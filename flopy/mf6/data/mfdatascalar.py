@@ -71,10 +71,20 @@ class MFScalar(mfdata.MFData):
 
 
     """
-    def __init__(self, sim_data, model_or_sim, structure, data=None,
-                 enable=True, path=None, dimensions=None):
-        super(MFScalar, self).__init__(sim_data, model_or_sim, structure,
-                                       enable, path, dimensions)
+
+    def __init__(
+        self,
+        sim_data,
+        model_or_sim,
+        structure,
+        data=None,
+        enable=True,
+        path=None,
+        dimensions=None,
+    ):
+        super(MFScalar, self).__init__(
+            sim_data, model_or_sim, structure, enable, path, dimensions
+        )
         self._data_type = self.structure.data_item_structures[0].type
         self._data_storage = self._new_storage()
         if data is not None:
@@ -94,9 +104,11 @@ class MFScalar(mfdata.MFData):
             return np.float64
         elif self.structure.type == DatumType.integer:
             return np.int32
-        elif self.structure.type == DatumType.recarray or \
-                self.structure.type == DatumType.record or \
-                self.structure.type == DatumType.repeating_record:
+        elif (
+            self.structure.type == DatumType.recarray
+            or self.structure.type == DatumType.record
+            or self.structure.type == DatumType.repeating_record
+        ):
             for data_item_struct in self.structure.data_item_structures:
                 if data_item_struct.type == DatumType.double_precision:
                     return np.float64
@@ -109,14 +121,20 @@ class MFScalar(mfdata.MFData):
             return self._get_storage_obj().has_data()
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(),
-                                  self._path,
-                                  'checking for data',
-                                  self.structure.name,
-                                  inspect.stack()[0][3], type_,
-                                  value_, traceback_, None,
-                                  self._simulation_data.debug, ex)
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self._path,
+                "checking for data",
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                None,
+                self._simulation_data.debug,
+                ex,
+            )
 
     @property
     def data(self):
@@ -127,60 +145,88 @@ class MFScalar(mfdata.MFData):
             return self._get_storage_obj().get_data(apply_mult=apply_mult)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(),
-                                  self._path,
-                                  'getting data',
-                                  self.structure.name,
-                                  inspect.stack()[0][3], type_,
-                                  value_, traceback_, None,
-                                  self._simulation_data.debug, ex)
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self._path,
+                "getting data",
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                None,
+                self._simulation_data.debug,
+                ex,
+            )
 
     def set_data(self, data):
         self._resync()
         if self.structure.type == DatumType.record:
             if data is not None:
-                if not isinstance(data, list) or isinstance(data, np.ndarray) or \
-                            isinstance(data, tuple):
+                if (
+                    not isinstance(data, list)
+                    or isinstance(data, np.ndarray)
+                    or isinstance(data, tuple)
+                ):
                     data = [data]
         else:
-            while isinstance(data, list) or isinstance(data, np.ndarray) or \
-                    isinstance(data, tuple):
+            while (
+                isinstance(data, list)
+                or isinstance(data, np.ndarray)
+                or isinstance(data, tuple)
+            ):
                 data = data[0]
-                if (isinstance(data, list) or isinstance(data, tuple)) and \
-                        len(data) > 1:
+                if (isinstance(data, list) or isinstance(data, tuple)) and len(
+                    data
+                ) > 1:
                     self._add_data_line_comment(data[1:], 0)
         storage = self._get_storage_obj()
         data_struct = self.structure.data_item_structures[0]
         try:
-            converted_data = convert_data(data, self._data_dimensions,
-                                          self._data_type, data_struct)
+            converted_data = convert_data(
+                data, self._data_dimensions, self._data_type, data_struct
+            )
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            comment = 'Could not convert data "{}" to type ' \
-                      '"{}".'.format(data, self._data_type)
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(),
-                                  self._path,
-                                  'converting data',
-                                  self.structure.name,
-                                  inspect.stack()[0][3], type_,
-                                  value_, traceback_, comment,
-                                  self._simulation_data.debug, ex)
+            comment = 'Could not convert data "{}" to type ' '"{}".'.format(
+                data, self._data_type
+            )
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self._path,
+                "converting data",
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                comment,
+                self._simulation_data.debug,
+                ex,
+            )
         try:
             storage.set_data(converted_data, key=self._current_key)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            comment = 'Could not set data "{}" to type ' \
-                      '"{}".'.format(data, self._data_type)
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(),
-                                  self._path,
-                                  'setting data',
-                                  self.structure.name,
-                                  inspect.stack()[0][3], type_,
-                                  value_, traceback_, comment,
-                                  self._simulation_data.debug, ex)
+            comment = 'Could not set data "{}" to type ' '"{}".'.format(
+                data, self._data_type
+            )
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self._path,
+                "setting data",
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                comment,
+                self._simulation_data.debug,
+                ex,
+            )
 
     def add_one(self):
         datum_type = self.structure.get_datum_type()
@@ -190,107 +236,159 @@ class MFScalar(mfdata.MFData):
                     self._get_storage_obj().set_data(1)
                 except Exception as ex:
                     type_, value_, traceback_ = sys.exc_info()
-                    comment = 'Could not set data to 1'
-                    raise MFDataException(self.structure.get_model(),
-                                          self.structure.get_package(),
-                                          self._path,
-                                          'setting data',
-                                          self.structure.name,
-                                          inspect.stack()[0][3], type_,
-                                          value_, traceback_, comment,
-                                          self._simulation_data.debug, ex)
+                    comment = "Could not set data to 1"
+                    raise MFDataException(
+                        self.structure.get_model(),
+                        self.structure.get_package(),
+                        self._path,
+                        "setting data",
+                        self.structure.name,
+                        inspect.stack()[0][3],
+                        type_,
+                        value_,
+                        traceback_,
+                        comment,
+                        self._simulation_data.debug,
+                        ex,
+                    )
             else:
                 try:
                     current_val = self._get_storage_obj().get_data()
                 except Exception as ex:
                     type_, value_, traceback_ = sys.exc_info()
-                    raise MFDataException(self.structure.get_model(),
-                                          self.structure.get_package(),
-                                          self._path,
-                                          'getting data',
-                                          self.structure.name,
-                                          inspect.stack()[0][3], type_,
-                                          value_, traceback_, None,
-                                          self._simulation_data.debug, ex)
+                    raise MFDataException(
+                        self.structure.get_model(),
+                        self.structure.get_package(),
+                        self._path,
+                        "getting data",
+                        self.structure.name,
+                        inspect.stack()[0][3],
+                        type_,
+                        value_,
+                        traceback_,
+                        None,
+                        self._simulation_data.debug,
+                        ex,
+                    )
                 try:
                     self._get_storage_obj().set_data(current_val + 1)
                 except Exception as ex:
                     type_, value_, traceback_ = sys.exc_info()
-                    comment = 'Could increment data "{}" by one' \
-                              '.'.format(current_val)
-                    raise MFDataException(self.structure.get_model(),
-                                          self.structure.get_package(),
-                                          self._path,
-                                          'setting data',
-                                          self.structure.name,
-                                          inspect.stack()[0][3], type_,
-                                          value_, traceback_, comment,
-                                          self._simulation_data.debug, ex)
+                    comment = 'Could increment data "{}" by one' ".".format(
+                        current_val
+                    )
+                    raise MFDataException(
+                        self.structure.get_model(),
+                        self.structure.get_package(),
+                        self._path,
+                        "setting data",
+                        self.structure.name,
+                        inspect.stack()[0][3],
+                        type_,
+                        value_,
+                        traceback_,
+                        comment,
+                        self._simulation_data.debug,
+                        ex,
+                    )
         else:
-            message = '{} of type {} does not support add one ' \
-                      'operation.'.format(self._data_name,
-                                          self.structure.get_datum_type())
+            message = (
+                "{} of type {} does not support add one "
+                "operation.".format(
+                    self._data_name, self.structure.get_datum_type()
+                )
+            )
             type_, value_, traceback_ = sys.exc_info()
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(),
-                                  self._path,
-                                  'adding one to scalar',
-                                  self.structure.name,
-                                  inspect.stack()[0][3], type_,
-                                  value_, traceback_, message,
-                                  self._simulation_data.debug)
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self._path,
+                "adding one to scalar",
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                message,
+                self._simulation_data.debug,
+            )
 
-    def get_file_entry(self, values_only=False, one_based=False,
-                       ext_file_action=ExtFileAction.copy_relative_paths):
+    def get_file_entry(
+        self,
+        values_only=False,
+        one_based=False,
+        ext_file_action=ExtFileAction.copy_relative_paths,
+    ):
         storage = self._get_storage_obj()
         try:
-            if storage is None or \
-                    self._get_storage_obj().get_data() is None:
-                return ''
+            if storage is None or self._get_storage_obj().get_data() is None:
+                return ""
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(),
-                                  self._path,
-                                  'getting data',
-                                  self.structure.name,
-                                  inspect.stack()[0][3], type_,
-                                  value_, traceback_, None,
-                                  self._simulation_data.debug, ex)
-        if self.structure.type == DatumType.keyword or self.structure.type ==\
-                DatumType.record:
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self._path,
+                "getting data",
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                None,
+                self._simulation_data.debug,
+                ex,
+            )
+        if (
+            self.structure.type == DatumType.keyword
+            or self.structure.type == DatumType.record
+        ):
             try:
                 data = storage.get_data()
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'getting data',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, None,
-                                      self._simulation_data.debug, ex)
+                raise MFDataException(
+                    self.structure.get_model(),
+                    self.structure.get_package(),
+                    self._path,
+                    "getting data",
+                    self.structure.name,
+                    inspect.stack()[0][3],
+                    type_,
+                    value_,
+                    traceback_,
+                    None,
+                    self._simulation_data.debug,
+                    ex,
+                )
         if self.structure.type == DatumType.keyword:
             if data is not None and data != False:
                 # keyword appears alone
-                return '{}{}\n'.format(self._simulation_data.indent_string,
-                                       self.structure.name.upper())
+                return "{}{}\n".format(
+                    self._simulation_data.indent_string,
+                    self.structure.name.upper(),
+                )
             else:
-                return ''
+                return ""
         elif self.structure.type == DatumType.record:
             text_line = []
             index = 0
             for data_item in self.structure.data_item_structures:
-                if data_item.type == DatumType.keyword and \
-                        data_item.optional == False:
+                if (
+                    data_item.type == DatumType.keyword
+                    and data_item.optional == False
+                ):
                     if isinstance(data, list) or isinstance(data, tuple):
-                        if len(data) > index and (data[index] is not None and
-                                                  data[index] != False):
+                        if len(data) > index and (
+                            data[index] is not None and data[index] != False
+                        ):
                             text_line.append(data_item.name.upper())
-                            if isinstance(data[index], str) and \
-                                    data_item.name.upper() != \
-                                    data[index].upper() and data[index] != '':
+                            if (
+                                isinstance(data[index], str)
+                                and data_item.name.upper()
+                                != data[index].upper()
+                                and data[index] != ""
+                            ):
                                 # since the data does not match the keyword
                                 # assume the keyword was excluded
                                 index -= 1
@@ -298,147 +396,220 @@ class MFScalar(mfdata.MFData):
                         if data is not None and data != False:
                             text_line.append(data_item.name.upper())
                 else:
-                    if data is not None and data != '':
+                    if data is not None and data != "":
                         if isinstance(data, list) or isinstance(data, tuple):
                             if len(data) > index:
-                                if data[index] is not None and \
-                                        data[index] != False:
+                                if (
+                                    data[index] is not None
+                                    and data[index] != False
+                                ):
                                     current_data = data[index]
                                 else:
                                     break
                             elif data_item.optional == True:
                                 break
                             else:
-                                message = 'Missing expected data. Data ' \
-                                          'size is {}. Index {} not' \
-                                          'found.'.format(len(data), index)
+                                message = (
+                                    "Missing expected data. Data "
+                                    "size is {}. Index {} not"
+                                    "found.".format(len(data), index)
+                                )
                                 type_, value_, traceback_ = sys.exc_info()
                                 raise MFDataException(
                                     self.structure.get_model(),
                                     self.structure.get_package(),
                                     self._path,
-                                    'getting data',
+                                    "getting data",
                                     self.structure.name,
-                                    inspect.stack()[0][3], type_,
-                                    value_, traceback_, message,
-                                    self._simulation_data.debug)
+                                    inspect.stack()[0][3],
+                                    type_,
+                                    value_,
+                                    traceback_,
+                                    message,
+                                    self._simulation_data.debug,
+                                )
 
                         else:
                             current_data = data
                         if data_item.type == DatumType.keyword:
-                            if current_data is not None and current_data != \
-                                    False:
+                            if (
+                                current_data is not None
+                                and current_data != False
+                            ):
+                                if (
+                                    isinstance(data[index], str)
+                                    and data[index] == "#"
+                                ):
+                                    # if data has been commented out,
+                                    # keep the comment
+                                    text_line.append(data[index])
                                 text_line.append(data_item.name.upper())
                         else:
                             try:
-                                text_line.append(to_string(
-                                    current_data, self._data_type,
-                                    self._simulation_data,
-                                    self._data_dimensions,
-                                    data_item = data_item))
+                                text_line.append(
+                                    to_string(
+                                        current_data,
+                                        self._data_type,
+                                        self._simulation_data,
+                                        self._data_dimensions,
+                                        data_item=data_item,
+                                    )
+                                )
                             except Exception as ex:
-                                message = 'Could not convert "{}" of type ' \
-                                          '"{}" to a string' \
-                                          '.'.format(current_data,
-                                                     self._data_type)
+                                message = (
+                                    'Could not convert "{}" of type '
+                                    '"{}" to a string'
+                                    ".".format(current_data, self._data_type)
+                                )
                                 type_, value_, traceback_ = sys.exc_info()
                                 raise MFDataException(
                                     self.structure.get_model(),
                                     self.structure.get_package(),
                                     self._path,
-                                    'converting data to string',
+                                    "converting data to string",
                                     self.structure.name,
-                                    inspect.stack()[0][3], type_,
-                                    value_, traceback_, message,
-                                    self._simulation_data.debug)
+                                    inspect.stack()[0][3],
+                                    type_,
+                                    value_,
+                                    traceback_,
+                                    message,
+                                    self._simulation_data.debug,
+                                )
                 index += 1
 
             text = self._simulation_data.indent_string.join(text_line)
-            return '{}{}\n'.format(self._simulation_data.indent_string,
-                                   text)
+            return "{}{}\n".format(self._simulation_data.indent_string, text)
         else:
             data_item = self.structure.data_item_structures[0]
             try:
                 if one_based:
                     if self.structure.type != DatumType.integer:
-                        message = 'Data scalar "{}" can not be one_based ' \
-                                  'because it is not an integer' \
-                                  '.'.format(self.structure.name)
+                        message = (
+                            'Data scalar "{}" can not be one_based '
+                            "because it is not an integer"
+                            ".".format(self.structure.name)
+                        )
                         type_, value_, traceback_ = sys.exc_info()
                         raise MFDataException(
                             self.structure.get_model(),
                             self.structure.get_package(),
                             self._path,
-                            'storing one based integer',
+                            "storing one based integer",
                             self.structure.name,
-                            inspect.stack()[0][3], type_,
-                            value_, traceback_, message,
-                            self._simulation_data.debug)
+                            inspect.stack()[0][3],
+                            type_,
+                            value_,
+                            traceback_,
+                            message,
+                            self._simulation_data.debug,
+                        )
                     data = self._get_storage_obj().get_data() + 1
                 else:
                     data = self._get_storage_obj().get_data()
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'getting data',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, None,
-                                      self._simulation_data.debug)
+                raise MFDataException(
+                    self.structure.get_model(),
+                    self.structure.get_package(),
+                    self._path,
+                    "getting data",
+                    self.structure.name,
+                    inspect.stack()[0][3],
+                    type_,
+                    value_,
+                    traceback_,
+                    None,
+                    self._simulation_data.debug,
+                )
             try:
                 # data
-                values = to_string(data, self._data_type, self._simulation_data,
-                                   self._data_dimensions, data_item=data_item)
+                values = to_string(
+                    data,
+                    self._data_type,
+                    self._simulation_data,
+                    self._data_dimensions,
+                    data_item=data_item,
+                )
             except Exception as ex:
-                message = 'Could not convert "{}" of type "{}" ' \
-                          'to a string.'.format(data,
-                                                self._data_type)
+                message = (
+                    'Could not convert "{}" of type "{}" '
+                    "to a string.".format(data, self._data_type)
+                )
                 type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'converting data to string',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, message,
-                                      self._simulation_data.debug)
+                raise MFDataException(
+                    self.structure.get_model(),
+                    self.structure.get_package(),
+                    self._path,
+                    "converting data to string",
+                    self.structure.name,
+                    inspect.stack()[0][3],
+                    type_,
+                    value_,
+                    traceback_,
+                    message,
+                    self._simulation_data.debug,
+                )
             if values_only:
-                return '{}{}'.format(self._simulation_data.indent_string,
-                                     values)
+                return "{}{}".format(
+                    self._simulation_data.indent_string, values
+                )
             else:
                 # keyword + data
-                return '{}{}{}{}\n'.format(self._simulation_data.indent_string,
-                                           self.structure.name.upper(),
-                                           self._simulation_data.indent_string,
-                                           values)
+                return "{}{}{}{}\n".format(
+                    self._simulation_data.indent_string,
+                    self.structure.name.upper(),
+                    self._simulation_data.indent_string,
+                    values,
+                )
 
-    def load(self, first_line, file_handle, block_header,
-             pre_data_comments=None, external_file_info=None):
-        super(MFScalar, self).load(first_line, file_handle, block_header,
-                                   pre_data_comments=None,
-                                   external_file_info=None)
+    def load(
+        self,
+        first_line,
+        file_handle,
+        block_header,
+        pre_data_comments=None,
+        external_file_info=None,
+    ):
+        super(MFScalar, self).load(
+            first_line,
+            file_handle,
+            block_header,
+            pre_data_comments=None,
+            external_file_info=None,
+        )
         self._resync()
         file_access = MFFileAccessScalar(
-            self.structure, self._data_dimensions, self._simulation_data,
-            self._path, self._current_key)
+            self.structure,
+            self._data_dimensions,
+            self._simulation_data,
+            self._path,
+            self._current_key,
+        )
         return file_access.load_from_package(
-            first_line, file_handle, self._get_storage_obj(), self._data_type,
-            self._keyword, pre_data_comments)
+            first_line,
+            file_handle,
+            self._get_storage_obj(),
+            self._data_type,
+            self._keyword,
+            pre_data_comments,
+        )
 
     def _new_storage(self, stress_period=0):
-        return DataStorage(self._simulation_data, self._model_or_sim,
-                           self._data_dimensions, self.get_file_entry,
-                           DataStorageType.internal_array,
-                           DataStructureType.scalar,
-                           stress_period=stress_period, data_path=self._path)
+        return DataStorage(
+            self._simulation_data,
+            self._model_or_sim,
+            self._data_dimensions,
+            self.get_file_entry,
+            DataStorageType.internal_array,
+            DataStructureType.scalar,
+            stress_period=stress_period,
+            data_path=self._path,
+        )
 
     def _get_storage_obj(self):
         return self._data_storage
 
-    def plot(self, filename_base=None,
-             file_extension=None, **kwargs):
+    def plot(self, filename_base=None, file_extension=None, **kwargs):
         """
         Helper method to plot scalar objects
 
@@ -460,10 +631,12 @@ class MFScalar(mfdata.MFData):
         if not self.plotable:
             raise TypeError("Scalar values are not plotable")
 
-        axes = PlotUtilities._plot_scalar_helper(self,
-                                                 filename_base=filename_base,
-                                                 file_extension=file_extension,
-                                                 **kwargs)
+        axes = PlotUtilities._plot_scalar_helper(
+            self,
+            filename_base=filename_base,
+            file_extension=file_extension,
+            **kwargs
+        )
         return axes
 
 
@@ -520,14 +693,24 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
 
 
     """
-    def __init__(self, sim_data, model_or_sim, structure, enable=True,
-                 path=None, dimensions=None):
-        super(MFScalarTransient, self).__init__(sim_data=sim_data,
-                                                model_or_sim=model_or_sim,
-                                                structure=structure,
-                                                enable=enable,
-                                                path=path,
-                                                dimensions=dimensions)
+
+    def __init__(
+        self,
+        sim_data,
+        model_or_sim,
+        structure,
+        enable=True,
+        path=None,
+        dimensions=None,
+    ):
+        super(MFScalarTransient, self).__init__(
+            sim_data=sim_data,
+            model_or_sim=model_or_sim,
+            structure=structure,
+            enable=enable,
+            path=path,
+            dimensions=dimensions,
+        )
         self._transient_setup(self._data_storage)
         self.repeating = True
 
@@ -548,8 +731,9 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
             stress_period = key
         else:
             stress_period = 1
-        self._data_storage[key] = \
-            super(MFScalarTransient, self)._new_storage(stress_period)
+        self._data_storage[key] = super(MFScalarTransient, self)._new_storage(
+            stress_period
+        )
 
     def add_one(self, key=0):
         self._update_record_prep(key)
@@ -560,8 +744,9 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
             data_found = False
             for sto_key in self._data_storage.keys():
                 self.get_data_prep(sto_key)
-                data_found = data_found or super(MFScalarTransient,
-                                                 self).has_data()
+                data_found = (
+                    data_found or super(MFScalarTransient, self).has_data()
+                )
                 if data_found:
                     break
         else:
@@ -584,46 +769,62 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
             self._set_data_prep(data, key)
             super(MFScalarTransient, self).set_data(data)
 
-    def get_file_entry(self, key=None, ext_file_action=
-                                       ExtFileAction.copy_relative_paths):
+    def get_file_entry(
+        self, key=None, ext_file_action=ExtFileAction.copy_relative_paths
+    ):
         if key is None:
             file_entry = []
             for sto_key in self._data_storage.keys():
                 if self.has_data(sto_key):
                     self._get_file_entry_prep(sto_key)
-                    text_entry = super(MFScalarTransient,
-                                       self).get_file_entry(ext_file_action=
-                                                            ext_file_action)
+                    text_entry = super(MFScalarTransient, self).get_file_entry(
+                        ext_file_action=ext_file_action
+                    )
                     file_entry.append(text_entry)
             if file_entry > 1:
-                return '\n\n'.join(file_entry)
+                return "\n\n".join(file_entry)
             elif file_entry == 1:
                 return file_entry[0]
             else:
-                return ''
+                return ""
         else:
             self._get_file_entry_prep(key)
-            return super(MFScalarTransient,
-                         self).get_file_entry(ext_file_action=ext_file_action)
+            return super(MFScalarTransient, self).get_file_entry(
+                ext_file_action=ext_file_action
+            )
 
-    def load(self, first_line, file_handle, block_header,
-             pre_data_comments=None, external_file_info=None):
+    def load(
+        self,
+        first_line,
+        file_handle,
+        block_header,
+        pre_data_comments=None,
+        external_file_info=None,
+    ):
         self._load_prep(block_header)
-        return super(MFScalarTransient, self).load(first_line, file_handle,
-                                                   pre_data_comments,
-                                                   external_file_info)
+        return super(MFScalarTransient, self).load(
+            first_line, file_handle, pre_data_comments, external_file_info
+        )
 
     def _new_storage(self, stress_period=0):
         return OrderedDict()
 
     def _get_storage_obj(self):
-        if self._current_key is None or \
-                self._current_key not in self._data_storage:
+        if (
+            self._current_key is None
+            or self._current_key not in self._data_storage
+        ):
             return None
         return self._data_storage[self._current_key]
 
-    def plot(self, filename_base=None, file_extension=None,
-             kper=0, fignum=None, **kwargs):
+    def plot(
+        self,
+        filename_base=None,
+        file_extension=None,
+        kper=0,
+        fignum=None,
+        **kwargs
+    ):
         """
         Plot transient scalar model data
 
@@ -679,10 +880,12 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
         if not self.plotable:
             raise TypeError("Simulation level packages are not plotable")
 
-        axes = PlotUtilities._plot_transient2d_helper(self,
-                                                      filename_base=filename_base,
-                                                      file_extension=file_extension,
-                                                      kper=kper,
-                                                      fignum=fignum,
-                                                      **kwargs)
+        axes = PlotUtilities._plot_transient2d_helper(
+            self,
+            filename_base=filename_base,
+            file_extension=file_extension,
+            kper=kper,
+            fignum=fignum,
+            **kwargs
+        )
         return axes

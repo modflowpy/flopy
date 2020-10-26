@@ -1,0 +1,122 @@
+# --------------------- gwt dis options ---------------------
+
+block options
+name length_units
+type string
+reader urword
+optional true
+longname model length units
+description is the length units used for this model.  Values can be ``FEET'', ``METERS'', or ``CENTIMETERS''.  If not specified, the default is ``UNKNOWN''.
+
+block options
+name nogrb
+type keyword
+reader urword
+optional true
+longname do not write binary grid file
+description keyword to deactivate writing of the binary grid file.
+
+block options
+name xorigin
+type double precision
+reader urword
+optional true
+longname x-position of the model grid origin
+description x-position of the lower-left corner of the model grid.  A default value of zero is assigned if not specified.  The value for XORIGIN does not affect the model simulation, but it is written to the binary grid file so that postprocessors can locate the grid in space.
+
+block options
+name yorigin
+type double precision
+reader urword
+optional true
+longname y-position of the model grid origin
+description y-position of the lower-left corner of the model grid.  If not specified, then a default value equal to zero is used.  The value for YORIGIN does not affect the model simulation, but it is written to the binary grid file so that postprocessors can locate the grid in space.
+
+block options
+name angrot
+type double precision
+reader urword
+optional true
+longname rotation angle
+description counter-clockwise rotation angle (in degrees) of the lower-left corner of the model grid.  If not specified, then a default value of 0.0 is assigned.  The value for ANGROT does not affect the model simulation, but it is written to the binary grid file so that postprocessors can locate the grid in space.
+
+
+# --------------------- gwt dis dimensions ---------------------
+
+block dimensions
+name nlay
+type integer
+reader urword
+optional false
+longname number of layers
+description is the number of layers in the model grid.
+default_value 1
+
+block dimensions
+name nrow
+type integer
+reader urword
+optional false
+longname number of rows
+description is the number of rows in the model grid.
+default_value 2
+
+block dimensions
+name ncol
+type integer
+reader urword
+optional false
+longname number of columns
+description is the number of columns in the model grid.
+default_value 2
+
+# --------------------- gwt dis griddata ---------------------
+
+block griddata
+name delr
+type double precision
+shape (ncol)
+reader readarray
+longname spacing along a row
+description is the column spacing in the row direction.
+default_value 1.0
+
+block griddata
+name delc
+type double precision
+shape (nrow)
+reader readarray
+longname spacing along a column
+description is the row spacing in the column direction.
+default_value 1.0
+
+block griddata
+name top
+type double precision
+shape (ncol, nrow)
+reader readarray
+longname cell top elevation
+description is the top elevation for each cell in the top model layer.
+default_value 1.0
+
+block griddata
+name botm
+type double precision
+shape (ncol, nrow, nlay)
+reader readarray
+layered true
+longname cell bottom elevation
+description is the bottom elevation for each cell.
+default_value 0.
+
+block griddata
+name idomain
+type integer
+shape (ncol, nrow, nlay)
+reader readarray
+layered true
+optional true
+longname idomain existence array
+description is an optional array that characterizes the existence status of a cell.  If the IDOMAIN array is not specified, then all model cells exist within the solution.  If the IDOMAIN value for a cell is 0, the cell does not exist in the simulation.  Input and output values will be read and written for the cell, but internal to the program, the cell is excluded from the solution.  If the IDOMAIN value for a cell is 1, the cell exists in the simulation.  If the IDOMAIN value for a cell is -1, the cell does not exist in the simulation.  Furthermore, the first existing cell above will be connected to the first existing cell below.  This type of cell is referred to as a ``vertical pass through'' cell.
+
+

@@ -1,0 +1,85 @@
+# --------------------- gwt mst options ---------------------
+
+block options
+name save_flows
+type keyword
+reader urword
+optional true
+longname save calculated flows to budget file
+description REPLACE save_flows {'{#1}': 'MST'}
+
+block options
+name first_order_decay
+type keyword
+reader urword
+optional true
+longname activate first-order decay
+description is a text keyword to indicate that first-order decay will occur.  Use of this keyword requires that DECAY and DECAY\_SORBED (if sorbtion is active) are specified in the GRIDDATA block.
+
+block options
+name zero_order_decay
+type keyword
+reader urword
+optional true
+longname activate zero-order decay
+description is a text keyword to indicate that zero-order decay will occur.  Use of this keyword requires that DECAY and DECAY\_SORBED (if sorbtion is active) are specified in the GRIDDATA block.
+
+block options
+name sorbtion
+type keyword
+reader urword
+optional true
+longname activate sorbtion
+description is a text keyword to indicate that sorbtion will be activated.  Use of this keyword requires that BULK\_DENSITY and DISTCOEF are specified in the GRIDDATA block.
+
+# --------------------- gwt mst griddata ---------------------
+
+block griddata
+name porosity
+type double precision
+shape (nodes)
+reader readarray
+layered true
+longname porosity
+description is the aquifer porosity.
+
+block griddata
+name decay
+type double precision
+shape (nodes)
+reader readarray
+layered true
+optional true
+longname aqueous phase decay rate coefficient
+description is the rate coefficient for first or zero-order decay for the aqueous phase of the mobile domain.  A negative value indicates solute production.  The dimensions of decay for first-order decay is one over time.  The dimensions of decay for zero-order decay is mass per length cubed per time.  decay will have no affect on simulation results unless either first- or zero-order decay is specified in the options block.
+
+block griddata
+name decay_sorbed
+type double precision
+shape (nodes)
+reader readarray
+optional true
+layered true
+longname sorbed phase decay rate coefficient
+description is the rate coefficient for first or zero-order decay for the sorbed phase of the mobile domain.  A negative value indicates solute production.  The dimensions of decay\_sorbed for first-order decay is one over time.  The dimensions of decay\_sorbed for zero-order decay is mass of solute per mass of aquifer per time.  If decay\_sorbed is not specified and both decay and sorbtion are active, then the sorbed decay rate will be set equal to the aqueous decay rate.  decay\_sorbed will have no affect on simulation results unless the SORPTION keyword and either first- or zero-order decay are specified in the options block.
+
+block griddata
+name bulk_density
+type double precision
+shape (nodes)
+reader readarray
+optional true
+layered true
+longname bulk density
+description is the bulk density of the aquifer in mass per length cubed.  bulk\_density is not required unless the SORBTION keyword is specified.
+
+block griddata
+name distcoef
+type double precision
+shape (nodes)
+reader readarray
+layered true
+optional true
+longname distribution coefficient
+description is the distribution coefficient for the equilibrium-controlled linear sorption isotherm in dimensions of length cubed per mass.  distcoef is not required unless the SORBTION keyword is specified.
+

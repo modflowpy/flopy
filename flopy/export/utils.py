@@ -2,8 +2,13 @@ from __future__ import print_function
 import json
 import os
 import numpy as np
-from ..utils import HeadFile, CellBudgetFile, UcnFile, FormattedHeadFile, \
-    ZBNetOutput
+from ..utils import (
+    HeadFile,
+    CellBudgetFile,
+    UcnFile,
+    FormattedHeadFile,
+    ZBNetOutput,
+)
 from ..mbase import BaseModel, ModelInterface
 from ..pakbase import PackageInterface
 from ..datbase import DataType, DataInterface, DataListInterface
@@ -12,18 +17,24 @@ from . import shapefile_utils
 from . import vtk
 
 
-NC_PRECISION_TYPE = {np.float64: "f8", np.float32: "f4", np.int: "i4",
-                     np.int64: "i4", np.int32: "i4"}
+NC_PRECISION_TYPE = {
+    np.float64: "f8",
+    np.float32: "f4",
+    np.int: "i4",
+    np.int64: "i4",
+    np.int32: "i4",
+}
 
 path = os.path.split(netcdf.__file__)[0]
-with open(path + '/longnames.json') as f:
+with open(path + "/longnames.json") as f:
     NC_LONG_NAMES = json.load(f)
-with open(path + '/unitsformat.json') as f:
+with open(path + "/unitsformat.json") as f:
     NC_UNITS_FORMAT = json.load(f)
 
 
-def ensemble_helper(inputs_filename, outputs_filename, models, add_reals=True,
-                    **kwargs):
+def ensemble_helper(
+    inputs_filename, outputs_filename, models, add_reals=True, **kwargs
+):
     """
     Helper to export an ensemble of model instances.  Assumes
     all models have same dis and reference information, only difference is
@@ -32,15 +43,16 @@ def ensemble_helper(inputs_filename, outputs_filename, models, add_reals=True,
     """
     f_in, f_out = None, None
     for m in models[1:]:
-        assert m.get_nrow_ncol_nlay_nper() == models[
-            0].get_nrow_ncol_nlay_nper()
+        assert (
+            m.get_nrow_ncol_nlay_nper() == models[0].get_nrow_ncol_nlay_nper()
+        )
     if inputs_filename is not None:
         f_in = models[0].export(inputs_filename, **kwargs)
         vdict = {}
         vdicts = [models[0].export(vdict, **kwargs)]
         i = 1
         for m in models[1:]:
-            suffix = m.name.split('.')[0].split('_')[-1]
+            suffix = m.name.split(".")[0].split("_")[-1]
             vdict = {}
             m.export(vdict, **kwargs)
             vdicts.append(vdict)
@@ -69,17 +81,27 @@ def ensemble_helper(inputs_filename, outputs_filename, models, add_reals=True,
             else:
                 f_in.append(mean, suffix="**mean**")
                 f_in.append(stdev, suffix="**stdev**")
-        f_in.add_global_attributes({"namefile": ''})
+        f_in.add_global_attributes({"namefile": ""})
 
     if outputs_filename is not None:
-        f_out = output_helper(outputs_filename, models[0],
-                              models[0].load_results(as_dict=True), **kwargs)
+        f_out = output_helper(
+            outputs_filename,
+            models[0],
+            models[0].load_results(as_dict=True),
+            **kwargs
+        )
         vdict = {}
-        vdicts = [output_helper(vdict, models[0], models[0]. \
-                                load_results(as_dict=True), **kwargs)]
+        vdicts = [
+            output_helper(
+                vdict,
+                models[0],
+                models[0].load_results(as_dict=True),
+                **kwargs
+            )
+        ]
         i = 1
         for m in models[1:]:
-            suffix = m.name.split('.')[0].split('_')[-1]
+            suffix = m.name.split(".")[0].split("_")[-1]
             oudic = m.load_results(as_dict=True)
             vdict = {}
             output_helper(vdict, m, oudic, **kwargs)
@@ -103,26 +125,36 @@ def ensemble_helper(inputs_filename, outputs_filename, models, add_reals=True,
         if i >= 2:
             if not add_reals:
                 f_out.write()
-                f_out = NetCdf.empty_like(mean,
-                                          output_filename=outputs_filename)
+                f_out = NetCdf.empty_like(
+                    mean, output_filename=outputs_filename
+                )
                 f_out.append(mean, suffix="**mean**")
                 f_out.append(stdev, suffix="**stdev**")
 
             else:
                 f_out.append(mean, suffix="**mean**")
                 f_out.append(stdev, suffix="**stdev**")
-        f_out.add_global_attributes({"namefile": ''})
+        f_out.add_global_attributes({"namefile": ""})
     return f_in, f_out
 
 
-def _add_output_nc_variable(f, times, shape3d, out_obj, var_name, logger=None,
-                            text='', mask_vals=(), mask_array3d=None):
+def _add_output_nc_variable(
+    f,
+    times,
+    shape3d,
+    out_obj,
+    var_name,
+    logger=None,
+    text="",
+    mask_vals=(),
+    mask_array3d=None,
+):
     if logger:
-        logger.log("creating array for {0}".format(
-            var_name))
+        logger.log("creating array for {0}".format(var_name))
 
-    array = np.zeros((len(times), shape3d[0], shape3d[1], shape3d[2]),
-                     dtype=np.float32)
+    array = np.zeros(
+        (len(times), shape3d[0], shape3d[1], shape3d[2]), dtype=np.float32
+    )
     array[:] = np.NaN
 
     if isinstance(out_obj, ZBNetOutput):
@@ -143,10 +175,12 @@ def _add_output_nc_variable(f, times, shape3d, out_obj, var_name, logger=None,
                     else:
                         a = out_obj.get_data(totim=t)
                 except Exception as e:
-                    estr = "error getting data for {0} at time" \
-                           " {1}:{2}".format(var_name +
-                                             text.decode().strip().lower(),
-                                             t, str(e))
+                    estr = (
+                        "error getting data for {0} at time"
+                        " {1}:{2}".format(
+                            var_name + text.decode().strip().lower(), t, str(e)
+                        )
+                    )
                     if logger:
                         logger.warn(estr)
                     else:
@@ -157,10 +191,12 @@ def _add_output_nc_variable(f, times, shape3d, out_obj, var_name, logger=None,
                 try:
                     array[i, :, :, :] = a.astype(np.float32)
                 except Exception as e:
-                    estr = "error assigning {0} data to array for time" \
-                           " {1}:{2}".format(var_name +
-                                             text.decode().strip().lower(),
-                                             t, str(e))
+                    estr = (
+                        "error assigning {0} data to array for time"
+                        " {1}:{2}".format(
+                            var_name + text.decode().strip().lower(), t, str(e)
+                        )
+                    )
                     if logger:
                         logger.warn(estr)
                     else:
@@ -168,8 +204,7 @@ def _add_output_nc_variable(f, times, shape3d, out_obj, var_name, logger=None,
                     continue
 
     if logger:
-        logger.log("creating array for {0}".format(
-            var_name))
+        logger.log("creating array for {0}".format(var_name))
 
     for mask_val in mask_vals:
         array[np.where(array == mask_val)] = np.NaN
@@ -184,8 +219,7 @@ def _add_output_nc_variable(f, times, shape3d, out_obj, var_name, logger=None,
 
     units = None
     if var_name in NC_UNITS_FORMAT:
-        units = NC_UNITS_FORMAT[var_name].format(
-            f.grid_units, f.time_units)
+        units = NC_UNITS_FORMAT[var_name].format(f.grid_units, f.time_units)
     precision_str = "f4"
 
     if text:
@@ -198,12 +232,14 @@ def _add_output_nc_variable(f, times, shape3d, out_obj, var_name, logger=None,
         attribs["units"] = units
     try:
         dim_tuple = ("time",) + f.dimension_names
-        var = f.create_variable(var_name, attribs,
-                                precision_str=precision_str,
-                                dimensions=dim_tuple)
+        var = f.create_variable(
+            var_name,
+            attribs,
+            precision_str=precision_str,
+            dimensions=dim_tuple,
+        )
     except Exception as e:
-        estr = "error creating variable {0}:\n{1}".format(
-            var_name, str(e))
+        estr = "error creating variable {0}:\n{1}".format(var_name, str(e))
         if logger:
             logger.lraise(estr)
         else:
@@ -213,15 +249,15 @@ def _add_output_nc_variable(f, times, shape3d, out_obj, var_name, logger=None,
         var[:] = array
     except Exception as e:
         estr = "error setting array to variable {0}:\n{1}".format(
-            var_name, str(e))
+            var_name, str(e)
+        )
         if logger:
             logger.lraise(estr)
         else:
             raise Exception(estr)
 
 
-def _add_output_nc_zonebudget_variable(f, array, var_name, flux,
-                                       logger=None):
+def _add_output_nc_zonebudget_variable(f, array, var_name, flux, logger=None):
     """
     Method to add zonebudget output data to netcdf file
 
@@ -253,13 +289,15 @@ def _add_output_nc_zonebudget_variable(f, array, var_name, flux,
     attribs["coordinates"] = "time zone"
     attribs["min"] = mn
     attribs["max"] = mx
-    attribs['units'] = units
-    dim_tuple = ('time', "zone")
+    attribs["units"] = units
+    dim_tuple = ("time", "zone")
 
-    var = f.create_group_variable('zonebudget', var_name, attribs,
-                                  precision_str, dim_tuple)
+    var = f.create_group_variable(
+        "zonebudget", var_name, attribs, precision_str, dim_tuple
+    )
 
     var[:] = array
+
 
 def output_helper(f, ml, oudic, **kwargs):
     """
@@ -296,12 +334,12 @@ def output_helper(f, ml, oudic, **kwargs):
     forgive = kwargs.pop("forgive", False)
     kwargs.pop("suffix", None)
     mask_vals = []
-    mflay = kwargs.pop('mflay', None)
-    kper = kwargs.pop('kper', None)
+    mflay = kwargs.pop("mflay", None)
+    kper = kwargs.pop("kper", None)
     if "masked_vals" in kwargs:
         mask_vals = kwargs.pop("masked_vals")
     if len(kwargs) > 0 and logger is not None:
-        str_args = ','.join(kwargs)
+        str_args = ",".join(kwargs)
         logger.warn("unused kwargs: " + str_args)
 
     zonebud = None
@@ -318,8 +356,9 @@ def output_helper(f, ml, oudic, **kwargs):
     # that they will line up
     for key in oudic.keys():
         out = oudic[key]
-        times = [float("{0:15.6f}".format(t)) for t in
-                 out.recordarray["totim"]]
+        times = [
+            float("{0:15.6f}".format(t)) for t in out.recordarray["totim"]
+        ]
         out.recordarray["totim"] = times
 
     times = []
@@ -356,17 +395,22 @@ def output_helper(f, ml, oudic, **kwargs):
     assert len(common_times) > 0
     if len(skipped_times) > 0:
         if logger:
-            logger.warn("the following output times are not common to all" + \
-                        " output files and are being skipped:\n" + \
-                        "{0}".format(skipped_times))
+            logger.warn(
+                "the following output times are not common to all"
+                + " output files and are being skipped:\n"
+                + "{0}".format(skipped_times)
+            )
         else:
-            print("the following output times are not common to all" + \
-                  " output files and are being skipped:\n" + \
-                  "{0}".format(skipped_times))
+            print(
+                "the following output times are not common to all"
+                + " output files and are being skipped:\n"
+                + "{0}".format(skipped_times)
+            )
     times = [t for t in common_times[::stride]]
     if isinstance(f, str) and f.lower().endswith(".nc"):
-        f = NetCdf(f, ml, time_values=times, logger=logger,
-                   forgive=forgive, **kwargs)
+        f = NetCdf(
+            f, ml, time_values=times, logger=logger, forgive=forgive, **kwargs
+        )
     elif isinstance(f, NetCdf):
         otimes = list(f.nc.variables["time"][:])
         assert otimes == times
@@ -385,30 +429,55 @@ def output_helper(f, ml, oudic, **kwargs):
             filename = filename.lower()
 
             if isinstance(out_obj, UcnFile):
-                _add_output_nc_variable(f, times, shape3d, out_obj,
-                                        "concentration", logger=logger,
-                                        mask_vals=mask_vals,
-                                        mask_array3d=mask_array3d)
+                _add_output_nc_variable(
+                    f,
+                    times,
+                    shape3d,
+                    out_obj,
+                    "concentration",
+                    logger=logger,
+                    mask_vals=mask_vals,
+                    mask_array3d=mask_array3d,
+                )
 
             elif isinstance(out_obj, HeadFile):
-                _add_output_nc_variable(f, times, shape3d, out_obj,
-                                        out_obj.text.decode(), logger=logger,
-                                        mask_vals=mask_vals,
-                                        mask_array3d=mask_array3d)
+                _add_output_nc_variable(
+                    f,
+                    times,
+                    shape3d,
+                    out_obj,
+                    out_obj.text.decode(),
+                    logger=logger,
+                    mask_vals=mask_vals,
+                    mask_array3d=mask_array3d,
+                )
 
             elif isinstance(out_obj, FormattedHeadFile):
-                _add_output_nc_variable(f, times, shape3d, out_obj,
-                                        out_obj.text, logger=logger,
-                                        mask_vals=mask_vals,
-                                        mask_array3d=mask_array3d)
+                _add_output_nc_variable(
+                    f,
+                    times,
+                    shape3d,
+                    out_obj,
+                    out_obj.text,
+                    logger=logger,
+                    mask_vals=mask_vals,
+                    mask_array3d=mask_array3d,
+                )
 
             elif isinstance(out_obj, CellBudgetFile):
                 var_name = "cell_by_cell_flow"
                 for text in out_obj.textlist:
-                    _add_output_nc_variable(f, times, shape3d, out_obj,
-                                            var_name, logger=logger, text=text,
-                                            mask_vals=mask_vals,
-                                            mask_array3d=mask_array3d)
+                    _add_output_nc_variable(
+                        f,
+                        times,
+                        shape3d,
+                        out_obj,
+                        var_name,
+                        logger=logger,
+                        text=text,
+                        mask_vals=mask_vals,
+                        mask_array3d=mask_array3d,
+                    )
 
             else:
                 estr = "unrecognized file extension:{0}".format(filename)
@@ -419,37 +488,50 @@ def output_helper(f, ml, oudic, **kwargs):
 
         if zonebud is not None:
             try:
-                f.initialize_group("zonebudget",
-                                   dimensions=('time', 'zone'),
-                                   dimension_data={'time': zonebud.time,
-                                                   'zone': zonebud.zones})
+                f.initialize_group(
+                    "zonebudget",
+                    dimensions=("time", "zone"),
+                    dimension_data={
+                        "time": zonebud.time,
+                        "zone": zonebud.zones,
+                    },
+                )
             except AttributeError:
                 pass
 
             for text, array in zonebud.arrays.items():
-                _add_output_nc_zonebudget_variable(f, array, text,
-                                                   zonebud.flux,
-                                                   logger)
+                _add_output_nc_zonebudget_variable(
+                    f, array, text, zonebud.flux, logger
+                )
 
             # write the zone array to standard output
-            _add_output_nc_variable(f, times, shape3d, zonebud,
-                                    "budget_zones", logger=logger,
-                                    mask_vals=mask_vals,
-                                    mask_array3d=mask_array3d)
+            _add_output_nc_variable(
+                f,
+                times,
+                shape3d,
+                zonebud,
+                "budget_zones",
+                logger=logger,
+                mask_vals=mask_vals,
+                mask_array3d=mask_array3d,
+            )
 
-    elif isinstance(f, str) and f.endswith('.shp'):
+    elif isinstance(f, str) and f.endswith(".shp"):
         attrib_dict = {}
         for _, out_obj in oudic.items():
 
-            if isinstance(out_obj, HeadFile) or \
-                    isinstance(out_obj, FormattedHeadFile) or \
-                    isinstance(out_obj, UcnFile):
+            if (
+                isinstance(out_obj, HeadFile)
+                or isinstance(out_obj, FormattedHeadFile)
+                or isinstance(out_obj, UcnFile)
+            ):
                 if isinstance(out_obj, UcnFile):
-                    attrib_name = 'conc'
+                    attrib_name = "conc"
                 else:
-                    attrib_name = 'head'
-                plotarray = np.atleast_3d(out_obj.get_alldata()
-                                          .transpose()).transpose()
+                    attrib_name = "head"
+                plotarray = np.atleast_3d(
+                    out_obj.get_alldata().transpose()
+                ).transpose()
 
                 for per in range(plotarray.shape[0]):
                     for k in range(plotarray.shape[1]):
@@ -457,20 +539,20 @@ def output_helper(f, ml, oudic, **kwargs):
                             continue
                         if mflay is not None and k != mflay:
                             continue
-                        name = attrib_name + '{}_{}'.format(per, k)
+                        name = attrib_name + "{}_{}".format(per, k)
                         attrib_dict[name] = plotarray[per][k]
 
             elif isinstance(out_obj, CellBudgetFile):
                 names = out_obj.get_unique_record_names(decode=True)
 
                 for attrib_name in names:
-                    plotarray = np.atleast_3d(out_obj.get_data(
-                                              text=attrib_name,
-                                              full3D=True))
+                    plotarray = np.atleast_3d(
+                        out_obj.get_data(text=attrib_name, full3D=True)
+                    )
 
                     attrib_name = attrib_name.strip()
                     if attrib_name == "FLOW RIGHT FACE":
-                        attrib_name = 'FRF'
+                        attrib_name = "FRF"
                     elif attrib_name == "FLOW FRONT FACE":
                         attrib_name = "FFF"
                     elif attrib_name == "FLOW LOWER FACE":
@@ -483,7 +565,7 @@ def output_helper(f, ml, oudic, **kwargs):
                                 continue
                             if mflay is not None and k != mflay:
                                 continue
-                            name = attrib_name + '{}_{}'.format(per, k)
+                            name = attrib_name + "{}_{}".format(per, k)
                             attrib_dict[name] = plotarray[per][k]
 
         if attrib_dict:
@@ -493,8 +575,9 @@ def output_helper(f, ml, oudic, **kwargs):
         if logger:
             logger.lraise("unrecognized export argument:{0}".format(f))
         else:
-            raise NotImplementedError("unrecognized export argument" +
-                                      ":{0}".format(f))
+            raise NotImplementedError(
+                "unrecognized export argument" + ":{0}".format(f)
+            )
     return f
 
 
@@ -531,9 +614,9 @@ def model_export(f, ml, fmt=None, **kwargs):
         f = NetCdf(f, ml, **kwargs)
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
-        shapefile_utils.model_attributes_to_shapefile(f, ml,
-                                                      package_names=package_names,
-                                                      **kwargs)
+        shapefile_utils.model_attributes_to_shapefile(
+            f, ml, package_names=package_names, **kwargs
+        )
 
     elif isinstance(f, NetCdf):
 
@@ -547,19 +630,27 @@ def model_export(f, ml, fmt=None, **kwargs):
         for pak in ml.packagelist:
             f = package_export(f, pak, **kwargs)
 
-    elif fmt == 'vtk':
+    elif fmt == "vtk":
         # call vtk model export
-        nanval = kwargs.get('nanval', -1e20)
-        smooth = kwargs.get('smooth', False)
-        point_scalars = kwargs.get('point_scalars', False)
-        vtk_grid_type = kwargs.get('vtk_grid_type', 'auto')
-        true2d = kwargs.get('true2d', False)
-        binary = kwargs.get('binary', False)
-        kpers = kwargs.get('kpers', None)
-        vtk.export_model(ml, f, package_names=package_names, nanval=nanval,
-                         smooth=smooth, point_scalars=point_scalars,
-                         vtk_grid_type=vtk_grid_type, true2d=true2d,
-                         binary=binary, kpers=kpers)
+        nanval = kwargs.get("nanval", -1e20)
+        smooth = kwargs.get("smooth", False)
+        point_scalars = kwargs.get("point_scalars", False)
+        vtk_grid_type = kwargs.get("vtk_grid_type", "auto")
+        true2d = kwargs.get("true2d", False)
+        binary = kwargs.get("binary", False)
+        kpers = kwargs.get("kpers", None)
+        vtk.export_model(
+            ml,
+            f,
+            package_names=package_names,
+            nanval=nanval,
+            smooth=smooth,
+            point_scalars=point_scalars,
+            vtk_grid_type=vtk_grid_type,
+            true2d=true2d,
+            binary=binary,
+            kpers=kpers,
+        )
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
@@ -599,22 +690,25 @@ def package_export(f, pak, fmt=None, **kwargs):
         f = NetCdf(f, pak.parent, **kwargs)
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
-        shapefile_utils.model_attributes_to_shapefile(f, pak.parent,
-                                                      package_names=pak.name,
-                                                      **kwargs)
+        shapefile_utils.model_attributes_to_shapefile(
+            f, pak.parent, package_names=pak.name, **kwargs
+        )
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
         for a in pak.data_list:
             if isinstance(a, DataInterface):
                 if a.array is not None:
-                    if a.data_type == DataType.array2d \
-                            and len(a.array.shape) == 2 \
-                            and a.array.shape[1] > 0:
+                    if (
+                        a.data_type == DataType.array2d
+                        and len(a.array.shape) == 2
+                        and a.array.shape[1] > 0
+                    ):
                         try:
                             f = array2d_export(f, a, **kwargs)
                         except:
                             f.logger.warn(
-                                "error adding {0} as variable".format(a.name))
+                                "error adding {0} as variable".format(a.name)
+                            )
                     elif a.data_type == DataType.array3d:
                         f = array3d_export(f, a, **kwargs)
                     elif a.data_type == DataType.transient2d:
@@ -623,32 +717,48 @@ def package_export(f, pak, fmt=None, **kwargs):
                         f = mflist_export(f, a, **kwargs)
                     elif isinstance(a, list):
                         for v in a:
-                            if isinstance(a, DataInterface) and \
-                                    v.data_type == DataType.array3d:
+                            if (
+                                isinstance(a, DataInterface)
+                                and v.data_type == DataType.array3d
+                            ):
                                 f = array3d_export(f, v, **kwargs)
         return f
 
-    elif fmt == 'vtk':
+    elif fmt == "vtk":
         # call vtk array export to folder
-        nanval = kwargs.get('nanval', -1e20)
-        smooth = kwargs.get('smooth', False)
-        point_scalars = kwargs.get('point_scalars', False)
-        vtk_grid_type = kwargs.get('vtk_grid_type', 'auto')
-        true2d = kwargs.get('true2d', False)
-        binary = kwargs.get('binary', False)
-        kpers = kwargs.get('kpers', None)
-        vtk.export_package(pak.parent, pak.name, f, nanval=nanval,
-                           smooth=smooth, point_scalars=point_scalars,
-                           vtk_grid_type=vtk_grid_type, true2d=true2d,
-                           binary=binary, kpers=kpers)
+        nanval = kwargs.get("nanval", -1e20)
+        smooth = kwargs.get("smooth", False)
+        point_scalars = kwargs.get("point_scalars", False)
+        vtk_grid_type = kwargs.get("vtk_grid_type", "auto")
+        true2d = kwargs.get("true2d", False)
+        binary = kwargs.get("binary", False)
+        kpers = kwargs.get("kpers", None)
+        vtk.export_package(
+            pak.parent,
+            pak.name,
+            f,
+            nanval=nanval,
+            smooth=smooth,
+            point_scalars=point_scalars,
+            vtk_grid_type=vtk_grid_type,
+            true2d=true2d,
+            binary=binary,
+            kpers=kpers,
+        )
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
 
 
-def generic_array_export(f, array, var_name="generic_array",
-                         dimensions=("time", "layer", "y", "x"),
-                         precision_str="f4", units="unitless", **kwargs):
+def generic_array_export(
+    f,
+    array,
+    var_name="generic_array",
+    dimensions=("time", "layer", "y", "x"),
+    precision_str="f4",
+    units="unitless",
+    **kwargs
+):
     """
     Method to export a generic array to NetCdf
 
@@ -671,23 +781,32 @@ def generic_array_export(f, array, var_name="generic_array",
 
     """
     if isinstance(f, str) and f.lower().endswith(".nc"):
-        assert "model" in kwargs.keys(), "creating a new netCDF using " \
-                                         "generic_array_helper requires a " \
-                                         "'model' kwarg"
+        assert "model" in kwargs.keys(), (
+            "creating a new netCDF using "
+            "generic_array_helper requires a "
+            "'model' kwarg"
+        )
         assert isinstance(kwargs["model"], BaseModel)
         f = NetCdf(f, kwargs.pop("model"), **kwargs)
 
-    assert array.ndim == len(dimensions), "generic_array_helper() " + \
-                                          "array.ndim != dimensions"
-    coords_dims = {"time": "time", "layer": "layer", "y": "latitude",
-                   "x": "longitude"}
-    coords = ' '.join([coords_dims[d] for d in dimensions])
-    mn = kwargs.pop("min", -1.0e+9)
-    mx = kwargs.pop("max", 1.0e+9)
+    assert array.ndim == len(dimensions), (
+        "generic_array_helper() " + "array.ndim != dimensions"
+    )
+    coords_dims = {
+        "time": "time",
+        "layer": "layer",
+        "y": "latitude",
+        "x": "longitude",
+    }
+    coords = " ".join([coords_dims[d] for d in dimensions])
+    mn = kwargs.pop("min", -1.0e9)
+    mx = kwargs.pop("max", 1.0e9)
     long_name = kwargs.pop("long_name", var_name)
     if len(kwargs) > 0:
-        f.logger.warn("generic_array_helper(): unrecognized kwargs:" + \
-                      ",".join(kwargs.keys()))
+        f.logger.warn(
+            "generic_array_helper(): unrecognized kwargs:"
+            + ",".join(kwargs.keys())
+        )
     attribs = {"long_name": long_name}
     attribs["coordinates"] = coords
     attribs["units"] = units
@@ -696,8 +815,12 @@ def generic_array_export(f, array, var_name="generic_array",
     if np.isnan(attribs["min"]) or np.isnan(attribs["max"]):
         raise Exception("error processing {0}: all NaNs".format(var_name))
     try:
-        var = f.create_variable(var_name, attribs, precision_str=precision_str,
-                                dimensions=dimensions)
+        var = f.create_variable(
+            var_name,
+            attribs,
+            precision_str=precision_str,
+            dimensions=dimensions,
+        )
     except Exception as e:
         estr = "error creating variable {0}:\n{1}".format(var_name, str(e))
         f.logger.warn(estr)
@@ -705,8 +828,9 @@ def generic_array_export(f, array, var_name="generic_array",
     try:
         var[:] = array
     except Exception as e:
-        estr = "error setting array to variable {0}:\n{1}".format(var_name,
-                                                                  str(e))
+        estr = "error setting array to variable {0}:\n{1}".format(
+            var_name, str(e)
+        )
         f.logger.warn(estr)
         raise Exception(estr)
     return f
@@ -727,8 +851,10 @@ def mflist_export(f, mfl, **kwargs):
 
     """
     if not isinstance(mfl, (DataListInterface, DataInterface)):
-        err = "mflist_helper only helps instances that support " \
-              "DataListInterface"
+        err = (
+            "mflist_helper only helps instances that support "
+            "DataListInterface"
+        )
         raise AssertionError(err)
 
     modelgrid = mfl.model.modelgrid
@@ -745,9 +871,11 @@ def mflist_export(f, mfl, **kwargs):
 
         if modelgrid is None:
             raise Exception("MfList.to_shapefile: ModelGrid is not set")
-        elif modelgrid.grid_type == 'USG-Unstructured':
-            raise Exception('Flopy does not support exporting to shapefile '
-                            'from a MODFLOW-USG unstructured grid.')
+        elif modelgrid.grid_type == "USG-Unstructured":
+            raise Exception(
+                "Flopy does not support exporting to shapefile "
+                "from a MODFLOW-USG unstructured grid."
+            )
 
         if kper is None:
             keys = mfl.data.keys()
@@ -770,19 +898,23 @@ def mflist_export(f, mfl, **kwargs):
             from ..utils.geometry import Polygon
 
             df = mfl.get_dataframe(squeeze=squeeze)
-            if 'kper' in kwargs or df is None:
+            if "kper" in kwargs or df is None:
                 ra = mfl[kper]
                 verts = np.array(modelgrid.get_cell_vertices(ra.i, ra.j))
             elif df is not None:
-                verts = np.array([modelgrid.get_cell_vertices(i,
-                                                              df.j.values[ix])
-                                  for ix, i in enumerate(df.i.values)])
+                verts = np.array(
+                    [
+                        modelgrid.get_cell_vertices(i, df.j.values[ix])
+                        for ix, i in enumerate(df.i.values)
+                    ]
+                )
                 ra = df.to_records(index=False)
-            epsg = kwargs.get('epsg', None)
-            prj = kwargs.get('prj', None)
+            epsg = kwargs.get("epsg", None)
+            prj = kwargs.get("prj", None)
             polys = np.array([Polygon(v) for v in verts])
-            recarray2shp(ra, geoms=polys, shpname=f,
-                         mg=modelgrid, epsg=epsg, prj=prj)
+            recarray2shp(
+                ra, geoms=polys, shpname=f, mg=modelgrid, epsg=epsg, prj=prj
+            )
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
         base_name = mfl.package.name[0].lower()
@@ -792,7 +924,7 @@ def mflist_export(f, mfl, **kwargs):
 
         # for name, array in m4d.items():
         for name, array in mfl.masked_4D_arrays_itr():
-            var_name = base_name + '_' + name
+            var_name = base_name + "_" + name
             if isinstance(f, dict):
                 f[var_name] = array
                 continue
@@ -800,8 +932,9 @@ def mflist_export(f, mfl, **kwargs):
 
             units = None
             if var_name in NC_UNITS_FORMAT:
-                units = NC_UNITS_FORMAT[var_name].format(f.grid_units,
-                                                         f.time_units)
+                units = NC_UNITS_FORMAT[var_name].format(
+                    f.grid_units, f.time_units
+                )
             precision_str = NC_PRECISION_TYPE[mfl.dtype[name].type]
             if var_name in NC_LONG_NAMES:
                 attribs = {"long_name": NC_LONG_NAMES[var_name]}
@@ -812,18 +945,23 @@ def mflist_export(f, mfl, **kwargs):
             attribs["max"] = np.nanmax(array)
             if np.isnan(attribs["min"]) or np.isnan(attribs["max"]):
                 raise Exception(
-                    "error processing {0}: all NaNs".format(var_name))
+                    "error processing {0}: all NaNs".format(var_name)
+                )
 
             if units is not None:
                 attribs["units"] = units
             try:
                 dim_tuple = ("time",) + f.dimension_names
-                var = f.create_variable(var_name, attribs,
-                                        precision_str=precision_str,
-                                        dimensions=dim_tuple)
+                var = f.create_variable(
+                    var_name,
+                    attribs,
+                    precision_str=precision_str,
+                    dimensions=dim_tuple,
+                )
             except Exception as e:
-                estr = "error creating variable {0}:\n{1}".format(var_name,
-                                                                  str(e))
+                estr = "error creating variable {0}:\n{1}".format(
+                    var_name, str(e)
+                )
                 f.logger.warn(estr)
                 raise Exception(estr)
 
@@ -832,7 +970,8 @@ def mflist_export(f, mfl, **kwargs):
                 var[:] = array
             except Exception as e:
                 estr = "error setting array to variable {0}:\n{1}".format(
-                    var_name, str(e))
+                    var_name, str(e)
+                )
                 f.logger.warn(estr)
                 raise Exception(estr)
             f.log("processing {0} attribute".format(name))
@@ -863,15 +1002,17 @@ def transient2d_export(f, t2d, fmt=None, **kwargs):
     """
 
     if not isinstance(t2d, DataInterface):
-        err = "transient2d_helper only helps instances that support " \
-              "DataInterface"
+        err = (
+            "transient2d_helper only helps instances that support "
+            "DataInterface"
+        )
         raise AssertionError(err)
 
-    min_valid = kwargs.get("min_valid", -1.0e+9)
-    max_valid = kwargs.get("max_valid", 1.0e+9)
+    min_valid = kwargs.get("min_valid", -1.0e9)
+    max_valid = kwargs.get("max_valid", 1.0e9)
 
     modelgrid = t2d.model.modelgrid
-    if 'modelgrid' in kwargs:
+    if "modelgrid" in kwargs:
         modelgrid = kwargs.pop("modelgrid")
 
     if isinstance(f, str) and f.lower().endswith(".nc"):
@@ -881,8 +1022,9 @@ def transient2d_export(f, t2d, fmt=None, **kwargs):
         array_dict = {}
         for kper in range(t2d.model.modeltime.nper):
             u2d = t2d[kper]
-            name = '{}_{}'.format(shapefile_utils.shape_attr_name(u2d.name),
-                                  kper + 1)
+            name = "{}_{}".format(
+                shapefile_utils.shape_attr_name(u2d.name), kper + 1
+            )
             array_dict[name] = u2d.array
         shapefile_utils.write_grid_shapefile(f, modelgrid, array_dict)
 
@@ -915,7 +1057,7 @@ def transient2d_export(f, t2d, fmt=None, **kwargs):
                 #    array[:, 0, t2d.model.btn.icbund.array[0] == 0] = \
                 #        f.fillvalue
 
-        var_name = t2d.name.replace('_', '')
+        var_name = t2d.name.replace("_", "")
         if isinstance(f, dict):
             array[array == netcdf.FILLVALUE] = np.NaN
             f[var_name] = array
@@ -925,8 +1067,9 @@ def transient2d_export(f, t2d, fmt=None, **kwargs):
         units = "unitless"
 
         if var_name in NC_UNITS_FORMAT:
-            units = NC_UNITS_FORMAT[var_name].format(f.grid_units,
-                                                     f.time_units)
+            units = NC_UNITS_FORMAT[var_name].format(
+                f.grid_units, f.time_units
+            )
         try:
             precision_str = NC_PRECISION_TYPE[t2d.dtype]
         except:
@@ -943,9 +1086,12 @@ def transient2d_export(f, t2d, fmt=None, **kwargs):
             raise Exception("error processing {0}: all NaNs".format(var_name))
         try:
             dim_tuple = ("time",) + f.dimension_names
-            var = f.create_variable(var_name, attribs,
-                                    precision_str=precision_str,
-                                    dimensions=dim_tuple)
+            var = f.create_variable(
+                var_name,
+                attribs,
+                precision_str=precision_str,
+                dimensions=dim_tuple,
+            )
         except Exception as e:
             estr = "error creating variable {0}:\n{1}".format(var_name, str(e))
             f.logger.warn(estr)
@@ -953,25 +1099,36 @@ def transient2d_export(f, t2d, fmt=None, **kwargs):
         try:
             var[:, 0] = array
         except Exception as e:
-            estr = "error setting array to variable {0}:\n{1}".format(var_name,
-                                                                      str(e))
+            estr = "error setting array to variable {0}:\n{1}".format(
+                var_name, str(e)
+            )
             f.logger.warn(estr)
             raise Exception(estr)
         return f
 
-    elif fmt == 'vtk':
-        name = kwargs.get('name', t2d.name)
-        nanval = kwargs.get('nanval', -1e20)
-        smooth = kwargs.get('smooth', False)
-        point_scalars = kwargs.get('point_scalars', False)
-        vtk_grid_type = kwargs.get('vtk_grid_type', 'auto')
-        true2d = kwargs.get('true2d', False)
-        binary = kwargs.get('binary', False)
-        kpers = kwargs.get('kpers', None)
-        vtk.export_transient(t2d.model, t2d.array, f, name, nanval=nanval,
-                             smooth=smooth, point_scalars=point_scalars,
-                             array2d=True, vtk_grid_type=vtk_grid_type,
-                             true2d=true2d, binary=binary, kpers=kpers)
+    elif fmt == "vtk":
+        name = kwargs.get("name", t2d.name)
+        nanval = kwargs.get("nanval", -1e20)
+        smooth = kwargs.get("smooth", False)
+        point_scalars = kwargs.get("point_scalars", False)
+        vtk_grid_type = kwargs.get("vtk_grid_type", "auto")
+        true2d = kwargs.get("true2d", False)
+        binary = kwargs.get("binary", False)
+        kpers = kwargs.get("kpers", None)
+        vtk.export_transient(
+            t2d.model,
+            t2d.array,
+            f,
+            name,
+            nanval=nanval,
+            smooth=smooth,
+            point_scalars=point_scalars,
+            array2d=True,
+            vtk_grid_type=vtk_grid_type,
+            true2d=true2d,
+            binary=binary,
+            kpers=kpers,
+        )
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
 
@@ -996,12 +1153,12 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
 
     """
 
-    assert isinstance(u3d, DataInterface), "array3d_export only helps " \
-                                           "instances that support " \
-                                           "DataInterface"
+    assert isinstance(u3d, DataInterface), (
+        "array3d_export only helps " "instances that support " "DataInterface"
+    )
 
-    min_valid = kwargs.get("min_valid", -1.0e+9)
-    max_valid = kwargs.get("max_valid", 1.0e+9)
+    min_valid = kwargs.get("min_valid", -1.0e9)
+    max_valid = kwargs.get("max_valid", 1.0e9)
 
     modelgrid = u3d.model.modelgrid
     if "modelgrid" in kwargs:
@@ -1020,8 +1177,9 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
             else:
                 dname = u2d.name
                 array = u2d.array
-            name = '{}_{}'.format(
-                shapefile_utils.shape_attr_name(dname), ilay + 1)
+            name = "{}_{}".format(
+                shapefile_utils.shape_attr_name(dname), ilay + 1
+            )
             array_dict[name] = array
         shapefile_utils.write_grid_shapefile(f, modelgrid, array_dict)
 
@@ -1029,7 +1187,7 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
         var_name = u3d.name
         if isinstance(var_name, list) or isinstance(var_name, tuple):
             var_name = var_name[0]
-        var_name = var_name.replace(' ', '_').lower()
+        var_name = var_name.replace(" ", "_").lower()
         # f.log("getting 3D array for {0}".format(var_name))
         array = u3d.array
 
@@ -1051,7 +1209,7 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
             # f.log("broadcasting 3D array for {0}".format(var_name))
             full_array = np.empty(mask.shape)
             full_array[:] = np.NaN
-            full_array[:array.shape[0]] = array
+            full_array[: array.shape[0]] = array
             array = full_array
             # f.log("broadcasting 3D array for {0}".format(var_name))
 
@@ -1086,8 +1244,9 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
         array[np.isnan(array)] = f.fillvalue
         units = "unitless"
         if var_name in NC_UNITS_FORMAT:
-            units = NC_UNITS_FORMAT[var_name].format(f.grid_units,
-                                                     f.time_units)
+            units = NC_UNITS_FORMAT[var_name].format(
+                f.grid_units, f.time_units
+            )
         precision_str = NC_PRECISION_TYPE[u3d.dtype]
         if var_name in NC_LONG_NAMES:
             attribs = {"long_name": NC_LONG_NAMES[var_name]}
@@ -1100,9 +1259,12 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
         if np.isnan(attribs["min"]) or np.isnan(attribs["max"]):
             raise Exception("error processing {0}: all NaNs".format(var_name))
         try:
-            var = f.create_variable(var_name, attribs,
-                                    precision_str=precision_str,
-                                    dimensions=f.dimension_names)
+            var = f.create_variable(
+                var_name,
+                attribs,
+                precision_str=precision_str,
+                dimensions=f.dimension_names,
+            )
         except Exception as e:
             estr = "error creating variable {0}:\n{1}".format(var_name, str(e))
             f.logger.warn(estr)
@@ -1110,28 +1272,37 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
         try:
             var[:] = array
         except Exception as e:
-            estr = "error setting array to variable {0}:\n{1}".format(var_name,
-                                                                      str(e))
+            estr = "error setting array to variable {0}:\n{1}".format(
+                var_name, str(e)
+            )
             f.logger.warn(estr)
             raise Exception(estr)
         return f
 
-    elif fmt == 'vtk':
+    elif fmt == "vtk":
         # call vtk array export to folder
-        name = kwargs.get('name', u3d.name)
-        nanval = kwargs.get('nanval', -1e20)
-        smooth = kwargs.get('smooth', False)
-        point_scalars = kwargs.get('point_scalars', False)
-        vtk_grid_type = kwargs.get('vtk_grid_type', 'auto')
-        true2d = kwargs.get('true2d', False)
-        binary = kwargs.get('binary', False)
+        name = kwargs.get("name", u3d.name)
+        nanval = kwargs.get("nanval", -1e20)
+        smooth = kwargs.get("smooth", False)
+        point_scalars = kwargs.get("point_scalars", False)
+        vtk_grid_type = kwargs.get("vtk_grid_type", "auto")
+        true2d = kwargs.get("true2d", False)
+        binary = kwargs.get("binary", False)
         if isinstance(name, list) or isinstance(name, tuple):
             name = name[0]
 
-        vtk.export_array(u3d.model, u3d.array, f, name, nanval=nanval,
-                         smooth=smooth, point_scalars=point_scalars,
-                         vtk_grid_type=vtk_grid_type, true2d=true2d,
-                         binary=binary)
+        vtk.export_array(
+            u3d.model,
+            u3d.array,
+            f,
+            name,
+            nanval=nanval,
+            smooth=smooth,
+            point_scalars=point_scalars,
+            vtk_grid_type=vtk_grid_type,
+            true2d=true2d,
+            binary=binary,
+        )
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
@@ -1156,13 +1327,13 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
         if fmt is set to 'vtk', parameters of vtk.export_array
 
     """
-    assert isinstance(u2d, DataInterface), "util2d_helper only helps " \
-                                           "instances that support " \
-                                           "DataInterface"
+    assert isinstance(u2d, DataInterface), (
+        "util2d_helper only helps " "instances that support " "DataInterface"
+    )
     assert len(u2d.array.shape) == 2, "util2d_helper only supports 2D arrays"
 
-    min_valid = kwargs.get("min_valid", -1.0e+9)
-    max_valid = kwargs.get("max_valid", 1.0e+9)
+    min_valid = kwargs.get("min_valid", -1.0e9)
+    max_valid = kwargs.get("max_valid", 1.0e9)
 
     modelgrid = u2d.model.modelgrid
     if "modelgrid" in kwargs:
@@ -1173,8 +1344,7 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         name = shapefile_utils.shape_attr_name(u2d.name, keep_layer=True)
-        shapefile_utils.write_grid_shapefile(f, modelgrid,
-                                             {name: u2d.array})
+        shapefile_utils.write_grid_shapefile(f, modelgrid, {name: u2d.array})
         return
 
     elif isinstance(f, str) and f.lower().endswith(".asc"):
@@ -1190,9 +1360,11 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
 
         with np.errstate(invalid="ignore"):
             if array.dtype not in [int, np.int, np.int32, np.int64]:
-                if modelgrid.idomain is not None and \
-                                "ibound" not in u2d.name.lower() and \
-                                "idomain" not in u2d.name.lower():
+                if (
+                    modelgrid.idomain is not None
+                    and "ibound" not in u2d.name.lower()
+                    and "idomain" not in u2d.name.lower()
+                ):
                     array[modelgrid.idomain[0, :, :] == 0] = np.NaN
                 array[array <= min_valid] = np.NaN
                 array[array >= max_valid] = np.NaN
@@ -1201,12 +1373,13 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
                 mx, mn = np.nanmax(array), np.nanmin(array)
                 array[array <= min_valid] = netcdf.FILLVALUE
                 array[array >= max_valid] = netcdf.FILLVALUE
-                if modelgrid.idomain is not None and \
-                        "ibound" not in u2d.name.lower() and \
-                        "idomain" not in u2d.name.lower() and \
-                        "icbund" not in u2d.name.lower():
-                    array[modelgrid.idomain[0, :, :] == 0] = \
-                        netcdf.FILLVALUE
+                if (
+                    modelgrid.idomain is not None
+                    and "ibound" not in u2d.name.lower()
+                    and "idomain" not in u2d.name.lower()
+                    and "icbund" not in u2d.name.lower()
+                ):
+                    array[modelgrid.idomain[0, :, :] == 0] = netcdf.FILLVALUE
         var_name = u2d.name
         if isinstance(f, dict):
             f[var_name] = array
@@ -1216,8 +1389,9 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
         units = "unitless"
 
         if var_name in NC_UNITS_FORMAT:
-            units = NC_UNITS_FORMAT[var_name].format(f.grid_units,
-                                                     f.time_units)
+            units = NC_UNITS_FORMAT[var_name].format(
+                f.grid_units, f.time_units
+            )
         precision_str = NC_PRECISION_TYPE[u2d.dtype]
         if var_name in NC_LONG_NAMES:
             attribs = {"long_name": NC_LONG_NAMES[var_name]}
@@ -1230,9 +1404,12 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
         if np.isnan(attribs["min"]) or np.isnan(attribs["max"]):
             raise Exception("error processing {0}: all NaNs".format(var_name))
         try:
-            var = f.create_variable(var_name, attribs,
-                                    precision_str=precision_str,
-                                    dimensions=f.dimension_names[1:])
+            var = f.create_variable(
+                var_name,
+                attribs,
+                precision_str=precision_str,
+                dimensions=f.dimension_names[1:],
+            )
         except Exception as e:
             estr = "error creating variable {0}:\n{1}".format(var_name, str(e))
             f.logger.warn(estr)
@@ -1240,33 +1417,44 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
         try:
             var[:] = array
         except Exception as e:
-            estr = "error setting array to variable {0}:\n{1}".format(var_name,
-                                                                      str(e))
+            estr = "error setting array to variable {0}:\n{1}".format(
+                var_name, str(e)
+            )
             f.logger.warn(estr)
             raise Exception(estr)
         return f
 
-    elif fmt == 'vtk':
+    elif fmt == "vtk":
 
         # call vtk array export to folder
-        name = kwargs.get('name', u2d.name)
-        nanval = kwargs.get('nanval', -1e20)
-        smooth = kwargs.get('smooth', False)
-        point_scalars = kwargs.get('point_scalars', False)
-        vtk_grid_type = kwargs.get('vtk_grid_type', 'auto')
-        true2d = kwargs.get('true2d', False)
-        binary = kwargs.get('binary', False)
-        vtk.export_array(u2d.model, u2d.array, f, name, nanval=nanval,
-                         smooth=smooth, point_scalars=point_scalars,
-                         array2d=True, vtk_grid_type=vtk_grid_type,
-                         true2d=true2d, binary=binary)
+        name = kwargs.get("name", u2d.name)
+        nanval = kwargs.get("nanval", -1e20)
+        smooth = kwargs.get("smooth", False)
+        point_scalars = kwargs.get("point_scalars", False)
+        vtk_grid_type = kwargs.get("vtk_grid_type", "auto")
+        true2d = kwargs.get("true2d", False)
+        binary = kwargs.get("binary", False)
+        vtk.export_array(
+            u2d.model,
+            u2d.array,
+            f,
+            name,
+            nanval=nanval,
+            smooth=smooth,
+            point_scalars=point_scalars,
+            array2d=True,
+            vtk_grid_type=vtk_grid_type,
+            true2d=true2d,
+            binary=binary,
+        )
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
 
 
-def export_array(modelgrid, filename, a, nodata=-9999,
-                 fieldname='value', **kwargs):
+def export_array(
+    modelgrid, filename, a, nodata=-9999, fieldname="value", **kwargs
+):
     """
     Write a numpy array to Arc Ascii grid or shapefile with the model
     reference.
@@ -1308,14 +1496,17 @@ def export_array(modelgrid, filename, a, nodata=-9999,
     """
 
     if filename.lower().endswith(".asc"):
-        if len(np.unique(modelgrid.delr)) != \
-                len(np.unique(modelgrid.delc)) != 1 \
-                or modelgrid.delr[0] != modelgrid.delc[0]:
-            raise ValueError('Arc ascii arrays require a uniform grid.')
+        if (
+            len(np.unique(modelgrid.delr))
+            != len(np.unique(modelgrid.delc))
+            != 1
+            or modelgrid.delr[0] != modelgrid.delc[0]
+        ):
+            raise ValueError("Arc ascii arrays require a uniform grid.")
 
         xoffset, yoffset = modelgrid.xoffset, modelgrid.yoffset
         cellsize = modelgrid.delr[0]
-        fmt = kwargs.get('fmt', '%.18e')
+        fmt = kwargs.get("fmt", "%.18e")
         a = a.copy()
         a[np.isnan(a)] = nodata
         if modelgrid.angrot != 0:
@@ -1323,7 +1514,7 @@ def export_array(modelgrid, filename, a, nodata=-9999,
                 from scipy.ndimage import rotate
             except ImportError:
                 rotate = None
-                print('scipy package required to export rotated grid.')
+                print("scipy package required to export rotated grid.")
 
             if rotate is not None:
                 a = rotate(a, modelgrid.angrot, cval=nodata)
@@ -1334,88 +1525,107 @@ def export_array(modelgrid, filename, a, nodata=-9999,
                 cellsize = np.max((dx, dy))
                 xoffset, yoffset = xmin, ymin
 
-        filename = '.'.join(
-            filename.split('.')[:-1]) + '.asc'  # enforce .asc ending
+        filename = (
+            ".".join(filename.split(".")[:-1]) + ".asc"
+        )  # enforce .asc ending
         nrow, ncol = a.shape
         a[np.isnan(a)] = nodata
-        txt = 'ncols  {:d}\n'.format(ncol)
-        txt += 'nrows  {:d}\n'.format(nrow)
-        txt += 'xllcorner  {:f}\n'.format(xoffset)
-        txt += 'yllcorner  {:f}\n'.format(yoffset)
-        txt += 'cellsize  {}\n'.format(cellsize)
+        txt = "ncols  {:d}\n".format(ncol)
+        txt += "nrows  {:d}\n".format(nrow)
+        txt += "xllcorner  {:f}\n".format(xoffset)
+        txt += "yllcorner  {:f}\n".format(yoffset)
+        txt += "cellsize  {}\n".format(cellsize)
         # ensure that nodata fmt consistent w values
-        txt += 'NODATA_value  {}\n'.format(fmt) % (nodata)
-        with open(filename, 'w') as output:
+        txt += "NODATA_value  {}\n".format(fmt) % (nodata)
+        with open(filename, "w") as output:
             output.write(txt)
-        with open(filename, 'ab') as output:
+        with open(filename, "ab") as output:
             np.savetxt(output, a, **kwargs)
-        print('wrote {}'.format(filename))
+        print("wrote {}".format(filename))
 
     elif filename.lower().endswith(".tif"):
-        if len(np.unique(modelgrid.delr)) != \
-                len(np.unique(modelgrid.delc)) != 1 \
-                or modelgrid.delr[0] != modelgrid.delc[0]:
-            raise ValueError('GeoTIFF export require a uniform grid.')
+        if (
+            len(np.unique(modelgrid.delr))
+            != len(np.unique(modelgrid.delc))
+            != 1
+            or modelgrid.delr[0] != modelgrid.delc[0]
+        ):
+            raise ValueError("GeoTIFF export require a uniform grid.")
         try:
             import rasterio
             from rasterio import Affine
         except ImportError:
-            print('GeoTIFF export requires the rasterio package.')
+            print("GeoTIFF export requires the rasterio package.")
             return
         dxdy = modelgrid.delc[0]
         # because this is only implemented for a structured grid,
         # we can get the xul and yul coordinate from modelgrid.xvertices(0, 0)
         verts = modelgrid.get_cell_vertices(0, 0)
         xul, yul = verts[0]
-        trans = Affine.translation(xul, yul) * \
-            Affine.rotation(modelgrid.angrot) * \
-            Affine.scale(dxdy, -dxdy)
+        trans = (
+            Affine.translation(xul, yul)
+            * Affine.rotation(modelgrid.angrot)
+            * Affine.scale(dxdy, -dxdy)
+        )
 
         # third dimension is the number of bands
         a = a.copy()
         if len(a.shape) == 2:
             a = np.reshape(a, (1, a.shape[0], a.shape[1]))
-        if a.dtype.name == 'int64':
-            a = a.astype('int32')
+        if a.dtype.name == "int64":
+            a = a.astype("int32")
             dtype = rasterio.int32
-        elif a.dtype.name == 'int32':
+        elif a.dtype.name == "int32":
             dtype = rasterio.int32
-        elif a.dtype.name == 'float64':
+        elif a.dtype.name == "float64":
             dtype = rasterio.float64
-        elif a.dtype.name == 'float32':
+        elif a.dtype.name == "float32":
             dtype = rasterio.float32
         else:
             msg = 'ERROR: invalid dtype "{}"'.format(a.dtype.name)
             raise TypeError(msg)
 
-        meta = {'count': a.shape[0],
-                'width': a.shape[2],
-                'height': a.shape[1],
-                'nodata': nodata,
-                'dtype': dtype,
-                'driver': 'GTiff',
-                'crs': modelgrid.proj4,
-                'transform': trans
-                }
+        meta = {
+            "count": a.shape[0],
+            "width": a.shape[2],
+            "height": a.shape[1],
+            "nodata": nodata,
+            "dtype": dtype,
+            "driver": "GTiff",
+            "crs": modelgrid.proj4,
+            "transform": trans,
+        }
         meta.update(kwargs)
-        with rasterio.open(filename, 'w', **meta) as dst:
+        with rasterio.open(filename, "w", **meta) as dst:
             dst.write(a)
-        print('wrote {}'.format(filename))
+        print("wrote {}".format(filename))
 
     elif filename.lower().endswith(".shp"):
         from ..export.shapefile_utils import write_grid_shapefile
-        epsg = kwargs.get('epsg', None)
-        prj = kwargs.get('prj', None)
+
+        epsg = kwargs.get("epsg", None)
+        prj = kwargs.get("prj", None)
         if epsg is None and prj is None:
             epsg = modelgrid.epsg
-        write_grid_shapefile(filename, modelgrid, array_dict={fieldname: a},
-                             nan_val=nodata,
-                             epsg=epsg, prj=prj)
+        write_grid_shapefile(
+            filename,
+            modelgrid,
+            array_dict={fieldname: a},
+            nan_val=nodata,
+            epsg=epsg,
+            prj=prj,
+        )
 
 
-def export_contours(modelgrid, filename, contours,
-                    fieldname='level', epsg=None, prj=None,
-                    **kwargs):
+def export_contours(
+    modelgrid,
+    filename,
+    contours,
+    fieldname="level",
+    epsg=None,
+    prj=None,
+    **kwargs
+):
     """
     Convert matplotlib contour plot object to shapefile.
 
@@ -1461,15 +1671,15 @@ def export_contours(modelgrid, filename, contours,
             level += list(np.ones(len(paths)) * levels[i])
 
     # convert the dictionary to a recarray
-    ra = np.array(level,
-                  dtype=[(fieldname, float)]).view(np.recarray)
+    ra = np.array(level, dtype=[(fieldname, float)]).view(np.recarray)
 
     recarray2shp(ra, geoms, filename, epsg=epsg, prj=prj, **kwargs)
     return
 
 
-def export_contourf(filename, contours, fieldname='level', epsg=None,
-                    prj=None, **kwargs):
+def export_contourf(
+    filename, contours, fieldname="level", epsg=None, prj=None, **kwargs
+):
     """
     Write matplotlib filled contours to shapefile.  This utility requires
     that shapely is installed.
@@ -1508,8 +1718,8 @@ def export_contourf(filename, contours, fieldname='level', epsg=None,
 
     try:
         from shapely import geometry
-    except (ImportError, ModuleNotFoundError):
-        raise ImportError('export_contourf requires python shapely package')
+    except ImportError:
+        raise ImportError("export_contourf requires python shapely package")
 
     from ..utils.geometry import Polygon
     from .shapefile_utils import recarray2shp
@@ -1531,8 +1741,9 @@ def export_contourf(filename, contours, fieldname='level', epsg=None,
                 for ncp, cp in enumerate(contour_path.to_polygons()):
                     x = cp[:, 0]
                     y = cp[:, 1]
-                    new_shape = geometry.Polygon([(i[0], i[1])
-                                                  for i in zip(x, y)])
+                    new_shape = geometry.Polygon(
+                        [(i[0], i[1]) for i in zip(x, y)]
+                    )
                     if ncp == 0:
                         poly = new_shape
                     else:
@@ -1550,7 +1761,7 @@ def export_contourf(filename, contours, fieldname='level', epsg=None,
         pg = Polygon([(x, y) for x, y in zip(xa, ya)], interiors=interiors)
         geoms += [pg]
 
-    print('Writing {} polygons'.format(len(level)))
+    print("Writing {} polygons".format(len(level)))
 
     # Create recarray
     ra = np.array(level, dtype=[(fieldname, float)]).view(np.recarray)
@@ -1559,14 +1770,18 @@ def export_contourf(filename, contours, fieldname='level', epsg=None,
     return
 
 
-def export_array_contours(modelgrid, filename, a,
-                          fieldname='level',
-                          interval=None,
-                          levels=None,
-                          maxlevels=1000,
-                          epsg=None,
-                          prj=None,
-                          **kwargs):
+def export_array_contours(
+    modelgrid,
+    filename,
+    a,
+    fieldname="level",
+    interval=None,
+    levels=None,
+    maxlevels=1000,
+    epsg=None,
+    prj=None,
+    **kwargs
+):
     """
     Contour an array using matplotlib; write shapefile of contours.
 
@@ -1593,7 +1808,11 @@ def export_array_contours(modelgrid, filename, a,
     **kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
     """
-    import matplotlib.pyplot as plt
+    try:
+        import matplotlib.pyplot as plt
+    except:
+        err_msg = "matplotlib must be installed to use export_array_contours()"
+        raise ImportError(err_msg)
 
     if epsg is None:
         epsg = modelgrid.epsg
@@ -1604,10 +1823,9 @@ def export_array_contours(modelgrid, filename, a,
         imin = np.nanmin(a)
         imax = np.nanmax(a)
         nlevels = np.round(np.abs(imax - imin) / interval, 2)
-        msg = '{:.0f} levels at interval of {} > maxlevels={}'.format(
-            nlevels,
-            interval,
-            maxlevels)
+        msg = "{:.0f} levels at interval of {} > maxlevels={}".format(
+            nlevels, interval, maxlevels
+        )
         assert nlevels < maxlevels, msg
         levels = np.arange(imin, imax, interval)
     ax = plt.subplots()[-1]
@@ -1637,7 +1855,7 @@ def contour_array(modelgrid, ax, a, **kwargs):
     """
     from ..plot import PlotMapView
 
-    kwargs['ax'] = ax
+    kwargs["ax"] = ax
     pmv = PlotMapView(modelgrid=modelgrid)
     contour_set = pmv.contour_array(a=a, **kwargs)
 

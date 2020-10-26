@@ -39,11 +39,20 @@ class PlotCrossSection(object):
 
     """
 
-    def __init__(self, model=None, modelgrid=None, ax=None,
-                 line=None, extent=None, geographic_coords=False):
+    def __init__(
+        self,
+        model=None,
+        modelgrid=None,
+        ax=None,
+        line=None,
+        extent=None,
+        geographic_coords=False,
+    ):
         if plt is None:
-            s = 'Could not import matplotlib.  Must install matplotlib ' + \
-                ' in order to use ModelMap method'
+            s = (
+                "Could not import matplotlib.  Must install matplotlib "
+                + " in order to use ModelMap method"
+            )
             raise ImportError(s)
 
         if modelgrid is None and model is not None:
@@ -53,21 +62,27 @@ class PlotCrossSection(object):
         tmp = modelgrid.grid_type
 
         if tmp == "structured":
-            self.__cls = _StructuredCrossSection(ax=ax, model=model,
-                                                 modelgrid=modelgrid,
-                                                 line=line, extent=extent,
-                                                 geographic_coords=
-                                                 geographic_coords)
+            self.__cls = _StructuredCrossSection(
+                ax=ax,
+                model=model,
+                modelgrid=modelgrid,
+                line=line,
+                extent=extent,
+                geographic_coords=geographic_coords,
+            )
 
         elif tmp == "unstructured":
             raise NotImplementedError("Unstructured xc not yet implemented")
 
         elif tmp == "vertex":
-            self.__cls = _VertexCrossSection(ax=ax, model=model,
-                                             modelgrid=modelgrid,
-                                             line=line, extent=extent,
-                                             geographic_coords=
-                                             geographic_coords)
+            self.__cls = _VertexCrossSection(
+                ax=ax,
+                model=model,
+                modelgrid=modelgrid,
+                line=line,
+                extent=extent,
+                geographic_coords=geographic_coords,
+            )
 
         else:
             raise ValueError("Unknown modelgrid type {}".format(tmp))
@@ -113,8 +128,9 @@ class PlotCrossSection(object):
         patches : matplotlib.collections.PatchCollection
 
         """
-        return self.__cls.plot_array(a=a, masked_values=masked_values,
-                                     head=head, **kwargs)
+        return self.__cls.plot_array(
+            a=a, masked_values=masked_values, head=head, **kwargs
+        )
 
     def plot_surface(self, a, masked_values=None, **kwargs):
         """
@@ -134,11 +150,18 @@ class PlotCrossSection(object):
         plot : list containing matplotlib.plot objects
 
         """
-        return self.__cls.plot_surface(a=a, masked_values=masked_values,
-                                       **kwargs)
+        return self.__cls.plot_surface(
+            a=a, masked_values=masked_values, **kwargs
+        )
 
-    def plot_fill_between(self, a, colors=('blue', 'red'),
-                          masked_values=None, head=None, **kwargs):
+    def plot_fill_between(
+        self,
+        a,
+        colors=("blue", "red"),
+        masked_values=None,
+        head=None,
+        **kwargs
+    ):
         """
         Plot a three-dimensional array as lines.
 
@@ -162,9 +185,13 @@ class PlotCrossSection(object):
         plot : list containing matplotlib.fillbetween objects
 
         """
-        return self.__cls.plot_fill_between(a=a, colors=colors,
-                                            masked_values=masked_values,
-                                            head=head, **kwargs)
+        return self.__cls.plot_fill_between(
+            a=a,
+            colors=colors,
+            masked_values=masked_values,
+            head=head,
+            **kwargs
+        )
 
     def contour_array(self, a, masked_values=None, head=None, **kwargs):
         """
@@ -188,10 +215,11 @@ class PlotCrossSection(object):
         contour_set : matplotlib.pyplot.contour
 
         """
-        return self.__cls.contour_array(a=a, masked_values=masked_values,
-                                        head=head, **kwargs)
+        return self.__cls.contour_array(
+            a=a, masked_values=masked_values, head=head, **kwargs
+        )
 
-    def plot_inactive(self, ibound=None, color_noflow='black', **kwargs):
+    def plot_inactive(self, ibound=None, color_noflow="black", **kwargs):
         """
         Make a plot of inactive cells.  If not specified, then pull ibound
         from the self.ml
@@ -216,18 +244,25 @@ class PlotCrossSection(object):
                 ibound = self.mg.idomain
 
         plotarray = np.zeros(ibound.shape, dtype=np.int)
-        idx1 = (ibound == 0)
+        idx1 = ibound == 0
         plotarray[idx1] = 1
         plotarray = np.ma.masked_equal(plotarray, 0)
-        cmap = matplotlib.colors.ListedColormap(['0', color_noflow])
+        cmap = matplotlib.colors.ListedColormap(["0", color_noflow])
         bounds = [0, 1, 2]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
         patches = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
 
         return patches
 
-    def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
-                    color_vpt="red", head=None, **kwargs):
+    def plot_ibound(
+        self,
+        ibound=None,
+        color_noflow="black",
+        color_ch="blue",
+        color_vpt="red",
+        head=None,
+        **kwargs
+    ):
         """
         Make a plot of ibound.  If not specified, then pull ibound from the
         self.model
@@ -263,18 +298,25 @@ class PlotCrossSection(object):
             ibound = self.mg.idomain
 
         plotarray = np.zeros(ibound.shape, dtype=np.int)
-        idx1 = (ibound == 0)
-        idx2 = (ibound < 0)
+        idx1 = ibound == 0
+        idx2 = ibound < 0
         plotarray[idx1] = 1
         plotarray[idx2] = 2
         plotarray = np.ma.masked_equal(plotarray, 0)
-        cmap = matplotlib.colors.ListedColormap(['none', color_noflow,
-                                                 color_ch])
+        cmap = matplotlib.colors.ListedColormap(
+            ["none", color_noflow, color_ch]
+        )
         bounds = [0, 1, 2, 3]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
         # mask active cells
-        patches = self.plot_array(plotarray, masked_values=[0], head=head,
-                                  cmap=cmap, norm=norm, **kwargs)
+        patches = self.plot_array(
+            plotarray,
+            masked_values=[0],
+            head=head,
+            cmap=cmap,
+            norm=norm,
+            **kwargs
+        )
         return patches
 
     def plot_grid(self, **kwargs):
@@ -291,8 +333,8 @@ class PlotCrossSection(object):
             lc : matplotlib.collections.LineCollection
 
         """
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
+        if "ax" in kwargs:
+            ax = kwargs.pop("ax")
         else:
             ax = self.ax
 
@@ -304,8 +346,9 @@ class PlotCrossSection(object):
 
         return col
 
-    def plot_bc(self, name=None, package=None, kper=0, color=None,
-                head=None, **kwargs):
+    def plot_bc(
+        self, name=None, package=None, kper=0, color=None, head=None, **kwargs
+    ):
         """
         Plot boundary conditions locations for a specific boundary
         type from a flopy model
@@ -334,19 +377,19 @@ class PlotCrossSection(object):
         patches : matplotlib.collections.PatchCollection
 
         """
-        if 'ftype' in kwargs and name is None:
-            name = kwargs.pop('ftype')
+        if "ftype" in kwargs and name is None:
+            name = kwargs.pop("ftype")
 
         # Find package to plot
         if package is not None:
             p = package
         elif self.model is not None:
             if name is None:
-                raise Exception('ftype not specified')
+                raise Exception("ftype not specified")
             name = name.upper()
             p = self.model.get_package(name)
         else:
-            raise Exception('Cannot find package to plot')
+            raise Exception("Cannot find package to plot")
 
         # trap for mf6 'cellid' vs mf2005 'k', 'i', 'j' convention
         if isinstance(p, list) or p.parent.version == "mf6":
@@ -355,20 +398,21 @@ class PlotCrossSection(object):
 
             idx = np.array([])
             for pp in p:
-                if pp.package_type in ('lak', 'sfr', 'maw', 'uzf'):
-                    t = plotutil.advanced_package_bc_helper(pp, self.mg,
-                                                            kper)
+                if pp.package_type in ("lak", "sfr", "maw", "uzf"):
+                    t = plotutil.advanced_package_bc_helper(pp, self.mg, kper)
                 else:
                     try:
                         mflist = pp.stress_period_data.array[kper]
                     except Exception as e:
-                        raise Exception("Not a list-style boundary package: "
-                                        + str(e))
+                        raise Exception(
+                            "Not a list-style boundary package: " + str(e)
+                        )
                     if mflist is None:
                         return
 
-                    t = np.array([list(i) for i in mflist['cellid']],
-                                 dtype=int).T
+                    t = np.array(
+                        [list(i) for i in mflist["cellid"]], dtype=int
+                    ).T
 
                 if len(idx) == 0:
                     idx = np.copy(t)
@@ -377,27 +421,30 @@ class PlotCrossSection(object):
 
         else:
             # modflow-2005 structured and unstructured grid
-            if p.package_type in ('uzf', 'lak'):
+            if p.package_type in ("uzf", "lak"):
                 idx = plotutil.advanced_package_bc_helper(p, self.mg, kper)
             else:
                 try:
                     mflist = p.stress_period_data[kper]
                 except Exception as e:
-                    raise Exception("Not a list-style boundary package: "
-                                    + str(e))
+                    raise Exception(
+                        "Not a list-style boundary package: " + str(e)
+                    )
                 if mflist is None:
                     return
                 if len(self.mg.shape) == 3:
-                    idx = [mflist['k'], mflist['i'], mflist['j']]
+                    idx = [mflist["k"], mflist["i"], mflist["j"]]
                 else:
-                    idx = mflist['node']
+                    idx = mflist["node"]
 
         # Plot the list locations, change this to self.mg.shape
         if len(self.mg.shape) != 3:
             plotarray = np.zeros((self.mg.nlay, self.mg.ncpl), dtype=np.int)
             plotarray[tuple(idx)] = 1
         else:
-            plotarray = np.zeros((self.mg.nlay, self.mg.nrow, self.mg.ncol), dtype=np.int)
+            plotarray = np.zeros(
+                (self.mg.nlay, self.mg.nrow, self.mg.ncol), dtype=np.int
+            )
             plotarray[idx[0], idx[1], idx[2]] = 1
 
         plotarray = np.ma.masked_equal(plotarray, 0)
@@ -406,19 +453,35 @@ class PlotCrossSection(object):
             if key in plotutil.bc_color_dict:
                 c = plotutil.bc_color_dict[key]
             else:
-                c = plotutil.bc_color_dict['default']
+                c = plotutil.bc_color_dict["default"]
         else:
             c = color
-        cmap = matplotlib.colors.ListedColormap(['none', c])
+        cmap = matplotlib.colors.ListedColormap(["none", c])
         bounds = [0, 1, 2]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
-        patches = self.plot_array(plotarray, masked_values=[0],
-                                  head=head, cmap=cmap, norm=norm, **kwargs)
+        patches = self.plot_array(
+            plotarray,
+            masked_values=[0],
+            head=head,
+            cmap=cmap,
+            norm=norm,
+            **kwargs
+        )
 
         return patches
 
-    def plot_vector(self, vx, vy, vz, head=None, kstep=1, hstep=1,
-                    normalize=False, masked_values=None, **kwargs):
+    def plot_vector(
+        self,
+        vx,
+        vy,
+        vz,
+        head=None,
+        kstep=1,
+        hstep=1,
+        normalize=False,
+        masked_values=None,
+        **kwargs
+    ):
         """
         Plot a vector.
 
@@ -457,40 +520,44 @@ class PlotCrossSection(object):
             result of the quiver function
 
         """
-        if 'pivot' in kwargs:
-            pivot = kwargs.pop('pivot')
+        if "pivot" in kwargs:
+            pivot = kwargs.pop("pivot")
         else:
-            pivot = 'middle'
+            pivot = "middle"
 
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
+        if "ax" in kwargs:
+            ax = kwargs.pop("ax")
         else:
             ax = self.ax
 
         # this function does not support arbitrary cross-sections, so check it
         arbitrary = False
-        if self.mg.grid_type == 'structured':
-            if not (self.direction == 'x' or self.direction == 'y'):
+        if self.mg.grid_type == "structured":
+            if not (self.direction == "x" or self.direction == "y"):
                 arbitrary = True
         else:
             # check within a tolerance
             pts = self.pts
-            xuniform = [True if abs(pts.T[0, 0] - i) < 1
-                        else False for i in pts.T[0]]
-            yuniform = [True if abs(pts.T[1, 0] - i) < 1
-                        else False for i in pts.T[1]]
+            xuniform = [
+                True if abs(pts.T[0, 0] - i) < 1 else False for i in pts.T[0]
+            ]
+            yuniform = [
+                True if abs(pts.T[1, 0] - i) < 1 else False for i in pts.T[1]
+            ]
             if not np.all(xuniform) and not np.all(yuniform):
                 arbitrary = True
         if arbitrary:
-            err_msg = "plot_specific_discharge() does not " \
-                      "support arbitrary cross-sections"
+            err_msg = (
+                "plot_specific_discharge() does not "
+                "support arbitrary cross-sections"
+            )
             raise AssertionError(err_msg)
 
         # get the actual values to plot
-        if self.direction == 'x':
+        if self.direction == "x":
             u_tmp = vx
-        elif self.direction == 'y':
-            u_tmp = -1. * vy
+        elif self.direction == "y":
+            u_tmp = -1.0 * vy
         v_tmp = vz
         if self.mg.grid_type == "structured":
             if isinstance(head, np.ndarray):
@@ -509,7 +576,9 @@ class PlotCrossSection(object):
                 for k in range(self.mg.nlay):
                     for i in range(xcentergrid.shape[1]):
                         x.append(xcentergrid[k, i])
-                        z.append(0.5 * (zcentergrid[k, i] + zcentergrid[k + 1, i]))
+                        z.append(
+                            0.5 * (zcentergrid[k, i] + zcentergrid[k + 1, i])
+                        )
                 x = np.array(x).reshape((1, xcentergrid.shape[1]))
                 z = np.array(z).reshape((1, xcentergrid.shape[1]))
             else:
@@ -520,10 +589,16 @@ class PlotCrossSection(object):
             v = []
             xedge, yedge = self.mg.xyedges
             for k in range(self.mg.nlay):
-                u.append(plotutil.cell_value_points(self.xpts, xedge,
-                                                    yedge, u_tmp[k, :, :]))
-                v.append(plotutil.cell_value_points(self.xpts, xedge,
-                                                    yedge, v_tmp[k, :, :]))
+                u.append(
+                    plotutil.cell_value_points(
+                        self.xpts, xedge, yedge, u_tmp[k, :, :]
+                    )
+                )
+                v.append(
+                    plotutil.cell_value_points(
+                        self.xpts, xedge, yedge, v_tmp[k, :, :]
+                    )
+                )
             u = np.array(u)
             v = np.array(v)
             x = x[::kstep, ::hstep]
@@ -538,21 +613,29 @@ class PlotCrossSection(object):
 
         else:
             # kstep implementation for vertex grid
-            projpts = {key: value for key, value in self.__cls.projpts.items()
-                       if (key // self.mg.ncpl) % kstep == 0}
+            projpts = {
+                key: value
+                for key, value in self.__cls.projpts.items()
+                if (key // self.mg.ncpl) % kstep == 0
+            }
 
             # set x and z centers
             if isinstance(head, np.ndarray):
                 # pipe kstep to set_zcentergrid to assure consistent array size
-                zcenters = self.__cls.set_zcentergrid(np.ravel(head), kstep=kstep)
+                zcenters = self.__cls.set_zcentergrid(
+                    np.ravel(head), kstep=kstep
+                )
             else:
-                zcenters = [np.mean(np.array(v).T[1]) for i, v
-                            in sorted(projpts.items())]
+                zcenters = [
+                    np.mean(np.array(v).T[1])
+                    for i, v in sorted(projpts.items())
+                ]
 
             u = np.array([u_tmp.ravel()[cell] for cell in sorted(projpts)])
 
-            x = np.array([np.mean(np.array(v).T[0]) for i, v
-                          in sorted(projpts.items())])
+            x = np.array(
+                [np.mean(np.array(v).T[0]) for i, v in sorted(projpts.items())]
+            )
 
             z = np.ravel(zcenters)
             v = np.array([v_tmp.ravel()[cell] for cell in sorted(projpts)])
@@ -565,14 +648,14 @@ class PlotCrossSection(object):
         # mask values
         if masked_values is not None:
             for mval in masked_values:
-                to_mask = np.logical_or(u==mval, v==mval)
+                to_mask = np.logical_or(u == mval, v == mval)
                 u[to_mask] = np.nan
                 v[to_mask] = np.nan
 
         # normalize
         if normalize:
-            vmag = np.sqrt(u ** 2. + v ** 2.)
-            idx = vmag > 0.
+            vmag = np.sqrt(u ** 2.0 + v ** 2.0)
+            idx = vmag > 0.0
             u[idx] /= vmag[idx]
             v[idx] /= vmag[idx]
 
@@ -581,8 +664,9 @@ class PlotCrossSection(object):
 
         return quiver
 
-    def plot_specific_discharge(self, spdis, head=None, kstep=1,
-                                hstep=1, normalize=False, **kwargs):
+    def plot_specific_discharge(
+        self, spdis, head=None, kstep=1, hstep=1, normalize=False, **kwargs
+    ):
         """
         DEPRECATED. Use plot_vector() instead, which should follow after
         postprocessing.get_specific_discharge().
@@ -616,24 +700,29 @@ class PlotCrossSection(object):
 
         """
         import warnings
-        warnings.warn('plot_specific_discharge() has been deprecated. Use '
-                      'plot_vector() instead, which should follow after '
-                      'postprocessing.get_specific_discharge()',
-                      DeprecationWarning)
 
-        if 'pivot' in kwargs:
-            pivot = kwargs.pop('pivot')
+        warnings.warn(
+            "plot_specific_discharge() has been deprecated. Use "
+            "plot_vector() instead, which should follow after "
+            "postprocessing.get_specific_discharge()",
+            DeprecationWarning,
+        )
+
+        if "pivot" in kwargs:
+            pivot = kwargs.pop("pivot")
         else:
-            pivot = 'middle'
+            pivot = "middle"
 
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
+        if "ax" in kwargs:
+            ax = kwargs.pop("ax")
         else:
             ax = self.ax
 
         if isinstance(spdis, list):
-            print("Warning: Selecting the final stress period from Specific"
-                  " Discharge list")
+            print(
+                "Warning: Selecting the final stress period from Specific"
+                " Discharge list"
+            )
             spdis = spdis[-1]
 
         if self.mg.grid_type == "structured":
@@ -648,29 +737,35 @@ class PlotCrossSection(object):
         qz = np.zeros((nlay * ncpl))
         ib = np.zeros((nlay * ncpl), dtype=bool)
 
-        idx = np.array(spdis['node']) - 1
+        idx = np.array(spdis["node"]) - 1
 
         # check that vertex grid cross sections are not arbitrary
         # within a tolerance!
-        if self.mg.grid_type != 'structured':
+        if self.mg.grid_type != "structured":
             pts = self.pts
-            xuniform = [True if abs(pts.T[0, 0] - i) < 1
-                        else False for i in pts.T[0]]
-            yuniform = [True if abs(pts.T[1, 0] - i) < 1
-                        else False for i in pts.T[1]]
+            xuniform = [
+                True if abs(pts.T[0, 0] - i) < 1 else False for i in pts.T[0]
+            ]
+            yuniform = [
+                True if abs(pts.T[1, 0] - i) < 1 else False for i in pts.T[1]
+            ]
             if not np.all(xuniform):
                 if not np.all(yuniform):
-                    err_msg = "plot_specific_discharge does not " \
-                              "support aribtrary cross sections"
+                    err_msg = (
+                        "plot_specific_discharge does not "
+                        "support aribtrary cross sections"
+                    )
                     raise AssertionError(err_msg)
 
-        if self.direction == 'x':
-            qx[idx] = spdis['qx']
-        elif self.direction == 'y':
-            qx[idx] = spdis['qy'] * -1
+        if self.direction == "x":
+            qx[idx] = spdis["qx"]
+        elif self.direction == "y":
+            qx[idx] = spdis["qy"] * -1
         else:
-            err_msg = 'plot_specific_discharge does not ' \
-                      'support arbitrary cross-sections'
+            err_msg = (
+                "plot_specific_discharge does not "
+                "support arbitrary cross-sections"
+            )
             raise AssertionError(err_msg)
 
         qz[idx] = spdis["qz"]
@@ -697,7 +792,9 @@ class PlotCrossSection(object):
                 for k in range(nlay):
                     for i in range(xcentergrid.shape[1]):
                         x.append(xcentergrid[k, i])
-                        z.append(0.5 * (zcentergrid[k, i] + zcentergrid[k + 1, i]))
+                        z.append(
+                            0.5 * (zcentergrid[k, i] + zcentergrid[k + 1, i])
+                        )
                 x = np.array(x).reshape((1, xcentergrid.shape[1]))
                 z = np.array(z).reshape((1, xcentergrid.shape[1]))
             else:
@@ -709,12 +806,21 @@ class PlotCrossSection(object):
             ibx = []
             xedge, yedge = self.mg.xyedges
             for k in range(self.mg.nlay):
-                u.append(plotutil.cell_value_points(self.xpts, xedge,
-                                                    yedge, qx[k, :, :]))
-                v.append(plotutil.cell_value_points(self.xpts, xedge,
-                                                    yedge, qz[k, :, :]))
-                ibx.append(plotutil.cell_value_points(self.xpts, xedge,
-                                                      yedge, ib[k, :, :]))
+                u.append(
+                    plotutil.cell_value_points(
+                        self.xpts, xedge, yedge, qx[k, :, :]
+                    )
+                )
+                v.append(
+                    plotutil.cell_value_points(
+                        self.xpts, xedge, yedge, qz[k, :, :]
+                    )
+                )
+                ibx.append(
+                    plotutil.cell_value_points(
+                        self.xpts, xedge, yedge, ib[k, :, :]
+                    )
+                )
             u = np.array(u)
             v = np.array(v)
             ibx = np.array(ibx)
@@ -732,27 +838,33 @@ class PlotCrossSection(object):
 
         else:
             # kstep implementation for vertex grid
-            projpts = {key: value for key, value in self.__cls.projpts.items()
-                       if (key // ncpl) % kstep == 0}
+            projpts = {
+                key: value
+                for key, value in self.__cls.projpts.items()
+                if (key // ncpl) % kstep == 0
+            }
 
             # set x and z centers
             if isinstance(head, np.ndarray):
                 # pipe kstep to set_zcentergrid to assure consistent array size
-                zcenters = self.__cls.set_zcentergrid(np.ravel(head), kstep=kstep)
+                zcenters = self.__cls.set_zcentergrid(
+                    np.ravel(head), kstep=kstep
+                )
             else:
-                zcenters = [np.mean(np.array(v).T[1]) for i, v
-                            in sorted(projpts.items())]
+                zcenters = [
+                    np.mean(np.array(v).T[1])
+                    for i, v in sorted(projpts.items())
+                ]
 
             u = np.array([qx[cell] for cell in sorted(projpts)])
 
-            x = np.array([np.mean(np.array(v).T[0]) for i, v
-                          in sorted(projpts.items())])
+            x = np.array(
+                [np.mean(np.array(v).T[0]) for i, v in sorted(projpts.items())]
+            )
 
             z = np.ravel(zcenters)
-            v = np.array([qz[cell] for cell
-                          in sorted(projpts)])
-            ib = np.array([ib[cell] for cell
-                           in sorted(projpts)])
+            v = np.array([qz[cell] for cell in sorted(projpts)])
+            ib = np.array([ib[cell] for cell in sorted(projpts)])
 
             x = x[::hstep]
             z = z[::hstep]
@@ -761,8 +873,8 @@ class PlotCrossSection(object):
             ib = ib[::hstep]
 
         if normalize:
-            vmag = np.sqrt(u ** 2. + v ** 2.)
-            idx = vmag > 0.
+            vmag = np.sqrt(u ** 2.0 + v ** 2.0)
+            idx = vmag > 0.0
             u[idx] /= vmag[idx]
             v[idx] /= vmag[idx]
 
@@ -774,9 +886,17 @@ class PlotCrossSection(object):
 
         return quiver
 
-    def plot_discharge(self, frf, fff, flf=None,
-                       head=None, kstep=1, hstep=1, normalize=False,
-                       **kwargs):
+    def plot_discharge(
+        self,
+        frf,
+        fff,
+        flf=None,
+        head=None,
+        kstep=1,
+        hstep=1,
+        normalize=False,
+        **kwargs
+    ):
         """
         DEPRECATED. Use plot_vector() instead, which should follow after
         postprocessing.get_specific_discharge().
@@ -812,14 +932,18 @@ class PlotCrossSection(object):
 
         """
         import warnings
-        warnings.warn('plot_discharge() has been deprecated. Use '
-                      'plot_vector() instead, which should follow after '
-                      'postprocessing.get_specific_discharge()',
-                      DeprecationWarning)
+
+        warnings.warn(
+            "plot_discharge() has been deprecated. Use "
+            "plot_vector() instead, which should follow after "
+            "postprocessing.get_specific_discharge()",
+            DeprecationWarning,
+        )
 
         if self.mg.grid_type != "structured":
-            err_msg = "Use plot_specific_discharge for " \
-                      "{} grids".format(self.mg.grid_type)
+            err_msg = "Use plot_specific_discharge for " "{} grids".format(
+                self.mg.grid_type
+            )
             raise NotImplementedError(err_msg)
 
         else:
@@ -831,12 +955,12 @@ class PlotCrossSection(object):
             delc = self.mg.delc
             top = self.mg.top
             botm = self.mg.botm
-            if not np.all(self.active==1):
-                botm = botm[self.active==1]
+            if not np.all(self.active == 1):
+                botm = botm[self.active == 1]
             nlay = botm.shape[0]
             laytyp = None
-            hnoflo = 999.
-            hdry = 999.
+            hnoflo = 999.0
+            hdry = 999.0
 
             if self.model is not None:
                 if self.model.laytyp is not None:
@@ -857,14 +981,14 @@ class PlotCrossSection(object):
                 if nlay > 1:
                     head[1:, :, :] = botm[:-1, :, :]
 
-            sat_thk = plotutil.PlotUtilities. \
-                saturated_thickness(head, top, botm,
-                                    laytyp, [hnoflo, hdry])
+            sat_thk = plotutil.PlotUtilities.saturated_thickness(
+                head, top, botm, laytyp, [hnoflo, hdry]
+            )
 
             # Calculate specific discharge
-            qx, qy, qz = plotutil.PlotUtilities. \
-                centered_specific_discharge(frf, fff, flf,
-                                            delr, delc, sat_thk)
+            qx, qy, qz = plotutil.PlotUtilities.centered_specific_discharge(
+                frf, fff, flf, delr, delc, sat_thk
+            )
 
             if qz is None:
                 qz = np.zeros((qx.shape), dtype=np.float)
@@ -879,16 +1003,26 @@ class PlotCrossSection(object):
                 if val != 0:
                     temp.append((ix + 1, qx[ix], -qy[ix], qz[ix]))
 
-            spdis = np.recarray((len(temp),), dtype=[('node', np.int),
-                                                     ("qx", np.float),
-                                                     ("qy", np.float),
-                                                     ("qz", np.float)])
+            spdis = np.recarray(
+                (len(temp),),
+                dtype=[
+                    ("node", np.int),
+                    ("qx", np.float),
+                    ("qy", np.float),
+                    ("qz", np.float),
+                ],
+            )
             for ix, tup in enumerate(temp):
                 spdis[ix] = tup
 
-            self.plot_specific_discharge(spdis, head=head, kstep=kstep,
-                                         hstep=hstep, normalize=normalize,
-                                         **kwargs)
+            self.plot_specific_discharge(
+                spdis,
+                head=head,
+                kstep=kstep,
+                hstep=hstep,
+                normalize=normalize,
+                **kwargs
+            )
 
     def get_grid_patch_collection(self, zpts, plotarray, **kwargs):
         """
@@ -911,14 +1045,16 @@ class PlotCrossSection(object):
 
         """
         if self.mg.grid_type == "structured":
-            return self.__cls.get_grid_patch_collection(zpts=zpts, plotarray=plotarray,
-                                                        **kwargs)
+            return self.__cls.get_grid_patch_collection(
+                zpts=zpts, plotarray=plotarray, **kwargs
+            )
         elif self.mg.grid_type == "unstructured":
             raise NotImplementedError()
 
         else:
-            return self.__cls.get_grid_patch_collection(projpts=zpts, plotarray=plotarray,
-                                                        **kwargs)
+            return self.__cls.get_grid_patch_collection(
+                projpts=zpts, plotarray=plotarray, **kwargs
+            )
 
     def get_grid_line_collection(self, **kwargs):
         """
@@ -957,9 +1093,10 @@ class DeprecatedCrossSection(PlotCrossSection):
         then these will be calculated based on grid, coordinates, and rotation.
 
     """
-    def __init__(self, ax=None, model=None, modelgrid=None,
-                 line=None, extent=None):
-        super(DeprecatedCrossSection, self).__init__(ax=ax, model=model,
-                                                     modelgrid=modelgrid,
-                                                     line=line,
-                                                     extent=extent)
+
+    def __init__(
+        self, ax=None, model=None, modelgrid=None, line=None, extent=None
+    ):
+        super(DeprecatedCrossSection, self).__init__(
+            ax=ax, model=model, modelgrid=modelgrid, line=line, extent=extent
+        )

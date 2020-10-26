@@ -119,15 +119,44 @@ class ModflowIms(mfpackage.MFPackage):
           routine. For a linear problem OUTER_MAXIMUM should be 1.
     under_relaxation : string
         * under_relaxation (string) is an optional keyword that defines the
-          nonlinear under-relaxation schemes used. By default under-relaxation
-          is not used. NONE - under-relaxation is not used. SIMPLE - Simple
-          under-relaxation scheme with a fixed relaxation factor is used.
-          COOLEY - Cooley under-relaxation scheme is used. DBD - delta-bar-
-          delta under-relaxation is used. Note that the under-relaxation
-          schemes are used in conjunction with problems that use the Newton-
-          Raphson formulation, however, experience has indicated that the
-          Cooley under-relaxation and damping work well also for the Picard
-          scheme with the wet/dry options of MODFLOW 6.
+          nonlinear under-relaxation schemes used. Under-relaxation is also
+          known as dampening, and is used to reduce the size of the calculated
+          dependent variable before proceeding to the next outer iteration.
+          Under-relaxation can be an effective tool for highly nonlinear models
+          when there are large and often counteracting changes in the
+          calculated dependent variable between successive outer iterations. By
+          default under-relaxation is not used. NONE - under-relaxation is not
+          used (default). SIMPLE - Simple under-relaxation scheme with a fixed
+          relaxation factor (UNDER_RELAXATION_GAMMA) is used. COOLEY - Cooley
+          under-relaxation scheme is used. DBD - delta-bar-delta under-
+          relaxation is used. Note that the under-relaxation schemes are often
+          used in conjunction with problems that use the Newton-Raphson
+          formulation, however, experience has indicated that they also work
+          well non-Newton problems, such as those with the wet/dry options of
+          MODFLOW 6.
+    under_relaxation_gamma : double
+        * under_relaxation_gamma (double) real value defining either the
+          relaxation factor for the SIMPLE scheme or the history or memory term
+          factor of the Cooley and delta-bar-delta algorithms. For the SIMPLE
+          scheme, a value of one indicates that there is no under-relaxation
+          and the full head change is applied. This value can be gradually
+          reduced from one as a way to improve convergence; for well behaved
+          problems, using a value less than one can increase the number of
+          outer iterations required for convergence and needlessly increase run
+          times. UNDER_RELAXATION_GAMMA must be greater than zero for the
+          SIMPLE scheme or the program will terminate with an error. For the
+          Cooley and delta-bar-delta schemes, UNDER_RELAXATION_GAMMA is a
+          memory term that can range between zero and one. When
+          UNDER_RELAXATION_GAMMA is zero, only the most recent history
+          (previous iteration value) is maintained. As UNDER_RELAXATION_GAMMA
+          is increased, past history of iteration changes has greater influence
+          on the memory term. The memory term is maintained as an exponential
+          average of past changes. Retaining some past history can overcome
+          granular behavior in the calculated function surface and therefore
+          helps to overcome cyclic patterns of non-convergence. The value
+          usually ranges from 0.1 to 0.3; a value of 0.2 works well for most
+          problems. UNDER_RELAXATION_GAMMA only needs to be specified if
+          UNDER_RELAXATION is not NONE.
     under_relaxation_theta : double
         * under_relaxation_theta (double) real value defining the reduction
           factor for the learning rate (under-relaxation term) of the delta-
@@ -148,20 +177,6 @@ class ModflowIms(mfpackage.MFPackage):
           UNDER_RELAXATION_KAPPA. The value usually ranges from 0.03 to 0.3; a
           value of 0.1 works well for most problems. UNDER_RELAXATION_KAPPA
           only needs to be specified if UNDER_RELAXATION is DBD.
-    under_relaxation_gamma : double
-        * under_relaxation_gamma (double) real value defining the history or
-          memory term factor of the delta-bar-delta algorithm.
-          UNDER_RELAXATION_GAMMA is between zero and 1 but cannot be equal to
-          one. When UNDER_RELAXATION_GAMMA is zero, only the most recent
-          history (previous iteration value) is maintained. As
-          UNDER_RELAXATION_GAMMA is increased, past history of iteration
-          changes has greater influence on the memory term. The memory term is
-          maintained as an exponential average of past changes. Retaining some
-          past history can overcome granular behavior in the calculated
-          function surface and therefore helps to overcome cyclic patterns of
-          non-convergence. The value usually ranges from 0.1 to 0.3; a value of
-          0.2 works well for most problems. UNDER_RELAXATION_GAMMA only needs
-          to be specified if UNDER_RELAXATION is not NONE.
     under_relaxation_momentum : double
         * under_relaxation_momentum (double) real value defining the fraction
           of past history changes that is added as a momentum term to the step
@@ -325,195 +340,471 @@ class ModflowIms(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    csv_output_filerecord = ListTemplateGenerator(('ims', 'options',
-                                                   'csv_output_filerecord'))
-    csv_outer_output_filerecord = ListTemplateGenerator((
-        'ims', 'options', 'csv_outer_output_filerecord'))
-    csv_inner_output_filerecord = ListTemplateGenerator((
-        'ims', 'options', 'csv_inner_output_filerecord'))
-    no_ptcrecord = ListTemplateGenerator(('ims', 'options',
-                                          'no_ptcrecord'))
-    rcloserecord = ListTemplateGenerator(('ims', 'linear',
-                                          'rcloserecord'))
+
+    csv_output_filerecord = ListTemplateGenerator(
+        ("ims", "options", "csv_output_filerecord")
+    )
+    csv_outer_output_filerecord = ListTemplateGenerator(
+        ("ims", "options", "csv_outer_output_filerecord")
+    )
+    csv_inner_output_filerecord = ListTemplateGenerator(
+        ("ims", "options", "csv_inner_output_filerecord")
+    )
+    no_ptcrecord = ListTemplateGenerator(("ims", "options", "no_ptcrecord"))
+    rcloserecord = ListTemplateGenerator(("ims", "linear", "rcloserecord"))
     package_abbr = "ims"
     _package_type = "ims"
     dfn_file_name = "sln-ims.dfn"
 
-    dfn = [["block options", "name print_option", "type string",
-            "reader urword", "optional true"],
-           ["block options", "name complexity", "type string",
-            "reader urword", "optional true"],
-           ["block options", "name csv_output_filerecord",
-            "type record csv_output fileout csvfile", "shape",
-            "reader urword", "tagged true", "optional true",
-            "deprecated 6.1.1"],
-           ["block options", "name csv_output", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false", "deprecated 6.1.1"],
-           ["block options", "name csvfile", "type string",
-            "preserve_case true", "shape", "in_record true", "reader urword",
-            "tagged false", "optional false", "deprecated 6.1.1"],
-           ["block options", "name csv_outer_output_filerecord",
-            "type record csv_outer_output fileout outer_csvfile", "shape",
-            "reader urword", "tagged true", "optional true"],
-           ["block options", "name csv_outer_output", "type keyword",
-            "shape", "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name fileout", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name outer_csvfile", "type string",
-            "preserve_case true", "shape", "in_record true", "reader urword",
-            "tagged false", "optional false"],
-           ["block options", "name csv_inner_output_filerecord",
-            "type record csv_inner_output fileout inner_csvfile", "shape",
-            "reader urword", "tagged true", "optional true"],
-           ["block options", "name csv_inner_output", "type keyword",
-            "shape", "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name inner_csvfile", "type string",
-            "preserve_case true", "shape", "in_record true", "reader urword",
-            "tagged false", "optional false"],
-           ["block options", "name no_ptcrecord",
-            "type record no_ptc no_ptc_option", "reader urword",
-            "optional true"],
-           ["block options", "name no_ptc", "type keyword",
-            "in_record true", "reader urword", "optional false",
-            "tagged true"],
-           ["block options", "name no_ptc_option", "type string",
-            "in_record true", "reader urword", "optional true",
-            "tagged false"],
-           ["block nonlinear", "name outer_hclose", "type double precision",
-            "reader urword", "optional true", "deprecated 6.1.1"],
-           ["block nonlinear", "name outer_dvclose",
-            "type double precision", "reader urword", "optional false"],
-           ["block nonlinear", "name outer_rclosebnd",
-            "type double precision", "reader urword", "optional true",
-            "deprecated 6.1.1"],
-           ["block nonlinear", "name outer_maximum", "type integer",
-            "reader urword", "optional false"],
-           ["block nonlinear", "name under_relaxation", "type string",
-            "reader urword", "optional true"],
-           ["block nonlinear", "name under_relaxation_theta",
-            "type double precision", "reader urword", "optional true"],
-           ["block nonlinear", "name under_relaxation_kappa",
-            "type double precision", "reader urword", "optional true"],
-           ["block nonlinear", "name under_relaxation_gamma",
-            "type double precision", "reader urword", "optional true"],
-           ["block nonlinear", "name under_relaxation_momentum",
-            "type double precision", "reader urword", "optional true"],
-           ["block nonlinear", "name backtracking_number", "type integer",
-            "reader urword", "optional true"],
-           ["block nonlinear", "name backtracking_tolerance",
-            "type double precision", "reader urword", "optional true"],
-           ["block nonlinear", "name backtracking_reduction_factor",
-            "type double precision", "reader urword", "optional true"],
-           ["block nonlinear", "name backtracking_residual_limit",
-            "type double precision", "reader urword", "optional true"],
-           ["block linear", "name inner_maximum", "type integer",
-            "reader urword", "optional false"],
-           ["block linear", "name inner_hclose", "type double precision",
-            "reader urword", "optional true", "deprecated 6.1.1"],
-           ["block linear", "name inner_dvclose", "type double precision",
-            "reader urword", "optional false"],
-           ["block linear", "name rcloserecord",
-            "type record inner_rclose rclose_option", "reader urword",
-            "optional false"],
-           ["block linear", "name inner_rclose", "type double precision",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block linear", "name rclose_option", "type string",
-            "tagged false", "in_record true", "reader urword",
-            "optional true"],
-           ["block linear", "name linear_acceleration", "type string",
-            "reader urword", "optional false"],
-           ["block linear", "name relaxation_factor",
-            "type double precision", "reader urword", "optional true"],
-           ["block linear", "name preconditioner_levels", "type integer",
-            "reader urword", "optional true"],
-           ["block linear", "name preconditioner_drop_tolerance",
-            "type double precision", "reader urword", "optional true"],
-           ["block linear", "name number_orthogonalizations",
-            "type integer", "reader urword", "optional true"],
-           ["block linear", "name scaling_method", "type string",
-            "reader urword", "optional true"],
-           ["block linear", "name reordering_method", "type string",
-            "reader urword", "optional true"]]
+    dfn = [
+        [
+            "block options",
+            "name print_option",
+            "type string",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name complexity",
+            "type string",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name csv_output_filerecord",
+            "type record csv_output fileout csvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "deprecated 6.1.1",
+        ],
+        [
+            "block options",
+            "name csv_output",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+            "deprecated 6.1.1",
+        ],
+        [
+            "block options",
+            "name csvfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+            "deprecated 6.1.1",
+        ],
+        [
+            "block options",
+            "name csv_outer_output_filerecord",
+            "type record csv_outer_output fileout outer_csvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name csv_outer_output",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name fileout",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name outer_csvfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name csv_inner_output_filerecord",
+            "type record csv_inner_output fileout inner_csvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name csv_inner_output",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name inner_csvfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name no_ptcrecord",
+            "type record no_ptc no_ptc_option",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name no_ptc",
+            "type keyword",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged true",
+        ],
+        [
+            "block options",
+            "name no_ptc_option",
+            "type string",
+            "in_record true",
+            "reader urword",
+            "optional true",
+            "tagged false",
+        ],
+        [
+            "block nonlinear",
+            "name outer_hclose",
+            "type double precision",
+            "reader urword",
+            "optional true",
+            "deprecated 6.1.1",
+        ],
+        [
+            "block nonlinear",
+            "name outer_dvclose",
+            "type double precision",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block nonlinear",
+            "name outer_rclosebnd",
+            "type double precision",
+            "reader urword",
+            "optional true",
+            "deprecated 6.1.1",
+        ],
+        [
+            "block nonlinear",
+            "name outer_maximum",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block nonlinear",
+            "name under_relaxation",
+            "type string",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block nonlinear",
+            "name under_relaxation_gamma",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block nonlinear",
+            "name under_relaxation_theta",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block nonlinear",
+            "name under_relaxation_kappa",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block nonlinear",
+            "name under_relaxation_momentum",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block nonlinear",
+            "name backtracking_number",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block nonlinear",
+            "name backtracking_tolerance",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block nonlinear",
+            "name backtracking_reduction_factor",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block nonlinear",
+            "name backtracking_residual_limit",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block linear",
+            "name inner_maximum",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block linear",
+            "name inner_hclose",
+            "type double precision",
+            "reader urword",
+            "optional true",
+            "deprecated 6.1.1",
+        ],
+        [
+            "block linear",
+            "name inner_dvclose",
+            "type double precision",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block linear",
+            "name rcloserecord",
+            "type record inner_rclose rclose_option",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block linear",
+            "name inner_rclose",
+            "type double precision",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block linear",
+            "name rclose_option",
+            "type string",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block linear",
+            "name linear_acceleration",
+            "type string",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block linear",
+            "name relaxation_factor",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block linear",
+            "name preconditioner_levels",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block linear",
+            "name preconditioner_drop_tolerance",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block linear",
+            "name number_orthogonalizations",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block linear",
+            "name scaling_method",
+            "type string",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block linear",
+            "name reordering_method",
+            "type string",
+            "reader urword",
+            "optional true",
+        ],
+    ]
 
-    def __init__(self, simulation, loading_package=False, print_option=None,
-                 complexity=None, csv_output_filerecord=None,
-                 csv_outer_output_filerecord=None,
-                 csv_inner_output_filerecord=None, no_ptcrecord=None,
-                 outer_hclose=None, outer_dvclose=None, outer_rclosebnd=None,
-                 outer_maximum=None, under_relaxation=None,
-                 under_relaxation_theta=None, under_relaxation_kappa=None,
-                 under_relaxation_gamma=None, under_relaxation_momentum=None,
-                 backtracking_number=None, backtracking_tolerance=None,
-                 backtracking_reduction_factor=None,
-                 backtracking_residual_limit=None, inner_maximum=None,
-                 inner_hclose=None, inner_dvclose=None, rcloserecord=None,
-                 linear_acceleration=None, relaxation_factor=None,
-                 preconditioner_levels=None,
-                 preconditioner_drop_tolerance=None,
-                 number_orthogonalizations=None, scaling_method=None,
-                 reordering_method=None, filename=None, pname=None,
-                 parent_file=None):
-        super(ModflowIms, self).__init__(simulation, "ims", filename, pname,
-                                         loading_package, parent_file)
+    def __init__(
+        self,
+        simulation,
+        loading_package=False,
+        print_option=None,
+        complexity=None,
+        csv_output_filerecord=None,
+        csv_outer_output_filerecord=None,
+        csv_inner_output_filerecord=None,
+        no_ptcrecord=None,
+        outer_hclose=None,
+        outer_dvclose=None,
+        outer_rclosebnd=None,
+        outer_maximum=None,
+        under_relaxation=None,
+        under_relaxation_gamma=None,
+        under_relaxation_theta=None,
+        under_relaxation_kappa=None,
+        under_relaxation_momentum=None,
+        backtracking_number=None,
+        backtracking_tolerance=None,
+        backtracking_reduction_factor=None,
+        backtracking_residual_limit=None,
+        inner_maximum=None,
+        inner_hclose=None,
+        inner_dvclose=None,
+        rcloserecord=None,
+        linear_acceleration=None,
+        relaxation_factor=None,
+        preconditioner_levels=None,
+        preconditioner_drop_tolerance=None,
+        number_orthogonalizations=None,
+        scaling_method=None,
+        reordering_method=None,
+        filename=None,
+        pname=None,
+        parent_file=None,
+    ):
+        super(ModflowIms, self).__init__(
+            simulation, "ims", filename, pname, loading_package, parent_file
+        )
 
         # set up variables
         self.print_option = self.build_mfdata("print_option", print_option)
         self.complexity = self.build_mfdata("complexity", complexity)
-        self.csv_output_filerecord = self.build_mfdata("csv_output_filerecord",
-                                                       csv_output_filerecord)
+        self.csv_output_filerecord = self.build_mfdata(
+            "csv_output_filerecord", csv_output_filerecord
+        )
         self.csv_outer_output_filerecord = self.build_mfdata(
-            "csv_outer_output_filerecord", csv_outer_output_filerecord)
+            "csv_outer_output_filerecord", csv_outer_output_filerecord
+        )
         self.csv_inner_output_filerecord = self.build_mfdata(
-            "csv_inner_output_filerecord", csv_inner_output_filerecord)
+            "csv_inner_output_filerecord", csv_inner_output_filerecord
+        )
         self.no_ptcrecord = self.build_mfdata("no_ptcrecord", no_ptcrecord)
         self.outer_hclose = self.build_mfdata("outer_hclose", outer_hclose)
         self.outer_dvclose = self.build_mfdata("outer_dvclose", outer_dvclose)
-        self.outer_rclosebnd = self.build_mfdata("outer_rclosebnd",
-                                                 outer_rclosebnd)
+        self.outer_rclosebnd = self.build_mfdata(
+            "outer_rclosebnd", outer_rclosebnd
+        )
         self.outer_maximum = self.build_mfdata("outer_maximum", outer_maximum)
-        self.under_relaxation = self.build_mfdata("under_relaxation",
-                                                  under_relaxation)
-        self.under_relaxation_theta = self.build_mfdata(
-            "under_relaxation_theta", under_relaxation_theta)
-        self.under_relaxation_kappa = self.build_mfdata(
-            "under_relaxation_kappa", under_relaxation_kappa)
+        self.under_relaxation = self.build_mfdata(
+            "under_relaxation", under_relaxation
+        )
         self.under_relaxation_gamma = self.build_mfdata(
-            "under_relaxation_gamma", under_relaxation_gamma)
+            "under_relaxation_gamma", under_relaxation_gamma
+        )
+        self.under_relaxation_theta = self.build_mfdata(
+            "under_relaxation_theta", under_relaxation_theta
+        )
+        self.under_relaxation_kappa = self.build_mfdata(
+            "under_relaxation_kappa", under_relaxation_kappa
+        )
         self.under_relaxation_momentum = self.build_mfdata(
-            "under_relaxation_momentum", under_relaxation_momentum)
-        self.backtracking_number = self.build_mfdata("backtracking_number",
-                                                     backtracking_number)
+            "under_relaxation_momentum", under_relaxation_momentum
+        )
+        self.backtracking_number = self.build_mfdata(
+            "backtracking_number", backtracking_number
+        )
         self.backtracking_tolerance = self.build_mfdata(
-            "backtracking_tolerance", backtracking_tolerance)
+            "backtracking_tolerance", backtracking_tolerance
+        )
         self.backtracking_reduction_factor = self.build_mfdata(
-            "backtracking_reduction_factor", backtracking_reduction_factor)
+            "backtracking_reduction_factor", backtracking_reduction_factor
+        )
         self.backtracking_residual_limit = self.build_mfdata(
-            "backtracking_residual_limit", backtracking_residual_limit)
+            "backtracking_residual_limit", backtracking_residual_limit
+        )
         self.inner_maximum = self.build_mfdata("inner_maximum", inner_maximum)
         self.inner_hclose = self.build_mfdata("inner_hclose", inner_hclose)
         self.inner_dvclose = self.build_mfdata("inner_dvclose", inner_dvclose)
         self.rcloserecord = self.build_mfdata("rcloserecord", rcloserecord)
-        self.linear_acceleration = self.build_mfdata("linear_acceleration",
-                                                     linear_acceleration)
-        self.relaxation_factor = self.build_mfdata("relaxation_factor",
-                                                   relaxation_factor)
-        self.preconditioner_levels = self.build_mfdata("preconditioner_levels",
-                                                       preconditioner_levels)
+        self.linear_acceleration = self.build_mfdata(
+            "linear_acceleration", linear_acceleration
+        )
+        self.relaxation_factor = self.build_mfdata(
+            "relaxation_factor", relaxation_factor
+        )
+        self.preconditioner_levels = self.build_mfdata(
+            "preconditioner_levels", preconditioner_levels
+        )
         self.preconditioner_drop_tolerance = self.build_mfdata(
-            "preconditioner_drop_tolerance", preconditioner_drop_tolerance)
+            "preconditioner_drop_tolerance", preconditioner_drop_tolerance
+        )
         self.number_orthogonalizations = self.build_mfdata(
-            "number_orthogonalizations", number_orthogonalizations)
-        self.scaling_method = self.build_mfdata("scaling_method",
-                                                scaling_method)
-        self.reordering_method = self.build_mfdata("reordering_method",
-                                                   reordering_method)
+            "number_orthogonalizations", number_orthogonalizations
+        )
+        self.scaling_method = self.build_mfdata(
+            "scaling_method", scaling_method
+        )
+        self.reordering_method = self.build_mfdata(
+            "reordering_method", reordering_method
+        )
         self._init_complete = True

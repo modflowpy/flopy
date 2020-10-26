@@ -397,7 +397,7 @@ tagged false
 in_record true
 reader urword
 longname number of connected reaches
-description integer value that defines the number of reaches connected to the reach.
+description integer value that defines the number of reaches connected to the reach.  If a value of zero is specified for NCON an entry for RNO is still required in the subsequent CONNECTIONDATA block.
 
 block packagedata
 name ustrf

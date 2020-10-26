@@ -332,20 +332,64 @@ class Mnw(object):
     None
 
     """
-    by_node_variables = ['k', 'i', 'j', 'ztop', 'zbotm', 'rw', 'rskin',
-                         'kskin', 'B', 'C', 'P', 'cwc', 'pp']
 
-    def __init__(self, wellid,
-                 nnodes=1, nper=1,
-                 losstype="skin", pumploc=0, qlimit=0, ppflag=0, pumpcap=0,
-                 rw=1, rskin=2, kskin=10,
-                 B=None, C=0, P=2., cwc=None, pp=1,
-                 k=0, i=0, j=0, ztop=0, zbotm=0,
-                 node_data=None, stress_period_data=None,
-                 pumplay=0, pumprow=0, pumpcol=0, zpump=None,
-                 hlim=None, qcut=None, qfrcmn=None, qfrcmx=None,
-                 hlift=None, liftq0=None, liftqmax=None, hwtol=None,
-                 liftn=None, qn=None, mnwpackage=None):
+    by_node_variables = [
+        "k",
+        "i",
+        "j",
+        "ztop",
+        "zbotm",
+        "rw",
+        "rskin",
+        "kskin",
+        "B",
+        "C",
+        "P",
+        "cwc",
+        "pp",
+    ]
+
+    def __init__(
+        self,
+        wellid,
+        nnodes=1,
+        nper=1,
+        losstype="skin",
+        pumploc=0,
+        qlimit=0,
+        ppflag=0,
+        pumpcap=0,
+        rw=1,
+        rskin=2,
+        kskin=10,
+        B=None,
+        C=0,
+        P=2.0,
+        cwc=None,
+        pp=1,
+        k=0,
+        i=0,
+        j=0,
+        ztop=0,
+        zbotm=0,
+        node_data=None,
+        stress_period_data=None,
+        pumplay=0,
+        pumprow=0,
+        pumpcol=0,
+        zpump=None,
+        hlim=None,
+        qcut=None,
+        qfrcmn=None,
+        qfrcmx=None,
+        hlift=None,
+        liftq0=None,
+        liftqmax=None,
+        hwtol=None,
+        liftn=None,
+        qn=None,
+        mnwpackage=None,
+    ):
         """
         Class constructor
         """
@@ -413,8 +457,9 @@ class Mnw(object):
                 self.stress_period_data[n] = stress_period_data[n]
 
         # accept node data from structured array
-        self.node_data = ModflowMnw2.get_empty_node_data(np.abs(nnodes),
-                                                         aux_names=self.aux)
+        self.node_data = ModflowMnw2.get_empty_node_data(
+            np.abs(nnodes), aux_names=self.aux
+        )
         if node_data is not None:
             for n in node_data.dtype.names:
                 self.node_data[n] = node_data[n]
@@ -429,7 +474,7 @@ class Mnw(object):
         else:
             self._set_attributes_from_node_data()
 
-        for n in ['k', 'i', 'j']:
+        for n in ["k", "i", "j"]:
             if len(self.__dict__[n]) > 0:
                 # need to set for each period
                 self.stress_period_data[n] = [self.__dict__[n][0]]
@@ -444,8 +489,9 @@ class Mnw(object):
 
         """
         nnodes = self.nnodes
-        node_data = ModflowMnw2.get_empty_node_data(np.abs(nnodes),
-                                                    aux_names=self.aux)
+        node_data = ModflowMnw2.get_empty_node_data(
+            np.abs(nnodes), aux_names=self.aux
+        )
 
         names = Mnw.get_item2_names(self)
         for n in names:
@@ -453,8 +499,9 @@ class Mnw(object):
         self.node_data = node_data
 
     @staticmethod
-    def get_empty_stress_period_data(nper=0, aux_names=None, structured=True,
-                                     default_value=0):
+    def get_empty_stress_period_data(
+        nper=0, aux_names=None, structured=True, default_value=0
+    ):
         """
         Get an empty stress_period_data recarray that corresponds to dtype
 
@@ -496,20 +543,26 @@ class Mnw(object):
 
         """
         if structured:
-            return np.dtype([('k', np.int),
-                             ('i', np.int),
-                             ('j', np.int),
-                             ('per', np.int),
-                             ('qdes', np.float32),
-                             ('capmult', np.int),
-                             ('cprime', np.float32),
-                             ('hlim', np.float32),
-                             ('qcut', np.int),
-                             ('qfrcmn', np.float32),
-                             ('qfrcmx', np.float32)])
+            return np.dtype(
+                [
+                    ("k", np.int),
+                    ("i", np.int),
+                    ("j", np.int),
+                    ("per", np.int),
+                    ("qdes", np.float32),
+                    ("capmult", np.int),
+                    ("cprime", np.float32),
+                    ("hlim", np.float32),
+                    ("qcut", np.int),
+                    ("qfrcmn", np.float32),
+                    ("qfrcmx", np.float32),
+                ]
+            )
         else:
-            msg = 'Mnw2: get_default_spd_dtype not implemented for ' + \
-                  'unstructured grids'
+            msg = (
+                "Mnw2: get_default_spd_dtype not implemented for "
+                + "unstructured grids"
+            )
             raise NotImplementedError(msg)
 
     @staticmethod
@@ -549,35 +602,41 @@ class Mnw(object):
             pumpcap = mnw2obj.pumpcap
             qcut = mnw2obj.qcut
 
-        names = ['i', 'j']
+        names = ["i", "j"]
         if nnodes > 0:
-            names += ['k']
+            names += ["k"]
         if nnodes < 0:
-            names += ['ztop', 'zbotm']
-        names += ['wellid', 'losstype', 'pumploc', 'qlimit', 'ppflag',
-                  'pumpcap']
-        if losstype.lower() == 'thiem':
-            names += ['rw']
-        elif losstype.lower() == 'skin':
-            names += ['rw', 'rskin', 'kskin']
-        elif losstype.lower() == 'general':
-            names += ['rw', 'B', 'C', 'P']
-        elif losstype.lower() == 'specifycwc':
-            names += ['cwc']
+            names += ["ztop", "zbotm"]
+        names += [
+            "wellid",
+            "losstype",
+            "pumploc",
+            "qlimit",
+            "ppflag",
+            "pumpcap",
+        ]
+        if losstype.lower() == "thiem":
+            names += ["rw"]
+        elif losstype.lower() == "skin":
+            names += ["rw", "rskin", "kskin"]
+        elif losstype.lower() == "general":
+            names += ["rw", "B", "C", "P"]
+        elif losstype.lower() == "specifycwc":
+            names += ["cwc"]
         if ppflag > 0 and nnodes > 0:
-            names += ['pp']
+            names += ["pp"]
         if pumploc != 0:
             if pumploc > 0:
-                names += ['pumplay', 'pumprow', 'pumpcol']
+                names += ["pumplay", "pumprow", "pumpcol"]
             if pumploc < 0:
-                names += ['zpump']
+                names += ["zpump"]
         if qlimit > 0:
-            names += ['hlim', 'qcut']
+            names += ["hlim", "qcut"]
             if qcut != 0:
-                names += ['qfrcmn', 'qfrcmx']
+                names += ["qfrcmn", "qfrcmx"]
         if pumpcap > 0:
-            names += ['hlift', 'liftq0', 'liftqmax', 'hwtol']
-            names += ['liftn', 'qn']
+            names += ["hlift", "liftq0", "liftqmax", "hwtol"]
+            names += ["liftn", "qn"]
         return names
 
     @staticmethod
@@ -606,12 +665,12 @@ class Mnw(object):
     @staticmethod
     def sort_node_data(node_data):
         # sort by layer (layer input option)
-        if np.any(np.diff(node_data['k']) < 0):
-            node_data.sort(order=['k'])
+        if np.any(np.diff(node_data["k"]) < 0):
+            node_data.sort(order=["k"])
 
         # reverse sort by ztop if it's specified and not sorted correctly
-        if np.any(np.diff(node_data['ztop']) > 0):
-            node_data = np.sort(node_data, order=['ztop'])[::-1]
+        if np.any(np.diff(node_data["ztop"]) > 0):
+            node_data = np.sort(node_data, order=["ztop"])[::-1]
         return node_data
 
     def check(self, f=None, verbose=True, level=1, checktype=None):
@@ -638,10 +697,21 @@ class Mnw(object):
 
         """
         chk = self._get_check(f, verbose, level, checktype)
-        if self.losstype.lower() not in ['none', 'thiem', 'skin', 'general',
-                                         'sepecifycwc']:
-            chk._add_to_summary(type='Error', k=self.k, i=self.i, j=self.j,
-                                value=self.losstype, desc='Invalid losstype.')
+        if self.losstype.lower() not in [
+            "none",
+            "thiem",
+            "skin",
+            "general",
+            "sepecifycwc",
+        ]:
+            chk._add_to_summary(
+                type="Error",
+                k=self.k,
+                i=self.i,
+                j=self.j,
+                value=self.losstype,
+                desc="Invalid losstype.",
+            )
 
         chk.summarize()
         return chk
@@ -659,12 +729,14 @@ class Mnw(object):
         names = Mnw.get_item2_names(node_data=self.node_data)
         for n in names:
             # assign by node variables as lists if they are being included
-            if n in self.by_node_variables:  # and len(np.unique(self.node_data[n])) > 1:
+            if (
+                n in self.by_node_variables
+            ):  # and len(np.unique(self.node_data[n])) > 1:
                 self.__dict__[n] = list(self.node_data[n])
             else:
                 self.__dict__[n] = self.node_data[n][0]
 
-    def _write_2(self, f_mnw, float_format=' {:15.7E}', indent=12):
+    def _write_2(self, f_mnw, float_format=" {:15.7E}", indent=12):
         """
         Write out dataset 2 for MNW.
 
@@ -688,17 +760,21 @@ class Mnw(object):
         # update object attributes with values from node_data
         self._set_attributes_from_node_data()
 
-        indent = ' ' * indent
+        indent = " " * indent
         # dataset 2a
-        fmt = '{} {:.0f}\n'
+        fmt = "{} {:.0f}\n"
         f_mnw.write(fmt.format(self.wellid, self.nnodes))
         # dataset 2b
-        fmt = indent + '{} {:.0f} {:.0f} {:.0f} {:.0f}\n'
-        f_mnw.write(fmt.format(self.losstype,
-                               self.pumploc,
-                               self.qlimit,
-                               self.ppflag,
-                               self.pumpcap))
+        fmt = indent + "{} {:.0f} {:.0f} {:.0f} {:.0f}\n"
+        f_mnw.write(
+            fmt.format(
+                self.losstype,
+                self.pumploc,
+                self.qlimit,
+                self.ppflag,
+                self.pumpcap,
+            )
+        )
 
         # dataset 2c
         def _assign_by_node_var(var):
@@ -707,77 +783,95 @@ class Mnw(object):
                 return -1
             return var[0]
 
-        if self.losstype.lower() != 'none':
-            if self.losstype.lower() != 'specifycwc':
-                fmt = indent + float_format + ' '
+        if self.losstype.lower() != "none":
+            if self.losstype.lower() != "specifycwc":
+                fmt = indent + float_format + " "
                 f_mnw.write(fmt.format(_assign_by_node_var(self.rw)))
-                if self.losstype.lower() == 'skin':
-                    fmt = '{0} {0}'.format(float_format)
-                    f_mnw.write(fmt.format(_assign_by_node_var(self.rskin),
-                                           _assign_by_node_var(self.kskin)))
-                elif self.losstype.lower() == 'general':
-                    fmt = '{0} {0} {0}'.format(float_format)
-                    f_mnw.write(fmt.format(_assign_by_node_var(self.B),
-                                           _assign_by_node_var(self.C),
-                                           _assign_by_node_var(self.P)))
+                if self.losstype.lower() == "skin":
+                    fmt = "{0} {0}".format(float_format)
+                    f_mnw.write(
+                        fmt.format(
+                            _assign_by_node_var(self.rskin),
+                            _assign_by_node_var(self.kskin),
+                        )
+                    )
+                elif self.losstype.lower() == "general":
+                    fmt = "{0} {0} {0}".format(float_format)
+                    f_mnw.write(
+                        fmt.format(
+                            _assign_by_node_var(self.B),
+                            _assign_by_node_var(self.C),
+                            _assign_by_node_var(self.P),
+                        )
+                    )
             else:
                 fmt = indent + float_format
                 f_mnw.write(fmt.format(_assign_by_node_var(self.cwc)))
-            f_mnw.write('\n')
+            f_mnw.write("\n")
         # dataset 2d
         if self.nnodes > 0:
+
             def _getloc(n):
                 """Output for dataset 2d1."""
-                return indent + '{:.0f} {:.0f} {:.0f}'.format(self.k[n] + 1,
-                                                              self.i[n] + 1,
-                                                              self.j[n] + 1)
+                return indent + "{:.0f} {:.0f} {:.0f}".format(
+                    self.k[n] + 1, self.i[n] + 1, self.j[n] + 1
+                )
+
         elif self.nnodes < 0:
+
             def _getloc(n):
                 """Output for dataset 2d2."""
-                fmt = indent + '{0} {0} '.format(
-                    float_format) + '{:.0f} {:.0f}'
-                return fmt.format(self.node_data.ztop[n],
-                                  self.node_data.zbotm[n],
-                                  self.node_data.i[n] + 1,
-                                  self.node_data.j[n] + 1)
+                fmt = (
+                    indent + "{0} {0} ".format(float_format) + "{:.0f} {:.0f}"
+                )
+                return fmt.format(
+                    self.node_data.ztop[n],
+                    self.node_data.zbotm[n],
+                    self.node_data.i[n] + 1,
+                    self.node_data.j[n] + 1,
+                )
+
         for n in range(np.abs(self.nnodes)):
             f_mnw.write(_getloc(n))
-            for var in ['rw', 'rskin', 'kskin', 'B', 'C', 'P', 'cwc', 'pp']:
+            for var in ["rw", "rskin", "kskin", "B", "C", "P", "cwc", "pp"]:
                 val = self.__dict__[var]
                 if val is None:
                     continue
                 # only write variables by node if they are unique lists > length 1
                 if len(np.unique(val)) > 1:
                     # if isinstance(val, list) or val < 0:
-                    fmt = ' ' + float_format
+                    fmt = " " + float_format
                     f_mnw.write(fmt.format(self.node_data[var][n]))
-            f_mnw.write('\n')
+            f_mnw.write("\n")
         # dataset 2e
         if self.pumploc != 0:
             if self.pumploc > 0:
                 f_mnw.write(
-                    indent + '{:.0f} {:.0f} {:.0f}\n'.format(self.pumplay,
-                                                             self.pumprow,
-                                                             self.pumpcol))
+                    indent
+                    + "{:.0f} {:.0f} {:.0f}\n".format(
+                        self.pumplay, self.pumprow, self.pumpcol
+                    )
+                )
             elif self.pumploc < 0:
-                fmt = indent + '{}\n'.format(float_format)
+                fmt = indent + "{}\n".format(float_format)
                 f_mnw.write(fmt.format(self.zpump))
         # dataset 2f
         if self.qlimit > 0:
-            fmt = indent + '{} '.format(float_format) + '{:.0f}'
+            fmt = indent + "{} ".format(float_format) + "{:.0f}"
             f_mnw.write(fmt.format(self.hlim, self.qcut))
             if self.qcut != 0:
-                fmt = ' {0} {0}'.format(float_format)
+                fmt = " {0} {0}".format(float_format)
                 f_mnw.write(fmt.format(self.qfrcmn, self.qfrcmx))
-            f_mnw.write('\n')
+            f_mnw.write("\n")
         # dataset 2g
         if self.pumpcap > 0:
-            fmt = indent + '{0} {0} {0} {0}\n'.format(float_format)
+            fmt = indent + "{0} {0} {0} {0}\n".format(float_format)
             f_mnw.write(
-                fmt.format(self.hlift, self.liftq0, self.liftqmax, self.hwtol))
+                fmt.format(self.hlift, self.liftq0, self.liftqmax, self.hwtol)
+            )
         # dataset 2h
         if self.pumpcap > 0:
-            fmt = indent + '{0} {0}\n'.format(float_format)
+            fmt = indent + "{0} {0}\n".format(float_format)
             f_mnw.write(fmt.format(self.liftn, self.qn))
 
 
@@ -902,17 +996,29 @@ class ModflowMnw2(Package):
 
     """
 
-    def __init__(self, model, mnwmax=0, nodtot=None, ipakcb=0, mnwprnt=0,
-                 aux=[],
-                 node_data=None, mnw=None, stress_period_data=None, itmp=[],
-                 extension='mnw2', unitnumber=None, filenames=None,
-                 gwt=False):
+    def __init__(
+        self,
+        model,
+        mnwmax=0,
+        nodtot=None,
+        ipakcb=0,
+        mnwprnt=0,
+        aux=[],
+        node_data=None,
+        mnw=None,
+        stress_period_data=None,
+        itmp=[],
+        extension="mnw2",
+        unitnumber=None,
+        filenames=None,
+        gwt=False,
+    ):
         """
         Package constructor
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowMnw2.defaultunit()
+            unitnumber = ModflowMnw2._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -926,32 +1032,44 @@ class ModflowMnw2(Package):
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
             fname = filenames[1]
-            model.add_output_file(ipakcb, fname=fname,
-                                  package=ModflowMnw2.ftype())
+            model.add_output_file(
+                ipakcb, fname=fname, package=ModflowMnw2._ftype()
+            )
         else:
             ipakcb = 0
 
         # Fill namefile items
-        name = [ModflowMnw2.ftype()]
+        name = [ModflowMnw2._ftype()]
         units = [unitnumber]
-        extra = ['']
+        extra = [""]
 
         # set package name
         fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension=extension, name=name,
-                         unit_number=units, extra=extra, filenames=fname)
+        Package.__init__(
+            self,
+            model,
+            extension=extension,
+            name=name,
+            unit_number=units,
+            extra=extra,
+            filenames=fname,
+        )
 
-        self.url = 'mnw2.htm'
+        self.url = "mnw2.htm"
         self.nper = self.parent.nrow_ncol_nlay_nper[-1]
-        self.nper = 1 if self.nper == 0 else self.nper  # otherwise iterations from 0, nper won't run
+        self.nper = (
+            1 if self.nper == 0 else self.nper
+        )  # otherwise iterations from 0, nper won't run
         self.structured = self.parent.structured
 
         # Dataset 0
-        self.heading = '# {} package for '.format(self.name[0]) + \
-                       ' {}, '.format(model.version_types[model.version]) + \
-                       'generated by Flopy.'
+        self.heading = (
+            "# {} package for ".format(self.name[0])
+            + " {}, ".format(model.version_types[model.version])
+            + "generated by Flopy."
+        )
         # Dataset 1
         # maximum number of multi-node wells to be simulated
         self.mnwmax = int(mnwmax)
@@ -965,13 +1083,18 @@ class ModflowMnw2(Package):
         self.node_data = self.get_empty_node_data(0, aux_names=aux)
 
         if node_data is not None:
-            self.node_data = self.get_empty_node_data(len(node_data),
-                                                      aux_names=aux)
-            names = [n for n in node_data.dtype.names if
-                     n in self.node_data.dtype.names]
+            self.node_data = self.get_empty_node_data(
+                len(node_data), aux_names=aux
+            )
+            names = [
+                n
+                for n in node_data.dtype.names
+                if n in self.node_data.dtype.names
+            ]
             for n in names:
                 self.node_data[n] = node_data[
-                    n]  # recarray of Mnw properties by node
+                    n
+                ]  # recarray of Mnw properties by node
             self.nodtot = len(self.node_data)
             self._sort_node_data()
             # self.node_data.sort(order=['wellid', 'k'])
@@ -980,21 +1103,24 @@ class ModflowMnw2(Package):
             # self.node_data.sort(order='wellid', axis=0)
         self.mnw = mnw  # dict or list of Mnw objects
 
-        self.stress_period_data = MfList(self,
-                                         {0: self.get_empty_stress_period_data(
-                                             0,
-                                             aux_names=aux,
-                                             structured=self.structured)},
-                                         dtype=self.get_default_spd_dtype(
-                                             structured=self.structured))
+        self.stress_period_data = MfList(
+            self,
+            {
+                0: self.get_empty_stress_period_data(
+                    0, aux_names=aux, structured=self.structured
+                )
+            },
+            dtype=self.get_default_spd_dtype(structured=self.structured),
+        )
         if stress_period_data is not None:
             for per, data in stress_period_data.items():
-                spd = ModflowMnw2.get_empty_stress_period_data(len(data),
-                                                               aux_names=aux)
+                spd = ModflowMnw2.get_empty_stress_period_data(
+                    len(data), aux_names=aux
+                )
                 names = [n for n in data.dtype.names if n in spd.dtype.names]
                 for n in names:
                     spd[n] = data[n]
-                spd.sort(order='wellid')
+                spd.sort(order="wellid")
                 self.stress_period_data[per] = spd
 
         self.itmp = itmp
@@ -1011,34 +1137,40 @@ class ModflowMnw2(Package):
             self.make_stress_period_data(self.mnw)
 
         if stress_period_data is not None:
-            if 'k' not in stress_period_data[
-                list(stress_period_data.keys())[0]].dtype.names:
+            if (
+                "k"
+                not in stress_period_data[
+                    list(stress_period_data.keys())[0]
+                ].dtype.names
+            ):
                 self._add_kij_to_stress_period_data()
 
         self.parent.add_package(self)
 
     def _add_kij_to_stress_period_data(self):
         for per in self.stress_period_data.data.keys():
-            for d in ['k', 'i', 'j']:
+            for d in ["k", "i", "j"]:
                 self.stress_period_data[per][d] = [
                     self.mnw[wellid].__dict__[d][0]
-                    for wellid in self.stress_period_data[per].wellid]
+                    for wellid in self.stress_period_data[per].wellid
+                ]
 
     def _sort_node_data(self):
 
         node_data = self.node_data
         node_data_list = []
-        wells = sorted(np.unique(node_data['wellid']).tolist())
+        wells = sorted(np.unique(node_data["wellid"]).tolist())
         for wellid in wells:
-            nd = node_data[node_data['wellid'] == wellid]
+            nd = node_data[node_data["wellid"] == wellid]
             nd = Mnw.sort_node_data(nd)
             node_data_list.append(nd)
         node_data = np.concatenate(node_data_list, axis=0)
         self.node_data = node_data.view(np.recarray)
 
     @staticmethod
-    def get_empty_node_data(maxnodes=0, aux_names=None, structured=True,
-                            default_value=0):
+    def get_empty_node_data(
+        maxnodes=0, aux_names=None, structured=True, default_value=0
+    ):
         """
         get an empty recarray that corresponds to dtype
 
@@ -1062,8 +1194,9 @@ class ModflowMnw2(Package):
         dtype = ModflowMnw2.get_default_node_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        return create_empty_recarray(maxnodes, dtype,
-                                     default_value=default_value)
+        return create_empty_recarray(
+            maxnodes, dtype, default_value=default_value
+        )
 
     @staticmethod
     def get_default_node_dtype(structured=True):
@@ -1083,46 +1216,51 @@ class ModflowMnw2(Package):
 
         """
         if structured:
-            return np.dtype([('k', np.int),
-                             ('i', np.int),
-                             ('j', np.int),
-                             ('ztop', np.float32),
-                             ('zbotm', np.float32),
-                             ('wellid', np.object),
-                             ('losstype', np.object),
-                             ('pumploc', np.int),
-                             ('qlimit', np.int),
-                             ('ppflag', np.int),
-                             ('pumpcap', np.int),
-                             ('rw', np.float32),
-                             ('rskin', np.float32),
-                             ('kskin', np.float32),
-                             ('B', np.float32),
-                             ('C', np.float32),
-                             ('P', np.float32),
-                             ('cwc', np.float32),
-                             ('pp', np.float32),
-                             ('pumplay', np.int),
-                             ('pumprow', np.int),
-                             ('pumpcol', np.int),
-                             ('zpump', np.float32),
-                             ('hlim', np.float32),
-                             ('qcut', np.int),
-                             ('qfrcmn', np.float32),
-                             ('qfrcmx', np.float32),
-                             ('hlift', np.float32),
-                             ('liftq0', np.float32),
-                             ('liftqmax', np.float32),
-                             ('hwtol', np.float32),
-                             ('liftn', np.float32),
-                             ('qn', np.float32)])
+            return np.dtype(
+                [
+                    ("k", np.int),
+                    ("i", np.int),
+                    ("j", np.int),
+                    ("ztop", np.float32),
+                    ("zbotm", np.float32),
+                    ("wellid", np.object),
+                    ("losstype", np.object),
+                    ("pumploc", np.int),
+                    ("qlimit", np.int),
+                    ("ppflag", np.int),
+                    ("pumpcap", np.int),
+                    ("rw", np.float32),
+                    ("rskin", np.float32),
+                    ("kskin", np.float32),
+                    ("B", np.float32),
+                    ("C", np.float32),
+                    ("P", np.float32),
+                    ("cwc", np.float32),
+                    ("pp", np.float32),
+                    ("pumplay", np.int),
+                    ("pumprow", np.int),
+                    ("pumpcol", np.int),
+                    ("zpump", np.float32),
+                    ("hlim", np.float32),
+                    ("qcut", np.int),
+                    ("qfrcmn", np.float32),
+                    ("qfrcmx", np.float32),
+                    ("hlift", np.float32),
+                    ("liftq0", np.float32),
+                    ("liftqmax", np.float32),
+                    ("hwtol", np.float32),
+                    ("liftn", np.float32),
+                    ("qn", np.float32),
+                ]
+            )
         else:
-            msg = 'get_default_node_dtype: unstructured model not supported'
+            msg = "get_default_node_dtype: unstructured model not supported"
             raise NotImplementedError(msg)
 
     @staticmethod
-    def get_empty_stress_period_data(itmp=0, aux_names=None, structured=True,
-                                     default_value=0):
+    def get_empty_stress_period_data(
+        itmp=0, aux_names=None, structured=True, default_value=0
+    ):
         """
         Get an empty stress period data recarray
 
@@ -1167,23 +1305,27 @@ class ModflowMnw2(Package):
 
         """
         if structured:
-            return np.dtype([('k', np.int),
-                             ('i', np.int),
-                             ('j', np.int),
-                             ('wellid', np.object),
-                             ('qdes', np.float32),
-                             ('capmult', np.int),
-                             ('cprime', np.float32),
-                             ('hlim', np.float32),
-                             ('qcut', np.int),
-                             ('qfrcmn', np.float32),
-                             ('qfrcmx', np.float32)])
+            return np.dtype(
+                [
+                    ("k", np.int),
+                    ("i", np.int),
+                    ("j", np.int),
+                    ("wellid", np.object),
+                    ("qdes", np.float32),
+                    ("capmult", np.int),
+                    ("cprime", np.float32),
+                    ("hlim", np.float32),
+                    ("qcut", np.int),
+                    ("qfrcmn", np.float32),
+                    ("qfrcmx", np.float32),
+                ]
+            )
         else:
-            msg = 'get_default_spd_dtype: unstructured model not supported'
+            msg = "get_default_spd_dtype: unstructured model not supported"
             raise NotImplementedError(msg)
 
-    @staticmethod
-    def load(f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
         """
 
         Parameters
@@ -1211,22 +1353,24 @@ class ModflowMnw2(Package):
         """
 
         if model.verbose:
-            sys.stdout.write('loading mnw2 package file...\n')
+            sys.stdout.write("loading mnw2 package file...\n")
 
         structured = model.structured
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
-            nper = 1 if nper == 0 else nper  # otherwise iterations from 0, nper won't run
+            nper = (
+                1 if nper == 0 else nper
+            )  # otherwise iterations from 0, nper won't run
 
-        openfile = not hasattr(f, 'read')
+        openfile = not hasattr(f, "read")
         if openfile:
             filename = f
-            f = open(filename, 'r')
+            f = open(filename, "r")
 
         # dataset 0 (header)
         while True:
             line = get_next_line(f)
-            if line[0] != '#':
+            if line[0] != "#":
                 break
         # dataset 1
         mnwmax, nodtot, ipakcb, mnwprint, option = _parse_1(line)
@@ -1238,14 +1382,18 @@ class ModflowMnw2(Package):
             mnwobj = _parse_2(f)
             # populate stress period data table for each well object
             # this is filled below under dataset 4
-            mnwobj.stress_period_data = Mnw.get_empty_stress_period_data(nper,
-                                                                         aux_names=option)
+            mnwobj.stress_period_data = Mnw.get_empty_stress_period_data(
+                nper, aux_names=option
+            )
             mnw[mnwobj.wellid] = mnwobj
             # master table with all node data
             node_data = np.append(node_data, mnwobj.node_data).view(
-                np.recarray)
+                np.recarray
+            )
 
-        stress_period_data = {}  # stress period data table for package (flopy convention)
+        stress_period_data = (
+            {}
+        )  # stress period data table for package (flopy convention)
         itmp = []
         for per in range(0, nper):
             # dataset 3
@@ -1253,34 +1401,50 @@ class ModflowMnw2(Package):
             # dataset4
             # dict might be better here to only load submitted values
             if itmp_per > 0:
-                current_4 = ModflowMnw2.get_empty_stress_period_data(itmp_per,
-                                                                     aux_names=option)
+                current_4 = ModflowMnw2.get_empty_stress_period_data(
+                    itmp_per, aux_names=option
+                )
                 for i in range(itmp_per):
                     wellid, qdes, capmult, cprime, xyz = _parse_4a(
-                        get_next_line(f),
-                        mnw,
-                        gwt=gwt)
+                        get_next_line(f), mnw, gwt=gwt
+                    )
                     hlim, qcut, qfrcmn, qfrcmx = 0, 0, 0, 0
                     if mnw[wellid].qlimit < 0:
                         hlim, qcut, qfrcmn, qfrcmx = _parse_4b(
-                            get_next_line(f))
+                            get_next_line(f)
+                        )
                     # update package stress period data table
                     ndw = node_data[node_data.wellid == wellid]
                     kij = [ndw.k[0], ndw.i[0], ndw.j[0]]
-                    current_4[i] = tuple(kij + [wellid, qdes, capmult, cprime,
-                                                hlim, qcut, qfrcmn,
-                                                qfrcmx] + xyz)
+                    current_4[i] = tuple(
+                        kij
+                        + [
+                            wellid,
+                            qdes,
+                            capmult,
+                            cprime,
+                            hlim,
+                            qcut,
+                            qfrcmn,
+                            qfrcmx,
+                        ]
+                        + xyz
+                    )
                     # update well stress period data table
                     mnw[wellid].stress_period_data[per] = tuple(
-                        kij + [per] + [qdes, capmult, cprime,
-                                       hlim, qcut, qfrcmn, qfrcmx] + xyz)
+                        kij
+                        + [per]
+                        + [qdes, capmult, cprime, hlim, qcut, qfrcmn, qfrcmx]
+                        + xyz
+                    )
                 stress_period_data[per] = current_4
             elif itmp_per == 0:  # no active mnws this stress period
                 pass
             else:
                 # copy pumping rates from previous stress period
-                mnw[wellid].stress_period_data[per] = \
-                    mnw[wellid].stress_period_data[per - 1]
+                mnw[wellid].stress_period_data[per] = mnw[
+                    wellid
+                ].stress_period_data[per - 1]
             itmp.append(itmp_per)
 
         if openfile:
@@ -1291,7 +1455,7 @@ class ModflowMnw2(Package):
         filenames = [None, None]
         if ext_unit_dict is not None:
             for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowMnw2.ftype():
+                if value.filetype == ModflowMnw2._ftype():
                     unitnumber = key
                     filenames[0] = os.path.basename(value.filename)
 
@@ -1300,11 +1464,20 @@ class ModflowMnw2(Package):
                         filenames[1] = os.path.basename(value.filename)
                         model.add_pop_key_list(key)
 
-        return ModflowMnw2(model, mnwmax=mnwmax, nodtot=nodtot, ipakcb=ipakcb,
-                           mnwprnt=mnwprint, aux=option,
-                           node_data=node_data, mnw=mnw,
-                           stress_period_data=stress_period_data, itmp=itmp,
-                           unitnumber=unitnumber, filenames=filenames)
+        return cls(
+            model,
+            mnwmax=mnwmax,
+            nodtot=nodtot,
+            ipakcb=ipakcb,
+            mnwprnt=mnwprint,
+            aux=option,
+            node_data=node_data,
+            mnw=mnw,
+            stress_period_data=stress_period_data,
+            itmp=itmp,
+            unitnumber=unitnumber,
+            filenames=filenames,
+        )
 
     def check(self, f=None, verbose=True, level=1, checktype=None):
         """
@@ -1339,13 +1512,19 @@ class ModflowMnw2(Package):
 
         # itmp
         if self.itmp[0] < 0:
-            chk._add_to_summary(type='Error', value=self.itmp[0],
-                                desc='Itmp must be >= 0 for first stress period.')
+            chk._add_to_summary(
+                type="Error",
+                value=self.itmp[0],
+                desc="Itmp must be >= 0 for first stress period.",
+            )
         invalid_itmp = np.array(self.itmp) > self.mnwmax
         if np.any(invalid_itmp):
             for v in np.array(self.itmp)[invalid_itmp]:
-                chk._add_to_summary(type='Error', value=v,
-                                    desc='Itmp value greater than MNWMAX')
+                chk._add_to_summary(
+                    type="Error",
+                    value=v,
+                    desc="Itmp value greater than MNWMAX",
+                )
 
         chk.summarize()
         return chk
@@ -1371,23 +1550,23 @@ class ModflowMnw2(Package):
         nd = []
         for i in range(len(self.node_data)):
             r = self.node_data[i]
-            if r['ztop'] - r['zbotm'] > 0:
-                startK = get_layer(self.parent.dis, r['i'], r['j'], r['ztop'])
-                endK = get_layer(self.parent.dis, r['i'], r['j'], r['zbotm'])
+            if r["ztop"] - r["zbotm"] > 0:
+                startK = get_layer(self.parent.dis, r["i"], r["j"], r["ztop"])
+                endK = get_layer(self.parent.dis, r["i"], r["j"], r["zbotm"])
                 if startK == endK:
                     r = r.copy()
-                    r['k'] = startK
+                    r["k"] = startK
                     nd.append(r)
                 else:
                     for k in np.arange(startK, endK + 1):
                         rk = r.copy()
-                        rk['k'] = k
+                        rk["k"] = k
                         if k > startK:
-                            loc = (k - 1, rk['i'], rk['j'])
-                            rk['ztop'] = self.parent.dis.botm[loc]
+                            loc = (k - 1, rk["i"], rk["j"])
+                            rk["ztop"] = self.parent.dis.botm[loc]
                         if k < endK:
-                            loc = (k, rk['i'], rk['j'])
-                            rk['zbotm'] = self.parent.dis.botm[loc]
+                            loc = (k, rk["i"], rk["j"])
+                            rk["zbotm"] = self.parent.dis.botm[loc]
                         nd.append(rk)
             else:
                 nd.append(r)
@@ -1405,7 +1584,7 @@ class ModflowMnw2(Package):
         node_data = self.node_data
         stress_period_data = self.stress_period_data
         self.mnw = {}
-        mnws = np.unique(node_data['wellid'])
+        mnws = np.unique(node_data["wellid"])
         for wellid in mnws:
             nd = node_data[node_data.wellid == wellid]
             nnodes = Mnw.get_nnodes(nd)
@@ -1415,15 +1594,18 @@ class ModflowMnw2(Package):
             # if maxtop - minbot > 0 and nnodes > 0:
             #    nnodes *= -1
             # reshape stress period data to well
-            mnwspd = Mnw.get_empty_stress_period_data(self.nper,
-                                                      aux_names=self.aux)
+            mnwspd = Mnw.get_empty_stress_period_data(
+                self.nper, aux_names=self.aux
+            )
             for per, itmp in enumerate(self.itmp):
                 inds = stress_period_data[per].wellid == wellid
                 if itmp > 0 and np.any(inds):
-                    names = [n for n in
-                             stress_period_data[per][inds].dtype.names if
-                             n in mnwspd.dtype.names]
-                    mnwspd[per]['per'] = per
+                    names = [
+                        n
+                        for n in stress_period_data[per][inds].dtype.names
+                        if n in mnwspd.dtype.names
+                    ]
+                    mnwspd[per]["per"] = per
                     for n in names:
                         mnwspd[per][n] = stress_period_data[per][inds][n][0]
                 elif itmp == 0:
@@ -1431,10 +1613,14 @@ class ModflowMnw2(Package):
                 elif itmp < 0:
                     mnwspd[per] = mnwspd[per - 1]
 
-            self.mnw[wellid] = Mnw(wellid,
-                                   nnodes=nnodes, nper=self.nper,
-                                   node_data=nd, stress_period_data=mnwspd,
-                                   mnwpackage=self)
+            self.mnw[wellid] = Mnw(
+                wellid,
+                nnodes=nnodes,
+                nper=self.nper,
+                node_data=nd,
+                stress_period_data=mnwspd,
+                mnwpackage=self,
+            )
 
     def make_node_data(self, mnwobjs):
         """
@@ -1487,30 +1673,36 @@ class ModflowMnw2(Package):
         for per, itmp in enumerate(self.itmp):
             if itmp > 0:
                 stress_period_data[
-                    per] = ModflowMnw2.get_empty_stress_period_data(itmp,
-                                                                    aux_names=self.aux)
+                    per
+                ] = ModflowMnw2.get_empty_stress_period_data(
+                    itmp, aux_names=self.aux
+                )
                 i = 0
                 for mnw in mnwobjs:
                     if per in mnw.stress_period_data.per:
                         i += 1
                         if i > itmp:
                             raise ItmpError(itmp, i)
-                        names = [n for n in mnw.stress_period_data.dtype.names
-                                 if n in stress_period_data[per].dtype.names]
-                        stress_period_data[per]['wellid'][i - 1] = mnw.wellid
+                        names = [
+                            n
+                            for n in mnw.stress_period_data.dtype.names
+                            if n in stress_period_data[per].dtype.names
+                        ]
+                        stress_period_data[per]["wellid"][i - 1] = mnw.wellid
                         for n in names:
-                            stress_period_data[per][n][i - 1] = \
-                                mnw.stress_period_data[n][per]
-                stress_period_data[per].sort(order='wellid')
+                            stress_period_data[per][n][
+                                i - 1
+                            ] = mnw.stress_period_data[n][per]
+                stress_period_data[per].sort(order="wellid")
                 if i < itmp:
                     raise ItmpError(itmp, i)
             elif itmp == 0:
                 continue
             else:  # itmp < 0
                 stress_period_data[per] = stress_period_data[per - 1]
-        self.stress_period_data = MfList(self,
-                                         stress_period_data,
-                                         dtype=stress_period_data[0].dtype)
+        self.stress_period_data = MfList(
+            self, stress_period_data, dtype=stress_period_data[0].dtype
+        )
 
     def export(self, f, **kwargs):
         """
@@ -1529,12 +1721,13 @@ class ModflowMnw2(Package):
         """
         # A better strategy would be to build a single 4-D MfList
         # (currently the stress period data array has everything in layer 0)
-        self.node_data_MfList = MfList(self, self.get_allnode_data(),
-                                       dtype=self.node_data.dtype)
+        self.node_data_MfList = MfList(
+            self, self.get_allnode_data(), dtype=self.node_data.dtype
+        )
         # make some modifications to ensure proper export
         # avoid duplicate entries for qfrc
         wellids = np.unique(self.node_data.wellid)
-        todrop = ['hlim', 'qcut', 'qfrcmn', 'qfrcmx']
+        todrop = ["hlim", "qcut", "qfrcmn", "qfrcmx"]
         # move duplicate fields from node_data to stress_period_data
         for wellid in wellids:
             wellnd = self.node_data.wellid == wellid
@@ -1542,10 +1735,11 @@ class ModflowMnw2(Package):
                 for per in self.stress_period_data.data.keys():
                     for col in todrop:
                         inds = self.stress_period_data[per].wellid == wellid
-                        self.stress_period_data[per][col][inds] = \
-                            self.node_data[wellnd][col]
+                        self.stress_period_data[per][col][
+                            inds
+                        ] = self.node_data[wellnd][col]
         self.node_data_MfList = self.node_data_MfList.drop(todrop)
-        '''
+        """
         todrop = {'qfrcmx', 'qfrcmn'}
         names = list(set(self.stress_period_data.dtype.names).difference(todrop))
         dtype = np.dtype([(k, d) for k, d in self.stress_period_data.dtype.descr if k not in todrop])
@@ -1557,7 +1751,7 @@ class ModflowMnw2(Package):
                 newarr[n] = self.stress_period_data[k][n]
             spd[k] = newarr
         self.stress_period_data = MfList(self, spd, dtype=dtype)
-        '''
+        """
 
         return super(ModflowMnw2, self).export(f, **kwargs)
 
@@ -1575,17 +1769,18 @@ class ModflowMnw2(Package):
         None
 
         """
-        f_mnw.write('{:.0f} '.format(self.mnwmax))
+        f_mnw.write("{:.0f} ".format(self.mnwmax))
         if self.mnwmax < 0:
-            f_mnw.write('{:.0f} '.format(self.nodtot))
-        f_mnw.write('{:.0f} {:.0f}'.format(self.ipakcb, self.mnwprnt))
+            f_mnw.write("{:.0f} ".format(self.nodtot))
+        f_mnw.write("{:.0f} {:.0f}".format(self.ipakcb, self.mnwprnt))
         if len(self.aux) > 0:
             for abc in self.aux:
-                f_mnw.write(' aux {}'.format(abc))
-        f_mnw.write('\n')
+                f_mnw.write(" aux {}".format(abc))
+        f_mnw.write("\n")
 
-    def write_file(self, filename=None, float_format=' {:15.7E}',
-                   use_tables=True):
+    def write_file(
+        self, filename=None, float_format=" {:15.7E}", use_tables=True
+    ):
         """
         Write the package file.
 
@@ -1608,10 +1803,10 @@ class ModflowMnw2(Package):
         if filename is not None:
             self.fn_path = filename
 
-        f_mnw = open(self.fn_path, 'w')
+        f_mnw = open(self.fn_path, "w")
 
         # dataset 0 (header)
-        f_mnw.write('{0}\n'.format(self.heading))
+        f_mnw.write("{0}\n".format(self.heading))
 
         # dataset 1
         self._write_1(f_mnw)
@@ -1621,7 +1816,8 @@ class ModflowMnw2(Package):
         # call make_mnw_objects?? (table is definitive then)
         if use_tables:
             mnws = np.unique(
-                self.node_data.wellid).tolist()  # preserve any order
+                self.node_data.wellid
+            ).tolist()  # preserve any order
         else:
             mnws = self.mnw.values()
         for k in mnws:
@@ -1629,47 +1825,63 @@ class ModflowMnw2(Package):
 
         # dataset 3
         for per in range(self.nper):
-            f_mnw.write('{:.0f}  Stress Period {:.0f}\n'.format(self.itmp[per],
-                                                                per + 1))
+            f_mnw.write(
+                "{:.0f}  Stress Period {:.0f}\n".format(
+                    self.itmp[per], per + 1
+                )
+            )
             if self.itmp[per] > 0:
 
                 for n in range(self.itmp[per]):
                     # dataset 4
                     wellid = self.stress_period_data[per].wellid[n]
                     qdes = self.stress_period_data[per].qdes[n]
-                    fmt = '{} ' + float_format
+                    fmt = "{} " + float_format
                     f_mnw.write(fmt.format(wellid, qdes))
                     if self.mnw[wellid].pumpcap > 0:
-                        fmt = ' ' + float_format
-                        f_mnw.write(fmt.format(
-                            *self.stress_period_data[per].capmult[n]))
+                        fmt = " " + float_format
+                        f_mnw.write(
+                            fmt.format(
+                                *self.stress_period_data[per].capmult[n]
+                            )
+                        )
                     if qdes > 0 and self.gwt:
-                        f_mnw.write(fmt.format(
-                            *self.stress_period_data[per].cprime[n]))
+                        f_mnw.write(
+                            fmt.format(*self.stress_period_data[per].cprime[n])
+                        )
                     if len(self.aux) > 0:
                         for var in self.aux:
-                            fmt = ' ' + float_format
-                            f_mnw.write(fmt.format(
-                                *self.stress_period_data[per][var][n]))
-                    f_mnw.write('\n')
+                            fmt = " " + float_format
+                            f_mnw.write(
+                                fmt.format(
+                                    *self.stress_period_data[per][var][n]
+                                )
+                            )
+                    f_mnw.write("\n")
                     if self.mnw[wellid].qlimit < 0:
-                        hlim, qcut = \
-                            self.stress_period_data[per][['hlim', 'qcut']][n]
-                        fmt = float_format + ' {:.0f}'
+                        hlim, qcut = self.stress_period_data[per][
+                            ["hlim", "qcut"]
+                        ][n]
+                        fmt = float_format + " {:.0f}"
                         f_mnw.write(fmt.format(hlim, qcut))
                         if qcut != 0:
-                            fmt = ' {} {}'.format(float_format)
-                            f_mnw.write(fmt.format(*self.stress_period_data[
-                                per][['qfrcmn', 'qfrcmx']][n]))
-                        f_mnw.write('\n')
+                            fmt = " {} {}".format(float_format)
+                            f_mnw.write(
+                                fmt.format(
+                                    *self.stress_period_data[per][
+                                        ["qfrcmn", "qfrcmx"]
+                                    ][n]
+                                )
+                            )
+                        f_mnw.write("\n")
         f_mnw.close()
 
     @staticmethod
-    def ftype():
-        return 'MNW2'
+    def _ftype():
+        return "MNW2"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 34
 
 
@@ -1693,8 +1905,11 @@ def _parse_1(line):
     mnwprint = pop_item(line, int)
     option = []  # aux names
     if len(line) > 0:
-        option += [line[i] for i in np.arange(1, len(line)) if
-                   'aux' in line[i - 1].lower()]
+        option += [
+            line[i]
+            for i in np.arange(1, len(line))
+            if "aux" in line[i - 1].lower()
+        ]
     return mnwmax, nodtot, ipakcb, mnwprint, option
 
 
@@ -1712,10 +1927,12 @@ def _parse_2(f):
     # dataset 2a
     line = line_parse(get_next_line(f))
     if len(line) > 2:
-        warnings.warn('MNW2: {}\n'.format(line) +
-                      'Extra items in Dataset 2a!' +
-                      'Check for WELLIDs with space ' +
-                      'but not enclosed in quotes.')
+        warnings.warn(
+            "MNW2: {}\n".format(line)
+            + "Extra items in Dataset 2a!"
+            + "Check for WELLIDs with space "
+            + "but not enclosed in quotes."
+        )
     wellid = pop_item(line).lower()
     nnodes = pop_item(line, int)
     # dataset 2b
@@ -1727,16 +1944,29 @@ def _parse_2(f):
     pumpcap = pop_item(line, int)
 
     # dataset 2c
-    names = ['ztop', 'zbotm', 'k', 'i', 'j', 'rw', 'rskin', 'kskin', 'B', 'C',
-             'P', 'cwc', 'pp']
+    names = [
+        "ztop",
+        "zbotm",
+        "k",
+        "i",
+        "j",
+        "rw",
+        "rskin",
+        "kskin",
+        "B",
+        "C",
+        "P",
+        "cwc",
+        "pp",
+    ]
     d2d = {n: [] for n in names}  # dataset 2d; dict of lists for each variable
     # set default values of 0 for all 2c items
-    d2dw = dict(
-        zip(['rw', 'rskin', 'kskin', 'B', 'C', 'P', 'cwc'], [0] * 7))
-    if losstype.lower() != 'none':
+    d2dw = dict(zip(["rw", "rskin", "kskin", "B", "C", "P", "cwc"], [0] * 7))
+    if losstype.lower() != "none":
         # update d2dw items
         d2dw.update(
-            _parse_2c(get_next_line(f), losstype))  # dict of values for well
+            _parse_2c(get_next_line(f), losstype)
+        )  # dict of values for well
         for k, v in d2dw.items():
             if v > 0:
                 d2d[k].append(v)
@@ -1745,23 +1975,30 @@ def _parse_2(f):
     for i in range(np.abs(nnodes)):
         line = line_parse(get_next_line(f))
         if nnodes > 0:
-            d2d['k'].append(pop_item(line, int) - 1)
-            d2d['i'].append(pop_item(line, int) - 1)
-            d2d['j'].append(pop_item(line, int) - 1)
+            d2d["k"].append(pop_item(line, int) - 1)
+            d2d["i"].append(pop_item(line, int) - 1)
+            d2d["j"].append(pop_item(line, int) - 1)
         elif nnodes < 0:
-            d2d['ztop'].append(pop_item(line, float))
-            d2d['zbotm'].append(pop_item(line, float))
-            d2d['i'].append(pop_item(line, int) - 1)
-            d2d['j'].append(pop_item(line, int) - 1)
-        d2di = _parse_2c(line, losstype, rw=d2dw['rw'], rskin=d2dw['rskin'],
-                         kskin=d2dw['kskin'],
-                         B=d2dw['B'], C=d2dw['C'], P=d2dw['P'],
-                         cwc=d2dw['cwc'])
+            d2d["ztop"].append(pop_item(line, float))
+            d2d["zbotm"].append(pop_item(line, float))
+            d2d["i"].append(pop_item(line, int) - 1)
+            d2d["j"].append(pop_item(line, int) - 1)
+        d2di = _parse_2c(
+            line,
+            losstype,
+            rw=d2dw["rw"],
+            rskin=d2dw["rskin"],
+            kskin=d2dw["kskin"],
+            B=d2dw["B"],
+            C=d2dw["C"],
+            P=d2dw["P"],
+            cwc=d2dw["cwc"],
+        )
         # append only the returned items
         for k, v in d2di.items():
             d2d[k].append(v)
         if ppflag > 0 and nnodes > 0:
-            d2d['pp'].append(pop_item(line, float))
+            d2d["pp"].append(pop_item(line, float))
 
     # dataset 2e
     pumplay = None
@@ -1817,23 +2054,47 @@ def _parse_2(f):
             liftn = pop_item(line, float)
             qn = pop_item(line, float)
 
-    return Mnw(wellid,
-               nnodes=nnodes,
-               losstype=losstype, pumploc=pumploc, qlimit=qlimit,
-               ppflag=ppflag, pumpcap=pumpcap,
-               k=d2d['k'], i=d2d['i'], j=d2d['j'], ztop=d2d['ztop'],
-               zbotm=d2d['zbotm'],
-               rw=d2d['rw'], rskin=d2d['rskin'], kskin=d2d['kskin'],
-               B=d2d['B'], C=d2d['C'], P=d2d['P'], cwc=d2d['cwc'],
-               pp=d2d['pp'],
-               pumplay=pumplay, pumprow=pumprow, pumpcol=pumpcol, zpump=zpump,
-               hlim=hlim, qcut=qcut, qfrcmn=qfrcmn, qfrcmx=qfrcmx,
-               hlift=hlift, liftq0=liftq0, liftqmax=liftqmax, hwtol=hwtol,
-               liftn=liftn, qn=qn)
+    return Mnw(
+        wellid,
+        nnodes=nnodes,
+        losstype=losstype,
+        pumploc=pumploc,
+        qlimit=qlimit,
+        ppflag=ppflag,
+        pumpcap=pumpcap,
+        k=d2d["k"],
+        i=d2d["i"],
+        j=d2d["j"],
+        ztop=d2d["ztop"],
+        zbotm=d2d["zbotm"],
+        rw=d2d["rw"],
+        rskin=d2d["rskin"],
+        kskin=d2d["kskin"],
+        B=d2d["B"],
+        C=d2d["C"],
+        P=d2d["P"],
+        cwc=d2d["cwc"],
+        pp=d2d["pp"],
+        pumplay=pumplay,
+        pumprow=pumprow,
+        pumpcol=pumpcol,
+        zpump=zpump,
+        hlim=hlim,
+        qcut=qcut,
+        qfrcmn=qfrcmn,
+        qfrcmx=qfrcmx,
+        hlift=hlift,
+        liftq0=liftq0,
+        liftqmax=liftqmax,
+        hwtol=hwtol,
+        liftn=liftn,
+        qn=qn,
+    )
 
 
-def _parse_2c(line, losstype, rw=-1, rskin=-1, kskin=-1, B=-1, C=-1, P=-1,
-              cwc=-1):
+def _parse_2c(
+    line, losstype, rw=-1, rskin=-1, kskin=-1, B=-1, C=-1, P=-1, cwc=-1
+):
     """
 
     Parameters
@@ -1855,24 +2116,24 @@ def _parse_2c(line, losstype, rw=-1, rskin=-1, kskin=-1, B=-1, C=-1, P=-1,
     if not isinstance(line, list):
         line = line_parse(line)
     nd = {}  # dict of dataset 2c/2d items
-    if losstype.lower() != 'specifycwc':
+    if losstype.lower() != "specifycwc":
         if rw < 0:
-            nd['rw'] = pop_item(line, float)
-        if losstype.lower() == 'skin':
+            nd["rw"] = pop_item(line, float)
+        if losstype.lower() == "skin":
             if rskin < 0:
-                nd['rskin'] = pop_item(line, float)
+                nd["rskin"] = pop_item(line, float)
             if kskin < 0:
-                nd['kskin'] = pop_item(line, float)
-        elif losstype.lower() == 'general':
+                nd["kskin"] = pop_item(line, float)
+        elif losstype.lower() == "general":
             if B < 0:
-                nd['B'] = pop_item(line, float)
+                nd["B"] = pop_item(line, float)
             if C < 0:
-                nd['C'] = pop_item(line, float)
+                nd["C"] = pop_item(line, float)
             if P < 0:
-                nd['P'] = pop_item(line, float)
+                nd["P"] = pop_item(line, float)
     else:
         if cwc < 0:
-            nd['cwc'] = pop_item(line, float)
+            nd["cwc"] = pop_item(line, float)
     return nd
 
 
@@ -1931,8 +2192,10 @@ class ItmpError(Exception):
         self.nactivewells = nactivewells
 
     def __str__(self):
-        s = '\n\nItmp value of {} '.format(self.itmp) + \
-            'is positive but does not equal the number of active wells ' + \
-            'specified ({}). '.format(self.nactivewells) + \
-            'See MNW2 package documentation for details.'
+        s = (
+            "\n\nItmp value of {} ".format(self.itmp)
+            + "is positive but does not equal the number of active wells "
+            + "specified ({}). ".format(self.nactivewells)
+            + "See MNW2 package documentation for details."
+        )
         return s

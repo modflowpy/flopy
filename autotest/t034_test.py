@@ -290,6 +290,7 @@ def test_load_write_sfr_option_block():
     assert sfr.options.factorkv == sfr2.options.factorkv
     assert sfr2.options.factorkv == 0.4
     assert sfr2.options.factorkh == 0.2
+    assert sfr2.options.block
 
     sfr2.options.strhc1kh = False
     sfr2.options.strhc1kv = False
@@ -328,6 +329,7 @@ def test_load_write_sfr_option_line():
     assert sfr2.reachinput
     assert sfr2.options.factorkv == 0.4
     assert sfr2.options.factorkh == 0.2
+    assert not sfr2.options.block
 
     # test with modflow-2005
     ml = flopy.modflow.Modflow(modelname="optionblock",
@@ -376,6 +378,7 @@ def test_load_write_uzf_option_block():
     assert uzf.options.nosurfleak == uzf2.options.nosurfleak
     assert uzf.options.etsquare == uzf2.options.etsquare
     assert uzf.options.savefinf == uzf2.options.savefinf
+    assert uzf2.options.block
 
     uzf2.smoothfact = 0.4
 
@@ -421,6 +424,7 @@ def test_load_write_uzf_option_line():
     assert uzf2.etsquare
     assert uzf2.smoothfact == 0.2
     assert uzf2.options.savefinf
+    assert not uzf2.options.block
 
 
 def test_load_write_wel_option_block():

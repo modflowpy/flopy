@@ -1,0 +1,50 @@
+# --------------------- gwt fmi options ---------------------
+
+block options
+name flow_imbalance_correction
+type keyword
+reader urword
+optional true
+longname correct for flow imbalance
+description correct for an imbalance in flows by assuming that any residual flow error comes in or leaves at the concentration of the cell.
+
+# --------------------- gwt fmi packagedata ---------------------
+
+block packagedata
+name packagedata
+type recarray flowtype filein fname
+reader urword
+optional false
+longname flowtype list
+description
+
+block packagedata
+name flowtype
+in_record true
+type string
+tagged false
+reader urword
+longname flow type
+description is the word GWFBUDGET, GWFHEAD, GWFMOVER or the name of an advanced GWF stress package.  If GWFBUDGET is specified, then the corresponding file must be a budget file from a previous GWF Model run.  If an advanced GWF stress package name appears then the corresponding file must be the budget file saved by a LAK, SFR, MAW or UZF Package.
+
+block packagedata
+name filein
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block packagedata
+name fname
+in_record true
+type string
+preserve_case true
+tagged false
+reader urword
+longname file name
+description is the name of the file containing flows.  The path to the file should be included if the file is not located in the folder where the program was run.
+

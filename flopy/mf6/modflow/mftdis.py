@@ -44,45 +44,97 @@ class ModflowTdis(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    perioddata = ListTemplateGenerator(('tdis', 'perioddata',
-                                        'perioddata'))
+
+    perioddata = ListTemplateGenerator(("tdis", "perioddata", "perioddata"))
     package_abbr = "tdis"
     _package_type = "tdis"
     dfn_file_name = "sim-tdis.dfn"
 
-    dfn = [["block options", "name time_units", "type string",
-            "reader urword", "optional true"],
-           ["block options", "name start_date_time", "type string",
-            "reader urword", "optional true"],
-           ["block dimensions", "name nper", "type integer",
-            "reader urword", "optional false", "default_value 1"],
-           ["block perioddata", "name perioddata",
-            "type recarray perlen nstp tsmult", "reader urword",
-            "optional false", "default_value ((1.0, 1, 1.0),)"],
-           ["block perioddata", "name perlen", "type double precision",
-            "in_record true", "tagged false", "reader urword",
-            "optional false"],
-           ["block perioddata", "name nstp", "type integer",
-            "in_record true", "tagged false", "reader urword",
-            "optional false"],
-           ["block perioddata", "name tsmult", "type double precision",
-            "in_record true", "tagged false", "reader urword",
-            "optional false"]]
+    dfn = [
+        [
+            "block options",
+            "name time_units",
+            "type string",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name start_date_time",
+            "type string",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block dimensions",
+            "name nper",
+            "type integer",
+            "reader urword",
+            "optional false",
+            "default_value 1",
+        ],
+        [
+            "block perioddata",
+            "name perioddata",
+            "type recarray perlen nstp tsmult",
+            "reader urword",
+            "optional false",
+            "default_value ((1.0, 1, 1.0),)",
+        ],
+        [
+            "block perioddata",
+            "name perlen",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block perioddata",
+            "name nstp",
+            "type integer",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block perioddata",
+            "name tsmult",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+    ]
 
-    def __init__(self, simulation, loading_package=False, time_units=None,
-                 start_date_time=None, nper=1, perioddata=((1.0, 1, 1.0),),
-                 filename=None, pname=None, parent_file=None):
-        super(ModflowTdis, self).__init__(simulation, "tdis", filename, pname,
-                                          loading_package, parent_file)
+    def __init__(
+        self,
+        simulation,
+        loading_package=False,
+        time_units=None,
+        start_date_time=None,
+        nper=1,
+        perioddata=((1.0, 1, 1.0),),
+        filename=None,
+        pname=None,
+        parent_file=None,
+    ):
+        super(ModflowTdis, self).__init__(
+            simulation, "tdis", filename, pname, loading_package, parent_file
+        )
 
         # set up variables
         self.time_units = self.build_mfdata("time_units", time_units)
-        self.start_date_time = self.build_mfdata("start_date_time",
-                                                 start_date_time)
+        self.start_date_time = self.build_mfdata(
+            "start_date_time", start_date_time
+        )
         self.nper = self.build_mfdata("nper", nper)
         self.perioddata = self.build_mfdata("perioddata", perioddata)
         self._init_complete = True

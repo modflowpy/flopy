@@ -91,13 +91,31 @@ class ModflowBcf(Package):
 
     """
 
-    def __init__(self, model, ipakcb=None, intercellt=0, laycon=3, trpy=1.0,
-                 hdry=-1E+30, iwdflg=0, wetfct=0.1, iwetit=1, ihdwet=0,
-                 tran=1.0, hy=1.0, vcont=1.0, sf1=1e-5, sf2=0.15, wetdry=-0.01,
-                 extension='bcf', unitnumber=None, filenames=None):
+    def __init__(
+        self,
+        model,
+        ipakcb=None,
+        intercellt=0,
+        laycon=3,
+        trpy=1.0,
+        hdry=-1e30,
+        iwdflg=0,
+        wetfct=0.1,
+        iwetit=1,
+        ihdwet=0,
+        tran=1.0,
+        hy=1.0,
+        vcont=1.0,
+        sf1=1e-5,
+        sf2=0.15,
+        wetdry=-0.01,
+        extension="bcf",
+        unitnumber=None,
+        filenames=None,
+    ):
 
         if unitnumber is None:
-            unitnumber = ModflowBcf.defaultunit()
+            unitnumber = ModflowBcf._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -111,33 +129,59 @@ class ModflowBcf(Package):
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
             fname = filenames[1]
-            model.add_output_file(ipakcb, fname=fname,
-                                  package=ModflowBcf.ftype())
+            model.add_output_file(
+                ipakcb, fname=fname, package=ModflowBcf._ftype()
+            )
         else:
             ipakcb = 0
 
         # Fill namefile items
-        name = [ModflowBcf.ftype()]
+        name = [ModflowBcf._ftype()]
         units = [unitnumber]
-        extra = ['']
+        extra = [""]
 
         # set package name
         fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension=extension, name=name,
-                         unit_number=units, extra=extra, filenames=fname)
+        Package.__init__(
+            self,
+            model,
+            extension=extension,
+            name=name,
+            unit_number=units,
+            extra=extra,
+            filenames=fname,
+        )
 
-        self.url = 'bcf.htm'
+        self.url = "bcf.htm"
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Set values of all parameters
-        self.intercellt = Util2d(model, (nlay,), np.int32, intercellt,
-                                 name='laycon', locat=self.unit_number[0])
-        self.laycon = Util2d(model, (nlay,), np.int32, laycon, name='laycon',
-                             locat=self.unit_number[0])
-        self.trpy = Util2d(model, (nlay,), np.float32, trpy,
-                           name='Anisotropy factor', locat=self.unit_number[0])
+        self.intercellt = Util2d(
+            model,
+            (nlay,),
+            np.int32,
+            intercellt,
+            name="laycon",
+            locat=self.unit_number[0],
+        )
+        self.laycon = Util2d(
+            model,
+            (nlay,),
+            np.int32,
+            laycon,
+            name="laycon",
+            locat=self.unit_number[0],
+        )
+        self.trpy = Util2d(
+            model,
+            (nlay,),
+            np.float32,
+            trpy,
+            name="Anisotropy factor",
+            locat=self.unit_number[0],
+        )
 
         # item 1
         self.ipakcb = ipakcb
@@ -146,26 +190,57 @@ class ModflowBcf(Package):
         self.wetfct = wetfct
         self.iwetit = iwetit
         self.ihdwet = ihdwet
-        self.tran = Util3d(model, (nlay, nrow, ncol), np.float32, tran,
-                           'Transmissivity', locat=self.unit_number[0])
-        self.hy = Util3d(model, (nlay, nrow, ncol), np.float32, hy,
-                         'Horizontal Hydraulic Conductivity',
-                         locat=self.unit_number[0])
+        self.tran = Util3d(
+            model,
+            (nlay, nrow, ncol),
+            np.float32,
+            tran,
+            "Transmissivity",
+            locat=self.unit_number[0],
+        )
+        self.hy = Util3d(
+            model,
+            (nlay, nrow, ncol),
+            np.float32,
+            hy,
+            "Horizontal Hydraulic Conductivity",
+            locat=self.unit_number[0],
+        )
         if model.nlay > 1:
-            self.vcont = Util3d(model, (nlay - 1, nrow, ncol), np.float32,
-                                vcont,
-                                'Vertical Conductance',
-                                locat=self.unit_number[0])
+            self.vcont = Util3d(
+                model,
+                (nlay - 1, nrow, ncol),
+                np.float32,
+                vcont,
+                "Vertical Conductance",
+                locat=self.unit_number[0],
+            )
         else:
             self.vcont = None
-        self.sf1 = Util3d(model, (nlay, nrow, ncol), np.float32, sf1,
-                          'Primary Storage Coefficient',
-                          locat=self.unit_number[0])
-        self.sf2 = Util3d(model, (nlay, nrow, ncol), np.float32, sf2,
-                          'Secondary Storage Coefficient',
-                          locat=self.unit_number[0])
-        self.wetdry = Util3d(model, (nlay, nrow, ncol), np.float32, wetdry,
-                             'WETDRY', locat=self.unit_number[0])
+        self.sf1 = Util3d(
+            model,
+            (nlay, nrow, ncol),
+            np.float32,
+            sf1,
+            "Primary Storage Coefficient",
+            locat=self.unit_number[0],
+        )
+        self.sf2 = Util3d(
+            model,
+            (nlay, nrow, ncol),
+            np.float32,
+            sf2,
+            "Secondary Storage Coefficient",
+            locat=self.unit_number[0],
+        )
+        self.wetdry = Util3d(
+            model,
+            (nlay, nrow, ncol),
+            np.float32,
+            wetdry,
+            "WETDRY",
+            locat=self.unit_number[0],
+        )
         self.parent.add_package(self)
         return
 
@@ -180,9 +255,9 @@ class ModflowBcf(Package):
         """
         # get model information
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
-        dis = self.parent.get_package('DIS')
+        dis = self.parent.get_package("DIS")
         if dis is None:
-            dis = self.parent.get_package('DISU')
+            dis = self.parent.get_package("DISU")
 
         ifrefm = self.parent.get_ifrefm()
 
@@ -190,48 +265,63 @@ class ModflowBcf(Package):
         if f is not None:
             f_bcf = f
         else:
-            f_bcf = open(self.fn_path, 'w')
+            f_bcf = open(self.fn_path, "w")
         # Item 1: ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET
-        f_bcf.write('{:10d}{:10.6G}{:10d}{:10.3f}{:10d}{:10d}\n'.format(
-            self.ipakcb, self.hdry, self.iwdflg, self.wetfct, self.iwetit,
-            self.ihdwet))
+        f_bcf.write(
+            "{:10d}{:10.6G}{:10d}{:10.3f}{:10d}{:10d}\n".format(
+                self.ipakcb,
+                self.hdry,
+                self.iwdflg,
+                self.wetfct,
+                self.iwetit,
+                self.ihdwet,
+            )
+        )
 
         # LAYCON array
         for k in range(nlay):
             if ifrefm:
                 if self.intercellt[k] > 0:
-                    f_bcf.write('{0:1d}{1:1d} '.format(self.intercellt[k],
-                                                       self.laycon[k]))
+                    f_bcf.write(
+                        "{0:1d}{1:1d} ".format(
+                            self.intercellt[k], self.laycon[k]
+                        )
+                    )
                 else:
-                    f_bcf.write('0{0:1d} '.format(self.laycon[k]))
+                    f_bcf.write("0{0:1d} ".format(self.laycon[k]))
             else:
                 if self.intercellt[k] > 0:
-                    f_bcf.write('{0:1d}{1:1d}'.format(self.intercellt[k],
-                                                       self.laycon[k]))
+                    f_bcf.write(
+                        "{0:1d}{1:1d}".format(
+                            self.intercellt[k], self.laycon[k]
+                        )
+                    )
                 else:
-                    f_bcf.write('0{0:1d}'.format(self.laycon[k]))
-        f_bcf.write('\n')
+                    f_bcf.write("0{0:1d}".format(self.laycon[k]))
+        f_bcf.write("\n")
         f_bcf.write(self.trpy.get_file_entry())
         transient = not dis.steady.all()
         for k in range(nlay):
-            if (transient == True):
+            if transient == True:
                 f_bcf.write(self.sf1[k].get_file_entry())
-            if ((self.laycon[k] == 0) or (self.laycon[k] == 2)):
+            if (self.laycon[k] == 0) or (self.laycon[k] == 2):
                 f_bcf.write(self.tran[k].get_file_entry())
             else:
                 f_bcf.write(self.hy[k].get_file_entry())
             if k < nlay - 1:
                 f_bcf.write(self.vcont[k].get_file_entry())
-            if ((transient == True) and (
-                    (self.laycon[k] == 2) or (self.laycon[k] == 3))):
+            if (transient == True) and (
+                (self.laycon[k] == 2) or (self.laycon[k] == 3)
+            ):
                 f_bcf.write(self.sf2[k].get_file_entry())
-            if ((self.iwdflg != 0) and (
-                    (self.laycon[k] == 1) or (self.laycon[k] == 3))):
+            if (self.iwdflg != 0) and (
+                (self.laycon[k] == 1) or (self.laycon[k] == 3)
+            ):
                 f_bcf.write(self.wetdry[k].get_file_entry())
         f_bcf.close()
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -267,40 +357,42 @@ class ModflowBcf(Package):
         """
 
         if model.verbose:
-            sys.stdout.write('loading bcf package file...\n')
+            sys.stdout.write("loading bcf package file...\n")
 
-        openfile = not hasattr(f, 'read')
+        openfile = not hasattr(f, "read")
         if openfile:
             filename = f
-            f = open(filename, 'r')
+            f = open(filename, "r")
 
         # dataset 0 -- header
         while True:
             line = f.readline()
-            if line[0] != '#':
+            if line[0] != "#":
                 break
 
         # determine problem dimensions
         nr, nc, nlay, nper = model.get_nrow_ncol_nlay_nper()
-        dis = model.get_package('DIS')
+        dis = model.get_package("DIS")
         if dis is None:
-            dis = model.get_package('DISU')
+            dis = model.get_package("DISU")
 
         # Item 1: ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET - line already read above
         if model.verbose:
-            print('   loading ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET...')
+            print("   loading ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET...")
         t = line_parse(line)
-        ipakcb, hdry, iwdflg, wetfct, iwetit, ihdwet = int(t[0]), \
-                                                       float(t[1]), \
-                                                       int(t[2]), \
-                                                       float(t[3]), \
-                                                       int(t[4]), \
-                                                       int(t[5])
+        ipakcb, hdry, iwdflg, wetfct, iwetit, ihdwet = (
+            int(t[0]),
+            float(t[1]),
+            int(t[2]),
+            float(t[3]),
+            int(t[4]),
+            int(t[5]),
+        )
 
         # LAYCON array
         ifrefm = model.get_ifrefm()
         if model.verbose:
-            print('   loading LAYCON...')
+            print("   loading LAYCON...")
         line = f.readline()
         if ifrefm:
             t = []
@@ -320,14 +412,14 @@ class ModflowBcf(Package):
             t = []
             istart = 0
             for k in range(nlay):
-                lcode = line[istart:istart + 2]
-                if lcode.strip() == '':
+                lcode = line[istart : istart + 2]
+                if lcode.strip() == "":
                     # hit end of line before expected end of data
                     # read next line
                     line = f.readline()
                     istart = 0
-                    lcode = line[istart:istart + 2]
-                lcode = lcode.replace(' ', '0')
+                    lcode = line[istart : istart + 2]
+                lcode = lcode.replace(" ", "0")
                 t.append(lcode)
                 istart += 2
         intercellt = np.zeros(nlay, dtype=np.int32)
@@ -341,9 +433,10 @@ class ModflowBcf(Package):
 
         # TRPY array
         if model.verbose:
-            print('   loading TRPY...')
-        trpy = Util2d.load(f, model, (nlay,), np.float32, 'trpy',
-                           ext_unit_dict)
+            print("   loading TRPY...")
+        trpy = Util2d.load(
+            f, model, (nlay,), np.float32, "trpy", ext_unit_dict
+        )
 
         # property data for each layer based on options
         transient = not dis.steady.all()
@@ -370,47 +463,53 @@ class ModflowBcf(Package):
             # sf1
             if transient:
                 if model.verbose:
-                    print('   loading sf1 layer {0:3d}...'.format(k + 1))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'sf1',
-                                ext_unit_dict)
+                    print("   loading sf1 layer {0:3d}...".format(k + 1))
+                t = Util2d.load(
+                    f, model, (nrow, ncol), np.float32, "sf1", ext_unit_dict
+                )
                 sf1[k] = t
 
             # tran or hy
-            if ((laycon[k] == 0) or (laycon[k] == 2)):
+            if (laycon[k] == 0) or (laycon[k] == 2):
                 if model.verbose:
-                    print('   loading tran layer {0:3d}...'.format(k + 1))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'tran',
-                                ext_unit_dict)
+                    print("   loading tran layer {0:3d}...".format(k + 1))
+                t = Util2d.load(
+                    f, model, (nrow, ncol), np.float32, "tran", ext_unit_dict
+                )
                 tran[k] = t
             else:
                 if model.verbose:
-                    print('   loading hy layer {0:3d}...'.format(k + 1))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'hy',
-                                ext_unit_dict)
+                    print("   loading hy layer {0:3d}...".format(k + 1))
+                t = Util2d.load(
+                    f, model, (nrow, ncol), np.float32, "hy", ext_unit_dict
+                )
                 hy[k] = t
 
             # vcont
             if k < (nlay - 1):
                 if model.verbose:
-                    print('   loading vcont layer {0:3d}...'.format(k + 1))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'vcont',
-                                ext_unit_dict)
+                    print("   loading vcont layer {0:3d}...".format(k + 1))
+                t = Util2d.load(
+                    f, model, (nrow, ncol), np.float32, "vcont", ext_unit_dict
+                )
                 vcont[k] = t
 
             # sf2
-            if (transient and ((laycon[k] == 2) or (laycon[k] == 3))):
+            if transient and ((laycon[k] == 2) or (laycon[k] == 3)):
                 if model.verbose:
-                    print('   loading sf2 layer {0:3d}...'.format(k + 1))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'sf2',
-                                ext_unit_dict)
+                    print("   loading sf2 layer {0:3d}...".format(k + 1))
+                t = Util2d.load(
+                    f, model, (nrow, ncol), np.float32, "sf2", ext_unit_dict
+                )
                 sf2[k] = t
 
             # wetdry
-            if ((iwdflg != 0) and ((laycon[k] == 1) or (laycon[k] == 3))):
+            if (iwdflg != 0) and ((laycon[k] == 1) or (laycon[k] == 3)):
                 if model.verbose:
-                    print('   loading sf2 layer {0:3d}...'.format(k + 1))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'wetdry',
-                                ext_unit_dict)
+                    print("   loading sf2 layer {0:3d}...".format(k + 1))
+                t = Util2d.load(
+                    f, model, (nrow, ncol), np.float32, "wetdry", ext_unit_dict
+                )
                 wetdry[k] = t
 
         if openfile:
@@ -420,30 +519,44 @@ class ModflowBcf(Package):
         unitnumber = None
         filenames = [None, None]
         if ext_unit_dict is not None:
-            unitnumber, filenames[0] = \
-                model.get_ext_dict_attr(ext_unit_dict,
-                                        filetype=ModflowBcf.ftype())
+            unitnumber, filenames[0] = model.get_ext_dict_attr(
+                ext_unit_dict, filetype=ModflowBcf._ftype()
+            )
             if ipakcb > 0:
-                iu, filenames[1] = \
-                    model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
+                iu, filenames[1] = model.get_ext_dict_attr(
+                    ext_unit_dict, unit=ipakcb
+                )
                 model.add_pop_key_list(ipakcb)
 
         # create instance of bcf object
-        bcf = ModflowBcf(model, ipakcb=ipakcb, intercellt=intercellt,
-                         laycon=laycon, trpy=trpy, hdry=hdry,
-                         iwdflg=iwdflg, wetfct=wetfct, iwetit=iwetit,
-                         ihdwet=ihdwet,
-                         tran=tran, hy=hy, vcont=vcont, sf1=sf1, sf2=sf2,
-                         wetdry=wetdry,
-                         unitnumber=unitnumber, filenames=filenames)
+        bcf = cls(
+            model,
+            ipakcb=ipakcb,
+            intercellt=intercellt,
+            laycon=laycon,
+            trpy=trpy,
+            hdry=hdry,
+            iwdflg=iwdflg,
+            wetfct=wetfct,
+            iwetit=iwetit,
+            ihdwet=ihdwet,
+            tran=tran,
+            hy=hy,
+            vcont=vcont,
+            sf1=sf1,
+            sf2=sf2,
+            wetdry=wetdry,
+            unitnumber=unitnumber,
+            filenames=filenames,
+        )
 
         # return bcf object
         return bcf
 
     @staticmethod
-    def ftype():
-        return 'BCF6'
+    def _ftype():
+        return "BCF6"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 15

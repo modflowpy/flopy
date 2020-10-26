@@ -6,27 +6,16 @@ FloPy includes support for MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, an
 For general modeling issues, please consult a modeling forum, such as the [MODFLOW Users Group](https://groups.google.com/forum/#!forum/modflow).  Other MODFLOW resources are listed in the [MODFLOW Resources](https://github.com/modflowpy/flopy#modflow-resources) section.
 
 
-Installation
------------------------------------------------
-
-FloPy requires **Python** 3.5 (or higher) and **NumPy** 1.9 (or higher).  Dependencies for optional FloPy methods are summarized [here](docs/flopy_method_dependencies.md).
-
-To install FloPy type:
-
-    conda install -c conda-forge flopy
-
-or
-
-    pip install flopy
-
-
-The release candidate version can also be installed from the git repository using the instructions provided [below](#relcand).
-
-
 Documentation
 -----------------------------------------------
 
-FloPy code documentation is available at [http://modflowpy.github.io/flopydoc/](http://modflowpy.github.io/flopydoc/)
+FloPy code documentation is available at [https://flopy.readthedocs.io](https://flopy.readthedocs.io)
+
+
+Contributing
+------------------------------------------------
+
+Bug reports, code contributions, or improvements to the documentation are welcome from the community. Prior to contributing, please read up on our guidelines for [contributing](https://github.com/modflowpy/flopy/blob/master/CONTRIBUTING.md) and then check out one of our issues in the [hotlist: community-help](https://github.com/modflowpy/flopy/labels/hotlist%3A%20community%20help).
 
 
 How to Cite
@@ -38,7 +27,7 @@ How to Cite
 
 *Software/Code citation for FloPy:*
 
-[Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N., 2020, FloPy v3.3.1: U.S. Geological Survey Software Release, 26 June 2020, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N., 2020, FloPy v3.3.2: U.S. Geological Survey Software Release, 26 October 2020, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 Disclaimer
@@ -54,14 +43,3 @@ software is released on condition that neither the USGS nor the U.S. Government
 shall be held liable for any damages resulting from its authorized or
 unauthorized use.
 
-Installation
------------------------------------------------
-To install FloPy version 3.3.1:
-```
-pip install flopy
-```
-
-To update to FloPy version 3.3.1:
-```
-pip install flopy --upgrade
-```

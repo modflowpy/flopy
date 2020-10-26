@@ -8,6 +8,7 @@ from flopy.plot import plotutil
 from flopy.utils import geometry
 from flopy.plot.crosssection import _CrossSection
 import warnings
+
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
@@ -42,29 +43,43 @@ class _VertexCrossSection(_CrossSection):
         as the distance along the cross section line.
 
     """
-    def __init__(self, ax=None, model=None, modelgrid=None,
-                 line=None, extent=None, geographic_coords=False):
-        super(_VertexCrossSection, self).__init__(ax=ax, model=model,
-                                                  modelgrid=modelgrid,
-                                                  geographic_coords=
-                                                  geographic_coords)
+
+    def __init__(
+        self,
+        ax=None,
+        model=None,
+        modelgrid=None,
+        line=None,
+        extent=None,
+        geographic_coords=False,
+    ):
+        super(_VertexCrossSection, self).__init__(
+            ax=ax,
+            model=model,
+            modelgrid=modelgrid,
+            geographic_coords=geographic_coords,
+        )
 
         if line is None:
-            err_msg = 'line must be specified.'
+            err_msg = "line must be specified."
             raise Exception(err_msg)
 
         linekeys = [linekeys.lower() for linekeys in list(line.keys())]
 
         if len(linekeys) != 1:
-            err_msg = 'Either row, column, or line must be specified ' \
-                      'in line dictionary.\nkeys specified: '
+            err_msg = (
+                "Either row, column, or line must be specified "
+                "in line dictionary.\nkeys specified: "
+            )
             for k in linekeys:
-                err_msg += '{} '.format(k)
+                err_msg += "{} ".format(k)
             raise Exception(err_msg)
 
         elif "line" not in linekeys:
-            err_msg = "only line can be specified in line dictionary " \
-                      "for vertex Discretization"
+            err_msg = (
+                "only line can be specified in line dictionary "
+                "for vertex Discretization"
+            )
             raise AssertionError(err_msg)
 
         onkey = linekeys[0]
@@ -84,49 +99,64 @@ class _VertexCrossSection(_CrossSection):
             yp.append(v2)
 
         # unrotate and untransform modelgrid into modflow coordinates!
-        xp, yp = geometry.transform(xp, yp,
-                                    self.mg.xoffset,
-                                    self.mg.yoffset,
-                                    self.mg.angrot_radians,
-                                    inverse=True)
+        xp, yp = geometry.transform(
+            xp,
+            yp,
+            self.mg.xoffset,
+            self.mg.yoffset,
+            self.mg.angrot_radians,
+            inverse=True,
+        )
 
-        self.xcellcenters, self.ycellcenters = \
-            geometry.transform(self.mg.xcellcenters,
-                               self.mg.ycellcenters,
-                               self.mg.xoffset, self.mg.yoffset,
-                               self.mg.angrot_radians, inverse=True)
+        self.xcellcenters, self.ycellcenters = geometry.transform(
+            self.mg.xcellcenters,
+            self.mg.ycellcenters,
+            self.mg.xoffset,
+            self.mg.yoffset,
+            self.mg.angrot_radians,
+            inverse=True,
+        )
 
         try:
-            self.xvertices, self.yvertices = \
-                geometry.transform(self.mg.xvertices,
-                                   self.mg.yvertices,
-                                   self.mg.xoffset, self.mg.yoffset,
-                                   self.mg.angrot_radians, inverse=True)
+            self.xvertices, self.yvertices = geometry.transform(
+                self.mg.xvertices,
+                self.mg.yvertices,
+                self.mg.xoffset,
+                self.mg.yoffset,
+                self.mg.angrot_radians,
+                inverse=True,
+            )
         except ValueError:
             # irregular shapes in vertex grid ie. squares and triangles
-            xverts, yverts = plotutil.UnstructuredPlotUtilities.\
-                irregular_shape_patch(self.mg.xvertices, self.mg.yvertices)
+            (
+                xverts,
+                yverts,
+            ) = plotutil.UnstructuredPlotUtilities.irregular_shape_patch(
+                self.mg.xvertices, self.mg.yvertices
+            )
 
-            self.xvertices, self.yvertices = \
-                geometry.transform(xverts, yverts,
-                                   self.mg.xoffset,
-                                   self.mg.yoffset,
-                                   self.mg.angrot_radians, inverse=True)
+            self.xvertices, self.yvertices = geometry.transform(
+                xverts,
+                yverts,
+                self.mg.xoffset,
+                self.mg.yoffset,
+                self.mg.angrot_radians,
+                inverse=True,
+            )
 
         pts = [(xt, yt) for xt, yt in zip(xp, yp)]
         self.pts = np.array(pts)
 
         # get points along the line
 
-        self.xypts = plotutil.UnstructuredPlotUtilities.\
-            line_intersect_grid(self.pts,
-                                self.xvertices,
-                                self.yvertices)
+        self.xypts = plotutil.UnstructuredPlotUtilities.line_intersect_grid(
+            self.pts, self.xvertices, self.yvertices
+        )
 
         if len(self.xypts) < 2:
-            s = 'cross-section cannot be created\n.'
-            s += '   less than 2 points intersect the model grid\n'
-            s += '   {} points intersect the grid.'.format(len(self.xypts))
+            s = "cross-section cannot be created\n."
+            s += "   less than 2 points intersect the model grid\n"
+            s += "   {} points intersect the grid.".format(len(self.xypts))
             raise Exception(s)
 
         if self.geographic_coords:
@@ -135,9 +165,13 @@ class _VertexCrossSection(_CrossSection):
             for nn, pt in self.xypts.items():
                 xp = [t[0] for t in pt]
                 yp = [t[1] for t in pt]
-                xp, yp = geometry.transform(xp, yp, self.mg.xoffset,
-                                            self.mg.yoffset,
-                                            self.mg.angrot_radians)
+                xp, yp = geometry.transform(
+                    xp,
+                    yp,
+                    self.mg.xoffset,
+                    self.mg.yoffset,
+                    self.mg.angrot_radians,
+                )
                 xypts[nn] = [(xt, yt) for xt, yt in zip(xp, yp)]
 
             self.xypts = xypts
@@ -183,9 +217,10 @@ class _VertexCrossSection(_CrossSection):
         self.layer0 = None
         self.layer1 = None
 
-        self.d = {i: (np.min(np.array(v).T[0]),
-                      np.max(np.array(v).T[0])) for
-                  i, v in sorted(self.projpts.items())}
+        self.d = {
+            i: (np.min(np.array(v).T[0]), np.max(np.array(v).T[0]))
+            for i, v in sorted(self.projpts.items())
+        }
 
         self.xpts = None
         self.active = None
@@ -223,8 +258,8 @@ class _VertexCrossSection(_CrossSection):
         patches : matplotlib.collections.PatchCollection
 
         """
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
+        if "ax" in kwargs:
+            ax = kwargs.pop("ax")
         else:
             ax = self.ax
 
@@ -268,17 +303,17 @@ class _VertexCrossSection(_CrossSection):
         -------
         plot : list containing matplotlib.plot objects
         """
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
+        if "ax" in kwargs:
+            ax = kwargs.pop("ax")
         else:
             ax = self.ax
 
-        if 'color' in kwargs:
-            color = kwargs.pop('color')
-        elif 'c' in kwargs:
-            color = kwargs.pop('c')
+        if "color" in kwargs:
+            color = kwargs.pop("color")
+        elif "c" in kwargs:
+            color = kwargs.pop("c")
         else:
-            color = 'b'
+            color = "b"
 
         if not isinstance(a, np.ndarray):
             a = np.array(a)
@@ -337,8 +372,14 @@ class _VertexCrossSection(_CrossSection):
 
         return plot
 
-    def plot_fill_between(self, a, colors=('blue', 'red'),
-                          masked_values=None, head=None, **kwargs):
+    def plot_fill_between(
+        self,
+        a,
+        colors=("blue", "red"),
+        masked_values=None,
+        head=None,
+        **kwargs
+    ):
         """
         Plot a three-dimensional array as lines.
 
@@ -363,7 +404,7 @@ class _VertexCrossSection(_CrossSection):
 
         """
         if "ax" in kwargs:
-            ax = kwargs.pop('ax')
+            ax = kwargs.pop("ax")
         else:
             ax = self.ax
 
@@ -431,7 +472,13 @@ class _VertexCrossSection(_CrossSection):
         contour_set : matplotlib.pyplot.contour
 
         """
-        import matplotlib.tri as tri
+        if plt is None:
+            err_msg = (
+                "matplotlib must be installed to " + "use contour_array()"
+            )
+            raise ImportError(err_msg)
+        else:
+            import matplotlib.tri as tri
 
         if not isinstance(a, np.ndarray):
             a = np.array(a)
@@ -439,16 +486,16 @@ class _VertexCrossSection(_CrossSection):
         if a.ndim > 1:
             a = np.ravel(a)
 
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
+        if "ax" in kwargs:
+            ax = kwargs.pop("ax")
         else:
             ax = self.ax
 
-        xcenters = [np.mean(np.array(v).T[0]) for i, v
-                    in sorted(self.projpts.items())]
+        xcenters = [
+            np.mean(np.array(v).T[0]) for i, v in sorted(self.projpts.items())
+        ]
 
-        plotarray = np.array([a[cell] for cell
-                              in sorted(self.projpts)])
+        plotarray = np.array([a[cell] for cell in sorted(self.projpts)])
 
         # work around for tri-contour ignore vmin & vmax
         # necessary for the tri-contour NaN issue fix
@@ -460,19 +507,19 @@ class _VertexCrossSection(_CrossSection):
             if "vmax" not in kwargs:
                 vmax = np.nanmax(plotarray)
             else:
-                vmax = kwargs.pop('vmax')
+                vmax = kwargs.pop("vmax")
 
             levels = np.linspace(vmin, vmax, 7)
-            kwargs['levels'] = levels
+            kwargs["levels"] = levels
 
         # workaround for tri-contour nan issue
-        plotarray[np.isnan(plotarray)] = -2**31
+        plotarray[np.isnan(plotarray)] = -(2 ** 31)
         if masked_values is None:
-            masked_values = [-2**31]
+            masked_values = [-(2 ** 31)]
         else:
             masked_values = list(masked_values)
-            if -2**31 not in masked_values:
-                masked_values.append(-2**31)
+            if -(2 ** 31) not in masked_values:
+                masked_values.append(-(2 ** 31))
 
         ismasked = None
         if masked_values is not None:
@@ -486,20 +533,24 @@ class _VertexCrossSection(_CrossSection):
         if isinstance(head, np.ndarray):
             zcenters = self.set_zcentergrid(np.ravel(head))
         else:
-            zcenters = [np.mean(np.array(v).T[1]) for i, v
-                        in sorted(self.projpts.items())]
+            zcenters = [
+                np.mean(np.array(v).T[1])
+                for i, v in sorted(self.projpts.items())
+            ]
 
         plot_triplot = False
-        if 'plot_triplot' in kwargs:
-            plot_triplot = kwargs.pop('plot_triplot')
+        if "plot_triplot" in kwargs:
+            plot_triplot = kwargs.pop("plot_triplot")
 
-        if 'extent' in kwargs:
-            extent = kwargs.pop('extent')
+        if "extent" in kwargs:
+            extent = kwargs.pop("extent")
 
-            idx = (xcenters >= extent[0]) & (
-                    xcenters <= extent[1]) & (
-                          zcenters >= extent[2]) & (
-                          zcenters <= extent[3])
+            idx = (
+                (xcenters >= extent[0])
+                & (xcenters <= extent[1])
+                & (zcenters >= extent[2])
+                & (zcenters <= extent[3])
+            )
             plotarray = plotarray[idx].flatten()
             xcenters = xcenters[idx].flatten()
             zcenters = zcenters[idx].flatten()
@@ -508,8 +559,9 @@ class _VertexCrossSection(_CrossSection):
 
         if ismasked is not None:
             ismasked = ismasked.flatten()
-            mask = np.any(np.where(ismasked[triang.triangles],
-                                   True, False), axis=1)
+            mask = np.any(
+                np.where(ismasked[triang.triangles], True, False), axis=1
+            )
             triang.set_mask(mask)
 
         contour_set = ax.tricontour(triang, plotarray, **kwargs)
@@ -523,23 +575,34 @@ class _VertexCrossSection(_CrossSection):
         return contour_set
 
     def plot_inactive(self):
-        raise NotImplementedError("Function must be called in PlotCrossSection")
+        raise NotImplementedError(
+            "Function must be called in PlotCrossSection"
+        )
 
     def plot_ibound(self):
-        raise NotImplementedError("Function must be called in PlotCrossSection")
+        raise NotImplementedError(
+            "Function must be called in PlotCrossSection"
+        )
 
     def plot_grid(self):
-        raise NotImplementedError("Function must be called in PlotCrossSection")
+        raise NotImplementedError(
+            "Function must be called in PlotCrossSection"
+        )
 
     def plot_bc(self):
-        raise NotImplementedError("Function must be called in PlotCrossSection")
+        raise NotImplementedError(
+            "Function must be called in PlotCrossSection"
+        )
 
     def plot_specific_discharge(self):
-        raise NotImplementedError("Function must be called in PlotCrossSection")
+        raise NotImplementedError(
+            "Function must be called in PlotCrossSection"
+        )
 
     def plot_discharge(self):
-        raise NotImplementedError("plot_specific_discharge must be "
-                                  "used for VertexGrid models")
+        raise NotImplementedError(
+            "plot_specific_discharge must be " "used for VertexGrid models"
+        )
 
     @classmethod
     def get_grid_patch_collection(cls, projpts, plotarray, **kwargs):
@@ -560,23 +623,29 @@ class _VertexCrossSection(_CrossSection):
         patches : matplotlib.collections.PatchCollection
 
         """
-        from matplotlib.patches import Polygon
-        from matplotlib.collections import PatchCollection
+        if plt is None:
+            err_msg = (
+                "matplotlib must be installed to "
+                + "use get_grid_patch_collection()"
+            )
+            raise ImportError(err_msg)
+        else:
+            from matplotlib.patches import Polygon
+            from matplotlib.collections import PatchCollection
 
-        if 'vmin' in kwargs:
-            vmin = kwargs.pop('vmin')
+        if "vmin" in kwargs:
+            vmin = kwargs.pop("vmin")
         else:
             vmin = None
-        if 'vmax' in kwargs:
-            vmax = kwargs.pop('vmax')
+        if "vmax" in kwargs:
+            vmax = kwargs.pop("vmax")
         else:
             vmax = None
 
         rectcol = []
         data = []
         for cell, verts in sorted(projpts.items()):
-            verts = plotutil.UnstructuredPlotUtilities\
-                .arctan2(np.array(verts))
+            verts = plotutil.UnstructuredPlotUtilities.arctan2(np.array(verts))
 
             if np.isnan(plotarray[cell]):
                 continue
@@ -609,25 +678,32 @@ class _VertexCrossSection(_CrossSection):
         -------
         linecollection : matplotlib.collections.LineCollection
         """
-        from matplotlib.patches import Polygon
-        from matplotlib.collections import PatchCollection
+        if plt is None:
+            err_msg = (
+                "matplotlib must be installed to "
+                + "use get_grid_line_collection()"
+            )
+            raise ImportError(err_msg)
+        else:
+            from matplotlib.patches import Polygon
+            from matplotlib.collections import PatchCollection
 
         color = "grey"
-        if 'ec' in kwargs:
-            color = kwargs.pop('ec')
+        if "ec" in kwargs:
+            color = kwargs.pop("ec")
         if color in kwargs:
-            color = kwargs.pop('color')
+            color = kwargs.pop("color")
 
         rectcol = []
         for _, verts in sorted(self.projpts.items()):
-            verts = plotutil.UnstructuredPlotUtilities\
-                .arctan2(np.array(verts))
+            verts = plotutil.UnstructuredPlotUtilities.arctan2(np.array(verts))
 
             rectcol.append(Polygon(verts, closed=True))
 
         if len(rectcol) > 0:
-            patches = PatchCollection(rectcol, edgecolor=color,
-                                      facecolor='none', **kwargs)
+            patches = PatchCollection(
+                rectcol, edgecolor=color, facecolor="none", **kwargs
+            )
         else:
             patches = None
 
@@ -665,8 +741,9 @@ class _VertexCrossSection(_CrossSection):
             botm = self.elev[k, :]
             adjnn = (k - 1) * self.mg.ncpl
             d0 = 0
-            for nn, verts in sorted(self.xypts.items(),
-                                    key=lambda q: q[-1][xyix][xyix]):
+            for nn, verts in sorted(
+                self.xypts.items(), key=lambda q: q[-1][xyix][xyix]
+            ):
                 if vs is None:
                     t = top[nn]
                 else:
@@ -711,9 +788,11 @@ class _VertexCrossSection(_CrossSection):
 
         """
         verts = self.set_zpts(vs)
-        zcenters =[np.mean(np.array(v).T[1]) for i, v
-                   in sorted(verts.items())
-                   if (i // self.mg.ncpl) % kstep == 0]
+        zcenters = [
+            np.mean(np.array(v).T[1])
+            for i, v in sorted(verts.items())
+            if (i // self.mg.ncpl) % kstep == 0
+        ]
         return zcenters
 
     def get_extent(self):
@@ -736,4 +815,3 @@ class _VertexCrossSection(_CrossSection):
         ymax = np.max(self.elev)
 
         return (xmin, xmax, ymin, ymax)
-

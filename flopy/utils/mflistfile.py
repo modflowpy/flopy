@@ -42,13 +42,14 @@ class ListBudget(object):
 
     """
 
-    def __init__(self, file_name, budgetkey=None, timeunit='days'):
+    def __init__(self, file_name, budgetkey=None, timeunit="days"):
 
         # Set up file reading
         assert os.path.exists(file_name), "file_name {0} not found".format(
-            file_name)
+            file_name
+        )
         self.file_name = file_name
-        self.f = open(file_name, 'r', encoding='ascii', errors='replace')
+        self.f = open(file_name, "r", encoding="ascii", errors="replace")
 
         self.tssp_lines = 0
 
@@ -65,25 +66,27 @@ class ListBudget(object):
         self.null_entries = []
 
         self.time_line_idx = 20
-        if timeunit.upper() == 'SECONDS':
-            self.timeunit = 'S'
+        if timeunit.upper() == "SECONDS":
+            self.timeunit = "S"
             self.time_idx = 0
-        elif timeunit.upper() == 'MINUTES':
-            self.timeunit = 'M'
+        elif timeunit.upper() == "MINUTES":
+            self.timeunit = "M"
             self.time_idx = 1
-        elif timeunit.upper() == 'HOURS':
-            self.timeunit = 'H'
+        elif timeunit.upper() == "HOURS":
+            self.timeunit = "H"
             self.time_idx = 2
-        elif timeunit.upper() == 'DAYS':
-            self.timeunit = 'D'
+        elif timeunit.upper() == "DAYS":
+            self.timeunit = "D"
             self.time_idx = 3
-        elif timeunit.upper() == 'YEARS':
-            self.timeunit = 'Y'
+        elif timeunit.upper() == "YEARS":
+            self.timeunit = "Y"
             self.time_idx = 4
         else:
-            raise Exception('need to reset time_idxs attribute to '
-                            'use units other than days and check usage of '
-                            'timedelta')
+            raise Exception(
+                "need to reset time_idxs attribute to "
+                "use units other than days and check usage of "
+                "timedelta"
+            )
 
         # Fill budget recarrays
         self._load()
@@ -98,7 +101,7 @@ class ListBudget(object):
         return
 
     def set_budget_key(self):
-        raise Exception('Must be overridden...')
+        raise Exception("Must be overridden...")
 
     def isvalid(self):
         """
@@ -153,7 +156,7 @@ class ListBudget(object):
         """
         if not self._isvalid:
             return None
-        return self.inc['totim'].tolist()
+        return self.inc["totim"].tolist()
 
     def get_kstpkper(self):
         """
@@ -175,8 +178,9 @@ class ListBudget(object):
         if not self._isvalid:
             return None
         kstpkper = []
-        for kstp, kper in zip(self.inc['time_step'],
-                              self.inc['stress_period']):
+        for kstp, kper in zip(
+            self.inc["time_step"], self.inc["stress_period"]
+        ):
             kstpkper.append((kstp, kper))
         return kstpkper
 
@@ -210,9 +214,9 @@ class ListBudget(object):
         else:
             if not isinstance(names, list):
                 names = [names]
-            names.insert(0, 'stress_period')
-            names.insert(0, 'time_step')
-            names.insert(0, 'totim')
+            names.insert(0, "stress_period")
+            names.insert(0, "time_step")
+            names.insert(0, "totim")
             return self.inc[names].view(np.recarray)
 
     def get_cumulative(self, names=None):
@@ -237,7 +241,7 @@ class ListBudget(object):
         >>> mf_list = MfListBudget("my_model.list")
         >>> cumulative = mf_list.get_cumulative()
 
-       """
+        """
         if not self._isvalid:
             return None
         if names is None:
@@ -245,12 +249,12 @@ class ListBudget(object):
         else:
             if not isinstance(names, list):
                 names = [names]
-            names.insert(0, 'stress_period')
-            names.insert(0, 'time_step')
-            names.insert(0, 'totim')
+            names.insert(0, "stress_period")
+            names.insert(0, "time_step")
+            names.insert(0, "totim")
             return np.array(self.cum)[names].view(np.recarray)
 
-    def get_model_runtime(self, units='seconds'):
+    def get_model_runtime(self, units="seconds"):
         """
         Get the elapsed runtime of the model from the list file.
 
@@ -274,16 +278,22 @@ class ListBudget(object):
             return None
 
         # reopen the file
-        self.f = open(self.file_name, 'r', encoding='ascii', errors='replace')
+        self.f = open(self.file_name, "r", encoding="ascii", errors="replace")
         units = units.lower()
-        if not units == 'seconds' and not units == 'minutes' and not units == 'hours':
+        if (
+            not units == "seconds"
+            and not units == "minutes"
+            and not units == "hours"
+        ):
             raise (
                 '"units" input variable must be "minutes", "hours", or "seconds": {0} was specified'.format(
-                    units))
+                    units
+                )
+            )
         try:
-            seekpoint = self._seek_to_string('Elapsed run time:')
+            seekpoint = self._seek_to_string("Elapsed run time:")
         except:
-            print('Elapsed run time not included in list file. Returning NaN')
+            print("Elapsed run time not included in list file. Returning NaN")
             return np.nan
 
         self.f.seek(seekpoint)
@@ -291,18 +301,18 @@ class ListBudget(object):
 
         self.f.close()
         # yank out the floating point values from the Elapsed run time string
-        times = list(map(float, re.findall(r'[+-]?[0-9.]+', line)))
+        times = list(map(float, re.findall(r"[+-]?[0-9.]+", line)))
         # pad an array with zeros and times with [days, hours, minutes, seconds]
         times = np.array([0 for i in range(4 - len(times))] + times)
         # convert all to seconds
         time2sec = np.array([24 * 60 * 60, 60 * 60, 60, 1])
         times_sec = np.sum(times * time2sec)
         # return in the requested units
-        if units == 'seconds':
+        if units == "seconds":
             return times_sec
-        elif units == 'minutes':
+        elif units == "minutes":
             return times_sec / 60.0
-        elif units == 'hours':
+        elif units == "hours":
             return times_sec / 60.0 / 60.0
 
     def get_budget(self, names=None):
@@ -338,11 +348,13 @@ class ListBudget(object):
         else:
             if not isinstance(names, list):
                 names = [names]
-            names.insert(0, 'stress_period')
-            names.insert(0, 'time_step')
-            names.insert(0, 'totim')
-            return self.inc[names].view(np.recarray), \
-                   self.cum[names].view(np.recarray)
+            names.insert(0, "stress_period")
+            names.insert(0, "time_step")
+            names.insert(0, "totim")
+            return (
+                self.inc[names].view(np.recarray),
+                self.cum[names].view(np.recarray),
+            )
 
     def get_data(self, kstpkper=None, idx=None, totim=None, incremental=False):
         """
@@ -396,23 +408,27 @@ class ListBudget(object):
             try:
                 ipos = self.get_kstpkper().index(kstpkper)
             except:
-                print('   could not retrieve kstpkper ' +
-                      '{} from the lst file'.format(kstpkper))
+                print(
+                    "   could not retrieve kstpkper "
+                    + "{} from the lst file".format(kstpkper)
+                )
         elif totim is not None:
             try:
                 ipos = self.get_times().index(totim)
             except:
-                print('   could not retrieve totime ' +
-                      '{} from the lst file'.format(totim))
+                print(
+                    "   could not retrieve totime "
+                    + "{} from the lst file".format(totim)
+                )
         elif idx is not None:
             ipos = idx
         else:
             ipos = -1
 
         if ipos is None:
-            print('Could not find specified condition.')
-            print('  kstpkper = {}'.format(kstpkper))
-            print('  totim = {}'.format(totim))
+            print("Could not find specified condition.")
+            print("  kstpkper = {}".format(kstpkper))
+            print("  totim = {}".format(totim))
             # TODO: return zero-length array, or update docstring return type
             return None
 
@@ -422,18 +438,19 @@ class ListBudget(object):
             t = self.cum[ipos]
 
         dtype = np.dtype(
-            [('index', np.int32), ('value', np.float32), ('name', '|S25')])
+            [("index", np.int32), ("value", np.float32), ("name", "|S25")]
+        )
         v = np.recarray(shape=(len(self.inc.dtype.names[3:])), dtype=dtype)
         for i, name in enumerate(self.inc.dtype.names[3:]):
-            mult = 1.
-            if '_OUT' in name:
-                mult = -1.
-            v[i]['index'] = i
-            v[i]['value'] = mult * t[name]
-            v[i]['name'] = name
+            mult = 1.0
+            if "_OUT" in name:
+                mult = -1.0
+            v[i]["index"] = i
+            v[i]["value"] = mult * t[name]
+            v[i]["name"] = name
         return v
 
-    def get_dataframes(self, start_datetime='1-1-1970', diff=False):
+    def get_dataframes(self, start_datetime="1-1-1970", diff=False):
         """
         Get pandas dataframes with the incremental and cumulative water budget
         items in the list file.
@@ -468,9 +485,11 @@ class ListBudget(object):
             return None
         totim = self.get_times()
         if start_datetime is not None:
-            totim = totim_to_datetime(totim,
-                                      start=pd.to_datetime(start_datetime),
-                                      timeunit=self.timeunit)
+            totim = totim_to_datetime(
+                totim,
+                start=pd.to_datetime(start_datetime),
+                timeunit=self.timeunit,
+            )
 
         df_flux = pd.DataFrame(self.inc, index=totim).loc[:, self.entries]
         df_vol = pd.DataFrame(self.cum, index=totim).loc[:, self.entries]
@@ -481,18 +500,18 @@ class ListBudget(object):
         else:
             in_names = [col for col in df_flux.columns if col.endswith("_IN")]
 
-            base_names = [name.replace("_IN", '') for name in in_names]
+            base_names = [name.replace("_IN", "") for name in in_names]
             for name in base_names:
                 in_name = name + "_IN"
                 out_name = name + "_OUT"
-                df_flux.loc[:, name.lower()] = df_flux.loc[:,
-                                               in_name] - df_flux.loc[:,
-                                                          out_name]
+                df_flux.loc[:, name.lower()] = (
+                    df_flux.loc[:, in_name] - df_flux.loc[:, out_name]
+                )
                 df_flux.pop(in_name)
                 df_flux.pop(out_name)
-                df_vol.loc[:, name.lower()] = df_vol.loc[:,
-                                              in_name] - df_vol.loc[:,
-                                                         out_name]
+                df_vol.loc[:, name.lower()] = (
+                    df_vol.loc[:, in_name] - df_vol.loc[:, out_name]
+                )
                 df_vol.pop(in_name)
                 df_vol.pop(out_name)
             cols = list(df_flux.columns)
@@ -525,68 +544,86 @@ class ListBudget(object):
 
         # Ensure list file exists
         if not os.path.isfile(self.f.name):
-            raise FileNotFoundError(errno.ENOENT,
-                                    os.strerror(errno.ENOENT),
-                                    self.f.name)
+            raise FileNotFoundError(
+                errno.ENOENT, os.strerror(errno.ENOENT), self.f.name
+            )
 
         # Eval based on model list type
         if isinstance(self, MfListBudget):
             # Check if reduced pumping data was set to be written
             # to list file
-            sCheck = 'WELLS WITH REDUCED PUMPING WILL BE REPORTED ' +\
-                     'TO THE MAIN LISTING FILE'
-            assert open(self.f.name).read().find(sCheck) > 0,\
-                'Pumping reductions not written to list file. ' +\
-                'Try removing "noprint" keyword from well file.'
+            sCheck = (
+                "WELLS WITH REDUCED PUMPING WILL BE REPORTED "
+                + "TO THE MAIN LISTING FILE"
+            )
+            assert open(self.f.name).read().find(sCheck) > 0, (
+                "Pumping reductions not written to list file. "
+                + 'Try removing "noprint" keyword from well file.'
+            )
 
             # Set dtypes for resulting data
-            dtype = np.dtype([('SP', np.int32), ('TS', np.int32),
-                              ('LAY', np.int32), ('ROW', np.int32),
-                              ('COL', np.int32), ('APPL.Q', np.float64),
-                              ('ACT.Q', np.float64),
-                              ('GW-HEAD', np.float64),
-                              ('CELL-BOT', np.float64)])
+            dtype = np.dtype(
+                [
+                    ("SP", np.int32),
+                    ("TS", np.int32),
+                    ("LAY", np.int32),
+                    ("ROW", np.int32),
+                    ("COL", np.int32),
+                    ("APPL.Q", np.float64),
+                    ("ACT.Q", np.float64),
+                    ("GW-HEAD", np.float64),
+                    ("CELL-BOT", np.float64),
+                ]
+            )
 
             # Define string to id start of reduced ppg data
-            sKey = 'WELLS WITH REDUCED PUMPING FOR STRESS PERIOD'
+            sKey = "WELLS WITH REDUCED PUMPING FOR STRESS PERIOD"
 
         elif isinstance(self, MfusgListBudget):
             # Check if reduced pumping data was written and if set to
             # be written to list file
-            sCheck = 'WELL REDUCTION INFO WILL BE WRITTEN TO UNIT:'
+            sCheck = "WELL REDUCTION INFO WILL BE WRITTEN TO UNIT:"
             bLstUnit = False
             bRdcdPpg = False
             for l in open(self.f.name):
                 # Assumes LST unit always first
-                if 'UNIT' in l and not bLstUnit:
+                if "UNIT" in l and not bLstUnit:
                     iLstUnit = int(l.strip().split()[-1])
                     bLstUnit = True
                 if sCheck in l:
                     bRdcdPpg = True
-                    assert int(l.strip().split()[-1]) == iLstUnit,\
-                        'Pumping reductions not written to list file. ' +\
-                        'Try setting iunitafr to the list file unit number.'
-            assert bRdcdPpg, 'Auto pumping reductions not active.'
+                    assert int(l.strip().split()[-1]) == iLstUnit, (
+                        "Pumping reductions not written to list file. "
+                        + "Try setting iunitafr to the list file unit number."
+                    )
+            assert bRdcdPpg, "Auto pumping reductions not active."
 
             # Set dtypes for resulting data
-            dtype = np.dtype([('SP', np.int32), ('TS', np.int32),
-                              ('WELL.NO', np.int32),
-                              ('CLN NODE', np.int32),
-                              ('APPL.Q', np.float64),
-                              ('ACT.Q', np.float64),
-                              ('GW_HEAD', np.float64),
-                              ('CELL_BOT', np.float64)])
+            dtype = np.dtype(
+                [
+                    ("SP", np.int32),
+                    ("TS", np.int32),
+                    ("WELL.NO", np.int32),
+                    ("CLN NODE", np.int32),
+                    ("APPL.Q", np.float64),
+                    ("ACT.Q", np.float64),
+                    ("GW_HEAD", np.float64),
+                    ("CELL_BOT", np.float64),
+                ]
+            )
 
             # Define string to id start of reduced ppg data
-            sKey = 'WELLS WITH REDUCED PUMPING FOR STRESS PERIOD'
+            sKey = "WELLS WITH REDUCED PUMPING FOR STRESS PERIOD"
 
         # elif isinstance(self, other ListBudget class):
 
         else:
-            msg = 'get_reduced_pumping() is only implemented for the ' +\
-                  'MfListBudget or MfusgListBudget classes. Please ' +\
-                  'feel free to expand the functionality to other ' +\
-                  'ListBudget classes.'
+            msg = (
+                "get_reduced_pumping() is only implemented for the "
+                + "MfListBudget or MfusgListBudget classes. Please "
+                + "feel free to expand the functionality to other "
+                + "ListBudget classes."
+            )
             raise NotImplementedError(msg)
 
         # Iterate through list file to read in reduced ppg info
@@ -594,7 +631,7 @@ class ListBudget(object):
         lsData = []
         while True:
             l = f.readline()
-            if l == '':
+            if l == "":
                 break
             # If l is reduced ppg header row
             if sKey in l:
@@ -616,8 +653,7 @@ class ListBudget(object):
                     lsData.append(ls)
         f.close()
 
-        return(np.rec.fromrecords([tuple(x) for x in lsData],
-                                  dtype=dtype))
+        return np.rec.fromrecords([tuple(x) for x in lsData], dtype=dtype)
 
     def _build_index(self, maxentries):
         self.idx_map = self._get_index(maxentries)
@@ -630,7 +666,7 @@ class ListBudget(object):
         while True:
             seekpoint = self.f.tell()
             line = self.f.readline()
-            if line == '':
+            if line == "":
                 break
             if self.budgetkey in line:
                 for l in range(self.tssp_lines):
@@ -638,8 +674,12 @@ class ListBudget(object):
                 try:
                     ts, sp = self._get_ts_sp(line)
                 except:
-                    print('unable to cast ts,sp on line number', l_count,
-                          ' line: ', line)
+                    print(
+                        "unable to cast ts,sp on line number",
+                        l_count,
+                        " line: ",
+                        line,
+                    )
                     break
                 # print('info found for timestep stress period',ts,sp)
 
@@ -667,7 +707,7 @@ class ListBudget(object):
         while True:
             seekpoint = self.f.tell()
             line = self.f.readline()
-            if line == '':
+            if line == "":
                 break
             if s in line:
                 break
@@ -684,14 +724,14 @@ class ListBudget(object):
         # sp = int(line[self.sp_idxs[0]:self.sp_idxs[1]])
 
         # Get rid of nasty things
-        line = line.replace(',', '').replace('*', '')
+        line = line.replace(",", "").replace("*", "")
 
-        searchstring = 'TIME STEP'
+        searchstring = "TIME STEP"
         idx = line.index(searchstring) + len(searchstring)
         ll = line[idx:].strip().split()
         ts = int(ll[0])
 
-        searchstring = 'STRESS PERIOD'
+        searchstring = "STRESS PERIOD"
         idx = line.index(searchstring) + len(searchstring)
         ll = line[idx:].strip().split()
         sp = int(ll[0])
@@ -702,16 +742,18 @@ class ListBudget(object):
         if len(self.idx_map) < 1:
             return None, None
         if len(self.entries) > 0:
-            raise Exception('entries already set:' + str(self.entries))
+            raise Exception("entries already set:" + str(self.entries))
         if not self.idx_map:
-            raise Exception('must call build_index before call set_entries')
+            raise Exception("must call build_index before call set_entries")
         try:
-            incdict, cumdict = self._get_sp(self.idx_map[0][0],
-                                            self.idx_map[0][1],
-                                            self.idx_map[0][2])
+            incdict, cumdict = self._get_sp(
+                self.idx_map[0][0], self.idx_map[0][1], self.idx_map[0][2]
+            )
         except:
-            raise Exception('unable to read budget information from first '
-                            'entry in list file')
+            raise Exception(
+                "unable to read budget information from first "
+                "entry in list file"
+            )
         self.entries = incdict.keys()
         null_entries = collections.OrderedDict()
         incdict = collections.OrderedDict()
@@ -736,7 +778,7 @@ class ListBudget(object):
                 cumdict[entry].append(tcum[entry])
 
             # Get the time for this record
-            seekpoint = self._seek_to_string('TIME SUMMARY AT END')
+            seekpoint = self._seek_to_string("TIME SUMMARY AT END")
             tslen, sptim, tt = self._get_totim(ts, sp, seekpoint)
             totim.append(tt)
 
@@ -744,8 +786,11 @@ class ListBudget(object):
         idx_array = np.array(self.idx_map)
 
         # build dtype for recarray
-        dtype_tups = [('totim', np.float32), ("time_step", np.int32),
-                      ("stress_period", np.int32)]
+        dtype_tups = [
+            ("totim", np.float32),
+            ("time_step", np.int32),
+            ("stress_period", np.int32),
+        ]
         for entry in self.entries:
             dtype_tups.append((entry, np.float32))
         dtype = np.dtype(dtype_tups)
@@ -762,11 +807,11 @@ class ListBudget(object):
 
         # file the totim, time_step, and stress_period columns for the
         # incremental and cumulative recarrays (zero-based kstp,kper)
-        self.inc['totim'] = np.array(totim)[:]
+        self.inc["totim"] = np.array(totim)[:]
         self.inc["time_step"] = idx_array[:, 0] - 1
         self.inc["stress_period"] = idx_array[:, 1] - 1
 
-        self.cum['totim'] = np.array(totim)[:]
+        self.cum["totim"] = np.array(totim)[:]
         self.cum["time_step"] = idx_array[:, 0] - 1
         self.cum["stress_period"] = idx_array[:, 1] - 1
 
@@ -777,70 +822,80 @@ class ListBudget(object):
         # --read to the start of the "in" budget information
         while True:
             line = self.f.readline()
-            if line == '':
+            if line == "":
                 print(
-                    'end of file found while seeking budget information for ts,sp',
-                    ts, sp)
+                    "end of file found while seeking budget information for ts,sp",
+                    ts,
+                    sp,
+                )
                 return self.null_entries
 
             # --if there are two '=' in this line, then it is a budget line
-            if len(re.findall('=', line)) == 2:
+            if len(re.findall("=", line)) == 2:
                 break
 
-        tag = 'IN'
+        tag = "IN"
         incdict = collections.OrderedDict()
         cumdict = collections.OrderedDict()
         entrydict = {}
         while True:
 
-            if line == '':
+            if line == "":
                 # raise Exception('end of file found while seeking budget information')
                 print(
-                    'end of file found while seeking budget information for ts,sp',
-                    ts, sp)
+                    "end of file found while seeking budget information for ts,sp",
+                    ts,
+                    sp,
+                )
                 return self.null_entries
-            if len(re.findall('=', line)) == 2:
+            if len(re.findall("=", line)) == 2:
                 try:
                     entry, flux, cumu = self._parse_budget_line(line)
                 except Exception:
-                    print('error parsing budget line in ts,sp', ts, sp)
+                    print("error parsing budget line in ts,sp", ts, sp)
                     return self.null_entries
                 if flux is None:
                     print(
-                        'error casting in flux for', entry,
-                        ' to float in ts,sp',
-                        ts, sp)
+                        "error casting in flux for",
+                        entry,
+                        " to float in ts,sp",
+                        ts,
+                        sp,
+                    )
                     return self.null_entries
                 if cumu is None:
                     print(
-                        'error casting in cumu for', entry,
-                        ' to float in ts,sp',
-                        ts, sp)
+                        "error casting in cumu for",
+                        entry,
+                        " to float in ts,sp",
+                        ts,
+                        sp,
+                    )
                     return self.null_entries
                 if entry.endswith(tag.upper()):
-                    if ' - ' in entry.upper():
-                        key = entry.replace(' ', '')
+                    if " - " in entry.upper():
+                        key = entry.replace(" ", "")
                     else:
-                        key = entry.replace(' ', '_')
-                elif 'PERCENT DISCREPANCY' in entry.upper():
-                    key = entry.replace(' ', '_')
+                        key = entry.replace(" ", "_")
+                elif "PERCENT DISCREPANCY" in entry.upper():
+                    key = entry.replace(" ", "_")
                 else:
-                    entry = entry.replace(' ', '_')
+                    entry = entry.replace(" ", "_")
                     if entry in entrydict:
                         entrydict[entry] += 1
                         inum = entrydict[entry]
-                        entry = '{}{}'.format(entry, inum + 1)
+                        entry = "{}{}".format(entry, inum + 1)
                     else:
                         entrydict[entry] = 0
-                    key = '{}_{}'.format(entry, tag)
+                    key = "{}_{}".format(entry, tag)
                 incdict[key] = flux
                 cumdict[key] = cumu
             else:
-                if 'OUT:' in line.upper():
-                    tag = 'OUT'
+                if "OUT:" in line.upper():
+                    tag = "OUT"
                     entrydict = {}
             line = self.f.readline()
-            if entry.upper() == 'PERCENT DISCREPANCY':
+            if entry.upper() == "PERCENT DISCREPANCY":
                 break
 
         return incdict, cumdict
@@ -848,15 +903,15 @@ class ListBudget(object):
     def _parse_budget_line(self, line):
 
         # get the budget item name
-        entry = line.strip().split('=')[0].strip()
+        entry = line.strip().split("=")[0].strip()
 
         # get the cumulative string
-        idx = line.index('=') + 1
+        idx = line.index("=") + 1
         line2 = line[idx:]
         ll = line2.strip().split()
         cu_str = ll[0]
 
-        idx = line2.index('=') + 1
+        idx = line2.index("=") + 1
         fx_str = line2[idx:].split()[0].strip()
 
         #
@@ -867,12 +922,12 @@ class ListBudget(object):
         try:
             cumu = float(cu_str)
         except:
-            if 'NAN' in cu_str.strip().upper():
+            if "NAN" in cu_str.strip().upper():
                 cumu = np.NaN
         try:
             flux = float(fx_str)
         except:
-            if 'NAN' in fx_str.strip().upper():
+            if "NAN" in fx_str.strip().upper():
                 flux = np.NaN
         return entry, flux, cumu
 
@@ -883,14 +938,23 @@ class ListBudget(object):
         while True:
             line = self.f.readline()
             ihead += 1
-            if line == '':
+            if line == "":
                 print(
-                    'end of file found while seeking time information for ts,sp',
-                    ts, sp)
+                    "end of file found while seeking time information for ts,sp",
+                    ts,
+                    sp,
+                )
                 return np.NaN, np.NaN, np.NaN
-            elif ihead == 2 and 'SECONDS     MINUTES      HOURS       DAYS        YEARS' not in line:
+            elif (
+                ihead == 2
+                and "SECONDS     MINUTES      HOURS       DAYS        YEARS"
+                not in line
+            ):
                 break
-            elif '-----------------------------------------------------------' in line:
+            elif (
+                "-----------------------------------------------------------"
+                in line
+            ):
                 line = self.f.readline()
                 break
 
@@ -898,31 +962,31 @@ class ListBudget(object):
             translen = self._parse_time_line(line)
             line = self.f.readline()
             if translen is None:
-                print('error parsing translen for ts,sp', ts, sp)
+                print("error parsing translen for ts,sp", ts, sp)
                 return np.NaN, np.NaN, np.NaN
 
         tslen = self._parse_time_line(line)
         if tslen is None:
-            print('error parsing tslen for ts,sp', ts, sp)
+            print("error parsing tslen for ts,sp", ts, sp)
             return np.NaN, np.NaN, np.NaN
 
         sptim = self._parse_time_line(self.f.readline())
         if sptim is None:
-            print('error parsing sptim for ts,sp', ts, sp)
+            print("error parsing sptim for ts,sp", ts, sp)
             return np.NaN, np.NaN, np.NaN
 
         totim = self._parse_time_line(self.f.readline())
         if totim is None:
-            print('error parsing totim for ts,sp', ts, sp)
+            print("error parsing totim for ts,sp", ts, sp)
             return np.NaN, np.NaN, np.NaN
         return tslen, sptim, totim
 
     def _parse_time_line(self, line):
-        if line == '':
-            print('end of file found while parsing time information')
+        if line == "":
+            print("end of file found while parsing time information")
             return None
         try:
-            time_str = line[self.time_line_idx:]
+            time_str = line[self.time_line_idx :]
             raw = time_str.split()
             idx = self.time_idx
             # catch case where itmuni is undefined
@@ -935,57 +999,47 @@ class ListBudget(object):
                 idx = 0
             tval = float(raw[idx])
         except:
-            print('error parsing tslen information', time_str)
+            print("error parsing tslen information", time_str)
             return None
         return tval
 
 
 class SwtListBudget(ListBudget):
-    """
-
-    """
+    """"""
 
     def set_budget_key(self):
-        self.budgetkey = 'MASS BUDGET FOR ENTIRE MODEL'
+        self.budgetkey = "MASS BUDGET FOR ENTIRE MODEL"
         return
 
 
 class MfListBudget(ListBudget):
-    """
-
-    """
+    """"""
 
     def set_budget_key(self):
-        self.budgetkey = 'VOLUMETRIC BUDGET FOR ENTIRE MODEL'
+        self.budgetkey = "VOLUMETRIC BUDGET FOR ENTIRE MODEL"
         return
 
 
 class Mf6ListBudget(ListBudget):
-    """
-
-    """
+    """"""
 
     def set_budget_key(self):
-        self.budgetkey = 'VOLUME BUDGET FOR ENTIRE MODEL'
+        self.budgetkey = "VOLUME BUDGET FOR ENTIRE MODEL"
         return
 
 
 class MfusgListBudget(ListBudget):
-    """
-
-    """
+    """"""
 
     def set_budget_key(self):
-        self.budgetkey = 'VOLUMETRIC BUDGET FOR ENTIRE MODEL'
+        self.budgetkey = "VOLUMETRIC BUDGET FOR ENTIRE MODEL"
         return
 
 
 class SwrListBudget(ListBudget):
-    """
-
-    """
+    """"""
 
     def set_budget_key(self):
-        self.budgetkey = 'VOLUMETRIC SURFACE WATER BUDGET FOR ENTIRE MODEL'
+        self.budgetkey = "VOLUMETRIC SURFACE WATER BUDGET FOR ENTIRE MODEL"
         self.tssp_lines = 1
         return

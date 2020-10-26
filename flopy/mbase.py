@@ -26,7 +26,9 @@ from .discretization.grid import Grid
 
 # Global variables
 iconst = 1  # Multiplier for individual array elements in integer and real arrays read by MODFLOW's U2DREL, U1DREL and U2DINT.
-iprn = -1  # Printout flag. If >= 0 then array values read are printed in listing file.
+iprn = (
+    -1
+)  # Printout flag. If >= 0 then array values read are printed in listing file.
 
 
 class FileDataEntry(object):
@@ -49,8 +51,11 @@ class FileData(object):
             if file_data.fname == fname or file_data.unit == unit:
                 ipop.append(idx)
 
-        self.file_data.append(FileDataEntry(fname, unit, binflag=binflag,
-                                            output=output, package=package))
+        self.file_data.append(
+            FileDataEntry(
+                fname, unit, binflag=binflag, output=output, package=package
+            )
+        )
         return
 
 
@@ -61,107 +66,109 @@ class ModelInterface(object):
 
     def update_modelgrid(self):
         if self._modelgrid is not None:
-            self._modelgrid = Grid(proj4=self._modelgrid.proj4,
-                                   xoff=self._modelgrid.xoffset,
-                                   yoff=self._modelgrid.yoffset,
-                                   angrot=self._modelgrid.angrot)
+            self._modelgrid = Grid(
+                proj4=self._modelgrid.proj4,
+                xoff=self._modelgrid.xoffset,
+                yoff=self._modelgrid.yoffset,
+                angrot=self._modelgrid.angrot,
+            )
         self._mg_resync = True
 
     @property
     @abc.abstractmethod
     def modelgrid(self):
         raise NotImplementedError(
-            'must define modelgrid in child '
-            'class to use this base class')
+            "must define modelgrid in child " "class to use this base class"
+        )
 
     @property
     @abc.abstractmethod
     def packagelist(self):
         raise NotImplementedError(
-            'must define packagelist in child '
-            'class to use this base class')
+            "must define packagelist in child " "class to use this base class"
+        )
 
     @property
     @abc.abstractmethod
     def namefile(self):
         raise NotImplementedError(
-            'must define namefile in child '
-            'class to use this base class')
+            "must define namefile in child " "class to use this base class"
+        )
 
     @property
     @abc.abstractmethod
     def model_ws(self):
         raise NotImplementedError(
-            'must define model_ws in child '
-            'class to use this base class')
+            "must define model_ws in child " "class to use this base class"
+        )
 
     @property
     @abc.abstractmethod
     def exename(self):
         raise NotImplementedError(
-            'must define exename in child '
-            'class to use this base class')
+            "must define exename in child " "class to use this base class"
+        )
 
     @property
     @abc.abstractmethod
     def version(self):
         raise NotImplementedError(
-            'must define version in child '
-            'class to use this base class')
+            "must define version in child " "class to use this base class"
+        )
 
     @property
     @abc.abstractmethod
     def solver_tols(self):
         raise NotImplementedError(
-            'must define version in child '
-            'class to use this base class')
+            "must define version in child " "class to use this base class"
+        )
 
     @abc.abstractmethod
     def export(self, f, **kwargs):
         raise NotImplementedError(
-            'must define export in child '
-            'class to use this base class')
+            "must define export in child " "class to use this base class"
+        )
 
     @property
     @abc.abstractmethod
     def laytyp(self):
         raise NotImplementedError(
-            'must define laytyp in child '
-            'class to use this base class')
+            "must define laytyp in child " "class to use this base class"
+        )
 
     @property
     @abc.abstractmethod
     def hdry(self):
         raise NotImplementedError(
-            'must define hdry in child '
-            'class to use this base class')
+            "must define hdry in child " "class to use this base class"
+        )
 
     @property
     @abc.abstractmethod
     def hnoflo(self):
         raise NotImplementedError(
-            'must define hnoflo in child '
-            'class to use this base class')
+            "must define hnoflo in child " "class to use this base class"
+        )
 
     @property
     @abc.abstractmethod
     def laycbd(self):
         raise NotImplementedError(
-            'must define laycbd in child '
-            'class to use this base class')
+            "must define laycbd in child " "class to use this base class"
+        )
 
     @property
     @abc.abstractmethod
     def verbose(self):
         raise NotImplementedError(
-            'must define verbose in child '
-            'class to use this base class')
+            "must define verbose in child " "class to use this base class"
+        )
 
     @abc.abstractmethod
     def check(self, f=None, verbose=True, level=1):
         raise NotImplementedError(
-            'must define check in child '
-            'class to use this base class')
+            "must define check in child " "class to use this base class"
+        )
 
     def get_package_list(self, ftype=None):
         """
@@ -180,7 +187,7 @@ class ModelInterface(object):
 
         """
         val = []
-        for pp in (self.packagelist):
+        for pp in self.packagelist:
             if ftype is None:
                 val.append(pp.name[0].upper())
             elif pp.package_type.lower() == ftype:
@@ -225,34 +232,45 @@ class ModelInterface(object):
 
         for p in self.packagelist:
             if chk.package_check_levels.get(p.name[0].lower(), 0) <= level:
-                results[p.name[0]] = p.check(f=None, verbose=False,
-                                             level=level - 1,
-                                             checktype=chk.__class__)
+                results[p.name[0]] = p.check(
+                    f=None,
+                    verbose=False,
+                    level=level - 1,
+                    checktype=chk.__class__,
+                )
 
         # model level checks
         # solver check
         if self.version in chk.solver_packages.keys():
             solvers = set(chk.solver_packages[self.version]).intersection(
-                set(self.get_package_list()))
+                set(self.get_package_list())
+            )
             if not solvers:
-                chk._add_to_summary('Error', desc='\r    No solver package',
-                                    package='model')
+                chk._add_to_summary(
+                    "Error", desc="\r    No solver package", package="model"
+                )
             elif len(list(solvers)) > 1:
                 for s in solvers:
-                    chk._add_to_summary('Error',
-                                        desc='\r    Multiple solver packages',
-                                        package=s)
+                    chk._add_to_summary(
+                        "Error",
+                        desc="\r    Multiple solver packages",
+                        package=s,
+                    )
             else:
-                chk.passed.append('Compatible solver package')
+                chk.passed.append("Compatible solver package")
 
         # add package check results to model level check summary
         for r in results.values():
-            if r is not None and r.summary_array is not None:  # currently SFR doesn't have one
-                chk.summary_array = np.append(chk.summary_array,
-                                              r.summary_array).view(
-                    np.recarray)
-                chk.passed += ['{} package: {}'.format(r.package.name[0], psd)
-                               for psd in r.passed]
+            if (
+                r is not None and r.summary_array is not None
+            ):  # currently SFR doesn't have one
+                chk.summary_array = np.append(
+                    chk.summary_array, r.summary_array
+                ).view(np.recarray)
+                chk.passed += [
+                    "{} package: {}".format(r.package.name[0], psd)
+                    for psd in r.passed
+                ]
         chk.summarize()
         return chk
 
@@ -281,35 +299,45 @@ class BaseModel(ModelInterface):
 
     """
 
-    def __init__(self, modelname='modflowtest', namefile_ext='nam',
-                 exe_name='mf2k.exe', model_ws=None,
-                 structured=True, verbose=False, **kwargs):
+    def __init__(
+        self,
+        modelname="modflowtest",
+        namefile_ext="nam",
+        exe_name="mf2k.exe",
+        model_ws=None,
+        structured=True,
+        verbose=False,
+        **kwargs
+    ):
         """
         BaseModel init
         """
         ModelInterface.__init__(self)
         self.__name = modelname
-        self.namefile_ext = namefile_ext or ''
-        self._namefile = self.__name + '.' + self.namefile_ext
+        self.namefile_ext = namefile_ext or ""
+        self._namefile = self.__name + "." + self.namefile_ext
         self._packagelist = []
-        self.heading = ''
+        self.heading = ""
         self.exe_name = exe_name
         self._verbose = verbose
         self.external_path = None
-        self.external_extension = 'ref'
-        if model_ws is None: model_ws = os.getcwd()
+        self.external_extension = "ref"
+        if model_ws is None:
+            model_ws = os.getcwd()
         if not os.path.exists(model_ws):
             try:
                 os.makedirs(model_ws)
             except:
                 print(
-                    '\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(
-                        model_ws, os.getcwd()))
+                    "\n{0:s} not valid, workspace-folder was changed to {1:s}\n".format(
+                        model_ws, os.getcwd()
+                    )
+                )
                 model_ws = os.getcwd()
         self._model_ws = model_ws
         self.structured = structured
         self.pop_key_list = []
-        self.cl_params = ''
+        self.cl_params = ""
 
         # check for reference info in kwargs
         # we are just carrying these until a dis package is added
@@ -318,16 +346,19 @@ class BaseModel(ModelInterface):
         self._xul = kwargs.pop("xul", None)
         self._yul = kwargs.pop("yul", None)
         if self._xul is not None or self._yul is not None:
-            warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
-                          DeprecationWarning)
+            warnings.warn(
+                "xul/yul have been deprecated. Use xll/yll instead.",
+                DeprecationWarning,
+            )
 
         self._rotation = kwargs.pop("rotation", 0.0)
         self._proj4_str = kwargs.pop("proj4_str", None)
         self._start_datetime = kwargs.pop("start_datetime", "1-1-1970")
 
         # build model discretization objects
-        self._modelgrid = Grid(proj4=self._proj4_str, xoff=xll, yoff=yll,
-                               angrot=self._rotation)
+        self._modelgrid = Grid(
+            proj4=self._proj4_str, xoff=xll, yoff=yll, angrot=self._rotation
+        )
         self._modeltime = None
 
         # Model file information
@@ -355,14 +386,14 @@ class BaseModel(ModelInterface):
     @property
     def modeltime(self):
         raise NotImplementedError(
-            'must define modeltime in child '
-            'class to use this base class')
+            "must define modeltime in child " "class to use this base class"
+        )
 
     @property
     def modelgrid(self):
         raise NotImplementedError(
-            'must define modelgrid in child '
-            'class to use this base class')
+            "must define modelgrid in child " "class to use this base class"
+        )
 
     @property
     def packagelist(self):
@@ -516,6 +547,7 @@ class BaseModel(ModelInterface):
 
         """
         from .export import utils
+
         return utils.model_export(f, self, **kwargs)
 
     def add_package(self, p):
@@ -535,9 +567,11 @@ class BaseModel(ModelInterface):
                     except:
                         pn = p.name
                     if self.verbose:
-                        msg = "\nWARNING:\n    unit {} ".format(u) + \
-                              "of package {} ".format(pn) + \
-                              "already in use."
+                        msg = (
+                            "\nWARNING:\n    unit {} ".format(u)
+                            + "of package {} ".format(pn)
+                            + "already in use."
+                        )
                         print(msg)
             self.package_units.append(u)
         for i, pp in enumerate(self.packagelist):
@@ -545,13 +579,15 @@ class BaseModel(ModelInterface):
                 continue
             elif isinstance(p, type(pp)):
                 if self.verbose:
-                    print("\nWARNING:\n    Two packages of the same type, " +
-                          "Replacing existing " +
-                          "'{}' package.".format(p.name[0]))
+                    print(
+                        "\nWARNING:\n    Two packages of the same type, "
+                        + "Replacing existing "
+                        + "'{}' package.".format(p.name[0])
+                    )
                 self.packagelist[i] = p
                 return
         if self.verbose:
-            print('adding Package: ', p.name[0])
+            print("adding Package: ", p.name[0])
         self.packagelist.append(p)
 
     def remove_package(self, pname):
@@ -567,7 +603,7 @@ class BaseModel(ModelInterface):
         for i, pp in enumerate(self.packagelist):
             if pname.upper() in pp.name:
                 if self.verbose:
-                    print('removing Package: ', pp.name)
+                    print("removing Package: ", pp.name)
 
                 # Remove the package object from the model's packagelist
                 p = self.packagelist.pop(i)
@@ -579,7 +615,8 @@ class BaseModel(ModelInterface):
                         self.package_units.remove(iu)
                 return
         raise StopIteration(
-            'Package name ' + pname + ' not found in Package list')
+            "Package name " + pname + " not found in Package list"
+        )
 
     def __getattr__(self, item):
         """
@@ -604,15 +641,15 @@ class BaseModel(ModelInterface):
         using self.dis.delr, self.dis.delc, and self.dis.lenuni before being
         returned
         """
-        if item == 'output_packages' or not hasattr(self, 'output_packages'):
+        if item == "output_packages" or not hasattr(self, "output_packages"):
             raise AttributeError(item)
 
-        if item == 'sr':
+        if item == "sr":
             if self.dis is not None:
                 return self.dis.sr
             else:
                 return None
-        if item == 'tr':
+        if item == "tr":
             if self.dis is not None:
                 return self.dis.tr
             else:
@@ -630,12 +667,13 @@ class BaseModel(ModelInterface):
         pckg = self.get_package(item)
         if pckg is not None or item in self.mfnam_packages:
             return pckg
-        if item == 'modelgrid':
+        if item == "modelgrid":
             return
         raise AttributeError(item)
 
-    def get_ext_dict_attr(self, ext_unit_dict=None, unit=None, filetype=None,
-                          pop_key=True):
+    def get_ext_dict_attr(
+        self, ext_unit_dict=None, unit=None, filetype=None, pop_key=True
+    ):
         iu = None
         fname = None
         if ext_unit_dict is not None:
@@ -654,18 +692,21 @@ class BaseModel(ModelInterface):
 
     def _output_msg(self, i, add=True):
         if add:
-            txt1 = 'Adding'
-            txt2 = 'to'
+            txt1 = "Adding"
+            txt2 = "to"
         else:
-            txt1 = 'Removing'
-            txt2 = 'from'
-        msg = '{} {} '.format(txt1, self.output_fnames[i]) + \
-              '(unit={}) '.format(self.output_units[i]) + \
-              '{} the output list.'.format(txt2)
+            txt1 = "Removing"
+            txt2 = "from"
+        msg = (
+            "{} {} ".format(txt1, self.output_fnames[i])
+            + "(unit={}) ".format(self.output_units[i])
+            + "{} the output list.".format(txt2)
+        )
         print(msg)
 
-    def add_output_file(self, unit, fname=None, extension='cbc',
-                        binflag=True, package=None):
+    def add_output_file(
+        self, unit, fname=None, extension="cbc", binflag=True, package=None
+    ):
         """
         Add an ascii or binary output file for a package
 
@@ -711,7 +752,7 @@ class BaseModel(ModelInterface):
 
         if add_cbc:
             if fname is None:
-                fname = self.name + '.' + extension
+                fname = self.name + "." + extension
                 # check if this file name exists for a different unit number
                 if fname in self.output_fnames:
                     idx = self.output_fnames.index(fname)
@@ -720,12 +761,12 @@ class BaseModel(ModelInterface):
                         # include unit number in fname if package has
                         # not been passed
                         if package is None:
-                            fname = self.name + '.{}.'.format(unit) \
-                                    + extension
+                            fname = self.name + ".{}.".format(unit) + extension
                         # include package name in fname
                         else:
-                            fname = self.name + '.{}.'.format(package) \
-                                    + extension
+                            fname = (
+                                self.name + ".{}.".format(package) + extension
+                            )
             else:
                 fname = os.path.basename(fname)
             self.add_output(fname, unit, binflag=binflag, package=package)
@@ -749,8 +790,10 @@ class BaseModel(ModelInterface):
         """
         if fname in self.output_fnames:
             if self.verbose:
-                msg = "BaseModel.add_output() warning: " + \
-                      "replacing existing filename {}".format(fname)
+                msg = (
+                    "BaseModel.add_output() warning: "
+                    + "replacing existing filename {}".format(fname)
+                )
                 print(msg)
             idx = self.output_fnames.index(fname)
             if self.verbose:
@@ -805,7 +848,7 @@ class BaseModel(ModelInterface):
                     self.output_binflag.pop(i)
                     self.output_packages.pop(i)
         else:
-            msg = ' either fname or unit must be passed to remove_output()'
+            msg = " either fname or unit must be passed to remove_output()"
             raise Exception(msg)
         return
 
@@ -833,7 +876,7 @@ class BaseModel(ModelInterface):
                     return self.output_fnames[i]
             return None
         else:
-            msg = ' either fname or unit must be passed to get_output()'
+            msg = " either fname or unit must be passed to get_output()"
             raise Exception(msg)
         return
 
@@ -864,17 +907,19 @@ class BaseModel(ModelInterface):
                     idx = i
                     break
         else:
-            msg = ' either fname or unit must be passed ' + \
-                  ' to set_output_attribute()'
+            msg = (
+                " either fname or unit must be passed "
+                + " to set_output_attribute()"
+            )
             raise Exception(msg)
         if attr is not None:
             if idx is not None:
                 for key, value in attr.items:
-                    if key == 'binflag':
+                    if key == "binflag":
                         self.output_binflag[idx] = value
-                    elif key == 'fname':
+                    elif key == "fname":
                         self.output_fnames[idx] = value
-                    elif key == 'unit':
+                    elif key == "unit":
                         self.output_units[idx] = value
         return
 
@@ -905,16 +950,17 @@ class BaseModel(ModelInterface):
                     break
         else:
             raise Exception(
-                ' either fname or unit must be passed ' +
-                ' to set_output_attribute()')
+                " either fname or unit must be passed "
+                + " to set_output_attribute()"
+            )
         v = None
         if attr is not None:
             if idx is not None:
-                if attr == 'binflag':
+                if attr == "binflag":
                     v = self.output_binflag[idx]
-                elif attr == 'fname':
+                elif attr == "fname":
                     v = self.output_fnames[idx]
-                elif attr == 'unit':
+                elif attr == "unit":
                     v = self.output_units[idx]
         return v
 
@@ -936,8 +982,10 @@ class BaseModel(ModelInterface):
         """
         if fname in self.external_fnames:
             if self.verbose:
-                msg = "BaseModel.add_external() warning: " + \
-                      "replacing existing filename {}".format(fname)
+                msg = (
+                    "BaseModel.add_external() warning: "
+                    + "replacing existing filename {}".format(fname)
+                )
                 print(msg)
             idx = self.external_fnames.index(fname)
             self.external_fnames.pop(idx)
@@ -946,8 +994,10 @@ class BaseModel(ModelInterface):
             self.external_output.pop(idx)
         if unit in self.external_units:
             if self.verbose:
-                msg = "BaseModel.add_external() warning: " + \
-                      "replacing existing unit {}".format(unit)
+                msg = (
+                    "BaseModel.add_external() warning: "
+                    + "replacing existing unit {}".format(unit)
+                )
                 print(msg)
             idx = self.external_units.index(unit)
             self.external_fnames.pop(idx)
@@ -984,7 +1034,7 @@ class BaseModel(ModelInterface):
                 if u == unit:
                     plist.append(i)
         else:
-            msg = ' either fname or unit must be passed to remove_external()'
+            msg = " either fname or unit must be passed to remove_external()"
             raise Exception(msg)
         # remove external file
         j = 0
@@ -997,8 +1047,9 @@ class BaseModel(ModelInterface):
             j += 1
         return
 
-    def add_existing_package(self, filename, ptype=None,
-                             copy_to_model_ws=True):
+    def add_existing_package(
+        self, filename, ptype=None, copy_to_model_ws=True
+    ):
         """
         Add an existing package to a model instance.
 
@@ -1019,7 +1070,7 @@ class BaseModel(ModelInterface):
 
         """
         if ptype is None:
-            ptype = filename.split('.')[-1]
+            ptype = filename.split(".")[-1]
         ptype = str(ptype).upper()
 
         # for pak in self.packagelist:
@@ -1031,9 +1082,9 @@ class BaseModel(ModelInterface):
 
         fake_package = Obj()
         fake_package.write_file = lambda: None
-        fake_package.extra = ['']
+        fake_package.extra = [""]
         fake_package.name = [ptype]
-        fake_package.extension = [filename.split('.')[-1]]
+        fake_package.extension = [filename.split(".")[-1]]
         fake_package.unit_number = [self.next_ext_unit()]
         if copy_to_model_ws:
             base_filename = os.path.split(filename)[-1]
@@ -1057,13 +1108,15 @@ class BaseModel(ModelInterface):
             for i in range(len(p.name)):
                 if p.unit_number[i] == 0:
                     continue
-                s = '{:14s} '.format(p.name[i]) + \
-                    '{:5d}  '.format(p.unit_number[i]) + \
-                    '{}'.format(p.file_name[i])
+                s = (
+                    "{:14s} ".format(p.name[i])
+                    + "{:5d}  ".format(p.unit_number[i])
+                    + "{}".format(p.file_name[i])
+                )
                 if p.extra[i]:
-                    s += ' ' + p.extra[i]
+                    s += " " + p.extra[i]
                 lines.append(s)
-        return '\n'.join(lines) + '\n'
+        return "\n".join(lines) + "\n"
 
     def has_package(self, name):
         """
@@ -1081,7 +1134,7 @@ class BaseModel(ModelInterface):
 
         """
         if not name:
-            raise ValueError('invalid package name')
+            raise ValueError("invalid package name")
         name = name.upper()
         for p in self.packagelist:
             for pn in p.name:
@@ -1105,9 +1158,9 @@ class BaseModel(ModelInterface):
 
         """
         if not name:
-            raise ValueError('invalid package name')
+            raise ValueError("invalid package name")
         name = name.upper()
-        for pp in (self.packagelist):
+        for pp in self.packagelist:
             if pp.name[0].upper() == name:
                 return pp
         return None
@@ -1117,25 +1170,31 @@ class BaseModel(ModelInterface):
 
         # check that this is a valid model version
         if self.version not in list(self.version_types.keys()):
-            err = 'Error: Unsupported model ' + \
-                  'version ({}).'.format(self.version) + \
-                  ' Valid model versions are:'
+            err = (
+                "Error: Unsupported model "
+                + "version ({}).".format(self.version)
+                + " Valid model versions are:"
+            )
             for v in list(self.version_types.keys()):
-                err += ' {}'.format(v)
+                err += " {}".format(v)
             raise Exception(err)
 
         # set namefile heading
-        heading = '# Name file for ' + \
-                  '{}, '.format(self.version_types[self.version]) + \
-                  'generated by Flopy version {}.'.format(__version__)
+        heading = (
+            "# Name file for "
+            + "{}, ".format(self.version_types[self.version])
+            + "generated by Flopy version {}.".format(__version__)
+        )
         self.heading = heading
 
         # set heading for each package
         for p in self.get_package_list():
             pak = self.get_package(p)
-            heading = '# {} package for '.format(pak.name[0]) + \
-                      '{}, '.format(self.version_types[self.version]) + \
-                      'generated by Flopy version {}.'.format(__version__)
+            heading = (
+                "# {} package for ".format(pak.name[0])
+                + "{}, ".format(self.version_types[self.version])
+                + "generated by Flopy version {}.".format(__version__)
+            )
 
             pak.heading = heading
 
@@ -1163,12 +1222,13 @@ class BaseModel(ModelInterface):
             new_pth = os.getcwd()
         if not os.path.exists(new_pth):
             try:
-                line = '\ncreating model workspace...\n' + \
-                       '   {}'.format(new_pth)
+                line = "\ncreating model workspace...\n" + "   {}".format(
+                    new_pth
+                )
                 print(line)
                 os.makedirs(new_pth)
             except:
-                line = '\n{} not valid, workspace-folder '.format(new_pth)
+                line = "\n{} not valid, workspace-folder ".format(new_pth)
                 raise OSError(line)
                 # line = '\n{} not valid, workspace-folder '.format(new_pth) + \
                 #        'was changed to {}\n'.format(os.getcwd())
@@ -1178,16 +1238,20 @@ class BaseModel(ModelInterface):
         # --reset the model workspace
         old_pth = self._model_ws
         self._model_ws = new_pth
-        line = '\nchanging model workspace...\n   {}\n'.format(new_pth)
+        line = "\nchanging model workspace...\n   {}\n".format(new_pth)
         sys.stdout.write(line)
         # reset the paths for each package
-        for pp in (self.packagelist):
+        for pp in self.packagelist:
             pp.fn_path = os.path.join(self.model_ws, pp.file_name[0])
 
         # create the external path (if needed)
-        if hasattr(self, "external_path") and self.external_path is not None \
-                and not os.path.exists(os.path.join(self._model_ws,
-                                                    self.external_path)):
+        if (
+            hasattr(self, "external_path")
+            and self.external_path is not None
+            and not os.path.exists(
+                os.path.join(self._model_ws, self.external_path)
+            )
+        ):
             pth = os.path.join(self._model_ws, self.external_path)
             os.makedirs(pth)
             if reset_external:
@@ -1198,8 +1262,9 @@ class BaseModel(ModelInterface):
 
     def _reset_external(self, pth, old_pth):
         new_ext_fnames = []
-        for ext_file, output in zip(self.external_fnames,
-                                    self.external_output):
+        for ext_file, output in zip(
+            self.external_fnames, self.external_output
+        ):
             # new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
             # this is a wicked mess
             if output:
@@ -1209,7 +1274,7 @@ class BaseModel(ModelInterface):
                 # fpth = os.path.abspath(os.path.join(old_pth, ext_file))
                 # new_ext_file = os.path.relpath(fpth, os.path.abspath(pth))
                 fdir = os.path.dirname(ext_file)
-                if fdir == '':
+                if fdir == "":
                     fpth = os.path.abspath(os.path.join(old_pth, ext_file))
                 else:
                     fpth = ext_file
@@ -1235,10 +1300,10 @@ class BaseModel(ModelInterface):
 
         """
         self.__name = str(value)
-        self.namefile = self.__name + '.' + self.namefile_ext
+        self.namefile = self.__name + "." + self.namefile_ext
         for p in self.packagelist:
             for i in range(len(p.extension)):
-                p.file_name[i] = self.__name + '.' + p.extension[i]
+                p.file_name[i] = self.__name + "." + p.extension[i]
             p.fn_path = os.path.join(self.model_ws, p.file_name[0])
 
     def __setattr__(self, key, value):
@@ -1254,32 +1319,42 @@ class BaseModel(ModelInterface):
             assert isinstance(value, utils.reference.SpatialReference)
             warnings.warn(
                 "SpatialReference has been deprecated.",
-                category=DeprecationWarning)
+                category=DeprecationWarning,
+            )
             if self.dis is not None:
                 self.dis.sr = value
             else:
-                raise Exception("cannot set SpatialReference -"
-                                "ModflowDis not found")
+                raise Exception(
+                    "cannot set SpatialReference -" "ModflowDis not found"
+                )
         elif key == "tr":
-            assert isinstance(value,
-                              discretization.reference.TemporalReference)
+            assert isinstance(
+                value, discretization.reference.TemporalReference
+            )
             if self.dis is not None:
                 self.dis.tr = value
             else:
-                raise Exception("cannot set TemporalReference -"
-                                "ModflowDis not found")
+                raise Exception(
+                    "cannot set TemporalReference -" "ModflowDis not found"
+                )
         elif key == "start_datetime":
             if self.dis is not None:
                 self.dis.start_datetime = value
                 self.tr.start_datetime = value
             else:
-                raise Exception("cannot set start_datetime -"
-                                "ModflowDis not found")
+                raise Exception(
+                    "cannot set start_datetime -" "ModflowDis not found"
+                )
         else:
             super(BaseModel, self).__setattr__(key, value)
 
-    def run_model(self, silent=False, pause=False, report=False,
-                  normal_msg='normal termination'):
+    def run_model(
+        self,
+        silent=False,
+        pause=False,
+        report=False,
+        normal_msg="normal termination",
+    ):
         """
         This method will run the model using subprocess.Popen.
 
@@ -1304,13 +1379,19 @@ class BaseModel(ModelInterface):
 
         """
 
-        return run_model(self.exe_name, self.namefile, model_ws=self.model_ws,
-                         silent=silent, pause=pause, report=report,
-                         normal_msg=normal_msg)
+        return run_model(
+            self.exe_name,
+            self.namefile,
+            model_ws=self.model_ws,
+            silent=silent,
+            pause=pause,
+            report=report,
+            normal_msg=normal_msg,
+        )
 
     def load_results(self):
 
-        print('load_results not implemented')
+        print("load_results not implemented")
 
         return None
 
@@ -1325,24 +1406,27 @@ class BaseModel(ModelInterface):
         """
         if check:
             # run check prior to writing input
-            self.check(f='{}.chk'.format(self.name), verbose=self.verbose,
-                       level=1)
+            self.check(
+                f="{}.chk".format(self.name), verbose=self.verbose, level=1
+            )
 
         # reset the model to free_format if parameter substitution was
         # performed on a model load
         if self.parameter_load and not self.free_format_input:
             if self.verbose:
-                print('\nResetting free_format_input to True to ' +
-                      'preserve the precision of the parameter data.')
+                print(
+                    "\nResetting free_format_input to True to "
+                    + "preserve the precision of the parameter data."
+                )
             self.free_format_input = True
 
         if self.verbose:
-            print('\nWriting packages:')
+            print("\nWriting packages:")
 
         if SelPackList == False:
             for p in self.packagelist:
                 if self.verbose:
-                    print('   Package: ', p.name[0])
+                    print("   Package: ", p.name[0])
                 # prevent individual package checks from running after
                 # model-level package check above
                 # otherwise checks are run twice
@@ -1358,14 +1442,14 @@ class BaseModel(ModelInterface):
                 for i, p in enumerate(self.packagelist):
                     if pon in p.name:
                         if self.verbose:
-                            print('   Package: ', p.name[0])
+                            print("   Package: ", p.name[0])
                         try:
                             p.write_file(check=False)
                         except TypeError:
                             p.write_file()
                             break
         if self.verbose:
-            print(' ')
+            print(" ")
         # write name file
         self.write_name_file()
         # os.chdir(org_dir)
@@ -1377,7 +1461,8 @@ class BaseModel(ModelInterface):
 
         """
         raise Exception(
-            'IMPLEMENTATION ERROR: writenamefile must be overloaded')
+            "IMPLEMENTATION ERROR: writenamefile must be overloaded"
+        )
 
     def set_model_units(self):
         """
@@ -1385,7 +1470,8 @@ class BaseModel(ModelInterface):
 
         """
         raise Exception(
-            'IMPLEMENTATION ERROR: set_model_units must be overloaded')
+            "IMPLEMENTATION ERROR: set_model_units must be overloaded"
+        )
 
     @property
     def name(self):
@@ -1460,15 +1546,19 @@ class BaseModel(ModelInterface):
                 if p.unit_number[i] != 0:
                     if p.unit_number[i] in package_units.values():
                         duplicate_units[p.name[i]] = p.unit_number[i]
-                        otherpackage = [k for k, v in package_units.items()
-                                        if v == p.unit_number[i]][0]
+                        otherpackage = [
+                            k
+                            for k, v in package_units.items()
+                            if v == p.unit_number[i]
+                        ][0]
                         duplicate_units[otherpackage] = p.unit_number[i]
         if len(duplicate_units) > 0:
             for k, v in duplicate_units.items():
-                chk._add_to_summary('Error', package=k, value=v,
-                                    desc='unit number conflict')
+                chk._add_to_summary(
+                    "Error", package=k, value=v, desc="unit number conflict"
+                )
         else:
-            chk.passed.append('Unit number conflicts')
+            chk.passed.append("Unit number conflicts")
 
         return self._check(chk, level)
 
@@ -1520,8 +1610,9 @@ class BaseModel(ModelInterface):
         """
         from flopy.plot import PlotUtilities
 
-        axes = PlotUtilities._plot_model_helper(self, SelPackList=SelPackList,
-                                                **kwargs)
+        axes = PlotUtilities._plot_model_helper(
+            self, SelPackList=SelPackList, **kwargs
+        )
         return axes
 
     def to_shapefile(self, filename, package_names=None, **kwargs):
@@ -1553,10 +1644,17 @@ class BaseModel(ModelInterface):
         return
 
 
-def run_model(exe_name, namefile, model_ws='./',
-              silent=False, pause=False, report=False,
-              normal_msg='normal termination', use_async=False,
-              cargs=None):
+def run_model(
+    exe_name,
+    namefile,
+    model_ws="./",
+    silent=False,
+    pause=False,
+    report=False,
+    normal_msg="normal termination",
+    use_async=False,
+    cargs=None,
+):
     """
     This function will run the model using subprocess.Popen.  It
     communicates with the model's stdout asynchronously and reports
@@ -1612,28 +1710,33 @@ def run_model(exe_name, namefile, model_ws='./',
     exe = which(exe_name)
     if exe is None:
         import platform
-        if platform.system() in 'Windows':
-            if not exe_name.lower().endswith('.exe'):
-                exe = which(exe_name + '.exe')
+
+        if platform.system() in "Windows":
+            if not exe_name.lower().endswith(".exe"):
+                exe = which(exe_name + ".exe")
     if exe is None:
-        s = 'The program {} does not exist or is not executable.'.format(
-            exe_name)
+        s = "The program {} does not exist or is not executable.".format(
+            exe_name
+        )
         raise Exception(s)
     else:
         if not silent:
-            s = 'FloPy is using the following ' + \
-                ' executable to run the model: {}'.format(exe)
+            s = (
+                "FloPy is using the following "
+                + " executable to run the model: {}".format(exe)
+            )
             print(s)
 
     if namefile is not None:
         if not os.path.isfile(os.path.join(model_ws, namefile)):
-            s = 'The namefile for this model ' + \
-                'does not exists: {}'.format(namefile)
+            s = "The namefile for this model " + "does not exists: {}".format(
+                namefile
+            )
             raise Exception(s)
 
     # simple little function for the thread to target
     def q_output(output, q):
-        for line in iter(output.readline, b''):
+        for line in iter(output.readline, b""):
             q.put(line)
             # time.sleep(1)
             # output.close()
@@ -1655,15 +1758,15 @@ def run_model(exe_name, namefile, model_ws='./',
 
     if not use_async:
         while True:
-            line = proc.stdout.readline().decode('utf-8')
-            if line == '' and proc.poll() is not None:
+            line = proc.stdout.readline().decode("utf-8")
+            if line == "" and proc.poll() is not None:
                 break
             if line:
                 for msg in normal_msg:
                     if msg in line.lower():
                         success = True
                         break
-                line = line.rstrip('\r\n')
+                line = line.rstrip("\r\n")
                 if not silent:
                     print(line)
                 if report:
@@ -1680,17 +1783,17 @@ def run_model(exe_name, namefile, model_ws='./',
 
     failed_words = ["fail", "error"]
     last = datetime.now()
-    lastsec = 0.
+    lastsec = 0.0
     while True:
         try:
             line = q.get_nowait()
         except Queue.Empty:
             pass
         else:
-            if line == '':
+            if line == "":
                 break
             line = line.decode().lower().strip()
-            if line != '':
+            if line != "":
                 now = datetime.now()
                 dt = now - last
                 tsecs = dt.total_seconds() - lastsec
@@ -1718,5 +1821,5 @@ def run_model(exe_name, namefile, model_ws='./',
                 break
 
     if pause:
-        input('Press Enter to continue...')
+        input("Press Enter to continue...")
     return success, buff

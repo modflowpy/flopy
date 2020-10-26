@@ -6,7 +6,7 @@ import inspect
 import numpy as np
 from ..utils.mfenums import DiscretizationType
 from ..data import mfstructure, mfdata
-from ..mfbase import MFDataException, ExtFileAction
+from ..mfbase import MFDataException, ExtFileAction, VerbosityLevel
 from .mfstructure import DatumType
 from ...utils import datautil
 from ...datbase import DataListInterface, DataType
@@ -110,20 +110,39 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
 
 
     """
-    def __init__(self, sim_data, model_or_sim, structure, data=None,
-                 enable=True, path=None, dimensions=None, package=None):
-        super(MFList, self).__init__(sim_data, model_or_sim, structure, enable,
-                                     path, dimensions)
+
+    def __init__(
+        self,
+        sim_data,
+        model_or_sim,
+        structure,
+        data=None,
+        enable=True,
+        path=None,
+        dimensions=None,
+        package=None,
+    ):
+        super(MFList, self).__init__(
+            sim_data, model_or_sim, structure, enable, path, dimensions
+        )
         try:
             self._data_storage = self._new_storage()
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            raise MFDataException(structure.get_model(),
-                                  structure.get_package(), path,
-                                  'creating storage', structure.name,
-                                  inspect.stack()[0][3],
-                                  type_, value_, traceback_, None,
-                                  sim_data.debug, ex)
+            raise MFDataException(
+                structure.get_model(),
+                structure.get_package(),
+                path,
+                "creating storage",
+                structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                None,
+                sim_data.debug,
+                ex,
+            )
         self._package = package
         self._last_line_info = []
         self._data_line = None
@@ -134,12 +153,20 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 self.set_data(data, True)
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(structure.get_model(),
-                                      structure.get_package(), path,
-                                      'setting data', structure.name,
-                                      inspect.stack()[0][3],
-                                      type_, value_, traceback_, None,
-                                      sim_data.debug, ex)
+                raise MFDataException(
+                    structure.get_model(),
+                    structure.get_package(),
+                    path,
+                    "setting data",
+                    structure.name,
+                    inspect.stack()[0][3],
+                    type_,
+                    value_,
+                    traceback_,
+                    None,
+                    sim_data.debug,
+                    ex,
+                )
 
     @property
     def data_type(self):
@@ -167,16 +194,22 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             sarr = [sarr]
         if len(sarr) == 0 or sarr[0] is None:
             return None
-        if 'inode' in sarr[0].dtype.names:
+        if "inode" in sarr[0].dtype.names:
             raise NotImplementedError()
         arrays = {}
         model_grid = self._data_dimensions.get_model_grid()
 
         if model_grid._grid_type.value == 1:
-            shape = (model_grid.num_layers(), model_grid.num_rows(),
-                     model_grid.num_columns())
+            shape = (
+                model_grid.num_layers(),
+                model_grid.num_rows(),
+                model_grid.num_columns(),
+            )
         elif model_grid._grid_type.value == 2:
-            shape = (model_grid.num_layers(), model_grid.num_cells_per_layer())
+            shape = (
+                model_grid.num_layers(),
+                model_grid.num_cells_per_layer(),
+            )
         else:
             shape = (model_grid.num_cells_per_layer(),)
 
@@ -200,15 +233,15 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             for sp_rec in sarr:
                 if sp_rec is not None:
                     for rec in sp_rec:
-                        arr[rec['cellid']] += rec[name]
-                        cnt[rec['cellid']] += 1.
+                        arr[rec["cellid"]] += rec[name]
+                        cnt[rec["cellid"]] += 1.0
             # average keys that should not be added
-            if name != 'cond' and name != 'flux':
-                idx = cnt > 0.
+            if name != "cond" and name != "flux":
+                idx = cnt > 0.0
                 arr[idx] /= cnt[idx]
             if mask:
-                arr = np.ma.masked_where(cnt == 0., arr)
-                arr[cnt == 0.] = np.NaN
+                arr = np.ma.masked_where(cnt == 0.0, arr)
+                arr[cnt == 0.0] = np.NaN
 
             arrays[name] = arr.copy()
         # elif mask:
@@ -222,34 +255,59 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             self._data_storage = self._new_storage()
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(),
-                                  self._path,
-                                  'reinitializing', self.structure.name,
-                                  inspect.stack()[0][3],
-                                  type_, value_, traceback_, None,
-                                  self._simulation_data.debug, ex)
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self._path,
+                "reinitializing",
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                None,
+                self._simulation_data.debug,
+                ex,
+            )
 
         self._data_line = None
 
-    def store_as_external_file(self, external_file_path, binary=False,
-                               replace_existing_external=True):
+    def store_as_external_file(
+        self,
+        external_file_path,
+        binary=False,
+        replace_existing_external=True,
+        check_data=True,
+    ):
         # only store data externally (do not subpackage info)
         if self.structure.construct_package is None:
             storage = self._get_storage_obj()
             # check if data is already stored external
-            if replace_existing_external or storage is None or \
-                    storage.layer_storage.first_item().data_storage_type == \
-                    DataStorageType.internal_array or \
-                    storage.layer_storage.first_item().data_storage_type == \
-                    DataStorageType.internal_constant:
+            if (
+                replace_existing_external
+                or storage is None
+                or storage.layer_storage.first_item().data_storage_type
+                == DataStorageType.internal_array
+                or storage.layer_storage.first_item().data_storage_type
+                == DataStorageType.internal_constant
+            ):
                 data = self._get_data()
                 # if not empty dataset
                 if data is not None:
-                    external_data = {'filename': external_file_path,
-                                     'data': self._get_data(),
-                                     'binary': binary}
-                    self._set_data(external_data)
+                    if (
+                        self._simulation_data.verbosity_level.value
+                        >= VerbosityLevel.verbose.value
+                    ):
+                        print(
+                            "Storing {} to external file {}.."
+                            ".".format(self.structure.name, external_file_path)
+                        )
+                    external_data = {
+                        "filename": external_file_path,
+                        "data": data,
+                        "binary": binary,
+                    }
+                    self._set_data(external_data, check_data=check_data)
 
     def has_data(self):
         try:
@@ -258,12 +316,20 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             return self._get_storage_obj().has_data()
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(), self._path,
-                                  'checking for data', self.structure.name,
-                                  inspect.stack()[0][3], type_, value_,
-                                  traceback_, None,
-                                  self._simulation_data.debug, ex)
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self._path,
+                "checking for data",
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                None,
+                self._simulation_data.debug,
+                ex,
+            )
 
     def _get_data(self, apply_mult=False, **kwargs):
         try:
@@ -272,30 +338,38 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             return self._get_storage_obj().get_data()
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(), self._path,
-                                  'getting data', self.structure.name,
-                                  inspect.stack()[0][3], type_, value_,
-                                  traceback_, None,
-                                  self._simulation_data.debug, ex)
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self._path,
+                "getting data",
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                None,
+                self._simulation_data.debug,
+                ex,
+            )
 
     def get_data(self, apply_mult=False, **kwargs):
         return self._get_data(apply_mult, **kwargs)
 
-    def _set_data(self, data, autofill=False):
+    def _set_data(self, data, autofill=False, check_data=True):
         if isinstance(data, dict):
-            if 'data' in data:
-                data_check = data['data']
+            if "data" in data:
+                data_check = data["data"]
             else:
                 data_check = None
         else:
             data_check = data
-        if iterable(data_check):
+        if iterable(data_check) and check_data:
             # verify data length
             min_line_size = self.structure.get_min_record_entries()
-            if isinstance(data_check[0], np.record) or \
-                    (iterable(data_check[0]) and not
-                     isinstance(data_check[0], str)):
+            if isinstance(data_check[0], np.record) or (
+                iterable(data_check[0]) and not isinstance(data_check[0], str)
+            ):
                 # data contains multiple records
                 for data_line in data_check:
                     self._check_line_size(data_line, min_line_size)
@@ -311,19 +385,29 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             self._get_storage_obj().set_data(data, autofill=autofill)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(), self._path,
-                                  'setting data', self.structure.name,
-                                  inspect.stack()[0][3], type_, value_,
-                                  traceback_, None,
-                                  self._simulation_data.debug, ex)
-        # verify cellids
-        self._check_valid_cellids()
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self._path,
+                "setting data",
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                None,
+                self._simulation_data.debug,
+                ex,
+            )
+        if check_data:
+            # verify cellids
+            self._check_valid_cellids()
 
     def _check_valid_cellids(self):
         # only check packages that are a part of a model
-        if isinstance(self._model_or_sim, ModelInterface) and \
-                hasattr(self._model_or_sim, 'modelgrid'):
+        if isinstance(self._model_or_sim, ModelInterface) and hasattr(
+            self._model_or_sim, "modelgrid"
+        ):
             # get model grid info
             mg = self._model_or_sim.modelgrid
             if not mg.is_complete:
@@ -338,7 +422,8 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 data = storage_obj.get_data()
                 # check data for invalid cellids
                 for index, is_cellid in enumerate(
-                        storage_obj.recarray_cellid_list):
+                    storage_obj.resolve_cellidlist(data)
+                ):
                     if is_cellid:
                         for record in data:
                             if not isinstance(record[index], tuple):
@@ -348,56 +433,74 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                             idomain_val = idomain
                             # cellid should be within the model grid
                             for idx, cellid_part in enumerate(record[index]):
-                                if model_shape[idx] <= cellid_part or \
-                                        cellid_part < 0:
-                                    message = 'Cellid {} is outside of the ' \
-                                              'model grid ' \
-                                              '{}'.format(record[index],
-                                                          model_shape)
+                                if (
+                                    model_shape[idx] <= cellid_part
+                                    or cellid_part < 0
+                                ):
+                                    message = (
+                                        "Cellid {} is outside of the "
+                                        "model grid "
+                                        "{}".format(record[index], model_shape)
+                                    )
                                     type_, value_, traceback_ = sys.exc_info()
                                     raise MFDataException(
                                         self.structure.get_model(),
                                         self.structure.get_package(),
                                         self.structure.path,
-                                        'storing data',
+                                        "storing data",
                                         self.structure.name,
                                         inspect.stack()[0][3],
-                                        type_, value_, traceback_, message,
-                                        self._simulation_data.debug)
+                                        type_,
+                                        value_,
+                                        traceback_,
+                                        message,
+                                        self._simulation_data.debug,
+                                    )
                                 idomain_val = idomain_val[cellid_part]
                             # cellid should be at an active cell
-                            if idomain_val != 1:
-                                message = 'Cellid {} is outside of the ' \
-                                          'active model grid' \
-                                          '.'.format(record[index])
+                            if idomain_val < 1:
+                                message = (
+                                    "Cellid {} is outside of the "
+                                    "active model grid"
+                                    ".".format(record[index])
+                                )
                                 type_, value_, traceback_ = sys.exc_info()
                                 raise MFDataException(
                                     self.structure.get_model(),
                                     self.structure.get_package(),
                                     self.structure.path,
-                                    'storing data',
+                                    "storing data",
                                     self.structure.name,
                                     inspect.stack()[0][3],
-                                    type_, value_, traceback_, message,
-                                    self._simulation_data.debug)
+                                    type_,
+                                    value_,
+                                    traceback_,
+                                    message,
+                                    self._simulation_data.debug,
+                                )
 
     def _check_line_size(self, data_line, min_line_size):
         if 0 < len(data_line) < min_line_size:
             min_line_size = self.structure.get_min_record_entries()
-            message = 'Data line {} only has {} entries, ' \
-                      'minimum number of entries is ' \
-                      '{}.'.format(data_line, len(data_line),
-                                   min_line_size)
+            message = (
+                "Data line {} only has {} entries, "
+                "minimum number of entries is "
+                "{}.".format(data_line, len(data_line), min_line_size)
+            )
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(
                 self.structure.get_model(),
                 self.structure.get_package(),
                 self.structure.path,
-                'storing data',
+                "storing data",
                 self.structure.name,
                 inspect.stack()[0][3],
-                type_, value_, traceback_, message,
-                self._simulation_data.debug)
+                type_,
+                value_,
+                traceback_,
+                message,
+                self._simulation_data.debug,
+            )
 
     def set_data(self, data, autofill=False):
         self._set_data(data, autofill)
@@ -411,13 +514,20 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             self._get_storage_obj().append_data(data)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(),
-                                  self._path,
-                                  'appending data', self.structure.name,
-                                  inspect.stack()[0][3], type_, value_,
-                                  traceback_, None,
-                                  self._simulation_data.debug, ex)
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self._path,
+                "appending data",
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                None,
+                self._simulation_data.debug,
+                ex,
+            )
 
     def append_list_as_record(self, record):
         self._resync()
@@ -430,13 +540,20 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             self._get_storage_obj().append_data([tuple_record])
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(),
-                                  self._path,
-                                  'appending data', self.structure.name,
-                                  inspect.stack()[0][3], type_, value_,
-                                  traceback_, None,
-                                  self._simulation_data.debug, ex)
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self._path,
+                "appending data",
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                None,
+                self._simulation_data.debug,
+                ex,
+            )
 
     def update_record(self, record, key_index):
         self.append_list_as_record(record)
@@ -449,30 +566,45 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 for row in data:
                     col_num = 0
                     for val in row:
-                        if val is not None and val.lower() == search_term and \
-                                (col == None or col == col_num):
+                        if (
+                            val is not None
+                            and val.lower() == search_term
+                            and (col == None or col == col_num)
+                        ):
                             return (row, col)
                         col_num += 1
             return None
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
             if col is None:
-                col = ''
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(), self._path,
-                                  'searching for data', self.structure.name,
-                                  inspect.stack()[0][3], type_, value_,
-                                  traceback_,
-                                  'search_term={}\ncol={}'.format(search_term,
-                                                                  col),
-                                   self._simulation_data.debug, ex)
+                col = ""
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self._path,
+                "searching for data",
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                "search_term={}\ncol={}".format(search_term, col),
+                self._simulation_data.debug,
+                ex,
+            )
 
-    def get_file_entry(self, values_only=False,
-                       ext_file_action=ExtFileAction.copy_relative_paths):
+    def get_file_entry(
+        self,
+        values_only=False,
+        ext_file_action=ExtFileAction.copy_relative_paths,
+    ):
         return self._get_file_entry(values_only, ext_file_action)
 
-    def _get_file_entry(self, values_only=False,
-                       ext_file_action=ExtFileAction.copy_relative_paths):
+    def _get_file_entry(
+        self,
+        values_only=False,
+        ext_file_action=ExtFileAction.copy_relative_paths,
+    ):
         try:
             # freeze model grid to boost performance
             self._data_dimensions.lock()
@@ -481,58 +613,81 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             file_entry = []
             storage = self._get_storage_obj()
             if storage is None or not storage.has_data():
-                return ''
+                return ""
 
             # write out initial comments
             if storage.pre_data_comments:
                 file_entry.append(storage.pre_data_comments.get_file_entry())
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(),
-                                  self._path, 'get file entry initialization',
-                                  self.structure.name,
-                                  inspect.stack()[0][3], type_, value_,
-                                  traceback_, None,
-                                  self._simulation_data.debug, ex)
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self._path,
+                "get file entry initialization",
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                None,
+                self._simulation_data.debug,
+                ex,
+            )
 
-        if storage.layer_storage.first_item().data_storage_type == \
-                DataStorageType.external_file:
+        if (
+            storage.layer_storage.first_item().data_storage_type
+            == DataStorageType.external_file
+        ):
             try:
-                ext_string = self._get_external_formatting_string(0,
-                                                                  ext_file_action)
-                file_entry.append('{}{}{}'.format(indent, indent,
-                                                 ext_string))
+                ext_string = self._get_external_formatting_string(
+                    0, ext_file_action
+                )
+                file_entry.append("{}{}{}".format(indent, indent, ext_string))
                 # write file
 
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'formatting external file string',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_, value_,
-                                      traceback_, None,
-                                      self._simulation_data.debug, ex)
+                raise MFDataException(
+                    self.structure.get_model(),
+                    self.structure.get_package(),
+                    self._path,
+                    "formatting external file string",
+                    self.structure.name,
+                    inspect.stack()[0][3],
+                    type_,
+                    value_,
+                    traceback_,
+                    None,
+                    self._simulation_data.debug,
+                    ex,
+                )
         else:
             try:
                 data_complete = storage.get_data()
-                if storage.layer_storage.first_item().data_storage_type == \
-                        DataStorageType.internal_constant:
+                if (
+                    storage.layer_storage.first_item().data_storage_type
+                    == DataStorageType.internal_constant
+                ):
                     data_lines = 1
                 else:
                     data_lines = len(data_complete)
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'getting data from storage',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_, value_,
-                                      traceback_, None,
-                                      self._simulation_data.debug, ex)
+                raise MFDataException(
+                    self.structure.get_model(),
+                    self.structure.get_package(),
+                    self._path,
+                    "getting data from storage",
+                    self.structure.name,
+                    inspect.stack()[0][3],
+                    type_,
+                    value_,
+                    traceback_,
+                    None,
+                    self._simulation_data.debug,
+                    ex,
+                )
 
             # loop through list line by line - assumes first data_item size
             # is representative
@@ -540,126 +695,193 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             for mflist_line in range(0, data_lines):
                 text_line = []
                 index = 0
-                self._get_file_entry_record(data_complete, mflist_line,
-                                            text_line, index, self.structure,
-                                            storage, indent)
+                self._get_file_entry_record(
+                    data_complete,
+                    mflist_line,
+                    text_line,
+                    index,
+                    self.structure,
+                    storage,
+                    indent,
+                )
 
                 # include comments
-                if mflist_line in storage.comments and \
-                        storage.comments[mflist_line].text:
+                if (
+                    mflist_line in storage.comments
+                    and storage.comments[mflist_line].text
+                ):
                     text_line.append(storage.comments[mflist_line].text)
 
-                file_entry.append('{}{}\n'.format(indent, indent.
-                                                  join(text_line)))
+                file_entry.append(
+                    "{}{}\n".format(indent, indent.join(text_line))
+                )
                 self._crnt_line_num += 1
 
         # unfreeze model grid
         self._data_dimensions.unlock()
-        return ''.join(file_entry)
+        return "".join(file_entry)
 
-    def _get_file_entry_record(self, data_complete, mflist_line, text_line,
-                               index, data_set, storage, indent):
-        if storage.layer_storage.first_item().data_storage_type == \
-                DataStorageType.internal_constant:
+    def _get_file_entry_record(
+        self,
+        data_complete,
+        mflist_line,
+        text_line,
+        index,
+        data_set,
+        storage,
+        indent,
+    ):
+        if (
+            storage.layer_storage.first_item().data_storage_type
+            == DataStorageType.internal_constant
+        ):
             try:
                 #  constant data
                 data_type = self.structure.data_item_structures[1].type
                 const_str = self._get_constant_formatting_string(
-                        storage.get_const_val(0), 0, data_type, '')
-                text_line.append('{}{}{}'.format(indent, indent,
-                                                 const_str.upper()))
+                    storage.get_const_val(0), 0, data_type, ""
+                )
+                text_line.append(
+                    "{}{}{}".format(indent, indent, const_str.upper())
+                )
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'getting constant data',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_, value_,
-                                      traceback_, None,
-                                      self._simulation_data.debug, ex)
+                raise MFDataException(
+                    self.structure.get_model(),
+                    self.structure.get_package(),
+                    self._path,
+                    "getting constant data",
+                    self.structure.name,
+                    inspect.stack()[0][3],
+                    type_,
+                    value_,
+                    traceback_,
+                    None,
+                    self._simulation_data.debug,
+                    ex,
+                )
         else:
             data_dim = self._data_dimensions
             data_line = data_complete[mflist_line]
             for data_item in data_set.data_item_structures:
                 if data_item.is_aux:
                     try:
-                        aux_var_names = \
+                        aux_var_names = (
                             data_dim.package_dim.get_aux_variables()
+                        )
                         if aux_var_names is not None:
                             for aux_var_name in aux_var_names[0]:
-                                if aux_var_name.lower() != 'auxiliary':
+                                if aux_var_name.lower() != "auxiliary":
                                     data_val = data_line[index]
-                                    text_line.append(to_string(
-                                            data_val, data_item.type,
+                                    text_line.append(
+                                        to_string(
+                                            data_val,
+                                            data_item.type,
                                             self._simulation_data,
                                             self._data_dimensions,
                                             data_item.is_cellid,
                                             data_item.possible_cellid,
-                                            data_item))
+                                            data_item,
+                                        )
+                                    )
                                     index += 1
                     except Exception as ex:
                         type_, value_, traceback_ = sys.exc_info()
-                        raise MFDataException(self.structure.get_model(),
-                                              self.structure.get_package(),
-                                              self._path,
-                                              'processing auxiliary '
-                                              'variables',
-                                              self.structure.name,
-                                              inspect.stack()[0][3], type_,
-                                              value_,
-                                              traceback_, None,
-                                              self._simulation_data.debug, ex)
+                        raise MFDataException(
+                            self.structure.get_model(),
+                            self.structure.get_package(),
+                            self._path,
+                            "processing auxiliary " "variables",
+                            self.structure.name,
+                            inspect.stack()[0][3],
+                            type_,
+                            value_,
+                            traceback_,
+                            None,
+                            self._simulation_data.debug,
+                            ex,
+                        )
                 elif data_item.type == DatumType.record:
                     # record within a record, recurse
-                    self._get_file_entry_record(data_complete, mflist_line,
-                                                text_line, index, data_item,
-                                                storage, indent)
-                elif (not data_item.is_boundname or
-                        data_dim.package_dim.boundnames()) and \
-                        (not data_item.optional or data_item.name_length < 5
-                        or not data_item.is_mname or not storage.in_model):
+                    self._get_file_entry_record(
+                        data_complete,
+                        mflist_line,
+                        text_line,
+                        index,
+                        data_item,
+                        storage,
+                        indent,
+                    )
+                elif (
+                    not data_item.is_boundname
+                    or data_dim.package_dim.boundnames()
+                ) and (
+                    not data_item.optional
+                    or data_item.name_length < 5
+                    or not data_item.is_mname
+                    or not storage.in_model
+                ):
                     data_complete_len = len(data_line)
                     if data_complete_len <= index:
                         if data_item.optional == False:
-                            message = 'Not enough data provided ' \
-                                         'for {}. Data for required data ' \
-                                         'item "{}" not ' \
-                                         'found (data path: {})' \
-                                      '.'.format(self.structure.name,
-                                                 data_item.name,
-                                                 self._path,)
+                            message = (
+                                "Not enough data provided "
+                                "for {}. Data for required data "
+                                'item "{}" not '
+                                "found (data path: {})"
+                                ".".format(
+                                    self.structure.name,
+                                    data_item.name,
+                                    self._path,
+                                )
+                            )
                             type_, value_, traceback_ = sys.exc_info()
-                            raise MFDataException(self.structure.get_model(),
-                                                  self.structure.get_package(),
-                                                  self._path,
-                                                  'building file entry record',
-                                                  self.structure.name,
-                                                  inspect.stack()[0][3], type_,
-                                                  value_, traceback_, message,
-                                                  self._simulation_data.debug)
+                            raise MFDataException(
+                                self.structure.get_model(),
+                                self.structure.get_package(),
+                                self._path,
+                                "building file entry record",
+                                self.structure.name,
+                                inspect.stack()[0][3],
+                                type_,
+                                value_,
+                                traceback_,
+                                message,
+                                self._simulation_data.debug,
+                            )
                         else:
                             break
                     try:
                         # resolve size of data
                         resolved_shape, shape_rule = data_dim.get_data_shape(
-                                data_item, self.structure, [data_line],
-                                repeating_key=self._current_key)
+                            data_item,
+                            self.structure,
+                            [data_line],
+                            repeating_key=self._current_key,
+                        )
                         data_val = data_line[index]
-                        if data_item.is_cellid or (data_item.possible_cellid
-                                and storage._validate_cellid([data_val], 0)):
-                            if data_item.shape is not None and \
-                                    len(data_item.shape) > 0 and \
-                                    data_item.shape[0] == 'ncelldim':
+                        if data_item.is_cellid or (
+                            data_item.possible_cellid
+                            and storage._validate_cellid([data_val], 0)
+                        ):
+                            if (
+                                data_item.shape is not None
+                                and len(data_item.shape) > 0
+                                and data_item.shape[0] == "ncelldim"
+                            ):
                                 model_grid = data_dim.get_model_grid()
-                                cellid_size = \
-                                        model_grid.\
-                                            get_num_spatial_coordinates()
-                                data_item.remove_cellid(resolved_shape,
-                                                        cellid_size)
+                                cellid_size = (
+                                    model_grid.get_num_spatial_coordinates()
+                                )
+                                data_item.remove_cellid(
+                                    resolved_shape, cellid_size
+                                )
                         data_size = 1
-                        if len(resolved_shape) == 1 and \
-                                datautil.DatumUtil.is_int(resolved_shape[0]):
+                        if len(
+                            resolved_shape
+                        ) == 1 and datautil.DatumUtil.is_int(
+                            resolved_shape[0]
+                        ):
                             data_size = int(resolved_shape[0])
                             if data_size < 0:
                                 # unable to resolve data size based on shape, use
@@ -667,16 +889,20 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                 data_size = storage.resolve_data_size(index)
                     except Exception as ex:
                         type_, value_, traceback_ = sys.exc_info()
-                        raise MFDataException(self.structure.get_model(),
-                                              self.structure.get_package(),
-                                              self._path,
-                                              'resolving data shape',
-                                              self.structure.name,
-                                              inspect.stack()[0][3], type_,
-                                              value_, traceback_,
-                                              'Verify that your data is the '
-                                              'correct shape',
-                                              self._simulation_data.debug, ex)
+                        raise MFDataException(
+                            self.structure.get_model(),
+                            self.structure.get_package(),
+                            self._path,
+                            "resolving data shape",
+                            self.structure.name,
+                            inspect.stack()[0][3],
+                            type_,
+                            value_,
+                            traceback_,
+                            "Verify that your data is the " "correct shape",
+                            self._simulation_data.debug,
+                            ex,
+                        )
                     for data_index in range(0, data_size):
                         if data_complete_len > index:
                             data_val = data_line[index]
@@ -698,163 +924,224 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                 data_key = data_val.lower()
                                 if data_key not in data_item.keystring_dict:
                                     keystr_struct = data_item.keystring_dict[
-                                        '{}record'.format(data_key)]
+                                        "{}record".format(data_key)
+                                    ]
                                 else:
                                     keystr_struct = data_item.keystring_dict[
-                                        data_key]
-                                if isinstance(keystr_struct,
-                                              mfstructure.MFDataStructure):
+                                        data_key
+                                    ]
+                                if isinstance(
+                                    keystr_struct, mfstructure.MFDataStructure
+                                ):
                                     # data items following keystring
-                                    ks_structs = keystr_struct.\
-                                        data_item_structures[1:]
+                                    ks_structs = (
+                                        keystr_struct.data_item_structures[1:]
+                                    )
                                 else:
                                     # key string stands alone
                                     ks_structs = [keystr_struct]
                                 ks_struct_index = 0
                                 max_index = len(ks_structs) - 1
-                                for data_index in range(index,
-                                                        data_complete_len):
+                                for data_index in range(
+                                    index, data_complete_len
+                                ):
                                     if data_line[data_index] is not None:
                                         try:
                                             k_data_item = ks_structs[
-                                                ks_struct_index]
-                                            text_line.append(to_string(
+                                                ks_struct_index
+                                            ]
+                                            text_line.append(
+                                                to_string(
                                                     data_line[data_index],
                                                     k_data_item.type,
                                                     self._simulation_data,
                                                     self._data_dimensions,
                                                     k_data_item.is_cellid,
                                                     k_data_item.possible_cellid,
-                                                    k_data_item))
+                                                    k_data_item,
+                                                )
+                                            )
                                         except Exception as ex:
-                                            message = 'An error occurred ' \
-                                                      'while converting data '\
-                                                      'to a string. This ' \
-                                                      'error occurred while ' \
-                                                      'processing "{}" line ' \
-                                                      '{} data item "{}".' \
-                                                      '(data path: {})' \
-                                                      '.'.format(
-                                                        self.structure.name,
-                                                        data_item.name,
-                                                        self._crnt_line_num,
-                                                        self._path)
-                                            type_, value_, \
-                                            traceback_ = sys.exc_info()
+                                            message = (
+                                                "An error occurred "
+                                                "while converting data "
+                                                "to a string. This "
+                                                "error occurred while "
+                                                'processing "{}" line '
+                                                '{} data item "{}".'
+                                                "(data path: {})"
+                                                ".".format(
+                                                    self.structure.name,
+                                                    data_item.name,
+                                                    self._crnt_line_num,
+                                                    self._path,
+                                                )
+                                            )
+                                            (
+                                                type_,
+                                                value_,
+                                                traceback_,
+                                            ) = sys.exc_info()
                                             raise MFDataException(
                                                 self.structure.get_model(),
                                                 self.structure.get_package(),
                                                 self._path,
-                                                'converting data '
-                                                'to a string',
+                                                "converting data "
+                                                "to a string",
                                                 self.structure.name,
-                                                inspect.stack()[0][
-                                                    3], type_,
-                                                value_, traceback_,
+                                                inspect.stack()[0][3],
+                                                type_,
+                                                value_,
+                                                traceback_,
                                                 message,
-                                                self.
-                                                _simulation_data.
-                                                debug, ex)
+                                                self._simulation_data.debug,
+                                                ex,
+                                            )
                                         if ks_struct_index < max_index:
                                             # increment until last record
                                             # entry then repeat last entry
                                             ks_struct_index += 1
                                 index = data_index
-                            elif data_val is not None and (not isinstance(
-                                    data_val, float) or
-                                    not math.isnan(data_val)):
+                            elif data_val is not None and (
+                                not isinstance(data_val, float)
+                                or not math.isnan(data_val)
+                            ):
                                 try:
                                     if data_item.tagged and data_index == 0:
                                         # data item tagged, include data item name
                                         # as a keyword
-                                        text_line.append(to_string(
-                                                    data_val, DatumType.string,
-                                                    self._simulation_data,
-                                                    self._data_dimensions,
-                                                    False, data_item=data_item))
+                                        text_line.append(
+                                            to_string(
+                                                data_val,
+                                                DatumType.string,
+                                                self._simulation_data,
+                                                self._data_dimensions,
+                                                False,
+                                                data_item=data_item,
+                                            )
+                                        )
                                         index += 1
                                         data_val = data_line[index]
                                     text_line.append(
-                                            to_string(data_val, data_item.type,
-                                                      self._simulation_data,
-                                                      self._data_dimensions,
-                                                      data_item.is_cellid,
-                                                      data_item.possible_cellid,
-                                                      data_item))
+                                        to_string(
+                                            data_val,
+                                            data_item.type,
+                                            self._simulation_data,
+                                            self._data_dimensions,
+                                            data_item.is_cellid,
+                                            data_item.possible_cellid,
+                                            data_item,
+                                        )
+                                    )
                                 except Exception as ex:
-                                    message = 'An error occurred while ' \
-                                              'converting data to a ' \
-                                              'string. ' \
-                                              'This error occurred while ' \
-                                              'processing "{}" line {} data ' \
-                                              'item "{}".(data path: {})'\
-                                              '.'.format(self.structure.name,
-                                                         data_item.name,
-                                                         self._crnt_line_num,
-                                                         self._path)
+                                    message = (
+                                        "An error occurred while "
+                                        "converting data to a "
+                                        "string. "
+                                        "This error occurred while "
+                                        'processing "{}" line {} data '
+                                        'item "{}".(data path: {})'
+                                        ".".format(
+                                            self.structure.name,
+                                            data_item.name,
+                                            self._crnt_line_num,
+                                            self._path,
+                                        )
+                                    )
                                     type_, value_, traceback_ = sys.exc_info()
-                                    raise MFDataException(self.structure.
-                                                          get_model(),
-                                                          self.structure.
-                                                          get_package(),
-                                                          self._path,
-                                                          'converting data '
-                                                          'to a string',
-                                                          self.structure.name,
-                                                          inspect.stack()[0][
-                                                              3], type_,
-                                                          value_, traceback_,
-                                                          message,
-                                                          self.
-                                                          _simulation_data.
-                                                          debug, ex)
+                                    raise MFDataException(
+                                        self.structure.get_model(),
+                                        self.structure.get_package(),
+                                        self._path,
+                                        "converting data " "to a string",
+                                        self.structure.name,
+                                        inspect.stack()[0][3],
+                                        type_,
+                                        value_,
+                                        traceback_,
+                                        message,
+                                        self._simulation_data.debug,
+                                        ex,
+                                    )
                                 index += 1
                         elif not data_item.optional and shape_rule is None:
-                            message = 'Not enough data provided ' \
-                                      'for {}. Data for required data ' \
-                                      'item "{}" not ' \
-                                      'found (data path: {})' \
-                                      '.'.format(self.structure.name,
-                                                 data_item.name,
-                                                 self._path)
+                            message = (
+                                "Not enough data provided "
+                                "for {}. Data for required data "
+                                'item "{}" not '
+                                "found (data path: {})"
+                                ".".format(
+                                    self.structure.name,
+                                    data_item.name,
+                                    self._path,
+                                )
+                            )
                             type_, value_, traceback_ = sys.exc_info()
-                            raise MFDataException(self.structure.get_model(),
-                                                  self.structure.get_package(),
-                                                  self._path,
-                                                  'building data line',
-                                                  self.structure.name,
-                                                  inspect.stack()[0][3], type_,
-                                                  value_, traceback_, message,
-                                                  self._simulation_data.debug)
+                            raise MFDataException(
+                                self.structure.get_model(),
+                                self.structure.get_package(),
+                                self._path,
+                                "building data line",
+                                self.structure.name,
+                                inspect.stack()[0][3],
+                                type_,
+                                value_,
+                                traceback_,
+                                message,
+                                self._simulation_data.debug,
+                            )
 
-    def load(self, first_line, file_handle, block_header,
-             pre_data_comments=None, external_file_info=None):
-        super(MFList, self).load(first_line, file_handle, block_header,
-                                 pre_data_comments=None)
+    def load(
+        self,
+        first_line,
+        file_handle,
+        block_header,
+        pre_data_comments=None,
+        external_file_info=None,
+    ):
+        super(MFList, self).load(
+            first_line, file_handle, block_header, pre_data_comments=None
+        )
         self._resync()
-        file_access = MFFileAccessList( self.structure, self._data_dimensions,
-                                        self._simulation_data, self._path,
-                                        self._current_key)
+        file_access = MFFileAccessList(
+            self.structure,
+            self._data_dimensions,
+            self._simulation_data,
+            self._path,
+            self._current_key,
+        )
         storage = self._get_storage_obj()
         result = file_access.load_from_package(
-            first_line, file_handle, storage, pre_data_comments)
+            first_line, file_handle, storage, pre_data_comments
+        )
         if external_file_info is not None:
             storage.point_to_existing_external_file(external_file_info, 0)
         return result
 
     def _new_storage(self, stress_period=0):
-        return DataStorage(self._simulation_data, self._model_or_sim,
-                           self._data_dimensions, self._get_file_entry,
-                           DataStorageType.internal_array,
-                           DataStructureType.recarray,
-                           stress_period=stress_period,
-                           data_path=self._path)
+        return DataStorage(
+            self._simulation_data,
+            self._model_or_sim,
+            self._data_dimensions,
+            self._get_file_entry,
+            DataStorageType.internal_array,
+            DataStructureType.recarray,
+            stress_period=stress_period,
+            data_path=self._path,
+        )
 
     def _get_storage_obj(self):
         return self._data_storage
 
-    def plot(self, key=None, names=None, filename_base=None,
-             file_extension=None, mflay=None, **kwargs):
+    def plot(
+        self,
+        key=None,
+        names=None,
+        filename_base=None,
+        file_extension=None,
+        mflay=None,
+        **kwargs
+    ):
         """
         Plot boundary condition (MfList) data
 
@@ -912,13 +1199,19 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         if not self.plotable:
             raise TypeError("Simulation level packages are not plotable")
 
-        if 'cellid' not in self.dtype.names:
+        if "cellid" not in self.dtype.names:
             return
 
-        PlotUtilities._plot_mflist_helper(mflist=self, key=key, kper=None,
-                                          names=names, filename_base=None,
-                                          file_extension=None, mflay=None,
-                                          **kwargs )
+        PlotUtilities._plot_mflist_helper(
+            mflist=self,
+            key=key,
+            kper=None,
+            names=names,
+            filename_base=None,
+            file_extension=None,
+            mflay=None,
+            **kwargs
+        )
 
 
 class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
@@ -980,16 +1273,27 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
 
 
     """
-    def __init__(self, sim_data, model_or_sim, structure, enable=True, path=None,
-                 dimensions=None, package=None):
-        super(MFTransientList, self).__init__(sim_data=sim_data,
-                                              model_or_sim=model_or_sim,
-                                              structure=structure,
-                                              data=None,
-                                              enable=enable,
-                                              path=path,
-                                              dimensions=dimensions,
-                                              package=package)
+
+    def __init__(
+        self,
+        sim_data,
+        model_or_sim,
+        structure,
+        enable=True,
+        path=None,
+        dimensions=None,
+        package=None,
+    ):
+        super(MFTransientList, self).__init__(
+            sim_data=sim_data,
+            model_or_sim=model_or_sim,
+            structure=structure,
+            data=None,
+            enable=enable,
+            path=path,
+            dimensions=dimensions,
+            package=package,
+        )
         self._transient_setup(self._data_storage)
         self.repeating = True
 
@@ -1008,8 +1312,9 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
     @property
     def masked_4D_arrays(self):
         model_grid = self._data_dimensions.get_model_grid()
-        nper = self._data_dimensions.package_dim.model_dim[0].simulation_time \
-            .get_num_stress_periods()
+        nper = self._data_dimensions.package_dim.model_dim[
+            0
+        ].simulation_time.get_num_stress_periods()
         # get the first kper
         arrays = self.to_array(kper=0, mask=True)
 
@@ -1018,8 +1323,14 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             if model_grid.grid_type() == DiscretizationType.DIS:
                 m4ds = {}
                 for name, array in arrays.items():
-                    m4d = np.zeros((nper, model_grid.num_layers,
-                                    model_grid.num_rows, model_grid.num_columns))
+                    m4d = np.zeros(
+                        (
+                            nper,
+                            model_grid.num_layers,
+                            model_grid.num_rows,
+                            model_grid.num_columns,
+                        )
+                    )
                     m4d[0, :, :, :] = array
                     m4ds[name] = m4d
                 for kper in range(1, nper):
@@ -1030,8 +1341,13 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             else:
                 m3ds = {}
                 for name, array in arrays.items():
-                    m3d = np.zeros((nper, model_grid.num_layers,
-                                    model_grid.num_cells_per_layer()))
+                    m3d = np.zeros(
+                        (
+                            nper,
+                            model_grid.num_layers,
+                            model_grid.num_cells_per_layer(),
+                        )
+                    )
                     m3d[0, :, :] = array
                     m3ds[name] = m3d
                 for kper in range(1, nper):
@@ -1042,8 +1358,9 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
 
     def masked_4D_arrays_itr(self):
         model_grid = self._data_dimensions.get_model_grid()
-        nper = self._data_dimensions.package_dim.model_dim[0].simulation_time \
-            .get_num_stress_periods()
+        nper = self._data_dimensions.package_dim.model_dim[
+            0
+        ].simulation_time.get_num_stress_periods()
         # get the first kper
         arrays = self.to_array(kper=0, mask=True)
 
@@ -1051,8 +1368,14 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             # initialize these big arrays
             for name, array in arrays.items():
                 if model_grid.grid_type() == DiscretizationType.DIS:
-                    m4d = np.zeros((nper, model_grid.num_layers(),
-                                    model_grid.num_rows(), model_grid.num_columns()))
+                    m4d = np.zeros(
+                        (
+                            nper,
+                            model_grid.num_layers(),
+                            model_grid.num_rows(),
+                            model_grid.num_columns(),
+                        )
+                    )
                     m4d[0, :, :, :] = array
                     for kper in range(1, nper):
                         arrays = self.to_array(kper=kper, mask=True)
@@ -1061,8 +1384,13 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                                 m4d[kper, :, :, :] = array
                     yield name, m4d
                 else:
-                    m3d = np.zeros((nper, model_grid.num_layers(),
-                                    model_grid.num_cells_per_layer()))
+                    m3d = np.zeros(
+                        (
+                            nper,
+                            model_grid.num_layers(),
+                            model_grid.num_cells_per_layer(),
+                        )
+                    )
                     m3d[0, :, :] = array
                     for kper in range(1, nper):
                         arrays = self.to_array(kper=kper, mask=True)
@@ -1084,45 +1412,62 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             stress_period = transient_key
         else:
             stress_period = 1
-        self._data_storage[transient_key] = \
-            super(MFTransientList, self)._new_storage(stress_period)
+        self._data_storage[transient_key] = super(
+            MFTransientList, self
+        )._new_storage(stress_period)
 
     @property
     def data(self):
         return self.get_data()
 
-    def store_as_external_file(self, external_file_path, binary=False,
-                               replace_existing_external=True):
+    def store_as_external_file(
+        self,
+        external_file_path,
+        binary=False,
+        replace_existing_external=True,
+        check_data=True,
+    ):
         sim_time = self._data_dimensions.package_dim.model_dim[
-            0].simulation_time
+            0
+        ].simulation_time
         num_sp = sim_time.get_num_stress_periods()
         for sp in range(0, num_sp):
             if sp in self._data_storage:
                 self._current_key = sp
                 layer_storage = self._get_storage_obj().layer_storage
-                if layer_storage.get_total_size() > 0 and \
-                        self._get_storage_obj().layer_storage[0].\
-                        layer_storage_type != \
-                        DataStorageType.external_file:
+                if (
+                    layer_storage.get_total_size() > 0
+                    and self._get_storage_obj()
+                    .layer_storage[0]
+                    .layer_storage_type
+                    != DataStorageType.external_file
+                ):
                     fname, ext = os.path.splitext(external_file_path)
-                    full_name = '{}_{}{}'.format(fname, sp+1, ext)
-                    super(MFTransientList, self).\
-                        store_as_external_file(full_name, binary,
-                                               replace_existing_external)
+                    full_name = "{}_{}{}".format(fname, sp + 1, ext)
+                    super(MFTransientList, self).store_as_external_file(
+                        full_name,
+                        binary,
+                        replace_existing_external,
+                        check_data,
+                    )
 
     def get_data(self, key=None, apply_mult=False, **kwargs):
         if self._data_storage is not None and len(self._data_storage) > 0:
             if key is None:
-                if 'array' in kwargs:
+                if "array" in kwargs:
                     output = []
                     sim_time = self._data_dimensions.package_dim.model_dim[
-                        0].simulation_time
+                        0
+                    ].simulation_time
                     num_sp = sim_time.get_num_stress_periods()
                     for sp in range(0, num_sp):
                         if sp in self._data_storage:
                             self.get_data_prep(sp)
-                            output.append(super(MFTransientList, self).get_data(
-                                apply_mult=apply_mult))
+                            output.append(
+                                super(MFTransientList, self).get_data(
+                                    apply_mult=apply_mult
+                                )
+                            )
                         else:
                             output.append(None)
                     return output
@@ -1131,7 +1476,8 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                     for key in self._data_storage.keys():
                         self.get_data_prep(key)
                         output[key] = super(MFTransientList, self).get_data(
-                            apply_mult=apply_mult)
+                            apply_mult=apply_mult
+                        )
                     return output
             self.get_data_prep(key)
             return super(MFTransientList, self).get_data(apply_mult=apply_mult)
@@ -1139,8 +1485,8 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             return None
 
     def set_data(self, data, key=None, autofill=False):
-        if (isinstance(data, dict) or isinstance(data, OrderedDict)):
-            if 'filename' not in data:
+        if isinstance(data, dict) or isinstance(data, OrderedDict):
+            if "filename" not in data:
                 # each item in the dictionary is a list for one stress period
                 # the dictionary key is the stress period the list is for
                 del_keys = []
@@ -1150,13 +1496,13 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                         del_keys.append(key)
                     else:
                         self._set_data_prep(list_item, key)
-                        super(MFTransientList, self).set_data(list_item,
-                                                              autofill=
-                                                              autofill)
+                        super(MFTransientList, self).set_data(
+                            list_item, autofill=autofill
+                        )
                 for key in del_keys:
                     del data[key]
             else:
-                self._set_data_prep(data['data'], key)
+                self._set_data_prep(data["data"], key)
                 super(MFTransientList, self).set_data(data, autofill)
         else:
             if key is None:
@@ -1172,19 +1518,30 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                 self._set_data_prep(data, key)
                 super(MFTransientList, self).set_data(data, autofill)
 
-    def get_file_entry(self, key=0,
-                       ext_file_action=ExtFileAction.copy_relative_paths):
+    def get_file_entry(
+        self, key=0, ext_file_action=ExtFileAction.copy_relative_paths
+    ):
         self._get_file_entry_prep(key)
-        return super(MFTransientList, self).get_file_entry(ext_file_action=
-                                                           ext_file_action)
+        return super(MFTransientList, self).get_file_entry(
+            ext_file_action=ext_file_action
+        )
 
-    def load(self, first_line, file_handle, block_header,
-             pre_data_comments=None, external_file_info=None):
+    def load(
+        self,
+        first_line,
+        file_handle,
+        block_header,
+        pre_data_comments=None,
+        external_file_info=None,
+    ):
         self._load_prep(block_header)
-        return super(MFTransientList, self).load(first_line, file_handle,
-                                                 block_header,
-                                                 pre_data_comments,
-                                                 external_file_info)
+        return super(MFTransientList, self).load(
+            first_line,
+            file_handle,
+            block_header,
+            pre_data_comments,
+            external_file_info,
+        )
 
     def append_list_as_record(self, record, key=0):
         self._append_list_as_record_prep(record, key)
@@ -1198,14 +1555,23 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         return OrderedDict()
 
     def _get_storage_obj(self):
-        if self._current_key is None or \
-                self._current_key not in self._data_storage:
+        if (
+            self._current_key is None
+            or self._current_key not in self._data_storage
+        ):
             return None
         return self._data_storage[self._current_key]
 
-    def plot(self, key=None, names=None, kper=0,
-             filename_base=None, file_extension=None, mflay=None,
-             **kwargs):
+    def plot(
+        self,
+        key=None,
+        names=None,
+        kper=0,
+        filename_base=None,
+        file_extension=None,
+        mflay=None,
+        **kwargs
+    ):
         """
         Plot stress period boundary condition (MfList) data for a specified
         stress period
@@ -1266,13 +1632,19 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         if not self.plotable:
             raise TypeError("Simulation level packages are not plotable")
 
-        if 'cellid' not in self.dtype.names:
+        if "cellid" not in self.dtype.names:
             return
 
-        axes = PlotUtilities._plot_mflist_helper(self, key=key, names=names,
-                                                 kper=kper, filename_base=filename_base,
-                                                 file_extension=file_extension, mflay=mflay,
-                                                 **kwargs)
+        axes = PlotUtilities._plot_mflist_helper(
+            self,
+            key=key,
+            names=names,
+            kper=kper,
+            filename_base=filename_base,
+            file_extension=file_extension,
+            mflay=mflay,
+            **kwargs
+        )
         return axes
 
 
@@ -1308,17 +1680,28 @@ class MFMultipleList(MFTransientList):
 
 
     """
-    def __init__(self, sim_data, model_or_sim, structure, enable=True,
-                 path=None, dimensions=None, package=None):
-        super(MFMultipleList, self).__init__(sim_data=sim_data,
-                                             model_or_sim=model_or_sim,
-                                             structure=structure,
-                                             enable=enable,
-                                             path=path,
-                                             dimensions=dimensions,
-                                             package=package)
+
+    def __init__(
+        self,
+        sim_data,
+        model_or_sim,
+        structure,
+        enable=True,
+        path=None,
+        dimensions=None,
+        package=None,
+    ):
+        super(MFMultipleList, self).__init__(
+            sim_data=sim_data,
+            model_or_sim=model_or_sim,
+            structure=structure,
+            enable=enable,
+            path=path,
+            dimensions=dimensions,
+            package=package,
+        )
 
     def get_data(self, key=None, apply_mult=False, **kwargs):
-        return super(MFMultipleList, self).get_data(key=key,
-                                                    apply_mult=apply_mult,
-                                                    **kwargs)
+        return super(MFMultipleList, self).get_data(
+            key=key, apply_mult=apply_mult, **kwargs
+        )

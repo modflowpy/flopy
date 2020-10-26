@@ -8,7 +8,7 @@ pip install --no-binary rasterio rasterio
 pip install --upgrade numpy
 if [ "${RUN_TYPE}" = "misc" ]; then
   pip install flake8 "pylint!=2.5.0" pylint-exit
-  pip install jupyter nbconvert
+  pip install jupyter jupytext
 fi
 pip install https://github.com/modflowpy/pymake/zipball/master
 pip install shapely[vectorize]

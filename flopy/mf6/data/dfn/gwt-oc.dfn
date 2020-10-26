@@ -1,0 +1,280 @@
+# --------------------- gwt oc options ---------------------
+
+block options
+name budget_filerecord
+type record budget fileout budgetfile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name budget
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname budget keyword
+description keyword to specify that record corresponds to the budget.
+
+block options
+name fileout
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an output filename is expected next.
+
+block options
+name budgetfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the output file to write budget information.
+
+block options
+name concentration_filerecord
+type record concentration fileout concentrationfile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name concentration
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname concentration keyword
+description keyword to specify that record corresponds to concentration.
+
+block options
+name concentrationfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the output file to write conc information.
+
+block options
+name concentrationprintrecord
+type record concentration print_format formatrecord
+shape
+reader urword
+optional true
+longname
+description
+
+block options
+name print_format
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname keyword to indicate that a print format follows
+description keyword to specify format for printing to the listing file.
+
+block options
+name formatrecord
+type record columns width digits format
+shape
+in_record true
+reader urword
+tagged
+optional false
+longname
+description
+
+block options
+name columns
+type integer
+shape
+in_record true
+reader urword
+tagged true
+optional
+longname number of columns
+description number of columns for writing data.
+
+block options
+name width
+type integer
+shape
+in_record true
+reader urword
+tagged true
+optional
+longname width for each number
+description width for writing each number.
+
+block options
+name digits
+type integer
+shape
+in_record true
+reader urword
+tagged true
+optional
+longname number of digits
+description number of digits to use for writing a number.
+
+block options
+name format
+type string
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname write format
+description write format can be EXPONENTIAL, FIXED, GENERAL, or SCIENTIFIC.
+
+
+# --------------------- gwt oc period ---------------------
+
+block period
+name iper
+type integer
+block_variable True
+in_record true
+tagged false
+shape
+valid
+reader urword
+optional false
+longname stress period number
+description REPLACE iper {}
+
+block period
+name saverecord
+type record save rtype ocsetting
+shape
+reader urword
+tagged false
+optional true
+longname
+description
+
+block period
+name save
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname keyword to save
+description keyword to indicate that information will be saved this stress period.
+
+block period
+name printrecord
+type record print rtype ocsetting
+shape
+reader urword
+tagged false
+optional true
+longname
+description
+
+block period
+name print
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname keyword to save
+description keyword to indicate that information will be printed this stress period.
+
+block period
+name rtype
+type string
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname record type
+description type of information to save or print.  Can be BUDGET or CONCENTRATION.
+
+block period
+name ocsetting
+type keystring all first last frequency steps
+shape
+tagged false
+in_record true
+reader urword
+longname
+description specifies the steps for which the data will be saved.
+
+block period
+name all
+type keyword
+shape
+in_record true
+reader urword
+longname
+description keyword to indicate save for all time steps in period.
+
+block period
+name first
+type keyword
+shape
+in_record true
+reader urword
+longname
+description keyword to indicate save for first step in period. This keyword may be used in conjunction with other keywords to print or save results for multiple time steps.
+
+block period
+name last
+type keyword
+shape
+in_record true
+reader urword
+longname
+description keyword to indicate save for last step in period. This keyword may be used in conjunction with other keywords to print or save results for multiple time steps.
+
+block period
+name frequency
+type integer
+shape
+tagged true
+in_record true
+reader urword
+longname
+description save at the specified time step frequency. This keyword may be used in conjunction with other keywords to print or save results for multiple time steps.
+
+block period
+name steps
+type integer
+shape (<nstp)
+tagged true
+in_record true
+reader urword
+longname
+description save for each step specified in STEPS. This keyword may be used in conjunction with other keywords to print or save results for multiple time steps.
+

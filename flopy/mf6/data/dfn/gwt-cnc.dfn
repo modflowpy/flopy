@@ -1,0 +1,206 @@
+# --------------------- gwt cnc options ---------------------
+
+block options
+name auxiliary
+type string
+shape (naux)
+reader urword
+optional true
+longname keyword to specify aux variables
+description REPLACE auxnames {'{#1}': 'Groundwater Transport'}
+
+block options
+name auxmultname
+type string
+shape
+reader urword
+optional true
+longname name of auxiliary variable for multiplier
+description REPLACE auxmultname {'{#1}': 'concentration value'}
+
+block options
+name boundnames
+type keyword
+shape
+reader urword
+optional true
+longname
+description REPLACE boundnames {'{#1}': 'constant concentration'}
+
+block options
+name print_input
+type keyword
+reader urword
+optional true
+longname print input to listing file
+description REPLACE print_input {'{#1}': 'constant concentration'}
+
+block options
+name print_flows
+type keyword
+reader urword
+optional true
+longname print calculated flows to listing file
+description REPLACE print_flows {'{#1}': 'constant concentration'}
+
+block options
+name save_flows
+type keyword
+reader urword
+optional true
+longname save constant concentration flows to budget file
+description REPLACE save_flows {'{#1}': 'constant concentration'}
+
+block options
+name ts_filerecord
+type record ts6 filein ts6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name ts6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname time series keyword
+description keyword to specify that record corresponds to a time-series file.
+
+block options
+name filein
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block options
+name ts6_filename
+type string
+preserve_case true
+in_record true
+reader urword
+optional false
+tagged false
+longname file name of time series information
+description REPLACE timeseriesfile {}
+
+block options
+name obs_filerecord
+type record obs6 filein obs6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name obs6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname obs keyword
+description keyword to specify that record corresponds to an observations file.
+
+block options
+name obs6_filename
+type string
+preserve_case true
+in_record true
+tagged false
+reader urword
+optional false
+longname obs6 input filename
+description REPLACE obs6_filename {'{#1}': 'Constant Concentration'}
+
+
+# --------------------- gwt cnc dimensions ---------------------
+
+block dimensions
+name maxbound
+type integer
+reader urword
+optional false
+longname maximum number of constant concentrations
+description REPLACE maxbound {'{#1}': 'constant concentrations'}
+
+
+# --------------------- gwt cnc period ---------------------
+
+block period
+name iper
+type integer
+block_variable True
+in_record true
+tagged false
+shape
+valid
+reader urword
+optional false
+longname stress period number
+description REPLACE iper {}
+
+block period
+name stress_period_data
+type recarray cellid conc aux boundname
+shape (maxbound)
+reader urword
+longname
+description
+
+block period
+name cellid
+type integer
+shape (ncelldim)
+tagged false
+in_record true
+reader urword
+longname cell identifier
+description REPLACE cellid {}
+
+block period
+name conc
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+time_series true
+longname constant concentration value
+description is the constant concentration value. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+
+block period
+name aux
+type double precision
+in_record true
+tagged false
+shape (naux)
+reader urword
+optional true
+time_series true
+longname auxiliary variables
+description REPLACE aux {'{#1}': 'constant concentration'}
+
+block period
+name boundname
+type string
+shape
+tagged false
+in_record true
+reader urword
+optional true
+longname constant concentration name
+description REPLACE boundname {'{#1}': 'constant concentration'}

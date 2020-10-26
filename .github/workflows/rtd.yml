@@ -1,0 +1,98 @@
+name: Read the Docs
+
+on:
+  push:
+    branches: [master, develop]
+  pull_request:
+    branches: [master, develop]
+
+jobs:
+
+  rtd_build:
+    name: Read the Docs build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    if: github.repository_owner == 'modflowpy'
+    steps:
+      - name: Checkout flopy repo
+        uses: actions/checkout@v2
+
+      - name: Output repo information
+        run: |
+          echo $GITHUB_REPOSITORY_OWNER
+          echo $GITHUB_REPOSITORY
+          echo $GITHUB_REF
+          echo $GITHUB_EVENT_NAME
+
+      # Standard python fails on windows without GDAL installation
+      # Using custom bash shell ("shell: bash -l {0}") with Miniconda
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v1.7.0
+        with:
+          python-version: 3.8
+          mamba-version: "*"
+          channels: conda-forge,defaults
+          auto-update-conda: true
+          auto-activate-base: true
+          activate-environment: flopy
+
+      - name: Add jupyter and jupytext to scripts run
+        shell: bash -l {0}
+        run: |
+          mamba install --name flopy jupyter jupytext
+
+      - name: Add packages to flopy environment
+        shell: bash -l {0}
+        run: |
+          mamba env update --name flopy --file etc/environment.yml
+
+      - name: Install pymake, xmipy, and flopy
+        shell: bash -l {0}
+        run: |
+          pip install https://github.com/modflowpy/pymake/zipball/master
+          pip install xmipy
+          pip install .
+
+      - name: Download executables needed for tests
+        shell: bash -l {0}
+        run: |
+          python ./autotest/get_exes.py
+
+      - name: Add executables directory to path
+        shell: bash
+        run: |
+          echo "::add-path::$HOME/.local/bin"
+
+      - name: Run jupytext on tutorials
+        shell: bash -l {0}
+        run: |
+          cd .docs/
+          python create_tutorials.py
+          cd ../
+
+      - name: Upload completed jupyter notebooks as an artifact for ReadtheDocs
+        if:
+          github.repository_owner == 'modflowpy' && github.event_name == 'push'
+        uses: actions/upload-artifact@v2
+        with:
+          name: notebooks-for-${{ github.sha }}
+          path: |
+            .docs/_notebooks
+
+  # trigger rtd if previous job was successful
+  rtd:
+    name: Read the Docs trigger
+    needs: rtd_build
+    runs-on: ubuntu-latest
+
+    if:
+      github.repository_owner == 'modflowpy' && github.event_name == 'push'
+    steps:
+      - name: Trigger RTDs build on master and develop branches
+        uses: dfm/rtds-action@v1.0.0
+        with:
+          webhook_url: ${{ secrets.RTDS_WEBHOOK_URL }}
+          webhook_token: ${{ secrets.RTDS_WEBHOOK_TOKEN }}
+          commit_ref: ${{ github.ref }}

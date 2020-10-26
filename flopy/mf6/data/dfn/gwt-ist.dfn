@@ -1,0 +1,221 @@
+# --------------------- gwt ist options ---------------------
+
+block options
+name save_flows
+type keyword
+reader urword
+optional true
+longname save calculated flows to budget file
+description REPLACE save_flows {'{#1}': 'IST'}
+
+block options
+name sorbtion
+type keyword
+reader urword
+optional true
+longname activate sorbtion
+description is a text keyword to indicate that sorbtion will be activated.  Use of this keyword requires that BULK\_DENSITY and DISTCOEF are specified in the GRIDDATA block.
+
+block options
+name first_order_decay
+type keyword
+reader urword
+optional true
+longname activate first-order decay
+description is a text keyword to indicate that first-order decay will occur.  Use of this keyword requires that DECAY and DECAY\_SORBED (if sorbtion is active) are specified in the GRIDDATA block.
+
+block options
+name zero_order_decay
+type keyword
+reader urword
+optional true
+longname activate zero-order decay
+description is a text keyword to indicate that zero-order decay will occur.  Use of this keyword requires that DECAY and DECAY\_SORBED (if sorbtion is active) are specified in the GRIDDATA block.
+
+block options
+name cim_filerecord
+type record cim fileout cimfile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name cim
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname cim keyword
+description keyword to specify that record corresponds to immobile concentration.
+
+block options
+name fileout
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an output filename is expected next.
+
+block options
+name cimfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the output file to write immobile concentrations.
+
+block options
+name cimprintrecord
+type record cim print_format formatrecord
+shape
+reader urword
+optional true
+longname
+description
+
+block options
+name print_format
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname keyword to indicate that a print format follows
+description keyword to specify format for printing to the listing file.
+
+block options
+name formatrecord
+type record columns width digits format
+shape
+in_record true
+reader urword
+tagged
+optional false
+longname
+description
+
+block options
+name columns
+type integer
+shape
+in_record true
+reader urword
+tagged true
+optional
+longname number of columns
+description number of columns for writing data.
+
+block options
+name width
+type integer
+shape
+in_record true
+reader urword
+tagged true
+optional
+longname width for each number
+description width for writing each number.
+
+block options
+name digits
+type integer
+shape
+in_record true
+reader urword
+tagged true
+optional
+longname number of digits
+description number of digits to use for writing a number.
+
+block options
+name format
+type string
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname write format
+description write format can be EXPONENTIAL, FIXED, GENERAL, or SCIENTIFIC.
+
+# --------------------- gwt ist griddata ---------------------
+
+block griddata
+name cim
+type double precision
+shape (nodes)
+reader readarray
+optional true
+layered true
+longname initial concentration of the immobile domain
+description initial concentration of the immobile domain in mass per length cubed.  If CIM is not specified, then it is assumed to be zero.
+
+block griddata
+name thetaim
+type double precision
+shape (nodes)
+reader readarray
+layered true
+longname porosity of the immobile domain
+description porosity of the immobile domain specified as the volume of immobile pore space per total volume (dimensionless).
+
+block griddata
+name zetaim
+type double precision
+shape (nodes)
+reader readarray
+layered true
+longname mass transfer rate coefficient between the mobile and immobile domains
+description mass transfer rate coefficient between the mobile and immobile domains, in dimensions of per time.
+
+block griddata
+name decay
+type double precision
+shape (nodes)
+reader readarray
+layered true
+optional true
+longname first rate coefficient
+description is the rate coefficient for first or zero-order decay for the aqueous phase of the immobile domain.  A negative value indicates solute production.  The dimensions of decay for first-order decay is one over time.  The dimensions of decay for zero-order decay is mass per length cubed per time.  decay will have no affect on simulation results unless either first- or zero-order decay is specified in the options block.
+
+block griddata
+name decay_sorbed
+type double precision
+shape (nodes)
+reader readarray
+optional true
+layered true
+longname second rate coefficient
+description is the rate coefficient for first or zero-order decay for the sorbed phase of the immobile domain.  A negative value indicates solute production.  The dimensions of decay\_sorbed for first-order decay is one over time.  The dimensions of decay\_sorbed for zero-order decay is mass of solute per mass of aquifer per time.  If decay\_sorbed is not specified and both decay and sorbtion are active, then the sorbed decay rate will be set equal to the aqueous decay rate.  decay\_sorbed will have no affect on simulation results unless the SORPTION keyword and either first- or zero-order decay are specified in the options block.
+
+block griddata
+name bulk_density
+type double precision
+shape (nodes)
+reader readarray
+layered true
+longname bulk density
+description is the bulk density of the aquifer in mass per length cubed.  bulk\_density will have no affect on simulation results unless the SORBTION keyword is specified in the options block.
+
+block griddata
+name distcoef
+type double precision
+shape (nodes)
+reader readarray
+layered true
+longname distribution coefficient
+description is the distribution coefficient for the equilibrium-controlled linear sorption isotherm in dimensions of length cubed per mass.  distcoef will have no affect on simulation results unless the SORBTION keyword is specified in the options block.
+

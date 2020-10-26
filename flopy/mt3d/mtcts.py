@@ -1,6 +1,6 @@
 from ..pakbase import Package
 
-__author__ = 'emorway'
+__author__ = "emorway"
 
 
 class Mt3dCts(Package):
@@ -140,7 +140,9 @@ class Mt3dCts(Package):
 
     """
 
-    def __init__(self, ):
+    def __init__(
+        self,
+    ):
         raise NotImplementedError()
         # # unit number
         # if unitnumber is None:
@@ -156,9 +158,18 @@ class Mt3dCts(Package):
 
         # Set package specific parameters
 
-    @staticmethod
-    def load(f, model, nlay=None, nrow=None, ncol=None, nper=None,
-             ncomp=None, ext_unit_dict=None):
+    @classmethod
+    def load(
+        cls,
+        f,
+        model,
+        nlay=None,
+        nrow=None,
+        ncol=None,
+        nper=None,
+        ncomp=None,
+        ext_unit_dict=None,
+    ):
         """
         Load an existing package.
 
@@ -310,13 +321,13 @@ class Mt3dCts(Package):
         # dtype = dtype
 
     @staticmethod
-    def ftype():
-        return 'CTS'
+    def _ftype():
+        return "CTS"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 5
 
     @staticmethod
-    def reservedunit():
+    def _reservedunit():
         return 5

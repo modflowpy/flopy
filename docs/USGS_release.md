@@ -21,9 +21,9 @@ header-includes:
     - \fancyhf{{}}
     - \fancyhead[LE, LO, RE, RO]{}
     - \fancyhead[CE, CO]{FloPy Release Notes}
-    - \fancyfoot[LE, RO]{FloPy version 3.3.1}
+    - \fancyfoot[LE, RO]{FloPy version 3.3.2}
     - \fancyfoot[CO, CE]{\thepage\ of \pageref{LastPage}}
-    - \fancyfoot[RE, LO]{06/26/2020}
+    - \fancyfoot[RE, LO]{10/26/2020}
 geometry: margin=0.75in
 ---
 
@@ -35,27 +35,16 @@ FloPy includes support for MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, an
 For general modeling issues, please consult a modeling forum, such as the [MODFLOW Users Group](https://groups.google.com/forum/#!forum/modflow).  Other MODFLOW resources are listed in the [MODFLOW Resources](https://github.com/modflowpy/flopy#modflow-resources) section.
 
 
-Installation
------------------------------------------------
-
-FloPy requires **Python** 3.5 (or higher) and **NumPy** 1.9 (or higher).  Dependencies for optional FloPy methods are summarized [here](docs/flopy_method_dependencies.md).
-
-To install FloPy type:
-
-    conda install -c conda-forge flopy
-
-or
-
-    pip install flopy
-
-
-The release candidate version can also be installed from the git repository using the instructions provided [below](#relcand).
-
-
 Documentation
 -----------------------------------------------
 
-FloPy code documentation is available at [http://modflowpy.github.io/flopydoc/](http://modflowpy.github.io/flopydoc/)
+FloPy code documentation is available at [https://flopy.readthedocs.io](https://flopy.readthedocs.io)
+
+
+Contributing
+------------------------------------------------
+
+Bug reports, code contributions, or improvements to the documentation are welcome from the community. Prior to contributing, please read up on our guidelines for [contributing](CONTRIBUTING.md) and then check out one of our issues in the [hotlist: community-help](https://github.com/modflowpy/flopy/labels/hotlist%3A%20community%20help).
 
 
 How to Cite
@@ -67,7 +56,7 @@ How to Cite
 
 ##### ***Software/Code citation for FloPy:***
 
-[Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N., 2020, FloPy v3.3.1: U.S. Geological Survey Software Release, 26 June 2020, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N., 2020, FloPy v3.3.2: U.S. Geological Survey Software Release, 26 October 2020, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 Disclaimer
@@ -85,12 +74,12 @@ unauthorized use.
 
 Installation
 -----------------------------------------------
-To install FloPy version 3.3.1 from the USGS FloPy website:
+To install FloPy version 3.3.2 from the USGS FloPy website:
 ```
-pip install https://water.usgs.gov/ogw/flopy/flopy-3.3.1.zip
+pip install https://water.usgs.gov/ogw/flopy/flopy-3.3.2.zip
 ```
 
-To update to FloPy version 3.3.1 from the USGS FloPy website:
+To update to FloPy version 3.3.2 from the USGS FloPy website:
 ```
-pip install https://water.usgs.gov/ogw/flopy/flopy-3.3.1.zip --upgrade
+pip install https://water.usgs.gov/ogw/flopy/flopy-3.3.2.zip --upgrade
 ```

@@ -180,16 +180,36 @@ class SeawatVdf(Package):
     >>> lpf = flopy.seawat.SeawatVdf(m)
 
     """
+
     unitnumber = 37
 
-    def __init__(self, model, mtdnconc=1, mfnadvfd=1, nswtcpl=1, iwtable=1,
-                 densemin=0, densemax=0, dnscrit=1e-2, denseref=1.000,
-                 denseslp=.025, crhoref=0, firstdt=0.001, indense=1,
-                 dense=1.000, nsrhoeos=1, drhodprhd=4.46e-3, prhdref=0.,
-                 extension='vdf', unitnumber=None, filenames=None, **kwargs):
+    def __init__(
+        self,
+        model,
+        mtdnconc=1,
+        mfnadvfd=1,
+        nswtcpl=1,
+        iwtable=1,
+        densemin=0,
+        densemax=0,
+        dnscrit=1e-2,
+        denseref=1.000,
+        denseslp=0.025,
+        crhoref=0,
+        firstdt=0.001,
+        indense=1,
+        dense=1.000,
+        nsrhoeos=1,
+        drhodprhd=4.46e-3,
+        prhdref=0.0,
+        extension="vdf",
+        unitnumber=None,
+        filenames=None,
+        **kwargs
+    ):
 
         if unitnumber is None:
-            unitnumber = SeawatVdf.defaultunit()
+            unitnumber = SeawatVdf._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -198,20 +218,27 @@ class SeawatVdf(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [SeawatVdf.ftype()]
+        name = [SeawatVdf._ftype()]
         units = [unitnumber]
-        extra = ['']
+        extra = [""]
 
         # set package name
         fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension=extension, name=name,
-                         unit_number=units, extra=extra, filenames=fname)
+        Package.__init__(
+            self,
+            model,
+            extension=extension,
+            name=name,
+            unit_number=units,
+            extra=extra,
+            filenames=fname,
+        )
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
 
-        self.mtdnconc = kwargs.pop('mt3drhoflg', mtdnconc)
+        self.mtdnconc = kwargs.pop("mt3drhoflg", mtdnconc)
         self.mfnadvfd = mfnadvfd
         self.nswtcpl = nswtcpl
         self.iwtable = iwtable
@@ -220,16 +247,21 @@ class SeawatVdf(Package):
         self.dnscrit = dnscrit
         self.nsrhoeos = nsrhoeos
         self.denseref = denseref
-        self.denseslp = kwargs.pop('drhodc', denseslp)
+        self.denseslp = kwargs.pop("drhodc", denseslp)
         self.crhoref = crhoref
         self.drhodprhd = drhodprhd
         self.prhdref = prhdref
         self.firstdt = firstdt
         self.indense = indense
         if self.mtdnconc == 0:
-            self.dense = Transient3d(model, (nlay, nrow, ncol), np.float32,
-                                     dense, name='dense_',
-                                     locat=self.unit_number[0])
+            self.dense = Transient3d(
+                model,
+                (nlay, nrow, ncol),
+                np.float32,
+                dense,
+                name="dense_",
+                locat=self.unit_number[0],
+            )
         else:
             # dense not needed for most cases so setting to None
             self.dense = None
@@ -245,44 +277,50 @@ class SeawatVdf(Package):
         None
 
         """
-        f_vdf = open(self.fn_path, 'w')
+        f_vdf = open(self.fn_path, "w")
 
         # item 1
-        f_vdf.write('%10i%10i%10i%10i\n' % (self.mtdnconc, self.mfnadvfd,
-                                            self.nswtcpl, self.iwtable))
+        f_vdf.write(
+            "%10i%10i%10i%10i\n"
+            % (self.mtdnconc, self.mfnadvfd, self.nswtcpl, self.iwtable)
+        )
 
         # item 2
-        f_vdf.write('%10.4f%10.4f\n' % (self.densemin, self.densemax))
+        f_vdf.write("%10.4f%10.4f\n" % (self.densemin, self.densemax))
 
         # item 3
-        if (self.nswtcpl > 1 or self.nswtcpl == -1):
-            f_vdf.write('%10f\n' % (self.dnscrit))
+        if self.nswtcpl > 1 or self.nswtcpl == -1:
+            f_vdf.write("%10f\n" % (self.dnscrit))
 
         # item 4
         if self.mtdnconc >= 0:
             if self.nsrhoeos == 1:
-                f_vdf.write('%10.4f%10.4f\n' % (self.denseref, self.denseslp))
+                f_vdf.write("%10.4f%10.4f\n" % (self.denseref, self.denseslp))
             else:
-                f_vdf.write('%10.4f%10.4f\n' % (self.denseref,
-                                                self.denseslp[0]))
+                f_vdf.write(
+                    "%10.4f%10.4f\n" % (self.denseref, self.denseslp[0])
+                )
 
         elif self.mtdnconc == -1:
-            f_vdf.write('%10.4f%10.4f%10.4f\n' % (self.denseref,
-                                                  self.drhodprhd,
-                                                  self.prhdref))
-            f_vdf.write('%10i\n' % self.nsrhoeos)
+            f_vdf.write(
+                "%10.4f%10.4f%10.4f\n"
+                % (self.denseref, self.drhodprhd, self.prhdref)
+            )
+            f_vdf.write("%10i\n" % self.nsrhoeos)
             if self.nsrhoeos == 1:
-                f_vdf.write('%10i%10.4f%10.4f\n' % (1, self.denseslp,
-                                                    self.crhoref))
+                f_vdf.write(
+                    "%10i%10.4f%10.4f\n" % (1, self.denseslp, self.crhoref)
+                )
             else:
                 for i in range(self.nsrhoeos):
                     mtrhospec = 1 + i
-                    f_vdf.write('%10i%10.4f%10.4f\n' % (mtrhospec,
-                                                        self.denseslp[i],
-                                                        self.crhoref[i]))
+                    f_vdf.write(
+                        "%10i%10.4f%10.4f\n"
+                        % (mtrhospec, self.denseslp[i], self.crhoref[i])
+                    )
 
         # item 5
-        f_vdf.write('%10f\n' % (self.firstdt))
+        f_vdf.write("%10f\n" % (self.firstdt))
 
         # Transient DENSE array
         if self.mtdnconc == 0:
@@ -294,17 +332,17 @@ class SeawatVdf(Package):
 
                 # item 6 (and possibly 7)
                 if itmp > 0:
-                    f_vdf.write('%10i\n' % (self.indense))
+                    f_vdf.write("%10i\n" % (self.indense))
                     f_vdf.write(file_entry_dense)
 
                 else:
-                    f_vdf.write('%10i\n' % (itmp))
+                    f_vdf.write("%10i\n" % (itmp))
 
         f_vdf.close()
         return
 
-    @staticmethod
-    def load(f, model, nper=None, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, nper=None, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -343,18 +381,18 @@ class SeawatVdf(Package):
         """
 
         if model.verbose:
-            sys.stdout.write('loading vdf package file...\n')
+            sys.stdout.write("loading vdf package file...\n")
 
         # Open file, if necessary
-        openfile = not hasattr(f, 'read')
+        openfile = not hasattr(f, "read")
         if openfile:
             filename = f
-            f = open(filename, 'r')
+            f = open(filename, "r")
 
         # Dataset 0 -- comment line
         while True:
             line = f.readline()
-            if line[0] != '#':
+            if line[0] != "#":
                 break
 
         # Determine problem dimensions
@@ -364,21 +402,21 @@ class SeawatVdf(Package):
 
         # Item 1: MT3DRHOFLG MFNADVFD NSWTCPL IWTABLE - line already read above
         if model.verbose:
-            print('   loading MT3DRHOFLG MFNADVFD NSWTCPL IWTABLE...')
+            print("   loading MT3DRHOFLG MFNADVFD NSWTCPL IWTABLE...")
         t = line.strip().split()
         mt3drhoflg = int(t[0])
         mfnadvfd = int(t[1])
         nswtcpl = int(t[2])
         iwtable = int(t[3])
         if model.verbose:
-            print('   MT3DRHOFLG {}'.format(mt3drhoflg))
-            print('   MFNADVFD {}'.format(mfnadvfd))
-            print('   NSWTCPL {}'.format(nswtcpl))
-            print('   IWTABLE {}'.format(iwtable))
+            print("   MT3DRHOFLG {}".format(mt3drhoflg))
+            print("   MFNADVFD {}".format(mfnadvfd))
+            print("   NSWTCPL {}".format(nswtcpl))
+            print("   IWTABLE {}".format(iwtable))
 
         # Item 2 -- DENSEMIN DENSEMAX
         if model.verbose:
-            print('   loading DENSEMIN DENSEMAX...')
+            print("   loading DENSEMIN DENSEMAX...")
         line = f.readline()
         t = line.strip().split()
         densemin = float(t[0])
@@ -386,7 +424,7 @@ class SeawatVdf(Package):
 
         # Item 3 -- DNSCRIT
         if model.verbose:
-            print('   loading DNSCRIT...')
+            print("   loading DNSCRIT...")
         dnscrit = None
         if nswtcpl > 1 or nswtcpl == -1:
             line = f.readline()
@@ -401,7 +439,7 @@ class SeawatVdf(Package):
         crhoref = None
         if mt3drhoflg >= 0:
             if model.verbose:
-                print('   loading DENSEREF DRHODC(1)...')
+                print("   loading DENSEREF DRHODC(1)...")
             line = f.readline()
             t = line.strip().split()
             denseref = float(t[0])
@@ -409,7 +447,7 @@ class SeawatVdf(Package):
             nsrhoeos = 1
         else:
             if model.verbose:
-                print('   loading DENSEREF DRHODPRHD PRHDREF...')
+                print("   loading DENSEREF DRHODPRHD PRHDREF...")
             line = f.readline()
             t = line.strip().split()
             denseref = float(t[0])
@@ -417,13 +455,13 @@ class SeawatVdf(Package):
             prhdref = float(t[2])
 
             if model.verbose:
-                print('   loading NSRHOEOS...')
+                print("   loading NSRHOEOS...")
             line = f.readline()
             t = line.strip().split()
             nsrhoeos = int(t[0])
 
             if model.verbose:
-                print('    loading MTRHOSPEC DRHODC CRHOREF...')
+                print("    loading MTRHOSPEC DRHODC CRHOREF...")
             mtrhospec = []
             drhodc = []
             crhoref = []
@@ -436,7 +474,7 @@ class SeawatVdf(Package):
 
         # Item 5 -- FIRSTDT
         if model.verbose:
-            print('   loading FIRSTDT...')
+            print("   loading FIRSTDT...")
         line = f.readline()
         t = line.strip().split()
         firstdt = float(t[0])
@@ -452,25 +490,40 @@ class SeawatVdf(Package):
             for iper in range(nper):
 
                 if model.verbose:
-                    print('   loading INDENSE '
-                          'for stress period {}...'.format(iper + 1))
+                    print(
+                        "   loading INDENSE "
+                        "for stress period {}...".format(iper + 1)
+                    )
                 line = f.readline()
                 t = line.strip().split()
                 indense = int(t[0])
 
                 if indense > 0:
-                    name = 'DENSE_StressPeriod_{}'.format(iper)
-                    t = Util3d.load(f, model, (nlay, nrow, ncol),
-                                    np.float32, name, ext_unit_dict)
+                    name = "DENSE_StressPeriod_{}".format(iper)
+                    t = Util3d.load(
+                        f,
+                        model,
+                        (nlay, nrow, ncol),
+                        np.float32,
+                        name,
+                        ext_unit_dict,
+                    )
                     if indense == 2:
                         t = t.array
                         t = denseref + drhodc * t
-                        t = Util3d(model, (nlay, nrow, ncol), np.float32, t,
-                                   name, ext_unit_dict=ext_unit_dict)
+                        t = Util3d(
+                            model,
+                            (nlay, nrow, ncol),
+                            np.float32,
+                            t,
+                            name,
+                            ext_unit_dict=ext_unit_dict,
+                        )
                     dense[iper] = t
 
-            dense = Transient3d(model, (nlay, nrow, ncol), np.float32,
-                                dense, name='dense_')
+            dense = Transient3d(
+                model, (nlay, nrow, ncol), np.float32, dense, name="dense_"
+            )
 
             # Set indense = 1 because all concentrations converted to density
             indense = 1
@@ -482,26 +535,38 @@ class SeawatVdf(Package):
         unitnumber = None
         filenames = [None]
         if ext_unit_dict is not None:
-            unitnumber, filenames[0] = \
-                model.get_ext_dict_attr(ext_unit_dict,
-                                        filetype=SeawatVdf.ftype())
+            unitnumber, filenames[0] = model.get_ext_dict_attr(
+                ext_unit_dict, filetype=SeawatVdf._ftype()
+            )
 
         # Construct and return vdf package
-        vdf = SeawatVdf(model, mt3drhoflg=mt3drhoflg, mfnadvfd=mfnadvfd,
-                        nswtcpl=nswtcpl, iwtable=iwtable,
-                        densemin=densemin, densemax=densemax,
-                        dnscrit=dnscrit, denseref=denseref, drhodc=drhodc,
-                        drhodprhd=drhodprhd, prhdref=prhdref,
-                        nsrhoeos=nsrhoeos, mtrhospec=mtrhospec,
-                        crhoref=crhoref, firstdt=firstdt, indense=indense,
-                        dense=dense,
-                        unitnumber=unitnumber, filenames=filenames)
-        return vdf
+        return cls(
+            model,
+            mt3drhoflg=mt3drhoflg,
+            mfnadvfd=mfnadvfd,
+            nswtcpl=nswtcpl,
+            iwtable=iwtable,
+            densemin=densemin,
+            densemax=densemax,
+            dnscrit=dnscrit,
+            denseref=denseref,
+            drhodc=drhodc,
+            drhodprhd=drhodprhd,
+            prhdref=prhdref,
+            nsrhoeos=nsrhoeos,
+            mtrhospec=mtrhospec,
+            crhoref=crhoref,
+            firstdt=firstdt,
+            indense=indense,
+            dense=dense,
+            unitnumber=unitnumber,
+            filenames=filenames,
+        )
 
     @staticmethod
-    def ftype():
-        return 'VDF'
+    def _ftype():
+        return "VDF"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 37

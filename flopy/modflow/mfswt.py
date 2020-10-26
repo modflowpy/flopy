@@ -229,7 +229,7 @@ class ModflowSwt(Package):
 
     """
 
-    def write_file(self,f=None):
+    def write_file(self, f=None):
         """
         Write the package file.
 
@@ -241,27 +241,42 @@ class ModflowSwt(Package):
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
         if f is None:
-            f = open(self.fn_path, 'w')
+            f = open(self.fn_path, "w")
         # First line: heading
-        f.write('{}\n'.format(self.heading))
+        f.write("{}\n".format(self.heading))
         # write dataset 1
-        f.write('{} {} {} {} {} {} {}\n'.format(self.ipakcb, self.iswtoc,
-                                                self.nsystm, self.ithk,
-                                                self.ivoid, self.istpcs,
-                                                self.icrcc))
+        f.write(
+            "{} {} {} {} {} {} {}\n".format(
+                self.ipakcb,
+                self.iswtoc,
+                self.nsystm,
+                self.ithk,
+                self.ivoid,
+                self.istpcs,
+                self.icrcc,
+            )
+        )
         # write dataset 2
         t = self.lnwt.array
         for tt in t:
-            f.write('{} '.format(tt + 1))
-        f.write('\n')
+            f.write("{} ".format(tt + 1))
+        f.write("\n")
 
         # write dataset 3
         f.write(
-            '{} {} {} {} {} {} {} {} {} {}\n'.format(self.izcfl, self.izcfm,
-                                                     self.iglfl, self.iglfm,
-                                                     self.iestfl, self.iestfm,
-                                                     self.ipcsfl, self.ipcsfm,
-                                                     self.istfl, self.istfm))
+            "{} {} {} {} {} {} {} {} {} {}\n".format(
+                self.izcfl,
+                self.izcfm,
+                self.iglfl,
+                self.iglfm,
+                self.iestfl,
+                self.iestfm,
+                self.ipcsfl,
+                self.ipcsfm,
+                self.istfl,
+                self.istfm,
+            )
+        )
 
         # write dataset 4
         f.write(self.gl0.get_file_entry())
@@ -295,34 +310,66 @@ class ModflowSwt(Package):
         if self.iswtoc > 0:
             # dataset 16
             for i in self.ids16:
-                f.write('{} '.format(i))
-            f.write('  #dataset 16\n')
+                f.write("{} ".format(i))
+            f.write("  #dataset 16\n")
 
             # dataset 17
             for k in range(self.iswtoc):
                 t = self.ids17[k, :].copy()
                 t[0:4] += 1
                 for i in t:
-                    f.write('{} '.format(i))
-                f.write('  #dataset 17 iswtoc {}\n'.format(k + 1))
+                    f.write("{} ".format(i))
+                f.write("  #dataset 17 iswtoc {}\n".format(k + 1))
 
         # close swt file
         f.close()
 
-    def __init__(self, model, ipakcb=None, iswtoc=0, nsystm=1, ithk=0, ivoid=0,
-                 istpcs=1, icrcc=0, lnwt=0, izcfl=0, izcfm=0, iglfl=0, iglfm=0,
-                 iestfl=0, iestfm=0, ipcsfl=0, ipcsfm=0, istfl=0, istfm=0,
-                 gl0=0., sgm=1.7, sgs=2., thick=1., sse=1., ssv=1.,
-                 cr=0.01, cc=0.25, void=0.82, sub=0., pcsoff=0., pcs=0.,
-                 ids16=None, ids17=None,
-                 extension='swt', unitnumber=None, filenames=None):
+    def __init__(
+        self,
+        model,
+        ipakcb=None,
+        iswtoc=0,
+        nsystm=1,
+        ithk=0,
+        ivoid=0,
+        istpcs=1,
+        icrcc=0,
+        lnwt=0,
+        izcfl=0,
+        izcfm=0,
+        iglfl=0,
+        iglfm=0,
+        iestfl=0,
+        iestfm=0,
+        ipcsfl=0,
+        ipcsfm=0,
+        istfl=0,
+        istfm=0,
+        gl0=0.0,
+        sgm=1.7,
+        sgs=2.0,
+        thick=1.0,
+        sse=1.0,
+        ssv=1.0,
+        cr=0.01,
+        cc=0.25,
+        void=0.82,
+        sub=0.0,
+        pcsoff=0.0,
+        pcs=0.0,
+        ids16=None,
+        ids17=None,
+        extension="swt",
+        unitnumber=None,
+        filenames=None,
+    ):
         """
         Package constructor.
 
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowSwt.defaultunit()
+            unitnumber = ModflowSwt._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -337,20 +384,27 @@ class ModflowSwt(Package):
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
             fname = filenames[1]
-            model.add_output_file(ipakcb, fname=fname,
-                                  package=ModflowSwt.ftype())
+            model.add_output_file(
+                ipakcb, fname=fname, package=ModflowSwt._ftype()
+            )
         else:
             ipakcb = 0
 
-        item16_extensions = ["swt_subsidence.hds", "swt_total_comp.hds",
-                             "swt_inter_comp.hds", "swt_vert_disp.hds",
-                             "swt_precon_stress.hds",
-                             "swt_precon_stress_delta.hds",
-                             "swt_geostatic_stress.hds",
-                             "swt_geostatic_stress_delta.hds",
-                             "swt_eff_stress.hds", "swt_eff_stress_delta.hds",
-                             "swt_void_ratio.hds", "swt_thick.hds",
-                             "swt_lay_center.hds"]
+        item16_extensions = [
+            "swt_subsidence.hds",
+            "swt_total_comp.hds",
+            "swt_inter_comp.hds",
+            "swt_vert_disp.hds",
+            "swt_precon_stress.hds",
+            "swt_precon_stress_delta.hds",
+            "swt_geostatic_stress.hds",
+            "swt_geostatic_stress_delta.hds",
+            "swt_eff_stress.hds",
+            "swt_eff_stress_delta.hds",
+            "swt_void_ratio.hds",
+            "swt_thick.hds",
+            "swt_lay_center.hds",
+        ]
         item16_units = [2052 + i for i in range(len(item16_extensions))]
 
         if iswtoc > 0:
@@ -362,29 +416,39 @@ class ModflowSwt(Package):
                 else:
                     iu = ids16[k]
                 fname = filenames[idx + 2]
-                model.add_output_file(iu, fname=fname, extension=ext,
-                                      package=ModflowSwt.ftype())
+                model.add_output_file(
+                    iu, fname=fname, extension=ext, package=ModflowSwt._ftype()
+                )
                 idx += 1
 
         extensions = [extension]
-        name = [ModflowSwt.ftype()]
+        name = [ModflowSwt._ftype()]
         units = [unitnumber]
-        extra = ['']
+        extra = [""]
 
         # set package name
         fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and
         # unit number
-        Package.__init__(self, model, extension=extensions, name=name,
-                         unit_number=units, extra=extra, filenames=fname)
+        Package.__init__(
+            self,
+            model,
+            extension=extensions,
+            name=name,
+            unit_number=units,
+            extra=extra,
+            filenames=fname,
+        )
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
 
-        self.heading = '# {} package for '.format(self.name[0]) + \
-                       ' {}, '.format(model.version_types[model.version]) + \
-                       'generated by Flopy.'
-        self.url = 'swt.htm'
+        self.heading = (
+            "# {} package for ".format(self.name[0])
+            + " {}, ".format(model.version_types[model.version])
+            + "generated by Flopy."
+        )
+        self.url = "swt.htm"
 
         self.ipakcb = ipakcb
         self.iswtoc = iswtoc
@@ -395,7 +459,7 @@ class ModflowSwt(Package):
         self.istpcs = istpcs
         self.icrcc = icrcc
 
-        self.lnwt = Util2d(model, (nsystm,), np.int32, lnwt, name='lnwt')
+        self.lnwt = Util2d(model, (nsystm,), np.int32, lnwt, name="lnwt")
 
         self.izcfl = izcfl
         self.izcfm = izcfm
@@ -408,55 +472,102 @@ class ModflowSwt(Package):
         self.istfl = istfl
         self.istfm = istfm
 
-        self.gl0 = Util2d(model, (nrow, ncol), np.float32, gl0, name='gl0')
-        self.sgm = Util2d(model, (nrow, ncol), np.float32, sgm, name='sgm')
-        self.sgs = Util2d(model, (nrow, ncol), np.float32, sgs, name='sgs')
+        self.gl0 = Util2d(model, (nrow, ncol), np.float32, gl0, name="gl0")
+        self.sgm = Util2d(model, (nrow, ncol), np.float32, sgm, name="sgm")
+        self.sgs = Util2d(model, (nrow, ncol), np.float32, sgs, name="sgs")
 
         # interbed data
-        names = ['thick system ' for n in range(nsystm)]
-        self.thick = Util3d(model, (nsystm, nrow, ncol), np.float32, thick,
-                            name=names,
-                            locat=self.unit_number[0])
-        names = ['void system ' for n in range(nsystm)]
-        self.void = Util3d(model, (nsystm, nrow, ncol), np.float32, void,
-                           name=names,
-                           locat=self.unit_number[0])
-        names = ['sub system ' for n in range(nsystm)]
-        self.sub = Util3d(model, (nsystm, nrow, ncol), np.float32, sub,
-                          name=names,
-                          locat=self.unit_number[0])
+        names = ["thick system " for n in range(nsystm)]
+        self.thick = Util3d(
+            model,
+            (nsystm, nrow, ncol),
+            np.float32,
+            thick,
+            name=names,
+            locat=self.unit_number[0],
+        )
+        names = ["void system " for n in range(nsystm)]
+        self.void = Util3d(
+            model,
+            (nsystm, nrow, ncol),
+            np.float32,
+            void,
+            name=names,
+            locat=self.unit_number[0],
+        )
+        names = ["sub system " for n in range(nsystm)]
+        self.sub = Util3d(
+            model,
+            (nsystm, nrow, ncol),
+            np.float32,
+            sub,
+            name=names,
+            locat=self.unit_number[0],
+        )
         if icrcc != 0:
-            names = ['sse system ' for n in range(nsystm)]
-            self.sse = Util3d(model, (nsystm, nrow, ncol), np.float32, sse,
-                              name=names,
-                              locat=self.unit_number[0])
-            names = ['ssc system ' for n in range(nsystm)]
-            self.ssv = Util3d(model, (nsystm, nrow, ncol), np.float32, ssv,
-                              name=names,
-                              locat=self.unit_number[0])
+            names = ["sse system " for n in range(nsystm)]
+            self.sse = Util3d(
+                model,
+                (nsystm, nrow, ncol),
+                np.float32,
+                sse,
+                name=names,
+                locat=self.unit_number[0],
+            )
+            names = ["ssc system " for n in range(nsystm)]
+            self.ssv = Util3d(
+                model,
+                (nsystm, nrow, ncol),
+                np.float32,
+                ssv,
+                name=names,
+                locat=self.unit_number[0],
+            )
             self.cr = None
             self.cc = None
         else:
             self.sse = None
             self.ssv = None
-            names = ['cr system ' for n in range(nsystm)]
-            self.cr = Util3d(model, (nsystm, nrow, ncol), np.float32, cr,
-                             name=names,
-                             locat=self.unit_number[0])
-            names = ['cc system ' for n in range(nsystm)]
-            self.cc = Util3d(model, (nsystm, nrow, ncol), np.float32, cc,
-                             name=names,
-                             locat=self.unit_number[0])
+            names = ["cr system " for n in range(nsystm)]
+            self.cr = Util3d(
+                model,
+                (nsystm, nrow, ncol),
+                np.float32,
+                cr,
+                name=names,
+                locat=self.unit_number[0],
+            )
+            names = ["cc system " for n in range(nsystm)]
+            self.cc = Util3d(
+                model,
+                (nsystm, nrow, ncol),
+                np.float32,
+                cc,
+                name=names,
+                locat=self.unit_number[0],
+            )
 
         # layer data
         if istpcs != 0:
-            self.pcsoff = Util3d(model, (nlay, nrow, ncol), np.float32, pcsoff,
-                                 name='pcsoff', locat=self.unit_number[0])
+            self.pcsoff = Util3d(
+                model,
+                (nlay, nrow, ncol),
+                np.float32,
+                pcsoff,
+                name="pcsoff",
+                locat=self.unit_number[0],
+            )
             self.pcs = None
         else:
             self.pcsoff = None
-            self.pcs = Util3d(model, (nlay, nrow, ncol), np.float32, pcs,
-                              name='pcs', locat=self.unit_number[0])
+            self.pcs = Util3d(
+                model,
+                (nlay, nrow, ncol),
+                np.float32,
+                pcs,
+                name="pcs",
+                locat=self.unit_number[0],
+            )
 
         # output data
         if iswtoc > 0:
@@ -488,8 +599,8 @@ class ModflowSwt(Package):
         # add package to model
         self.parent.add_package(self)
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -521,32 +632,34 @@ class ModflowSwt(Package):
         """
 
         if model.verbose:
-            sys.stdout.write('loading swt package file...\n')
+            sys.stdout.write("loading swt package file...\n")
 
-        openfile = not hasattr(f, 'read')
+        openfile = not hasattr(f, "read")
         if openfile:
             filename = f
-            f = open(filename, 'r')
+            f = open(filename, "r")
 
         # dataset 0 -- header
         while True:
             line = f.readline()
-            if line[0] != '#':
+            if line[0] != "#":
                 break
         # determine problem dimensions
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
 
         # read dataset 1
         if model.verbose:
-            sys.stdout.write('  loading swt dataset 1\n')
+            sys.stdout.write("  loading swt dataset 1\n")
         t = line.strip().split()
-        ipakcb, iswtoc, nsystm, ithk, ivoid, istpcs, icrcc = int(t[0]), \
-                                                             int(t[1]), \
-                                                             int(t[2]), \
-                                                             int(t[3]), \
-                                                             int(t[4]), \
-                                                             int(t[5]), \
-                                                             int(t[6])
+        ipakcb, iswtoc, nsystm, ithk, ivoid, istpcs, icrcc = (
+            int(t[0]),
+            int(t[1]),
+            int(t[2]),
+            int(t[3]),
+            int(t[4]),
+            int(t[5]),
+            int(t[6]),
+        )
 
         # if ipakcb > 0:
         #     ipakcb = 53
@@ -555,39 +668,59 @@ class ModflowSwt(Package):
         lnwt = None
         if nsystm > 0:
             if model.verbose:
-                sys.stdout.write('  loading swt dataset 2\n')
+                sys.stdout.write("  loading swt dataset 2\n")
             lnwt = np.empty((nsystm), dtype=np.int32)
             lnwt = read1d(f, lnwt) - 1
 
         # read dataset 3
         if model.verbose:
-            sys.stdout.write('  loading swt dataset 3\n')
+            sys.stdout.write("  loading swt dataset 3\n")
         line = f.readline()
         t = line.strip().split()
-        iizcfl, izcfm, iglfl, iglfm, iestfl, \
-        iestfm, ipcsfl, ipcsfm, istfl, istfm = int(t[0]), int(t[1]), \
-                                               int(t[2]), int(t[3]), \
-                                               int(t[4]), int(t[5]), \
-                                               int(t[6]), int(t[7]), \
-                                               int(t[8]), int(t[9])
+        (
+            iizcfl,
+            izcfm,
+            iglfl,
+            iglfm,
+            iestfl,
+            iestfm,
+            ipcsfl,
+            ipcsfm,
+            istfl,
+            istfm,
+        ) = (
+            int(t[0]),
+            int(t[1]),
+            int(t[2]),
+            int(t[3]),
+            int(t[4]),
+            int(t[5]),
+            int(t[6]),
+            int(t[7]),
+            int(t[8]),
+            int(t[9]),
+        )
 
         # read dataset 4
         if model.verbose:
-            sys.stdout.write('  loading swt dataset 4')
-        gl0 = Util2d.load(f, model, (nrow, ncol), np.float32, 'gl0',
-                          ext_unit_dict)
+            sys.stdout.write("  loading swt dataset 4")
+        gl0 = Util2d.load(
+            f, model, (nrow, ncol), np.float32, "gl0", ext_unit_dict
+        )
 
         # read dataset 5
         if model.verbose:
-            sys.stdout.write('  loading swt dataset 5')
-        sgm = Util2d.load(f, model, (nrow, ncol), np.float32, 'sgm',
-                          ext_unit_dict)
+            sys.stdout.write("  loading swt dataset 5")
+        sgm = Util2d.load(
+            f, model, (nrow, ncol), np.float32, "sgm", ext_unit_dict
+        )
 
         # read dataset 6
         if model.verbose:
-            sys.stdout.write('  loading swt dataset 6')
-        sgs = Util2d.load(f, model, (nrow, ncol), np.float32, 'sgs',
-                          ext_unit_dict)
+            sys.stdout.write("  loading swt dataset 6")
+        sgs = Util2d.load(
+            f, model, (nrow, ncol), np.float32, "sgs", ext_unit_dict
+        )
 
         # read datasets 7 to 13
         thick = [0] * nsystm
@@ -609,54 +742,102 @@ class ModflowSwt(Package):
             # thick
             if model.verbose:
                 sys.stdout.write(
-                    '  loading swt dataset 7 for layer {}\n'.format(kk))
-            t = Util2d.load(f, model, (nrow, ncol), np.float32,
-                            'thick layer {}'.format(kk),
-                            ext_unit_dict)
+                    "  loading swt dataset 7 for layer {}\n".format(kk)
+                )
+            t = Util2d.load(
+                f,
+                model,
+                (nrow, ncol),
+                np.float32,
+                "thick layer {}".format(kk),
+                ext_unit_dict,
+            )
             thick[k] = t
             if icrcc != 0:
                 # sse
                 if model.verbose:
                     sys.stdout.write(
-                        '  loading swt dataset 8 for layer {}\n'.format(kk))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32,
-                                'sse layer {}'.format(kk), ext_unit_dict)
+                        "  loading swt dataset 8 for layer {}\n".format(kk)
+                    )
+                t = Util2d.load(
+                    f,
+                    model,
+                    (nrow, ncol),
+                    np.float32,
+                    "sse layer {}".format(kk),
+                    ext_unit_dict,
+                )
                 sse[k] = t
                 # ssv
                 if model.verbose:
                     sys.stdout.write(
-                        '  loading swt dataset 9 for layer {}\n'.format(kk))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32,
-                                'sse layer {}'.format(kk), ext_unit_dict)
+                        "  loading swt dataset 9 for layer {}\n".format(kk)
+                    )
+                t = Util2d.load(
+                    f,
+                    model,
+                    (nrow, ncol),
+                    np.float32,
+                    "sse layer {}".format(kk),
+                    ext_unit_dict,
+                )
                 ssv[k] = t
             else:
                 # cr
                 if model.verbose:
                     sys.stdout.write(
-                        '  loading swt dataset 10 for layer {}\n'.format(kk))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32,
-                                'cr layer {}'.format(kk), ext_unit_dict)
+                        "  loading swt dataset 10 for layer {}\n".format(kk)
+                    )
+                t = Util2d.load(
+                    f,
+                    model,
+                    (nrow, ncol),
+                    np.float32,
+                    "cr layer {}".format(kk),
+                    ext_unit_dict,
+                )
                 cr[k] = t
                 # cc
                 if model.verbose:
                     sys.stdout.write(
-                        '  loading swt dataset 11 for layer {}\n'.format(kk))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32,
-                                'cc layer {}'.format(kk), ext_unit_dict)
+                        "  loading swt dataset 11 for layer {}\n".format(kk)
+                    )
+                t = Util2d.load(
+                    f,
+                    model,
+                    (nrow, ncol),
+                    np.float32,
+                    "cc layer {}".format(kk),
+                    ext_unit_dict,
+                )
                 cc[k] = t
             # void
             if model.verbose:
                 sys.stdout.write(
-                    '  loading swt dataset 12 for layer {}\n'.format(kk))
-            t = Util2d.load(f, model, (nrow, ncol), np.float32,
-                            'void layer {}'.format(kk), ext_unit_dict)
+                    "  loading swt dataset 12 for layer {}\n".format(kk)
+                )
+            t = Util2d.load(
+                f,
+                model,
+                (nrow, ncol),
+                np.float32,
+                "void layer {}".format(kk),
+                ext_unit_dict,
+            )
             void[k] = t
             # sub
             if model.verbose:
                 sys.stdout.write(
-                    '  loading swt dataset 13 for layer {}\n'.format(kk))
-            t = Util2d.load(f, model, (nrow, ncol), np.float32,
-                            'sub layer {}'.format(kk), ext_unit_dict)
+                    "  loading swt dataset 13 for layer {}\n".format(kk)
+                )
+            t = Util2d.load(
+                f,
+                model,
+                (nrow, ncol),
+                np.float32,
+                "sub layer {}".format(kk),
+                ext_unit_dict,
+            )
             sub[k] = t
 
         # dataset 14 and 15
@@ -670,16 +851,30 @@ class ModflowSwt(Package):
             if istpcs != 0:
                 if model.verbose:
                     sys.stdout.write(
-                        '  loading swt dataset 14 for layer {}\n'.format(kk))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32,
-                                'pcsoff layer {}'.format(k + 1), ext_unit_dict)
+                        "  loading swt dataset 14 for layer {}\n".format(kk)
+                    )
+                t = Util2d.load(
+                    f,
+                    model,
+                    (nrow, ncol),
+                    np.float32,
+                    "pcsoff layer {}".format(k + 1),
+                    ext_unit_dict,
+                )
                 pcsoff[k] = t
             else:
                 if model.verbose:
                     sys.stdout.write(
-                        '  loading swt dataset 15 for layer {}\n'.format(kk))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32,
-                                'pcs layer {}'.format(k + 1), ext_unit_dict)
+                        "  loading swt dataset 15 for layer {}\n".format(kk)
+                    )
+                t = Util2d.load(
+                    f,
+                    model,
+                    (nrow, ncol),
+                    np.float32,
+                    "pcs layer {}".format(k + 1),
+                    ext_unit_dict,
+                )
                 pcs[k] = t
 
         ids16 = None
@@ -688,18 +883,22 @@ class ModflowSwt(Package):
             # dataset 16
             if model.verbose:
                 sys.stdout.write(
-                    '  loading swt dataset 15 for layer {}\n'.format(kk))
+                    "  loading swt dataset 15 for layer {}\n".format(kk)
+                )
             ids16 = np.empty(26, dtype=np.int32)
             ids16 = read1d(f, ids16)
-            #for k in range(1, 26, 2):
+            # for k in range(1, 26, 2):
             #    model.add_pop_key_list(ids16[k])
             #    ids16[k] = 2054  # all sub-wt data sent to unit 2054
             # dataset 17
             ids17 = [0] * iswtoc
             for k in range(iswtoc):
                 if model.verbose:
-                    msg = 2 * ' ' + 'loading swt dataset 17 for ' + \
-                          'iswtoc {}\n'.format(k + 1)
+                    msg = (
+                        2 * " "
+                        + "loading swt dataset 17 for "
+                        + "iswtoc {}\n".format(k + 1)
+                    )
                     sys.stdout.write(msg)
                 t = np.empty(30, dtype=np.int32)
                 t = read1d(f, t)
@@ -713,43 +912,68 @@ class ModflowSwt(Package):
         unitnumber = None
         filenames = [None for x in range(15)]
         if ext_unit_dict is not None:
-            unitnumber, filenames[0] = \
-                model.get_ext_dict_attr(ext_unit_dict,
-                                        filetype=ModflowSwt.ftype())
+            unitnumber, filenames[0] = model.get_ext_dict_attr(
+                ext_unit_dict, filetype=ModflowSwt._ftype()
+            )
             if ipakcb > 0:
-                iu, filenames[1] = \
-                    model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
+                iu, filenames[1] = model.get_ext_dict_attr(
+                    ext_unit_dict, unit=ipakcb
+                )
 
             if iswtoc > 0:
                 ipos = 2
                 for k in range(1, 26, 2):
                     unit = ids16[k]
                     if unit > 0:
-                        iu, filenames[ipos] = \
-                            model.get_ext_dict_attr(ext_unit_dict,
-                                                    unit=unit)
+                        iu, filenames[ipos] = model.get_ext_dict_attr(
+                            ext_unit_dict, unit=unit
+                        )
                         model.add_pop_key_list(unit)
                     ipos += 1
 
-        # create sub-wt instance
-        swt = ModflowSwt(model, ipakcb=ipakcb, iswtoc=iswtoc, nsystm=nsystm,
-                         ithk=ithk, ivoid=ivoid, istpcs=istpcs,
-                         icrcc=icrcc, lnwt=lnwt, izcfl=iizcfl, izcfm=izcfm,
-                         iglfl=iglfl, iglfm=iglfm, iestfl=iestfl,
-                         iestfm=iestfm, ipcsfl=ipcsfl, ipcsfm=ipcsfm,
-                         istfl=istfl, istfm=istfm, gl0=gl0, sgm=sgm,
-                         sgs=sgs, thick=thick, sse=sse, ssv=ssv, cr=cr, cc=cc,
-                         void=void, sub=sub, pcsoff=pcsoff,
-                         pcs=pcs, ids16=ids16, ids17=ids17,
-                         unitnumber=unitnumber, filenames=filenames)
-
         # return sut-wt instance
-        return swt
+        return cls(
+            model,
+            ipakcb=ipakcb,
+            iswtoc=iswtoc,
+            nsystm=nsystm,
+            ithk=ithk,
+            ivoid=ivoid,
+            istpcs=istpcs,
+            icrcc=icrcc,
+            lnwt=lnwt,
+            izcfl=iizcfl,
+            izcfm=izcfm,
+            iglfl=iglfl,
+            iglfm=iglfm,
+            iestfl=iestfl,
+            iestfm=iestfm,
+            ipcsfl=ipcsfl,
+            ipcsfm=ipcsfm,
+            istfl=istfl,
+            istfm=istfm,
+            gl0=gl0,
+            sgm=sgm,
+            sgs=sgs,
+            thick=thick,
+            sse=sse,
+            ssv=ssv,
+            cr=cr,
+            cc=cc,
+            void=void,
+            sub=sub,
+            pcsoff=pcsoff,
+            pcs=pcs,
+            ids16=ids16,
+            ids17=ids17,
+            unitnumber=unitnumber,
+            filenames=filenames,
+        )
 
     @staticmethod
-    def ftype():
-        return 'SWT'
+    def _ftype():
+        return "SWT"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 35

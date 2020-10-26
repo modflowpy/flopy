@@ -55,11 +55,18 @@ Before you submit your Pull Request (PR) consider the following guidelines:
      ```
 
 1. Create your patch, **including appropriate test cases**.
+1. Run the [black formatter](https://github.com/psf/black) on Flopy source files from the git repository root directory using:
+
+   ```shell
+   black -l 79 ./flopy
+   ```
+   Note: Pull Requests must pass black format checks run on the [GitHub actions](https://github.com/modflowpy/flopy/actions) (*linting*) before they will be accepted. The black formatter can be installed using [`pip`](https://pypi.org/project/black/) and [`conda`](https://anaconda.org/conda-forge/black). 
+   
 1. Run the full FloPy test suite and ensure that all tests pass:
 
     ```shell
     cd autotest
-    nosetests -v build_exes.py
+    nosetests -v get_exes.py
     nosetests -v
     ```
    Note: the FloPy test suite requires the [nosetests](https://pypi.org/project/nose/) and [pymake](https://github.com/modflowpy/pymake) python packages. All the FloPy dependencies must also be installed for the tests to pass.

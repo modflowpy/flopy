@@ -9,6 +9,13 @@ from flopy.mf6.modflow.mfsimulation import MFSimulation
 from flopy.mf6.mfbase import VerbosityLevel
 
 try:
+    import shapefile
+    if int(shapefile.__version__.split('.')[0]) < 2:
+        shapefile = None
+except ImportError:
+    shapefile = None
+
+try:
     import pymake
 except:
     print('could not import pymake')
@@ -49,7 +56,8 @@ def test001a_tharmonic():
 
     # load simulation
     sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
-                            verbosity_level=0, verify_data=True)
+                            verbosity_level=0, verify_data=True,
+                            write_headers=False)
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
@@ -178,7 +186,8 @@ def test003_gwfs_disv():
         assert array_util.array_comp(budget_fjf_valid, budget_frf)
 
     model = sim.get_model(model_name)
-    model.export('{}/{}.shp'.format(pth, test_ex_name))
+    if shapefile:
+        model.export('{}/{}.shp'.format(pth, test_ex_name))
 
     # change some settings
     chd_head_left = model.get_package('CHD_LEFT')
@@ -254,7 +263,7 @@ def test005_advgw_tidal():
 
     # add a stress period beyond nper
     spd = ghb.stress_period_data.get_data()
-    spd[20] = copy.deepcopy(spd[9])
+    spd[20] = copy.deepcopy(spd[0])
     ghb.stress_period_data.set_data(spd)
 
     # make temp folder to save simulation

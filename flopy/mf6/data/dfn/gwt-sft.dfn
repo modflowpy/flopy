@@ -1,0 +1,426 @@
+# --------------------- gwt sft options ---------------------
+
+block options
+name flow_package_name
+type string
+shape
+reader urword
+optional true
+longname keyword to specify name of corresponding flow package
+description keyword to specify the name of the corresponding flow package.  If not specified, then the corresponding flow package must have the same name as this advanced transport package (the name associated with this package in the GWT name file).
+
+block options
+name auxiliary
+type string
+shape (naux)
+reader urword
+optional true
+longname keyword to specify aux variables
+description REPLACE auxnames {'{#1}': 'Groundwater Transport'}
+
+block options
+name flow_package_auxiliary_name
+type string
+shape
+reader urword
+optional true
+longname keyword to specify name of concentration auxiliary variable in flow package
+description keyword to specify the name of an auxiliary variable in the corresponding flow package.  If specified, then the simulated concentrations from this advanced transport package will be copied into the auxiliary variable specified with this name.  Note that the flow package must have an auxiliary variable with this name or the program will terminate with an error.  If the flows for this advanced transport package are read from a file, then this option will have no affect.
+
+block options
+name boundnames
+type keyword
+shape
+reader urword
+optional true
+longname
+description REPLACE boundnames {'{#1}': 'reach'}
+
+block options
+name print_input
+type keyword
+reader urword
+optional true
+longname print input to listing file
+description REPLACE print_input {'{#1}': 'reach'}
+
+block options
+name print_concentration
+type keyword
+reader urword
+optional true
+longname print calculated stages to listing file
+description REPLACE print_head {'{#1}': 'reach', '{#2}': 'stages', '{#3}': 'STAGE'}
+
+block options
+name print_flows
+type keyword
+reader urword
+optional true
+longname print calculated flows to listing file
+description REPLACE print_flows {'{#1}': 'reach'}
+
+block options
+name save_flows
+type keyword
+reader urword
+optional true
+longname save reach flows to budget file
+description REPLACE save_flows {'{#1}': 'reach'}
+
+block options
+name concentration_filerecord
+type record concentration fileout concfile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name concentration
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname stage keyword
+description keyword to specify that record corresponds to concentration.
+
+block options
+name concfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the binary output file to write concentration information.
+
+block options
+name budget_filerecord
+type record budget fileout budgetfile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name budget
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname budget keyword
+description keyword to specify that record corresponds to the budget.
+
+block options
+name fileout
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an output filename is expected next.
+
+block options
+name budgetfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the binary output file to write budget information.
+
+block options
+name ts_filerecord
+type record ts6 filein ts6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name ts6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname head keyword
+description keyword to specify that record corresponds to a time-series file.
+
+block options
+name filein
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block options
+name ts6_filename
+type string
+preserve_case true
+in_record true
+reader urword
+optional false
+tagged false
+longname file name of time series information
+description REPLACE timeseriesfile {}
+
+block options
+name obs_filerecord
+type record obs6 filein obs6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name obs6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname obs keyword
+description keyword to specify that record corresponds to an observations file.
+
+block options
+name obs6_filename
+type string
+preserve_case true
+in_record true
+tagged false
+reader urword
+optional false
+longname obs6 input filename
+description REPLACE obs6_filename {'{#1}': 'SFT'}
+
+
+# --------------------- gwt lkt packagedata ---------------------
+
+block packagedata
+name packagedata
+type recarray rno strt aux boundname
+shape (maxbound)
+reader urword
+longname
+description
+
+block packagedata
+name rno
+type integer
+shape
+tagged false
+in_record true
+reader urword
+longname reach number for this entry
+description integer value that defines the reach number associated with the specified PACKAGEDATA data on the line. RNO must be greater than zero and less than or equal to NREACHES. Reach information must be specified for every reach or the program will terminate with an error.  The program will also terminate with an error if information for a reach is specified more than once.
+numeric_index true
+
+block packagedata
+name strt
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+longname starting reach concentration
+description real value that defines the starting concentration for the reach.
+
+block packagedata
+name aux
+type double precision
+in_record true
+tagged false
+shape (naux)
+reader urword
+time_series true
+optional true
+longname auxiliary variables
+description REPLACE aux {'{#1}': 'reach'}
+
+block packagedata
+name boundname
+type string
+shape
+tagged false
+in_record true
+reader urword
+optional true
+longname well name
+description REPLACE boundname {'{#1}': 'reach'}
+
+
+# --------------------- gwt sft period ---------------------
+
+block period
+name iper
+type integer
+block_variable True
+in_record true
+tagged false
+shape
+valid
+reader urword
+optional false
+longname stress period number
+description REPLACE iper {}
+
+block period
+name reachperioddata
+type recarray rno reachsetting
+shape
+reader urword
+longname
+description
+
+block period
+name rno
+type integer
+shape
+tagged false
+in_record true
+reader urword
+longname reach number for this entry
+description integer value that defines the reach number associated with the specified PERIOD data on the line. RNO must be greater than zero and less than or equal to NREACHES.
+numeric_index true
+
+block period
+name reachsetting
+type keystring status concentration rainfall evaporation runoff inflow auxiliaryrecord
+shape
+tagged false
+in_record true
+reader urword
+longname
+description line of information that is parsed into a keyword and values.  Keyword values that can be used to start the REACHSETTING string include: STATUS, CONCENTRATION, RAINFALL, EVAPORATION, RUNOFF, and AUXILIARY.  These settings are used to assign the concentration of associated with the corresponding flow terms.  Concentrations cannot be specified for all flow terms.  For example, the Streamflow Package supports a ``DIVERSION'' flow term.  Diversion water will be routed using the calculated concentration of the reach.
+
+block period
+name status
+type string
+shape
+tagged true
+in_record true
+reader urword
+longname reach concentration status
+description keyword option to define reach status.  STATUS can be ACTIVE, INACTIVE, or CONSTANT. By default, STATUS is ACTIVE, which means that concentration will be calculated for the reach.  If a reach is inactive, then there will be no solute mass fluxes into or out of the reach and the inactive value will be written for the reach concentration.  If a reach is constant, then the concentration for the reach will be fixed at the user specified value.
+
+block period
+name concentration
+type string
+shape
+tagged true
+in_record true
+time_series true
+reader urword
+longname reach concentration
+description real or character value that defines the concentration for the reach. The specified CONCENTRATION is only applied if the reach is a constant concentration reach. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+
+block period
+name rainfall
+type string
+shape
+tagged true
+in_record true
+reader urword
+time_series true
+longname rainfall concentration
+description real or character value that defines the rainfall solute concentration $(ML^{-3})$ for the reach. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+
+block period
+name evaporation
+type string
+shape
+tagged true
+in_record true
+reader urword
+time_series true
+longname evaporation concentration
+description real or character value that defines the concentration of evaporated water $(ML^{-3})$ for the reach. If this concentration value is larger than the simulated concentration in the reach, then the evaporated water will be removed at the same concentration as the reach.  If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+
+block period
+name runoff
+type string
+shape
+tagged true
+in_record true
+reader urword
+time_series true
+longname runoff concentration
+description real or character value that defines the concentration of runoff $(ML^{-3})$ for the reach. Value must be greater than or equal to zero. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+
+block period
+name inflow
+type string
+shape
+tagged true
+in_record true
+reader urword
+time_series true
+longname inflow concentration
+description real or character value that defines the concentration of inflow $(ML^{-3})$ for the reach. Value must be greater than or equal to zero. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+
+block period
+name auxiliaryrecord
+type record auxiliary auxname auxval
+shape
+tagged
+in_record true
+reader urword
+longname
+description
+
+block period
+name auxiliary
+type keyword
+shape
+in_record true
+reader urword
+longname
+description keyword for specifying auxiliary variable.
+
+block period
+name auxname
+type string
+shape
+tagged false
+in_record true
+reader urword
+longname
+description name for the auxiliary variable to be assigned AUXVAL.  AUXNAME must match one of the auxiliary variable names defined in the OPTIONS block. If AUXNAME does not match one of the auxiliary variable names defined in the OPTIONS block the data are ignored.
+
+block period
+name auxval
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+time_series true
+longname auxiliary variable value
+description value for the auxiliary variable. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
