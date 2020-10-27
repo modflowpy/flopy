@@ -210,7 +210,7 @@ def update_version():
         f.write("major = {}\n".format(vmajor))
         f.write("minor = {}\n".format(vminor))
         f.write("micro = {}\n".format(vmicro))
-        f.write("__version__ = '{:d}.{:d}.{:d}'.format(major, minor, micro)\n")
+        f.write('__version__ = "{:d}.{:d}.{:d}".format(major, minor, micro)\n')
 
         # write the remainder of the version file
         if name_pos is not None:
