@@ -4,7 +4,7 @@ import sys
 import shutil
 
 try:
-    from pymake import getmfexes
+    import pymake
 except:
     print('pymake is not installed...will not download executables')
     pymake = None
@@ -54,17 +54,21 @@ def list_exes():
 
 
 def test_download_and_unzip():
-    getmfexes(exe_pth)
+    if pymake is None:
+        print("cannot download executables")
+    else:
+        pymake.getmfexes(exe_pth, verbose=True)
 
-    # move the exes from exe_pth to bindir
-    files = os.listdir(exe_pth)
-    for file in files:
-        if file.startswith('__'):
-            continue
-        src = os.path.join(exe_pth, file)
-        dst = os.path.join(bindir, file)
-        print('moving {} -> {}'.format(src, dst))
-        shutil.move(src, dst)
+        # move the exes from exe_pth to bindir
+        files = os.listdir(exe_pth)
+        for file in files:
+            if file.startswith('__'):
+                continue
+            src = os.path.join(exe_pth, file)
+            dst = os.path.join(bindir, file)
+            print('moving {} -> {}'.format(src, dst))
+            shutil.move(src, dst)
+    return
 
 
 def test_cleanup():
