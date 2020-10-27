@@ -79,15 +79,7 @@ def test_list_download():
     list_exes()
 
 
-def main():
-    test_download_and_unzip()
-
-    # clean up the download directory
-    cleanup()
-
-    # list executables
-    list_exes()
-
-
 if __name__ == '__main__':
-    main()
+    test_download_and_unzip()
+    cleanup()
+    list_exes()
