@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-echo "Building executables..."
-nosetests -v get_exes.py --with-id --with-timer -w ./autotest
+echo "Downloading executables..."
+python ./autotest/get_exes.py
 
 if [ "${RUN_TYPE}" = "test" ]; then
   echo "Running flopy autotest suite..."
