@@ -20,7 +20,7 @@ jobs:
     steps:
     # check out repo
     - name: Checkout flopy repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v2.3.4
 
     # Standard python fails on windows without GDAL installation. Using
     # standard python here since only linting on linux.
@@ -86,7 +86,7 @@ jobs:
     steps:
     # check out repo
     - name: Checkout flopy repo
-      uses: actions/checkout@v2
+      uses:  actions/checkout@v2.3.4
 
     - name: Cache Miniconda
       uses: actions/cache@v2.1.0
@@ -149,6 +149,6 @@ jobs:
         --cover-xml-file=../coverage.xml -w ./autotest ${{ matrix.test-path }}
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1.0.12
+      uses: codecov/codecov-action@v1.0.15
       with:
         file: ./coverage.xml

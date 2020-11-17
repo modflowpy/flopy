@@ -17,7 +17,7 @@ jobs:
     if: github.repository_owner == 'modflowpy'
     steps:
       - name: Checkout flopy repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Output repo information
         run: |
@@ -62,7 +62,7 @@ jobs:
       - name: Add executables directory to path
         shell: bash
         run: |
-          echo "::add-path::$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Run jupytext on tutorials
         shell: bash -l {0}
@@ -90,7 +90,7 @@ jobs:
       github.repository_owner == 'modflowpy' && github.event_name == 'push'
     steps:
       - name: Trigger RTDs build on master and develop branches
-        uses: dfm/rtds-action@v1.0.0
+        uses: dfm/rtds-action@v1.0.2
         with:
           webhook_url: ${{ secrets.RTDS_WEBHOOK_URL }}
           webhook_token: ${{ secrets.RTDS_WEBHOOK_TOKEN }}
