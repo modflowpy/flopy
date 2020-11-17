@@ -33,6 +33,7 @@ jobs:
         with:
           python-version: 3.8
           mamba-version: "*"
+          channels: conda-forge
           auto-update-conda: true
           activate-environment: flopy
 
