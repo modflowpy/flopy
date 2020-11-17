@@ -104,7 +104,6 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
         mamba-version: "*"
-        channels: conda-forge,defaults
         auto-update-conda: true
         activate-environment: flopy
         use-only-tar-bz2: true
