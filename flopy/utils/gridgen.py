@@ -569,7 +569,8 @@ class Gridgen(object):
             assert os.path.isfile(fn)
         except:
             print(
-                "Error.  Failed to export polygon shapefile of grid", buff,
+                "Error.  Failed to export polygon shapefile of grid",
+                buff,
             )
 
         cmds = [
@@ -586,7 +587,8 @@ class Gridgen(object):
             assert os.path.isfile(fn)
         except:
             print(
-                "Error.  Failed to export polygon shapefile of grid", buff,
+                "Error.  Failed to export polygon shapefile of grid",
+                buff,
             )
 
         # Export the usg data
@@ -631,7 +633,8 @@ class Gridgen(object):
             assert os.path.isfile(fn)
         except:
             print(
-                "Error.  Failed to export shared vertex vtk file", buff,
+                "Error.  Failed to export shared vertex vtk file",
+                buff,
             )
 
         return

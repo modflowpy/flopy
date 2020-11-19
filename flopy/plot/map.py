@@ -136,7 +136,9 @@ class PlotMapView(object):
                     a = np.squeeze(a, axis=1)
                     plotarray = a[self.layer, :]
                 else:
-                    raise Exception("Array has 3 dimensions so one of them must be of size 1 for a VertexGrid.")
+                    raise Exception(
+                        "Array has 3 dimensions so one of them must be of size 1 for a VertexGrid."
+                    )
             elif a.ndim == 2:
                 plotarray = a[self.layer, :]
             elif a.ndim == 1:
@@ -183,7 +185,9 @@ class PlotMapView(object):
                 quadmesh.set_array(plotarray)
 
         else:
-            raise Exception("Unknown grid type in plot_array: {}".format(self.mg.grid_type))
+            raise Exception(
+                "Unknown grid type in plot_array: {}".format(self.mg.grid_type)
+            )
 
         # set max and min
         if "vmin" in kwargs:
