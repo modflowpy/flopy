@@ -123,6 +123,52 @@ def ndarray_to_asciigrid(fname, a, extent, nodata=1.0e30):
     return
 
 
+def get_ia_from_iac(iac, zerobased=True):
+    ia = [0]
+    for ncon in iac:
+        ia.append(ia[-1] + ncon)
+    ia = np.array(ia)
+    if not zerobased:
+        ia += 1
+    return ia
+
+
+def get_isym(ia, ja):
+    isym = -1 * np.zeros(ja.shape, ja.dtype)
+    for n in range(ia.shape[0] - 1):
+        for ii in range(ia[n], ia[n + 1]):
+            m = ja[ii]
+            if m != n:
+                isym[ii] = 0
+                for jj in range(ia[m], ia[m + 1]):
+                    if ja[jj] == n:
+                        isym[ii] = jj
+                        break
+            else:
+                isym[ii] = ii
+    return isym
+
+
+def is_symmetrical(isym, a, atol=0):
+    assert isym.shape == a.shape
+    for ipos, val in enumerate(a):
+        isympos = isym[ipos]
+        diff = val - a[isympos]
+        if not np.allclose(diff, 0, atol=atol):
+            return False
+    return True
+
+
+def repair_array_asymmetry(isym, a, atol=0):
+    assert isym.shape == a.shape
+    for ipos, val in enumerate(a):
+        isympos = isym[ipos]
+        diff = val - a[isympos]
+        if not np.allclose(diff, 0, atol=atol):
+            a[isympos] = val
+    return a
+
+
 class Gridgen(object):
     """
     Class to work with the gridgen program to create layered quadtree grids.
@@ -523,8 +569,7 @@ class Gridgen(object):
             assert os.path.isfile(fn)
         except:
             print(
-                "Error.  Failed to export polygon shapefile of grid",
-                buff,
+                "Error.  Failed to export polygon shapefile of grid", buff,
             )
 
         cmds = [
@@ -541,8 +586,7 @@ class Gridgen(object):
             assert os.path.isfile(fn)
         except:
             print(
-                "Error.  Failed to export polygon shapefile of grid",
-                buff,
+                "Error.  Failed to export polygon shapefile of grid", buff,
             )
 
         # Export the usg data
@@ -587,8 +631,7 @@ class Gridgen(object):
             assert os.path.isfile(fn)
         except:
             print(
-                "Error.  Failed to export shared vertex vtk file",
-                buff,
+                "Error.  Failed to export shared vertex vtk file", buff,
             )
 
         return
@@ -1379,7 +1422,7 @@ class Gridgen(object):
 
         return gridprops
 
-    def get_gridprops_disu6(self):
+    def get_gridprops_disu6(self, zerobased=True, repair_asymmetry=True):
         """
         Return a dictionary containing all of the information required to
         create a MODFLOW 6 DISU Package
@@ -1416,6 +1459,8 @@ class Gridgen(object):
 
         # ja
         ja = self.get_ja(njag)
+        if zerobased:
+            ja -= 1
         gridprops["ja"] = ja
 
         # cl12
@@ -1431,6 +1476,10 @@ class Gridgen(object):
 
         # hwva
         hwva = self.get_hwva(ja=ja, ihc=ihc, fahl=None, top=top, bot=bot)
+        if repair_asymmetry:
+            ia = get_ia_from_iac(iac)
+            isym = get_isym(ia, ja)
+            hwva = repair_array_asymmetry(isym, hwva)
         gridprops["hwva"] = hwva
 
         # angldegx
@@ -1438,23 +1487,30 @@ class Gridgen(object):
         gridprops["angldegx"] = angldegx
 
         # vertices -- not optimized for redundant vertices yet
-        nvert = nodes * 4
         vertices = []
-        ivert = 0
+        if zerobased:
+            ivert = 0
+        else:
+            ivert = 1
         for n in range(nodes):
             vs = self.get_vertices(n)
             for x, y in vs[:-1]:  # do not include last vertex
                 vertices.append([ivert, x, y])
                 ivert += 1
+        nvert = len(vertices)
         gridprops["nvert"] = nvert
         gridprops["vertices"] = vertices
 
         # cell2d information
+        # (this is one-based at the moment)
         cell2d = []
-        iv = 1
+        if zerobased:
+            iv = 0
+        else:
+            iv = 1
         for n in range(nodes):
             xc, yc = self.get_center(n)
-            cell2d.append([n, xc, yc, 4, iv, iv + 1, iv + 2, iv + 3])
+            cell2d.append([n, xc, yc, 5, iv, iv + 1, iv + 2, iv + 3, iv])
             iv += 4
         gridprops["cell2d"] = cell2d
 
@@ -1476,7 +1532,7 @@ class Gridgen(object):
 
         """
 
-        gridprops = self.get_gridprops_disu6()
+        gridprops = self.get_gridprops_disu6(zerobased=False)
         f = open(fname, "w")
 
         # opts

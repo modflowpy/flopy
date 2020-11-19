@@ -12,6 +12,8 @@ class UnstructuredGrid(Grid):
         list of vertices that make up the grid
     cell2d
         list of cells and their vertices
+    layered : bool
+        layered means that the grid the same for all layers and that
 
     Properties
     ----------
@@ -43,7 +45,7 @@ class UnstructuredGrid(Grid):
         xoff=0.0,
         yoff=0.0,
         angrot=0.0,
-        layered=True,
+        # layered=True,
         nodes=None,
     ):
         super(UnstructuredGrid, self).__init__(
@@ -65,23 +67,16 @@ class UnstructuredGrid(Grid):
         self._top = top
         self._botm = botm
         self._ncpl = ncpl
-        self._layered = layered
+        # self._layered = layered
         self._xc = xcenters
         self._yc = ycenters
         self._nodes = nodes
 
         if iverts is not None:
-            if self.layered:
-                assert np.all([n == len(iverts) for n in ncpl])
-                assert np.array(self.xcellcenters).shape[0] == self.ncpl[0]
-                assert np.array(self.ycellcenters).shape[0] == self.ncpl[0]
-            else:
-                msg = "Length of iverts must equal ncpl.sum " "({} {})".format(
-                    len(iverts), ncpl
-                )
-                assert len(iverts) == np.sum(ncpl), msg
-                assert np.array(self.xcellcenters).shape[0] == self.ncpl
-                assert np.array(self.ycellcenters).shape[0] == self.ncpl
+            msg = "Length of iverts must equal ncpl.sum " "({} {})".format(
+                len(iverts), ncpl
+            )
+            # assert len(iverts) == np.sum(ncpl), msg
 
     @property
     def is_valid(self):
@@ -100,17 +95,18 @@ class UnstructuredGrid(Grid):
 
     @property
     def nlay(self):
-        if self.layered:
-            try:
-                return len(self.ncpl)
-            except TypeError:
-                return 1
-        else:
-            return 1
+        return 1
+        # if self.layered:
+        #    try:
+        #        return len(self.ncpl)
+        #    except TypeError:
+        #        return 1
+        # else:
+        #    return 1
 
-    @property
-    def layered(self):
-        return self._layered
+    # @property
+    # def layered(self):
+    #    return self._layered
 
     @property
     def nnodes(self):
@@ -125,7 +121,7 @@ class UnstructuredGrid(Grid):
             if self._iverts is None:
                 return None
             else:
-                return len(self._iverts)
+                return [len(self._iverts)]
         return self._ncpl
 
     @property
@@ -157,23 +153,30 @@ class UnstructuredGrid(Grid):
         a model grid line collection
 
         Returns:
-            list: grid line vertices
+            dict: dictionary of lines for each layer
         """
         self._copy_cache = False
         xgrid = self.xvertices
         ygrid = self.yvertices
 
-        lines = []
-        for ncell, verts in enumerate(xgrid):
-            for ix, vert in enumerate(verts):
-                lines.append(
-                    [
-                        (xgrid[ncell][ix - 1], ygrid[ncell][ix - 1]),
-                        (xgrid[ncell][ix], ygrid[ncell][ix]),
-                    ]
-                )
+        line_dict = {}
+        icell = 0
+        for ilay, numcells in enumerate(self.ncpl):
+            lines = []
+            for icpl in range(numcells):
+                verts = xgrid[icell]
+                for ix in range(len(verts)):
+                    lines.append(
+                        [
+                            (xgrid[icell][ix - 1], ygrid[icell][ix - 1]),
+                            (xgrid[icell][ix], ygrid[icell][ix]),
+                        ]
+                    )
+                icell += 1
+            line_dict[ilay] = lines
+
         self._copy_cache = True
-        return lines
+        return line_dict
 
     @property
     def xyzcellcenters(self):
@@ -227,12 +230,33 @@ class UnstructuredGrid(Grid):
         self._copy_cache = True
         return cell_vert
 
+    def plot(self, **kwargs):
+        """
+        Plot the grid lines.
+
+        Parameters
+        ----------
+        kwargs : ax, colors.  The remaining kwargs are passed into the
+            the LineCollection constructor.
+
+        Returns
+        -------
+        lc : matplotlib.collections.LineCollection
+
+        """
+        from flopy.plot import PlotMapView
+
+        layer = 0
+        if "layer" in kwargs:
+            layer = kwargs.pop("layer")
+        mm = PlotMapView(modelgrid=self, layer=layer)
+        return mm.plot_grid(**kwargs)
+
     def _build_grid_geometry_info(self):
         cache_index_cc = "cellcenters"
         cache_index_vert = "xyzgrid"
 
-        vertexdict = {ix: list(v[-2:]) for ix, v in enumerate(self._vertices)}
-
+        vertexdict = {int(v[0]): [v[1], v[2]] for v in self._vertices}
         xcenters = self._xc
         ycenters = self._yc
         xvertices = []
@@ -301,7 +325,7 @@ class UnstructuredGrid(Grid):
         ncells, nverts = ll[0:2]
         ncells = int(ncells)
         nverts = int(nverts)
-        verts = np.empty((nverts, 2), dtype=np.float)
+        verts = np.empty((nverts, 3), dtype=np.float)
         xc = np.empty((ncells), dtype=np.float)
         yc = np.empty((ncells), dtype=np.float)
 
@@ -311,8 +335,9 @@ class UnstructuredGrid(Grid):
             line = f.readline()
             ll = line.split()
             c, iv, x, y = ll[0:4]
-            verts[ivert, 0] = x
-            verts[ivert, 1] = y
+            verts[ivert, 0] = int(iv) - 1
+            verts[ivert, 1] = x
+            verts[ivert, 2] = y
 
         # read the cell information and create iverts, xc, and yc
         iverts = []
@@ -325,7 +350,7 @@ class UnstructuredGrid(Grid):
             if ivlist[0] != ivlist[-1]:
                 ivlist.append(ivlist[0])
             iverts.append(ivlist)
-            xc[icell], yc[icell] = get_polygon_centroid(verts[ivlist, :])
+            xc[icell], yc[icell] = get_polygon_centroid(verts[ivlist, 1:])
 
         # close file and return spatial reference
         f.close()

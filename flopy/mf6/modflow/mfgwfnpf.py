@@ -105,8 +105,8 @@ class ModflowGwfnpf(mfpackage.MFPackage):
           which the user would like to specify the horizontal hydraulic
           conductivity and the vertical hydraulic conductivity, then K should
           be assigned as the horizontal hydraulic conductivity, K33 should be
-          assigned as the vertical hydraulic conductivity, and texttt{K22} and
-          the three rotation angles should not be specified. When more
+          assigned as the vertical hydraulic conductivity, and K22 and the
+          three rotation angles should not be specified. When more
           sophisticated anisotropy is required, then K corresponds to the K11
           hydraulic conductivity axis. All included cells (IDOMAIN :math:`>` 0)
           must have a K value greater than zero.
@@ -188,7 +188,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have
+        utility packages (mfutl*). For example, mfutllaktab package must have 
         a mfgwflak package parent_file.
 
     """

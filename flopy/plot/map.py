@@ -116,6 +116,7 @@ class PlotMapView(object):
             a = np.array(a)
 
         if self.mg.grid_type == "structured":
+            # ensure plotarray is 2d
             if a.ndim == 3:
                 plotarray = a[self.layer, :, :]
             elif a.ndim == 2:
@@ -126,6 +127,7 @@ class PlotMapView(object):
                 raise Exception("Array must be of dimension 1, 2, or 3")
 
         elif self.mg.grid_type == "vertex":
+            # ensure plotarray is 1d
             if a.ndim == 3:
                 if a.shape[0] == 1:
                     a = np.squeeze(a, axis=0)
@@ -134,7 +136,7 @@ class PlotMapView(object):
                     a = np.squeeze(a, axis=1)
                     plotarray = a[self.layer, :]
                 else:
-                    raise Exception("Array must be of dimension 1 or 2")
+                    raise Exception("Array has 3 dimensions so one of them must be of size 1 for a VertexGrid.")
             elif a.ndim == 2:
                 plotarray = a[self.layer, :]
             elif a.ndim == 1:
@@ -162,14 +164,16 @@ class PlotMapView(object):
         else:
             ax = self.ax
 
-        if self.mg.grid_type in ("structured", "vertex"):
-            xgrid = np.array(self.mg.xvertices)
-            ygrid = np.array(self.mg.yvertices)
+        if self.mg.grid_type in ("structured", "vertex", "unstructured"):
 
             if self.mg.grid_type == "structured":
+                xgrid = self.mg.xvertices
+                ygrid = self.mg.yvertices
                 quadmesh = ax.pcolormesh(xgrid, ygrid, plotarray)
 
-            else:
+            else:  # use this approach for vertex and unstructured
+                xgrid = np.array(self.mg.xvertices, dtype=object)
+                ygrid = np.array(self.mg.yvertices, dtype=object)
                 patches = [
                     Polygon(list(zip(xgrid[i], ygrid[i])), closed=True)
                     for i in range(xgrid.shape[0])
@@ -179,9 +183,7 @@ class PlotMapView(object):
                 quadmesh.set_array(plotarray)
 
         else:
-            quadmesh = plotutil.plot_cvfd(
-                self.mg._vertices, self.mg._iverts, a=plotarray, ax=ax
-            )
+            raise Exception("Unknown grid type in plot_array: {}".format(self.mg.grid_type))
 
         # set max and min
         if "vmin" in kwargs:
@@ -472,7 +474,12 @@ class PlotMapView(object):
         if "colors" not in kwargs:
             kwargs["colors"] = "0.5"
 
-        lc = LineCollection(self.mg.grid_lines, **kwargs)
+        grid_lines = self.mg.grid_lines
+        if isinstance(grid_lines, dict):
+            # grid_lines are passed back as a dictionary with keys equal to
+            # layers for an UnstructuredGrid
+            grid_lines = grid_lines[self.layer]
+        lc = LineCollection(grid_lines, **kwargs)
 
         ax.add_collection(lc)
         ax.set_xlim(self.extent[0], self.extent[1])

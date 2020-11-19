@@ -29,8 +29,7 @@ class Grid(object):
     Parameters
     ----------
     grid_type : enumeration
-        type of model grid ('structured', 'vertex_layered',
-        'vertex_unlayered')
+        type of model grid ('structured', 'vertex', 'unstructured')
     top : ndarray(np.float)
         top elevations of cells in topmost layer
     botm : ndarray(np.float)
@@ -54,8 +53,7 @@ class Grid(object):
     Attributes
     ----------
     grid_type : enumeration
-        type of model grid ('structured', 'vertex_layered',
-        'vertex_unlayered')
+        type of model grid ('structured', 'vertex', 'unstructured')
     top : ndarray(np.float)
         top elevations of cells in topmost layer
     botm : ndarray(np.float)
@@ -597,7 +595,9 @@ class Grid(object):
         if self.top is not None and self.botm is not None:
             zcenters = []
             top_3d = np.expand_dims(self.top, 0)
-            zbdryelevs = np.concatenate((top_3d, self.botm), axis=0)
+            zbdryelevs = np.concatenate(
+                (top_3d, np.atleast_2d(self.botm)), axis=0
+            )
 
             for ix in range(1, len(zbdryelevs)):
                 zcenters.append((zbdryelevs[ix - 1] + zbdryelevs[ix]) / 2.0)
