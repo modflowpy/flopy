@@ -8,12 +8,38 @@ class UnstructuredGrid(Grid):
 
     Parameters
     ----------
-    vertices
-        list of vertices that make up the grid
-    cell2d
-        list of cells and their vertices
-    layered : bool
-        layered means that the grid the same for all layers and that
+    vertices : list
+        list of vertices that make up the grid.  Each vertex consists of three
+        entries [iv, xv, yv] which are the vertex number, which should be
+        zero-based, and the x and y vertex coordinates.
+    iverts : list
+        list of vertex numbers that comprise each cell.  This list must be of
+        size nodes, if the grid_varies_by_nodes argument is true, or it must
+        be of size ncpl[0] if the same 2d spatial grid is used for each layer.
+    xcenters : list or ndarray
+        list of x center coordinates for all cells in the grid if the grid
+        varies by layer or for all cells in a layer if the same grid is used
+        for all layers
+    ycenters : list or ndarray
+        list of y center coordinates for all cells in the grid if the grid
+        varies by layer or for all cells in a layer if the same grid is used
+        for all layers
+    ncpl : ndarray
+        one dimensional array of size nlay with the number of cells in each
+        layer.  This can also be passed in as a tuple or list as long as it
+        can be set using ncpl = np.array(ncpl, dtype=np.int).  The sum of ncpl
+        must be equal to the number of cells in the grid.  If ncpl is optional
+        and if it is not passed in, then it is is set using
+        ncpl = np.array([len(iverts)], dtype=np.int), which means that all cells
+        in the grid are contained in a single plottable layer.
+        If the model grid defined in verts and iverts applies for all model
+        layers, then the length of iverts can be equal to ncpl[0] and there
+        is no need to repeat all of the vertex information for cells in layers
+        beneath the top layer.
+    top : list or ndarray
+        top elevations for all cells in the grid.
+    botm : list or ndarray
+        bottom elevations for all cells in the grid.
 
     Properties
     ----------
@@ -23,9 +49,25 @@ class UnstructuredGrid(Grid):
         returns list of cells and their vertices
 
     Methods
-    ----------
+    -------
     get_cell_vertices(cellid)
         returns vertices for a single cell at cellid.
+
+    Notes
+    -----
+    This class handles spatial representation of unstructured grids.  It is
+    based on the concept of being able to support multiple model layers that
+    may have a different number of cells in each layer.  The array ncpl is of
+    size nlay and and its sum must equal nodes.  If the grid_varies_by_layer
+    flag is set to true, then the iverts array must be of size ncpl[0] and all
+    values in the ncpl array must be equal to nodes / nlay.  The xcenters and
+    ycenters arrays must also be of size ncpl[0].  This makes it
+    possible to efficiently store spatial grid information for multiple layers.
+
+    If the spatial grid is different for each model layer, then the
+    grid_varies_by_layer flag should be false, and iverts must be of size nodes.
+    The arrays for xcenters and ycenters must also be of size nodes.
+
     """
 
     def __init__(
@@ -45,8 +87,6 @@ class UnstructuredGrid(Grid):
         xoff=0.0,
         yoff=0.0,
         angrot=0.0,
-        # layered=True,
-        nodes=None,
     ):
         super(UnstructuredGrid, self).__init__(
             "unstructured",
@@ -62,32 +102,67 @@ class UnstructuredGrid(Grid):
             angrot,
         )
 
+        # if any of these are None, then the grid is not valid
         self._vertices = vertices
         self._iverts = iverts
-        self._top = top
-        self._botm = botm
-        self._ncpl = ncpl
-        # self._layered = layered
         self._xc = xcenters
         self._yc = ycenters
-        self._nodes = nodes
+
+        # if either of these are None, then the grid is not complete
+        self._top = top
+        self._botm = botm
+
+        if ncpl is not None:
+            # ensure ncpl is a 1d integer array
+            if isinstance(ncpl, (list, tuple, np.ndarray)):
+                ncpl = np.array(ncpl, dtype=np.int)
+            else:
+                raise TypeError("ncpl must be a list, tuple or ndarray")
+            assert ncpl.ndim == 1, "ncpl must be 1d"
+        else:
+            # ncpl is not specified, but if the grid is valid, then it is
+            # assumed to be of size len(iverts)
+            if self.is_valid:
+                ncpl = np.array([len(iverts)], dtype=np.int)
+        self._ncpl = ncpl
+
+        # determine if grid varies by layer
+        grid_varies_by_layer = True
+        if ncpl is not None and iverts is not None:
+            if ncpl[0] == len(iverts):
+                grid_varies_by_layer = False
+        self._grid_varies_by_layer = grid_varies_by_layer
 
         if iverts is not None:
-            msg = "Length of iverts must equal ncpl.sum " "({} {})".format(
-                len(iverts), ncpl
-            )
-            # assert len(iverts) == np.sum(ncpl), msg
+            if self.grid_varies_by_layer:
+                msg = "Length of iverts must equal grid nodes ({} {})".format(
+                    len(iverts), ncpl
+                )
+                assert len(iverts) == self.nnodes, msg
+                assert np.array(self.xcellcenters).shape[0] == self.nnodes
+                assert np.array(self.ycellcenters).shape[0] == self.nnodes
+            else:
+                assert np.all([cpl == len(iverts) for cpl in ncpl])
+                assert np.array(self.xcellcenters).shape[0] == self.ncpl[0]
+                assert np.array(self.ycellcenters).shape[0] == self.ncpl[0]
 
     @property
     def is_valid(self):
-        if self._nodes is not None:
-            return True
-        return False
+        iv = True
+        if self._iverts is None:
+            iv = False
+        if self._vertices is None:
+            iv = False
+        if self._xc is None:
+            iv = False
+        if self._yc is None:
+            iv = False
+        return iv
 
     @property
     def is_complete(self):
         if (
-            self._nodes is not None
+            self.is_valid is not None
             and super(UnstructuredGrid, self).is_complete
         ):
             return True
@@ -95,41 +170,30 @@ class UnstructuredGrid(Grid):
 
     @property
     def nlay(self):
-        return 1
-        # if self.layered:
-        #    try:
-        #        return len(self.ncpl)
-        #    except TypeError:
-        #        return 1
-        # else:
-        #    return 1
+        if self.ncpl is None:
+            return None
+        else:
+            return self.ncpl.shape[0]
 
-    # @property
-    # def layered(self):
-    #    return self._layered
+    @property
+    def grid_varies_by_layer(self):
+        return self._grid_varies_by_layer
 
     @property
     def nnodes(self):
-        if self._nodes is not None:
-            return self._nodes
+        if self.ncpl is None:
+            return None
         else:
-            return self.nlay * self.ncpl
+            return self.ncpl.sum()
 
     @property
     def ncpl(self):
-        if self._ncpl is None:
-            if self._iverts is None:
-                return None
-            else:
-                return [len(self._iverts)]
         return self._ncpl
 
     @property
     def shape(self):
         if self.ncpl is None:
-            return self.nnodes
-        if isinstance(self.ncpl, (list, np.ndarray)):
-            return self.nlay, self.ncpl[0]
+            return None
         else:
             return self.nlay, self.ncpl
 
@@ -150,33 +214,50 @@ class UnstructuredGrid(Grid):
     def grid_lines(self):
         """
         Creates a series of grid line vertices for drawing
-        a model grid line collection
+        a model grid line collection.  If the grid varies by layer, then
+        return a dictionary with keys equal to layers and values equal to
+        grid lines.  Otherwise, just return the grid lines
 
         Returns:
-            dict: dictionary of lines for each layer
+            dict: grid lines or dictionary of lines by layer
+
         """
         self._copy_cache = False
         xgrid = self.xvertices
         ygrid = self.yvertices
 
-        line_dict = {}
-        icell = 0
-        for ilay, numcells in enumerate(self.ncpl):
-            lines = []
-            for icpl in range(numcells):
+        grdlines = None
+        if self.grid_varies_by_layer:
+            grdlines = {}
+            icell = 0
+            for ilay, numcells in enumerate(self.ncpl):
+                lines = []
+                for icpl in range(numcells):
+                    verts = xgrid[icell]
+                    for ix in range(len(verts)):
+                        lines.append(
+                            [
+                                (xgrid[icell][ix - 1], ygrid[icell][ix - 1]),
+                                (xgrid[icell][ix], ygrid[icell][ix]),
+                            ]
+                        )
+                    icell += 1
+                grdlines[ilay] = lines
+        else:
+            grdlines = []
+            for icell in range(self.ncpl[0]):
                 verts = xgrid[icell]
+
                 for ix in range(len(verts)):
-                    lines.append(
+                    grdlines.append(
                         [
                             (xgrid[icell][ix - 1], ygrid[icell][ix - 1]),
                             (xgrid[icell][ix], ygrid[icell][ix]),
                         ]
                     )
-                icell += 1
-            line_dict[ilay] = lines
 
         self._copy_cache = True
-        return line_dict
+        return grdlines
 
     @property
     def xyzcellcenters(self):
