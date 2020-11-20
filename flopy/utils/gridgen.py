@@ -123,13 +123,11 @@ def ndarray_to_asciigrid(fname, a, extent, nodata=1.0e30):
     return
 
 
-def get_ia_from_iac(iac, zerobased=True):
+def get_ia_from_iac(iac):
     ia = [0]
     for ncon in iac:
         ia.append(ia[-1] + ncon)
     ia = np.array(ia)
-    if not zerobased:
-        ia += 1
     return ia
 
 
@@ -886,7 +884,8 @@ class Gridgen(object):
         njag = iac.sum()
         self.nja = njag
 
-        # ja
+        # ja -- this is being read is as one-based, which is also what is
+        # expected by the ModflowDisu constructor
         ja = np.empty((njag), dtype=np.int)
         fname = os.path.join(self.model_ws, "qtg.ja.dat")
         f = open(fname, "r")
@@ -1090,7 +1089,7 @@ class Gridgen(object):
 
     def get_ja(self, nja=None):
         """
-        Get the ja array
+        Get the zero-based ja array
 
         Parameters
         ----------
@@ -1111,6 +1110,7 @@ class Gridgen(object):
         fname = os.path.join(self.model_ws, "qtg.ja.dat")
         f = open(fname, "r")
         ja = read1d(f, ja)
+        ja -= 1
         f.close()
         return ja
 
@@ -1278,7 +1278,7 @@ class Gridgen(object):
                 elif ihc[ipos] == 0:
                     pass
                 else:
-                    m = ja[ipos] - 1
+                    m = ja[ipos]
                     dzn = top[n] - bot[n]
                     dzm = top[m] - bot[m]
                     dzavg = 0.5 * (dzn + dzm)
@@ -1364,7 +1364,7 @@ class Gridgen(object):
     def get_gridprops(self):
         """
         Get a dictionary of information needed to create a MODFLOW-USG DISU
-        Package
+        Package.  The ja dictionary entry will be returned as zero-based.
 
         Returns
         -------
@@ -1425,7 +1425,7 @@ class Gridgen(object):
 
         return gridprops
 
-    def get_gridprops_disu6(self, zerobased=True, repair_asymmetry=True):
+    def get_gridprops_disu6(self, repair_asymmetry=True):
         """
         Return a dictionary containing all of the information required to
         create a MODFLOW 6 DISU Package
@@ -1462,8 +1462,6 @@ class Gridgen(object):
 
         # ja
         ja = self.get_ja(njag)
-        if zerobased:
-            ja -= 1
         gridprops["ja"] = ja
 
         # cl12
@@ -1491,10 +1489,7 @@ class Gridgen(object):
 
         # vertices -- not optimized for redundant vertices yet
         vertices = []
-        if zerobased:
-            ivert = 0
-        else:
-            ivert = 1
+        ivert = 0
         for n in range(nodes):
             vs = self.get_vertices(n)
             for x, y in vs[:-1]:  # do not include last vertex
@@ -1507,10 +1502,7 @@ class Gridgen(object):
         # cell2d information
         # (this is one-based at the moment)
         cell2d = []
-        if zerobased:
-            iv = 0
-        else:
-            iv = 1
+        iv = 0
         for n in range(nodes):
             xc, yc = self.get_center(n)
             cell2d.append([n, xc, yc, 5, iv, iv + 1, iv + 2, iv + 3, iv])
@@ -1535,7 +1527,7 @@ class Gridgen(object):
 
         """
 
-        gridprops = self.get_gridprops_disu6(zerobased=False)
+        gridprops = self.get_gridprops_disu6()
         f = open(fname, "w")
 
         # opts
