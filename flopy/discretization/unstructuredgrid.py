@@ -157,7 +157,6 @@ class UnstructuredGrid(Grid):
             else:
                 assert ycenters.shape[0] == self.ncpl[0]
 
-
     @property
     def is_valid(self):
         iv = True
