@@ -139,12 +139,24 @@ class UnstructuredGrid(Grid):
                     len(iverts), ncpl
                 )
                 assert len(iverts) == self.nnodes, msg
-                assert np.array(self.xcellcenters).shape[0] == self.nnodes
-                assert np.array(self.ycellcenters).shape[0] == self.nnodes
             else:
-                assert np.all([cpl == len(iverts) for cpl in ncpl])
-                assert np.array(self.xcellcenters).shape[0] == self.ncpl[0]
-                assert np.array(self.ycellcenters).shape[0] == self.ncpl[0]
+                msg = "Length of iverts must equal ncpl ({} {})".format(
+                    len(iverts), ncpl
+                )
+                assert np.all([cpl == len(iverts) for cpl in ncpl]), msg
+
+        if xcenters is not None:
+            if self.grid_varies_by_layer:
+                assert xcenters.shape[0] == self.nnodes
+            else:
+                assert xcenters.shape[0] == self.ncpl[0]
+
+        if ycenters is not None:
+            if self.grid_varies_by_layer:
+                assert ycenters.shape[0] == self.nnodes
+            else:
+                assert ycenters.shape[0] == self.ncpl[0]
+
 
     @property
     def is_valid(self):

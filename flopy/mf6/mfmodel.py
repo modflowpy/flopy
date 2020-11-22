@@ -447,7 +447,6 @@ class MFModel(PackageContainer, ModelInterface):
                 xoff=self._modelgrid.xoffset,
                 yoff=self._modelgrid.yoffset,
                 angrot=self._modelgrid.angrot,
-                nodes=dis.nodes.get_data(),
             )
         elif self.get_grid_type() == DiscretizationType.DISL:
             dis = self.get_package("disl")
