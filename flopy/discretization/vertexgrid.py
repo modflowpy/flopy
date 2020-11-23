@@ -407,7 +407,7 @@ class VertexGrid(Grid):
         else:
             raise Exception("Array to plot must be of dimension 1 or 2")
         msg = "{} /= {}".format(plotarray.shape[0], self.ncpl)
-        assert plotarray.shape[0] == self.ncpl
+        assert plotarray.shape[0] == self.ncpl, msg
         return plotarray
 
 

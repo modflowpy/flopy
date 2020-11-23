@@ -30,8 +30,8 @@ class UnstructuredGrid(Grid):
         can be set using ncpl = np.array(ncpl, dtype=np.int).  The sum of ncpl
         must be equal to the number of cells in the grid.  ncpl is optional
         and if it is not passed in, then it is is set using
-        ncpl = np.array([len(iverts)], dtype=np.int), which means that all cells
-        in the grid are contained in a single plottable layer.
+        ncpl = np.array([len(iverts)], dtype=np.int), which means that all
+        cells in the grid are contained in a single plottable layer.
         If the model grid defined in verts and iverts applies for all model
         layers, then the length of iverts can be equal to ncpl[0] and there
         is no need to repeat all of the vertex information for cells in layers
@@ -65,8 +65,8 @@ class UnstructuredGrid(Grid):
     possible to efficiently store spatial grid information for multiple layers.
 
     If the spatial grid is different for each model layer, then the
-    grid_varies_by_layer flag should be false, and iverts must be of size nodes.
-    The arrays for xcenters and ycenters must also be of size nodes.
+    grid_varies_by_layer flag should be false, and iverts must be of size
+    nodes. The arrays for xcenters and ycenters must also be of size nodes.
 
     """
 
@@ -237,7 +237,7 @@ class UnstructuredGrid(Grid):
             icell = 0
             for ilay, numcells in enumerate(self.ncpl):
                 lines = []
-                for icpl in range(numcells):
+                for _ in range(numcells):
                     verts = xgrid[icell]
                     for ix in range(len(verts)):
                         lines.append(
