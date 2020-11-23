@@ -28,7 +28,7 @@ class UnstructuredGrid(Grid):
         one dimensional array of size nlay with the number of cells in each
         layer.  This can also be passed in as a tuple or list as long as it
         can be set using ncpl = np.array(ncpl, dtype=np.int).  The sum of ncpl
-        must be equal to the number of cells in the grid.  If ncpl is optional
+        must be equal to the number of cells in the grid.  ncpl is optional
         and if it is not passed in, then it is is set using
         ncpl = np.array([len(iverts)], dtype=np.int), which means that all cells
         in the grid are contained in a single plottable layer.
@@ -112,50 +112,41 @@ class UnstructuredGrid(Grid):
         self._top = top
         self._botm = botm
 
+        self._ncpl = None
         if ncpl is not None:
             # ensure ncpl is a 1d integer array
-            if isinstance(ncpl, (list, tuple, np.ndarray)):
-                ncpl = np.array(ncpl, dtype=np.int)
-            else:
-                raise TypeError("ncpl must be a list, tuple or ndarray")
-            assert ncpl.ndim == 1, "ncpl must be 1d"
+            self.set_ncpl(ncpl)
         else:
             # ncpl is not specified, but if the grid is valid, then it is
             # assumed to be of size len(iverts)
             if self.is_valid:
-                ncpl = np.array([len(iverts)], dtype=np.int)
-        self._ncpl = ncpl
-
-        # determine if grid varies by layer
-        grid_varies_by_layer = True
-        if ncpl is not None and iverts is not None:
-            if ncpl[0] == len(iverts):
-                grid_varies_by_layer = False
-        self._grid_varies_by_layer = grid_varies_by_layer
+                self.set_ncpl(len(iverts))
 
         if iverts is not None:
             if self.grid_varies_by_layer:
                 msg = "Length of iverts must equal grid nodes ({} {})".format(
-                    len(iverts), ncpl
+                    len(iverts), self.nnodes
                 )
                 assert len(iverts) == self.nnodes, msg
             else:
                 msg = "Length of iverts must equal ncpl ({} {})".format(
-                    len(iverts), ncpl
+                    len(iverts), self.ncpl
                 )
-                assert np.all([cpl == len(iverts) for cpl in ncpl]), msg
+                assert np.all([cpl == len(iverts) for cpl in self.ncpl]), msg
 
-        if xcenters is not None:
-            if self.grid_varies_by_layer:
-                assert xcenters.shape[0] == self.nnodes
-            else:
-                assert xcenters.shape[0] == self.ncpl[0]
+        return
 
-        if ycenters is not None:
-            if self.grid_varies_by_layer:
-                assert ycenters.shape[0] == self.nnodes
-            else:
-                assert ycenters.shape[0] == self.ncpl[0]
+    def set_ncpl(self, ncpl):
+        if isinstance(ncpl, int):
+            ncpl = np.array([ncpl], dtype=np.int)
+        if isinstance(ncpl, (list, tuple, np.ndarray)):
+            ncpl = np.array(ncpl, dtype=np.int)
+        else:
+            raise TypeError("ncpl must be a list, tuple or ndarray")
+        assert ncpl.ndim == 1, "ncpl must be 1d"
+        self._ncpl = ncpl
+        self._require_cache_updates()
+        return
 
     @property
     def is_valid(self):
@@ -188,7 +179,13 @@ class UnstructuredGrid(Grid):
 
     @property
     def grid_varies_by_layer(self):
-        return self._grid_varies_by_layer
+        gvbl = False
+        if self.is_valid:
+            if self.ncpl[0] == len(self._iverts):
+                gvbl = False
+            else:
+                gvbl = True
+        return gvbl
 
     @property
     def nnodes(self):
@@ -203,10 +200,7 @@ class UnstructuredGrid(Grid):
 
     @property
     def shape(self):
-        if self.ncpl is None:
-            return None
-        else:
-            return self.nlay, self.ncpl
+        return (self.nnodes,)
 
     @property
     def extent(self):
@@ -389,6 +383,51 @@ class UnstructuredGrid(Grid):
         self._cache_dict[cache_index_vert] = CachedData(
             [xvertices, yvertices, zvertices]
         )
+
+    def get_layer_node_range(self, layer):
+        node_layer_range = [0] + list(np.add.accumulate(self.ncpl))
+        return node_layer_range[layer], node_layer_range[layer + 1]
+
+    def get_xvertices_for_layer(self, layer):
+        xgrid = np.array(self.xvertices, dtype=object)
+        if self.grid_varies_by_layer:
+            istart, istop = self.get_layer_node_range(layer)
+            xgrid = xgrid[istart:istop]
+        return xgrid
+
+    def get_yvertices_for_layer(self, layer):
+        ygrid = np.array(self.yvertices, dtype=object)
+        if self.grid_varies_by_layer:
+            istart, istop = self.get_layer_node_range(layer)
+            ygrid = ygrid[istart:istop]
+        return ygrid
+
+    def get_xcellcenters_for_layer(self, layer):
+        xcenters = self.xcellcenters
+        if self.grid_varies_by_layer:
+            istart, istop = self.get_layer_node_range(layer)
+            xcenters = xcenters[istart:istop]
+        return xcenters
+
+    def get_ycellcenters_for_layer(self, layer):
+        ycenters = self.ycellcenters
+        if self.grid_varies_by_layer:
+            istart, istop = self.get_layer_node_range(layer)
+            ycenters = ycenters[istart:istop]
+        return ycenters
+
+    def get_plottable_layer_array(self, a, layer):
+        if a.shape[0] == self.ncpl[layer]:
+            # array is already the size to be plotted
+            plotarray = a
+        else:
+            # reshape the array into size nodes and then reset range to
+            # the part of the array for this layer
+            plotarray = np.reshape(a, (self.nnodes,))
+            istart, istop = self.get_layer_node_range(layer)
+            plotarray = plotarray[istart:istop]
+        assert plotarray.shape[0] == self.ncpl[layer]
+        return plotarray
 
     @classmethod
     def from_argus_export(cls, fname, nlay=1):

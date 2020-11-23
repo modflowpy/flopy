@@ -31,6 +31,7 @@ class VertexGrid(Grid):
     ----------
     get_cell_vertices(cellid)
         returns vertices for a single cell at cellid.
+
     """
 
     def __init__(
@@ -365,6 +366,49 @@ class VertexGrid(Grid):
         self._cache_dict[cache_index_vert] = CachedData(
             [xvertices, yvertices, zvertices]
         )
+
+    def get_xvertices_for_layer(self, layer):
+        xgrid = np.array(self.xvertices, dtype=object)
+        return xgrid
+
+    def get_yvertices_for_layer(self, layer):
+        ygrid = np.array(self.yvertices, dtype=object)
+        return ygrid
+
+    def get_xcellcenters_for_layer(self, layer):
+        xcenters = np.array(self.xcellcenters)
+        return xcenters
+
+    def get_ycellcenters_for_layer(self, layer):
+        ycenters = np.array(self.ycellcenters)
+        return ycenters
+
+    def get_plottable_layer_array(self, a, layer):
+        # ensure plotarray is 1d with length ncpl
+        if a.ndim == 3:
+            if a.shape[0] == 1:
+                a = np.squeeze(a, axis=0)
+                plotarray = a[layer, :]
+            elif a.shape[1] == 1:
+                a = np.squeeze(a, axis=1)
+                plotarray = a[layer, :]
+            else:
+                raise Exception(
+                    "Array has 3 dimensions so one of them must be of size 1 "
+                    "for a VertexGrid."
+                )
+        elif a.ndim == 2:
+            plotarray = a[layer, :]
+        elif a.ndim == 1:
+            plotarray = a
+            if plotarray.shape[0] == self.nnodes:
+                plotarray = plotarray.reshape(self.nlay, self.ncpl)
+                plotarray = plotarray[layer, :]
+        else:
+            raise Exception("Array to plot must be of dimension 1 or 2")
+        msg = "{} /= {}".format(plotarray.shape[0], self.ncpl)
+        assert plotarray.shape[0] == self.ncpl
+        return plotarray
 
 
 if __name__ == "__main__":

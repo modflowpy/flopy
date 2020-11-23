@@ -14,7 +14,7 @@ def test_unstructured_grid_shell():
     assert g.nlay is None
     assert g.nnodes is None
     assert g.ncpl is None
-    assert g.grid_varies_by_layer
+    assert not g.grid_varies_by_layer
     assert not g.is_valid
     assert not g.is_complete
     return
@@ -29,6 +29,7 @@ def test_unstructured_grid_dimensions():
     assert g.nnodes == 12
     assert not g.is_valid
     assert not g.is_complete
+    assert not g.grid_varies_by_layer
     return
 
 
@@ -54,6 +55,7 @@ def test_unstructured_minimal_grid():
     assert g.nnodes == 2
     assert g.is_valid
     assert not g.is_complete
+    assert not g.grid_varies_by_layer
     assert g._vertices == vertices
     assert g._iverts == iverts
     assert g._xc == xcenters
@@ -114,6 +116,7 @@ def test_unstructured_complete_grid():
     assert g.nnodes == 2
     assert g.is_valid
     assert not g.is_complete
+    assert g.grid_varies_by_layer
     assert g._vertices == vertices
     assert g._iverts == iverts
     assert g._xc == xcenters

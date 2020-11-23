@@ -252,13 +252,13 @@ class MfGrdFile(FlopyBinaryData):
                 xc = vertc[:, 0]
                 yc = vertc[:, 1]
                 mg = UnstructuredGrid(
-                    verts,
-                    iverts,
-                    xc,
-                    yc,
-                    top,
-                    botm,
-                    idomain,
+                    verts=verts,
+                    iverts=iverts,
+                    xcenters=xc,
+                    ycenters=yc,
+                    top=top,
+                    botm=botm,
+                    idomain=idomain,
                     xoff=xorigin,
                     yoff=yorigin,
                     angrot=angrot,

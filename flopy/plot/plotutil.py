@@ -2726,10 +2726,10 @@ def _depreciated_dis_handler(modelgrid, dis):
     )
     if modelgrid.grid_type == "vertex":
         modelgrid = VertexGrid(
-            modelgrid.vertices,
-            modelgrid.cell2d,
-            dis.top.array,
-            dis.botm.array,
+            vertices=modelgrid.vertices,
+            cell2d=modelgrid.cell2d,
+            top=dis.top.array,
+            botm=dis.botm.array,
             idomain=modelgrid.idomain,
             xoff=modelgrid.xoffset,
             yoff=modelgrid.yoffset,
@@ -2737,12 +2737,12 @@ def _depreciated_dis_handler(modelgrid, dis):
         )
     if modelgrid.grid_type == "unstructured":
         modelgrid = UnstructuredGrid(
-            modelgrid._vertices,
-            modelgrid._iverts,
-            modelgrid._xc,
-            modelgrid._yc,
-            dis.top.array,
-            dis.botm.array,
+            vertices=modelgrid._vertices,
+            iverts=modelgrid._iverts,
+            xcenters=modelgrid._xc,
+            ycenters=modelgrid._yc,
+            top=dis.top.array,
+            botm=dis.botm.array,
             idomain=modelgrid.idomain,
             xoff=modelgrid.xoffset,
             yoff=modelgrid.yoffset,

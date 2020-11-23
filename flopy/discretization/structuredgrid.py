@@ -1383,6 +1383,26 @@ class StructuredGrid(Grid):
 
         return afaces
 
+    def get_plottable_layer_array(self, a, layer):
+        # ensure plotarray is 2d and correct shape
+        if a.ndim == 3:
+            plotarray = a[layer, :, :]
+        elif a.ndim == 2:
+            plotarray = a
+            assert plotarray.shape == (self.nrow, self.ncol)
+        elif a.ndim == 1:
+            plotarray = a
+            if plotarray.shape[0] == self.nrow * self.ncol:
+                plotarray = plotarray.reshape((self.nrow, self.ncol))
+            elif plotarray.shape[0] == self.nnodes:
+                plotarray = plotarray.reshape(self.shape)
+                plotarray = plotarray[layer, :, :]
+        else:
+            raise Exception("Array to plot must be of dimension 1, 2, or 3")
+        msg = "{} /= {}".format(plotarray.shape, self.shape[1:])
+        assert plotarray.shape == self.shape[1:], msg
+        return plotarray
+
 
 if __name__ == "__main__":
     delc = np.ones((10,)) * 1

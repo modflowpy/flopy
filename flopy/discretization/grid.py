@@ -320,9 +320,17 @@ class Grid(object):
     def xcellcenters(self):
         return self.xyzcellcenters[0]
 
+    def get_xcellcenters_for_layer(self, layer):
+        # default is not layer dependent; must override for unstructured grid
+        return self.xcellcenters
+
     @property
     def ycellcenters(self):
         return self.xyzcellcenters[1]
+
+    def get_ycellcenters_for_layer(self, layer):
+        # default is not layer dependent; must override for unstructured grid
+        return self.ycellcenters
 
     @property
     def zcellcenters(self):
@@ -339,9 +347,17 @@ class Grid(object):
     def xvertices(self):
         return self.xyzvertices[0]
 
+    def get_xvertices_for_layer(self, layer):
+        # default is not layer dependent; must override for unstructured grid
+        return self.xvertices
+
     @property
     def yvertices(self):
         return self.xyzvertices[1]
+
+    def get_yvertices_for_layer(self, layer):
+        # default is not layer dependent; must override for unstructured grid
+        return self.yvertices
 
     @property
     def zvertices(self):
@@ -356,6 +372,11 @@ class Grid(object):
     #    raise NotImplementedError(
     #        'must define indices in child '
     #        'class to use this base class')
+
+    def get_plottable_layer_array(self, plotarray, layer):
+        raise NotImplementedError(
+            "must define get_plottable_layer_array in child class"
+        )
 
     def get_coords(self, x, y):
         """
