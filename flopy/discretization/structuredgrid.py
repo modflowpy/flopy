@@ -1390,6 +1390,7 @@ class StructuredGrid(Grid):
         assert plotarray.shape == required_shape, msg
         return plotarray
 
+
 if __name__ == "__main__":
     delc = np.ones((10,)) * 1
     delr = np.ones((20,)) * 1

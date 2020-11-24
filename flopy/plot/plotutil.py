@@ -309,7 +309,6 @@ class PlotUtilities(object):
 
         model_name = defaults.pop("model_name")
 
-
         nlay = package.parent.modelgrid.nlay
         inc = nlay
         if defaults["mflay"] is not None:
@@ -419,8 +418,8 @@ class PlotUtilities(object):
                         fignum = list(
                             range(
                                 defaults["initial_fig"],
-                                defaults["initial_fig"] +
-                                min(value.array.shape[0], nlay),
+                                defaults["initial_fig"]
+                                + min(value.array.shape[0], nlay),
                             )
                         )
                         defaults["initial_fig"] = fignum[-1] + 1

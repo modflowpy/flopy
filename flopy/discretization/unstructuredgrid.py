@@ -430,9 +430,9 @@ class UnstructuredGrid(Grid):
         return plotarray
 
     def get_plottable_layer_shape(self, layer=None):
-        shp = (self.nnodes, )
+        shp = (self.nnodes,)
         if layer is not None:
-            shp = (self.ncpl[layer])
+            shp = self.ncpl[layer]
         return shp
 
     @classmethod
