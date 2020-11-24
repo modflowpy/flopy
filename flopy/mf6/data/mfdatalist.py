@@ -1632,6 +1632,11 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         if not self.plotable:
             raise TypeError("Simulation level packages are not plotable")
 
+        # model.plot() will not work for a mf6 model oc package unless
+        # this check is here
+        if self.get_data() is None:
+            return
+
         if "cellid" not in self.dtype.names:
             return
 

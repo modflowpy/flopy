@@ -378,6 +378,9 @@ class Grid(object):
             "must define get_plottable_layer_array in child class"
         )
 
+    def get_plottable_layer_shape(self, layer=None):
+        return self.shape[1:]
+
     def get_coords(self, x, y):
         """
         Given x and y array-like values, apply rotation, scale and offset,
@@ -626,3 +629,18 @@ class Grid(object):
             zbdryelevs = None
             zcenters = None
         return zbdryelevs, zcenters
+
+    # Exporting
+    def write_shapefile(self, filename="grid.shp", epsg=None, prj=None):
+        """
+        Write a shapefile of the grid with just the row and column attributes.
+
+        """
+        from ..export.shapefile_utils import write_grid_shapefile
+
+        if epsg is None and prj is None:
+            epsg = self.epsg
+        write_grid_shapefile(
+            filename, self, array_dict={}, nan_val=-1.0e9, epsg=epsg, prj=prj
+        )
+        return

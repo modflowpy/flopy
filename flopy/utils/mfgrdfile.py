@@ -171,7 +171,7 @@ class MfGrdFile(FlopyBinaryData):
 
     def get_modelgrid(self):
         """
-        Get the ModelGrid based on the MODFLOW 6 discretization type
+        Get the modelgrid based on the MODFLOW 6 discretization type
         Returns
         -------
         sr : SpatialReference
@@ -189,7 +189,7 @@ class MfGrdFile(FlopyBinaryData):
         MODFLOW 6 discretization type.
         Returns
         -------
-        mg : ModelGrid
+        mg : modelgrid
         """
         mg = None
         idomain = None
@@ -303,8 +303,8 @@ class MfGrdFile(FlopyBinaryData):
 
     def _build_vertices_cell2d(self):
         """
-        Build the mf6 vectices and cell2d array
-         to generate a VertexModelGrid
+        Build the mf6 vertices and cell2d array
+         to generate a VertexGrid
 
         Returns:
         -------

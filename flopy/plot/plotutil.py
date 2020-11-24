@@ -309,7 +309,9 @@ class PlotUtilities(object):
 
         model_name = defaults.pop("model_name")
 
-        inc = package.parent.modelgrid.nlay
+
+        nlay = package.parent.modelgrid.nlay
+        inc = nlay
         if defaults["mflay"] is not None:
             inc = 1
 
@@ -417,7 +419,8 @@ class PlotUtilities(object):
                         fignum = list(
                             range(
                                 defaults["initial_fig"],
-                                defaults["initial_fig"] + value.array.shape[0],
+                                defaults["initial_fig"] +
+                                min(value.array.shape[0], nlay),
                             )
                         )
                         defaults["initial_fig"] = fignum[-1] + 1
@@ -819,26 +822,29 @@ class PlotUtilities(object):
             fext = "png"
 
         # flopy6 adaption
+        model = util3d.model
+        modelgrid = model.modelgrid
+        nplottable_layers = modelgrid.nlay
         array = util3d.array
         name = util3d.name
         if isinstance(name, str):
-            name = [name] * array.shape[0]
+            name = [name] * nplottable_layers
 
         names = [
             "{}{} layer {}".format(model_name, name[k], k + 1)
-            for k in range(array.shape[0])
+            for k in range(nplottable_layers)
         ]
 
         filenames = None
         if filename_base is not None:
             if mflay is not None:
                 i0 = int(mflay)
-                if i0 + 1 >= array.shape[0]:
-                    i0 = array.shape[0] - 1
+                if i0 + 1 >= nplottable_layers:
+                    i0 = nplottable_layers - 1
                 i1 = i0 + 1
             else:
                 i0 = 0
-                i1 = array.shape[0]
+                i1 = nplottable_layers
             # build filenames, use local "name" variable (flopy6 adaptation)
             filenames = [
                 "{}_{}_Layer{}.{}".format(filename_base, name[k], k + 1, fext)
@@ -847,7 +853,7 @@ class PlotUtilities(object):
 
         axes = PlotUtilities._plot_array_helper(
             array,
-            util3d.model,
+            model,
             names=names,
             filenames=filenames,
             mflay=mflay,
@@ -1041,7 +1047,7 @@ class PlotUtilities(object):
         plotarray : np.array object
         model: fp.modflow.Modflow object
             optional if spatial reference is provided
-        modelgrid: fp.discretization.ModelGrid object
+        modelgrid: fp.discretization.Grid object
             object that defines the spatial orientation of a modflow
             grid within flopy. Optional if model object is provided
         axes: matplotlib.axes object
@@ -1114,17 +1120,14 @@ class PlotUtilities(object):
                 if hdry is not None:
                     defaults["masked_values"].append(hdry)
 
-        elif modelgrid is not None:
-            grid_type = modelgrid.grid_type
-
-        else:
-            grid_type = "structured"
+        if modelgrid is None:
+            modelgrid = model.modelgrid
+        grid_type = modelgrid.grid_type
 
         ib = None
         if modelgrid is not None:
             if modelgrid.idomain is not None:
                 ib = modelgrid.idomain
-
         else:
             if ib is None:
                 try:
@@ -1132,15 +1135,11 @@ class PlotUtilities(object):
                 except:
                     pass
 
-        # reshape 2d arrays to 3d for convenience
-        if len(plotarray.shape) == 2 and grid_type == "structured":
-            plotarray = plotarray.reshape(
-                (1, plotarray.shape[0], plotarray.shape[1])
-            )
-
         # setup plotting routines
         # consider refactoring maxlay to nlay
-        maxlay = plotarray.shape[0]
+        maxlay = modelgrid.nlay
+        if maxlay is None:
+            maxlay = 1
         i0, i1 = PlotUtilities._set_layer_range(mflay, maxlay)
         names = PlotUtilities._set_names(names, maxlay)
         filenames = PlotUtilities._set_names(filenames, maxlay)
@@ -1156,7 +1155,7 @@ class PlotUtilities(object):
             )
             if defaults["pcolor"]:
                 cm = pmv.plot_array(
-                    plotarray[k],
+                    plotarray,
                     masked_values=defaults["masked_values"],
                     ax=axes[idx],
                     **kwargs
@@ -1170,7 +1169,7 @@ class PlotUtilities(object):
 
             if defaults["contour"]:
                 cl = pmv.contour_array(
-                    plotarray[k],
+                    plotarray,
                     masked_values=defaults["masked_values"],
                     ax=axes[idx],
                     colors=defaults["colors"],

@@ -385,6 +385,7 @@ class VertexGrid(Grid):
 
     def get_plottable_layer_array(self, a, layer):
         # ensure plotarray is 1d with length ncpl
+        required_shape = self.get_plottable_layer_shape()
         if a.ndim == 3:
             if a.shape[0] == 1:
                 a = np.squeeze(a, axis=0)
@@ -406,50 +407,6 @@ class VertexGrid(Grid):
                 plotarray = plotarray[layer, :]
         else:
             raise Exception("Array to plot must be of dimension 1 or 2")
-        msg = "{} /= {}".format(plotarray.shape[0], self.ncpl)
-        assert plotarray.shape[0] == self.ncpl, msg
+        msg = "{} /= {}".format(plotarray.shape[0], required_shape)
+        assert plotarray.shape == required_shape, msg
         return plotarray
-
-
-if __name__ == "__main__":
-    import os
-    import flopy as fp
-
-    ws = "../../examples/data/mf6/test003_gwfs_disv"
-    name = "mfsim.nam"
-
-    sim = fp.mf6.modflow.MFSimulation.load(sim_name=name, sim_ws=ws)
-
-    print(sim.model_names)
-    ml = sim.get_model("gwf_1")
-
-    dis = ml.dis
-
-    t = VertexGrid(
-        dis.vertices.array,
-        dis.cell2d.array,
-        top=dis.top.array,
-        botm=dis.botm.array,
-        idomain=dis.idomain.array,
-        epsg=26715,
-        xoff=0,
-        yoff=0,
-        angrot=45,
-    )
-
-    sr_x = t.xvertices
-    sr_y = t.yvertices
-    sr_xc = t.xcellcenters
-    sr_yc = t.ycellcenters
-    sr_lc = t.grid_lines
-    sr_e = t.extent
-
-    t.use_ref_coords = False
-    x = t.xvertices
-    y = t.yvertices
-    z = t.zvertices
-    xc = t.xcellcenters
-    yc = t.ycellcenters
-    zc = t.zcellcenters
-    lc = t.grid_lines
-    e = t.extent

@@ -429,6 +429,12 @@ class UnstructuredGrid(Grid):
         assert plotarray.shape[0] == self.ncpl[layer]
         return plotarray
 
+    def get_plottable_layer_shape(self, layer=None):
+        shp = (self.nnodes, )
+        if layer is not None:
+            shp = (self.ncpl[layer])
+        return shp
+
     @classmethod
     def from_argus_export(cls, fname, nlay=1):
         """

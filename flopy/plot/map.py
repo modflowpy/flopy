@@ -938,7 +938,7 @@ class PlotMapView(object):
         else:
             if self.mg.top is None:
                 err = (
-                    "StructuredModelGrid must have top and "
+                    "StructuredGrid must have top and "
                     "botm defined to use plot_discharge()"
                 )
                 raise AssertionError(err)

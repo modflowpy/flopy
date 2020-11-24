@@ -880,19 +880,6 @@ class StructuredGrid(Grid):
         cls.set_coord_info(xoff=xll, yoff=yll, angrot=rot)
         return cls
 
-    # Exporting
-    def write_shapefile(self, filename="grid.shp", epsg=None, prj=None):
-        """
-        Write a shapefile of the grid with just the row and column attributes.
-        """
-        from ..export.shapefile_utils import write_grid_shapefile
-
-        if epsg is None and prj is None:
-            epsg = self.epsg
-        write_grid_shapefile(
-            filename, self, array_dict={}, nan_val=-1.0e9, epsg=epsg, prj=prj
-        )
-
     def array_at_verts_basic(self, a):
         """
         Computes values at cell vertices using neighbor averaging.
@@ -1385,24 +1372,23 @@ class StructuredGrid(Grid):
 
     def get_plottable_layer_array(self, a, layer):
         # ensure plotarray is 2d and correct shape
+        required_shape = self.get_plottable_layer_shape()
         if a.ndim == 3:
             plotarray = a[layer, :, :]
         elif a.ndim == 2:
             plotarray = a
-            assert plotarray.shape == (self.nrow, self.ncol)
         elif a.ndim == 1:
             plotarray = a
             if plotarray.shape[0] == self.nrow * self.ncol:
-                plotarray = plotarray.reshape((self.nrow, self.ncol))
+                plotarray = plotarray.reshape(required_shape)
             elif plotarray.shape[0] == self.nnodes:
                 plotarray = plotarray.reshape(self.shape)
                 plotarray = plotarray[layer, :, :]
         else:
             raise Exception("Array to plot must be of dimension 1, 2, or 3")
-        msg = "{} /= {}".format(plotarray.shape, self.shape[1:])
-        assert plotarray.shape == self.shape[1:], msg
+        msg = "{} /= {}".format(plotarray.shape, required_shape)
+        assert plotarray.shape == required_shape, msg
         return plotarray
-
 
 if __name__ == "__main__":
     delc = np.ones((10,)) * 1

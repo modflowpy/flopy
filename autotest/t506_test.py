@@ -117,6 +117,14 @@ def test_mf6disv():
                                 saverecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')])
     sim.write_simulation()
 
+    gwf.modelgrid.set_coord_info(angrot=15)
+
+    # write grid and model shapefiles
+    fname = os.path.join(ws, 'grid.shp')
+    gwf.modelgrid.write_shapefile(fname)
+    fname = os.path.join(ws, 'model.shp')
+    gwf.export(fname)
+
     if mf6_exe is not None:
         sim.run_simulation(silent=True)
         head = flopy.utils.HeadFile(os.path.join(ws, head_file)).get_data()
@@ -125,14 +133,24 @@ def test_mf6disv():
         spdis = bud.get_data(text='DATA-SPDIS')[0]
 
         if matplotlib is not None:
-            pmv = flopy.plot.PlotMapView(gwf)
-            pmv.plot_array(head)
-            pmv.plot_grid(colors='white')
-            pmv.contour_array(head, levels=[.2, .4, .6, .8], linewidths=3.)
-            pmv.plot_specific_discharge(spdis, color='white')
+            f = plt.figure(figsize=(10, 10))
+            vmin = head.min()
+            vmax = head.max()
+            for ilay in range(gwf.modelgrid.nlay):
+                ax = plt.subplot(1, gwf.modelgrid.nlay, ilay + 1)
+                pmv = flopy.plot.PlotMapView(gwf, layer=ilay, ax=ax)
+                ax.set_aspect('equal')
+                pmv.plot_array(head.flatten(), cmap='jet', vmin=vmin,
+                               vmax=vmax)
+                pmv.plot_grid(colors='k', alpha=0.1)
+                pmv.contour_array(head, levels=[.2, .4, .6, .8], linewidths=3.,
+                                  vmin=vmin, vmax=vmax)
+                ax.set_title("Layer {}".format(ilay + 1))
+                pmv.plot_specific_discharge(spdis, color='white')
             fname = 'results.png'
             fname = os.path.join(ws, fname)
             plt.savefig(fname)
+            plt.close('all')
 
     return
 
@@ -192,6 +210,15 @@ def test_mf6disu():
                                 saverecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')])
     sim.write_simulation()
 
+    gwf.modelgrid.set_ncpl(g.get_nodelay())
+    gwf.modelgrid.set_coord_info(angrot=15)
+
+    # write grid and model shapefiles
+    fname = os.path.join(ws, 'grid.shp')
+    gwf.modelgrid.write_shapefile(fname)
+    fname = os.path.join(ws, 'model.shp')
+    gwf.export(fname)
+
     if mf6_exe is not None:
         sim.run_simulation(silent=True)
         head = flopy.utils.HeadFile(os.path.join(ws, head_file)).get_data()
@@ -200,17 +227,57 @@ def test_mf6disu():
         spdis = bud.get_data(text='DATA-SPDIS')[0]
 
         if matplotlib is not None:
-            pmv = flopy.plot.PlotMapView(gwf)
-            pmv.plot_array(head.flatten(), cmap='jet')
-            pmv.plot_grid(colors='k', alpha=0.1)
-            pmv.contour_array(head, levels=[.2, .4, .6, .8], linewidths=3.)
+            f = plt.figure(figsize=(10, 10))
+            vmin = head.min()
+            vmax = head.max()
+            for ilay in range(gwf.modelgrid.nlay):
+                ax = plt.subplot(1, gwf.modelgrid.nlay, ilay + 1)
+                pmv = flopy.plot.PlotMapView(gwf, layer=ilay, ax=ax)
+                ax.set_aspect('equal')
+                pmv.plot_array(head.flatten(), cmap='jet', vmin=vmin,
+                               vmax=vmax)
+                pmv.plot_grid(colors='k', alpha=0.1)
+                pmv.contour_array(head, levels=[.2, .4, .6, .8], linewidths=3.,
+                                  vmin=vmin, vmax=vmax)
+                ax.set_title("Layer {}".format(ilay + 1))
+                pmv.plot_specific_discharge(spdis, color='white')
             fname = 'results.png'
             fname = os.path.join(ws, fname)
             plt.savefig(fname)
+            plt.close('all')
 
     return
+
+
+def test_disv_model_dot_plot():
+    # load up the vertex example problem
+    name = "mymodel"
+    sim_path = os.path.join(tpth, 'gridgen_disv')
+    sim = flopy.mf6.MFSimulation.load(sim_name=name, version="mf6",
+                                      exe_name="mf6",
+                                      sim_ws=sim_path)
+    gwf = sim.get_model(name)
+    ax = gwf.oc.plot()
+    ax = gwf.plot()
+    assert ax
+    plt.close('all')
+
+
+def test_disu_model_dot_plot():
+    # load up the vertex example problem
+    name = "mymodel"
+    sim_path = os.path.join(tpth, 'gridgen_disv')
+    sim = flopy.mf6.MFSimulation.load(sim_name=name, version="mf6",
+                                      exe_name="mf6",
+                                      sim_ws=sim_path)
+    gwf = sim.get_model(name)
+    ax = gwf.plot()
+    assert ax
+    plt.close('all')
 
 
 if __name__ == "__main__":
     test_mf6disv()
     test_mf6disu()
+    test_disv_model_dot_plot()
+    test_disu_model_dot_plot()

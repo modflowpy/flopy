@@ -870,7 +870,7 @@ def mflist_export(f, mfl, **kwargs):
         squeeze = kwargs.get("squeeze", True)
 
         if modelgrid is None:
-            raise Exception("MfList.to_shapefile: ModelGrid is not set")
+            raise Exception("MfList.to_shapefile: modelgrid is not set")
         elif modelgrid.grid_type == "USG-Unstructured":
             raise Exception(
                 "Flopy does not support exporting to shapefile "
