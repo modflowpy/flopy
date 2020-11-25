@@ -1134,11 +1134,12 @@ class PlotUtilities(object):
                 except:
                     pass
 
+        # Code needs to set maxlay to 1 if the plottable array is for just
+        # one layer.  So it needs to set maxlay to 1 for the following types
+        # of arrays: top[nrow, ncol], hk[nlay, nrow, ncol], rech[1, nrow, ncol]
+        maxlay = modelgrid.get_number_plottable_layers(plotarray)
+
         # setup plotting routines
-        # consider refactoring maxlay to nlay
-        maxlay = modelgrid.nlay
-        if maxlay is None:
-            maxlay = 1
         i0, i1 = PlotUtilities._set_layer_range(mflay, maxlay)
         names = PlotUtilities._set_names(names, maxlay)
         filenames = PlotUtilities._set_names(filenames, maxlay)
@@ -1381,7 +1382,8 @@ class PlotUtilities(object):
                     ]
                 else:
                     names = [names]
-            assert len(names) == maxlay
+            msg = "{} /= {}: {}".format(len(names), maxlay, names)
+            assert len(names) == maxlay, msg
         return names
 
     @staticmethod
@@ -1410,7 +1412,8 @@ class PlotUtilities(object):
         if fignum is not None:
             if not isinstance(fignum, list):
                 fignum = [fignum]
-            assert len(fignum) == maxlay
+            msg = "{} /= {}".format(len(fignum), maxlay)
+            assert len(fignum) == maxlay, msg
             # check for existing figures
             f0 = fignum[0]
             for i in plt.get_fignums():
@@ -2704,7 +2707,7 @@ def _depreciated_dis_handler(modelgrid, dis):
     PlotMapView handler for the deprecated dis parameter
     which adds top and botm information to the modelgrid
 
-    Parmaeter
+    Parameter
     ---------
     modelgrid : fp.discretization.Grid object
 

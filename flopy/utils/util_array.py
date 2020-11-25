@@ -657,7 +657,7 @@ class Util3d(DataInterface):
         return DataType.array3d
 
     @property
-    def plotable(self):
+    def plottable(self):
         return True
 
     def export(self, f, **kwargs):
@@ -1133,7 +1133,7 @@ class Transient3d(DataInterface):
         return DataType.transient3d
 
     @property
-    def plotable(self):
+    def plottable(self):
         return False
 
     def get_zero_3d(self, kper):
@@ -1439,7 +1439,7 @@ class Transient2d(DataInterface):
         return DataType.transient2d
 
     @property
-    def plotable(self):
+    def plottable(self):
         return True
 
     @staticmethod
@@ -2016,7 +2016,7 @@ class Util2d(DataInterface):
         return DataType.array2d
 
     @property
-    def plotable(self):
+    def plottable(self):
         return True
 
     def _decide_how(self):

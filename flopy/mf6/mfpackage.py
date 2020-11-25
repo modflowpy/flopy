@@ -1630,7 +1630,7 @@ class MFPackage(PackageContainer, PackageInterface):
         self._parent = parent
 
     @property
-    def plotable(self):
+    def plottable(self):
         if self.model_or_sim.type == "Simulation":
             return False
         else:
@@ -2389,8 +2389,8 @@ class MFPackage(PackageContainer, PackageInterface):
         """
         from flopy.plot.plotutil import PlotUtilities
 
-        if not self.plotable:
-            raise TypeError("Simulation level packages are not plotable")
+        if not self.plottable:
+            raise TypeError("Simulation level packages are not plottable")
 
         axes = PlotUtilities._plot_package_helper(self, **kwargs)
         return axes

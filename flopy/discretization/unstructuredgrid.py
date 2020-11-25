@@ -416,6 +416,27 @@ class UnstructuredGrid(Grid):
             ycenters = ycenters[istart:istop]
         return ycenters
 
+    def get_number_plottable_layers(self, a):
+        """
+        Calculate and return the number of 2d plottable arrays that can be
+        obtained from the array passed (a)
+
+        Parameters
+        ----------
+        a : ndarray
+            array to check for plottable layers
+
+        Returns
+        -------
+        nplottable : int
+            number of plottable layers
+
+        """
+        nplottable = 0
+        if a.size == self.nnodes:
+            nplottable = self.nlay
+        return nplottable
+
     def get_plottable_layer_array(self, a, layer):
         if a.shape[0] == self.ncpl[layer]:
             # array is already the size to be plotted
@@ -430,9 +451,23 @@ class UnstructuredGrid(Grid):
         return plotarray
 
     def get_plottable_layer_shape(self, layer=None):
+        """
+        Determine the shape that is required in order to plot in 2d for
+        this grid.
+
+        Parameters
+        ----------
+        layer : int
+            Has no effect unless grid changes by layer
+
+        Returns
+        -------
+        shape : tuple
+            required shape of array to plot for a layer
+        """
         shp = (self.nnodes,)
         if layer is not None:
-            shp = self.ncpl[layer]
+            shp = (self.ncpl[layer],)
         return shp
 
     @classmethod
@@ -492,3 +527,48 @@ class UnstructuredGrid(Grid):
         # close file and return spatial reference
         f.close()
         return cls(verts, iverts, xc, yc, ncpl=np.array(nlay * [len(iverts)]))
+
+    @staticmethod
+    def ncpl_from_ihc(ihc, iac):
+        """
+        Use the ihc and iac arrays to calculate the number of cells per layer
+        array (ncpl) assuming that the plottable layer number is stored in
+        the diagonal position of the ihc array.
+
+        Parameters
+        ----------
+        ihc : ndarray
+            horizontal indicator array.  If the plottable layer number is
+            stored in the diagonal position, then this will be used to create
+            the returned ncpl array.  plottable layer numbers must increase
+            monotonically and be consecutive with node number
+        iac : ndarray
+            array of size nodes that has the number of connections for a cell,
+            plus one for the cell itself
+
+        Returns
+        -------
+        ncpl : ndarray
+            number of cells per plottable layer
+
+        """
+        from flopy.utils.gridgen import get_ia_from_iac
+
+        valid = False
+        ia = get_ia_from_iac(iac)
+
+        # look through the diagonal position of the ihc array, which is
+        # assumed to represent the plottable zero-based layer number
+        layers = ihc[ia[:-1]]
+
+        # use np.unique to find the unique layer numbers and the occurrence
+        # of each layer number
+        unique_layers, ncpl = np.unique(layers, return_counts=True)
+
+        # make sure unique layers numbers are monotonically increasing
+        # and are consecutive integers
+        if np.all(np.diff(unique_layers) == 1):
+            valid = True
+        if not valid:
+            ncpl = None
+        return ncpl

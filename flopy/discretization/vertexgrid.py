@@ -383,6 +383,31 @@ class VertexGrid(Grid):
         ycenters = np.array(self.ycellcenters)
         return ycenters
 
+    def get_number_plottable_layers(self, a):
+        """
+        Calculate and return the number of 2d plottable arrays that can be
+        obtained from the array passed (a)
+
+        Parameters
+        ----------
+        a : ndarray
+            array to check for plottable layers
+
+        Returns
+        -------
+        nplottable : int
+            number of plottable layers
+
+        """
+        nplottable = 0
+        required_shape = self.get_plottable_layer_shape()
+        if a.shape == required_shape:
+            nplottable = 1
+        else:
+            nplottable = a.size / self.ncpl
+            nplottable = int(nplottable)
+        return nplottable
+
     def get_plottable_layer_array(self, a, layer):
         # ensure plotarray is 1d with length ncpl
         required_shape = self.get_plottable_layer_shape()

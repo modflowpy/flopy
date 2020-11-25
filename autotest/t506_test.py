@@ -249,35 +249,75 @@ def test_mf6disu():
     return
 
 
-def test_disv_model_dot_plot():
+def test_disv_dot_plot():
     # load up the vertex example problem
     name = "mymodel"
     sim_path = os.path.join(tpth, 'gridgen_disv')
     sim = flopy.mf6.MFSimulation.load(sim_name=name, version="mf6",
                                       exe_name="mf6",
                                       sim_ws=sim_path)
+    # get gwf model
     gwf = sim.get_model(name)
-    ax = gwf.oc.plot()
+
+    # get the dis package
+    dis = gwf.disv
+
+    # try plotting an array
+    top = dis.top
+    ax = top.plot()
+    assert ax
+    plt.close('all')
+
+    # try plotting a package
+    ax = dis.plot()
+    assert ax
+    plt.close('all')
+
+    # try plotting a model
     ax = gwf.plot()
     assert ax
     plt.close('all')
 
+    return
 
-def test_disu_model_dot_plot():
-    # load up the vertex example problem
+
+def test_disu_dot_plot():
+    # load up the disu example problem
     name = "mymodel"
-    sim_path = os.path.join(tpth, 'gridgen_disv')
+    sim_path = os.path.join(tpth, 'gridgen_disu')
     sim = flopy.mf6.MFSimulation.load(sim_name=name, version="mf6",
                                       exe_name="mf6",
                                       sim_ws=sim_path)
     gwf = sim.get_model(name)
+
+    # check to make sure that ncpl was set properly through the diagonal
+    # position of the ihc array
+    assert np.allclose(gwf.modelgrid.ncpl, np.array([436, 184, 112]))
+
+    # get the dis package
+    dis = gwf.disu
+
+    # try plotting an array
+    top = dis.top
+    ax = top.plot()
+    assert ax
+    plt.close('all')
+
+    # try plotting a package
+    ax = dis.plot()
+    assert ax
+    plt.close('all')
+
+    # try plotting a model
     ax = gwf.plot()
     assert ax
     plt.close('all')
+
+    return
 
 
 if __name__ == "__main__":
     test_mf6disv()
     test_mf6disu()
-    test_disv_model_dot_plot()
-    test_disu_model_dot_plot()
+    test_disv_dot_plot()
+    test_disu_dot_plot()

@@ -378,7 +378,28 @@ class Grid(object):
             "must define get_plottable_layer_array in child class"
         )
 
+    def get_number_plottable_layers(self, a):
+        raise NotImplementedError(
+            "must define get_number_plottable_layers in child class"
+        )
+
     def get_plottable_layer_shape(self, layer=None):
+        """
+        Determine the shape that is required in order to plot a 2d array for
+        this grid.  For a regular MODFLOW grid, this is (nrow, ncol).  For
+        a vertex grid, this is (ncpl,) and for an unstructured grid this is
+        (ncpl[layer],).
+
+        Parameters
+        ----------
+        layer : int
+            Has no effect unless grid changes by layer
+
+        Returns
+        -------
+        shape : tuple
+            required shape of array to plot for a layer
+        """
         return self.shape[1:]
 
     def get_coords(self, x, y):

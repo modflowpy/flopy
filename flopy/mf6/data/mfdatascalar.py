@@ -34,8 +34,8 @@ class MFScalar(mfdata.MFData):
     ----------
     data_type : DataType
         type of data stored in the scalar
-    plotable : bool
-        if the scalar is plotable
+    plottable : bool
+        if the scalar is plottable
     dtype : numpy.dtype
         the scalar's numpy data type
     data : variable
@@ -95,7 +95,7 @@ class MFScalar(mfdata.MFData):
         return DataType.scalar
 
     @property
-    def plotable(self):
+    def plottable(self):
         return False
 
     @property
@@ -628,8 +628,8 @@ class MFScalar(mfdata.MFData):
         """
         from flopy.plot.plotutil import PlotUtilities
 
-        if not self.plotable:
-            raise TypeError("Scalar values are not plotable")
+        if not self.plottable:
+            raise TypeError("Scalar values are not plottable")
 
         axes = PlotUtilities._plot_scalar_helper(
             self,
@@ -719,7 +719,7 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
         return DataType.transientscalar
 
     @property
-    def plotable(self):
+    def plottable(self):
         if self.model is None:
             return False
         else:
@@ -877,8 +877,8 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
         """
         from flopy.plot.plotutil import PlotUtilities
 
-        if not self.plotable:
-            raise TypeError("Simulation level packages are not plotable")
+        if not self.plottable:
+            raise TypeError("Simulation level packages are not plottable")
 
         axes = PlotUtilities._plot_transient2d_helper(
             self,

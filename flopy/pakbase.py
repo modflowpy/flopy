@@ -72,9 +72,9 @@ class PackageInterface(object):
 
     @property
     @abc.abstractmethod
-    def plotable(self):
+    def plottable(self):
         raise NotImplementedError(
-            "must define plotable in child " "class to use this base class"
+            "must define plottable in child " "class to use this base class"
         )
 
     @property
@@ -609,7 +609,7 @@ class Package(PackageInterface):
             return self.name[0].lower()
 
     @property
-    def plotable(self):
+    def plottable(self):
         return True
 
     @property
@@ -780,8 +780,8 @@ class Package(PackageInterface):
         """
         from flopy.plot import PlotUtilities
 
-        if not self.plotable:
-            raise TypeError("Package {} is not plotable".format(self.name))
+        if not self.plottable:
+            raise TypeError("Package {} is not plottable".format(self.name))
 
         axes = PlotUtilities._plot_package_helper(self, **kwargs)
         return axes

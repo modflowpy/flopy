@@ -1159,7 +1159,7 @@ class Gridgen(object):
         ivc[idx] = 1
         return ivc
 
-    def get_ihc(self, fldr=None):
+    def get_ihc(self, nodelay=None, ia=None, fldr=None):
         """
         Get the ihc array
 
@@ -1184,6 +1184,25 @@ class Gridgen(object):
         ihc = np.where(abs(fldr) == 1, 1, ihc)
         ihc = np.where(abs(fldr) == 2, 1, ihc)
         ihc = np.where(abs(fldr) == 3, 0, ihc)
+
+        # fill the diagonal position of the ihc array with the layer number
+        if nodelay is None:
+            nodelay = self.get_nodelay()
+        if ia is None:
+            iac = self.get_iac()
+            ia = get_ia_from_iac(iac)
+        nodes = ia.shape[0] - 1
+        nlayers = nodelay.shape[0]
+        layers = -1 * np.ones(nodes, dtype=np.int)
+        node_layer_range = [0] + list(np.add.accumulate(nodelay))
+        for ilay in range(nlayers):
+            istart = node_layer_range[ilay]
+            istop = node_layer_range[ilay + 1]
+            layers[istart:istop] = ilay
+        assert np.all(layers >= 0)
+        for node in range(nodes):
+            ipos = ia[node]
+            ihc[ipos] = layers[node]
         return ihc
 
     def get_cl12(self):
@@ -1472,13 +1491,14 @@ class Gridgen(object):
         fldr = self.get_fldr()
 
         # ihc
-        ihc = self.get_ihc(fldr)
+        nodelay = self.get_nodelay()
+        ia = get_ia_from_iac(iac)
+        ihc = self.get_ihc(nodelay, ia, fldr)
         gridprops["ihc"] = ihc
 
         # hwva
         hwva = self.get_hwva(ja=ja, ihc=ihc, fahl=None, top=top, bot=bot)
         if repair_asymmetry:
-            ia = get_ia_from_iac(iac)
             isym = get_isym(ia, ja)
             hwva = repair_array_asymmetry(isym, hwva)
         gridprops["hwva"] = hwva
