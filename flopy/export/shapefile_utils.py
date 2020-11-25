@@ -333,7 +333,7 @@ def model_attributes_to_shapefile(
                                 aname = a.name
 
                             if arr.shape == (1,) + horz_shape:
-                                # fix for mf6 case.  TODO: fix this in the mf6 code
+                                # fix for mf6 case
                                 arr = arr[0]
                             assert arr.shape == horz_shape
                             name = "{}_{}".format(aname, ilay + 1)

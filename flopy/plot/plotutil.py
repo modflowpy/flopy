@@ -1100,9 +1100,8 @@ class PlotUtilities(object):
 
         plotarray = plotarray.astype(float)
 
-        # test if this is vertex or structured grid
+        # set values
         if model is not None:
-            grid_type = model.modelgrid.grid_type
             hnoflo = model.hnoflo
             hdry = model.hdry
             if defaults["masked_values"] is None:
@@ -1121,7 +1120,6 @@ class PlotUtilities(object):
 
         if modelgrid is None:
             modelgrid = model.modelgrid
-        grid_type = modelgrid.grid_type
 
         ib = None
         if modelgrid is not None:
@@ -1136,7 +1134,8 @@ class PlotUtilities(object):
 
         # Code needs to set maxlay to 1 if the plottable array is for just
         # one layer.  So it needs to set maxlay to 1 for the following types
-        # of arrays: top[nrow, ncol], hk[nlay, nrow, ncol], rech[1, nrow, ncol]
+        # of arrays: top[nrow, ncol], hk[nlay, nrow, ncol], and
+        # rech[1, nrow, ncol]
         maxlay = modelgrid.get_number_plottable_layers(plotarray)
 
         # setup plotting routines
