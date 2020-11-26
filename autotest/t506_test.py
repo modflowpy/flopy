@@ -210,8 +210,13 @@ def test_mf6disu():
                                 saverecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')])
     sim.write_simulation()
 
-    gwf.modelgrid.set_ncpl(g.get_nodelay())
     gwf.modelgrid.set_coord_info(angrot=15)
+
+    # The flopy Gridgen object includes the plottable layer number to the
+    # diagonal position in the ihc array.  This is why and how modelgrid.nlay
+    # is set to 3 and ncpl has a different number of cells per layer.
+    assert gwf.modelgrid.nlay == 3
+    assert np.allclose(gwf.modelgrid.ncpl, np.array([436, 184, 112]))
 
     # write grid and model shapefiles
     fname = os.path.join(ws, 'grid.shp')
