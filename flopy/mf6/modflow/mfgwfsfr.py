@@ -186,10 +186,11 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           current reach. Positive IC numbers indicate connected reaches are
           connected to the upstream end of the current reach. The absolute
           value of IC must be greater than zero and less than or equal to
-          NREACHES. This argument is an index variable, which means that it
-          should be treated as zero-based when working with FloPy and Python.
-          Flopy will automatically subtract one when loading index variables
-          and add one when writing index variables.
+          NREACHES. IC should not be specified when NCON is zero but must be
+          specified otherwise. This argument is an index variable, which means
+          that it should be treated as zero-based when working with FloPy and
+          Python. Flopy will automatically subtract one when loading index
+          variables and add one when writing index variables.
     diversions : [rno, idv, iconr, cprior]
         * rno (integer) integer value that defines the reach number associated
           with the specified DIVERSIONS data on the line. RNO must be greater
@@ -832,6 +833,7 @@ class ModflowGwfsfr(mfpackage.MFPackage):
             "tagged false",
             "in_record true",
             "reader urword",
+            "optional true",
             "numeric_index true",
             "support_negative_index true",
         ],
