@@ -226,7 +226,7 @@ class ModflowDisU(Package):
         extension="disu",
         unitnumber=None,
         filenames=None,
-        start_datetime="1/1/1970",
+        start_datetime=None,
     ):
 
         # set default unit number of one is not specified
@@ -358,6 +358,9 @@ class ModflowDisU(Package):
         assert self.iac.array.sum() == njag, "The sum of iac must equal njag."
         if ja is None:
             raise Exception("ja must be provided")
+        if ja[0] == 0:
+            # convert from zero-based to one-based
+            ja += 1
         self.ja = Util2d(
             model,
             (self.njag,),

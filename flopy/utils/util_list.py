@@ -127,7 +127,7 @@ class MfList(DataInterface, DataListInterface):
         return DataType.transientlist
 
     @property
-    def plotable(self):
+    def plottable(self):
         return True
 
     def get_empty(self, ncell=0):

@@ -911,7 +911,7 @@ class ModflowAg(Package):
         return "AG"
 
     @property
-    def plotable(self):
+    def plottable(self):
         return False
 
 

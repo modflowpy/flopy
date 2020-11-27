@@ -161,7 +161,11 @@ class ModflowGwfdisu(mfpackage.MFPackage):
           cell. There may be a different number of vertices for each cell.
         * icvert (integer) is an array of integer values containing vertex
           numbers (in the VERTICES block) used to define the cell. Vertices
-          must be listed in clockwise order.
+          must be listed in clockwise order. This argument is an index
+          variable, which means that it should be treated as zero-based when
+          working with FloPy and Python. Flopy will automatically subtract one
+          when loading index variables and add one when writing index
+          variables.
     filename : String
         File name for this package.
     pname : String
@@ -415,6 +419,7 @@ class ModflowGwfdisu(mfpackage.MFPackage):
             "tagged false",
             "reader urword",
             "optional false",
+            "numeric_index true",
         ],
     ]
 

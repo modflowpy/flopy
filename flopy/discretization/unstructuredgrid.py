@@ -8,10 +8,38 @@ class UnstructuredGrid(Grid):
 
     Parameters
     ----------
-    vertices
-        list of vertices that make up the grid
-    cell2d
-        list of cells and their vertices
+    vertices : list
+        list of vertices that make up the grid.  Each vertex consists of three
+        entries [iv, xv, yv] which are the vertex number, which should be
+        zero-based, and the x and y vertex coordinates.
+    iverts : list
+        list of vertex numbers that comprise each cell.  This list must be of
+        size nodes, if the grid_varies_by_nodes argument is true, or it must
+        be of size ncpl[0] if the same 2d spatial grid is used for each layer.
+    xcenters : list or ndarray
+        list of x center coordinates for all cells in the grid if the grid
+        varies by layer or for all cells in a layer if the same grid is used
+        for all layers
+    ycenters : list or ndarray
+        list of y center coordinates for all cells in the grid if the grid
+        varies by layer or for all cells in a layer if the same grid is used
+        for all layers
+    ncpl : ndarray
+        one dimensional array of size nlay with the number of cells in each
+        layer.  This can also be passed in as a tuple or list as long as it
+        can be set using ncpl = np.array(ncpl, dtype=np.int).  The sum of ncpl
+        must be equal to the number of cells in the grid.  ncpl is optional
+        and if it is not passed in, then it is is set using
+        ncpl = np.array([len(iverts)], dtype=np.int), which means that all
+        cells in the grid are contained in a single plottable layer.
+        If the model grid defined in verts and iverts applies for all model
+        layers, then the length of iverts can be equal to ncpl[0] and there
+        is no need to repeat all of the vertex information for cells in layers
+        beneath the top layer.
+    top : list or ndarray
+        top elevations for all cells in the grid.
+    botm : list or ndarray
+        bottom elevations for all cells in the grid.
 
     Properties
     ----------
@@ -21,9 +49,25 @@ class UnstructuredGrid(Grid):
         returns list of cells and their vertices
 
     Methods
-    ----------
+    -------
     get_cell_vertices(cellid)
         returns vertices for a single cell at cellid.
+
+    Notes
+    -----
+    This class handles spatial representation of unstructured grids.  It is
+    based on the concept of being able to support multiple model layers that
+    may have a different number of cells in each layer.  The array ncpl is of
+    size nlay and and its sum must equal nodes.  If the grid_varies_by_layer
+    flag is set to true, then the iverts array must be of size ncpl[0] and all
+    values in the ncpl array must be equal to nodes / nlay.  The xcenters and
+    ycenters arrays must also be of size ncpl[0].  This makes it
+    possible to efficiently store spatial grid information for multiple layers.
+
+    If the spatial grid is different for each model layer, then the
+    grid_varies_by_layer flag should be false, and iverts must be of size
+    nodes. The arrays for xcenters and ycenters must also be of size nodes.
+
     """
 
     def __init__(
@@ -43,8 +87,6 @@ class UnstructuredGrid(Grid):
         xoff=0.0,
         yoff=0.0,
         angrot=0.0,
-        layered=True,
-        nodes=None,
     ):
         super(UnstructuredGrid, self).__init__(
             "unstructured",
@@ -60,39 +102,69 @@ class UnstructuredGrid(Grid):
             angrot,
         )
 
+        # if any of these are None, then the grid is not valid
         self._vertices = vertices
         self._iverts = iverts
-        self._top = top
-        self._botm = botm
-        self._ncpl = ncpl
-        self._layered = layered
         self._xc = xcenters
         self._yc = ycenters
-        self._nodes = nodes
+
+        # if either of these are None, then the grid is not complete
+        self._top = top
+        self._botm = botm
+
+        self._ncpl = None
+        if ncpl is not None:
+            # ensure ncpl is a 1d integer array
+            self.set_ncpl(ncpl)
+        else:
+            # ncpl is not specified, but if the grid is valid, then it is
+            # assumed to be of size len(iverts)
+            if self.is_valid:
+                self.set_ncpl(len(iverts))
 
         if iverts is not None:
-            if self.layered:
-                assert np.all([n == len(iverts) for n in ncpl])
-                assert np.array(self.xcellcenters).shape[0] == self.ncpl[0]
-                assert np.array(self.ycellcenters).shape[0] == self.ncpl[0]
-            else:
-                msg = "Length of iverts must equal ncpl.sum " "({} {})".format(
-                    len(iverts), ncpl
+            if self.grid_varies_by_layer:
+                msg = "Length of iverts must equal grid nodes ({} {})".format(
+                    len(iverts), self.nnodes
                 )
-                assert len(iverts) == np.sum(ncpl), msg
-                assert np.array(self.xcellcenters).shape[0] == self.ncpl
-                assert np.array(self.ycellcenters).shape[0] == self.ncpl
+                assert len(iverts) == self.nnodes, msg
+            else:
+                msg = "Length of iverts must equal ncpl ({} {})".format(
+                    len(iverts), self.ncpl
+                )
+                assert np.all([cpl == len(iverts) for cpl in self.ncpl]), msg
+
+        return
+
+    def set_ncpl(self, ncpl):
+        if isinstance(ncpl, int):
+            ncpl = np.array([ncpl], dtype=np.int)
+        if isinstance(ncpl, (list, tuple, np.ndarray)):
+            ncpl = np.array(ncpl, dtype=np.int)
+        else:
+            raise TypeError("ncpl must be a list, tuple or ndarray")
+        assert ncpl.ndim == 1, "ncpl must be 1d"
+        self._ncpl = ncpl
+        self._require_cache_updates()
+        return
 
     @property
     def is_valid(self):
-        if self._nodes is not None:
-            return True
-        return False
+        iv = True
+        if self._iverts is None:
+            iv = False
+        if self._vertices is None:
+            iv = False
+        if self._xc is None:
+            iv = False
+        if self._yc is None:
+            iv = False
+        return iv
 
     @property
     def is_complete(self):
         if (
-            self._nodes is not None
+            self.is_valid is not None
             and super(UnstructuredGrid, self).is_complete
         ):
             return True
@@ -100,42 +172,35 @@ class UnstructuredGrid(Grid):
 
     @property
     def nlay(self):
-        if self.layered:
-            try:
-                return len(self.ncpl)
-            except TypeError:
-                return 1
+        if self.ncpl is None:
+            return None
         else:
-            return 1
+            return self.ncpl.shape[0]
 
     @property
-    def layered(self):
-        return self._layered
+    def grid_varies_by_layer(self):
+        gvbl = False
+        if self.is_valid:
+            if self.ncpl[0] == len(self._iverts):
+                gvbl = False
+            else:
+                gvbl = True
+        return gvbl
 
     @property
     def nnodes(self):
-        if self._nodes is not None:
-            return self._nodes
+        if self.ncpl is None:
+            return None
         else:
-            return self.nlay * self.ncpl
+            return self.ncpl.sum()
 
     @property
     def ncpl(self):
-        if self._ncpl is None:
-            if self._iverts is None:
-                return None
-            else:
-                return len(self._iverts)
         return self._ncpl
 
     @property
     def shape(self):
-        if self.ncpl is None:
-            return self.nnodes
-        if isinstance(self.ncpl, (list, np.ndarray)):
-            return self.nlay, self.ncpl[0]
-        else:
-            return self.nlay, self.ncpl
+        return (self.nnodes,)
 
     @property
     def extent(self):
@@ -154,26 +219,50 @@ class UnstructuredGrid(Grid):
     def grid_lines(self):
         """
         Creates a series of grid line vertices for drawing
-        a model grid line collection
+        a model grid line collection.  If the grid varies by layer, then
+        return a dictionary with keys equal to layers and values equal to
+        grid lines.  Otherwise, just return the grid lines
 
         Returns:
-            list: grid line vertices
+            dict: grid lines or dictionary of lines by layer
+
         """
         self._copy_cache = False
         xgrid = self.xvertices
         ygrid = self.yvertices
 
-        lines = []
-        for ncell, verts in enumerate(xgrid):
-            for ix, vert in enumerate(verts):
-                lines.append(
-                    [
-                        (xgrid[ncell][ix - 1], ygrid[ncell][ix - 1]),
-                        (xgrid[ncell][ix], ygrid[ncell][ix]),
-                    ]
-                )
+        grdlines = None
+        if self.grid_varies_by_layer:
+            grdlines = {}
+            icell = 0
+            for ilay, numcells in enumerate(self.ncpl):
+                lines = []
+                for _ in range(numcells):
+                    verts = xgrid[icell]
+                    for ix in range(len(verts)):
+                        lines.append(
+                            [
+                                (xgrid[icell][ix - 1], ygrid[icell][ix - 1]),
+                                (xgrid[icell][ix], ygrid[icell][ix]),
+                            ]
+                        )
+                    icell += 1
+                grdlines[ilay] = lines
+        else:
+            grdlines = []
+            for icell in range(self.ncpl[0]):
+                verts = xgrid[icell]
+
+                for ix in range(len(verts)):
+                    grdlines.append(
+                        [
+                            (xgrid[icell][ix - 1], ygrid[icell][ix - 1]),
+                            (xgrid[icell][ix], ygrid[icell][ix]),
+                        ]
+                    )
+
         self._copy_cache = True
-        return lines
+        return grdlines
 
     @property
     def xyzcellcenters(self):
@@ -227,12 +316,33 @@ class UnstructuredGrid(Grid):
         self._copy_cache = True
         return cell_vert
 
+    def plot(self, **kwargs):
+        """
+        Plot the grid lines.
+
+        Parameters
+        ----------
+        kwargs : ax, colors.  The remaining kwargs are passed into the
+            the LineCollection constructor.
+
+        Returns
+        -------
+        lc : matplotlib.collections.LineCollection
+
+        """
+        from flopy.plot import PlotMapView
+
+        layer = 0
+        if "layer" in kwargs:
+            layer = kwargs.pop("layer")
+        mm = PlotMapView(modelgrid=self, layer=layer)
+        return mm.plot_grid(**kwargs)
+
     def _build_grid_geometry_info(self):
         cache_index_cc = "cellcenters"
         cache_index_vert = "xyzgrid"
 
-        vertexdict = {ix: list(v[-2:]) for ix, v in enumerate(self._vertices)}
-
+        vertexdict = {int(v[0]): [v[1], v[2]] for v in self._vertices}
         xcenters = self._xc
         ycenters = self._yc
         xvertices = []
@@ -274,6 +384,92 @@ class UnstructuredGrid(Grid):
             [xvertices, yvertices, zvertices]
         )
 
+    def get_layer_node_range(self, layer):
+        node_layer_range = [0] + list(np.add.accumulate(self.ncpl))
+        return node_layer_range[layer], node_layer_range[layer + 1]
+
+    def get_xvertices_for_layer(self, layer):
+        xgrid = np.array(self.xvertices, dtype=object)
+        if self.grid_varies_by_layer:
+            istart, istop = self.get_layer_node_range(layer)
+            xgrid = xgrid[istart:istop]
+        return xgrid
+
+    def get_yvertices_for_layer(self, layer):
+        ygrid = np.array(self.yvertices, dtype=object)
+        if self.grid_varies_by_layer:
+            istart, istop = self.get_layer_node_range(layer)
+            ygrid = ygrid[istart:istop]
+        return ygrid
+
+    def get_xcellcenters_for_layer(self, layer):
+        xcenters = self.xcellcenters
+        if self.grid_varies_by_layer:
+            istart, istop = self.get_layer_node_range(layer)
+            xcenters = xcenters[istart:istop]
+        return xcenters
+
+    def get_ycellcenters_for_layer(self, layer):
+        ycenters = self.ycellcenters
+        if self.grid_varies_by_layer:
+            istart, istop = self.get_layer_node_range(layer)
+            ycenters = ycenters[istart:istop]
+        return ycenters
+
+    def get_number_plottable_layers(self, a):
+        """
+        Calculate and return the number of 2d plottable arrays that can be
+        obtained from the array passed (a)
+
+        Parameters
+        ----------
+        a : ndarray
+            array to check for plottable layers
+
+        Returns
+        -------
+        nplottable : int
+            number of plottable layers
+
+        """
+        nplottable = 0
+        if a.size == self.nnodes:
+            nplottable = self.nlay
+        return nplottable
+
+    def get_plottable_layer_array(self, a, layer):
+        if a.shape[0] == self.ncpl[layer]:
+            # array is already the size to be plotted
+            plotarray = a
+        else:
+            # reshape the array into size nodes and then reset range to
+            # the part of the array for this layer
+            plotarray = np.reshape(a, (self.nnodes,))
+            istart, istop = self.get_layer_node_range(layer)
+            plotarray = plotarray[istart:istop]
+        assert plotarray.shape[0] == self.ncpl[layer]
+        return plotarray
+
+    def get_plottable_layer_shape(self, layer=None):
+        """
+        Determine the shape that is required in order to plot in 2d for
+        this grid.
+
+        Parameters
+        ----------
+        layer : int
+            Has no effect unless grid changes by layer
+
+        Returns
+        -------
+        shape : tuple
+            required shape of array to plot for a layer
+        """
+        shp = (self.nnodes,)
+        if layer is not None:
+            shp = (self.ncpl[layer],)
+        return shp
+
     @classmethod
     def from_argus_export(cls, fname, nlay=1):
         """
@@ -301,7 +497,7 @@ class UnstructuredGrid(Grid):
         ncells, nverts = ll[0:2]
         ncells = int(ncells)
         nverts = int(nverts)
-        verts = np.empty((nverts, 2), dtype=np.float)
+        verts = np.empty((nverts, 3), dtype=np.float)
         xc = np.empty((ncells), dtype=np.float)
         yc = np.empty((ncells), dtype=np.float)
 
@@ -311,8 +507,9 @@ class UnstructuredGrid(Grid):
             line = f.readline()
             ll = line.split()
             c, iv, x, y = ll[0:4]
-            verts[ivert, 0] = x
-            verts[ivert, 1] = y
+            verts[ivert, 0] = int(iv) - 1
+            verts[ivert, 1] = x
+            verts[ivert, 2] = y
 
         # read the cell information and create iverts, xc, and yc
         iverts = []
@@ -325,8 +522,53 @@ class UnstructuredGrid(Grid):
             if ivlist[0] != ivlist[-1]:
                 ivlist.append(ivlist[0])
             iverts.append(ivlist)
-            xc[icell], yc[icell] = get_polygon_centroid(verts[ivlist, :])
+            xc[icell], yc[icell] = get_polygon_centroid(verts[ivlist, 1:])
 
         # close file and return spatial reference
         f.close()
         return cls(verts, iverts, xc, yc, ncpl=np.array(nlay * [len(iverts)]))
+
+    @staticmethod
+    def ncpl_from_ihc(ihc, iac):
+        """
+        Use the ihc and iac arrays to calculate the number of cells per layer
+        array (ncpl) assuming that the plottable layer number is stored in
+        the diagonal position of the ihc array.
+
+        Parameters
+        ----------
+        ihc : ndarray
+            horizontal indicator array.  If the plottable layer number is
+            stored in the diagonal position, then this will be used to create
+            the returned ncpl array.  plottable layer numbers must increase
+            monotonically and be consecutive with node number
+        iac : ndarray
+            array of size nodes that has the number of connections for a cell,
+            plus one for the cell itself
+
+        Returns
+        -------
+        ncpl : ndarray
+            number of cells per plottable layer
+
+        """
+        from flopy.utils.gridgen import get_ia_from_iac
+
+        valid = False
+        ia = get_ia_from_iac(iac)
+
+        # look through the diagonal position of the ihc array, which is
+        # assumed to represent the plottable zero-based layer number
+        layers = ihc[ia[:-1]]
+
+        # use np.unique to find the unique layer numbers and the occurrence
+        # of each layer number
+        unique_layers, ncpl = np.unique(layers, return_counts=True)
+
+        # make sure unique layers numbers are monotonically increasing
+        # and are consecutive integers
+        if np.all(np.diff(unique_layers) == 1):
+            valid = True
+        if not valid:
+            ncpl = None
+        return ncpl

@@ -31,6 +31,7 @@ class VertexGrid(Grid):
     ----------
     get_cell_vertices(cellid)
         returns vertices for a single cell at cellid.
+
     """
 
     def __init__(
@@ -366,46 +367,71 @@ class VertexGrid(Grid):
             [xvertices, yvertices, zvertices]
         )
 
+    def get_xvertices_for_layer(self, layer):
+        xgrid = np.array(self.xvertices, dtype=object)
+        return xgrid
 
-if __name__ == "__main__":
-    import os
-    import flopy as fp
+    def get_yvertices_for_layer(self, layer):
+        ygrid = np.array(self.yvertices, dtype=object)
+        return ygrid
 
-    ws = "../../examples/data/mf6/test003_gwfs_disv"
-    name = "mfsim.nam"
+    def get_xcellcenters_for_layer(self, layer):
+        xcenters = np.array(self.xcellcenters)
+        return xcenters
 
-    sim = fp.mf6.modflow.MFSimulation.load(sim_name=name, sim_ws=ws)
+    def get_ycellcenters_for_layer(self, layer):
+        ycenters = np.array(self.ycellcenters)
+        return ycenters
 
-    print(sim.model_names)
-    ml = sim.get_model("gwf_1")
+    def get_number_plottable_layers(self, a):
+        """
+        Calculate and return the number of 2d plottable arrays that can be
+        obtained from the array passed (a)
 
-    dis = ml.dis
+        Parameters
+        ----------
+        a : ndarray
+            array to check for plottable layers
 
-    t = VertexGrid(
-        dis.vertices.array,
-        dis.cell2d.array,
-        top=dis.top.array,
-        botm=dis.botm.array,
-        idomain=dis.idomain.array,
-        epsg=26715,
-        xoff=0,
-        yoff=0,
-        angrot=45,
-    )
+        Returns
+        -------
+        nplottable : int
+            number of plottable layers
 
-    sr_x = t.xvertices
-    sr_y = t.yvertices
-    sr_xc = t.xcellcenters
-    sr_yc = t.ycellcenters
-    sr_lc = t.grid_lines
-    sr_e = t.extent
+        """
+        nplottable = 0
+        required_shape = self.get_plottable_layer_shape()
+        if a.shape == required_shape:
+            nplottable = 1
+        else:
+            nplottable = a.size / self.ncpl
+            nplottable = int(nplottable)
+        return nplottable
 
-    t.use_ref_coords = False
-    x = t.xvertices
-    y = t.yvertices
-    z = t.zvertices
-    xc = t.xcellcenters
-    yc = t.ycellcenters
-    zc = t.zcellcenters
-    lc = t.grid_lines
-    e = t.extent
+    def get_plottable_layer_array(self, a, layer):
+        # ensure plotarray is 1d with length ncpl
+        required_shape = self.get_plottable_layer_shape()
+        if a.ndim == 3:
+            if a.shape[0] == 1:
+                a = np.squeeze(a, axis=0)
+                plotarray = a[layer, :]
+            elif a.shape[1] == 1:
+                a = np.squeeze(a, axis=1)
+                plotarray = a[layer, :]
+            else:
+                raise Exception(
+                    "Array has 3 dimensions so one of them must be of size 1 "
+                    "for a VertexGrid."
+                )
+        elif a.ndim == 2:
+            plotarray = a[layer, :]
+        elif a.ndim == 1:
+            plotarray = a
+            if plotarray.shape[0] == self.nnodes:
+                plotarray = plotarray.reshape(self.nlay, self.ncpl)
+                plotarray = plotarray[layer, :]
+        else:
+            raise Exception("Array to plot must be of dimension 1 or 2")
+        msg = "{} /= {}".format(plotarray.shape[0], required_shape)
+        assert plotarray.shape == required_shape, msg
+        return plotarray

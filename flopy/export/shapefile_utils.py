@@ -1,5 +1,6 @@
 """
 Module for exporting and importing flopy model attributes
+
 """
 import copy
 import shutil
@@ -139,6 +140,8 @@ def write_grid_shapefile(
         ]
     elif mg.grid_type == "vertex":
         verts = [mg.get_cell_vertices(cellid) for cellid in range(mg.ncpl)]
+    elif mg.grid_type == "unstructured":
+        verts = [mg.get_cell_vertices(cellid) for cellid in range(mg.nnodes)]
     else:
         raise Exception("Grid type {} not supported.".format(mg.grid_type))
 
@@ -169,6 +172,19 @@ def write_grid_shapefile(
             for name in names[1:]
         ]
         node = list(range(1, mg.ncpl + 1))
+        at = np.vstack(
+            [node] + [array_dict[name].ravel() for name in names[1:]]
+        ).transpose()
+
+        names = enforce_10ch_limit(names)
+
+    elif mg.grid_type == "unstructured":
+        names = ["node"] + list(array_dict.keys())
+        dtypes = [("node", np.dtype("int"))] + [
+            (enforce_10ch_limit([name])[0], array_dict[name].dtype)
+            for name in names[1:]
+        ]
+        node = list(range(1, mg.nnodes + 1))
         at = np.vstack(
             [node] + [array_dict[name].ravel() for name in names[1:]]
         ).transpose()
@@ -263,7 +279,7 @@ def model_attributes_to_shapefile(
             "Flopy does not support exporting to shapefile from "
             "and MODFLOW-USG unstructured grid."
         )
-    horz_shape = grid.shape[1:]
+    horz_shape = grid.get_plottable_layer_shape()
     for pname in package_names:
         pak = ml.get_package(pname)
         attrs = dir(pak)
@@ -287,7 +303,6 @@ def model_attributes_to_shapefile(
                     name = shape_attr_name(a.name, keep_layer=True)
                     # name = a.name.lower()
                     array_dict[name] = a.array
-                # elif isinstance(a, Util3d):
                 elif a.data_type == DataType.array3d:
                     # Not sure how best to check if an object has array data
                     try:
@@ -301,23 +316,28 @@ def model_attributes_to_shapefile(
                         continue
                     if isinstance(a.name, list) and a.name[0] == "thickness":
                         continue
-                    for ilay in range(a.array.shape[0]):
-                        try:
-                            arr = a.array[ilay]
-                        except:
-                            arr = a[ilay]
 
-                        if isinstance(a, Util3d):
-                            aname = shape_attr_name(a[ilay].name)
-                        else:
-                            aname = a.name
+                    if a.array.shape == horz_shape:
+                        array_dict[a.name] = a.array
+                    else:
+                        # array is not the same shape as the layer shape
+                        for ilay in range(a.array.shape[0]):
+                            try:
+                                arr = a.array[ilay]
+                            except:
+                                arr = a[ilay]
 
-                        if arr.shape == (1,) + horz_shape:
-                            # fix for mf6 case.  TODO: fix this in the mf6 code
-                            arr = arr[0]
-                        assert arr.shape == horz_shape
-                        name = "{}_{}".format(aname, ilay + 1)
-                        array_dict[name] = arr
+                            if isinstance(a, Util3d):
+                                aname = shape_attr_name(a[ilay].name)
+                            else:
+                                aname = a.name
+
+                            if arr.shape == (1,) + horz_shape:
+                                # fix for mf6 case
+                                arr = arr[0]
+                            assert arr.shape == horz_shape
+                            name = "{}_{}".format(aname, ilay + 1)
+                            array_dict[name] = arr
                 elif (
                     a.data_type == DataType.transient2d
                 ):  # elif isinstance(a, Transient2d):
