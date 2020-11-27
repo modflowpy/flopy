@@ -1381,8 +1381,10 @@ class Gridgen(object):
         return cellxy
 
     def get_gridprops(self):
-        msg = ("Use: "
-               "get_gridprops_disu5, get_gridprops_disu6, get_gridprops_disv")
+        msg = (
+            "Use: "
+            "get_gridprops_disu5, get_gridprops_disu6, get_gridprops_disv"
+        )
         raise DeprecationWarning(msg)
 
     @staticmethod
@@ -1429,11 +1431,11 @@ class Gridgen(object):
         cl12 = self.get_cl12()
         fahl = self.get_fahl()
 
-        gridprops['nodes'] = nodes
-        gridprops['nlay'] = nlay
-        gridprops['njag'] = njag
-        gridprops['ivsd'] = 0
-        gridprops['idsymrd'] = 0
+        gridprops["nodes"] = nodes
+        gridprops["nlay"] = nlay
+        gridprops["njag"] = njag
+        gridprops["ivsd"] = 0
+        gridprops["idsymrd"] = 0
         gridprops["iac"] = iac
         gridprops["ja"] = ja
         gridprops["nodelay"] = nodelay
@@ -1679,13 +1681,13 @@ class Gridgen(object):
         return gridprops
 
     def to_disu6(self, fname, writevertices=True):
-        msg = ("Use: "
-               "flopy.mf6.ModflowGwfdisu(gwf, **g.get_gridprops_disu6())")
+        msg = (
+            "Use: " "flopy.mf6.ModflowGwfdisu(gwf, **g.get_gridprops_disu6())"
+        )
         raise DeprecationWarning(msg)
 
     def to_disv6(self, fname, verbose=False):
-        msg = ("Use: "
-               "flopy.mf6.ModflowGwfdisv(gwf, **g.get_gridprops_disv())")
+        msg = "Use: " "flopy.mf6.ModflowGwfdisv(gwf, **g.get_gridprops_disv())"
         raise DeprecationWarning(msg)
 
     def intersect(self, features, featuretype, layer):
