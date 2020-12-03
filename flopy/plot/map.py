@@ -122,6 +122,11 @@ class PlotMapView(object):
         # Use the model grid to pass back an array of the correct shape
         plotarray = self.mg.get_plottable_layer_array(a, self.layer)
 
+        # if masked_values are provided mask the plotting array
+        if masked_values is not None:
+            for mval in masked_values:
+                plotarray = np.ma.masked_values(plotarray, mval)
+
         # add NaN values to mask
         plotarray = np.ma.masked_where(np.isnan(plotarray), plotarray)
 
