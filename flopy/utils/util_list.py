@@ -514,16 +514,7 @@ class MfList(DataInterface, DataListInterface):
                 dfi = dfi.set_index(names)
             else:
                 dfi = pd.DataFrame.from_records(recs)
-                dfg = dfi.groupby(names)
-                count = dfg[varnames[0]].count().rename("n")
-                if (count > 1).values.any():
-                    print(
-                        "Duplicated list entry locations aggregated "
-                        "for kper {}".format(per)
-                    )
-                    for kij in count[count > 1].index.values:
-                        print("    (k,i,j) {}".format(kij))
-                dfi = dfg.sum()  # aggregate
+                dfi = dfi.set_index(names)
                 dfi.columns = list(["{}{}".format(c, per) for c in varnames])
             dfs.append(dfi)
         df = pd.concat(dfs, axis=1)
