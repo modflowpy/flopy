@@ -514,10 +514,11 @@ class MfList(DataInterface, DataListInterface):
                 dfi = dfi.set_index(names)
             else:
                 dfi = pd.DataFrame.from_records(recs)
-                dfi = dfi.set_index(names)
+                dfi = dfi.set_index(names, append=True)  # keep first index for uniqueness
                 dfi.columns = list(["{}{}".format(c, per) for c in varnames])
             dfs.append(dfi)
         df = pd.concat(dfs, axis=1)
+        df = df.reset_index(level=0, drop=True)  # remove first index
         if squeeze:
             keep = []
             for var in varnames:
