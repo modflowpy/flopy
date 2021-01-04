@@ -4,6 +4,7 @@ from scipy.spatial import Voronoi
 from .cvfdutil import get_disv_gridprops
 from ..plot.plotutil import plot_cvfd
 
+
 def get_sorted_vertices(icell_vertices, vertices):
     centroid = vertices[icell_vertices].mean(axis=0)
     tlist = []
@@ -29,12 +30,14 @@ def get_valid_faces(vor):
 
 def point_in_cell(point, vertices):
     from shapely.geometry import Point, Polygon
+
     p = Point(point)
     poly = Polygon(vertices)
     if p.intersects(poly):
         return True
     else:
         return False
+
 
 def sort_vertices(vlist):
     x, y = zip(*vlist)
@@ -124,7 +127,7 @@ def get_voronoi_grid(points, **kwargs):
     return verts, iverts
 
 
-class VoronoiGrid():
+class VoronoiGrid:
     """
     FloPy VoronoiGrid helper class for creating a voronoi model grid from
     an array of input points that define cell centers.  The class handles
@@ -152,6 +155,7 @@ class VoronoiGrid():
     class.  This is a feature that could be added in the future.
 
     """
+
     def __init__(self, points, **kwargs):
         verts, iverts = get_voronoi_grid(points, **kwargs)
         self.points = points
@@ -173,8 +177,9 @@ class VoronoiGrid():
             flopy.mf6.ModflowGwfdisv constructor
 
         """
-        disv_gridprops = get_disv_gridprops(self.verts, self.iverts,
-                                            xcyc=self.points)
+        disv_gridprops = get_disv_gridprops(
+            self.verts, self.iverts, xcyc=self.points
+        )
         return disv_gridprops
 
     def get_disu5_gridprops(self):
@@ -269,12 +274,12 @@ class VoronoiGrid():
 
         """
         if ax is None:
-            ax = plt.subplot(1, 1, 1, aspect='equal')
+            ax = plt.subplot(1, 1, 1, aspect="equal")
         pc = self.get_patch_collection(ax, **kwargs)
         ax.set_xlim(self.verts[:, 0].min(), self.verts[:, 0].max())
         ax.set_ylim(self.verts[:, 1].min(), self.verts[:, 1].max())
         if plot_title:
-            ax.set_title("ncells: {}; nverts: {}".format(self.ncpl,
-                                                         self.nverts))
+            ax.set_title(
+                "ncells: {}; nverts: {}".format(self.ncpl, self.nverts)
+            )
         return ax
-

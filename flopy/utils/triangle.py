@@ -759,7 +759,9 @@ class Triangle(object):
                 ip += 1
         if self._nodes is not None:
             for i in range(self._nodes.shape[0]):
-                s = "{} {} {}\n".format(ip, self._nodes[i, 0], self._nodes[i, 1])
+                s = "{} {} {}\n".format(
+                    ip, self._nodes[i, 0], self._nodes[i, 1]
+                )
                 f.write(s)
                 ip += 1
         f.close()

@@ -370,7 +370,9 @@ def get_disv_gridprops(verts, iverts, xcyc=None):
     if xcyc is None:
         xcyc = np.empty((ncpl, 2), dtype=np.float)
         for icell in range(ncpl):
-            vlist = [(verts[ivert, 0], verts[ivert, 1]) for ivert in iverts[icell]]
+            vlist = [
+                (verts[ivert, 0], verts[ivert, 1]) for ivert in iverts[icell]
+            ]
             xcyc[icell, 0], xcyc[icell, 1] = centroid_of_polygon(vlist)
     else:
         assert xcyc.shape == (ncpl, 2)
