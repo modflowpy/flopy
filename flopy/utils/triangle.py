@@ -26,6 +26,10 @@ class Triangle(object):
     angle : float
         Triangle will continue to add vertices until no angle is less than
         this specified value.  (default is 20 degrees)
+    nodes : ndarray
+        Two dimensional array of shape (npoints, 2) with x and y positions
+        of fixed node locations to include in the resulting triangular mesh.
+        (default is None)
     additional_args : list
         list of additional command line switches to pass to triangle
 
@@ -41,6 +45,7 @@ class Triangle(object):
         exe_name="triangle",
         maximum_area=None,
         angle=20.0,
+        nodes=None,
         additional_args=None,
     ):
         self.model_ws = model_ws
@@ -50,6 +55,7 @@ class Triangle(object):
         self.exe_name = os.path.abspath(exe_name)
         self.angle = angle
         self.maximum_area = maximum_area
+        self._nodes = nodes
         self.additional_args = additional_args
         self._initialize_vars()
         return
@@ -741,12 +747,21 @@ class Triangle(object):
         nvert = 0
         for p in self._polygons:
             nvert += len(p)
+        if self._nodes is not None:
+            nvert += self._nodes.shape[0]
         s = "{} {} {} {}\n".format(nvert, 2, 0, 0)
         f.write(s)
         ip = 0
         for p in self._polygons:
             for vertex in p:
                 s = "{} {} {}\n".format(ip, vertex[0], vertex[1])
+                f.write(s)
+                ip += 1
+        if self._nodes is not None:
+            for i in range(self._nodes.shape[0]):
+                s = "{} {} {}\n".format(
+                    ip, self._nodes[i, 0], self._nodes[i, 1]
+                )
                 f.write(s)
                 ip += 1
         f.close()
