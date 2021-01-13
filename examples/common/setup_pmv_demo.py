@@ -11,7 +11,7 @@ def run():
     try:
         import flopy
     except:
-        fpth = os.path.abspath(os.path.join("..", ".."))
+        fpth = os.path.abspath(os.path.join("../..", ".."))
         sys.path.append(fpth)
         import flopy
 

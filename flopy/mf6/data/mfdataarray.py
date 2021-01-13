@@ -34,8 +34,8 @@ class MFArray(MFMultiDimVar):
     ----------
     data_type : DataType
         type of data stored in the scalar
-    plotable : bool
-        if the scalar is plotable
+    plottable : bool
+        if the scalar is plottable
     dtype : numpy.dtype
         the scalar's numpy data type
     data : variable
@@ -375,7 +375,7 @@ class MFArray(MFMultiDimVar):
         return self._get_data().dtype.type
 
     @property
-    def plotable(self):
+    def plottable(self):
         if self.model is None:
             return False
         else:
@@ -1259,10 +1259,17 @@ class MFArray(MFMultiDimVar):
         """
         from flopy.plot import PlotUtilities
 
-        if not self.plotable:
-            raise TypeError("Simulation level packages are not plotable")
+        if not self.plottable:
+            raise TypeError(
+                "This MFArray is not plottable likely because modelgrid is "
+                "not available."
+            )
 
-        if len(self.array.shape) == 2:
+        modelgrid = self.model.modelgrid
+        a = self.array
+        num_plottable_layers = modelgrid.get_number_plottable_layers(a)
+
+        if num_plottable_layers == 1:
             axes = PlotUtilities._plot_util2d_helper(
                 self,
                 title=title,
@@ -1271,7 +1278,7 @@ class MFArray(MFMultiDimVar):
                 fignum=fignum,
                 **kwargs
             )
-        elif len(self.array.shape) == 3:
+        elif num_plottable_layers > 1:
             axes = PlotUtilities._plot_util3d_helper(
                 self,
                 filename_base=filename_base,
@@ -1611,8 +1618,8 @@ class MFTransientArray(MFArray, MFTransient):
         """
         from flopy.plot.plotutil import PlotUtilities
 
-        if not self.plotable:
-            raise TypeError("Simulation level packages are not plotable")
+        if not self.plottable:
+            raise TypeError("Simulation level packages are not plottable")
 
         axes = PlotUtilities._plot_transient2d_helper(
             self,

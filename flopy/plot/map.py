@@ -23,7 +23,7 @@ class PlotMapView(object):
 
     Parameters
     ----------
-    modelgrid : flopy.discretiztion.Grid
+    modelgrid : flopy.discretization.Grid
         The modelgrid class can be StructuredGrid, VertexGrid,
         or UnstructuredGrid (Default is None)
     ax : matplotlib.pyplot axis
@@ -60,10 +60,8 @@ class PlotMapView(object):
 
         if model is not None:
             self.mg = model.modelgrid
-
         elif modelgrid is not None:
             self.mg = modelgrid
-
         else:
             err_msg = "A model grid instance must be provided to PlotMapView"
             raise AssertionError(err_msg)
@@ -112,44 +110,19 @@ class PlotMapView(object):
             matplotlib.collections.PatchCollection
 
         """
-        if not isinstance(a, np.ndarray):
-            a = np.array(a)
 
-        if self.mg.grid_type == "structured":
-            if a.ndim == 3:
-                plotarray = a[self.layer, :, :]
-            elif a.ndim == 2:
-                plotarray = a
-            elif a.ndim == 1:
-                plotarray = a
-            else:
-                raise Exception("Array must be of dimension 1, 2, or 3")
-
-        elif self.mg.grid_type == "vertex":
-            if a.ndim == 3:
-                if a.shape[0] == 1:
-                    a = np.squeeze(a, axis=0)
-                    plotarray = a[self.layer, :]
-                elif a.shape[1] == 1:
-                    a = np.squeeze(a, axis=1)
-                    plotarray = a[self.layer, :]
-                else:
-                    raise Exception("Array must be of dimension 1 or 2")
-            elif a.ndim == 2:
-                plotarray = a[self.layer, :]
-            elif a.ndim == 1:
-                plotarray = a
-            else:
-                raise Exception("Array must be of dimension 1 or 2")
-
-        elif self.mg.grid_type == "unstructured":
-            plotarray = a
-
-        else:
+        if self.mg.grid_type not in ("structured", "vertex", "unstructured"):
             raise TypeError(
                 "Unrecognized grid type {}".format(self.mg.grid_type)
             )
 
+        if not isinstance(a, np.ndarray):
+            a = np.array(a)
+
+        # Use the model grid to pass back an array of the correct shape
+        plotarray = self.mg.get_plottable_layer_array(a, self.layer)
+
+        # if masked_values are provided mask the plotting array
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_values(plotarray, mval)
@@ -162,26 +135,20 @@ class PlotMapView(object):
         else:
             ax = self.ax
 
-        if self.mg.grid_type in ("structured", "vertex"):
-            xgrid = np.array(self.mg.xvertices)
-            ygrid = np.array(self.mg.yvertices)
+        # Get vertices for the selected layer
+        xgrid = self.mg.get_xvertices_for_layer(self.layer)
+        ygrid = self.mg.get_yvertices_for_layer(self.layer)
 
-            if self.mg.grid_type == "structured":
-                quadmesh = ax.pcolormesh(xgrid, ygrid, plotarray)
-
-            else:
-                patches = [
-                    Polygon(list(zip(xgrid[i], ygrid[i])), closed=True)
-                    for i in range(xgrid.shape[0])
-                ]
-
-                quadmesh = PatchCollection(patches)
-                quadmesh.set_array(plotarray)
-
+        if self.mg.grid_type == "structured":
+            quadmesh = ax.pcolormesh(xgrid, ygrid, plotarray)
         else:
-            quadmesh = plotutil.plot_cvfd(
-                self.mg._vertices, self.mg._iverts, a=plotarray, ax=ax
-            )
+            # use patch collection for vertex and unstructured
+            patches = [
+                Polygon(list(zip(xgrid[i], ygrid[i])), closed=True)
+                for i in range(xgrid.shape[0])
+            ]
+            quadmesh = PatchCollection(patches)
+            quadmesh.set_array(plotarray)
 
         # set max and min
         if "vmin" in kwargs:
@@ -194,6 +161,7 @@ class PlotMapView(object):
         else:
             vmax = None
 
+        # limit the color range
         quadmesh.set_clim(vmin=vmin, vmax=vmax)
 
         # send rest of kwargs to quadmesh
@@ -236,38 +204,8 @@ class PlotMapView(object):
         if not isinstance(a, np.ndarray):
             a = np.array(a)
 
-        xcentergrid = np.array(self.mg.xcellcenters)
-        ycentergrid = np.array(self.mg.ycellcenters)
-
-        if self.mg.grid_type == "structured":
-            if a.ndim == 3:
-                plotarray = a[self.layer, :, :]
-            elif a.ndim == 2:
-                plotarray = a
-            elif a.ndim == 1:
-                plotarray = a
-            else:
-                raise Exception("Array must be of dimension 1, 2 or 3")
-
-        elif self.mg.grid_type == "vertex":
-            if a.ndim == 3:
-                if a.shape[0] == 1:
-                    a = np.squeeze(a, axis=0)
-                    plotarray = a[self.layer, :]
-                elif a.shape[1] == 1:
-                    a = np.squeeze(a, axis=1)
-                    plotarray = a[self.layer, :]
-                else:
-                    raise Exception("Array must be of dimension 1 or 2")
-            elif a.ndim == 2:
-                plotarray = a[self.layer, :]
-            elif a.ndim == 1:
-                plotarray = a
-            else:
-                raise Exception("Array must be of dimension 1, 2 or 3")
-
-        else:
-            plotarray = a
+        # Use the model grid to pass back an array of the correct shape
+        plotarray = self.mg.get_plottable_layer_array(a, self.layer)
 
         # work around for tri-contour ignore vmin & vmax
         # necessary block for tri-contour NaN issue
@@ -316,19 +254,22 @@ class PlotMapView(object):
         if "plot_triplot" in kwargs:
             plot_triplot = kwargs.pop("plot_triplot")
 
+        # Get vertices for the selected layer
+        xcentergrid = self.mg.get_xcellcenters_for_layer(self.layer)
+        ycentergrid = self.mg.get_ycellcenters_for_layer(self.layer)
+
         if "extent" in kwargs:
             extent = kwargs.pop("extent")
 
-            if self.mg.grid_type in ("structured", "vertex"):
-                idx = (
-                    (xcentergrid >= extent[0])
-                    & (xcentergrid <= extent[1])
-                    & (ycentergrid >= extent[2])
-                    & (ycentergrid <= extent[3])
-                )
-                plotarray = plotarray[idx]
-                xcentergrid = xcentergrid[idx]
-                ycentergrid = ycentergrid[idx]
+            idx = (
+                (xcentergrid >= extent[0])
+                & (xcentergrid <= extent[1])
+                & (ycentergrid >= extent[2])
+                & (ycentergrid <= extent[3])
+            )
+            plotarray = plotarray[idx]
+            xcentergrid = xcentergrid[idx]
+            ycentergrid = ycentergrid[idx]
 
         plotarray = plotarray.flatten()
         xcentergrid = xcentergrid.flatten()
@@ -472,7 +413,12 @@ class PlotMapView(object):
         if "colors" not in kwargs:
             kwargs["colors"] = "0.5"
 
-        lc = LineCollection(self.mg.grid_lines, **kwargs)
+        grid_lines = self.mg.grid_lines
+        if isinstance(grid_lines, dict):
+            # grid_lines are passed back as a dictionary with keys equal to
+            # layers for an UnstructuredGrid
+            grid_lines = grid_lines[self.layer]
+        lc = LineCollection(grid_lines, **kwargs)
 
         ax.add_collection(lc)
         ax.set_xlim(self.extent[0], self.extent[1])
@@ -522,13 +468,11 @@ class PlotMapView(object):
         if package is not None:
             p = package
             name = p.name[0]
-
         elif self.model is not None:
             if name is None:
                 raise Exception("ftype not specified")
             name = name.upper()
             p = self.model.get_package(name)
-
         else:
             raise Exception("Cannot find package to plot")
 
@@ -578,11 +522,14 @@ class PlotMapView(object):
                 else:
                     idx = mflist["node"]
 
-        nlay = self.mg.nlay
+        if plotAll and self.mg.grid_type == "unstructured":
+            raise Exception("plotAll cannot be used with unstructured grid.")
+        else:
+            nlay = self.mg.nlay
 
         # Plot the list locations
         plotarray = np.zeros(self.mg.shape, dtype=np.int)
-        if plotAll and self.mg.grid_type != "unstructured":
+        if plotAll:
             pa = np.zeros(self.mg.shape[1:], dtype=np.int)
             pa[tuple(idx[1:])] = 1
             for k in range(nlay):
@@ -892,35 +839,32 @@ class PlotMapView(object):
             )
             spdis = spdis[-1]
 
-        if self.mg.grid_type == "structured":
-            ncpl = self.mg.nrow * self.mg.ncol
+        nodes = self.mg.nnodes
 
-        else:
-            ncpl = self.mg.ncpl
-
-        nlay = self.mg.nlay
-
-        qx = np.zeros((nlay * ncpl))
-        qy = np.zeros((nlay * ncpl))
+        qx = np.zeros(nodes)
+        qy = np.zeros(nodes)
 
         idx = np.array(spdis["node"]) - 1
         qx[idx] = spdis["qx"]
         qy[idx] = spdis["qy"]
 
+        qx = self.mg.get_plottable_layer_array(qx, self.layer)
+        qy = self.mg.get_plottable_layer_array(qy, self.layer)
+
+        # Get vertices for the selected layer
+        xcentergrid = self.mg.get_xcellcenters_for_layer(self.layer)
+        ycentergrid = self.mg.get_ycellcenters_for_layer(self.layer)
+
         if self.mg.grid_type == "structured":
-            qx.shape = (self.mg.nlay, self.mg.nrow, self.mg.ncol)
-            qy.shape = (self.mg.nlay, self.mg.nrow, self.mg.ncol)
-            x = self.mg.xcellcenters[::istep, ::jstep]
-            y = self.mg.ycellcenters[::istep, ::jstep]
-            u = qx[:, ::istep, ::jstep]
-            v = qy[:, ::istep, ::jstep]
+            x = xcentergrid[::istep, ::jstep]
+            y = ycentergrid[::istep, ::jstep]
+            u = qx[::istep, ::jstep]
+            v = qy[::istep, ::jstep]
         else:
-            qx.shape = (self.mg.nlay, self.mg.ncpl)
-            qy.shape = (self.mg.nlay, self.mg.ncpl)
-            x = self.mg.xcellcenters[::istep]
-            y = self.mg.ycellcenters[::istep]
-            u = qx[:, ::istep]
-            v = qy[:, ::istep]
+            x = xcentergrid[::istep]
+            y = ycentergrid[::istep]
+            u = qx[::istep]
+            v = qy[::istep]
 
         # normalize
         if normalize:
@@ -932,8 +876,6 @@ class PlotMapView(object):
         u[u == 0] = np.nan
         v[v == 0] = np.nan
 
-        u = u[self.layer, :]
-        v = v[self.layer, :]
         # Rotate and plot, offsets must be zero since
         # these are vectors not locations
         urot, vrot = geometry.rotate(u, v, 0.0, 0.0, self.mg.angrot_radians)
@@ -1001,7 +943,7 @@ class PlotMapView(object):
         else:
             if self.mg.top is None:
                 err = (
-                    "StructuredModelGrid must have top and "
+                    "StructuredGrid must have top and "
                     "botm defined to use plot_discharge()"
                 )
                 raise AssertionError(err)

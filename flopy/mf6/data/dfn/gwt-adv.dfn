@@ -1,0 +1,11 @@
+# --------------------- gwt adv options ---------------------
+
+block options
+name scheme
+type string
+valid central upstream tvd
+reader urword
+optional true
+longname advective scheme
+description scheme used to solve the advection term.  Can be upstream, central, or TVD.  If not specified, upstream weighting is the default weighting scheme.
+

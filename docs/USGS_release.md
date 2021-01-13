@@ -21,9 +21,9 @@ header-includes:
     - \fancyhf{{}}
     - \fancyhead[LE, LO, RE, RO]{}
     - \fancyhead[CE, CO]{FloPy Release Notes}
-    - \fancyfoot[LE, RO]{FloPy version 3.3.2}
+    - \fancyfoot[LE, RO]{FloPy version 3.3.3}
     - \fancyfoot[CO, CE]{\thepage\ of \pageref{LastPage}}
-    - \fancyfoot[RE, LO]{06/26/2020}
+    - \fancyfoot[RE, LO]{10/27/2020}
 geometry: margin=0.75in
 ---
 
@@ -38,7 +38,7 @@ For general modeling issues, please consult a modeling forum, such as the [MODFL
 Documentation
 -----------------------------------------------
 
-FloPy code documentation is available at [https://modflowpy.github.io/flopydoc/](https://modflowpy.github.io/flopydoc/)
+FloPy code documentation is available at [https://flopy.readthedocs.io](https://flopy.readthedocs.io)
 
 
 Contributing
@@ -56,7 +56,7 @@ How to Cite
 
 ##### ***Software/Code citation for FloPy:***
 
-[Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N., 2020, FloPy v3.3.2 &mdash; release candidate: U.S. Geological Survey Software Release, 26 June 2020, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N., 2020, FloPy v3.3.3 &mdash; release candidate: U.S. Geological Survey Software Release, 27 October 2020, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 Disclaimer
@@ -73,12 +73,12 @@ resulting from the authorized or unauthorized use of the software.
 
 Installation
 -----------------------------------------------
-To install FloPy version 3.3.2 from the USGS FloPy website:
+To install FloPy version 3.3.3 from the USGS FloPy website:
 ```
-pip install https://water.usgs.gov/ogw/flopy/flopy-3.3.2.zip
+pip install https://water.usgs.gov/ogw/flopy/flopy-3.3.3.zip
 ```
 
-To update to FloPy version 3.3.2 from the USGS FloPy website:
+To update to FloPy version 3.3.3 from the USGS FloPy website:
 ```
-pip install https://water.usgs.gov/ogw/flopy/flopy-3.3.2.zip --upgrade
+pip install https://water.usgs.gov/ogw/flopy/flopy-3.3.3.zip --upgrade
 ```

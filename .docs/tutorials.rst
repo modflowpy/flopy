@@ -10,6 +10,7 @@ Contents:
    :maxdepth: 2
 
    _notebooks/tutorial01_mf6
+   _notebooks/tutorial02_mf6
 
 
 MODFLOW Tutorials

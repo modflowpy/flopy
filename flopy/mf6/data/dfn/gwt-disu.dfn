@@ -1,0 +1,251 @@
+# --------------------- gwt disu options ---------------------
+
+block options
+name length_units
+type string
+reader urword
+optional true
+longname model length units
+description is the length units used for this model.  Values can be ``FEET'', ``METERS'', or ``CENTIMETERS''.  If not specified, the default is ``UNKNOWN''.
+
+block options
+name nogrb
+type keyword
+reader urword
+optional true
+longname do not write binary grid file
+description keyword to deactivate writing of the binary grid file.
+
+block options
+name xorigin
+type double precision
+reader urword
+optional true
+longname x-position origin of the model grid coordinate system
+description x-position of the origin used for model grid vertices.  This value should be provided in a real-world coordinate system.  A default value of zero is assigned if not specified.  The value for XORIGIN does not affect the model simulation, but it is written to the binary grid file so that postprocessors can locate the grid in space.
+
+block options
+name yorigin
+type double precision
+reader urword
+optional true
+longname y-position origin of the model grid coordinate system
+description y-position of the origin used for model grid vertices.  This value should be provided in a real-world coordinate system.  If not specified, then a default value equal to zero is used.  The value for YORIGIN does not affect the model simulation, but it is written to the binary grid file so that postprocessors can locate the grid in space.
+
+block options
+name angrot
+type double precision
+reader urword
+optional true
+longname rotation angle
+description counter-clockwise rotation angle (in degrees) of the model grid coordinate system relative to a real-world coordinate system.  If not specified, then a default value of 0.0 is assigned.  The value for ANGROT does not affect the model simulation, but it is written to the binary grid file so that postprocessors can locate the grid in space.
+
+# --------------------- gwt disu dimensions ---------------------
+
+block dimensions
+name nodes
+type integer
+reader urword
+optional false
+longname number of layers
+description is the number of cells in the model grid.
+
+block dimensions
+name nja
+type integer
+reader urword
+optional false
+longname number of columns
+description is the sum of the number of connections and NODES.  When calculating the total number of connections, the connection between cell n and cell m is considered to be different from the connection between cell m and cell n.  Thus, NJA is equal to the total number of connections, including n to m and m to n, and the total number of cells.
+
+block dimensions
+name nvert
+type integer
+reader urword
+optional true
+longname number of vertices
+description is the total number of (x, y) vertex pairs used to define the plan-view shape of each cell in the model grid.  If NVERT is not specified or is specified as zero, then the VERTICES and CELL2D blocks below are not read.  NVERT and the accompanying VERTICES and CELL2D blocks should be specified for most simulations.  If the XT3D or SAVE\_SPECIFIC\_DISCHARGE options are specified in the NPF Package, then this information is required.
+
+# --------------------- gwt disu griddata ---------------------
+
+block griddata
+name top
+type double precision
+shape (nodes)
+reader readarray
+longname cell top elevation
+description is the top elevation for each cell in the model grid.
+
+block griddata
+name bot
+type double precision
+shape (nodes)
+reader readarray
+longname cell bottom elevation
+description is the bottom elevation for each cell.
+
+block griddata
+name area
+type double precision
+shape (nodes)
+reader readarray
+longname cell surface area
+description is the cell surface area (in plan view).
+
+
+# --------------------- gwt disu connectiondata ---------------------
+
+block connectiondata
+name iac
+type integer
+shape (nodes)
+reader readarray
+longname number of cell connections
+description is the number of connections (plus 1) for each cell.  The sum of all the entries in IAC must be equal to NJA.
+
+block connectiondata
+name ja
+type integer
+shape (nja)
+reader readarray
+longname grid connectivity
+description is a list of cell number (n) followed by its connecting cell numbers (m) for each of the m cells connected to cell n. The number of values to provide for cell n is IAC(n).  This list is sequentially provided for the first to the last cell. The first value in the list must be cell n itself, and the remaining cells must be listed in an increasing order (sorted from lowest number to highest).  Note that the cell and its connections are only supplied for the GWF cells and their connections to the other GWF cells.  Also note that the JA list input may be divided such that every node and its connectivity list can be on a separate line for ease in readability of the file. To further ease readability of the file, the node number of the cell whose connectivity is subsequently listed, may be expressed as a negative number, the sign of which is subsequently converted to positive by the code.
+numeric_index true
+
+block connectiondata
+name ihc
+type integer
+shape (nja)
+reader readarray
+longname connection type
+description is an index array indicating the direction between node n and all of its m connections.  If IHC = 0 then cell n and cell m are connected in the vertical direction.  Cell n overlies cell m if the cell number for n is less than m; cell m overlies cell n if the cell number for m is less than n.  If IHC = 1 then cell n and cell m are connected in the horizontal direction.  If IHC = 2 then cell n and cell m are connected in the horizontal direction, and the connection is vertically staggered.  A vertically staggered connection is one in which a cell is horizontally connected to more than one cell in a horizontal connection.
+
+block connectiondata
+name cl12
+type double precision
+shape (nja)
+reader readarray
+longname connection lengths
+description is the array containing connection lengths between the center of cell n and the shared face with each adjacent m cell.
+
+block connectiondata
+name hwva
+type double precision
+shape (nja)
+reader readarray
+longname connection lengths
+description is a symmetric array of size NJA.  For horizontal connections, entries in HWVA are the horizontal width perpendicular to flow.  For vertical connections, entries in HWVA are the vertical area for flow.  Thus, values in the HWVA array contain dimensions of both length and area.  Entries in the HWVA array have a one-to-one correspondence with the connections specified in the JA array.  Likewise, there is a one-to-one correspondence between entries in the HWVA array and entries in the IHC array, which specifies the connection type (horizontal or vertical).  Entries in the HWVA array must be symmetric; the program will terminate with an error if the value for HWVA for an n to m connection does not equal the value for HWVA for the corresponding n to m connection.
+
+block connectiondata
+name angldegx
+type double precision
+optional true
+shape (nja)
+reader readarray
+longname angle of face normal to connection
+description is the angle (in degrees) between the horizontal x-axis and the outward normal to the face between a cell and its connecting cells. The angle varies between zero and 360.0 degrees, where zero degrees points in the positive x-axis direction, and 90 degrees points in the positive y-axis direction.  ANGLDEGX is only needed if horizontal anisotropy is specified in the NPF Package, if the XT3D option is used in the NPF Package, or if the SAVE\_SPECIFIC\_DISCHARGE option is specifed in the NPF Package.  ANGLDEGX does not need to be specified if these conditions are not met.  ANGLDEGX is of size NJA; values specified for vertical connections and for the diagonal position are not used.  Note that ANGLDEGX is read in degrees, which is different from MODFLOW-USG, which reads a similar variable (ANGLEX) in radians.
+
+# --------------------- gwt disu vertices ---------------------
+
+block vertices
+name vertices
+type recarray iv xv yv
+reader urword
+optional false
+longname vertices data
+description
+
+block vertices
+name iv
+type integer
+in_record true
+tagged false
+reader urword
+optional false
+longname vertex number
+description is the vertex number.  Records in the VERTICES block must be listed in consecutive order from 1 to NVERT.
+numeric_index true
+
+block vertices
+name xv
+type double precision
+in_record true
+tagged false
+reader urword
+optional false
+longname x-coordinate for vertex
+description is the x-coordinate for the vertex.
+
+block vertices
+name yv
+type double precision
+in_record true
+tagged false
+reader urword
+optional false
+longname y-coordinate for vertex
+description is the y-coordinate for the vertex.
+
+
+# --------------------- gwt disu cell2d ---------------------
+
+block cell2d
+name cell2d
+type recarray icell2d xc yc ncvert icvert
+reader urword
+optional false
+longname cell2d data
+description
+
+block cell2d
+name icell2d
+type integer
+in_record true
+tagged false
+reader urword
+optional false
+longname cell2d number
+description is the cell2d number.  Records in the CELL2D block must be listed in consecutive order from 1 to NODES.
+numeric_index true
+
+block cell2d
+name xc
+type double precision
+in_record true
+tagged false
+reader urword
+optional false
+longname x-coordinate for cell center
+description is the x-coordinate for the cell center.
+
+block cell2d
+name yc
+type double precision
+in_record true
+tagged false
+reader urword
+optional false
+longname y-coordinate for cell center
+description is the y-coordinate for the cell center.
+
+block cell2d
+name ncvert
+type integer
+in_record true
+tagged false
+reader urword
+optional false
+longname number of cell vertices
+description is the number of vertices required to define the cell.  There may be a different number of vertices for each cell.
+
+block cell2d
+name icvert
+type integer
+shape (ncvert)
+in_record true
+tagged false
+reader urword
+optional false
+longname number of cell vertices
+description is an array of integer values containing vertex numbers (in the VERTICES block) used to define the cell.  Vertices must be listed in clockwise order.
+numeric_index true

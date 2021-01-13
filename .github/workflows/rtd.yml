@@ -2,9 +2,9 @@ name: Read the Docs
 
 on:
   push:
-    branches: [ master, develop ]
+    branches: [master, develop]
   pull_request:
-    branches: [ develop ]
+    branches: [master, develop]
 
 jobs:
 
@@ -14,9 +14,10 @@ jobs:
     strategy:
       fail-fast: false
 
+    if: github.repository_owner == 'modflowpy'
     steps:
       - name: Checkout flopy repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Output repo information
         run: |
@@ -28,13 +29,12 @@ jobs:
       # Standard python fails on windows without GDAL installation
       # Using custom bash shell ("shell: bash -l {0}") with Miniconda
       - name: Setup Miniconda
-        uses: conda-incubator/setup-miniconda@v1.7.0
+        uses: conda-incubator/setup-miniconda@v2.0.0
         with:
           python-version: 3.8
           mamba-version: "*"
-          channels: conda-forge,defaults
+          channels: conda-forge
           auto-update-conda: true
-          auto-activate-base: true
           activate-environment: flopy
 
       - name: Add jupyter and jupytext to scripts run
@@ -62,7 +62,7 @@ jobs:
       - name: Add executables directory to path
         shell: bash
         run: |
-          echo "::add-path::$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Run jupytext on tutorials
         shell: bash -l {0}
@@ -90,7 +90,7 @@ jobs:
       github.repository_owner == 'modflowpy' && github.event_name == 'push'
     steps:
       - name: Trigger RTDs build on master and develop branches
-        uses: dfm/rtds-action@v1.0.0
+        uses: dfm/rtds-action@v1.0.2
         with:
           webhook_url: ${{ secrets.RTDS_WEBHOOK_URL }}
           webhook_token: ${{ secrets.RTDS_WEBHOOK_TOKEN }}

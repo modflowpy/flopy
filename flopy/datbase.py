@@ -52,9 +52,9 @@ class DataInterface(object):
 
     @property
     @abc.abstractmethod
-    def plotable(self):
+    def plottable(self):
         raise NotImplementedError(
-            "must define plotable in child " "class to use this base class"
+            "must define plottable in child " "class to use this base class"
         )
 
 

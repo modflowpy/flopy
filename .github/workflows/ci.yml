@@ -6,7 +6,7 @@ on:
   push:
     branches: [master, develop]
   pull_request:
-    branches: [develop]
+    branches: [master, develop]
 
 jobs:
 
@@ -15,11 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-    steps:
 
+    if: github.repository_owner == 'modflowpy'
+    steps:
     # check out repo
     - name: Checkout flopy repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v2.3.4
 
     # Standard python fails on windows without GDAL installation. Using
     # standard python here since only linting on linux.
@@ -85,7 +86,7 @@ jobs:
     steps:
     # check out repo
     - name: Checkout flopy repo
-      uses: actions/checkout@v2
+      uses:  actions/checkout@v2.3.4
 
     - name: Cache Miniconda
       uses: actions/cache@v2.1.0
@@ -99,21 +100,20 @@ jobs:
     # Standard python fails on windows without GDAL installation
     # Using custom bash shell ("shell: bash -l {0}") with Miniconda
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v1.7.0
+      uses: conda-incubator/setup-miniconda@v2.0.0
       with:
         python-version: ${{ matrix.python-version }}
         mamba-version: "*"
-        channels: conda-forge,defaults
+        channels: conda-forge
         auto-update-conda: true
-        auto-activate-base: true
         activate-environment: flopy
         use-only-tar-bz2: true
 
-    - name: Add jupyter and nbconvert to notebooks run
+    - name: Add jupyter and jupytext to notebooks run
       if: matrix.run-type == 'nb'
       shell: bash -l {0}
       run: |
-        mamba install --name flopy jupyter nbconvert
+        mamba install --name flopy jupyter jupytext
 
     - name: Add packages to flopy environment using mamba or conda
       shell: bash -l {0}
@@ -139,7 +139,7 @@ jobs:
     - name: Add executables directory to path
       shell: bash
       run: |
-        echo "::add-path::$HOME/.local/bin"
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     - name: Run nosetests
       shell: bash -l {0}
@@ -149,6 +149,6 @@ jobs:
         --cover-xml-file=../coverage.xml -w ./autotest ${{ matrix.test-path }}
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1.0.12
+      uses: codecov/codecov-action@v1.0.15
       with:
         file: ./coverage.xml

@@ -180,7 +180,7 @@ tagged false
 reader urword
 optional false
 longname obs6 input filename
-description is the file name of the observations input file for this exchange. See the ``Observation utility'' section for instructions for preparing observation input files. Table \ref{table:obstype} lists observation type(s) supported by the GWF-GWF package.
+description is the file name of the observations input file for this exchange. See the ``Observation utility'' section for instructions for preparing observation input files. Table \ref{table:gwf-obstypetable} lists observation type(s) supported by the GWF-GWF package.
 
 
 # --------------------- exg gwfgwf dimensions ---------------------

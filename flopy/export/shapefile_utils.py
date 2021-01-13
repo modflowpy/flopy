@@ -1,5 +1,6 @@
 """
 Module for exporting and importing flopy model attributes
+
 """
 import copy
 import shutil
@@ -90,7 +91,12 @@ def write_gridlines_shapefile(filename, mg):
 
 
 def write_grid_shapefile(
-    filename, mg, array_dict, nan_val=np.nan, epsg=None, prj=None  # -1.0e9,
+    filename,
+    mg,
+    array_dict,
+    nan_val=np.nan,
+    epsg=None,
+    prj=None,  # -1.0e9,
 ):
     """
     Method to write a shapefile of gridded input data
@@ -134,6 +140,8 @@ def write_grid_shapefile(
         ]
     elif mg.grid_type == "vertex":
         verts = [mg.get_cell_vertices(cellid) for cellid in range(mg.ncpl)]
+    elif mg.grid_type == "unstructured":
+        verts = [mg.get_cell_vertices(cellid) for cellid in range(mg.nnodes)]
     else:
         raise Exception("Grid type {} not supported.".format(mg.grid_type))
 
@@ -164,6 +172,19 @@ def write_grid_shapefile(
             for name in names[1:]
         ]
         node = list(range(1, mg.ncpl + 1))
+        at = np.vstack(
+            [node] + [array_dict[name].ravel() for name in names[1:]]
+        ).transpose()
+
+        names = enforce_10ch_limit(names)
+
+    elif mg.grid_type == "unstructured":
+        names = ["node"] + list(array_dict.keys())
+        dtypes = [("node", np.dtype("int"))] + [
+            (enforce_10ch_limit([name])[0], array_dict[name].dtype)
+            for name in names[1:]
+        ]
+        node = list(range(1, mg.nnodes + 1))
         at = np.vstack(
             [node] + [array_dict[name].ravel() for name in names[1:]]
         ).transpose()
@@ -258,7 +279,7 @@ def model_attributes_to_shapefile(
             "Flopy does not support exporting to shapefile from "
             "and MODFLOW-USG unstructured grid."
         )
-    horz_shape = grid.shape[1:]
+    horz_shape = grid.get_plottable_layer_shape()
     for pname in package_names:
         pak = ml.get_package(pname)
         attrs = dir(pak)
@@ -282,7 +303,6 @@ def model_attributes_to_shapefile(
                     name = shape_attr_name(a.name, keep_layer=True)
                     # name = a.name.lower()
                     array_dict[name] = a.array
-                # elif isinstance(a, Util3d):
                 elif a.data_type == DataType.array3d:
                     # Not sure how best to check if an object has array data
                     try:
@@ -296,23 +316,28 @@ def model_attributes_to_shapefile(
                         continue
                     if isinstance(a.name, list) and a.name[0] == "thickness":
                         continue
-                    for ilay in range(a.array.shape[0]):
-                        try:
-                            arr = a.array[ilay]
-                        except:
-                            arr = a[ilay]
 
-                        if isinstance(a, Util3d):
-                            aname = shape_attr_name(a[ilay].name)
-                        else:
-                            aname = a.name
+                    if a.array.shape == horz_shape:
+                        array_dict[a.name] = a.array
+                    else:
+                        # array is not the same shape as the layer shape
+                        for ilay in range(a.array.shape[0]):
+                            try:
+                                arr = a.array[ilay]
+                            except:
+                                arr = a[ilay]
 
-                        if arr.shape == (1,) + horz_shape:
-                            # fix for mf6 case.  TODO: fix this in the mf6 code
-                            arr = arr[0]
-                        assert arr.shape == horz_shape
-                        name = "{}_{}".format(aname, ilay + 1)
-                        array_dict[name] = arr
+                            if isinstance(a, Util3d):
+                                aname = shape_attr_name(a[ilay].name)
+                            else:
+                                aname = a.name
+
+                            if arr.shape == (1,) + horz_shape:
+                                # fix for mf6 case
+                                arr = arr[0]
+                            assert arr.shape == horz_shape
+                            name = "{}_{}".format(aname, ilay + 1)
+                            array_dict[name] = arr
                 elif (
                     a.data_type == DataType.transient2d
                 ):  # elif isinstance(a, Transient2d):
@@ -357,7 +382,8 @@ def model_attributes_to_shapefile(
                             for ilay in range(a.model.modelgrid.nlay):
                                 u2d = a[ilay]
                                 name = "{}_{}".format(
-                                    shape_attr_name(u2d.name), ilay + 1
+                                    shape_attr_name(u2d.name),
+                                    ilay + 1,
                                 )
                                 arr = u2d.array
                                 assert arr.shape == horz_shape
@@ -463,7 +489,12 @@ def get_pyshp_field_info(dtypename):
 
 def get_pyshp_field_dtypes(code):
     """Returns a numpy dtype for a pyshp field type."""
-    dtypes = {"N": np.int, "F": np.float, "L": np.bool, "C": np.object}
+    dtypes = {
+        "N": np.int,
+        "F": np.float,
+        "L": np.bool,
+        "C": np.object,
+    }
     return dtypes.get(code, np.object)
 
 
@@ -480,7 +511,7 @@ def shp2recarray(shpname):
     recarray : np.recarray
 
     """
-    from ..utils.geometry import shape
+    from ..utils.geospatial_utils import GeoSpatialCollection
 
     sf = import_shapefile(check_version=False)
 
@@ -489,7 +520,7 @@ def shp2recarray(shpname):
         (str(f[0]), get_pyshp_field_dtypes(f[1])) for f in sfobj.fields[1:]
     ]
 
-    geoms = [shape(s) for s in sfobj.iterShapes()]
+    geoms = GeoSpatialCollection(sfobj).flopy_geometry
     records = [
         tuple(r) + (geoms[i],) for i, r in enumerate(sfobj.iterRecords())
     ]
@@ -510,14 +541,18 @@ def recarray2shp(
 ):
     """
     Write a numpy record array to a shapefile, using a corresponding
-    list of geometries.
+    list of geometries. Method supports list of flopy geometry objects,
+    flopy Collection object, shapely Collection object, and geojson
+    Geometry Collection objects
 
     Parameters
     ----------
     recarray : np.recarray
         Numpy record array with attribute information that will go in the
         shapefile
-    geoms : list of flopy.utils.geometry objects
+    geoms : list of flopy.utils.geometry, shapely geometry collection,
+            flopy geometry collection, shapefile.Shapes,
+            list of shapefile.Shape objects, or geojson geometry collection
         The number of geometries in geoms must equal the number of records in
         recarray.
     shpname : str
@@ -536,6 +571,7 @@ def recarray2shp(
     subsequent use. See flopy.reference for more details.
 
     """
+    from ..utils.geospatial_utils import GeoSpatialCollection
 
     if len(recarray) != len(geoms):
         raise IndexError(
@@ -546,6 +582,9 @@ def recarray2shp(
         raise Exception("Recarray is empty")
 
     geomtype = None
+
+    geoms = GeoSpatialCollection(geoms).flopy_geometry
+
     for g in geoms:
         try:
             geomtype = g.shapeType
@@ -722,7 +761,10 @@ class CRS(object):
         if self.wktstr is not None:
             sp = [
                 p
-                for p in [self.standard_parallel_1, self.standard_parallel_2]
+                for p in [
+                    self.standard_parallel_1,
+                    self.standard_parallel_2,
+                ]
                 if p is not None
             ]
             sp = sp if len(sp) > 0 else None
@@ -797,7 +839,12 @@ class CRS(object):
             end = s[strt:].find("]") + strt
             try:
                 return float(self.wktstr[strt:end].split(",")[1])
-            except (IndexError, TypeError, ValueError, AttributeError):
+            except (
+                IndexError,
+                TypeError,
+                ValueError,
+                AttributeError,
+            ):
                 pass
 
     def _getgcsparam(self, txt):

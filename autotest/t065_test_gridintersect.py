@@ -128,7 +128,7 @@ def test_rect_grid_3d_point_outside():
     botm = np.concatenate([np.ones(4), np.zeros(4)]).reshape(2, 2, 2)
     gr = get_rect_grid(top=np.ones(4), botm=botm)
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect_point(Point(25., 25., .5))
+    result = ix.intersect(Point(25., 25., .5))
     assert len(result) == 0
     return result
 
@@ -142,7 +142,7 @@ def test_rect_grid_3d_point_inside():
     botm = np.concatenate([np.ones(4), .5 * np.ones(4), np.zeros(4)]).reshape(3, 2, 2)
     gr = get_rect_grid(top=np.ones(4), botm=botm)
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect_point(Point(2., 2., .2))
+    result = ix.intersect(Point(2., 2., .2))
     assert result.cellids[0] == (1, 1, 0)
     return result
 
@@ -156,7 +156,7 @@ def test_rect_grid_3d_point_above():
     botm = np.concatenate([np.ones(4), np.zeros(4)]).reshape(2, 2, 2)
     gr = get_rect_grid(top=np.ones(4), botm=botm)
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect_point(Point(2., 2., 2))
+    result = ix.intersect(Point(2., 2., 2))
     assert len(result) == 0
     return result
 
@@ -169,7 +169,7 @@ def test_rect_grid_point_outside():
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect_point(Point(25., 25.))
+    result = ix.intersect(Point(25., 25.))
     assert len(result) == 0
     return result
 
@@ -182,7 +182,7 @@ def test_rect_grid_point_on_outer_boundary():
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect_point(Point(20., 10.))
+    result = ix.intersect(Point(20., 10.))
     assert len(result) == 1
     assert np.all(result.cellids[0] == (0, 1))
     return result
@@ -196,7 +196,7 @@ def test_rect_grid_point_on_inner_boundary():
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect_point(Point(10., 10.))
+    result = ix.intersect(Point(10., 10.))
     assert len(result) == 1
     assert np.all(result.cellids[0] == (0, 0))
     return result
@@ -210,7 +210,7 @@ def test_rect_grid_multipoint_in_one_cell():
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect_point(MultiPoint([Point(1., 1.), Point(2., 2.)]))
+    result = ix.intersect(MultiPoint([Point(1., 1.), Point(2., 2.)]))
     assert len(result) == 1
     assert result.cellids[0] == (1, 0)
     return result
@@ -224,7 +224,7 @@ def test_rect_grid_multipoint_in_multiple_cells():
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect_point(MultiPoint([Point(1., 1.), Point(12., 12.)]))
+    result = ix.intersect(MultiPoint([Point(1., 1.), Point(12., 12.)]))
     assert len(result) == 2
     assert result.cellids[0] == (1, 0)
     assert result.cellids[1] == (0, 1)
@@ -242,7 +242,7 @@ def test_rect_grid_point_outside_shapely(rtree=True):
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method='vertex', rtree=rtree)
-    result = ix.intersect_point(Point(25., 25.))
+    result = ix.intersect(Point(25., 25.))
     assert len(result) == 0
     return result
 
@@ -255,7 +255,7 @@ def test_rect_grid_point_on_outer_boundary_shapely(rtree=True):
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method='vertex', rtree=rtree)
-    result = ix.intersect_point(Point(20., 10.))
+    result = ix.intersect(Point(20., 10.))
     assert len(result) == 1
     assert np.all(result.cellids[0] == (0, 1))
     return result
@@ -269,7 +269,7 @@ def test_rect_grid_point_on_inner_boundary_shapely(rtree=True):
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method='vertex', rtree=rtree)
-    result = ix.intersect_point(Point(10., 10.))
+    result = ix.intersect(Point(10., 10.))
     assert len(result) == 1
     assert np.all(result.cellids[0] == (0, 0))
     return result
@@ -283,16 +283,16 @@ def test_rect_vertex_grid_point_in_one_cell_shapely(rtree=True):
         return
     gr = get_rect_vertex_grid()
     ix = GridIntersect(gr, method='vertex', rtree=rtree)
-    result = ix.intersect_point(Point(4., 4.))
+    result = ix.intersect(Point(4., 4.))
     assert len(result) == 1
     assert result.cellids[0] == 0
-    result = ix.intersect_point(Point(4., 6.))
+    result = ix.intersect(Point(4., 6.))
     assert len(result) == 1
     assert result.cellids[0] == 0
-    result = ix.intersect_point(Point(6., 6.))
+    result = ix.intersect(Point(6., 6.))
     assert len(result) == 1
     assert result.cellids[0] == 0
-    result = ix.intersect_point(Point(6., 4.))
+    result = ix.intersect(Point(6., 4.))
     assert len(result) == 1
     assert result.cellids[0] == 0
     return result
@@ -306,7 +306,7 @@ def test_rect_grid_multipoint_in_one_cell_shapely(rtree=True):
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method='vertex', rtree=rtree)
-    result = ix.intersect_point(MultiPoint([Point(1., 1.), Point(2., 2.)]))
+    result = ix.intersect(MultiPoint([Point(1., 1.), Point(2., 2.)]))
     assert len(result) == 1
     assert result.cellids[0] == (1, 0)
     return result
@@ -320,7 +320,7 @@ def test_rect_grid_multipoint_in_multiple_cells_shapely(rtree=True):
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method='vertex', rtree=rtree)
-    result = ix.intersect_point(MultiPoint([Point(1., 1.), Point(12., 12.)]))
+    result = ix.intersect(MultiPoint([Point(1., 1.), Point(12., 12.)]))
     assert len(result) == 2
     assert result.cellids[0] == (0, 1)
     assert result.cellids[1] == (1, 0)
@@ -337,7 +337,7 @@ def test_tri_grid_point_outside(rtree=True):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect_point(Point(25., 25.))
+    result = ix.intersect(Point(25., 25.))
     assert len(result) == 0
     return result
 
@@ -352,7 +352,7 @@ def test_tri_grid_point_on_outer_boundary(rtree=True):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect_point(Point(20., 10.))
+    result = ix.intersect(Point(20., 10.))
     assert len(result) == 1
     assert np.all(result.cellids[0] == 0)
     return result
@@ -368,7 +368,7 @@ def test_tri_grid_point_on_inner_boundary(rtree=True):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect_point(Point(10., 10.))
+    result = ix.intersect(Point(10., 10.))
     assert len(result) == 1
     assert np.all(result.cellids[0] == 0)
     return result
@@ -384,7 +384,7 @@ def test_tri_grid_multipoint_in_one_cell(rtree=True):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect_point(MultiPoint([Point(1., 1.), Point(2., 2.)]))
+    result = ix.intersect(MultiPoint([Point(1., 1.), Point(2., 2.)]))
     assert len(result) == 1
     assert result.cellids[0] == 1
     return result
@@ -400,7 +400,7 @@ def test_tri_grid_multipoint_in_multiple_cells(rtree=True):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect_point(MultiPoint([Point(1., 1.), Point(12., 12.)]))
+    result = ix.intersect(MultiPoint([Point(1., 1.), Point(12., 12.)]))
     assert len(result) == 2
     assert result.cellids[0] == 0
     assert result.cellids[1] == 1
@@ -418,7 +418,7 @@ def test_rect_grid_linestring_outside():
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect_linestring(LineString([(25., 25.), (21., 5.)]))
+    result = ix.intersect(LineString([(25., 25.), (21., 5.)]))
     assert len(result) == 0
     return result
 
@@ -431,7 +431,7 @@ def test_rect_grid_linestring_in_2cells():
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect_linestring(LineString([(5., 5.), (15., 5.)]))
+    result = ix.intersect(LineString([(5., 5.), (15., 5.)]))
     assert len(result) == 2
     assert result.lengths.sum() == 10.
     assert result.cellids[0] == (1, 0)
@@ -447,7 +447,7 @@ def test_rect_grid_linestring_on_outer_boundary():
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect_linestring(LineString([(15., 20.), (5., 20.)]))
+    result = ix.intersect(LineString([(15., 20.), (5., 20.)]))
     assert len(result) == 2
     assert result.lengths.sum() == 10.
     assert result.cellids[1] == (0, 0)
@@ -463,7 +463,7 @@ def test_rect_grid_linestring_on_inner_boundary():
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect_linestring(LineString([(5., 10.), (15., 10.)]))
+    result = ix.intersect(LineString([(5., 10.), (15., 10.)]))
     assert len(result) == 2
     assert result.lengths.sum() == 10.
     assert result.cellids[0] == (0, 0)
@@ -479,7 +479,7 @@ def test_rect_grid_multilinestring_in_one_cell():
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect_linestring(MultiLineString(
+    result = ix.intersect(MultiLineString(
         [LineString([(1., 1), (9., 1.)]), LineString([(1., 9.), (9., 9.)])]))
     assert len(result) == 1
     assert result.lengths == 16.
@@ -495,7 +495,7 @@ def test_rect_grid_linestring_in_and_out_of_cell():
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect_linestring(
+    result = ix.intersect(
         LineString([(5., 9), (15., 5.), (5., 1.)]))
     assert len(result) == 2
     assert result.cellids[0] == (1, 0)
@@ -512,7 +512,7 @@ def test_rect_grid_linestring_in_and_out_of_cell2():
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect_linestring(LineString(
+    result = ix.intersect(LineString(
         [(5, 15), (5., 9), (15., 5.), (5., 1.)]))
     assert len(result) == 3
     # assert result.cellids[0] == (1, 0)
@@ -532,7 +532,7 @@ def test_rect_grid_linestring_outside_shapely(rtree=True):
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method='vertex', rtree=rtree)
-    result = ix.intersect_linestring(LineString([(25., 25.), (21., 5.)]))
+    result = ix.intersect(LineString([(25., 25.), (21., 5.)]))
     assert len(result) == 0
     return result
 
@@ -545,7 +545,7 @@ def test_rect_grid_linestring_in_2cells_shapely(rtree=True):
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method='vertex', rtree=rtree)
-    result = ix.intersect_linestring(LineString([(5., 5.), (15., 5.)]))
+    result = ix.intersect(LineString([(5., 5.), (15., 5.)]))
     assert len(result) == 2
     assert result.lengths.sum() == 10.
     assert result.cellids[0] == (1, 0)
@@ -561,7 +561,7 @@ def test_rect_grid_linestring_on_outer_boundary_shapely(rtree=True):
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method='vertex', rtree=rtree)
-    result = ix.intersect_linestring(LineString([(15., 20.), (5., 20.)]))
+    result = ix.intersect(LineString([(15., 20.), (5., 20.)]))
     assert len(result) == 2
     assert result.lengths.sum() == 10.
     assert result.cellids[0] == (0, 0)
@@ -577,7 +577,7 @@ def test_rect_grid_linestring_on_inner_boundary_shapely(rtree=True):
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method='vertex', rtree=rtree)
-    result = ix.intersect_linestring(LineString([(5., 10.), (15., 10.)]))
+    result = ix.intersect(LineString([(5., 10.), (15., 10.)]))
     assert len(result) == 2
     assert result.lengths.sum() == 10.
     assert result.cellids[0] == (0, 0)
@@ -593,7 +593,7 @@ def test_rect_grid_multilinestring_in_one_cell_shapely(rtree=True):
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method='vertex', rtree=rtree)
-    result = ix.intersect_linestring(MultiLineString(
+    result = ix.intersect(MultiLineString(
         [LineString([(1., 1), (9., 1.)]), LineString([(1., 9.), (9., 9.)])]))
     assert len(result) == 1
     assert result.lengths == 16.
@@ -609,7 +609,7 @@ def test_rect_grid_linestring_in_and_out_of_cell_shapely(rtree=True):
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method='vertex', rtree=rtree)
-    result = ix.intersect_linestring(
+    result = ix.intersect(
         LineString([(5., 9), (15., 5.), (5., 1.)]))
     assert len(result) == 2
     assert result.cellids[0] == (1, 0)
@@ -628,7 +628,7 @@ def test_tri_grid_linestring_outside(rtree=True):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect_linestring(LineString([(25., 25.), (21., 5.)]))
+    result = ix.intersect(LineString([(25., 25.), (21., 5.)]))
     assert len(result) == 0
     return result
 
@@ -643,7 +643,7 @@ def test_tri_grid_linestring_in_2cells(rtree=True):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect_linestring(LineString([(5., 5.), (5., 15.)]))
+    result = ix.intersect(LineString([(5., 5.), (5., 15.)]))
     assert len(result) == 2
     assert result.lengths.sum() == 10.
     assert result.cellids[0] == 1
@@ -661,7 +661,7 @@ def test_tri_grid_linestring_on_outer_boundary(rtree=True):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect_linestring(LineString([(15., 20.), (5., 20.)]))
+    result = ix.intersect(LineString([(15., 20.), (5., 20.)]))
     assert len(result) == 2
     assert result.lengths.sum() == 10.
     assert result.cellids[0] == 2
@@ -679,7 +679,7 @@ def test_tri_grid_linestring_on_inner_boundary(rtree=True):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect_linestring(LineString([(5., 10.), (15., 10.)]))
+    result = ix.intersect(LineString([(5., 10.), (15., 10.)]))
     assert len(result) == 2
     assert result.lengths.sum() == 10.
     assert result.cellids[0] == 0
@@ -697,7 +697,7 @@ def test_tri_grid_multilinestring_in_one_cell(rtree=True):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect_linestring(MultiLineString(
+    result = ix.intersect(MultiLineString(
         [LineString([(1., 1), (9., 1.)]), LineString([(2., 2.), (9., 2.)])]))
     assert len(result) == 1
     assert result.lengths == 15.
@@ -716,7 +716,7 @@ def test_rect_grid_polygon_outside():
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect_polygon(
+    result = ix.intersect(
         Polygon([(21., 11.), (23., 17.), (25., 11.)]))
     assert len(result) == 0
     return result
@@ -730,7 +730,7 @@ def test_rect_grid_polygon_in_2cells():
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect_polygon(
+    result = ix.intersect(
         Polygon([(2.5, 5.0), (7.5, 5.0), (7.5, 15.), (2.5, 15.)]))
     assert len(result) == 2
     assert result.areas.sum() == 50.
@@ -745,7 +745,7 @@ def test_rect_grid_polygon_on_outer_boundary():
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect_polygon(
+    result = ix.intersect(
         Polygon([(20., 5.0), (25., 5.0), (25., 15.), (20., 15.)]))
     assert len(result) == 0
     return result
@@ -759,7 +759,7 @@ def test_rect_grid_polygon_on_inner_boundary():
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect_polygon(
+    result = ix.intersect(
         Polygon([(5., 10.0), (15., 10.0), (15., 5.), (5., 5.)]))
     assert len(result) == 2
     assert result.areas.sum() == 50.
@@ -777,7 +777,7 @@ def test_rect_grid_multipolygon_in_one_cell():
     p1 = Polygon([(1., 1.), (8., 1.), (8., 3.), (1., 3.)])
     p2 = Polygon([(1., 9.), (8., 9.), (8., 7.), (1., 7.)])
     p = MultiPolygon([p1, p2])
-    result = ix.intersect_polygon(p)
+    result = ix.intersect(p)
     assert len(result) == 1
     assert result.areas.sum() == 28.
     return result
@@ -794,7 +794,7 @@ def test_rect_grid_multipolygon_in_multiple_cells():
     p1 = Polygon([(1., 1.), (19., 1.), (19., 3.), (1., 3.)])
     p2 = Polygon([(1., 9.), (19., 9.), (19., 7.), (1., 7.)])
     p = MultiPolygon([p1, p2])
-    result = ix.intersect_polygon(p)
+    result = ix.intersect(p)
     assert len(result) == 2
     assert result.areas.sum() == 72.
     return result
@@ -810,7 +810,7 @@ def test_rect_grid_polygon_with_hole():
     ix = GridIntersect(gr, method="structured")
     p = Polygon([(5., 5.), (5., 15.), (25., 15.), (25., -5.),
                  (5., -5.)], holes=[[(9., -1), (9, 11), (21, 11), (21, -1)]])
-    result = ix.intersect_polygon(p)
+    result = ix.intersect(p)
     assert len(result) == 3
     assert result.areas.sum() == 104.
     return result
@@ -827,7 +827,7 @@ def test_rect_grid_polygon_outside_shapely(rtree=True):
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method='vertex', rtree=rtree)
-    result = ix.intersect_polygon(
+    result = ix.intersect(
         Polygon([(21., 11.), (23., 17.), (25., 11.)]))
     assert len(result) == 0
     return result
@@ -841,7 +841,7 @@ def test_rect_grid_polygon_in_2cells_shapely(rtree=True):
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method='vertex', rtree=rtree)
-    result = ix.intersect_polygon(
+    result = ix.intersect(
         Polygon([(2.5, 5.0), (7.5, 5.0), (7.5, 15.), (2.5, 15.)]))
     assert len(result) == 2
     assert result.areas.sum() == 50.
@@ -856,7 +856,7 @@ def test_rect_grid_polygon_on_outer_boundary_shapely(rtree=True):
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method='vertex', rtree=rtree)
-    result = ix.intersect_polygon(
+    result = ix.intersect(
         Polygon([(20., 5.0), (25., 5.0), (25., 15.), (20., 15.)]))
     assert len(result) == 0
     return result
@@ -870,7 +870,7 @@ def test_rect_grid_polygon_on_inner_boundary_shapely(rtree=True):
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method='vertex', rtree=rtree)
-    result = ix.intersect_polygon(
+    result = ix.intersect(
         Polygon([(5., 10.0), (15., 10.0), (15., 5.), (5., 5.)]))
     assert len(result) == 2
     assert result.areas.sum() == 50.
@@ -888,7 +888,7 @@ def test_rect_grid_multipolygon_in_one_cell_shapely(rtree=True):
     p1 = Polygon([(1., 1.), (8., 1.), (8., 3.), (1., 3.)])
     p2 = Polygon([(1., 9.), (8., 9.), (8., 7.), (1., 7.)])
     p = MultiPolygon([p1, p2])
-    result = ix.intersect_polygon(p)
+    result = ix.intersect(p)
     assert len(result) == 1
     assert result.areas.sum() == 28.
     return result
@@ -905,7 +905,7 @@ def test_rect_grid_multipolygon_in_multiple_cells_shapely(rtree=True):
     p1 = Polygon([(1., 1.), (19., 1.), (19., 3.), (1., 3.)])
     p2 = Polygon([(1., 9.), (19., 9.), (19., 7.), (1., 7.)])
     p = MultiPolygon([p1, p2])
-    result = ix.intersect_polygon(p)
+    result = ix.intersect(p)
     assert len(result) == 2
     assert result.areas.sum() == 72.
     return result
@@ -921,7 +921,7 @@ def test_rect_grid_polygon_with_hole_shapely(rtree=True):
     ix = GridIntersect(gr, method='vertex', rtree=rtree)
     p = Polygon([(5., 5.), (5., 15.), (25., 15.), (25., -5.),
                  (5., -5.)], holes=[[(9., -1), (9, 11), (21, 11), (21, -1)]])
-    result = ix.intersect_polygon(p)
+    result = ix.intersect(p)
     assert len(result) == 3
     assert result.areas.sum() == 104.
     return result
@@ -937,7 +937,7 @@ def test_rect_grid_polygon_in_edge_in_cell(rtree=True):
     ix = GridIntersect(gr, method='vertex', rtree=rtree)
     p = Polygon([(0., 5.), (3., 0.), (7., 0.),
                  (10., 5.), (10., -1.), (0., -1.)])
-    result = ix.intersect_polygon(p)
+    result = ix.intersect(p)
     assert len(result) == 1
     assert result.areas.sum() == 15.
     return result
@@ -953,7 +953,7 @@ def test_tri_grid_polygon_outside(rtree=True):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect_polygon(
+    result = ix.intersect(
         Polygon([(21., 11.), (23., 17.), (25., 11.)]))
     assert len(result) == 0
     return result
@@ -969,7 +969,7 @@ def test_tri_grid_polygon_in_2cells(rtree=True):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect_polygon(
+    result = ix.intersect(
         Polygon([(2.5, 5.0), (5.0, 5.0), (5.0, 15.), (2.5, 15.)]))
     assert len(result) == 2
     assert result.areas.sum() == 25.
@@ -986,7 +986,7 @@ def test_tri_grid_polygon_on_outer_boundary(rtree=True):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect_polygon(
+    result = ix.intersect(
         Polygon([(20., 5.0), (25., 5.0), (25., 15.), (20., 15.)]))
     assert len(result) == 0
     return result
@@ -997,7 +997,7 @@ def test_tri_grid_polygon_on_inner_boundary(rtree=True):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect_polygon(
+    result = ix.intersect(
         Polygon([(5., 10.0), (15., 10.0), (15., 5.), (5., 5.)]))
     assert len(result) == 4
     assert result.areas.sum() == 50.
@@ -1017,7 +1017,7 @@ def test_tri_grid_multipolygon_in_one_cell(rtree=True):
     p1 = Polygon([(1., 1.), (8., 1.), (8., 3.), (3., 3.)])
     p2 = Polygon([(5., 5.), (8., 5.), (8., 8.)])
     p = MultiPolygon([p1, p2])
-    result = ix.intersect_polygon(p)
+    result = ix.intersect(p)
     assert len(result) == 1
     assert result.areas.sum() == 16.5
     return result
@@ -1036,7 +1036,7 @@ def test_tri_grid_multipolygon_in_multiple_cells(rtree=True):
     p1 = Polygon([(1., 1.), (19., 1.), (19., 3.), (1., 3.)])
     p2 = Polygon([(1., 9.), (19., 9.), (19., 7.), (1., 7.)])
     p = MultiPolygon([p1, p2])
-    result = ix.intersect_polygon(p)
+    result = ix.intersect(p)
     assert len(result) == 4
     assert result.areas.sum() == 72.
     return result
@@ -1054,7 +1054,7 @@ def test_tri_grid_polygon_with_hole(rtree=True):
     ix = GridIntersect(gr, rtree=rtree)
     p = Polygon([(5., 5.), (5., 15.), (25., 15.), (25., -5.),
                  (5., -5.)], holes=[[(9., -1), (9, 11), (21, 11), (21, -1)]])
-    result = ix.intersect_polygon(p)
+    result = ix.intersect(p)
     assert len(result) == 6
     assert result.areas.sum() == 104.
     return result
@@ -1072,7 +1072,7 @@ def test_point_offset_rot_structured_grid():
     sgr = get_rect_grid(angrot=45., xyoffset=10.)
     p = Point(10., 10 + np.sqrt(200.))
     ix = GridIntersect(sgr, method="structured")
-    result = ix.intersect_point(p)
+    result = ix.intersect(p)
     # assert len(result) == 1.
     return result
 
@@ -1086,7 +1086,7 @@ def test_linestring_offset_rot_structured_grid():
     sgr = get_rect_grid(angrot=45., xyoffset=10.)
     ls = LineString([(5, 10. + np.sqrt(200.)), (15, 10. + np.sqrt(200.))])
     ix = GridIntersect(sgr, method="structured")
-    result = ix.intersect_linestring(ls)
+    result = ix.intersect(ls)
     # assert len(result) == 2.
     return result
 
@@ -1103,7 +1103,7 @@ def test_polygon_offset_rot_structured_grid():
                  (15, 10. + 1.5 * np.sqrt(200.)),
                  (5, 10. + 1.5 * np.sqrt(200.))])
     ix = GridIntersect(sgr, method="structured")
-    result = ix.intersect_polygon(p)
+    result = ix.intersect(p)
     # assert len(result) == 3.
     return result
 
@@ -1117,7 +1117,7 @@ def test_point_offset_rot_structured_grid_shapely(rtree=True):
     sgr = get_rect_grid(angrot=45., xyoffset=10.)
     p = Point(10., 10 + np.sqrt(200.))
     ix = GridIntersect(sgr, method="vertex", rtree=rtree)
-    result = ix.intersect_point(p)
+    result = ix.intersect(p)
     # assert len(result) == 1.
     return result
 
@@ -1131,7 +1131,7 @@ def test_linestring_offset_rot_structured_grid_shapely(rtree=True):
     sgr = get_rect_grid(angrot=45., xyoffset=10.)
     ls = LineString([(5, 10. + np.sqrt(200.)), (15, 10. + np.sqrt(200.))])
     ix = GridIntersect(sgr, method="vertex", rtree=rtree)
-    result = ix.intersect_linestring(ls)
+    result = ix.intersect(ls)
     # assert len(result) == 2.
     return result
 
@@ -1148,7 +1148,7 @@ def test_polygon_offset_rot_structured_grid_shapely(rtree=True):
                  (15, 10. + 1.5 * np.sqrt(200.)),
                  (5, 10. + 1.5 * np.sqrt(200.))])
     ix = GridIntersect(sgr, method="vertex", rtree=rtree)
-    result = ix.intersect_polygon(p)
+    result = ix.intersect(p)
     # assert len(result) == 3.
     return result
 

@@ -40,8 +40,8 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
     ----------
     data_type : DataType
         type of data stored in the scalar
-    plotable : bool
-        if the scalar is plotable
+    plottable : bool
+        if the scalar is plottable
     dtype : numpy.dtype
         the scalar's numpy data type
     data : variable
@@ -181,7 +181,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         return self.get_data().dtype
 
     @property
-    def plotable(self):
+    def plottable(self):
         if self.model is None:
             return False
         else:
@@ -1196,8 +1196,8 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         """
         from flopy.plot import PlotUtilities
 
-        if not self.plotable:
-            raise TypeError("Simulation level packages are not plotable")
+        if not self.plottable:
+            raise TypeError("Simulation level packages are not plottable")
 
         if "cellid" not in self.dtype.names:
             return
@@ -1629,8 +1629,13 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         """
         from flopy.plot import PlotUtilities
 
-        if not self.plotable:
-            raise TypeError("Simulation level packages are not plotable")
+        if not self.plottable:
+            raise TypeError("Simulation level packages are not plottable")
+
+        # model.plot() will not work for a mf6 model oc package unless
+        # this check is here
+        if self.get_data() is None:
+            return
 
         if "cellid" not in self.dtype.names:
             return

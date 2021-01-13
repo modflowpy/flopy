@@ -295,9 +295,9 @@ class MFData(DataInterface):
         )
 
     @property
-    def plotable(self):
+    def plottable(self):
         raise NotImplementedError(
-            "must define plotable in child " "class to use this base class"
+            "must define plottable in child " "class to use this base class"
         )
 
     def _resync(self):
@@ -500,9 +500,9 @@ class MFMultiDimVar(MFData):
         )
 
     @property
-    def plotable(self):
+    def plottable(self):
         raise NotImplementedError(
-            "must define plotable in child " "class to use this base class"
+            "must define plottable in child " "class to use this base class"
         )
 
     def _get_internal_formatting_string(self, layer):

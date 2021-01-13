@@ -122,8 +122,8 @@ def test_gridgen():
         # test the different gridprops dictionaries, which contain all the
         # information needed to make the different discretization packages
         gridprops = g.get_gridprops_disv()
-        gridprops = g.get_gridprops()
-        #gridprops = g.get_gridprops_disu6()
+        gridprops = g.get_gridprops_disu5()
+        gridprops = g.get_gridprops_disu6()
 
         # test the gridgen point intersection
         points = [(4750., 5250.)]
@@ -146,18 +146,6 @@ def test_gridgen():
         # test getting a modflow-usg disu package
         mu = flopy.modflow.Modflow(version='mfusg', structured=False)
         disu = g.get_disu(mu)
-
-        # test writing a modflow 6 disu package
-        fname = os.path.join(cpth, 'mymf6model.disu')
-        g6.to_disu6(fname)
-        assert os.path.isfile(fname), \
-            'MF6 disu file not created: {}'.format(fname)
-
-        # test writing a modflow 6 disv package
-        fname = os.path.join(cpth, 'mymf6model.disv')
-        g6.to_disv6(fname)
-        assert os.path.isfile(fname), \
-            'MF6 disv file not created: {}'.format(fname)
 
         # test mfusg with vertical pass-through (True above at instantiation)
         gu.build()

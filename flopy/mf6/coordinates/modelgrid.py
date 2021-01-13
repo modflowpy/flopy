@@ -476,13 +476,9 @@ class ModelGrid(object):
                 (self._model_name, "disl", "griddata", "idomain")
             ].get_data()
         elif self._grid_type == DiscretizationType.DISU:
-            except_str = (
-                "ERROR: Can not return idomain for model {}.  This "
-                "model uses a DISU grid that does not "
-                "have an idomain.".format(self._model_name)
-            )
-            print(except_str)
-            raise MFGridException(except_str)
+            return self._simulation_data.mfdata[
+                (self._model_name, "disu", "griddata", "idomain")
+            ].get_data()
         except_str = (
             "ERROR: Grid type {} for model {} not "
             "recognized.".format(self._grid_type, self._model_name)
@@ -656,13 +652,9 @@ class ModelGrid(object):
                 (self._model_name, "disv", "dimensions", "ncpl")
             ].get_data()
         elif self.grid_type() == DiscretizationType.DISU:
-            except_str = (
-                'ERROR: Model "{}" is unstructured and does not '
-                "have a consistent number of cells per "
-                "layer.".format(self._model_name)
-            )
-            print(except_str)
-            raise MFGridException(except_str)
+            return self._simulation_data.mfdata[
+                (self._model_name, "disu", "dimensions", "nodes")
+            ].get_data()
 
     def num_layers(self):
         if self.grid_type() == DiscretizationType.DIS:

@@ -1,0 +1,11 @@
+# --------------------- gwt ic griddata ---------------------
+
+block griddata
+name strt
+type double precision
+shape (nodes)
+reader readarray
+layered true
+longname starting concentration
+description is the initial (starting) concentration---that is, concentration at the beginning of the GWT Model simulation.  STRT must be specified for all GWT Model simulations. One value is read for every model cell.
+default_value 0.0

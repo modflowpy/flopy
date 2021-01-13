@@ -29,8 +29,7 @@ class Grid(object):
     Parameters
     ----------
     grid_type : enumeration
-        type of model grid ('structured', 'vertex_layered',
-        'vertex_unlayered')
+        type of model grid ('structured', 'vertex', 'unstructured')
     top : ndarray(np.float)
         top elevations of cells in topmost layer
     botm : ndarray(np.float)
@@ -54,8 +53,7 @@ class Grid(object):
     Attributes
     ----------
     grid_type : enumeration
-        type of model grid ('structured', 'vertex_layered',
-        'vertex_unlayered')
+        type of model grid ('structured', 'vertex', 'unstructured')
     top : ndarray(np.float)
         top elevations of cells in topmost layer
     botm : ndarray(np.float)
@@ -322,9 +320,17 @@ class Grid(object):
     def xcellcenters(self):
         return self.xyzcellcenters[0]
 
+    def get_xcellcenters_for_layer(self, layer):
+        # default is not layer dependent; must override for unstructured grid
+        return self.xcellcenters
+
     @property
     def ycellcenters(self):
         return self.xyzcellcenters[1]
+
+    def get_ycellcenters_for_layer(self, layer):
+        # default is not layer dependent; must override for unstructured grid
+        return self.ycellcenters
 
     @property
     def zcellcenters(self):
@@ -341,9 +347,17 @@ class Grid(object):
     def xvertices(self):
         return self.xyzvertices[0]
 
+    def get_xvertices_for_layer(self, layer):
+        # default is not layer dependent; must override for unstructured grid
+        return self.xvertices
+
     @property
     def yvertices(self):
         return self.xyzvertices[1]
+
+    def get_yvertices_for_layer(self, layer):
+        # default is not layer dependent; must override for unstructured grid
+        return self.yvertices
 
     @property
     def zvertices(self):
@@ -358,6 +372,35 @@ class Grid(object):
     #    raise NotImplementedError(
     #        'must define indices in child '
     #        'class to use this base class')
+
+    def get_plottable_layer_array(self, plotarray, layer):
+        raise NotImplementedError(
+            "must define get_plottable_layer_array in child class"
+        )
+
+    def get_number_plottable_layers(self, a):
+        raise NotImplementedError(
+            "must define get_number_plottable_layers in child class"
+        )
+
+    def get_plottable_layer_shape(self, layer=None):
+        """
+        Determine the shape that is required in order to plot a 2d array for
+        this grid.  For a regular MODFLOW grid, this is (nrow, ncol).  For
+        a vertex grid, this is (ncpl,) and for an unstructured grid this is
+        (ncpl[layer],).
+
+        Parameters
+        ----------
+        layer : int
+            Has no effect unless grid changes by layer
+
+        Returns
+        -------
+        shape : tuple
+            required shape of array to plot for a layer
+        """
+        return self.shape[1:]
 
     def get_coords(self, x, y):
         """
@@ -597,7 +640,9 @@ class Grid(object):
         if self.top is not None and self.botm is not None:
             zcenters = []
             top_3d = np.expand_dims(self.top, 0)
-            zbdryelevs = np.concatenate((top_3d, self.botm), axis=0)
+            zbdryelevs = np.concatenate(
+                (top_3d, np.atleast_2d(self.botm)), axis=0
+            )
 
             for ix in range(1, len(zbdryelevs)):
                 zcenters.append((zbdryelevs[ix - 1] + zbdryelevs[ix]) / 2.0)
@@ -605,3 +650,18 @@ class Grid(object):
             zbdryelevs = None
             zcenters = None
         return zbdryelevs, zcenters
+
+    # Exporting
+    def write_shapefile(self, filename="grid.shp", epsg=None, prj=None):
+        """
+        Write a shapefile of the grid with just the row and column attributes.
+
+        """
+        from ..export.shapefile_utils import write_grid_shapefile
+
+        if epsg is None and prj is None:
+            epsg = self.epsg
+        write_grid_shapefile(
+            filename, self, array_dict={}, nan_val=-1.0e9, epsg=epsg, prj=prj
+        )
+        return

@@ -2,6 +2,34 @@ import copy
 import numpy as np
 from .grid import Grid, CachedData
 
+try:
+    from numpy.lib import NumpyVersion
+
+    numpy115 = NumpyVersion(np.__version__) >= "1.15.0"
+except ImportError:
+    numpy115 = False
+
+if not numpy115:
+
+    def flip_numpy115(m, axis=None):
+        """Provide same behavior for np.flip since numpy 1.15.0."""
+        import numpy.core.numeric as _nx
+        from numpy.core.numeric import asarray
+
+        if not hasattr(m, "ndim"):
+            m = asarray(m)
+        if axis is None:
+            indexer = (np.s_[::-1],) * m.ndim
+        else:
+            axis = _nx.normalize_axis_tuple(axis, m.ndim)
+            indexer = [np.s_[:]] * m.ndim
+            for ax in axis:
+                indexer[ax] = np.s_[::-1]
+            indexer = tuple(indexer)
+        return m[indexer]
+
+    np.flip = flip_numpy115
+
 
 def array_at_verts_basic2d(a):
     """
@@ -852,19 +880,6 @@ class StructuredGrid(Grid):
         cls.set_coord_info(xoff=xll, yoff=yll, angrot=rot)
         return cls
 
-    # Exporting
-    def write_shapefile(self, filename="grid.shp", epsg=None, prj=None):
-        """
-        Write a shapefile of the grid with just the row and column attributes.
-        """
-        from ..export.shapefile_utils import write_grid_shapefile
-
-        if epsg is None and prj is None:
-            epsg = self.epsg
-        write_grid_shapefile(
-            filename, self, array_dict={}, nan_val=-1.0e9, epsg=epsg, prj=prj
-        )
-
     def array_at_verts_basic(self, a):
         """
         Computes values at cell vertices using neighbor averaging.
@@ -1354,6 +1369,51 @@ class StructuredGrid(Grid):
                 afaces[inactive_faces] = np.nan
 
         return afaces
+
+    def get_number_plottable_layers(self, a):
+        """
+        Calculate and return the number of 2d plottable arrays that can be
+        obtained from the array passed (a)
+
+        Parameters
+        ----------
+        a : ndarray
+            array to check for plottable layers
+
+        Returns
+        -------
+        nplottable : int
+            number of plottable layers
+
+        """
+        nplottable = 0
+        required_shape = self.get_plottable_layer_shape()
+        if a.shape == required_shape:
+            nplottable = 1
+        else:
+            nplottable = a.size / self.nrow / self.ncol
+            nplottable = int(nplottable)
+        return nplottable
+
+    def get_plottable_layer_array(self, a, layer):
+        # ensure plotarray is 2d and correct shape
+        required_shape = self.get_plottable_layer_shape()
+        if a.ndim == 3:
+            plotarray = a[layer, :, :]
+        elif a.ndim == 2:
+            plotarray = a
+        elif a.ndim == 1:
+            plotarray = a
+            if plotarray.shape[0] == self.nrow * self.ncol:
+                plotarray = plotarray.reshape(required_shape)
+            elif plotarray.shape[0] == self.nnodes:
+                plotarray = plotarray.reshape(self.shape)
+                plotarray = plotarray[layer, :, :]
+        else:
+            raise Exception("Array to plot must be of dimension 1, 2, or 3")
+        msg = "{} /= {}".format(plotarray.shape, required_shape)
+        assert plotarray.shape == required_shape, msg
+        return plotarray
 
 
 if __name__ == "__main__":

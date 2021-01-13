@@ -320,7 +320,9 @@ class MFModel(PackageContainer, ModelInterface):
             )
         elif self.get_grid_type() == DiscretizationType.DISU:
             dis = self.get_package("disu")
-            return UnstructuredGrid(nodes=dis.nodes.get_data())
+            nodes = dis.nodes.get_data()
+            ncpl = np.array([nodes], dtype=np.int)
+            return UnstructuredGrid(ncpl=ncpl)
 
     @property
     def modelgrid(self):
@@ -401,6 +403,14 @@ class MFModel(PackageContainer, ModelInterface):
             if not hasattr(dis, "_init_complete"):
                 # disu package has not yet been fully initialized
                 return self._modelgrid
+
+            # check to see if ncpl can be constructed from ihc array,
+            # otherwise set ncpl equal to [nodes]
+            ihc = dis.ihc.array
+            iac = dis.iac.array
+            ncpl = UnstructuredGrid.ncpl_from_ihc(ihc, iac)
+            if ncpl is None:
+                ncpl = np.array([dis.nodes.get_data()], dtype=np.int)
             cell2d = dis.cell2d.array
             idomain = np.ones(dis.nodes.array, np.int32)
             if cell2d is None:
@@ -442,12 +452,12 @@ class MFModel(PackageContainer, ModelInterface):
                 botm=dis.bot.array,
                 idomain=idomain,
                 lenuni=dis.length_units.array,
+                ncpl=ncpl,
                 proj4=self._modelgrid.proj4,
                 epsg=self._modelgrid.epsg,
                 xoff=self._modelgrid.xoffset,
                 yoff=self._modelgrid.yoffset,
                 angrot=self._modelgrid.angrot,
-                nodes=dis.nodes.get_data(),
             )
         elif self.get_grid_type() == DiscretizationType.DISL:
             dis = self.get_package("disl")
