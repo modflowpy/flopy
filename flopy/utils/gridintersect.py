@@ -786,7 +786,7 @@ class GridIntersect:
                             self.mfgrid.angrot_radians,
                             inverse=False,
                         )
-                        v_realworld.append([rx, ry])
+                        v_realworld.append(list(zip(rx, ry)))
                     ixs_realworld = []
                     for ix in ixs:
                         ix_realworld = rotate(
@@ -828,7 +828,7 @@ class GridIntersect:
                         self.mfgrid.angrot_radians,
                         inverse=False,
                     )
-                    v_realworld.append([rx, ry])
+                    v_realworld.append(list(zip(rx, ry)))
                 vertices = v_realworld
 
                 ix_shapes_realworld = []
