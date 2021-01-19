@@ -88,6 +88,9 @@ jobs:
     - name: Checkout flopy repo
       uses:  actions/checkout@v2.3.4
 
+    - name: Get branch name
+      uses: nelonoel/branch-name@v1.0.1
+
     - name: Cache Miniconda
       uses: actions/cache@v2.1.0
       env:
@@ -130,6 +133,27 @@ jobs:
         pip install https://github.com/modflowpy/pymake/zipball/master
         pip install xmipy
         pip install .
+
+    - name: Setup symbolic link to gfortran on Linux
+      if: runner.os == 'Linux'
+      run: |
+        sudo ln -fs /usr/bin/gfortran-10 /usr/local/bin/gfortran
+        sudo ln -fs /usr/bin/gcc-10 /usr/local/bin/gcc
+        sudo ln -fs /usr/bin/g++-10 /usr/local/bin/g++
+
+    - name: Setup symbolic link to gfortran on macOS
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        sudo ln -fs /usr/local/bin/gfortran-10 /usr/local/bin/gfortran
+        sudo ln -fs /usr/local/bin/gcc-10 /usr/local/bin/gcc
+        sudo ln -fs /usr/local/bin/g++-10 /usr/local/bin/g++
+
+    - name: Print GNU compiler versions
+      run: |
+        gfortran --version
+        gcc --version
+        g++ --version
 
     - name: Download executables needed for tests
       shell: bash -l {0}
