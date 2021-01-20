@@ -59,25 +59,31 @@ def get_branch():
             branch = "develop"
 
     if branch is None:
-        try:
-            # determine current branch
-            b = subprocess.Popen(
-                ("git", "status"),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-            ).communicate()[0]
-            if isinstance(b, bytes):
-                b = b.decode("utf-8")
+        if is_CI:
+            github_ref = os.getenv("GITHUB_REF")
+            branch = os.path.basename(os.path.normpath(github_ref)).lower()
+        else:
+            try:
+                # determine current branch
+                b = subprocess.Popen(
+                    ("git", "status"),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                ).communicate()[0]
+                if isinstance(b, bytes):
+                    b = b.decode("utf-8")
 
-            for line in b.splitlines():
-                if "On branch" in line:
-                    branch = line.replace("On branch ", "").rstrip()
+                for line in b.splitlines():
+                    if "On branch" in line:
+                        branch = (
+                            line.replace("On branch ", "").rstrip().lower()
+                        )
 
-        except:
-            msg = "Could not determine current branch. Is git installed?"
-            raise ValueError(msg)
+            except:
+                msg = "Could not determine current branch. Is git installed?"
+                raise ValueError(msg)
 
-    return branch.lower()
+    return branch
 
 
 def cleanup():
