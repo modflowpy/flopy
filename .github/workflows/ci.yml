@@ -158,7 +158,9 @@ jobs:
     - name: Download executables needed for tests
       shell: bash -l {0}
       run: |
-        python ./autotest/get_exes.py
+        cd autotest
+        python get_exes.py
+        cd ..
 
     - name: Add executables directory to path
       shell: bash

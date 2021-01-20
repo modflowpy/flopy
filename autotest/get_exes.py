@@ -16,7 +16,7 @@ except:
     print("flopy is not installed...will not update flopy")
     flopy = None
 
-os.environ["CI"] = "1"
+# os.environ["CI"] = "1"
 
 # path where downloaded executables will be extracted
 exe_pth = "exe_download"
@@ -77,7 +77,7 @@ def get_branch():
             msg = "Could not determine current branch. Is git installed?"
             raise ValueError(msg)
 
-    return branch
+    return branch.lower()
 
 
 def cleanup():
@@ -119,8 +119,16 @@ def test_download_nightly_build():
     error_msg = "pymake not installed - cannot download executables"
     assert pymake is not None, error_msg
 
+    # get the current branch
+    branch = get_branch()
+    print("current branch: {}".format(branch))
+
+    # No need to replace MODFLOW 6 executables
+    if branch == "master":
+        print("No need to update MODFLOW 6 executables")
     # Replace MODFLOW 6 executables with the latest versions
-    if get_branch() != "master":
+    else:
+        print("Updating MODFLOW 6 executables from the nightly-build repo")
         platform = sys.platform.lower()
         if "linux" in platform:
             zip_file = "linux.zip"
@@ -142,7 +150,11 @@ def test_update_flopy():
     error_msg = "flopy not installed - cannot update flopy"
     assert flopy is not None, error_msg
 
-    if get_branch() != "master":
+    branch = get_branch()
+    if branch == "master":
+        print("No need to update flopy MODFLOW 6 classes")
+    else:
+        print("Update flopy MODFLOW 6 classes")
         flopy.mf6.utils.generate_classes(branch="develop", backup=False)
 
 
