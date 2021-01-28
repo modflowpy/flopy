@@ -456,15 +456,24 @@ class DataStorage(object):
                     if formal:
                         if self.layered:
                             data_str = "{}Layer_{}{{{}}}" "\n({})\n".format(
-                                data_str, index + 1, header, repr(storage)
+                                data_str,
+                                str(index + 1),
+                                header,
+                                repr(self.get_data((index,))),
                             )
                         else:
-                            data_str = "{}{{{}}}\n({})\n".format(
-                                data_str, header, repr(storage)
+                            data_str = "{}Layer_{}{{{}}}\n({})\n".format(
+                                data_str,
+                                str(index + 1),
+                                header,
+                                repr(self.get_data((index,))),
                             )
                     else:
-                        data_str = "{}{{{}}}\n({})\n".format(
-                            data_str, header, str(storage)
+                        data_str = "{}Layer_{}{{{}}}\n({})\n".format(
+                            data_str,
+                            str(index + 1),
+                            header,
+                            str(self.get_data((index,))),
                         )
             elif (
                 storage.data_storage_type == DataStorageType.internal_constant
