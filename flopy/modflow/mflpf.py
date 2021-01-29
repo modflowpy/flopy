@@ -39,6 +39,19 @@ class ModflowLpf(Package):
         to HNOFLO in the Basic Package, which is the value assigned to cells
         that are no-flow cells at the start of a model simulation.
         (default is -1.e30).
+    ikcflag : int
+        For mfusg unstructured models only. A flag indicating if hydraulic
+        conductivity or transmissivity information is input for each of the
+        cells or whether this information is directly input for the nodal
+        connections.
+        0: hydraulic conductivity or transmissivity values are input on a
+        cell-by-cell basis with inter-block hydraulic conductivity or
+        transmissivity value being computed as per the LAYAVG averaging scheme.
+        1: hydraulic conductivity or transmissivity values are read for the
+        connection between cells n and m.
+        -1: conductance values are read for the connection between cells n
+        and m.
+        (default is 0).
     laytyp : int or array of ints (nlay)
         Layer type, contains a flag for each layer that specifies the layer
         type.
@@ -193,6 +206,7 @@ class ModflowLpf(Package):
         laywet=0,
         ipakcb=None,
         hdry=-1e30,
+        ikcflag=0,
         iwdflg=0,
         wetfct=0.1,
         iwetit=1,
@@ -269,6 +283,7 @@ class ModflowLpf(Package):
             hdry  # Head in cells that are converted to dry during a simulation
         )
         self.nplpf = 0  # number of LPF parameters
+        self.ikcflag = ikcflag
         self.laytyp = Util2d(model, (nlay,), np.int32, laytyp, name="laytyp")
         self.layavg = Util2d(model, (nlay,), np.int32, layavg, name="layavg")
         self.chani = Util2d(model, (nlay,), np.float32, chani, name="chani")
@@ -396,12 +411,23 @@ class ModflowLpf(Package):
         # Item 0: text
         f.write("{}\n".format(self.heading))
 
-        # Item 1: IBCFCB, HDRY, NPLPF
-        f.write(
-            "{0:10d}{1:10.6G}{2:10d} {3:s}\n".format(
-                self.ipakcb, self.hdry, self.nplpf, self.options
+        # Item 1: IBCFCB, HDRY, NPLPF, <IKCFLAG>, OPTIONS
+        if self.parent.version == "mfusg" and self.parent.structured == False:
+            f.write(
+                "{0:10d}{1:10.6G}{2:10d}{3:10d} {4:s}\n".format(
+                    self.ipakcb,
+                    self.hdry,
+                    self.nplpf,
+                    self.ikcflag,
+                    self.options,
+                )
             )
-        )
+        else:
+            f.write(
+                "{0:10d}{1:10.6G}{2:10d} {3:s}\n".format(
+                    self.ipakcb, self.hdry, self.nplpf, self.options
+                )
+            )
         # LAYTYP array
         f.write(self.laytyp.string)
         # LAYAVG array

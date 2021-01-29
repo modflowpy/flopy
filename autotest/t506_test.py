@@ -340,6 +340,12 @@ def test_mfusg():
             plt.savefig(fname)
             plt.close('all')
 
+        # re-run with an LPF keyword specified. This would have thrown an error
+        # before the addition of ikcflag to mflpf.py (flopy 3.3.3 and earlier).
+        lpf = flopy.modflow.ModflowLpf(m, novfc = True)
+        m.write_input()
+        m.run_model()
+
 
 def test_disv_dot_plot():
     # load up the vertex example problem
