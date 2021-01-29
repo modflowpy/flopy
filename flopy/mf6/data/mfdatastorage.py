@@ -450,38 +450,52 @@ class DataStorage(object):
         data_str = ""
         # Assemble strings for internal array data
         for index, storage in enumerate(self.layer_storage.elements()):
+            if self.layered:
+                layer_str = "Layer_{}".format(str(index + 1))
+            else:
+                layer_str = ""
             if storage.data_storage_type == DataStorageType.internal_array:
                 if storage.internal_data is not None:
                     header = self._get_layer_header_str(index)
                     if formal:
                         if self.layered:
-                            data_str = "{}Layer_{}{{{}}}" "\n({})\n".format(
+                            data_str = "{}{}{{{}}}" "\n({})\n".format(
                                 data_str,
-                                str(index + 1),
+                                layer_str,
                                 header,
                                 repr(self.get_data((index,))),
                             )
                         else:
-                            data_str = "{}Layer_{}{{{}}}\n({})\n".format(
+                            data_str = "{}{}{{{}}}\n({})\n".format(
                                 data_str,
-                                str(index + 1),
+                                layer_str,
                                 header,
                                 repr(self.get_data((index,))),
                             )
                     else:
-                        data_str = "{}Layer_{}{{{}}}\n({})\n".format(
+                        data_str = "{}{}{{{}}}\n({})\n".format(
                             data_str,
-                            str(index + 1),
+                            layer_str,
                             header,
                             str(self.get_data((index,))),
                         )
             elif (
                 storage.data_storage_type == DataStorageType.internal_constant
             ):
-                if storage.data_const_value is not None:
-                    data_str = "{}{{{}}}" "\n".format(
-                        data_str, self._get_layer_header_str(index)
-                    )
+                if formal:
+                    if storage.data_const_value is not None:
+                        data_str = "{}{}{{{}}}" "\n".format(
+                            data_str,
+                            layer_str,
+                            self._get_layer_header_str(index),
+                        )
+                else:
+                    if storage.data_const_value is not None:
+                        data_str = "{}{}{{{}}}" "\n".format(
+                            data_str,
+                            layer_str,
+                            self._get_layer_header_str(index),
+                        )
         return data_str
 
     def _get_layer_header_str(self, layer):
