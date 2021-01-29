@@ -39,19 +39,6 @@ class ModflowLpf(Package):
         to HNOFLO in the Basic Package, which is the value assigned to cells
         that are no-flow cells at the start of a model simulation.
         (default is -1.e30).
-    ikcflag : int
-        For mfusg unstructured models only. A flag indicating if hydraulic
-        conductivity or transmissivity information is input for each of the
-        cells or whether this information is directly input for the nodal
-        connections.
-        0: hydraulic conductivity or transmissivity values are input on a
-        cell-by-cell basis with inter-block hydraulic conductivity or
-        transmissivity value being computed as per the LAYAVG averaging scheme.
-        1: hydraulic conductivity or transmissivity values are read for the
-        connection between cells n and m.
-        -1: conductance values are read for the connection between cells n
-        and m.
-        (default is 0).
     laytyp : int or array of ints (nlay)
         Layer type, contains a flag for each layer that specifies the layer
         type.
@@ -206,7 +193,6 @@ class ModflowLpf(Package):
         laywet=0,
         ipakcb=None,
         hdry=-1e30,
-        ikcflag=0,
         iwdflg=0,
         wetfct=0.1,
         iwetit=1,
@@ -283,7 +269,7 @@ class ModflowLpf(Package):
             hdry  # Head in cells that are converted to dry during a simulation
         )
         self.nplpf = 0  # number of LPF parameters
-        self.ikcflag = ikcflag
+        self.ikcflag = 0  # 1 and -1 are not supported.
         self.laytyp = Util2d(model, (nlay,), np.int32, laytyp, name="laytyp")
         self.layavg = Util2d(model, (nlay,), np.int32, layavg, name="layavg")
         self.chani = Util2d(model, (nlay,), np.float32, chani, name="chani")
@@ -523,6 +509,10 @@ class ModflowLpf(Package):
             print("   loading IBCFCB, HDRY, NPLPF...")
         t = line_parse(line)
         ipakcb, hdry, nplpf = int(t[0]), float(t[1]), int(t[2])
+        item1_len = 3
+        if model.version == "mfusg" and model.structured == False:
+            ikcflag = int(t[3])
+            item1_len = 4
         # if ipakcb != 0:
         #    model.add_pop_key_list(ipakcb)
         #    ipakcb = 53
@@ -532,17 +522,17 @@ class ModflowLpf(Package):
         thickstrt = False
         nocvcorrection = False
         novfc = False
-        if len(t) > 3:
-            for k in range(3, len(t)):
+        if len(t) > item1_len:
+            for k in range(item1_len, len(t)):
                 if "STORAGECOEFFICIENT" in t[k].upper():
                     storagecoefficient = True
-                elif "CONSTANTCV" in t[k].upper():
+                if "CONSTANTCV" in t[k].upper():
                     constantcv = True
-                elif "THICKSTRT" in t[k].upper():
+                if "THICKSTRT" in t[k].upper():
                     thickstrt = True
-                elif "NOCVCORRECTION" in t[k].upper():
+                if "NOCVCORRECTION" in t[k].upper():
                     nocvcorrection = True
-                elif "NOVFC" in t[k].upper():
+                if "NOVFC" in t[k].upper():
                     novfc = True
 
         # LAYTYP array
@@ -773,6 +763,7 @@ class ModflowLpf(Package):
             constantcv=constantcv,
             thickstrt=thickstrt,
             novfc=novfc,
+            nocvcorrection=nocvcorrection,
             unitnumber=unitnumber,
             filenames=filenames,
         )
