@@ -340,6 +340,24 @@ def test_mfusg():
             plt.savefig(fname)
             plt.close('all')
 
+        # re-run with an LPF keyword specified. This would have thrown an error
+        # before the addition of ikcflag to mflpf.py (flopy 3.3.3 and earlier).
+        lpf = flopy.modflow.ModflowLpf(m, novfc=True, nocvcorrection=True)
+        m.write_input()
+        m.run_model()
+
+        # also test load of unstructured LPF with keywords
+        lpf2 = flopy.modflow.ModflowLpf.load(
+            os.path.join(ws, name + ".lpf"), m, check=False
+        )
+        msg = "NOCVCORRECTION and NOVFC should be in lpf options but at least one is not."
+        assert (
+            "NOVFC" in lpf2.options.upper()
+            and "NOCVCORRECTION" in lpf2.options.upper()
+        ), msg
+            
+    return
+
 
 def test_disv_dot_plot():
     # load up the vertex example problem
