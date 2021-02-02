@@ -244,8 +244,8 @@ class Mt3dSsm(Package):
 
         if mxss is None and mf is None:
             wmsg = (
-                "SSM Package: mxss is None and modflowmodel is None.  "
-                + "Cannot calculate max number of sources and sinks.  "
+                "SSM Package: mxss is None and modflowmodel is None. "
+                + "Cannot calculate max number of sources and sinks. "
                 + "Estimating from stress_period_data. "
             )
             warnings.warn(

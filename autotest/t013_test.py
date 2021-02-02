@@ -103,13 +103,20 @@ def test_mt3d_create_woutmfmodel():
 
         ssm = flopy.mt3d.Mt3dSsm(mt)
 
-        assert len(w) == 1, "Number of warnings = {} instead of 1".format(
-            len(w)
+        wrn_msg = "mxss is None and modflowmodel is None."
+        if len(w) > 0:
+            print("Number of warnings: {}".format(len(w)))
+            ipos = -1
+            for idx, wm in enumerate(w):
+                print(wm.message)
+                if wrn_msg in str(wm.message):
+                    ipos = idx
+                    break
+
+        assert ipos >= 0, "'{}' warning message not issued".format(wrn_msg)
+        assert w[ipos].category == UserWarning, "Warning category: {}".format(
+            w[0].category
         )
-        assert w[0].category == UserWarning, "Warning category: {}".format(
-            w[0]
-        )
-        assert "mxss is None and modflowmodel is None." in str(w[0].message)
 
     gcg = flopy.mt3d.Mt3dRct(mt)
     rct = flopy.mt3d.Mt3dGcg(mt)
