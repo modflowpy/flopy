@@ -205,7 +205,8 @@ class Mt3dSsm(Package):
                     "Deprecation Warning: Keyword argument '"
                     + key
                     + "' no longer supported. Use "
-                    + "'stress_period_data' instead."
+                    + "'stress_period_data' instead.",
+                    category=UserWarning,
                 )
 
         # Set dimensions
@@ -242,10 +243,14 @@ class Mt3dSsm(Package):
             )
 
         if mxss is None and mf is None:
+            wmsg = (
+                "SSM Package: mxss is None and modflowmodel is None.  "
+                + "Cannot calculate max number of sources and sinks.  "
+                + "Estimating from stress_period_data. "
+            )
             warnings.warn(
-                "SSM Package: mxss is None and modflowmodel is "
-                + "None.  Cannot calculate max number of sources "
-                + "and sinks.  Estimating from stress_period_data. "
+                wmsg,
+                category=UserWarning,
             )
 
         if mxss is None:
