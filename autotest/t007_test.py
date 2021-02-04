@@ -1403,17 +1403,23 @@ def test_get_vertices():
 
 
 def test_get_lrc_get_node():
-    node = 50
+    nlay, nrow, ncol = 3, 4, 5
     ml = flopy.modflow.Modflow()
-    dis = flopy.modflow.ModflowDis(ml, nlay=1, nrow=1, ncol=201, delr=10,
-                                   delc=1, top=50, botm=0)
-    lrc = dis.get_lrc([node, ])
-    if lrc[0] != (0, 0, 50):
-        raise AssertionError("get_lrc() is not returning zero based (k, i, j)")
-    nodes = dis.get_node(lrc)
-    if nodes[0] != node:
-        raise AssertionError('get_node() is not returning zero based node')
-
+    dis = flopy.modflow.ModflowDis(ml, nlay=nlay, nrow=nrow, ncol=ncol,
+                                   top=50, botm=[0, -1, -2])
+    nodes = list(range(nlay * nrow * ncol))
+    indices = np.indices((nlay, nrow, ncol))
+    layers = indices[0].flatten()
+    rows = indices[1].flatten()
+    cols = indices[2].flatten()
+    for node, (l, r, c) in enumerate(zip(layers, rows, cols)):
+        # ensure get_lrc returns zero-based layer row col
+        lrc = dis.get_lrc(node)[0]
+        assert lrc == (l, r, c), "get_lrc() returned {}, expecting {}".format(lrc, (l, r, c))
+        # ensure get_node returns zero-based node number
+        n = dis.get_node((l, r, c))[0]
+        assert node == n, "get_node() returned {}, expecting {}".format(n, node)
+    return
 
 def test_vertex_model_dot_plot():
     import matplotlib.pyplot as plt
@@ -1681,6 +1687,7 @@ def main():
     # test_mt_modelgrid()
     # test_rotation()
     # test_model_dot_plot()
+    test_get_lrc_get_node()
     # test_vertex_model_dot_plot()
     # test_sr_with_Map()
     # test_modelgrid_with_PlotMapView()
@@ -1704,9 +1711,9 @@ def main():
     # test_export_contourf()
     # test_sr()
     # test_shapefile_polygon_closed()
-    test_mapview_plot_bc()
-    test_crosssection_plot_bc()
-    test_output_helper_shapefile_export()
+    # test_mapview_plot_bc()
+    # test_crosssection_plot_bc()
+    # test_output_helper_shapefile_export()
 
 if __name__ == '__main__':
 
