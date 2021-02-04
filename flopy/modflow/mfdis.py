@@ -553,7 +553,7 @@ class ModflowDis(Package):
 
     def get_lrc(self, nodes):
         """
-        Get layer, row, column from a list of zero based
+        Get zero-based layer, row, column from a list of zero-based
         MODFLOW node numbers.
 
         Returns
@@ -566,20 +566,16 @@ class ModflowDis(Package):
         nrc = self.nrow * self.ncol
         v = []
         for node in nodes:
-            k = int((node + 1) / nrc)
-            if (k * nrc) < node:
-                k += 1
-            ij = int(node - (k - 1) * nrc)
+            k = int(node / nrc)
+            ij = node - k * nrc
             i = int(ij / self.ncol)
-            if (i * self.ncol) < ij:
-                i += 1
-            j = ij - (i - 1) * self.ncol
-            v.append((k - 1, i - 1, j))
+            j = ij - i * self.ncol
+            v.append((k, i, j))
         return v
 
     def get_node(self, lrc_list):
         """
-        Get node number from a list of zero based MODFLOW
+        Get zero-based node number from a list of zero-based MODFLOW
         layer, row, column tuples.
 
         Returns
@@ -592,7 +588,7 @@ class ModflowDis(Package):
         nrc = self.nrow * self.ncol
         v = []
         for [k, i, j] in lrc_list:
-            node = int(((k) * nrc) + ((i) * self.ncol) + j)
+            node = int((k * nrc) + (i * self.ncol) + j)
             v.append(node)
         return v
 
