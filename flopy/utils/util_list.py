@@ -462,13 +462,13 @@ class MfList(DataInterface, DataListInterface):
         Parameters
         ----------
         squeeze : bool
-            Reduce number of columns in dataframe to only include
+            Reduce number of rows in dataframe to only include
             stress periods where a variable changes.
 
         Returns
         -------
         df : dataframe
-            Dataframe of shape nrow = ncells, ncol = nvar x nper. If
+            Dataframe of shape nrow = nper x ncells, ncol = nvar. If
             the squeeze option is chosen, nper is the number of
             stress periods where at least one cells is different,
             otherwise it is equal to the number of keys in MfList.data.
@@ -485,7 +485,7 @@ class MfList(DataInterface, DataListInterface):
             raise ImportError(msg)
 
         # make a dataframe of all data for all stress periods
-        names = ["k", "i", "j"]
+        names = ["per", "k", "i", "j"]
         if "MNW2" in self.package.name:
             names += ["wellid"]
 
@@ -499,7 +499,7 @@ class MfList(DataInterface, DataListInterface):
                 break
 
         # create list of dataframes for each stress period
-        # each with index of k, i, j
+        # each with index of per, k, i, j
         dfs = []
         for per in self.data.keys():
             recs = self.data[per]
@@ -507,31 +507,23 @@ class MfList(DataInterface, DataListInterface):
                 # add an empty dataframe if a stress period is
                 # empty (e.g. no pumping during a predevelopment
                 # period)
-                columns = names + list(
-                    ["{}{}".format(c, per) for c in varnames]
-                )
+                columns = names + varnames
                 dfi = pd.DataFrame(data=None, columns=columns)
                 dfi = dfi.set_index(names)
             else:
                 dfi = pd.DataFrame.from_records(recs)
-                dfi = dfi.set_index(
-                    names, append=True
-                )  # keep first index for uniqueness
-                dfi.columns = list(["{}{}".format(c, per) for c in varnames])
+                dfi.loc[:, "per"] = per
+                dfi = dfi.set_index(names)
             dfs.append(dfi)
-        df = pd.concat(dfs, axis=1)
-        df = df.reset_index(level=0, drop=True)  # remove first index
+        df = pd.concat(dfs, axis=0)
         if squeeze:
-            keep = []
-            for var in varnames:
-                diffcols = list([n for n in df.columns if var in n])
-                diff = df[diffcols].fillna(0).diff(axis=1)
-                diff[
-                    "{}0".format(var)
-                ] = 1  # always return the first stress period
-                changed = diff.sum(axis=0) != 0
-                keep.append(df.loc[:, changed.index[changed]])
-            df = pd.concat(keep, axis=1)
+            changed = (df
+                .groupby(level=["k", "i", "j"])
+                .diff()
+                .ne(0.)
+                .any(axis=1)
+                )
+            df = df.loc[changed]
         df = df.reset_index()
         df.insert(len(names), "node", df.i * self._model.ncol + df.j)
         return df
