@@ -58,15 +58,17 @@ class UnstructuredGrid(Grid):
     This class handles spatial representation of unstructured grids.  It is
     based on the concept of being able to support multiple model layers that
     may have a different number of cells in each layer.  The array ncpl is of
-    size nlay and and its sum must equal nodes.  If the grid_varies_by_layer
-    flag is set to true, then the iverts array must be of size ncpl[0] and all
-    values in the ncpl array must be equal to nodes / nlay.  The xcenters and
-    ycenters arrays must also be of size ncpl[0].  This makes it
-    possible to efficiently store spatial grid information for multiple layers.
+    size nlay and and its sum must equal nodes.  If the length of iverts is
+    equal to ncpl[0] and the number of cells per layer is the same for each
+    layer, then it is assumed that the grid does not vary by layer.  In this
+    case, the xcenters and ycenters arrays must also be of size ncpl[0].
+    This makes it possible to efficiently store spatial grid information
+    for multiple layers.
 
     If the spatial grid is different for each model layer, then the
-    grid_varies_by_layer flag should be false, and iverts must be of size
-    nodes. The arrays for xcenters and ycenters must also be of size nodes.
+    grid_varies_by_layer flag will automatically be set to false, and iverts
+    must be of size nodes. The arrays for xcenters and ycenters must also
+    be of size nodes.
 
     """
 

@@ -1450,7 +1450,7 @@ class Gridgen(object):
 
     def get_gridprops_disu6(self, repair_asymmetry=True):
         """
-        Get a dictionary of information needed to create a MODFLOW-USG DISU
+        Get a dictionary of information needed to create a MODFLOW 6 DISU
         Package.  The returned dictionary can be unpacked directly into the
         ModflowGwfdisu constructor.
 

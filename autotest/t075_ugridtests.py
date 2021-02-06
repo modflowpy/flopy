@@ -5,8 +5,9 @@ Unstructured grid tests
 
 import os
 import numpy as np
-from flopy.discretization import UnstructuredGrid
+from flopy.discretization import UnstructuredGrid, VertexGrid
 from flopy.utils.triangle import Triangle
+from flopy.utils.voronoi import VoronoiGrid
 
 tpth = os.path.join("temp", "t075")
 if not os.path.isdir(tpth):
@@ -235,6 +236,32 @@ def test_triangle_unstructured_grid():
     return
 
 
+def test_voronoi_vertex_grid():
+    xmin = 0.0
+    xmax = 2.0
+    ymin = 0.0
+    ymax = 1.0
+    area_max = 0.05
+    tri = Triangle(maximum_area=area_max, angle=30, model_ws=tpth)
+    poly = np.array(((xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)))
+    tri.add_polygon(poly)
+    tri.build(verbose=False)
+
+    # create vor object and VertexGrid
+    vor = VoronoiGrid(tri.verts)
+    gridprops = vor.get_gridprops_vertexgrid()
+    vgrid = VertexGrid(**gridprops, nlay=1)
+    assert vgrid.is_valid
+
+    # arguments for creating a mf6 disv package
+    gridprops = vor.get_disv_gridprops()
+    assert gridprops["ncpl"] == 43
+    assert gridprops["nvert"] == 83
+    assert len(gridprops["vertices"]) == 83
+    assert len(gridprops["cell2d"]) == 43
+    return
+
+
 if __name__ == "__main__":
     test_unstructured_grid_shell()
     test_unstructured_grid_dimensions()
@@ -243,3 +270,4 @@ if __name__ == "__main__":
     test_loading_argus_meshes()
     test_create_unstructured_grid_from_verts()
     test_triangle_unstructured_grid()
+    test_voronoi_vertex_grid()
