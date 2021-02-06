@@ -517,12 +517,9 @@ class MfList(DataInterface, DataListInterface):
             dfs.append(dfi)
         df = pd.concat(dfs, axis=0)
         if squeeze:
-            changed = (df
-                .groupby(level=["k", "i", "j"])
-                .diff()
-                .ne(0.)
-                .any(axis=1)
-                )
+            changed = (
+                df.groupby(level=["k", "i", "j"]).diff().ne(0.0).any(axis=1)
+            )
             df = df.loc[changed]
         df = df.reset_index()
         df.insert(len(names), "node", df.i * self._model.ncol + df.j)
