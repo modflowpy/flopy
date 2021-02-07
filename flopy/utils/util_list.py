@@ -523,7 +523,14 @@ class MfList(DataInterface, DataListInterface):
             df = df.iloc[changed.values, :]
         df = df.reset_index()
         df.loc[:, "node"] = df.loc[:, "i"] * self._model.ncol + df.loc[:, "j"]
-        df = df.loc[:, names + ["node",] + [v for v in varnames if not v == "node"]]
+        df = df.loc[
+            :,
+            names
+            + [
+                "node",
+            ]
+            + [v for v in varnames if not v == "node"],
+        ]
         return df
 
     def add_record(self, kper, index, values):
