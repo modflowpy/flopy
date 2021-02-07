@@ -520,9 +520,10 @@ class MfList(DataInterface, DataListInterface):
             changed = (
                 df.groupby(level=["k", "i", "j"]).diff().ne(0.0).any(axis=1)
             )
-            df = df.loc[changed]
+            df = df.iloc[changed.values, :]
         df = df.reset_index()
-        df.insert(len(names), "node", df.i * self._model.ncol + df.j)
+        df.loc[:, "node"] = df.loc[:, "i"] * self._model.ncol + df.loc[:, "j"]
+        df = df.loc[:, names + ["node",] + [v for v in varnames if not v == "node"]]
         return df
 
     def add_record(self, kper, index, values):

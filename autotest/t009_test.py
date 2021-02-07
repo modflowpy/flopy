@@ -318,13 +318,13 @@ def test_export():
     crds = np.array(list(ra.geometry[2].coords))
     assert np.array_equal(crds, np.array([[2.5,  4.5], [3.5,  5.5]]))
     ra = shp2recarray(os.path.join(outpath, 'sfr.shp'))
-    assert ra.iseg0.sum() == sfr.reach_data.iseg.sum()
-    assert ra.ireach0.sum() == sfr.reach_data.ireach.sum()
+    assert ra.iseg.sum() == sfr.reach_data.iseg.sum()
+    assert ra.ireach.sum() == sfr.reach_data.ireach.sum()
     y = np.concatenate([np.array(g.exterior)[:, 1] for g in ra.geometry])
     x = np.concatenate([np.array(g.exterior)[:, 0] for g in ra.geometry])
 
     assert (x.min(), x.max(), y.min(), y.max()) == m.modelgrid.extent
-    assert ra[(ra.iseg0 == 2) & (ra.ireach0 == 1)]['geometry'][0].bounds \
+    assert ra[(ra.iseg == 2) & (ra.ireach == 1)]['geometry'][0].bounds \
         == (6.0, 2.0, 7.0, 3.0)
 
 
