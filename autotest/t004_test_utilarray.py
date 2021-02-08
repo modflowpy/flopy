@@ -798,26 +798,14 @@ def test_mflist():
     }
     wel5 = flopy.modflow.ModflowWel(ml, stress_period_data=sp_data4)
     df = wel5.stress_period_data.get_dataframe()
-    df = df.groupby(["per", "i", "j", "k"]).sum()
+    df = df.groupby(["per", "k", "i", "j"]).sum()
     assert df.loc[0, "flux"].sum() == 1.0
     assert df.loc[1, "flux"].sum() == 9.0
     assert (
-        df.loc[
-            df.apply(
-                lambda x: x.per == 2 and x.k == 1 and x.i == 1 and x.j == 3, axis=1
-            ),
-            "flux",
-        ].values
-        == 9.0
-    )
+        df.loc[(2, 1, 1, 3), "flux"] == 9.0
+        )
     assert (
-        df.loc[
-            df.apply(
-                lambda x: x.per == 2 and x.k == 1 and x.i == 2 and x.j == 4, axis=1
-            ),
-            "flux",
-        ].values
-        == 16.0
+        df.loc[(2, 1, 2, 4), "flux"] == 16.0
     )
 
 
