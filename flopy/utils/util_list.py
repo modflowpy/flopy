@@ -1143,12 +1143,12 @@ class MfList(DataInterface, DataListInterface):
         for name, arr in arrays.items():
             if unstructured:
                 cnt = np.zeros(
-                    (self._model.nlay * self._model.ncpl,), dtype=np.float
+                    (self._model.nlay * self._model.ncpl,), dtype=float
                 )
             else:
                 cnt = np.zeros(
                     (self._model.nlay, self._model.nrow, self._model.ncol),
-                    dtype=np.float,
+                    dtype=float,
                 )
             # print(name,kper)
             for rec in sarr:

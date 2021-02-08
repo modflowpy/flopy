@@ -192,7 +192,7 @@ def write_grid_shapefile(
         names = enforce_10ch_limit(names)
 
     # flag nan values and explicitly set the dtypes
-    if at.dtype in [np.float, np.float32, np.float64]:
+    if at.dtype in [float, np.float32, np.float64]:
         at[np.isnan(at)] = nan_val
     at = np.array([tuple(i) for i in at], dtype=dtypes)
 
@@ -490,12 +490,12 @@ def get_pyshp_field_info(dtypename):
 def get_pyshp_field_dtypes(code):
     """Returns a numpy dtype for a pyshp field type."""
     dtypes = {
-        "N": np.int,
-        "F": np.float,
-        "L": np.bool,
-        "C": np.object,
+        "N": int,
+        "F": float,
+        "L": bool,
+        "C": object,
     }
-    return dtypes.get(code, np.object)
+    return dtypes.get(code, object)
 
 
 def shp2recarray(shpname):
@@ -524,7 +524,7 @@ def shp2recarray(shpname):
     records = [
         tuple(r) + (geoms[i],) for i, r in enumerate(sfobj.iterRecords())
     ]
-    dtype += [("geometry", np.object)]
+    dtype += [("geometry", object)]
 
     recarray = np.array(records, dtype=dtype).view(np.recarray)
     return recarray

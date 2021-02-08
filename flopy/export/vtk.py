@@ -1070,12 +1070,12 @@ class Vtk(object):
         """
         # build 1d index array
         shape1d = self.shape[0] * self.shape[1] * self.shape[2]
-        actwcells1d = np.zeros(shape1d, dtype=np.int)
+        actwcells1d = np.zeros(shape1d, dtype=int)
         if self.has_point_data:
             shape1d_verts = (
                 self.shape_verts[0] * self.shape_verts[1] * self.shape_verts[2]
             )
-            actwcells1d_verts = np.zeros(shape1d_verts, dtype=np.int)
+            actwcells1d_verts = np.zeros(shape1d_verts, dtype=int)
 
         # loop through arrays
         for a in self.arrays.values():

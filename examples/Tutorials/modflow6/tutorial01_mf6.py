@@ -224,7 +224,7 @@ plt.clabel(c, fmt="%1.1f")
 # Before we start we will create a MODFLOW-2005 ibound array to use to plot
 # the locations of the constant heads.
 
-ibd = np.ones((Nlay, N, N), dtype=np.int)
+ibd = np.ones((Nlay, N, N), dtype=int)
 for k, i, j in ra["cellid"]:
     ibd[k, i, j] = -1
 

@@ -321,7 +321,7 @@ class PlotMapView(object):
 
             ibound = self.mg.idomain
 
-        plotarray = np.zeros(ibound.shape, dtype=np.int)
+        plotarray = np.zeros(ibound.shape, dtype=int)
         idx1 = ibound == 0
         plotarray[idx1] = 1
         plotarray = np.ma.masked_equal(plotarray, 0)
@@ -373,7 +373,7 @@ class PlotMapView(object):
 
             ibound = self.mg.idomain
 
-        plotarray = np.zeros(ibound.shape, dtype=np.int)
+        plotarray = np.zeros(ibound.shape, dtype=int)
         idx1 = ibound == 0
         idx2 = ibound < 0
         plotarray[idx1] = 1
@@ -528,9 +528,9 @@ class PlotMapView(object):
             nlay = self.mg.nlay
 
         # Plot the list locations
-        plotarray = np.zeros(self.mg.shape, dtype=np.int)
+        plotarray = np.zeros(self.mg.shape, dtype=int)
         if plotAll:
-            pa = np.zeros(self.mg.shape[1:], dtype=np.int)
+            pa = np.zeros(self.mg.shape[1:], dtype=int)
             pa[tuple(idx[1:])] = 1
             for k in range(nlay):
                 plotarray[k] = pa.copy()
@@ -640,7 +640,7 @@ class PlotMapView(object):
             ncpl = kwargs.pop("ncpl")
             if isinstance(ncpl, int):
                 i = int(ncpl)
-                ncpl = np.ones((nlay,), dtype=np.int) * i
+                ncpl = np.ones((nlay,), dtype=int) * i
             elif isinstance(ncpl, list) or isinstance(ncpl, tuple):
                 ncpl = np.array(ncpl)
             i0 = 0
@@ -975,7 +975,7 @@ class PlotMapView(object):
                     laycbd = self.model.laycbd
 
             if laycbd is not None and 1 in laycbd:
-                active = np.ones((botm.shape[0],), dtype=np.int)
+                active = np.ones((botm.shape[0],), dtype=int)
                 kon = 0
                 for cbd in laycbd:
                     if cbd > 0:
@@ -987,7 +987,7 @@ class PlotMapView(object):
             # thickness by setting laytyp to zeros
             if head is None or laytyp is None:
                 head = np.zeros(botm.shape, np.float32)
-                laytyp = np.zeros((botm.shape[0],), dtype=np.int)
+                laytyp = np.zeros((botm.shape[0],), dtype=int)
 
             # calculate the saturated thickness
             sat_thk = plotutil.PlotUtilities.saturated_thickness(
@@ -1010,7 +1010,7 @@ class PlotMapView(object):
 
             spdis = np.recarray(
                 (len(temp),),
-                dtype=[("node", np.int), ("qx", np.float), ("qy", np.float)],
+                dtype=[("node", int), ("qx", float), ("qy", float)],
             )
             for ix, tup in enumerate(temp):
                 spdis[ix] = tup

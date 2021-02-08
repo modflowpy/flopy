@@ -24,7 +24,7 @@ def cf_model(model, k, i, j, base, Q=-100):
         os.path.join(cf_pth, "DG.cbc"), precision="double"
     )
     kk = hedObj.get_kstpkper()
-    v = np.zeros((len(kk)), dtype=np.float)
+    v = np.zeros((len(kk)), dtype=float)
     h = hedObj.get_ts((k, i, j))
     for idx, kon in enumerate(kk):
         if h[idx, 1] == model.lpf.hdry:
@@ -116,7 +116,7 @@ fs.write(
 )
 
 # create array to store capture fraction data (subset of model)
-cf_array = np.empty((10, nrow2, ncol2), dtype=np.float)
+cf_array = np.empty((10, nrow2, ncol2), dtype=float)
 cf_array.fill(np.nan)
 
 # timer for capture fraction analysis

@@ -870,7 +870,7 @@ def test021_twri():
     )
 
     # build stress_period_data for drn package
-    conc = np.ones((15, 15), dtype=np.float) * 35.0
+    conc = np.ones((15, 15), dtype=float) * 35.0
     auxdata = {0: [6, conc]}
 
     stress_period_data = []

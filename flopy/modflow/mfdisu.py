@@ -157,8 +157,8 @@ class ModflowDisU(Package):
         Number of time steps in each stress period (default is 1).
     tsmult : float or array of floats (nper)
         Time step multiplier (default is 1.0).
-    steady : boolean or array of boolean (nper)
-        true or False indicating whether or not stress period is steady state
+    steady : bool or array of bool (nper)
+        True or False indicating whether or not stress period is steady state
         (default is True).
     extension : string
         Filename extension (default is 'dis')
@@ -443,7 +443,7 @@ class ModflowDisU(Package):
             model, (self.nper,), np.float32, tsmult, name="tsmult"
         )
         self.steady = Util2d(
-            model, (self.nper,), np.bool, steady, name="steady"
+            model, (self.nper,), bool, steady, name="steady"
         )
 
         self.itmuni_dict = {
@@ -550,7 +550,7 @@ class ModflowDisU(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
-        check : boolean
+        check : bool
             Check package data for common errors. (default False; not setup yet)
 
         Returns

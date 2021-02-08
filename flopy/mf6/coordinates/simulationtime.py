@@ -98,7 +98,7 @@ class SimulationTime(object):
     #        self.calendar_start_time = calendar_start_time
 
     #    def get_stress_period_array(self):
-    #        return np.arange(1, self.get_num_stress_periods(), 1, np.int)
+    #        return np.arange(1, self.get_num_stress_periods(), 1, int)
 
     def get_time_units(self):
         time_units = self.simdata.mfdata[

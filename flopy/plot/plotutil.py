@@ -1916,7 +1916,7 @@ class SwiConcentration:
             except:
                 sys.stdout.write("Error: DIS package not available.\n")
             self.__botm = np.zeros(
-                (dis.nlay + 1, dis.nrow, dis.ncol), np.float
+                (dis.nlay + 1, dis.nrow, dis.ncol), float
             )
             self.__botm[0, :, :] = dis.top.array
             self.__botm[1:, :, :] = dis.botm.array
@@ -1959,7 +1959,7 @@ class SwiConcentration:
         >>> conc = c.calc_conc(z, layer=0)
 
         """
-        conc = np.zeros((self.__nlay, self.__nrow, self.__ncol), np.float)
+        conc = np.zeros((self.__nlay, self.__nrow, self.__ncol), float)
 
         pct = {}
         for isrf in range(self.__nsrf):
@@ -2340,7 +2340,7 @@ def plot_cvfd(
         ncpl = kwargs.pop("ncpl")
         if isinstance(ncpl, int):
             i = int(ncpl)
-            ncpl = np.ones((nlay), dtype=np.int) * i
+            ncpl = np.ones((nlay), dtype=int) * i
         elif isinstance(ncpl, list) or isinstance(ncpl, tuple):
             ncpl = np.array(ncpl)
         i0 = 0

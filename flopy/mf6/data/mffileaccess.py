@@ -190,7 +190,7 @@ class MFFileAccess(object):
         elif datum_type == DatumType.double_precision:
             return np.float64, "double"
         elif datum_type == DatumType.string or datum_type == DatumType.keyword:
-            return np.str, "str"
+            return str, "str"
         else:
             return None, None
 

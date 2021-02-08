@@ -637,7 +637,7 @@ class HeadObservation(object):
 
         # convert passed time_series_data to a numpy array
         if isinstance(time_series_data, list):
-            time_series_data = np.array(time_series_data, dtype=np.float)
+            time_series_data = np.array(time_series_data, dtype=float)
 
         # if a single observation is passed as a list reshape to a
         # two-dimensional numpy array
@@ -730,7 +730,7 @@ class HeadObservation(object):
         dtype = np.dtype(
             [
                 ("totim", np.float32),
-                ("irefsp", np.int),
+                ("irefsp", int),
                 ("toffset", np.float32),
                 ("hobs", np.float32),
                 ("obsname", "|S12"),

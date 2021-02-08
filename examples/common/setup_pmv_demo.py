@@ -191,7 +191,7 @@ def run():
     )
 
     # rch
-    aux = [np.ones(ncpl, dtype=np.int) * 6]
+    aux = [np.ones(ncpl, dtype=int) * 6]
     rch = flopy.mf6.ModflowGwfrcha(
         gwf, recharge=0.005, auxiliary=[("iface",)], aux={0: [6]}
     )

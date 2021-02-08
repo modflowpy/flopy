@@ -367,8 +367,8 @@ class Mt3dSft(Package):
         water boundary conditions.
         """
         type_list = [
-            ("node", np.int),
-            ("isfbctyp", np.int),
+            ("node", int),
+            ("isfbctyp", int),
             ("cbcsf0", np.float32),
         ]
         if ncomp > 1:

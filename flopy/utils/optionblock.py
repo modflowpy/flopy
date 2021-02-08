@@ -168,7 +168,7 @@ class OptionBlock(object):
         elif isinstance(value, np.recarray):
             for name in value.dtype.names:
                 if self._attr_types[name] == np.bool_:
-                    if not isinstance(value, (bool, np.bool_, np.bool)):
+                    if not isinstance(value, (bool, np.bool_)):
                         raise TypeError(err_msg.format(self._attr_types[name]))
                 else:
                     try:
@@ -180,7 +180,7 @@ class OptionBlock(object):
 
         elif key in self._attr_types:
             if self._attr_types[key] == np.bool_:
-                if not isinstance(value, (bool, np.bool_, np.bool)):
+                if not isinstance(value, (bool, np.bool_)):
                     raise TypeError(err_msg.format(self._attr_types[key]))
             else:
                 try:
@@ -249,14 +249,14 @@ class OptionBlock(object):
         """
         # set up all attributes for the class!
         for key, ctx in self._context.items():
-            if ctx[OptionBlock.dtype] in (np.bool_, bool, np.bool):
+            if ctx[OptionBlock.dtype] in (np.bool_, bool):
                 self.__setattr__(key, False)
             else:
                 self.__setattr__(key, None)
 
             if ctx[OptionBlock.nested]:
                 for k, d in ctx[OptionBlock.vars].items():
-                    if d[OptionBlock.dtype] in (np.bool_, bool, np.bool):
+                    if d[OptionBlock.dtype] in (np.bool_, bool):
                         self.__setattr__(k, False)
                     else:
                         self.__setattr__(k, None)

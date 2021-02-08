@@ -20,7 +20,7 @@ from . import vtk
 NC_PRECISION_TYPE = {
     np.float64: "f8",
     np.float32: "f4",
-    np.int: "i4",
+    int: "i4",
     np.int64: "i4",
     np.int32: "i4",
 }
@@ -1040,7 +1040,7 @@ def transient2d_export(f, t2d, fmt=None, **kwargs):
         array = t2d.array
         # f.log("getting 4D array for {0}".format(t2d.name_base))
         with np.errstate(invalid="ignore"):
-            if array.dtype not in [int, np.int, np.int32, np.int64]:
+            if array.dtype not in [int, np.int32, np.int64]:
                 if mask is not None:
                     array[:, 0, mask] = np.NaN
                 array[array <= min_valid] = np.NaN
@@ -1216,7 +1216,7 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
         # runtime warning issued in some cases - need to track down cause
         # happens when NaN is already in array
         with np.errstate(invalid="ignore"):
-            if array.dtype not in [int, np.int, np.int32, np.int64]:
+            if array.dtype not in [int, np.int32, np.int64]:
                 # if u3d.model.modelgrid.bas6 is not None and "ibound" not
                 # in var_name:
                 #    array[u3d.model.modelgrid.bas6.ibound.array == 0] =
@@ -1359,7 +1359,7 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
         # f.log("getting 2D array for {0}".format(u2d.name))
 
         with np.errstate(invalid="ignore"):
-            if array.dtype not in [int, np.int, np.int32, np.int64]:
+            if array.dtype not in [int, np.int32, np.int64]:
                 if (
                     modelgrid.idomain is not None
                     and "ibound" not in u2d.name.lower()

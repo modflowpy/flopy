@@ -33,7 +33,7 @@ def test_binary_well():
                                exe_name=exe_name)
     dis = flopy.modflow.ModflowDis(ml, nlay=nlay, nrow=nrow, ncol=ncol, top=0,
                                    botm=[-1., -2., -3.])
-    ibound = np.ones((nlay, nrow, ncol), dtype=np.int)
+    ibound = np.ones((nlay, nrow, ncol), dtype=int)
     ibound[0, 1, 1] = 0
     ibound[0, 0, -1] = -1
     bas = flopy.modflow.ModflowBas(ml, ibound=ibound)
