@@ -225,7 +225,9 @@ def test_transient3d():
     ncol = 5
     nper = 5
     ml = flopy.modflow.Modflow()
-    dis = flopy.modflow.ModflowDis(ml, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper)
+    dis = flopy.modflow.ModflowDis(
+        ml, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper
+    )
 
     # Make a transient 3d array of a constant value
     t3d = Transient3d(ml, (nlay, nrow, ncol), np.float32, 10.0, "fake")
@@ -234,7 +236,9 @@ def test_transient3d():
 
     # Make a transient 3d array with changing entries and then verify that
     # they can be reproduced through indexing
-    a = np.arange((nlay * nrow * ncol), dtype=np.float32).reshape((nlay, nrow, ncol))
+    a = np.arange((nlay * nrow * ncol), dtype=np.float32).reshape(
+        (nlay, nrow, ncol)
+    )
     t3d = {0: a, 2: 1025, 3: a, 4: 1000.0}
     t3d = Transient3d(ml, (nlay, nrow, ncol), np.float32, t3d, "fake")
     assert np.array_equal(t3d[0].array, a)
@@ -702,7 +706,10 @@ def test_append_mflist():
     wel1 = flopy.modflow.ModflowWel(ml, stress_period_data=sp_data1)
     wel2 = flopy.modflow.ModflowWel(ml, stress_period_data=sp_data2)
     wel3 = flopy.modflow.ModflowWel(
-        ml, stress_period_data=wel2.stress_period_data.append(wel1.stress_period_data)
+        ml,
+        stress_period_data=wel2.stress_period_data.append(
+            wel1.stress_period_data
+        ),
     )
     ml.write_input()
 
@@ -710,7 +717,10 @@ def test_append_mflist():
 def test_mflist():
     ml = flopy.modflow.Modflow(model_ws=out_dir)
     dis = flopy.modflow.ModflowDis(ml, 10, 10, 10, 10)
-    sp_data = {0: [[1, 1, 1, 1.0], [1, 1, 2, 2.0], [1, 1, 3, 3.0]], 1: [1, 2, 4, 4.0]}
+    sp_data = {
+        0: [[1, 1, 1, 1.0], [1, 1, 2, 2.0], [1, 1, 3, 3.0]],
+        1: [1, 2, 4, 4.0],
+    }
     wel = flopy.modflow.ModflowWel(ml, stress_period_data=sp_data)
     spd = wel.stress_period_data
 
@@ -750,7 +760,9 @@ def test_mflist():
     assert np.array_equal(sp_data[9], ml.wel.stress_period_data[1])
 
     pth = os.path.join("..", "examples", "data", "mf2005_test")
-    ml = flopy.modflow.Modflow.load(os.path.join(pth, "swi2ex4sww.nam"), verbose=True)
+    ml = flopy.modflow.Modflow.load(
+        os.path.join(pth, "swi2ex4sww.nam"), verbose=True
+    )
     m4ds = ml.wel.stress_period_data.masked_4D_arrays
 
     sp_data = flopy.utils.MfList.masked4D_arrays_to_stress_period_data(
@@ -785,6 +797,12 @@ def test_mflist():
     assert df.loc[0, "flux"].sum() == 1.0
     assert df.loc[1, "flux"].sum() == 9.0
     assert df.loc[2, "flux"].sum() == 25.0
+
+    # test the squeeze option
+    df = wel4.stress_period_data.get_dataframe(squeeze=True)
+    df = df.set_index(["per", "k", "i", "j"])
+    assert df.loc[2, "flux"].sum() == 16.0
+
     sp_data4 = {
         0: [1, 1, 1, 1.0],
         1: [[1, 1, 3, 3.0], [1, 1, 3, 6.0]],
@@ -801,12 +819,8 @@ def test_mflist():
     df = df.groupby(["per", "k", "i", "j"]).sum()
     assert df.loc[0, "flux"].sum() == 1.0
     assert df.loc[1, "flux"].sum() == 9.0
-    assert (
-        df.loc[(2, 1, 1, 3), "flux"] == 9.0
-        )
-    assert (
-        df.loc[(2, 1, 2, 4), "flux"] == 16.0
-    )
+    assert df.loc[(2, 1, 1, 3), "flux"] == 9.0
+    assert df.loc[(2, 1, 2, 4), "flux"] == 16.0
 
 
 def test_how():
