@@ -454,7 +454,7 @@ class MfList(DataInterface, DataListInterface):
             )
         self.__vtype[kper] = np.recarray
 
-    def get_dataframe(self, squeeze=True):
+    def get_dataframe(self, squeeze=False):
         """
         Cast recarrays for stress periods into single
         dataframe containing all stress periods.
