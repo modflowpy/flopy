@@ -1915,9 +1915,7 @@ class SwiConcentration:
                 dis = model.get_package("DIS")
             except:
                 sys.stdout.write("Error: DIS package not available.\n")
-            self.__botm = np.zeros(
-                (dis.nlay + 1, dis.nrow, dis.ncol), float
-            )
+            self.__botm = np.zeros((dis.nlay + 1, dis.nrow, dis.ncol), float)
             self.__botm[0, :, :] = dis.top.array
             self.__botm[1:, :, :] = dis.botm.array
             try:
