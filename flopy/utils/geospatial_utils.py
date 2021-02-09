@@ -330,7 +330,7 @@ class GeoSpatialCollection(object):
                     MultiPolygon,
                 ),
             ):
-                for geom in list(obj):
+                for geom in obj.geoms:
                     self.__collection.append(GeoSpatialUtil(geom))
 
     def __iter__(self):
