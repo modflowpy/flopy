@@ -62,7 +62,7 @@ class ModflowDis(Package):
         Number of time steps in each stress period (default is 1).
     tsmult : float or array of floats (nper)
         Time step multiplier (default is 1.0).
-    steady : boolean or array of boolean (nper)
+    steady : bool or array of bool (nper)
         true or False indicating whether or not stress period is steady state
         (default is True).
     itmuni : int
@@ -236,9 +236,7 @@ class ModflowDis(Package):
         self.tsmult = Util2d(
             model, (self.nper,), np.float32, tsmult, name="tsmult"
         )
-        self.steady = Util2d(
-            model, (self.nper,), np.bool, steady, name="steady"
-        )
+        self.steady = Util2d(model, (self.nper,), bool, steady, name="steady")
 
         try:
             self.itmuni = int(itmuni)
@@ -356,7 +354,7 @@ class ModflowDis(Package):
                 totim.append(t)
                 if m > 1:
                     dt *= m
-        return np.array(totim, dtype=np.float)
+        return np.array(totim, dtype=float)
 
     def get_final_totim(self):
         """
@@ -674,7 +672,7 @@ class ModflowDis(Package):
 
         Parameters
         ----------
-        check : boolean
+        check : bool
             Check package data for common errors. (default True)
 
         Returns
@@ -823,7 +821,7 @@ class ModflowDis(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
-        check : boolean
+        check : bool
             Check package data for common errors. (default True)
 
         Returns
@@ -937,13 +935,13 @@ class ModflowDis(Package):
                 )
             )
             print("   loading laycbd...")
-        laycbd = np.zeros(nlay, dtype=np.int)
+        laycbd = np.zeros(nlay, dtype=int)
         d = 0
         while True:
             line = f.readline()
             raw = line.strip("\n").split()
             for val in raw:
-                if (np.int(val)) != 0:
+                if int(val) != 0:
                     laycbd[d] = 1
                 d += 1
                 if d == nlay:

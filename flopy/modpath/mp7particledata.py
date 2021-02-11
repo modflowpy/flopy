@@ -896,9 +896,9 @@ class NodeParticleData(object):
         if isinstance(subdivisiondata, (CellDataType, FaceDataType)):
             subdivisiondata = [subdivisiondata]
 
-        if isinstance(nodes, (int, np.int, np.int32, np.int64)):
+        if isinstance(nodes, (int, np.int32, np.int64)):
             nodes = [(nodes,)]
-        elif isinstance(nodes, (float, np.float, np.float32, np.float64)):
+        elif isinstance(nodes, (float, np.float32, np.float64)):
             msg = (
                 "{}: nodes is of type {} ".format(self.name, type(nodes))
                 + "but must be an int if a single value is passed"

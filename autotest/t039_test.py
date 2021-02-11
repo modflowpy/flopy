@@ -61,9 +61,9 @@ def read_zonebudget_file(fname):
         vals = [float(i) for i in items[1:-1]]
         row = (totim, kstp, kper, record,) + tuple(v for v in vals)
         rows.append(row)
-    dtype_list = [('totim', np.float),
-                  ('time_step', np.int),
-                  ('stress_period', np.int),
+    dtype_list = [('totim', float),
+                  ('time_step', int),
+                  ('stress_period', int),
                   ('name', '<U50')] + [(z, '<f8') for z in zonenames]
     dtype = np.dtype(dtype_list)
     return np.array(rows, dtype=dtype)
@@ -120,7 +120,7 @@ def test_compare2zonebudget(rtol=1e-2):
 #     mflistrecs = mflistbud.get_data(idx=-1, incremental=True)
 #     print(repr(mflistrecs))
 #
-#     zon = np.ones((3, 40, 20), dtype=np.int)
+#     zon = np.ones((3, 40, 20), dtype=int)
 #     cbc_fname = os.path.join(loadpth, 'freyberg.cbc')
 #     kstp, kper = CellBudgetFile(cbc_fname).get_kstpkper()[-1]
 #     zb = ZoneBudget(cbc_fname, zon, kstpkper=(kstp, kper))

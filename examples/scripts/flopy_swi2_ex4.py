@@ -112,13 +112,13 @@ def run():
 
     # bas data
     # ibound - active except for the corners
-    ibound = np.ones((nlay, nrow, ncol), dtype=np.int)
+    ibound = np.ones((nlay, nrow, ncol), dtype=int)
     ibound[:, 0, 0] = 0
     ibound[:, 0, -1] = 0
     ibound[:, -1, 0] = 0
     ibound[:, -1, -1] = 0
     # initial head data
-    ihead = np.zeros((nlay, nrow, ncol), dtype=np.float)
+    ihead = np.zeros((nlay, nrow, ncol), dtype=float)
 
     # lpf data
     laytyp = 0
@@ -128,7 +128,7 @@ def run():
     # boundary condition data
     # ghb data
     colcell, rowcell = np.meshgrid(np.arange(0, ncol), np.arange(0, nrow))
-    index = np.zeros((nrow, ncol), dtype=np.int)
+    index = np.zeros((nrow, ncol), dtype=int)
     index[:, :10] = 1
     index[:, -10:] = 1
     index[:10, :] = 1
@@ -144,7 +144,7 @@ def run():
     ghb_data = {0: lrchc}
 
     # recharge data
-    rch = np.zeros((nrow, ncol), dtype=np.float)
+    rch = np.zeros((nrow, ncol), dtype=float)
     rch[index == 0] = 0.0004
     # create recharge dictionary
     rch_data = {0: rch}
@@ -174,7 +174,7 @@ def run():
     z1 = -10.0 * np.ones((nrow, ncol))
     z1[index == 0] = -11.0
     z = np.array([[z1, z1]])
-    iso = np.zeros((nlay, nrow, ncol), np.int)
+    iso = np.zeros((nlay, nrow, ncol), int)
     iso[0, :, :][index == 0] = 1
     iso[0, :, :][index == 1] = -2
     iso[1, 30, 35] = 2

@@ -186,24 +186,24 @@ class ModflowMnw1(Package):
         if structured:
             return np.dtype(
                 [
-                    ("mnw_no", np.int),
-                    ("k", np.int),
-                    ("i", np.int),
-                    ("j", np.int),
+                    ("mnw_no", int),
+                    ("k", int),
+                    ("i", int),
+                    ("j", int),
                     ("qdes", np.float32),
-                    ("mntxt", np.object),
+                    ("mntxt", object),
                     ("qwval", np.float32),
                     ("rw", np.float32),
                     ("skin", np.float32),
                     ("hlim", np.float32),
                     ("href", np.float32),
-                    ("dd", np.object),
-                    ("iqwgrp", np.object),
-                    ("cpc", np.object),
-                    ("qcut", np.object),
+                    ("dd", object),
+                    ("iqwgrp", object),
+                    ("cpc", object),
+                    ("qcut", object),
                     ("qfrcmn", np.float32),
                     ("qfrcmx", np.float32),
-                    ("label", np.object),
+                    ("label", object),
                 ]
             )
         else:

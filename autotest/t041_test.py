@@ -34,7 +34,7 @@ def test_hob_simple():
     nlay, nrow, ncol = 1, 11, 11
     shape3d = (nlay, nrow, ncol)
     shape2d = (nrow, ncol)
-    ib = np.ones(shape3d, dtype=np.int)
+    ib = np.ones(shape3d, dtype=int)
     ib[0, 0, 0] = -1
     m = flopy.modflow.Modflow(modelname=modelname, model_ws=pth,
                               verbose=False, exe_name=exe_name, )

@@ -413,10 +413,10 @@ class BinaryLayerFile(LayerFile):
                 )  # change ilay from header to zero-based
                 if ilay != k:
                     continue
-                ipos = np.long(self.iposarray[irec])
+                ipos = int(self.iposarray[irec])
 
                 # Calculate offset necessary to reach intended cell
-                self.file.seek(ipos + np.long(ioffset), 0)
+                self.file.seek(ipos + int(ioffset), 0)
 
                 # Find the time index and then put value into result in the
                 # correct location.
@@ -1526,7 +1526,7 @@ class CellBudgetFile(object):
             idx = np.array([idx])
 
         header = self.recordarray[idx]
-        ipos = np.long(self.iposarray[idx])
+        ipos = int(self.iposarray[idx])
         self.file.seek(ipos, 0)
         imeth = header["imeth"][0]
 
@@ -1755,9 +1755,9 @@ class CellBudgetFile(object):
         nlay = self.nlay
         nrow = self.nrow
         ncol = self.ncol
-        residual = np.zeros((nlay, nrow, ncol), dtype=np.float)
+        residual = np.zeros((nlay, nrow, ncol), dtype=float)
         if scaled:
-            inflow = np.zeros((nlay, nrow, ncol), dtype=np.float)
+            inflow = np.zeros((nlay, nrow, ncol), dtype=float)
         select_indices = np.where((self.recordarray["totim"] == totim))[0]
 
         for i in select_indices:
@@ -1802,7 +1802,7 @@ class CellBudgetFile(object):
                     inflow[idx] += flow[idx]
 
         if scaled:
-            residual_scaled = np.zeros((nlay, nrow, ncol), dtype=np.float)
+            residual_scaled = np.zeros((nlay, nrow, ncol), dtype=float)
             idx = inflow > 0.0
             residual_scaled[idx] = residual[idx] / inflow[idx]
             return residual_scaled

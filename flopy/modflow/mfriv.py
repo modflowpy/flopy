@@ -277,9 +277,9 @@ class ModflowRiv(Package):
         if structured:
             dtype = np.dtype(
                 [
-                    ("k", np.int),
-                    ("i", np.int),
-                    ("j", np.int),
+                    ("k", int),
+                    ("i", int),
+                    ("j", int),
                     ("stage", np.float32),
                     ("cond", np.float32),
                     ("rbot", np.float32),
@@ -288,7 +288,7 @@ class ModflowRiv(Package):
         else:
             dtype = np.dtype(
                 [
-                    ("node", np.int),
+                    ("node", int),
                     ("stage", np.float32),
                     ("cond", np.float32),
                     ("rbot", np.float32),

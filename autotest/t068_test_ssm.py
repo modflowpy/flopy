@@ -18,10 +18,10 @@ if v1 is None or v2 is None:
 def test_mt3d_ssm_with_nodata_in_1st_sp():
 
     nlay, nrow, ncol = 3, 5, 5
-    perlen = np.zeros((10), dtype=np.float) + 10
+    perlen = np.zeros((10), dtype=float) + 10
     nper = len(perlen)
     
-    ibound = np.ones((nlay,nrow,ncol), dtype=np.int)
+    ibound = np.ones((nlay,nrow,ncol), dtype=int)
     
     botm = np.arange(-1,-4,-1)
     top = 0.

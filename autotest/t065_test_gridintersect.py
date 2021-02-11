@@ -51,8 +51,8 @@ def get_tri_grid(angrot=0., xyoffset=0., triangle_exe=None):
 
 
 def get_rect_grid(angrot=0., xyoffset=0., top=None, botm=None):
-    delc = 10 * np.ones(2, dtype=np.float)
-    delr = 10 * np.ones(2, dtype=np.float)
+    delc = 10 * np.ones(2, dtype=float)
+    delr = 10 * np.ones(2, dtype=float)
     sgr = fgrid.StructuredGrid(
         delc, delr, top=top, botm=botm, xoff=xyoffset, yoff=xyoffset,
         angrot=angrot)

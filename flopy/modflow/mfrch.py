@@ -426,7 +426,7 @@ class ModflowRch(Package):
         npar = 0
         if "parameter" in line.lower():
             raw = line.strip().split()
-            npar = np.int(raw[1])
+            npar = int(raw[1])
             if npar > 0:
                 if model.verbose:
                     txt = (
