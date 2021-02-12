@@ -190,7 +190,7 @@ class Triangle(object):
 
         # create verts and iverts
         self.verts = self.node[["x", "y"]]
-        self.verts = np.array(self.verts.tolist(), np.float)
+        self.verts = np.array(self.verts.tolist(), float)
         self.iverts = []
         for row in self.ele:
             self.iverts.append([row[1], row[2], row[3]])
@@ -279,7 +279,7 @@ class Triangle(object):
             polygon that is added with the add_polygon method.
 
         """
-        iedge = np.zeros((self.ncpl), dtype=np.int)
+        iedge = np.zeros((self.ncpl), dtype=int)
         boundary_markers = np.unique(self.edge["boundary_marker"])
         for ibm in boundary_markers:
             icells = self.get_edge_cells(ibm)
@@ -484,7 +484,7 @@ class Triangle(object):
 
         """
         ncpl = len(self.iverts)
-        xcyc = np.empty((ncpl, 2), dtype=np.float)
+        xcyc = np.empty((ncpl, 2), dtype=float)
         for i, icell2d in enumerate(self.iverts):
             points = []
             for iv in icell2d:

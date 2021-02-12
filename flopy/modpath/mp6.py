@@ -271,7 +271,7 @@ class Modpath6(BaseModel):
             self.__mf.dis.nrow,
             self.__mf.dis.ncol,
         )
-        arr = np.zeros((nlay, nrow, ncol), dtype=np.int)
+        arr = np.zeros((nlay, nrow, ncol), dtype=int)
         group_name = []
         group_region = []
         group_placement = []

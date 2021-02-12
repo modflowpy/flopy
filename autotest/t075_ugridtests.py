@@ -56,7 +56,7 @@ def test_unstructured_minimal_grid():
     g = UnstructuredGrid(
         vertices=vertices, iverts=iverts, xcenters=xcenters, ycenters=ycenters
     )
-    assert np.allclose(g.ncpl, np.array([2], dtype=np.int))
+    assert np.allclose(g.ncpl, np.array([2], dtype=int))
     assert g.nlay == 1
     assert g.nnodes == 2
     assert g.is_valid
@@ -117,7 +117,7 @@ def test_unstructured_complete_grid():
         top=top,
         botm=botm,
     )
-    assert np.allclose(g.ncpl, np.array([1, 1], dtype=np.int))
+    assert np.allclose(g.ncpl, np.array([1, 1], dtype=int))
     assert g.nlay == 2
     assert g.nnodes == 2
     assert g.is_valid

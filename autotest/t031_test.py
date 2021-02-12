@@ -55,17 +55,17 @@ def test_mpsim():
     node_data = np.array(
         [(3, 12, 12, 'well1', 'skin', -1, 0, 0, 0, 1., 2., 5., 6.2),
          (4, 12, 12, 'well1', 'skin', -1, 0, 0, 0, 0.5, 2., 5., 6.2)],
-        dtype=[('k', np.int), ('i', np.int), ('j', np.int),
-               ('wellid', np.object), ('losstype', np.object),
-               ('pumploc', np.int), ('qlimit', np.int),
-               ('ppflag', np.int), ('pumpcap', np.int),
-               ('rw', np.float), ('rskin', np.float),
-               ('kskin', np.float), ('zpump', np.float)]).view(np.recarray)
+        dtype=[('k', int), ('i', int), ('j', int),
+               ('wellid', object), ('losstype', object),
+               ('pumploc', int), ('qlimit', int),
+               ('ppflag', int), ('pumpcap', int),
+               ('rw', float), ('rskin', float),
+               ('kskin', float), ('zpump', float)]).view(np.recarray)
 
     stress_period_data = {0: np.array([(0, 'well1', -150000.0)],
-                                      dtype=[('per', np.int),
-                                             ('wellid', np.object),
-                                             ('qdes', np.float)])}
+                                      dtype=[('per', int),
+                                             ('wellid', object),
+                                             ('qdes', float)])}
     m.remove_package('WEL')
     mnw2 = flopy.modflow.ModflowMnw2(model=m, mnwmax=1,
                                      node_data=node_data,

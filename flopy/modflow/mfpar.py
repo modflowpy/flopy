@@ -233,13 +233,13 @@ class ModflowPar(object):
                 partyp = t[1].lower()
                 if partyp not in par_types:
                     par_types.append(partyp)
-                parval = np.float(t[2])
-                nclu = np.int(t[3])
+                parval = float(t[2])
+                nclu = int(t[3])
                 clusters = []
                 for nc in range(nclu):
                     line = f.readline()
                     t = line.strip().split()
-                    lay = np.int(t[0])
+                    lay = int(t[0])
                     s = t[1]
                     if len(s) > 10:
                         s = s[0:10]
@@ -251,7 +251,7 @@ class ModflowPar(object):
                     iarr = []
                     for iv in t[3:]:
                         try:
-                            iz = int(np.int(iv))
+                            iz = int(iv)
                             if iz != 0:
                                 iarr.append(iz)
                         except:
@@ -313,12 +313,12 @@ class ModflowPar(object):
             partyp, parval = tdict["partyp"], tdict["parval"]
             nclu, clusters = tdict["nclu"], tdict["clusters"]
             if model.mfpar.pval is None:
-                pv = np.float(parval)
+                pv = float(parval)
             else:
                 try:
-                    pv = np.float(model.mfpar.pval.pval_dict[key.lower()])
+                    pv = float(model.mfpar.pval.pval_dict[key.lower()])
                 except:
-                    pv = np.float(parval)
+                    pv = float(parval)
             # print partyp, parval, nclu, clusters
             if partyp == findkey:
                 for [layer, mltarr, zonarr, izones] in clusters:

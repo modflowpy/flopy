@@ -85,12 +85,12 @@ class ModflowParBc(object):
                     print('   loading parameter "{}"...'.format(parnam))
                 partyp = t[1].lower()
                 parval = t[2]
-                nlst = np.int(t[3])
+                nlst = int(t[3])
                 numinst = 1
                 timeVarying = False
                 if len(t) > 4:
                     if "instances" in t[4].lower():
-                        numinst = np.int(t[5])
+                        numinst = int(t[5])
                         timeVarying = True
                 pinst = {}
                 for inst in range(numinst):
@@ -156,12 +156,12 @@ class ModflowParBc(object):
                     print('   loading parameter "{}"...'.format(parnam))
                 partyp = t[1].lower()
                 parval = t[2]
-                nclu = np.int(t[3])
+                nclu = int(t[3])
                 numinst = 1
                 timeVarying = False
                 if len(t) > 4:
                     if "instances" in t[4].lower():
-                        numinst = np.int(t[5])
+                        numinst = int(t[5])
                         timeVarying = True
                 pinst = {}
                 for inst in range(numinst):
@@ -248,12 +248,12 @@ class ModflowParBc(object):
             pdict, idict = pak_parms.bc_parms[key]
             inst_data = idict[value]
             if model.mfpar.pval is None:
-                pv = np.float(pdict["parval"])
+                pv = float(pdict["parval"])
             else:
                 try:
-                    pv = np.float(model.mfpar.pval.pval_dict[key.lower()])
+                    pv = float(model.mfpar.pval.pval_dict[key.lower()])
                 except:
-                    pv = np.float(pdict["parval"])
+                    pv = float(pdict["parval"])
             for [mltarr, zonarr, izones] in inst_data:
                 model.parameter_load = True
                 # print mltarr, zonarr, izones

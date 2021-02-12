@@ -97,7 +97,7 @@ def test_subwt():
                              vka=[0.4, 0.4, 0.01, 0.4],
                              sy=0.3, ss=1.0e-6)
 
-    # temp_ib = np.ones((ml.nrow,ml.ncol),dtype=np.int)
+    # temp_ib = np.ones((ml.nrow,ml.ncol),dtype=int)
     # np.savetxt('temp_ib.dat',temp_ib,fmt='%1d')
     ibound = np.loadtxt(ibound_path)
     ibound[ibound == 5] = -1

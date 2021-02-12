@@ -532,8 +532,8 @@ class Mt3dLkt(Package):
         conditions interacting with the lake (i.e., pumps, specified runoff...)
         """
         type_list = [
-            ("node", np.int),
-            ("ilkbctyp", np.int),
+            ("node", int),
+            ("ilkbctyp", int),
             ("cbclk0", np.float32),
         ]
         if ncomp > 1:

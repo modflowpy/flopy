@@ -899,10 +899,10 @@ class Package(PackageInterface):
         nppak = 0
         if "parameter" in line.lower():
             t = line.strip().split()
-            nppak = np.int(t[1])
+            nppak = int(t[1])
             mxl = 0
             if nppak > 0:
-                mxl = np.int(t[2])
+                mxl = int(t[2])
                 if model.verbose:
                     msg = (
                         3 * " "
@@ -931,7 +931,7 @@ class Package(PackageInterface):
                     msg = 3 * " " + "implicit nppak in {}".format(filename)
                     print(msg)
             if nppak > 0:
-                mxl = np.int(t[3])
+                mxl = int(t[3])
                 imax += 1
                 if model.verbose:
                     msg = (
@@ -1089,12 +1089,12 @@ class Package(PackageInterface):
 
                 #  get appropriate parval
                 if model.mfpar.pval is None:
-                    parval = np.float(par_dict["parval"])
+                    parval = float(par_dict["parval"])
                 else:
                     try:
-                        parval = np.float(model.mfpar.pval.pval_dict[pname])
+                        parval = float(model.mfpar.pval.pval_dict[pname])
                     except:
-                        parval = np.float(par_dict["parval"])
+                        parval = float(par_dict["parval"])
 
                 # fill current parameter data (par_current)
                 for ibnd, t in enumerate(data_dict):

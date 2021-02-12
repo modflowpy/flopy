@@ -436,7 +436,8 @@ class check:
         """
         mg = self.model.modelgrid
         if mg.grid_type == "structured":
-            inds = (mg.nlay, mg.nrow, mg.ncol)
+            nlaycbd = mg._StructuredGrid__laycbd.sum() if include_cbd else 0
+            inds = (mg.nlay + nlaycbd, mg.nrow, mg.ncol)
         elif mg.grid_type == "vertex":
             inds = (mg.nlay, mg.ncpl)
         else:
@@ -645,23 +646,23 @@ class check:
             # include node column for structured grids (useful for indexing)
             return np.dtype(
                 [
-                    ("type", np.object),
-                    ("package", np.object),
-                    ("k", np.int),
-                    ("i", np.int),
-                    ("j", np.int),
-                    ("value", np.float),
-                    ("desc", np.object),
+                    ("type", object),
+                    ("package", object),
+                    ("k", int),
+                    ("i", int),
+                    ("j", int),
+                    ("value", float),
+                    ("desc", object),
                 ]
             )
         else:
             return np.dtype(
                 [
-                    ("type", np.object),
-                    ("package", np.object),
-                    ("node", np.int),
-                    ("value", np.float),
-                    ("desc", np.object),
+                    ("type", object),
+                    ("package", object),
+                    ("node", int),
+                    ("value", float),
+                    ("desc", object),
                 ]
             )
 
@@ -813,34 +814,34 @@ class mf6check(check):
         if mg.grid_type == "structured":
             return np.dtype(
                 [
-                    ("type", np.object),
-                    ("package", np.object),
-                    ("k", np.int),
-                    ("i", np.int),
-                    ("j", np.int),
-                    ("value", np.float),
-                    ("desc", np.object),
+                    ("type", object),
+                    ("package", object),
+                    ("k", int),
+                    ("i", int),
+                    ("j", int),
+                    ("value", float),
+                    ("desc", object),
                 ]
             )
         elif mg.grid_type == "vertex":
             return np.dtype(
                 [
-                    ("type", np.object),
-                    ("package", np.object),
-                    ("lay", np.int),
-                    ("cell", np.int),
-                    ("value", np.float),
-                    ("desc", np.object),
+                    ("type", object),
+                    ("package", object),
+                    ("lay", int),
+                    ("cell", int),
+                    ("value", float),
+                    ("desc", object),
                 ]
             )
         else:
             return np.dtype(
                 [
-                    ("type", np.object),
-                    ("package", np.object),
-                    ("node", np.int),
-                    ("value", np.float),
-                    ("desc", np.object),
+                    ("type", object),
+                    ("package", object),
+                    ("node", int),
+                    ("value", float),
+                    ("desc", object),
                 ]
             )
 

@@ -1469,7 +1469,7 @@ class SpatialReference(object):
         nrowvert = self.nrow + 1
         ncolvert = self.ncol + 1
         npoints = nrowvert * ncolvert
-        verts = np.empty((npoints, 2), dtype=np.float)
+        verts = np.empty((npoints, 2), dtype=float)
         verts[:, 0] = x
         verts[:, 1] = y
         iverts = []
@@ -1496,7 +1496,7 @@ class SpatialReference(object):
         npoints = nrvncv * nlayvert
 
         # create and fill a 3d points array for the grid
-        verts = np.empty((npoints, 3), dtype=np.float)
+        verts = np.empty((npoints, 3), dtype=float)
         verts[:, 0] = np.tile(x, nlayvert)
         verts[:, 1] = np.tile(y, nlayvert)
         istart = 0
@@ -1539,7 +1539,7 @@ class SpatialReference(object):
         if ibound is not None:
 
             # go through the vertex list and mark vertices that are used
-            ivertrenum = np.zeros(npoints, dtype=np.int)
+            ivertrenum = np.zeros(npoints, dtype=int)
             for vlist in iverts:
                 for iv in vlist:
                     # mark vertices that are actually used
@@ -1569,11 +1569,11 @@ class SpatialReference(object):
     def get_3d_vertex_connectivity(self, nlay, top, bot, ibound=None):
         if ibound is None:
             ncells = nlay * self.nrow * self.ncol
-            ibound = np.ones((nlay, self.nrow, self.ncol), dtype=np.int)
+            ibound = np.ones((nlay, self.nrow, self.ncol), dtype=int)
         else:
             ncells = (ibound != 0).sum()
         npoints = ncells * 8
-        verts = np.empty((npoints, 3), dtype=np.float)
+        verts = np.empty((npoints, 3), dtype=float)
         iverts = []
         ipoint = 0
         for k in range(nlay):
@@ -1827,9 +1827,9 @@ class SpatialReferenceUnstructured(SpatialReference):
         ncells, nverts = ll[0:2]
         ncells = int(ncells)
         nverts = int(nverts)
-        verts = np.empty((nverts, 2), dtype=np.float)
-        xc = np.empty((ncells), dtype=np.float)
-        yc = np.empty((ncells), dtype=np.float)
+        verts = np.empty((nverts, 2), dtype=float)
+        xc = np.empty((ncells), dtype=float)
+        yc = np.empty((ncells), dtype=float)
 
         # read the vertices
         f.readline()

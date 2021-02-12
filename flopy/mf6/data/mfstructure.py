@@ -1862,7 +1862,7 @@ class MFDataStructure(object):
                         elif var_type[0] == DatumType.integer:
                             return np.int32
                         else:
-                            return np.object
+                            return object
                     else:
                         return var_type[2]
         return None

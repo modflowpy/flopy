@@ -18,7 +18,7 @@ def get_sorted_vertices(icell_vertices, vertices):
 
 
 def get_valid_faces(vor):
-    nvalid_faces = np.zeros(vor.npoints, dtype=np.int)
+    nvalid_faces = np.zeros(vor.npoints, dtype=int)
     for pointidx, simplex in zip(vor.ridge_points, vor.ridge_vertices):
         simplex = np.asarray(simplex)
         if np.all(simplex >= 0):

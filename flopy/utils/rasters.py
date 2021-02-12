@@ -51,11 +51,11 @@ class Raster(object):
 
     """
 
-    FLOAT32 = (float, np.float, np.float32, np.float_)
+    FLOAT32 = (float, np.float32, np.float_)
     FLOAT64 = (np.float64,)
     INT8 = (np.int8,)
     INT16 = (np.int16,)
-    INT32 = (int, np.int, np.int32, np.int_)
+    INT32 = (int, np.int32, np.int_)
     INT64 = (np.int64,)
 
     def __init__(

@@ -112,10 +112,10 @@ def ndarray_to_asciigrid(fname, a, extent, nodata=1.0e30):
     header += "xllcorner {}\n".format(xmin)
     header += "yllcorner {}\n".format(ymin)
     header += "cellsize {}\n".format(dx)
-    header += "NODATA_value {}\n".format(np.float(nodata))
+    header += "NODATA_value {}\n".format(float(nodata))
     # replace nan with nodata
     idx = np.isnan(a)
-    a[idx] = np.float(nodata)
+    a[idx] = float(nodata)
     # write
     with open(fname, "wb") as f:
         f.write(header.encode("ascii"))
@@ -216,7 +216,7 @@ class Gridgen(object):
 
         self.nodes = 0
         self.nja = 0
-        self.nodelay = np.zeros((self.nlay), dtype=np.int)
+        self.nodelay = np.zeros((self.nlay), dtype=int)
         self._vertdict = {}
         self.model_ws = model_ws
         exe_name = which(exe_name)
@@ -727,14 +727,14 @@ class Gridgen(object):
         f = open(fname, "r")
         dt = np.dtype(
             [
-                ("node", np.int),
-                ("layer", np.int),
-                ("x", np.float),
-                ("y", np.float),
-                ("z", np.float),
-                ("dx", np.float),
-                ("dy", np.float),
-                ("dz", np.float),
+                ("node", int),
+                ("layer", int),
+                ("x", float),
+                ("y", float),
+                ("z", float),
+                ("dx", float),
+                ("dy", float),
+                ("dz", float),
             ]
         )
         node_ra = np.genfromtxt(fname, dtype=dt, skip_header=1)
@@ -799,7 +799,7 @@ class Gridgen(object):
         self.nodes = nodes
 
         # nodelay
-        nodelay = np.empty((nlay), dtype=np.int)
+        nodelay = np.empty((nlay), dtype=int)
         fname = os.path.join(self.model_ws, "qtg.nodesperlay.dat")
         f = open(fname, "r")
         nodelay = read1d(f, nodelay)
@@ -874,7 +874,7 @@ class Gridgen(object):
             istart = istop
 
         # iac
-        iac = np.empty((nodes), dtype=np.int)
+        iac = np.empty((nodes), dtype=int)
         fname = os.path.join(self.model_ws, "qtg.iac.dat")
         f = open(fname, "r")
         iac = read1d(f, iac)
@@ -886,14 +886,14 @@ class Gridgen(object):
 
         # ja -- this is being read is as one-based, which is also what is
         # expected by the ModflowDisu constructor
-        ja = np.empty((njag), dtype=np.int)
+        ja = np.empty((njag), dtype=int)
         fname = os.path.join(self.model_ws, "qtg.ja.dat")
         f = open(fname, "r")
         ja = read1d(f, ja)
         f.close()
 
         # ivc
-        fldr = np.empty((njag), dtype=np.int)
+        fldr = np.empty((njag), dtype=int)
         fname = os.path.join(self.model_ws, "qtg.fldr.dat")
         f = open(fname, "r")
         fldr = read1d(f, fldr)
@@ -988,7 +988,7 @@ class Gridgen(object):
 
         """
         nlay = self.get_nlay()
-        nodelay = np.empty((nlay), dtype=np.int)
+        nodelay = np.empty((nlay), dtype=int)
         fname = os.path.join(self.model_ws, "qtg.nodesperlay.dat")
         f = open(fname, "r")
         nodelay = read1d(f, nodelay)
@@ -1080,7 +1080,7 @@ class Gridgen(object):
 
         """
         nodes = self.get_nodes()
-        iac = np.empty((nodes), dtype=np.int)
+        iac = np.empty((nodes), dtype=int)
         fname = os.path.join(self.model_ws, "qtg.iac.dat")
         f = open(fname, "r")
         iac = read1d(f, iac)
@@ -1106,7 +1106,7 @@ class Gridgen(object):
         if nja is None:
             iac = self.get_iac()
             nja = iac.sum()
-        ja = np.empty((nja), dtype=np.int)
+        ja = np.empty((nja), dtype=int)
         fname = os.path.join(self.model_ws, "qtg.ja.dat")
         f = open(fname, "r")
         ja = read1d(f, ja)
@@ -1128,7 +1128,7 @@ class Gridgen(object):
         """
         iac = self.get_iac()
         njag = iac.sum()
-        fldr = np.empty((njag), dtype=np.int)
+        fldr = np.empty((njag), dtype=int)
         fname = os.path.join(self.model_ws, "qtg.fldr.dat")
         f = open(fname, "r")
         fldr = read1d(f, fldr)
@@ -1154,7 +1154,7 @@ class Gridgen(object):
         """
         if fldr is None:
             fldr = self.get_fldr()
-        ivc = np.zeros(fldr.shape, dtype=np.int)
+        ivc = np.zeros(fldr.shape, dtype=int)
         idx = abs(fldr) == 3
         ivc[idx] = 1
         return ivc
@@ -1179,7 +1179,7 @@ class Gridgen(object):
         """
         if fldr is None:
             fldr = self.get_fldr()
-        ihc = np.empty(fldr.shape, dtype=np.int)
+        ihc = np.empty(fldr.shape, dtype=int)
         ihc = np.where(abs(fldr) == 0, 0, ihc)
         ihc = np.where(abs(fldr) == 1, 1, ihc)
         ihc = np.where(abs(fldr) == 2, 1, ihc)
@@ -1193,7 +1193,7 @@ class Gridgen(object):
             ia = get_ia_from_iac(iac)
         nodes = ia.shape[0] - 1
         nlayers = nodelay.shape[0]
-        layers = -1 * np.ones(nodes, dtype=np.int)
+        layers = -1 * np.ones(nodes, dtype=int)
         node_layer_range = [0] + list(np.add.accumulate(nodelay))
         for ilay in range(nlayers):
             istart = node_layer_range[ilay]
@@ -1324,7 +1324,7 @@ class Gridgen(object):
         """
         if fldr is None:
             fldr = self.get_fldr()
-        angldegx = np.zeros(fldr.shape, dtype=np.float)
+        angldegx = np.zeros(fldr.shape, dtype=float)
         angldegx = np.where(fldr == 0, 1.0e30, angldegx)
         angldegx = np.where(abs(fldr) == 3, 1.0e30, angldegx)
         angldegx = np.where(fldr == 2, 90, angldegx)
@@ -1373,7 +1373,7 @@ class Gridgen(object):
             x and y cell centers.  Shape is (ncells, 2)
 
         """
-        cellxy = np.empty((ncells, 2), dtype=np.float)
+        cellxy = np.empty((ncells, 2), dtype=float)
         for n in range(ncells):
             x, y = self.get_center(n)
             cellxy[n, 0] = x

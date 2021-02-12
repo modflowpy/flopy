@@ -27,10 +27,10 @@ class UnstructuredGrid(Grid):
     ncpl : ndarray
         one dimensional array of size nlay with the number of cells in each
         layer.  This can also be passed in as a tuple or list as long as it
-        can be set using ncpl = np.array(ncpl, dtype=np.int).  The sum of ncpl
+        can be set using ncpl = np.array(ncpl, dtype=int).  The sum of ncpl
         must be equal to the number of cells in the grid.  ncpl is optional
         and if it is not passed in, then it is is set using
-        ncpl = np.array([len(iverts)], dtype=np.int), which means that all
+        ncpl = np.array([len(iverts)], dtype=int), which means that all
         cells in the grid are contained in a single plottable layer.
         If the model grid defined in verts and iverts applies for all model
         layers, then the length of iverts can be equal to ncpl[0] and there
@@ -140,9 +140,9 @@ class UnstructuredGrid(Grid):
 
     def set_ncpl(self, ncpl):
         if isinstance(ncpl, int):
-            ncpl = np.array([ncpl], dtype=np.int)
+            ncpl = np.array([ncpl], dtype=int)
         if isinstance(ncpl, (list, tuple, np.ndarray)):
-            ncpl = np.array(ncpl, dtype=np.int)
+            ncpl = np.array(ncpl, dtype=int)
         else:
             raise TypeError("ncpl must be a list, tuple or ndarray")
         assert ncpl.ndim == 1, "ncpl must be 1d"
@@ -499,9 +499,9 @@ class UnstructuredGrid(Grid):
         ncells, nverts = ll[0:2]
         ncells = int(ncells)
         nverts = int(nverts)
-        verts = np.empty((nverts, 3), dtype=np.float)
-        xc = np.empty((ncells), dtype=np.float)
-        yc = np.empty((ncells), dtype=np.float)
+        verts = np.empty((nverts, 3), dtype=float)
+        xc = np.empty((ncells), dtype=float)
+        yc = np.empty((ncells), dtype=float)
 
         # read the vertices
         f.readline()

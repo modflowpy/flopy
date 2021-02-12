@@ -321,7 +321,7 @@ class MFModel(PackageContainer, ModelInterface):
         elif self.get_grid_type() == DiscretizationType.DISU:
             dis = self.get_package("disu")
             nodes = dis.nodes.get_data()
-            ncpl = np.array([nodes], dtype=np.int)
+            ncpl = np.array([nodes], dtype=int)
             return UnstructuredGrid(ncpl=ncpl)
 
     @property
@@ -410,7 +410,7 @@ class MFModel(PackageContainer, ModelInterface):
             iac = dis.iac.array
             ncpl = UnstructuredGrid.ncpl_from_ihc(ihc, iac)
             if ncpl is None:
-                ncpl = np.array([dis.nodes.get_data()], dtype=np.int)
+                ncpl = np.array([dis.nodes.get_data()], dtype=int)
             cell2d = dis.cell2d.array
             idomain = np.ones(dis.nodes.array, np.int32)
             if cell2d is None:
