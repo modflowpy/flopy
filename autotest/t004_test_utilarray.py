@@ -798,11 +798,6 @@ def test_mflist():
     assert df.loc[1, "flux"].sum() == 9.0
     assert df.loc[2, "flux"].sum() == 25.0
 
-    # test the squeeze option
-    df = wel4.stress_period_data.get_dataframe(squeeze=True)
-    df = df.set_index(["per", "k", "i", "j"])
-    assert df.loc[2, "flux"].sum() == 16.0
-
     sp_data4 = {
         0: [1, 1, 1, 1.0],
         1: [[1, 1, 3, 3.0], [1, 1, 3, 6.0]],
@@ -821,6 +816,48 @@ def test_mflist():
     assert df.loc[1, "flux"].sum() == 9.0
     assert df.loc[(2, 1, 1, 3), "flux"] == 9.0
     assert df.loc[(2, 1, 2, 4), "flux"] == 16.0
+
+    # test squeeze option using the River package
+    sp_data5 = {
+        0: [
+            [1, 2, 4, 1.0, 10.0, 0.5],
+            [1, 2, 4, 1.5, 10.0, 0.5],
+            [1, 2, 4, 1.5, 10.0, 0.5],
+            [1, 1, 3, 2.0, 10.0, 0.5],
+            [1, 1, 3, 4.0, 10.0, 0.5],
+        ],
+        1: [
+            [1, 2, 4, 1.0, 10.0, 0.5],
+            [1, 2, 4, 1.5, 10.0, 0.5],
+            [1, 2, 4, 1.5, 10.0, 0.5],
+            [1, 1, 3, 2.0, 10.0, 0.5],
+            [1, 1, 3, 2.5, 10.0, 0.5],
+        ],
+        2: [
+            [1, 2, 4, 1.0, 10.0, 0.5],
+            [1, 2, 4, 1.5, 10.0, 0.5],
+            [1, 2, 4, 1.5, 10.0, 0.5],
+            [1, 1, 3, 2.0, 10.0, 0.5],
+            [1, 1, 3, 2.5, 10.0, 0.5],
+        ],
+        3: [
+            [1, 2, 4, 1.0, 20.0, 0.5],
+            [1, 2, 4, 1.5, 20.0, 0.5],
+            [1, 2, 4, 1.5, 20.0, 0.5],
+            [1, 1, 3, 2.0, 20.0, 0.5],
+            [1, 1, 3, 2.5, 20.0, 0.5],
+        ],
+        4: [
+            [1, 2, 4, 1.0, 20.0, 0.5],
+            [3, 3, 3, 1.0, 20.0, 0.5],
+        ],
+    }
+    riv = flopy.modflow.ModflowRiv(ml, stress_period_data=sp_data5)
+    df = riv.stress_period_data.get_dataframe(squeeze=True)
+    assert len(df.groupby("per").sum()) == 4
+    assert df.groupby("per")["cond"].sum().loc[3] == 100.0
+    assert df.groupby("per")["stage"].mean().loc[0] == 2.0
+    assert df.groupby(["k", "i", "j"])["rbot"].count()[(1, 2, 4)] == 10
 
 
 def test_how():

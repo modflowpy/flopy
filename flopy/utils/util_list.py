@@ -516,11 +516,20 @@ class MfList(DataInterface, DataListInterface):
                 dfi = dfi.set_index(names)
             dfs.append(dfi)
         df = pd.concat(dfs, axis=0)
+
+        # add unique integer index
+        df.loc[:, "no"] = 1
+        df.loc[:, "no"] = df.groupby(["per", "k", "i", "j"])["no"].cumsum() - 1
+        df = df.set_index("no", append=True)
+
+        # squeeze: remove duplicate periods
         if squeeze:
             changed = (
-                df.groupby(level=["k", "i", "j"]).diff().ne(0.0).any(axis=1)
+                df.groupby(["k", "i", "j", "no"]).diff().ne(0.0).any(axis=1)
             )
-            df = df.iloc[changed.values, :]
+            changed = changed.groupby("per").transform(lambda s: s.any())
+            df = df.loc[changed, :]
+
         df = df.reset_index()
         df.loc[:, "node"] = df.loc[:, "i"] * self._model.ncol + df.loc[:, "j"]
         df = df.loc[
