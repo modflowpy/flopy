@@ -1,7 +1,9 @@
 import glob
 import importlib
 import inspect, sys, traceback
-import os, collections, copy
+import os, copy
+from collections import OrderedDict
+from collections.abc import Iterable
 from shutil import copyfile
 from enum import Enum
 
@@ -233,10 +235,10 @@ class MFFileMgmt(object):
         self.existing_file_dict = {}
         # keys:filenames,vals:instance name
 
-        self.model_relative_path = collections.OrderedDict()
+        self.model_relative_path = OrderedDict()
 
         self._last_loaded_sim_path = None
-        self._last_loaded_model_relative_path = collections.OrderedDict()
+        self._last_loaded_model_relative_path = OrderedDict()
 
     def copy_files(self, copy_relative_only=True):
         num_files_copied = 0
@@ -677,7 +679,7 @@ class PackageContainer(object):
             return None
         if isinstance(load_only, dict):
             return load_only
-        if not isinstance(load_only, collections.Iterable):
+        if not isinstance(load_only, Iterable):
             raise FlopyException(
                 "load_only must be iterable or None. "
                 'load_only value of "{}" is '
