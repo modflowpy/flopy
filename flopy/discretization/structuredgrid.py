@@ -195,7 +195,7 @@ class StructuredGrid(Grid):
         if laycbd is not None:
             self.__laycbd = laycbd
         else:
-            self.__laycbd = np.zeros(self.__nlay, dtype=int)
+            self.__laycbd = np.zeros(self.__nlay or (), dtype=int)
 
     ####################
     # Properties
