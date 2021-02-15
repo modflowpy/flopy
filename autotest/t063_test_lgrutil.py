@@ -18,7 +18,7 @@ def test_lgrutil():
     delcp = 100.
     topp = 100.
     botmp = [-100, -200, -300, -400, -500]
-    idomainp = np.ones((nlayp, nrowp, ncolp), dtype=np.int)
+    idomainp = np.ones((nlayp, nrowp, ncolp), dtype=int)
     idomainp[0:2, 1:4, 1:4] = 0
     ncpp = 3
     ncppl = [1, 1, 0, 0, 0]

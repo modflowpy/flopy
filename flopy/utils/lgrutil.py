@@ -77,11 +77,11 @@ class Lgr(object):
 
         # # child cells per parent and child cells per parent layer
         self.ncpp = ncpp
-        self.ncppl = Util2d(m, (nlayp,), np.int, ncppl, "ncppl").array
+        self.ncppl = Util2d(m, (nlayp,), int, ncppl, "ncppl").array
 
         # calculate ibcl which is the bottom child layer (one based) in each
         # parent layer
-        self.ibcl = np.zeros(self.nlayp, dtype=np.int)
+        self.ibcl = np.zeros(self.nlayp, dtype=int)
         self.ibcl[0] = self.ncppl[0]
         for k in range(1, self.nlayp):
             if self.ncppl[k] > 0:
@@ -231,7 +231,7 @@ class Lgr(object):
             idomain array for the child model
 
         """
-        idomain = np.ones((self.nlay, self.nrow, self.ncol), dtype=np.int)
+        idomain = np.ones((self.nlay, self.nrow, self.ncol), dtype=int)
         for kc in range(self.nlay):
             for ic in range(self.nrow):
                 for jc in range(self.ncol):

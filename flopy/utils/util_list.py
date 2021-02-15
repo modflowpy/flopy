@@ -454,7 +454,7 @@ class MfList(DataInterface, DataListInterface):
             )
         self.__vtype[kper] = np.recarray
 
-    def get_dataframe(self, squeeze=True):
+    def get_dataframe(self, squeeze=False):
         """
         Cast recarrays for stress periods into single
         dataframe containing all stress periods.
@@ -462,13 +462,13 @@ class MfList(DataInterface, DataListInterface):
         Parameters
         ----------
         squeeze : bool
-            Reduce number of columns in dataframe to only include
+            Reduce number of rows in dataframe to only include
             stress periods where a variable changes.
 
         Returns
         -------
         df : dataframe
-            Dataframe of shape nrow = ncells, ncol = nvar x nper. If
+            Dataframe of shape nrow = nper x ncells, ncol = nvar. If
             the squeeze option is chosen, nper is the number of
             stress periods where at least one cells is different,
             otherwise it is equal to the number of keys in MfList.data.
@@ -485,7 +485,7 @@ class MfList(DataInterface, DataListInterface):
             raise ImportError(msg)
 
         # make a dataframe of all data for all stress periods
-        names = ["k", "i", "j"]
+        names = ["per", "k", "i", "j"]
         if "MNW2" in self.package.name:
             names += ["wellid"]
 
@@ -499,7 +499,7 @@ class MfList(DataInterface, DataListInterface):
                 break
 
         # create list of dataframes for each stress period
-        # each with index of k, i, j
+        # each with index of per, k, i, j
         dfs = []
         for per in self.data.keys():
             recs = self.data[per]
@@ -507,39 +507,39 @@ class MfList(DataInterface, DataListInterface):
                 # add an empty dataframe if a stress period is
                 # empty (e.g. no pumping during a predevelopment
                 # period)
-                columns = names + list(
-                    ["{}{}".format(c, per) for c in varnames]
-                )
+                columns = names + varnames
                 dfi = pd.DataFrame(data=None, columns=columns)
                 dfi = dfi.set_index(names)
             else:
                 dfi = pd.DataFrame.from_records(recs)
-                dfg = dfi.groupby(names)
-                count = dfg[varnames[0]].count().rename("n")
-                if (count > 1).values.any():
-                    print(
-                        "Duplicated list entry locations aggregated "
-                        "for kper {}".format(per)
-                    )
-                    for kij in count[count > 1].index.values:
-                        print("    (k,i,j) {}".format(kij))
-                dfi = dfg.sum()  # aggregate
-                dfi.columns = list(["{}{}".format(c, per) for c in varnames])
+                dfi.loc[:, "per"] = per
+                dfi = dfi.set_index(names)
             dfs.append(dfi)
-        df = pd.concat(dfs, axis=1)
+        df = pd.concat(dfs, axis=0)
+
+        # add unique integer index
+        df.loc[:, "no"] = 1
+        df.loc[:, "no"] = df.groupby(["per", "k", "i", "j"])["no"].cumsum() - 1
+        df = df.set_index("no", append=True)
+
+        # squeeze: remove duplicate periods
         if squeeze:
-            keep = []
-            for var in varnames:
-                diffcols = list([n for n in df.columns if var in n])
-                diff = df[diffcols].fillna(0).diff(axis=1)
-                diff[
-                    "{}0".format(var)
-                ] = 1  # always return the first stress period
-                changed = diff.sum(axis=0) != 0
-                keep.append(df.loc[:, changed.index[changed]])
-            df = pd.concat(keep, axis=1)
+            changed = (
+                df.groupby(["k", "i", "j", "no"]).diff().ne(0.0).any(axis=1)
+            )
+            changed = changed.groupby("per").transform(lambda s: s.any())
+            df = df.loc[changed, :]
+
         df = df.reset_index()
-        df.insert(len(names), "node", df.i * self._model.ncol + df.j)
+        df.loc[:, "node"] = df.loc[:, "i"] * self._model.ncol + df.loc[:, "j"]
+        df = df.loc[
+            :,
+            names
+            + [
+                "node",
+            ]
+            + [v for v in varnames if not v == "node"],
+        ]
         return df
 
     def add_record(self, kper, index, values):
@@ -1143,12 +1143,12 @@ class MfList(DataInterface, DataListInterface):
         for name, arr in arrays.items():
             if unstructured:
                 cnt = np.zeros(
-                    (self._model.nlay * self._model.ncpl,), dtype=np.float
+                    (self._model.nlay * self._model.ncpl,), dtype=float
                 )
             else:
                 cnt = np.zeros(
                     (self._model.nlay, self._model.nrow, self._model.ncol),
-                    dtype=np.float,
+                    dtype=float,
                 )
             # print(name,kper)
             for rec in sarr:

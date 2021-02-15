@@ -207,7 +207,7 @@ class _StructuredCrossSection(_CrossSection):
             if l > 0:
                 self.ncb += 1
 
-        self.active = np.ones((self.mg.nlay + self.ncb), dtype=np.int)
+        self.active = np.ones((self.mg.nlay + self.ncb), dtype=int)
         kon = 0
 
         if len(self.laycbd) > 0:
@@ -379,7 +379,7 @@ class _StructuredCrossSection(_CrossSection):
             )
             if len(self.laycbd) > 0:
                 if self.laycbd[k] > 0:
-                    ta = np.empty((self.mg.nrow, self.mg.ncol), dtype=np.float)
+                    ta = np.empty((self.mg.nrow, self.mg.ncol), dtype=float)
                     ta[:, :] = -1e9
                     vpts.append(
                         plotutil.cell_value_points(self.xpts, xedge, yedge, ta)
@@ -513,7 +513,7 @@ class _StructuredCrossSection(_CrossSection):
             )
             if len(self.laycbd) > 0:
                 if self.laycbd[k] > 0:
-                    ta = np.empty((self.mg.nrow, self.mg.ncol), dtype=np.float)
+                    ta = np.empty((self.mg.nrow, self.mg.ncol), dtype=float)
                     ta[:, :] = self.mg.botm.array[k, :, :]
                     vpts.append(
                         plotutil.cell_value_points(

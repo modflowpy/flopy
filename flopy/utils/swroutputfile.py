@@ -335,7 +335,7 @@ class SwrFile(FlopyBinaryData):
         self.conn_dtype = np.dtype(
             [("reach", "i4"), ("from", "i4"), ("to", "i4")]
         )
-        conn = np.zeros((self.nrecord, 3), np.int)
+        conn = np.zeros((self.nrecord, 3), int)
         icount = 0
         for nrg in range(self.flowitems):
             flowitems = self.read_integer()
@@ -405,7 +405,7 @@ class SwrFile(FlopyBinaryData):
     def _read_header(self):
         nitems = 0
         if self.type == "exchange" or self.type == "structure":
-            itemlist = np.zeros(self.nrecord, np.int)
+            itemlist = np.zeros(self.nrecord, int)
             try:
                 for i in range(self.nrecord):
                     itemlist[i] = self.read_integer()

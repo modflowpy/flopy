@@ -9,7 +9,7 @@ except:
 
 
 def analyticalWaterTableSolution(h1, h2, z, R, K, L, x):
-    h = np.zeros((x.shape[0]), np.float)
+    h = np.zeros((x.shape[0]), float)
     b1 = h1 - z
     b2 = h2 - z
     h = np.sqrt(b1 ** 2 - (x / L) * (b1 ** 2 - b2 ** 2) + (R * x / K) * (L - x)) + z
@@ -46,10 +46,10 @@ def test_mfnwt_run():
     h2 = 11.
 
     # ibound
-    ibound = np.ones((nlay, nrow, ncol), dtype=np.int)
+    ibound = np.ones((nlay, nrow, ncol), dtype=int)
 
     # starting heads
-    strt = np.zeros((nlay, nrow, ncol), dtype=np.float)
+    strt = np.zeros((nlay, nrow, ncol), dtype=float)
     strt[0, 0, 0] = h1
     strt[0, 0, -1] = h2
 

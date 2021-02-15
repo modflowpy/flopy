@@ -197,9 +197,9 @@ class ModflowDrn(Package):
             if not is_drt:
                 dtype = np.dtype(
                     [
-                        ("k", np.int),
-                        ("i", np.int),
-                        ("j", np.int),
+                        ("k", int),
+                        ("i", int),
+                        ("j", int),
                         ("elev", np.float32),
                         ("cond", np.float32),
                     ]
@@ -207,20 +207,20 @@ class ModflowDrn(Package):
             else:
                 dtype = np.dtype(
                     [
-                        ("k", np.int),
-                        ("i", np.int),
-                        ("j", np.int),
+                        ("k", int),
+                        ("i", int),
+                        ("j", int),
                         ("elev", np.float32),
                         ("cond", np.float32),
-                        ("layr", np.int),
-                        ("rowr", np.int),
-                        ("colr", np.int),
+                        ("layr", int),
+                        ("rowr", int),
+                        ("colr", int),
                         ("rfprop", np.float32),
                     ]
                 )
         else:
             dtype = np.dtype(
-                [("node", np.int), ("elev", np.float32), ("cond", np.float32)]
+                [("node", int), ("elev", np.float32), ("cond", np.float32)]
             )
         return dtype
 

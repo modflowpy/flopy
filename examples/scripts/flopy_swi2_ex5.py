@@ -83,11 +83,11 @@ def run(silent=False):
     nlay = 6
     nrow = 1
     ncol = 113
-    delr = np.zeros((ncol), np.float)
+    delr = np.zeros((ncol), float)
     delc = 1.0
-    r = np.zeros((ncol), np.float)
-    x = np.zeros((ncol), np.float)
-    edge = np.zeros((ncol), np.float)
+    r = np.zeros((ncol), float)
+    x = np.zeros((ncol), float)
+    edge = np.zeros((ncol), float)
     dx = 25.0
     for i in range(0, ncol):
         delr[i] = dx
@@ -109,10 +109,10 @@ def run(silent=False):
 
     nsave_zeta = 8
     ndecay = 4
-    ibound = np.ones((nlay, nrow, ncol), np.int)
+    ibound = np.ones((nlay, nrow, ncol), int)
     for k in range(0, nlay):
         ibound[k, 0, ncol - 1] = -1
-    bot = np.zeros((nlay, nrow, ncol), np.float)
+    bot = np.zeros((nlay, nrow, ncol), float)
     dz = 100.0 / float(nlay - 1)
     zall = -np.arange(0, 100 + dz, dz)
     zall = np.append(zall, -120.0)
@@ -121,7 +121,7 @@ def run(silent=False):
     for k in range(0, nlay):
         for i in range(0, ncol):
             bot[k, 0, i] = tb[k]
-    isource = np.zeros((nlay, nrow, ncol), np.int)
+    isource = np.zeros((nlay, nrow, ncol), int)
     isource[:, 0, ncol - 1] = 1
     isource[nlay - 1, 0, ncol - 1] = 2
 
@@ -129,10 +129,10 @@ def run(silent=False):
     kvb = (0.0000000000100 * 1000.0 * 9.81 / 0.001) * 60 * 60 * 24
     ssb = 1e-5
     sszb = 0.2
-    kh = np.zeros((nlay, nrow, ncol), np.float)
-    kv = np.zeros((nlay, nrow, ncol), np.float)
-    ss = np.zeros((nlay, nrow, ncol), np.float)
-    ssz = np.zeros((nlay, nrow, ncol), np.float)
+    kh = np.zeros((nlay, nrow, ncol), float)
+    kv = np.zeros((nlay, nrow, ncol), float)
+    ss = np.zeros((nlay, nrow, ncol), float)
+    ssz = np.zeros((nlay, nrow, ncol), float)
     for k in range(0, nlay):
         for i in range(0, ncol):
             f = r[i] * 2.0 * math.pi
@@ -140,7 +140,7 @@ def run(silent=False):
             kv[k, 0, i] = kvb * f
             ss[k, 0, i] = ssb * f
             ssz[k, 0, i] = sszb * f
-    z = np.ones((nlay), np.float)
+    z = np.ones((nlay), float)
     z = -100.0 * z
 
     nwell = 1
@@ -153,7 +153,7 @@ def run(silent=False):
     wellQpm = wellQ / abs(wellbtm)
     well_data = {}
     for ip in range(0, nper):
-        welllist = np.zeros((nwell, 4), np.float)
+        welllist = np.zeros((nwell, 4), float)
         for iw in range(0, nwell):
             if ip == 0:
                 b = zall[iw] - zall[iw + 1]
@@ -168,7 +168,7 @@ def run(silent=False):
             welllist[iw, 3] = q
         well_data[ip] = welllist.copy()
 
-    ihead = np.zeros((nlay), np.float)
+    ihead = np.zeros((nlay), float)
 
     ocspd = {}
     for i in range(0, nper):
@@ -263,13 +263,13 @@ def run(silent=False):
     ibound = np.ones((nlay_swt, nrow, ncol), "int")
     for k in range(0, nlay_swt):
         ibound[k, 0, ncol - 1] = -1
-    bot = np.zeros((nlay_swt, nrow, ncol), np.float)
+    bot = np.zeros((nlay_swt, nrow, ncol), float)
     zall = [0, -20.0, -40.0, -60.0, -80.0, -100.0, -120.0]
     dz = 120.0 / nlay_swt
     tb = np.arange(nlay_swt) * -dz - dz
-    sconc = np.zeros((nlay_swt, nrow, ncol), np.float)
-    icbund = np.ones((nlay_swt, nrow, ncol), np.int)
-    strt = np.zeros((nlay_swt, nrow, ncol), np.float)
+    sconc = np.zeros((nlay_swt, nrow, ncol), float)
+    icbund = np.ones((nlay_swt, nrow, ncol), int)
+    strt = np.zeros((nlay_swt, nrow, ncol), float)
     pressure = 0.0
     g = 9.81
     z = -dz / 2.0  # cell center
@@ -295,10 +295,10 @@ def run(silent=False):
     kvb = (0.0000000000100 * 1000.0 * 9.81 / 0.001) * 60 * 60 * 24
     ssb = 1e-5
     sszb = 0.2
-    kh = np.zeros((nlay_swt, nrow, ncol), np.float)
-    kv = np.zeros((nlay_swt, nrow, ncol), np.float)
-    ss = np.zeros((nlay_swt, nrow, ncol), np.float)
-    ssz = np.zeros((nlay_swt, nrow, ncol), np.float)
+    kh = np.zeros((nlay_swt, nrow, ncol), float)
+    kv = np.zeros((nlay_swt, nrow, ncol), float)
+    ss = np.zeros((nlay_swt, nrow, ncol), float)
+    ssz = np.zeros((nlay_swt, nrow, ncol), float)
     for k in range(0, nlay_swt):
         for i in range(0, ncol):
             f = r[i] * 2.0 * math.pi
@@ -319,7 +319,7 @@ def run(silent=False):
     wellbtm = -20.0
     wellQpm = wellQ / abs(wellbtm)
     for ip in range(0, nper):
-        welllist = np.zeros((nwell, 4), np.float)
+        welllist = np.zeros((nwell, 4), float)
         ssmlist = []
         for iw in range(0, nwell):
             if ip == 0:
@@ -426,7 +426,7 @@ def run(silent=False):
     uobj = flopy.utils.UcnFile(ucnfile)
     times = uobj.get_times()
     print(times)
-    conc = np.zeros((len(times), nlay_swt, ncol), np.float)
+    conc = np.zeros((len(times), nlay_swt, ncol), float)
     for idx, tt in enumerate(times):
         c = uobj.get_data(totim=tt)
         for ilay in range(0, nlay_swt):
@@ -435,7 +435,7 @@ def run(silent=False):
 
     # spatial data
     # swi2
-    bot = np.zeros((1, ncol, nlay), np.float)
+    bot = np.zeros((1, ncol, nlay), float)
     dz = 100.0 / float(nlay - 1)
     zall = -np.arange(0, 100 + dz, dz)
     zall = np.append(zall, -120.0)
@@ -446,7 +446,7 @@ def run(silent=False):
             bot[0, i, k] = tb[k]
     # seawat
     swt_dz = 120.0 / nlay_swt
-    swt_tb = np.zeros((nlay_swt), np.float)
+    swt_tb = np.zeros((nlay_swt), float)
     zc = -swt_dz / 2.0
     for klay in range(0, nlay_swt):
         swt_tb[klay] = zc
@@ -529,8 +529,8 @@ def run(silent=False):
     leg._drawFrame = False
     # data items
     for itime in range(0, nswi_times):
-        zb = np.zeros((ncol), np.float)
-        zs = np.zeros((ncol), np.float)
+        zb = np.zeros((ncol), float)
+        zs = np.zeros((ncol), float)
         for icol in range(0, ncol):
             for klay in range(0, nlay):
                 # top and bottom of layer

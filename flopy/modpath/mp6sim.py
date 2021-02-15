@@ -448,12 +448,12 @@ class StartingLocationsFile(Package):
         """
         dtype = np.dtype(
             [
-                ("particleid", np.int),
-                ("particlegroup", np.int),
-                ("initialgrid", np.int),
-                ("k0", np.int),
-                ("i0", np.int),
-                ("j0", np.int),
+                ("particleid", int),
+                ("particlegroup", int),
+                ("initialgrid", int),
+                ("k0", int),
+                ("i0", int),
+                ("j0", int),
                 ("xloc0", np.float32),
                 ("yloc0", np.float32),
                 ("zloc0", np.float32),

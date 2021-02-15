@@ -754,12 +754,12 @@ class ModflowSfr2(Package):
             # include node column for structured grids (useful for indexing)
             return np.dtype(
                 [
-                    ("node", np.int),
-                    ("k", np.int),
-                    ("i", np.int),
-                    ("j", np.int),
-                    ("iseg", np.int),
-                    ("ireach", np.int),
+                    ("node", int),
+                    ("k", int),
+                    ("i", int),
+                    ("j", int),
+                    ("iseg", int),
+                    ("ireach", int),
                     ("rchlen", np.float32),
                     ("strtop", np.float32),
                     ("slope", np.float32),
@@ -769,16 +769,16 @@ class ModflowSfr2(Package):
                     ("thti", np.float32),
                     ("eps", np.float32),
                     ("uhc", np.float32),
-                    ("reachID", np.int),
-                    ("outreach", np.int),
+                    ("reachID", int),
+                    ("outreach", int),
                 ]
             )
         else:
             return np.dtype(
                 [
-                    ("node", np.int),
-                    ("iseg", np.int),
-                    ("ireach", np.int),
+                    ("node", int),
+                    ("iseg", int),
+                    ("ireach", int),
                     ("rchlen", np.float32),
                     ("strtop", np.float32),
                     ("slope", np.float32),
@@ -788,8 +788,8 @@ class ModflowSfr2(Package):
                     ("thti", np.float32),
                     ("eps", np.float32),
                     ("uhc", np.float32),
-                    ("reachID", np.int),
-                    ("outreach", np.int),
+                    ("reachID", int),
+                    ("outreach", int),
                 ]
             )
 
@@ -797,12 +797,12 @@ class ModflowSfr2(Package):
     def get_default_segment_dtype():
         return np.dtype(
             [
-                ("nseg", np.int),
-                ("icalc", np.int),
-                ("outseg", np.int),
-                ("iupseg", np.int),
-                ("iprior", np.int),
-                ("nstrpts", np.int),
+                ("nseg", int),
+                ("icalc", int),
+                ("outseg", int),
+                ("iupseg", int),
+                ("iprior", int),
+                ("nstrpts", int),
                 ("flow", np.float32),
                 ("runoff", np.float32),
                 ("etsw", np.float32),

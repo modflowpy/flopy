@@ -26,7 +26,7 @@ def test_tpl_constant():
     mfpackage = 'lpf'
     partype = 'hk'
     parname = 'HK_LAYER_1'
-    idx = np.empty((nlay, nrow, ncol), dtype=np.bool)
+    idx = np.empty((nlay, nrow, ncol), dtype=bool)
     idx[0] = True
     idx[1:] = False
 

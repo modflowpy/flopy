@@ -385,7 +385,7 @@ class ModflowLak(Package):
 
         if isinstance(stages, float):
             if self.nlakes == 1:
-                stages = np.array([self.nlakes], dtype=np.float) * stages
+                stages = np.array([self.nlakes], dtype=float) * stages
             else:
                 stages = np.ones(self.nlakes, dtype=float) * stages
         elif isinstance(stages, list):
@@ -397,7 +397,7 @@ class ModflowLak(Package):
             raise Exception(err)
         self.stages = stages
         if stage_range is None:
-            stage_range = np.ones((nlakes, 2), dtype=np.float)
+            stage_range = np.ones((nlakes, 2), dtype=float)
             stage_range[:, 0] = -10000.0
             stage_range[:, 1] = 10000.0
         else:
@@ -466,7 +466,7 @@ class ModflowLak(Package):
                 elif isinstance(value, float) or isinstance(value, int):
                     td = {}
                     for k in range(self.nlakes):
-                        td[k] = (np.ones(6, dtype=np.float) * value).tolist()
+                        td[k] = (np.ones(6, dtype=float) * value).tolist()
                     flux_data[key] = td
                 elif isinstance(value, dict):
                     try:

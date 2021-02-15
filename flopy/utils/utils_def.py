@@ -38,12 +38,8 @@ class FlopyBinaryData(object):
         return
 
     def read_text(self, nchar=20):
-        textvalue = self._read_values(self.character, nchar).tostring()
-        if not isinstance(textvalue, str):
-            textvalue = textvalue.decode().strip()
-        else:
-            textvalue = textvalue.strip()
-        return textvalue
+        bytesvalue = self._read_values(self.character, nchar).tobytes()
+        return bytesvalue.decode().strip()
 
     def read_integer(self):
         return self._read_values(self.integer, 1)[0]

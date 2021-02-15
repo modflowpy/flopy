@@ -48,7 +48,7 @@ def test_polygon_from_ij():
                          (0, 7, 8, .3, True, 's2')],
                         dtype=[('k', '<i8'), ('i', '<i8'), ('j', '<i8'),
                                ('stuff', '<f4'), ('stuf', '|b1'),
-                               ('stf', np.object)]).view(np.recarray)
+                               ('stf', object)]).view(np.recarray)
 
     # vertices for a model cell
     geoms = [Polygon(m.modelgrid.get_cell_vertices(i, j)) for i, j in

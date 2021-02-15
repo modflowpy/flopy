@@ -470,7 +470,7 @@ class Util3d(DataInterface):
         this package will be added.
     shape : length 3 tuple
         shape of the 3-D array, typically (nlay,nrow,ncol)
-    dtype : [np.int32, np.float32, np.bool]
+    dtype : [np.int32, np.float32, bool]
         the type of the data
     value : variable
         the data to be assigned to the 3-D array.
@@ -1016,7 +1016,7 @@ class Transient3d(DataInterface):
         this package will be added.
     shape : length 3 tuple
         shape of the 3-D transient arrays, typically (nlay,nrow,ncol)
-    dtype : [np.int32, np.float32, np.bool]
+    dtype : [np.int32, np.float32, bool]
         the type of the data
     value : variable
         the data to be assigned to the 3-D arrays. Typically a dict
@@ -1302,7 +1302,7 @@ class Transient2d(DataInterface):
         this package will be added.
     shape : length 2 tuple
         shape of the 2-D transient arrays, typically (nrow,ncol)
-    dtype : [np.int32, np.float32, np.bool]
+    dtype : [np.int32, np.float32, bool]
         the type of the data
     value : variable
         the data to be assigned to the 2-D arrays. Typically a dict
@@ -1804,7 +1804,7 @@ class Util2d(DataInterface):
         this package will be added.
     shape : tuple
         Shape of the 1- or 2-D array
-    dtype : [np.int32, np.float32, np.bool]
+    dtype : [np.int32, np.float32, bool]
         the type of the data
     value : variable
         the data to be assigned to the 1- or 2-D array.
@@ -1951,7 +1951,7 @@ class Util2d(DataInterface):
                     )
                 )
             dtype = np.int32
-        if dtype not in [np.int32, np.float32, np.bool]:
+        if dtype not in [np.int32, np.float32, bool]:
             raise TypeError("Util2d:unsupported dtype: " + str(dtype))
 
         if name is not None:
@@ -2902,20 +2902,20 @@ class Util2d(DataInterface):
             value = np.array(value)
 
         if isinstance(value, bool):
-            if self._dtype == np.bool:
+            if self._dtype == bool:
                 try:
-                    self.__value = np.bool(value)
+                    self.__value = bool(value)
 
                 except:
                     raise Exception(
                         "Util2d:could not cast "
-                        + 'boolean value to type "np.bool": '
+                        + 'boolean value to type "bool": '
                         + str(value)
                     )
             else:
                 raise Exception(
                     "Util2d:value type is bool, "
-                    + " but dtype not set as np.bool"
+                    + " but dtype not set as bool"
                 )
         elif isinstance(value, str):
             if os.path.exists(value):
@@ -3161,21 +3161,21 @@ class Util2d(DataInterface):
         freefmt, cnstnt, fmtin, iprn, nunit = None, None, None, -1, None
         fname = None
         isfloat = False
-        if dtype == np.float or dtype == np.float32:
+        if dtype == float or dtype == np.float32:
             isfloat = True
             # if free format keywords
         if str(raw[0].lower()) in str(free_fmt):
             freefmt = raw[0].lower()
             if raw[0].lower() == "constant":
                 if isfloat:
-                    cnstnt = np.float(raw[1].lower().replace("d", "e"))
+                    cnstnt = float(raw[1].lower().replace("d", "e"))
                 else:
-                    cnstnt = np.int(raw[1].lower())
+                    cnstnt = int(raw[1].lower())
             if raw[0].lower() == "internal":
                 if isfloat:
-                    cnstnt = np.float(raw[1].lower().replace("d", "e"))
+                    cnstnt = float(raw[1].lower().replace("d", "e"))
                 else:
-                    cnstnt = np.int(raw[1].lower())
+                    cnstnt = int(raw[1].lower())
                 fmtin = raw[2].strip()
                 iprn = 0
                 if len(raw) >= 4:
@@ -3193,9 +3193,9 @@ class Util2d(DataInterface):
 
                 nunit = int(raw[1])
                 if isfloat:
-                    cnstnt = np.float(raw[2].lower().replace("d", "e"))
+                    cnstnt = float(raw[2].lower().replace("d", "e"))
                 else:
-                    cnstnt = np.int(raw[2].lower())
+                    cnstnt = int(raw[2].lower())
                 fmtin = raw[3].strip()
                 iprn = 0
                 if len(raw) >= 5:
@@ -3203,26 +3203,26 @@ class Util2d(DataInterface):
             elif raw[0].lower() == "open/close":
                 fname = raw[1].strip()
                 if isfloat:
-                    cnstnt = np.float(raw[2].lower().replace("d", "e"))
+                    cnstnt = float(raw[2].lower().replace("d", "e"))
                 else:
-                    cnstnt = np.int(raw[2].lower())
+                    cnstnt = int(raw[2].lower())
                 fmtin = raw[3].strip()
                 iprn = 0
                 if len(raw) >= 5:
                     iprn = int(raw[4])
                 npl, fmt, width, decimal = None, None, None, None
         else:
-            locat = np.int(line[0:10].strip())
+            locat = int(line[0:10].strip())
             if isfloat:
                 if len(line) >= 20:
-                    cnstnt = np.float(
+                    cnstnt = float(
                         line[10:20].strip().lower().replace("d", "e")
                     )
                 else:
                     cnstnt = 0.0
             else:
                 if len(line) >= 20:
-                    cnstnt = np.int(line[10:20].strip())
+                    cnstnt = int(line[10:20].strip())
                 else:
                     cnstnt = 0
                 # if cnstnt == 0:
@@ -3233,7 +3233,7 @@ class Util2d(DataInterface):
                 else:
                     fmtin = ""
                 try:
-                    iprn = np.int(line[40:50].strip())
+                    iprn = int(line[40:50].strip())
                 except:
                     iprn = 0
             # locat = int(raw[0])
@@ -3244,7 +3244,7 @@ class Util2d(DataInterface):
                 freefmt = "constant"
             elif locat < 0:
                 freefmt = "external"
-                nunit = np.int(locat) * -1
+                nunit = int(locat) * -1
                 fmtin = "(binary)"
             elif locat > 0:
                 # if the unit number matches the current file, it's internal
@@ -3252,7 +3252,7 @@ class Util2d(DataInterface):
                     freefmt = "internal"
                 else:
                     freefmt = "external"
-                nunit = np.int(locat)
+                nunit = int(locat)
 
             # Reset for special MT3D control flags
             if array_format == "mt3d":

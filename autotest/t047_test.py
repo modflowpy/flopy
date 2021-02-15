@@ -20,7 +20,7 @@ def get_namefile_entries(fpth):
     except:
         print('could not open...{}'.format(fpth))
         return None
-    dtype = [('ftype', '|S12'), ('unit', np.int),
+    dtype = [('ftype', '|S12'), ('unit', int),
              ('filename', '|S128'), ('status', '|S10')]
     lines = f.readlines()
     data = []
