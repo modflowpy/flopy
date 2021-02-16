@@ -82,6 +82,8 @@ jobs:
         exclude:
           - os: macos-latest
             python-version: 3.6
+          - os: macos-latest
+            python-version: 3.7
 
     steps:
     # check out repo
