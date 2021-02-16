@@ -46,8 +46,8 @@ class ModflowGwt(mfmodel.MFModel):
           Output Control.
     packages : [ftype, fname, pname]
         * ftype (string) is the file type, which must be one of the following
-          character values shown in table~ref{table:ftype}. Ftype may be
-          entered in any combination of uppercase and lowercase.
+          character values shown in table in mf6io.pdf. Ftype may be entered in
+          any combination of uppercase and lowercase.
         * fname (string) is the name of the file containing the package input.
           The path to the file should be included if the file is not located in
           the folder where the program was run.

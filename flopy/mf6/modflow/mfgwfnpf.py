@@ -94,12 +94,11 @@ class ModflowGwfnpf(mfpackage.MFPackage):
     icelltype : [integer]
         * icelltype (integer) flag for each cell that specifies how saturated
           thickness is treated. 0 means saturated thickness is held constant;
-          :math:`>`0 means saturated thickness varies with computed head when
-          head is below the cell top; :math:`<`0 means saturated thickness
-          varies with computed head unless the THICKSTRT option is in effect.
-          When THICKSTRT is in effect, a negative value of icelltype indicates
-          that saturated thickness will be computed as STRT-BOT and held
-          constant.
+          >0 means saturated thickness varies with computed head when head is
+          below the cell top; <0 means saturated thickness varies with computed
+          head unless the THICKSTRT option is in effect. When THICKSTRT is in
+          effect, a negative value of icelltype indicates that saturated
+          thickness will be computed as STRT-BOT and held constant.
     k : [double]
         * k (double) is the hydraulic conductivity. For the common case in
           which the user would like to specify the horizontal hydraulic
@@ -108,8 +107,8 @@ class ModflowGwfnpf(mfpackage.MFPackage):
           assigned as the vertical hydraulic conductivity, and K22 and the
           three rotation angles should not be specified. When more
           sophisticated anisotropy is required, then K corresponds to the K11
-          hydraulic conductivity axis. All included cells (IDOMAIN :math:`>` 0)
-          must have a K value greater than zero.
+          hydraulic conductivity axis. All included cells (IDOMAIN > 0) must
+          have a K value greater than zero.
     k22 : [double]
         * k22 (double) is the hydraulic conductivity of the second ellipsoid
           axis (or the ratio of K22/K if the K22OVERK option is specified); for
@@ -120,15 +119,15 @@ class ModflowGwfnpf(mfpackage.MFPackage):
           conductivity along columns in the y direction. For an unstructured
           DISU grid, the user must assign principal x and y axes and provide
           the angle for each cell face relative to the assigned x direction.
-          All included cells (IDOMAIN :math:`>` 0) must have a K22 value
-          greater than zero.
+          All included cells (IDOMAIN > 0) must have a K22 value greater than
+          zero.
     k33 : [double]
         * k33 (double) is the hydraulic conductivity of the third ellipsoid
           axis (or the ratio of K33/K if the K33OVERK option is specified); for
           an unrotated case, this is the vertical hydraulic conductivity. When
           anisotropy is applied, K33 corresponds to the K33 tensor component.
-          All included cells (IDOMAIN :math:`>` 0) must have a K33 value
-          greater than zero.
+          All included cells (IDOMAIN > 0) must have a K33 value greater than
+          zero.
     angle1 : [double]
         * angle1 (double) is a rotation angle of the hydraulic conductivity
           tensor in degrees. The angle represents the first of three sequential
@@ -172,16 +171,16 @@ class ModflowGwfnpf(mfpackage.MFPackage):
     wetdry : [double]
         * wetdry (double) is a combination of the wetting threshold and a flag
           to indicate which neighboring cells can cause a cell to become wet.
-          If WETDRY :math:`<` 0, only a cell below a dry cell can cause the
-          cell to become wet. If WETDRY :math:`>` 0, the cell below a dry cell
-          and horizontally adjacent cells can cause a cell to become wet. If
-          WETDRY is 0, the cell cannot be wetted. The absolute value of WETDRY
-          is the wetting threshold. When the sum of BOT and the absolute value
-          of WETDRY at a dry cell is equaled or exceeded by the head at an
-          adjacent cell, the cell is wetted. WETDRY must be specified if
-          "REWET" is specified in the OPTIONS block. If "REWET" is not
-          specified in the options block, then WETDRY can be entered, and
-          memory will be allocated for it, even though it is not used.
+          If WETDRY < 0, only a cell below a dry cell can cause the cell to
+          become wet. If WETDRY > 0, the cell below a dry cell and horizontally
+          adjacent cells can cause a cell to become wet. If WETDRY is 0, the
+          cell cannot be wetted. The absolute value of WETDRY is the wetting
+          threshold. When the sum of BOT and the absolute value of WETDRY at a
+          dry cell is equaled or exceeded by the head at an adjacent cell, the
+          cell is wetted. WETDRY must be specified if "REWET" is specified in
+          the OPTIONS block. If "REWET" is not specified in the options block,
+          then WETDRY can be entered, and memory will be allocated for it, even
+          though it is not used.
     filename : String
         File name for this package.
     pname : String
