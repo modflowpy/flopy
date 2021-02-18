@@ -61,27 +61,27 @@ def get_branch():
     if branch is None:
         if is_CI:
             github_ref = os.getenv("GITHUB_REF")
-            branch = os.path.basename(os.path.normpath(github_ref)).lower()
-        else:
-            try:
-                # determine current branch
-                b = subprocess.Popen(
-                    ("git", "status"),
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                ).communicate()[0]
-                if isinstance(b, bytes):
-                    b = b.decode("utf-8")
+            if github_ref is not None:
+                return os.path.basename(os.path.normpath(github_ref)).lower()
+        try:
+            # determine current branch
+            b = subprocess.Popen(
+                ("git", "status"),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            ).communicate()[0]
+            if isinstance(b, bytes):
+                b = b.decode("utf-8")
 
-                for line in b.splitlines():
-                    if "On branch" in line:
-                        branch = (
-                            line.replace("On branch ", "").rstrip().lower()
-                        )
+            for line in b.splitlines():
+                if "On branch" in line:
+                    branch = (
+                        line.replace("On branch ", "").rstrip().lower()
+                    )
 
-            except:
-                msg = "Could not determine current branch. Is git installed?"
-                raise ValueError(msg)
+        except:
+            msg = "Could not determine current branch. Is git installed?"
+            raise ValueError(msg)
 
     return branch
 
@@ -135,17 +135,7 @@ def test_download_nightly_build():
     # Replace MODFLOW 6 executables with the latest versions
     else:
         print("Updating MODFLOW 6 executables from the nightly-build repo")
-        platform = sys.platform.lower()
-        if "linux" in platform:
-            zip_file = "linux.zip"
-        elif "darwin" in platform:
-            zip_file = "mac.zip"
-        elif "win32" in platform:
-            zip_file = "win64.zip"
-        url = pymake.get_repo_assets("MODFLOW-USGS/modflow6-nightly-build")[
-            zip_file
-        ]
-        pymake.download_and_unzip(url, exe_pth, verbose=True)
+        pymake.getmfnightly(pth=exe_pth, exes=["mf6", "libmf6"], verbose=True)
 
         move_exe()
 
