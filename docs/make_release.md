@@ -54,7 +54,7 @@ Use `run_notebooks.py` in the `release` directory to rerun all of the notebooks 
 ## Commit the release branch
 
 1.  Commit the changes to the release (*e.g.* `release3.2.10`) branch.
-2.  Push the commit to GitHub.
+2.  Push the commit to the [upstream GitHub repository](https://github.com/modflowpy/flopy).
 3.  Wait until the commit successfully runs on [GitHub Actions](https://github.com/modflowpy/flopy/actions).
 
 
