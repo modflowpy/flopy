@@ -37,12 +37,6 @@ Instructions for making a FloPy release
     python update-version_changes.py
     ```
 
-3.  Run pandoc from the terminal in the root directory to create USGS release notes using:
-
-    ```
-    pandoc -o ./docs/USGS_release.pdf ./docs/USGS_release.md ./docs/supported_packages.md ./docs/model_checks.md ./docs/version_changes.md
-    ```
-
 
 ## Update the example notebooks
 
@@ -50,13 +44,14 @@ Use `run_notebooks.py` in the `release` directory to rerun all of the notebooks 
 
 1.  `examples\Notebooks` directory.
 2.  `examples\Notebooks\groundwater_paper` directory.
+2.  `examples\Notebooks\FAQ` directory.
 
 
 ## Commit the release branch
 
 1.  Commit the changes to the release (*e.g.* `release3.2.10`) branch.
 2.  Push the commit to GitHub.
-3.  Wait until the commit successfully runs on [Travis](https://travis-ci.org/modflowpy/flopy/builds).
+3.  Wait until the commit successfully runs on [GitHub Actions](https://github.com/modflowpy/flopy/actions).
 
 
 ## Update master branch
