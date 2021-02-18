@@ -671,13 +671,12 @@ def create_packages():
                 parent_init_string, init_var, package_short_name, spaces
             )
         )
-        local_datetime = datetime.datetime.now()
-        local_datetime_timestamp = float(local_datetime.strftime("%s"))
+        local_datetime = datetime.datetime.now(datetime.timezone.utc)
         comment_string = (
             "# DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE "
             + "MUST BE CREATED BY\n# mf6/utils/createpackages.py\n# FILE "
             + "created on {} UTC".format(
-                datetime.datetime.utcfromtimestamp(local_datetime_timestamp)
+                local_datetime.strftime("%B %d, %Y %H:%M:%S")
             )
         )
         # assemble full package string
