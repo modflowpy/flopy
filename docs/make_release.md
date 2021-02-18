@@ -9,8 +9,12 @@ Instructions for making a FloPy release
     ```
     python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="master", backup=False)'
     ```
+3.  Run `black` on the updated MODFLOW 6 package classes by running the following from the root directory:
 
-    Evaluate if there are any changes that seem to reduce MODFLOW 6 functionality before committing changes on the release branch.
+    ```
+    black -l 79 flopy/mf6
+    ```
+
 
 
 ## Update the release version number
