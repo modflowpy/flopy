@@ -131,9 +131,8 @@ class ModflowGwfgwf(mfpackage.MFPackage):
         * cl2 (double) is the distance between the center of cell 2 and the its
           shared face with cell 1.
         * hwva (double) is the horizontal width of the flow connection between
-          cell 1 and cell 2 if IHC :math:`>` 0, or it is the area perpendicular
-          to flow of the vertical connection between cell 1 and cell 2 if IHC =
-          0.
+          cell 1 and cell 2 if IHC > 0, or it is the area perpendicular to flow
+          of the vertical connection between cell 1 and cell 2 if IHC = 0.
         * aux (double) represents the values of the auxiliary variables for
           each GWFGWF Exchange. The values of auxiliary variables must be
           present for each exchange. The values must be specified in the order

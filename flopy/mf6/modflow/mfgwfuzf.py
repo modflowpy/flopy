@@ -217,8 +217,8 @@ class ModflowGwfuzf(mfpackage.MFPackage):
           a given volume of soil divided by that volume. Values range from 0 to
           about 3 :math:`cm^{-2}`, depending on the plant community and its
           stage of development. ROOTACT is always specified, but is only used
-          if SIMULATE\_ET and UNSAT\_ETAE are specified in the OPTIONS block.
-          If the Options block includes a TIMESERIESFILE entry (see the "Time-
+          if SIMULATE_ET and UNSAT_ETAE are specified in the OPTIONS block. If
+          the Options block includes a TIMESERIESFILE entry (see the "Time-
           Variable Input" section), values can be obtained from a time series
           by entering the time-series name in place of a numeric value.
         * aux (double) represents the values of the auxiliary variables for

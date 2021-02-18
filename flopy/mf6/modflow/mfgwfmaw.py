@@ -281,12 +281,12 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                 * rate (double) is the volumetric pumping rate for the multi-
                   aquifer well. A positive value indicates recharge and a
                   negative value indicates discharge (pumping). RATE only
-                  applies to active (IBOUND :math:`>` 0) multi-aquifer wells.
-                  If the Options block includes a TIMESERIESFILE entry (see the
-                  "Time-Variable Input" section), values can be obtained from a
-                  time series by entering the time-series name in place of a
-                  numeric value. By default, the RATE for each multi-aquifer
-                  well is zero.
+                  applies to active (IBOUND > 0) multi-aquifer wells. If the
+                  Options block includes a TIMESERIESFILE entry (see the "Time-
+                  Variable Input" section), values can be obtained from a time
+                  series by entering the time-series name in place of a numeric
+                  value. By default, the RATE for each multi-aquifer well is
+                  zero.
             well_head : [double]
                 * well_head (double) is the head in the multi-aquifer well.
                   WELL_HEAD is only applied to constant head (STATUS is
@@ -300,15 +300,15 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                 * head_limit (string) is the limiting water level (head) in the
                   well, which is the minimum of the well RATE or the well
                   inflow rate from the aquifer. HEAD_LIMIT can be applied to
-                  extraction wells (RATE :math:`<` 0) or injection wells (RATE
-                  :math:`>` 0). HEAD\_LIMIT can be deactivated by specifying
-                  the text string `OFF'. The HEAD\_LIMIT option is based on the
-                  HEAD\_LIMIT functionality available in the
-                  MNW2~\citep{konikow2009} package for MODFLOW-2005. The
-                  HEAD\_LIMIT option has been included to facilitate backward
-                  compatibility with previous versions of MODFLOW but use of
-                  the RATE\_SCALING option instead of the HEAD\_LIMIT option is
-                  recommended. By default, HEAD\_LIMIT is `OFF'.
+                  extraction wells (RATE < 0) or injection wells (RATE > 0).
+                  HEAD_LIMIT can be deactivated by specifying the text string
+                  'OFF'. The HEAD_LIMIT option is based on the HEAD_LIMIT
+                  functionality available in the MNW2 (Konikow et al., 2009)
+                  package for MODFLOW-2005. The HEAD_LIMIT option has been
+                  included to facilitate backward compatibility with previous
+                  versions of MODFLOW but use of the RATE_SCALING option
+                  instead of the HEAD_LIMIT option is recommended. By default,
+                  HEAD_LIMIT is 'OFF'.
             shutoffrecord : [minrate, maxrate]
                 * minrate (double) is the minimum rate that a well must exceed
                   to shutoff a well during a stress period. The well will shut
