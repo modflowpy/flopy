@@ -220,6 +220,9 @@ def update_version():
     # update code.json
     update_codejson(vmajor, vminor, vmicro)
 
+    # update PyPi_release.md
+    update_PyPi_release(vmajor, vminor, vmicro)
+
 
 def update_codejson(vmajor, vminor, vmicro):
     # define json filename
@@ -354,6 +357,36 @@ def update_notebook_examples_markdown():
             )
         f.write("{}\n".format(line))
     f.close()
+
+def update_PyPi_release(vmajor, vminor, vmicro):
+    # create disclaimer text
+    is_approved, disclaimer = get_disclaimer()
+
+    # create version
+    version = get_tag(vmajor, vminor, vmicro)
+
+    # read README.md into memory
+    file = "PyPi_release.md"
+    fpth = os.path.join(file_paths[file], file)
+    with open(fpth, "r") as file:
+        lines = [line.rstrip() for line in file]
+
+    # rewrite README.md
+    terminate = False
+    f = open(fpth, "w")
+    for line in lines:
+        if "http://dx.doi.org/10.5066/F7BK19FH" in line:
+            line = get_software_citation(version, is_approved)
+        elif "Disclaimer" in line:
+            line = disclaimer
+            terminate = True
+        f.write("{}\n".format(line))
+        if terminate:
+            break
+
+    f.close()
+
+    return
 
 
 if __name__ == "__main__":
