@@ -1,5 +1,6 @@
 import os
 import io
+import datetime
 import textwrap
 from enum import Enum
 from flopy.mf6.data import mfstructure, mfdatautil
@@ -670,9 +671,13 @@ def create_packages():
                 parent_init_string, init_var, package_short_name, spaces
             )
         )
+        local_datetime = datetime.datetime.now(datetime.timezone.utc)
         comment_string = (
             "# DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE "
-            "MUST BE CREATED BY\n# mf6/utils/createpackages.py"
+            + "MUST BE CREATED BY\n# mf6/utils/createpackages.py\n# FILE "
+            + "created on {} UTC".format(
+                local_datetime.strftime("%B %d, %Y %H:%M:%S")
+            )
         )
         # assemble full package string
         package_string = "{}\n{}\n\n\n{}{}\n{}\n{}\n\n{}{}\n{}\n".format(
