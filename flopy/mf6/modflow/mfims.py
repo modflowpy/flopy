@@ -1,5 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
+# FILE created on February 18, 2021 16:23:05 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -230,9 +231,9 @@ class ModflowIms(mfpackage.MFPackage):
           for convergence of the inner (linear) iterations, in units of length.
           When the maximum absolute value of the head change at all nodes
           during an iteration is less than or equal to INNER_HCLOSE, the matrix
-          solver assumes convergence. Commonly, INNER_HCLOSE is set an order of
-          magnitude less than the OUTER_HCLOSE value specified for the
-          NONLINEAR block. The INNER_HCLOSE keyword has been deprecated in
+          solver assumes convergence. Commonly, INNER_HCLOSE is set equal to or
+          an order of magnitude less than the OUTER_HCLOSE value specified for
+          the NONLINEAR block. The INNER_HCLOSE keyword has been deprecated in
           favor of the more general INNER_DVCLOSE (for dependent variable),
           however either one can be specified in order to maintain backward
           compatibility.
@@ -243,12 +244,13 @@ class ModflowIms(mfpackage.MFPackage):
           length for head). When the maximum absolute value of the dependent-
           variable change at all nodes during an iteration is less than or
           equal to INNER_DVCLOSE, the matrix solver assumes convergence.
-          Commonly, INNER_DVCLOSE is set an order of magnitude less than the
-          OUTER_DVCLOSE value specified for the NONLINEAR block. The keyword,
-          INNER_HCLOSE can be still be specified instead of INNER_DVCLOSE for
-          backward compatibility with previous versions of MODFLOW 6 but
-          eventually INNER_HCLOSE will be deprecated and specification of
-          INNER_HCLOSE will cause MODFLOW 6 to terminate with an error.
+          Commonly, INNER_DVCLOSE is set equal to or an order of magnitude less
+          than the OUTER_DVCLOSE value specified for the NONLINEAR block. The
+          keyword, INNER_HCLOSE can be still be specified instead of
+          INNER_DVCLOSE for backward compatibility with previous versions of
+          MODFLOW 6 but eventually INNER_HCLOSE will be deprecated and
+          specification of INNER_HCLOSE will cause MODFLOW 6 to terminate with
+          an error.
     rcloserecord : [inner_rclose, rclose_option]
         * inner_rclose (double) real value that defines the flow residual
           tolerance for convergence of the IMS linear solver and specific flow
