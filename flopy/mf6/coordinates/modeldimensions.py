@@ -4,6 +4,7 @@ modeldimensions module.  Contains the model dimension information
 
 """
 
+import sys
 from .simulationtime import SimulationTime
 from .modelgrid import UnstructuredModelGrid, ModelGrid
 from ..mfbase import StructException, FlopyException, VerbosityLevel
@@ -81,6 +82,7 @@ class DataDimensions(object):
         data=None,
         data_item_num=None,
         repeating_key=None,
+        min_size=False,
     ):
         return self.get_model_dim(data_item_num).get_data_shape(
             self.structure,
@@ -89,6 +91,7 @@ class DataDimensions(object):
             data,
             self.package_dim.package_path,
             repeating_key=repeating_key,
+            min_size=min_size,
         )
 
     def model_subspace_size(self, subspace_string="", data_item_num=None):
@@ -403,6 +406,7 @@ class ModelDimensions(object):
         path=None,
         deconstruct_axis=True,
         repeating_key=None,
+        min_size=False,
     ):
         if structure is None:
             raise FlopyException(
@@ -492,6 +496,7 @@ class ModelDimensions(object):
                 path,
                 deconstruct_axis,
                 repeating_key=repeating_key,
+                min_size=min_size,
             )
             if self.locked and consistent_shape:
                 self.stored_shapes[data_item.path] = (
@@ -509,6 +514,7 @@ class ModelDimensions(object):
         path=None,
         deconstruct_axis=True,
         repeating_key=None,
+        min_size=False,
     ):
         if isinstance(data, tuple):
             data = [data]
@@ -560,7 +566,7 @@ class ModelDimensions(object):
                         result = self.resolve_exp(
                             item,
                             self._find_in_dataset(
-                                data_set_struct, item[0], data
+                                data_set_struct, item[0], data, min_size
                             ),
                         )
                         if result:
@@ -584,7 +590,8 @@ class ModelDimensions(object):
                         elif DatumUtil.is_int(item[0]):
                             shape_dimensions.append(int(item[0]))
                         else:
-                            # try to resolve dimension within the existing block
+                            # try to resolve dimension within the
+                            # existing block
                             result = self.simulation_data.mfdata.find_in_path(
                                 parent_path, item[0]
                             )
@@ -684,7 +691,7 @@ class ModelDimensions(object):
             return value
 
     @staticmethod
-    def _find_in_dataset(data_set_struct, item, data):
+    def _find_in_dataset(data_set_struct, item, data, min_size=False):
         if data is not None:
             # find the current data item in data_set_struct
             for index, data_item in zip(
@@ -695,12 +702,22 @@ class ModelDimensions(object):
                     data_item.name.lower() == item.lower()
                     and len(data[0]) > index
                 ):
-                    # always use the maximum value
-                    max_val = 0
-                    for data_line in data:
-                        if data_line[index] > max_val:
-                            max_val = data_line[index]
-                    return max_val
+                    if min_size:
+                        # use the minimum value
+                        min_val = sys.maxsize
+                        for data_line in data:
+                            if data_line[index] < min_val:
+                                min_val = data_line[index]
+                        if min_val == sys.maxsize:
+                            return 0
+                        return min_val
+                    else:
+                        # use the maximum value
+                        max_val = 0
+                        for data_line in data:
+                            if data_line[index] > max_val:
+                                max_val = data_line[index]
+                        return max_val
         return None
 
     @staticmethod

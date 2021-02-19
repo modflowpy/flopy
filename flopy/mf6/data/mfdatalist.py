@@ -356,6 +356,31 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
     def get_data(self, apply_mult=False, **kwargs):
         return self._get_data(apply_mult, **kwargs)
 
+    def _get_min_record_entries(self, data=None):
+        try:
+            if isinstance(data, dict) and "data" in data:
+                data = data["data"]
+            type_list = self._get_storage_obj().build_type_list(
+                data=data, min_size=True
+            )
+        except Exception as ex:
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self._path,
+                "getting min record entries",
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                None,
+                self._simulation_data.debug,
+                ex,
+            )
+        return len(type_list)
+
     def _set_data(self, data, autofill=False, check_data=True):
         if isinstance(data, dict):
             if "data" in data:
@@ -366,7 +391,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             data_check = data
         if iterable(data_check) and check_data:
             # verify data length
-            min_line_size = self.structure.get_min_record_entries()
+            min_line_size = self._get_min_record_entries(data)
             if isinstance(data_check[0], np.record) or (
                 iterable(data_check[0]) and not isinstance(data_check[0], str)
             ):
@@ -481,7 +506,6 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
 
     def _check_line_size(self, data_line, min_line_size):
         if 0 < len(data_line) < min_line_size:
-            min_line_size = self.structure.get_min_record_entries()
             message = (
                 "Data line {} only has {} entries, "
                 "minimum number of entries is "
