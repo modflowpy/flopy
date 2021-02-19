@@ -4,16 +4,27 @@ Instructions for making a FloPy release
 ## Make a release branch from develop
 
 1.  Make a release branch from develop (*e.g.* `release3.2.10`)
-2.  Update MODFLOW 6 dfn files in the repository and MODFLOW 6 package classes by running:
+    
+2.  If the flopy release coincides with a new MODFLOW 6 release
+    
+    1.  Update `usgsprograms.txt` in the [GitHub pymake repository](https://github.com/modflowpy/pymake) with the path to the new MODFLOW 6 release. Also update all other targets in `usgsprograms.txt` with the path to new releases.
+    
+    2.  Recompile all of the executables release on the [GitHub executables repository](https://github.com/MODFLOW-USGS/executables) using the `buildall.py` pymake script and Intel compilers for all operating systems.
+    
+    3.  Update the README.md on the [GitHub executables repository](https://github.com/MODFLOW-USGS/executables) with the information in the `code.md` file created by the `buildall.py` pymake script. 
+    
+    4.  Make a new release on the [GitHub executables repository](https://github.com/MODFLOW-USGS/executables) and add all of the operating system specific zip files containing the compiled executables (`linux.zip`, `mac.zip`, `win64.zip`, `win32.zip`). Publish the new release.
+    
+    5.  Update MODFLOW 6 dfn files in the repository and MODFLOW 6 package classes by running:
 
-    ```
-    python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="master", backup=False)'
-    ```
-3.  Run `black` on the updated MODFLOW 6 package classes by running the following from the root directory:
+        ```
+        python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="master", backup=False)'
+        ```
+    5.  Run `black` on the updated MODFLOW 6 package classes by running the following from the root directory:
 
-    ```
-    black -l 79 flopy/mf6
-    ```
+        ```
+        black -l 79 flopy/mf6
+        ```
 
 
 
