@@ -2388,6 +2388,7 @@ class DataStorage(object):
         key=None,
         nseg=None,
         cellid_expanded=False,
+        min_size=False,
     ):
         if data_set is None:
             self.jagged_record = False
@@ -2438,17 +2439,27 @@ class DataStorage(object):
                     ks_data_item.type = DatumType.string
                     ks_data_item.name = "{}_data".format(ks_data_item.name)
                     ks_rec_type = ks_data_item.get_rec_type()
-                    self._append_type_lists(
-                        ks_data_item.name, ks_rec_type, ks_data_item.is_cellid
-                    )
+                    if not min_size:
+                        self._append_type_lists(
+                            ks_data_item.name,
+                            ks_rec_type,
+                            ks_data_item.is_cellid,
+                        )
                     if (
                         index == len(data_set.data_item_structures) - 1
                         and data is not None
                     ):
                         idx = 1
-                        line_max_size = self._get_max_data_line_size(data)
+                        (
+                            line_max_size,
+                            line_min_size,
+                        ) = self._get_max_min_data_line_size(data)
+                        if min_size:
+                            line_size = line_min_size
+                        else:
+                            line_size = line_max_size
                         type_list = self.resolve_typelist(data)
-                        while len(type_list) < line_max_size:
+                        while len(type_list) < line_size:
                             # keystrings at the end of a line can contain
                             # items of variable length. assume everything at
                             # the end of the data line is related to the last
@@ -2515,6 +2526,7 @@ class DataStorage(object):
                                     data_set,
                                     data,
                                     repeating_key=key,
+                                    min_size=min_size,
                                 )
                             else:
                                 resolved_shape = [1]
@@ -2555,14 +2567,17 @@ class DataStorage(object):
                                 grid = data_dim.get_model_grid()
                                 size = grid.get_num_spatial_coordinates()
                                 data_item.remove_cellid(resolved_shape, size)
-                        for index in range(0, resolved_shape[0]):
-                            if resolved_shape[0] > 1:
-                                name = "{}_{}".format(data_item.name, index)
-                            else:
-                                name = data_item.name
-                            self._append_type_lists(
-                                name, data_type, data_item.is_cellid
-                            )
+                        if not data_item.optional or not min_size:
+                            for index in range(0, resolved_shape[0]):
+                                if resolved_shape[0] > 1:
+                                    name = "{}_{}".format(
+                                        data_item.name, index
+                                    )
+                                else:
+                                    name = data_item.name
+                                self._append_type_lists(
+                                    name, data_type, data_item.is_cellid
+                                )
         if cellid_expanded:
             return self._recarray_type_list_ex
         else:
@@ -2625,13 +2640,18 @@ class DataStorage(object):
         return current_length[0]
 
     @staticmethod
-    def _get_max_data_line_size(data):
+    def _get_max_min_data_line_size(data):
         max_size = 0
+        min_size = sys.maxsize
         if data is not None:
             for value in data:
                 if len(value) > max_size:
                     max_size = len(value)
-        return max_size
+                if len(value) < min_size:
+                    min_size = len(value)
+        if min_size == sys.maxsize:
+            min_size = 0
+        return max_size, min_size
 
     def get_data_dimensions(self, layer):
         data_dimensions = self.data_dimensions.get_data_shape()[0]
