@@ -173,9 +173,7 @@ class PyListUtil(object):
     def max_multi_dim_list_size(current_list):
         max_length = -1
         for item in current_list:
-            if isinstance(item, str):
-                return len(current_list)
-            elif len(item) > max_length:
+            if len(item) > max_length:
                 max_length = len(item)
         return max_length
 
