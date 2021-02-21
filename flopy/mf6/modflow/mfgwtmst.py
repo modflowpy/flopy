@@ -1,5 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
+# FILE created on February 18, 2021 16:23:05 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator
 
@@ -30,10 +31,13 @@ class ModflowGwtmst(mfpackage.MFPackage):
           order decay will occur. Use of this keyword requires that DECAY and
           DECAY_SORBED (if sorbtion is active) are specified in the GRIDDATA
           block.
-    sorbtion : boolean
-        * sorbtion (boolean) is a text keyword to indicate that sorbtion will
-          be activated. Use of this keyword requires that BULK_DENSITY and
-          DISTCOEF are specified in the GRIDDATA block.
+    sorption : string
+        * sorption (string) is a text keyword to indicate that sorption will be
+          activated. Valid sorption options include LINEAR, FREUNDLICH, and
+          LANGMUIR. Use of this keyword requires that BULK_DENSITY and DISTCOEF
+          are specified in the GRIDDATA block. If sorption is specified as
+          FREUNDLICH or LANGMUIR then SP2 is also required in the GRIDDATA
+          block.
     porosity : [double]
         * porosity (double) is the aquifer porosity.
     decay : [double]
@@ -51,10 +55,10 @@ class ModflowGwtmst(mfpackage.MFPackage):
           first-order decay is one over time. The dimensions of decay_sorbed
           for zero-order decay is mass of solute per mass of aquifer per time.
           If decay_sorbed is not specified and both decay and sorbtion are
-          active, then the sorbed decay rate will be set equal to the aqueous
-          decay rate. decay_sorbed will have no affect on simulation results
-          unless the SORPTION keyword and either first- or zero-order decay are
-          specified in the options block.
+          active, then the program will terminate with an error. decay_sorbed
+          will have no affect on simulation results unless the SORPTION keyword
+          and either first- or zero-order decay are specified in the options
+          block.
     bulk_density : [double]
         * bulk_density (double) is the bulk density of the aquifer in mass per
           length cubed. bulk_density is not required unless the SORBTION
@@ -62,8 +66,11 @@ class ModflowGwtmst(mfpackage.MFPackage):
     distcoef : [double]
         * distcoef (double) is the distribution coefficient for the
           equilibrium-controlled linear sorption isotherm in dimensions of
-          length cubed per mass. distcoef is not required unless the SORBTION
+          length cubed per mass. distcoef is not required unless the SORPTION
           keyword is specified.
+    sp2 : [double]
+        * sp2 (double) is the exponent for the Freundlich isotherm and the
+          sorption capacity for the Langmuir isotherm.
     filename : String
         File name for this package.
     pname : String
@@ -84,6 +91,7 @@ class ModflowGwtmst(mfpackage.MFPackage):
         ("gwt6", "mst", "griddata", "bulk_density")
     )
     distcoef = ArrayTemplateGenerator(("gwt6", "mst", "griddata", "distcoef"))
+    sp2 = ArrayTemplateGenerator(("gwt6", "mst", "griddata", "sp2"))
     package_abbr = "gwtmst"
     _package_type = "mst"
     dfn_file_name = "gwt-mst.dfn"
@@ -112,8 +120,9 @@ class ModflowGwtmst(mfpackage.MFPackage):
         ],
         [
             "block options",
-            "name sorbtion",
-            "type keyword",
+            "name sorption",
+            "type string",
+            "valid linear freundlich langmuir",
             "reader urword",
             "optional true",
         ],
@@ -161,6 +170,15 @@ class ModflowGwtmst(mfpackage.MFPackage):
             "layered true",
             "optional true",
         ],
+        [
+            "block griddata",
+            "name sp2",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "optional true",
+        ],
     ]
 
     def __init__(
@@ -170,12 +188,13 @@ class ModflowGwtmst(mfpackage.MFPackage):
         save_flows=None,
         first_order_decay=None,
         zero_order_decay=None,
-        sorbtion=None,
+        sorption=None,
         porosity=None,
         decay=None,
         decay_sorbed=None,
         bulk_density=None,
         distcoef=None,
+        sp2=None,
         filename=None,
         pname=None,
         parent_file=None,
@@ -192,10 +211,11 @@ class ModflowGwtmst(mfpackage.MFPackage):
         self.zero_order_decay = self.build_mfdata(
             "zero_order_decay", zero_order_decay
         )
-        self.sorbtion = self.build_mfdata("sorbtion", sorbtion)
+        self.sorption = self.build_mfdata("sorption", sorption)
         self.porosity = self.build_mfdata("porosity", porosity)
         self.decay = self.build_mfdata("decay", decay)
         self.decay_sorbed = self.build_mfdata("decay_sorbed", decay_sorbed)
         self.bulk_density = self.build_mfdata("bulk_density", bulk_density)
         self.distcoef = self.build_mfdata("distcoef", distcoef)
+        self.sp2 = self.build_mfdata("sp2", sp2)
         self._init_complete = True

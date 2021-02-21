@@ -1037,10 +1037,24 @@ class MFDataItemStructure(object):
                     self.description = " ".join(arr_line[1:])
 
                 # clean self.description
-                self.description = self.description.replace("``", '"')
-                self.description = self.description.replace("''", '"')
+                replace_pairs = [
+                    ("``", '"'),  # double quotes
+                    ("''", '"'),
+                    ("`", "'"),  # single quotes
+                    ("~", " "),  # non-breaking space
+                    (r"\mf", "MODFLOW 6"),
+                    (r"\citep{konikow2009}", "(Konikow et al., 2009)"),
+                    (r"\citep{hill1990preconditioned}", "(Hill, 1990)"),
+                    (r"\ref{table:ftype}", "in mf6io.pdf"),
+                    (r"\ref{table:gwf-obstypetable}", "in mf6io.pdf"),
+                ]
+                for s1, s2 in replace_pairs:
+                    if s1 in self.description:
+                        self.description = self.description.replace(s1, s2)
 
                 # massage latex equations
+                self.description = self.description.replace("$<$", "<")
+                self.description = self.description.replace("$>$", ">")
                 if "$" in self.description:
                     descsplit = self.description.split("$")
                     mylist = [
@@ -1050,7 +1064,7 @@ class MFDataItemStructure(object):
                         + "`"
                         for i, j in zip(descsplit[::2], descsplit[1::2])
                     ]
-                    mylist.append(descsplit[-1])
+                    mylist.append(descsplit[-1].replace("\\", ""))
                     self.description = "".join(mylist)
                 else:
                     self.description = self.description.replace("\\", "")

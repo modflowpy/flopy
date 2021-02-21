@@ -7,28 +7,16 @@ import datetime
 import json
 from collections import OrderedDict
 
-# update files and paths so that there are the same number of
-# path and file entries in the paths and files list. Enter '.'
+# file_paths dictionary has file names and the path to the file. Enter '.'
 # as the path if the file is in the root repository directory
-paths = ["../flopy", "../", "../docs", "../docs", "../", "../", "../docs"]
-files = [
-    "version.py",
-    "README.md",
-    "USGS_release.md",
-    "PyPi_release.md",
-    "code.json",
-    "DISCLAIMER.md",
-    "notebook_examples.md",
-]
-
-# check that there are the same number of entries in files and paths
-if len(paths) != len(files):
-    msg = (
-        "The number of entries in paths "
-        + "({}) must equal ".format(len(paths))
-        + "the number of entries in files ({})".format(len(files))
-    )
-    assert False, msg
+file_paths = {
+    "version.py": "../flopy",
+    "README.md": "../",
+    "PyPi_release.md": "../docs",
+    "code.json": "../",
+    "DISCLAIMER.md": "../flopy",
+    "notebook_examples.md": "../docs",
+}
 
 pak = "flopy"
 
@@ -172,7 +160,8 @@ def get_software_citation(version, is_approved):
 def update_version():
     name_pos = None
     try:
-        fpth = os.path.join(paths[0], files[0])
+        file = "version.py"
+        fpth = os.path.join(file_paths[file], file)
 
         vmajor = 0
         vminor = 0
@@ -231,13 +220,14 @@ def update_version():
     # update code.json
     update_codejson(vmajor, vminor, vmicro)
 
-    # update docs/USGS_release.md with new version information
-    update_USGSmarkdown(vmajor, vminor, vmicro)
+    # update PyPi_release.md
+    update_PyPi_release(vmajor, vminor, vmicro)
 
 
 def update_codejson(vmajor, vminor, vmicro):
     # define json filename
-    json_fname = os.path.join(paths[4], files[4])
+    file = "code.json"
+    json_fname = os.path.join(file_paths[file], file)
 
     # get branch
     branch = get_branch()
@@ -282,7 +272,8 @@ def update_readme_markdown(vmajor, vminor, vmicro):
     version = get_tag(vmajor, vminor, vmicro)
 
     # read README.md into memory
-    fpth = os.path.join(paths[1], files[1])
+    file = "README.md"
+    fpth = os.path.join(file_paths[file], file)
     with open(fpth, "r") as file:
         lines = [line.rstrip() for line in file]
 
@@ -327,7 +318,8 @@ def update_readme_markdown(vmajor, vminor, vmicro):
     f.close()
 
     # write disclaimer markdown file
-    fpth = os.path.join(paths[0], "DISCLAIMER.md")
+    file = "DISCLAIMER.md"
+    fpth = os.path.join(file_paths[file], file)
     f = open(fpth, "w")
     f.write(disclaimer)
     f.close()
@@ -346,7 +338,8 @@ def update_notebook_examples_markdown():
         branch = "develop"
 
     # read notebook_examples.md into memory
-    fpth = os.path.join(paths[6], files[6])
+    file = "notebook_examples.md"
+    fpth = os.path.join(file_paths[file], file)
     with open(fpth, "r") as file:
         lines = [line.rstrip() for line in file]
 
@@ -365,129 +358,33 @@ def update_notebook_examples_markdown():
         f.write("{}\n".format(line))
     f.close()
 
-
-def update_USGSmarkdown(vmajor, vminor, vmicro):
-    # get branch
-    branch = get_branch()
-
+def update_PyPi_release(vmajor, vminor, vmicro):
     # create disclaimer text
     is_approved, disclaimer = get_disclaimer()
-
-    # set repo branch string based on is_approved
-    if is_approved:
-        repo_str = "master"
-    else:
-        repo_str = "develop"
 
     # create version
     version = get_tag(vmajor, vminor, vmicro)
 
     # read README.md into memory
-    fpth = os.path.join(paths[1], files[1])
+    file = "PyPi_release.md"
+    fpth = os.path.join(file_paths[file], file)
     with open(fpth, "r") as file:
         lines = [line.rstrip() for line in file]
 
-    # write USGS_release.md
-    fpth = os.path.join(paths[2], files[2])
+    # rewrite README.md
+    terminate = False
     f = open(fpth, "w")
-
-    # write PyPi_release.md
-    fpth = os.path.join(paths[3], files[3])
-    f2 = open(fpth, "w")
-
-    # date and branch information
-    now = datetime.datetime.now()
-    sdate = now.strftime("%m/%d/%Y")
-
-    # write header information
-    f.write("---\n")
-    f.write("title: FloPy Release Notes\n")
-    f.write("author:\n")
-    for author in authors:
-        sv = author.split()
-        tauthor = "{}".format(sv[1])
-        if len(sv) > 2:
-            tauthor += " {}.".format(sv[2][0])
-        tauthor += " {}".format(sv[0])
-        f.write("    - {}\n".format(tauthor))
-    f.write("header-includes:\n")
-    f.write("    - \\usepackage{fancyhdr}\n")
-    f.write("    - \\usepackage{lastpage}\n")
-    f.write("    - \\pagestyle{fancy}\n")
-    f.write("    - \\fancyhf{{}}\n")
-    f.write("    - \\fancyhead[LE, LO, RE, RO]{}\n")
-    f.write("    - \\fancyhead[CE, CO]{FloPy Release Notes}\n")
-    f.write("    - \\fancyfoot[LE, RO]{{FloPy version {}}}\n".format(version))
-    f.write("    - \\fancyfoot[CO, CE]{\\thepage\\ of \\pageref{LastPage}}\n")
-    f.write("    - \\fancyfoot[RE, LO]{{{}}}\n".format(sdate))
-    f.write("geometry: margin=0.75in\n")
-    f.write("---\n\n")
-
-    # write select information from README.md
-    writeline = False
     for line in lines:
-        if line == "Introduction":
-            writeline = True
-        elif line == "Installation":
-            writeline = False
-        elif line == "Documentation":
-            writeline = True
-        elif line == "Getting Started":
-            writeline = False
-        elif line == "Contributing":
-            writeline = True
-        elif line == "How to Cite":
-            writeline = True
-        elif "http://dx.doi.org/10.5066/F7BK19FH" in line:
-            writeline = True
+        if "http://dx.doi.org/10.5066/F7BK19FH" in line:
             line = get_software_citation(version, is_approved)
-        elif line == "MODFLOW Resources":
-            writeline = False
-        elif "Installing the latest FloPy release candidate" in line:
-            writeline = False
-        elif line == "Disclaimer":
-            writeline = True
-        elif "[MODFLOW 6](docs/mf6.md)" in line:
-            line = line.replace("[MODFLOW 6](docs/mf6.md)", "MODFLOW 6")
+        elif "Disclaimer" in line:
+            line = disclaimer
+            terminate = True
+        f.write("{}\n".format(line))
+        if terminate:
+            break
 
-        if writeline:
-            # USGS_release.md
-            f.write("{}\n".format(line))
-            # PyPi_release.md
-            line = line.replace("***", "*")
-            line = line.replace("##### ", "")
-            if "CONTRIBUTING.md" in line:
-                rstr = (
-                    "https://github.com/modflowpy/flopy/blob/"
-                    + "{}/CONTRIBUTING.md".format(repo_str)
-                )
-                line = line.replace("CONTRIBUTING.md", rstr)
-            f2.write("{}\n".format(line))
-
-    # write installation information
-    cweb = "https://water.usgs.gov/ogw/flopy/flopy-{}.zip".format(version)
-    line = ""
-    line += "Installation\n"
-    line += "-----------------------------------------------\n"
-    line += "To install FloPy version {} ".format(version)
-    line += "from the USGS FloPy website:\n"
-    line += "```\n"
-    line += "pip install {}\n".format(cweb)
-    line += "```\n\n"
-    line += "To update to FloPy version {} ".format(version)
-    line += "from the USGS FloPy website:\n"
-    line += "```\n"
-    line += "pip install {} --upgrade\n".format(cweb)
-    line += "```\n"
-
-    # write installation instructions of USGS_release.md
-    f.write(line)
-
-    # close the USGS_release.md file
     f.close()
-
-    # close the PyPi_release.md file
-    f2.close()
 
     return
 

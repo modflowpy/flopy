@@ -2,6 +2,26 @@ FloPy Changes
 -----------------------------------------------
 ### Version 3.3.3
 
+* New features:
+
+    * [feat(voronoi)](https://github.com/modflowpy/flopy/commit/71162aef76ad025c42753e82ddee14bdeef1fd22): Add voronoigrid class (#1034). Committed by langevin-usgs on 2021-01-05.
+    * [feat(unstructured)](https://github.com/modflowpy/flopy/commit/0f7a0f033ba0bdff19621e824e721d032a6d1313): Improve unstructured grid support for modflow 6 and modflow-usg (#1021). Committed by langevin-usgs on 2020-11-27.
+
+
+* Bug fixes:
+
+    * [fix(createpackages)](https://github.com/modflowpy/flopy/commit/8a2cffb052d0c33a4699edb9554b039fa871f00f): Avoid creating invalid escape characters (#1055). Committed by Mike Taves on 2021-02-17.
+    * [fix(DeprecationWarning)](https://github.com/modflowpy/flopy/commit/7d36b1c7f67a9eddeda122644295cf23c0573c8d): Use collections.abc module instead of collections (#1057). Committed by Mike Taves on 2021-02-15.
+    * [fix(DeprecationWarning)](https://github.com/modflowpy/flopy/commit/39c0ecba20bd54f2eafd8350151e60efbcc5c162): Related to numpy (#1058). Committed by Mike Taves on 2021-02-15.
+    * [fix(numpy)](https://github.com/modflowpy/flopy/commit/943ace46c686cbdbfdc327a3016da5942211ab7e): Aliases of builtin types is deprecated as of numpy 1.20 (#1052). Committed by Mike Taves on 2021-02-11.
+    * [fix()](https://github.com/modflowpy/flopy/commit/3ccdd57e390b94c4f23daa3d46554efd39e8ec9d): fix(get_active) include the cbd layers when checking layer thickness before BAS is loaded (#1051). Committed by Michael Ou on 2021-02-08.
+    * [fix(dis)](https://github.com/modflowpy/flopy/commit/5bfdf715514bbefd3f9d9a2e79d5c486e48f1896): Fix for dis.get_lrc() and dis.get_node() (#1049). Committed by langevin-usgs on 2021-02-04.
+    * [fix()](https://github.com/modflowpy/flopy/commit/3088e51bb546afc5a68103a81821c750480263b7): fix(modflow/mflpf) mfusg unstructured lpf ikcflag addition (#1044). Committed by Chris Nicol on 2021-02-01.
+    * [fix(print MFArray)](https://github.com/modflowpy/flopy/commit/b8322ddc52241d3c2a49c4ebdf2e8865c6f36bb9): Fixed printing of layered arrays - issue #1043 (#1045). Committed by spaulins-usgs on 2021-01-29.
+    * [fix(GridIntersect)](https://github.com/modflowpy/flopy/commit/369942c7ed3171927f50a20c27b951ed062eb0e1): Fix vertices for offset grids (#1037). Committed by Davíd Brakenhoff on 2021-01-13.
+    * [fix(PlotMapView.plot_array())](https://github.com/modflowpy/flopy/commit/7cb429f81a9206fa450cceff21c695faf01fce41): Fix value masking code for masked_values parameter (#1026). Committed by Joshua Larsen on 2020-12-03.
+    * [fix(sfr ic option)](https://github.com/modflowpy/flopy/commit/0ab929e01fdf2a2205d268e51364630d9bbaf9c5): Made ic optional and updated description (#1020). Committed by spaulins-usgs on 2020-11-27.
+
 ### Version 3.3.2
 
 * New features:

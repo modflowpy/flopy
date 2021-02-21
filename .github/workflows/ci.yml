@@ -4,7 +4,10 @@ on:
   schedule:
     - cron: '0 8 * * *' # run at 8 AM UTC (12 am PST)
   push:
-    branches: [master, develop]
+    branches:
+      - master
+      - develop
+      - 'release*'
   pull_request:
     branches: [master, develop]
 
@@ -79,9 +82,9 @@ jobs:
             python-version: 3.8
             run-type: script
             test-path: autotest_scripts.py
-        exclude:
-          - os: macos-latest
-            python-version: 3.6
+#        exclude:
+#          - os: macos-latest
+#            python-version: 3.6
 
     steps:
     # check out repo
