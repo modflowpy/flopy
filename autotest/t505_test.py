@@ -37,8 +37,7 @@ from flopy.mf6.mfbase import MFDataException
 
 try:
     import shapefile
-
-    if int(shapefile.__version__.split(".")[0]) < 2:
+    if int(shapefile.__version__.split('.')[0]) < 2:
         shapefile = None
 except ImportError:
     shapefile = None
@@ -1135,28 +1134,6 @@ def test005_advgw_tidal():
         timeseries=ts_dict,
     )
 
-    # test nseg = 1
-    evt_period = ModflowGwfevt.stress_period_data.empty(model, 150, nseg=1)
-    for col in range(0, 10):
-        for row in range(0, 15):
-            evt_period[0][col * 15 + row] = (
-                (0, row, col),
-                50.0,
-                0.0004,
-                10.0,
-                None,
-            )
-    evt_package_test = ModflowGwfevt(
-        model,
-        print_input=True,
-        print_flows=True,
-        save_flows=True,
-        maxbound=150,
-        nseg=1,
-        stress_period_data=evt_period,
-    )
-    evt_package_test.remove()
-
     # test empty
     evt_period = ModflowGwfevt.stress_period_data.empty(model, 150, nseg=3)
     for col in range(0, 10):
@@ -1287,15 +1264,7 @@ def test005_advgw_tidal():
             ("rv2-upper", "RIV", "riv2_upper"),
             ("rv-2-7-4", "RIV", (0, 6, 3)),
             ("rv2-8-5", "RIV", (0, 6, 4)),
-            (
-                "rv-2-9-6",
-                "RIV",
-                (
-                    0,
-                    5,
-                    5,
-                ),
-            ),
+            ("rv-2-9-6", "RIV", (0, 5, 5,)),
         ],
         "riv_flowsA.csv": [
             ("riv1-3-1", "RIV", (0, 2, 0)),
