@@ -2541,7 +2541,7 @@ class DataStorage(object):
                             resolved_shape[0] == -9999
                             or shape_rule is not None
                         ):
-                            if data is not None:
+                            if data is not None and not min_size:
                                 # shape is an indeterminate 1-d array and
                                 # should consume the remainder of the data
                                 max_s = PyListUtil.max_multi_dim_list_size(
@@ -2551,10 +2551,12 @@ class DataStorage(object):
                                     self._recarray_type_list
                                 )
                             else:
-                                # shape is indeterminate 1-d array and no data
-                                # provided to resolve
+                                # shape is indeterminate 1-d array and either
+                                # no data provided to resolve or request is
+                                # for minimum data size
                                 resolved_shape[0] = 1
-                                self.jagged_record = True
+                                if not min_size:
+                                    self.jagged_record = True
                         if data_item.is_cellid:
                             if (
                                 data_item.shape is not None
