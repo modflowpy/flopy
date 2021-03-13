@@ -792,12 +792,14 @@ def get_neighbors_u(a, disu):
     ja = disu.ja.array - 1
     iac_sum = np.cumsum(disu.iac.array)
     ja_slices = np.asarray(
-        [np.s_[iac_sum[i - 1] + 1:x] if i > 0 else np.s_[1:x]
-         for i, x in enumerate(iac_sum)]
-        )  # note: this removes the diagonal - neighbors only
+        [
+            np.s_[iac_sum[i - 1] + 1 : x] if i > 0 else np.s_[1:x]
+            for i, x in enumerate(iac_sum)
+        ]
+    )  # note: this removes the diagonal - neighbors only
     neighbors = [ja[sl] for sl in ja_slices]
     a_neighbors = [a[n] for n in neighbors]
-    
+
     return a_neighbors
 
 
