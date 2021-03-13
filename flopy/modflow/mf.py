@@ -840,7 +840,6 @@ class Modflow(BaseModel):
             disnamdata.filehandle, ml, ext_unit_dict=ext_unit_dict, check=False
         )
         files_successfully_loaded.append(disnamdata.filename)
-
         if ml.verbose:
             print("   {:4s} package load...success".format(dis.name[0]))
         assert ml.pop_key_list.pop() == dis_key
