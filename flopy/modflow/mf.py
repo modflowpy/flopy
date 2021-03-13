@@ -841,12 +841,6 @@ class Modflow(BaseModel):
         )
         files_successfully_loaded.append(disnamdata.filename)
 
-        # make unstructured modelgrid so checker will work
-        # if 'DISU' in ml.get_package_list():
-        #    dis = ml.get_package("disu")
-        #    ncpl = dis.nodelay.array
-        #    return UnstructuredGrid(ncpl=ncpl)
-
         if ml.verbose:
             print("   {:4s} package load...success".format(dis.name[0]))
         assert ml.pop_key_list.pop() == dis_key
