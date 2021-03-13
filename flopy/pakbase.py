@@ -112,12 +112,16 @@ class PackageInterface(object):
         )
 
         # check vkcb if there are any quasi-3D layers
-        if self.parent.dis.laycbd.sum() > 0:
+        if "DIS" in self.parent.get_package_list():
+            dis = self.parent.dis
+        else:
+            dis = self.parent.disu
+        if dis.laycbd.sum() > 0:
             # pad non-quasi-3D layers in vkcb array with ones so
             # they won't fail checker
             vkcb = self.vkcb.array.copy()
             for l in range(self.vkcb.shape[0]):
-                if self.parent.dis.laycbd[l] == 0:
+                if dis.laycbd[l] == 0:
                     # assign 1 instead of zero as default value that
                     # won't violate checker
                     # (allows for same structure as other checks)
@@ -243,8 +247,25 @@ class PackageInterface(object):
         # convert vertical anisotropy to Kv for checking
         if vka is not None:
             if "layvka" in self.__dict__:
-                for l in range(vka.shape[0]):
-                    vka[l] *= hk[l] if self.layvka.array[l] != 0 else 1
+                if self.parent.structured:
+                    for l in range(vka.shape[0]):
+                        vka[l] *= hk[l] if self.layvka.array[l] != 0 else 1
+                else:
+                    k_inds_to = np.cumsum(self.parent.disu.nodelay.array)
+                    k_inds_from = np.array(
+                        [
+                            k_inds_to[i - 1] if i > 0 else 0
+                            for i, n in enumerate(k_inds_to)
+                        ]
+                    )
+                    slices = [
+                        np.s_[k_inds_to[i - 1] : x] if i > 0 else np.s_[:x]
+                        for i, x in enumerate(k_inds_to)
+                    ]
+                    for k, sl in enumerate(slices):
+                        if self.layvka.array[k] != 0:
+                            vka[sl] *= hk[sl]
+
             self._check_thresholds(
                 chk,
                 vka,
@@ -368,16 +389,46 @@ class PackageInterface(object):
 
             # only check specific yield for convertible layers
             if "laytyp" in self.__dict__:
-                inds = np.array(
-                    [
-                        True
-                        if l > 0 or l < 0 and "THICKSTRT" in self.options
-                        else False
-                        for l in self.laytyp
+                if "DIS" in self.parent.get_package_list():
+                    inds = np.array(
+                        [
+                            True
+                            if l > 0 or l < 0 and "THICKSTRT" in self.options
+                            else False
+                            for l in self.laytyp
+                        ]
+                    )
+                    sarrays["sy"] = sarrays["sy"][inds, :, :]
+                    active = active[inds, :, :]
+                else:
+                    k_inds_to = np.cumsum(self.parent.disu.nodelay.array)
+                    k_inds_from = np.array(
+                        [
+                            k_inds_to[i - 1] if i > 0 else 0
+                            for i, n in enumerate(k_inds_to)
+                        ]
+                    )
+                    slices = [
+                        np.s_[k_inds_to[i - 1] : x] if i > 0 else np.s_[:x]
+                        for i, x in enumerate(k_inds_to)
                     ]
-                )
-                sarrays["sy"] = sarrays["sy"][inds, :, :]
-                active = active[inds, :, :]
+                    slices = np.asarray(
+                        [
+                            s
+                            for i, s in enumerate(slices)
+                            if (self.laytyp[i] > 0)
+                            or (
+                                self.laytyp[i] < 0
+                                and "THICKSTRT" in self.options
+                            )
+                        ]
+                    )
+                    sarrays["sy"] = np.asarray(
+                        [sarrays["sy"][sl] for sl in slices]
+                    ).flatten()
+                    active = np.asarray(
+                        [active[sl] for sl in slices]
+                    ).flatten()
             else:
                 iconvert = self.iconvert.array
                 for ishape in np.ndindex(active.shape):

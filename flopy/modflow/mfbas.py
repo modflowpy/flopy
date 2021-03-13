@@ -12,7 +12,7 @@ import re
 import sys
 import numpy as np
 from ..pakbase import Package
-from ..utils import Util3d, get_neighbors
+from ..utils import Util3d, get_neighbors, get_neighbors_u
 
 
 class ModflowBas(Package):
@@ -215,16 +215,29 @@ class ModflowBas(Package):
         """
         chk = self._get_check(f, verbose, level, checktype)
 
-        neighbors = get_neighbors(self.ibound.array)
-        neighbors[
-            np.isnan(neighbors)
-        ] = 0  # set neighbors at edges to 0 (inactive)
-        chk.values(
-            self.ibound.array,
-            (self.ibound.array > 0) & np.all(neighbors < 1, axis=0),
-            "isolated cells in ibound array",
-            "Warning",
-        )
+        if self.parent.structured:
+            neighbors = get_neighbors(self.ibound.array)
+            neighbors[
+                np.isnan(neighbors)
+            ] = 0  # set neighbors at edges to 0 (inactive)
+            chk.values(
+                self.ibound.array,
+                (self.ibound.array > 0) & np.all(neighbors < 1, axis=0),
+                "isolated cells in ibound array",
+                "Warning",
+            )
+        elif "DISU" in self.parent.get_package_list():
+            neighbors = get_neighbors_u(self.ibound.array, self.parent.disu)
+            n_neighbors_active = np.array(
+                [len(n[n != 0]) for n in neighbors]
+            )  # including CHDs == ok.
+            chk.values(
+                self.ibound.array,
+                (self.ibound.array != 0) & (n_neighbors_active == 0),
+                "isolated cells in ibound array",
+                "Warning",
+            )
+
         chk.values(
             self.ibound.array,
             np.isnan(self.ibound.array),

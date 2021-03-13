@@ -435,7 +435,23 @@ class check:
             True where active.
         """
         mg = self.model.modelgrid
-        if mg.grid_type == "structured":
+        if not mg:  # if no modelgrid defined, use disu/dis to define inds
+            if "DIS" in self.model.get_package_list():
+                if include_cbd and dis.laycbd.sum() > 0:
+                    inds = (
+                        self.model.dis.nlay + dis.laycbd.sum(),
+                        self.model.dis.nrow,
+                        self.model.dis.ncol,
+                    )
+                else:
+                    inds = (
+                        self.model.dis.nlay,
+                        self.model.dis.nrow,
+                        self.model.dis.ncol,
+                    )
+            else:
+                inds = self.model.disu.nodes
+        elif mg.grid_type == "structured":
             nlaycbd = mg._StructuredGrid__laycbd.sum() if include_cbd else 0
             inds = (mg.nlay + nlaycbd, mg.nrow, mg.ncol)
         elif mg.grid_type == "vertex":
@@ -770,6 +786,37 @@ def get_neighbors(a):
         ]
     )  # j+1
     return neighbors.reshape(6, nk, ni, nj)
+
+
+def get_neighbors_u(a, disu):
+    """
+    Returns the n neighboring values for each value in a.
+
+    Parameters
+    ----------
+    a : 1-D numpy array of values for all nodes in the model
+        Model array in node order.
+    disu : flopy mfusg disu package
+
+
+    Returns
+    -------
+    neighbors : jagged list for each node in a, containing numpy arrays of
+        neighbouring values from a.
+    """
+
+    ja = disu.ja.array - 1
+    iac_sum = np.cumsum(disu.iac.array)
+    ja_slices = np.asarray(
+        [
+            np.s_[iac_sum[i - 1] + 1 : x] if i > 0 else np.s_[1:x]
+            for i, x in enumerate(iac_sum)
+        ]
+    )  # note: this removes the diagonal - neighbors only
+    neighbors = [ja[sl] for sl in ja_slices]
+    a_neighbors = [a[n] for n in neighbors]
+
+    return a_neighbors
 
 
 class mf6check(check):

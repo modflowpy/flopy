@@ -10,6 +10,7 @@ from inspect import getfullargspec
 from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam
+from ..discretization.unstructuredgrid import UnstructuredGrid
 from ..discretization.structuredgrid import StructuredGrid
 from ..discretization.grid import Grid
 from flopy.discretization.modeltime import ModelTime
@@ -269,16 +270,21 @@ class Modflow(BaseModel):
     @property
     def modeltime(self):
         # build model time
+        if self.get_package("disu") is not None:
+            dis = self.disu
+        else:
+            dis = self.dis
+
         data_frame = {
-            "perlen": self.dis.perlen.array,
-            "nstp": self.dis.nstp.array,
-            "tsmult": self.dis.tsmult.array,
+            "perlen": dis.perlen.array,
+            "nstp": dis.nstp.array,
+            "tsmult": dis.tsmult.array,
         }
         self._model_time = ModelTime(
             data_frame,
-            self.dis.itmuni_dict[self.dis.itmuni],
-            self.dis.start_datetime,
-            self.dis.steady.array,
+            dis.itmuni_dict[dis.itmuni],
+            dis.start_datetime,
+            dis.steady.array,
         )
         return self._model_time
 
@@ -293,16 +299,21 @@ class Modflow(BaseModel):
             ibound = None
 
         if self.get_package("disu") is not None:
-            self._modelgrid = Grid(
-                grid_type="USG-Unstructured",
-                top=self.disu.top,
-                botm=self.disu.bot,
-                idomain=ibound,
-                proj4=self._modelgrid.proj4,
-                epsg=self._modelgrid.epsg,
-                xoff=self._modelgrid.xoffset,
-                yoff=self._modelgrid.yoffset,
-                angrot=self._modelgrid.angrot,
+            # self._modelgrid = Grid(
+            #    grid_type="USG-Unstructured",
+            #    top=self.disu.top,
+            #    botm=self.disu.bot,
+            #    idomain=ibound,
+            #    proj4=self._modelgrid.proj4,
+            #    epsg=self._modelgrid.epsg,
+            #    xoff=self._modelgrid.xoffset,
+            #    yoff=self._modelgrid.yoffset,
+            #    angrot=self._modelgrid.angrot,
+            # )
+            self._modelgrid = UnstructuredGrid(
+                ncpl=self.disu.nodelay.array,
+                top=self.disu.top.array,
+                botm=self.disu.bot.array,
             )
             print(
                 "WARNING: Model grid functionality limited for unstructured "
@@ -829,6 +840,13 @@ class Modflow(BaseModel):
             disnamdata.filehandle, ml, ext_unit_dict=ext_unit_dict, check=False
         )
         files_successfully_loaded.append(disnamdata.filename)
+
+        # make unstructured modelgrid so checker will work
+        # if 'DISU' in ml.get_package_list():
+        #    dis = ml.get_package("disu")
+        #    ncpl = dis.nodelay.array
+        #    return UnstructuredGrid(ncpl=ncpl)
+
         if ml.verbose:
             print("   {:4s} package load...success".format(dis.name[0]))
         assert ml.pop_key_list.pop() == dis_key

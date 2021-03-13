@@ -53,7 +53,7 @@ from .mflistfile import (
     SwrListBudget,
     Mf6ListBudget,
 )
-from .check import check, get_neighbors
+from .check import check, get_neighbors, get_neighbors_u
 from .utils_def import FlopyBinaryData, totim_to_datetime
 from .flopy_io import read_fixed_var, write_fixed_var
 from .zonbud import (
