@@ -28,7 +28,7 @@ def test_load_usg():
 # function to load a MODFLOW-USG model and then write it back out
 def load_model(namfile, model_ws):
     m = flopy.modflow.Modflow.load(namfile, model_ws=model_ws,
-                                   version='mfusg', verbose=True, check=False)
+                                   version='mfusg', verbose=True, check=True)
     assert m, 'Could not load namefile {}'.format(namfile)
     assert m.load_fail is False
     m.change_model_ws(tpth)
