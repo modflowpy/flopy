@@ -342,7 +342,7 @@ class ModflowUpw(Package):
         transient = not self.parent.get_package("DIS").steady.all()
         for k in range(nlay):
             f_upw.write(self.hk[k].get_file_entry())
-            if self.chani[k] < 1:
+            if self.chani[k] < 0:
                 f_upw.write(self.hani[k].get_file_entry())
             f_upw.write(self.vka[k].get_file_entry())
             if transient:
@@ -499,7 +499,7 @@ class ModflowUpw(Package):
             hk[k] = t
 
             # hani
-            if chani[k] < 1:
+            if chani[k] < 0:
                 if model.verbose:
                     print("   loading hani layer {0:3d}...".format(k + 1))
                 if "hani" not in par_types:

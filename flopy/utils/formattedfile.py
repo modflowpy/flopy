@@ -135,6 +135,8 @@ class FormattedLayerFile(LayerFile):
 
         self.nrow = header_info["nrow"]
         self.ncol = header_info["ncol"]
+        if header_info['ilay'] > self.nlay:
+            self.nlay = header_info['ilay']
 
         ipos = self.file.tell()
         self._store_record(header_info, ipos)

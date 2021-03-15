@@ -855,3 +855,112 @@ def is_clockwise(*geom):
         x = np.append(x, x[-1])
         y = np.append(y, y[-1])
     return np.sum((np.diff(x)) * (y[1:] + y[:-1])) > 0
+
+
+def point_in_polygon(xc, yc, polygon):
+    """
+    Use the ray casting algorithm to determine if a point
+    is within a polygon. Enables very fast
+    intersection calculations!
+
+    Parameters
+    ----------
+    xc : np.ndarray
+        2d array of xpoints
+    yc : np.ndarray
+        2d array of ypoints
+    polygon : iterable (list)
+        polygon vertices [(x0, y0),....(xn, yn)]
+        note: polygon can be open or closed
+
+    Returns
+    -------
+    mask: np.array
+        True value means point is in polygon!
+
+    """
+    x0, y0 = polygon[0]
+    xt, yt = polygon[-1]
+
+    # close polygon if it isn't already
+    if (x0, y0) != (xt, yt):
+        polygon.append((x0, y0))
+
+    ray_count = np.zeros(xc.shape, dtype=int)
+    num = len(polygon)
+    j = num - 1
+    for i in range(num):
+
+        tmp = polygon[i][0] + (polygon[j][0] - polygon[i][0]) * (
+            yc - polygon[i][1]
+        ) / (polygon[j][1] - polygon[i][1])
+
+        comp = np.where(
+            ((polygon[i][1] > yc) ^ (polygon[j][1] > yc)) & (xc < tmp)
+        )
+
+        j = i
+        if len(comp[0]) > 0:
+            ray_count[comp[0], comp[1]] += 1
+
+    mask = np.ones(xc.shape, dtype=bool)
+    mask[ray_count % 2 == 0] = False
+
+    return mask
+
+
+def project_point_onto_xc_line(line, pts, d0=0, direction="x"):
+    """
+    Method to project points onto a cross sectional line
+    that is defined by distance. Used for plotting MODPATH results
+    on to a cross section!
+
+    line : list or np.ndarray
+        numpy array of [(x0, y0), (x1, y1)] that defines the line
+        to project on to
+    pts : list or np.ndarray
+        numpy array of [(x, y),] points to be projected
+    d0 : distance offset along line of min(xl)
+    direction : string
+        projection direction "x" or "y"
+
+    Returns:
+        np.ndarray of projected [(x, y),] points
+    """
+    if isinstance(line, list):
+        line = np.array(line)
+
+    if isinstance(pts, list):
+        pts = np.array(pts)
+
+    x0, x1 = line.T[0, :]
+    y0, y1 = line.T[1, :]
+    dx = np.abs(x0 - x1)
+    dy = np.abs(y0 - y1)
+    m = dy / dx
+    b = y0 - (m * x0)
+    x = pts.T[0]
+    y = pts.T[1]
+
+    if direction == 'x':
+        if dy == 0:
+            pass
+        else:
+            y = (x * m) + b
+
+    else:
+        if dx == 0:
+            pass
+        else:
+            x = (y - b) / m
+
+    # now do distance equation on pts from x0, y0
+    asq = (x - x0) ** 2
+    bsq = (y - y0) ** 2
+    dist = np.sqrt(asq + bsq)
+    if direction == "x":
+        x = dist + d0
+    else:
+        y = d0 - dist
+
+    return (x, y)

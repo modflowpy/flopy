@@ -1265,8 +1265,7 @@ def test_rasters():
     if (np.max(data) - 2608.557) > 1e-4:
         raise AssertionError
 
-    data = rio.resample_to_grid(ml.modelgrid.xcellcenters,
-                                ml.modelgrid.ycellcenters,
+    data = rio.resample_to_grid(ml.modelgrid,
                                 band=rio.bands[0],
                                 method="nearest")
     if data.size != 5913:

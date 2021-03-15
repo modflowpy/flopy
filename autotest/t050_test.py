@@ -355,15 +355,21 @@ def test_vtk_cbc():
 
 def test_vtk_vector():
     from flopy.utils import postprocessing as pp
+    from flopy.utils import HeadFile, CellBudgetFile
     # test mf 2005 freyberg
     mpth = os.path.join('..', 'examples', 'data',
                         'freyberg_multilayer_transient')
     namfile = 'freyberg.nam'
     cbcfile = os.path.join(mpth, 'freyberg.cbc')
     hdsfile = os.path.join(mpth, 'freyberg.hds')
+    cbc = CellBudgetFile(cbcfile)
+    keys = ["FLOW RIGHT FACE", "FLOW FRONT FACE", "FLOW LOWER FACE"]
+    vectors = [cbc.get_data(text=t)[0] for t in keys]
+    hds = HeadFile(hdsfile)
+    head = hds.get_data()
     m = flopy.modflow.Modflow.load(namfile, model_ws=mpth, verbose=False,
                                    load_only=['dis', 'bas6', 'upw'])
-    q = pp.get_specific_discharge(m, cbcfile=cbcfile)
+    q = pp.get_specific_discharge(vectors, m, head)
     output_dir = os.path.join(cpth, 'freyberg_vector')
     filenametocheck = 'discharge.vtu'
 
@@ -386,12 +392,12 @@ def test_vtk_vector():
     assert(os.path.exists(filetocheck))
 
     # with values directly given at vertices
-    q = pp.get_specific_discharge(m, cbcfile=cbcfile, hdsfile=hdsfile,
+    q = pp.get_specific_discharge(vectors, m, head,
                                   position='vertices')
     nancount = np.count_nonzero(np.isnan(q[0]))
-    assert(nancount==308)
+    assert(nancount == 472)
     overall = np.nansum(q[0]) + np.nansum(q[1]) + np.nansum(q[2])
-    assert np.allclose(overall, -15.467904755216372)
+    assert np.allclose(overall, -45.38671967357735)
     output_dir = os.path.join(cpth, 'freyberg_vector')
     filenametocheck = 'discharge_verts.vtu'
     vtk.export_vector(m, q, output_dir, 'discharge_verts')
@@ -655,7 +661,10 @@ def test_vtk_export_true2d_nonregxy():
 
     # export and check specific discharge given at vertices
     cbcfile = os.path.join(output_dir, name + '.cbc')
-    q = pp.get_specific_discharge(m, cbcfile, position='vertices')
+    cbc = bf.CellBudgetFile(cbcfile)
+    keys = ["FLOW RIGHT FACE", "FLOW FRONT FACE"]
+    vectors = [cbc.get_data(text=t)[0] for t in keys]
+    q = pp.get_specific_discharge(vectors, m, position='vertices')
     vtk.export_vector(m, q, output_dir, name + '_q', point_scalars=True,
                       true2d=True)
     filetocheck = os.path.join(output_dir, name + '_q.vtr')
@@ -663,8 +672,8 @@ def test_vtk_export_true2d_nonregxy():
     # assert(totalbytes1==5772)
     nlines1 = count_lines_in_file(filetocheck)
     assert(nlines1==54)
-
     return
+
 
 def test_vtk_export_true2d_nonregxz():
     import flopy.utils.binaryfile as bf
@@ -722,7 +731,11 @@ def test_vtk_export_true2d_nonregxz():
 
     # export and check specific discharge given at vertices
     cbcfile = os.path.join(output_dir, name + '.cbc')
-    q = pp.get_specific_discharge(m, cbcfile, position='vertices')
+    cbc = bf.CellBudgetFile(cbcfile)
+    keys = ["FLOW RIGHT FACE", "FLOW LOWER FACE"]
+    vectors = [cbc.get_data(text=t)[0] for t in keys]
+    vectors.insert(1, None)
+    q = pp.get_specific_discharge(vectors, m, position='vertices')
     vtk.export_vector(m, q, output_dir, name + '_q', point_scalars=True,
                       true2d=True)
     filetocheck = os.path.join(output_dir, name + '_q.vtu')
@@ -730,8 +743,8 @@ def test_vtk_export_true2d_nonregxz():
     # assert(totalbytes2==7036)
     nlines2 = count_lines_in_file(filetocheck)
     assert(nlines2==123)
-
     return
+
 
 def test_vtk_export_true2d_nonregyz():
     import flopy.utils.binaryfile as bf
@@ -789,7 +802,11 @@ def test_vtk_export_true2d_nonregyz():
 
     # export and check specific discharge given at vertices
     cbcfile = os.path.join(output_dir, name + '.cbc')
-    q = pp.get_specific_discharge(m, cbcfile, position='vertices')
+    cbc = bf.CellBudgetFile(cbcfile)
+    keys = ["FLOW FRONT FACE", "FLOW LOWER FACE"]
+    vectors = [cbc.get_data(text=t)[0] for t in keys]
+    vectors.insert(0, None)
+    q = pp.get_specific_discharge(vectors, m, position='vertices')
     vtk.export_vector(m, q, output_dir, name + '_q', point_scalars=True,
                       true2d=True)
     filetocheck = os.path.join(output_dir, name + '_q.vtu')
@@ -797,8 +814,8 @@ def test_vtk_export_true2d_nonregyz():
     # assert(totalbytes2==7032)
     nlines2 = count_lines_in_file(filetocheck)
     assert(nlines2==123)
-
     return
+
 
 if __name__ == '__main__':
     test_vtk_export_array2d()

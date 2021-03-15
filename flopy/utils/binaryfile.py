@@ -300,6 +300,9 @@ class BinaryLayerFile(LayerFile):
         header = self._get_header()
         self.nrow = header["nrow"]
         self.ncol = header["ncol"]
+        if header["ilay"] > self.nlay:
+            self.nlay = header["ilay"]
+
         if self.nrow < 0 or self.ncol < 0:
             raise Exception("negative nrow, ncol")
         if self.nrow > 1 and self.nrow * self.ncol > 10000000:

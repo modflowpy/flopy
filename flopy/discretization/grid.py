@@ -169,6 +169,7 @@ class Grid(object):
         if angrot is None:
             angrot = 0.0
         self._angrot = angrot
+        self._polygons = None
         self._cache_dict = {}
         self._copy_cache = True
 
@@ -290,6 +291,10 @@ class Grid(object):
         return copy.deepcopy(self._idomain)
 
     @property
+    def ncpl(self):
+        raise NotImplementedError("must define ncpl in child class")
+
+    @property
     def nnodes(self):
         raise NotImplementedError("must define nnodes in child class")
 
@@ -372,6 +377,38 @@ class Grid(object):
     #    raise NotImplementedError(
     #        'must define indices in child '
     #        'class to use this base class')
+    @property
+    def cross_section_vertices(self):
+        return self.xyzvertices[0], self.xyzvertices[1]
+
+    @property
+    def map_polygons(self):
+        """
+        Get a list of matplotlib Polygon patches for plotting
+
+        Returns
+        -------
+            list of Polygon objects
+        """
+        try:
+            from matplotlib.patches import Polygon
+        except ImportError:
+            raise ImportError("matplotlib required to use this method")
+        cache_index = "xyzgrid"
+        if (
+                cache_index not in self._cache_dict
+                or self._cache_dict[cache_index].out_of_date
+        ):
+            self.xyzvertices
+            self._polygons = None
+
+        if self._polygons is None:
+            self._polygons = [
+                Polygon(self.get_cell_vertices(nn), closed=True)
+                for nn in range(self.ncpl)
+            ]
+
+        return copy.copy(self._polygons)
 
     def get_plottable_layer_array(self, plotarray, layer):
         raise NotImplementedError(
@@ -430,11 +467,11 @@ class Grid(object):
         if not np.isscalar(x):
             x, y = x.copy(), y.copy()
 
-        x, y = geometry.rotate(
-            x, y, self._xoff, self._yoff, -self.angrot_radians
+        x, y = geometry.transform(
+            x, y, self._xoff, self._yoff, self.angrot_radians, inverse=True
         )
-        x -= self._xoff
-        y -= self._yoff
+        # x -= self._xoff
+        # y -= self._yoff
 
         return x, y
 

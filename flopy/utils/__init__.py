@@ -64,7 +64,7 @@ from .zonbud import (
     ZBNetOutput,
 )
 from .mfgrdfile import MfGrdFile
-from .postprocessing import get_transmissivities
+from .postprocessing import get_transmissivities, get_specific_discharge
 from .sfroutputfile import SfrFile
 from .recarray_utils import create_empty_recarray, ra_slice
 from .mtlistfile import MtListBudget

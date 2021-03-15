@@ -923,7 +923,7 @@ class SpatialReference(object):
         Get a LineCollection of the grid
 
         """
-        from flopy.plot import ModelMap
+        from ..plot import ModelMap
 
         map = ModelMap(sr=self)
         lc = map.plot_grid(**kwargs)
@@ -1905,27 +1905,26 @@ class SpatialReferenceUnstructured(SpatialReference):
 
         Returns
         -------
-        quadmesh : matplotlib.collections.QuadMesh
+        pc : matplotlib.collections.PatchCollection
 
         """
-        from ..plot import plotutil
+        from ..plot import ModelMap
 
-        patch_collection = plotutil.plot_cvfd(
-            self.verts, self.iverts, a=a, ax=ax
-        )
-        return patch_collection
+        pmv = ModelMap(sr=self, ax=ax)
+        pc = pmv.plot_array(a)
+
+        return pc
 
     def get_grid_line_collection(self, **kwargs):
         """
         Get a patch collection of the grid
 
         """
-        from ..plot import plotutil
+        from ..plot import ModelMap
 
-        edgecolor = kwargs.pop("colors")
-        pc = plotutil.cvfd_to_patch_collection(self.verts, self.iverts)
-        pc.set(facecolor="none")
-        pc.set(edgecolor=edgecolor)
+        ax = kwargs.pop('ax', None)
+        pmv = ModelMap(sr=self, ax=ax)
+        pc = pmv.plot_grid(**kwargs)
         return pc
 
     def contour_array(self, ax, a, **kwargs):
