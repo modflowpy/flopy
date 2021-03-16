@@ -480,7 +480,7 @@ def build_mf6gwt(sim_folder):
     sim = flopy.mf6.MFSimulation(
         sim_name=name,
         sim_ws=sim_ws,
-        exe_name="mf6.exe",
+        exe_name="mf6",
         continue_=True,
     )
     tdis_ds = ((period1, 73, 1.0), (period2, 2927, 1.0))
