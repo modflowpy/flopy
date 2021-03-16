@@ -1922,7 +1922,7 @@ class SpatialReferenceUnstructured(SpatialReference):
         """
         from ..plot import ModelMap
 
-        ax = kwargs.pop('ax', None)
+        ax = kwargs.pop("ax", None)
         pmv = ModelMap(sr=self, ax=ax)
         pc = pmv.plot_grid(**kwargs)
         return pc

@@ -43,20 +43,23 @@ class PlotCrossSection(object):
         as the distance along the cross section line.
 
     """
-    def __init__(self,
-                 model=None,
-                 modelgrid=None,
-                 ax=None,
-                 line=None,
-                 extent=None,
-                 geographic_coords=False):
+
+    def __init__(
+        self,
+        model=None,
+        modelgrid=None,
+        ax=None,
+        line=None,
+        extent=None,
+        geographic_coords=False,
+    ):
 
         self.ax = ax
         self.geographic_coords = geographic_coords
         if plt is None:
             s = (
-                    "Could not import matplotlib.  Must install matplotlib "
-                    + " in order to use ModelCrossSection method"
+                "Could not import matplotlib.  Must install matplotlib "
+                + " in order to use ModelCrossSection method"
             )
             raise ImportError(s)
 
@@ -80,8 +83,10 @@ class PlotCrossSection(object):
         line = {k.lower(): v for k, v in line.items()}
 
         if len(line) != 1:
-            s = "only row, column, or line can be specified in line " \
+            s = (
+                "only row, column, or line can be specified in line "
                 "dictionary keys specified: "
+            )
             for k in line.keys():
                 s += "{} ".format(k)
             raise AssertionError(s)
@@ -106,10 +111,12 @@ class PlotCrossSection(object):
 
         xverts, yverts = self.mg.cross_section_vertices
 
-        xverts, yverts = \
-            plotutil.UnstructuredPlotUtilities.irregular_shape_patch(
-                xverts, yverts
-            )
+        (
+            xverts,
+            yverts,
+        ) = plotutil.UnstructuredPlotUtilities.irregular_shape_patch(
+            xverts, yverts
+        )
 
         self.xvertices, self.yvertices = geometry.transform(
             xverts,
@@ -117,13 +124,14 @@ class PlotCrossSection(object):
             self.mg.xoffset,
             self.mg.yoffset,
             self.mg.angrot_radians,
-            inverse=True)
+            inverse=True,
+        )
 
-        if onkey in ('row', 'column'):
+        if onkey in ("row", "column"):
             eps = 1.0e-4
             xedge, yedge = self.mg.xyedges
-            if onkey == 'row':
-                self.direction = 'x'
+            if onkey == "row":
+                self.direction = "x"
                 ycenter = ycellcenters.T[0]
                 pts = [
                     (xedge[0] - eps, ycenter[int(line[onkey])]),
@@ -273,16 +281,16 @@ class PlotCrossSection(object):
                     polys = [poly]
 
                 for polygon in polys:
-                    verts = \
-                        plotutil.UnstructuredPlotUtilities.arctan2(
-                            np.array(polygon)
-                        )
+                    verts = plotutil.UnstructuredPlotUtilities.arctan2(
+                        np.array(polygon)
+                    )
 
                     if cell not in self._polygons:
                         self._polygons[cell] = [Polygon(verts, closed=True)]
                     else:
-                        self._polygons[cell].append(Polygon(verts,
-                                                            closed=True))
+                        self._polygons[cell].append(
+                            Polygon(verts, closed=True)
+                        )
 
         return copy.copy(self._polygons)
 
@@ -445,7 +453,7 @@ class PlotCrossSection(object):
 
         """
         ax = kwargs.pop("ax", self.ax)
-        kwargs['colors'] = colors
+        kwargs["colors"] = colors
 
         if not isinstance(a, np.ndarray):
             a = np.array(a)
@@ -523,8 +531,10 @@ class PlotCrossSection(object):
             elev = self.elev.reshape(2, self.mg.ncpl)
             for k, ev in enumerate(elev):
                 if k == 0:
-                    zc = [ev[i] if head[k][i] > ev[i] else head[k][i]
-                          for i in sorted(self.projpts)]
+                    zc = [
+                        ev[i] if head[k][i] > ev[i] else head[k][i]
+                        for i in sorted(self.projpts)
+                    ]
                 else:
                     zc = [ev[i] for i in sorted(self.projpts)]
                 zcenters.append(zc)
@@ -537,10 +547,12 @@ class PlotCrossSection(object):
             if isinstance(head, np.ndarray):
                 zcenters = self.set_zcentergrid(np.ravel(head))
             else:
-                zcenters = np.array([
-                    np.mean(np.array(v).T[1])
-                    for i, v in sorted(self.projpts.items())
-                    ])
+                zcenters = np.array(
+                    [
+                        np.mean(np.array(v).T[1])
+                        for i, v in sorted(self.projpts.items())
+                    ]
+                )
 
         # work around for tri-contour ignore vmin & vmax
         # necessary for the tri-contour NaN issue fix
@@ -910,12 +922,12 @@ class PlotCrossSection(object):
         arbitrary = False
         pts = self.pts
         xuniform = [
-            True if abs(pts.T[0, 0] - i) < self.mean_dy
-            else False for i in pts.T[0]
+            True if abs(pts.T[0, 0] - i) < self.mean_dy else False
+            for i in pts.T[0]
         ]
         yuniform = [
-            True if abs(pts.T[1, 0] - i) < self.mean_dx
-            else False for i in pts.T[1]
+            True if abs(pts.T[1, 0] - i) < self.mean_dx else False
+            for i in pts.T[1]
         ]
         if not np.all(xuniform) and not np.all(yuniform):
             arbitrary = True
@@ -931,7 +943,7 @@ class PlotCrossSection(object):
         if self.mg.idomain is not None:
             ib = self.mg.idomain.ravel()
 
-        # get the actual values to plot
+        # get the actual values to plot and set xcenters
         if self.direction == "x":
             u_tmp = vx
         else:
@@ -951,11 +963,14 @@ class PlotCrossSection(object):
 
         else:
             zcenters = [
-                np.mean(np.array(v).T[1])
-                for i, v in sorted(projpts.items())
+                np.mean(np.array(v).T[1]) for i, v in sorted(projpts.items())
             ]
 
-        x = self.xcenters
+        xcenters = np.array(
+            [np.mean(np.array(v).T[0]) for i, v in sorted(projpts.items())]
+        )
+
+        x = np.ravel(xcenters)
         z = np.ravel(zcenters)
         u = np.array([u_tmp.ravel()[cell] for cell in sorted(projpts)])
         v = np.array([vz.ravel()[cell] for cell in sorted(projpts)])
@@ -1053,9 +1068,16 @@ class PlotCrossSection(object):
         qy[idx] = spdis["qy"]
         qz[idx] = spdis["qz"]
 
-        return self.plot_vector(qx, qy, qz, head=head, kstep=kstep,
-                                hstep=hstep, normalize=normalize,
-                                **kwargs)
+        return self.plot_vector(
+            qx,
+            qy,
+            qz,
+            head=head,
+            kstep=kstep,
+            hstep=hstep,
+            normalize=normalize,
+            **kwargs
+        )
 
     def plot_discharge(
         self,
@@ -1164,12 +1186,19 @@ class PlotCrossSection(object):
             qy = qy.ravel()
             qz = qz.ravel()
 
-            return self.plot_vector(qx, qy, qz, head=head, kstep=kstep,
-                                    hstep=hstep, normalize=normalize,
-                                    **kwargs)
+            return self.plot_vector(
+                qx,
+                qy,
+                qz,
+                head=head,
+                kstep=kstep,
+                hstep=hstep,
+                normalize=normalize,
+                **kwargs
+            )
 
     def plot_pathline(
-            self, pl, travel_time=None, method="cell", head=None, **kwargs
+        self, pl, travel_time=None, method="cell", head=None, **kwargs
     ):
         """
         Plot the MODPATH pathlines
@@ -1234,12 +1263,20 @@ class PlotCrossSection(object):
             pl2.append(tp)
 
         tp = plotutil.intersect_modpath_with_crosssection(
-            pl2, projpts, self.xvertices, self.yvertices, self.direction,
-            method=method
+            pl2,
+            projpts,
+            self.xvertices,
+            self.yvertices,
+            self.direction,
+            method=method,
         )
         plines = plotutil.reproject_modpath_to_crosssection(
-            tp, projpts, self.xypts, self.direction,
-            self.mg, self.geographic_coords
+            tp,
+            projpts,
+            self.xypts,
+            self.direction,
+            self.mg,
+            self.geographic_coords,
         )
 
         # build linecollection and markers arrays
@@ -1271,7 +1308,7 @@ class PlotCrossSection(object):
         return lc
 
     def plot_timeseries(
-            self, ts, travel_time=None, method='cell', head=None, **kwargs
+        self, ts, travel_time=None, method="cell", head=None, **kwargs
     ):
         """
         Plot the MODPATH timeseries.
@@ -1302,21 +1339,22 @@ class PlotCrossSection(object):
             lo : list of Line2D objects
         """
         if "color" in kwargs:
-            kwargs['markercolor'] = kwargs['color']
+            kwargs["markercolor"] = kwargs["color"]
 
         return self.plot_pathline(
             ts, travel_time=travel_time, method=method, head=head, **kwargs
         )
 
     def plot_endpoint(
-            self,
-            ep,
-            direction="ending",
-            selection=None,
-            selection_direction=None,
-            method="cell",
-            head=None,
-            **kwargs):
+        self,
+        ep,
+        direction="ending",
+        selection=None,
+        selection_direction=None,
+        method="cell",
+        head=None,
+        **kwargs
+    ):
         """
 
         Parameters
@@ -1326,11 +1364,11 @@ class PlotCrossSection(object):
         Returns
         -------
         """
-        ax = kwargs.pop('ax', self.ax)
+        ax = kwargs.pop("ax", self.ax)
 
         # colorbar kwargs
         createcb = kwargs.pop("colorbar", False)
-        colorbar_label = kwargs.pop('colorbar_label', "Endpoint Time")
+        colorbar_label = kwargs.pop("colorbar_label", "Endpoint Time")
         shrink = float(kwargs.pop("shrink", 1.0))
 
         # marker kwargs
@@ -1339,38 +1377,49 @@ class PlotCrossSection(object):
 
         cd = {}
         if "c" not in kwargs:
-            vmin, vmax = 1e+10, -1e+10
+            vmin, vmax = 1e10, -1e10
             for rec in ep:
-                tt = float(rec['time'] - rec['time0'])
+                tt = float(rec["time"] - rec["time0"])
                 if tt < vmin:
                     vmin = tt
                 if tt > vmax:
                     vmax = tt
-                cd[int(rec['particleid'])] = tt
-            kwargs['vmin'] = vmin
-            kwargs['vmax'] = vmax
+                cd[int(rec["particleid"])] = tt
+            kwargs["vmin"] = vmin
+            kwargs["vmax"] = vmax
         else:
-            tc = kwargs.pop('c')
+            tc = kwargs.pop("c")
             for rec in ep:
-                cd[int(rec['praticleid'])] = tc
+                cd[int(rec["praticleid"])] = tc
 
         tep, istart = plotutil.parse_modpath_selection_options(
-            ep, direction, selection, selection_direction)[0:2]
+            ep, direction, selection, selection_direction
+        )[0:2]
 
         projpts = self.projpts
         if head is not None:
             projpts = self.set_zpts(head)
 
         tep = plotutil.intersect_modpath_with_crosssection(
-            tep, projpts, self.xvertices, self.yvertices, self.direction,
-            method=method, starting=istart
+            tep,
+            projpts,
+            self.xvertices,
+            self.yvertices,
+            self.direction,
+            method=method,
+            starting=istart,
         )
         if not tep:
             return
 
         epdict = plotutil.reproject_modpath_to_crosssection(
-            tep, projpts, self.xypts, self.direction, self.mg,
-            self.geographic_coords, starting=istart
+            tep,
+            projpts,
+            self.xypts,
+            self.direction,
+            self.mg,
+            self.geographic_coords,
+            starting=istart,
         )
 
         arr = []
@@ -1404,12 +1453,12 @@ class PlotCrossSection(object):
         """
         from matplotlib.collections import PatchCollection
 
-        edgecolor = kwargs.pop("colors", 'grey')
+        edgecolor = kwargs.pop("colors", "grey")
         edgecolor = kwargs.pop("color", edgecolor)
         edgecolor = kwargs.pop("ec", edgecolor)
         edgecolor = kwargs.pop("edgecolor", edgecolor)
-        facecolor = kwargs.pop('facecolor', 'none')
-        facecolor = kwargs.pop('fc', facecolor)
+        facecolor = kwargs.pop("facecolor", "none")
+        facecolor = kwargs.pop("fc", facecolor)
 
         polygons = [
             p for _, polys in sorted(self.polygons.items()) for p in polys
@@ -1473,15 +1522,13 @@ class PlotCrossSection(object):
                     i0 = 2
                     for ix in range(len(verts)):
                         if ix == i0 - 1:
-                            xypts.append((nn, verts[i0 - 2: i0]))
+                            xypts.append((nn, verts[i0 - 2 : i0]))
                             i0 += 2
 
                 else:
                     xypts.append((nn, verts))
 
-            xypts = sorted(
-                xypts, key=lambda q: q[-1][xyix][xyix]
-            )
+            xypts = sorted(xypts, key=lambda q: q[-1][xyix][xyix])
 
             if self.direction == "y":
                 xypts = xypts[::-1]
@@ -1491,7 +1538,7 @@ class PlotCrossSection(object):
                     t = top[nn]
                 else:
                     t = vs[nn + ncbnn]
-                    if np.isclose(t, -1e+30):
+                    if np.isclose(t, -1e30):
                         t = botm[nn]
 
                     if t < botm[nn]:
@@ -1552,11 +1599,8 @@ class PlotCrossSection(object):
         return zcenters
 
     def get_grid_patch_collection(
-            self,
-            plotarray,
-            projpts=None,
-            fill_between=False,
-            **kwargs):
+        self, plotarray, projpts=None, fill_between=False, **kwargs
+    ):
         """
         Get a PatchCollection of plotarray in unmasked cells
 
@@ -1618,10 +1662,9 @@ class PlotCrossSection(object):
 
             for polygon in polys:
                 if not use_cache:
-                    polygon = \
-                        plotutil.UnstructuredPlotUtilities.arctan2(
-                            np.array(polygon)
-                        )
+                    polygon = plotutil.UnstructuredPlotUtilities.arctan2(
+                        np.array(polygon)
+                    )
 
                 if np.isnan(plotarray[cell]):
                     continue
@@ -1645,9 +1688,7 @@ class PlotCrossSection(object):
                         v = y
 
                     p1 = [(x[0], y1), (x[1], y1), (x[1], v), (x[0], v)]
-                    p2 = [(x[0], v), (x[1], v),
-                          (x[1], y),
-                          (x[0], y)]
+                    p2 = [(x[0], v), (x[1], v), (x[1], y), (x[0], y)]
                     rectcol.append(Polygon(p1, closed=True, color=colors[0]))
                     rectcol.append(Polygon(p2, closed=True, color=colors[1]))
                 else:

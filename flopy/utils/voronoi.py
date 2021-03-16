@@ -38,6 +38,7 @@ def point_in_cell(point, vertices):
     else:
         return False
 
+
 # todo: find out how this is different from get_sorted_vertices()
 def sort_vertices(vlist):
     x, y = zip(*vlist)

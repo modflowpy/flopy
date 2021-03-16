@@ -942,7 +942,7 @@ def project_point_onto_xc_line(line, pts, d0=0, direction="x"):
     x = pts.T[0]
     y = pts.T[1]
 
-    if direction == 'x':
+    if direction == "x":
         if dy == 0:
             pass
         else:

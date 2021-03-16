@@ -253,8 +253,9 @@ class Triangle(object):
 
         pmv = PlotMapView(modelgrid=modelgrid, ax=ax, layer=layer)
         if a is None:
-            pc = pmv.plot_grid(facecolor=facecolor, edgecolor=edgecolor,
-                               **kwargs)
+            pc = pmv.plot_grid(
+                facecolor=facecolor, edgecolor=edgecolor, **kwargs
+            )
         else:
             pc = pmv.plot_array(
                 a,

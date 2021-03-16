@@ -604,10 +604,10 @@ def get_extended_budget(
 
 
 def get_specific_discharge(
-        vectors,
-        model,
-        head=None,
-        position="centers",
+    vectors,
+    model,
+    head=None,
+    position="centers",
 ):
     """
     Get the discharge vector at cell centers at a given time. For "classical"
@@ -665,15 +665,15 @@ def get_specific_discharge(
         if vectors[ix].shape == modelgrid.shape:
             tqx = np.zeros(
                 (modelgrid.nlay, modelgrid.nrow, modelgrid.ncol + 1),
-                dtype=np.float32
+                dtype=np.float32,
             )
             tqy = np.zeros(
                 (modelgrid.nlay, modelgrid.nrow + 1, modelgrid.ncol),
-                dtype=np.float32
+                dtype=np.float32,
             )
             tqz = np.zeros(
                 (modelgrid.nlay + 1, modelgrid.nrow, modelgrid.ncol),
-                dtype=np.float32
+                dtype=np.float32,
             )
             if vectors[0] is not None:
                 tqx[:, :, 1:] = vectors[0]
@@ -691,8 +691,10 @@ def get_specific_discharge(
                 tqz = vectors[2]
 
         else:
-            raise IndexError("Classical budget components must have "
-                             "the same shape as the modelgrid")
+            raise IndexError(
+                "Classical budget components must have "
+                "the same shape as the modelgrid"
+            )
     else:
         spdis = vectors
 
@@ -701,8 +703,9 @@ def get_specific_discharge(
         if head is None:
             sat_thk = model.dis.thickness.array
         else:
-            sat_thk = get_saturated_thickness(head, model, [model.hdry,
-                                                            model.hnoflo])
+            sat_thk = get_saturated_thickness(
+                head, model, [model.hdry, model.hnoflo]
+            )
             sat_thk.shape = model.modelgrid.shape
 
         # inform modelgrid of no-flow and dry cells
@@ -730,13 +733,19 @@ def get_specific_discharge(
         if position == "centers":
             qx = np.zeros(modelgrid.shape, dtype=np.float32)
             qy = np.zeros(modelgrid.shape, dtype=np.float32)
-            cross_area_x = delc[:] * 0.5 * \
-                           (sat_thk[:, :, :-1] + sat_thk[:, :, 1:])
-            cross_area_y = delr * 0.5 * \
-                           (sat_thk[:, 1:, :] + sat_thk[:, :-1, :])
-            qx[:, :, 1:] = 0.5 * (tqx[:, :, 2:] + tqx[:, :, 1:-1]) / cross_area_x
+            cross_area_x = (
+                delc[:] * 0.5 * (sat_thk[:, :, :-1] + sat_thk[:, :, 1:])
+            )
+            cross_area_y = (
+                delr * 0.5 * (sat_thk[:, 1:, :] + sat_thk[:, :-1, :])
+            )
+            qx[:, :, 1:] = (
+                0.5 * (tqx[:, :, 2:] + tqx[:, :, 1:-1]) / cross_area_x
+            )
             qx[:, :, 0] = 0.5 * tqx[:, :, 1] / cross_area_x[:, :, 0]
-            qy[:, 1:, :] = 0.5 * (tqy[:, 2:, :] + tqy[:, 1:-1, :]) / cross_area_y
+            qy[:, 1:, :] = (
+                0.5 * (tqy[:, 2:, :] + tqy[:, 1:-1, :]) / cross_area_y
+            )
             qy[:, 0, :] = 0.5 * tqy[:, 1, :] / cross_area_y[:, 0, :]
             qz = 0.5 * (tqz[1:, :, :] + tqz[:-1, :, :]) / cross_area_z
 

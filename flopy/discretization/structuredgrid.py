@@ -816,11 +816,11 @@ class StructuredGrid(Grid):
         """
         nn = None
         if kwargs:
-            if 'node' in kwargs:
-                nn = kwargs.pop('node')
+            if "node" in kwargs:
+                nn = kwargs.pop("node")
             else:
-                i = kwargs.pop('i')
-                j = kwargs.pop('j')
+                i = kwargs.pop("i")
+                j = kwargs.pop("j")
 
         if len(args) > 0:
             if len(args) == 1:
@@ -1451,16 +1451,24 @@ class StructuredGrid(Grid):
         xverts, yverts = [], []
         for i in range(self.nrow):
             for j in range(self.ncol):
-                xverts.append([xv[i, j],
-                               xv[i + 1, j],
-                               xv[i + 1, j + 1],
-                               xv[i, j + 1],
-                               xv[i, j]])
-                yverts.append([yv[i, j],
-                               yv[i + 1, j],
-                               yv[i + 1, j + 1],
-                               yv[i, j + 1],
-                               yv[i, j]])
+                xverts.append(
+                    [
+                        xv[i, j],
+                        xv[i + 1, j],
+                        xv[i + 1, j + 1],
+                        xv[i, j + 1],
+                        xv[i, j],
+                    ]
+                )
+                yverts.append(
+                    [
+                        yv[i, j],
+                        yv[i + 1, j],
+                        yv[i + 1, j + 1],
+                        yv[i, j + 1],
+                        yv[i, j],
+                    ]
+                )
 
         return np.array(xverts), np.array(yverts)
 

@@ -214,7 +214,7 @@ class PlotUtilities(object):
                     mflay=defaults["mflay"],
                     key=defaults["key"],
                     model_name=defaults["model_name"],
-                    model_grid=model.modelgrid
+                    model_grid=model.modelgrid,
                 )
                 # unroll nested lists of axes into a single list of axes
                 if isinstance(caxs, list):
@@ -240,7 +240,7 @@ class PlotUtilities(object):
                             mflay=defaults["mflay"],
                             key=defaults["key"],
                             model_name=defaults["model_name"],
-                            modelgrid=model.modelgrid
+                            modelgrid=model.modelgrid,
                         )
 
                         # unroll nested lists of axes into a single list
@@ -300,7 +300,7 @@ class PlotUtilities(object):
             "key": None,
             "initial_fig": 0,
             "model_name": "",
-            "modelgrid": None
+            "modelgrid": None,
         }
 
         for key in defaults:
@@ -351,7 +351,7 @@ class PlotUtilities(object):
                                 fignum=fignum,
                                 model_name=model_name,
                                 colorbar=True,
-                                modelgrid=defaults['modelgrid']
+                                modelgrid=defaults["modelgrid"],
                             )
                         )
 
@@ -407,7 +407,7 @@ class PlotUtilities(object):
                         mflay=defaults["mflay"],
                         fignum=fignum,
                         colorbar=colorbar,
-                        modelgrid=defaults['modelgrid'],
+                        modelgrid=defaults["modelgrid"],
                         **kwargs
                     )
 
@@ -443,7 +443,7 @@ class PlotUtilities(object):
                                 fignum=fignum,
                                 model_name=model_name,
                                 colorbar=True,
-                                modelgrid=defaults['modelgrid']
+                                modelgrid=defaults["modelgrid"],
                             )
                         )
 
@@ -474,7 +474,7 @@ class PlotUtilities(object):
                                     fignum=fignum,
                                     model_name=model_name,
                                     colorbar=True,
-                                    modelgrid=defaults['modelgrid']
+                                    modelgrid=defaults["modelgrid"],
                                 )
                             )
 
@@ -504,7 +504,7 @@ class PlotUtilities(object):
                                 kper=defaults["kper"],
                                 fignum=fignum,
                                 colorbar=True,
-                                modelgrid=defaults['modelgrid']
+                                modelgrid=defaults["modelgrid"],
                             )
                         )
 
@@ -2140,8 +2140,10 @@ def shapefile_to_patch_collection(shp, radius=500.0, idx=None):
 
     """
     if shapefile is None:
-        s = "Could not import shapefile.  Must install pyshp " \
+        s = (
+            "Could not import shapefile.  Must install pyshp "
             "in order to plot shapefiles."
+        )
         raise PlotException(s)
     if plt is None:
         err_msg = (
@@ -2193,7 +2195,8 @@ def shapefile_to_patch_collection(shp, radius=500.0, idx=None):
                         # check multipolygons for holes!
                         mask = point_in_polygon(
                             poly.T[0].reshape(1, -1),
-                            poly.T[1].reshape(1, -1), p
+                            poly.T[1].reshape(1, -1),
+                            p,
                         )
 
                         if np.all(mask):
@@ -2215,8 +2218,10 @@ def shapefile_to_patch_collection(shp, radius=500.0, idx=None):
                 if isinstance(poly, list):
                     codes = []
                     for path in poly:
-                        c = np.ones(len(path), dtype=MPath.Path.code_type) * \
-                            MPath.Path.LINETO
+                        c = (
+                            np.ones(len(path), dtype=MPath.Path.code_type)
+                            * MPath.Path.LINETO
+                        )
                         c[0] = MPath.Path.MOVETO
                         if len(codes) == 0:
                             codes = c
@@ -2285,8 +2290,10 @@ def plot_shapefile(
     """
 
     if shapefile is None:
-        s = "Could not import shapefile.  Must install pyshp in " \
+        s = (
+            "Could not import shapefile.  Must install pyshp in "
             "order to plot shapefiles."
+        )
         raise PlotException(s)
 
     vmin = kwargs.pop("vmin", None)
@@ -2339,7 +2346,7 @@ def cvfd_to_patch_collection(verts, iverts):
     warnings.warn(
         "cvfd_to_patch_collection is deprecated, "
         "use PlotMapView for plotting",
-        DeprecationWarning
+        DeprecationWarning,
     )
 
     if plt is None:
@@ -2417,7 +2424,7 @@ def plot_cvfd(
     """
     warnings.warn(
         "plot_cvfd is deprecated, use PlotMapView for plotting",
-        DeprecationWarning
+        DeprecationWarning,
     )
     if plt is None:
         err_msg = "matplotlib must be installed to use plot_cvfd()"
@@ -2660,10 +2667,12 @@ def filter_modpath_by_travel_time(recarray, travel_time):
         tp = recarray.copy()
     else:
         if isinstance(travel_time, str):
-            funcs = {"<=": lambda a, b: a["time"] <= b,
-                     ">=": lambda a, b: a["time"] >= b,
-                     "<": lambda a, b: a["time"] < b,
-                     ">": lambda a, b: a["time"] > b}
+            funcs = {
+                "<=": lambda a, b: a["time"] <= b,
+                ">=": lambda a, b: a["time"] >= b,
+                "<": lambda a, b: a["time"] < b,
+                ">": lambda a, b: a["time"] > b,
+            }
             idx = None
             for k, func in sorted(funcs.items())[::-1]:
                 if k in travel_time:
@@ -2676,11 +2685,11 @@ def filter_modpath_by_travel_time(recarray, travel_time):
                     idx = recarray["time"] <= time
                 except (ValueError, KeyError):
                     errmsg = (
-                            "flopy.map.plot_pathline travel_time "
-                            + "variable cannot be parsed. "
-                            + "Acceptable logical variables are , "
-                            + "<=, <, >=, and >. "
-                            + "You passed {}".format(travel_time)
+                        "flopy.map.plot_pathline travel_time "
+                        + "variable cannot be parsed. "
+                        + "Acceptable logical variables are , "
+                        + "<=, <, >=, and >. "
+                        + "You passed {}".format(travel_time)
                     )
                     raise Exception(errmsg)
         else:
@@ -2692,13 +2701,13 @@ def filter_modpath_by_travel_time(recarray, travel_time):
 
 
 def intersect_modpath_with_crosssection(
-        recarrays,
-        projpts,
-        xvertices,
-        yvertices,
-        projection,
-        method="cell",
-        starting=False
+    recarrays,
+    projpts,
+    xvertices,
+    yvertices,
+    projection,
+    method="cell",
+    starting=False,
 ):
     """
 
@@ -2719,7 +2728,9 @@ def intersect_modpath_with_crosssection(
         xp, yp, zp = "x0", "y0", "z0"
 
     if not isinstance(recarrays, list):
-        recarrays = [recarrays,]
+        recarrays = [
+            recarrays,
+        ]
 
     if projection == "x":
         v_opp = yvertices
@@ -2744,34 +2755,45 @@ def intersect_modpath_with_crosssection(
         omin = np.min(v_opp[cell])
         omax = np.max(v_opp[cell])
         oppts[cell] = np.array(
-            [[omin, zmax],
-             [omax, zmax],
-             [omax, zmin],
-             [omin, zmin],
-             [omin, zmax]]
+            [
+                [omin, zmax],
+                [omax, zmax],
+                [omax, zmin],
+                [omin, zmin],
+                [omin, zmax],
+            ]
         )
 
         # intersects w/actual...
         nppts[cell] = np.array(
-            [[nmin, zmax],
-             [nmax, zmax],
-             [nmax, zmin],
-             [nmin, zmin],
-             [nmin, zmax]]
+            [
+                [nmin, zmax],
+                [nmax, zmax],
+                [nmax, zmin],
+                [nmin, zmin],
+                [nmin, zmax],
+            ]
         )
 
     idict = {}
     for recarray in recarrays:
         for cell, _ in projpts.items():
-            m0 = point_in_polygon(recarray[prj].reshape(1, -1),
-                                  recarray[zp].reshape(1, -1),
-                                  nppts[cell])
+            m0 = point_in_polygon(
+                recarray[prj].reshape(1, -1),
+                recarray[zp].reshape(1, -1),
+                nppts[cell],
+            )
             if method == "cell":
-                m1 = point_in_polygon(recarray[oprj].reshape(1, -1),
-                                      recarray[zp].reshape(1, -1),
-                                      oppts[cell])
-                idx = [i for i, (x, y) in
-                       enumerate(zip(m0[0], m1[0])) if x == y == True]
+                m1 = point_in_polygon(
+                    recarray[oprj].reshape(1, -1),
+                    recarray[zp].reshape(1, -1),
+                    oppts[cell],
+                )
+                idx = [
+                    i
+                    for i, (x, y) in enumerate(zip(m0[0], m1[0]))
+                    if x == y == True
+                ]
             else:
                 idx = [i for i, x in enumerate(m0[0]) if x == True]
 
@@ -2785,13 +2807,13 @@ def intersect_modpath_with_crosssection(
 
 
 def reproject_modpath_to_crosssection(
-        idict,
-        projpts,
-        xypts,
-        projection,
-        modelgrid,
-        geographic_coords,
-        starting=False
+    idict,
+    projpts,
+    xypts,
+    projection,
+    modelgrid,
+    geographic_coords,
+    starting=False,
 ):
     """
 
@@ -2818,7 +2840,7 @@ def reproject_modpath_to_crosssection(
     if not geographic_coords:
         for cell, recarrays in idict.items():
             line = xypts[cell]
-            if projection == 'x':
+            if projection == "x":
                 d0 = np.min([i[0] for i in projpts[cell]])
             else:
                 d0 = np.max([i[0] for i in projpts[cell]])
@@ -2829,7 +2851,7 @@ def reproject_modpath_to_crosssection(
                 )
                 rec[xp] = x
                 rec[yp] = y
-                pid = rec['particleid'][0]
+                pid = rec["particleid"][0]
                 pline = list(zip(rec[proj], rec[zp]))
                 if pid not in ptdict:
                     ptdict[pid] = pline
@@ -2847,7 +2869,7 @@ def reproject_modpath_to_crosssection(
                 )
                 rec[xp] = x
                 rec[yp] = y
-                pid = rec['particleid'][0]
+                pid = rec["particleid"][0]
                 pline = list(zip(rec[proj], rec[zp]))
                 if pid not in ptdict:
                     ptdict[pid] = pline
@@ -2858,7 +2880,10 @@ def reproject_modpath_to_crosssection(
 
 
 def parse_modpath_selection_options(
-        ep, direction, selection, selection_direction,
+    ep,
+    direction,
+    selection,
+    selection_direction,
 ):
     """
 
@@ -2907,23 +2932,22 @@ def parse_modpath_selection_options(
                 else:
                     ksel, isel, jsel = "k", "i", "j"
                 # make selection
-                idx = (ep[ksel] == k) & (ep[isel] == i) & (
-                        ep[jsel] == j)
+                idx = (ep[ksel] == k) & (ep[isel] == i) & (ep[jsel] == j)
                 tep = ep[idx]
             else:
                 errmsg = (
-                        "plot_endpoint selection must be "
-                        + "a zero-based layer, row, column tuple "
-                        + "(l, r, c) or node number (MODPATH 7) of "
-                        + "the location to evaluate (i.e., well location)."
+                    "plot_endpoint selection must be "
+                    + "a zero-based layer, row, column tuple "
+                    + "(l, r, c) or node number (MODPATH 7) of "
+                    + "the location to evaluate (i.e., well location)."
                 )
                 raise Exception(errmsg)
         except (ValueError, KeyError, IndexError):
             errmsg = (
-                    "plot_endpoint selection must be a "
-                    + "zero-based layer, row, column tuple (l, r, c) "
-                    + "or node number (MODPATH 7) of the location "
-                    + "to evaluate (i.e., well location)."
+                "plot_endpoint selection must be a "
+                + "zero-based layer, row, column tuple (l, r, c) "
+                + "or node number (MODPATH 7) of the location "
+                + "to evaluate (i.e., well location)."
             )
             raise Exception(errmsg)
     else:

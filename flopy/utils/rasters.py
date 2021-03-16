@@ -341,8 +341,14 @@ class Raster(object):
 
         return arr_dict[band]
 
-    def resample_to_grid(self, modelgrid, band, method="nearest",
-                         multithread=False, thread_pool=2):
+    def resample_to_grid(
+        self,
+        modelgrid,
+        band,
+        method="nearest",
+        multithread=False,
+        thread_pool=2,
+    ):
         """
         Method to resample the raster data to a
         user supplied grid of x, y coordinates.
@@ -401,7 +407,7 @@ class Raster(object):
             # step 3: use griddata interpolation to snap to grid
             data = griddata((rxc, ryc), arr, (xc, yc), method=method)
 
-        elif method in ('median', 'mean'):
+        elif method in ("median", "mean"):
             # these methods are slow and could use a speed u
             ncpl = modelgrid.ncpl
             data_shape = modelgrid.xcellcenters.shape
@@ -415,9 +421,10 @@ class Raster(object):
                 container = threading.BoundedSemaphore(thread_pool)
                 threads = []
                 for node in range(ncpl):
-                    t = threading.Thread(target=self.__threaded_resampling,
-                                         args=(modelgrid, node, band, method,
-                                               container, q))
+                    t = threading.Thread(
+                        target=self.__threaded_resampling,
+                        args=(modelgrid, node, band, method, container, q),
+                    )
                     threads.append(t)
 
                 for thread in threads:
@@ -453,7 +460,7 @@ class Raster(object):
         return data
 
     def __threaded_resampling(
-            self, modelgrid, node, band, method, container, q
+        self, modelgrid, node, band, method, container, q
     ):
         """
         Threaded resampling handler to speed up bottlenecks

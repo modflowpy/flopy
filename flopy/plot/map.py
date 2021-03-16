@@ -122,7 +122,7 @@ class PlotMapView(object):
         # add NaN values to mask
         plotarray = np.ma.masked_where(np.isnan(plotarray), plotarray)
 
-        ax = kwargs.pop('ax', self.ax)
+        ax = kwargs.pop("ax", self.ax)
 
         # use cached patch collection for plotting
         polygons = self.mg.map_polygons
@@ -185,8 +185,8 @@ class PlotMapView(object):
         # work around for tri-contour ignore vmin & vmax
         # necessary block for tri-contour NaN issue
         if "levels" not in kwargs:
-            vmin = kwargs.pop('vmin', np.nanmin(plotarray))
-            vmax = kwargs.pop('vmax', np.nanmax(plotarray))
+            vmin = kwargs.pop("vmin", np.nanmin(plotarray))
+            vmax = kwargs.pop("vmax", np.nanmax(plotarray))
             levels = np.linspace(vmin, vmax, 7)
             kwargs["levels"] = levels
 
@@ -209,7 +209,7 @@ class PlotMapView(object):
                     t = np.isclose(plotarray, mval)
                     ismasked += t
 
-        ax = kwargs.pop('ax', self.ax)
+        ax = kwargs.pop("ax", self.ax)
 
         if "colors" in kwargs.keys():
             if "cmap" in kwargs.keys():
@@ -361,13 +361,13 @@ class PlotMapView(object):
 
         from matplotlib.collections import PatchCollection
 
-        ax = kwargs.pop('ax', self.ax)
-        edgecolor = kwargs.pop("colors", 'grey')
+        ax = kwargs.pop("ax", self.ax)
+        edgecolor = kwargs.pop("colors", "grey")
         edgecolor = kwargs.pop("color", edgecolor)
         edgecolor = kwargs.pop("ec", edgecolor)
         edgecolor = kwargs.pop("edgecolor", edgecolor)
-        facecolor = kwargs.pop('facecolor', 'none')
-        facecolor = kwargs.pop('fc', facecolor)
+        facecolor = kwargs.pop("facecolor", "none")
+        facecolor = kwargs.pop("fc", facecolor)
 
         # use cached patch collection for plotting
         polygons = self.mg.map_polygons
@@ -580,9 +580,10 @@ class PlotMapView(object):
             Keyword arguments passed to plotutil.plot_cvfd()
 
         """
-        warnings.warn("plot_cvfd will be deprecated use "
-                      "plot_grid or plot_array",
-                      PendingDeprecationWarning)
+        warnings.warn(
+            "plot_cvfd will be deprecated use " "plot_grid or plot_array",
+            PendingDeprecationWarning,
+        )
         a = kwargs.pop("a", None)
         if a is None:
             return self.plot_grid(**kwargs)
@@ -614,7 +615,7 @@ class PlotMapView(object):
         """
         warnings.warn(
             "contour_cvfd will be deprecated use contour_array",
-                      PendingDeprecationWarning
+            PendingDeprecationWarning,
         )
 
         return self.contour_array(a, masked_values=masked_values, **kwargs)
@@ -1025,7 +1026,7 @@ class PlotMapView(object):
             lo : list of Line2D objects
         """
         if "color" in kwargs:
-            kwargs['markercolor'] = kwargs['color']
+            kwargs["markercolor"] = kwargs["color"]
 
         return self.plot_pathline(ts, travel_time=travel_time, **kwargs)
 
@@ -1074,7 +1075,7 @@ class PlotMapView(object):
 
         """
 
-        ax = kwargs.pop('ax', self.ax)
+        ax = kwargs.pop("ax", self.ax)
 
         tep, _, xp, yp = plotutil.parse_modpath_selection_options(
             ep, direction, selection, selection_direction
@@ -1091,7 +1092,7 @@ class PlotMapView(object):
 
         # colorbar kwargs
         createcb = kwargs.pop("colorbar", False)
-        colorbar_label = kwargs.pop('colorbar_label', "Endpoint Time")
+        colorbar_label = kwargs.pop("colorbar_label", "Endpoint Time")
         shrink = float(kwargs.pop("shrink", 1.0))
 
         # transform data!

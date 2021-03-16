@@ -267,8 +267,9 @@ class VertexGrid(Grid):
         """
         while cellid >= self.ncpl:
             if cellid > self.nnodes:
-                err = "cellid {} out of index for size {}".format(cellid,
-                                                                  self.nnodes)
+                err = "cellid {} out of index for size {}".format(
+                    cellid, self.nnodes
+                )
                 raise IndexError(err)
 
             cellid -= self.ncpl

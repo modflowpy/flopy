@@ -318,8 +318,8 @@ class UnstructuredGrid(Grid):
 
         cache_index = "xyzgrid"
         if (
-                cache_index not in self._cache_dict
-                or self._cache_dict[cache_index].out_of_date
+            cache_index not in self._cache_dict
+            or self._cache_dict[cache_index].out_of_date
         ):
             self.xyzvertices
             self._polygons = None

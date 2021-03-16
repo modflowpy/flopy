@@ -18,10 +18,11 @@ class styles(object):
     accessed using the plt.style.context() method.
 
     """
+
     _ws = os.path.abspath(os.path.dirname(__file__))
     _map_style = os.path.join(_ws, "mplstyle", "usgsmap.mplstyle")
     _plot_style = os.path.join(_ws, "mplstyle", "usgsplot.mplstyle")
-    if platform.system() == 'linux':
+    if platform.system() == "linux":
         _map_style = os.path.join(_ws, "mplstyle", "usgsmap_linux.mplstyle")
         _plot_style = os.path.join(_ws, "mplstyle", "usgsplot_linux.mplstyle")
 
@@ -58,8 +59,14 @@ class styles(object):
 
     @classmethod
     def heading(
-            self, ax=None, letter=None, heading=None, x=0.00, y=1.01, idx=None,
-            fontsize=9
+        self,
+        ax=None,
+        letter=None,
+        heading=None,
+        x=0.00,
+        y=1.01,
+        idx=None,
+        fontsize=9,
     ):
         """Add a USGS-style heading to a matplotlib axis object
 
@@ -94,7 +101,9 @@ class styles(object):
         if letter is None and idx is not None:
             letter = chr(ord("A") + idx)
 
-        font = styles.__set_fontspec(bold=True, italic=False, fontsize=fontsize)
+        font = styles.__set_fontspec(
+            bold=True, italic=False, fontsize=fontsize
+        )
 
         if letter is not None:
             if heading is None:
@@ -144,7 +153,7 @@ class styles(object):
         """
         if ax is None:
             ax = plt.gca()
-        fontsize = kwargs.pop('fontsize', 9)
+        fontsize = kwargs.pop("fontsize", 9)
         fontspec = styles.__set_fontspec(
             bold=bold, italic=italic, fontsize=fontsize
         )
@@ -174,7 +183,7 @@ class styles(object):
         if ax is None:
             ax = plt.gca()
 
-        fontsize = kwargs.pop('fontsize', 9)
+        fontsize = kwargs.pop("fontsize", 9)
         fontspec = styles.__set_fontspec(
             bold=bold, italic=italic, fontsize=fontsize
         )
@@ -247,18 +256,18 @@ class styles(object):
 
     @classmethod
     def add_text(
-            cls,
-            ax=None,
-            text="",
-            x=0.0,
-            y=0.0,
-            transform=True,
-            bold=True,
-            italic=True,
-            fontsize=9,
-            ha="left",
-            va="bottom",
-            **kwargs
+        cls,
+        ax=None,
+        text="",
+        x=0.0,
+        y=0.0,
+        transform=True,
+        bold=True,
+        italic=True,
+        fontsize=9,
+        ha="left",
+        va="bottom",
+        **kwargs
     ):
         """Add USGS-style text to a axis object
 
@@ -303,29 +312,35 @@ class styles(object):
         else:
             transform = ax.transData
 
-        font = styles.__set_fontspec(bold=bold,
-                                     italic=italic,
-                                     fontsize=fontsize)
+        font = styles.__set_fontspec(
+            bold=bold, italic=italic, fontsize=fontsize
+        )
 
         text_obj = ax.text(
-            x, y, text, va=va, ha=ha, fontdict=font,
-            transform=transform, **kwargs
+            x,
+            y,
+            text,
+            va=va,
+            ha=ha,
+            fontdict=font,
+            transform=transform,
+            **kwargs
         )
         return text_obj
 
     @classmethod
     def add_annotation(
-            cls,
-            ax=None,
-            text="",
-            xy=None,
-            xytext=None,
-            bold=True,
-            italic=True,
-            fontsize=9,
-            ha="left",
-            va="bottom",
-            **kwargs
+        cls,
+        ax=None,
+        text="",
+        xy=None,
+        xytext=None,
+        bold=True,
+        italic=True,
+        fontsize=9,
+        ha="left",
+        va="bottom",
+        **kwargs
     ):
         """Add an annotation to a axis object
 
@@ -367,9 +382,9 @@ class styles(object):
         if xytext is None:
             xytext = (0.0, 0.0)
 
-        fontspec = styles.__set_fontspec(bold=bold,
-                                         italic=italic,
-                                         fontsize=fontsize)
+        fontspec = styles.__set_fontspec(
+            bold=bold, italic=italic, fontsize=fontsize
+        )
         # add font information to kwargs
         if kwargs is None:
             kwargs = fontspec
@@ -400,7 +415,7 @@ class styles(object):
         if ax is None:
             ax = plt.gca()
 
-        ax.tick_params(axis='both', which='both', length=0)
+        ax.tick_params(axis="both", which="both", length=0)
 
     @classmethod
     def __set_fontspec(cls, bold=True, italic=True, fontsize=9, family=False):
@@ -442,12 +457,11 @@ class styles(object):
         }
 
         if family:
-            fontspec.pop('fontname')
-            fontspec['family'] = family
+            fontspec.pop("fontname")
+            fontspec["family"] = family
 
         return fontspec
 
 
 if plt is None:
     styles = None
-
