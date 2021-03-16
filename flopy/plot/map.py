@@ -670,7 +670,7 @@ class PlotMapView(object):
             ib = self.mg.idomain.ravel()
 
         xcentergrid = self.mg.get_xcellcenters_for_layer(self.layer)
-        ycentergrid = self.mg.get_xcellcenters_for_layer(self.layer)
+        ycentergrid = self.mg.get_ycellcenters_for_layer(self.layer)
         vx = self.mg.get_plottable_layer_array(vx, self.layer)
         vy = self.mg.get_plottable_layer_array(vy, self.layer)
         ib = self.mg.get_plottable_layer_array(ib, self.layer)
