@@ -669,29 +669,29 @@ class PlotMapView(object):
         if self.mg.idomain is not None:
             ib = self.mg.idomain.ravel()
 
+        xcentergrid = self.mg.get_xcellcenters_for_layer(self.layer)
+        ycentergrid = self.mg.get_xcellcenters_for_layer(self.layer)
         vx = self.mg.get_plottable_layer_array(vx, self.layer)
         vy = self.mg.get_plottable_layer_array(vy, self.layer)
         ib = self.mg.get_plottable_layer_array(ib, self.layer)
 
         try:
-            x = self.mg.xcellcenters[::istep, ::jstep]
-            y = self.mg.ycellcenters[::istep, ::jstep]
+            x = xcentergrid[::istep, ::jstep]
+            y = ycentergrid[::istep, ::jstep]
             u = vx[::istep, ::jstep]
             v = vy[::istep, ::jstep]
             ib = ib[::istep, ::jstep]
         except IndexError:
-            x = self.mg.xcellcenters[::jstep]
-            y = self.mg.ycellcenters[::jstep]
+            x = xcentergrid[::jstep]
+            y = ycentergrid[::jstep]
             u = vx[::jstep]
             v = vy[::jstep]
             ib = ib[::jstep]
 
         # if necessary, copy to avoid changing the passed values
         if masked_values is not None or normalize:
-            import copy
-
-            u = copy.copy(u)
-            v = copy.copy(v)
+            u = np.copy(u)
+            v = np.copy(v)
 
         # mask values
         if masked_values is not None:
