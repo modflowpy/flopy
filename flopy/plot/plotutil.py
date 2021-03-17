@@ -820,10 +820,12 @@ class PlotUtilities(object):
         else:
             fext = "png"
 
-        # flopy6 adaption
         model = util3d.model
-        modelgrid = model.modelgrid
-        nplottable_layers = modelgrid.nlay
+        if isinstance(util3d, Util3d):
+            nplottable_layers = util3d.shape[0]
+        else:
+            # flopy6 adaption
+            nplottable_layers = model.modelgrid.nlay
         array = util3d.array
         name = util3d.name
         if isinstance(name, str):

@@ -1423,6 +1423,8 @@ def test_get_lrc_get_node():
 
 def test_vertex_model_dot_plot():
     import matplotlib.pyplot as plt
+    from matplotlib import rcParams
+    rcParams["figure.max_open_warning"] = 36
     # load up the vertex example problem
     sim_name = "mfsim.nam"
     sim_path = "../examples/data/mf6/test003_gwftri_disv"
@@ -1431,16 +1433,28 @@ def test_vertex_model_dot_plot():
                                            sim_ws=sim_path)
     disv_ml = disv_sim.get_model('gwf_1')
     ax = disv_ml.plot()
-    assert ax
+    assert isinstance(ax, list)
+    assert len(ax) == 36
     plt.close('all')
 
 
 def test_model_dot_plot():
     import matplotlib.pyplot as plt
-    loadpth = os.path.join('..', 'examples', 'data', 'secp')
-    ml = flopy.modflow.Modflow.load('secp.nam', model_ws=loadpth)
+    loadpth = os.path.join('..', 'examples', 'data', 'mf2005_test')
+    ml = flopy.modflow.Modflow.load('ibs2k.nam', 'mf2k', model_ws=loadpth)
     ax = ml.plot()
-    assert ax
+    assert isinstance(ax, list)
+    assert len(ax) == 20
+    plt.close('all')
+
+    # plot specific dataset
+    ax = ml.bcf6.hy.plot()
+    assert isinstance(ax, list)
+    assert len(ax) == 2
+
+    # special case where nlay != plottable
+    ax = ml.bcf6.vcont.plot()
+    assert isinstance(ax, plt.Axes)
     plt.close('all')
 
 
