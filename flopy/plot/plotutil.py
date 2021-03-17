@@ -1639,7 +1639,8 @@ class PlotUtilities(object):
         import warnings
 
         warnings.warn(
-            "centered_specific_discharge() has been deprecated. Use "
+            "centered_specific_discharge() has been deprecated and will be "
+            "removed in version 3.3.5. Use "
             "postprocessing.get_specific_discharge() instead.",
             DeprecationWarning,
         )
@@ -2344,8 +2345,8 @@ def cvfd_to_patch_collection(verts, iverts):
 
     """
     warnings.warn(
-        "cvfd_to_patch_collection is deprecated, "
-        "use PlotMapView for plotting",
+        "cvfd_to_patch_collection is deprecated and will be removed in "
+        "version 3.3.5. Use PlotMapView for plotting",
         DeprecationWarning,
     )
 
@@ -2423,7 +2424,8 @@ def plot_cvfd(
 
     """
     warnings.warn(
-        "plot_cvfd is deprecated, use PlotMapView for plotting",
+        "plot_cvfd is deprecated and will be removed in version 3.3.5. "
+        "Use PlotMapView for plotting",
         DeprecationWarning,
     )
     if plt is None:
@@ -2581,7 +2583,8 @@ def _depreciated_dis_handler(modelgrid, dis):
     import warnings
 
     warnings.warn(
-        "the dis parameter has been depreciated.", PendingDeprecationWarning
+        "the dis parameter has been depreciated and will be removed in "
+        "version 3.3.5.", PendingDeprecationWarning
     )
     if modelgrid.grid_type == "vertex":
         modelgrid = VertexGrid(

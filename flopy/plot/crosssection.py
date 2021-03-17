@@ -1043,9 +1043,9 @@ class PlotCrossSection(object):
         import warnings
 
         warnings.warn(
-            "plot_specific_discharge() has been deprecated. Use "
-            "plot_vector() instead, which should follow after "
-            "postprocessing.get_specific_discharge()",
+            "plot_specific_discharge() has been deprecated and will be"
+            "removed in version 3.3.5. Use plot_vector() instead, which "
+            "should follow after postprocessing.get_specific_discharge()",
             DeprecationWarning,
         )
 
@@ -1127,9 +1127,9 @@ class PlotCrossSection(object):
         import warnings
 
         warnings.warn(
-            "plot_discharge() has been deprecated. Use "
-            "plot_vector() instead, which should follow after "
-            "postprocessing.get_specific_discharge()",
+            "plot_discharge() has been deprecated and will be removed in"
+            "version 3.3.5. Use plot_vector() instead, which should follow "
+            "after postprocessing.get_specific_discharge()",
             DeprecationWarning,
         )
 
@@ -1786,7 +1786,8 @@ class ModelCrossSection(object):
 
         err_msg = (
             "ModelCrossSection is Deprecated and has been replaced by "
-            + "PlotCrossSection(), Calling PlotCrossSection()"
+            "PlotCrossSection(). ModelCrossSection will be removed in "
+            "version 3.3.5, Calling PlotCrossSection()"
         )
         warnings.warn(err_msg, DeprecationWarning)
 

@@ -138,8 +138,8 @@ class SpatialReference(object):
         length_multiplier=None,
     ):
         warnings.warn(
-            "SpatialReference has been deprecated. Use StructuredGrid"
-            " instead.",
+            "SpatialReference has been deprecated and will be removed in "
+            "version 3.3.5. Use StructuredGrid instead.",
             category=DeprecationWarning,
         )
 
@@ -1708,8 +1708,8 @@ class SpatialReferenceUnstructured(SpatialReference):
         length_multiplier=1.0,
     ):
         warnings.warn(
-            "SpatialReferenceUnstructured has been deprecated. "
-            "Use VertexGrid instead.",
+            "SpatialReferenceUnstructured has been deprecated and will be "
+            "removed in version 3.3.5. Use VertexGrid instead.",
             category=DeprecationWarning,
         )
         self.xc = xc
@@ -1988,7 +1988,8 @@ class epsgRef:
 
     def __init__(self):
         warnings.warn(
-            "epsgRef has been deprecated.", category=DeprecationWarning
+            "epsgRef has been deprecated and will be removed in version "
+            "3.3.5.", category=DeprecationWarning
         )
         try:
             from appdirs import user_data_dir
@@ -2071,7 +2072,8 @@ class crs(object):
 
     def __init__(self, prj=None, esri_wkt=None, epsg=None):
         warnings.warn(
-            "crs has been deprecated. Use CRS in shapefile_utils instead.",
+            "crs has been deprecated and will be removed in version 3.3.5. "
+            "Use CRS in shapefile_utils instead.",
             category=DeprecationWarning,
         )
         self.wktstr = None
@@ -2292,7 +2294,8 @@ def getprj(epsg, addlocalreference=True, text="esriwkt"):
 
     """
     warnings.warn(
-        "SpatialReference has been deprecated. Use StructuredGrid " "instead.",
+        "SpatialReference has been deprecated and will be removed in version "
+        "3.3.5. Use StructuredGrid instead.",
         category=DeprecationWarning,
     )
     epsgfile = epsgRef()
@@ -2328,7 +2331,8 @@ def get_spatialreference(epsg, text="esriwkt"):
     from flopy.utils.flopy_io import get_url_text
 
     warnings.warn(
-        "SpatialReference has been deprecated. Use StructuredGrid " "instead.",
+        "SpatialReference has been deprecated and will be removed in version "
+        "3.3.5. Use StructuredGrid instead.",
         category=DeprecationWarning,
     )
 
@@ -2372,7 +2376,8 @@ def getproj4(epsg):
 
     """
     warnings.warn(
-        "SpatialReference has been deprecated. Use StructuredGrid " "instead.",
+        "SpatialReference has been deprecated and will be removed in version "
+        "3.3.5. Use StructuredGrid instead.",
         category=DeprecationWarning,
     )
 

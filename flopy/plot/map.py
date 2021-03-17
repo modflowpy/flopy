@@ -581,7 +581,8 @@ class PlotMapView(object):
 
         """
         warnings.warn(
-            "plot_cvfd will be deprecated use " "plot_grid or plot_array",
+            "plot_cvfd will be deprecated and will be removed in version "
+            "3.3.5. Use plot_grid or plot_array",
             PendingDeprecationWarning,
         )
         a = kwargs.pop("a", None)
@@ -614,7 +615,8 @@ class PlotMapView(object):
 
         """
         warnings.warn(
-            "contour_cvfd will be deprecated use contour_array",
+            "contour_cvfd will be deprecated and removed in version 3.3.5. "
+            " Use contour_array",
             PendingDeprecationWarning,
         )
 
@@ -750,9 +752,9 @@ class PlotMapView(object):
 
         """
         warnings.warn(
-            "plot_specific_discharge() has been deprecated. Use "
-            "plot_vector() instead, which should follow after "
-            "postprocessing.get_specific_discharge()",
+            "plot_specific_discharge() has been deprecated and will be "
+            "removed in version 3.3.5. Use plot_vector() instead, which "
+            "should follow after postprocessing.get_specific_discharge()",
             DeprecationWarning,
         )
 
@@ -820,9 +822,9 @@ class PlotMapView(object):
 
         """
         warnings.warn(
-            "plot_discharge() has been deprecated. Use "
-            "plot_vector() instead, which should follow after "
-            "postprocessing.get_specific_discharge()",
+            "plot_discharge() has been deprecated and will be replaced "
+            "in version 3.3.5. Use plot_vector() instead, which should "
+            "follow after postprocessing.get_specific_discharge()",
             DeprecationWarning,
         )
 
@@ -1269,7 +1271,8 @@ class ModelMap(object):
 
         err_msg = (
             "ModelMap is deprecated and has been replaced by "
-            "PlotMapView(); Calling PlotMapView()"
+            "PlotMapView(). ModelMap will be removed in version 3.3.5; "
+            "Calling PlotMapView()"
         )
         warnings.warn(err_msg, DeprecationWarning)
 
