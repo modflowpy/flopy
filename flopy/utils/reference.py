@@ -1989,7 +1989,8 @@ class epsgRef:
     def __init__(self):
         warnings.warn(
             "epsgRef has been deprecated and will be removed in version "
-            "3.3.5.", category=DeprecationWarning
+            "3.3.5.",
+            category=DeprecationWarning,
         )
         try:
             from appdirs import user_data_dir

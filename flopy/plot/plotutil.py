@@ -2584,7 +2584,8 @@ def _depreciated_dis_handler(modelgrid, dis):
 
     warnings.warn(
         "the dis parameter has been depreciated and will be removed in "
-        "version 3.3.5.", PendingDeprecationWarning
+        "version 3.3.5.",
+        PendingDeprecationWarning,
     )
     if modelgrid.grid_type == "vertex":
         modelgrid = VertexGrid(
