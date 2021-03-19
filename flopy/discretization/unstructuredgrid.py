@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 from .grid import Grid, CachedData
 
@@ -300,6 +301,50 @@ class UnstructuredGrid(Grid):
             return self._cache_dict[cache_index].data
         else:
             return self._cache_dict[cache_index].data_nocopy
+
+    @property
+    def map_polygons(self):
+        """
+        Property to get Matplotlib polygon objects for the modelgrid
+
+        Returns
+        -------
+            list or dict of matplotlib.collections.Polygon
+        """
+        try:
+            from matplotlib.patches import Polygon
+        except ImportError:
+            raise ImportError("matplotlib required to use this method")
+
+        cache_index = "xyzgrid"
+        if (
+            cache_index not in self._cache_dict
+            or self._cache_dict[cache_index].out_of_date
+        ):
+            self.xyzvertices
+            self._polygons = None
+
+        if self._polygons is None:
+            if self.grid_varies_by_layer:
+                self._polygons = {}
+                ilay = 0
+                lay_break = np.cumsum(self.ncpl)
+                for nn in range(self.nnodes):
+                    if nn in lay_break:
+                        ilay += 1
+
+                    if ilay not in self._polygons:
+                        self._polygons[ilay] = []
+
+                    p = Polygon(self.get_cell_vertices(nn), closed=True)
+                    self._polygons[ilay].append(p)
+            else:
+                self._polygons = [
+                    Polygon(self.get_cell_vertices(nn), closed=True)
+                    for nn in range(self.ncpl[0])
+                ]
+
+        return copy.copy(self._polygons)
 
     def intersect(self, x, y, local=False, forgive=False):
         x, y = super(UnstructuredGrid, self).intersect(x, y, local, forgive)

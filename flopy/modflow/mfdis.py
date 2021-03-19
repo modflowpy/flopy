@@ -559,17 +559,7 @@ class ModflowDis(Package):
         v : list of tuples containing the layer (k), row (i),
             and column (j) for each node in the input list
         """
-        if not isinstance(nodes, list):
-            nodes = [nodes]
-        nrc = self.nrow * self.ncol
-        v = []
-        for node in nodes:
-            k = int(node / nrc)
-            ij = node - k * nrc
-            i = int(ij / self.ncol)
-            j = ij - i * self.ncol
-            v.append((k, i, j))
-        return v
+        return self.parent.modelgrid.get_lrc(nodes)
 
     def get_node(self, lrc_list):
         """
@@ -581,14 +571,7 @@ class ModflowDis(Package):
         v : list of MODFLOW nodes for each layer (k), row (i),
             and column (j) tuple in the input list
         """
-        if not isinstance(lrc_list, list):
-            lrc_list = [lrc_list]
-        nrc = self.nrow * self.ncol
-        v = []
-        for [k, i, j] in lrc_list:
-            node = int((k * nrc) + (i * self.ncol) + j)
-            v.append(node)
-        return v
+        return self.parent.modelgrid.get_node(lrc_list)
 
     def get_layer(self, i, j, elev):
         """Return the layer for an elevation at an i, j location.

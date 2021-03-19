@@ -27,5 +27,5 @@ from .plotutil import (
     PlotUtilities,
 )
 from .map import ModelMap, PlotMapView
-from .crosssection import ModelCrossSection
-from .plotbase import PlotCrossSection
+from .crosssection import ModelCrossSection, PlotCrossSection
+from .styles import styles

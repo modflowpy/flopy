@@ -209,6 +209,7 @@ class LayerFile(object):
                 delr=np.ones(
                     self.ncol,
                 ),
+                nlay=self.nlay,
                 xoff=0.0,
                 yoff=0.0,
                 angrot=0.0,

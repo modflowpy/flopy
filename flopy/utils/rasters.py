@@ -1,4 +1,6 @@
 import numpy as np
+import threading
+import queue
 
 try:
     import rasterio
@@ -55,7 +57,7 @@ class Raster(object):
     FLOAT64 = (np.float64,)
     INT8 = (np.int8,)
     INT16 = (np.int16,)
-    INT32 = (int, np.int32, np.int_)
+    INT32 = (int, np.int, np.int32, np.uint32)
     INT64 = (np.int64,)
 
     def __init__(
@@ -84,6 +86,9 @@ class Raster(object):
             )
             raise ImportError(msg)
 
+        from .geometry import point_in_polygon
+
+        self._point_in_polygon = point_in_polygon
         self._array = array
         self._bands = bands
 
@@ -336,7 +341,14 @@ class Raster(object):
 
         return arr_dict[band]
 
-    def resample_to_grid(self, xc, yc, band, method="nearest"):
+    def resample_to_grid(
+        self,
+        modelgrid,
+        band,
+        method="nearest",
+        multithread=False,
+        thread_pool=2,
+    ):
         """
         Method to resample the raster data to a
         user supplied grid of x, y coordinates.
@@ -346,10 +358,8 @@ class Raster(object):
 
         Parameters
         ----------
-        xc : np.ndarray or list
-            an array of x-cell centers
-        yc : np.ndarray or list
-            an array of y-cell centers
+        modelgrid : flopy.Grid object
+            model grid to sample data from
         band : int
             raster band to re-sample
         method : str
@@ -371,26 +381,75 @@ class Raster(object):
         else:
             from scipy.interpolate import griddata
 
-        data_shape = xc.shape
-        xc = xc.flatten()
-        yc = yc.flatten()
-        # step 1: create grid from raster bounds
-        rxc = self.xcenters
-        ryc = self.ycenters
+        method = method.lower()
+        if method in ("linear", "nearest", "cubic"):
+            xc = modelgrid.xcellcenters
+            yc = modelgrid.ycellcenters
 
-        # step 2: flatten grid
-        rxc = rxc.flatten()
-        ryc = ryc.flatten()
+            data_shape = xc.shape
+            xc = xc.flatten()
+            yc = yc.flatten()
+            # step 1: create grid from raster bounds
+            rxc = self.xcenters
+            ryc = self.ycenters
 
-        # step 3: get array
-        if method == "cubic":
-            arr = self.get_array(band, masked=False)
+            # step 2: flatten grid
+            rxc = rxc.flatten()
+            ryc = ryc.flatten()
+
+            # step 3: get array
+            if method == "cubic":
+                arr = self.get_array(band, masked=False)
+            else:
+                arr = self.get_array(band, masked=True)
+            arr = arr.flatten()
+
+            # step 3: use griddata interpolation to snap to grid
+            data = griddata((rxc, ryc), arr, (xc, yc), method=method)
+
+        elif method in ("median", "mean"):
+            # these methods are slow and could use a speed u
+            ncpl = modelgrid.ncpl
+            data_shape = modelgrid.xcellcenters.shape
+            if isinstance(ncpl, (list, np.ndarray)):
+                ncpl = ncpl[0]
+
+            data = np.zeros((ncpl,), dtype=float)
+
+            if multithread:
+                q = queue.Queue()
+                container = threading.BoundedSemaphore(thread_pool)
+                threads = []
+                for node in range(ncpl):
+                    t = threading.Thread(
+                        target=self.__threaded_resampling,
+                        args=(modelgrid, node, band, method, container, q),
+                    )
+                    threads.append(t)
+
+                for thread in threads:
+                    thread.start()
+                for thread in threads:
+                    thread.join()
+
+                for _ in range(len(threads)):
+                    node, val = q.get()
+                    data[node] = val
+            else:
+                for node in range(ncpl):
+                    verts = modelgrid.get_cell_vertices(node)
+                    rstr_data = self.sample_polygon(verts, band)
+                    msk = np.in1d(rstr_data, self.nodatavals)
+                    rstr_data[msk] = np.nan
+
+                    if method == "median":
+                        val = np.nanmedian(rstr_data)
+                    else:
+                        val = np.nanmean(rstr_data)
+
+                    data[node] = val
         else:
-            arr = self.get_array(band, masked=True)
-        arr = arr.flatten()
-
-        # step 3: use griddata interpolation to snap to grid
-        data = griddata((rxc, ryc), arr, (xc, yc), method=method)
+            raise TypeError("{} method not supported".format(method))
 
         # step 4: return grid to user in shape provided
         data.shape = data_shape
@@ -399,6 +458,42 @@ class Raster(object):
         data[np.isnan(data)] = self.nodatavals[0]
 
         return data
+
+    def __threaded_resampling(
+        self, modelgrid, node, band, method, container, q
+    ):
+        """
+        Threaded resampling handler to speed up bottlenecks
+
+        Parameters
+        ----------
+        modelgrid : flopy.discretization.Grid object
+            flopy grid to sample to
+        node : int
+            node number
+        band : int
+            raster band to sample from
+        method : str
+            resampling method
+        container : threading.BoundedSemaphore
+        q : queue.Queue
+
+        Returns
+        -------
+            None
+        """
+        container.acquire()
+        verts = modelgrid.get_cell_vertices(node)
+        rstr_data = self.sample_polygon(verts, band)
+        msk = np.in1d(rstr_data, self.nodatavals)
+        rstr_data[msk] = np.nan
+
+        if method == "median":
+            val = np.nanmedian(rstr_data)
+        else:
+            val = np.nanmean(rstr_data)
+        q.put((node, val))
+        container.release()
 
     def crop(self, polygon, invert=False):
         """
@@ -625,58 +720,6 @@ class Raster(object):
 
         return mask
 
-    @staticmethod
-    def _point_in_polygon(xc, yc, polygon):
-        """
-        Use the ray casting algorithm to determine if a point
-        is within a polygon. Enables very fast
-        intersection calculations!
-
-        Parameters
-        ----------
-        xc : np.ndarray
-            array of xpoints
-        yc : np.ndarray
-            array of ypoints
-        polygon : iterable (list)
-            polygon vertices [(x0, y0),....(xn, yn)]
-            note: polygon can be open or closed
-
-        Returns
-        -------
-        mask: np.array
-            True value means point is in polygon!
-
-        """
-        x0, y0 = polygon[0]
-        xt, yt = polygon[-1]
-
-        # close polygon if it isn't already
-        if (x0, y0) != (xt, yt):
-            polygon.append((x0, y0))
-
-        ray_count = np.zeros(xc.shape, dtype=int)
-        num = len(polygon)
-        j = num - 1
-        for i in range(num):
-
-            tmp = polygon[i][0] + (polygon[j][0] - polygon[i][0]) * (
-                yc - polygon[i][1]
-            ) / (polygon[j][1] - polygon[i][1])
-
-            comp = np.where(
-                ((polygon[i][1] > yc) ^ (polygon[j][1] > yc)) & (xc < tmp)
-            )
-
-            j = i
-            if len(comp[0]) > 0:
-                ray_count[comp[0], comp[1]] += 1
-
-        mask = np.ones(xc.shape, dtype=bool)
-        mask[ray_count % 2 == 0] = False
-
-        return mask
-
     def get_array(self, band, masked=True):
         """
         Method to get a numpy array corresponding to the
@@ -706,6 +749,7 @@ class Raster(object):
 
         if masked:
             for v in self.nodatavals:
+                array = array.astype(float)
                 array[array == v] = np.nan
 
         return array

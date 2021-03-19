@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 
 try:
@@ -111,6 +112,8 @@ class VertexGrid(Grid):
             return len(self._cell1d)
         if self._botm is not None:
             return len(self._botm[0])
+        if self._cell2d is not None and self._nlay is None:
+            return len(self._cell2d)
         else:
             return self._ncpl
 
@@ -262,6 +265,15 @@ class VertexGrid(Grid):
         Returns
         ------- list of x,y cell vertices
         """
+        while cellid >= self.ncpl:
+            if cellid > self.nnodes:
+                err = "cellid {} out of index for size {}".format(
+                    cellid, self.nnodes
+                )
+                raise IndexError(err)
+
+            cellid -= self.ncpl
+
         self._copy_cache = False
         cell_verts = list(zip(self.xvertices[cellid], self.yvertices[cellid]))
         self._copy_cache = True
@@ -361,7 +373,7 @@ class VertexGrid(Grid):
             yvertices = yvertxform
 
         self._cache_dict[cache_index_cc] = CachedData(
-            [xcenters, ycenters, zcenters]
+            [np.array(xcenters), np.array(ycenters), np.array(zcenters)]
         )
         self._cache_dict[cache_index_vert] = CachedData(
             [xvertices, yvertices, zvertices]
