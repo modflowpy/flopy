@@ -22,7 +22,7 @@ try:
     from shapely.prepared import prep
 
     shply = True
-except ImportError:
+except:
     shply = False
 
 import contextlib
@@ -34,7 +34,7 @@ SHAPELY_GE_20 = str(shapely.__version__) >= LooseVersion("2.0")
 
 try:
     from shapely.errors import ShapelyDeprecationWarning as shapely_warning
-except ImportError:
+except:
     shapely_warning = None
 
 if shapely_warning is not None and not SHAPELY_GE_20:
@@ -145,7 +145,7 @@ class GridIntersect:
                 "Please install shapely if you need to use grid intersect "
                 "functionality."
             )
-            raise ImportError(msg)
+            raise ModuleNotFoundError(msg)
 
         self.mfgrid = mfgrid
         if method is None:
