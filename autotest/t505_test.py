@@ -658,6 +658,7 @@ def np002():
         maxbound=1,
         stress_period_data=[((0, 0, 9), 125.0, 60.0)],
     )
+
     rch_package = ModflowGwfrch(
         model,
         print_input=True,
@@ -668,7 +669,6 @@ def np002():
 
     # write simulation to new location
     sim.write_simulation()
-
     assert os.path.isfile(top_data_file)
 
     if run:
@@ -736,6 +736,29 @@ def np002():
         "checker threshold of 0.5" in summary
     )
     assert "Not a number" in summary
+
+    # check case where aux variable defined and stress period data has empty
+    # stress period
+    model.remove_package('ghb')
+    ghb_package = ModflowGwfghb(
+        model,
+        print_input=True,
+        print_flows=True,
+        maxbound=1,
+        stress_period_data={0:[((0, 0, 9), 125.0, 60.0, 0.0)], 1:[()]},
+        auxiliary=["CONCENTRATION"]
+    )
+    sim.write_simulation()
+    sim2 = MFSimulation.load(
+        sim_name=test_ex_name,
+        version="mf6",
+        exe_name=exe_name,
+        sim_ws=run_folder
+    )
+    md2 = sim2.get_model()
+    ghb2 = md2.get_package('ghb')
+    spd2 = ghb2.stress_period_data.get_data(1)
+    assert(spd2 is None)
 
     return
 
@@ -3038,8 +3061,8 @@ def test_transport():
 
 
 if __name__ == "__main__":
-    np001()
     np002()
+    np001()
     test004_bcfss()
     test005_advgw_tidal()
     test006_2models_gnc()

@@ -797,17 +797,18 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                             for aux_var_name in aux_var_names[0]:
                                 if aux_var_name.lower() != "auxiliary":
                                     data_val = data_line[index]
-                                    text_line.append(
-                                        to_string(
-                                            data_val,
-                                            data_item.type,
-                                            self._simulation_data,
-                                            self._data_dimensions,
-                                            data_item.is_cellid,
-                                            data_item.possible_cellid,
-                                            data_item,
+                                    if data_val is not None:
+                                        text_line.append(
+                                            to_string(
+                                                data_val,
+                                                data_item.type,
+                                                self._simulation_data,
+                                                self._data_dimensions,
+                                                data_item.is_cellid,
+                                                data_item.possible_cellid,
+                                                data_item,
+                                            )
                                         )
-                                    )
                                     index += 1
                     except Exception as ex:
                         type_, value_, traceback_ = sys.exc_info()
