@@ -173,7 +173,7 @@ class ParticleData(object):
             partlocs = np.array(partlocs, dtype=dtype)
         elif isinstance(partlocs, np.ndarray):
             dtypein = partlocs.dtype
-            if dtypein != partlocs.dtype:
+            if dtypein != dtype:
                 partlocs = np.array(partlocs, dtype=dtype)
         else:
             msg = (
