@@ -208,7 +208,6 @@ class GeoSpatialUtil(object):
         else:
             raise ModuleNotFoundError("geojson is not installed")
 
-
     @property
     def shape(self):
         """
