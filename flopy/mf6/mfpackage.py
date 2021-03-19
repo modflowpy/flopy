@@ -1475,9 +1475,7 @@ class MFPackage(PackageContainer, PackageInterface):
                 model_or_sim.simulation_data.debug,
             )
 
-        super(MFPackage, self).__init__(
-            model_or_sim.simulation_data, self.model_name
-        )
+        super().__init__(model_or_sim.simulation_data, self.model_name)
 
         self.parent = model_or_sim
         self._simulation_data = model_or_sim.simulation_data
@@ -1578,7 +1576,7 @@ class MFPackage(PackageContainer, PackageInterface):
                         package=self._get_pname(),
                     )
                 return
-        super(MFPackage, self).__setattr__(name, value)
+        super().__setattr__(name, value)
 
     def __repr__(self):
         return self._get_data_str(True)
@@ -1644,7 +1642,7 @@ class MFPackage(PackageContainer, PackageInterface):
     def check(self, f=None, verbose=True, level=1, checktype=None):
         if checktype is None:
             checktype = mf6check
-        return super(MFPackage, self).check(f, verbose, level, checktype)
+        return super().check(f, verbose, level, checktype)
 
     def _get_nan_exclusion_list(self):
         excl_list = []
@@ -2453,7 +2451,7 @@ class MFChildPackages(object):
             package = self._packages[0]
             setattr(package, key, value)
             return
-        super(MFChildPackages, self).__setattr__(key, value)
+        super().__setattr__(key, value)
 
     def __default_file_path_base(self, file_path, suffix=""):
         stem = os.path.split(file_path)[1]

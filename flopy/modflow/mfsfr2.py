@@ -609,16 +609,16 @@ class ModflowSfr2(Package):
 
     def __setattr__(self, key, value):
         if key == "nstrm":
-            super(ModflowSfr2, self).__setattr__("_nstrm", value)
+            super().__setattr__("_nstrm", value)
         elif key == "dataset_5":
-            super(ModflowSfr2, self).__setattr__("_dataset_5", value)
+            super().__setattr__("_dataset_5", value)
         elif key == "segment_data":
-            super(ModflowSfr2, self).__setattr__("segment_data", value)
+            super().__setattr__("segment_data", value)
             self._dataset_5 = None
         elif key == "const":
-            super(ModflowSfr2, self).__setattr__("_const", value)
+            super().__setattr__("_const", value)
         else:  # return to default behavior of pakbase
-            super(ModflowSfr2, self).__setattr__(key, value)
+            super().__setattr__(key, value)
 
     @property
     def const(self):

@@ -154,7 +154,7 @@ class StructuredGrid(Grid):
         ncol=None,
         laycbd=None,
     ):
-        super(StructuredGrid, self).__init__(
+        super().__init__(
             "structured",
             top,
             botm,
@@ -211,7 +211,7 @@ class StructuredGrid(Grid):
         if (
             self.__delc is not None
             and self.__delr is not None
-            and super(StructuredGrid, self).is_complete
+            and super().is_complete
         ):
             return True
         return False
@@ -757,7 +757,7 @@ class StructuredGrid(Grid):
 
         """
         # transform x and y to local coordinates
-        x, y = super(StructuredGrid, self).intersect(x, y, local, forgive)
+        x, y = super().intersect(x, y, local, forgive)
 
         # get the cell edges in local coordinates
         xe, ye = self.xyedges

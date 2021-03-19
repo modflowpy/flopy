@@ -1732,7 +1732,7 @@ class DeprecatedCrossSection(PlotCrossSection):
     def __init__(
         self, ax=None, model=None, modelgrid=None, line=None, extent=None
     ):
-        super(DeprecatedCrossSection, self).__init__(
+        super().__init__(
             ax=ax, model=model, modelgrid=modelgrid, line=line, extent=extent
         )
 

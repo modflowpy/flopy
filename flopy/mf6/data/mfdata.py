@@ -489,7 +489,7 @@ class MFMultiDimVar(MFData):
         path=None,
         dimensions=None,
     ):
-        super(MFMultiDimVar, self).__init__(
+        super().__init__(
             sim_data, model_or_sim, structure, enable, path, dimensions
         )
 

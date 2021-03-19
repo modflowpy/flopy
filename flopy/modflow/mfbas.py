@@ -181,7 +181,7 @@ class ModflowBas(Package):
         if key == "ifrefm":
             self.parent.free_format_input = value
         else:
-            super(ModflowBas, self).__setattr__(key, value)
+            super().__setattr__(key, value)
 
     def check(self, f=None, verbose=True, level=1, checktype=None):
         """

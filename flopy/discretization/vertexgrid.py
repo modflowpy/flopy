@@ -53,7 +53,7 @@ class VertexGrid(Grid):
         ncpl=None,
         cell1d=None,
     ):
-        super(VertexGrid, self).__init__(
+        super().__init__(
             "vertex",
             top,
             botm,
@@ -92,7 +92,7 @@ class VertexGrid(Grid):
         if (
             self._vertices is not None
             and (self._cell2d is not None or self._cell1d is not None)
-            and super(VertexGrid, self).is_complete
+            and super().is_complete
         ):
             return True
         return False
@@ -232,7 +232,7 @@ class VertexGrid(Grid):
 
         if local:
             # transform x and y to real-world coordinates
-            x, y = super(VertexGrid, self).get_coords(x, y)
+            x, y = super().get_coords(x, y)
         xv, yv, zv = self.xyzvertices
         for icell2d in range(self.ncpl):
             xa = np.array(xv[icell2d])

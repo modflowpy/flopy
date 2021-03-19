@@ -1138,7 +1138,7 @@ class DeprecatedMapView(PlotMapView):
     def __init__(
         self, model=None, modelgrid=None, ax=None, layer=0, extent=None
     ):
-        super(DeprecatedMapView, self).__init__(
+        super().__init__(
             model=model, modelgrid=modelgrid, ax=ax, layer=layer, extent=extent
         )
 
@@ -1194,7 +1194,7 @@ class DeprecatedMapView(PlotMapView):
                 modelgrid=self.mg, dis=dis
             )
 
-        super(DeprecatedMapView, self).plot_discharge(
+        super().plot_discharge(
             frf=frf,
             fff=fff,
             flf=flf,

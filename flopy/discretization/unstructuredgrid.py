@@ -91,7 +91,7 @@ class UnstructuredGrid(Grid):
         yoff=0.0,
         angrot=0.0,
     ):
-        super(UnstructuredGrid, self).__init__(
+        super().__init__(
             "unstructured",
             top,
             botm,
@@ -166,10 +166,7 @@ class UnstructuredGrid(Grid):
 
     @property
     def is_complete(self):
-        if (
-            self.is_valid is not None
-            and super(UnstructuredGrid, self).is_complete
-        ):
+        if self.is_valid is not None and super().is_complete:
             return True
         return False
 
@@ -347,7 +344,7 @@ class UnstructuredGrid(Grid):
         return copy.copy(self._polygons)
 
     def intersect(self, x, y, local=False, forgive=False):
-        x, y = super(UnstructuredGrid, self).intersect(x, y, local, forgive)
+        x, y = super().intersect(x, y, local, forgive)
         raise Exception("Not implemented yet")
 
     def get_cell_vertices(self, cellid):

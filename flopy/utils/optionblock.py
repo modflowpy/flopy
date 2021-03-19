@@ -163,7 +163,7 @@ class OptionBlock(object):
             self.__dict__[key] = value
 
         elif value is None:
-            super(OptionBlock, self).__setattr__(key, value)
+            super().__setattr__(key, value)
 
         elif isinstance(value, np.recarray):
             for name in value.dtype.names:
@@ -191,7 +191,7 @@ class OptionBlock(object):
             self.__dict__[key] = value
 
         else:
-            super(OptionBlock, self).__setattr__(key, value)
+            super().__setattr__(key, value)
 
     def __getattribute__(self, item):
         """

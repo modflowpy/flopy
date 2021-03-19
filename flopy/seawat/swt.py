@@ -313,9 +313,7 @@ class Seawat(BaseModel):
             self._mt.change_model_ws(
                 new_pth=new_pth, reset_external=reset_external
             )
-        super(Seawat, self).change_model_ws(
-            new_pth=new_pth, reset_external=reset_external
-        )
+        super().change_model_ws(new_pth=new_pth, reset_external=reset_external)
 
     def write_name_file(self):
         """

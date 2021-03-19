@@ -672,7 +672,7 @@ class ModflowUzf1(Package):
             )
             print(msg)
         else:
-            super(ModflowUzf1, self).__setattr__(key, value)
+            super().__setattr__(key, value)
 
     @property
     def nuzgag(self):
