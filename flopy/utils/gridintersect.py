@@ -26,11 +26,15 @@ except:
     shply = False
 
 import contextlib
-import shapely
 import warnings
 from distutils.version import LooseVersion
 
-SHAPELY_GE_20 = str(shapely.__version__) >= LooseVersion("2.0")
+try:
+    import shapely
+    SHAPELY_GE_20 = str(shapely.__version__) >= LooseVersion("2.0")
+except:
+    shapely = None
+    SHAPELY_GE_20 = False
 
 try:
     from shapely.errors import ShapelyDeprecationWarning as shapely_warning
