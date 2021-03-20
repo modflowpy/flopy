@@ -8,12 +8,12 @@ try:
         LineString,
         MultiLineString,
     )
-except ImportError:
+except:
     shapely = None
 
 try:
     import geojson
-except ImportError:
+except:
     geojson = None
 
 import numpy as np
@@ -135,6 +135,8 @@ class GeoSpatialUtil(object):
                 ),
             ):
                 self.__geo_interface = obj.__geo_interface__
+        else:
+            raise ModuleNotFoundError("shapely is not installed")
 
     @property
     def __geo_interface__(self):
@@ -186,6 +188,8 @@ class GeoSpatialUtil(object):
             if self._shapely is None:
                 self._shapely = shapely.geometry.shape(self.__geo_interface)
             return self._shapely
+        else:
+            raise ModuleNotFoundError("shapely is not installed")
 
     @property
     def geojson(self):
@@ -201,6 +205,8 @@ class GeoSpatialUtil(object):
                 cls = geojson_classes[self.__geo_interface["type"].lower()]
                 self._geojson = cls(self.__geo_interface["coordinates"])
             return self._geojson
+        else:
+            raise ModuleNotFoundError("geojson is not installed")
 
     @property
     def shape(self):
@@ -332,6 +338,8 @@ class GeoSpatialCollection(object):
             ):
                 for geom in obj.geoms:
                     self.__collection.append(GeoSpatialUtil(geom))
+        else:
+            raise ModuleNotFoundError("shapely is no installed")
 
     def __iter__(self):
         """
@@ -385,6 +393,8 @@ class GeoSpatialCollection(object):
                 self._shapely = shapely.geometry.collection.GeometryCollection(
                     [i.shapely for i in self.__collection]
                 )
+        else:
+            raise ModuleNotFoundError("shapely is not installed")
 
         return self._shapely
 
@@ -402,6 +412,8 @@ class GeoSpatialCollection(object):
                 self._geojson = geojson.GeometryCollection(
                     [i.geojson for i in self.__collection]
                 )
+        else:
+            raise ModuleNotFoundError("geojson is not installed")
         return self._geojson
 
     @property
