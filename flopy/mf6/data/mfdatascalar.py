@@ -82,7 +82,7 @@ class MFScalar(mfdata.MFData):
         path=None,
         dimensions=None,
     ):
-        super(MFScalar, self).__init__(
+        super().__init__(
             sim_data, model_or_sim, structure, enable, path, dimensions
         )
         self._data_type = self.structure.data_item_structures[0].type
@@ -570,7 +570,7 @@ class MFScalar(mfdata.MFData):
         pre_data_comments=None,
         external_file_info=None,
     ):
-        super(MFScalar, self).load(
+        super().load(
             first_line,
             file_handle,
             block_header,
@@ -703,7 +703,7 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
         path=None,
         dimensions=None,
     ):
-        super(MFScalarTransient, self).__init__(
+        super().__init__(
             sim_data=sim_data,
             model_or_sim=model_or_sim,
             structure=structure,
@@ -726,37 +726,33 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
             return True
 
     def add_transient_key(self, key):
-        super(MFScalarTransient, self).add_transient_key(key)
+        super().add_transient_key(key)
         if isinstance(key, int):
             stress_period = key
         else:
             stress_period = 1
-        self._data_storage[key] = super(MFScalarTransient, self)._new_storage(
-            stress_period
-        )
+        self._data_storage[key] = super()._new_storage(stress_period)
 
     def add_one(self, key=0):
         self._update_record_prep(key)
-        super(MFScalarTransient, self).add_one()
+        super().add_one()
 
     def has_data(self, key=None):
         if key is None:
             data_found = False
             for sto_key in self._data_storage.keys():
                 self.get_data_prep(sto_key)
-                data_found = (
-                    data_found or super(MFScalarTransient, self).has_data()
-                )
+                data_found = data_found or super().has_data()
                 if data_found:
                     break
         else:
             self.get_data_prep(key)
-            data_found = super(MFScalarTransient, self).has_data()
+            data_found = super().has_data()
         return data_found
 
     def get_data(self, key=0, **kwargs):
         self.get_data_prep(key)
-        return super(MFScalarTransient, self).get_data()
+        return super().get_data()
 
     def set_data(self, data, key=None):
         if isinstance(data, dict) or isinstance(data, OrderedDict):
@@ -764,10 +760,10 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
             # the dictionary key is the stress period the list is for
             for key, list_item in data.items():
                 self._set_data_prep(list_item, key)
-                super(MFScalarTransient, self).set_data(list_item)
+                super().set_data(list_item)
         else:
             self._set_data_prep(data, key)
-            super(MFScalarTransient, self).set_data(data)
+            super().set_data(data)
 
     def get_file_entry(
         self, key=None, ext_file_action=ExtFileAction.copy_relative_paths
@@ -777,7 +773,7 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
             for sto_key in self._data_storage.keys():
                 if self.has_data(sto_key):
                     self._get_file_entry_prep(sto_key)
-                    text_entry = super(MFScalarTransient, self).get_file_entry(
+                    text_entry = super().get_file_entry(
                         ext_file_action=ext_file_action
                     )
                     file_entry.append(text_entry)
@@ -789,9 +785,7 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
                 return ""
         else:
             self._get_file_entry_prep(key)
-            return super(MFScalarTransient, self).get_file_entry(
-                ext_file_action=ext_file_action
-            )
+            return super().get_file_entry(ext_file_action=ext_file_action)
 
     def load(
         self,
@@ -802,7 +796,7 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
         external_file_info=None,
     ):
         self._load_prep(block_header)
-        return super(MFScalarTransient, self).load(
+        return super().load(
             first_line, file_handle, pre_data_comments, external_file_info
         )
 

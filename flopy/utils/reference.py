@@ -515,63 +515,57 @@ class SpatialReference(object):
     def __setattr__(self, key, value):
         reset = True
         if key == "delr":
-            super(SpatialReference, self).__setattr__(
-                "delr", np.atleast_1d(np.array(value))
-            )
+            super().__setattr__("delr", np.atleast_1d(np.array(value)))
         elif key == "delc":
-            super(SpatialReference, self).__setattr__(
-                "delc", np.atleast_1d(np.array(value))
-            )
+            super().__setattr__("delc", np.atleast_1d(np.array(value)))
         elif key == "xul":
-            super(SpatialReference, self).__setattr__("_xul", float(value))
+            super().__setattr__("_xul", float(value))
             self.origin_loc = "ul"
         elif key == "yul":
-            super(SpatialReference, self).__setattr__("_yul", float(value))
+            super().__setattr__("_yul", float(value))
             self.origin_loc = "ul"
         elif key == "xll":
-            super(SpatialReference, self).__setattr__("_xll", float(value))
+            super().__setattr__("_xll", float(value))
             self.origin_loc = "ll"
         elif key == "yll":
-            super(SpatialReference, self).__setattr__("_yll", float(value))
+            super().__setattr__("_yll", float(value))
             self.origin_loc = "ll"
         elif key == "length_multiplier":
-            super(SpatialReference, self).__setattr__(
-                "_length_multiplier", float(value)
-            )
+            super().__setattr__("_length_multiplier", float(value))
             # self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
             #                yll=self.yll)
         elif key == "rotation":
-            super(SpatialReference, self).__setattr__("rotation", float(value))
+            super().__setattr__("rotation", float(value))
             # self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
             #                yll=self.yll)
         elif key == "lenuni":
-            super(SpatialReference, self).__setattr__("_lenuni", int(value))
+            super().__setattr__("_lenuni", int(value))
             # self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
             #                yll=self.yll)
         elif key == "units":
             value = value.lower()
             assert value in self.supported_units
-            super(SpatialReference, self).__setattr__("_units", value)
+            super().__setattr__("_units", value)
         elif key == "proj4_str":
-            super(SpatialReference, self).__setattr__("_proj4_str", value)
+            super().__setattr__("_proj4_str", value)
             # reset the units and epsg
             units = self._parse_units_from_proj4()
             if units is not None:
                 self._units = units
             self._epsg = None
         elif key == "epsg":
-            super(SpatialReference, self).__setattr__("_epsg", value)
+            super().__setattr__("_epsg", value)
             # reset the units and proj4
             self._units = None
             self._proj4_str = getproj4(self._epsg)
             self.crs = crs(epsg=value)
         elif key == "prj":
-            super(SpatialReference, self).__setattr__("prj", value)
+            super().__setattr__("prj", value)
             # translation to proj4 strings in crs class not robust yet
             # leave units and proj4 alone for now.
             self.crs = crs(prj=value, epsg=self.epsg)
         else:
-            super(SpatialReference, self).__setattr__(key, value)
+            super().__setattr__(key, value)
             reset = False
         if reset:
             self._reset()

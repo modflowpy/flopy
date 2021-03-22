@@ -60,7 +60,7 @@ class MfGrdFile(FlopyBinaryData):
         """
 
         # Call base class init
-        super(MfGrdFile, self).__init__()
+        super().__init__()
 
         # set attributes
         self.set_float(precision=precision)

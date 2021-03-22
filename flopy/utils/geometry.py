@@ -170,7 +170,7 @@ class Collection(list):
     """
 
     def __init__(self, geometries=()):
-        super(Collection, self).__init__(geometries)
+        super().__init__(geometries)
 
     def __repr__(self):
         return "Shapes: {}".format(list(self))
@@ -235,7 +235,7 @@ class MultiPolygon(Collection):
         for p in polygons:
             if not isinstance(p, Polygon):
                 raise TypeError("Only Polygon instances are supported")
-            super(MultiPolygon, self).__init__(polygons)
+            super().__init__(polygons)
 
     def __repr__(self):
         return "MultiPolygon: {}".format(list(self))
@@ -263,7 +263,7 @@ class MultiLineString(Collection):
         for l in linestrings:
             if not isinstance(l, LineString):
                 raise TypeError("Only LineString instances are supported")
-            super(MultiLineString, self).__init__(linestrings)
+            super().__init__(linestrings)
 
     def __repr__(self):
         return "LineString: {}".format(list(self))
@@ -291,7 +291,7 @@ class MultiPoint(Collection):
         for p in points:
             if not isinstance(p, Point):
                 raise TypeError("Only Point instances are supported")
-            super(MultiPoint, self).__init__(points)
+            super().__init__(points)
 
     def __repr__(self):
         return "MultiPoint: {}".format(list(self))
@@ -348,7 +348,7 @@ class Polygon(Shape):
         Multi-polygons not yet supported.
         z information is only stored if it was entered.
         """
-        super(Polygon, self).__init__(
+        super().__init__(
             self.type,
             coordinates=None,
             exterior=exterior,
@@ -484,7 +484,7 @@ class LineString(Shape):
         z information is only stored if it was entered.
 
         """
-        super(LineString, self).__init__(self.type, coordinates)
+        super().__init__(self.type, coordinates)
 
     def __eq__(self, other):
         if not isinstance(other, LineString):
@@ -583,7 +583,7 @@ class Point(Shape):
         -----
         z information is only stored if it was entered.
         """
-        super(Point, self).__init__(self.type, coordinates)
+        super().__init__(self.type, coordinates)
 
     def __eq__(self, other):
         if not isinstance(other, Point):

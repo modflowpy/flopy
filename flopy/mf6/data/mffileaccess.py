@@ -199,7 +199,7 @@ class MFFileAccessArray(MFFileAccess):
     def __init__(
         self, structure, data_dimensions, simulation_data, path, current_key
     ):
-        super(MFFileAccessArray, self).__init__(
+        super().__init__(
             structure, data_dimensions, simulation_data, path, current_key
         )
 
@@ -975,7 +975,7 @@ class MFFileAccessList(MFFileAccess):
     def __init__(
         self, structure, data_dimensions, simulation_data, path, current_key
     ):
-        super(MFFileAccessList, self).__init__(
+        super().__init__(
             structure, data_dimensions, simulation_data, path, current_key
         )
 
@@ -2161,7 +2161,7 @@ class MFFileAccessScalar(MFFileAccess):
     def __init__(
         self, structure, data_dimensions, simulation_data, path, current_key
     ):
-        super(MFFileAccessScalar, self).__init__(
+        super().__init__(
             structure, data_dimensions, simulation_data, path, current_key
         )
 

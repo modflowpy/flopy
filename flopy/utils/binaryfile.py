@@ -31,7 +31,7 @@ class BinaryHeader(Header):
     """
 
     def __init__(self, bintype=None, precision="single"):
-        super(BinaryHeader, self).__init__(bintype, precision)
+        super().__init__(bintype, precision)
 
     def set_values(self, **kwargs):
         """
@@ -280,9 +280,7 @@ class BinaryLayerFile(LayerFile):
     """
 
     def __init__(self, filename, precision, verbose, kwargs):
-        super(BinaryLayerFile, self).__init__(
-            filename, precision, verbose, kwargs
-        )
+        super().__init__(filename, precision, verbose, kwargs)
         return
 
     def __enter__(self):
@@ -495,7 +493,7 @@ class HeadFile(BinaryLayerFile):
         self.header_dtype = BinaryHeader.set_dtype(
             bintype="Head", precision=precision
         )
-        super(HeadFile, self).__init__(filename, precision, verbose, kwargs)
+        super().__init__(filename, precision, verbose, kwargs)
         return
 
 
@@ -565,7 +563,7 @@ class UcnFile(BinaryLayerFile):
         self.header_dtype = BinaryHeader.set_dtype(
             bintype="Ucn", precision=precision
         )
-        super(UcnFile, self).__init__(filename, precision, verbose, kwargs)
+        super().__init__(filename, precision, verbose, kwargs)
         return
 
 
@@ -1893,7 +1891,7 @@ class HeadUFile(BinaryLayerFile):
         self.header_dtype = BinaryHeader.set_dtype(
             bintype="Head", precision=precision
         )
-        super(HeadUFile, self).__init__(filename, precision, verbose, kwargs)
+        super().__init__(filename, precision, verbose, kwargs)
         return
 
     def _get_data_array(self, totim=0.0):

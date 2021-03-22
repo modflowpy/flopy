@@ -206,7 +206,7 @@ class DfnPackage(Dfn):
     """
 
     def __init__(self, package):
-        super(DfnPackage, self).__init__()
+        super().__init__()
         self.package = package
         self.package_type = package._package_type
         self.dfn_file_name = package.dfn_file_name
@@ -468,7 +468,7 @@ class DfnFile(Dfn):
     """
 
     def __init__(self, file):
-        super(DfnFile, self).__init__()
+        super().__init__()
 
         dfn_path, tail = os.path.split(os.path.realpath(__file__))
         dfn_path = os.path.join(dfn_path, "dfn")
@@ -2422,7 +2422,7 @@ class MFStructure(object):
 
     def __new__(cls, internal_request=False, load_from_dfn_files=False):
         if cls._instance is None:
-            cls._instance = super(MFStructure, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
 
             # Initialize variables
             cls._instance.mf_version = 6

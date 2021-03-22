@@ -506,7 +506,7 @@ class ArrayTemplateGenerator(TemplateGenerator):
     """
 
     def __init__(self, path):
-        super(ArrayTemplateGenerator, self).__init__(path)
+        super().__init__(path)
 
     def empty(
         self,
@@ -670,7 +670,7 @@ class ListTemplateGenerator(TemplateGenerator):
     """
 
     def __init__(self, path):
-        super(ListTemplateGenerator, self).__init__(path)
+        super().__init__(path)
 
     def _build_template_data(self, type_list):
         template_data = []

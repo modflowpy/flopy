@@ -41,7 +41,7 @@ bc_color_dict = {
 
 class PlotException(Exception):
     def __init__(self, message):
-        super(PlotException, self).__init__(message)
+        super().__init__(message)
 
 
 class PlotUtilities(object):

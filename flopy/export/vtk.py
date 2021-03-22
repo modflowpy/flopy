@@ -159,7 +159,7 @@ class XmlWriterAscii(XmlWriterInterface):
     """
 
     def __init__(self, file_path):
-        super(XmlWriterAscii, self).__init__(file_path)
+        super().__init__(file_path)
 
     def _open_file(self, file_path):
         """
@@ -231,7 +231,7 @@ class XmlWriterBinary(XmlWriterInterface):
     """
 
     def __init__(self, file_path):
-        super(XmlWriterBinary, self).__init__(file_path)
+        super().__init__(file_path)
 
         if sys.byteorder == "little":
             self.byte_order = "<"
@@ -328,7 +328,7 @@ class XmlWriterBinary(XmlWriterInterface):
         self.close_element("AppendedData")
 
         # call super final
-        super(XmlWriterBinary, self).final()
+        super().final()
 
 
 class _Array(object):

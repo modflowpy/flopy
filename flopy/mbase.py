@@ -1310,7 +1310,7 @@ class BaseModel(ModelInterface):
         if key == "free_format_input":
             # if self.bas6 is not None:
             #    self.bas6.ifrefm = value
-            super(BaseModel, self).__setattr__(key, value)
+            super().__setattr__(key, value)
         elif key == "name":
             self._set_name(value)
         elif key == "model_ws":
@@ -1346,7 +1346,7 @@ class BaseModel(ModelInterface):
                     "cannot set start_datetime -" "ModflowDis not found"
                 )
         else:
-            super(BaseModel, self).__setattr__(key, value)
+            super().__setattr__(key, value)
 
     def run_model(
         self,

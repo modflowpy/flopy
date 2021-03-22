@@ -734,9 +734,7 @@ class UnstructuredModelGrid(ModelGrid):
     """
 
     def __init__(self, model_name, simulation_data):
-        super(UnstructuredModelGrid, self).__init__(
-            model_name, simulation_data, DiscretizationType.DISU
-        )
+        super().__init__(model_name, simulation_data, DiscretizationType.DISU)
 
     def __getitem__(self, index):
         return UnstructuredModelCell(

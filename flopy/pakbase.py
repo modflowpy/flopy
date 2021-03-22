@@ -585,7 +585,7 @@ class Package(PackageInterface):
                             )
                         value = new_list
 
-        super(Package, self).__setattr__(key, value)
+        super().__setattr__(key, value)
 
     @property
     def name(self):
