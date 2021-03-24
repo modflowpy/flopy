@@ -1889,6 +1889,7 @@ class UnstructuredPlotUtilities(object):
         adj_xverts = []
         for xv in xverts:
             if len(xv) < max_verts:
+                xv = list(xv)
                 n = max_verts - len(xv)
                 adj_xverts.append(xv + [xv[-1]] * n)
             else:
@@ -1897,6 +1898,7 @@ class UnstructuredPlotUtilities(object):
         adj_yverts = []
         for yv in yverts:
             if len(yv) < max_verts:
+                yv = list(yv)
                 n = max_verts - len(yv)
                 adj_yverts.append(yv + [yv[-1]] * n)
             else:

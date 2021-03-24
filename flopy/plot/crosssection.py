@@ -217,8 +217,15 @@ class PlotCrossSection(object):
         else:
             self.active = np.ones(self.mg.nlay, dtype=int)
 
-        top = self.mg.top.reshape(1, self.mg.ncpl)
-        botm = self.mg.botm.reshape(self.mg.nlay + self.ncb, self.mg.ncpl)
+        self._nlay = self.mg.nlay
+        self._ncpl = self.mg.ncpl
+        if isinstance(self.mg.ncpl, (list, tuple, np.ndarray)):
+            self._nlay = 1
+            self.ncb = 0  # not sure that this is quite right...
+            self._ncpl = self.mg.nnodes
+
+        top = self.mg.top.reshape(1, self._ncpl)
+        botm = self.mg.botm.reshape(self._nlay + self.ncb, self._ncpl)
 
         self.elev = np.concatenate((top, botm), axis=0)
 
@@ -357,8 +364,8 @@ class PlotCrossSection(object):
         pc = self.get_grid_patch_collection(a, projpts, **kwargs)
         if pc is not None:
             ax.add_collection(pc)
-            ax.set_xlim(self.extent[0], self.extent[1])
-            ax.set_ylim(self.extent[2], self.extent[3])
+            ax.set_xlim(self.extent[0] - 10, self.extent[1] + 10)
+            ax.set_ylim(self.extent[2] - 10, self.extent[3] + 10)
 
         return pc
 
@@ -390,7 +397,7 @@ class PlotCrossSection(object):
         if a.ndim > 1:
             a = np.ravel(a)
 
-        if a.size % self.mg.ncpl != 0:
+        if a.size % self._ncpl != 0:
             raise AssertionError("Array size must be a multiple of ncpl")
 
         if masked_values is not None:
@@ -833,7 +840,7 @@ class PlotCrossSection(object):
                     idx = mflist["node"]
 
         if len(self.mg.shape) != 3:
-            plotarray = np.zeros((self.mg.nlay, self.mg.ncpl), dtype=np.int)
+            plotarray = np.zeros((self._nlay, self._ncpl), dtype=np.int)
             plotarray[tuple(idx)] = 1
         else:
             plotarray = np.zeros(
@@ -953,7 +960,7 @@ class PlotCrossSection(object):
         projpts = {
             key: value
             for key, value in self.projpts.items()
-            if (key // self.mg.ncpl) % kstep == 0
+            if (key // self._ncpl) % kstep == 0
         }
 
         # set x and z centers
@@ -1056,8 +1063,8 @@ class PlotCrossSection(object):
             )
             spdis = spdis[-1]
 
-        ncpl = self.mg.ncpl
-        nlay = self.mg.nlay
+        ncpl = self._ncpl
+        nlay = self._nlay
 
         qx = np.zeros((nlay * ncpl))
         qy = np.zeros((nlay * ncpl))
@@ -1500,24 +1507,49 @@ class PlotCrossSection(object):
 
         projpts = {}
 
-        nlay = 1
-        if len(self.xvertices) != self.mg.nnodes:
-            nlay = self.mg.nlay + self.ncb
+        nlay = self.mg.nlay + self.ncb
+
+        nodeskip = [[] for _ in range(nlay)]
+        if isinstance(self.mg.ncpl, np.ndarray):
+            # unstructured grid trap, may need to adjust for confining beds!
+            strt = 0
+            end = 0
+            nodeskip = []
+            for ncpl in self.mg.ncpl:
+                end += ncpl
+                layskip = []
+                for nn, verts in self.xypts.items():
+                    if strt <= nn < end:
+                        continue
+                    else:
+                        layskip.append(nn)
+
+                strt += ncpl
+                nodeskip.append(layskip)
 
         cbcnt = 0
         for k in range(1, nlay + 1):
+
+            ns = k
+            # unstructured grid trap
+            if self._nlay == 1:
+                k = 1
+
             if not self.active[k - 1]:
                 cbcnt += 1
                 continue
             top = self.elev[k - 1, :]
             botm = self.elev[k, :]
-            adjnn = (k - 1) * self.mg.ncpl
-            ncbnn = adjnn - (cbcnt * self.mg.ncpl)
+            adjnn = (k - 1) * self._ncpl
+            ncbnn = adjnn - (cbcnt * self._ncpl)
             d0 = 0
 
             # trap to split multipolygons
             xypts = []
             for nn, verts in self.xypts.items():
+                if nn in nodeskip[ns - 1]:
+                    continue
+
                 if len(verts) > 2:
                     i0 = 2
                     for ix in range(len(verts)):
@@ -1566,10 +1598,15 @@ class PlotCrossSection(object):
                     d0 += c
 
                 projpt = projt + projb
-                if nn + ncbnn not in projpts:
-                    projpts[nn + ncbnn] = projpt
+                node = nn + ncbnn
+                if isinstance(self.mg.ncpl, np.ndarray):
+                    # unstructured grid trap
+                    node = nn
+
+                if node not in projpts:
+                    projpts[node] = projpt
                 else:
-                    projpts[nn + ncbnn] += projpt
+                    projpts[node] += projpt
 
         return projpts
 
@@ -1594,7 +1631,7 @@ class PlotCrossSection(object):
         zcenters = [
             np.mean(np.array(v).T[1])
             for i, v in sorted(verts.items())
-            if (i // self.mg.ncpl) % kstep == 0
+            if (i // self._ncpl) % kstep == 0
         ]
         return zcenters
 
