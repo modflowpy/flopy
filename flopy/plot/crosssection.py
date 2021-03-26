@@ -217,12 +217,9 @@ class PlotCrossSection(object):
         else:
             self.active = np.ones(self.mg.nlay, dtype=int)
 
-        self._nlay = self.mg.nlay
-        self._ncpl = self.mg.ncpl
-        if isinstance(self.mg.ncpl, (list, tuple, np.ndarray)):
-            self._nlay = 1
-            self.ncb = 0  # not sure that this is quite right...
-            self._ncpl = self.mg.nnodes
+        self._nlay, self._ncpl, self.ncb = self.mg.cross_section_lay_ncpl_ncb(
+            self.ncb
+        )
 
         top = self.mg.top.reshape(1, self._ncpl)
         botm = self.mg.botm.reshape(self._nlay + self.ncb, self._ncpl)
@@ -364,8 +361,8 @@ class PlotCrossSection(object):
         pc = self.get_grid_patch_collection(a, projpts, **kwargs)
         if pc is not None:
             ax.add_collection(pc)
-            ax.set_xlim(self.extent[0] - 10, self.extent[1] + 10)
-            ax.set_ylim(self.extent[2] - 10, self.extent[3] + 10)
+            ax.set_xlim(self.extent[0], self.extent[1])
+            ax.set_ylim(self.extent[2], self.extent[3])
 
         return pc
 
@@ -527,30 +524,16 @@ class PlotCrossSection(object):
         xcenters = self.xcenters
         plotarray = np.array([a[cell] for cell in sorted(self.projpts)])
 
-        if self.mg.nlay == 1 and not isinstance(self.mg.ncpl, np.ndarray):
-            zcenters = []
-            if isinstance(head, np.ndarray):
-                head = head.reshape(1, self.mg.ncpl)
-                head = np.vstack((head, head))
-            else:
-                head = self.elev.reshape(2, self.mg.ncpl)
+        (
+            plotarray,
+            xcenters,
+            zcenters,
+            mplcontour,
+        ) = self.mg.cross_section_set_contour_arrays(
+            plotarray, xcenters, head, self.elev, self.projpts
+        )
 
-            elev = self.elev.reshape(2, self.mg.ncpl)
-            for k, ev in enumerate(elev):
-                if k == 0:
-                    zc = [
-                        ev[i] if head[k][i] > ev[i] else head[k][i]
-                        for i in sorted(self.projpts)
-                    ]
-                else:
-                    zc = [ev[i] for i in sorted(self.projpts)]
-                zcenters.append(zc)
-
-            plotarray = np.vstack((plotarray, plotarray))
-            xcenters = np.vstack((xcenters, xcenters))
-            zcenters = np.array(zcenters)
-
-        else:
+        if not mplcontour:
             if isinstance(head, np.ndarray):
                 zcenters = self.set_zcentergrid(np.ravel(head))
             else:
@@ -602,7 +585,7 @@ class PlotCrossSection(object):
             xcenters = xcenters[idx].flatten()
             zcenters = zcenters[idx].flatten()
 
-        if self.mg.nlay == 1 and not isinstance(self.mg.ncpl, np.ndarray):
+        if mplcontour:
             plotarray = np.ma.masked_array(plotarray, ismasked)
             contour_set = ax.contour(xcenters, zcenters, plotarray, **kwargs)
         else:
@@ -1509,39 +1492,18 @@ class PlotCrossSection(object):
 
         nlay = self.mg.nlay + self.ncb
 
-        nodeskip = [[] for _ in range(nlay)]
-        if isinstance(self.mg.ncpl, np.ndarray):
-            # unstructured grid trap, may need to adjust for confining beds!
-            strt = 0
-            end = 0
-            nodeskip = []
-            for ncpl in self.mg.ncpl:
-                end += ncpl
-                layskip = []
-                for nn, verts in self.xypts.items():
-                    if strt <= nn < end:
-                        continue
-                    else:
-                        layskip.append(nn)
-
-                strt += ncpl
-                nodeskip.append(layskip)
+        nodeskip = self.mg.cross_section_nodeskip(nlay, self.xypts)
 
         cbcnt = 0
         for k in range(1, nlay + 1):
 
-            ns = k
-            # unstructured grid trap
-            if self._nlay == 1:
-                k = 1
-
             if not self.active[k - 1]:
                 cbcnt += 1
                 continue
+
+            k, ns, ncbnn = self.mg.cross_section_adjust_indicies(k - 1, cbcnt)
             top = self.elev[k - 1, :]
             botm = self.elev[k, :]
-            adjnn = (k - 1) * self._ncpl
-            ncbnn = adjnn - (cbcnt * self._ncpl)
             d0 = 0
 
             # trap to split multipolygons
@@ -1599,10 +1561,6 @@ class PlotCrossSection(object):
 
                 projpt = projt + projb
                 node = nn + ncbnn
-                if isinstance(self.mg.ncpl, np.ndarray):
-                    # unstructured grid trap
-                    node = nn
-
                 if node not in projpts:
                     projpts[node] = projpt
                 else:

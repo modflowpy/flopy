@@ -302,6 +302,102 @@ class UnstructuredGrid(Grid):
         else:
             return self._cache_dict[cache_index].data_nocopy
 
+    def cross_section_lay_ncpl_ncb(self, ncb):
+        """
+        Get PlotCrossSection compatible layers, ncpl, and ncb
+        variables
+
+        Parameters
+        ----------
+        ncb : int
+            number of confining beds
+
+        Returns
+        -------
+            tuple : (int, int, int) layers, ncpl, ncb
+        """
+        return 1, self.nnodes, 0
+
+    def cross_section_nodeskip(self, nlay, xypts):
+        """
+        Get a nodeskip list for PlotCrossSection. This is a correction
+        for UnstructuredGridPlotting
+
+        Parameters
+        ----------
+        nlay : int
+            nlay is nlay + ncb
+        xypts : dict
+            dictionary of node number and xyvertices of a cross-section
+
+        Returns
+        -------
+            list : n-dimensional list of nodes to not plot for each layer
+        """
+        strt = 0
+        end = 0
+        nodeskip = []
+        for ncpl in self.ncpl:
+            end += ncpl
+            layskip = []
+            for nn, verts in xypts.items():
+                if strt <= nn < end:
+                    continue
+                else:
+                    layskip.append(nn)
+
+            strt += ncpl
+            nodeskip.append(layskip)
+
+        return nodeskip
+
+    def cross_section_adjust_indicies(self, k, cbcnt):
+        """
+        Method to get adjusted indicies by layer and confining bed
+        for PlotCrossSection plotting
+
+        Parameters
+        ----------
+        k : int
+            zero based model layer
+        cbcnt : int
+            confining bed counter
+
+        Returns
+        -------
+            tuple: (int, int, int) (adjusted layer, nodeskip layer, node
+            adjustment value based on number of confining beds and the layer)
+        """
+        return 1, k + 1, 0
+
+    def cross_section_set_contour_arrays(
+        self, plotarray, xcenters, head, elev, projpts
+    ):
+        """
+        Method to set countour array centers for rare instances where
+        matplotlib contouring is prefered over trimesh plotting
+
+        Parameters
+        ----------
+        plotarray : np.ndarray
+            array of data for contouring
+        xcenters : np.ndarray
+            xcenters array
+        head : np.ndarray
+            head array to adjust cell centers location
+        elev : np.ndarray
+            cell elevation array
+        projpts : dict
+            dictionary of projected cross sectional vertices
+
+        Returns
+        -------
+            tuple: (np.ndarray, np.ndarray, np.ndarray, bool)
+            plotarray, xcenter array, ycenter array, and a boolean flag
+            for contouring
+        """
+        return plotarray, xcenters, None, False
+
     @property
     def map_polygons(self):
         """
