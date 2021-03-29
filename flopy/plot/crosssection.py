@@ -217,8 +217,12 @@ class PlotCrossSection(object):
         else:
             self.active = np.ones(self.mg.nlay, dtype=int)
 
-        top = self.mg.top.reshape(1, self.mg.ncpl)
-        botm = self.mg.botm.reshape(self.mg.nlay + self.ncb, self.mg.ncpl)
+        self._nlay, self._ncpl, self.ncb = self.mg.cross_section_lay_ncpl_ncb(
+            self.ncb
+        )
+
+        top = self.mg.top.reshape(1, self._ncpl)
+        botm = self.mg.botm.reshape(self._nlay + self.ncb, self._ncpl)
 
         self.elev = np.concatenate((top, botm), axis=0)
 
@@ -390,7 +394,7 @@ class PlotCrossSection(object):
         if a.ndim > 1:
             a = np.ravel(a)
 
-        if a.size % self.mg.ncpl != 0:
+        if a.size % self._ncpl != 0:
             raise AssertionError("Array size must be a multiple of ncpl")
 
         if masked_values is not None:
@@ -520,30 +524,16 @@ class PlotCrossSection(object):
         xcenters = self.xcenters
         plotarray = np.array([a[cell] for cell in sorted(self.projpts)])
 
-        if self.mg.nlay == 1 and not isinstance(self.mg.ncpl, np.ndarray):
-            zcenters = []
-            if isinstance(head, np.ndarray):
-                head = head.reshape(1, self.mg.ncpl)
-                head = np.vstack((head, head))
-            else:
-                head = self.elev.reshape(2, self.mg.ncpl)
+        (
+            plotarray,
+            xcenters,
+            zcenters,
+            mplcontour,
+        ) = self.mg.cross_section_set_contour_arrays(
+            plotarray, xcenters, head, self.elev, self.projpts
+        )
 
-            elev = self.elev.reshape(2, self.mg.ncpl)
-            for k, ev in enumerate(elev):
-                if k == 0:
-                    zc = [
-                        ev[i] if head[k][i] > ev[i] else head[k][i]
-                        for i in sorted(self.projpts)
-                    ]
-                else:
-                    zc = [ev[i] for i in sorted(self.projpts)]
-                zcenters.append(zc)
-
-            plotarray = np.vstack((plotarray, plotarray))
-            xcenters = np.vstack((xcenters, xcenters))
-            zcenters = np.array(zcenters)
-
-        else:
+        if not mplcontour:
             if isinstance(head, np.ndarray):
                 zcenters = self.set_zcentergrid(np.ravel(head))
             else:
@@ -595,7 +585,7 @@ class PlotCrossSection(object):
             xcenters = xcenters[idx].flatten()
             zcenters = zcenters[idx].flatten()
 
-        if self.mg.nlay == 1 and not isinstance(self.mg.ncpl, np.ndarray):
+        if mplcontour:
             plotarray = np.ma.masked_array(plotarray, ismasked)
             contour_set = ax.contour(xcenters, zcenters, plotarray, **kwargs)
         else:
@@ -833,7 +823,7 @@ class PlotCrossSection(object):
                     idx = mflist["node"]
 
         if len(self.mg.shape) != 3:
-            plotarray = np.zeros((self.mg.nlay, self.mg.ncpl), dtype=np.int)
+            plotarray = np.zeros((self._nlay, self._ncpl), dtype=np.int)
             plotarray[tuple(idx)] = 1
         else:
             plotarray = np.zeros(
@@ -953,7 +943,7 @@ class PlotCrossSection(object):
         projpts = {
             key: value
             for key, value in self.projpts.items()
-            if (key // self.mg.ncpl) % kstep == 0
+            if (key // self._ncpl) % kstep == 0
         }
 
         # set x and z centers
@@ -1056,8 +1046,8 @@ class PlotCrossSection(object):
             )
             spdis = spdis[-1]
 
-        ncpl = self.mg.ncpl
-        nlay = self.mg.nlay
+        ncpl = self._ncpl
+        nlay = self._nlay
 
         qx = np.zeros((nlay * ncpl))
         qy = np.zeros((nlay * ncpl))
@@ -1500,24 +1490,28 @@ class PlotCrossSection(object):
 
         projpts = {}
 
-        nlay = 1
-        if len(self.xvertices) != self.mg.nnodes:
-            nlay = self.mg.nlay + self.ncb
+        nlay = self.mg.nlay + self.ncb
+
+        nodeskip = self.mg.cross_section_nodeskip(nlay, self.xypts)
 
         cbcnt = 0
         for k in range(1, nlay + 1):
+
             if not self.active[k - 1]:
                 cbcnt += 1
                 continue
+
+            k, ns, ncbnn = self.mg.cross_section_adjust_indicies(k - 1, cbcnt)
             top = self.elev[k - 1, :]
             botm = self.elev[k, :]
-            adjnn = (k - 1) * self.mg.ncpl
-            ncbnn = adjnn - (cbcnt * self.mg.ncpl)
             d0 = 0
 
             # trap to split multipolygons
             xypts = []
             for nn, verts in self.xypts.items():
+                if nn in nodeskip[ns - 1]:
+                    continue
+
                 if len(verts) > 2:
                     i0 = 2
                     for ix in range(len(verts)):
@@ -1566,10 +1560,11 @@ class PlotCrossSection(object):
                     d0 += c
 
                 projpt = projt + projb
-                if nn + ncbnn not in projpts:
-                    projpts[nn + ncbnn] = projpt
+                node = nn + ncbnn
+                if node not in projpts:
+                    projpts[node] = projpt
                 else:
-                    projpts[nn + ncbnn] += projpt
+                    projpts[node] += projpt
 
         return projpts
 
@@ -1594,7 +1589,7 @@ class PlotCrossSection(object):
         zcenters = [
             np.mean(np.array(v).T[1])
             for i, v in sorted(verts.items())
-            if (i // self.mg.ncpl) % kstep == 0
+            if (i // self._ncpl) % kstep == 0
         ]
         return zcenters
 
