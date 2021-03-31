@@ -1,0 +1,170 @@
+Importa library
+
+import os
+import pandas as pd
+import flopy
+import numpy as np
+import matplotlib.pyplot as plt
+import flopy.utils.binaryfile as bf
+from ipywidgets import interact
+import shutil
+import matplotlib.colors
+flopy is installed in C:\Users\Jerson\miniconda3\lib\site-packages\flopy
+Flow Model
+
+Name the model
+
+model_ws='../4_OUT/R_SIM_KRIG'
+modelname='Modelo_Flujo'
+exe_name= '../1_SOLVER/mf2005.exe'
+mf = flopy.modflow.Modflow(modelname, exe_name=exe_name, model_ws=model_ws)
+Spatial discretization
+
+nlay = 30
+nrow = 1
+ncol = 100
+delr=10.
+delc=1.
+top = 510.
+botm = np.ones((nlay), dtype=np.int32)
+for i in range (nlay):
+    botm[i]= 500 -(i*10)
+nper = 3
+nstp = [1]+[1]*2 
+perlen = [1] + [864000]*1 + [2523743999]*1
+steady = [True] + [False]*2
+​
+dis=flopy.modflow.ModflowDis(mf, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr, delc=delc, top=top, 
+                             botm=botm, nper=nper, perlen=perlen, steady=steady, itmuni=1, lenuni=2)
+#botm
+#dis.plot()
+Package BAS
+
+ibound = np.ones((nlay, nrow, ncol), dtype=np.int32)
+ibound[1:,:,0] = -1
+ibound[21:,:,-1] = -1
+#ibound
+Package - strt
+
+bas = flopy.modflow.ModflowBas(mf, ibound=ibound, strt=top)
+#bas.plot()
+Package CHD
+
+chdspd={}
+chdspd[0]=[[i, 0, 0, 500., 500.] for i in range(1,30)]
+for i in range (21,30):
+    chdspd[0].append(([i, 0, 99, 300.,300.])) 
+chdspd[1]=[[i, 0, 0, 500., 500.] for i in range(1,30)]
+for i in range (21,30):
+    chdspd[1].append(([i, 0, 99, 300.,300.])) 
+chdspd[2]=[[i, 0, 0, 500., 500.] for i in range(1,30)]
+for i in range (21,30):
+    chdspd[2].append(([i, 0, 99, 300.,300.])) 
+    
+chd = flopy.modflow.ModflowChd(mf, stress_period_data=chdspd)
+Hydraulic conductivity
+
+kx=pd.read_excel('../3_IN/SIMULACION_K.xlsx', sheet_name=None, header=None) 
+#kx
+hk=kx['KRIGING'].to_numpy()
+lpf=flopy.modflow.ModflowLpf(mf, laytyp=1, ipakcb=53, hk=hk, vka=hk, hdry=-2e+20, chani=-1.0, ss=1e-05, sy=0.15)
+l
+**Solver mf2005**
+pcg =flopy.modflow.ModflowPcg(mf, mxiter=85, iter1=57, npcond=1, nbpol=1, hclose=1e-05, rclose=1e-05, relax=1,
+                              iprpcg=0, mutpcg=0, ihcofadd=0)
+Output Control - OC
+
+spd_oc = {}
+for kper in range(nper):
+    for kstp in range(nstp[kper]):
+        spd_oc[(kper, kstp)] = ['save head','save budget']
+    
+oc= flopy.modflow.ModflowOc(mf,stress_period_data=spd_oc, compact=True)
+LMT Linkage with MT3DMS for multi-species mass transport modeling
+
+lmt = flopy.modflow.ModflowLmt(mf, output_file_name='mt3d.ftl')
+Write output files mf2005
+
+mf.write_input()
+Run flow model
+
+mf.run_model()
+FloPy is using the following  executable to run the model: ../1_SOLVER/mf2005.exe
+
+                                  MODFLOW-2005     
+    U.S. GEOLOGICAL SURVEY MODULAR FINITE-DIFFERENCE GROUND-WATER FLOW MODEL
+                             Version 1.12.00 2/3/2017                        
+
+ Using NAME file: Modelo_Flujo.nam 
+ Run start date and time (yyyy/mm/dd hh:mm:ss): 2021/03/25 10:46:02
+
+ Solving:  Stress period:     1    Time step:     1    Ground-Water Flow Eqn.
+ Solving:  Stress period:     2    Time step:     1    Ground-Water Flow Eqn.
+ Solving:  Stress period:     3    Time step:     1    Ground-Water Flow Eqn.
+ Run end date and time (yyyy/mm/dd hh:mm:ss): 2021/03/25 10:46:02
+ Elapsed run time:  0.333 Seconds
+
+  Normal termination of simulation
+(True, [])
+Transport Model
+
+ftlfilename='mt3d.ftl'
+namemt3d='transModel'
+mt_model = flopy.mt3d.Mt3dms(modelname=namemt3d,  model_ws=model_ws, ftlfilename=ftlfilename, version='mt3d-usgs', 
+                             exe_name='../1_SOLVER/mt3d-usgs_1.1.0_64.exe', modflowmodel=mf)
+BTN file
+
+timprs=[10800., 950400., 4320000., 7776000., 15552000., 31536000.,
+        94672800., 157788000., 220903200., 946728000., 1105000000., 1578000000.]
+icbund = np.ones((nlay, nrow, ncol), dtype=np.int32)
+icbund[1:,:,0] = -1
+​
+nprs=len(timprs)
+nper = 3
+perlen = [1] + [864000]*1 + [2523800000]*1
+btn = flopy.mt3d.Mt3dBtn(mt_model, ncomp=1, nper=nper, mcomp=1, tunit='sec', lunit='m', munit='g', prsity=0.25,
+                             sconc=0.0, cinact=-1e+30, thkmin=0.01, ifmtcn=12, ifmtnp=5, ifmtrf=12, ifmtdp=12, 
+                             perlen=perlen, savucn=True, nprs=nprs, timprs=timprs, dt0=0, mxstrn=50000,ttsmult=1., 
+                             ttsmax=0, icbund=icbund)
+Packege Advection - ADV
+
+adv = flopy.mt3d.Mt3dAdv(mt_model, mixelm=3, percel=1, mxpart=75000, nadvfd=2, itrack=3, wd=1, dceps=1e-05, 
+                        nplane=0, npl=0, nph=10, npmin=2, npmax=20, npsink=10, dchmoc=0.01)
+Solver - GCG
+
+gcg = flopy.mt3d.Mt3dGcg(mt_model, mxiter=1, iter1=200, isolve=3, ncrs=0, cclose=1e-06, iprgcg=1)
+Package Dispersion - DSP
+
+dsp = flopy.mt3d.Mt3dDsp(mt_model, al=0, multiDiff=True, dmcoef=0, trpt=0.1, trpv=0.01)
+itype = flopy.mt3d.Mt3dSsm.itype_dict()
+itype
+​
+{'CHD': 1,
+ 'BAS6': 1,
+ 'PBC': 1,
+ 'WEL': 2,
+ 'DRN': 3,
+ 'RIV': 4,
+ 'GHB': 5,
+ 'MAS': 15,
+ 'CC': -1}
+Concentration of pollutants - SSM
+
+#[K,I,J,CSS,iSSType] = layer, row, column, source concentration, type of sink/source: well-constant concentration cell 
+​
+ssm_data = {}
+ssm_data[1] = [(k, 0, 0, 100, 1) for k in range (1,30)]
+for k in range (1,30):
+    ssm_data[1].append((k, 0, 0, 100, -1)) 
+ssm_data[2] = [(k, 0, 0, 0, 1) for k in range (1,30)]
+for k in range (1,30):
+    ssm_data[2].append((k, 0, 0, 0, -1)) 
+ssm = flopy.mt3d.Mt3dSsm(mt_model, stress_period_data=ssm_data)
+#ssm.plot()
+Write output files transport model - MT3D
+
+mt_model.write_input()
+Run transport model - MT3D
+
+mt_model.run_model(silent=True)
+(False, [])
