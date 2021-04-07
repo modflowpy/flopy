@@ -91,10 +91,7 @@ class MFBlockHeader(object):
                 name,
                 "blk_trailing_comment",
             )
-            self.blk_post_comment_path = path + (
-                name,
-                "blk_post_comment",
-            )
+            self.blk_post_comment_path = path + (name, "blk_post_comment",)
             if self.blk_trailing_comment_path not in simulation_data.mfdata:
                 simulation_data.mfdata[
                     self.blk_trailing_comment_path
@@ -1132,6 +1129,7 @@ class MFBlock(object):
             and self.structure.name.lower() != "exchanges"
             and self.structure.name.lower() != "options"
             and self.structure.name.lower() != "sources"
+            and self.structure.name.lower() != "stressperioddata"
         ):
             return
         if self.structure.repeating():
@@ -1139,15 +1137,9 @@ class MFBlock(object):
             for repeating_dataset in repeating_datasets:
                 # resolve any missing block headers
                 self._add_missing_block_headers(repeating_dataset)
-            if len(repeating_datasets) > 0:
-                # loop through all block headers
-                for block_header in self.block_headers:
-                    # write block
-                    self._write_block(fd, block_header, ext_file_action)
-            else:
-                # write out block
-                self._write_block(fd, self.block_headers[0], ext_file_action)
-
+            for block_header in self.block_headers:
+                # write block
+                self._write_block(fd, block_header, ext_file_action)
         else:
             self._write_block(fd, self.block_headers[0], ext_file_action)
 
