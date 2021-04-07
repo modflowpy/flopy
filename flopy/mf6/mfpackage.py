@@ -91,7 +91,10 @@ class MFBlockHeader(object):
                 name,
                 "blk_trailing_comment",
             )
-            self.blk_post_comment_path = path + (name, "blk_post_comment",)
+            self.blk_post_comment_path = path + (
+                name,
+                "blk_post_comment",
+            )
             if self.blk_trailing_comment_path not in simulation_data.mfdata:
                 simulation_data.mfdata[
                     self.blk_trailing_comment_path
