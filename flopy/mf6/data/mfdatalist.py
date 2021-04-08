@@ -389,6 +389,10 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 data_check = None
         else:
             data_check = data
+        if data_check is None or (
+            isinstance(data_check, list) and len(data_check) == 0
+        ):
+            check_data = False
         if iterable(data_check) and check_data:
             # verify data length
             min_line_size = self._get_min_record_entries(data)
@@ -1321,6 +1325,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         )
         self._transient_setup(self._data_storage)
         self.repeating = True
+        self.empty_keys = {}
 
     @property
     def data_type(self):
@@ -1513,12 +1518,17 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                     if list_item is None:
                         self.remove_transient_key(key)
                         del_keys.append(key)
+                        self.empty_keys[key] = False
+                    elif isinstance(list_item, list) and len(list_item) == 0:
+                        self.empty_keys[key] = True
                     else:
+                        self.empty_keys[key] = False
                         self._set_data_prep(list_item, key)
                         super().set_data(list_item, autofill=autofill)
                 for key in del_keys:
                     del data[key]
             else:
+                self.empty_keys[key] = False
                 self._set_data_prep(data["data"], key)
                 super().set_data(data, autofill)
         else:
@@ -1529,17 +1539,24 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                     key = data[new_key_index]
                 else:
                     key = 0
-            if data is None:
-                self.remove_transient_key(key)
+            if isinstance(data, list) and len(data) == 0:
+                self.empty_keys[key] = True
             else:
-                self._set_data_prep(data, key)
-                super().set_data(data, autofill)
+                self.empty_keys[key] = False
+                if data is None:
+                    self.remove_transient_key(key)
+                else:
+                    self._set_data_prep(data, key)
+                    super().set_data(data, autofill)
 
     def get_file_entry(
         self, key=0, ext_file_action=ExtFileAction.copy_relative_paths
     ):
-        self._get_file_entry_prep(key)
-        return super().get_file_entry(ext_file_action=ext_file_action)
+        if key in self.empty_keys and self.empty_keys[key] == True:
+            return ""
+        else:
+            self._get_file_entry_prep(key)
+            return super().get_file_entry(ext_file_action=ext_file_action)
 
     def load(
         self,
