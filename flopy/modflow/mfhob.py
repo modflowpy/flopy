@@ -510,7 +510,7 @@ class ModflowHob(Package):
         return 39
 
 
-class HeadObservation(object):
+class HeadObservation:
     """
     Create single HeadObservation instance from a time series array. A list of
     HeadObservation instances are passed to the ModflowHob package.

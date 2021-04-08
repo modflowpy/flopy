@@ -18,7 +18,7 @@ except ImportError:
     scipy = None
 
 
-class Raster(object):
+class Raster:
     """
     The Raster object is used for cropping, sampling raster values,
     and re-sampling raster values to grids, and provides methods to

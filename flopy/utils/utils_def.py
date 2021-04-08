@@ -6,7 +6,7 @@ from datetime import timedelta
 import numpy as np
 
 
-class FlopyBinaryData(object):
+class FlopyBinaryData:
     """
     The FlopyBinaryData class is a class to that defines the data types for
     integer, floating point, and character data in MODFLOW binary

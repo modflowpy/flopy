@@ -6,7 +6,7 @@ from ..utils.cvfdutil import centroid_of_polygon
 from ..utils.geospatial_utils import GeoSpatialUtil
 
 
-class Triangle(object):
+class Triangle:
     """
     Class to work with the triangle program to unstructured triangular grids.
     Information on the triangle program can be found at

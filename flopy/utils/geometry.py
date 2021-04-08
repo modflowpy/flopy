@@ -4,7 +4,7 @@ Container objects for working with geometric information
 import numpy as np
 
 
-class Shape(object):
+class Shape:
     """
     Parent class for handling geo interfacing, do not instantiate directly
 

@@ -12,7 +12,7 @@ from ..utils.recarray_utils import create_empty_recarray
 from ..pakbase import Package
 
 
-class Mnw(object):
+class Mnw:
     """
     Multi-Node Well object class
 

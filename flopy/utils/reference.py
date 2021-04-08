@@ -13,7 +13,7 @@ from collections import OrderedDict
 srefhttp = "https://spatialreference.org"
 
 
-class SpatialReference(object):
+class SpatialReference:
     """
     a class to locate a structured model grid in x-y space
 
@@ -1942,7 +1942,7 @@ class SpatialReferenceUnstructured(SpatialReference):
         return contour_set
 
 
-class TemporalReference(object):
+class TemporalReference:
     """
     For now, just a container to hold start time and time units files
     outside of DIS package.
@@ -2059,7 +2059,7 @@ class epsgRef:
             print("{}:\n{}\n".format(k, v))
 
 
-class crs(object):
+class crs:
     """
     Container to parse and store coordinate reference system parameters,
     and translate between different formats.

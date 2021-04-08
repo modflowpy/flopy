@@ -15,7 +15,7 @@ import errno
 from ..utils.utils_def import totim_to_datetime
 
 
-class ListBudget(object):
+class ListBudget:
     """
     MODFLOW family list file handling
 

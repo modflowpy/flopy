@@ -571,7 +571,7 @@ class BudgetIndexError(Exception):
     pass
 
 
-class CellBudgetFile(object):
+class CellBudgetFile:
     """
     CellBudgetFile Class.
 

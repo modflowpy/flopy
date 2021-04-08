@@ -2,7 +2,7 @@ from __future__ import print_function
 from ..pest import tplarray as tplarray
 
 
-class TemplateWriter(object):
+class TemplateWriter:
     """
     Class for writing PEST template files.
 

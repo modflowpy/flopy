@@ -26,7 +26,7 @@ from ..utils.check import mf6check
 from ..version import __version__
 
 
-class MFBlockHeader(object):
+class MFBlockHeader:
     """
     Represents the header of a block in a MF6 input file
 
@@ -268,7 +268,7 @@ class MFBlockHeader(object):
         return transient_key
 
 
-class MFBlock(object):
+class MFBlock:
     """
     Represents a block in a MF6 input file
 
@@ -2389,7 +2389,7 @@ class MFPackage(PackageContainer, PackageInterface):
         return axes
 
 
-class MFChildPackages(object):
+class MFChildPackages:
     def __init__(
         self,
         model,

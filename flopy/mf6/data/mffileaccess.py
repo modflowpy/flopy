@@ -14,7 +14,7 @@ from ...utils import datautil
 from ..data.mfstructure import DatumType, MFDataStructure, DataType
 
 
-class MFFileAccess(object):
+class MFFileAccess:
     def __init__(
         self, structure, data_dimensions, simulation_data, path, current_key
     ):

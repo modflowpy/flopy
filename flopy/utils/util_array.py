@@ -19,7 +19,7 @@ from ..utils.flopy_io import line_parse
 from ..datbase import DataType, DataInterface
 
 
-class ArrayFormat(object):
+class ArrayFormat:
     """
     ArrayFormat class for handling various output format types for both
     MODFLOW and flopy

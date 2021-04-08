@@ -5,7 +5,7 @@ Module spatial referencing for flopy model objects
 import numpy as np
 
 
-class StructuredSpatialReference(object):
+class StructuredSpatialReference:
     """
     a simple class to locate the model grid in x-y space
 
@@ -547,7 +547,7 @@ class StructuredSpatialReference(object):
         return b
 
 
-class VertexSpatialReference(object):
+class VertexSpatialReference:
     """
     a simple class to locate the model grid in x-y space
 
@@ -858,7 +858,7 @@ class VertexSpatialReference(object):
             self._ycenter_array = np.append(self._ycenter_array, np.mean(cell))
 
 
-class SpatialReference(object):
+class SpatialReference:
     """
     A dynamic inheritance class that locates a gridded model in space
 

@@ -4,7 +4,7 @@ import warnings
 from ..utils import geometry
 
 
-class CachedData(object):
+class CachedData:
     def __init__(self, data):
         self._data = data
         self.out_of_date = False
@@ -22,7 +22,7 @@ class CachedData(object):
         self.out_of_date = False
 
 
-class Grid(object):
+class Grid:
     """
     Base class for a structured or unstructured model grid
 

@@ -12,7 +12,7 @@ import numpy as np
 from ..utils.utils_def import totim_to_datetime
 
 
-class MtListBudget(object):
+class MtListBudget:
     """
     MT3D mass budget reader
 

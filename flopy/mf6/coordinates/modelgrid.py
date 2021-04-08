@@ -12,7 +12,7 @@ class MFGridException(Exception):
         Exception.__init__(self, "MFGridException: {}".format(error))
 
 
-class ModelCell(object):
+class ModelCell:
     """
     Represents a model cell
 
@@ -328,7 +328,7 @@ class UnstructuredModelCell(ModelCell):
                 fahl[connecting_cell - 1][rev_con_number] *= con_area_mult
 
 
-class ModelGrid(object):
+class ModelGrid:
     """
     Base class for a structured or unstructured model grid
 

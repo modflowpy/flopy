@@ -37,7 +37,7 @@ class DfnType(Enum):
     unknown = 999
 
 
-class Dfn(object):
+class Dfn:
     """
     Base class for package file definitions
 
@@ -799,7 +799,7 @@ class BlockType(Enum):
     transient = 3
 
 
-class MFDataItemStructure(object):
+class MFDataItemStructure:
     """
     Defines the structure of a single MF6 data item in a dfn file
 
@@ -1283,7 +1283,7 @@ class MFDataItemStructure(object):
         return item_type
 
 
-class MFDataStructure(object):
+class MFDataStructure:
     """
     Defines the structure of a single MF6 data item in a dfn file
 
@@ -1917,7 +1917,7 @@ class MFDataStructure(object):
         return ""
 
 
-class MFBlockStructure(object):
+class MFBlockStructure:
     """
     Defines the structure of a MF6 block.
 
@@ -2030,7 +2030,7 @@ class MFBlockStructure(object):
         return recarray_list
 
 
-class MFInputFileStructure(object):
+class MFInputFileStructure:
     """
     MODFLOW Input File Stucture class.  Loads file
     structure information for individual input file
@@ -2115,7 +2115,7 @@ class MFInputFileStructure(object):
             return None
 
 
-class MFModelStructure(object):
+class MFModelStructure:
     """
     Defines the structure of a MF6 model and its packages
 
@@ -2205,7 +2205,7 @@ class MFModelStructure(object):
             return None
 
 
-class MFSimulationStructure(object):
+class MFSimulationStructure:
     """
     Defines the structure of a MF6 simulation and its packages
     and models.
@@ -2399,7 +2399,7 @@ class MFSimulationStructure(object):
                     package_struct.read_as_arrays = True
 
 
-class MFStructure(object):
+class MFStructure:
     """
     Singleton class for accessing the contents of the json structure file
     (only one instance of this class can exist, which loads the json file on

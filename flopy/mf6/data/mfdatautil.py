@@ -222,7 +222,7 @@ def to_string(
         return str(val)
 
 
-class MFComment(object):
+class MFComment:
     """
     Represents a variable in a MF6 input file
 
@@ -428,7 +428,7 @@ class MFComment(object):
                     fd.write(" {}".format(item))
 
 
-class TemplateGenerator(object):
+class TemplateGenerator:
     """
     Abstract base class for building a data template for different data types.
     This is a generic class that is initialized with a path that identifies
@@ -805,7 +805,7 @@ class ListTemplateGenerator(TemplateGenerator):
             return rec_array
 
 
-class MFDocString(object):
+class MFDocString:
     """
     Helps build a python class doc string
 
