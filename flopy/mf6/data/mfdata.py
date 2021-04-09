@@ -12,6 +12,7 @@ from ..coordinates.modeldimensions import DataDimensions, DiscretizationType
 from ...datbase import DataInterface, DataType
 from .mfdatastorage import DataStructureType
 from .mfdatautil import to_string
+from ...mbase import ModelInterface
 
 
 class MFTransient:
@@ -256,6 +257,10 @@ class MFData(DataInterface):
         self._structure_init()
         # tie this to the simulation dictionary
         sim_data.mfdata[self._path] = self
+        # set up model grid caching
+        self._cache_next_grid = False
+        self._grid_cached = False
+        self._cached_model_grid = None
 
     def __repr__(self):
         return repr(self._get_storage_obj())
@@ -299,6 +304,20 @@ class MFData(DataInterface):
         raise NotImplementedError(
             "must define plottable in child " "class to use this base class"
         )
+
+    @property
+    def _cache_model_grid(self):
+        return self._cache_next_grid
+
+    @_cache_model_grid.setter
+    def _cache_model_grid(self, cache_model_grid):
+        if cache_model_grid:
+            self._cache_next_grid = True
+            self._grid_cached = False
+        else:
+            self._cache_next_grid = False
+            self._grid_cached = False
+            self._cached_model_grid = None
 
     def _resync(self):
         model = self.model
@@ -439,6 +458,28 @@ class MFData(DataInterface):
     def is_valid(self):
         # TODO: Implement for each data type
         return self._valid
+
+    def _get_model_grid(self):
+        mg = None
+        if self._cache_next_grid or not self._grid_cached or \
+                self._cached_model_grid is None:
+            # construct a new model grid
+            if isinstance(self._model_or_sim, ModelInterface) and hasattr(
+                    self._model_or_sim, "modelgrid"
+            ):
+                # get model grid info
+                mg = self._model_or_sim.modelgrid
+            else:
+                mg = None
+        if self._grid_cached and self._cached_model_grid is not None:
+            # get the model grid from cache
+            mg = self._cached_model_grid
+        elif self._cache_next_grid:
+            # cache the existing model grid
+            self._cached_model_grid = mg
+            self._grid_cached = mg is not None
+            self._cache_next_grid = False
+        return mg
 
     def _structure_init(self, data_set=None):
         if data_set is None:

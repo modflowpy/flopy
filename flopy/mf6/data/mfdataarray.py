@@ -1265,7 +1265,7 @@ class MFArray(MFMultiDimVar):
                 "not available."
             )
 
-        modelgrid = self.model.modelgrid
+        modelgrid = self._get_model_grid()
         a = self.array
         num_plottable_layers = modelgrid.get_number_plottable_layers(a)
 

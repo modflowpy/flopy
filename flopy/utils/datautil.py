@@ -265,34 +265,34 @@ class PyListUtil:
             # consistent delimiter has been found.  continue using that
             # delimiter without doing further checks
             if PyListUtil.delimiter_used is None:
-                comment_split = line.strip().split("#", 1)
+                comment_split = line.split("#", 1)
                 clean_line = comment_split[0].strip().split()
             else:
-                comment_split = line.strip().split("#", 1)
+                comment_split = line.split("#", 1)
                 clean_line = (
                     comment_split[0].strip().split(PyListUtil.delimiter_used)
                 )
                 if len(comment_split) > 1:
                     clean_line.append("#")
-                    clean_line.append(comment_split[1])
+                    clean_line.append(comment_split[1].strip())
         else:
             # compare against the default split option without comments split
-            comment_split = line.strip().split("#", 1)
+            comment_split = line.split("#", 1)
             clean_line = comment_split[0].strip().split()
             if len(comment_split) > 1:
                 clean_line.append("#")
-                clean_line.append(comment_split[1])
+                clean_line.append(comment_split[1].strip())
             # try different delimiters and use the one the breaks the data
             # apart the most
             max_split_size = len(clean_line)
             max_split_type = None
             max_split_list = clean_line
             for delimiter in PyListUtil.delimiter_list:
-                comment_split = line.strip().split("#")
+                comment_split = line.split("#")
                 alt_split = comment_split[0].strip().split(delimiter)
                 if len(comment_split) > 1:
                     alt_split.append("#")
-                    alt_split.append(comment_split[1])
+                    alt_split.append(comment_split[1].strip())
                 alt_split_len = len(alt_split)
                 if alt_split_len > max_split_size:
                     max_split_size = len(alt_split)
@@ -318,7 +318,8 @@ class PyListUtil:
         arr_fixed_line = []
         index = 0
         # loop through line to fix quotes and delimiters
-        while index < len(clean_line):
+        len_cl = len(clean_line)
+        while index < len_cl:
             item = clean_line[index]
             if item and item not in PyListUtil.delimiter_list:
                 if item and item[0] in PyListUtil.quote_list:
@@ -328,9 +329,9 @@ class PyListUtil:
                     else:
                         arr_fixed_line.append(item[1:])
                         # loop until trailing quote found
-                        while index < len(clean_line):
+                        while index < len_cl:
                             index += 1
-                            if index < len(clean_line):
+                            if index < len_cl:
                                 item = clean_line[index]
                                 if item[-1] in PyListUtil.quote_list:
                                     arr_fixed_line[-1] = "{} {}".format(

@@ -389,9 +389,8 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 data_check = None
         else:
             data_check = data
-        if data_check is None or (
-            isinstance(data_check, list) and len(data_check) == 0
-        ):
+        if data_check is None or not self._simulation_data.verify_data or \
+                (isinstance(data_check, list) and len(data_check) == 0):
             check_data = False
         if iterable(data_check) and check_data:
             # verify data length
@@ -428,7 +427,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 self._simulation_data.debug,
                 ex,
             )
-        if check_data:
+        if check_data and self._simulation_data.verify_data:
             # verify cellids
             self._check_valid_cellids()
 
@@ -438,7 +437,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             self._model_or_sim, "modelgrid"
         ):
             # get model grid info
-            mg = self._model_or_sim.modelgrid
+            mg = self._get_model_grid()
             if not mg.is_complete:
                 return
             idomain = mg.idomain
@@ -530,8 +529,8 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 self._simulation_data.debug,
             )
 
-    def set_data(self, data, autofill=False):
-        self._set_data(data, autofill)
+    def set_data(self, data, autofill=False, check_data=True):
+        self._set_data(data, autofill, check_data=check_data)
 
     def append_data(self, data):
         try:
@@ -1455,6 +1454,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         replace_existing_external=True,
         check_data=True,
     ):
+        self._cache_model_grid = True
         sim_time = self._data_dimensions.package_dim.model_dim[
             0
         ].simulation_time
@@ -1478,6 +1478,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                         replace_existing_external,
                         check_data,
                     )
+        self._cache_model_grid = False
 
     def get_data(self, key=None, apply_mult=False, **kwargs):
         if self._data_storage is not None and len(self._data_storage) > 0:
@@ -1509,6 +1510,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             return None
 
     def set_data(self, data, key=None, autofill=False):
+        self._cache_model_grid = True
         if isinstance(data, dict) or isinstance(data, OrderedDict):
             if "filename" not in data:
                 # each item in the dictionary is a list for one stress period
@@ -1523,8 +1525,13 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                         self.empty_keys[key] = True
                     else:
                         self.empty_keys[key] = False
+                        if "check" in list_item:
+                            check = list_item["check"]
+                        else:
+                            check = True
                         self._set_data_prep(list_item, key)
-                        super().set_data(list_item, autofill=autofill)
+                        super().set_data(list_item, autofill=autofill,
+                                         check_data=check)
                 for key in del_keys:
                     del data[key]
             else:
@@ -1548,6 +1555,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                 else:
                     self._set_data_prep(data, key)
                     super().set_data(data, autofill)
+        self._cache_model_grid = False
 
     def get_file_entry(
         self, key=0, ext_file_action=ExtFileAction.copy_relative_paths

@@ -158,7 +158,7 @@ def to_string(
     elif is_cellid or (possible_cellid and isinstance(val, tuple)):
         if DatumUtil.is_int(val):
             return str(val + 1)
-        if len(val) > 0 and isinstance(val, str) and val.lower() == "none":
+        if len(val) == 4 and isinstance(val, str) and val.lower() == "none":
             # handle case that cellid is 'none'
             return val
         if is_cellid and data_dim.get_model_dim(None).model_name is not None:
@@ -199,10 +199,7 @@ def to_string(
         return " ".join(string_val)
     elif data_type == DatumType.integer:
         if data_item is not None and data_item.numeric_index:
-            if isinstance(val, str):
-                return str(int(val) + 1)
-            else:
-                return str(int(val) + 1)
+            return str(int(val) + 1)
         return str(int(val))
     elif data_type == DatumType.string:
         try:

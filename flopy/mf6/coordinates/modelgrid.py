@@ -594,13 +594,14 @@ class ModelGrid:
             return ["node"]
 
     def get_num_spatial_coordinates(self):
-        if self.grid_type() == DiscretizationType.DIS:
+        grid_type = self.grid_type()
+        if grid_type == DiscretizationType.DIS:
             return 3
-        elif self.grid_type() == DiscretizationType.DISV:
+        elif grid_type == DiscretizationType.DISV:
             return 2
         elif (
-            self.grid_type() == DiscretizationType.DISU
-            or self.grid_type() == DiscretizationType.DISL
+            grid_type == DiscretizationType.DISU
+            or grid_type == DiscretizationType.DISL
         ):
             return 1
 
