@@ -331,7 +331,7 @@ class XmlWriterBinary(XmlWriterInterface):
         super().final()
 
 
-class _Array(object):
+class _Array:
     # class to store array and tell if array is 2d
     def __init__(self, array, array2d):
         self.array = array
@@ -347,7 +347,7 @@ def _get_basic_modeltime(perlen_list):
     return totim
 
 
-class Vtk(object):
+class Vtk:
     """
     Class to build VTK object for exporting flopy vtk
 

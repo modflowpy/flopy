@@ -3,7 +3,7 @@ from ..modflow import Modflow
 from .util_array import Util2d, Util3d
 
 
-class Lgr(object):
+class Lgr:
     def __init__(
         self,
         nlayp,

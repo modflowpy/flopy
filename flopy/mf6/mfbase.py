@@ -190,7 +190,7 @@ class ExtFileAction(Enum):
     copy_relative_paths = 3
 
 
-class MFFilePath(object):
+class MFFilePath:
     def __init__(self, file_path, model_name):
         self.file_path = file_path
         self.model_name = {model_name: 0}
@@ -199,7 +199,7 @@ class MFFilePath(object):
         return os.path.isabs(self.file_path)
 
 
-class MFFileMgmt(object):
+class MFFileMgmt:
     """
     Class containing MODFLOW path data
 
@@ -451,7 +451,7 @@ class MFFileMgmt(object):
                 )
 
 
-class PackageContainer(object):
+class PackageContainer:
     """
     Base class for any class containing packages.
 

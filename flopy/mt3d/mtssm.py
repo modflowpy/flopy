@@ -8,7 +8,7 @@ from ..utils import Util2d, MfList, Transient2d
 SsmLabels = ["WEL", "DRN", "RCH", "EVT", "RIV", "GHB", "BAS6", "CHD", "PBC"]
 
 
-class SsmPackage(object):
+class SsmPackage:
     def __init__(self, label="", instance=None, needTFstr=False):
         self.label = label
         self.instance = instance

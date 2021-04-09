@@ -8,7 +8,7 @@ import os
 import platform
 
 
-class styles(object):
+class styles:
     """Styles class for custom matplotlib styling
 
     The class contains both custom styles and plotting methods

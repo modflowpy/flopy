@@ -193,7 +193,7 @@ class SimulationDict(collections.OrderedDict):
             pass
 
 
-class MFSimulationData(object):
+class MFSimulationData:
     """
     Class containing MODFLOW simulation data and file formatting data.
 

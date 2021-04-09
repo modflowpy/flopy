@@ -16,7 +16,7 @@ if sys.version_info < (3, 6):
     dict = OrderedDict
 
 
-class NamData(object):
+class NamData:
     """
     MODFLOW Namefile Class.
 

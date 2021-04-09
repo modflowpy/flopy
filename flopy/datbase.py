@@ -13,7 +13,7 @@ class DataType(Enum):
     transientscalar = 8
 
 
-class DataInterface(object):
+class DataInterface:
     @property
     @abc.abstractmethod
     def data_type(self):
@@ -58,7 +58,7 @@ class DataInterface(object):
         )
 
 
-class DataListInterface(object):
+class DataListInterface:
     @property
     @abc.abstractmethod
     def package(self):

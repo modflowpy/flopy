@@ -44,7 +44,7 @@ class PlotException(Exception):
         super().__init__(message)
 
 
-class PlotUtilities(object):
+class PlotUtilities:
     """
     Class which groups a collection of plotting utilities
     which Flopy and Flopy6 can use to generate map based plots
@@ -1700,7 +1700,7 @@ class PlotUtilities(object):
         return (qx, qy, qz)
 
 
-class UnstructuredPlotUtilities(object):
+class UnstructuredPlotUtilities:
     """
     Collection of unstructured grid and vertex grid compatible
     plotting helper functions

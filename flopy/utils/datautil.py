@@ -38,7 +38,7 @@ def max_tuple_abs_size(some_tuple):
     return max_size
 
 
-class DatumUtil(object):
+class DatumUtil:
     @staticmethod
     def is_int(str):
         try:
@@ -70,7 +70,7 @@ class DatumUtil(object):
         return False
 
 
-class PyListUtil(object):
+class PyListUtil:
     """
     Class contains miscellaneous methods to work with and compare python lists
 
@@ -600,7 +600,7 @@ class MultiList:
         return MultiListIter(self.multi_dim_list, False)
 
 
-class ArrayIndexIter(object):
+class ArrayIndexIter:
     def __init__(self, array_shape, index_as_tuple=False):
         self.array_shape = array_shape
         self.current_location = []
@@ -643,7 +643,7 @@ class ArrayIndexIter(object):
     next = __next__  # Python 2 support
 
 
-class MultiListIter(object):
+class MultiListIter:
     def __init__(self, multi_list, detailed_info=False, iter_leaf_lists=False):
         self.multi_list = multi_list
         self.detailed_info = detailed_info
@@ -665,7 +665,7 @@ class MultiListIter(object):
     next = __next__  # Python 2 support
 
 
-class ConstIter(object):
+class ConstIter:
     def __init__(self, value):
         self.value = value
 
@@ -678,7 +678,7 @@ class ConstIter(object):
     next = __next__  # Python 2 support
 
 
-class FileIter(object):
+class FileIter:
     def __init__(self, file_path):
         self.eof = False
         try:
@@ -721,7 +721,7 @@ class FileIter(object):
     next = __next__  # Python 2 support
 
 
-class NameIter(object):
+class NameIter:
     def __init__(self, name, first_not_numbered=True):
         self.name = name
         self.iter_num = -1
@@ -740,7 +740,7 @@ class NameIter(object):
     next = __next__  # Python 2 support
 
 
-class PathIter(object):
+class PathIter:
     def __init__(self, path, first_not_numbered=True):
         self.path = path
         self.name_iter = NameIter(path[-1], first_not_numbered)

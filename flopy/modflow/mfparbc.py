@@ -8,7 +8,7 @@ import numpy as np
 from ..utils.flopy_io import line_strip, ulstrd
 
 
-class ModflowParBc(object):
+class ModflowParBc:
     """
     Class for loading boundary condition parameter data for MODFLOW packages
     that use list data (WEL, GHB, DRN, etc.). This Class is also used to

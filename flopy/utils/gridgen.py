@@ -167,7 +167,7 @@ def repair_array_asymmetry(isym, a, atol=0):
     return a
 
 
-class Gridgen(object):
+class Gridgen:
     """
     Class to work with the gridgen program to create layered quadtree grids.
 

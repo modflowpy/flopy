@@ -15,7 +15,7 @@ import warnings
 warnings.simplefilter("always", PendingDeprecationWarning)
 
 
-class PlotCrossSection(object):
+class PlotCrossSection:
     """
     Class to create a cross sectional plot of a model.
 
@@ -1732,7 +1732,7 @@ class DeprecatedCrossSection(PlotCrossSection):
         )
 
 
-class ModelCrossSection(object):
+class ModelCrossSection:
     """
     DEPRECATED. Class to create a cross section of the model.
 

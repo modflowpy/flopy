@@ -659,7 +659,7 @@ def write_prj(shpname, mg=None, epsg=None, prj=None, wkt_string=None):
             output.write(prjtxt)
 
 
-class CRS(object):
+class CRS:
     """
     Container to parse and store coordinate reference system parameters,
     and translate between different formats.

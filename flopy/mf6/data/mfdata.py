@@ -14,7 +14,7 @@ from .mfdatastorage import DataStructureType
 from .mfdatautil import to_string
 
 
-class MFTransient(object):
+class MFTransient:
     """
     Parent class for transient data.  This class contains internal objects and
     methods that most end users will not need to access directly.

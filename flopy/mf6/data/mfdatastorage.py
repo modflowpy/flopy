@@ -40,7 +40,7 @@ class DataStructureType(Enum):
     scalar = 3
 
 
-class LayerStorage(object):
+class LayerStorage:
     """
     Stores a single layer of data.
 
@@ -160,7 +160,7 @@ class LayerStorage(object):
             return self.data_const_value
 
 
-class DataStorage(object):
+class DataStorage:
     """
     Stores and retrieves data.
 

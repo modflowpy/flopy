@@ -3,7 +3,7 @@ import numpy as np
 from ..utils import flopy_io
 
 
-class OptionBlock(object):
+class OptionBlock:
     """
     Parent class to for option blocks within
     Modflow-nwt models. This class contains base
@@ -413,7 +413,7 @@ class OptionBlock(object):
                 return cls(options_line=option_line, package=package)
 
 
-class OptionUtil(object):
+class OptionUtil:
     @staticmethod
     def isfloat(s):
         """

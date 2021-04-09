@@ -16,7 +16,7 @@ import warnings
 warnings.simplefilter("always", PendingDeprecationWarning)
 
 
-class PlotMapView(object):
+class PlotMapView:
     """
     Class to create a map of the model. Delegates plotting
     functionality based on model grid type.
@@ -1206,7 +1206,7 @@ class DeprecatedMapView(PlotMapView):
         )
 
 
-class ModelMap(object):
+class ModelMap:
     """
     DEPRECATED. ModelMap acts as a PlotMapView factory
     object. Please migrate to PlotMapView for plotting

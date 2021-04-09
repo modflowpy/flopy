@@ -7,7 +7,7 @@ from collections import OrderedDict
 from ..utils.utils_def import totim_to_datetime
 
 
-class ZoneBudget(object):
+class ZoneBudget:
     """
     ZoneBudget class
 
@@ -1830,7 +1830,7 @@ def get_totim_modflow6(tdis):
     return totim
 
 
-class ZBNetOutput(object):
+class ZBNetOutput:
     """
     Class that holds zonebudget netcdf output and allows export utilities
     to recognize the output data type.
@@ -1859,7 +1859,7 @@ class ZBNetOutput(object):
         self.flux = flux
 
 
-class ZoneBudgetOutput(object):
+class ZoneBudgetOutput:
     """
     Class method to process zonebudget output into volumetric budgets
 

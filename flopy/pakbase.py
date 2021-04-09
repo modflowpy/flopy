@@ -20,7 +20,7 @@ from .utils import OptionBlock
 from .utils.flopy_io import ulstrd
 
 
-class PackageInterface(object):
+class PackageInterface:
     @property
     @abc.abstractmethod
     def name(self):

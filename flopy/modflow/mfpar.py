@@ -12,7 +12,7 @@ from .mfpval import ModflowPval
 from .mfmlt import ModflowMlt
 
 
-class ModflowPar(object):
+class ModflowPar:
     """
     Class for loading mult, zone, pval, and parameter data for MODFLOW packages
     that use array data (LPF, UPW, RCH, EVT). Class also includes methods to

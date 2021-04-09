@@ -41,7 +41,7 @@ shape_types = {
 }
 
 
-class GeoSpatialUtil(object):
+class GeoSpatialUtil:
     """
     Geospatial utils are a unifying method to provide conversion between
     commonly used geospatial input types
@@ -237,7 +237,7 @@ class GeoSpatialUtil(object):
         return self._flopy_geometry
 
 
-class GeoSpatialCollection(object):
+class GeoSpatialCollection:
     """
     The GeoSpatialCollection class allows a user to convert between
     Collection objects from common geospatial libraries.
