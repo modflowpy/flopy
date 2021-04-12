@@ -453,6 +453,7 @@ class MFScalar(mfdata.MFData):
                                         self._simulation_data,
                                         self._data_dimensions,
                                         data_item=data_item,
+                                        verify_data=self._simulation_data.verify_data,
                                     )
                                 )
                             except Exception as ex:
@@ -529,6 +530,7 @@ class MFScalar(mfdata.MFData):
                     self._simulation_data,
                     self._data_dimensions,
                     data_item=data_item,
+                    verify_data=self._simulation_data.verify_data,
                 )
             except Exception as ex:
                 message = (

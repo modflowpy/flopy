@@ -389,8 +389,11 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 data_check = None
         else:
             data_check = data
-        if data_check is None or not self._simulation_data.verify_data or \
-                (isinstance(data_check, list) and len(data_check) == 0):
+        if (
+            data_check is None
+            or not self._simulation_data.verify_data
+            or (isinstance(data_check, list) and len(data_check) == 0)
+        ):
             check_data = False
         if iterable(data_check) and check_data:
             # verify data length
@@ -810,6 +813,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                                 data_item.is_cellid,
                                                 data_item.possible_cellid,
                                                 data_item,
+                                                self._simulation_data.verify_data,
                                             )
                                         )
                                     index += 1
@@ -987,6 +991,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                                     k_data_item.is_cellid,
                                                     k_data_item.possible_cellid,
                                                     k_data_item,
+                                                    self._simulation_data.verify_data,
                                                 )
                                             )
                                         except Exception as ex:
@@ -1046,6 +1051,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                                 self._data_dimensions,
                                                 False,
                                                 data_item=data_item,
+                                                verify_data=self._simulation_data.verify_data,
                                             )
                                         )
                                         index += 1
@@ -1059,6 +1065,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                             data_item.is_cellid,
                                             data_item.possible_cellid,
                                             data_item,
+                                            self._simulation_data.verify_data,
                                         )
                                     )
                                 except Exception as ex:
@@ -1530,8 +1537,9 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                         else:
                             check = True
                         self._set_data_prep(list_item, key)
-                        super().set_data(list_item, autofill=autofill,
-                                         check_data=check)
+                        super().set_data(
+                            list_item, autofill=autofill, check_data=check
+                        )
                 for key in del_keys:
                     del data[key]
             else:

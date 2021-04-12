@@ -126,6 +126,7 @@ def to_string(
     is_cellid=False,
     possible_cellid=False,
     data_item=None,
+    verify_data=True,
 ):
     if data_type == DatumType.double_precision:
         if data_item is not None and data_item.support_negative_index:
@@ -161,7 +162,11 @@ def to_string(
         if len(val) == 4 and isinstance(val, str) and val.lower() == "none":
             # handle case that cellid is 'none'
             return val
-        if is_cellid and data_dim.get_model_dim(None).model_name is not None:
+        if (
+            verify_data
+            and is_cellid
+            and data_dim.get_model_dim(None).model_name is not None
+        ):
             model_grid = data_dim.get_model_grid()
             cellid_size = model_grid.get_num_spatial_coordinates()
             if len(val) != cellid_size:

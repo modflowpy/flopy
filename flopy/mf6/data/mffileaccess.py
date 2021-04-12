@@ -460,6 +460,7 @@ class MFFileAccessArray(MFFileAccess):
                     self._simulation_data,
                     self._data_dimensions,
                     is_cellid,
+                    verify_data=self._simulation_data.verify_data,
                 )
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()

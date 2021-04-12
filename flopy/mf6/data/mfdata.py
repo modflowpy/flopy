@@ -461,11 +461,14 @@ class MFData(DataInterface):
 
     def _get_model_grid(self):
         mg = None
-        if self._cache_next_grid or not self._grid_cached or \
-                self._cached_model_grid is None:
+        if (
+            self._cache_next_grid
+            or not self._grid_cached
+            or self._cached_model_grid is None
+        ):
             # construct a new model grid
             if isinstance(self._model_or_sim, ModelInterface) and hasattr(
-                    self._model_or_sim, "modelgrid"
+                self._model_or_sim, "modelgrid"
             ):
                 # get model grid info
                 mg = self._model_or_sim.modelgrid
@@ -507,7 +510,11 @@ class MFData(DataInterface):
         sim_data = self._simulation_data
         const_format = list(sim_data.constant_formatting)
         const_format[1] = to_string(
-            const_val, data_type, self._simulation_data, self._data_dimensions
+            const_val,
+            data_type,
+            self._simulation_data,
+            self._data_dimensions,
+            verify_data=self._simulation_data.verify_data,
         )
         return "{}{}".format(sim_data.indent_string.join(const_format), suffix)
 
