@@ -1140,6 +1140,58 @@ def test_replace_ims_package():
         raise AssertionError()
 
 
+def test_mf6_output():
+    sim_ws = os.path.join('..', 'examples', 'data', 'mf6', 'test001e_UZF_3lay')
+    sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws)
+    sim.simulation_data.mfpath.set_sim_path(cpth)
+    sim.write_simulation()
+    sim.run_simulation()
+
+
+    ml = sim.get_model("gwf_1")
+
+    bud = ml.oc.output.budget()
+    hds = ml.oc.output.head()
+
+    if not isinstance(bud, flopy.utils.CellBudgetFile):
+        raise TypeError()
+
+    if not isinstance(hds, flopy.utils.HeadFile):
+        raise TypeError()
+
+    bud = ml.output.budget()
+    hds = ml.output.head()
+
+    if not isinstance(bud, flopy.utils.CellBudgetFile):
+        raise TypeError()
+
+    if not isinstance(hds, flopy.utils.HeadFile):
+        raise TypeError()
+
+    uzf = ml.uzf
+    uzf_bud = uzf.output.budget()
+    conv = uzf.output.package_convergence()
+    uzf_obs = uzf.output.obs()
+
+    if not isinstance(uzf_bud, flopy.utils.CellBudgetFile):
+        raise TypeError()
+
+    if not isinstance(conv, flopy.utils.observationfile.CsvFile):
+        raise TypeError()
+
+    if not isinstance(uzf_obs, flopy.utils.Mf6Obs):
+        raise TypeError()
+
+    if len(uzf.output.methods()) != 3:
+        raise AssertionError()
+
+    if len(ml.output.methods()) != 2:
+        raise AssertionError()
+
+    if ml.dis.output.methods() is not None:
+        raise AssertionError()
+
+
 if __name__ == "__main__":
     test001a_tharmonic()
     test001e_uzf_3lay()
@@ -1153,3 +1205,4 @@ if __name__ == "__main__":
     test045_lake2tr()
     test_cbc_precision()
     test_replace_ims_package()
+    test_mf6_output()
