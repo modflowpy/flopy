@@ -26,7 +26,7 @@ from ..utils.check import mf6check
 from ..version import __version__
 
 
-class MFBlockHeader(object):
+class MFBlockHeader:
     """
     Represents the header of a block in a MF6 input file
 
@@ -268,7 +268,7 @@ class MFBlockHeader(object):
         return transient_key
 
 
-class MFBlock(object):
+class MFBlock:
     """
     Represents a block in a MF6 input file
 
@@ -1132,6 +1132,7 @@ class MFBlock(object):
             and self.structure.name.lower() != "exchanges"
             and self.structure.name.lower() != "options"
             and self.structure.name.lower() != "sources"
+            and self.structure.name.lower() != "stressperioddata"
         ):
             return
         if self.structure.repeating():
@@ -1139,15 +1140,9 @@ class MFBlock(object):
             for repeating_dataset in repeating_datasets:
                 # resolve any missing block headers
                 self._add_missing_block_headers(repeating_dataset)
-            if len(repeating_datasets) > 0:
-                # loop through all block headers
-                for block_header in self.block_headers:
-                    # write block
-                    self._write_block(fd, block_header, ext_file_action)
-            else:
-                # write out block
-                self._write_block(fd, self.block_headers[0], ext_file_action)
-
+            for block_header in self.block_headers:
+                # write block
+                self._write_block(fd, block_header, ext_file_action)
         else:
             self._write_block(fd, self.block_headers[0], ext_file_action)
 
@@ -1475,9 +1470,7 @@ class MFPackage(PackageContainer, PackageInterface):
                 model_or_sim.simulation_data.debug,
             )
 
-        super(MFPackage, self).__init__(
-            model_or_sim.simulation_data, self.model_name
-        )
+        super().__init__(model_or_sim.simulation_data, self.model_name)
 
         self.parent = model_or_sim
         self._simulation_data = model_or_sim.simulation_data
@@ -1578,7 +1571,7 @@ class MFPackage(PackageContainer, PackageInterface):
                         package=self._get_pname(),
                     )
                 return
-        super(MFPackage, self).__setattr__(name, value)
+        super().__setattr__(name, value)
 
     def __repr__(self):
         return self._get_data_str(True)
@@ -1644,7 +1637,7 @@ class MFPackage(PackageContainer, PackageInterface):
     def check(self, f=None, verbose=True, level=1, checktype=None):
         if checktype is None:
             checktype = mf6check
-        return super(MFPackage, self).check(f, verbose, level, checktype)
+        return super().check(f, verbose, level, checktype)
 
     def _get_nan_exclusion_list(self):
         excl_list = []
@@ -2396,7 +2389,7 @@ class MFPackage(PackageContainer, PackageInterface):
         return axes
 
 
-class MFChildPackages(object):
+class MFChildPackages:
     def __init__(
         self,
         model,
@@ -2453,7 +2446,7 @@ class MFChildPackages(object):
             package = self._packages[0]
             setattr(package, key, value)
             return
-        super(MFChildPackages, self).__setattr__(key, value)
+        super().__setattr__(key, value)
 
     def __default_file_path_base(self, file_path, suffix=""):
         stem = os.path.split(file_path)[1]

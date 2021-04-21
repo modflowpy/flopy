@@ -11,7 +11,7 @@ from ..utils.util_array import Util2d
 from ..utils.recarray_utils import create_empty_recarray
 
 
-class ParticleData(object):
+class ParticleData:
     """
     Class to create the most basic particle data type (starting location
     input style 1). Input style 1 is the most general input style and
@@ -173,7 +173,7 @@ class ParticleData(object):
             partlocs = np.array(partlocs, dtype=dtype)
         elif isinstance(partlocs, np.ndarray):
             dtypein = partlocs.dtype
-            if dtypein != partlocs.dtype:
+            if dtypein != dtype:
                 partlocs = np.array(partlocs, dtype=dtype)
         else:
             msg = (
@@ -456,7 +456,7 @@ class ParticleData(object):
         return " " + " ".join(fmts)
 
 
-class FaceDataType(object):
+class FaceDataType:
     """
     Face data type class to create a MODPATH 7 particle location template for
     input style 2, 3, and 4 on cell faces (templatesubdivisiontype = 2).
@@ -597,7 +597,7 @@ class FaceDataType(object):
         return
 
 
-class CellDataType(object):
+class CellDataType:
     """
     Cell data type class to create a MODPATH 7 particle location template for
     input style 2, 3, and 4 in cells (templatesubdivisiontype = 2).
@@ -684,7 +684,7 @@ class CellDataType(object):
         return
 
 
-class LRCParticleData(object):
+class LRCParticleData:
     """
     Layer, row, column particle data template class to create MODPATH 7
     particle location input style 2 on cell faces (templatesubdivisiontype = 1)
@@ -851,7 +851,7 @@ class LRCParticleData(object):
         return
 
 
-class NodeParticleData(object):
+class NodeParticleData:
     """
     Node particle data template class to create MODPATH 7 particle location
     input style 3 on cell faces (templatesubdivisiontype = 1) and/or in cells

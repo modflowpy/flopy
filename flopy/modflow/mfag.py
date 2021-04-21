@@ -216,7 +216,7 @@ class ModflowAg(Package):
         # set package name
         fname = [filenames[0]]
 
-        super(ModflowAg, self).__init__(
+        super().__init__(
             model,
             extension=extension,
             name=name,

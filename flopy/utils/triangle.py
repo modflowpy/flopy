@@ -3,11 +3,10 @@ import numpy as np
 import subprocess
 from ..mbase import which
 from ..utils.cvfdutil import centroid_of_polygon
-from ..plot.plotutil import plot_cvfd
 from ..utils.geospatial_utils import GeoSpatialUtil
 
 
-class Triangle(object):
+class Triangle:
     """
     Class to work with the triangle program to unstructured triangular grids.
     Information on the triangle program can be found at
@@ -241,29 +240,31 @@ class Triangle(object):
         None
 
         """
-        try:
-            import matplotlib.pyplot as plt
-        except:
-            err_msg = (
-                "matplotlib must be installed to " + "use triangle.plot()"
-            )
-            raise ImportError(err_msg)
+        from ..plot import PlotMapView
+        from ..discretization import VertexGrid
 
-        if ax is None:
-            ax = plt.gca()
+        cell2d = self.get_cell2d()
+        vertices = self.get_vertices()
+        ncpl = len(cell2d)
 
-        pc = plot_cvfd(
-            self.verts,
-            self.iverts,
-            ax=ax,
-            edgecolor=edgecolor,
-            facecolor=facecolor,
-            cmap=cmap,
-            a=a,
-            masked_values=masked_values,
-            **kwargs
+        modelgrid = VertexGrid(
+            vertices=vertices, cell2d=cell2d, ncpl=ncpl, nlay=1
         )
-        ax.autoscale()
+
+        pmv = PlotMapView(modelgrid=modelgrid, ax=ax, layer=layer)
+        if a is None:
+            pc = pmv.plot_grid(
+                facecolor=facecolor, edgecolor=edgecolor, **kwargs
+            )
+        else:
+            pc = pmv.plot_array(
+                a,
+                masked_values=masked_values,
+                cmap=cmap,
+                edgecolor=edgecolor,
+                **kwargs
+            )
+
         return pc
 
     def get_boundary_marker_array(self):

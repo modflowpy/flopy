@@ -28,7 +28,7 @@ with open(path + "/longnames.json") as f:
     NC_LONG_NAMES = json.load(f)
 
 
-class Logger(object):
+class Logger:
     """
     Basic class for logging events during the linear analysis calculations
     if filename is passed, then an file handle is opened
@@ -121,7 +121,7 @@ class Logger(object):
         return
 
 
-class NetCdf(object):
+class NetCdf:
     """
     Support for writing a netCDF4 compliant file from a flopy model
 

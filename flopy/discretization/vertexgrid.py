@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 
 try:
@@ -52,7 +53,7 @@ class VertexGrid(Grid):
         ncpl=None,
         cell1d=None,
     ):
-        super(VertexGrid, self).__init__(
+        super().__init__(
             "vertex",
             top,
             botm,
@@ -91,7 +92,7 @@ class VertexGrid(Grid):
         if (
             self._vertices is not None
             and (self._cell2d is not None or self._cell1d is not None)
-            and super(VertexGrid, self).is_complete
+            and super().is_complete
         ):
             return True
         return False
@@ -111,6 +112,8 @@ class VertexGrid(Grid):
             return len(self._cell1d)
         if self._botm is not None:
             return len(self._botm[0])
+        if self._cell2d is not None and self._nlay is None:
+            return len(self._cell2d)
         else:
             return self._ncpl
 
@@ -229,7 +232,7 @@ class VertexGrid(Grid):
 
         if local:
             # transform x and y to real-world coordinates
-            x, y = super(VertexGrid, self).get_coords(x, y)
+            x, y = super().get_coords(x, y)
         xv, yv, zv = self.xyzvertices
         for icell2d in range(self.ncpl):
             xa = np.array(xv[icell2d])
@@ -262,6 +265,15 @@ class VertexGrid(Grid):
         Returns
         ------- list of x,y cell vertices
         """
+        while cellid >= self.ncpl:
+            if cellid > self.nnodes:
+                err = "cellid {} out of index for size {}".format(
+                    cellid, self.nnodes
+                )
+                raise IndexError(err)
+
+            cellid -= self.ncpl
+
         self._copy_cache = False
         cell_verts = list(zip(self.xvertices[cellid], self.yvertices[cellid]))
         self._copy_cache = True
@@ -361,7 +373,7 @@ class VertexGrid(Grid):
             yvertices = yvertxform
 
         self._cache_dict[cache_index_cc] = CachedData(
-            [xcenters, ycenters, zcenters]
+            [np.array(xcenters), np.array(ycenters), np.array(zcenters)]
         )
         self._cache_dict[cache_index_vert] = CachedData(
             [xvertices, yvertices, zvertices]

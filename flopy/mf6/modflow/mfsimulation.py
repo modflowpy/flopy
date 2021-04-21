@@ -193,7 +193,7 @@ class SimulationDict(collections.OrderedDict):
             pass
 
 
-class MFSimulationData(object):
+class MFSimulationData:
     """
     Class containing MODFLOW simulation data and file formatting data.
 
@@ -423,7 +423,7 @@ class MFSimulation(PackageContainer):
         memory_print_option=None,
         write_headers=True,
     ):
-        super(MFSimulation, self).__init__(MFSimulationData(sim_ws), sim_name)
+        super().__init__(MFSimulationData(sim_ws), sim_name)
         self.simulation_data.verbosity_level = self._resolve_verbosity_level(
             verbosity_level
         )

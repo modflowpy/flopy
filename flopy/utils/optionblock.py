@@ -3,7 +3,7 @@ import numpy as np
 from ..utils import flopy_io
 
 
-class OptionBlock(object):
+class OptionBlock:
     """
     Parent class to for option blocks within
     Modflow-nwt models. This class contains base
@@ -163,7 +163,7 @@ class OptionBlock(object):
             self.__dict__[key] = value
 
         elif value is None:
-            super(OptionBlock, self).__setattr__(key, value)
+            super().__setattr__(key, value)
 
         elif isinstance(value, np.recarray):
             for name in value.dtype.names:
@@ -191,7 +191,7 @@ class OptionBlock(object):
             self.__dict__[key] = value
 
         else:
-            super(OptionBlock, self).__setattr__(key, value)
+            super().__setattr__(key, value)
 
     def __getattribute__(self, item):
         """
@@ -413,7 +413,7 @@ class OptionBlock(object):
                 return cls(options_line=option_line, package=package)
 
 
-class OptionUtil(object):
+class OptionUtil:
     @staticmethod
     def isfloat(s):
         """

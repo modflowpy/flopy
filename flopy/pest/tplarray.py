@@ -83,7 +83,7 @@ class Transient2dTpl:
             return self.transient2d.get_kper_entry(kper)
 
 
-class Util3dTpl(object):
+class Util3dTpl:
     """
     Class to define a three-dimensional template array for use with parameter
     estimation.
@@ -144,7 +144,7 @@ class Util3dTpl(object):
         return
 
 
-class Util2dTpl(object):
+class Util2dTpl:
     """
     Class to define a two-dimensional template array for use with parameter
     estimation.

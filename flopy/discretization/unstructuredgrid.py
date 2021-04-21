@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 from .grid import Grid, CachedData
 
@@ -90,7 +91,7 @@ class UnstructuredGrid(Grid):
         yoff=0.0,
         angrot=0.0,
     ):
-        super(UnstructuredGrid, self).__init__(
+        super().__init__(
             "unstructured",
             top,
             botm,
@@ -165,10 +166,7 @@ class UnstructuredGrid(Grid):
 
     @property
     def is_complete(self):
-        if (
-            self.is_valid is not None
-            and super(UnstructuredGrid, self).is_complete
-        ):
+        if self.is_valid is not None and super().is_complete:
             return True
         return False
 
@@ -301,8 +299,148 @@ class UnstructuredGrid(Grid):
         else:
             return self._cache_dict[cache_index].data_nocopy
 
+    def cross_section_lay_ncpl_ncb(self, ncb):
+        """
+        Get PlotCrossSection compatible layers, ncpl, and ncb
+        variables
+
+        Parameters
+        ----------
+        ncb : int
+            number of confining beds
+
+        Returns
+        -------
+            tuple : (int, int, int) layers, ncpl, ncb
+        """
+        return 1, self.nnodes, 0
+
+    def cross_section_nodeskip(self, nlay, xypts):
+        """
+        Get a nodeskip list for PlotCrossSection. This is a correction
+        for UnstructuredGridPlotting
+
+        Parameters
+        ----------
+        nlay : int
+            nlay is nlay + ncb
+        xypts : dict
+            dictionary of node number and xyvertices of a cross-section
+
+        Returns
+        -------
+            list : n-dimensional list of nodes to not plot for each layer
+        """
+        strt = 0
+        end = 0
+        nodeskip = []
+        for ncpl in self.ncpl:
+            end += ncpl
+            layskip = []
+            for nn, verts in xypts.items():
+                if strt <= nn < end:
+                    continue
+                else:
+                    layskip.append(nn)
+
+            strt += ncpl
+            nodeskip.append(layskip)
+
+        return nodeskip
+
+    def cross_section_adjust_indicies(self, k, cbcnt):
+        """
+        Method to get adjusted indicies by layer and confining bed
+        for PlotCrossSection plotting
+
+        Parameters
+        ----------
+        k : int
+            zero based model layer
+        cbcnt : int
+            confining bed counter
+
+        Returns
+        -------
+            tuple: (int, int, int) (adjusted layer, nodeskip layer, node
+            adjustment value based on number of confining beds and the layer)
+        """
+        return 1, k + 1, 0
+
+    def cross_section_set_contour_arrays(
+        self, plotarray, xcenters, head, elev, projpts
+    ):
+        """
+        Method to set countour array centers for rare instances where
+        matplotlib contouring is prefered over trimesh plotting
+
+        Parameters
+        ----------
+        plotarray : np.ndarray
+            array of data for contouring
+        xcenters : np.ndarray
+            xcenters array
+        head : np.ndarray
+            head array to adjust cell centers location
+        elev : np.ndarray
+            cell elevation array
+        projpts : dict
+            dictionary of projected cross sectional vertices
+
+        Returns
+        -------
+            tuple: (np.ndarray, np.ndarray, np.ndarray, bool)
+            plotarray, xcenter array, ycenter array, and a boolean flag
+            for contouring
+        """
+        return plotarray, xcenters, None, False
+
+    @property
+    def map_polygons(self):
+        """
+        Property to get Matplotlib polygon objects for the modelgrid
+
+        Returns
+        -------
+            list or dict of matplotlib.collections.Polygon
+        """
+        try:
+            from matplotlib.patches import Polygon
+        except ImportError:
+            raise ImportError("matplotlib required to use this method")
+
+        cache_index = "xyzgrid"
+        if (
+            cache_index not in self._cache_dict
+            or self._cache_dict[cache_index].out_of_date
+        ):
+            self.xyzvertices
+            self._polygons = None
+
+        if self._polygons is None:
+            if self.grid_varies_by_layer:
+                self._polygons = {}
+                ilay = 0
+                lay_break = np.cumsum(self.ncpl)
+                for nn in range(self.nnodes):
+                    if nn in lay_break:
+                        ilay += 1
+
+                    if ilay not in self._polygons:
+                        self._polygons[ilay] = []
+
+                    p = Polygon(self.get_cell_vertices(nn), closed=True)
+                    self._polygons[ilay].append(p)
+            else:
+                self._polygons = [
+                    Polygon(self.get_cell_vertices(nn), closed=True)
+                    for nn in range(self.ncpl[0])
+                ]
+
+        return copy.copy(self._polygons)
+
     def intersect(self, x, y, local=False, forgive=False):
-        x, y = super(UnstructuredGrid, self).intersect(x, y, local, forgive)
+        x, y = super().intersect(x, y, local, forgive)
         raise Exception("Not implemented yet")
 
     def get_cell_vertices(self, cellid):

@@ -11,7 +11,7 @@ from ..utils.util_array import Util2d
 from .mp7particledata import ParticleData, NodeParticleData
 
 
-class _Modpath7ParticleGroup(object):
+class _Modpath7ParticleGroup:
     """
     Base particle group class that defines common data to all particle
     input styles (MODPATH 7 simulation file items 26 through 32).

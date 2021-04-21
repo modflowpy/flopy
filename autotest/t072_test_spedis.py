@@ -333,8 +333,10 @@ def test_extended_budget_comprehensive():
 def test_specific_discharge_default():
     # load and postprocess
     mf = flopy.modflow.Modflow.load(namfile_mf2005, check=False)
-    qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(mf,
-                                            cbcfile_mf2005)
+    cbc = bf.CellBudgetFile(cbcfile_mf2005)
+    keys = ["FLOW RIGHT FACE", "FLOW FRONT FACE", "FLOW LOWER FACE"]
+    vectors = [cbc.get_data(text=t)[0] for t in keys]
+    qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(vectors, mf)
 
     # overall check
     overall = np.sum(qx) + np.sum(qy) + np.sum(qz)
@@ -345,20 +347,31 @@ def test_specific_discharge_comprehensive():
     import matplotlib.pyplot as plt
     from matplotlib.quiver import Quiver
 
+    hds = bf.HeadFile(hdsfile_mf2005)
+    head = hds.get_data()
     # load and postprocess
     mf = flopy.modflow.Modflow.load(namfile_mf2005, check=False)
-    qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(mf,
-                             cbcfile_mf2005,
-                             boundary_ifaces=boundary_ifaces,
-                             hdsfile=hdsfile_mf2005)
+    Qx_ext, Qy_ext, Qz_ext = \
+        flopy.utils.postprocessing.get_extended_budget(
+            cbcfile_mf2005,
+            boundary_ifaces=boundary_ifaces,
+            hdsfile=hdsfile_mf2005,
+            model=mf
+        )
+
+    qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(
+        (Qx_ext, Qy_ext, Qz_ext),
+        mf,
+        head
+    )
 
     # check nan values
     assert np.isnan(qx[0, 0, 2])
     assert np.isnan(qx[1, 0, 1])
 
     # overall check
-    overall = np.nansum(qx) + np.nansum(qy) + np.nansum(qz)
-    assert np.allclose(overall, -0.8558630187423599)
+    overall = np.nansum(qz)  # np.nansum(qx) + np.nansum(qy) + np.nansum(qz)
+    assert np.allclose(overall, -4.43224582939148)
 
     # plot discharge in map view
     lay = 1
@@ -366,7 +379,6 @@ def test_specific_discharge_comprehensive():
     quiver = modelmap.plot_vector(qx, qy, normalize=True,
                                   masked_values=[qx[lay, 0, 0]],
                                   color='orange')
-
     # check plot
     ax = modelmap.ax
     if len(ax.collections) == 0:
@@ -378,7 +390,7 @@ def test_specific_discharge_comprehensive():
     pos = np.sum(quiver.X) + np.sum(quiver.Y)
     assert np.allclose(pos, 1600.)
     val = np.sum(quiver.U) + np.sum(quiver.V)
-    assert np.allclose(val, 10.908548650065649)
+    assert np.allclose(val, 10.11359908150753)
 
     # close figure
     plt.close()
@@ -402,11 +414,11 @@ def test_specific_discharge_comprehensive():
     X = np.ma.masked_where(quiver.Umask, quiver.X)
     Y = np.ma.masked_where(quiver.Umask, quiver.Y)
     pos = X.sum() + Y.sum()
-    assert np.allclose(pos, -153.8352064441874)
+    assert np.allclose(pos, -153.8341064453125)
     U = np.ma.masked_where(quiver.Umask, quiver.U)
     V = np.ma.masked_where(quiver.Umask, quiver.V)
     val = U.sum() + V.sum()
-    assert np.allclose(val, -3.25453417836753)
+    assert np.allclose(val, -5.2501876516091235)
 
     # close figure
     plt.close()
@@ -424,9 +436,13 @@ def test_specific_discharge_mf6():
     sim = MFSimulation.load(sim_name=modelname_mf6, sim_ws=modelws_mf6,
                             verbosity_level=0)
     gwf = sim.get_model(modelname_mf6)
-    qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(gwf,
-                       cbcfile_mf6, precision='double',
-                       hdsfile=hdsfile_mf6)
+    hds = bf.HeadFile(hdsfile_mf6)
+    head = hds.get_data()
+    cbc = bf.CellBudgetFile(cbcfile_mf6)
+    spdis = cbc.get_data(text="SPDIS")[0]
+    qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(
+        spdis, gwf, head
+        )
 
     # check nan values
     assert np.isnan(qx[0, 0, 2])

@@ -14,7 +14,7 @@ from ...utils import datautil
 from ..data.mfstructure import DatumType, MFDataStructure, DataType
 
 
-class MFFileAccess(object):
+class MFFileAccess:
     def __init__(
         self, structure, data_dimensions, simulation_data, path, current_key
     ):
@@ -199,7 +199,7 @@ class MFFileAccessArray(MFFileAccess):
     def __init__(
         self, structure, data_dimensions, simulation_data, path, current_key
     ):
-        super(MFFileAccessArray, self).__init__(
+        super().__init__(
             structure, data_dimensions, simulation_data, path, current_key
         )
 
@@ -460,6 +460,7 @@ class MFFileAccessArray(MFFileAccess):
                     self._simulation_data,
                     self._data_dimensions,
                     is_cellid,
+                    verify_data=self._simulation_data.verify_data,
                 )
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
@@ -975,7 +976,7 @@ class MFFileAccessList(MFFileAccess):
     def __init__(
         self, structure, data_dimensions, simulation_data, path, current_key
     ):
-        super(MFFileAccessList, self).__init__(
+        super().__init__(
             structure, data_dimensions, simulation_data, path, current_key
         )
 
@@ -2161,7 +2162,7 @@ class MFFileAccessScalar(MFFileAccess):
     def __init__(
         self, structure, data_dimensions, simulation_data, path, current_key
     ):
-        super(MFFileAccessScalar, self).__init__(
+        super().__init__(
             structure, data_dimensions, simulation_data, path, current_key
         )
 

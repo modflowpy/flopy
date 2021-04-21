@@ -12,7 +12,7 @@ class MFGridException(Exception):
         Exception.__init__(self, "MFGridException: {}".format(error))
 
 
-class ModelCell(object):
+class ModelCell:
     """
     Represents a model cell
 
@@ -328,7 +328,7 @@ class UnstructuredModelCell(ModelCell):
                 fahl[connecting_cell - 1][rev_con_number] *= con_area_mult
 
 
-class ModelGrid(object):
+class ModelGrid:
     """
     Base class for a structured or unstructured model grid
 
@@ -594,13 +594,14 @@ class ModelGrid(object):
             return ["node"]
 
     def get_num_spatial_coordinates(self):
-        if self.grid_type() == DiscretizationType.DIS:
+        grid_type = self.grid_type()
+        if grid_type == DiscretizationType.DIS:
             return 3
-        elif self.grid_type() == DiscretizationType.DISV:
+        elif grid_type == DiscretizationType.DISV:
             return 2
         elif (
-            self.grid_type() == DiscretizationType.DISU
-            or self.grid_type() == DiscretizationType.DISL
+            grid_type == DiscretizationType.DISU
+            or grid_type == DiscretizationType.DISL
         ):
             return 1
 
@@ -734,9 +735,7 @@ class UnstructuredModelGrid(ModelGrid):
     """
 
     def __init__(self, model_name, simulation_data):
-        super(UnstructuredModelGrid, self).__init__(
-            model_name, simulation_data, DiscretizationType.DISU
-        )
+        super().__init__(model_name, simulation_data, DiscretizationType.DISU)
 
     def __getitem__(self, index):
         return UnstructuredModelCell(

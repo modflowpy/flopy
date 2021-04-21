@@ -19,7 +19,7 @@ from ..utils.flopy_io import line_parse
 from ..datbase import DataType, DataInterface
 
 
-class ArrayFormat(object):
+class ArrayFormat:
     """
     ArrayFormat class for handling various output format types for both
     MODFLOW and flopy
@@ -184,7 +184,7 @@ class ArrayFormat(object):
             if other.lower() == "binary":
                 return self.binary
         else:
-            super(ArrayFormat, self).__eq__(other)
+            super().__eq__(other)
 
     @property
     def npl(self):
@@ -277,7 +277,7 @@ class ArrayFormat(object):
             self._parse_python_format(value)
 
         else:
-            super(ArrayFormat, self).__setattr__(key, value)
+            super().__setattr__(key, value)
 
     @property
     def py(self):
@@ -632,13 +632,13 @@ class Util3d(DataInterface):
                     fortran=value,
                     array_free_format=self.array_free_format,
                 )
-            super(Util3d, self).__setattr__("fmtin", value)
+            super().__setattr__("fmtin", value)
         elif hasattr(self, "util_2ds") and key == "how":
             for u2d in self.util_2ds:
                 u2d.how = value
         else:
             # set the attribute for u3d
-            super(Util3d, self).__setattr__(key, value)
+            super().__setattr__(key, value)
 
     @property
     def name(self):
@@ -1114,7 +1114,7 @@ class Transient3d(DataInterface):
 
     def __setattr__(self, key, value):
         # set the attribute for u3d, even for cnstnt
-        super(Transient3d, self).__setattr__(key, value)
+        super().__setattr__(key, value)
 
     @property
     def model(self):
@@ -1508,7 +1508,7 @@ class Transient2d(DataInterface):
             for kper, u2d in self.transient_2ds.items():
                 self.transient_2ds[kper].how = value
         # set the attribute for u3d, even for cnstnt
-        super(Transient2d, self).__setattr__(key, value)
+        super().__setattr__(key, value)
 
     def get_zero_2d(self, kper):
         name = self.name_base + str(kper + 1) + "(filled zero)"
@@ -2252,7 +2252,7 @@ class Util2d(DataInterface):
         elif key == "model":
             self._model = value
         else:
-            super(Util2d, self).__setattr__(key, value)
+            super().__setattr__(key, value)
 
     def all(self):
         return self.array.all()

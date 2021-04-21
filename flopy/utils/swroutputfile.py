@@ -50,7 +50,7 @@ class SwrFile(FlopyBinaryData):
         Class constructor.
 
         """
-        super(SwrFile, self).__init__()
+        super().__init__()
         self.set_float(precision=precision)
         self.header_dtype = np.dtype(
             [
@@ -680,7 +680,7 @@ class SwrStage(SwrFile):
     """
 
     def __init__(self, filename, precision="double", verbose=False):
-        super(SwrStage, self).__init__(
+        super().__init__(
             filename, swrtype="stage", precision=precision, verbose=verbose
         )
         return
@@ -720,7 +720,7 @@ class SwrBudget(SwrFile):
     """
 
     def __init__(self, filename, precision="double", verbose=False):
-        super(SwrBudget, self).__init__(
+        super().__init__(
             filename, swrtype="budget", precision=precision, verbose=verbose
         )
         return
@@ -760,7 +760,7 @@ class SwrFlow(SwrFile):
     """
 
     def __init__(self, filename, precision="double", verbose=False):
-        super(SwrFlow, self).__init__(
+        super().__init__(
             filename, swrtype="flow", precision=precision, verbose=verbose
         )
         return
@@ -800,7 +800,7 @@ class SwrExchange(SwrFile):
     """
 
     def __init__(self, filename, precision="double", verbose=False):
-        super(SwrExchange, self).__init__(
+        super().__init__(
             filename, swrtype="exchange", precision=precision, verbose=verbose
         )
         return
@@ -841,7 +841,7 @@ class SwrStructure(SwrFile):
     """
 
     def __init__(self, filename, precision="double", verbose=False):
-        super(SwrStructure, self).__init__(
+        super().__init__(
             filename, swrtype="structure", precision=precision, verbose=verbose
         )
         return

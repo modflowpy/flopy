@@ -4,7 +4,7 @@ import warnings
 from ..utils import geometry
 
 
-class CachedData(object):
+class CachedData:
     def __init__(self, data):
         self._data = data
         self.out_of_date = False
@@ -22,7 +22,7 @@ class CachedData(object):
         self.out_of_date = False
 
 
-class Grid(object):
+class Grid:
     """
     Base class for a structured or unstructured model grid
 
@@ -169,6 +169,7 @@ class Grid(object):
         if angrot is None:
             angrot = 0.0
         self._angrot = angrot
+        self._polygons = None
         self._cache_dict = {}
         self._copy_cache = True
 
@@ -290,6 +291,10 @@ class Grid(object):
         return copy.deepcopy(self._idomain)
 
     @property
+    def ncpl(self):
+        raise NotImplementedError("must define ncpl in child class")
+
+    @property
     def nnodes(self):
         raise NotImplementedError("must define nnodes in child class")
 
@@ -372,6 +377,148 @@ class Grid(object):
     #    raise NotImplementedError(
     #        'must define indices in child '
     #        'class to use this base class')
+    @property
+    def cross_section_vertices(self):
+        return self.xyzvertices[0], self.xyzvertices[1]
+
+    def cross_section_lay_ncpl_ncb(self, ncb):
+        """
+        Get PlotCrossSection compatible layers, ncpl, and ncb
+        variables
+
+        Parameters
+        ----------
+        ncb : int
+            number of confining beds
+
+        Returns
+        -------
+            tuple : (int, int, int) layers, ncpl, ncb
+        """
+        return self.nlay, self.ncpl, ncb
+
+    def cross_section_nodeskip(self, nlay, xypts):
+        """
+        Get a nodeskip list for PlotCrossSection. This is a correction
+        for UnstructuredGridPlotting
+
+        Parameters
+        ----------
+        nlay : int
+            nlay is nlay + ncb
+        xypts : dict
+            dictionary of node number and xyvertices of a cross-section
+
+        Returns
+        -------
+            list : n-dimensional list of nodes to not plot for each layer
+        """
+        return [[] for _ in range(nlay)]
+
+    def cross_section_adjust_indicies(self, k, cbcnt):
+        """
+        Method to get adjusted indicies by layer and confining bed
+        for PlotCrossSection plotting
+
+        Parameters
+        ----------
+        k : int
+            zero based layer number
+        cbcnt : int
+            confining bed counter
+
+        Returns
+        -------
+            tuple: (int, int, int) (adjusted layer, nodeskip layer, node
+            adjustment value based on number of confining beds and the layer)
+        """
+        adjnn = k * self.ncpl
+        ncbnn = adjnn - (cbcnt * self.ncpl)
+        return k + 1, k + 1, ncbnn
+
+    def cross_section_set_contour_arrays(
+        self, plotarray, xcenters, head, elev, projpts
+    ):
+        """
+        Method to set countour array centers for rare instances where
+        matplotlib contouring is prefered over trimesh plotting
+
+        Parameters
+        ----------
+        plotarray : np.ndarray
+            array of data for contouring
+        xcenters : np.ndarray
+            xcenters array
+        zcenters : np.ndarray
+            zcenters array
+        head : np.ndarray
+            head array to adjust cell centers location
+        elev : np.ndarray
+            cell elevation array
+        projpts : dict
+            dictionary of projected cross sectional vertices
+
+        Returns
+        -------
+            tuple: (np.ndarray, np.ndarray, np.ndarray, bool)
+            plotarray, xcenter array, ycenter array, and a boolean flag
+            for contouring
+        """
+        if self.nlay != 1:
+            return plotarray, xcenters, None, False
+        else:
+            zcenters = []
+            if isinstance(head, np.ndarray):
+                head = head.reshape(1, self.ncpl)
+                head = np.vstack((head, head))
+            else:
+                head = elev.reshape(2, self.ncpl)
+
+            elev = elev.reshape(2, self.ncpl)
+            for k, ev in enumerate(elev):
+                if k == 0:
+                    zc = [
+                        ev[i] if head[k][i] > ev[i] else head[k][i]
+                        for i in sorted(projpts)
+                    ]
+                else:
+                    zc = [ev[i] for i in sorted(projpts)]
+                zcenters.append(zc)
+
+            plotarray = np.vstack((plotarray, plotarray))
+            xcenters = np.vstack((xcenters, xcenters))
+            zcenters = np.array(zcenters)
+
+            return plotarray, xcenters, zcenters, True
+
+    @property
+    def map_polygons(self):
+        """
+        Get a list of matplotlib Polygon patches for plotting
+
+        Returns
+        -------
+            list of Polygon objects
+        """
+        try:
+            from matplotlib.patches import Polygon
+        except ImportError:
+            raise ImportError("matplotlib required to use this method")
+        cache_index = "xyzgrid"
+        if (
+            cache_index not in self._cache_dict
+            or self._cache_dict[cache_index].out_of_date
+        ):
+            self.xyzvertices
+            self._polygons = None
+
+        if self._polygons is None:
+            self._polygons = [
+                Polygon(self.get_cell_vertices(nn), closed=True)
+                for nn in range(self.ncpl)
+            ]
+
+        return copy.copy(self._polygons)
 
     def get_plottable_layer_array(self, plotarray, layer):
         raise NotImplementedError(
@@ -430,11 +577,11 @@ class Grid(object):
         if not np.isscalar(x):
             x, y = x.copy(), y.copy()
 
-        x, y = geometry.rotate(
-            x, y, self._xoff, self._yoff, -self.angrot_radians
+        x, y = geometry.transform(
+            x, y, self._xoff, self._yoff, self.angrot_radians, inverse=True
         )
-        x -= self._xoff
-        y -= self._yoff
+        # x -= self._xoff
+        # y -= self._yoff
 
         return x, y
 

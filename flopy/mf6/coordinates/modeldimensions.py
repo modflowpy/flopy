@@ -13,7 +13,7 @@ from ..utils.mfenums import DiscretizationType
 from ...utils.datautil import DatumUtil, NameIter
 
 
-class DataDimensions(object):
+class DataDimensions:
     """
     Resolves dimension information for model data using information contained
     in the model files
@@ -121,7 +121,7 @@ class DataDimensions(object):
                 return self.package_dim.model_dim[int(model_num)]
 
 
-class PackageDimensions(object):
+class PackageDimensions:
     """
     Resolves dimension information for common parts of a package
 
@@ -286,7 +286,7 @@ class PackageDimensions(object):
         return names_dict
 
 
-class ModelDimensions(object):
+class ModelDimensions:
     """
     Contains model dimension information and helper methods
 

@@ -117,7 +117,7 @@ class MFArray(MFMultiDimVar):
         path=None,
         dimensions=None,
     ):
-        super(MFArray, self).__init__(
+        super().__init__(
             sim_data, model_or_sim, structure, enable, path, dimensions
         )
         if self.structure.layered:
@@ -204,7 +204,7 @@ class MFArray(MFMultiDimVar):
         elif name == "binary":
             self._get_storage_obj().layer_storage.first_item().binary = value
         else:
-            super(MFArray, self).__setattr__(name, value)
+            super().__setattr__(name, value)
 
     def __getitem__(self, k):
         if isinstance(k, int):
@@ -382,7 +382,7 @@ class MFArray(MFMultiDimVar):
             return True
 
     def new_simulation(self, sim_data):
-        super(MFArray, self).new_simulation(sim_data)
+        super().new_simulation(sim_data)
         self._data_storage = self._new_storage(False)
         self._layer_shape = (1,)
 
@@ -785,7 +785,7 @@ class MFArray(MFMultiDimVar):
         pre_data_comments=None,
         external_file_info=None,
     ):
-        super(MFArray, self).load(
+        super().load(
             first_line,
             file_handle,
             block_header,
@@ -1265,7 +1265,7 @@ class MFArray(MFMultiDimVar):
                 "not available."
             )
 
-        modelgrid = self.model.modelgrid
+        modelgrid = self._get_model_grid()
         a = self.array
         num_plottable_layers = modelgrid.get_number_plottable_layers(a)
 
@@ -1358,7 +1358,7 @@ class MFTransientArray(MFArray, MFTransient):
         path=None,
         dimensions=None,
     ):
-        super(MFTransientArray, self).__init__(
+        super().__init__(
             sim_data=sim_data,
             model_or_sim=model_or_sim,
             structure=structure,
@@ -1379,10 +1379,10 @@ class MFTransientArray(MFArray, MFTransient):
             del self._data_storage[transient_key]
 
     def add_transient_key(self, transient_key):
-        super(MFTransientArray, self).add_transient_key(transient_key)
-        self._data_storage[transient_key] = super(
-            MFTransientArray, self
-        )._new_storage(stress_period=transient_key)
+        super().add_transient_key(transient_key)
+        self._data_storage[transient_key] = super()._new_storage(
+            stress_period=transient_key
+        )
 
     def store_as_external_file(
         self,
@@ -1410,7 +1410,7 @@ class MFTransientArray(MFArray, MFTransient):
                 ):
                     fname, ext = os.path.splitext(external_file_path)
                     full_name = "{}_{}{}".format(fname, sp + 1, ext)
-                    super(MFTransientArray, self).store_as_external_file(
+                    super().store_as_external_file(
                         full_name,
                         layer,
                         binary,
@@ -1431,7 +1431,7 @@ class MFTransientArray(MFArray, MFTransient):
                     for sp in range(0, num_sp):
                         if sp in self._data_storage:
                             self.get_data_prep(sp)
-                            data = super(MFTransientArray, self).get_data(
+                            data = super().get_data(
                                 apply_mult=apply_mult, **kwargs
                             )
                             data = np.expand_dims(data, 0)
@@ -1439,7 +1439,7 @@ class MFTransientArray(MFArray, MFTransient):
                             if data is None:
                                 # get any data
                                 self.get_data_prep(self._data_storage.key()[0])
-                                data = super(MFTransientArray, self).get_data(
+                                data = super().get_data(
                                     apply_mult=apply_mult, **kwargs
                                 )
                                 data = np.expand_dims(data, 0)
@@ -1457,7 +1457,7 @@ class MFTransientArray(MFArray, MFTransient):
                         data = None
                         if sp in self._data_storage:
                             self.get_data_prep(sp)
-                            data = super(MFTransientArray, self).get_data(
+                            data = super().get_data(
                                 apply_mult=apply_mult, **kwargs
                             )
                         if output is None:
@@ -1473,9 +1473,7 @@ class MFTransientArray(MFArray, MFTransient):
                     return output
             else:
                 self.get_data_prep(layer)
-                return super(MFTransientArray, self).get_data(
-                    apply_mult=apply_mult
-                )
+                return super().get_data(apply_mult=apply_mult)
         else:
             return None
 
@@ -1490,9 +1488,7 @@ class MFTransientArray(MFArray, MFTransient):
                     del_keys.append(key)
                 else:
                     self._set_data_prep(list_item, key)
-                    super(MFTransientArray, self).set_data(
-                        list_item, multiplier, layer
-                    )
+                    super().set_data(list_item, multiplier, layer)
             for key in del_keys:
                 del data[key]
         else:
@@ -1511,15 +1507,13 @@ class MFTransientArray(MFArray, MFTransient):
                 self.remove_transient_key(key)
             else:
                 self._set_data_prep(data, key)
-                super(MFTransientArray, self).set_data(data, multiplier, layer)
+                super().set_data(data, multiplier, layer)
 
     def get_file_entry(
         self, key=0, ext_file_action=ExtFileAction.copy_relative_paths
     ):
         self._get_file_entry_prep(key)
-        return super(MFTransientArray, self).get_file_entry(
-            ext_file_action=ext_file_action
-        )
+        return super().get_file_entry(ext_file_action=ext_file_action)
 
     def load(
         self,
@@ -1530,7 +1524,7 @@ class MFTransientArray(MFArray, MFTransient):
         external_file_info=None,
     ):
         self._load_prep(block_header)
-        return super(MFTransientArray, self).load(
+        return super().load(
             first_line, file_handle, pre_data_comments, external_file_info
         )
 
@@ -1540,7 +1534,7 @@ class MFTransientArray(MFArray, MFTransient):
         if base_storage:
             if not isinstance(stress_period, int):
                 stress_period = 1
-            return super(MFTransientArray, self)._new_storage(
+            return super()._new_storage(
                 set_layers, base_storage, stress_period
             )
         else:

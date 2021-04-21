@@ -20,7 +20,7 @@ from .utils import OptionBlock
 from .utils.flopy_io import ulstrd
 
 
-class PackageInterface(object):
+class PackageInterface:
     @property
     @abc.abstractmethod
     def name(self):
@@ -585,7 +585,7 @@ class Package(PackageInterface):
                             )
                         value = new_list
 
-        super(Package, self).__setattr__(key, value)
+        super().__setattr__(key, value)
 
     @property
     def name(self):

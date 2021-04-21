@@ -114,7 +114,7 @@ class MFModel(PackageContainer, ModelInterface):
         verbose=False,
         **kwargs
     ):
-        super(MFModel, self).__init__(simulation.simulation_data, modelname)
+        super().__init__(simulation.simulation_data, modelname)
         self.simulation = simulation
         self.simulation_data = simulation.simulation_data
         self.name = modelname

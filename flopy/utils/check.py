@@ -781,9 +781,7 @@ class mf6check(check):
         level=1,
         property_threshold_values={},
     ):
-        super(mf6check, self).__init__(
-            package, f, verbose, level, property_threshold_values
-        )
+        super().__init__(package, f, verbose, level, property_threshold_values)
         if hasattr(package, "model_or_sim"):
             self.model = package.model_or_sim
 

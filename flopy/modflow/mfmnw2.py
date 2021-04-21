@@ -12,7 +12,7 @@ from ..utils.recarray_utils import create_empty_recarray
 from ..pakbase import Package
 
 
-class Mnw(object):
+class Mnw:
     """
     Multi-Node Well object class
 
@@ -1753,7 +1753,7 @@ class ModflowMnw2(Package):
         self.stress_period_data = MfList(self, spd, dtype=dtype)
         """
 
-        return super(ModflowMnw2, self).export(f, **kwargs)
+        return super().export(f, **kwargs)
 
     def _write_1(self, f_mnw):
         """

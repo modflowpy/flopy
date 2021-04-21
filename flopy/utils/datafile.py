@@ -9,7 +9,7 @@ import flopy.utils
 from ..discretization.structuredgrid import StructuredGrid
 
 
-class Header(object):
+class Header:
     """
     The header class is an abstract base class to create headers for MODFLOW files
     """
@@ -147,7 +147,7 @@ class Header(object):
             return self.header[0]
 
 
-class LayerFile(object):
+class LayerFile:
     """
     The LayerFile class is the abstract base class from which specific derived
     classes are formed.  LayerFile This class should not be instantiated
@@ -209,6 +209,7 @@ class LayerFile(object):
                 delr=np.ones(
                     self.ncol,
                 ),
+                nlay=self.nlay,
                 xoff=0.0,
                 yoff=0.0,
                 angrot=0.0,
