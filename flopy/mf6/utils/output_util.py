@@ -13,15 +13,17 @@ class MF6Output(object):
     obj : PackageInterface object
 
     """
+
     def __init__(self, obj):
         from ..modflow import ModflowUtlobs
 
         # set initial observation definitions
-        methods = {'budget': self.__budget,
-                   'obs': self.__obs,
-                   'csv': self.__csv,
-                   'package_convergence': self.__csv,
-                   }
+        methods = {
+            "budget": self.__budget,
+            "obs": self.__obs,
+            "csv": self.__csv,
+            "package_convergence": self.__csv,
+        }
         delist = ("ts",)
         self._obj = obj
         self._methods = []
@@ -40,7 +42,7 @@ class MF6Output(object):
         if not obspkg:
             # skim through the dfn file
             try:
-                datasets = obj.blocks['options'].datasets
+                datasets = obj.blocks["options"].datasets
             except KeyError:
                 return
 
@@ -173,7 +175,7 @@ class MF6Output(object):
         except AttributeError:
             return
 
-    def __budget(self, precision='double'):
+    def __budget(self, precision="double"):
         """
         Convenience method to open and return a budget object
 
@@ -249,9 +251,9 @@ class MF6Output(object):
             else:
                 idx = flist.index(f)
                 if idx is None:
-                    err = "File name not found, " \
-                          "available files are {}".format(
-                        ", ".join(flist)
+                    err = (
+                        "File name not found, "
+                        "available files are {}".format(", ".join(flist))
                     )
                     raise FileNotFoundError(err)
                 else:

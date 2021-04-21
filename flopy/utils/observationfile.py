@@ -275,7 +275,7 @@ class Mf6Obs(ObsFiles):
 
     """
 
-    def __init__(self, filename, verbose=False, isBinary='auto'):
+    def __init__(self, filename, verbose=False, isBinary="auto"):
         """
         Class constructor.
 
@@ -285,7 +285,7 @@ class Mf6Obs(ObsFiles):
         self.verbose = verbose
 
         # check if this is a binary file
-        if isBinary == 'auto':
+        if isBinary == "auto":
             with open(filename) as foo:
                 if isinstance(foo, io.TextIOBase):
                     isBinary = False
@@ -491,6 +491,7 @@ class CsvFile(object):
         csv file name
 
     """
+
     def __init__(self, csvfile):
 
         self.file = open(csvfile, "r")
@@ -593,7 +594,7 @@ def _build_dtype(obsnames, floattype="f4"):
     dtype = []
     if "time" in obsnames:
         idx = obsnames.index("time")
-        obsnames[idx] = 'totim'
+        obsnames[idx] = "totim"
 
     elif "totim" not in obsnames:
         dtype = [("totim", floattype)]
