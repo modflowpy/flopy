@@ -1946,8 +1946,8 @@ class Util2d(DataInterface):
             if np.dtype(int).itemsize != 4:
                 # show warning for platforms where int is not 4-bytes
                 warn(
-                    "Util2d: setting integer dtype from {0} to int32".format(
-                        dtype
+                    "Util2d: setting integer dtype from {} to int32 for array {}".format(
+                        dtype, name
                     )
                 )
             dtype = np.int32
