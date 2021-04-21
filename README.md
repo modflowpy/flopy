@@ -71,9 +71,10 @@ oc = flopy.mf6.ModflowGwfoc(gwf,
                             saverecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')])
 sim.write_simulation()
 sim.run_simulation()
-head = flopy.utils.HeadFile(os.path.join(ws, head_file)).get_data()
-bud = flopy.utils.CellBudgetFile(os.path.join(ws, budget_file),
-                                 precision='double')
+
+head = gwf.output.head().get_data()
+bud = gwf.output.budget()
+
 spdis = bud.get_data(text='DATA-SPDIS')[0]
 pmv = flopy.plot.PlotMapView(gwf)
 pmv.plot_array(head)
