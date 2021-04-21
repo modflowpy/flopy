@@ -23,10 +23,11 @@ from .coordinates import modeldimensions
 from ..pakbase import PackageInterface
 from .data.mfdatautil import MFComment
 from ..utils.check import mf6check
+from .utils.output_util import MF6Output
 from ..version import __version__
 
 
-class MFBlockHeader:
+class MFBlockHeader(object):
     """
     Represents the header of a block in a MF6 input file
 
@@ -268,7 +269,7 @@ class MFBlockHeader:
         return transient_key
 
 
-class MFBlock:
+class MFBlock(object):
     """
     Represents a block in a MF6 input file
 
@@ -1132,7 +1133,6 @@ class MFBlock:
             and self.structure.name.lower() != "exchanges"
             and self.structure.name.lower() != "options"
             and self.structure.name.lower() != "sources"
-            and self.structure.name.lower() != "stressperioddata"
         ):
             return
         if self.structure.repeating():
@@ -1140,9 +1140,15 @@ class MFBlock:
             for repeating_dataset in repeating_datasets:
                 # resolve any missing block headers
                 self._add_missing_block_headers(repeating_dataset)
-            for block_header in self.block_headers:
-                # write block
-                self._write_block(fd, block_header, ext_file_action)
+            if len(repeating_datasets) > 0:
+                # loop through all block headers
+                for block_header in self.block_headers:
+                    # write block
+                    self._write_block(fd, block_header, ext_file_action)
+            else:
+                # write out block
+                self._write_block(fd, self.block_headers[0], ext_file_action)
+
         else:
             self._write_block(fd, self.block_headers[0], ext_file_action)
 
@@ -1470,7 +1476,9 @@ class MFPackage(PackageContainer, PackageInterface):
                 model_or_sim.simulation_data.debug,
             )
 
-        super().__init__(model_or_sim.simulation_data, self.model_name)
+        super(MFPackage, self).__init__(
+            model_or_sim.simulation_data, self.model_name
+        )
 
         self.parent = model_or_sim
         self._simulation_data = model_or_sim.simulation_data
@@ -1571,7 +1579,7 @@ class MFPackage(PackageContainer, PackageInterface):
                         package=self._get_pname(),
                     )
                 return
-        super().__setattr__(name, value)
+        super(MFPackage, self).__setattr__(name, value)
 
     def __repr__(self):
         return self._get_data_str(True)
@@ -1630,6 +1638,17 @@ class MFPackage(PackageContainer, PackageInterface):
             return True
 
     @property
+    def output(self):
+        """
+        Method to get output associated with a specific package
+
+        Returns
+        -------
+            MF6Output object
+        """
+        return MF6Output(self)
+
+    @property
     def data_list(self):
         # return [data_object, data_object, ...]
         return self._data_list
@@ -1637,7 +1656,7 @@ class MFPackage(PackageContainer, PackageInterface):
     def check(self, f=None, verbose=True, level=1, checktype=None):
         if checktype is None:
             checktype = mf6check
-        return super().check(f, verbose, level, checktype)
+        return super(MFPackage, self).check(f, verbose, level, checktype)
 
     def _get_nan_exclusion_list(self):
         excl_list = []
@@ -2389,7 +2408,7 @@ class MFPackage(PackageContainer, PackageInterface):
         return axes
 
 
-class MFChildPackages:
+class MFChildPackages(object):
     def __init__(
         self,
         model,
@@ -2446,7 +2465,7 @@ class MFChildPackages:
             package = self._packages[0]
             setattr(package, key, value)
             return
-        super().__setattr__(key, value)
+        super(MFChildPackages, self).__setattr__(key, value)
 
     def __default_file_path_base(self, file_path, suffix=""):
         stem = os.path.split(file_path)[1]

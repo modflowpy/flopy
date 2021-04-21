@@ -114,7 +114,7 @@ class MFModel(PackageContainer, ModelInterface):
         verbose=False,
         **kwargs
     ):
-        super().__init__(simulation.simulation_data, modelname)
+        super(MFModel, self).__init__(simulation.simulation_data, modelname)
         self.simulation = simulation
         self.simulation_data = simulation.simulation_data
         self.name = modelname
@@ -579,6 +579,13 @@ class MFModel(PackageContainer, ModelInterface):
     @property
     def laycbd(self):
         return None
+
+    @property
+    def output(self):
+        try:
+            return self.oc.output
+        except AttributeError:
+            return None
 
     def export(self, f, **kwargs):
         from ..export import utils
