@@ -27,7 +27,7 @@ from .utils.output_util import MF6Output
 from ..version import __version__
 
 
-class MFBlockHeader(object):
+class MFBlockHeader:
     """
     Represents the header of a block in a MF6 input file
 
@@ -269,7 +269,7 @@ class MFBlockHeader(object):
         return transient_key
 
 
-class MFBlock(object):
+class MFBlock:
     """
     Represents a block in a MF6 input file
 
@@ -2408,7 +2408,7 @@ class MFPackage(PackageContainer, PackageInterface):
         return axes
 
 
-class MFChildPackages(object):
+class MFChildPackages:
     def __init__(
         self,
         model,
@@ -2465,7 +2465,7 @@ class MFChildPackages(object):
             package = self._packages[0]
             setattr(package, key, value)
             return
-        super(MFChildPackages, self).__setattr__(key, value)
+        super().__setattr__(key, value)
 
     def __default_file_path_base(self, file_path, suffix=""):
         stem = os.path.split(file_path)[1]
