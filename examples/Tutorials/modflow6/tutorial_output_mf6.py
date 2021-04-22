@@ -21,14 +21,18 @@
 # ## Package import
 import flopy
 import os
+import platform
 
 # ## Load a simple demonstration model
+exe_name = "mf6"
+if platform.system().lower() == 'windows':
+    exe_name += ".exe"
 ws = os.path.abspath(os.path.dirname(''))
 if os.path.split(ws)[-1] == "modflow6":
     sim_ws = os.path.join(ws, "..", "..", 'data', 'mf6', 'test001e_UZF_3lay')
 else:
     sim_ws = os.path.join(ws, '..', '..', 'examples', 'data', 'mf6', 'test001e_UZF_3lay')
-sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws)
+sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws, exe_name=exe_name)
 sim.run_simulation(silent=True)
 
 # ## Get output using the `.output` attribute
