@@ -24,7 +24,7 @@ class MF6Output(object):
             "csv": self.__csv,
             "package_convergence": self.__csv,
         }
-        delist = ("ts",)
+        delist = ("ts", "wc")
         self._obj = obj
         self._methods = []
         self._sim_ws = obj.simulation_data.mfpath.get_sim_path()
