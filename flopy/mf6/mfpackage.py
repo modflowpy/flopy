@@ -1144,14 +1144,6 @@ class MFBlock:
             for block_header in self.block_headers:
                 # write block
                 self._write_block(fd, block_header, ext_file_action)
-            if len(repeating_datasets) > 0:
-                # loop through all block headers
-                for block_header in self.block_headers:
-                    # write block
-                    self._write_block(fd, block_header, ext_file_action)
-            else:
-                # write out block
-                self._write_block(fd, self.block_headers[0], ext_file_action)
 
         else:
             self._write_block(fd, self.block_headers[0], ext_file_action)
