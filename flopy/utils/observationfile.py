@@ -5,7 +5,7 @@ from ..utils.utils_def import FlopyBinaryData
 
 class ObsFiles(FlopyBinaryData):
     def __init__(self):
-        super(ObsFiles, self).__init__()
+        super().__init__()
         return
 
     def get_times(self):
@@ -280,7 +280,7 @@ class Mf6Obs(ObsFiles):
         Class constructor.
 
         """
-        super(Mf6Obs, self).__init__()
+        super().__init__()
         # initialize class information
         self.verbose = verbose
 
@@ -364,7 +364,7 @@ class HydmodObs(ObsFiles):
         Class constructor.
 
         """
-        super(HydmodObs, self).__init__()
+        super().__init__()
         # initialize class information
         self.verbose = verbose
         # --open binary head file
@@ -442,7 +442,7 @@ class SwrObs(ObsFiles):
         Class constructor.
 
         """
-        super(SwrObs, self).__init__()
+        super().__init__()
         self.set_float(precision=precision)
         # initialize class information
         self.verbose = verbose
@@ -481,7 +481,7 @@ class SwrObs(ObsFiles):
         return
 
 
-class CsvFile(object):
+class CsvFile:
     """
     Class for reading csv based output files
 
