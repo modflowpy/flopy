@@ -1581,7 +1581,7 @@ class MFPackage(PackageContainer, PackageInterface):
                         package=self._get_pname(),
                     )
                 return
-        super(MFPackage, self).__setattr__(name, value)
+        super().__setattr__(name, value)
 
     def __repr__(self):
         return self._get_data_str(True)
