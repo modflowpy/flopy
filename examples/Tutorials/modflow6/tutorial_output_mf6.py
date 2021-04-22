@@ -23,7 +23,7 @@ import flopy
 import os
 
 # ## Load a simple demonstration model
-ws = os.path.abspath(os.path.dirname(__file__))
+ws = os.path.abspath(os.path.dirname(''))
 if os.path.split(ws)[-1] == "modflow6":
     sim_ws = os.path.join(ws, "..", "..", 'data', 'mf6', 'test001e_UZF_3lay')
 else:
