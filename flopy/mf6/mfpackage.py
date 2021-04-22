@@ -1133,6 +1133,7 @@ class MFBlock:
             and self.structure.name.lower() != "exchanges"
             and self.structure.name.lower() != "options"
             and self.structure.name.lower() != "sources"
+            and self.structure.name.lower() != "stressperioddata"
         ):
             return
         if self.structure.repeating():
@@ -1140,6 +1141,9 @@ class MFBlock:
             for repeating_dataset in repeating_datasets:
                 # resolve any missing block headers
                 self._add_missing_block_headers(repeating_dataset)
+            for block_header in self.block_headers:
+                # write block
+                self._write_block(fd, block_header, ext_file_action)
             if len(repeating_datasets) > 0:
                 # loop through all block headers
                 for block_header in self.block_headers:
@@ -1476,9 +1480,7 @@ class MFPackage(PackageContainer, PackageInterface):
                 model_or_sim.simulation_data.debug,
             )
 
-        super(MFPackage, self).__init__(
-            model_or_sim.simulation_data, self.model_name
-        )
+        super().__init__(model_or_sim.simulation_data, self.model_name)
 
         self.parent = model_or_sim
         self._simulation_data = model_or_sim.simulation_data
@@ -1656,7 +1658,7 @@ class MFPackage(PackageContainer, PackageInterface):
     def check(self, f=None, verbose=True, level=1, checktype=None):
         if checktype is None:
             checktype = mf6check
-        return super(MFPackage, self).check(f, verbose, level, checktype)
+        return super().check(f, verbose, level, checktype)
 
     def _get_nan_exclusion_list(self):
         excl_list = []
