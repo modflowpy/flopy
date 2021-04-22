@@ -4,7 +4,8 @@ from ...utils.observationfile import CsvFile
 from ...pakbase import PackageInterface
 
 
-class MF6Output(object):
+class MF6Output:
+
     """
     A class that uses meta programming to get output
 
