@@ -105,7 +105,8 @@ uzf_bud = uzf.output.budget()
 uzf_bud.get_data(idx=0)
 
 uzf_conv = uzf.output.package_convergence()
-uzf_conv.data[0:10]
+if uzf_conv is not None:
+    uzf_conv.data[0:10]
 
 uzf_obs = uzf.output.obs()
 uzf_obs.data[0:10]
