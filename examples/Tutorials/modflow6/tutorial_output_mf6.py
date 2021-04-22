@@ -23,8 +23,11 @@ import flopy
 import os
 
 # ## Load a simple demonstration model
-flopy_ws = os.path.abspath(os.path.dirname(flopy.__file__))
-sim_ws = os.path.join(flopy_ws, '..', 'examples', 'data', 'mf6', 'test001e_UZF_3lay')
+ws = os.path.abspath(os.path.dirname(__file__))
+if os.path.split(ws)[-1] == "modflow6":
+    sim_ws = os.path.join(ws, "..", "..", 'data', 'mf6', 'test001e_UZF_3lay')
+else:
+    sim_ws = os.path.join(ws, '..', '..', 'examples', 'data', 'mf6', 'test001e_UZF_3lay')
 sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws)
 sim.run_simulation(silent=True)
 
