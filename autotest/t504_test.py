@@ -1141,12 +1141,13 @@ def test_replace_ims_package():
 
 
 def test_mf6_output():
+    ws = os.path.abspath(os.path.dirname(__file__))
+    exe_name = os.path.join(ws, "mf6")
     sim_ws = os.path.join('..', 'examples', 'data', 'mf6', 'test001e_UZF_3lay')
     sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws, exe_name=exe_name)
     sim.simulation_data.mfpath.set_sim_path(cpth)
     sim.write_simulation()
     sim.run_simulation()
-
 
     ml = sim.get_model("gwf_1")
 
@@ -1184,7 +1185,8 @@ def test_mf6_output():
         raise TypeError()
 
     if len(uzf.output.methods()) != 3:
-        raise AssertionError()
+        print(uzf.output.__dict__)
+        raise AssertionError(", ".join(uzf.output.methods()))
 
     if len(ml.output.methods()) != 2:
         raise AssertionError()
@@ -1194,16 +1196,16 @@ def test_mf6_output():
 
 
 if __name__ == "__main__":
-    test001a_tharmonic()
-    test001e_uzf_3lay()
-    test003_gwfs_disv()
-    test005_advgw_tidal()
-    test006_2models_mvr()
-    test006_gwf3()
-    test027_timeseriestest()
-    test036_twrihfb()
-    test045_lake1ss_table()
-    test045_lake2tr()
-    test_cbc_precision()
-    test_replace_ims_package()
+    # test001a_tharmonic()
+    # test001e_uzf_3lay()
+    # test003_gwfs_disv()
+    # test005_advgw_tidal()
+    # test006_2models_mvr()
+    # test006_gwf3()
+    # test027_timeseriestest()
+    # test036_twrihfb()
+    # test045_lake1ss_table()
+    # test045_lake2tr()
+    # test_cbc_precision()
+    # test_replace_ims_package()
     test_mf6_output()
