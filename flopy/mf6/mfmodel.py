@@ -580,6 +580,13 @@ class MFModel(PackageContainer, ModelInterface):
     def laycbd(self):
         return None
 
+    @property
+    def output(self):
+        try:
+            return self.oc.output
+        except AttributeError:
+            return None
+
     def export(self, f, **kwargs):
         from ..export import utils
 

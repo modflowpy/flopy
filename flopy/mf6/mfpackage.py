@@ -23,6 +23,7 @@ from .coordinates import modeldimensions
 from ..pakbase import PackageInterface
 from .data.mfdatautil import MFComment
 from ..utils.check import mf6check
+from .utils.output_util import MF6Output
 from ..version import __version__
 
 
@@ -1143,6 +1144,7 @@ class MFBlock:
             for block_header in self.block_headers:
                 # write block
                 self._write_block(fd, block_header, ext_file_action)
+
         else:
             self._write_block(fd, self.block_headers[0], ext_file_action)
 
@@ -1628,6 +1630,17 @@ class MFPackage(PackageContainer, PackageInterface):
             return False
         else:
             return True
+
+    @property
+    def output(self):
+        """
+        Method to get output associated with a specific package
+
+        Returns
+        -------
+            MF6Output object
+        """
+        return MF6Output(self)
 
     @property
     def data_list(self):
