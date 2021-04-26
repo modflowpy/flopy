@@ -6,7 +6,7 @@ import flopy
 
 def test_mf6():
 
-    out_dir = os.path.join('temp', 't501')
+    out_dir = os.path.join("temp", "t501")
     if os.path.exists(out_dir):
         shutil.rmtree(out_dir)
     os.mkdir(out_dir)
@@ -17,10 +17,9 @@ def test_mf6():
     tdis = flopy.mf6.modflow.mftdis.ModflowTdis(sim)
     assert isinstance(tdis, flopy.mf6.modflow.mftdis.ModflowTdis)
 
-    gwfgwf = flopy.mf6.modflow.mfgwfgwf.ModflowGwfgwf(sim,
-                                                      exgtype='gwf6-gwf6',
-                                                      exgmnamea='gwf1',
-                                                      exgmnameb='gwf2')
+    gwfgwf = flopy.mf6.modflow.mfgwfgwf.ModflowGwfgwf(
+        sim, exgtype="gwf6-gwf6", exgmnamea="gwf1", exgmnameb="gwf2"
+    )
     assert isinstance(gwfgwf, flopy.mf6.modflow.mfgwfgwf.ModflowGwfgwf)
 
     gwf = flopy.mf6.ModflowGwf(sim)
@@ -100,20 +99,41 @@ def test_mf6():
     sim.write_simulation()
 
     # Verify files were written
-    assert os.path.isfile(os.path.join(out_dir, 'mfsim.nam'))
-    exts_model = ['nam', 'dis', 'disu', 'disv', 'npf', 'ic',
-            'sto', 'hfb', 'gnc', 'chd', 'wel', 'drn', 'riv', 'ghb', 'rch',
-            'rcha', 'evt', 'evta', 'maw', 'sfr', 'lak', 'mvr']
-    exts_sim = ['gwfgwf', 'ims', 'tdis']
+    assert os.path.isfile(os.path.join(out_dir, "mfsim.nam"))
+    exts_model = [
+        "nam",
+        "dis",
+        "disu",
+        "disv",
+        "npf",
+        "ic",
+        "sto",
+        "hfb",
+        "gnc",
+        "chd",
+        "wel",
+        "drn",
+        "riv",
+        "ghb",
+        "rch",
+        "rcha",
+        "evt",
+        "evta",
+        "maw",
+        "sfr",
+        "lak",
+        "mvr",
+    ]
+    exts_sim = ["gwfgwf", "ims", "tdis"]
     for ext in exts_model:
-        fname = os.path.join(out_dir, 'model.{}'.format(ext))
-        assert os.path.isfile(fname), fname + ' not found'
+        fname = os.path.join(out_dir, "model.{}".format(ext))
+        assert os.path.isfile(fname), fname + " not found"
     for ext in exts_sim:
-        fname = os.path.join(out_dir, 'sim.{}'.format(ext))
-        assert os.path.isfile(fname), fname + ' not found'
-
+        fname = os.path.join(out_dir, "sim.{}".format(ext))
+        assert os.path.isfile(fname), fname + " not found"
 
     return
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test_mf6()

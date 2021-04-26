@@ -1,5 +1,3 @@
-
-
 import os
 import warnings
 import flopy
@@ -40,7 +38,7 @@ def test_mtlist():
 
         assert len(w) == 1, len(w)
         assert w[0].category == UserWarning, w[0]
-        assert 'error parsing GW mass budget' in str(w[0].message)
+        assert "error parsing GW mass budget" in str(w[0].message)
 
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
@@ -51,8 +49,8 @@ def test_mtlist():
 
         assert len(w) == 1, len(w)
         assert w[0].category == UserWarning, w[0]
-        assert 'error parsing SW mass budget' in str(w[0].message)
+        assert "error parsing SW mass budget" in str(w[0].message)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_mtlist()

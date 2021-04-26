@@ -12,13 +12,15 @@ def download_mf6_examples():
 
     # set url
     dirname = "mf6examples"
-    url = "https://github.com/MODFLOW-USGS/modflow6-examples/releases/" + \
-          "download/current/modflow6-examples.zip"
+    url = (
+        "https://github.com/MODFLOW-USGS/modflow6-examples/releases/"
+        + "download/current/modflow6-examples.zip"
+    )
 
     # create folder for mf6 distribution download
     cpth = os.getcwd()
-    dstpth = os.path.join('temp', dirname)
-    print('create...{}'.format(dstpth))
+    dstpth = os.path.join("temp", dirname)
+    print("create...{}".format(dstpth))
     if not os.path.exists(dstpth):
         os.makedirs(dstpth)
     os.chdir(dstpth)
@@ -43,9 +45,7 @@ os.mkdir(out_dir)
 mf6path = download_mf6_examples()
 distpth = os.path.join(mf6path)
 
-exclude_models = (
-    "lnf",
-)
+exclude_models = ("lnf",)
 exclude_examples = (
     "sagehen",
     "ex-gwt-keating",
@@ -71,7 +71,7 @@ for dirName, subdirList, fileList in os.walk(mf6path):
     if useModel:
         for file_name in fileList:
             if file_name.lower() == "mfsim.nam":
-                print('Found directory: {}'.format(dirName))
+                print("Found directory: {}".format(dirName))
                 src_folders.append(dirName)
 src_folders = sorted(src_folders)
 
@@ -80,12 +80,12 @@ for src in src_folders:
     dirBase = src.partition("{0}mf6examples{0}".format(os.path.sep))[2]
     dst = os.path.join(out_dir, dirBase)
 
-    print('copying {} -> {}'.format(src, dst))
+    print("copying {} -> {}".format(src, dst))
     folders.append(dst)
     shutil.copytree(src, dst)
 folders = sorted(folders)
 
-exe_name = 'mf6'
+exe_name = "mf6"
 v = flopy.which(exe_name)
 run = True
 if v is None:
@@ -94,13 +94,13 @@ if v is None:
 
 def runmodel(folder):
     f = os.path.basename(os.path.normpath(folder))
-    print('\n\n')
-    print('**** RUNNING TEST: {} ****'.format(f))
-    print('\n')
+    print("\n\n")
+    print("**** RUNNING TEST: {} ****".format(f))
+    print("\n")
 
     # load the model into a flopy simulation
-    print('loading {}'.format(f))
-    sim = flopy.mf6.MFSimulation.load(f, 'mf6', exe_name, folder)
+    print("loading {}".format(f))
+    sim = flopy.mf6.MFSimulation.load(f, "mf6", exe_name, folder)
     assert isinstance(sim, flopy.mf6.MFSimulation)
 
     # run the simulation in folder if executable is available
@@ -108,10 +108,11 @@ def runmodel(folder):
         success, buff = sim.run_simulation()
         assert success
 
-        headfiles = [f for f in os.listdir(folder)
-                     if f.lower().endswith('.hds')]
+        headfiles = [
+            f for f in os.listdir(folder) if f.lower().endswith(".hds")
+        ]
 
-        folder2 = folder + '-RERUN'
+        folder2 = folder + "-RERUN"
         sim.simulation_data.mfpath.set_sim_path(folder2)
         sim.write_simulation()
         success, buff = sim.run_simulation()
@@ -123,10 +124,16 @@ def runmodel(folder):
             headfiles1.append(os.path.join(folder, hf))
             headfiles2.append(os.path.join(folder2, hf))
 
-        outfile = os.path.join(folder, 'head_compare.dat')
-        success = pymake.compare_heads(None, None, precision='double',
-                                       text='head', files1=headfiles1,
-                                       files2=headfiles2, outfile=outfile)
+        outfile = os.path.join(folder, "head_compare.dat")
+        success = pymake.compare_heads(
+            None,
+            None,
+            precision="double",
+            text="head",
+            files1=headfiles1,
+            files2=headfiles2,
+            outfile=outfile,
+        )
         assert success
 
 
@@ -144,7 +151,7 @@ def runmodels():
     return
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # to run them all with python
     runmodels()
 

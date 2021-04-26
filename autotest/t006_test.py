@@ -1,21 +1,24 @@
 # Test reference class
 import os
 import numpy as np
+
 try:
     import matplotlib
 except:
     matplotlib = None
 
 import flopy
+
 try:
     import shapefile
-    if int(shapefile.__version__.split('.')[0]) < 2:
+
+    if int(shapefile.__version__.split(".")[0]) < 2:
         shapefile = None
 except ImportError:
     shapefile = None
 
 
-cpth = os.path.join('temp', 't006')
+cpth = os.path.join("temp", "t006")
 # make the directory if it does not exist
 if not os.path.isdir(cpth):
     os.makedirs(cpth)
@@ -23,7 +26,8 @@ if not os.path.isdir(cpth):
 
 def test_binaryfile_reference():
     h = flopy.utils.HeadFile(
-        os.path.join('..', 'examples', 'data', 'freyberg', 'freyberg.githds'))
+        os.path.join("..", "examples", "data", "freyberg", "freyberg.githds")
+    )
     assert isinstance(h, flopy.utils.HeadFile)
     h.mg.set_coord_info(xoff=1000.0, yoff=200.0, angrot=15.0)
 
@@ -35,13 +39,15 @@ def test_binaryfile_reference():
 
 def test_formattedfile_reference():
     h = flopy.utils.FormattedHeadFile(
-        os.path.join('..', 'examples', 'data', 'mf2005_test',
-                     'test1tr.githds'))
+        os.path.join("..", "examples", "data", "mf2005_test", "test1tr.githds")
+    )
     assert isinstance(h, flopy.utils.FormattedHeadFile)
     h.mg.set_coord_info(xoff=1000.0, yoff=200.0, angrot=15.0)
 
     if matplotlib is not None:
-        assert isinstance(h.plot(masked_values=[6999.000]), matplotlib.axes.Axes)
+        assert isinstance(
+            h.plot(masked_values=[6999.000]), matplotlib.axes.Axes
+        )
         matplotlib.pyplot.close()
     return
 
@@ -57,11 +63,21 @@ def test_mflist_reference():
     nrow, ncol = 50, 40
     botm = np.arange(0, -100, -10)
     hk = np.random.random((nrow, ncol))
-    dis = flopy.modflow.ModflowDis(ml, delr=100.0, delc=100.0,
-                                   nrow=nrow, ncol=ncol, nlay=nlay,
-                                   nper=perlen.shape[0], perlen=perlen,
-                                   nstp=nstp, tsmult=tsmult,
-                                   top=10, botm=botm, steady=False)
+    dis = flopy.modflow.ModflowDis(
+        ml,
+        delr=100.0,
+        delc=100.0,
+        nrow=nrow,
+        ncol=ncol,
+        nlay=nlay,
+        nper=perlen.shape[0],
+        perlen=perlen,
+        nstp=nstp,
+        tsmult=tsmult,
+        top=10,
+        botm=botm,
+        steady=False,
+    )
     assert isinstance(dis, flopy.modflow.ModflowDis)
     lpf = flopy.modflow.ModflowLpf(ml, hk=hk, vka=10.0, laytyp=1)
     assert isinstance(lpf, flopy.modflow.ModflowLpf)
@@ -88,22 +104,23 @@ def test_mflist_reference():
     assert isinstance(ghb, flopy.modflow.ModflowGhb)
 
     if shapefile:
-        test = os.path.join(cpth, 'test3.shp')
+        test = os.path.join(cpth, "test3.shp")
         ml.export(test, kper=0)
         shp = shapefile.Reader(test)
         assert shp.numRecords == nrow * ncol
 
+
 def test_cbc_ts():
-    fpth = os.path.join('..', 'examples', 'data', 'mf2005_test',
-                        'swiex1.gitzta')
-    zobj = flopy.utils.CellBudgetFile(fpth, precision='single')
-    ts = zobj.get_ts(text='ZETASRF  1', idx=(0, 0, 24))
-    errtxt = 'shape of zeta timeseries is {} not (4, 2)'.format(ts.shape)
+    fpth = os.path.join(
+        "..", "examples", "data", "mf2005_test", "swiex1.gitzta"
+    )
+    zobj = flopy.utils.CellBudgetFile(fpth, precision="single")
+    ts = zobj.get_ts(text="ZETASRF  1", idx=(0, 0, 24))
+    errtxt = "shape of zeta timeseries is {} not (4, 2)".format(ts.shape)
     assert ts.shape == (4, 2), errtxt
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     # test_mbase_sr()
     # test_sr()
     # test_dis_reference()

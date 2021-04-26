@@ -1141,7 +1141,7 @@ def test_replace_ims_package():
 
 
 def test_mf6_output():
-    sim_ws = os.path.join('..', 'examples', 'data', 'mf6', 'test001e_UZF_3lay')
+    sim_ws = os.path.join("..", "examples", "data", "mf6", "test001e_UZF_3lay")
     sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws, exe_name=exe_name)
     sim.simulation_data.mfpath.set_sim_path(cpth)
     sim.write_simulation()
