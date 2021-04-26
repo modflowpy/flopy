@@ -429,6 +429,16 @@ def test_no_ds_6bc():
         assert len(sfr.channel_geometry_data[0][1][i]) == 8
         assert sum(sfr.channel_geometry_data[0][1][i]) > 0.
 
+    sfrfile2 = os.path.join("temp", "junk.sfr")
+    sfr.write_file()
+    sfr = fm.ModflowSfr2.load(sfrfile2, model=m)
+    assert len(sfr.segment_data[0]) == 2
+    assert len(sfr.channel_geometry_data[0]) == 2
+    assert len(sfr.channel_geometry_data[0][1]) == 2
+    for i in range(2):
+        assert len(sfr.channel_geometry_data[0][1][i]) == 8
+        assert sum(sfr.channel_geometry_data[0][1][i]) > 0.
+
 
 def test_ds_6d_6e_disordered():
     path = os.path.join("..", "examples", "data", "hydmod_test")

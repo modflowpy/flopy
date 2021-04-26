@@ -2023,11 +2023,11 @@ class ModflowSfr2(Package):
                 f_sfr.write(fmts[4].format(depth) + " ")
             elif icalc == 1:
                 if i > 0:
-                    pass
+                    return
                 else:
                     f_sfr.write(fmts[3].format(width) + " ")
             else:
-                pass
+                return
 
         else:
             return
