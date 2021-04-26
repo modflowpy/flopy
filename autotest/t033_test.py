@@ -3,7 +3,7 @@ import numpy as np
 import flopy
 from flopy.utils.util_array import Util2d
 
-newpth = os.path.join('.', 'temp', 't033')
+newpth = os.path.join(".", "temp", "t033")
 # make the directory if it does not exist
 if not os.path.isdir(newpth):
     os.makedirs(newpth)
@@ -17,18 +17,20 @@ def test_rchload():
     nper = 2
 
     # create model 1
-    m1 = flopy.modflow.Modflow('rchload1', model_ws=newpth)
-    dis1 = flopy.modflow.ModflowDis(m1, nlay=nlay, nrow=nrow, ncol=ncol,
-                                    nper=nper)
+    m1 = flopy.modflow.Modflow("rchload1", model_ws=newpth)
+    dis1 = flopy.modflow.ModflowDis(
+        m1, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper
+    )
     a = np.random.random((nrow, ncol))
-    rech1 = Util2d(m1, (nrow, ncol), np.float32, a, 'rech', cnstnt=1.0,
-                   how='openclose')
+    rech1 = Util2d(
+        m1, (nrow, ncol), np.float32, a, "rech", cnstnt=1.0, how="openclose"
+    )
     rch1 = flopy.modflow.ModflowRch(m1, rech={0: rech1})
     m1.write_input()
 
     # load model 1
     os.chdir(newpth)
-    m1l = flopy.modflow.Modflow.load('rchload1.nam')
+    m1l = flopy.modflow.Modflow.load("rchload1.nam")
     a1 = rech1.array
     a2 = m1l.rch.rech[0].array
     assert np.allclose(a1, a2)
@@ -36,18 +38,20 @@ def test_rchload():
     assert np.allclose(a1, a2)
     os.chdir(startpth)
 
-    m2 = flopy.modflow.Modflow('rchload2', model_ws=newpth)
-    dis2 = flopy.modflow.ModflowDis(m2, nlay=nlay, nrow=nrow, ncol=ncol,
-                                    nper=nper)
+    m2 = flopy.modflow.Modflow("rchload2", model_ws=newpth)
+    dis2 = flopy.modflow.ModflowDis(
+        m2, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper
+    )
     a = np.random.random((nrow, ncol))
-    rech2 = Util2d(m2, (nrow, ncol), np.float32, a, 'rech', cnstnt=2.0,
-                   how='openclose')
+    rech2 = Util2d(
+        m2, (nrow, ncol), np.float32, a, "rech", cnstnt=2.0, how="openclose"
+    )
     rch2 = flopy.modflow.ModflowRch(m2, rech={0: rech2})
     m2.write_input()
 
     # load model 2
     os.chdir(newpth)
-    m2l = flopy.modflow.Modflow.load('rchload2.nam')
+    m2l = flopy.modflow.Modflow.load("rchload2.nam")
     a1 = rech2.array
     a2 = m2l.rch.rech[0].array
     assert np.allclose(a1, a2)
@@ -56,5 +60,5 @@ def test_rchload():
     os.chdir(startpth)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_rchload()

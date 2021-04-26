@@ -3,21 +3,23 @@ import os
 import numpy as np
 import flopy
 
-testpth = os.path.join('.', 'temp', 't023')
+testpth = os.path.join(".", "temp", "t023")
 # make the directory if it does not exist
 if not os.path.isdir(testpth):
     os.makedirs(testpth)
 
+
 def test_mt3d_multispecies():
     # modflow model
-    modelname = 'multispecies'
+    modelname = "multispecies"
     nlay = 1
     nrow = 20
     ncol = 20
     nper = 10
     mf = flopy.modflow.Modflow(modelname=modelname, model_ws=testpth)
-    dis = flopy.modflow.ModflowDis(mf, nlay=nlay, nrow=nrow, ncol=ncol,
-                                   nper=nper)
+    dis = flopy.modflow.ModflowDis(
+        mf, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper
+    )
     lpf = flopy.modflow.ModflowLpf(mf)
     rch = flopy.modflow.ModflowRch(mf)
     evt = flopy.modflow.ModflowEvt(mf)
@@ -25,31 +27,43 @@ def test_mt3d_multispecies():
 
     # Create a 5-component mt3d model and write the files
     ncomp = 5
-    mt = flopy.mt3d.Mt3dms(modelname=modelname, modflowmodel=mf,
-                           model_ws=testpth, verbose=True)
+    mt = flopy.mt3d.Mt3dms(
+        modelname=modelname, modflowmodel=mf, model_ws=testpth, verbose=True
+    )
     sconc3 = np.random.random((nrow, ncol))
-    btn = flopy.mt3d.Mt3dBtn(mt, ncomp=ncomp, sconc=1., sconc2=2.,
-                             sconc3=sconc3, sconc5=5.)
+    btn = flopy.mt3d.Mt3dBtn(
+        mt, ncomp=ncomp, sconc=1.0, sconc2=2.0, sconc3=sconc3, sconc5=5.0
+    )
     # check obs I/O
     mt.btn.obs = np.array([[0, 2, 300], [0, 1, 250]])
     crch32 = np.random.random((nrow, ncol))
     cevt33 = np.random.random((nrow, ncol))
-    ssm = flopy.mt3d.Mt3dSsm(mt, crch=1., crch2=2., crch3={2:crch32}, crch5=5.,
-                             cevt=1., cevt2=2., cevt3={3:cevt33}, cevt5=5.)
+    ssm = flopy.mt3d.Mt3dSsm(
+        mt,
+        crch=1.0,
+        crch2=2.0,
+        crch3={2: crch32},
+        crch5=5.0,
+        cevt=1.0,
+        cevt2=2.0,
+        cevt3={3: cevt33},
+        cevt5=5.0,
+    )
     crch2 = ssm.crch[1].array
-    assert(crch2.max() == 2.)
+    assert crch2.max() == 2.0
     cevt2 = ssm.cevt[1].array
-    assert(cevt2.max() == 2.)
+    assert cevt2.max() == 2.0
     mt.write_input()
 
     # Create a second MODFLOW model
-    modelname2 = 'multispecies2'
+    modelname2 = "multispecies2"
     mf2 = flopy.modflow.Modflow(modelname=modelname2, model_ws=testpth)
-    dis2 = flopy.modflow.ModflowDis(mf2, nlay=nlay, nrow=nrow, ncol=ncol,
-                                    nper=nper)
+    dis2 = flopy.modflow.ModflowDis(
+        mf2, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper
+    )
 
     # Load the MT3D model into mt2 and then write it out
-    fname = modelname + '.nam'
+    fname = modelname + ".nam"
     mt2 = flopy.mt3d.Mt3dms.load(fname, model_ws=testpth, verbose=True)
     # check obs I/O
     assert np.all(mt.btn.obs == mt2.btn.obs)
@@ -59,5 +73,5 @@ def test_mt3d_multispecies():
     return
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_mt3d_multispecies()

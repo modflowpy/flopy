@@ -250,7 +250,10 @@ def np001():
         model,
         budget_filerecord=[("np001_mod.cbc",)],
         head_filerecord=[("np001_mod.hds",)],
-        saverecord={0: [("HEAD", "ALL"), ("BUDGET", "ALL")], 1: [],},
+        saverecord={
+            0: [("HEAD", "ALL"), ("BUDGET", "ALL")],
+            1: [],
+        },
         printrecord=[("HEAD", "ALL")],
     )
     empty_sp_text = oc_package.saverecord.get_file_entry(1)
@@ -539,7 +542,11 @@ def np001():
 
     # test loading and re-writing empty stress period
     test_sim = MFSimulation.load(
-        test_ex_name, "mf6", exe_name, run_folder, write_headers=False,
+        test_ex_name,
+        "mf6",
+        exe_name,
+        run_folder,
+        write_headers=False,
     )
     wel = test_sim.get_model().wel
     wel._filename = "np001_spd_test.wel"
@@ -1358,7 +1365,15 @@ def test005_advgw_tidal():
             ("rv2-upper", "RIV", "riv2_upper"),
             ("rv-2-7-4", "RIV", (0, 6, 3)),
             ("rv2-8-5", "RIV", (0, 6, 4)),
-            ("rv-2-9-6", "RIV", (0, 5, 5,),),
+            (
+                "rv-2-9-6",
+                "RIV",
+                (
+                    0,
+                    5,
+                    5,
+                ),
+            ),
         ],
         "riv_flowsA.csv": [
             ("riv1-3-1", "RIV", (0, 2, 0)),
@@ -2964,7 +2979,9 @@ def test_transport():
     gwfname = "gwf_" + name
     newtonoptions = ["NEWTON", "UNDER_RELAXATION"]
     gwf = flopy.mf6.ModflowGwf(
-        sim, modelname=gwfname, newtonoptions=newtonoptions,
+        sim,
+        modelname=gwfname,
+        newtonoptions=newtonoptions,
     )
 
     # create iterative model solution and register the gwf model with it
