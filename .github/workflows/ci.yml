@@ -56,7 +56,7 @@ jobs:
       run:
         shell: bash
 
-    if: github.repository_owner == 'modflowpy' && github.event_name == 'push'
+    if: github.repository_owner == 'modflowpy' && github.event_name != 'schedule'
     steps:
     # check out repo
     - name: Checkout flopy repo
