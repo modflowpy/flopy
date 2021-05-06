@@ -485,9 +485,9 @@ class PlotMapView:
 
         nlay = self.mg.nlay
 
-        plotarray = np.zeros(self.mg.shape, dtype=np.int)
+        plotarray = np.zeros(self.mg.shape, dtype=int)
         if plotAll and len(self.mg.shape) > 1:
-            pa = np.zeros(self.mg.shape[1:], dtype=np.int)
+            pa = np.zeros(self.mg.shape[1:], dtype=int)
             pa[tuple(idx[1:])] = 1
             for k in range(nlay):
                 plotarray[k] = pa.copy()
