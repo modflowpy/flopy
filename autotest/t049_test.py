@@ -253,13 +253,14 @@ def test_pathline_plot_xc():
     # test with multi-layer example
     model_ws = os.path.join("..", 'examples', 'data', 'mp6')
 
-    ml = flopy.modflow.Modflow.load("EXAMPLE.nam", model_ws=model_ws)
+    ml = flopy.modflow.Modflow.load("EXAMPLE.nam", model_ws=model_ws,
+                                    exe_name=mf2005_exe)
     ml.change_model_ws(os.path.join('.', 'temp'))
     ml.write_input()
     ml.run_model()
 
     mp = flopy.modpath.Modpath6(modelname='ex6',
-                                exe_name='mp6',
+                                exe_name=mpth_exe,
                                 modflowmodel=ml,
                                 model_ws=os.path.join('.', 'temp'),
                                 dis_file=ml.name + '.DIS',
