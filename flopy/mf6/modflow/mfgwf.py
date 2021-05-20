@@ -19,8 +19,8 @@ class ModflowGwf(mfmodel.MFModel):
         version of modflow
     exe_name : string
         model executable name
-    model_ws : string
-        model working folder path
+    model_rel_path : string
+        model working folder path, relative to simulation directory.
     sim : MFSimulation
         Simulation that this model is a part of.  Model is automatically
         added to simulation when it is initialized.
