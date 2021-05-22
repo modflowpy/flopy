@@ -5,8 +5,8 @@ from ..utils import geometry
 try:
     import matplotlib.pyplot as plt
     import matplotlib.colors
-    from matplotlib.collections import PatchCollection
-    from matplotlib.patches import Polygon
+    from matplotlib.collections import PathCollection, LineCollection
+    from matplotlib.path import Path
 except (ImportError, ModuleNotFoundError):
     plt = None
 
@@ -112,7 +112,6 @@ class PlotMapView:
 
         # Use the model grid to pass back an array of the correct shape
         plotarray = self.mg.get_plottable_layer_array(a, self.layer)
-        plotarray = plotarray.ravel()
 
         # if masked_values are provided mask the plotting array
         if masked_values is not None:
@@ -129,20 +128,26 @@ class PlotMapView:
         if isinstance(polygons, dict):
             polygons = polygons[self.layer]
 
-        collection = PatchCollection(polygons)
-        collection.set_array(plotarray)
+        if len(polygons) == 0:
+            return
+
+        if not isinstance(polygons[0], Path):
+            collection = ax.pcolormesh(
+                self.mg.xvertices, self.mg.yvertices, plotarray
+            )
+
+        else:
+            plotarray = plotarray.ravel()
+            collection = PathCollection(polygons)
+            collection.set_array(plotarray)
 
         # set max and min
         vmin = kwargs.pop("vmin", None)
         vmax = kwargs.pop("vmax", None)
 
-        # limit the color range
+        # set matplotlib kwargs
         collection.set_clim(vmin=vmin, vmax=vmax)
-
-        # send rest of kwargs to quadmesh
         collection.set(**kwargs)
-
-        # add collection to axis
         ax.add_collection(collection)
 
         # set limits
@@ -362,30 +367,21 @@ class PlotMapView:
         from matplotlib.collections import PatchCollection
 
         ax = kwargs.pop("ax", self.ax)
-        edgecolor = kwargs.pop("colors", "grey")
-        edgecolor = kwargs.pop("color", edgecolor)
-        edgecolor = kwargs.pop("ec", edgecolor)
-        edgecolor = kwargs.pop("edgecolor", edgecolor)
-        facecolor = kwargs.pop("facecolor", "none")
-        facecolor = kwargs.pop("fc", facecolor)
+        colors = kwargs.pop("colors", "grey")
+        colors = kwargs.pop("color", colors)
+        colors = kwargs.pop("ec", colors)
+        colors = kwargs.pop("edgecolor", colors)
 
-        # use cached patch collection for plotting
-        polygons = self.mg.map_polygons
-        if isinstance(polygons, dict):
-            polygons = polygons[self.layer]
+        grid_lines = self.mg.grid_lines
+        if isinstance(grid_lines, dict):
+            grid_lines = grid_lines[self.layer]
 
-        if len(polygons) > 0:
-            patches = PatchCollection(
-                polygons, edgecolor=edgecolor, facecolor=facecolor, **kwargs
-            )
-        else:
-            patches = None
+        collection = LineCollection(grid_lines, colors=colors, **kwargs)
 
-        ax.add_collection(patches)
+        ax.add_collection(collection)
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
-
-        return patches
+        return collection
 
     def plot_bc(
         self,

@@ -405,14 +405,14 @@ class UnstructuredGrid(Grid):
             list or dict of matplotlib.collections.Polygon
         """
         try:
-            from matplotlib.patches import Polygon
+            from matplotlib.path import Path
         except ImportError:
             raise ImportError("matplotlib required to use this method")
 
         cache_index = "xyzgrid"
         if (
-            cache_index not in self._cache_dict
-            or self._cache_dict[cache_index].out_of_date
+                cache_index not in self._cache_dict
+                or self._cache_dict[cache_index].out_of_date
         ):
             self.xyzvertices
             self._polygons = None
@@ -429,12 +429,12 @@ class UnstructuredGrid(Grid):
                     if ilay not in self._polygons:
                         self._polygons[ilay] = []
 
-                    p = Polygon(self.get_cell_vertices(nn), closed=True)
+                    p = Path(self.get_cell_vertices(nn))
                     self._polygons[ilay].append(p)
             else:
                 self._polygons = [
-                    Polygon(self.get_cell_vertices(nn), closed=True)
-                    for nn in range(self.ncpl[0])
+                    Path(self.get_cell_vertices(nn)) for
+                    nn in range(self.ncpl[0])
                 ]
 
         return copy.copy(self._polygons)
