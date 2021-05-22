@@ -411,8 +411,8 @@ class UnstructuredGrid(Grid):
 
         cache_index = "xyzgrid"
         if (
-                cache_index not in self._cache_dict
-                or self._cache_dict[cache_index].out_of_date
+            cache_index not in self._cache_dict
+            or self._cache_dict[cache_index].out_of_date
         ):
             self.xyzvertices
             self._polygons = None
@@ -433,8 +433,8 @@ class UnstructuredGrid(Grid):
                     self._polygons[ilay].append(p)
             else:
                 self._polygons = [
-                    Path(self.get_cell_vertices(nn)) for
-                    nn in range(self.ncpl[0])
+                    Path(self.get_cell_vertices(nn))
+                    for nn in range(self.ncpl[0])
                 ]
 
         return copy.copy(self._polygons)
