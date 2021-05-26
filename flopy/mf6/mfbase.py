@@ -176,6 +176,7 @@ class MFDataException(Exception):
 
 class VerbosityLevel(Enum):
     """Determines how much information FloPy writes to the console"""
+
     quiet = 1
     normal = 2
     verbose = 3
@@ -184,6 +185,7 @@ class VerbosityLevel(Enum):
 class PackageContainerType(Enum):
     """Determines whether a package container is a simulation, model, or
     package."""
+
     simulation = 1
     model = 2
     package = 3
@@ -192,6 +194,7 @@ class PackageContainerType(Enum):
 class ExtFileAction(Enum):
     """Defines what to do with external files when the simulation or model's
     path change."""
+
     copy_all = 1
     copy_none = 2
     copy_relative_paths = 3
@@ -200,6 +203,7 @@ class ExtFileAction(Enum):
 class MFFilePath:
     """Class that stores a single file path along with the associated model
     name."""
+
     def __init__(self, file_path, model_name):
         self.file_path = file_path
         self.model_name = {model_name: 0}
@@ -387,17 +391,17 @@ class MFFileMgmt:
     def get_model_path(self, key, last_loaded_path=False):
         """Returns the model working path for the model `key`.
 
-            Parameters
-            ----------
-            key : str
-                Model name whose path flopy will retrieve
-            last_loaded_path : bool
-                Get the last path loaded by FloPy which may not be the most
-                recent path.
+        Parameters
+        ----------
+        key : str
+            Model name whose path flopy will retrieve
+        last_loaded_path : bool
+            Get the last path loaded by FloPy which may not be the most
+            recent path.
 
-            Returns
-            -------
-                model path : str
+        Returns
+        -------
+            model path : str
 
         """
         if last_loaded_path:

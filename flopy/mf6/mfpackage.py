@@ -1382,8 +1382,7 @@ class MFBlock:
         return True
 
     def is_valid(self):
-        """Returns true of the block is valid.
-        """
+        """Returns true of the block is valid."""
         # check data sets
         for dataset in self.datasets.values():
             # Non-optional datasets must be enabled
@@ -2492,6 +2491,7 @@ class MFChildPackages:
     Parameters
     ----------
     """
+
     def __init__(
         self,
         model,

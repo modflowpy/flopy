@@ -293,8 +293,7 @@ class MFArray(MFMultiDimVar):
 
     @property
     def data_type(self):
-        """Type of data (DataType) stored in the array
-        """
+        """Type of data (DataType) stored in the array"""
         if self.structure.layered:
             return DataType.array3d
         else:
@@ -302,14 +301,12 @@ class MFArray(MFMultiDimVar):
 
     @property
     def dtype(self):
-        """Type of data (numpy.dtype) stored in the array
-        """
+        """Type of data (numpy.dtype) stored in the array"""
         return self._get_data().dtype.type
 
     @property
     def plottable(self):
-        """If the array is plottable
-        """
+        """If the array is plottable"""
         if self.model is None:
             return False
         else:
@@ -317,8 +314,7 @@ class MFArray(MFMultiDimVar):
 
     @property
     def data(self):
-        """Returns array data.  Calls get_data with default parameters.
-        """
+        """Returns array data.  Calls get_data with default parameters."""
         return self._get_data()
 
     def new_simulation(self, sim_data):
@@ -408,8 +404,7 @@ class MFArray(MFMultiDimVar):
         self._get_storage_obj().layered = layered_data
 
     def make_layered(self):
-        """Changes the data to be stored by layer instead of as a single array.
-        """
+        """Changes the data to be stored by layer instead of as a single array."""
 
         if self.supports_layered():
             try:
@@ -487,7 +482,7 @@ class MFArray(MFMultiDimVar):
                 Whether to replace an existing external file.
             check_data : bool
                 Verify data prior to storing
-    """
+        """
 
         storage = self._get_storage_obj()
         if storage is None:
@@ -1425,8 +1420,7 @@ class MFTransientArray(MFArray, MFTransient):
 
     @property
     def data_type(self):
-        """Type of data (DataType) stored in the array
-        """
+        """Type of data (DataType) stored in the array"""
         return DataType.transient2d
 
     def remove_transient_key(self, transient_key):

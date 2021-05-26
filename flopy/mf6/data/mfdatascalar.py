@@ -54,8 +54,7 @@ class MFScalar(mfdata.MFData):
 
     @property
     def data_type(self):
-        """Type of data (DataType) stored in the scalar
-        """
+        """Type of data (DataType) stored in the scalar"""
         return DataType.scalar
 
     @property
@@ -67,8 +66,7 @@ class MFScalar(mfdata.MFData):
 
     @property
     def dtype(self):
-        """The scalar's numpy data type (numpy.dtype).
-        """
+        """The scalar's numpy data type (numpy.dtype)."""
         if self.structure.type == DatumType.double_precision:
             return np.float64
         elif self.structure.type == DatumType.integer:
@@ -86,8 +84,7 @@ class MFScalar(mfdata.MFData):
         return None
 
     def has_data(self):
-        """Returns whether this object has data associated with it.
-        """
+        """Returns whether this object has data associated with it."""
         try:
             return self._get_storage_obj().has_data()
         except Exception as ex:
@@ -109,8 +106,7 @@ class MFScalar(mfdata.MFData):
 
     @property
     def data(self):
-        """Returns the scalar data. Calls get_data with default parameters.
-        """
+        """Returns the scalar data. Calls get_data with default parameters."""
         return self.get_data()
 
     def get_data(self, apply_mult=False, **kwargs):
@@ -732,14 +728,12 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
 
     @property
     def data_type(self):
-        """Type of data (DataType) stored in the scalar
-        """
+        """Type of data (DataType) stored in the scalar"""
         return DataType.transientscalar
 
     @property
     def plottable(self):
-        """If the scalar is plottable
-        """
+        """If the scalar is plottable"""
         if self.model is None:
             return False
         else:
@@ -807,18 +801,18 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
     def set_data(self, data, key=None):
         """Sets the contents of the data at time `key` to `data`.
 
-            Parameters
-            ----------
-            data : str/int/float/recarray/list
-                Data being set.  Data can be a dictionary with keys as
-                zero-based stress periods and values as the data.  If data is
-                a string, integer, double, recarray, or list of tuples, it
-                will be assigned to the the stress period specified in `key`.
-                If any is set to None, that stress period of data will be
-                removed.
-            key : int
-                Zero based stress period to assign data too.  Does not apply
-                if `data` is a dictionary.
+        Parameters
+        ----------
+        data : str/int/float/recarray/list
+            Data being set.  Data can be a dictionary with keys as
+            zero-based stress periods and values as the data.  If data is
+            a string, integer, double, recarray, or list of tuples, it
+            will be assigned to the the stress period specified in `key`.
+            If any is set to None, that stress period of data will be
+            removed.
+        key : int
+            Zero based stress period to assign data too.  Does not apply
+            if `data` is a dictionary.
 
         """
         if isinstance(data, dict) or isinstance(data, OrderedDict):

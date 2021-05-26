@@ -99,8 +99,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
 
     @property
     def data_type(self):
-        """Type of data (DataType) stored in the list
-        """
+        """Type of data (DataType) stored in the list"""
         return DataType.list
 
     @property
@@ -110,14 +109,12 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
 
     @property
     def dtype(self):
-        """Type of data (numpy.dtype) stored in the list
-        """
+        """Type of data (numpy.dtype) stored in the list"""
         return self.get_data().dtype
 
     @property
     def plottable(self):
-        """If this list data is plottable
-        """
+        """If this list data is plottable"""
         if self.model is None:
             return False
         else:
@@ -140,8 +137,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         out : dict of numpy.ndarrays
             Dictionary of 3-D numpy arrays containing the stress period data
             for a selected stress period. The dictionary keys are the
-            MFDataList dtype names for the stress period data.
-"""
+            MFDataList dtype names for the stress period data."""
         i0 = 1
         sarr = self.get_data(key=kper)
         if not isinstance(sarr, list):
@@ -290,8 +286,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                     self._set_data(external_data, check_data=check_data)
 
     def has_data(self):
-        """Returns whether this MFList has any data associated with it.
-        """
+        """Returns whether this MFList has any data associated with it."""
         try:
             if self._get_storage_obj() is None:
                 return False
@@ -355,7 +350,9 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             if isinstance(data, dict) and "data" in data:
                 data = data["data"]
             type_list = self._get_storage_obj().build_type_list(
-                data=data, min_size=True, overwrite_existing_type_list=False,
+                data=data,
+                min_size=True,
+                overwrite_existing_type_list=False,
             )
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
@@ -1382,8 +1379,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
 
     @property
     def data(self):
-        """Returns list data.  Calls get_data with default parameters.
-        """
+        """Returns list data.  Calls get_data with default parameters."""
         return self.get_data()
 
     @property
@@ -1604,19 +1600,19 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
     def set_data(self, data, key=None, autofill=False):
         """Sets the contents of the data at time `key` to `data`.
 
-            Parameters
-            ----------
-            data : dict, recarray, list
-                Data being set.  Data can be a dictionary with keys as
-                zero-based stress periods and values as the data.  If data is
-                an recarray or list of tuples, it will be assigned to the the
-                stress period specified in `key`.  If any is set to None, that
-                stress period of data will be removed.
-            key : int
-                Zero based stress period to assign data too.  Does not apply
-                if `data` is a dictionary.
-            autofill : bool
-                Automatically correct data.
+        Parameters
+        ----------
+        data : dict, recarray, list
+            Data being set.  Data can be a dictionary with keys as
+            zero-based stress periods and values as the data.  If data is
+            an recarray or list of tuples, it will be assigned to the the
+            stress period specified in `key`.  If any is set to None, that
+            stress period of data will be removed.
+        key : int
+            Zero based stress period to assign data too.  Does not apply
+            if `data` is a dictionary.
+        autofill : bool
+            Automatically correct data.
         """
         self._cache_model_grid = True
         if isinstance(data, dict) or isinstance(data, OrderedDict):

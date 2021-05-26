@@ -884,8 +884,7 @@ class MFSimulation(PackageContainer):
 
     @property
     def sim_package_list(self):
-        """ List of all "simulation level" packages
-        """
+        """List of all "simulation level" packages"""
         package_list = []
         if self._tdis_file is not None:
             package_list.append(self._tdis_file)
