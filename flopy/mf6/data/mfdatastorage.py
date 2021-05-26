@@ -1269,6 +1269,9 @@ class DataStorage:
                     data_lst[index] = float(data_lst[index])
                 elif DatumUtil.is_int(data_lst[index]) and item[1] == int:
                     data_lst[index] = int(data_lst[index])
+            if len(data_lst) == 0:
+                # do not exclude all the data
+                return data
             return tuple(data_lst)
         return data
 
