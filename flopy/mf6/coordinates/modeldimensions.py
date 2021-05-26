@@ -37,7 +37,7 @@ class DataDimensions:
         data structure if no data item is specified, otherwise returns shape of
         individual data time.  user data and the dictionary path to the data
         can be passed in "data" to help resolve the data shape
-    model_subspace_size : (subspace_string : string)
+    model_subspace_size : (subspace_string : str)
         returns the size of the model subspace specified in subspace_string
 
     See Also
@@ -292,7 +292,7 @@ class ModelDimensions:
 
     Parameters
     ----------
-    model_name : string
+    model_name : str
         name of the model
     simulation_data : MFSimulationData
         contains all simulation related data
@@ -322,7 +322,7 @@ class ModelDimensions:
         deconstructed into layer/row/col)
     data_reshape : ()
         reshapes jagged model data
-    model_subspace_size : (subspace_string : string)
+    model_subspace_size : (subspace_string : str)
         returns the size of the model subspace specified in subspace_string
 
     See Also

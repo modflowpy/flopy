@@ -28,34 +28,29 @@ from ..version import __version__
 
 class MFBlockHeader:
     """
-    Represents the header of a block in a MF6 input file
+    Represents the header of a block in a MF6 input file.  This class is used
+    internally by FloPy and its direct use by a user of this library is not
+    recommend.
 
     Parameters
     ----------
-    name : string
-        block name
+    name : str
+        Block name
     variable_strings : list
-        list of strings that appear after the block name
+        List of strings that appear after the block name
     comment : MFComment
-        comment text in the block header
+        Comment text in the block header
 
     Attributes
     ----------
-    name : string
-        block name
+    name : str
+        Block name
     variable_strings : list
-        list of strings that appear after the block name
+        List of strings that appear after the block name
     comment : MFComment
-        comment text in the block header
+        Comment text in the block header
     data_items : list
-        list of MFVariable of the variables contained in this block
-
-    Methods
-    -------
-    write_header : (fd : file object)
-        writes block header to file object 'fd'
-    write_footer : (fd : file object)
-        writes block footer to file object 'fd'
+        List of MFVariable of the variables contained in this block
 
     """
 
@@ -115,6 +110,7 @@ class MFBlockHeader:
         data,
         dimensions,
     ):
+        """Builds data objects to hold header variables."""
         self.data_items = []
         var_path = block_path + (block_header_structure[0].name,)
 
@@ -148,6 +144,7 @@ class MFBlockHeader:
         self.add_data_item(new_data, data)
 
     def add_data_item(self, new_data, data):
+        """Adds data to the block."""
         self.data_items.append(new_data)
         while isinstance(data, list):
             if len(data) > 0:
@@ -160,6 +157,7 @@ class MFBlockHeader:
         self.blk_post_comment_path += data
 
     def is_same_header(self, block_header):
+        """Checks if `block_header` is the same header as this header."""
         if len(self.variable_strings) > 0:
             if len(self.variable_strings) != len(
                 block_header.variable_strings
@@ -190,12 +188,14 @@ class MFBlockHeader:
         return False
 
     def get_comment(self):
+        """Get block header comment"""
         if self.simulation_data is None:
             return self.comment
         else:
             return self.simulation_data.mfdata[self.comment_path]
 
     def connect_to_dict(self, simulation_data, path, comment=None):
+        """Add comment to the simulation dictionary"""
         self.simulation_data = simulation_data
         self.path = path
         self.comment_path = path + ("blk_hdr_comment",)
@@ -206,6 +206,14 @@ class MFBlockHeader:
         self.comment = None
 
     def write_header(self, fd):
+        """Writes block header to file object `fd`.
+
+        Parameters
+        ----------
+        fd : file object
+            File object to write block header to.
+
+        """
         fd.write("BEGIN {}".format(self.name))
         if len(self.data_items) > 0:
             if isinstance(self.data_items[0], mfdatascalar.MFScalar):
@@ -228,6 +236,14 @@ class MFBlockHeader:
         fd.write("\n")
 
     def write_footer(self, fd):
+        """Writes block footer to file object `fd`.
+
+        Parameters
+        ----------
+        fd : file object
+            File object to write block footer to.
+
+        """
         fd.write("END {}".format(self.name))
         if len(self.data_items) > 0:
             one_based = self.data_items[0].structure.type == DatumType.integer
@@ -241,6 +257,7 @@ class MFBlockHeader:
         fd.write("\n")
 
     def get_transient_key(self):
+        """Get transient key associated with this block header."""
         transient_key = None
         for index in range(0, len(self.data_items)):
             if self.data_items[index].structure.type != DatumType.keyword:
@@ -270,63 +287,37 @@ class MFBlockHeader:
 
 class MFBlock:
     """
-    Represents a block in a MF6 input file
-
+    Represents a block in a MF6 input file.  This class is used internally
+    by FloPy and use by users of the FloPy library is not recommended.
 
     Parameters
     ----------
     simulation_data : MFSimulationData
-        data specific to this simulation
+        Data specific to this simulation
     dimensions : MFDimensions
-        describes model dimensions including model grid and simulation time
+        Describes model dimensions including model grid and simulation time
     structure : MFVariableStructure
-        structure describing block
+        Structure describing block
     path : tuple
-        unique path to block
+        Unique path to block
 
     Attributes
     ----------
-    block_headers : MFBlockHeaderIO
-        block header text (BEGIN/END), header variables, comments in the
+    block_headers : MFBlockHeader
+        Block header text (BEGIN/END), header variables, comments in the
         header
     structure : MFBlockStructure
-        structure describing block
+        Structure describing block
     path : tuple
-        unique path to block
+        Unique path to block
     datasets : OrderDict
-        dictionary of dataset objects with keys that are the name of the
+        Dictionary of dataset objects with keys that are the name of the
         dataset
     datasets_keyword : dict
-        dictionary of dataset objects with keys that are key words to identify
+        Dictionary of dataset objects with keys that are key words to identify
         start of dataset
-    enabled : boolean
-        block is being used
-
-    Methods
-    -------
-    get_block_header_info : (line : string, path : tuple)
-        static method that parses a line as a block header and returns a
-        MFBlockHeader class representing the block header in that line
-    load : (block_header : MFBlockHeader, fd : file, strict : boolean)
-        loads block from file object.  file object must be advanced to
-        beginning of block before calling
-    write : (fd : file)
-        writes block to a file object
-    is_valid : ()
-        returns true of the block is valid
-    set_all_data_external : (base_name : string, check_data : boolean)
-        sets the block's list and array data to be stored externally,
-        base_name is external file name's prefix, check_data determines
-        if data error checking is enabled during this process
-
-    See Also
-    --------
-
-    Notes
-    -----
-
-    Examples
-    --------
+    enabled : bool
+        If block is being used in the simulation
 
     """
 
@@ -397,6 +388,7 @@ class MFBlock:
         data=None,
         package=None,
     ):
+        """Creates the appropriate data child object derived from MFData."""
         data_type = structure.get_datatype()
         # examine the data structure and determine the data type
         if (
@@ -487,6 +479,14 @@ class MFBlock:
             self._new_dataset(dataset.name, dataset, True, None)
 
     def set_model_relative_path(self, model_ws):
+        """Sets `model_ws` as the model path relative to the simulation's
+        path.
+
+        Parameters
+        ----------
+            model_ws : str
+                Model path relative to the simulation's path.
+        """
         # update datasets
         for key, dataset in self.datasets.items():
             if dataset.structure.file_data:
@@ -543,6 +543,7 @@ class MFBlock:
                             )
 
     def add_dataset(self, dataset_struct, data, var_path):
+        """Add data to this block."""
         try:
             self.datasets[var_path[-1]] = self.data_factory(
                 self._simulation_data,
@@ -695,6 +696,7 @@ class MFBlock:
             self.datasets_keyword[keyword] = dataset_struct
 
     def is_empty(self):
+        """Returns true if this block is empty."""
         for key, dataset in self.datasets.items():
             try:
                 has_data = dataset.has_data()
@@ -713,6 +715,18 @@ class MFBlock:
         return True
 
     def load(self, block_header, fd, strict=True):
+        """Loads block from file object.  file object must be advanced to
+        beginning of block before calling.
+
+        Parameters
+        ----------
+            block_header : MFBlockHeader
+                Block header for block block being loaded.
+            fd : file
+                File descriptor of file being loaded
+            strict : bool
+                Enforce strict MODFLOW 6 file format.
+        """
         # verify number of header variables
         if (
             len(block_header.variable_strings)
@@ -1125,6 +1139,14 @@ class MFBlock:
                 comments.append(arr_line)
 
     def write(self, fd, ext_file_action=ExtFileAction.copy_relative_paths):
+        """Writes block to a file object.
+
+        Parameters
+        ----------
+        fd : file object
+            File object to write to.
+
+        """
         # never write an empty block
         is_empty = self.is_empty()
         if (
@@ -1164,6 +1186,18 @@ class MFBlock:
         return False
 
     def set_all_data_external(self, base_name, check_data=True):
+        """Sets the block's list and array data to be stored externally,
+        base_name is external file name's prefix, check_data determines
+        if data error checking is enabled during this process.
+
+        Parameters
+        ----------
+            base_name : str
+                Base file name of external files where data will be written to.
+            check_data : bool
+                Whether to do data error checking.
+
+        """
         for key, dataset in self.datasets.items():
             if (
                 isinstance(dataset, mfdataarray.MFArray)
@@ -1294,6 +1328,8 @@ class MFBlock:
             fd.write("\n")
 
     def is_allowed(self):
+        """Determine if block is valid based on the values of dependant
+        MODFLOW variables."""
         if self.structure.variable_dependant_path:
             # fill in empty part of the path with the current path
             if len(self.structure.variable_dependant_path) == 3:
@@ -1346,6 +1382,8 @@ class MFBlock:
         return True
 
     def is_valid(self):
+        """Returns true of the block is valid.
+        """
         # check data sets
         for dataset in self.datasets.values():
             # Non-optional datasets must be enabled
@@ -1372,62 +1410,29 @@ class MFPackage(PackageContainer, PackageInterface):
     Parameters
     ----------
     model_or_sim : MFModel of MFSimulation
-        the parent model or simulation containing this package
-    package_type : string
-        string defining the package type
-    filename : string
-        filename of file where this package is stored
-    pname : string
-        package name
+        The parent model or simulation containing this package
+    package_type : str
+        String defining the package type
+    filename : str
+        Filename of file where this package is stored
+    pname : str
+        Package name
     loading_package : bool
-        whether or not to add this package to the parent container's package
+        Whether or not to add this package to the parent container's package
         list during initialization
     parent_file : MFPackage
-        parent package that contains this package
+        Parent package that contains this package
 
     Attributes
     ----------
     blocks : OrderedDict
-        dictionary of blocks contained in this package by block name
+        Dictionary of blocks contained in this package by block name
     path : tuple
-        data dictionary path to this package
+        Data dictionary path to this package
     structure : PackageStructure
-        describes the blocks and data contain in this package
+        Describes the blocks and data contain in this package
     dimensions : PackageDimension
-        resolves data dimensions for data within this package
-
-    Methods
-    -------
-    build_mfdata : (var_name : variable name, data : data contained in this
-      object) : MFData subclass
-        Returns the appropriate data type object (mfdatalist, mfdataarray, or
-        mfdatascalar) giving that object the appropriate structure (looked
-        up based on var_name) and any data supplied
-    load : (strict : bool) : bool
-        Loads the package from file
-    is_valid : bool
-        Returns whether or not this package is valid
-    write
-        Writes the package to a file
-    get_file_path : string
-        Returns the package file's path
-    remove
-        Removes package from the simulation/model it is currently a part of
-    set_all_data_external : (check_data : boolean)
-        sets the package's list and array data to be stored externally,
-        check_data determines if data error checking is enabled during this
-        process
-
-
-    See Also
-    --------
-
-    Notes
-    -----
-
-    Examples
-    --------
-
+        Resolves data dimensions for data within this package
 
     """
 
@@ -1581,10 +1586,12 @@ class MFPackage(PackageContainer, PackageInterface):
 
     @property
     def filename(self):
+        """Package's file name."""
         return self._filename
 
     @filename.setter
     def filename(self, fname):
+        """Package's file name."""
         if (
             isinstance(self.parent_file, MFPackage)
             and self.structure.file_type
@@ -1604,26 +1611,32 @@ class MFPackage(PackageContainer, PackageInterface):
 
     @property
     def package_type(self):
+        """String describing type of package"""
         return self._package_type
 
     @property
     def name(self):
+        """Name of package"""
         return [self.package_name]
 
     @name.setter
     def name(self, name):
+        """Name of package"""
         self.package_name = name
 
     @property
     def parent(self):
+        """Parent package"""
         return self._parent
 
     @parent.setter
     def parent(self, parent):
+        """Parent package"""
         self._parent = parent
 
     @property
     def plottable(self):
+        """If package is plottable"""
         if self.model_or_sim.type == "Simulation":
             return False
         else:
@@ -1631,10 +1644,12 @@ class MFPackage(PackageContainer, PackageInterface):
 
     @property
     def data_list(self):
+        """List of data in this package."""
         # return [data_object, data_object, ...]
         return self._data_list
 
     def check(self, f=None, verbose=True, level=1, checktype=None):
+        """Data check, returns True on success."""
         if checktype is None:
             checktype = mf6check
         return super().check(f, verbose, level, checktype)
@@ -1818,9 +1833,14 @@ class MFPackage(PackageContainer, PackageInterface):
                                 )
 
     def remove(self):
+        """Removes this package from the simulation/model it is currently a
+        part of.
+        """
         self.model_or_sim.remove_package(self)
 
     def build_child_packages_container(self, pkg_type, filerecord):
+        """Builds a container object for any child packages.  This method is
+        only intended for FloPy internal use."""
         # get package class
         package_obj = self.package_factory(
             pkg_type, self.model_or_sim.model_type
@@ -1835,6 +1855,8 @@ class MFPackage(PackageContainer, PackageInterface):
         self._child_package_groups[pkg_type] = child_pkgs
 
     def build_child_package(self, pkg_type, data, parameter_name, filerecord):
+        """Builds a child package.  This method is only intended for FloPy
+        internal use."""
         if not hasattr(self, pkg_type):
             self.build_child_packages_container(pkg_type, filerecord)
         if data is not None:
@@ -1878,6 +1900,24 @@ class MFPackage(PackageContainer, PackageInterface):
             package_group._init_package(package, child_path)
 
     def build_mfdata(self, var_name, data=None):
+        """Returns the appropriate data type object (mfdatalist, mfdataarray,
+        or mfdatascalar) given that object the appropriate structure (looked
+        up based on var_name) and any data supplied.  This method is for
+        internal FloPy library use only.
+
+        Parameters
+        ----------
+        var_name : str
+            Variable name
+
+        data : many supported types
+            Data contained in this object
+
+        Returns
+        -------
+        data object : MFData subclass
+
+        """
         if self.loading_package:
             data = None
         for key, block in self.structure.blocks.items():
@@ -1918,6 +1958,14 @@ class MFPackage(PackageContainer, PackageInterface):
         )
 
     def set_model_relative_path(self, model_ws):
+        """Sets the model path relative to the simulation's path.
+
+        Parameters
+        ----------
+        model_ws : str
+            Model path relative to the simulation's path.
+
+        """
         # update blocks
         for key, block in self.blocks.items():
             block.set_model_relative_path(model_ws)
@@ -1926,6 +1974,14 @@ class MFPackage(PackageContainer, PackageInterface):
             package.set_model_relative_path(model_ws)
 
     def set_all_data_external(self, check_data=True):
+        """Sets the package's list and array data to be stored externally.
+
+        Parameters
+        ----------
+            check_data : bool
+                Determine if data error checking is enabled
+
+        """
         # set blocks
         for key, block in self.blocks.items():
             file_name = os.path.split(self.filename)[1]
@@ -1935,6 +1991,18 @@ class MFPackage(PackageContainer, PackageInterface):
             package.set_all_data_external(check_data)
 
     def load(self, strict=True):
+        """Loads the package from file.
+
+        Parameters
+        ----------
+        strict : bool
+            Enforce strict checking of data.
+
+        Returns
+        -------
+        success : bool
+
+        """
         # open file
         try:
             fd_input_file = open(self.get_file_path(), "r")
@@ -1973,6 +2041,13 @@ class MFPackage(PackageContainer, PackageInterface):
         return self.is_valid()
 
     def is_valid(self):
+        """Returns whether or not this package is valid.
+
+        Returns
+        -------
+        is valid : bool
+
+        """
         # Check blocks
         for block in self.blocks.values():
             # Non-optional blocks must be enabled
@@ -2182,6 +2257,13 @@ class MFPackage(PackageContainer, PackageInterface):
                     self._store_comment(line, found_first_block)
 
     def write(self, ext_file_action=ExtFileAction.copy_relative_paths):
+        """Writes the package to a file.
+
+        Parameters
+        ----------
+        ext_file_action : ExtFileAction
+            How to handle pathing of external data files.
+        """
         if self.simulation_data.auto_set_sizes:
             self._update_size_defs()
 
@@ -2213,6 +2295,14 @@ class MFPackage(PackageContainer, PackageInterface):
         fd.close()
 
     def create_package_dimensions(self):
+        """Creates a package dimensions object.  For internal FloPy library
+        use.
+
+        Returns
+        -------
+        package dimensions : PackageDimensions
+
+        """
         model_dims = None
         if self.container_type[0] == PackageContainerType.model:
             model_dims = [
@@ -2314,6 +2404,12 @@ class MFPackage(PackageContainer, PackageInterface):
             block_num += 1
 
     def get_file_path(self):
+        """Returns the package file's path.
+
+        Returns
+        -------
+        file path : str
+        """
         if self.path[0] in self._simulation_data.mfpath.model_relative_path:
             return os.path.join(
                 self._simulation_data.mfpath.get_model_path(self.path[0]),
@@ -2332,10 +2428,10 @@ class MFPackage(PackageContainer, PackageInterface):
         Parameters
         ----------
         f : str
-            filename
+            Filename
         kwargs : keyword arguments
             modelgrid : flopy.discretization.Grid instance
-                user supplied modelgrid which can be used for exporting
+                User supplied modelgrid which can be used for exporting
                 in lieu of the modelgrid associated with the model object
 
         Returns
@@ -2354,8 +2450,6 @@ class MFPackage(PackageContainer, PackageInterface):
 
         Parameters
         ----------
-        package: flopy.pakbase.Package instance supplied for plotting
-
         **kwargs : dict
             filename_base : str
                 Base file name that will be used to automatically generate
@@ -2390,6 +2484,14 @@ class MFPackage(PackageContainer, PackageInterface):
 
 
 class MFChildPackages:
+    """
+    Behind the scenes code for creating an interface to access child packages
+    from a parent package.  This class is automatically constructed by the
+    FloPy library and is for internal library use only.
+
+    Parameters
+    ----------
+    """
     def __init__(
         self,
         model,
