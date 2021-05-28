@@ -925,7 +925,8 @@ def test045_lake2tr():
         head_file = os.path.join(os.getcwd(), expected_head_file_a)
         head_new = os.path.join(run_folder, "lakeex2a.hds")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new
+            None, None, files1=head_file, files2=head_new,
+            htol=10.,
         )
 
     # change some settings
@@ -1082,7 +1083,8 @@ def test027_timeseriestest():
         head_new = os.path.join(run_folder, "timeseriestest.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new, outfile=outfile
+            None, None, files1=head_file, files2=head_new, outfile=outfile,
+            htol=10.,
         )
 
     model = sim.get_model(model_name)
