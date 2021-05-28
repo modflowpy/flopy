@@ -952,7 +952,8 @@ def test045_lake2tr():
         head_file = os.path.join(os.getcwd(), expected_head_file_b)
         head_new = os.path.join(save_folder, "lakeex2a.hds")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new
+            None, None, files1=head_file, files2=head_new,
+            htol=10.,
         )
 
 
@@ -1107,7 +1108,8 @@ def test027_timeseriestest():
         head_file = os.path.join(os.getcwd(), expected_head_file_b)
         head_new = os.path.join(save_folder, "timeseriestest.hds")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new
+            None, None, files1=head_file, files2=head_new,
+            htol=10.,
         )
 
 
