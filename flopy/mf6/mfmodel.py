@@ -1201,7 +1201,7 @@ class MFModel(PackageContainer, ModelInterface):
 
         Returns
         -------
-        path, package structure : tuple, MFPackageStructure)
+        path, package structure : tuple, MFPackageStructure
 
         """
         package.container_type = [PackageContainerType.model]
