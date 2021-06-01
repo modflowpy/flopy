@@ -18,7 +18,7 @@ class ModelCell:
 
     Parameters
     ----------
-    cellid : string
+    cellid : str
         id of model cell
 
     Methods
@@ -44,11 +44,11 @@ class UnstructuredModelCell(ModelCell):
 
     Parameters
     ----------
-    cellid : string
+    cellid : str
         id of model cell
     simulation_data : object
         contains all simulation related data
-    model_name : string
+    model_name : str
         name of the model
 
     Methods
@@ -73,10 +73,10 @@ class UnstructuredModelCell(ModelCell):
         returns the connection areas for all connections to this cell
     get_connection_anglex : ()
         returns the connection angles for all connections to this cell
-    set_top : (top_elv : float, update_connections : boolean)
+    set_top : (top_elv : float, update_connections : bool)
         sets the top elevation of the model cell and updates the connection
         properties if update_connections is true
-    set_bot : (bot_elv : float, update_connections : boolean)
+    set_bot : (bot_elv : float, update_connections : bool)
         sets the bottom elevation of the model cell and updates the connection
         properties if update_connections is true
     set_area : (area : float)
@@ -334,7 +334,7 @@ class ModelGrid:
 
     Parameters
     ----------
-    model_name : string
+    model_name : str
         name of the model
     simulation_data : object
         contains all simulation related data
@@ -421,7 +421,7 @@ class ModelGrid:
         ----------
         simulation_data : MFSimulationData
             object containing simulation data for a simulation
-        model_name : string
+        model_name : str
             name of a model in the simulation
         Returns
         -------
@@ -714,7 +714,7 @@ class UnstructuredModelGrid(ModelGrid):
 
     Parameters
     ----------
-    model_name : string
+    model_name : str
         name of the model
     simulation_data : object
         contains all simulation related data

@@ -8,6 +8,7 @@ import numpy as np
 from ..mfbase import MFDataException, VerbosityLevel
 from ..data.mfstructure import DatumType, MFDataItemStructure
 from ..data import mfdatautil
+from .mfdatautil import iterable
 from ...utils.datautil import (
     DatumUtil,
     FileIter,
@@ -180,7 +181,7 @@ class DataStorage:
         what internal type is the data stored in (ndarray, recarray, scalar)
     layer_shape : int
         number of data layers
-    layered : boolean
+    layered : bool
         is the data layered
     layer_storage : MultiList<LayerStorage>
         one or more dimensional list of LayerStorage
@@ -199,7 +200,7 @@ class DataStorage:
         list of print formats, one for each layer
     data_structure_type :
         what internal type is the data stored in (ndarray, recarray, scalar)
-    layered : boolean
+    layered : bool
         is the data layered
     pre_data_comments : string
         any comments before the start of the data
@@ -218,7 +219,7 @@ class DataStorage:
     get_const_val(layer)
         gets the constant value of a given layer.  data storage type for layer
         must be "internal_constant".
-    has_data(layer) : boolean
+    has_data(layer) : bool
         returns true if data exists for the specified layer, false otherwise
     get_data(layer) : ndarray/recarray/string
         returns the data for the specified layer
@@ -863,7 +864,13 @@ class DataStorage:
                 )
 
     def set_data(
-        self, data, layer=None, multiplier=None, key=None, autofill=False
+        self,
+        data,
+        layer=None,
+        multiplier=None,
+        key=None,
+        autofill=False,
+        check_data=False,
     ):
         if multiplier is None:
             multiplier = [1.0]
@@ -871,11 +878,13 @@ class DataStorage:
             self.data_structure_type == DataStructureType.recarray
             or self.data_structure_type == DataStructureType.scalar
         ):
-            self._set_list(data, layer, multiplier, key, autofill)
+            self._set_list(data, layer, multiplier, key, autofill, check_data)
         else:
             self._set_array(data, layer, multiplier, key, autofill)
 
-    def _set_list(self, data, layer, multiplier, key, autofill):
+    def _set_list(
+        self, data, layer, multiplier, key, autofill, check_data=False
+    ):
         if isinstance(data, dict):
             if "filename" in data:
                 if "binary" in data and data["binary"]:
@@ -902,7 +911,13 @@ class DataStorage:
                 self.process_open_close_line(data, layer)
                 return
         self.store_internal(
-            data, layer, False, multiplier, key=key, autofill=autofill
+            data,
+            layer,
+            False,
+            multiplier,
+            key=key,
+            autofill=autofill,
+            check_data=check_data,
         )
 
     def _set_array(self, data, layer, multiplier, key, autofill):
@@ -1099,6 +1114,7 @@ class DataStorage:
         key=None,
         autofill=False,
         print_format=None,
+        check_data=False,
     ):
         if multiplier is None:
             multiplier = [self.get_default_mult()]
@@ -1113,12 +1129,36 @@ class DataStorage:
                     DataStorageType.internal_array
                 )
                 if data is None or isinstance(data, np.recarray):
-                    if self._simulation_data.verify_data:
+                    if self._simulation_data.verify_data and check_data:
                         self._verify_list(data)
                     self.layer_storage.first_item().internal_data = data
                 else:
                     if data is None:
                         self.set_data(None)
+                    self.build_type_list()
+                    if isinstance(data, list):
+                        # look for single strings in list that describe
+                        # multiple items
+                        new_data = []
+                        for item in data:
+                            if isinstance(item, str):
+                                # parse possible multi-item string
+                                new_data.append(self._resolve_data_line(item))
+                            else:
+                                new_data.append(item)
+                        data = new_data
+                    if isinstance(data, str):
+                        # parse possible multi-item string
+                        data = [self._resolve_data_line(data)]
+
+                    if (
+                        data is not None
+                        and check_data
+                        and self._simulation_data.verify_data
+                    ):
+                        # check data line length
+                        self._check_list_length(data)
+
                     if autofill and data is not None:
                         if isinstance(data, tuple) and isinstance(
                             data[0], tuple
@@ -1208,6 +1248,90 @@ class DataStorage:
                     )
             self.layer_storage[layer].factor = multiplier
             self.layer_storage[layer].iprn = print_format
+
+    def _resolve_data_line(self, data):
+        if len(self._recarray_type_list) > 1:
+            # resolve string into a line of data with correct
+            # types
+            data_lst = data.strip().split()
+            data_is = self.data_dimensions.structure.data_item_structures
+            # remove any leading keywords
+            for idx in range(0, len(data_is)):
+                if data_is[idx].type == DatumType.keyword:
+                    # exclude first items if they are keywords
+                    data_lst = data_lst[1:]
+                else:
+                    break
+            for item, index in zip(
+                self._recarray_type_list, range(0, len(data_lst))
+            ):
+                if DatumUtil.is_float(data_lst[index]) and item[1] == float:
+                    data_lst[index] = float(data_lst[index])
+                elif DatumUtil.is_int(data_lst[index]) and item[1] == int:
+                    data_lst[index] = int(data_lst[index])
+            if len(data_lst) == 0:
+                # do not exclude all the data
+                return data
+            return tuple(data_lst)
+        return data
+
+    def _get_min_record_entries(self, data=None):
+        try:
+            if isinstance(data, dict) and "data" in data:
+                data = data["data"]
+            type_list = self.build_type_list(data=data, min_size=True)
+        except Exception as ex:
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.data_dimensions.structure.get_model(),
+                self.data_dimensions.structure.get_package(),
+                self.data_dimensions.structure.path,
+                "getting min record entries",
+                self.data_dimensions.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                None,
+                self._simulation_data.debug,
+                ex,
+            )
+        return len(type_list)
+
+    def _check_line_size(self, data_line, min_line_size):
+        if 0 < len(data_line) < min_line_size:
+            message = (
+                "Data line {} only has {} entries, "
+                "minimum number of entries is "
+                "{}.".format(data_line, len(data_line), min_line_size)
+            )
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.data_dimensions.structure.get_model(),
+                self.data_dimensions.structure.get_package(),
+                self.data_dimensions.structure.path,
+                "storing data",
+                self.data_dimensions.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                message,
+                self._simulation_data.debug,
+            )
+
+    def _check_list_length(self, data_check):
+        if iterable(data_check):
+            # verify data length
+            min_line_size = self._get_min_record_entries(data_check)
+            if isinstance(data_check[0], np.record) or (
+                iterable(data_check[0]) and not isinstance(data_check[0], str)
+            ):
+                # data contains multiple records
+                for data_line in data_check:
+                    self._check_line_size(data_line, min_line_size)
+            else:
+                self._check_line_size(data_check, min_line_size)
 
     def _build_recarray(self, data, key, autofill):
         self.build_type_list(data=data, key=key)
@@ -2389,7 +2513,11 @@ class DataStorage:
         nseg=None,
         cellid_expanded=False,
         min_size=False,
+        overwrite_existing_type_list=True,
     ):
+        if not overwrite_existing_type_list:
+            existing_type_list = self._recarray_type_list
+            existing_type_list_ex = self._recarray_type_list_ex
         if data_set is None:
             self.jagged_record = False
             self._recarray_type_list = []
@@ -2581,9 +2709,17 @@ class DataStorage:
                                     name, data_type, data_item.is_cellid
                                 )
         if cellid_expanded:
-            return self._recarray_type_list_ex
+            new_type_list_ex = self._recarray_type_list_ex
+            if not overwrite_existing_type_list:
+                self._recarray_type_list = existing_type_list
+                self._recarray_type_list_ex = existing_type_list_ex
+            return new_type_list_ex
         else:
-            return self._recarray_type_list
+            new_type_list = self._recarray_type_list
+            if not overwrite_existing_type_list:
+                self._recarray_type_list = existing_type_list
+                self._recarray_type_list_ex = existing_type_list_ex
+            return new_type_list
 
     def get_default_mult(self):
         if self._data_type == DatumType.integer:
