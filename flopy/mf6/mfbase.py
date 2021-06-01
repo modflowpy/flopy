@@ -11,7 +11,7 @@ from enum import Enum
 # internal handled exceptions
 class MFInvalidTransientBlockHeaderException(Exception):
     """
-    Exception related to parsing a transient block header
+    Exception occurs when parsing a transient block header
     """
 
     def __init__(self, error):
@@ -22,7 +22,8 @@ class MFInvalidTransientBlockHeaderException(Exception):
 
 class ReadAsArraysException(Exception):
     """
-    Attempted to load ReadAsArrays package as non-ReadAsArraysPackage
+    Exception occurs when loading ReadAsArrays package as non-ReadAsArrays
+    package.
     """
 
     def __init__(self, error):
@@ -32,7 +33,7 @@ class ReadAsArraysException(Exception):
 # external exceptions for users
 class FlopyException(Exception):
     """
-    General Flopy Exception
+    General FloPy exception
     """
 
     def __init__(self, error, location=""):
@@ -44,7 +45,7 @@ class FlopyException(Exception):
 
 class StructException(Exception):
     """
-    Exception related to the package file structure
+    Exception with the package file structure
     """
 
     def __init__(self, error, location):
@@ -56,7 +57,8 @@ class StructException(Exception):
 
 class MFDataException(Exception):
     """
-    Exception related to MODFLOW input/output data
+    Exception with MODFLOW data.  Exception includes detailed error
+    information.
     """
 
     def __init__(
@@ -173,24 +175,35 @@ class MFDataException(Exception):
 
 
 class VerbosityLevel(Enum):
+    """Determines how much information FloPy writes to the console"""
+
     quiet = 1
     normal = 2
     verbose = 3
 
 
 class PackageContainerType(Enum):
+    """Determines whether a package container is a simulation, model, or
+    package."""
+
     simulation = 1
     model = 2
     package = 3
 
 
 class ExtFileAction(Enum):
+    """Defines what to do with external files when the simulation or model's
+    path change."""
+
     copy_all = 1
     copy_none = 2
     copy_relative_paths = 3
 
 
 class MFFilePath:
+    """Class that stores a single file path along with the associated model
+    name."""
+
     def __init__(self, file_path, model_name):
         self.file_path = file_path
         self.model_name = {model_name: 0}
@@ -206,24 +219,14 @@ class MFFileMgmt:
     Parameters
     ----------
 
-    path : string
-        path on disk to the simulation
+    path : str
+        Path on disk to the simulation
 
     Attributes
     ----------
 
-    sim_path : string
-        path to the simulation
     model_relative_path : OrderedDict
-        dictionary of relative paths to each model folder
-
-    Methods
-    -------
-
-    get_model_path : (key : string) : string
-        returns the model working path for the model key
-    set_sim_path : string
-        sets the simulation working path
+        Dictionary of relative paths to each model folder
 
     """
 
@@ -241,6 +244,13 @@ class MFFileMgmt:
         self._last_loaded_model_relative_path = OrderedDict()
 
     def copy_files(self, copy_relative_only=True):
+        """Copy files external to updated path.
+
+        Parameters
+        ----------
+            copy_relative_only : bool
+                Only copy files with relative paths.
+        """
         num_files_copied = 0
         if self._last_loaded_sim_path is not None:
             for mffile_path in self.existing_file_dict.values():
@@ -282,6 +292,8 @@ class MFFileMgmt:
     def get_updated_path(
         self, external_file_path, model_name, ext_file_action
     ):
+        """Get updated external file path information.  For internal
+        FloPy use, not intended for end user."""
         external_file_path = self.string_to_file_path(external_file_path)
         if ext_file_action == ExtFileAction.copy_all:
             if os.path.isabs(external_file_path):
@@ -313,6 +325,8 @@ class MFFileMgmt:
         return os.path.relpath(old_abs_path, current_abs_path)
 
     def strip_model_relative_path(self, model_name, path):
+        """Strip out the model relative path part of `path`.  For internal
+        FloPy use, not intended for end user."""
         if model_name in self.model_relative_path:
             model_rel_path = self.model_relative_path[model_name]
             new_path = None
@@ -327,6 +341,8 @@ class MFFileMgmt:
 
     @staticmethod
     def unique_file_name(file_name, lookup):
+        """Generate a unique file name.  For internal FloPy use, not intended
+        for end user."""
         num = 0
         while MFFileMgmt._build_file(file_name, num) in lookup:
             num += 1
@@ -342,6 +358,8 @@ class MFFileMgmt:
 
     @staticmethod
     def string_to_file_path(fp_string):
+        """Interpret string as a file path.  For internal FloPy use, not
+        intended for end user."""
         file_delimiters = ["/", "\\"]
         new_string = fp_string
         for delimiter in file_delimiters:
@@ -359,14 +377,33 @@ class MFFileMgmt:
         return new_string
 
     def set_last_accessed_path(self):
+        """Set the last accessed simulation path to the current simulation
+        path.  For internal FloPy use, not intended for end user."""
         self._last_loaded_sim_path = self._sim_path
         self.set_last_accessed_model_path()
 
     def set_last_accessed_model_path(self):
+        """Set the last accessed model path to the current model path.
+        For internal FloPy use, not intended for end user."""
         for key, item in self.model_relative_path.items():
             self._last_loaded_model_relative_path[key] = copy.deepcopy(item)
 
     def get_model_path(self, key, last_loaded_path=False):
+        """Returns the model working path for the model `key`.
+
+        Parameters
+        ----------
+        key : str
+            Model name whose path flopy will retrieve
+        last_loaded_path : bool
+            Get the last path loaded by FloPy which may not be the most
+            recent path.
+
+        Returns
+        -------
+            model path : str
+
+        """
         if last_loaded_path:
             return os.path.join(
                 self._last_loaded_sim_path,
@@ -381,12 +418,15 @@ class MFFileMgmt:
                 return self._sim_path
 
     def get_sim_path(self, last_loaded_path=False):
+        """Get the simulation path."""
         if last_loaded_path:
             return self._last_loaded_sim_path
         else:
             return self._sim_path
 
     def add_ext_file(self, file_path, model_name):
+        """Add an external file to the path list.  For internal FloPy use, not
+        intended for end user."""
         if file_path in self.existing_file_dict:
             if model_name not in self.existing_file_dict[file_path].model_name:
                 self.existing_file_dict[file_path].model_name[model_name] = 0
@@ -396,12 +436,12 @@ class MFFileMgmt:
 
     def set_sim_path(self, path):
         """
-        set the file path to the simulation files
+        Set the file path to the simulation files
 
         Parameters
         ----------
-        path : string
-            full path or relative path from working directory to
+        path : str
+            Full path or relative path from working directory to
             simulation folder
 
         Returns
@@ -409,7 +449,7 @@ class MFFileMgmt:
 
         Examples
         --------
-        self.simulation_data.mfdata.set_sim_path()
+        self.simulation_data.mfdata.set_sim_path('sim_folder')
         """
 
         # recalculate paths for everything
@@ -424,6 +464,8 @@ class MFFileMgmt:
     def resolve_path(
         self, path, model_name, last_loaded_path=False, move_abs_paths=False
     ):
+        """Resolve a simulation or model path.  For internal FloPy use, not
+        intended for end user."""
         if isinstance(path, MFFilePath):
             file_path = path.file_path
         else:
@@ -458,33 +500,19 @@ class PackageContainer:
     Parameters
     ----------
     simulation_data : SimulationData
-        the simulation's SimulationData object
-    name : string
-        name of the package container object
+        The simulation's SimulationData object
+    name : str
+        Name of the package container object
 
     Attributes
     ----------
-    _packagelist : list
-        packages contained in the package container
     package_type_dict : dictionary
-        dictionary of packages by package type
+        Dictionary of packages by package type
     package_name_dict : dictionary
-        dictionary of packages by package name
+        Dictionary of packages by package name
     package_key_dict : dictionary
-        dictionary of packages by package key
+        Dictionary of packages by package key
 
-    Methods
-    -------
-    package_factory : (package_type : string, model_type : string) :
-      MFPackage subclass
-        Static method that returns the appropriate package type object based
-        on the package_type and model_type strings
-    get_package : (name : string) : MFPackage or [MfPackage]
-        finds a package by package name, package key, package type, or partial
-        package name. returns either a single package, a list of packages,
-        or None
-    register_package : (package : MFPackage) : (tuple, PackageStructure)
-        base class method for package registration
     """
 
     def __init__(self, simulation_data, name):
@@ -498,6 +526,22 @@ class PackageContainer:
 
     @staticmethod
     def package_factory(package_type, model_type):
+        """Static method that returns the appropriate package type object based
+        on the package_type and model_type strings.  For internal FloPy use
+        only, not intended for end users.
+
+        Parameters
+        ----------
+            package_type : str
+                Type of package to create
+            model_type : str
+                Type of model that package is a part of
+
+        Returns
+        -------
+            package : MFPackage subclass
+
+        """
         package_abbr = "{}{}".format(model_type, package_type)
         package_utl_abbr = "utl{}".format(package_type)
         package_list = []
@@ -531,6 +575,20 @@ class PackageContainer:
 
     @staticmethod
     def model_factory(model_type):
+        """Static method that returns the appropriate model type object based
+        on the model_type string. For internal FloPy use only, not intended
+        for end users.
+
+        Parameters
+        ----------
+            model_type : str
+                Type of model that package is a part of
+
+        Returns
+        -------
+            model : MFModel subclass
+
+        """
         package_file_paths = PackageContainer.get_package_file_paths()
         for package_file_path in package_file_paths:
             module = PackageContainer.get_module(package_file_path)
@@ -546,6 +604,8 @@ class PackageContainer:
 
     @staticmethod
     def get_module_val(module, item, attrb):
+        """Static method that returns a python class module value.  For
+        internal FloPy use only, not intended for end users."""
         value = getattr(module, item)
         # verify this is a class
         if (
@@ -558,6 +618,8 @@ class PackageContainer:
 
     @staticmethod
     def get_module(package_file_path):
+        """Static method that returns the python module library.  For
+        internal FloPy use only, not intended for end users."""
         package_file_name = os.path.basename(package_file_path)
         module_path = os.path.splitext(package_file_name)[0]
         module_name = "{}{}{}".format(
@@ -573,16 +635,21 @@ class PackageContainer:
 
     @staticmethod
     def get_package_file_paths():
+        """Static method that gets the paths of all the FloPy python package
+        files.  For internal FloPy use only, not intended for end users.
+        """
         base_path = os.path.split(os.path.realpath(__file__))[0]
         package_path = os.path.join(base_path, "modflow")
         return glob.glob(os.path.join(package_path, "*.py"))
 
     @property
     def package_dict(self):
+        """Returns a copy of the package name dictionary."""
         return self.package_name_dict.copy()
 
     @property
     def package_names(self):
+        """Returns a list of package names."""
         return list(self.package_name_dict.keys())
 
     def _add_package(self, package, path):
@@ -625,7 +692,9 @@ class PackageContainer:
 
     def get_package(self, name=None):
         """
-        Get a package.
+        Finds a package by package name, package key, package type, or partial
+        package name. returns either a single package, a list of packages,
+        or None.
 
         Parameters
         ----------
@@ -670,6 +739,7 @@ class PackageContainer:
         return None
 
     def register_package(self, package):
+        """Base method for registering a package.  Should be overridden."""
         path = (package.package_name,)
         return (path, None)
 
