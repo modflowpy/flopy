@@ -259,7 +259,7 @@ class MFComment:
         checks to see if comment is just an empty string ''.  if
         include_whitespace is set to false a string with only whitespace is
         considered empty
-    is_comment(text, include_empty_line=False) : boolean
+    is_comment(text, include_empty_line=False) : bool
         returns true if text is a comment.  an empty line is considered a
         comment if include_empty_line is true.
 
@@ -492,7 +492,7 @@ class ArrayTemplateGenerator(TemplateGenerator):
 
     Methods
     -------
-    empty: (model: MFModel, layered: boolean, data_storage_type_list: boolean,
+    empty: (model: MFModel, layered: bool, data_storage_type_list: bool,
             default_value: int/float) : variable
         Builds a template for the data you need to specify for a specific data
         type (ie. "hk") in a specific model.  The data type and dimensions
@@ -657,7 +657,7 @@ class ListTemplateGenerator(TemplateGenerator):
 
     Methods
     -------
-    empty: (maxbound: int, aux_vars: list, boundnames: boolean, nseg: int) :
+    empty: (maxbound: int, aux_vars: list, boundnames: bool, nseg: int) :
             dictionary
         Builds a template for the data you need to specify for a specific data
         type (ie. "stress_period_data") in a specific model.  The data type is

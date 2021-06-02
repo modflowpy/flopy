@@ -1390,9 +1390,10 @@ class Gridgen:
     @staticmethod
     def gridarray_to_flopyusg_gridarray(nodelay, a):
         nlay = nodelay.shape[0]
-        istart = 0
+        istop = 0
         layerlist = []
         for k in range(nlay):
+            istart = istop
             istop = istart + nodelay[k]
             ak = a[istart:istop]
             if ak.min() == ak.max():

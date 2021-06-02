@@ -80,7 +80,9 @@ class Dfn:
             "gwfriv": 0,
             "gwfghb": 0,
             "gwfrch": 0,
+            "gwfrcha": 0,
             "gwfevt": 0,
+            "gwfevta": 0,
             "gwfmaw": 0,
             "gwfsfr": 0,
             "gwflak": 0,
@@ -2051,7 +2053,7 @@ class MFInputFileStructure:
 
     Attributes
     ----------
-    valid : boolean
+    valid : bool
         simulation structure validity
     path : tuple
         path defining the location of this input file structure within the
@@ -2126,7 +2128,7 @@ class MFModelStructure:
 
     Attributes
     ----------
-    valid : boolean
+    valid : bool
         simulation structure validity
     name_file_struct_obj : MFInputFileStructure
         describes the structure of the simulation name file
