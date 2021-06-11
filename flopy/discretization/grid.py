@@ -493,32 +493,7 @@ class Grid:
 
     @property
     def map_polygons(self):
-        """
-        Get a list of matplotlib Polygon patches for plotting
-
-        Returns
-        -------
-            list of Polygon objects
-        """
-        try:
-            from matplotlib.patches import Polygon
-        except ImportError:
-            raise ImportError("matplotlib required to use this method")
-        cache_index = "xyzgrid"
-        if (
-            cache_index not in self._cache_dict
-            or self._cache_dict[cache_index].out_of_date
-        ):
-            self.xyzvertices
-            self._polygons = None
-
-        if self._polygons is None:
-            self._polygons = [
-                Polygon(self.get_cell_vertices(nn), closed=True)
-                for nn in range(self.ncpl)
-            ]
-
-        return copy.copy(self._polygons)
+        raise NotImplementedError("must define map_polygons in child class")
 
     def get_plottable_layer_array(self, plotarray, layer):
         raise NotImplementedError(
@@ -558,7 +533,7 @@ class Grid:
             x = np.array(x)
             y = np.array(y)
         if not np.isscalar(x):
-            x, y = x.copy(), y.copy()
+            x, y = x.astype(float, copy=True), y.astype(float, copy=True)
 
         x += self._xoff
         y += self._yoff

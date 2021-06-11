@@ -726,6 +726,32 @@ class StructuredGrid(Grid):
         else:
             return self._cache_dict[cache_index].data_nocopy
 
+    @property
+    def map_polygons(self):
+        """
+        Get a list of matplotlib Polygon patches for plotting
+
+        Returns
+        -------
+            list of Polygon objects
+        """
+        try:
+            import matplotlib.path as mpath
+        except ImportError:
+            raise ImportError("matplotlib required to use this method")
+        cache_index = "xyzgrid"
+        if (
+            cache_index not in self._cache_dict
+            or self._cache_dict[cache_index].out_of_date
+        ):
+            self.xyzvertices
+            self._polygons = None
+
+        if self._polygons is None:
+            self._polygons = (self.xvertices, self.yvertices)
+
+        return self._polygons
+
     ###############
     ### Methods ###
     ###############
