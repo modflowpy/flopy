@@ -405,7 +405,7 @@ class UnstructuredGrid(Grid):
             list or dict of matplotlib.collections.Polygon
         """
         try:
-            from matplotlib.patches import Polygon
+            from matplotlib.path import Path
         except ImportError:
             raise ImportError("matplotlib required to use this method")
 
@@ -429,11 +429,11 @@ class UnstructuredGrid(Grid):
                     if ilay not in self._polygons:
                         self._polygons[ilay] = []
 
-                    p = Polygon(self.get_cell_vertices(nn), closed=True)
+                    p = Path(self.get_cell_vertices(nn))
                     self._polygons[ilay].append(p)
             else:
                 self._polygons = [
-                    Polygon(self.get_cell_vertices(nn), closed=True)
+                    Path(self.get_cell_vertices(nn))
                     for nn in range(self.ncpl[0])
                 ]
 

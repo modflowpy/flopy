@@ -2712,19 +2712,35 @@ def intersect_modpath_with_crosssection(
     xvertices,
     yvertices,
     projection,
+    ncpl,
     method="cell",
     starting=False,
 ):
     """
+    Method to intersect modpath output with a cross-section
 
-    :param recarrays:
-    :param projpts:
-    :param xvertices:
-    :param yvertices:
-    :param projection:
-    :param method:
-    :param starting:
-    :return:
+    Parameters
+    ----------
+    recarrays : list
+        list of numpy recarrays
+    projpts : dict
+        dict of crossectional cell vertices
+    xvertices : np.array
+        array of modelgrid xvertices
+    yvertices : np.array
+        array of modelgrid yvertices
+    projection : str
+        projection direction (x or y)
+    ncpl : int
+        number of cells per layer (cross sectional version)
+    method : str
+        intersection method ('cell' or 'all')
+    starting : bool
+        modpath starting location flag
+
+    Returns
+    -------
+        dict : dictionary of intersecting recarrays
     """
 
     from ..utils.geometry import point_in_polygon
@@ -2754,12 +2770,15 @@ def intersect_modpath_with_crosssection(
     nppts = {}
 
     for cell, verts in projpts.items():
+        tcell = cell
+        while tcell >= ncpl:
+            tcell -= ncpl
         zmin = np.min(np.array(verts)[:, 1])
         zmax = np.max(np.array(verts)[:, 1])
-        nmin = np.min(v_norm[cell])
-        nmax = np.max(v_norm[cell])
-        omin = np.min(v_opp[cell])
-        omax = np.max(v_opp[cell])
+        nmin = np.min(v_norm[tcell])
+        nmax = np.max(v_norm[tcell])
+        omin = np.min(v_opp[tcell])
+        omax = np.max(v_opp[tcell])
         oppts[cell] = np.array(
             [
                 [omin, zmax],
@@ -2818,19 +2837,35 @@ def reproject_modpath_to_crosssection(
     xypts,
     projection,
     modelgrid,
+    ncpl,
     geographic_coords,
     starting=False,
 ):
     """
+    Method to reproject modpath points onto cross sectional line
 
-    :param idict:
-    :param projpts:
-    :param xypts:
-    :param projection:
-    :param modelgrid:
-    :param geographic_coords:
-    :param starting:
-    :return:
+    Parameters
+    ----------
+    idict : dict
+        dictionary of intersecting points
+    projpts : dict
+        dictionary of cross sectional cells
+    xypts : dict
+        dictionary of cross sectional line
+    projection : str
+        projection direction (x or y)
+    modelgrid : Grid object
+        flopy modelgrid object
+    ncpl : int
+        number of cells per layer (cross sectional version)
+    geographic_coords : bool
+        flag for plotting in geographic coordinates
+    starting : bool
+        flag for modpath position
+
+    Returns
+    -------
+        dictionary of projected modpath lines or points
     """
     from ..utils import geometry
 
@@ -2845,7 +2880,10 @@ def reproject_modpath_to_crosssection(
     ptdict = {}
     if not geographic_coords:
         for cell, recarrays in idict.items():
-            line = xypts[cell]
+            tcell = cell
+            while tcell >= ncpl:
+                tcell -= ncpl
+            line = xypts[tcell]
             if projection == "x":
                 d0 = np.min([i[0] for i in projpts[cell]])
             else:

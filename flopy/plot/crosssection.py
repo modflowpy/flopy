@@ -1258,6 +1258,7 @@ class PlotCrossSection:
             self.xvertices,
             self.yvertices,
             self.direction,
+            self._ncpl,
             method=method,
         )
         plines = plotutil.reproject_modpath_to_crosssection(
@@ -1266,6 +1267,7 @@ class PlotCrossSection:
             self.xypts,
             self.direction,
             self.mg,
+            self._ncpl,
             self.geographic_coords,
         )
 
