@@ -866,18 +866,10 @@ class PlotUtilities:
 
         filenames = None
         if filename_base is not None:
-            if mflay is not None:
-                i0 = int(mflay)
-                if i0 + 1 >= nplottable_layers:
-                    i0 = nplottable_layers - 1
-                i1 = i0 + 1
-            else:
-                i0 = 0
-                i1 = nplottable_layers
             # build filenames, use local "name" variable (flopy6 adaptation)
             filenames = [
                 "{}_{}_Layer{}.{}".format(filename_base, name[k], k + 1, fext)
-                for k in range(i0, i1)
+                for k in range(nplottable_layers)
             ]
 
         axes = PlotUtilities._plot_array_helper(

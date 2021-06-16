@@ -38,16 +38,19 @@ class Grid:
         ibound/idomain value for each cell
     lenuni : ndarray(int)
         model length units
-    origin_loc : str
-        Corner of the model grid that is the model origin
-        'ul' (upper left corner) or 'll' (lower left corner)
-    origin_x : float
+    espg : str, int
+        optional espg projection code
+    proj4 : str
+        optional proj4 projection string code
+    prj : str
+        optional projection file name path
+    xoff : float
         x coordinate of the origin point (lower left corner of model grid)
         in the spatial reference coordinate system
-    origin_y : float
+    yoff : float
         y coordinate of the origin point (lower left corner of model grid)
         in the spatial reference coordinate system
-    rotation : float
+    angrot : float
         rotation angle of model grid, as it is rotated around the origin point
 
     Attributes
@@ -66,14 +69,16 @@ class Grid:
         spatial reference locates the grid in a coordinate system
     lenuni : int
         modflow lenuni parameter
-    origin_x : float
+    xoffset : float
         x coordinate of the origin point in the spatial reference coordinate
         system
-    origin_y : float
+    yoffset : float
         y coordinate of the origin point in the spatial reference coordinate
         system
-    rotation : float
+    angrot : float
         rotation angle of model grid, as it is rotated around the origin point
+    angrot_radians : float
+        rotation angle of model grid, in radians
     xgrid : ndarray
         returns numpy meshgrid of x edges in reference frame defined by
         point_type
