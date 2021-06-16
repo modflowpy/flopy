@@ -393,6 +393,9 @@ class MFScalar(mfdata.MFData):
                     and data_item.optional == False
                 ):
                     if isinstance(data, list) or isinstance(data, tuple):
+                        if len(data) == 1 and isinstance(data[0], tuple) or \
+                                isinstance(data[0], list):
+                            data = data[0]
                         if len(data) > index and (
                             data[index] is not None and data[index] != False
                         ):

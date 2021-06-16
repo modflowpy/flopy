@@ -20,7 +20,7 @@ def get_first_val(arr):
 
 # convert_data(data, type) : type
 #    converts data "data" to type "type" and returns the converted data
-def convert_data(data, data_dimensions, data_type, data_item=None):
+def convert_data(data, data_dimensions, data_type, data_item=None, sub_amt=1):
     if data_type == DatumType.double_precision:
         if data_item is not None and data_item.support_negative_index:
             val = int(PyListUtil.clean_numeric(data))
@@ -85,7 +85,7 @@ def convert_data(data, data_dimensions, data_type, data_item=None):
                     )
     elif data_type == DatumType.integer:
         if data_item is not None and data_item.numeric_index:
-            return int(PyListUtil.clean_numeric(data)) - 1
+            return int(PyListUtil.clean_numeric(data)) - sub_amt
         try:
             return int(data)
         except (ValueError, TypeError):

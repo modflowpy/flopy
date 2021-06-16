@@ -910,6 +910,14 @@ class DataStorage:
                         )
                 self.process_open_close_line(data, layer)
                 return
+        if isinstance(data, list):
+            if (
+                len(data) > 0
+                and not isinstance(data[0], tuple)
+                and not isinstance(data[0], list)
+            ):
+                # single line of data needs to be encapsulated in a tuple
+                data = [tuple(data)]
         self.store_internal(
             data,
             layer,
@@ -1143,13 +1151,15 @@ class DataStorage:
                         for item in data:
                             if isinstance(item, str):
                                 # parse possible multi-item string
-                                new_data.append(self._resolve_data_line(item))
+                                new_data.append(
+                                    self._resolve_data_line(item, key)
+                                )
                             else:
                                 new_data.append(item)
                         data = new_data
                     if isinstance(data, str):
                         # parse possible multi-item string
-                        data = [self._resolve_data_line(data)]
+                        data = [self._resolve_data_line(data, key)]
 
                     if (
                         data is not None
@@ -1249,30 +1259,28 @@ class DataStorage:
             self.layer_storage[layer].factor = multiplier
             self.layer_storage[layer].iprn = print_format
 
-    def _resolve_data_line(self, data):
+    def _resolve_data_line(self, data, key):
         if len(self._recarray_type_list) > 1:
-            # resolve string into a line of data with correct
-            # types
+            file_access = MFFileAccessList(
+                self.data_dimensions.structure,
+                self.data_dimensions,
+                self._simulation_data,
+                self._data_path,
+                self._stress_period,
+            )
             data_lst = data.strip().split()
-            data_is = self.data_dimensions.structure.data_item_structures
-            # remove any leading keywords
-            for idx in range(0, len(data_is)):
-                if data_is[idx].type == DatumType.keyword:
-                    # exclude first items if they are keywords
-                    data_lst = data_lst[1:]
-                else:
-                    break
-            for item, index in zip(
-                self._recarray_type_list, range(0, len(data_lst))
-            ):
-                if DatumUtil.is_float(data_lst[index]) and item[1] == float:
-                    data_lst[index] = float(data_lst[index])
-                elif DatumUtil.is_int(data_lst[index]) and item[1] == int:
-                    data_lst[index] = int(data_lst[index])
-            if len(data_lst) == 0:
-                # do not exclude all the data
-                return data
-            return tuple(data_lst)
+            data_loaded = []
+            data_out = file_access.load_list_line(
+                self,
+                data_lst,
+                0,
+                data_loaded,
+                False,
+                current_key=key,
+                data_line=data,
+                zero_based=True,
+            )[1]
+            return tuple(data_out)
         return data
 
     def _get_min_record_entries(self, data=None):
@@ -2605,8 +2613,7 @@ class DataStorage:
                     # don't include initial keywords
                     if (
                         data_item.type != DatumType.keyword
-                        or initial_keyword == False
-                        or data_set.block_variable == True
+                        or data_set.block_variable
                     ):
                         initial_keyword = False
                         shape_rule = None
