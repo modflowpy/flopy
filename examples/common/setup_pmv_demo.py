@@ -521,8 +521,8 @@ def build_mf6gwt(sim_folder):
         gwt, xt3d_off=True, alh=alpha_l, ath1=alpha_th, atv=alpha_tv
     )
     pd = [
-        ("GWFHEAD", "../mf6gwf/flow.hds".format(), None),
-        ("GWFBUDGET", "../mf6gwf/flow.bud", None),
+        ("GWFHEAD", "../mf6gwf/flow.hds".format()),
+        ("GWFBUDGET", "../mf6gwf/flow.bud"),
     ]
     flopy.mf6.ModflowGwtfmi(
         gwt, flow_imbalance_correction=True, packagedata=pd
