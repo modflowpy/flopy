@@ -1199,8 +1199,7 @@ class DataStorage:
                         ):
                             for data_index, data_entry in enumerate(data):
                                 if (
-                                    data_item_structs[0].type
-                                    == DatumType.string
+                                    isinstance(data_entry[0], str)
                                     and data_entry[0].lower()
                                     == data_item_structs[0].name.lower()
                                 ):
@@ -1261,6 +1260,29 @@ class DataStorage:
 
     def _resolve_data_line(self, data, key):
         if len(self._recarray_type_list) > 1:
+            # add any missing leading keywords to the beginning of the string
+            data_lst = data.strip().split()
+            data_lst_updated = []
+            struct = self.data_dimensions.structure
+            for data_item_index, data_item in enumerate(
+                struct.data_item_structures
+            ):
+                print(data_item)
+                if data_item.type == DatumType.keyword:
+                    if data_lst[0].lower() != data_item.name.lower():
+                        data_lst_updated.append(data_item.name)
+                    else:
+                        data_lst_updated.append(data_lst.pop(0))
+                else:
+                    if (
+                        struct.type == DatumType.record
+                        and data_lst[0].lower() != data_item.name.lower()
+                    ):
+                        data_lst_updated.append(data_item.name)
+                    break
+            data_lst_updated += data_lst
+
+            # parse the string as if it is being read from a package file
             file_access = MFFileAccessList(
                 self.data_dimensions.structure,
                 self.data_dimensions,
@@ -1268,11 +1290,10 @@ class DataStorage:
                 self._data_path,
                 self._stress_period,
             )
-            data_lst = data.strip().split()
             data_loaded = []
             data_out = file_access.load_list_line(
                 self,
-                data_lst,
+                data_lst_updated,
                 0,
                 data_loaded,
                 False,
@@ -2166,8 +2187,7 @@ class DataStorage:
                             )
 
     def _add_placeholders(self, data):
-        idx = 0
-        for data_line in data:
+        for idx, data_line in enumerate(data):
             data_line_len = len(data_line)
             if data_line_len < len(self._recarray_type_list):
                 for index in range(
@@ -2184,7 +2204,15 @@ class DataStorage:
                     else:
                         data_line += (None,)
                 data[idx] = data_line
-            idx += 1
+            elif data_line_len > len(self._recarray_type_list):
+                for index in range(
+                    len(self._recarray_type_list), data_line_len
+                ):
+                    if data_line[-1] is None:
+                        dl = list(data_line)
+                        del dl[-1]
+                        data_line = tuple(dl)
+                data[idx] = data_line
 
     def _duplicate_last_item(self):
         last_item = self._recarray_type_list[-1]
