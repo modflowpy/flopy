@@ -18,7 +18,414 @@ from ..utils.flopy_io import loadtxt
 from ..utils.recarray_utils import ra_slice
 
 
-class PathlineFile:
+class _ModpathSeries(object):
+    """
+    Base class for PathlineFile and TimeseriesFile objects.
+
+    This class served to reduce the amount of duplicated code and
+    increase maintainability of the modpath output methods
+
+    Parameters
+    ----------
+    filename : str
+        name of pathline or modpath file
+    verbose : bool
+        Write information to the screen. Default is False
+    output_type : str
+        pathline or timeseries file type
+
+    """
+    def __init__(self, filename, verbose=False, output_type='pathline'):
+        self.fname = filename
+        self.verbose = verbose
+        self.output_type = output_type.upper()
+
+        self._build_index()
+
+        # set output type
+        self.outdtype = self._get_outdtype()
+
+    def _build_index(self):
+        """
+        Set position of the start of the pathline data.
+        """
+        compact = False
+        self.skiprows = 0
+        self.file = open(self.fname, "r")
+        while True:
+            line = self.file.readline()
+            if isinstance(line, bytes):
+                line = line.decode()
+            if self.skiprows < 1:
+                if "MODPATH_{}_FILE 6".format(self.output_type) in line.upper():
+                    self.version = 6
+                elif "MODPATH_{}_FILE         7".format(self.output_type) in line.upper():
+                    self.version = 7
+                elif "MODPATH 5.0" in line.upper():
+                    self.version = 5
+                    if "COMPACT" in line.upper():
+                        compact = True
+                elif "MODPATH Version 3.00" in line.upper():
+                    self.version = 3
+                else:
+                    self.version = None
+                if self.version is None:
+                    errmsg = "{} is not a valid {} file".format(
+                        self.fname, self.output_type.lower()
+                    )
+                    raise Exception(errmsg)
+            self.skiprows += 1
+            if self.version == 6 or self.version == 7:
+                if "end header" in line.lower():
+                    break
+            elif self.version == 3 or self.version == 5:
+                break
+
+        # set compact
+        self.compact = compact
+
+        # return to start of file
+        self.file.seek(0)
+
+    def _get_outdtype(self):
+        outdtype = np.dtype(
+            [
+                ("x", np.float32),
+                ("y", np.float32),
+                ("z", np.float32),
+                ("time", np.float32),
+                ("k", np.int32),
+                ("particleid", np.int32),
+            ]
+        )
+        return outdtype
+
+    def get_maxid(self):
+        """
+        Get the maximum timeseries number in the file timeseries file
+
+        Returns
+        ----------
+        out : int
+            Maximum pathline number.
+
+        """
+        return self._data["particleid"].max()
+
+    def get_maxtime(self):
+        """
+        Get the maximum time in pathline file
+
+        Returns
+        ----------
+        out : float
+            Maximum pathline time.
+
+        """
+        return self._data["time"].max()
+
+    def get_data(self, partid=0, totim=None, ge=True):
+        """
+        get pathline data from the pathline file for a single pathline.
+
+        Parameters
+        ----------
+        partid : int
+            The zero-based particle id
+        totim : float
+            The simulation time.
+        ge : bool
+            Boolean that determines if pathline times greater than or equal
+            to or less than or equal to totim.
+
+        Returns
+        ----------
+        ra : np.recarray
+            Recarray with the x, y, z, time, k, and particleid.
+
+        """
+        ra = self._data
+        ra.sort(order=['particleid', 'time'])
+        if totim is not None:
+            if ge:
+                idx = np.where(
+                    (ra['time'] >= totim) & (ra['particleid'] == partid)
+                )[0]
+            else:
+                idx = np.where(
+                    (ra['time'] <= totim) & (ra['particleid'] == partid)
+                )[0]
+        else:
+            idx = np.where(ra["particleid"] == partid)[0]
+        ra = ra[idx]
+        return ra[["x", "y", "z", "time", "k", "particleid"]]
+
+    def get_alldata(self, totim=None, ge=True):
+        """
+        get data from the output file for all particles and all times.
+
+        Parameters
+        ----------
+        totim : float
+            The simulation time.
+        ge : bool
+            Boolean that determines if pathline times greater than or equal
+            to or less than or equal to totim.
+
+        Returns
+        ----------
+        plist : list of numpy record arrays
+            A list of numpy recarrays
+
+        """
+        ra = self._data
+        ra.sort(order=['particleid', 'time'])
+        if totim is not None:
+            if ge:
+                idx = np.where(ra['time'] >= totim)[0]
+            else:
+                idx = np.where(ra['time'] <= totim)[0]
+            if len(idx) > 0:
+                ra = ra[idx]
+        ra = ra[["x", "y", "z", "time", "k", "particleid"]]
+        return [ra[ra['particleid'] == i] for i in range(self.nid.size)]
+
+    def get_destination_data(self, dest_cells, to_recarray=True):
+        """
+        Get data for set of destination cells.
+
+        Parameters
+        ----------
+        dest_cells : list or array of tuples
+            (k, i, j) of each destination cell (zero-based)
+        to_recarray : bool
+            Boolean that controls returned series. If to_recarray is True,
+            a single recarray with all of the pathlines that intersect
+            dest_cells are returned. If to_recarray is False, a list of
+            recarrays (the same form as returned by get_alldata method)
+            that intersect dest_cells are returned (default is False).
+
+        Returns
+        -------
+        series : np.recarray
+            Slice of data array (e.g. PathlineFile._data, TimeseriesFile._data)
+            containing only pathlines with final k,i,j in dest_cells.
+
+        """
+
+        # create local copy of _data
+        ra = np.array(self._data)
+
+        # find the intersection of pathlines and dest_cells
+        # convert dest_cells to same dtype for comparison
+        if self.version < 7:
+            try:
+                raslice = ra[["k", "i", "j"]]
+            except:
+                msg = (
+                    "could not extract 'k', 'i', and 'j' keys "
+                    + "from {} data".format(self.output_type.lower())
+                )
+                raise KeyError(msg)
+        else:
+            try:
+                raslice = ra[["node"]]
+            except (KeyError, ValueError):
+                msg = "could not extract 'node' key from {} data".format(self.output_type.lower())
+                raise KeyError(msg)
+            if isinstance(dest_cells, (list, tuple)):
+                allint = all(isinstance(el, int) for el in dest_cells)
+                # convert to a list of tuples
+                if allint:
+                    t = []
+                    for el in dest_cells:
+                        t.append((el,))
+                        dest_cells = t
+
+        dest_cells = np.array(dest_cells, dtype=raslice.dtype)
+        inds = np.in1d(raslice, dest_cells)
+        epdest = ra[inds].copy().view(np.recarray)
+
+        if to_recarray:
+            # use particle ids to get the rest of the paths
+            inds = np.in1d(ra["particleid"], epdest.particleid)
+            series = ra[inds].copy()
+            series.sort(order=["particleid", "time"])
+            series = series.view(np.recarray)
+        else:
+
+            # get list of unique particleids in selection
+            partids = np.unique(epdest["particleid"])
+
+            # build list of unique particleids in selection
+            series = [self.get_data(partid) for partid in partids]
+
+        return series
+
+    def write_shapefile(
+            self,
+            data=None,
+            one_per_particle=True,
+            direction="ending",
+            shpname="endpoints.shp",
+            mg=None,
+            epsg=None,
+            sr=None,
+            **kwargs
+    ):
+        """
+        Write pathlines or timeseries to a shapefile
+
+        data : np.recarray
+            Record array of same form as that returned by
+            get_alldata(). (if none, get_alldata() is exported).
+        one_per_particle : boolean (default True)
+            True writes a single LineString with a single set of attribute
+            data for each particle. False writes a record/geometry for each
+            pathline segment (each row in the PathLine file). This option can
+            be used to visualize attribute information (time, model layer,
+            etc.) across a pathline in a GIS.
+        direction : str
+            String defining if starting or ending particle locations should be
+            included in shapefile attribute information. Only used if
+            one_per_particle=False. (default is 'ending')
+        shpname : str
+            File path for shapefile
+        mg : flopy.discretization.grid instance
+            Used to scale and rotate Global x,y,z values.
+        epsg : int
+            EPSG code for writing projection (.prj) file. If this is not
+            supplied, the proj4 string or epgs code associated with mg will be
+            used.
+        kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
+
+        """
+        from ..utils.reference import SpatialReference
+        from ..utils import geometry
+        from ..discretization import StructuredGrid
+        from ..utils.geometry import LineString
+        from ..export.shapefile_utils import recarray2shp
+
+        series = data
+        if series is None:
+            series = self._data.view(np.recarray)
+        else:
+            # convert pathline list to a single recarray
+            if isinstance(series, list):
+                s = series[0]
+                print(s.dtype)
+                for n in range(1, len(series)):
+                    s = stack_arrays((s, series[n]))
+                series = s.view(np.recarray)
+
+        seires = series.copy()
+        series.sort(order=["particleid", "time"])
+
+        if isinstance(mg, SpatialReference) or isinstance(
+                sr, SpatialReference
+        ):
+            warnings.warn(
+                "Deprecation warning: SpatialReference is deprecated."
+                "Use the Grid class instead.",
+                DeprecationWarning,
+            )
+            if isinstance(mg, SpatialReference):
+                sr = mg
+            mg = StructuredGrid(sr.delc, sr.delr)
+            mg.set_coord_info(
+                xoff=sr.xll,
+                yoff=sr.yll,
+                angrot=sr.rotation,
+                epsg=sr.epsg,
+                proj4=sr.proj4_str,
+            )
+
+        if epsg is None:
+            epsg = mg.epsg
+
+        particles = np.unique(series.particleid)
+        geoms = []
+
+        # create dtype with select attributes in pth
+        names = series.dtype.names
+        dtype = []
+        atts = ["particleid", "particlegroup", "time", "k", "i", "j", "node"]
+        for att in atts:
+            if att in names:
+                t = np.int32
+                if att == "time":
+                    t = np.float32
+                dtype.append((att, t))
+        dtype = np.dtype(dtype)
+
+        # reset names to the selected names in the created dtype
+        names = dtype.names
+
+        # 1 geometry for each path
+        if one_per_particle:
+
+            loc_inds = 0
+            if direction == "ending":
+                loc_inds = -1
+
+            sdata = []
+            for pid in particles:
+                ra = series[series.particleid == pid]
+
+                x, y = geometry.transform(
+                    ra.x, ra.y, mg.xoffset, mg.yoffset, mg.angrot_radians
+                )
+                z = ra.z
+                geoms.append(LineString(list(zip(x, y, z))))
+
+                t = [pid]
+                if "particlegroup" in names:
+                    t.append(ra.particlegroup[0])
+                t.append(ra.time.max())
+                if "node" in names:
+                    t.append(ra.node[loc_inds])
+                else:
+                    if "k" in names:
+                        t.append(ra.k[loc_inds])
+                    if "i" in names:
+                        t.append(ra.i[loc_inds])
+                    if "j" in names:
+                        t.append(ra.j[loc_inds])
+                sdata.append(tuple(t))
+
+            sdata = np.array(sdata, dtype=dtype).view(np.recarray)
+
+        # geometry for each row in PathLine file
+        else:
+            dtype = series.dtype
+            sdata = []
+            for pid in particles:
+                ra = series[series.particleid == pid]
+                if isinstance(mg, StructuredGrid):
+                    x, y = geometry.transform(
+                        ra.x, ra.y, mg.xoffset, mg.yoffset, mg.angrot_radians
+                    )
+                else:
+                    x, y = mg.transform(ra.x, ra.y)
+                z = ra.z
+                geoms += [
+                    LineString(
+                        [(x[i - 1], y[i - 1], z[i - 1]), (x[i], y[i], z[i])]
+                    )
+                    for i in np.arange(1, (len(ra)))
+                ]
+                sdata += ra[1:].tolist()
+            sdata = np.array(sdata, dtype=dtype).view(np.recarray)
+
+        # convert back to one-based
+        for n in set(self.kijnames).intersection(set(sdata.dtype.names)):
+            sdata[n] += 1
+
+        # write the final recarray to a shapefile
+        recarray2shp(sdata, geoms, shpname=shpname, epsg=epsg, **kwargs)
+
+
+class PathlineFile(_ModpathSeries):
     """
     PathlineFile Class.
 
@@ -55,14 +462,8 @@ class PathlineFile:
         Class constructor.
 
         """
-        self.fname = filename
-        self.verbose = verbose
 
-        # build index
-        self._build_index()
-
-        # set output dtype
-        self.outdtype = self._get_outdtype()
+        super().__init__(filename, verbose=verbose, output_type='pathline')
 
         # set data dtype and read pathline data
         if self.version == 7:
@@ -84,42 +485,6 @@ class PathlineFile:
 
         # close the input file
         self.file.close()
-        return
-
-    def _build_index(self):
-        """
-        Set position of the start of the pathline data.
-        """
-        self.skiprows = 0
-        self.file = open(self.fname, "r")
-        while True:
-            line = self.file.readline()
-            if isinstance(line, bytes):
-                line = line.decode()
-            if self.skiprows < 1:
-                if "MODPATH_PATHLINE_FILE 6" in line.upper():
-                    self.version = 6
-                elif "MODPATH_PATHLINE_FILE         7" in line.upper():
-                    self.version = 7
-                elif "MODPATH 5.0" in line.upper():
-                    self.version = 5
-                elif "MODPATH Version 3.00" in line.upper():
-                    self.version = 3
-                else:
-                    self.version = None
-                if self.version is None:
-                    errmsg = "{} is not a valid pathline file".format(
-                        self.fname
-                    )
-                    raise Exception(errmsg)
-            self.skiprows += 1
-            if self.version == 6 or self.version == 7:
-                if "end header" in line.lower():
-                    break
-            elif self.version == 3 or self.version == 5:
-                break
-        self.file.seek(0)
-        return
 
     def _get_dtypes(self):
         """
@@ -168,19 +533,6 @@ class PathlineFile:
             )
             raise TypeError(msg)
         return dtype
-
-    def _get_outdtype(self):
-        outdtype = np.dtype(
-            [
-                ("x", np.float32),
-                ("y", np.float32),
-                ("z", np.float32),
-                ("time", np.float32),
-                ("k", np.int32),
-                ("particleid", np.int32),
-            ]
-        )
-        return outdtype
 
     def _get_mp7data(self):
         dtyper = np.dtype(
@@ -278,7 +630,7 @@ class PathlineFile:
             Maximum pathline number.
 
         """
-        return self._data["particleid"].max()
+        return super().get_maxid()
 
     def get_maxtime(self):
         """
@@ -290,7 +642,7 @@ class PathlineFile:
             Maximum pathline time.
 
         """
-        return self._data["time"].max()
+        return super().get_maxtime()
 
     def get_data(self, partid=0, totim=None, ge=True):
         """
@@ -330,23 +682,7 @@ class PathlineFile:
         >>> p1 = pthobj.get_data(partid=1)
 
         """
-        # idx = self._data['particleid'] == partid
-        if totim is not None:
-            if ge:
-                idx = (self._data["time"] >= totim) & (
-                    self._data["particleid"] == partid
-                )
-            else:
-                idx = (self._data["time"] <= totim) & (
-                    self._data["particleid"] == partid
-                )
-        else:
-            idx = self._data["particleid"] == partid
-        self._ta = self._data[idx]
-        names = ["x", "y", "z", "time", "k", "particleid"]
-        return np.rec.fromarrays(
-            (self._ta[name] for name in names), dtype=self.outdtype
-        )
+        return super().get_data(partid=partid, totim=totim, ge=ge)
 
     def get_alldata(self, totim=None, ge=True):
         """
@@ -366,15 +702,8 @@ class PathlineFile:
         Returns
         ----------
         plist : a list of numpy record array
-            A list of numpy recarrays with the x, y, z, time, k, and particleid for
-            all pathlines.
-
-
-        See Also
-        --------
-
-        Notes
-        -----
+            A list of numpy recarrays with the x, y, z, time, k, and particleid
+            for all pathlines.
 
         Examples
         --------
@@ -384,13 +713,7 @@ class PathlineFile:
         >>> p = pthobj.get_alldata()
 
         """
-        # plist = []
-        # for partid in self.nid:
-        #     plist.append(self.get_data(partid=partid, totim=totim, ge=ge))
-        return [
-            self.get_data(partid=partid, totim=totim, ge=ge)
-            for partid in self.nid
-        ]
+        return super().get_alldata(totim=totim, ge=ge)
 
     def get_destination_pathline_data(self, dest_cells, to_recarray=False):
         """
@@ -422,62 +745,14 @@ class PathlineFile:
         ...                                       (1, 0, 0)])
 
         """
-
-        # create local copy of _data
-        ra = np.array(self._data)
-
-        # find the intersection of pathlines and dest_cells
-        # convert dest_cells to same dtype for comparison
-        if self.version < 7:
-            try:
-                raslice = ra[["k", "i", "j"]]
-            except:
-                msg = (
-                    "could not extract 'k', 'i', and 'j' keys "
-                    + "from pathline data"
-                )
-                raise KeyError(msg)
-        else:
-            try:
-                raslice = ra[["node"]]
-            except:
-                msg = "could not extract 'node' key from pathline data"
-                raise KeyError(msg)
-            if isinstance(dest_cells, (list, tuple)):
-                allint = all(isinstance(el, int) for el in dest_cells)
-                # convert to a list of tuples
-                if allint:
-                    t = []
-                    for el in dest_cells:
-                        t.append((el,))
-                        dest_cells = t
-
-        dest_cells = np.array(dest_cells, dtype=raslice.dtype)
-        inds = np.in1d(raslice, dest_cells)
-        epdest = ra[inds].copy().view(np.recarray)
-
-        if to_recarray:
-            # use particle ids to get the rest of the paths
-            inds = np.in1d(ra["particleid"], epdest.particleid)
-            pthldes = ra[inds].copy()
-            pthldes.sort(order=["particleid", "time"])
-            pthldes = pthldes.view(np.recarray)
-        else:
-
-            # get list of unique particleids in selection
-            partids = np.unique(epdest["particleid"])
-
-            # build list of unique particleids in selection
-            pthldes = [self.get_data(partid) for partid in partids]
-
-        return pthldes
+        return super().get_destination_data(dest_cells=dest_cells, to_recarray=to_recarray)
 
     def write_shapefile(
         self,
         pathline_data=None,
         one_per_particle=True,
         direction="ending",
-        shpname="endpoints.shp",
+        shpname="pathlines.shp",
         mg=None,
         epsg=None,
         sr=None,
@@ -488,7 +763,7 @@ class PathlineFile:
 
         pathline_data : np.recarray
             Record array of same form as that returned by
-            EndpointFile.get_alldata(). (if none, EndpointFile.get_alldata()
+            PathlineFile.get_alldata(). (if none, PathlineFile.get_alldata()
             is exported).
         one_per_particle : boolean (default True)
             True writes a single LineString with a single set of attribute
@@ -503,7 +778,7 @@ class PathlineFile:
         shpname : str
             File path for shapefile
         mg : flopy.discretization.grid instance
-            Used to scale and rotate Global x,y,z values in MODPATH Endpoint
+            Used to scale and rotate Global x,y,z values in MODPATH Pathline
             file.
         epsg : int
             EPSG code for writing projection (.prj) file. If this is not
@@ -512,131 +787,16 @@ class PathlineFile:
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
         """
-        from ..utils.reference import SpatialReference
-        from ..utils import geometry
-        from ..discretization import StructuredGrid
-        from ..utils.geometry import LineString
-        from ..export.shapefile_utils import recarray2shp
-
-        pth = pathline_data
-        if pth is None:
-            pth = self._data.view(np.recarray)
-        else:
-            # convert pathline list to a single recarray
-            if isinstance(pth, list):
-                s = pth[0]
-                print(s.dtype)
-                for n in range(1, len(pth)):
-                    s = stack_arrays((s, pth[n]))
-                pth = s.view(np.recarray)
-
-        pth = pth.copy()
-        pth.sort(order=["particleid", "time"])
-
-        if isinstance(mg, SpatialReference) or isinstance(
-            sr, SpatialReference
-        ):
-            warnings.warn(
-                "Deprecation warning: SpatialReference is deprecated."
-                "Use the Grid class instead.",
-                DeprecationWarning,
-            )
-            if isinstance(mg, SpatialReference):
-                sr = mg
-            mg = StructuredGrid(sr.delc, sr.delr)
-            mg.set_coord_info(
-                xoff=sr.xll,
-                yoff=sr.yll,
-                angrot=sr.rotation,
-                epsg=sr.epsg,
-                proj4=sr.proj4_str,
-            )
-
-        if epsg is None:
-            epsg = mg.epsg
-
-        particles = np.unique(pth.particleid)
-        geoms = []
-
-        # create dtype with select attributes in pth
-        names = pth.dtype.names
-        dtype = []
-        atts = ["particleid", "particlegroup", "time", "k", "i", "j", "node"]
-        for att in atts:
-            if att in names:
-                t = np.int32
-                if att == "time":
-                    t = np.float32
-                dtype.append((att, t))
-        dtype = np.dtype(dtype)
-
-        # reset names to the selected names in the created dtype
-        names = dtype.names
-
-        # 1 geometry for each path
-        if one_per_particle:
-
-            loc_inds = 0
-            if direction == "ending":
-                loc_inds = -1
-
-            pthdata = []
-            for pid in particles:
-                ra = pth[pth.particleid == pid]
-
-                x, y = geometry.transform(
-                    ra.x, ra.y, mg.xoffset, mg.yoffset, mg.angrot_radians
-                )
-                z = ra.z
-                geoms.append(LineString(list(zip(x, y, z))))
-
-                t = [pid]
-                if "particlegroup" in names:
-                    t.append(ra.particlegroup[0])
-                t.append(ra.time.max())
-                if "node" in names:
-                    t.append(ra.node[loc_inds])
-                else:
-                    if "k" in names:
-                        t.append(ra.k[loc_inds])
-                    if "i" in names:
-                        t.append(ra.i[loc_inds])
-                    if "j" in names:
-                        t.append(ra.j[loc_inds])
-                pthdata.append(tuple(t))
-
-            pthdata = np.array(pthdata, dtype=dtype).view(np.recarray)
-
-        # geometry for each row in PathLine file
-        else:
-            dtype = pth.dtype
-            # pthdata = np.empty((0, len(dtype)), dtype=dtype).view(np.recarray)
-            pthdata = []
-            for pid in particles:
-                ra = pth[pth.particleid == pid]
-                if isinstance(mg, StructuredGrid):
-                    x, y = geometry.transform(
-                        ra.x, ra.y, mg.xoffset, mg.yoffset, mg.angrot_radians
-                    )
-                else:
-                    x, y = mg.transform(ra.x, ra.y)
-                z = ra.z
-                geoms += [
-                    LineString(
-                        [(x[i - 1], y[i - 1], z[i - 1]), (x[i], y[i], z[i])]
-                    )
-                    for i in np.arange(1, (len(ra)))
-                ]
-                # pthdata = np.append(pthdata, ra[1:]).view(np.recarray)
-                pthdata += ra[1:].tolist()
-            pthdata = np.array(pthdata, dtype=dtype).view(np.recarray)
-
-        # convert back to one-based
-        for n in set(self.kijnames).intersection(set(pthdata.dtype.names)):
-            pthdata[n] += 1
-
-        # write the final recarray to a shapefile
-        recarray2shp(pthdata, geoms, shpname=shpname, epsg=epsg, **kwargs)
+        super().write_shapefile(
+            data=pathline_data,
+            one_per_particle=one_per_particle,
+            direction=direction,
+            shpname=shpname,
+            mg=mg,
+            epsg=epsg,
+            sr=sr,
+            **kwargs
+        )
 
 
 class EndpointFile:
@@ -1183,7 +1343,7 @@ class EndpointFile:
         recarray2shp(epd, geoms, shpname=shpname, epsg=epsg, **kwargs)
 
 
-class TimeseriesFile:
+class TimeseriesFile(_ModpathSeries):
     """
     TimeseriesFile Class.
 
@@ -1220,14 +1380,7 @@ class TimeseriesFile:
         Class constructor.
 
         """
-        self.fname = filename
-        self.verbose = verbose
-
-        # build index
-        self._build_index()
-
-        # set output dtype
-        self.outdtype = self._get_outdtype()
+        super().__init__(filename, verbose=verbose, output_type='timeseries')
 
         # set dtype
         self.dtype = self._get_dtypes()
@@ -1392,7 +1545,7 @@ class TimeseriesFile:
             Maximum pathline number.
 
         """
-        return self._data["particleid"].max()
+        return super().get_maxid()
 
     def get_maxtime(self):
         """
@@ -1404,7 +1557,7 @@ class TimeseriesFile:
             Maximum pathline time.
 
         """
-        return self._data["time"].max()
+        return super().get_maxtime()
 
     def get_data(self, partid=0, totim=None, ge=True):
         """
@@ -1445,22 +1598,7 @@ class TimeseriesFile:
         >>> ts1 = tsobj.get_data(partid=1)
 
         """
-        if totim is not None:
-            if ge:
-                idx = (self._data["time"] >= totim) & (
-                    self._data["particleid"] == partid
-                )
-            else:
-                idx = (self._data["time"] <= totim) & (
-                    self._data["particleid"] == partid
-                )
-        else:
-            idx = self._data["particleid"] == partid
-        self._ta = self._data[idx]
-        names = ["x", "y", "z", "time", "k", "particleid"]
-        return np.rec.fromarrays(
-            (self._ta[name] for name in names), dtype=self.outdtype
-        )
+        return super().get_data(partid=partid, totim=totim, ge=ge)
 
     def get_alldata(self, totim=None, ge=True):
         """
@@ -1484,13 +1622,6 @@ class TimeseriesFile:
             A list of numpy recarrays with the x, y, z, time, k, and
             particleid for all timeseries.
 
-
-        See Also
-        --------
-
-        Notes
-        -----
-
         Examples
         --------
 
@@ -1499,10 +1630,7 @@ class TimeseriesFile:
         >>> ts = tsobj.get_alldata()
 
         """
-        return [
-            self.get_data(partid=partid, totim=totim, ge=ge)
-            for partid in self.nid
-        ]
+        return super().get_alldata(totim=totim, ge=ge)
 
     def get_destination_timeseries_data(self, dest_cells):
         """
@@ -1528,42 +1656,55 @@ class TimeseriesFile:
         ...                                           (1, 0, 0)])
 
         """
+        return super().get_destination_data(dest_cells=dest_cells)
 
-        # create local copy of _data
-        ra = np.array(self._data)
+    def write_shapefile(
+        self,
+        timeseries_data=None,
+        one_per_particle=True,
+        direction="ending",
+        shpname="pathlines.shp",
+        mg=None,
+        epsg=None,
+        sr=None,
+        **kwargs
+    ):
+        """
+        Write pathlines to a shapefile
 
-        # find the intersection of timeseries and dest_cells
-        # convert dest_cells to same dtype for comparison
-        if self.version < 7:
-            try:
-                raslice = ra[["k", "i", "j"]]
-            except:
-                msg = (
-                    "could not extract 'k', 'i', and 'j' keys "
-                    + "from timeseries data"
-                )
-                raise KeyError(msg)
-        else:
-            try:
-                raslice = ra[["node"]]
-            except:
-                msg = "could not extract 'node' key from timeseries data"
-                raise KeyError(msg)
-            if isinstance(dest_cells, (list, tuple)):
-                allint = all(isinstance(el, int) for el in dest_cells)
-                # convert to a list of tuples
-                if allint:
-                    t = []
-                    for el in dest_cells:
-                        t.append((el,))
-                        dest_cells = t
+        timeseries_data : np.recarray
+            Record array of same form as that returned by
+            Timeseries.get_alldata(). (if none, Timeseries.get_alldata()
+            is exported).
+        one_per_particle : boolean (default True)
+            True writes a single LineString with a single set of attribute
+            data for each particle. False writes a record/geometry for each
+            pathline segment (each row in the Timeseries file). This option can
+            be used to visualize attribute information (time, model layer,
+            etc.) across a pathline in a GIS.
+        direction : str
+            String defining if starting or ending particle locations should be
+            included in shapefile attribute information. Only used if
+            one_per_particle=False. (default is 'ending')
+        shpname : str
+            File path for shapefile
+        mg : flopy.discretization.grid instance
+            Used to scale and rotate Global x,y,z values in MODPATH Timeseries
+            file.
+        epsg : int
+            EPSG code for writing projection (.prj) file. If this is not
+            supplied, the proj4 string or epgs code associated with mg will be
+            used.
+        kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
-        dest_cells = np.array(dest_cells, dtype=raslice.dtype)
-        inds = np.in1d(raslice, dest_cells)
-        epdest = ra[inds].copy().view(np.recarray)
-
-        # use particle ids to get the rest of the timeseries
-        inds = np.in1d(ra["particleid"], epdest.particleid)
-        tsdes = ra[inds].copy()
-        tsdes.sort(order=["particleid", "time"])
-        return tsdes.view(np.recarray)
+        """
+        super().write_shapefile(
+            data=timeseries_data,
+            one_per_particle=one_per_particle,
+            direction=direction,
+            shpname=shpname,
+            mg=mg,
+            epsg=epsg,
+            sr=sr,
+            **kwargs
+        )
