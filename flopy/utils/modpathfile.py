@@ -35,7 +35,8 @@ class _ModpathSeries(object):
         pathline or timeseries file type
 
     """
-    def __init__(self, filename, verbose=False, output_type='pathline'):
+
+    def __init__(self, filename, verbose=False, output_type="pathline"):
         self.fname = filename
         self.verbose = verbose
         self.output_type = output_type.upper()
@@ -57,9 +58,15 @@ class _ModpathSeries(object):
             if isinstance(line, bytes):
                 line = line.decode()
             if self.skiprows < 1:
-                if "MODPATH_{}_FILE 6".format(self.output_type) in line.upper():
+                if (
+                    "MODPATH_{}_FILE 6".format(self.output_type)
+                    in line.upper()
+                ):
                     self.version = 6
-                elif "MODPATH_{}_FILE         7".format(self.output_type) in line.upper():
+                elif (
+                    "MODPATH_{}_FILE         7".format(self.output_type)
+                    in line.upper()
+                ):
                     self.version = 7
                 elif "MODPATH 5.0" in line.upper():
                     self.version = 5
@@ -145,15 +152,15 @@ class _ModpathSeries(object):
 
         """
         ra = self._data
-        ra.sort(order=['particleid', 'time'])
+        ra.sort(order=["particleid", "time"])
         if totim is not None:
             if ge:
                 idx = np.where(
-                    (ra['time'] >= totim) & (ra['particleid'] == partid)
+                    (ra["time"] >= totim) & (ra["particleid"] == partid)
                 )[0]
             else:
                 idx = np.where(
-                    (ra['time'] <= totim) & (ra['particleid'] == partid)
+                    (ra["time"] <= totim) & (ra["particleid"] == partid)
                 )[0]
         else:
             idx = np.where(ra["particleid"] == partid)[0]
@@ -179,16 +186,16 @@ class _ModpathSeries(object):
 
         """
         ra = self._data
-        ra.sort(order=['particleid', 'time'])
+        ra.sort(order=["particleid", "time"])
         if totim is not None:
             if ge:
-                idx = np.where(ra['time'] >= totim)[0]
+                idx = np.where(ra["time"] >= totim)[0]
             else:
-                idx = np.where(ra['time'] <= totim)[0]
+                idx = np.where(ra["time"] <= totim)[0]
             if len(idx) > 0:
                 ra = ra[idx]
         ra = ra[["x", "y", "z", "time", "k", "particleid"]]
-        return [ra[ra['particleid'] == i] for i in range(self.nid.size)]
+        return [ra[ra["particleid"] == i] for i in range(self.nid.size)]
 
     def get_destination_data(self, dest_cells, to_recarray=True):
         """
@@ -221,7 +228,7 @@ class _ModpathSeries(object):
         if self.version < 7:
             try:
                 raslice = ra[["k", "i", "j"]]
-            except:
+            except (KeyError, ValueError):
                 msg = (
                     "could not extract 'k', 'i', and 'j' keys "
                     + "from {} data".format(self.output_type.lower())
@@ -231,7 +238,9 @@ class _ModpathSeries(object):
             try:
                 raslice = ra[["node"]]
             except (KeyError, ValueError):
-                msg = "could not extract 'node' key from {} data".format(self.output_type.lower())
+                msg = "could not extract 'node' key from {} data".format(
+                    self.output_type.lower()
+                )
                 raise KeyError(msg)
             if isinstance(dest_cells, (list, tuple)):
                 allint = all(isinstance(el, int) for el in dest_cells)
@@ -263,15 +272,15 @@ class _ModpathSeries(object):
         return series
 
     def write_shapefile(
-            self,
-            data=None,
-            one_per_particle=True,
-            direction="ending",
-            shpname="endpoints.shp",
-            mg=None,
-            epsg=None,
-            sr=None,
-            **kwargs
+        self,
+        data=None,
+        one_per_particle=True,
+        direction="ending",
+        shpname="endpoints.shp",
+        mg=None,
+        epsg=None,
+        sr=None,
+        **kwargs
     ):
         """
         Write pathlines or timeseries to a shapefile
@@ -322,7 +331,7 @@ class _ModpathSeries(object):
         series.sort(order=["particleid", "time"])
 
         if isinstance(mg, SpatialReference) or isinstance(
-                sr, SpatialReference
+            sr, SpatialReference
         ):
             warnings.warn(
                 "Deprecation warning: SpatialReference is deprecated."
@@ -463,7 +472,7 @@ class PathlineFile(_ModpathSeries):
 
         """
 
-        super().__init__(filename, verbose=verbose, output_type='pathline')
+        super().__init__(filename, verbose=verbose, output_type="pathline")
 
         # set data dtype and read pathline data
         if self.version == 7:
@@ -745,7 +754,9 @@ class PathlineFile(_ModpathSeries):
         ...                                       (1, 0, 0)])
 
         """
-        return super().get_destination_data(dest_cells=dest_cells, to_recarray=to_recarray)
+        return super().get_destination_data(
+            dest_cells=dest_cells, to_recarray=to_recarray
+        )
 
     def write_shapefile(
         self,
@@ -1213,7 +1224,7 @@ class EndpointFile:
                 keys = ["k", "i", "j"]
             try:
                 raslice = ra_slice(ra, keys)
-            except:
+            except (KeyError, ValueError):
                 msg = (
                     "could not extract"
                     + "'"
@@ -1229,7 +1240,7 @@ class EndpointFile:
                 keys = ["node"]
             try:
                 raslice = ra_slice(ra, keys)
-            except:
+            except (KeyError, ValueError):
                 msg = (
                     "could not extract '{}' ".format(keys[0])
                     + "key from endpoint data"
@@ -1380,7 +1391,7 @@ class TimeseriesFile(_ModpathSeries):
         Class constructor.
 
         """
-        super().__init__(filename, verbose=verbose, output_type='timeseries')
+        super().__init__(filename, verbose=verbose, output_type="timeseries")
 
         # set dtype
         self.dtype = self._get_dtypes()
