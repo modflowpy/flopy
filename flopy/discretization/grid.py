@@ -275,8 +275,55 @@ class Grid:
 
     @property
     def top_botm(self):
-        new_top = np.expand_dims(self._top, 0)
-        return np.concatenate((new_top, self._botm), axis=0)
+        elevations = None
+        if self.grid_type == "structured":
+            new_top = np.expand_dims(self._top, 0)
+            elevations = np.concatenate((new_top, self._botm), axis=0)
+        else:
+            raise ValueError(
+                "top_botm property not implemented for vertex "
+                + "and unstructured model grids"
+            )
+        return elevations
+
+    def thick(self, array=None):
+        """
+        Get the cell thickness. If the optional array is passed then
+        thickness is returned relative to array values (saturated thickness).
+        If array value is greater than or equal to the top of a cell the cell
+        thickness is returned. If array value is less than the top of a cell
+        the difference between the array value and the bottom of the cell
+        is returned. If array value is less than the bottom of the cell
+        a zero values is returned.
+
+        todo: add option for passing in HDRY and HNOFLO for MODFLOW-2005
+
+        Parameters
+        ----------
+        array : ndarray
+            array of elevations that will be used to adjust the cell thickness
+
+        Returns
+        -------
+            thick : calculated thickness
+        """
+        if self.grid_type == "structured":
+            thick = -np.diff(self.top_botm, axis=0)
+            if array is not None:
+                top = self.top_botm[:-1]
+                bot = self.top_botm[1:]
+                idx = (array < top) & (array > bot)
+                thick[idx] = array[idx] - bot[idx]
+                idx = array <= bot
+                thick[idx] = 0.0
+        else:
+            thick = self.top - self.botm
+            if array is not None:
+                idx = (array < self.top) & (array > self.botm)
+                thick[idx] = array[idx] - self.botm[idx]
+                idx = array <= self.botm
+                thick[idx] = 0.0
+        return thick
 
     @property
     def units(self):
