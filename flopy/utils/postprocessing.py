@@ -226,7 +226,8 @@ def get_saturated_thickness(heads, m, nodata, per_idx=None):
     sat_thickness = []
     for per in per_idx:
         hds = heads[per]
-        unconf_thickness = np.where((hds - botm) > top, top, hds - botm)
+        hds = np.where(hds < botm, botm, hds)  # for NWT when hds < botm
+        unconf_thickness = np.where(hds > top, top - botm, hds - botm)
         perthickness = np.where(is_conf, thickness, unconf_thickness)
         sat_thickness.append(perthickness)
     sat_thickness = np.squeeze(sat_thickness)

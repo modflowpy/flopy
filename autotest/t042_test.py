@@ -116,11 +116,6 @@ def test_get_sat_thickness_gradients():
     dz = np.array([np.nan, -0.9])
     assert np.nansum(np.abs(dh / dz - grad[:, 1, 0])) < 1e-6
 
-    sat_thick = get_saturated_thickness(hds, m, nodata)
-    assert (
-        np.abs(np.sum(sat_thick[:, 1, 1] - np.array([0.2, 1.0, 1.6]))) < 1e-6
-    ), "failed saturated thickness comparison (get_saturated_thickness())"
-
     sat_thick = m.modelgrid.saturated_thick(hds, mask=nodata)
     assert (
         np.abs(np.sum(sat_thick[:, 1, 1] - np.array([0.2, 1.0, 1.0]))) < 1e-6
