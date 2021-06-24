@@ -443,6 +443,12 @@ class UnstructuredGrid(Grid):
         x, y = super().intersect(x, y, local, forgive)
         raise Exception("Not implemented yet")
 
+    @property
+    def top_botm(self):
+        new_top = np.expand_dims(self._top, 0)
+        new_botm = np.expand_dims(self._botm, 0)
+        return np.concatenate((new_top, new_botm), axis=0)
+
     def get_cell_vertices(self, cellid):
         """
         Method to get a set of cell vertices for a single cell

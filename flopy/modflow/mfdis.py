@@ -324,7 +324,7 @@ class ModflowDis(Package):
         Check layer thickness.
 
         """
-        return (self.thickness > 0).all()
+        return (self.parent.modelgrid.thick > 0).all()
 
     def get_totim(self):
         """
@@ -471,7 +471,7 @@ class ModflowDis(Package):
         """
         vol = np.empty((self.nlay, self.nrow, self.ncol))
         for l in range(self.nlay):
-            vol[l, :, :] = self.thickness.array[l]
+            vol[l, :, :] = self.parent.modelgrid.thick[l]
         for r in range(self.nrow):
             vol[:, r, :] *= self.delc[r]
         for c in range(self.ncol):
@@ -636,6 +636,11 @@ class ModflowDis(Package):
         thickness : util3d array of floats (nlay, nrow, ncol)
 
         """
+        warnings.warn(
+            "ModflowDis.thickness will be deprecated and removed "
+            "in version 3.3.5.  Use grid.thick().",
+            PendingDeprecationWarning,
+        )
         # return self.__thickness
         thk = []
         thk.append(self.top - self.botm[0])
@@ -750,7 +755,7 @@ class ModflowDis(Package):
         active = chk.get_active(include_cbd=True)
 
         # Use either a numpy array or masked array
-        thickness = self.thickness.array
+        thickness = self.parent.modelgrid.thick
         non_finite = ~(np.isfinite(thickness))
         if non_finite.any():
             thickness[non_finite] = 0

@@ -804,6 +804,11 @@ class StructuredGrid(Grid):
             vrts = np.array(pts).transpose([2, 0, 1])
             return [v.tolist() for v in vrts]
 
+    @property
+    def top_botm(self):
+        new_top = np.expand_dims(self._top, 0)
+        return np.concatenate((new_top, self._botm), axis=0)
+
     def get_cell_vertices(self, *args, **kwargs):
         """
         Method to get a set of cell vertices for a single cell

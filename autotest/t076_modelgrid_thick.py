@@ -24,22 +24,22 @@ def test_structured_thick():
         top=top,
         botm=botm,
     )
-    thick = grid.thick()
+    thick = grid.thick
     assert np.allclose(thick, 5.), "thicknesses != 5."
 
-    sat_thick = grid.thick(array=grid.botm + 10.)
+    sat_thick = grid.saturated_thick(grid.botm + 10.)
     assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
 
-    sat_thick = grid.thick(array=grid.botm + 5.)
+    sat_thick = grid.saturated_thick(grid.botm + 5.)
     assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
 
-    sat_thick = grid.thick(array=grid.botm + 2.5)
+    sat_thick = grid.saturated_thick(grid.botm + 2.5)
     assert np.allclose(sat_thick, 2.5), "saturated thicknesses != 2.5"
 
-    sat_thick = grid.thick(array=grid.botm)
+    sat_thick = grid.saturated_thick(grid.botm)
     assert np.allclose(sat_thick, 0.), "saturated thicknesses != 0."
 
-    sat_thick = grid.thick(array=grid.botm-100.)
+    sat_thick = grid.saturated_thick(grid.botm - 100.)
     assert np.allclose(sat_thick, 0.), "saturated thicknesses != 0."
 
     return
@@ -76,10 +76,7 @@ def test_vertices_thick():
         [13, 4, 5, 8, 7],
         [14, 6, 7, 10, 9],
     ]
-    top = np.ones((nlay, ncpl), dtype=float)
-    top[0, :] = 10.
-    top[1, :] = 5.
-    top[2, :] = 0.
+    top = np.ones(ncpl, dtype=float) * 10.
     botm = np.zeros((nlay, ncpl), dtype=float)
     botm[0, :] = 5.
     botm[1, :] = 0.
@@ -92,23 +89,24 @@ def test_vertices_thick():
         top=top,
         botm=botm,
     )
-    thick = grid.thick()
+    thick = grid.thick
     assert np.allclose(thick, 5.), "thicknesses != 5."
 
-    sat_thick = grid.thick(array=grid.botm + 10.)
+    sat_thick = grid.saturated_thick(grid.botm + 10.)
     assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
 
-    sat_thick = grid.thick(array=grid.botm + 5.)
+    sat_thick = grid.saturated_thick(grid.botm + 5.)
     assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
 
-    sat_thick = grid.thick(array=grid.botm + 2.5)
+    sat_thick = grid.saturated_thick(grid.botm + 2.5)
     assert np.allclose(sat_thick, 2.5), "saturated thicknesses != 2.5"
 
-    sat_thick = grid.thick(array=grid.botm)
+    sat_thick = grid.saturated_thick(grid.botm)
     assert np.allclose(sat_thick, 0.), "saturated thicknesses != 0."
 
-    sat_thick = grid.thick(array=grid.botm-100.)
+    sat_thick = grid.saturated_thick(grid.botm - 100.)
     assert np.allclose(sat_thick, 0.), "saturated thicknesses != 0."
+
 
     return
 
@@ -170,22 +168,22 @@ def test_unstructured_thick():
         botm=botm.flatten(),
     )
 
-    thick = grid.thick()
+    thick = grid.thick
     assert np.allclose(thick, 5.), "thicknesses != 5."
 
-    sat_thick = grid.thick(array=grid.botm + 10.)
+    sat_thick = grid.saturated_thick(grid.botm + 10.)
     assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
 
-    sat_thick = grid.thick(array=grid.botm + 5.)
+    sat_thick = grid.saturated_thick(grid.botm + 5.)
     assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
 
-    sat_thick = grid.thick(array=grid.botm + 2.5)
+    sat_thick = grid.saturated_thick(grid.botm + 2.5)
     assert np.allclose(sat_thick, 2.5), "saturated thicknesses != 2.5"
 
-    sat_thick = grid.thick(array=grid.botm)
+    sat_thick = grid.saturated_thick(grid.botm)
     assert np.allclose(sat_thick, 0.), "saturated thicknesses != 0."
 
-    sat_thick = grid.thick(array=grid.botm-100.)
+    sat_thick = grid.saturated_thick(grid.botm - 100.)
     assert np.allclose(sat_thick, 0.), "saturated thicknesses != 0."
 
     return

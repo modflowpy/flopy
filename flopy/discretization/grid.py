@@ -275,54 +275,49 @@ class Grid:
 
     @property
     def top_botm(self):
-        elevations = None
-        if self.grid_type == "structured":
-            new_top = np.expand_dims(self._top, 0)
-            elevations = np.concatenate((new_top, self._botm), axis=0)
-        else:
-            raise ValueError(
-                "top_botm property not implemented for vertex "
-                + "and unstructured model grids"
-            )
-        return elevations
+        raise NotImplementedError("must define top_botm in child class")
 
-    def thick(self, array=None):
+    @property
+    def thick(self):
         """
-        Get the cell thickness. If the optional array is passed then
-        thickness is returned relative to array values (saturated thickness).
-        If array value is greater than or equal to the top of a cell the cell
-        thickness is returned. If array value is less than the top of a cell
-        the difference between the array value and the bottom of the cell
-        is returned. If array value is less than the bottom of the cell
-        a zero values is returned.
-
-        todo: add option for passing in HDRY and HNOFLO for MODFLOW-2005
-
-        Parameters
-        ----------
-        array : ndarray
-            array of elevations that will be used to adjust the cell thickness
+        Get the cell thickness for a structured, vertex, or unstructured grid.
 
         Returns
         -------
             thick : calculated thickness
         """
-        if self.grid_type == "structured":
-            thick = -np.diff(self.top_botm, axis=0)
-            if array is not None:
-                top = self.top_botm[:-1]
-                bot = self.top_botm[1:]
-                idx = (array < top) & (array > bot)
-                thick[idx] = array[idx] - bot[idx]
-                idx = array <= bot
-                thick[idx] = 0.0
-        else:
-            thick = self.top - self.botm
-            if array is not None:
-                idx = (array < self.top) & (array > self.botm)
-                thick[idx] = array[idx] - self.botm[idx]
-                idx = array <= self.botm
-                thick[idx] = 0.0
+        return -np.diff(self.top_botm, axis=0).reshape(self._botm.shape)
+
+    def saturated_thick(self, array, mask=None):
+        """
+        Get the saturated thickness for a structured, vertex, or unstructured
+        grid. If the optional array is passed then thickness is returned
+        relative to array values (saturated thickness). Returned values
+        ranges from zero to cell thickness if optional array is passed.
+
+        Parameters
+        ----------
+        array : ndarray
+            array of elevations that will be used to adjust the cell thickness
+        mask: float, list, tuple, ndarray
+            array values to replace with a nan value.
+
+        Returns
+        -------
+            thick : calculated saturated thickness
+        """
+        thick = self.thick
+        top = self.top_botm[:-1].reshape(thick.shape)
+        bot = self.top_botm[1:].reshape(thick.shape)
+        idx = np.where((array < top) & (array > bot))
+        thick[idx] = array[idx] - bot[idx]
+        idx = np.where(array <= bot)
+        thick[idx] = 0.0
+        if mask is not None:
+            if isinstance(mask, (float, int)):
+                mask = [float(mask)]
+            for mask_value in mask:
+                thick[np.where(array == mask_value)] = np.nan
         return thick
 
     @property
