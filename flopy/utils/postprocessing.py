@@ -707,7 +707,6 @@ def get_specific_discharge(
     if classical_budget:
         # get saturated thickness (head - bottom elev for unconfined layer)
         if head is None:
-            # sat_thk = model.dis.thickness.array
             sat_thk = modelgrid.thick
         else:
             sat_thk = modelgrid.saturated_thick(

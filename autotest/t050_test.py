@@ -468,14 +468,18 @@ def test_vtk_vector():
     # assert(totalbytes1==942413)
     # nlines1 = count_lines_in_file(filetocheck, binary=True)
     # assert(nlines1==3824)
-    assert os.path.exists(filetocheck)
+    assert os.path.exists(filetocheck), "file (0) does not exist: {}".format(
+        filetocheck
+    )
 
     # with values directly given at vertices
     q = pp.get_specific_discharge(vectors, m, head, position="vertices")
     nancount = np.count_nonzero(np.isnan(q[0]))
-    assert nancount == 472
+    assert nancount == 472, "nancount != 472 ({})".format(nancount)
     overall = np.nansum(q[0]) + np.nansum(q[1]) + np.nansum(q[2])
-    assert np.allclose(overall, -45.38671967357735)
+    assert np.allclose(
+        overall, -15.849639024891047
+    ), "vertices overall = {}".format(overall)
     output_dir = os.path.join(cpth, "freyberg_vector")
     filenametocheck = "discharge_verts.vtu"
     vtk.export_vector(m, q, output_dir, "discharge_verts")
@@ -483,7 +487,7 @@ def test_vtk_vector():
     # totalbytes2 = os.path.getsize(filetocheck)
     # assert(totalbytes2==1990047)
     nlines2 = count_lines_in_file(filetocheck)
-    assert nlines2 == 10598
+    assert nlines2 == 10598, "nlines != 10598 ({})".format(nlines2)
 
     # with values directly given at vertices and binary
     vtk.export_vector(
@@ -494,7 +498,9 @@ def test_vtk_vector():
     # assert(totalbytes3==891486)
     # nlines3 = count_lines_in_file(filetocheck, binary=True)
     # assert(nlines3==3012)
-    assert os.path.exists(filetocheck)
+    assert os.path.exists(filetocheck), "file (1) does not exist: {}".format(
+        filetocheck
+    )
 
     return
 

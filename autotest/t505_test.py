@@ -2916,8 +2916,12 @@ def test028_sfr():
         head_new = os.path.join(run_folder, "test1tr.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new, outfile=outfile,
-            htol=10.,
+            None,
+            None,
+            files1=head_file,
+            files2=head_new,
+            outfile=outfile,
+            htol=10.0,
         )
 
         # clean up
