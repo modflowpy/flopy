@@ -450,11 +450,11 @@ def test_specific_discharge_comprehensive():
     for col in ax.collections:
         if not isinstance(col, Quiver):
             raise AssertionError("Unexpected collection type")
-    assert np.sum(quiver.Umask) == 2
+    assert np.sum(quiver.Umask) == 4
     pos = np.sum(quiver.X) + np.sum(quiver.Y)
     assert np.allclose(pos, 1600.0)
     val = np.sum(quiver.U) + np.sum(quiver.V)
-    assert np.allclose(val, 10.11359908150753)
+    assert np.allclose(val, 12.0225525)
 
     # close figure
     plt.close()
@@ -481,15 +481,15 @@ def test_specific_discharge_comprehensive():
     for col in ax.collections:
         if not isinstance(col, Quiver):
             raise AssertionError("Unexpected collection type")
-    assert np.sum(quiver.Umask) == 5
+    assert np.sum(quiver.Umask) == 7
     X = np.ma.masked_where(quiver.Umask, quiver.X)
     Y = np.ma.masked_where(quiver.Umask, quiver.Y)
     pos = X.sum() + Y.sum()
-    assert np.allclose(pos, -153.8341064453125)
+    assert np.allclose(pos, -152.0747652053833)
     U = np.ma.masked_where(quiver.Umask, quiver.U)
     V = np.ma.masked_where(quiver.Umask, quiver.V)
     val = U.sum() + V.sum()
-    assert np.allclose(val, -5.2501876516091235)
+    assert np.allclose(val, -3.3428158026088326)
 
     # close figure
     plt.close()

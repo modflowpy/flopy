@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 
 
 def get_transmissivities(
@@ -188,6 +189,11 @@ def get_saturated_thickness(heads, m, nodata, per_idx=None):
     sat_thickness : 3 or 4-D np.ndarray
         Array of saturated thickness
     """
+    warnings.warn(
+        "postprocessing.get_saturated_thickness will be deprecated and "
+        "removed in version 3.3.5.  Use grid.saturated_thick(heads).",
+        PendingDeprecationWarning,
+    )
 
     if not isinstance(nodata, list):
         nodata = [nodata]
@@ -199,7 +205,7 @@ def get_saturated_thickness(heads, m, nodata, per_idx=None):
     botm = m.dis.botm.array
     top.shape = (1,) + botm.shape[1:]
     top = np.concatenate((top, botm[0:-1]), axis=0)
-    thickness = m.dis.thickness.array
+    thickness = m.modelgrid.thick
     nper, nlay, nrow, ncol = heads.shape
     if per_idx is None:
         per_idx = list(range(nper))
@@ -220,7 +226,8 @@ def get_saturated_thickness(heads, m, nodata, per_idx=None):
     sat_thickness = []
     for per in per_idx:
         hds = heads[per]
-        unconf_thickness = np.where((hds - botm) > top, top, hds - botm)
+        hds = np.where(hds < botm, botm, hds)  # for NWT when hds < botm
+        unconf_thickness = np.where(hds > top, top - botm, hds - botm)
         perthickness = np.where(is_conf, thickness, unconf_thickness)
         sat_thickness.append(perthickness)
     sat_thickness = np.squeeze(sat_thickness)
@@ -701,10 +708,10 @@ def get_specific_discharge(
     if classical_budget:
         # get saturated thickness (head - bottom elev for unconfined layer)
         if head is None:
-            sat_thk = model.dis.thickness.array
+            sat_thk = modelgrid.thick
         else:
-            sat_thk = get_saturated_thickness(
-                head, model, [model.hdry, model.hnoflo]
+            sat_thk = modelgrid.saturated_thick(
+                head, mask=[model.hdry, model.hnoflo]
             )
             sat_thk.shape = model.modelgrid.shape
 

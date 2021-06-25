@@ -236,15 +236,13 @@ class ModflowRch(Package):
                 )
                 l = 0
                 for i, cbd in enumerate(self.parent.dis.laycbd):
-                    thickness[i, :, :] = self.parent.dis.thickness.array[
-                        l, :, :
-                    ]
+                    thickness[i, :, :] = self.parent.modelgrid.thick[l, :, :]
                     if cbd > 0:
                         l += 1
                     l += 1
-                assert l == self.parent.dis.thickness.shape[0]
+                assert l == self.parent.modelgrid.thick.shape[0]
             else:
-                thickness = self.parent.dis.thickness.array
+                thickness = self.parent.modelgrid.thick
             assert thickness.shape == self.parent.get_package(pkg).hk.shape
             Tmean = (
                 (self.parent.get_package(pkg).hk.array * thickness)[:, active]

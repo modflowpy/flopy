@@ -280,8 +280,50 @@ class Grid:
 
     @property
     def top_botm(self):
-        new_top = np.expand_dims(self._top, 0)
-        return np.concatenate((new_top, self._botm), axis=0)
+        raise NotImplementedError("must define top_botm in child class")
+
+    @property
+    def thick(self):
+        """
+        Get the cell thickness for a structured, vertex, or unstructured grid.
+
+        Returns
+        -------
+            thick : calculated thickness
+        """
+        return -np.diff(self.top_botm, axis=0).reshape(self._botm.shape)
+
+    def saturated_thick(self, array, mask=None):
+        """
+        Get the saturated thickness for a structured, vertex, or unstructured
+        grid. If the optional array is passed then thickness is returned
+        relative to array values (saturated thickness). Returned values
+        ranges from zero to cell thickness if optional array is passed.
+
+        Parameters
+        ----------
+        array : ndarray
+            array of elevations that will be used to adjust the cell thickness
+        mask: float, list, tuple, ndarray
+            array values to replace with a nan value.
+
+        Returns
+        -------
+            thick : calculated saturated thickness
+        """
+        thick = self.thick
+        top = self.top_botm[:-1].reshape(thick.shape)
+        bot = self.top_botm[1:].reshape(thick.shape)
+        idx = np.where((array < top) & (array > bot))
+        thick[idx] = array[idx] - bot[idx]
+        idx = np.where(array <= bot)
+        thick[idx] = 0.0
+        if mask is not None:
+            if isinstance(mask, (float, int)):
+                mask = [float(mask)]
+            for mask_value in mask:
+                thick[np.where(array == mask_value)] = np.nan
+        return thick
 
     @property
     def units(self):
