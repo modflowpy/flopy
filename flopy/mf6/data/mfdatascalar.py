@@ -390,9 +390,14 @@ class MFScalar(mfdata.MFData):
             for data_item in self.structure.data_item_structures:
                 if (
                     data_item.type == DatumType.keyword
-                    and data_item.optional == False
+                    and not data_item.optional
                 ):
                     if isinstance(data, list) or isinstance(data, tuple):
+                        if len(data) == 1 and (
+                            isinstance(data[0], tuple)
+                            or isinstance(data[0], list)
+                        ):
+                            data = data[0]
                         if len(data) > index and (
                             data[index] is not None and data[index] != False
                         ):

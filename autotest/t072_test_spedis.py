@@ -252,7 +252,7 @@ def build_model_mf6():
         k=hk,
         rewet_record=rewet_record,
         wetdry=wetdry,
-        cvoptions=[()],
+        cvoptions=True,
         save_specific_discharge=True,
     )
 
