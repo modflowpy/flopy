@@ -1213,6 +1213,8 @@ class DataStorage:
                             new_data
                         )
         elif self.data_structure_type == DataStructureType.scalar:
+            if data == [()]:
+                data = [(True,)]
             self.layer_storage.first_item().internal_data = data
         else:
             layer, multiplier = self._store_prep(layer, multiplier)
