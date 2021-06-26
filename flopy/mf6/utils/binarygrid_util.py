@@ -651,3 +651,56 @@ class MfGrdFile(FlopyBinaryData):
         )
 
         return self._set_spatialreference()
+
+    def get_frffffflf(self, flowja):
+        """
+        Get
+
+        Parameters
+        ----------
+        flowja
+
+        Returns
+        -------
+        frf : ndarray
+
+        fff : ndarray
+
+
+
+        """
+        if self._grid == "DIS":
+            ia = self.ia
+            ja = self.ja
+            if flowja.shape != ja.shape:
+                raise ValueError(
+                    "size of flowja ({}) ".format(flowja.shape)
+                    + "not equal to {}".format(ja.shape)
+                )
+            shape = (self.nlay, self.nrow, self.ncol)
+            frf = np.zeros(shape, dtype=float).flatten()
+            fff = np.zeros(shape, dtype=float).flatten()
+            if self.nlay > 1:
+                shapez = (self.nlay - 1, self.nrow, self.ncol)
+                flf = np.zeros(shapez, dtype=float)
+            else:
+                shapez = None
+                flf = None
+            # fill flow terms
+            flows = [frf, fff, flf]
+            for n in range(self.nodes):
+                i0, i1 = ia[n] + 1, ia[n + 1]
+                ipos = 0
+                for j in range(i0, i1):
+                    jcol = ja[j]
+                    if jcol > n:
+                        flows[ipos][n] = flowja[j]
+                        ipos += 1
+            # reshape flow terms
+            frf = frf.reshape(shape)
+            fff = fff.reshape(shape)
+            if shapez is not None:
+                flf = flf.reshape(shapez)
+        else:
+            frf, fff, flf = None, None, None
+        return frf, fff, flf
