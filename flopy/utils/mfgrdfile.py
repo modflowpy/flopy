@@ -12,8 +12,6 @@ from flopy.utils.utils_def import FlopyBinaryData
 from flopy.discretization.structuredgrid import StructuredGrid
 from flopy.discretization.vertexgrid import VertexGrid
 from flopy.discretization.unstructuredgrid import UnstructuredGrid
-from flopy.utils.reference import SpatialReferenceUnstructured
-from flopy.utils.reference import SpatialReference
 import warnings
 
 warnings.simplefilter("always", PendingDeprecationWarning)
@@ -174,12 +172,13 @@ class MfGrdFile(FlopyBinaryData):
         Get the modelgrid based on the MODFLOW 6 discretization type
         Returns
         -------
-        sr : SpatialReference
+        mg : StructuredGrid, VertexGrid or UnstructuredGrid
+
         Examples
         --------
         >>> import flopy
         >>> gobj = flopy.utils.MfGrdFile('test.dis.grb')
-        >>> sr = gobj.get_modelgrid()
+        >>> mg = gobj.get_modelgrid()
         """
         return self.mg
 
@@ -414,6 +413,8 @@ class MfGrdFile(FlopyBinaryData):
         sr = None
         try:
             if self._grid == "DISV" or self._grid == "DISU":
+                from flopy.utils.reference import SpatialReferenceUnstructured
+
                 try:
                     iverts, verts = self.get_verts()
                     vertc = self.get_centroids()
@@ -430,6 +431,8 @@ class MfGrdFile(FlopyBinaryData):
                     )
                     print(msg)
             elif self._grid == "DIS":
+                from flopy.utils.reference import SpatialReference
+
                 delr, delc = self._datadict["DELR"], self._datadict["DELC"]
                 xorigin, yorigin, rot = (
                     self._datadict["XORIGIN"],

@@ -619,8 +619,7 @@ class UnstructuredGrid(Grid):
     @classmethod
     def from_argus_export(cls, fname, nlay=1):
         """
-        Create a new SpatialReferenceUnstructured grid from an Argus One
-        Trimesh file
+        Create a new UnstructuredGrid from an Argus One Trimesh file
 
         Parameters
         ----------
@@ -632,7 +631,7 @@ class UnstructuredGrid(Grid):
 
         Returns
         -------
-            sru : flopy.utils.reference.SpatialReferenceUnstructured
+        flopy.discretization.unstructuredgrid.UnstructuredGrid
 
         """
         from ..utils.geometry import get_polygon_centroid

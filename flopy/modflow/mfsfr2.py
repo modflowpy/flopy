@@ -1638,7 +1638,7 @@ class ModflowSfr2(Package):
 
         df = self.df
         m = self.parent
-        mfunits = m.sr.model_length_units
+        mfunits = m.modelgrid.units
 
         to_miles = {"feet": 1 / 5280.0, "meters": 1 / (0.3048 * 5280.0)}
 
@@ -2286,14 +2286,7 @@ class check:
 
     def __init__(self, sfrpackage, verbose=True, level=1):
         self.sfr = copy.copy(sfrpackage)
-
-        try:
-            self.mg = self.sfr.parent.modelgrid
-            self.sr = self.sfr.parent.modelgrid.sr
-        except AttributeError:
-            self.sr = self.sfr.parent.sr
-            self.mg = None
-
+        self.mg = self.sfr.parent.modelgrid
         self.reach_data = sfrpackage.reach_data
         self.segment_data = sfrpackage.segment_data
         self.verbose = verbose
@@ -2539,15 +2532,11 @@ class check:
         self._txt_footer(headertxt, txt, "circular routing", warning=False)
 
         # check reach connections for proximity
-        if self.mg is not None or self.mg is not None:
+        if self.mg is not None:
             rd = self.sfr.reach_data.copy()
             rd.sort(order=["reachID"])
-            try:
-                xcentergrid, ycentergrid, zc = self.mg.get_cellcenters()
-                del zc
-            except AttributeError:
-                xcentergrid = self.mg.xcellcenters
-                ycentergrid = self.mg.ycellcenters
+            xcentergrid = self.mg.xcellcenters
+            ycentergrid = self.mg.ycellcenters
 
             x0 = xcentergrid[rd.i, rd.j]
             y0 = ycentergrid[rd.i, rd.j]
@@ -2573,8 +2562,8 @@ class check:
             delr = self.mg.delr
             delc = self.mg.delc
 
-            dx = delr[rd.j]  # (delr * self.sr.length_multiplier)[rd.j]
-            dy = delc[rd.i]  # (delc * self.sr.length_multiplier)[rd.i]
+            dx = delr[rd.j]
+            dy = delc[rd.i]
             hyp = np.sqrt(dx ** 2 + dy ** 2)
 
             # breaks are when the connection distance is greater than
