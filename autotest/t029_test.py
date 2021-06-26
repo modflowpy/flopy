@@ -7,8 +7,7 @@ pthtest = os.path.join("..", "examples", "data", "mfgrd_test")
 
 
 def test_mfgrddis():
-    grbnam = "nwtp3.dis.grb"
-    fn = os.path.join(pthtest, grbnam)
+    fn = os.path.join(pthtest, "nwtp3.dis.grb")
     grid = flopy.mf6.utils.MfGrdFile(fn, verbose=True)
 
     connections = grid.connectivity
@@ -36,7 +35,7 @@ def test_mfgrddis():
 
     extents = mg.extent
     errmsg = (
-        "extents {} of {} ".format(extents, grbnam)
+        "extents {} of {} ".format(extents, fn)
         + "does not equal (0.0, 8000.0, 0.0, 8000.0)"
     )
     assert extents == (0.0, 8000.0, 0.0, 8000.0), errmsg
@@ -70,11 +69,11 @@ def test_mfgrddisv():
     plt.close("all")
 
     extents = mg.extent
-    errmsg = (
-        "extents {} of {} ".format(extents, fn)
-        + "does not equal (0.0, 700.0, 0.0, 700.0)"
-    )
-    assert extents == (0.0, 8000.0, 0.0, 8000.0), errmsg
+    extents0 = (0.0, 700.0, 0.0, 700.0)
+    errmsg = "extents {} of {} ".format(
+        extents, fn
+    ) + "does not equal {}".format(extents0)
+    assert extents == extents0, errmsg
 
     cellxy = grid.get_centroids
     errmsg = "shape of flow.disv centroids {} not equal to (218, 2).".format(
@@ -118,16 +117,16 @@ def test_mfgrddisu():
     plt.close("all")
 
     extents = mg.extent
-    errmsg = (
-        "extents {} of {} ".format(extents, fn)
-        + "does not equal (0.0, 8000.0, 0.0, 8000.0)"
-    )
-    assert extents == (0.0, 8000.0, 0.0, 8000.0), errmsg
+    extents0 = (0.0, 10000.0, 0.0, 1.0)
+    errmsg = "extents {} of {} ".format(
+        extents, fn
+    ) + "does not equal {}".format(extents0)
+    assert extents == extents0, errmsg
 
     return
 
 
 if __name__ == "__main__":
-    # test_mfgrddis()
+    test_mfgrddis()
     test_mfgrddisv()
     test_mfgrddisu()

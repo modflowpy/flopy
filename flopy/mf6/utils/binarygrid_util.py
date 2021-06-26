@@ -364,14 +364,20 @@ class MfGrdFile(FlopyBinaryData):
                 iavert = self.iavert
                 javert = self.javert
                 shpvert = self._recorddict["VERTICES"][2]
+                # create iverts
                 for ivert in range(self.nodes):
                     i0 = iavert[ivert]
                     i1 = iavert[ivert + 1]
                     iverts.append((javert[i0:i1]).tolist())
+                v0 = self._datadict["VERTICES"].reshape(shpvert)
+                # create verts
+                verts = [
+                    [idx, v0[idx, 0], v0[idx, 1]] for idx in range(shpvert[0])
+                ]
                 if self.verbose:
                     msg = "returning vertices for {}".format(self.file.name)
                     print(msg)
-                return iverts, self._datadict["VERTICES"].reshape(shpvert)
+                return iverts, verts
             except:
                 msg = "could not return vertices for {}".format(self.file.name)
                 raise KeyError(msg)
