@@ -251,38 +251,47 @@ def test_pathline_plot_xc():
     from matplotlib.collections import LineCollection
 
     # test with multi-layer example
-    model_ws = os.path.join("..", 'examples', 'data', 'mp6')
+    model_ws = os.path.join("..", "examples", "data", "mp6")
 
-    ml = flopy.modflow.Modflow.load("EXAMPLE.nam", model_ws=model_ws,
-                                    exe_name=mf2005_exe)
-    ml.change_model_ws(os.path.join('.', 'temp'))
+    ml = flopy.modflow.Modflow.load(
+        "EXAMPLE.nam", model_ws=model_ws, exe_name=mf2005_exe
+    )
+    ml.change_model_ws(os.path.join(".", "temp"))
     ml.write_input()
     ml.run_model()
 
-    mp = flopy.modpath.Modpath6(modelname='ex6',
-                                exe_name=mpth_exe,
-                                modflowmodel=ml,
-                                model_ws=os.path.join('.', 'temp'),
-                                dis_file=ml.name + '.DIS',
-                                head_file=ml.name + '.hed',
-                                budget_file=ml.name + '.bud')
+    mp = flopy.modpath.Modpath6(
+        modelname="ex6",
+        exe_name=mpth_exe,
+        modflowmodel=ml,
+        model_ws=os.path.join(".", "temp"),
+        dis_file=ml.name + ".DIS",
+        head_file=ml.name + ".hed",
+        budget_file=ml.name + ".bud",
+    )
 
-    mpb = flopy.modpath.Modpath6Bas(mp, hdry=ml.lpf.hdry, laytyp=ml.lpf.laytyp,
-                                    ibound=1, prsity=0.1)
+    mpb = flopy.modpath.Modpath6Bas(
+        mp, hdry=ml.lpf.hdry, laytyp=ml.lpf.laytyp, ibound=1, prsity=0.1
+    )
 
-    sim = mp.create_mpsim(trackdir='forward', simtype='pathline',
-                          packages='RCH', start_time=(2, 0, 1.))
+    sim = mp.create_mpsim(
+        trackdir="forward",
+        simtype="pathline",
+        packages="RCH",
+        start_time=(2, 0, 1.0),
+    )
     mp.write_input()
 
     mp.run_model(silent=False)
 
-    pthobj = flopy.utils.PathlineFile(os.path.join('temp', 'ex6.mppth'))
+    pthobj = flopy.utils.PathlineFile(os.path.join("temp", "ex6.mppth"))
     well_pathlines = pthobj.get_destination_pathline_data(
-        dest_cells=[(4, 12, 12)])
+        dest_cells=[(4, 12, 12)]
+    )
 
-    mx = flopy.plot.PlotCrossSection(model=ml, line={'row': 4})
-    mx.plot_bc("WEL", kper=2, color='blue')
-    pth = mx.plot_pathline(well_pathlines, method='cell', colors='red')
+    mx = flopy.plot.PlotCrossSection(model=ml, line={"row": 4})
+    mx.plot_bc("WEL", kper=2, color="blue")
+    pth = mx.plot_pathline(well_pathlines, method="cell", colors="red")
 
     if not isinstance(pth, LineCollection):
         raise AssertionError()

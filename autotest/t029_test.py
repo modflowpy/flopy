@@ -1,5 +1,7 @@
 import os
 import flopy
+import matplotlib
+import matplotlib.pyplot as plt
 
 pthtest = os.path.join("..", "examples", "data", "mfgrd_test")
 
@@ -7,39 +9,74 @@ pthtest = os.path.join("..", "examples", "data", "mfgrd_test")
 def test_mfgrddis():
     grbnam = "nwtp3.dis.grb"
     fn = os.path.join(pthtest, grbnam)
-    dis = flopy.utils.MfGrdFile(fn, verbose=True)
+    grid = flopy.mf6.utils.MfGrdFile(fn, verbose=True)
 
-    iverts, verts = dis.get_verts()
-    mg = dis.mg
+    connections = grid.connectivity
+    errmsg = "number of connections ({}) is not equal to {}".format(
+        len(connections), grid.nodes
+    )
+    assert len(connections) == grid.nodes, errmsg
+
+    cell_conn = grid.cellconnections
+    errmsg = "number of cell connections ({}) is not equal to {}".format(
+        cell_conn.shape[0], grid.nconnections
+    )
+    assert cell_conn.shape[0] == grid.nconnections, errmsg
+
+    mg = grid.get_modelgrid
+    assert isinstance(
+        mg, flopy.discretization.StructuredGrid
+    ), "invalid grid type"
+
+    lc = mg.plot()
+    assert isinstance(
+        lc, matplotlib.collections.LineCollection
+    ), "could not plot grid object created from {}".format(fn)
+    plt.close()
+
     extents = mg.extent
-    vertc = dis.get_centroids()
     errmsg = (
         "extents {} of {} ".format(extents, grbnam)
         + "does not equal (0.0, 8000.0, 0.0, 8000.0)"
     )
     assert extents == (0.0, 8000.0, 0.0, 8000.0), errmsg
-    errmsg = (
-        "shape of {} {} ".format(grbnam, verts.shape)
-        + "not equal to (32000, 2)."
-    )
-    assert verts.shape == (25600, 2), errmsg
-    errmsg = (
-        "ncells of {} {} ".format(grbnam, len(iverts)) + "not equal to 6400."
-    )
-    assert len(iverts) == 6400, errmsg
 
 
 def test_mfgrddisv():
     fn = os.path.join(pthtest, "flow.disv.grb")
-    disv = flopy.utils.MfGrdFile(fn, verbose=True)
+    grid = flopy.mf6.utils.MfGrdFile(fn, verbose=True)
 
-    iverts, verts = disv.get_verts()
-    errmsg = "shape of flow.disv {} not equal to (156, 2).".format(verts.shape)
-    assert verts.shape == (156, 2), errmsg
-    errmsg = "ncells of flow.disv {} not equal to 218.".format(len(iverts))
-    assert len(iverts) == 218, errmsg
+    connections = grid.connectivity
+    errmsg = "number of connections ({}) is not equal to {}".format(
+        len(connections), grid.nodes
+    )
+    assert len(connections) == grid.nodes, errmsg
 
-    cellxy = disv.get_centroids()
+    cell_conn = grid.cellconnections
+    errmsg = "number of cell connections ({}) is not equal to {}".format(
+        cell_conn.shape[0], grid.nconnections
+    )
+    assert cell_conn.shape[0] == grid.nconnections, errmsg
+
+    mg = grid.get_modelgrid
+    assert isinstance(
+        mg, flopy.discretization.VertexGrid
+    ), "invalid grid type ({})".format(type(mg))
+
+    lc = mg.plot()
+    assert isinstance(
+        lc, matplotlib.collections.LineCollection
+    ), "could not plot grid object created from {}".format(fn)
+    plt.close("all")
+
+    extents = mg.extent
+    errmsg = (
+        "extents {} of {} ".format(extents, fn)
+        + "does not equal (0.0, 700.0, 0.0, 700.0)"
+    )
+    assert extents == (0.0, 8000.0, 0.0, 8000.0), errmsg
+
+    cellxy = grid.get_centroids
     errmsg = "shape of flow.disv centroids {} not equal to (218, 2).".format(
         cellxy.shape
     )
@@ -49,23 +86,48 @@ def test_mfgrddisv():
 
 def test_mfgrddisu():
     fn = os.path.join(pthtest, "flow.disu.grb")
-    disu = flopy.utils.MfGrdFile(fn, verbose=True)
+    grid = flopy.mf6.utils.MfGrdFile(fn, verbose=True)
 
-    iverts, verts = disu.get_verts()
-    errmsg = "shape of flow.disu {} not equal to (148, 2).".format(verts.shape)
-    assert verts.shape == (148, 2), errmsg
-    errmsg = "nodes of flow.disu {} not equal to 121.".format(len(iverts))
-    assert len(iverts) == 121, errmsg
-
-    cellxy = disu.get_centroids()
-    errmsg = "shape of flow.disu centroids {} not equal to (121, 2).".format(
-        cellxy.shape
+    connections = grid.connectivity
+    errmsg = "number of connections ({}) is not equal to {}".format(
+        len(connections), grid.nodes
     )
-    assert cellxy.shape == (121, 2), errmsg
+    assert len(connections) == grid.nodes, errmsg
+
+    mg = grid.get_modelgrid
+    assert mg is None, "model grid is not None"
+
+    fn = os.path.join(pthtest, "keating.disu.grb")
+    grid = flopy.mf6.utils.MfGrdFile(fn, verbose=True)
+
+    connections = grid.connectivity
+    errmsg = "number of connections ({}) is not equal to {}".format(
+        len(connections), grid.nodes
+    )
+    assert len(connections) == grid.nodes, errmsg
+
+    mg = grid.get_modelgrid
+    assert isinstance(
+        mg, flopy.discretization.UnstructuredGrid
+    ), "invalid grid type ({})".format(type(mg))
+
+    lc = mg.plot()
+    assert isinstance(
+        lc, matplotlib.collections.LineCollection
+    ), "could not plot grid object created from {}".format(fn)
+    plt.close("all")
+
+    extents = mg.extent
+    errmsg = (
+        "extents {} of {} ".format(extents, fn)
+        + "does not equal (0.0, 8000.0, 0.0, 8000.0)"
+    )
+    assert extents == (0.0, 8000.0, 0.0, 8000.0), errmsg
+
     return
 
 
 if __name__ == "__main__":
-    test_mfgrddis()
+    # test_mfgrddis()
     test_mfgrddisv()
     test_mfgrddisu()
