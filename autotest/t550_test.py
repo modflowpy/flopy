@@ -5,7 +5,6 @@ import flopy
 fm = flopy.modflow
 fp6 = flopy.mf6
 from flopy.discretization import StructuredGrid
-from flopy.utils import SpatialReference as OGsr
 from flopy.export.shapefile_utils import shp2recarray
 
 try:
@@ -33,7 +32,6 @@ def test_mf6_grid_shp_export():
     perioddata = [[perlen, nstp, tsmult]] * 2
     botm = np.zeros((2, 10, 10))
 
-    ogsr = OGsr(delc=np.ones(nrow), delr=np.ones(ncol), xll=10, yll=10)
     m = fm.Modflow("junk", version="mfnwt", model_ws=tmpdir)
     dis = fm.ModflowDis(
         m,

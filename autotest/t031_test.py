@@ -204,7 +204,7 @@ def test_get_destination_data():
         well_pthld,
         one_per_particle=True,
         direction="starting",
-        mg=sr2,
+        sr=sr2,
         shpname=fpth,
     )
     fpth = os.path.join(path, "pathlines.shp")

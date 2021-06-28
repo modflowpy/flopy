@@ -1315,8 +1315,7 @@ class BaseModel(ModelInterface):
             self._set_name(value)
         elif key == "model_ws":
             self.change_model_ws(value)
-        elif key == "sr":
-            assert isinstance(value, utils.reference.SpatialReference)
+        elif key == "sr" and value.__class__.__name__ == "SpatialReference":
             warnings.warn(
                 "SpatialReference has been deprecated.",
                 category=DeprecationWarning,

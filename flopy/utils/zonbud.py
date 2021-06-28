@@ -1,6 +1,7 @@
 import os
 import copy
 import numpy as np
+import warnings
 from .binaryfile import CellBudgetFile
 from itertools import groupby
 from collections import OrderedDict
@@ -82,16 +83,14 @@ class ZoneBudget:
             )
 
         self.dis = None
-        self.sr = None
         if "model" in kwargs.keys():
             self.model = kwargs.pop("model")
-            self.sr = self.model.sr
             self.dis = self.model.dis
         if "dis" in kwargs.keys():
             self.dis = kwargs.pop("dis")
-            self.sr = self.dis.parent.sr
         if "sr" in kwargs.keys():
-            self.sr = kwargs.pop("sr")
+            kwargs.pop("sr")
+            warnings.warn("ignoring 'sr' parameter")
         if len(kwargs.keys()) > 0:
             args = ",".join(kwargs.keys())
             raise Exception("LayerFile error: unrecognized kwargs: " + args)

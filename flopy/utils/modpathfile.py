@@ -309,7 +309,6 @@ class _ModpathSeries(object):
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
         """
-        from ..utils.reference import SpatialReference
         from ..utils import geometry
         from ..discretization import StructuredGrid
         from ..utils.geometry import LineString
@@ -327,19 +326,15 @@ class _ModpathSeries(object):
                     s = stack_arrays((s, series[n]))
                 series = s.view(np.recarray)
 
-        seires = series.copy()
+        series = series.copy()
         series.sort(order=["particleid", "time"])
 
-        if isinstance(mg, SpatialReference) or isinstance(
-            sr, SpatialReference
-        ):
+        if mg is None and sr.__class__.__name__ == "SpatialReference":
             warnings.warn(
                 "Deprecation warning: SpatialReference is deprecated."
                 "Use the Grid class instead.",
                 DeprecationWarning,
             )
-            if isinstance(mg, SpatialReference):
-                sr = mg
             mg = StructuredGrid(sr.delc, sr.delr)
             mg.set_coord_info(
                 xoff=sr.xll,
@@ -1285,15 +1280,16 @@ class EndpointFile:
         direction : str
             String defining if starting or ending particle locations should be
             considered. (default is 'ending')
-        sr : flopy.utils.reference.SpatialReference instance
-            Used to scale and rotate Global x,y,z values in MODPATH Endpoint file
+        mg : flopy.discretization.grid instance
+            Used to scale and rotate Global x,y,z values in MODPATH Endpoint
+            file.
         epsg : int
-            EPSG code for writing projection (.prj) file. If this is not supplied,
-            the proj4 string or epgs code associated with sr will be used.
+            EPSG code for writing projection (.prj) file. If this is not
+            supplied, the proj4 string or epgs code associated with mg will be
+            used.
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
         """
-        from ..utils.reference import SpatialReference
         from ..utils import geometry
         from ..discretization import StructuredGrid
         from ..utils.geometry import Point
@@ -1313,16 +1309,12 @@ class EndpointFile:
                 + 'or "starting".'
             )
             raise Exception(errmsg)
-        if isinstance(mg, SpatialReference) or isinstance(
-            sr, SpatialReference
-        ):
+        if mg is None and sr.__class__.__name__ == "SpatialReference":
             warnings.warn(
                 "Deprecation warning: SpatialReference is deprecated."
                 "Use the Grid class instead.",
                 DeprecationWarning,
             )
-            if isinstance(mg, SpatialReference):
-                sr = mg
             mg = StructuredGrid(sr.delc, sr.delr)
             mg.set_coord_info(
                 xoff=sr.xll,

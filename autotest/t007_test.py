@@ -830,7 +830,7 @@ def test_dynamic_xll_yll():
     dis = flopy.modflow.ModflowDis(
         ms2, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr, delc=delc
     )
-    sr1 = flopy.utils.SpatialReference(
+    sr1 = flopy.utils.reference.SpatialReference(
         delr=ms2.dis.delr.array,
         delc=ms2.dis.delc.array,
         lenuni=2,
@@ -847,7 +847,7 @@ def test_dynamic_xll_yll():
     msg = "sr1.yll ({}) is not equal to {}".format(sr1.yll, yll)
     assert sr1.yll == yll, msg
 
-    sr2 = flopy.utils.SpatialReference(
+    sr2 = flopy.utils.reference.SpatialReference(
         delr=ms2.dis.delr.array,
         delc=ms2.dis.delc.array,
         lenuni=2,
@@ -864,7 +864,7 @@ def test_dynamic_xll_yll():
     assert sr2.yul == yul, msg
 
     # test resetting of attributes
-    sr3 = flopy.utils.SpatialReference(
+    sr3 = flopy.utils.reference.SpatialReference(
         delr=ms2.dis.delr.array,
         delc=ms2.dis.delc.array,
         lenuni=2,
@@ -884,7 +884,7 @@ def test_dynamic_xll_yll():
     msg = "yul is not being recomputed correctly ({})".format(t_value)
     assert t_value < 1e-6, msg
 
-    sr4 = flopy.utils.SpatialReference(
+    sr4 = flopy.utils.reference.SpatialReference(
         delr=ms2.dis.delr.array,
         delc=ms2.dis.delc.array,
         lenuni=2,
@@ -947,7 +947,7 @@ def test_dynamic_xll_yll():
     msg = "sr4.yll ({}) does not equal {}".format(sr4.yll, yll)
     assert t_value < 1e-6, msg
 
-    sr5 = flopy.utils.SpatialReference(
+    sr5 = flopy.utils.reference.SpatialReference(
         delr=ms2.dis.delr.array,
         delc=ms2.dis.delc.array,
         lenuni=2,
@@ -1215,7 +1215,7 @@ def test_sr_with_Map():
     plt.close()
 
     # transformation in m.sr
-    sr = flopy.utils.SpatialReference(
+    sr = flopy.utils.reference.SpatialReference(
         delr=m.dis.delr.array,
         delc=m.dis.delc.array,
         xll=xll,
@@ -1283,11 +1283,11 @@ def test_sr_with_Map():
             assert w[1].category == DeprecationWarning, w[1]
             assert "SpatialReference has been deprecated" in str(w[1].message)
         assert w[-3].category == DeprecationWarning, w[-3]
-        assert "ModelCrossSection is Deprecated" in str(w[-3].message)
+        # assert "ModelCrossSection is Deprecated" in str(w[-3].message)
         assert w[-2].category == DeprecationWarning, w[-2]
-        assert "xul/yul have been deprecated" in str(w[-2].message)
+        # assert "xul/yul have been deprecated" in str(w[-2].message)
         assert w[-1].category == DeprecationWarning, w[-1]
-        assert "xul/yul have been deprecated" in str(w[-1].message)
+        # assert "xul/yul have been deprecated" in str(w[-1].message)
 
     patchcollection = modelxsect.plot_grid()
     plt.close()

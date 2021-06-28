@@ -202,7 +202,7 @@ class LayerFile:
         self._build_index()
 
         # now that we read the data and know nrow and ncol,
-        # we can make a generic sr if needed
+        # we can make a generic mg if needed
         if self.mg is None:
             self.mg = StructuredGrid(
                 delc=np.ones((self.nrow,)),

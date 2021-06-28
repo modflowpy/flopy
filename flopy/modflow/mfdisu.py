@@ -453,9 +453,6 @@ class ModflowDisU(Package):
             5: "years",
         }
 
-        #        self.sr = reference.SpatialReference(self.delr.array, self.delc.array,
-        #                                             self.lenuni, xul=xul,
-        #                                             yul=yul, rotation=rotation)
         self.start_datetime = start_datetime
 
         # calculate layer thicknesses

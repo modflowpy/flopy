@@ -26,7 +26,7 @@ def get_transmissivities(
         numpy array of shape nlay by n locations (2D) OR complete heads array
         of the model for one time (3D)
     m : flopy.modflow.Modflow object
-        Must have dis, sr, and lpf or upw packages.
+        Must have dis and lpf or upw packages.
     r : 1D array-like of ints, of length n locations
         row indices (optional; alternately specify x, y)
     c : 1D array-like of ints, of length n locations
@@ -52,7 +52,7 @@ def get_transmissivities(
         pass
     elif x is not None and y is not None:
         # get row, col for observation locations
-        r, c = m.sr.get_ij(x, y)
+        r, c = m.modelgrid.intersect(x, y)
     else:
         raise ValueError("Must specify row, column or x, y locations.")
 
