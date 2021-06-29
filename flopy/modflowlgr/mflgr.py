@@ -1,5 +1,5 @@
 """
-mf module.  Contains the ModflowGlobal, ModflowList, and Modflow classes.
+mflgr module.
 
 
 """
@@ -63,27 +63,32 @@ class ModflowLgr(BaseModel):
 
     Parameters
     ----------
-    modelname : string, optional
+    modelname : str, default "modflowlgrtest".
         Name of model.  This string will be used to name the MODFLOW input
-        that are created with write_model. (the default is 'modflowtest')
-    namefile_ext : string, optional
-        Extension for the namefile (the default is 'nam')
-    version : string, optional
-        Version of MODFLOW to use (the default is 'mf2005').
-    exe_name : string, optional
-        The name of the executable to use (the default is
-        'mf2005').
-    listunit : integer, optional
-        Unit number for the list file (the default is 2).
-    model_ws : string, optional
-        model workspace.  Directory name to create model data sets.
-        (default is the present working directory).
-    external_path : string
-        Location for external files (default is None).
-    verbose : boolean, optional
-        Print additional information to the screen (default is False).
-    load : boolean, optional
-         (default is True).
+        that are created with write_model.
+    namefile_ext : str, default "lgr"
+        Extension for the namefile.
+    version : str, default "mflgr".
+        Version of MODFLOW-LGR to use.
+    exe_name : str, default "mflgr.exe"
+        The name of the executable to use.
+    iupbhsv : int, default 0
+        Unit number with boundary heads.
+    iupbfsv : int, default 0
+        Unit number with boundary fluxes.
+    parent : Modflow, optional
+        Instance of a Modflow object.
+    children : list, optional
+        List of instances of 1 or more Modflow objects.
+    children_data : list, optional
+        List of LgrChild objects.
+    model_ws : str, default "."
+        Model workspace.  Directory name to create model data sets.
+        Default is the present working directory.
+    external_path : str, optional
+        Location for external files.
+    verbose : bool, default False
+        Print additional information to the screen.
 
     Attributes
     ----------
@@ -99,10 +104,9 @@ class ModflowLgr(BaseModel):
 
     Examples
     --------
-
     >>> import flopy
     >>> lgr = flopy.modflowlgr.ModflowLgr(parent=parent, children=children,
-    >>>                                   children_data=children_data)
+    ...                                   children_data=children_data)
 
     """
 
@@ -122,8 +126,7 @@ class ModflowLgr(BaseModel):
         verbose=False,
         **kwargs
     ):
-        BaseModel.__init__(
-            self,
+        super().__init__(
             modelname,
             namefile_ext,
             exe_name,
@@ -495,26 +498,29 @@ class ModflowLgr(BaseModel):
 
         Parameters
         ----------
-        f : filename or file handle
-            MODFLOW name file to load.
+        f : str or file handle
+            Path to MODFLOW-LGR name file to load.
+        version : str, default "mflgr".
+            Version of MODFLOW-LGR to use.
+        exe_name : str, default "mflgr.exe"
+            The name of the executable to use.
+        verbose : bool, default False
+            Print additional information to the screen.
+        model_ws : str, default "."
+            Model workspace.  Directory name to create model data sets.
+            Default is the present working directory.
+        load_only : list of str, optional
+            Packages to load (e.g. ["bas6", "lpf"]). Default None
+            means that all packages will be loaded.
+        forgive : bool, default False
+            Option to raise exceptions on package load failure, which can be
+            useful for debugging.
+        check : bool, default True
+            Check model input for common errors.
 
-        model_ws : model workspace path
-
-        load_only : (optional) filetype(s) to load (e.g. ["bas6", "lpf"])
-
-        forgive : flag to raise exception(s) on package load failure - good for debugging
-
-        check : boolean
-            Check model input for common errors. (default True)
         Returns
         -------
-        ml : Modflow object
-
-        Examples
-        --------
-
-        >>> import flopy
-        >>> ml = flopy.modflow.Modflow.load(f)
+        flopy.modflowlgr.mflgr.ModflowLgr
 
         """
         # test if name file is passed with extension (i.e., is a valid file)
