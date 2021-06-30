@@ -1,4 +1,7 @@
 import os
+
+import numpy as np
+
 import flopy
 import matplotlib
 import matplotlib.pyplot as plt
@@ -9,6 +12,26 @@ pthtest = os.path.join("..", "examples", "data", "mfgrd_test")
 def test_mfgrddis():
     fn = os.path.join(pthtest, "nwtp3.dis.grb")
     grid = flopy.mf6.utils.MfGrdFile(fn, verbose=True)
+
+    ncpl = grid.ncol * grid.nrow
+    assert grid.ncpl == ncpl, "ncpl ({}) does not equal {}".format(
+        grid.ncpl, ncpl
+    )
+
+    iverts, verts = grid.get_vertices()
+    nvert = grid.nvert
+    node = np.array(iverts, dtype=int).max()
+    assert node + 1 == nvert, "nvert ({}) does not equal {}".format(
+        node + 1, nvert
+    )
+
+    assert (
+        nvert == verts.shape[0]
+    ), "number of vertex (x, y) pairs ({}) ".format(
+        verts.shape[0]
+    ) + "does not equal {}".format(
+        nvert
+    )
 
     connections = grid.connectivity
     errmsg = "number of connections ({}) is not equal to {}".format(
@@ -22,7 +45,7 @@ def test_mfgrddis():
     )
     assert cell_conn.shape[0] == grid.nconnections, errmsg
 
-    mg = grid.get_modelgrid
+    mg = grid.modelgrid
     assert isinstance(
         mg, flopy.discretization.StructuredGrid
     ), "invalid grid type"
@@ -45,6 +68,26 @@ def test_mfgrddisv():
     fn = os.path.join(pthtest, "flow.disv.grb")
     grid = flopy.mf6.utils.MfGrdFile(fn, verbose=True)
 
+    ncpl = 218
+    assert grid.ncpl == ncpl, "ncpl ({}) does not equal {}".format(
+        grid.ncpl, ncpl
+    )
+
+    iverts, verts = grid.get_vertices()
+    nvert = grid.nvert
+    node = max([max(sublist) for sublist in iverts])
+    assert node + 1 == nvert, "nvert ({}) does not equal {}".format(
+        node + 1, nvert
+    )
+
+    assert (
+        nvert == verts.shape[0]
+    ), "number of vertex (x, y) pairs ({}) ".format(
+        verts.shape[0]
+    ) + "does not equal {}".format(
+        nvert
+    )
+
     connections = grid.connectivity
     errmsg = "number of connections ({}) is not equal to {}".format(
         len(connections), grid.nodes
@@ -57,7 +100,7 @@ def test_mfgrddisv():
     )
     assert cell_conn.shape[0] == grid.nconnections, errmsg
 
-    mg = grid.get_modelgrid
+    mg = grid.modelgrid
     assert isinstance(
         mg, flopy.discretization.VertexGrid
     ), "invalid grid type ({})".format(type(mg))
@@ -87,25 +130,43 @@ def test_mfgrddisu():
     fn = os.path.join(pthtest, "flow.disu.grb")
     grid = flopy.mf6.utils.MfGrdFile(fn, verbose=True)
 
+    iverts, verts = grid.get_vertices()
+    assert iverts is None, "iverts and verts should be None for {}".format(fn)
+
     connections = grid.connectivity
     errmsg = "number of connections ({}) is not equal to {}".format(
         len(connections), grid.nodes
     )
     assert len(connections) == grid.nodes, errmsg
 
-    mg = grid.get_modelgrid
+    mg = grid.modelgrid
     assert mg is None, "model grid is not None"
 
     fn = os.path.join(pthtest, "keating.disu.grb")
     grid = flopy.mf6.utils.MfGrdFile(fn, verbose=True)
 
+    iverts, verts = grid.get_vertices()
+    nvert = grid.nvert
+    node = max([max(sublist) for sublist in iverts])
+    assert node + 1 == nvert, "nvert ({}) does not equal {}".format(
+        node + 1, nvert
+    )
+
+    assert (
+        nvert == len(verts)
+    ), "number of vertex (x, y) pairs ({}) ".format(
+        len(verts)
+    ) + "does not equal {}".format(
+        nvert
+    )
+
     connections = grid.connectivity
     errmsg = "number of connections ({}) is not equal to {}".format(
         len(connections), grid.nodes
     )
     assert len(connections) == grid.nodes, errmsg
 
-    mg = grid.get_modelgrid
+    mg = grid.modelgrid
     assert isinstance(
         mg, flopy.discretization.UnstructuredGrid
     ), "invalid grid type ({})".format(type(mg))

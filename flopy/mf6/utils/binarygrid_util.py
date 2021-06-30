@@ -165,7 +165,10 @@ class MfGrdFile(FlopyBinaryData):
                 print(msg)
 
         # set the model grid
-        self.modelgrid = self._set_modelgrid()
+        self._modelgrid = self._set_modelgrid()
+
+        # set iverts and verts
+        self._iverts, self._verts = self._get_verts()
 
         self.file.close()
 
@@ -239,8 +242,7 @@ class MfGrdFile(FlopyBinaryData):
             else:
                 iverts, verts = self._get_verts()
                 vertc = self._get_cellcenters()
-                xc = vertc[:, 0]
-                yc = vertc[:, 1]
+                xc, yc = vertc[:, 0], vertc[:, 1]
                 modelgrid = UnstructuredGrid(
                     vertices=verts,
                     iverts=iverts,
@@ -271,12 +273,11 @@ class MfGrdFile(FlopyBinaryData):
         try:
             if self._grid == "DISV" or self._grid == "DISU":
                 try:
-                    iverts, verts = self._get_verts()
                     vertc = self.get_centroids()
                     xc = vertc[:, 0]
                     yc = vertc[:, 1]
                     sr = SpatialReferenceUnstructured(
-                        xc, yc, verts, iverts, [xc.shape[0]]
+                        xc, yc, self._verts, self._iverts, [xc.shape[0]]
                     )
                 except:
                     msg = (
@@ -308,8 +309,7 @@ class MfGrdFile(FlopyBinaryData):
 
     def _build_vertices_cell2d(self):
         """
-        Build the mf6 vertices and cell2d array
-         to generate a VertexGrid
+        Build the mf6 vertices and cell2d array to generate a VertexGrid
 
         Returns:
         -------
@@ -318,13 +318,36 @@ class MfGrdFile(FlopyBinaryData):
         """
         iverts, verts = self._get_verts()
         vertc = self._get_cellcenters()
-
         vertices = [[ix] + list(i) for ix, i in enumerate(verts)]
         cell2d = [
             [ix] + list(vertc[ix]) + [len(i) - 1] + i[:-1]
             for ix, i in enumerate(iverts)
         ]
         return vertices, cell2d
+
+    def _build_structured_iverts(self, i, j):
+        """
+        Build list of vertex numbers for a cell in a model with a structured
+        grid
+
+        Parameters
+        ----------
+        i : int
+            row index
+        j : int
+            column indes
+
+        Returns
+        -------
+        iv_list : list
+            list of vertex number for a cell in a structured model
+
+        """
+        iv_list = [i * (self.ncol + 1) + j]
+        iv_list.append(i * (self.ncol + 1) + j + 1)
+        iv_list.append((i + 1) * (self.ncol + 1) + j + 1)
+        iv_list.append((i + 1) * (self.ncol + 1) + j)
+        return iv_list
 
     def _get_verts(self):
         """
@@ -350,11 +373,11 @@ class MfGrdFile(FlopyBinaryData):
                     i1 = iavert[ivert + 1]
                     iverts.append((javert[i0:i1]).tolist())
                 if self.verbose:
-                    msg = "returning vertices for {}".format(self.file.name)
+                    msg = "returning vertices from {}".format(self.file.name)
                     print(msg)
                 return iverts, self._datadict["VERTICES"].reshape(shpvert)
             except:
-                msg = "could not return vertices for " + "{}".format(
+                msg = "could not return vertices from " + "{}".format(
                     self.file.name
                 )
                 raise KeyError(msg)
@@ -375,36 +398,28 @@ class MfGrdFile(FlopyBinaryData):
                     [idx, v0[idx, 0], v0[idx, 1]] for idx in range(shpvert[0])
                 ]
                 if self.verbose:
-                    msg = "returning vertices for {}".format(self.file.name)
+                    msg = "returning vertices from {}".format(self.file.name)
                     print(msg)
                 return iverts, verts
             except:
-                msg = "could not return vertices for {}".format(self.file.name)
-                raise KeyError(msg)
+                msg = "could not get vertices from {}".format(self.file.name)
+                print(msg)
+                return None, None
         elif self._grid == "DIS":
             try:
-                nlay, nrow, ncol = (
-                    self.nlay,
+                nrow, ncol = (
                     self.nrow,
                     self.ncol,
                 )
-                iv = 0
-                verts = []
                 iverts = []
-                for k in range(nlay):
-                    for i in range(nrow):
-                        for j in range(ncol):
-                            ivlist = []
-                            v = self.modelgrid.get_cell_vertices(i, j)
-                            for (x, y) in v:
-                                verts.append((x, y))
-                                ivlist.append(iv)
-                                iv += 1
-                            iverts.append(ivlist)
-                verts = np.array(verts)
-                return iverts, verts
+                for i in range(nrow):
+                    for j in range(ncol):
+                        iverts.append(self._build_structured_iverts(i, j))
+                x = self._modelgrid.get_xvertices_for_layer(0).flatten()
+                y = self._modelgrid.get_yvertices_for_layer(0).flatten()
+                return iverts, np.column_stack((x, y))
             except:
-                msg = "could not return vertices for {}".format(self.file.name)
+                msg = "could not get vertices from {}".format(self.file.name)
                 raise KeyError(msg)
         return
 
@@ -419,16 +434,31 @@ class MfGrdFile(FlopyBinaryData):
             Array with x, y pairs of the centroid for every model cell
 
         """
+        xycellcenters = None
         if self._grid in ("DISV", "DISU"):
-            x = self._datadict["CELLX"]
-            y = self._datadict["CELLY"]
-            xycellcenters = np.column_stack((x, y))
-        else:
-            xycellcenters = None
+            try:
+                x = self._datadict["CELLX"]
+                y = self._datadict["CELLY"]
+                xycellcenters = np.column_stack((x, y))
+            except:
+                msg = "could not get cell centers from {}".format(
+                    self.file.name
+                )
+                print(msg)
         return xycellcenters
 
     @property
     def nlay(self):
+        """
+        Return the number of layers in a structured and vertex grid.
+        None is returned for an unstructured grid.
+
+        Returns
+        -------
+        nrow : int
+            number of layers
+
+        """
         if self._grid in ("DIS", "DISV"):
             nlay = self._datadict["NLAY"]
         else:
@@ -437,6 +467,16 @@ class MfGrdFile(FlopyBinaryData):
 
     @property
     def nrow(self):
+        """
+        Return the number of rows in a structured grid. None is returned
+        for vertex and unstructured grids.
+
+        Returns
+        -------
+        nrow : int
+            number of rows
+
+        """
         if self._grid == "DIS":
             nrow = self._datadict["NROW"]
         else:
@@ -445,6 +485,16 @@ class MfGrdFile(FlopyBinaryData):
 
     @property
     def ncol(self):
+        """
+        Return the number of columns in a structured grid. None is returned
+        for vertex and unstructured grids.
+
+        Returns
+        -------
+        ncol : int
+            number of columns
+
+        """
         if self._grid == "DIS":
             ncol = self._datadict["NCOL"]
         else:
@@ -453,14 +503,35 @@ class MfGrdFile(FlopyBinaryData):
 
     @property
     def ncpl(self):
+        """
+        Return the number of cells per layer in a structured and vertex
+        grid. None is returned for an unstructured model.
+
+        Returns
+        -------
+        ncpl : int
+            number of cells per layer
+
+        """
         if self._grid == "DISV":
             ncpl = self._datadict["NCPL"]
+        if self._grid == "DIS":
+            ncpl = self.nrow * self.ncol
         else:
-            ncpl = None
+            None
         return ncpl
 
     @property
     def ncells(self):
+        """
+        Return the number of cells in a grid.
+
+        Returns
+        -------
+        ncells : int
+            number of cells in a grid
+
+        """
         if self._grid in ("DIS", "DISV"):
             ncells = self._datadict["NCELLS"]
         else:
@@ -469,6 +540,15 @@ class MfGrdFile(FlopyBinaryData):
 
     @property
     def nodes(self):
+        """
+        Return the number of cells in a grid.
+
+        Returns
+        -------
+        nodes : int
+            number of nodes in a grid
+
+        """
         if self._grid in ("DIS", "DISV"):
             nodes = self.ncells
         else:
@@ -477,10 +557,29 @@ class MfGrdFile(FlopyBinaryData):
 
     @property
     def nconnections(self):
+        """
+        Return the number of intercell connections in a grid.
+
+        Returns
+        -------
+        nconnections : int
+            number of cells intercell connections
+
+        """
         return self.nja - self.nodes
 
     @property
     def nja(self):
+        """
+        Return the number of entries in the compressed row storage column
+        pointer vector.
+
+        Returns
+        -------
+        nja : int
+            number of entries in the JA vector
+
+        """
         return self._datadict["NJA"]
 
     @property
@@ -491,6 +590,7 @@ class MfGrdFile(FlopyBinaryData):
         Returns
         -------
         ia : list
+            compressed row storage row pointers
 
         """
         return self._datadict["IA"] - 1
@@ -503,9 +603,32 @@ class MfGrdFile(FlopyBinaryData):
         Returns
         -------
         ja : list
+            compressed row storage column pointers
 
         """
         return self._datadict["JA"] - 1
+
+    @property
+    def nvert(self):
+        """
+        Number of vertices that define a grid.
+
+        Returns
+        -------
+        nvert : int
+            number of vertices
+
+        """
+        if self._grid == "DIS":
+            nvert = (self.nrow + 1) * (self.ncol + 1)
+        elif self._grid == "DISV":
+            nvert = self._datadict["NVERT"]
+        else:
+            try:
+                nvert = len(self._verts)
+            except:
+                nvert = None
+        return nvert
 
     @property
     def iavert(self):
@@ -515,6 +638,7 @@ class MfGrdFile(FlopyBinaryData):
         Returns
         -------
         iavert : list
+            row pointers for javert entries for each cell
 
         """
         return self._datadict["IAVERT"] - 1
@@ -527,6 +651,7 @@ class MfGrdFile(FlopyBinaryData):
         Returns
         -------
         iavert : list
+            vertex numbers that define each cell
 
         """
         return self._datadict["JAVERT"] - 1
@@ -540,6 +665,7 @@ class MfGrdFile(FlopyBinaryData):
         Returns
         -------
         connectivity : list
+            node numbers for each cell and node numbers for all connected cells
 
         """
         ia = self.ia
@@ -563,6 +689,7 @@ class MfGrdFile(FlopyBinaryData):
         Returns
         -------
         cellconnections : structured ndarray
+            n and m cell numbers
 
         """
         cellconnections = np.zeros(
@@ -579,9 +706,9 @@ class MfGrdFile(FlopyBinaryData):
         return cellconnections
 
     @property
-    def get_modelgrid(self):
+    def modelgrid(self):
         """
-        Get the modelgrid based on the MODFLOW 6 discretization type
+        Return the modelgrid based on the MODFLOW 6 discretization type
 
         Returns
         -------
@@ -591,14 +718,14 @@ class MfGrdFile(FlopyBinaryData):
         --------
         >>> import flopy
         >>> gobj = flopy.utils.MfGrdFile('test.dis.grb')
-        >>> modelgrid = gobj.get_modelgrid()
+        >>> modelgrid = gobj.modelgrid
         """
-        return self.modelgrid
+        return self._modelgrid
 
     @property
     def get_centroids(self):
         """
-        Get the centroids for a MODFLOW 6 GWF model that uses the DIS,
+        Return the centroids for a MODFLOW 6 GWF model that uses the DIS,
         DISV, or DISU discretization.
 
         Returns
@@ -615,12 +742,12 @@ class MfGrdFile(FlopyBinaryData):
         """
         try:
             if self._grid == "DISU":
-                x = self.modelgrid.xcellcenters.flatten()
-                y = self.modelgrid.ycellcenters.flatten()
+                x = self._modelgrid.xcellcenters.flatten()
+                y = self._modelgrid.ycellcenters.flatten()
             elif self._grid in ("DIS", "DISV"):
                 nlay = self.nlay
-                x = np.tile(self.modelgrid.xcellcenters.flatten(), nlay)
-                y = np.tile(self.modelgrid.ycellcenters.flatten(), nlay)
+                x = np.tile(self._modelgrid.xcellcenters.flatten(), nlay)
+                y = np.tile(self._modelgrid.ycellcenters.flatten(), nlay)
             return np.column_stack((x, y))
         except:
             msg = "could not return centroids" + " for {}".format(
@@ -628,7 +755,6 @@ class MfGrdFile(FlopyBinaryData):
             )
             raise KeyError(msg)
 
-    @property
     def get_spatialreference(self):
         """
         Get the SpatialReference based on the MODFLOW 6 discretization type
@@ -652,21 +778,41 @@ class MfGrdFile(FlopyBinaryData):
 
         return self._set_spatialreference()
 
-    def get_frffffflf(self, flowja):
+    def get_vertices(self):
         """
-        Get
+        Get a list of the vertices that define each model cell and the x, y
+        pair for each vertex from the data in the binary grid file.
+
+        Returns
+        -------
+        iverts : list of lists
+            List with lists containing the vertex indices for each model cell.
+        verts : np.ndarray
+            Array with x, y pairs for every vertex used to define the model.
+
+        """
+        return self._iverts, self._verts
+
+    def get_faceflows(self, flowja):
+        """
+        Get the face flows for the flow right face, flow front face, and
+        flow lower face from the MODFLOW 6 flowja flows. This method can
+        be useful for building face flow arrays for MT3DMS, MT3D-USGS, and
+        RT3D. This method only works for a structured MODFLOW 6 model.
 
         Parameters
         ----------
-        flowja
+        flowja : ndarray
+            flowja array for a structured MODFLOW 6 model
 
         Returns
         -------
         frf : ndarray
-
+            right face flows
         fff : ndarray
-
-
+            front face flows
+        flf : ndarray
+            lower face flows
 
         """
         if self._grid == "DIS":
