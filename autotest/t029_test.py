@@ -127,7 +127,7 @@ def test_mfgrddisv():
     ) + "does not equal {}".format(extents0)
     assert extents == extents0, errmsg
 
-    cellxy = grid.get_centroids
+    cellxy = grid.xycentroids
     errmsg = "shape of flow.disv centroids {} not equal to (218, 2).".format(
         cellxy.shape
     )

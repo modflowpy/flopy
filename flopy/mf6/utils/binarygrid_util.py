@@ -12,11 +12,9 @@ from flopy.utils.utils_def import FlopyBinaryData
 from flopy.discretization.structuredgrid import StructuredGrid
 from flopy.discretization.vertexgrid import VertexGrid
 from flopy.discretization.unstructuredgrid import UnstructuredGrid
-from flopy.utils.reference import SpatialReferenceUnstructured
-from flopy.utils.reference import SpatialReference
 import warnings
 
-warnings.simplefilter("always", PendingDeprecationWarning)
+warnings.simplefilter("always", DeprecationWarning)
 
 
 class MfGrdFile(FlopyBinaryData):
@@ -272,8 +270,10 @@ class MfGrdFile(FlopyBinaryData):
         sr = None
         try:
             if self._grid == "DISV" or self._grid == "DISU":
+                from flopy.utils.reference import SpatialReferenceUnstructured
+
                 try:
-                    vertc = self.get_centroids()
+                    vertc = self.xycentroids()
                     xc = vertc[:, 0]
                     yc = vertc[:, 1]
                     sr = SpatialReferenceUnstructured(
@@ -287,6 +287,8 @@ class MfGrdFile(FlopyBinaryData):
                     )
                     print(msg)
             elif self._grid == "DIS":
+                from flopy.utils.reference import SpatialReference
+
                 delr, delc = self._datadict["DELR"], self._datadict["DELC"]
                 xorigin, yorigin, rot = (
                     self._datadict["XORIGIN"],
@@ -446,6 +448,61 @@ class MfGrdFile(FlopyBinaryData):
                 )
                 print(msg)
         return xycellcenters
+
+    def get_faceflows(self, flowja):
+        """
+        Get the face flows for the flow right face, flow front face, and
+        flow lower face from the MODFLOW 6 flowja flows. This method can
+        be useful for building face flow arrays for MT3DMS, MT3D-USGS, and
+        RT3D. This method only works for a structured MODFLOW 6 model.
+
+        Parameters
+        ----------
+        flowja : ndarray
+            flowja array for a structured MODFLOW 6 model
+
+        Returns
+        -------
+        frf : ndarray
+            right face flows
+        fff : ndarray
+            front face flows
+        flf : ndarray
+            lower face flows
+
+        """
+        if self._grid == "DIS":
+            ia = self.ia
+            ja = self.ja
+            if len(flowja.shape) > 0:
+                flowja = flowja.flatten()
+            if flowja.shape != ja.shape:
+                raise ValueError(
+                    "size of flowja ({}) ".format(flowja.shape)
+                    + "not equal to {}".format(ja.shape)
+                )
+            shape = (self.nlay, self.nrow, self.ncol)
+            frf = np.zeros(shape, dtype=float).flatten()
+            fff = np.zeros(shape, dtype=float).flatten()
+            flf = np.zeros(shape, dtype=float)
+            # fill flow terms
+            vmult = [-1.0, -1.0, -1.0]
+            flows = [frf, fff, flf]
+            for n in range(self.nodes):
+                i0, i1 = ia[n] + 1, ia[n + 1]
+                ipos = 0
+                for j in range(i0, i1):
+                    jcol = ja[j]
+                    if jcol > n:
+                        flows[ipos][n] = vmult[ipos] * flowja[j]
+                        ipos += 1
+            # reshape flow terms
+            frf = frf.reshape(shape)
+            fff = fff.reshape(shape)
+            flf = flf.reshape(shape)
+        else:
+            frf, fff, flf = None, None, None
+        return frf, fff, flf
 
     @property
     def nlay(self):
@@ -712,7 +769,8 @@ class MfGrdFile(FlopyBinaryData):
 
         Returns
         -------
-        modelgrid : Grid object
+        modelgrid : StructuredGrid, VertexGrid, UnstructuredGrid
+
 
         Examples
         --------
@@ -723,7 +781,7 @@ class MfGrdFile(FlopyBinaryData):
         return self._modelgrid
 
     @property
-    def get_centroids(self):
+    def xycentroids(self):
         """
         Return the centroids for a MODFLOW 6 GWF model that uses the DIS,
         DISV, or DISU discretization.
@@ -737,7 +795,7 @@ class MfGrdFile(FlopyBinaryData):
         --------
         >>> import flopy
         >>> gobj = flopy.utils.MfGrdFile('test.dis.grb')
-        >>> vertc = gobj.get_centroids()
+        >>> vertc = gobj.xycentroids()
 
         """
         try:
@@ -794,58 +852,3 @@ class MfGrdFile(FlopyBinaryData):
 
         """
         return self._iverts, self._verts
-
-    def get_faceflows(self, flowja):
-        """
-        Get the face flows for the flow right face, flow front face, and
-        flow lower face from the MODFLOW 6 flowja flows. This method can
-        be useful for building face flow arrays for MT3DMS, MT3D-USGS, and
-        RT3D. This method only works for a structured MODFLOW 6 model.
-
-        Parameters
-        ----------
-        flowja : ndarray
-            flowja array for a structured MODFLOW 6 model
-
-        Returns
-        -------
-        frf : ndarray
-            right face flows
-        fff : ndarray
-            front face flows
-        flf : ndarray
-            lower face flows
-
-        """
-        if self._grid == "DIS":
-            ia = self.ia
-            ja = self.ja
-            if len(flowja.shape) > 0:
-                flowja = flowja.flatten()
-            if flowja.shape != ja.shape:
-                raise ValueError(
-                    "size of flowja ({}) ".format(flowja.shape)
-                    + "not equal to {}".format(ja.shape)
-                )
-            shape = (self.nlay, self.nrow, self.ncol)
-            frf = np.zeros(shape, dtype=float).flatten()
-            fff = np.zeros(shape, dtype=float).flatten()
-            flf = np.zeros(shape, dtype=float)
-            # fill flow terms
-            vmult = [-1.0, -1.0, -1.0]
-            flows = [frf, fff, flf]
-            for n in range(self.nodes):
-                i0, i1 = ia[n] + 1, ia[n + 1]
-                ipos = 0
-                for j in range(i0, i1):
-                    jcol = ja[j]
-                    if jcol > n:
-                        flows[ipos][n] = vmult[ipos] * flowja[j]
-                        ipos += 1
-            # reshape flow terms
-            frf = frf.reshape(shape)
-            fff = fff.reshape(shape)
-            flf = flf.reshape(shape)
-        else:
-            frf, fff, flf = None, None, None
-        return frf, fff, flf

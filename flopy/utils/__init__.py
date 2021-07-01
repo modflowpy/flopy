@@ -65,3 +65,4 @@ from .mtlistfile import MtListBudget
 from .optionblock import OptionBlock
 from .rasters import Raster
 from .gridintersect import GridIntersect, ModflowGridIndices
+from .binarygrid_util import MfGrdFile
