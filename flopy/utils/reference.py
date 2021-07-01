@@ -9,6 +9,9 @@ import warnings
 
 from collections import OrderedDict
 
+__all__ = ["TemporalReference"]
+# all other classes and methods in this module are deprecated
+
 # web address of spatial reference dot org
 srefhttp = "https://spatialreference.org"
 
@@ -16,6 +19,10 @@ srefhttp = "https://spatialreference.org"
 class SpatialReference:
     """
     a class to locate a structured model grid in x-y space
+
+    .. deprecated:: 3.2.11
+        This class will be removed in version 3.3.5. Use
+        :py:class:`flopy.discretization.structuredgrid.StructuredGrid` instead.
 
     Parameters
     ----------
@@ -1633,6 +1640,10 @@ class SpatialReferenceUnstructured(SpatialReference):
     """
     a class to locate an unstructured model grid in x-y space
 
+    .. deprecated:: 3.2.11
+        This class will be removed in version 3.3.5. Use
+        :py:class:`flopy.discretization.vertexgrid.VertexGrid` instead.
+
     Parameters
     ----------
 
@@ -1978,6 +1989,9 @@ class epsgRef:
     The database is epsgref.json, located in the user's data directory. If
     optional 'appdirs' package is available, this is in the platform-dependent
     user directory, otherwise in the user's 'HOME/.flopy' directory.
+
+    .. deprecated:: 3.2.11
+        This class will be removed in version 3.3.5.
     """
 
     def __init__(self):
@@ -2063,6 +2077,10 @@ class crs:
     """
     Container to parse and store coordinate reference system parameters,
     and translate between different formats.
+
+    .. deprecated:: 3.2.11
+        This class will be removed in version 3.3.5. Use
+        :py:class:`flopy.export.shapefile_utils.CRS` instead.
     """
 
     def __init__(self, prj=None, esri_wkt=None, epsg=None):
@@ -2270,6 +2288,10 @@ def getprj(epsg, addlocalreference=True, text="esriwkt"):
     Gets projection file (.prj) text for given epsg code from
     spatialreference.org
 
+    .. deprecated:: 3.2.11
+        This function will be removed in version 3.3.5. Use
+        :py:class:`flopy.discretization.structuredgrid.StructuredGrid` instead.
+
     Parameters
     ----------
     epsg : int
@@ -2310,6 +2332,10 @@ def get_spatialreference(epsg, text="esriwkt"):
         https://spatialreference.org/ref/epsg/<epsg code>/<text>/
 
     See: https://www.epsg-registry.org/
+
+    .. deprecated:: 3.2.11
+        This function will be removed in version 3.3.5. Use
+        :py:class:`flopy.discretization.structuredgrid.StructuredGrid` instead.
 
     Parameters
     ----------
@@ -2358,6 +2384,10 @@ def getproj4(epsg):
     """
     Get projection file (.prj) text for given epsg code from
     spatialreference.org. See: https://www.epsg-registry.org/
+
+    .. deprecated:: 3.2.11
+        This function will be removed in version 3.3.5. Use
+        :py:class:`flopy.discretization.structuredgrid.StructuredGrid` instead.
 
     Parameters
     ----------

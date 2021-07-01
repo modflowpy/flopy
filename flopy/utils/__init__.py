@@ -40,12 +40,7 @@ from .swroutputfile import (
     SwrStructure,
 )
 from .observationfile import HydmodObs, SwrObs, Mf6Obs
-from .reference import (
-    SpatialReference,
-    SpatialReferenceUnstructured,
-    crs,
-    TemporalReference,
-)
+from .reference import TemporalReference
 from .mflistfile import (
     MfListBudget,
     MfusgListBudget,
