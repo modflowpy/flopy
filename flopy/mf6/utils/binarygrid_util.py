@@ -755,7 +755,8 @@ class MfGrdFile(FlopyBinaryData):
             )
             raise KeyError(msg)
 
-    def get_spatialreference(self):
+    @property
+    def spatialreference(self):
         """
         Get the SpatialReference based on the MODFLOW 6 discretization type
 
@@ -767,7 +768,7 @@ class MfGrdFile(FlopyBinaryData):
         --------
         >>> import flopy
         >>> gobj = flopy.utils.MfGrdFile('test.dis.grb')
-        >>> sr = gobj.get_spatialreference()
+        >>> sr = gobj.spatialreference()
         """
 
         warnings.warn(
@@ -778,7 +779,8 @@ class MfGrdFile(FlopyBinaryData):
 
         return self._set_spatialreference()
 
-    def get_vertices(self):
+    @property
+    def vertices(self):
         """
         Get a list of the vertices that define each model cell and the x, y
         pair for each vertex from the data in the binary grid file.
@@ -818,6 +820,8 @@ class MfGrdFile(FlopyBinaryData):
         if self._grid == "DIS":
             ia = self.ia
             ja = self.ja
+            if len(flowja.shape) > 0:
+                flowja = flowja.flatten()
             if flowja.shape != ja.shape:
                 raise ValueError(
                     "size of flowja ({}) ".format(flowja.shape)
@@ -826,13 +830,9 @@ class MfGrdFile(FlopyBinaryData):
             shape = (self.nlay, self.nrow, self.ncol)
             frf = np.zeros(shape, dtype=float).flatten()
             fff = np.zeros(shape, dtype=float).flatten()
-            if self.nlay > 1:
-                shapez = (self.nlay - 1, self.nrow, self.ncol)
-                flf = np.zeros(shapez, dtype=float)
-            else:
-                shapez = None
-                flf = None
+            flf = np.zeros(shape, dtype=float)
             # fill flow terms
+            vmult = [-1.0, -1.0, -1.0]
             flows = [frf, fff, flf]
             for n in range(self.nodes):
                 i0, i1 = ia[n] + 1, ia[n + 1]
@@ -840,13 +840,12 @@ class MfGrdFile(FlopyBinaryData):
                 for j in range(i0, i1):
                     jcol = ja[j]
                     if jcol > n:
-                        flows[ipos][n] = flowja[j]
+                        flows[ipos][n] = vmult[ipos] * flowja[j]
                         ipos += 1
             # reshape flow terms
             frf = frf.reshape(shape)
             fff = fff.reshape(shape)
-            if shapez is not None:
-                flf = flf.reshape(shapez)
+            flf = flf.reshape(shape)
         else:
             frf, fff, flf = None, None, None
         return frf, fff, flf
