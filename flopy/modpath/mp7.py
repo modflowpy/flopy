@@ -44,47 +44,41 @@ class Modpath7List(Package):
 
 class Modpath7(BaseModel):
     """
-    Modpath 7 base class
+    Modpath 7 class.
 
-        Parameters
-        ----------
-        modelname : str
-            Basename for MODPATH 7 input and output files (default is
-            'modpath7test').
-        simfile_ext : str
-            Filename extension of the MODPATH 7 simulation file
-            (default is 'mpsim').
-        namefile_ext : str
-            Filename extension of the MODPATH 7 namefile
-            (default is 'mpnam').
-        version : str
-            String that defines the MODPATH version. Valid versions are
-            'modpath7' (default is 'modpath7').
-        exe_name : str
-            The name of the executable to use (the default is
-            'mp7').
-        flowmodel : flopy.modflow.Modflow or flopy.mf6.MFModel object
-            MODFLOW model
-        headfilename : str
-            Filename of the MODFLOW output head file. If headfilename is
-            not provided then it will be set from the flowmodel (default
-            is None).
-        budgetfilename : str
-            Filename of the MODFLOW output cell-by-cell budget file.
-            If budgetfilename is not provided then it will be set
-            from the flowmodel (default is None).
-        model_ws : str
-            model workspace.  Directory name to create model data sets.
-            (default is the current working directory).
-        verbose : bool
-            Print additional information to the screen (default is False).
+    Parameters
+    ----------
+    modelname : str, default "modpath7test"
+        Basename for MODPATH 7 input and output files.
+    simfile_ext : str, default "mpsim"
+        Filename extension of the MODPATH 7 simulation file.
+    namefile_ext : str, default mpnam"
+        Filename extension of the MODPATH 7 namefile.
+    version : str, default "modpath7"
+        String that defines the MODPATH version. Valid versions are
+        "modpath7" (default).
+    exe_name : str, default "mp7.exe"
+        The name of the executable to use.
+    flowmodel : flopy.modflow.Modflow or flopy.mf6.MFModel object
+        MODFLOW model object.
+    headfilename : str, optional
+        Filename of the MODFLOW output head file. If headfilename is
+        not provided then it will be set from the flowmodel.
+    budgetfilename : str, optional
+        Filename of the MODFLOW output cell-by-cell budget file.
+        If budgetfilename is not provided then it will be set
+        from the flowmodel.
+    model_ws : str, default "."
+        Model workspace.  Directory name to create model data sets.
+        Default is the current working directory.
+    verbose : bool, default False
+        Print additional information to the screen.
 
-        Examples
-        --------
-
-        >>> import flopy
-        >>> m = flopy.modflow.Modflow.load('mf2005.nam')
-        >>> mp = flopy.modpath.Modpath7('mf2005_mp', flowmodel=m)
+    Examples
+    --------
+    >>> import flopy
+    >>> m = flopy.modflow.Modflow.load('mf2005.nam')
+    >>> mp = flopy.modpath.Modpath7('mf2005_mp', flowmodel=m)
 
     """
 
@@ -101,14 +95,7 @@ class Modpath7(BaseModel):
         model_ws=None,
         verbose=False,
     ):
-
-        """
-        Model constructor.
-
-        """
-
-        BaseModel.__init__(
-            self,
+        super().__init__(
             modelname,
             simfile_ext,
             exe_name,

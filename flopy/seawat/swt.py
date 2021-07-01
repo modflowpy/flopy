@@ -32,29 +32,34 @@ class Seawat(BaseModel):
 
     Parameters
     ----------
-    modelname : string, optional
+    modelname : str, default "swttest"
         Name of model.  This string will be used to name the SEAWAT input
-        that are created with write_model. (the default is 'swttest')
-    namefile_ext : string, optional
-        Extension for the namefile (the default is 'nam')
-    version : string, optional
-        Version of SEAWAT to use (the default is 'seawat').
-    exe_name : string, optional
-        The name of the executable to use (the default is
-        'swtv4.exe').
-    listunit : integer, optional
-        Unit number for the list file (the default is 2).
-    model_ws : string, optional
-        model workspace.  Directory name to create model data sets.
-        (default is the present working directory).
-    external_path : string
-        Location for external files (default is None).
-    verbose : boolean, optional
-        Print additional information to the screen (default is False).
-    load : boolean, optional
-         (default is True).
-    silent : integer
-        (default is 0)
+        that are created with write_model.
+    namefile_ext : str, default "nam"
+        Extension for the namefile.
+    modflowmodel : Modflow, default None
+        Instance of a Modflow object.
+    mt3dmodel : Mt3dms, default None
+        Instance of a Mt3dms object.
+    version : str, default "seawat"
+        Version of SEAWAT to use. Valid versions are "seawat" (default).
+    exe_name : str, default "swtv4"
+        The name of the executable to use.
+    structured : bool, default True
+        Specify if model grid is structured (default) or unstructured.
+    listunit : int, default 2
+        Unit number for the list file.
+    model_ws : str, default "."
+        Model workspace.  Directory name to create model data sets.
+        Default is the present working directory.
+    external_path : str, optional
+        Location for external files.
+    verbose : bool, default False
+        Print additional information to the screen.
+    load : bool, default True
+         Load model.
+    silent : int, default 0
+        Silent option.
 
     Attributes
     ----------
@@ -70,7 +75,6 @@ class Seawat(BaseModel):
 
     Examples
     --------
-
     >>> import flopy
     >>> m = flopy.seawat.swt.Seawat()
 
@@ -92,10 +96,7 @@ class Seawat(BaseModel):
         load=True,
         silent=0,
     ):
-
-        # Call constructor for parent object
-        BaseModel.__init__(
-            self,
+        super().__init__(
             modelname,
             namefile_ext,
             exe_name,
@@ -296,7 +297,7 @@ class Seawat(BaseModel):
 
     def _set_name(self, value):
         # Overrides BaseModel's setter for name property
-        BaseModel._set_name(self, value)
+        super()._set_name(value)
 
         # for i in range(len(self.lst.extension)):
         #    self.lst.file_name[i] = self.name + '.' + self.lst.extension[i]
@@ -445,37 +446,27 @@ class Seawat(BaseModel):
 
         Parameters
         ----------
-        f : string
-            Full path and name of SEAWAT name file.
-
-        version : string
-            The version of SEAWAT (seawat)
-            (default is seawat)
-
-        exe_name : string
-            The name of the executable to use if this loaded model is run.
-            (default is swtv4.exe)
-
-        verbose : bool
-            Write information on the load process if True.
-            (default is False)
-
-        model_ws : string
-            The path for the model workspace.
-            (default is the current working directory '.')
-
-        load_only : list of strings
-            Filetype(s) to load (e.g. ['lpf', 'adv'])
-            (default is None, which means that all will be loaded)
+        f : str
+            Path to SEAWAT name file to load.
+        version : str, default "seawat"
+            Version of SEAWAT to use. Valid versions are "seawat" (default).
+        exe_name : str, default "swtv4"
+            The name of the executable to use.
+        verbose : bool, default False
+            Print additional information to the screen.
+        model_ws : str, default "."
+            Model workspace.  Directory name to create model data sets.
+            Default is the present working directory.
+        load_only : list of str, optional
+            Packages to load (e.g. ["lpf", "adv"]). Default None
+            means that all packages will be loaded.
 
         Returns
         -------
-        m : flopy.seawat.swt.Seawat
-            flopy Seawat model object
+        flopy.seawat.swt.Seawat
 
         Examples
         --------
-
         >>> import flopy
         >>> m = flopy.seawat.swt.Seawat.load(f)
 

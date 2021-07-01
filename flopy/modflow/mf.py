@@ -58,29 +58,27 @@ class Modflow(BaseModel):
 
     Parameters
     ----------
-    modelname : string, optional
+    modelname : str, default "modflowtest"
         Name of model.  This string will be used to name the MODFLOW input
-        that are created with write_model. (the default is 'modflowtest')
-    namefile_ext : string, optional
-        Extension for the namefile (the default is 'nam')
-    version : string, optional
-        Version of MODFLOW to use (the default is 'mf2005').
-    exe_name : string, optional
-        The name of the executable to use (the default is
-        'mf2005').
-    listunit : integer, optional
-        Unit number for the list file (the default is 2).
-    model_ws : string, optional
-        model workspace.  Directory name to create model data sets.
+        that are created with write_model.
+    namefile_ext : str, default "nam"
+        Extension for the namefile.
+    version : str, default "mf2005"
+        MODFLOW version. Choose one of: "mf2k", "mf2005" (default),
+        "mfnwt", or "mfusg".
+    exe_name : str, default "mf2005.exe"
+        The name of the executable to use.
+    structured : bool, default True
+        Specify if model grid is structured (default) or unstructured.
+    listunit : int, default 2
+        Unit number for the list file.
+    model_ws : str, default "."
+        Model workspace.  Directory name to create model data sets.
         (default is the present working directory).
-    external_path : string
-        Location for external files (default is None).
-    verbose : boolean, optional
-        Print additional information to the screen (default is False).
-    load : boolean, optional
-         (default is True).
-    silent : integer
-        (default is 0)
+    external_path : str, optional
+        Location for external files.
+    verbose : bool, default False
+        Print additional information to the screen.
 
     Attributes
     ----------
@@ -96,7 +94,6 @@ class Modflow(BaseModel):
 
     Examples
     --------
-
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
 
@@ -115,8 +112,7 @@ class Modflow(BaseModel):
         verbose=False,
         **kwargs
     ):
-        BaseModel.__init__(
-            self,
+        super().__init__(
             modelname,
             namefile_ext,
             exe_name,
@@ -443,7 +439,7 @@ class Modflow(BaseModel):
 
     def _set_name(self, value):
         # Overrides BaseModel's setter for name property
-        BaseModel._set_name(self, value)
+        super()._set_name(value)
 
         if self.version == "mf2k":
             for i in range(len(self.glo.extension)):
@@ -688,17 +684,18 @@ class Modflow(BaseModel):
         ----------
         f : str
             Path to MODFLOW name file to load.
-        version : str, optional
-            MODFLOW version. Default 'mf2005', although can be modified on
-            loading packages unique to different MODFLOW versions.
-        exe_name : str, optional
-            MODFLOW executable name. Default 'mf2005.exe'.
-        verbose : bool, optional
-            Show messages that can be useful for debugging. Default False.
-        model_ws : str
-            Model workspace path. Default '.' or current directory.
+        version : str, default "mf2005"
+            MODFLOW version. Choose one of: "mf2k", "mf2005" (default),
+            "mfnwt", or "mfusg". Note that this can be modified on loading
+            packages unique to different MODFLOW versions.
+        exe_name : str, default "mf2005.exe"
+            MODFLOW executable name.
+        verbose : bool, default False
+            Show messages that can be useful for debugging.
+        model_ws : str, default "."
+            Model workspace path. Default is the current directory.
         load_only : list, str or None
-            List of case insensitive filetypes to load, e.g. ["bas6", "lpf"].
+            List of case insensitive packages to load, e.g. ["bas6", "lpf"].
             One package can also be specified, e.g. "rch". Default is None,
             which attempts to load all files. An empty list [] will not load
             any additional packages than is necessary. At a minimum, "dis" or
@@ -711,16 +708,14 @@ class Modflow(BaseModel):
 
         Returns
         -------
-        ml : Modflow object
+        flopy.modflow.mf.Modflow
 
         Examples
         --------
-
         >>> import flopy
         >>> ml = flopy.modflow.Modflow.load('model.nam')
 
         """
-
         # similar to modflow command: if file does not exist , try file.nam
         namefile_path = os.path.join(model_ws, f)
         if not os.path.isfile(namefile_path) and os.path.isfile(
