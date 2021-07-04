@@ -197,6 +197,9 @@ class StructuredGrid(Grid):
         else:
             self.__laycbd = np.zeros(self.__nlay or (), dtype=int)
 
+        self._iverts, self._verts = self._set_structured_vertices()
+        self._ia, self._ja = self._set_structured_iaja()
+
     ####################
     # Properties
     ####################
@@ -235,6 +238,18 @@ class StructuredGrid(Grid):
     @property
     def nnodes(self):
         return self.__nlay * self.__nrow * self.__ncol
+
+    @property
+    def nvert(self):
+        return self._verts.shape[0]
+
+    @property
+    def iverts(self):
+        return self._iverts
+
+    @property
+    def verts(self):
+        return self._verts
 
     @property
     def shape(self):
@@ -1547,3 +1562,106 @@ class StructuredGrid(Grid):
         msg = "{} /= {}".format(plotarray.shape, required_shape)
         assert plotarray.shape == required_shape, msg
         return plotarray
+
+    # internal
+    def _set_structured_iaja(self):
+        inode = 0
+        ia = np.zeros(self.nnodes + 1, dtype=int)
+        ja = []
+        for k in range(self.nlay):
+            for i in range(self.nrow):
+                for j in range(self.ncol):
+                    jacell = self._build_structured_jacell(k, i, j)
+                    ia[inode + 1] = ia[inode] + len(jacell)
+                    ja += jacell
+                    inode += 1
+        return ia, np.array(ja, dtype=int)
+
+    def _build_structured_jacell(self, k, i, j):
+        """
+        Build list of connections for a cell
+
+        Parameters
+        ----------
+        k : int
+            layer index
+        i : int
+            row index
+        j : int
+            column index
+
+        Returns
+        -------
+        ja : list
+            list of connected nodes for a cell (including the node)
+
+        """
+        ncpl = self.nrow * self.ncol
+        node = k * ncpl + i * self.ncol + j
+        ja = [node]
+        # top
+        if k > 0:
+            ja.append(node - ncpl)
+        # back
+        if i > 0:
+            ja.append(node - self.ncol)
+        # left
+        if j > 0:
+            ja.append(node - 1)
+        # right
+        if j < self.ncol - 1:
+            ja.append(node + 1)
+        # front
+        if i < self.nrow - 1:
+            ja.append(node + self.ncol)
+        # bottom
+        if k < self.nlay - 1:
+            ja.append(node + ncpl)
+
+        return ja
+
+    def _set_structured_vertices(self):
+        """
+        Build a list of the vertices that define each model cell and the x, y
+        pair for each vertex
+
+        Returns
+        -------
+        iverts : list of lists
+            List with lists containing the vertex indices for each model cell.
+        verts : np.ndarray
+            Array with x, y pairs for every vertex used to define the model.
+
+        """
+        iverts = []
+        inode = 0
+        for i in range(self.nrow):
+            for j in range(self.ncol):
+                iverts.append([inode] + self._build_structured_iverts(i, j))
+                inode += 1
+        x = self.xvertices.flatten()
+        y = self.yvertices.flatten()
+        return iverts, np.column_stack((x, y))
+
+    def _build_structured_iverts(self, i, j):
+        """
+        Build list of vertex numbers for a cell
+
+        Parameters
+        ----------
+        i : int
+            row index
+        j : int
+            column index
+
+        Returns
+        -------
+        iv_list : list
+            list of vertex numbers for a cell
+
+        """
+        iv_list = [i * (self.ncol + 1) + j]
+        iv_list.append(i * (self.ncol + 1) + j + 1)
+        iv_list.append((i + 1) * (self.ncol + 1) + j + 1)
+        iv_list.append((i + 1) * (self.ncol + 1) + j)
+        return iv_list

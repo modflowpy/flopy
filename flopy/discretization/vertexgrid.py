@@ -122,6 +122,18 @@ class VertexGrid(Grid):
         return self.nlay * self.ncpl
 
     @property
+    def nvert(self):
+        return len(self._vertices)
+
+    @property
+    def iverts(self):
+        return [[t[0]] + t[4:] for t in self._cell2d]
+
+    @property
+    def verts(self):
+        return np.array([t[1:] for t in self._vertices], dtype=float)
+
+    @property
     def shape(self):
         return self.nlay, self.ncpl
 

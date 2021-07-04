@@ -195,6 +195,21 @@ class UnstructuredGrid(Grid):
             return self.ncpl.sum()
 
     @property
+    def nvert(self):
+        return len(self._vertices)
+
+    @property
+    def iverts(self):
+        return self._iverts
+
+    @property
+    def verts(self):
+        if self._vertices is None:
+            return self._vertices
+        else:
+            return np.array([t[1:] for t in self._vertices], dtype=float)
+
+    @property
     def ncpl(self):
         return self._ncpl
 

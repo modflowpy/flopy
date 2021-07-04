@@ -165,9 +165,6 @@ class MfGrdFile(FlopyBinaryData):
         # set the model grid
         self._modelgrid = self._set_modelgrid()
 
-        # set iverts and verts
-        self._iverts, self._verts = self._get_verts()
-
         self.file.close()
 
     def _set_modelgrid(self):
@@ -277,7 +274,11 @@ class MfGrdFile(FlopyBinaryData):
                     xc = vertc[:, 0]
                     yc = vertc[:, 1]
                     sr = SpatialReferenceUnstructured(
-                        xc, yc, self._verts, self._iverts, [xc.shape[0]]
+                        xc,
+                        yc,
+                        self._modelgrid.verts,
+                        self._modelgrid.iverts,
+                        [xc.shape[0]],
                     )
                 except:
                     msg = (
@@ -851,4 +852,4 @@ class MfGrdFile(FlopyBinaryData):
             Array with x, y pairs for every vertex used to define the model.
 
         """
-        return self._iverts, self._verts
+        return self._modelgrid.iverts, self._modelgrid.verts

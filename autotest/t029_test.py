@@ -27,13 +27,13 @@ def test_mfgrddis():
         grid.ncpl, ncpl
     )
 
-    iverts, verts = grid.vertices
-    nvert = grid.nvert
-    node = np.array(iverts, dtype=int).max()
-    assert node + 1 == nvert, "nvert ({}) does not equal {}".format(
-        node + 1, nvert
+    nvert = grid.modelgrid.nvert
+    iverts = grid.modelgrid.iverts
+    maxvertex = max([max(sublist[1:]) for sublist in iverts])
+    assert maxvertex + 1 == nvert, "nvert ({}) does not equal {}".format(
+        maxvertex + 1, nvert
     )
-
+    verts = grid.modelgrid.verts
     assert (
         nvert == verts.shape[0]
     ), "number of vertex (x, y) pairs ({}) ".format(
@@ -78,17 +78,17 @@ def test_mfgrddisv():
     grid = flopy.mf6.utils.MfGrdFile(fn, verbose=True)
 
     ncpl = 218
-    assert grid.ncpl == ncpl, "ncpl ({}) does not equal {}".format(
-        grid.ncpl, ncpl
+    assert grid.modelgrid.ncpl == ncpl, "ncpl ({}) does not equal {}".format(
+        grid.modelgrid.ncpl, ncpl
     )
 
-    iverts, verts = grid.vertices
-    nvert = grid.nvert
-    node = max([max(sublist) for sublist in iverts])
-    assert node + 1 == nvert, "nvert ({}) does not equal {}".format(
-        node + 1, nvert
+    nvert = grid.modelgrid.nvert
+    iverts = grid.modelgrid.iverts
+    maxvertex = max([max(sublist[1:]) for sublist in iverts])
+    assert maxvertex + 1 == nvert, "nvert ({}) does not equal {}".format(
+        maxvertex + 1, nvert
     )
-
+    verts = grid.modelgrid.verts
     assert (
         nvert == verts.shape[0]
     ), "number of vertex (x, y) pairs ({}) ".format(
@@ -139,9 +139,6 @@ def test_mfgrddisu():
     fn = os.path.join(pthtest, "flow.disu.grb")
     grid = flopy.mf6.utils.MfGrdFile(fn, verbose=True)
 
-    iverts, verts = grid.vertices
-    assert iverts is None, "iverts and verts should be None for {}".format(fn)
-
     connections = grid.connectivity
     errmsg = "number of connections ({}) is not equal to {}".format(
         len(connections), grid.nodes
@@ -154,16 +151,20 @@ def test_mfgrddisu():
     fn = os.path.join(pthtest, "keating.disu.grb")
     grid = flopy.mf6.utils.MfGrdFile(fn, verbose=True)
 
-    iverts, verts = grid.vertices
-    nvert = grid.nvert
-    node = max([max(sublist) for sublist in iverts])
-    assert node + 1 == nvert, "nvert ({}) does not equal {}".format(
-        node + 1, nvert
+    nvert = grid.modelgrid.nvert
+    iverts = grid.modelgrid.iverts
+    maxvertex = max([max(sublist[1:]) for sublist in iverts])
+    assert maxvertex + 1 == nvert, "nvert ({}) does not equal {}".format(
+        maxvertex + 1, nvert
     )
-
-    assert nvert == len(verts), "number of vertex (x, y) pairs ({}) ".format(
-        len(verts)
-    ) + "does not equal {}".format(nvert)
+    verts = grid.modelgrid.verts
+    assert (
+        nvert == verts.shape[0]
+    ), "number of vertex (x, y) pairs ({}) ".format(
+        verts.shape[0]
+    ) + "does not equal {}".format(
+        nvert
+    )
 
     connections = grid.connectivity
     errmsg = "number of connections ({}) is not equal to {}".format(
@@ -267,7 +268,7 @@ def test_faceflows():
 
 
 if __name__ == "__main__":
-    test_mfgrddis()
-    test_mfgrddisv()
+    # test_mfgrddis()
+    # test_mfgrddisv()
     test_mfgrddisu()
-    test_faceflows()
+    # test_faceflows()

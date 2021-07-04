@@ -169,7 +169,11 @@ class Grid:
         self._epsg = epsg
         self._proj4 = proj4
         self._prj = prj
+        if xoff is None:
+            xoff = 0.0
         self._xoff = xoff
+        if yoff is None:
+            yoff = 0.0
         self._yoff = yoff
         if angrot is None:
             angrot = 0.0
@@ -177,6 +181,11 @@ class Grid:
         self._polygons = None
         self._cache_dict = {}
         self._copy_cache = True
+
+        self._iverts = None
+        self._verts = None
+        self._ia = None
+        self._ja = None
 
     ###################################
     # access to basic grid properties
@@ -344,6 +353,26 @@ class Grid:
     @property
     def nnodes(self):
         raise NotImplementedError("must define nnodes in child class")
+
+    @property
+    def nvert(self):
+        raise NotImplementedError("must define nvert in child class")
+
+    @property
+    def iverts(self):
+        raise NotImplementedError("must define iverts in child class")
+
+    @property
+    def verts(self):
+        raise NotImplementedError("must define vertices in child class")
+
+    @property
+    def ia(self):
+        return self._ia
+
+    @property
+    def ja(self):
+        return self._ja
 
     @property
     def shape(self):
