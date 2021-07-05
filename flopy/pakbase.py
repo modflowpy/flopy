@@ -225,7 +225,7 @@ class PackageInterface:
         else:
             vka = None
         if vka is not None:
-            vka = vka.copy() 
+            vka = vka.copy()
         return kparams, hk, vka, vka_param
 
     def _check_flowp(self, f=None, verbose=True, level=1, checktype=None):

@@ -680,7 +680,7 @@ class check:
         a : 3-D Model array in layer, row, column order array, even for an
         unstructured grid; for instance, a Util3d array
         (e.g. flopy.modflow.ModflowBas.ibound).
-        
+
         Returns
         -------
         neighbors : 4-D array
@@ -713,19 +713,27 @@ class check:
                 if isinstance(a, Util3d):
                     a = a.array
                 pad_value = int(-1e9)
-                n_max = np.max(disu.iac.array) - 1 # -1 for self, removed below
+                n_max = (
+                    np.max(disu.iac.array) - 1
+                )  # -1 for self, removed below
                 arr_neighbors = [
                     np.pad(
-                        a[n - 1], (0, n_max - n.size),
-                        'constant', constant_values=(0,pad_value))
-                    for n in neighbors]
+                        a[n - 1],
+                        (0, n_max - n.size),
+                        "constant",
+                        constant_values=(0, pad_value),
+                    )
+                    for n in neighbors
+                ]
                 arr_neighbors = np.where(
-                    arr_neighbors==-1e9, np.nan, arr_neighbors)
+                    arr_neighbors == -1e9, np.nan, arr_neighbors
+                )
                 neighbors = arr_neighbors.T
             else:
                 # if no disu, we can't define neighbours for this ugrid
                 neighbors = None
             return neighbors
+
 
 def _fmt_string_list(array, float_format="{}"):
     fmt_string = []
@@ -796,6 +804,7 @@ def fields_view(arr, fields):
     """
     dtype2 = np.dtype({name: arr.dtype.fields[name] for name in fields})
     return np.ndarray(arr.shape, dtype2, arr, 0, arr.strides)
+
 
 class mf6check(check):
     def __init__(

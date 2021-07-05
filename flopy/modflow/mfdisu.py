@@ -463,7 +463,8 @@ class ModflowDisU(Package):
                 ncpl=self.nodelay.array,
                 top=self.top.array,
                 botm=self.bot.array,
-                lenuni=self.lenuni)
+                lenuni=self.lenuni,
+            )
 
         self.tr = TemporalReference(
             itmuni=self.itmuni, start_datetime=start_datetime
