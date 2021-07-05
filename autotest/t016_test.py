@@ -46,7 +46,7 @@ def test_usg_disu_load():
     for (key1, value1), (key2, value2) in zip(
         disu2.__dict__.items(), disu.__dict__.items()
     ):
-        if isinstance(value1, (flopy.utils.Util2d, flopy.utils.Util3d):
+        if isinstance(value1, (flopy.utils.Util2d, flopy.utils.Util3d)):
             assert np.array_equal(value1.array, value2.array)
         elif isinstance(value1, list): #this is for the jagged _get_neighbours list
             assert np.all([np.all(v1 == v2) for v1,v2 in zip(value1,value2)])
