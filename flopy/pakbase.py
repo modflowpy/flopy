@@ -112,12 +112,16 @@ class PackageInterface:
         )
 
         # check vkcb if there are any quasi-3D layers
-        if self.parent.dis.laycbd.sum() > 0:
+        if "DIS" in self.parent.get_package_list():
+            dis = self.parent.dis
+        else:
+            dis = self.parent.disu
+        if dis.laycbd.sum() > 0:
             # pad non-quasi-3D layers in vkcb array with ones so
             # they won't fail checker
             vkcb = self.vkcb.array.copy()
             for l in range(self.vkcb.shape[0]):
-                if self.parent.dis.laycbd[l] == 0:
+                if dis.laycbd[l] == 0:
                     # assign 1 instead of zero as default value that
                     # won't violate checker
                     # (allows for same structure as other checks)
@@ -203,11 +207,17 @@ class PackageInterface:
             if kp in self.__dict__:
                 kparams[kp] = name
         if "hk" in self.__dict__:
-            hk = self.hk.array.copy()
+            if self.hk.shape[1] == None:
+                hk = np.asarray([a.array.flatten() for a in self.hk])
+            else:
+                hk = self.hk.array.copy()
         else:
             hk = self.k.array.copy()
         if "vka" in self.__dict__ and self.layvka.sum() > 0:
-            vka = self.vka.array
+            if self.vka.shape[1] == None:
+                vka = np.asarray([a.array.flatten() for a in self.vka])
+            else:
+                vka = self.vka.array
             vka_param = kparams.pop("vka")
         elif "k33" in self.__dict__:
             vka = self.k33.array
@@ -215,7 +225,7 @@ class PackageInterface:
         else:
             vka = None
         if vka is not None:
-            vka = vka.copy()
+            vka = vka.copy() 
         return kparams, hk, vka, vka_param
 
     def _check_flowp(self, f=None, verbose=True, level=1, checktype=None):
