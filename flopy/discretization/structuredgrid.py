@@ -197,9 +197,6 @@ class StructuredGrid(Grid):
         else:
             self.__laycbd = np.zeros(self.__nlay or (), dtype=int)
 
-        self._iverts, self._verts = self._set_structured_vertices()
-        self._ia, self._ja = self._set_structured_iaja()
-
     ####################
     # Properties
     ####################
@@ -241,15 +238,31 @@ class StructuredGrid(Grid):
 
     @property
     def nvert(self):
-        return self._verts.shape[0]
+        return (self.__nrow + 1) * (self.__ncol + 1)
 
     @property
     def iverts(self):
+        if self._iverts is None:
+            self._set_structured_iverts()
         return self._iverts
 
     @property
     def verts(self):
+        if self._verts is None:
+            self._set_structured_verts()
         return self._verts
+
+    @property
+    def ia(self):
+        if self._ia is None:
+            self._set_structured_iaja()
+        return self._ia
+
+    @property
+    def ja(self):
+        if self._ja is None:
+            self._set_structured_iaja()
+        return self._ja
 
     @property
     def shape(self):
@@ -1575,7 +1588,8 @@ class StructuredGrid(Grid):
                     ia[inode + 1] = ia[inode] + len(jacell)
                     ja += jacell
                     inode += 1
-        return ia, np.array(ja, dtype=int)
+        self._ia, self._ja = ia, ja
+        return
 
     def _build_structured_jacell(self, k, i, j):
         """
@@ -1620,17 +1634,10 @@ class StructuredGrid(Grid):
 
         return ja
 
-    def _set_structured_vertices(self):
+    def _set_structured_iverts(self):
         """
         Build a list of the vertices that define each model cell and the x, y
         pair for each vertex
-
-        Returns
-        -------
-        iverts : list of lists
-            List with lists containing the vertex indices for each model cell.
-        verts : np.ndarray
-            Array with x, y pairs for every vertex used to define the model.
 
         """
         iverts = []
@@ -1639,9 +1646,8 @@ class StructuredGrid(Grid):
             for j in range(self.ncol):
                 iverts.append([inode] + self._build_structured_iverts(i, j))
                 inode += 1
-        x = self.xvertices.flatten()
-        y = self.yvertices.flatten()
-        return iverts, np.column_stack((x, y))
+        self._iverts = iverts
+        return
 
     def _build_structured_iverts(self, i, j):
         """
@@ -1665,3 +1671,19 @@ class StructuredGrid(Grid):
         iv_list.append((i + 1) * (self.ncol + 1) + j + 1)
         iv_list.append((i + 1) * (self.ncol + 1) + j)
         return iv_list
+
+    def _set_structured_verts(self):
+        """
+        Build a list of the vertices that define each model cell and the x, y
+        pair for each vertex
+
+        Returns
+        -------
+        verts : np.ndarray
+            Array with x, y pairs for every vertex used to define the model.
+
+        """
+        self._verts = np.column_stack(
+            (self.xvertices.flatten(), self.yvertices.flatten())
+        )
+        return

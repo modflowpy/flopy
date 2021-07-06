@@ -21,6 +21,8 @@ from ..utils.flopy_io import line_parse
 ITMUNI = {"u": 0, "s": 1, "m": 2, "h": 3, "d": 4, "y": 5}
 LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}
 
+warnings.simplefilter("always", PendingDeprecationWarning)
+
 
 class ModflowDis(Package):
     """
@@ -612,26 +614,26 @@ class ModflowDis(Package):
             return self.botm.array[k, :, :]
 
     def __calculate_thickness(self):
-        thk = []
-        thk.append(self.top - self.botm[0])
-        for k in range(1, self.nlay + sum(self.laycbd)):
-            thk.append(self.botm[k - 1] - self.botm[k])
+        # thk = []
+        # thk.append(self.top - self.botm[0])
+        # for k in range(1, self.nlay + sum(self.laycbd)):
+        #     thk.append(self.botm[k - 1] - self.botm[k])
         self.__thickness = Util3d(
             self.parent,
             (self.nlay + sum(self.laycbd), self.nrow, self.ncol),
             np.float32,
-            thk,
+            self.parent.modelgrid.thick,
             name="thickness",
         )
 
     @property
     def thickness(self):
         """
-        Get a Util3d array of cell thicknesses.
+        Return cell thicknesses.
 
         Returns
         -------
-        thickness : util3d array of floats (nlay, nrow, ncol)
+        thickness : array of floats (nlay, nrow, ncol)
 
         """
         warnings.warn(
@@ -639,18 +641,7 @@ class ModflowDis(Package):
             "in version 3.3.5.  Use grid.thick().",
             PendingDeprecationWarning,
         )
-        # return self.__thickness
-        thk = []
-        thk.append(self.top - self.botm[0])
-        for k in range(1, self.nlay + sum(self.laycbd)):
-            thk.append(self.botm[k - 1] - self.botm[k])
-        return Util3d(
-            self.parent,
-            (self.nlay + sum(self.laycbd), self.nrow, self.ncol),
-            np.float32,
-            thk,
-            name="thickness",
-        )
+        return self.parent.modelgrid.thick
 
     def write_file(self, check=True):
         """

@@ -169,11 +169,7 @@ class Grid:
         self._epsg = epsg
         self._proj4 = proj4
         self._prj = prj
-        if xoff is None:
-            xoff = 0.0
         self._xoff = xoff
-        if yoff is None:
-            yoff = 0.0
         self._yoff = yoff
         if angrot is None:
             angrot = 0.0
