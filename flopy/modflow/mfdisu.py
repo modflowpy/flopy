@@ -470,14 +470,14 @@ class ModflowDisU(Package):
         nrow = None
         ncol = self.nodelay.array
         nlay = self.nlay
-        # thk = []
-        # for k in range(self.nlay):
-        #     thk.append(self.top[k] - self.bot[k])
+        thk = []
+        for k in range(self.nlay):
+            thk.append(self.top[k] - self.bot[k])
         self.__thickness = Util3d(
             self.parent,
             (nlay, nrow, ncol),
             np.float32,
-            self.parent.modelgrid.thick,
+            thk,
             name="thickness",
         )
         return
@@ -497,7 +497,7 @@ class ModflowDisU(Package):
             "in version 3.3.5.  Use grid.thick().",
             PendingDeprecationWarning,
         )
-        return self.parent.modelgrid.thick
+        return self.__thickness.array
 
     def checklayerthickness(self):
         """
