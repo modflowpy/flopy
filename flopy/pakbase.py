@@ -208,14 +208,18 @@ class PackageInterface:
                 kparams[kp] = name
         if "hk" in self.__dict__:
             if self.hk.shape[1] == None:
-                hk = np.asarray([a.array.flatten() for a in self.hk])
+                hk = np.asarray(
+                    [a.array.flatten() for a in self.hk], dtype=object
+                )
             else:
                 hk = self.hk.array.copy()
         else:
             hk = self.k.array.copy()
         if "vka" in self.__dict__ and self.layvka.sum() > 0:
             if self.vka.shape[1] == None:
-                vka = np.asarray([a.array.flatten() for a in self.vka])
+                vka = np.asarray(
+                    [a.array.flatten() for a in self.vka], dtype=object
+                )
             else:
                 vka = self.vka.array
             vka_param = kparams.pop("vka")
