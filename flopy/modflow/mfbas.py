@@ -226,12 +226,12 @@ class ModflowBas(Package):
                 "isolated cells in ibound array",
                 "Warning",
             )
-            chk.values(
-                self.ibound.array,
-                np.isnan(self.ibound.array),
-                error_name="Not a number",
-                error_type="Error",
-            )
+        chk.values(
+            self.ibound.array,
+            np.isnan(self.ibound.array),
+            error_name="Not a number",
+            error_type="Error",
+        )
         chk.summarize()
         return chk
 

@@ -136,8 +136,67 @@ def test_usg_model():
             success, buff = mf.run_model()
             assert success
 
+def test_usg_load_01B():
+    print("testing 1-layer unstructured mfusg model loading: 01A_nestedgrid_nognc.nam")
+    pthusgtest = os.path.join(
+        "..", "examples", "data", "mfusg_test", "01A_nestedgrid_nognc"
+    )
+    fname = os.path.join(pthusgtest, "flow.nam")
+    assert os.path.isfile(fname), "nam file not found {}".format(fname)
+
+    # Create the model
+    m = flopy.modflow.Modflow(modelname="usgload_1b", verbose=True)
+
+    # Load the model, with checking
+    m = m.load(fname, check=True)
+
+    # assert disu, lpf, bas packages have been loaded
+    msg = "flopy failed on loading mfusg disu package"
+    assert isinstance(m.disu, flopy.modflow.mfdisu.ModflowDisU), msg
+    msg = "flopy failed on loading mfusg lpf package"
+    assert isinstance(m.lpf, flopy.modflow.mflpf.ModflowLpf), msg
+    msg = "flopy failed on loading mfusg bas package"
+    assert isinstance(m.bas6, flopy.modflow.mfbas.ModflowBas), msg
+    msg = "flopy failed on loading mfusg oc package"
+    assert isinstance(m.oc, flopy.modflow.mfoc.ModflowOc), msg
+    msg = "flopy failed on loading mfusg sms package"
+    assert isinstance(m.sms, flopy.modflow.mfsms.ModflowSms), msg
+
+def test_usg_load_45usg():
+    print("testing 3-layer unstructured mfusg model loading: 45usg.nam")
+    pthusgtest = os.path.join(
+        "..", "examples", "data", "mfusg_test", "45usg"
+    )
+    fname = os.path.join(pthusgtest, "45usg.nam")
+    assert os.path.isfile(fname), "nam file not found {}".format(fname)
+
+    # Create the model
+    m = flopy.modflow.Modflow(modelname="usgload_1b", verbose=True)
+
+    # Load the model, with checking.
+    # RCH not loaded as mfusg rch and evt loading needs work (TO DO)
+    m = m.load(fname, check=True, load_only=["DISU","BAS6","LPF","SMS","OC","DRN","WEL"])
+
+    # assert disu, lpf, bas packages have been loaded
+    msg = "flopy failed on loading mfusg disu package"
+    assert isinstance(m.disu, flopy.modflow.mfdisu.ModflowDisU), msg
+    msg = "flopy failed on loading mfusg lpf package"
+    assert isinstance(m.lpf, flopy.modflow.mflpf.ModflowLpf), msg
+    msg = "flopy failed on loading mfusg bas package"
+    assert isinstance(m.bas6, flopy.modflow.mfbas.ModflowBas), msg
+    msg = "flopy failed on loading mfusg oc package"
+    assert isinstance(m.oc, flopy.modflow.mfoc.ModflowOc), msg
+    msg = "flopy failed on loading mfusg sms package"
+    assert isinstance(m.sms, flopy.modflow.mfsms.ModflowSms), msg
+    msg = "flopy failed on loading mfusg drn package"
+    assert isinstance(m.drn, flopy.modflow.mfdrn.ModflowDrn), msg
+    msg = "flopy failed on loading mfusg wel package"
+    assert isinstance(m.wel, flopy.modflow.mfwel.ModflowWel), msg
+
 
 if __name__ == "__main__":
     test_usg_disu_load()
     test_usg_sms_load()
     test_usg_model()
+    test_usg_load_01B()
+    test_usg_load_45usg()
