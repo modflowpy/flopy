@@ -3,13 +3,13 @@ begin options
 end options
 
 begin nonlinear
-	outer_hclose 1.e-4
-	outer_maximum 500 
+	outer_dvclose 1.e-4
+	outer_maximum 500
 	under_relaxation none
 end nonlinear
 
 begin linear
-	inner_hclose 1.0e-4
+	inner_dvclose 1.0e-4
 	inner_rclose 0.001
 	inner_maximum 100
 	linear_acceleration cg

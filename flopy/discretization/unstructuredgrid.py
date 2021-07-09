@@ -1,3 +1,4 @@
+import os
 import copy
 import numpy as np
 from .grid import Grid, CachedData
@@ -193,6 +194,33 @@ class UnstructuredGrid(Grid):
             return None
         else:
             return self.ncpl.sum()
+
+    @property
+    def nvert(self):
+        return len(self._vertices)
+
+    @property
+    def iverts(self):
+        return self._iverts
+
+    @property
+    def verts(self):
+        if self._vertices is None:
+            return self._vertices
+        else:
+            return np.array([t[1:] for t in self._vertices], dtype=float)
+
+    @property
+    def ia(self):
+        if self._ia is None:
+            self._set_unstructured_iaja()
+        return self._ia
+
+    @property
+    def ja(self):
+        if self._ja is None:
+            self._set_unstructured_iaja()
+        return self._ja
 
     @property
     def ncpl(self):
@@ -717,3 +745,65 @@ class UnstructuredGrid(Grid):
         if not valid:
             ncpl = None
         return ncpl
+
+    # initialize grid from a grb file
+    @classmethod
+    def from_binary_grid_file(cls, file_path, verbose=False):
+        """
+        Instantiate a UnstructuredGrid model grid from a MODFLOW 6 binary
+        grid (*.grb) file.
+
+        Parameters
+        ----------
+        file_path : str
+            file path for the MODFLOW 6 binary grid file
+        verbose : bool
+            Write information to standard output.  Default is False.
+
+        Returns
+        -------
+        return : UnstructuredGrid
+
+        """
+        from ..mf6.utils.binarygrid_util import MfGrdFile
+
+        grb_obj = MfGrdFile(file_path, verbose=verbose)
+        if grb_obj.grid_type != "DISU":
+            err_msg = (
+                "Binary grid file ({}) ".format(os.path.basename(file_path))
+                + "is not a vertex (DISU) grid."
+            )
+            raise ValueError(err_msg)
+
+        iverts = grb_obj.iverts
+        if iverts is not None:
+            verts = grb_obj.verts
+            vertc = grb_obj.cellcenters
+            xc, yc = vertc[:, 0], vertc[:, 1]
+
+            idomain = grb_obj.idomain
+            xorigin = grb_obj.xorigin
+            yorigin = grb_obj.yorigin
+            angrot = grb_obj.angrot
+
+            top = np.ravel(grb_obj.top)
+            botm = grb_obj.bot
+
+            return cls(
+                vertices=verts,
+                iverts=iverts,
+                xcenters=xc,
+                ycenters=yc,
+                top=top,
+                botm=botm,
+                idomain=idomain,
+                xoff=xorigin,
+                yoff=yorigin,
+                angrot=angrot,
+            )
+        else:
+            err_msg = (
+                "{} binary grid file".format(os.path.basename(file_path))
+                + " does not include vertex data"
+            )
+            raise TypeError(err_msg)

@@ -2,12 +2,13 @@ __author__ = "aleaf"
 
 import sys
 
-sys.path.append("/Users/aleaf/Documents/GitHub/flopy3")
 import os
 import glob
 import shutil
 import io
 import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
 from flopy.utils.recarray_utils import create_empty_recarray
 
 try:
@@ -18,14 +19,6 @@ try:
 except ImportError:
     shapefile = None
 
-try:
-    import matplotlib
-
-    # if os.getenv('TRAVIS'):  # are we running https://travis-ci.org/ automated tests ?
-    #     matplotlib.use('Agg')  # Force matplotlib  not to use any Xwindows backend
-except:
-    matplotlib = None
-
 import flopy
 
 fm = flopy.modflow
@@ -33,17 +26,13 @@ from flopy.utils.sfroutputfile import SfrFile
 from flopy.discretization import StructuredGrid
 from flopy.utils.reference import SpatialReference
 
-if os.path.split(os.getcwd())[-1] == "flopy3":
-    path = os.path.join("examples", "data", "mf2005_test")
-    path2 = os.path.join("examples", "data", "sfr_test")
-    outpath = os.path.join("py.test/temp")
-else:
-    path = os.path.join("..", "examples", "data", "mf2005_test")
-    path2 = os.path.join("..", "examples", "data", "sfr_test")
-    outpath = os.path.join("temp", "t009")
-    # make the directory if it does not exist
-    if not os.path.isdir(outpath):
-        os.makedirs(outpath)
+path = os.path.join("..", "examples", "data", "mf2005_test")
+path2 = os.path.join("..", "examples", "data", "sfr_test")
+outpath = os.path.join("temp", "t009")
+# make the directory if it does not exist
+if os.path.isdir(outpath):
+    shutil.rmtree(outpath)
+os.makedirs(outpath)
 
 sfr_items = {
     0: {"mfnam": "test1ss.nam", "sfrfile": "test1ss.sfr"},
@@ -376,11 +365,6 @@ def test_export():
     fm = flopy.modflow
     m = fm.Modflow()
     dis = fm.ModflowDis(m, 1, 10, 10, lenuni=2, itmuni=4)
-    sr = SpatialReference(xul=0.0, yul=0.0, delc=m.dis.delc.array)
-    m.modelgrid = StructuredGrid(
-        delc=m.dis.delc.array, delr=m.dis.delr.array, xoff=sr.xll, yoff=sr.yll
-    )
-    # m.sr.origin_loc = "ll"
     if not shapefile:
         return  # skip
     m.export(os.path.join(outpath, "grid.shp"))
@@ -797,22 +781,31 @@ def test_SfrFile():
 
 
 def test_sfr_plot():
-    # m = flopy.modflow.Modflow.load('test1ss.nam', model_ws=path, verbose=False)
-    # sfr = m.get_package('SFR')
-    # sfr.plot(key='strtop')
-    # plt.show()
-    # assert True
-    # plt.close()
-    pass
+    m = flopy.modflow.Modflow.load(
+        "test1ss.nam",
+        model_ws=path,
+        verbose=False,
+        check=False,
+    )
+    sfr = m.get_package("SFR")
+    tv = sfr.plot(
+        key="strtop",
+    )
+    plt.show(block=False)
+    assert issubclass(
+        type(tv[0]), matplotlib.axes.SubplotBase
+    ), "could not plot strtop"
+    plt.close("all")
 
 
 if __name__ == "__main__":
-    test_sfr()
+    # test_sfr()
     # test_ds_6d_6e_disordered()
     # test_disordered_reachdata_fields()
     # test_sfr_renumbering()
     # test_example()
-    # test_export()
+    test_sfr_plot()
+    test_export()
     # test_transient_example()
     # mtest_sfr_plot()
     # test_assign_layers()

@@ -66,7 +66,7 @@ Contents:
 
 
 MODFLOW 6 Models
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
 
 MODFLOW 6 supports both groundwater flow (mfgwf.ModflowGwf) and groundwater
 transport (mfgwt.ModflowGwt) models.  FloPy for MODFLOW 6 model objects can be
@@ -165,7 +165,7 @@ Contents:
 
 
 MODFLOW 6 Utility Packages
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 MODFLOW 6 has several utility packages that can be associated with other packages.
 This includes the obs package, which can be used to output model results specific
@@ -179,6 +179,25 @@ Contents:
    :maxdepth: 4
 
    ./source/flopy.mf6.modflow.mfutl*
+
+
+MODFLOW 6 Utility Functions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+MODFLOW 6 has several utility functions that can be used to process MODFLOW 6
+results.
+
+Contents:
+
+.. toctree::
+   :maxdepth: 4
+
+   ./source/flopy.mf6.utils.binaryfile_utils.rst
+   ./source/flopy.mf6.utils.binarygrid_util.rst
+   ./source/flopy.mf6.utils.mfobservation.rst
+   ./source/flopy.mf6.utils.output_util.rst
+   ./source/flopy.mf6.utils.postprocessing.rst
+   ./source/flopy.mf6.utils.reference.rst
 
 
 MODFLOW 6 Data
@@ -198,6 +217,21 @@ Contents:
    ./source/flopy.mf6.data.mfdataarray
    ./source/flopy.mf6.data.mfdatalist
    ./source/flopy.mf6.data.mfdatascalar
+
+Build MODFLOW 6 Classes
+^^^^^^^^^^^^^^^^^^^^^^^
+
+MODFLOW 6 FloPy classes can be rebuild from MODFLOW 6 definition files. This
+will allow creation of MODFLOW 6 FloPy classes for development versions of
+MODFLOW 6.
+
+Contents:
+
+.. toctree::
+   :maxdepth: 4
+
+   ./source/flopy.mf6.utils.createpackages.rst
+   ./source/flopy.mf6.utils.generate_classes.rst
 
 
 Previous Versions of MODFLOW

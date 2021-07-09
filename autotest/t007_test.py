@@ -286,9 +286,6 @@ def test_freyberg_export():
 
 
 def test_export_output():
-    import os
-    import numpy as np
-    import flopy
 
     # Do not fail if netCDF4 not installed
     try:
@@ -471,8 +468,6 @@ def test_export_array():
 
 
 def test_mbase_modelgrid():
-    import numpy as np
-    import flopy
 
     ml = flopy.modflow.Modflow(
         modelname="test", xll=500.0, rotation=12.5, start_datetime="1/1/2016"
@@ -499,8 +494,6 @@ def test_mbase_modelgrid():
 
 
 def test_mt_modelgrid():
-    import numpy as np
-    import flopy
 
     ml = flopy.modflow.Modflow(
         modelname="test",
@@ -596,7 +589,6 @@ def test_mt_modelgrid():
 
 
 def test_free_format_flag():
-    import flopy
 
     Lx = 100.0
     Ly = 100.0
@@ -642,7 +634,6 @@ def test_free_format_flag():
 
 
 def test_sr():
-    import flopy
 
     m = flopy.modflow.Modflow(
         "test",
@@ -665,8 +656,6 @@ def test_sr():
 
 
 def test_dis_sr():
-    import flopy
-    import numpy as np
 
     delr = 640
     delc = 640
@@ -703,8 +692,26 @@ def test_dis_sr():
     np.testing.assert_almost_equal(y, yul)
 
 
+def test_twri_mg():
+    name = "twri.nam"
+    ml = flopy.modflow.Modflow.load(name, model_ws=pth, check=False)
+    mg = ml.modelgrid
+    assert isinstance(
+        mg, flopy.discretization.StructuredGrid
+    ), "modelgrid is not an StructuredGrid instance"
+    shape = (3, 15, 15)
+    assert mg.shape == shape, "modelgrid shape {} not equal to {}".format(
+        mg.shape, shape
+    )
+    thick = mg.thick
+    shape = (5, 15, 15)
+    assert thick.shape == shape, "thickness shape {} not equal to {}".format(
+        thick.shape, shape
+    )
+    return
+
+
 def test_mg():
-    import flopy
     from flopy.utils import geometry
 
     Lx = 100.0
@@ -728,6 +735,7 @@ def test_mg():
         botm=botm,
     )
     bas = flopy.modflow.ModflowBas(ms, ifrefm=True)
+    t = dis.thickness
 
     # test instantiation of an empty basic Structured Grid
     mg = flopy.discretization.StructuredGrid(dis.delc.array, dis.delr.array)
@@ -1675,8 +1683,6 @@ def test_get_rc_from_node_coordinates():
 
 
 def test_netcdf_classmethods():
-    import os
-    import flopy
 
     # Do not fail if netCDF4 not installed
     try:
@@ -1742,8 +1748,6 @@ def test_shapefile_ibound():
     shapefile = import_shapefile()
     if not shapefile:
         return
-    import os
-    import flopy
 
     shape_name = os.path.join(spth, "test.shp")
     nam_file = "freyberg.nam"
@@ -1908,12 +1912,13 @@ def main():
     # test_netcdf_classmethods()
     # build_netcdf()
     # build_sfr_netcdf()
+    test_twri_mg()
     # test_mg()
     # test_mbase_modelgrid()
     # test_mt_modelgrid()
     # test_rotation()
     # test_model_dot_plot()
-    test_get_lrc_get_node()
+    # test_get_lrc_get_node()
     # test_vertex_model_dot_plot()
     # test_sr_with_Map()
     # test_modelgrid_with_PlotMapView()

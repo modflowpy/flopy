@@ -1,4 +1,6 @@
 import copy
+import os.path
+
 import numpy as np
 from .grid import Grid, CachedData
 
@@ -235,6 +237,22 @@ class StructuredGrid(Grid):
     @property
     def nnodes(self):
         return self.__nlay * self.__nrow * self.__ncol
+
+    @property
+    def nvert(self):
+        return (self.__nrow + 1) * (self.__ncol + 1)
+
+    @property
+    def iverts(self):
+        if self._iverts is None:
+            self._set_structured_iverts()
+        return self._iverts
+
+    @property
+    def verts(self):
+        if self._verts is None:
+            self._set_structured_verts()
+        return self._verts
 
     @property
     def shape(self):
@@ -1547,3 +1565,111 @@ class StructuredGrid(Grid):
         msg = "{} /= {}".format(plotarray.shape, required_shape)
         assert plotarray.shape == required_shape, msg
         return plotarray
+
+    def _set_structured_iverts(self):
+        """
+        Build a list of the vertices that define each model cell and the x, y
+        pair for each vertex
+
+        """
+        iverts = []
+        inode = 0
+        for i in range(self.nrow):
+            for j in range(self.ncol):
+                iverts.append([inode] + self._build_structured_iverts(i, j))
+                inode += 1
+        self._iverts = iverts
+        return
+
+    def _build_structured_iverts(self, i, j):
+        """
+        Build list of vertex numbers for a cell
+
+        Parameters
+        ----------
+        i : int
+            row index
+        j : int
+            column index
+
+        Returns
+        -------
+        iv_list : list
+            list of vertex numbers for a cell
+
+        """
+        iv_list = [i * (self.ncol + 1) + j]
+        iv_list.append(i * (self.ncol + 1) + j + 1)
+        iv_list.append((i + 1) * (self.ncol + 1) + j + 1)
+        iv_list.append((i + 1) * (self.ncol + 1) + j)
+        return iv_list
+
+    def _set_structured_verts(self):
+        """
+        Build a list of the vertices that define each model cell and the x, y
+        pair for each vertex
+
+        Returns
+        -------
+        verts : np.ndarray
+            Array with x, y pairs for every vertex used to define the model.
+
+        """
+        self._verts = np.column_stack(
+            (self.xvertices.flatten(), self.yvertices.flatten())
+        )
+        return
+
+    # initialize grid from a grb file
+    @classmethod
+    def from_binary_grid_file(cls, file_path, verbose=False):
+        """
+        Instantiate a StructuredGrid model grid from a MODFLOW 6 binary
+        grid (*.grb) file.
+
+        Parameters
+        ----------
+        file_path : str
+            file path for the MODFLOW 6 binary grid file
+        verbose : bool
+            Write information to standard output.  Default is False.
+
+        Returns
+        -------
+        return : StructuredGrid
+
+        """
+        from ..mf6.utils.binarygrid_util import MfGrdFile
+
+        grb_obj = MfGrdFile(file_path, verbose=verbose)
+        if grb_obj.grid_type != "DIS":
+            err_msg = (
+                "Binary grid file ({}) ".format(os.path.basename(file_path))
+                + "is not a structured (DIS) grid."
+            )
+            raise ValueError(err_msg)
+
+        idomain = grb_obj.idomain
+        xorigin = grb_obj.xorigin
+        yorigin = grb_obj.yorigin
+        angrot = grb_obj.angrot
+
+        nlay, nrow, ncol = (
+            grb_obj.nlay,
+            grb_obj.nrow,
+            grb_obj.ncol,
+        )
+        delr, delc = grb_obj.delr, grb_obj.delc
+        top, botm = grb_obj.top, grb_obj.bot
+        top.shape = (nrow, ncol)
+        botm.shape = (nlay, nrow, ncol)
+        return cls(
+            delc,
+            delr,
+            top,
+            botm,
+            idomain=idomain,
+            xoff=xorigin,
+            yoff=yorigin,
+            angrot=angrot,
+        )

@@ -178,6 +178,9 @@ class Grid:
         self._cache_dict = {}
         self._copy_cache = True
 
+        self._iverts = None
+        self._verts = None
+
     ###################################
     # access to basic grid properties
     ###################################
@@ -344,6 +347,18 @@ class Grid:
     @property
     def nnodes(self):
         raise NotImplementedError("must define nnodes in child class")
+
+    @property
+    def nvert(self):
+        raise NotImplementedError("must define nvert in child class")
+
+    @property
+    def iverts(self):
+        raise NotImplementedError("must define iverts in child class")
+
+    @property
+    def verts(self):
+        raise NotImplementedError("must define vertices in child class")
 
     @property
     def shape(self):
@@ -834,3 +849,10 @@ class Grid:
             filename, self, array_dict={}, nan_val=-1.0e9, epsg=epsg, prj=prj
         )
         return
+
+    # initialize grid from a grb file
+    @classmethod
+    def from_binary_grid_file(cls, file_path, verbose=False):
+        raise NotImplementedError(
+            "must define from_binary_grid_file in child class"
+        )

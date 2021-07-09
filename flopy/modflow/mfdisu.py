@@ -5,6 +5,7 @@ the ModflowDisU class as `flopy.modflow.ModflowDisU`.
 """
 
 import sys
+import warnings
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, read1d
@@ -13,6 +14,8 @@ from ..discretization.unstructuredgrid import UnstructuredGrid
 
 ITMUNI = {"u": 0, "s": 1, "m": 2, "h": 3, "d": 4, "y": 5}
 LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}
+
+warnings.simplefilter("always", PendingDeprecationWarning)
 
 
 class ModflowDisU(Package):
@@ -491,21 +494,30 @@ class ModflowDisU(Package):
         for k in range(self.nlay):
             thk.append(self.top[k] - self.bot[k])
         self.__thickness = Util3d(
-            self.parent, (nlay, nrow, ncol), np.float32, thk, name="thickness"
+            self.parent,
+            (nlay, nrow, ncol),
+            np.float32,
+            thk,
+            name="thickness",
         )
         return
 
     @property
     def thickness(self):
         """
-        Get a Util2d array of cell thicknesses.
+        Return cell thicknesses.
 
         Returns
         -------
-        thickness : util2d array of floats (nodes,)
+        thickness : array of floats (nodes,)
 
         """
-        return self.__thickness
+        warnings.warn(
+            "ModflowDisU.thickness will be deprecated and removed "
+            "in version 3.3.5.  Use grid.thick().",
+            PendingDeprecationWarning,
+        )
+        return self.__thickness.array
 
     def checklayerthickness(self):
         """

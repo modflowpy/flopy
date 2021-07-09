@@ -58,7 +58,6 @@ from .zonbud import (
     ZoneBudgetOutput,
     ZBNetOutput,
 )
-from .mfgrdfile import MfGrdFile
 from .postprocessing import get_transmissivities, get_specific_discharge
 from .sfroutputfile import SfrFile
 from .recarray_utils import create_empty_recarray, ra_slice
@@ -66,3 +65,4 @@ from .mtlistfile import MtListBudget
 from .optionblock import OptionBlock
 from .rasters import Raster
 from .gridintersect import GridIntersect, ModflowGridIndices
+from .binarygrid_util import MfGrdFile
