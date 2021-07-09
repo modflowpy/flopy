@@ -171,11 +171,10 @@ def test_usg_load_45usg():
     assert os.path.isfile(fname), "nam file not found {}".format(fname)
 
     # Create the model
-    m = flopy.modflow.Modflow(modelname="usgload_1b", verbose=True)
+    m = flopy.modflow.Modflow(modelname="45usg", verbose=True)
 
     # Load the model, with checking.
-    # RCH not loaded as mfusg rch and evt loading needs work (TO DO)
-    m = m.load(fname, check=True, load_only=["DISU","BAS6","LPF","SMS","OC","DRN","WEL"])
+    m = m.load(fname, check=True)
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
@@ -193,6 +192,50 @@ def test_usg_load_45usg():
     msg = "flopy failed on loading mfusg wel package"
     assert isinstance(m.wel, flopy.modflow.mfwel.ModflowWel), msg
 
+def test_usg_rch_evt_models01():
+    # this test has RCH nrchop == 1, and EVT nevtop == 1
+    print("testing unstructured mfusg RCH nrchop == 1, and EVT nevtop == 1: \
+usg_rch_evt.nam")
+    model_ws = os.path.join(
+        '..', 'examples', 'data', 'mfusg_test', 'rch_evt_tests')
+    nam = 'usg_rch_evt.nam'
+    m = flopy.modflow.Modflow.load(
+        nam, model_ws=model_ws, version='mfusg', exe_name=v)
+    m.model_ws = tpth
+    m.write_input()
+    if run:
+        success, buff = m.run_model()
+        assert success
+
+def test_usg_rch_evt_models02():
+    # this test has RCH nrchop == 2, and EVT nevtop == 2
+    print("testing unstructured mfusg RCH nrchop == 2, and EVT nevtop == 2: \
+usg_rch_evt_nrchop2.nam")
+    model_ws = os.path.join(
+        '..', 'examples', 'data', 'mfusg_test', 'rch_evt_tests')
+    nam = 'usg_rch_evt_nrchop2.nam'
+    m = flopy.modflow.Modflow.load(
+        nam, model_ws=model_ws, version='mfusg', exe_name=v)
+    m.model_ws = tpth
+    m.write_input()
+    if run:
+        success, buff = m.run_model()
+        assert success    
+
+def test_usg_rch_evt_models02a():
+    # this test has RCH nrchop == 2, and EVT nevtop == 2
+    print("testing unstructured mfusg RCH nrchop == 2, and EVT nevtop == 2,\
+ but with fewer irch nodes: than in nodelay[0] usg_rch_evt_nrchop2.nam")
+    model_ws = os.path.join(
+        '..', 'examples', 'data', 'mfusg_test', 'rch_evt_tests')
+    nam = 'usg_rch_evt_nrchop2a.nam'
+    m = flopy.modflow.Modflow.load(
+        nam, model_ws=model_ws, version='mfusg', exe_name=v)
+    m.model_ws = tpth
+    m.write_input()
+    if run:
+        success, buff = m.run_model()
+        assert success    
 
 if __name__ == "__main__":
     test_usg_disu_load()
@@ -200,3 +243,7 @@ if __name__ == "__main__":
     test_usg_model()
     test_usg_load_01B()
     test_usg_load_45usg()
+    test_usg_rch_evt_models01()
+    test_usg_rch_evt_models02()
+    test_usg_rch_evt_models02a()
+    
