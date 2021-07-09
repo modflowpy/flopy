@@ -116,7 +116,7 @@ jobs:
             test-path: autotest_scripts.py
     defaults:
       run:
-        shell: bash
+        shell: bash -l {0}
 
     steps:
     # check out repo
@@ -138,7 +138,7 @@ jobs:
     # Standard python fails on windows without GDAL installation
     # Using custom bash shell ("shell: bash -l {0}") with Miniconda
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v2.0.0
+      uses: conda-incubator/setup-miniconda@v2.1.1
       with:
         python-version: ${{ matrix.python-version }}
         mamba-version: "*"
@@ -149,12 +149,10 @@ jobs:
 
     - name: Add jupyter and jupytext to notebooks run
       if: matrix.run-type == 'nb'
-      shell: bash -l {0}
       run: |
         mamba install --name flopy jupyter jupytext
 
     - name: Add packages to flopy environment using mamba or conda
-      shell: bash -l {0}
       run: |
         if [ "$RUNNER_OS" == "Windows" ]; then
           conda env update --name flopy --file etc/environment.yml
@@ -163,7 +161,6 @@ jobs:
         fi
 
     - name: Install pymake, xmipy, and flopy
-      shell: bash -l {0}
       run: |
         pip install https://github.com/modflowpy/pymake/zipball/master
         pip install xmipy
@@ -190,7 +187,6 @@ jobs:
         g++ --version
 
     - name: Download executables needed for tests
-      shell: bash -l {0}
       run: |
         cd autotest
         python get_exes.py
@@ -201,7 +197,6 @@ jobs:
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     - name: Run nosetests
-      shell: bash -l {0}
       run: |
         coverage run -m nose -v --with-id --with-timer \
         --with-coverage --cover-package=flopy --cover-xml \
