@@ -133,6 +133,6 @@ def get_pak_vals_shape(model, vals):
                 _ = (v for v in vals)
             except:
                 return (1, ncol[0])  # default to layer 1 node count
-            return np.array(vals, ndmin=2).shape            
+            return np.array(vals, ndmin=2).shape
     else:
         return (nrow, ncol)  # structured
