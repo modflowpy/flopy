@@ -1,4 +1,6 @@
 import copy
+import os.path
+
 import numpy as np
 from .grid import Grid, CachedData
 
@@ -251,18 +253,6 @@ class StructuredGrid(Grid):
         if self._verts is None:
             self._set_structured_verts()
         return self._verts
-
-    @property
-    def ia(self):
-        if self._ia is None:
-            self._set_structured_iaja()
-        return self._ia
-
-    @property
-    def ja(self):
-        if self._ja is None:
-            self._set_structured_iaja()
-        return self._ja
 
     @property
     def shape(self):
@@ -1576,64 +1566,6 @@ class StructuredGrid(Grid):
         assert plotarray.shape == required_shape, msg
         return plotarray
 
-    # internal
-    def _set_structured_iaja(self):
-        inode = 0
-        ia = np.zeros(self.nnodes + 1, dtype=int)
-        ja = []
-        for k in range(self.nlay):
-            for i in range(self.nrow):
-                for j in range(self.ncol):
-                    jacell = self._build_structured_jacell(k, i, j)
-                    ia[inode + 1] = ia[inode] + len(jacell)
-                    ja += jacell
-                    inode += 1
-        self._ia, self._ja = ia, ja
-        return
-
-    def _build_structured_jacell(self, k, i, j):
-        """
-        Build list of connections for a cell
-
-        Parameters
-        ----------
-        k : int
-            layer index
-        i : int
-            row index
-        j : int
-            column index
-
-        Returns
-        -------
-        ja : list
-            list of connected nodes for a cell (including the node)
-
-        """
-        ncpl = self.nrow * self.ncol
-        node = k * ncpl + i * self.ncol + j
-        ja = [node]
-        # top
-        if k > 0:
-            ja.append(node - ncpl)
-        # back
-        if i > 0:
-            ja.append(node - self.ncol)
-        # left
-        if j > 0:
-            ja.append(node - 1)
-        # right
-        if j < self.ncol - 1:
-            ja.append(node + 1)
-        # front
-        if i < self.nrow - 1:
-            ja.append(node + self.ncol)
-        # bottom
-        if k < self.nlay - 1:
-            ja.append(node + ncpl)
-
-        return ja
-
     def _set_structured_iverts(self):
         """
         Build a list of the vertices that define each model cell and the x, y
@@ -1687,3 +1619,57 @@ class StructuredGrid(Grid):
             (self.xvertices.flatten(), self.yvertices.flatten())
         )
         return
+
+    # initialize grid from a grb file
+    @classmethod
+    def from_binary_grid_file(cls, file_path, verbose=False):
+        """
+        Instantiate a StructuredGrid model grid from a MODFLOW 6 binary
+        grid (*.grb) file.
+
+        Parameters
+        ----------
+        file_path : str
+            file path for the MODFLOW 6 binary grid file
+        verbose : bool
+            Write information to standard output.  Default is False.
+
+        Returns
+        -------
+        return : StructuredGrid
+
+        """
+        from ..mf6.utils.binarygrid_util import MfGrdFile
+
+        grb_obj = MfGrdFile(file_path, verbose=verbose)
+        if grb_obj.grid_type != "DIS":
+            err_msg = (
+                "Binary grid file ({}) ".format(os.path.basename(file_path))
+                + "is not a structured (DIS) grid."
+            )
+            raise ValueError(err_msg)
+
+        idomain = grb_obj.idomain
+        xorigin = grb_obj.xorigin
+        yorigin = grb_obj.yorigin
+        angrot = grb_obj.angrot
+
+        nlay, nrow, ncol = (
+            grb_obj.nlay,
+            grb_obj.nrow,
+            grb_obj.ncol,
+        )
+        delr, delc = grb_obj.delr, grb_obj.delc
+        top, botm = grb_obj.top, grb_obj.bot
+        top.shape = (nrow, ncol)
+        botm.shape = (nlay, nrow, ncol)
+        return cls(
+            delc,
+            delr,
+            top,
+            botm,
+            idomain=idomain,
+            xoff=xorigin,
+            yoff=yorigin,
+            angrot=angrot,
+        )

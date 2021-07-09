@@ -8,10 +8,7 @@ be accessed by the user.
 import numpy as np
 import collections
 
-from flopy.utils.utils_def import FlopyBinaryData
-from flopy.discretization.structuredgrid import StructuredGrid
-from flopy.discretization.vertexgrid import VertexGrid
-from flopy.discretization.unstructuredgrid import UnstructuredGrid
+from ...utils.utils_def import FlopyBinaryData
 import warnings
 
 warnings.simplefilter("always", DeprecationWarning)
@@ -28,7 +25,7 @@ class MfGrdFile(FlopyBinaryData):
     precision : string
         'single' or 'double'.  Default is 'double'.
     verbose : bool
-        Write information to the screen.  Default is False.
+        Write information to standard output.  Default is False.
 
     Attributes
     ----------
@@ -43,7 +40,8 @@ class MfGrdFile(FlopyBinaryData):
     -----
     The MfGrdFile class provides simple ways to retrieve data from binary
     MODFLOW 6 binary grid files (.grb). The binary grid file contains data
-    that can be used for post processing MODFLOW 6 model results.
+    that can be used for post processing MODFLOW 6 model results. For
+    example, the ia and ja arrays for a model grid.
 
     Examples
     --------
@@ -77,7 +75,7 @@ class MfGrdFile(FlopyBinaryData):
         # grid type
         line = self.read_text(self._initial_len).strip()
         t = line.split()
-        self._grid = t[1]
+        self._grid_type = t[1]
 
         # version
         line = self.read_text(self._initial_len).strip()
@@ -152,22 +150,34 @@ class MfGrdFile(FlopyBinaryData):
                     v = self.read_real()
             self._datadict[key] = v
 
-        if self.verbose:
-            if nd == 0:
-                msg = "  {} = {}".format(key, v)
-                print(msg)
-            else:
-                msg = "  {}: ".format(key) + "min = {} max = {}".format(
-                    v.min(), v.max()
-                )
-                print(msg)
+            if self.verbose:
+                if nd == 0:
+                    msg = "  {} = {}".format(key, v)
+                    print(msg)
+                else:
+                    msg = "  {}: ".format(key) + "min = {} max = {}".format(
+                        v.min(), v.max()
+                    )
+                    print(msg)
 
-        # set the model grid
-        self._modelgrid = self._set_modelgrid()
-
+        # close the file
         self.file.close()
 
-    def _set_modelgrid(self):
+        # initialize the model grid to None
+        self.__modelgrid = None
+
+        # set ia and ja
+        self.__set_iaja()
+
+    # internal functions
+    def __set_iaja(self):
+        """
+        Set ia and ja from _datadict.
+        """
+        self._ia = self._datadict["IA"] - 1
+        self._ja = self._datadict["JA"] - 1
+
+    def __set_modelgrid(self):
         """
         Define structured, vertex, or unstructured grid based on MODFLOW 6
         discretization type.
@@ -176,32 +186,23 @@ class MfGrdFile(FlopyBinaryData):
         -------
         modelgrid : grid
         """
+        from ...discretization.structuredgrid import StructuredGrid
+        from ...discretization.vertexgrid import VertexGrid
+        from ...discretization.unstructuredgrid import UnstructuredGrid
+
         modelgrid = None
-        idomain = None
-        xorigin = None
-        yorigin = None
-        angrot = None
-        if "IDOMAIN" in self._datadict:
-            idomain = self._datadict["IDOMAIN"]
-
-        if "XORIGIN" in self._datadict:
-            xorigin = self._datadict["XORIGIN"]
-
-        if "YORIGIN" in self._datadict:
-            yorigin = self._datadict["YORIGIN"]
-
-        if "ANGROT" in self._datadict:
-            angrot = self._datadict["ANGROT"]
+        idomain = self.idomain
+        xorigin = self.xorigin
+        yorigin = self.yorigin
+        angrot = self.angrot
 
         try:
-            if self._grid in ("DIS", "DISV"):
-                top, botm = self._datadict["TOP"], self._datadict["BOTM"]
-            else:
-                top, botm = self._datadict["TOP"], self._datadict["BOT"]
+            top = self.top
+            botm = self.bot
 
-            if self._grid == "DISV":
+            if self._grid_type == "DISV":
                 nlay, ncpl = self.nlay, self.ncpl
-                vertices, cell2d = self._build_vertices_cell2d()
+                vertices, cell2d = self.cell2d
                 top = np.ravel(top)
                 botm.shape = (nlay, ncpl)
                 modelgrid = VertexGrid(
@@ -215,13 +216,13 @@ class MfGrdFile(FlopyBinaryData):
                     angrot=angrot,
                 )
 
-            elif self._grid == "DIS":
+            elif self._grid_type == "DIS":
                 nlay, nrow, ncol = (
                     self.nlay,
                     self.nrow,
                     self.ncol,
                 )
-                delr, delc = self._datadict["DELR"], self._datadict["DELC"]
+                delr, delc = self.delr, self.delc
 
                 top.shape = (nrow, ncol)
                 botm.shape = (nlay, nrow, ncol)
@@ -230,13 +231,14 @@ class MfGrdFile(FlopyBinaryData):
                     delr,
                     top,
                     botm,
+                    idomain=idomain,
                     xoff=xorigin,
                     yoff=yorigin,
                     angrot=angrot,
                 )
             else:
-                iverts, verts = self._get_verts()
-                vertc = self._get_cellcenters()
+                iverts, verts = self.iverts, self.verts
+                vertc = self.cellcenters
                 xc, yc = vertc[:, 0], vertc[:, 1]
                 modelgrid = UnstructuredGrid(
                     vertices=verts,
@@ -254,9 +256,11 @@ class MfGrdFile(FlopyBinaryData):
         except:
             print("could not set model grid for {}".format(self.file.name))
 
-        return modelgrid
+        self.__modelgrid = modelgrid
 
-    def _set_spatialreference(self):
+        return
+
+    def __set_spatialreference(self):
         """
         Define structured or unstructured spatial reference based on
         MODFLOW 6 discretization type.
@@ -266,7 +270,7 @@ class MfGrdFile(FlopyBinaryData):
         """
         sr = None
         try:
-            if self._grid == "DISV" or self._grid == "DISU":
+            if self._grid_type in ("DISV", "DISU"):
                 from flopy.utils.reference import SpatialReferenceUnstructured
 
                 try:
@@ -276,18 +280,18 @@ class MfGrdFile(FlopyBinaryData):
                     sr = SpatialReferenceUnstructured(
                         xc,
                         yc,
-                        self._modelgrid.verts,
-                        self._modelgrid.iverts,
+                        self.__modelgrid.verts,
+                        self.__modelgrid.iverts,
                         [xc.shape[0]],
                     )
                 except:
                     msg = (
                         "could not set spatial reference for "
-                        + "{} discretization ".format(self._grid)
+                        + "{} discretization ".format(self._grid_type)
                         + "defined in {}".format(self.file.name)
                     )
                     print(msg)
-            elif self._grid == "DIS":
+            elif self._grid_type == "DIS":
                 from flopy.utils.reference import SpatialReference
 
                 delr, delc = self._datadict["DELR"], self._datadict["DELC"]
@@ -310,7 +314,7 @@ class MfGrdFile(FlopyBinaryData):
 
         return sr
 
-    def _build_vertices_cell2d(self):
+    def __build_vertices_cell2d(self):
         """
         Build the mf6 vertices and cell2d array to generate a VertexGrid
 
@@ -319,8 +323,8 @@ class MfGrdFile(FlopyBinaryData):
             vertices: list
             cell2d: list
         """
-        iverts, verts = self._get_verts()
-        vertc = self._get_cellcenters()
+        iverts, verts = self.iverts, self.verts
+        vertc = self.cellcenters
         vertices = [[ix] + list(i) for ix, i in enumerate(verts)]
         cell2d = [
             [ix] + list(vertc[ix]) + [len(i) - 1] + i[:-1]
@@ -328,105 +332,61 @@ class MfGrdFile(FlopyBinaryData):
         ]
         return vertices, cell2d
 
-    def _build_structured_iverts(self, i, j):
+    def __get_iverts(self):
         """
-        Build list of vertex numbers for a cell in a model with a structured
-        grid
-
-        Parameters
-        ----------
-        i : int
-            row index
-        j : int
-            column indes
-
-        Returns
-        -------
-        iv_list : list
-            list of vertex number for a cell in a structured model
-
-        """
-        iv_list = [i * (self.ncol + 1) + j]
-        iv_list.append(i * (self.ncol + 1) + j + 1)
-        iv_list.append((i + 1) * (self.ncol + 1) + j + 1)
-        iv_list.append((i + 1) * (self.ncol + 1) + j)
-        return iv_list
-
-    def _get_verts(self):
-        """
-        Get a list of the vertices that define each model cell and the x, y
-        pair for each vertex from the data in the binary grid file.
+        Get a list of the vertices that define each model cell.
 
         Returns
         -------
         iverts : list of lists
             List with lists containing the vertex indices for each model cell.
+
+        """
+        iverts = None
+        if "IAVERT" in self._datadict:
+            if self._grid_type == "DISV":
+                nsize = self.ncpl
+            elif self._grid_type == "DISU":
+                nsize = self.nodes
+            iverts = []
+            iavert = self.iavert
+            javert = self.javert
+            for ivert in range(nsize):
+                i0 = iavert[ivert]
+                i1 = iavert[ivert + 1]
+                iverts.append((javert[i0:i1]).tolist())
+            if self.verbose:
+                msg = "returning iverts from {}".format(self.file.name)
+                print(msg)
+        return iverts
+
+    def __get_verts(self):
+        """
+        Get a list of the x, y pair for each vertex from the data in the
+        binary grid file.
+
+        Returns
+        -------
         verts : np.ndarray
             Array with x, y pairs for every vertex used to define the model.
 
         """
-        if self._grid == "DISV":
-            try:
-                iverts = []
-                iavert = self.iavert
-                javert = self.javert
-                shpvert = self._recorddict["VERTICES"][2]
-                for ivert in range(self.ncpl):
-                    i0 = iavert[ivert]
-                    i1 = iavert[ivert + 1]
-                    iverts.append((javert[i0:i1]).tolist())
-                if self.verbose:
-                    msg = "returning vertices from {}".format(self.file.name)
-                    print(msg)
-                return iverts, self._datadict["VERTICES"].reshape(shpvert)
-            except:
-                msg = "could not return vertices from " + "{}".format(
-                    self.file.name
-                )
-                raise KeyError(msg)
-        elif self._grid == "DISU":
-            try:
-                iverts = []
-                iavert = self.iavert
-                javert = self.javert
-                shpvert = self._recorddict["VERTICES"][2]
-                # create iverts
-                for ivert in range(self.nodes):
-                    i0 = iavert[ivert]
-                    i1 = iavert[ivert + 1]
-                    iverts.append((javert[i0:i1]).tolist())
-                v0 = self._datadict["VERTICES"].reshape(shpvert)
-                # create verts
+        verts = None
+        if "VERTICES" in self._datadict:
+            shpvert = self._recorddict["VERTICES"][2]
+            verts = self._datadict["VERTICES"].reshape(shpvert)
+            if self._grid_type == "DISU":
+                # modify verts
                 verts = [
-                    [idx, v0[idx, 0], v0[idx, 1]] for idx in range(shpvert[0])
+                    [idx, verts[idx, 0], verts[idx, 1]]
+                    for idx in range(shpvert[0])
                 ]
-                if self.verbose:
-                    msg = "returning vertices from {}".format(self.file.name)
-                    print(msg)
-                return iverts, verts
-            except:
-                msg = "could not get vertices from {}".format(self.file.name)
+            if self.verbose:
+                msg = "returning verts from {}".format(self.file.name)
                 print(msg)
-                return None, None
-        elif self._grid == "DIS":
-            try:
-                nrow, ncol = (
-                    self.nrow,
-                    self.ncol,
-                )
-                iverts = []
-                for i in range(nrow):
-                    for j in range(ncol):
-                        iverts.append(self._build_structured_iverts(i, j))
-                x = self._modelgrid.get_xvertices_for_layer(0).flatten()
-                y = self._modelgrid.get_yvertices_for_layer(0).flatten()
-                return iverts, np.column_stack((x, y))
-            except:
-                msg = "could not get vertices from {}".format(self.file.name)
-                raise KeyError(msg)
-        return
+        return verts
 
-    def _get_cellcenters(self):
+    def __get_cellcenters(self):
         """
         Get the cell centers centroids for a MODFLOW 6 GWF model that uses
         the DISV or DISU discretization.
@@ -438,86 +398,37 @@ class MfGrdFile(FlopyBinaryData):
 
         """
         xycellcenters = None
-        if self._grid in ("DISV", "DISU"):
-            try:
-                x = self._datadict["CELLX"]
-                y = self._datadict["CELLY"]
-                xycellcenters = np.column_stack((x, y))
-            except:
-                msg = "could not get cell centers from {}".format(
-                    self.file.name
-                )
+        if "CELLX" in self._datadict:
+            x = self._datadict["CELLX"]
+            y = self._datadict["CELLY"]
+            xycellcenters = np.column_stack((x, y))
+            if self.verbose:
+                msg = "returning cell centers from {}".format(self.file.name)
                 print(msg)
         return xycellcenters
 
-    def get_faceflows(self, flowja):
+    # properties
+    @property
+    def grid_type(self):
         """
-        Get the face flows for the flow right face, flow front face, and
-        flow lower face from the MODFLOW 6 flowja flows. This method can
-        be useful for building face flow arrays for MT3DMS, MT3D-USGS, and
-        RT3D. This method only works for a structured MODFLOW 6 model.
-
-        Parameters
-        ----------
-        flowja : ndarray
-            flowja array for a structured MODFLOW 6 model
+        Grid type defined in the MODFLOW 6 grid file.
 
         Returns
         -------
-        frf : ndarray
-            right face flows
-        fff : ndarray
-            front face flows
-        flf : ndarray
-            lower face flows
-
+        grid_type : str
         """
-        if self._grid == "DIS":
-            ia = self.ia
-            ja = self.ja
-            if len(flowja.shape) > 0:
-                flowja = flowja.flatten()
-            if flowja.shape != ja.shape:
-                raise ValueError(
-                    "size of flowja ({}) ".format(flowja.shape)
-                    + "not equal to {}".format(ja.shape)
-                )
-            shape = (self.nlay, self.nrow, self.ncol)
-            frf = np.zeros(shape, dtype=float).flatten()
-            fff = np.zeros(shape, dtype=float).flatten()
-            flf = np.zeros(shape, dtype=float)
-            # fill flow terms
-            vmult = [-1.0, -1.0, -1.0]
-            flows = [frf, fff, flf]
-            for n in range(self.nodes):
-                i0, i1 = ia[n] + 1, ia[n + 1]
-                ipos = 0
-                for j in range(i0, i1):
-                    jcol = ja[j]
-                    if jcol > n:
-                        flows[ipos][n] = vmult[ipos] * flowja[j]
-                        ipos += 1
-            # reshape flow terms
-            frf = frf.reshape(shape)
-            fff = fff.reshape(shape)
-            flf = flf.reshape(shape)
-        else:
-            frf, fff, flf = None, None, None
-        return frf, fff, flf
+        return self._grid_type
 
     @property
     def nlay(self):
         """
-        Return the number of layers in a structured and vertex grid.
-        None is returned for an unstructured grid.
+        Number of layers. None for DISU grids.
 
         Returns
         -------
-        nrow : int
-            number of layers
-
+        nlay : int
         """
-        if self._grid in ("DIS", "DISV"):
+        if self._grid_type in ("DIS", "DISV"):
             nlay = self._datadict["NLAY"]
         else:
             nlay = None
@@ -526,16 +437,13 @@ class MfGrdFile(FlopyBinaryData):
     @property
     def nrow(self):
         """
-        Return the number of rows in a structured grid. None is returned
-        for vertex and unstructured grids.
+        Number of rows. None for DISV and DISU grids.
 
         Returns
         -------
         nrow : int
-            number of rows
-
         """
-        if self._grid == "DIS":
+        if self._grid_type == "DIS":
             nrow = self._datadict["NROW"]
         else:
             nrow = None
@@ -544,16 +452,13 @@ class MfGrdFile(FlopyBinaryData):
     @property
     def ncol(self):
         """
-        Return the number of columns in a structured grid. None is returned
-        for vertex and unstructured grids.
+        Number of columns. None for DISV and DISU grids.
 
         Returns
         -------
         ncol : int
-            number of columns
-
         """
-        if self._grid == "DIS":
+        if self._grid_type == "DIS":
             ncol = self._datadict["NCOL"]
         else:
             ncol = None
@@ -562,18 +467,15 @@ class MfGrdFile(FlopyBinaryData):
     @property
     def ncpl(self):
         """
-        Return the number of cells per layer in a structured and vertex
-        grid. None is returned for an unstructured model.
+        Number of cells per layer. None for DISU grids.
 
         Returns
         -------
         ncpl : int
-            number of cells per layer
-
         """
-        if self._grid == "DISV":
+        if self._grid_type == "DISV":
             ncpl = self._datadict["NCPL"]
-        if self._grid == "DIS":
+        if self._grid_type == "DIS":
             ncpl = self.nrow * self.ncol
         else:
             None
@@ -582,15 +484,13 @@ class MfGrdFile(FlopyBinaryData):
     @property
     def ncells(self):
         """
-        Return the number of cells in a grid.
+        Number of cells.
 
         Returns
         -------
         ncells : int
-            number of cells in a grid
-
         """
-        if self._grid in ("DIS", "DISV"):
+        if self._grid_type in ("DIS", "DISV"):
             ncells = self._datadict["NCELLS"]
         else:
             ncells = self._datadict["NODES"]
@@ -599,257 +499,295 @@ class MfGrdFile(FlopyBinaryData):
     @property
     def nodes(self):
         """
-        Return the number of cells in a grid.
+        Number of nodes.
 
         Returns
         -------
         nodes : int
-            number of nodes in a grid
-
         """
-        if self._grid in ("DIS", "DISV"):
+        if self._grid_type in ("DIS", "DISV"):
             nodes = self.ncells
         else:
             nodes = self._datadict["NODES"]
         return nodes
 
     @property
-    def nconnections(self):
+    def shape(self):
         """
-        Return the number of intercell connections in a grid.
+        Shape of the model grid (tuple).
 
         Returns
         -------
-        nconnections : int
-            number of cells intercell connections
-
+        shape : tuple
         """
-        return self.nja - self.nodes
+        if self._grid_type == "DIS":
+            shape = (self.nlay, self.nrow, self.ncol)
+        elif self._grid_type == "DISV":
+            shape = (self.nlay, self.ncpl)
+        else:
+            shape = (self.nodes,)
+        return shape
+
+    @property
+    def xorigin(self):
+        """
+        x-origin of the model grid. None if not defined in the
+        MODFLOW 6 grid file.
+
+        Returns
+        -------
+        xorigin : float
+        """
+        if "XORIGIN" in self._datadict:
+            xorigin = self._datadict["XORIGIN"]
+        else:
+            xorigin = None
+        return xorigin
+
+    @property
+    def yorigin(self):
+        """
+        y-origin of the model grid. None if not defined in the
+        MODFLOW 6 grid file.
+
+        Returns
+        -------
+        yorigin : float
+        """
+        if "YORIGIN" in self._datadict:
+            yorigin = self._datadict["YORIGIN"]
+        else:
+            yorigin = None
+        return yorigin
+
+    @property
+    def angrot(self):
+        """
+        Model grid rotation angle. None if not defined in the
+        MODFLOW 6 grid file.
+
+        Returns
+        -------
+        angrot : float
+        """
+        if "ANGROT" in self._datadict:
+            angrot = self._datadict["ANGROT"]
+        else:
+            angrot = None
+        return angrot
+
+    @property
+    def idomain(self):
+        """
+        IDOMAIN for the model grid. None if not defined in the
+        MODFLOW 6 grid file.
+
+        Returns
+        -------
+        idomain : ndarray of ints
+        """
+        if "IDOMAIN" in self._datadict:
+            idomain = self._datadict["IDOMAIN"]
+        else:
+            idomain = None
+        return idomain
+
+    @property
+    def delr(self):
+        """
+        Cell size in the row direction (y-direction). None if not
+        defined in the MODFLOW 6 grid file.
+
+        Returns
+        -------
+        delr : ndarray of floats
+        """
+        if self.grid_type == "DIS":
+            delr = self._datadict["DELR"]
+        else:
+            delr = None
+        return delr
+
+    @property
+    def delc(self):
+        """
+        Cell size in the column direction (x-direction). None if not
+        defined in the MODFLOW 6 grid file.
+
+        Returns
+        -------
+        delc : ndarray of floats
+        """
+        if self.grid_type == "DIS":
+            delc = self._datadict["DELC"]
+        else:
+            delc = None
+        return delc
+
+    @property
+    def top(self):
+        """
+        Top of the model cells in the upper model layer for DIS and
+        DISV grids. Top of the model cells for DISU grids.
+
+        Returns
+        -------
+        top : ndarray of floats
+        """
+        return self._datadict["TOP"]
+
+    @property
+    def bot(self):
+        """
+        Bottom of the model cells.
+
+        Returns
+        -------
+        bot : ndarray of floats
+        """
+        if self.grid_type in ("DIS", "DISV"):
+            bot = self._datadict["BOTM"]
+        else:
+            bot = self._datadict["BOT"]
+        return bot
 
     @property
     def nja(self):
         """
-        Return the number of entries in the compressed row storage column
-        pointer vector.
+        Number of non-zero entries in the CRS column pointer vector.
 
         Returns
         -------
         nja : int
-            number of entries in the JA vector
-
         """
         return self._datadict["NJA"]
 
     @property
     def ia(self):
         """
-        Zero-based compressed row storage row pointers
+        CRS row pointers for the model grid.
 
         Returns
         -------
-        ia : list
-            compressed row storage row pointers
-
+        ia : ndarray of ints
         """
-        return self._datadict["IA"] - 1
+        return np.array(self._ia, dtype=int)
 
     @property
     def ja(self):
         """
-        Zero-based compressed row storage column pointers
+        CRS column pointers for the model grid.
 
         Returns
         -------
-        ja : list
-            compressed row storage column pointers
-
+        ja : ndarray of ints
         """
-        return self._datadict["JA"] - 1
-
-    @property
-    def nvert(self):
-        """
-        Number of vertices that define a grid.
-
-        Returns
-        -------
-        nvert : int
-            number of vertices
-
-        """
-        if self._grid == "DIS":
-            nvert = (self.nrow + 1) * (self.ncol + 1)
-        elif self._grid == "DISV":
-            nvert = self._datadict["NVERT"]
-        else:
-            try:
-                nvert = len(self._verts)
-            except:
-                nvert = None
-        return nvert
+        return self._ja
 
     @property
     def iavert(self):
         """
-        Zero-based vertex row pointers
+        CRS cell pointers for cell vertices.
 
         Returns
         -------
-        iavert : list
-            row pointers for javert entries for each cell
-
+        iavert : ndarray of ints
         """
-        return self._datadict["IAVERT"] - 1
+        if "IAVERT" in self._datadict:
+            iavert = self._datadict["IAVERT"] - 1
+        else:
+            iavert = None
+        return iavert
 
     @property
     def javert(self):
         """
-        Zero-based vertex numbers for vertices comprising a cell
+        CRS vertex numbers for the vertices comprising each cell.
 
         Returns
         -------
-        iavert : list
-            vertex numbers that define each cell
-
+        javerts : ndarray of ints
         """
-        return self._datadict["JAVERT"] - 1
+        if "JAVERT" in self._datadict:
+            javert = self._datadict["JAVERT"] - 1
+        else:
+            javert = None
+        return javert
 
     @property
-    def connectivity(self):
+    def iverts(self):
         """
-        Return a list containing the zero-based node number and the
-        zero-based cell numbers of cells connected to the cell.
+        Vertex numbers comprising each cell for every cell in model grid.
 
         Returns
         -------
-        connectivity : list
-            node numbers for each cell and node numbers for all connected cells
-
+        iverts : list of lists of ints
         """
-        ia = self.ia
-        ja = self.ja
-        connectivity = []
-        for n in range(self.ncells):
-            i0, i1 = ia[n] + 1, ia[n + 1]
-            tlist = [n]
-            for j in range(i0, i1):
-                tlist.append(ja[j])
-            connectivity.append(tlist)
-        return connectivity
+        return self.__get_iverts()
 
     @property
-    def cellconnections(self):
+    def verts(self):
         """
-        Return a numpy recarray of all cell connections. Columns have
-        zero-based n and m cell numbers for each connection. All
-        connections are returned.
+        x,y location of each vertex that defines the model grid.
 
         Returns
         -------
-        cellconnections : structured ndarray
-            n and m cell numbers
-
+        verts : ndarray of floats
         """
-        cellconnections = np.zeros(
-            self.nconnections, dtype=[("n", int), ("m", int)]
-        )
-        ia, ja = self.ia, self.ja
-        idx = 0
-        for n in range(self.nodes):
-            i0, i1 = ia[n] + 1, ia[n + 1]
-            for j in range(i0, i1):
-                cellconnections["n"][idx] = n
-                cellconnections["m"][idx] = ja[j]
-                idx += 1
-        return cellconnections
+        return self.__get_verts()
+
+    @property
+    def cellcenters(self):
+        """
+        Cell centers (x,y).
+
+        Returns
+        -------
+        cellcenters : ndarray of floats
+        """
+        return self.__get_cellcenters()
 
     @property
     def modelgrid(self):
         """
-        Return the modelgrid based on the MODFLOW 6 discretization type
+        Model grid object.
 
         Returns
         -------
         modelgrid : StructuredGrid, VertexGrid, UnstructuredGrid
-
-
-        Examples
-        --------
-        >>> import flopy
-        >>> gobj = flopy.utils.MfGrdFile('test.dis.grb')
-        >>> modelgrid = gobj.modelgrid
         """
-        return self._modelgrid
+        if self.__modelgrid is None:
+            self.__set_modelgrid()
+        return self.__modelgrid
 
     @property
-    def xycentroids(self):
+    def cell2d(self):
         """
-        Return the centroids for a MODFLOW 6 GWF model that uses the DIS,
-        DISV, or DISU discretization.
+        cell2d data for a DISV grid. None for DIS and DISU grids.
 
         Returns
         -------
-        vertc : np.ndarray
-            Array with x, y pairs of the centroid for every model cell
-
-        Examples
-        --------
-        >>> import flopy
-        >>> gobj = flopy.utils.MfGrdFile('test.dis.grb')
-        >>> vertc = gobj.xycentroids()
-
+        cell2d : list of lists
         """
-        try:
-            if self._grid == "DISU":
-                x = self._modelgrid.xcellcenters.flatten()
-                y = self._modelgrid.ycellcenters.flatten()
-            elif self._grid in ("DIS", "DISV"):
-                nlay = self.nlay
-                x = np.tile(self._modelgrid.xcellcenters.flatten(), nlay)
-                y = np.tile(self._modelgrid.ycellcenters.flatten(), nlay)
-            return np.column_stack((x, y))
-        except:
-            msg = "could not return centroids" + " for {}".format(
-                self.file.name
-            )
-            raise KeyError(msg)
+        if self._grid_type == "DISV":
+            vertices, cell2d = self.__build_vertices_cell2d()
+        else:
+            vertices, cell2d = None, None
+        return vertices, cell2d
 
     @property
     def spatialreference(self):
         """
-        Get the SpatialReference based on the MODFLOW 6 discretization type
+        Spatial reference for model grid.
 
         Returns
         -------
-        sr : SpatialReference
-
-        Examples
-        --------
-        >>> import flopy
-        >>> gobj = flopy.utils.MfGrdFile('test.dis.grb')
-        >>> sr = gobj.spatialreference()
+        spatialreference : SpatialReference
         """
-
         warnings.warn(
             "SpatialReference has been deprecated and will be "
             "removed in version 3.3.5. Use get_modelgrid instead.",
             category=DeprecationWarning,
         )
 
-        return self._set_spatialreference()
-
-    @property
-    def vertices(self):
-        """
-        Get a list of the vertices that define each model cell and the x, y
-        pair for each vertex from the data in the binary grid file.
-
-        Returns
-        -------
-        iverts : list of lists
-            List with lists containing the vertex indices for each model cell.
-        verts : np.ndarray
-            Array with x, y pairs for every vertex used to define the model.
-
-        """
-        return self._modelgrid.iverts, self._modelgrid.verts
+        return self.__set_spatialreference()

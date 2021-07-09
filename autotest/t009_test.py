@@ -788,7 +788,9 @@ def test_sfr_plot():
         check=False,
     )
     sfr = m.get_package("SFR")
-    tv = sfr.plot(key="strtop", )
+    tv = sfr.plot(
+        key="strtop",
+    )
     plt.show(block=False)
     assert issubclass(
         type(tv[0]), matplotlib.axes.SubplotBase

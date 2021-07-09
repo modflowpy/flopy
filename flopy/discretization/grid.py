@@ -180,8 +180,6 @@ class Grid:
 
         self._iverts = None
         self._verts = None
-        self._ia = None
-        self._ja = None
 
     ###################################
     # access to basic grid properties
@@ -361,14 +359,6 @@ class Grid:
     @property
     def verts(self):
         raise NotImplementedError("must define vertices in child class")
-
-    @property
-    def ia(self):
-        return self._ia
-
-    @property
-    def ja(self):
-        return self._ja
 
     @property
     def shape(self):
@@ -859,3 +849,10 @@ class Grid:
             filename, self, array_dict={}, nan_val=-1.0e9, epsg=epsg, prj=prj
         )
         return
+
+    # initialize grid from a grb file
+    @classmethod
+    def from_binary_grid_file(cls, file_path, verbose=False):
+        raise NotImplementedError(
+            "must define from_binary_grid_file in child class"
+        )

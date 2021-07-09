@@ -1,3 +1,4 @@
+import os
 import copy
 import numpy as np
 
@@ -493,3 +494,54 @@ class VertexGrid(Grid):
         msg = "{} /= {}".format(plotarray.shape[0], required_shape)
         assert plotarray.shape == required_shape, msg
         return plotarray
+
+    # initialize grid from a grb file
+    @classmethod
+    def from_binary_grid_file(cls, file_path, verbose=False):
+        """
+        Instantiate a VertexGrid model grid from a MODFLOW 6 binary
+        grid (*.grb) file.
+
+        Parameters
+        ----------
+        file_path : str
+            file path for the MODFLOW 6 binary grid file
+        verbose : bool
+            Write information to standard output.  Default is False.
+
+        Returns
+        -------
+        return : VertexGrid
+
+        """
+        from ..mf6.utils.binarygrid_util import MfGrdFile
+
+        grb_obj = MfGrdFile(file_path, verbose=verbose)
+        if grb_obj.grid_type != "DISV":
+            err_msg = (
+                "Binary grid file ({}) ".format(os.path.basename(file_path))
+                + "is not a vertex (DISV) grid."
+            )
+            raise ValueError(err_msg)
+
+        idomain = grb_obj.idomain
+        xorigin = grb_obj.xorigin
+        yorigin = grb_obj.yorigin
+        angrot = grb_obj.angrot
+
+        nlay, ncpl = grb_obj.nlay, grb_obj.ncpl
+        top = np.ravel(grb_obj.top)
+        botm = grb_obj.bot
+        botm.shape = (nlay, ncpl)
+        vertices, cell2d = grb_obj.cell2d
+
+        return cls(
+            vertices,
+            cell2d,
+            top,
+            botm,
+            idomain,
+            xoff=xorigin,
+            yoff=yorigin,
+            angrot=angrot,
+        )
