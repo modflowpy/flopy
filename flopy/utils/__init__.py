@@ -55,6 +55,8 @@ from .zonbud import (
     ZoneBudget,
     read_zbarray,
     write_zbarray,
+    ZoneFile6,
+    ZoneBudget6,
     ZoneBudgetOutput,
     ZBNetOutput,
 )

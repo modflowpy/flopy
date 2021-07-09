@@ -925,11 +925,7 @@ def test045_lake2tr():
         head_file = os.path.join(os.getcwd(), expected_head_file_a)
         head_new = os.path.join(run_folder, "lakeex2a.hds")
         assert pymake.compare_heads(
-            None,
-            None,
-            files1=head_file,
-            files2=head_new,
-            htol=10.0,
+            None, None, files1=head_file, files2=head_new
         )
 
     # change some settings
@@ -1169,25 +1165,36 @@ def test_mf6_output():
     bud = ml.oc.output.budget()
     hds = ml.oc.output.head()
 
+    idomain = np.ones(ml.modelgrid.shape, dtype=int)
+    zonbud = ml.oc.output.zonebudget(idomain)
+
     if not isinstance(bud, flopy.utils.CellBudgetFile):
         raise TypeError()
 
     if not isinstance(hds, flopy.utils.HeadFile):
         raise TypeError()
+
+    if not isinstance(zonbud, flopy.utils.ZoneBudget6):
+        raise AssertionError()
 
     bud = ml.output.budget()
     hds = ml.output.head()
+    zonbud = ml.output.zonebudget(idomain)
 
     if not isinstance(bud, flopy.utils.CellBudgetFile):
         raise TypeError()
 
     if not isinstance(hds, flopy.utils.HeadFile):
+        raise TypeError()
+
+    if not isinstance(zonbud, flopy.utils.ZoneBudget6):
         raise TypeError()
 
     uzf = ml.uzf
     uzf_bud = uzf.output.budget()
     conv = uzf.output.package_convergence()
     uzf_obs = uzf.output.obs()
+    uzf_zonbud = uzf.output.zonebudget(idomain)
 
     if not isinstance(uzf_bud, flopy.utils.CellBudgetFile):
         raise TypeError()
@@ -1199,11 +1206,14 @@ def test_mf6_output():
     if not isinstance(uzf_obs, flopy.utils.Mf6Obs):
         raise TypeError()
 
-    if len(uzf.output.methods()) != 3:
+    if not isinstance(uzf_zonbud, flopy.utils.ZoneBudget6):
+        raise TypeError()
+
+    if len(uzf.output.methods()) != 4:
         print(uzf.output.__dict__)
         raise AssertionError(", ".join(uzf.output.methods()))
 
-    if len(ml.output.methods()) != 2:
+    if len(ml.output.methods()) != 3:
         raise AssertionError()
 
     if ml.dis.output.methods() is not None:
