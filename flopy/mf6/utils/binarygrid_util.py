@@ -65,6 +65,7 @@ class MfGrdFile(FlopyBinaryData):
         self._recorddict = collections.OrderedDict()
         self._datadict = collections.OrderedDict()
         self._recordkeys = []
+        self.filename = filename
 
         if self.verbose:
             print("\nProcessing binary grid file: {}".format(filename))

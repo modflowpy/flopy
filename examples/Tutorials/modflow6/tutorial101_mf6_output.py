@@ -22,6 +22,7 @@
 import flopy
 import os
 import platform
+import numpy as np
 
 # ## Load a simple demonstration model
 exe_name = "mf6"
@@ -46,6 +47,10 @@ sim.run_simulation(silent=True)
 # |                       | OC package object                              |
 # +-----------------------+------------------------------------------------+
 # | budget()              | Method to get the `CellBudgetFile` object for  |
+# |                       | the model. Accessed from the model object or   |
+# |                       | the OC package object                          |
+# +-----------------------+------------------------------------------------+
+# | zonebudget()          | Method to get the `ZoneBudget6` object for     |
 # |                       | the model. Accessed from the model object or   |
 # |                       | the OC package object                          |
 # +-----------------------+------------------------------------------------+
@@ -130,3 +135,22 @@ print("DIS package: ", ml.dis.output.methods())
 output = ml.obs[0].output
 obs_names = output.obs_names
 output.obs(f=obs_names[0]).data[0:10]
+
+# ## Creating and running ZoneBudget for MF6
+# For the model and many packages, zonebudget can be run on the cell budget
+# file. The `.output` method allows the user to easily build a ZoneBudget6
+# instance, then run the model, and view output. First we'll build a layered
+# zone array, then build and run zonebudget
+
+zarr = np.ones(ml.modelgrid.shape, dtype=int)
+for i in range(1, 4):
+    zarr[i - 1] *= i
+    
+zonbud = ml.output.zonebudget(zarr)
+zonbud.change_model_ws(sim_ws)
+zonbud.write_input()
+zonbud.run_model()
+
+df = zonbud.get_dataframes(net=True)
+df = df.reset_index()
+df

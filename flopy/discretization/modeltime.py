@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class ModelTime:
     """
     Class for MODFLOW simulation time
@@ -49,3 +52,40 @@ class ModelTime:
     @property
     def steady_state(self):
         return self._steady_state
+
+    @property
+    def totim(self):
+        delt = []
+        perlen_array = self.perlen
+        nstp_array = self.nstp
+        tsmult_array = self.tsmult
+        for ix, nstp in enumerate(nstp_array):
+            perlen = perlen_array[ix]
+            tsmult = tsmult_array[ix]
+            for stp in range(nstp):
+                if stp == 0:
+                    if tsmult != 1.0:
+                        dt = perlen * (tsmult - 1) / ((tsmult ** nstp) - 1)
+                    else:
+                        dt = perlen / nstp
+                else:
+                    dt = delt[-1] * tsmult
+                delt.append(dt)
+
+        totim = np.add.accumulate(delt)
+        return totim
+
+    @property
+    def tslen(self):
+        n = 0
+        tslen = []
+        totim = self.totim
+        for ix, stp in enumerate(self.nstp):
+            for i in range(stp):
+                if not tslen:
+                    tslen = [totim[n]]
+                else:
+                    tslen.append(totim[n] - totim[n - 1])
+                n += 1
+
+        return np.array(tslen)
