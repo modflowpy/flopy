@@ -1,7 +1,6 @@
 import os
 import copy
 import numpy as np
-import flopy.utils.flopy_io as io
 from itertools import groupby
 from collections import OrderedDict
 from .utils_def import totim_to_datetime
@@ -2094,13 +2093,14 @@ class ZoneBudget6:
         -------
             ZoneBudget6 object
         """
+        from ..utils.flopy_io import multi_line_strip
         name = nam_file.split(".")[0]
         zb6 = ZoneBudget6(name=name, model_ws=model_ws)
         with open(os.path.join(model_ws, nam_file)) as foo:
-            line = io.multi_line_strip(foo)
+            line = multi_line_strip(foo)
             if "begin" in line:
                 while True:
-                    t = io.multi_line_strip(foo).split()
+                    t = multi_line_strip(foo).split()
                     if t[0] == "end":
                         break
                     else:
@@ -2219,19 +2219,20 @@ class ZoneFile6:
         ZoneFile6 object
 
         """
+        from ..utils.flopy_io import multi_line_strip
         pkg_ws = os.path.split(f)[0]
         with open(f) as foo:
             t = [0]
             while t[0] != "ncells":
-                t = io.multi_line_strip(foo).split()
+                t = multi_line_strip(foo).split()
 
             ncells = int(t[1])
 
             t = [0]
             while t[0] != "izone":
-                t = io.multi_line_strip(foo).split()
+                t = multi_line_strip(foo).split()
 
-            method = io.multi_line_strip(foo).split()[0]
+            method = multi_line_strip(foo).split()[0]
 
             if method in ("internal", "open/close"):
                 izone = np.zeros((ncells,), dtype=int)
@@ -2240,7 +2241,7 @@ class ZoneFile6:
                 if method == "open/close":
                     fobj = open(os.path.join(pkg_ws, t[1]))
                 while i < ncells:
-                    t = io.multi_line_strip(fobj)
+                    t = multi_line_strip(fobj)
                     if t[0] == "open/close":
                         if fobj != foo:
                             fobj.close()
