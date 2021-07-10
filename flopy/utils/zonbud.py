@@ -2094,6 +2094,7 @@ class ZoneBudget6:
             ZoneBudget6 object
         """
         from ..utils.flopy_io import multi_line_strip
+
         name = nam_file.split(".")[0]
         zb6 = ZoneBudget6(name=name, model_ws=model_ws)
         with open(os.path.join(model_ws, nam_file)) as foo:
@@ -2220,6 +2221,7 @@ class ZoneFile6:
 
         """
         from ..utils.flopy_io import multi_line_strip
+
         pkg_ws = os.path.split(f)[0]
         with open(f) as foo:
             t = [0]
