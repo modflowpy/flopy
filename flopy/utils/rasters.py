@@ -55,10 +55,10 @@ class Raster:
 
     FLOAT32 = (float, np.float32, np.float_)
     FLOAT64 = (np.float64,)
-    INT8 = (np.int8,)
-    INT16 = (np.int16,)
-    INT32 = (int, np.int32, np.uint32)
-    INT64 = (np.int64,)
+    INT8 = (np.int8, np.uint8)
+    INT16 = (np.int16, np.uint16)
+    INT32 = (int, np.int32, np.uint32, np.uint, np.uintc, np.uint32)
+    INT64 = (np.int64, np.uint64)
 
     def __init__(
         self,
