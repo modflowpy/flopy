@@ -1,5 +1,5 @@
 import os
-from ...utils import HeadFile, CellBudgetFile, Mf6Obs
+from ...utils import HeadFile, CellBudgetFile, Mf6Obs, ZoneBudget6, ZoneFile6
 from ...utils.observationfile import CsvFile
 from ...pakbase import PackageInterface
 
@@ -21,6 +21,7 @@ class MF6Output:
         # set initial observation definitions
         methods = {
             "budget": self.__budget,
+            "zonebudget": self.__zonebudget,
             "obs": self.__obs,
             "csv": self.__csv,
             "package_convergence": self.__csv,
@@ -62,6 +63,11 @@ class MF6Output:
                             layerfiles[rectype] = data
                         else:
                             setattr(self, rectype, methods[rectype])
+                            if rectype == "budget":
+                                setattr(
+                                    self, "zonebudget", methods["zonebudget"]
+                                )
+                                self._methods.append("zonebudget()")
                             self._methods.append("{}()".format(rectype))
                             if rectype == "obs":
                                 data = None
@@ -175,6 +181,36 @@ class MF6Output:
             return self._csv
         except AttributeError:
             return
+
+    def __zonebudget(self, izone):
+        """
+
+        Returns
+        -------
+
+        """
+        budget = self.__budget()
+        grb = None
+        if budget is not None:
+            zonbud = ZoneBudget6(model_ws=self._sim_ws)
+            ZoneFile6(zonbud, izone)
+            zonbud.bud = budget
+            try:
+                if self._obj.model_or_sim.model_type == "gwf":
+                    if self._obj.package_type == "oc":
+                        dis = self._obj.model_or_sim.dis
+                        if (
+                            dis.blocks["options"].datasets["nogrb"].array
+                            is None
+                        ):
+                            grb = os.path.join(
+                                self._sim_ws, dis.filename + ".grb"
+                            )
+            except AttributeError:
+                pass
+
+            zonbud.grb = grb
+            return zonbud
 
     def __budget(self, precision="double"):
         """
