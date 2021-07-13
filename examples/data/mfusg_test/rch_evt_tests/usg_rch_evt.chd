@@ -1,0 +1,7 @@
+# MODFLOW-USGs Constant-Head Boundary Package (CHD)
+         4
+ 4    Stress Period 1
+ 20   2.500000  2.500000
+ 25   3.000000  3.000000
+ 26   3.000000  3.000000
+ 27   3.000000  3.000000

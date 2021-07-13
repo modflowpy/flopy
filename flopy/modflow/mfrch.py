@@ -14,6 +14,7 @@ from ..pakbase import Package
 from ..utils import Util2d, Transient2d
 from ..modflow.mfparbc import ModflowParBc as mfparbc
 from ..utils.flopy_io import line_parse
+from ..utils.utils_def import get_pak_vals_shape
 
 
 class ModflowRch(Package):
@@ -34,11 +35,12 @@ class ModflowRch(Package):
         1: Recharge to top grid layer only
         2: Recharge to layer defined in irch
         3: Recharge to highest active cell (default is 3).
-    rech : float or array of floats (nrow, ncol)
-        is the recharge flux. (default is 1.e-3).
-    irch : int or array of ints (nrow, ncol)
-        is the layer to which recharge is applied in each vertical
-        column (only used when nrchop=2). (default is 0).
+    rech : float or filename or ndarray or dict keyed on kper (zero-based)
+        Recharge flux (default is 1.e-3, which is used for all stress periods)
+    irch : int or filename or ndarray or dict keyed on kper (zero-based)
+        Layer (for an unstructured grid) or node (for an unstructured grid) to
+        which recharge is applied in each vertical column (only used when
+        nrchop=2). Default is 0, which is used for all stress periods.
     extension : string
         Filename extension (default is 'rch')
     unitnumber : int
@@ -156,12 +158,16 @@ class ModflowRch(Package):
 
         self.nrchop = nrchop
         self.ipakcb = ipakcb
+
+        rech_u2d_shape = get_pak_vals_shape(model, rech)
+        irch_u2d_shape = get_pak_vals_shape(model, irch)
+
         self.rech = Transient2d(
-            model, (nrow, ncol), np.float32, rech, name="rech_"
+            model, rech_u2d_shape, np.float32, rech, name="rech_"
         )
         if self.nrchop == 2:
             self.irch = Transient2d(
-                model, (nrow, ncol), np.int32, irch, name="irch_"
+                model, irch_u2d_shape, np.int32, irch, name="irch_"
             )
         else:
             self.irch = None
@@ -202,6 +208,11 @@ class ModflowRch(Package):
         -------
         None
 
+        Notes
+        -----
+        Unstructured models not checked for extreme recharge transmissivity
+        ratios.
+
         Examples
         --------
 
@@ -220,7 +231,7 @@ class ModflowRch(Package):
         hk_package = {"UPW", "LPF"}.intersection(
             set(self.parent.get_package_list())
         )
-        if len(hk_package) > 0:
+        if len(hk_package) > 0 and self.parent.structured:
             pkg = list(hk_package)[0]
 
             # handle quasi-3D layers
@@ -352,11 +363,21 @@ class ModflowRch(Package):
                 irch,
                 self.irch.name,
             )
+            if not self.parent.structured:
+                mxndrch = np.max(
+                    [
+                        u2d.array.size
+                        for kper, u2d in self.irch.transient_2ds.items()
+                    ]
+                )
+                f_rch.write("{0:10d}\n".format(mxndrch))
 
         for kper in range(nper):
             inrech, file_entry_rech = self.rech.get_kper_entry(kper)
             if self.nrchop == 2:
                 inirch, file_entry_irch = irch.get_kper_entry(kper)
+                if not self.parent.structured:
+                    inirch = self.rech[kper].array.size
             else:
                 inirch = -1
             f_rch.write(
@@ -439,6 +460,12 @@ class ModflowRch(Package):
         nrchop = int(t[0])
         ipakcb = int(t[1])
 
+        # dataset 2b for mfusg
+        if not model.structured and nrchop == 2:
+            line = f.readline()
+            t = line_parse(line)
+            mxndrch = int(t[0])
+
         # dataset 3 and 4 - parameters data
         pak_parms = None
         if npar > 0:
@@ -446,6 +473,8 @@ class ModflowRch(Package):
 
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
+        else:
+            nrow, ncol, nlay, _ = model.get_nrow_ncol_nlay_nper()
         # read data for every stress period
         rech = {}
         irch = None
@@ -457,8 +486,18 @@ class ModflowRch(Package):
             line = f.readline()
             t = line_parse(line)
             inrech = int(t[0])
+
             if nrchop == 2:
                 inirch = int(t[1])
+            elif not model.structured:
+                # usg uses only layer 1 nodes for options 1 and 3. ncol is nodelay for mfusg models.
+                inirch = ncol[0]
+
+            if model.structured:
+                u2d_shape = (nrow, ncol)
+            else:
+                u2d_shape = (1, inirch)
+
             if inrech >= 0:
                 if npar == 0:
                     if model.verbose:
@@ -471,7 +510,7 @@ class ModflowRch(Package):
                     t = Util2d.load(
                         f,
                         model,
-                        (nrow, ncol),
+                        u2d_shape,
                         np.float32,
                         "rech",
                         ext_unit_dict,
@@ -493,7 +532,7 @@ class ModflowRch(Package):
                             iname = "static"
                         parm_dict[pname] = iname
                     t = mfparbc.parameter_bcfill(
-                        model, (nrow, ncol), parm_dict, pak_parms
+                        model, u2d_shape, parm_dict, pak_parms
                     )
 
                 current_rech = t
@@ -508,10 +547,10 @@ class ModflowRch(Package):
                         )
                         print(txt)
                     t = Util2d.load(
-                        f, model, (nrow, ncol), np.int32, "irch", ext_unit_dict
+                        f, model, u2d_shape, np.int32, "irch", ext_unit_dict
                     )
                     current_irch = Util2d(
-                        model, (nrow, ncol), np.int32, t.array - 1, "irch"
+                        model, u2d_shape, np.int32, t.array - 1, "irch"
                     )
                 irch[iper] = current_irch
 

@@ -102,3 +102,37 @@ def totim_to_datetime(totim, start="1-1-1970", timeunit="D"):
         t = timedelta(**kwargs)
         out.append(start + t)
     return out
+
+
+def get_pak_vals_shape(model, vals):
+    """Function to define shape of package input data for Util2d.
+
+    Parameters
+    ----------
+    model : flopy model object
+    vals : Package input values (dict of arrays or scalars, or ndarray, or
+        single scalar).
+
+    Returns
+    -------
+    shape: tuple
+        shape of input data for Util2d
+
+    """
+    nrow, ncol, nlay, nper = model.nrow_ncol_nlay_nper
+    if nrow is None:  # unstructured
+        if isinstance(vals, dict):
+            try:  # check for iterable
+                _ = (v for v in list(vals.values())[0])
+            except:
+                return (1, ncol[0])  # default to layer 1 node count
+            return np.array(list(vals.values())[0], ndmin=2).shape
+        else:
+            # check for single iterable
+            try:
+                _ = (v for v in vals)
+            except:
+                return (1, ncol[0])  # default to layer 1 node count
+            return np.array(vals, ndmin=2).shape
+    else:
+        return (nrow, ncol)  # structured
