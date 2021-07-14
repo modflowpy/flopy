@@ -650,11 +650,11 @@ class Grid:
                 proj4 = self._proj4
 
         if xoff is None:
-            xoff = 0.
+            xoff = 0.0
         if yoff is None:
-            yoff = 0.
+            yoff = 0.0
         if angrot is None:
-            angrot = 0.
+            angrot = 0.0
 
         self._xoff = xoff
         self._yoff = yoff
