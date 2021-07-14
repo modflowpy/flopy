@@ -2582,12 +2582,14 @@ class check:
                     txt += "At segments:\n"
                     txt += " ".join(map(str, segments_with_breaks)) + "\n"
                 else:
-                    f = os.path.join(
+                    fpath = os.path.join(
                         self.sfr.parent._model_ws,
                         "reach_connection_gaps.chk.csv",
                     )
-                    rd.tofile(f, sep="\t")
-                    txt += "See {} for details.".format(f)
+                    with open(fpath, "w") as fp:
+                        fp.write(",".join(rd.dtype.names) + "\n")
+                        np.savetxt(fp, rd, "%s", ",")
+                    txt += "See {} for details.".format(fpath)
                 if self.verbose:
                     print(txt)
             self._txt_footer(
