@@ -1,5 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
+# FILE created on March 19, 2021 03:08:37 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator, ArrayTemplateGenerator
 
@@ -20,10 +21,11 @@ class ModflowGwtist(mfpackage.MFPackage):
         * save_flows (boolean) keyword to indicate that IST flow terms will be
           written to the file specified with "BUDGET FILEOUT" in Output
           Control.
-    sorbtion : boolean
-        * sorbtion (boolean) is a text keyword to indicate that sorbtion will
+    sorption : boolean
+        * sorption (boolean) is a text keyword to indicate that sorption will
           be activated. Use of this keyword requires that BULK_DENSITY and
-          DISTCOEF are specified in the GRIDDATA block.
+          DISTCOEF are specified in the GRIDDATA block. The linear sorption
+          isotherm is the only isotherm presently supported in the IST Package.
     first_order_decay : boolean
         * first_order_decay (boolean) is a text keyword to indicate that first-
           order decay will occur. Use of this keyword requires that DECAY and
@@ -36,7 +38,12 @@ class ModflowGwtist(mfpackage.MFPackage):
           block.
     cim_filerecord : [cimfile]
         * cimfile (string) name of the output file to write immobile
-          concentrations.
+          concentrations. This file is a binary file that has the same format
+          and structure as a binary head and concentration file. The value for
+          the text variable written to the file is CIM. Immobile domain
+          concentrations will be written to this file at the same interval as
+          mobile domain concentrations are saved, as specified in the GWT Model
+          Output Control file.
     cimprintrecord : [columns, width, digits, format]
         * columns (integer) number of columns for writing data.
         * width (integer) width for writing each number.
@@ -67,10 +74,10 @@ class ModflowGwtist(mfpackage.MFPackage):
           first-order decay is one over time. The dimensions of decay_sorbed
           for zero-order decay is mass of solute per mass of aquifer per time.
           If decay_sorbed is not specified and both decay and sorbtion are
-          active, then the sorbed decay rate will be set equal to the aqueous
-          decay rate. decay_sorbed will have no affect on simulation results
-          unless the SORPTION keyword and either first- or zero-order decay are
-          specified in the options block.
+          active, then the program will terminate with an error. decay_sorbed
+          will have no affect on simulation results unless the SORPTION keyword
+          and either first- or zero-order decay are specified in the options
+          block.
     bulk_density : [double]
         * bulk_density (double) is the bulk density of the aquifer in mass per
           length cubed. bulk_density will have no affect on simulation results
@@ -123,7 +130,7 @@ class ModflowGwtist(mfpackage.MFPackage):
         ],
         [
             "block options",
-            "name sorbtion",
+            "name sorption",
             "type keyword",
             "reader urword",
             "optional true",
@@ -316,7 +323,7 @@ class ModflowGwtist(mfpackage.MFPackage):
         model,
         loading_package=False,
         save_flows=None,
-        sorbtion=None,
+        sorption=None,
         first_order_decay=None,
         zero_order_decay=None,
         cim_filerecord=None,
@@ -332,13 +339,13 @@ class ModflowGwtist(mfpackage.MFPackage):
         pname=None,
         parent_file=None,
     ):
-        super(ModflowGwtist, self).__init__(
+        super().__init__(
             model, "ist", filename, pname, loading_package, parent_file
         )
 
         # set up variables
         self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self.sorbtion = self.build_mfdata("sorbtion", sorbtion)
+        self.sorption = self.build_mfdata("sorption", sorption)
         self.first_order_decay = self.build_mfdata(
             "first_order_decay", first_order_decay
         )

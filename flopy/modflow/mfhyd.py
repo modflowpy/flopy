@@ -202,7 +202,7 @@ class ModflowHyd(Package):
                 obs["hydlbl"][idx] = obsdata[idx][6]
             obsdata = obs
         elif isinstance(obsdata, np.ndarray):
-            if obsdata.dtype == np.object:
+            if obsdata.dtype == object:
                 if obsdata.shape[1] != len(dtype):
                     raise IndexError("Incorrect number of fields for obsdata")
                 obsdata = obsdata.transpose()
@@ -278,7 +278,7 @@ class ModflowHyd(Package):
                 ("pckg", "|S3"),
                 ("arr", "|S2"),
                 ("intyp", "|S1"),
-                ("klay", np.int),
+                ("klay", int),
                 ("xl", np.float32),
                 ("yl", np.float32),
                 ("hydlbl", "|S14"),

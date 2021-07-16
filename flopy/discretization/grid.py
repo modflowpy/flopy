@@ -4,7 +4,7 @@ import warnings
 from ..utils import geometry
 
 
-class CachedData(object):
+class CachedData:
     def __init__(self, data):
         self._data = data
         self.out_of_date = False
@@ -22,7 +22,7 @@ class CachedData(object):
         self.out_of_date = False
 
 
-class Grid(object):
+class Grid:
     """
     Base class for a structured or unstructured model grid
 
@@ -30,35 +30,38 @@ class Grid(object):
     ----------
     grid_type : enumeration
         type of model grid ('structured', 'vertex', 'unstructured')
-    top : ndarray(np.float)
+    top : ndarray(float)
         top elevations of cells in topmost layer
-    botm : ndarray(np.float)
+    botm : ndarray(float)
         bottom elevations of all cells
-    idomain : ndarray(np.int)
+    idomain : ndarray(int)
         ibound/idomain value for each cell
-    lenuni : ndarray(np.int)
+    lenuni : ndarray(int)
         model length units
-    origin_loc : str
-        Corner of the model grid that is the model origin
-        'ul' (upper left corner) or 'll' (lower left corner)
-    origin_x : float
+    espg : str, int
+        optional espg projection code
+    proj4 : str
+        optional proj4 projection string code
+    prj : str
+        optional projection file name path
+    xoff : float
         x coordinate of the origin point (lower left corner of model grid)
         in the spatial reference coordinate system
-    origin_y : float
+    yoff : float
         y coordinate of the origin point (lower left corner of model grid)
         in the spatial reference coordinate system
-    rotation : float
+    angrot : float
         rotation angle of model grid, as it is rotated around the origin point
 
     Attributes
     ----------
     grid_type : enumeration
         type of model grid ('structured', 'vertex', 'unstructured')
-    top : ndarray(np.float)
+    top : ndarray(float)
         top elevations of cells in topmost layer
-    botm : ndarray(np.float)
+    botm : ndarray(float)
         bottom elevations of all cells
-    idomain : ndarray(np.int)
+    idomain : ndarray(int)
         ibound/idomain value for each cell
     proj4 : proj4 SpatialReference
         spatial reference locates the grid in a coordinate system
@@ -66,14 +69,16 @@ class Grid(object):
         spatial reference locates the grid in a coordinate system
     lenuni : int
         modflow lenuni parameter
-    origin_x : float
+    xoffset : float
         x coordinate of the origin point in the spatial reference coordinate
         system
-    origin_y : float
+    yoffset : float
         y coordinate of the origin point in the spatial reference coordinate
         system
-    rotation : float
+    angrot : float
         rotation angle of model grid, as it is rotated around the origin point
+    angrot_radians : float
+        rotation angle of model grid, in radians
     xgrid : ndarray
         returns numpy meshgrid of x edges in reference frame defined by
         point_type
@@ -169,8 +174,12 @@ class Grid(object):
         if angrot is None:
             angrot = 0.0
         self._angrot = angrot
+        self._polygons = None
         self._cache_dict = {}
         self._copy_cache = True
+
+        self._iverts = None
+        self._verts = None
 
     ###################################
     # access to basic grid properties
@@ -274,8 +283,50 @@ class Grid(object):
 
     @property
     def top_botm(self):
-        new_top = np.expand_dims(self._top, 0)
-        return np.concatenate((new_top, self._botm), axis=0)
+        raise NotImplementedError("must define top_botm in child class")
+
+    @property
+    def thick(self):
+        """
+        Get the cell thickness for a structured, vertex, or unstructured grid.
+
+        Returns
+        -------
+            thick : calculated thickness
+        """
+        return -np.diff(self.top_botm, axis=0).reshape(self._botm.shape)
+
+    def saturated_thick(self, array, mask=None):
+        """
+        Get the saturated thickness for a structured, vertex, or unstructured
+        grid. If the optional array is passed then thickness is returned
+        relative to array values (saturated thickness). Returned values
+        ranges from zero to cell thickness if optional array is passed.
+
+        Parameters
+        ----------
+        array : ndarray
+            array of elevations that will be used to adjust the cell thickness
+        mask: float, list, tuple, ndarray
+            array values to replace with a nan value.
+
+        Returns
+        -------
+            thick : calculated saturated thickness
+        """
+        thick = self.thick
+        top = self.top_botm[:-1].reshape(thick.shape)
+        bot = self.top_botm[1:].reshape(thick.shape)
+        idx = np.where((array < top) & (array > bot))
+        thick[idx] = array[idx] - bot[idx]
+        idx = np.where(array <= bot)
+        thick[idx] = 0.0
+        if mask is not None:
+            if isinstance(mask, (float, int)):
+                mask = [float(mask)]
+            for mask_value in mask:
+                thick[np.where(array == mask_value)] = np.nan
+        return thick
 
     @property
     def units(self):
@@ -290,8 +341,24 @@ class Grid(object):
         return copy.deepcopy(self._idomain)
 
     @property
+    def ncpl(self):
+        raise NotImplementedError("must define ncpl in child class")
+
+    @property
     def nnodes(self):
         raise NotImplementedError("must define nnodes in child class")
+
+    @property
+    def nvert(self):
+        raise NotImplementedError("must define nvert in child class")
+
+    @property
+    def iverts(self):
+        raise NotImplementedError("must define iverts in child class")
+
+    @property
+    def verts(self):
+        raise NotImplementedError("must define vertices in child class")
 
     @property
     def shape(self):
@@ -372,6 +439,123 @@ class Grid(object):
     #    raise NotImplementedError(
     #        'must define indices in child '
     #        'class to use this base class')
+    @property
+    def cross_section_vertices(self):
+        return self.xyzvertices[0], self.xyzvertices[1]
+
+    def cross_section_lay_ncpl_ncb(self, ncb):
+        """
+        Get PlotCrossSection compatible layers, ncpl, and ncb
+        variables
+
+        Parameters
+        ----------
+        ncb : int
+            number of confining beds
+
+        Returns
+        -------
+            tuple : (int, int, int) layers, ncpl, ncb
+        """
+        return self.nlay, self.ncpl, ncb
+
+    def cross_section_nodeskip(self, nlay, xypts):
+        """
+        Get a nodeskip list for PlotCrossSection. This is a correction
+        for UnstructuredGridPlotting
+
+        Parameters
+        ----------
+        nlay : int
+            nlay is nlay + ncb
+        xypts : dict
+            dictionary of node number and xyvertices of a cross-section
+
+        Returns
+        -------
+            list : n-dimensional list of nodes to not plot for each layer
+        """
+        return [[] for _ in range(nlay)]
+
+    def cross_section_adjust_indicies(self, k, cbcnt):
+        """
+        Method to get adjusted indicies by layer and confining bed
+        for PlotCrossSection plotting
+
+        Parameters
+        ----------
+        k : int
+            zero based layer number
+        cbcnt : int
+            confining bed counter
+
+        Returns
+        -------
+            tuple: (int, int, int) (adjusted layer, nodeskip layer, node
+            adjustment value based on number of confining beds and the layer)
+        """
+        adjnn = k * self.ncpl
+        ncbnn = adjnn - (cbcnt * self.ncpl)
+        return k + 1, k + 1, ncbnn
+
+    def cross_section_set_contour_arrays(
+        self, plotarray, xcenters, head, elev, projpts
+    ):
+        """
+        Method to set countour array centers for rare instances where
+        matplotlib contouring is prefered over trimesh plotting
+
+        Parameters
+        ----------
+        plotarray : np.ndarray
+            array of data for contouring
+        xcenters : np.ndarray
+            xcenters array
+        zcenters : np.ndarray
+            zcenters array
+        head : np.ndarray
+            head array to adjust cell centers location
+        elev : np.ndarray
+            cell elevation array
+        projpts : dict
+            dictionary of projected cross sectional vertices
+
+        Returns
+        -------
+            tuple: (np.ndarray, np.ndarray, np.ndarray, bool)
+            plotarray, xcenter array, ycenter array, and a boolean flag
+            for contouring
+        """
+        if self.nlay != 1:
+            return plotarray, xcenters, None, False
+        else:
+            zcenters = []
+            if isinstance(head, np.ndarray):
+                head = head.reshape(1, self.ncpl)
+                head = np.vstack((head, head))
+            else:
+                head = elev.reshape(2, self.ncpl)
+
+            elev = elev.reshape(2, self.ncpl)
+            for k, ev in enumerate(elev):
+                if k == 0:
+                    zc = [
+                        ev[i] if head[k][i] > ev[i] else head[k][i]
+                        for i in sorted(projpts)
+                    ]
+                else:
+                    zc = [ev[i] for i in sorted(projpts)]
+                zcenters.append(zc)
+
+            plotarray = np.vstack((plotarray, plotarray))
+            xcenters = np.vstack((xcenters, xcenters))
+            zcenters = np.array(zcenters)
+
+            return plotarray, xcenters, zcenters, True
+
+    @property
+    def map_polygons(self):
+        raise NotImplementedError("must define map_polygons in child class")
 
     def get_plottable_layer_array(self, plotarray, layer):
         raise NotImplementedError(
@@ -411,7 +595,7 @@ class Grid(object):
             x = np.array(x)
             y = np.array(y)
         if not np.isscalar(x):
-            x, y = x.copy(), y.copy()
+            x, y = x.astype(float, copy=True), y.astype(float, copy=True)
 
         x += self._xoff
         y += self._yoff
@@ -430,11 +614,11 @@ class Grid(object):
         if not np.isscalar(x):
             x, y = x.copy(), y.copy()
 
-        x, y = geometry.rotate(
-            x, y, self._xoff, self._yoff, -self.angrot_radians
+        x, y = geometry.transform(
+            x, y, self._xoff, self._yoff, self.angrot_radians, inverse=True
         )
-        x -= self._xoff
-        y -= self._yoff
+        # x -= self._xoff
+        # y -= self._yoff
 
         return x, y
 
@@ -665,3 +849,10 @@ class Grid(object):
             filename, self, array_dict={}, nan_val=-1.0e9, epsg=epsg, prj=prj
         )
         return
+
+    # initialize grid from a grb file
+    @classmethod
+    def from_binary_grid_file(cls, file_path, verbose=False):
+        raise NotImplementedError(
+            "must define from_binary_grid_file in child class"
+        )

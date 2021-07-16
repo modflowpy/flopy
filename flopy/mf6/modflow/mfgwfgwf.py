@@ -1,5 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
+# FILE created on March 19, 2021 03:08:37 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -131,9 +132,8 @@ class ModflowGwfgwf(mfpackage.MFPackage):
         * cl2 (double) is the distance between the center of cell 2 and the its
           shared face with cell 1.
         * hwva (double) is the horizontal width of the flow connection between
-          cell 1 and cell 2 if IHC :math:`>` 0, or it is the area perpendicular
-          to flow of the vertical connection between cell 1 and cell 2 if IHC =
-          0.
+          cell 1 and cell 2 if IHC > 0, or it is the area perpendicular to flow
+          of the vertical connection between cell 1 and cell 2 if IHC = 0.
         * aux (double) represents the values of the auxiliary variables for
           each GWFGWF Exchange. The values of auxiliary variables must be
           present for each exchange. The values must be specified in the order
@@ -438,7 +438,7 @@ class ModflowGwfgwf(mfpackage.MFPackage):
         pname=None,
         parent_file=None,
     ):
-        super(ModflowGwfgwf, self).__init__(
+        super().__init__(
             simulation, "gwfgwf", filename, pname, loading_package, parent_file
         )
 

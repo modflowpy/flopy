@@ -241,11 +241,11 @@ class ModflowHfb(Package):
         if structured:
             dtype = np.dtype(
                 [
-                    ("k", np.int),
-                    ("irow1", np.int),
-                    ("icol1", np.int),
-                    ("irow2", np.int),
-                    ("icol2", np.int),
+                    ("k", int),
+                    ("irow1", int),
+                    ("icol1", int),
+                    ("irow2", int),
+                    ("icol2", int),
                     ("hydchr", np.float32),
                 ]
             )
@@ -372,12 +372,12 @@ class ModflowHfb(Package):
 
                 #
                 if model.mfpar.pval is None:
-                    parval = np.float(par_dict["parval"])
+                    parval = float(par_dict["parval"])
                 else:
                     try:
-                        parval = np.float(model.mfpar.pval.pval_dict[pname])
+                        parval = float(model.mfpar.pval.pval_dict[pname])
                     except:
-                        parval = np.float(par_dict["parval"])
+                        parval = float(par_dict["parval"])
 
                 # fill current parameter data (par_current)
                 for ibnd, t in enumerate(data_dict):

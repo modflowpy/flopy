@@ -5,6 +5,7 @@ import copy
 import inspect
 import numpy as np
 import flopy
+
 fm = flopy.modflow
 mf6 = flopy.mf6
 from flopy.datbase import DataType, DataInterface
@@ -13,7 +14,7 @@ from flopy.utils import TemporalReference
 
 
 def get_package_list(model):
-    if model.version == 'mf6':
+    if model.version == "mf6":
         packages = [p.name[0].upper() for p in model.packagelist]
     else:
         packages = model.get_package_list()
@@ -48,12 +49,13 @@ def model_is_copy(m1, m2):
             else:
                 return False
         if k in [
-                 '_packagelist',
-                 '_package_paths',
-                 'package_key_dict',
-                 'package_type_dict',
-                 'package_name_dict',
-                 '_ftype_num_dict']:
+            "_packagelist",
+            "_package_paths",
+            "package_key_dict",
+            "package_type_dict",
+            "package_name_dict",
+            "_ftype_num_dict",
+        ]:
             continue
         elif k not in m2.__dict__:
             return False
@@ -77,25 +79,31 @@ def package_is_copy(pk1, pk2):
     """
     for k, v in pk1.__dict__.items():
         v2 = pk2.__dict__[k]
-        if v2 is v and type(v) not in [bool, str, type(None),
-                                       float, int, tuple
-                                       ]:
+        if v2 is v and type(v) not in [
+            bool,
+            str,
+            type(None),
+            float,
+            int,
+            tuple,
+        ]:
             # Deep copy doesn't work for ModflowUtltas
             if not inspect.isclass(v):
                 return False
-        if k in ['_child_package_groups',
-                 '_data_list',
-                 '_packagelist',
-                 '_simulation_data',
-                 'blocks',
-                 'dimensions',
-                 'package_key_dict',
-                 'package_name_dict',
-                 'package_type_dict',
-                 'post_block_comments',
-                 'simulation_data',
-                 'structure'
-                 ]:
+        if k in [
+            "_child_package_groups",
+            "_data_list",
+            "_packagelist",
+            "_simulation_data",
+            "blocks",
+            "dimensions",
+            "package_key_dict",
+            "package_name_dict",
+            "package_type_dict",
+            "post_block_comments",
+            "simulation_data",
+            "structure",
+        ]:
             continue
         elif isinstance(v, mf6.mfpackage.MFPackage):
             continue
@@ -121,13 +129,22 @@ def package_is_copy(pk1, pk2):
                 return False
         elif isinstance(v, DataInterface):
             if v != v2:
-                if v.data_type == DataType.transientlist or \
-                        v.data_type == DataType.list:
+                if (
+                    v.data_type == DataType.transientlist
+                    or v.data_type == DataType.list
+                ):
                     if not list_is_copy(v, v2):
                         return False
                 else:
                     a1, a2 = v.array, v2.array
-                    if a2 is a1 and type(a1) not in [bool, str, type(None), float, int, tuple]:
+                    if a2 is a1 and type(a1) not in [
+                        bool,
+                        str,
+                        type(None),
+                        float,
+                        int,
+                        tuple,
+                    ]:
                         return False
                     if a1 is None and a2 is None:
                         continue
@@ -160,14 +177,21 @@ def list_is_copy(mflist1, mflist2):
     elif isinstance(mflist1, mf6.data.mfdatalist.MFList):
         data1 = {0: mflist1.array}
         data2 = {0: mflist2.array}
-    elif hasattr(mflist1, 'data'):
+    elif hasattr(mflist1, "data"):
         data1 = mflist1.data
         data2 = mflist2.data
     for k, v in data1.items():
         if k not in data2:
             return False
         v2 = data2[k]
-        if v2 is v and type(v) not in [bool, str, type(None), float, int, tuple]:
+        if v2 is v and type(v) not in [
+            bool,
+            str,
+            type(None),
+            float,
+            int,
+            tuple,
+        ]:
             return False
         if v is None and v2 is None:
             continue
@@ -189,7 +213,7 @@ def list_is_copy(mflist1, mflist2):
 
 
 def test_mf2005_copy():
-    path = '../examples/data/freyberg_multilayer_transient/freyberg.nam'
+    path = "../examples/data/freyberg_multilayer_transient/freyberg.nam"
     model_ws, namefile = os.path.split(path)
     m = fm.Modflow.load(namefile, model_ws=model_ws)
     m_c = copy.copy(m)
@@ -199,9 +223,9 @@ def test_mf2005_copy():
 
 
 def test_mf6_copy():
-    sim_ws = '../examples/data/mf6/test045_lake2tr'
-    sim = mf6.MFSimulation.load('mfsim.nam', 'mf6', sim_ws=sim_ws)
-    m = sim.get_model('lakeex2a')
+    sim_ws = "../examples/data/mf6/test045_lake2tr"
+    sim = mf6.MFSimulation.load("mfsim.nam", "mf6", sim_ws=sim_ws)
+    m = sim.get_model("lakeex2a")
     m_c = copy.copy(m)
     m_dc = copy.deepcopy(m)
     assert model_is_copy(m, m_dc)

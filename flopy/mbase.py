@@ -24,14 +24,15 @@ from .version import __version__
 from .discretization.modeltime import ModelTime
 from .discretization.grid import Grid
 
-# Global variables
-iconst = 1  # Multiplier for individual array elements in integer and real arrays read by MODFLOW's U2DREL, U1DREL and U2DINT.
-iprn = (
-    -1
-)  # Printout flag. If >= 0 then array values read are printed in listing file.
+## Global variables
+# Multiplier for individual array elements in integer and real arrays read by
+# MODFLOW's U2DREL, U1DREL and U2DINT.
+iconst = 1
+# Printout flag. If >= 0 then array values read are printed in listing file.
+iprn = -1
 
 
-class FileDataEntry(object):
+class FileDataEntry:
     def __init__(self, fname, unit, binflag=False, output=False, package=None):
         self.fname = fname
         self.unit = unit
@@ -40,7 +41,7 @@ class FileDataEntry(object):
         self.package = package
 
 
-class FileData(object):
+class FileData:
     def __init__(self):
         self.file_data = []
         return
@@ -59,7 +60,7 @@ class FileData(object):
         return
 
 
-class ModelInterface(object):
+class ModelInterface:
     def __init__(self):
         self._mg_resync = True
         self._modelgrid = None
@@ -78,96 +79,96 @@ class ModelInterface(object):
     @abc.abstractmethod
     def modelgrid(self):
         raise NotImplementedError(
-            "must define modelgrid in child " "class to use this base class"
+            "must define modelgrid in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def packagelist(self):
         raise NotImplementedError(
-            "must define packagelist in child " "class to use this base class"
+            "must define packagelist in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def namefile(self):
         raise NotImplementedError(
-            "must define namefile in child " "class to use this base class"
+            "must define namefile in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def model_ws(self):
         raise NotImplementedError(
-            "must define model_ws in child " "class to use this base class"
+            "must define model_ws in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def exename(self):
         raise NotImplementedError(
-            "must define exename in child " "class to use this base class"
+            "must define exename in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def version(self):
         raise NotImplementedError(
-            "must define version in child " "class to use this base class"
+            "must define version in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def solver_tols(self):
         raise NotImplementedError(
-            "must define version in child " "class to use this base class"
+            "must define version in child class to use this base class"
         )
 
     @abc.abstractmethod
     def export(self, f, **kwargs):
         raise NotImplementedError(
-            "must define export in child " "class to use this base class"
+            "must define export in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def laytyp(self):
         raise NotImplementedError(
-            "must define laytyp in child " "class to use this base class"
+            "must define laytyp in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def hdry(self):
         raise NotImplementedError(
-            "must define hdry in child " "class to use this base class"
+            "must define hdry in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def hnoflo(self):
         raise NotImplementedError(
-            "must define hnoflo in child " "class to use this base class"
+            "must define hnoflo in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def laycbd(self):
         raise NotImplementedError(
-            "must define laycbd in child " "class to use this base class"
+            "must define laycbd in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def verbose(self):
         raise NotImplementedError(
-            "must define verbose in child " "class to use this base class"
+            "must define verbose in child class to use this base class"
         )
 
     @abc.abstractmethod
     def check(self, f=None, verbose=True, level=1):
         raise NotImplementedError(
-            "must define check in child " "class to use this base class"
+            "must define check in child class to use this base class"
         )
 
     def get_package_list(self, ftype=None):
@@ -277,25 +278,31 @@ class ModelInterface(object):
 
 class BaseModel(ModelInterface):
     """
-    MODFLOW based models base class
+    MODFLOW-based models base class.
 
     Parameters
     ----------
-
-    modelname : string
-        Name of the model.  Model files will be given this name. (default is
-        'modflowtest'
-
-    namefile_ext : string
-        name file extension (default is 'nam')
-
-    exe_name : string
-        name of the modflow executable
-
-    model_ws : string
+    modelname : str, default "modflowtest"
+        Name of the model, which is also used for model file names.
+    namefile_ext : str, default "nam"
+        Name file extension, without "."
+    exe_name : str, default "mf2k.exe"
+        Name of the modflow executable.
+    model_ws : str, optional
         Path to the model workspace.  Model files will be created in this
         directory.  Default is None, in which case model_ws is assigned
         to the current working directory.
+    structured : bool, default True
+        Specify if model grid is structured (default) or unstructured.
+    verbose : bool, default False
+        Print additional information to the screen.
+    **kwargs : dict, optional
+        Used to define: ``xll``/``yll`` for the x- and y-coordinates of
+        the lower-left corner of the grid, ``xul``/``yul`` for the
+        x- and y-coordinates of the upper-left corner of the grid
+        (deprecated), ``rotation`` for the grid rotation (default 0.0),
+        ``proj4_str`` for a PROJ string, and ``start_datetime`` for
+        model start date (default "1-1-1970").
 
     """
 
@@ -309,10 +316,8 @@ class BaseModel(ModelInterface):
         verbose=False,
         **kwargs
     ):
-        """
-        BaseModel init
-        """
-        ModelInterface.__init__(self)
+        """Initialize BaseModel."""
+        super().__init__()
         self.__name = modelname
         self.namefile_ext = namefile_ext or ""
         self._namefile = self.__name + "." + self.namefile_ext
@@ -1077,7 +1082,7 @@ class BaseModel(ModelInterface):
         #     if ptype in pak.name:
         #         print("BaseModel.add_existing_package() warning: " +\
         #               "replacing existing package {0}".format(ptype))
-        class Obj(object):
+        class Obj:
             pass
 
         fake_package = Obj()
@@ -1310,13 +1315,12 @@ class BaseModel(ModelInterface):
         if key == "free_format_input":
             # if self.bas6 is not None:
             #    self.bas6.ifrefm = value
-            super(BaseModel, self).__setattr__(key, value)
+            super().__setattr__(key, value)
         elif key == "name":
             self._set_name(value)
         elif key == "model_ws":
             self.change_model_ws(value)
-        elif key == "sr":
-            assert isinstance(value, utils.reference.SpatialReference)
+        elif key == "sr" and value.__class__.__name__ == "SpatialReference":
             warnings.warn(
                 "SpatialReference has been deprecated.",
                 category=DeprecationWarning,
@@ -1346,7 +1350,7 @@ class BaseModel(ModelInterface):
                     "cannot set start_datetime -" "ModflowDis not found"
                 )
         else:
-            super(BaseModel, self).__setattr__(key, value)
+            super().__setattr__(key, value)
 
     def run_model(
         self,

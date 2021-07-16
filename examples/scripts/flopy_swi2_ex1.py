@@ -62,16 +62,16 @@ def run():
     delr = 5.0
     delc = 1.0
 
-    ibound = np.ones((nrow, ncol), np.int)
+    ibound = np.ones((nrow, ncol), int)
     ibound[0, -1] = -1
 
     # create initial zeta surface
-    z = np.zeros((nrow, ncol), np.float)
+    z = np.zeros((nrow, ncol), float)
     z[0, 16:24] = np.arange(-2.5, -40, -5)
     z[0, 24:] = -40
     z = [z]
     # create isource for SWI2
-    isource = np.ones((nrow, ncol), np.int)
+    isource = np.ones((nrow, ncol), int)
     isource[0, 0] = 2
 
     ocdict = {}

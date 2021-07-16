@@ -1,5 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
+# FILE created on March 19, 2021 03:08:37 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator
 
@@ -26,9 +27,9 @@ class ModflowGwfsto(mfpackage.MFPackage):
     iconvert : [integer]
         * iconvert (integer) is a flag for each cell that specifies whether or
           not a cell is convertible for the storage calculation. 0 indicates
-          confined storage is used. :math:`>`0 indicates confined storage is
-          used when head is above cell top and a mixed formulation of
-          unconfined and confined storage is used when head is below cell top.
+          confined storage is used. >0 indicates confined storage is used when
+          head is above cell top and a mixed formulation of unconfined and
+          confined storage is used when head is below cell top.
     ss : [double]
         * ss (double) is specific storage (or the storage coefficient if
           STORAGECOEFFICIENT is specified as an option). Specific storage
@@ -162,7 +163,7 @@ class ModflowGwfsto(mfpackage.MFPackage):
         pname=None,
         parent_file=None,
     ):
-        super(ModflowGwfsto, self).__init__(
+        super().__init__(
             model, "sto", filename, pname, loading_package, parent_file
         )
 

@@ -373,11 +373,11 @@ class Observations:
         """
         data = self.get_data(key=key, idx=idx, totim=totim)
         # create x-array coordinates from time and header
-        totim = data.T[0][1:].astype(np.float)
-        header = data[0][1:].astype(np.str)
+        totim = data.T[0][1:].astype(float)
+        header = data[0][1:].astype(str)
 
         # strip time and header off of data
-        data = data[1:, 1:].astype(np.float)
+        data = data[1:, 1:].astype(float)
 
         return data
 

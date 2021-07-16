@@ -8,6 +8,7 @@ import numpy as np
 from ..mfbase import MFDataException, VerbosityLevel
 from ..data.mfstructure import DatumType, MFDataItemStructure
 from ..data import mfdatautil
+from .mfdatautil import iterable
 from ...utils.datautil import (
     DatumUtil,
     FileIter,
@@ -40,7 +41,7 @@ class DataStructureType(Enum):
     scalar = 3
 
 
-class LayerStorage(object):
+class LayerStorage:
     """
     Stores a single layer of data.
 
@@ -160,7 +161,7 @@ class LayerStorage(object):
             return self.data_const_value
 
 
-class DataStorage(object):
+class DataStorage:
     """
     Stores and retrieves data.
 
@@ -180,7 +181,7 @@ class DataStorage(object):
         what internal type is the data stored in (ndarray, recarray, scalar)
     layer_shape : int
         number of data layers
-    layered : boolean
+    layered : bool
         is the data layered
     layer_storage : MultiList<LayerStorage>
         one or more dimensional list of LayerStorage
@@ -199,7 +200,7 @@ class DataStorage(object):
         list of print formats, one for each layer
     data_structure_type :
         what internal type is the data stored in (ndarray, recarray, scalar)
-    layered : boolean
+    layered : bool
         is the data layered
     pre_data_comments : string
         any comments before the start of the data
@@ -218,7 +219,7 @@ class DataStorage(object):
     get_const_val(layer)
         gets the constant value of a given layer.  data storage type for layer
         must be "internal_constant".
-    has_data(layer) : boolean
+    has_data(layer) : bool
         returns true if data exists for the specified layer, false otherwise
     get_data(layer) : ndarray/recarray/string
         returns the data for the specified layer
@@ -450,29 +451,52 @@ class DataStorage(object):
         data_str = ""
         # Assemble strings for internal array data
         for index, storage in enumerate(self.layer_storage.elements()):
+            if self.layered:
+                layer_str = "Layer_{}".format(str(index + 1))
+            else:
+                layer_str = ""
             if storage.data_storage_type == DataStorageType.internal_array:
                 if storage.internal_data is not None:
                     header = self._get_layer_header_str(index)
                     if formal:
                         if self.layered:
-                            data_str = "{}Layer_{}{{{}}}" "\n({})\n".format(
-                                data_str, index + 1, header, repr(storage)
+                            data_str = "{}{}{{{}}}" "\n({})\n".format(
+                                data_str,
+                                layer_str,
+                                header,
+                                repr(self.get_data((index,))),
                             )
                         else:
-                            data_str = "{}{{{}}}\n({})\n".format(
-                                data_str, header, repr(storage)
+                            data_str = "{}{}{{{}}}\n({})\n".format(
+                                data_str,
+                                layer_str,
+                                header,
+                                repr(self.get_data((index,))),
                             )
                     else:
-                        data_str = "{}{{{}}}\n({})\n".format(
-                            data_str, header, str(storage)
+                        data_str = "{}{}{{{}}}\n({})\n".format(
+                            data_str,
+                            layer_str,
+                            header,
+                            str(self.get_data((index,))),
                         )
             elif (
                 storage.data_storage_type == DataStorageType.internal_constant
             ):
-                if storage.data_const_value is not None:
-                    data_str = "{}{{{}}}" "\n".format(
-                        data_str, self._get_layer_header_str(index)
-                    )
+                if formal:
+                    if storage.data_const_value is not None:
+                        data_str = "{}{}{{{}}}" "\n".format(
+                            data_str,
+                            layer_str,
+                            self._get_layer_header_str(index),
+                        )
+                else:
+                    if storage.data_const_value is not None:
+                        data_str = "{}{}{{{}}}" "\n".format(
+                            data_str,
+                            layer_str,
+                            self._get_layer_header_str(index),
+                        )
         return data_str
 
     def _get_layer_header_str(self, layer):
@@ -840,7 +864,13 @@ class DataStorage(object):
                 )
 
     def set_data(
-        self, data, layer=None, multiplier=None, key=None, autofill=False
+        self,
+        data,
+        layer=None,
+        multiplier=None,
+        key=None,
+        autofill=False,
+        check_data=False,
     ):
         if multiplier is None:
             multiplier = [1.0]
@@ -848,11 +878,13 @@ class DataStorage(object):
             self.data_structure_type == DataStructureType.recarray
             or self.data_structure_type == DataStructureType.scalar
         ):
-            self._set_list(data, layer, multiplier, key, autofill)
+            self._set_list(data, layer, multiplier, key, autofill, check_data)
         else:
             self._set_array(data, layer, multiplier, key, autofill)
 
-    def _set_list(self, data, layer, multiplier, key, autofill):
+    def _set_list(
+        self, data, layer, multiplier, key, autofill, check_data=False
+    ):
         if isinstance(data, dict):
             if "filename" in data:
                 if "binary" in data and data["binary"]:
@@ -878,8 +910,22 @@ class DataStorage(object):
                         )
                 self.process_open_close_line(data, layer)
                 return
+        if isinstance(data, list):
+            if (
+                len(data) > 0
+                and not isinstance(data[0], tuple)
+                and not isinstance(data[0], list)
+            ):
+                # single line of data needs to be encapsulated in a tuple
+                data = [tuple(data)]
         self.store_internal(
-            data, layer, False, multiplier, key=key, autofill=autofill
+            data,
+            layer,
+            False,
+            multiplier,
+            key=key,
+            autofill=autofill,
+            check_data=check_data,
         )
 
     def _set_array(self, data, layer, multiplier, key, autofill):
@@ -1076,6 +1122,7 @@ class DataStorage(object):
         key=None,
         autofill=False,
         print_format=None,
+        check_data=False,
     ):
         if multiplier is None:
             multiplier = [self.get_default_mult()]
@@ -1090,12 +1137,38 @@ class DataStorage(object):
                     DataStorageType.internal_array
                 )
                 if data is None or isinstance(data, np.recarray):
-                    if self._simulation_data.verify_data:
+                    if self._simulation_data.verify_data and check_data:
                         self._verify_list(data)
                     self.layer_storage.first_item().internal_data = data
                 else:
                     if data is None:
                         self.set_data(None)
+                    self.build_type_list()
+                    if isinstance(data, list):
+                        # look for single strings in list that describe
+                        # multiple items
+                        new_data = []
+                        for item in data:
+                            if isinstance(item, str):
+                                # parse possible multi-item string
+                                new_data.append(
+                                    self._resolve_data_line(item, key)
+                                )
+                            else:
+                                new_data.append(item)
+                        data = new_data
+                    if isinstance(data, str):
+                        # parse possible multi-item string
+                        data = [self._resolve_data_line(data, key)]
+
+                    if (
+                        data is not None
+                        and check_data
+                        and self._simulation_data.verify_data
+                    ):
+                        # check data line length
+                        self._check_list_length(data)
+
                     if autofill and data is not None:
                         if isinstance(data, tuple) and isinstance(
                             data[0], tuple
@@ -1126,8 +1199,7 @@ class DataStorage(object):
                         ):
                             for data_index, data_entry in enumerate(data):
                                 if (
-                                    data_item_structs[0].type
-                                    == DatumType.string
+                                    isinstance(data_entry[0], str)
                                     and data_entry[0].lower()
                                     == data_item_structs[0].name.lower()
                                 ):
@@ -1141,6 +1213,8 @@ class DataStorage(object):
                             new_data
                         )
         elif self.data_structure_type == DataStructureType.scalar:
+            if data == [()]:
+                data = [(True,)]
             self.layer_storage.first_item().internal_data = data
         else:
             layer, multiplier = self._store_prep(layer, multiplier)
@@ -1185,6 +1259,110 @@ class DataStorage(object):
                     )
             self.layer_storage[layer].factor = multiplier
             self.layer_storage[layer].iprn = print_format
+
+    def _resolve_data_line(self, data, key):
+        if len(self._recarray_type_list) > 1:
+            # add any missing leading keywords to the beginning of the string
+            data_lst = data.strip().split()
+            data_lst_updated = []
+            struct = self.data_dimensions.structure
+            for data_item_index, data_item in enumerate(
+                struct.data_item_structures
+            ):
+                print(data_item)
+                if data_item.type == DatumType.keyword:
+                    if data_lst[0].lower() != data_item.name.lower():
+                        data_lst_updated.append(data_item.name)
+                    else:
+                        data_lst_updated.append(data_lst.pop(0))
+                else:
+                    if (
+                        struct.type == DatumType.record
+                        and data_lst[0].lower() != data_item.name.lower()
+                    ):
+                        data_lst_updated.append(data_item.name)
+                    break
+            data_lst_updated += data_lst
+
+            # parse the string as if it is being read from a package file
+            file_access = MFFileAccessList(
+                self.data_dimensions.structure,
+                self.data_dimensions,
+                self._simulation_data,
+                self._data_path,
+                self._stress_period,
+            )
+            data_loaded = []
+            data_out = file_access.load_list_line(
+                self,
+                data_lst_updated,
+                0,
+                data_loaded,
+                False,
+                current_key=key,
+                data_line=data,
+                zero_based=True,
+            )[1]
+            return tuple(data_out)
+        return data
+
+    def _get_min_record_entries(self, data=None):
+        try:
+            if isinstance(data, dict) and "data" in data:
+                data = data["data"]
+            type_list = self.build_type_list(data=data, min_size=True)
+        except Exception as ex:
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.data_dimensions.structure.get_model(),
+                self.data_dimensions.structure.get_package(),
+                self.data_dimensions.structure.path,
+                "getting min record entries",
+                self.data_dimensions.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                None,
+                self._simulation_data.debug,
+                ex,
+            )
+        return len(type_list)
+
+    def _check_line_size(self, data_line, min_line_size):
+        if 0 < len(data_line) < min_line_size:
+            message = (
+                "Data line {} only has {} entries, "
+                "minimum number of entries is "
+                "{}.".format(data_line, len(data_line), min_line_size)
+            )
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.data_dimensions.structure.get_model(),
+                self.data_dimensions.structure.get_package(),
+                self.data_dimensions.structure.path,
+                "storing data",
+                self.data_dimensions.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                message,
+                self._simulation_data.debug,
+            )
+
+    def _check_list_length(self, data_check):
+        if iterable(data_check):
+            # verify data length
+            min_line_size = self._get_min_record_entries(data_check)
+            if isinstance(data_check[0], np.record) or (
+                iterable(data_check[0]) and not isinstance(data_check[0], str)
+            ):
+                # data contains multiple records
+                for data_line in data_check:
+                    self._check_line_size(data_line, min_line_size)
+            else:
+                self._check_line_size(data_check, min_line_size)
 
     def _build_recarray(self, data, key, autofill):
         self.build_type_list(data=data, key=key)
@@ -2011,8 +2189,7 @@ class DataStorage(object):
                             )
 
     def _add_placeholders(self, data):
-        idx = 0
-        for data_line in data:
+        for idx, data_line in enumerate(data):
             data_line_len = len(data_line)
             if data_line_len < len(self._recarray_type_list):
                 for index in range(
@@ -2029,7 +2206,15 @@ class DataStorage(object):
                     else:
                         data_line += (None,)
                 data[idx] = data_line
-            idx += 1
+            elif data_line_len > len(self._recarray_type_list):
+                for index in range(
+                    len(self._recarray_type_list), data_line_len
+                ):
+                    if data_line[-1] is None:
+                        dl = list(data_line)
+                        del dl[-1]
+                        data_line = tuple(dl)
+                data[idx] = data_line
 
     def _duplicate_last_item(self):
         last_item = self._recarray_type_list[-1]
@@ -2365,7 +2550,12 @@ class DataStorage(object):
         key=None,
         nseg=None,
         cellid_expanded=False,
+        min_size=False,
+        overwrite_existing_type_list=True,
     ):
+        if not overwrite_existing_type_list:
+            existing_type_list = self._recarray_type_list
+            existing_type_list_ex = self._recarray_type_list_ex
         if data_set is None:
             self.jagged_record = False
             self._recarray_type_list = []
@@ -2415,17 +2605,27 @@ class DataStorage(object):
                     ks_data_item.type = DatumType.string
                     ks_data_item.name = "{}_data".format(ks_data_item.name)
                     ks_rec_type = ks_data_item.get_rec_type()
-                    self._append_type_lists(
-                        ks_data_item.name, ks_rec_type, ks_data_item.is_cellid
-                    )
+                    if not min_size:
+                        self._append_type_lists(
+                            ks_data_item.name,
+                            ks_rec_type,
+                            ks_data_item.is_cellid,
+                        )
                     if (
                         index == len(data_set.data_item_structures) - 1
                         and data is not None
                     ):
                         idx = 1
-                        line_max_size = self._get_max_data_line_size(data)
+                        (
+                            line_max_size,
+                            line_min_size,
+                        ) = self._get_max_min_data_line_size(data)
+                        if min_size:
+                            line_size = line_min_size
+                        else:
+                            line_size = line_max_size
                         type_list = self.resolve_typelist(data)
-                        while len(type_list) < line_max_size:
+                        while len(type_list) < line_size:
                             # keystrings at the end of a line can contain
                             # items of variable length. assume everything at
                             # the end of the data line is related to the last
@@ -2443,8 +2643,7 @@ class DataStorage(object):
                     # don't include initial keywords
                     if (
                         data_item.type != DatumType.keyword
-                        or initial_keyword == False
-                        or data_set.block_variable == True
+                        or data_set.block_variable
                     ):
                         initial_keyword = False
                         shape_rule = None
@@ -2492,6 +2691,7 @@ class DataStorage(object):
                                     data_set,
                                     data,
                                     repeating_key=key,
+                                    min_size=min_size,
                                 )
                             else:
                                 resolved_shape = [1]
@@ -2506,7 +2706,7 @@ class DataStorage(object):
                             resolved_shape[0] == -9999
                             or shape_rule is not None
                         ):
-                            if data is not None:
+                            if data is not None and not min_size:
                                 # shape is an indeterminate 1-d array and
                                 # should consume the remainder of the data
                                 max_s = PyListUtil.max_multi_dim_list_size(
@@ -2516,10 +2716,12 @@ class DataStorage(object):
                                     self._recarray_type_list
                                 )
                             else:
-                                # shape is indeterminate 1-d array and no data
-                                # provided to resolve
+                                # shape is indeterminate 1-d array and either
+                                # no data provided to resolve or request is
+                                # for minimum data size
                                 resolved_shape[0] = 1
-                                self.jagged_record = True
+                                if not min_size:
+                                    self.jagged_record = True
                         if data_item.is_cellid:
                             if (
                                 data_item.shape is not None
@@ -2532,18 +2734,29 @@ class DataStorage(object):
                                 grid = data_dim.get_model_grid()
                                 size = grid.get_num_spatial_coordinates()
                                 data_item.remove_cellid(resolved_shape, size)
-                        for index in range(0, resolved_shape[0]):
-                            if resolved_shape[0] > 1:
-                                name = "{}_{}".format(data_item.name, index)
-                            else:
-                                name = data_item.name
-                            self._append_type_lists(
-                                name, data_type, data_item.is_cellid
-                            )
+                        if not data_item.optional or not min_size:
+                            for index in range(0, resolved_shape[0]):
+                                if resolved_shape[0] > 1:
+                                    name = "{}_{}".format(
+                                        data_item.name, index
+                                    )
+                                else:
+                                    name = data_item.name
+                                self._append_type_lists(
+                                    name, data_type, data_item.is_cellid
+                                )
         if cellid_expanded:
-            return self._recarray_type_list_ex
+            new_type_list_ex = self._recarray_type_list_ex
+            if not overwrite_existing_type_list:
+                self._recarray_type_list = existing_type_list
+                self._recarray_type_list_ex = existing_type_list_ex
+            return new_type_list_ex
         else:
-            return self._recarray_type_list
+            new_type_list = self._recarray_type_list
+            if not overwrite_existing_type_list:
+                self._recarray_type_list = existing_type_list
+                self._recarray_type_list_ex = existing_type_list_ex
+            return new_type_list
 
     def get_default_mult(self):
         if self._data_type == DatumType.integer:
@@ -2602,13 +2815,18 @@ class DataStorage(object):
         return current_length[0]
 
     @staticmethod
-    def _get_max_data_line_size(data):
+    def _get_max_min_data_line_size(data):
         max_size = 0
+        min_size = sys.maxsize
         if data is not None:
             for value in data:
                 if len(value) > max_size:
                     max_size = len(value)
-        return max_size
+                if len(value) < min_size:
+                    min_size = len(value)
+        if min_size == sys.maxsize:
+            min_size = 0
+        return max_size, min_size
 
     def get_data_dimensions(self, layer):
         data_dimensions = self.data_dimensions.get_data_shape()[0]

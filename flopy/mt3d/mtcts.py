@@ -274,8 +274,8 @@ class Mt3dCts(Package):
         raise NotImplementedError()
 
         # # Item 3
-        # type_list = [("icts", np.int), ("next", np.int), ("ninj", np.int),
-        #              ("itrtinj", np.int)]
+        # type_list = [("icts", int), ("next", int), ("ninj", int),
+        #              ("itrtinj", int)]
         #
         # # Create a list for storing items 5, 6, & 9
         # items_5_6_7_9_list = []
@@ -291,7 +291,7 @@ class Mt3dCts(Package):
         #     for comp in range(1, ncomp+1):
         #         ioptinj_name = "ioptinj{0:d}".format(comp)
         #         cmchginj_name = "cmchginj{0:d}".format(comp)
-        #         items_5_6_7_9_list.append((ioptinj_name, np.int))
+        #         items_5_6_7_9_list.append((ioptinj_name, int))
         #         items_5_6_7_9_list.append((cmchginj_name, np.float32))
         #
         #     if iforce == 0:
@@ -305,14 +305,14 @@ class Mt3dCts(Package):
         # type_list.append(items_5_6_7_9_list)
         #
         # # Now create a list for the records in Item 4
-        # ext_wels_list = [("kext", np.int), ("iext", np.int), ("jext", np.int),
-        #                  ("iwext", np.int)]
+        # ext_wels_list = [("kext", int), ("iext", int), ("jext", int),
+        #                  ("iwext", int)]
         #
         # type_list.append(ext_wels_list)
         #
         # # Now create a list for the records in Item 8
-        # inj_wels_list = [("kinj", np.int), ("iinj", np.int), ("jinj", np.int),
-        #                  ("iwinj", np.int)]
+        # inj_wels_list = [("kinj", int), ("iinj", int), ("jinj", int),
+        #                  ("iwinj", int)]
         # type_list.append(inj_wels_list)
         #
         # #

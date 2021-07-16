@@ -13,7 +13,9 @@ from .mfdatastorage import DataStorage, DataStructureType, DataStorageType
 class MFScalar(mfdata.MFData):
     """
     Provides an interface for the user to access and update MODFLOW
-    scalar data.
+    scalar data. MFScalar objects are not designed to be directly constructed
+    by the end user. When a flopy for MODFLOW 6 package object is constructed,
+    the appropriate MFScalar objects are automatically built.
 
     Parameters
     ----------
@@ -30,46 +32,6 @@ class MFScalar(mfdata.MFData):
     dimensions : MFDataDimensions
         dimension information related to the model, package, and array
 
-    Attributes
-    ----------
-    data_type : DataType
-        type of data stored in the scalar
-    plottable : bool
-        if the scalar is plottable
-    dtype : numpy.dtype
-        the scalar's numpy data type
-    data : variable
-        calls get_data with default parameters
-
-    Methods
-    -------
-    has_data : () : bool
-        Returns whether this object has data associated with it.
-    get_data : () : ndarray
-        Returns the data associated with this object.
-    set_data : (data : ndarray/list, multiplier : float)
-        Sets the contents of the data to "data" with
-        multiplier "multiplier".
-    load : (first_line : string, file_handle : file descriptor,
-            block_header : MFBlockHeader, pre_data_comments : MFComment) :
-            tuple (bool, string)
-        Loads data from first_line (the first line of data) and open file
-        file_handle which is pointing to the second line of data.  Returns a
-        tuple with the first item indicating whether all data was read
-        and the second item being the last line of text read from the file.
-    get_file_entry : () : string
-        Returns a string containing the data.
-
-    See Also
-    --------
-
-    Notes
-    -----
-
-    Examples
-    --------
-
-
     """
 
     def __init__(
@@ -82,7 +44,7 @@ class MFScalar(mfdata.MFData):
         path=None,
         dimensions=None,
     ):
-        super(MFScalar, self).__init__(
+        super().__init__(
             sim_data, model_or_sim, structure, enable, path, dimensions
         )
         self._data_type = self.structure.data_item_structures[0].type
@@ -92,14 +54,19 @@ class MFScalar(mfdata.MFData):
 
     @property
     def data_type(self):
+        """Type of data (DataType) stored in the scalar"""
         return DataType.scalar
 
     @property
     def plottable(self):
+        """If the scalar is plottable.  Currently all scalars are not
+        plottable.
+        """
         return False
 
     @property
     def dtype(self):
+        """The scalar's numpy data type (numpy.dtype)."""
         if self.structure.type == DatumType.double_precision:
             return np.float64
         elif self.structure.type == DatumType.integer:
@@ -117,6 +84,7 @@ class MFScalar(mfdata.MFData):
         return None
 
     def has_data(self):
+        """Returns whether this object has data associated with it."""
         try:
             return self._get_storage_obj().has_data()
         except Exception as ex:
@@ -138,9 +106,22 @@ class MFScalar(mfdata.MFData):
 
     @property
     def data(self):
+        """Returns the scalar data. Calls get_data with default parameters."""
         return self.get_data()
 
     def get_data(self, apply_mult=False, **kwargs):
+        """Returns the data associated with this object.
+
+        Parameters
+        ----------
+            apply_mult : bool
+                Parameter does not apply to scalar data.
+
+        Returns
+        -------
+            data : str, int, float, recarray
+
+        """
         try:
             return self._get_storage_obj().get_data(apply_mult=apply_mult)
         except Exception as ex:
@@ -161,6 +142,14 @@ class MFScalar(mfdata.MFData):
             )
 
     def set_data(self, data):
+        """Sets the contents of the data to `data`.
+
+        Parameters
+        ----------
+            data : str/int/float/recarray/list
+                Data to set
+
+        """
         self._resync()
         if self.structure.type == DatumType.record:
             if data is not None:
@@ -169,18 +158,25 @@ class MFScalar(mfdata.MFData):
                     or isinstance(data, np.ndarray)
                     or isinstance(data, tuple)
                 ):
-                    data = [data]
+                    if isinstance(data, str):
+                        # convert string to list of entries
+                        data = data.strip().split()
+                    else:
+                        data = [data]
         else:
-            while (
-                isinstance(data, list)
-                or isinstance(data, np.ndarray)
-                or isinstance(data, tuple)
-            ):
-                data = data[0]
-                if (isinstance(data, list) or isinstance(data, tuple)) and len(
-                    data
-                ) > 1:
-                    self._add_data_line_comment(data[1:], 0)
+            if isinstance(data, str):
+                data = data.strip().split()[-1]
+            else:
+                while (
+                    isinstance(data, list)
+                    or isinstance(data, np.ndarray)
+                    or isinstance(data, tuple)
+                ):
+                    data = data[0]
+                    if (
+                        isinstance(data, list) or isinstance(data, tuple)
+                    ) and len(data) > 1:
+                        self._add_data_line_comment(data[1:], 0)
         storage = self._get_storage_obj()
         data_struct = self.structure.data_item_structures[0]
         try:
@@ -229,6 +225,7 @@ class MFScalar(mfdata.MFData):
             )
 
     def add_one(self):
+        """Adds one if this is an integer scalar"""
         datum_type = self.structure.get_datum_type()
         if datum_type == int or datum_type == np.int32:
             if self._get_storage_obj().get_data() is None:
@@ -319,6 +316,23 @@ class MFScalar(mfdata.MFData):
         one_based=False,
         ext_file_action=ExtFileAction.copy_relative_paths,
     ):
+        """Returns a string containing the data formatted for a MODFLOW 6
+        file.
+
+        Parameters
+        ----------
+            values_only : bool
+                Return values only excluding keywords
+            one_based : bool
+                Return one-based integer values
+            ext_file_action : ExtFileAction
+                How to handle external paths.
+
+        Returns
+        -------
+            file entry : str
+
+        """
         storage = self._get_storage_obj()
         try:
             if storage is None or self._get_storage_obj().get_data() is None:
@@ -376,9 +390,14 @@ class MFScalar(mfdata.MFData):
             for data_item in self.structure.data_item_structures:
                 if (
                     data_item.type == DatumType.keyword
-                    and data_item.optional == False
+                    and not data_item.optional
                 ):
                     if isinstance(data, list) or isinstance(data, tuple):
+                        if len(data) == 1 and (
+                            isinstance(data[0], tuple)
+                            or isinstance(data[0], list)
+                        ):
+                            data = data[0]
                         if len(data) > index and (
                             data[index] is not None and data[index] != False
                         ):
@@ -529,6 +548,7 @@ class MFScalar(mfdata.MFData):
                     self._simulation_data,
                     self._data_dimensions,
                     data_item=data_item,
+                    verify_data=self._simulation_data.verify_data,
                 )
             except Exception as ex:
                 message = (
@@ -570,7 +590,35 @@ class MFScalar(mfdata.MFData):
         pre_data_comments=None,
         external_file_info=None,
     ):
-        super(MFScalar, self).load(
+        """Loads data from first_line (the first line of data) and open file
+        file_handle which is pointing to the second line of data.  Returns a
+        tuple with the first item indicating whether all data was read
+        and the second item being the last line of text read from the file.
+        This method was only designed for internal FloPy use and is not
+        recommended for end users.
+
+        Parameters
+        ----------
+            first_line : str
+                A string containing the first line of data.
+            file_handle : file descriptor
+                A file handle for the data file which points to the second
+                line of data
+            block_header : MFBlockHeader
+                Block header object that contains block header information
+                for the block containing this data
+            pre_data_comments : MFComment
+                Comments immediately prior to the data
+            external_file_info : list
+                Contains information about storing files externally
+
+        Returns
+        -------
+            more data : bool,
+            next data line : str
+
+        """
+        super().load(
             first_line,
             file_handle,
             block_header,
@@ -643,7 +691,8 @@ class MFScalar(mfdata.MFData):
 class MFScalarTransient(MFScalar, mfdata.MFTransient):
     """
     Provides an interface for the user to access and update MODFLOW transient
-    scalar data.
+    scalar data.  Transient scalar data is used internally by FloPy and should
+    not be used directly by the end user.
 
     Parameters
     ----------
@@ -660,38 +709,6 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
     dimensions : MFDataDimensions
         dimension information related to the model, package, and array
 
-    Methods
-    -------
-    add_transient_key : (transient_key : int)
-        Adds a new transient time allowing data for that time to be stored and
-        retrieved using the key "transient_key"
-    add_one :(transient_key : int)
-        Adds one to the data stored at key "transient_key"
-    get_data : (key : int) : ndarray
-        Returns the data associated with "key".
-    set_data : (data : ndarray/list, multiplier : float, key : int)
-        Sets the contents of the data at time "key" to
-        "data" with multiplier "multiplier".
-    load : (first_line : string, file_handle : file descriptor,
-            block_header : MFBlockHeader, pre_data_comments : MFComment) :
-            tuple (bool, string)
-        Loads data from first_line (the first line of data) and open file
-        file_handle which is pointing to the second line of data.  Returns a
-        tuple with the first item indicating whether all data was read
-        and the second item being the last line of text read from the file.
-    get_file_entry : (key : int) : string
-        Returns a string containing the data at time "key".
-
-    See Also
-    --------
-
-    Notes
-    -----
-
-    Examples
-    --------
-
-
     """
 
     def __init__(
@@ -703,7 +720,7 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
         path=None,
         dimensions=None,
     ):
-        super(MFScalarTransient, self).__init__(
+        super().__init__(
             sim_data=sim_data,
             model_or_sim=model_or_sim,
             structure=structure,
@@ -716,68 +733,127 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
 
     @property
     def data_type(self):
+        """Type of data (DataType) stored in the scalar"""
         return DataType.transientscalar
 
     @property
     def plottable(self):
+        """If the scalar is plottable"""
         if self.model is None:
             return False
         else:
             return True
 
     def add_transient_key(self, key):
-        super(MFScalarTransient, self).add_transient_key(key)
+        """Adds a new transient time allowing data for that time to be stored
+        and retrieved using the key `key`.  Method is used
+        internally by FloPy and is not intended to the end user.
+
+        Parameters
+        ----------
+            key : int
+                Zero-based stress period to add
+
+        """
+        super().add_transient_key(key)
         if isinstance(key, int):
             stress_period = key
         else:
             stress_period = 1
-        self._data_storage[key] = super(MFScalarTransient, self)._new_storage(
-            stress_period
-        )
+        self._data_storage[key] = super()._new_storage(stress_period)
 
     def add_one(self, key=0):
+        """Adds one to the data stored at key `key`.  Method is used
+        internally by FloPy and is not intended to the end user.
+
+        Parameters
+        ----------
+            key : int
+                Zero-based stress period to add
+        """
         self._update_record_prep(key)
-        super(MFScalarTransient, self).add_one()
+        super().add_one()
 
     def has_data(self, key=None):
         if key is None:
             data_found = False
             for sto_key in self._data_storage.keys():
                 self.get_data_prep(sto_key)
-                data_found = (
-                    data_found or super(MFScalarTransient, self).has_data()
-                )
+                data_found = data_found or super().has_data()
                 if data_found:
                     break
         else:
             self.get_data_prep(key)
-            data_found = super(MFScalarTransient, self).has_data()
+            data_found = super().has_data()
         return data_found
 
     def get_data(self, key=0, **kwargs):
+        """Returns the data for stress period `key`.
+
+        Parameters
+        ----------
+            key : int
+                Zero-based stress period to return data from.
+
+        Returns
+        -------
+            data : str/int/float/recarray
+
+        """
         self.get_data_prep(key)
-        return super(MFScalarTransient, self).get_data()
+        return super().get_data()
 
     def set_data(self, data, key=None):
+        """Sets the contents of the data at time `key` to `data`.
+
+        Parameters
+        ----------
+        data : str/int/float/recarray/list
+            Data being set.  Data can be a dictionary with keys as
+            zero-based stress periods and values as the data.  If data is
+            a string, integer, double, recarray, or list of tuples, it
+            will be assigned to the the stress period specified in `key`.
+            If any is set to None, that stress period of data will be
+            removed.
+        key : int
+            Zero based stress period to assign data too.  Does not apply
+            if `data` is a dictionary.
+
+        """
         if isinstance(data, dict) or isinstance(data, OrderedDict):
             # each item in the dictionary is a list for one stress period
             # the dictionary key is the stress period the list is for
             for key, list_item in data.items():
                 self._set_data_prep(list_item, key)
-                super(MFScalarTransient, self).set_data(list_item)
+                super().set_data(list_item)
         else:
             self._set_data_prep(data, key)
-            super(MFScalarTransient, self).set_data(data)
+            super().set_data(data)
 
     def get_file_entry(
         self, key=None, ext_file_action=ExtFileAction.copy_relative_paths
     ):
+        """Returns a string containing the data at time `key` formatted for a
+        MODFLOW 6 file.
+
+        Parameters
+        ----------
+            key : int
+                Zero based stress period to return data from.
+            ext_file_action : ExtFileAction
+                How to handle external paths.
+
+        Returns
+        -------
+            file entry : str
+
+        """
         if key is None:
             file_entry = []
             for sto_key in self._data_storage.keys():
                 if self.has_data(sto_key):
                     self._get_file_entry_prep(sto_key)
-                    text_entry = super(MFScalarTransient, self).get_file_entry(
+                    text_entry = super().get_file_entry(
                         ext_file_action=ext_file_action
                     )
                     file_entry.append(text_entry)
@@ -789,9 +865,7 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
                 return ""
         else:
             self._get_file_entry_prep(key)
-            return super(MFScalarTransient, self).get_file_entry(
-                ext_file_action=ext_file_action
-            )
+            return super().get_file_entry(ext_file_action=ext_file_action)
 
     def load(
         self,
@@ -801,8 +875,29 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
         pre_data_comments=None,
         external_file_info=None,
     ):
+        """Loads data from first_line (the first line of data) and open file
+        file_handle which is pointing to the second line of data.  Returns a
+        tuple with the first item indicating whether all data was read
+        and the second item being the last line of text read from the file.
+
+        Parameters
+        ----------
+            first_line : str
+                A string containing the first line of data in this scalar.
+            file_handle : file descriptor
+                A file handle for the data file which points to the second
+                line of data for this array
+            block_header : MFBlockHeader
+                Block header object that contains block header information
+                for the block containing this data
+            pre_data_comments : MFComment
+                Comments immediately prior to the data
+            external_file_info : list
+                Contains information about storing files externally
+
+        """
         self._load_prep(block_header)
-        return super(MFScalarTransient, self).load(
+        return super().load(
             first_line, file_handle, pre_data_comments, external_file_info
         )
 

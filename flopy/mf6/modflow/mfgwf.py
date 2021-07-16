@@ -1,5 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
+# FILE created on March 19, 2021 03:08:37 UTC
 from .. import mfmodel
 from ..data.mfdatautil import ListTemplateGenerator, ArrayTemplateGenerator
 
@@ -18,8 +19,8 @@ class ModflowGwf(mfmodel.MFModel):
         version of modflow
     exe_name : string
         model executable name
-    model_ws : string
-        model working folder path
+    model_rel_path : string
+        model working folder path, relative to simulation directory.
     sim : MFSimulation
         Simulation that this model is a part of.  Model is automatically
         added to simulation when it is initialized.
@@ -51,8 +52,8 @@ class ModflowGwf(mfmodel.MFModel):
           Newton-Raphson UNDER_RELAXATION is not applied.
     packages : [ftype, fname, pname]
         * ftype (string) is the file type, which must be one of the following
-          character values shown in table~ref{table:ftype}. Ftype may be
-          entered in any combination of uppercase and lowercase.
+          character values shown in table in mf6io.pdf. Ftype may be entered in
+          any combination of uppercase and lowercase.
         * fname (string) is the name of the file containing the package input.
           The path to the file should be included if the file is not located in
           the folder where the program was run.
@@ -92,7 +93,7 @@ class ModflowGwf(mfmodel.MFModel):
         packages=None,
         **kwargs
     ):
-        super(ModflowGwf, self).__init__(
+        super().__init__(
             simulation,
             model_type="gwf6",
             modelname=modelname,

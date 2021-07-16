@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 
 
 def get_transmissivities(
@@ -25,7 +26,7 @@ def get_transmissivities(
         numpy array of shape nlay by n locations (2D) OR complete heads array
         of the model for one time (3D)
     m : flopy.modflow.Modflow object
-        Must have dis, sr, and lpf or upw packages.
+        Must have dis and lpf or upw packages.
     r : 1D array-like of ints, of length n locations
         row indices (optional; alternately specify x, y)
     c : 1D array-like of ints, of length n locations
@@ -51,7 +52,7 @@ def get_transmissivities(
         pass
     elif x is not None and y is not None:
         # get row, col for observation locations
-        r, c = m.sr.get_ij(x, y)
+        r, c = m.modelgrid.intersect(x, y)
     else:
         raise ValueError("Must specify row, column or x, y locations.")
 
@@ -177,8 +178,8 @@ def get_saturated_thickness(heads, m, nodata, per_idx=None):
         Heads array.
     m : flopy.modflow.Modflow object
         Must have a flopy.modflow.ModflowDis object attached.
-    nodata : real
-        HDRY value indicating dry cells.
+    nodata : float, list
+        HDRY value indicating dry cells and/or HNOFLO values.
     per_idx : int or sequence of ints
         stress periods to return. If None,
         returns all stress periods (default).
@@ -188,10 +189,23 @@ def get_saturated_thickness(heads, m, nodata, per_idx=None):
     sat_thickness : 3 or 4-D np.ndarray
         Array of saturated thickness
     """
-    # internal calculations done on a masked array
-    heads = np.ma.array(heads, ndmin=4, mask=heads == nodata)
+    warnings.warn(
+        "postprocessing.get_saturated_thickness will be deprecated and "
+        "removed in version 3.3.5.  Use grid.saturated_thick(heads).",
+        PendingDeprecationWarning,
+    )
+
+    if not isinstance(nodata, list):
+        nodata = [nodata]
+    heads = np.array(heads, ndmin=4)
+    for mv in nodata:
+        heads[heads == mv] = np.nan
+
+    top = m.dis.top.array
     botm = m.dis.botm.array
-    thickness = m.dis.thickness.array
+    top.shape = (1,) + botm.shape[1:]
+    top = np.concatenate((top, botm[0:-1]), axis=0)
+    thickness = m.modelgrid.thick
     nper, nlay, nrow, ncol = heads.shape
     if per_idx is None:
         per_idx = list(range(nper))
@@ -199,38 +213,26 @@ def get_saturated_thickness(heads, m, nodata, per_idx=None):
         per_idx = [per_idx]
 
     # get confined or unconfined/convertible info
-    if m.has_package("BCF6") or m.has_package("LPF") or m.has_package("UPW"):
-        if m.has_package("BCF6"):
-            laytyp = m.lpf.laycon.array
-        elif m.has_package("LPF"):
-            laytyp = m.lpf.laytyp.array
-        else:
-            laytyp = m.upw.laytyp.array
-        if len(laytyp) == 1:
-            is_conf = np.full(m.modelgrid.shape, laytyp == 0)
-        else:
-            laytyp = laytyp.reshape(m.modelgrid.nlay, 1, 1)
-            is_conf = np.logical_and(
-                (laytyp == 0), np.full(m.modelgrid.shape, True)
-            )
-    elif m.has_package("NPF"):
-        is_conf = m.npf.icelltype.array == 0
-    else:
-        raise ValueError(
-            "No flow package was found when trying to determine "
-            "the layer type."
+    laytyp = m.laytyp
+    if len(laytyp.shape) == 1:
+        laytyp.shape = (m.nlay, 1, 1)
+        is_conf = np.logical_and(
+            (laytyp == 0), np.full(m.modelgrid.shape, True)
         )
+    else:
+        is_conf = laytyp == 0
 
     # calculate saturated thickness
     sat_thickness = []
     for per in per_idx:
         hds = heads[per]
-        perthickness = hds - botm
-        conf = np.logical_or(perthickness > thickness, is_conf)
-        perthickness[conf] = thickness[conf]
-        # convert to nan-filled array, as is expected(!?)
-        sat_thickness.append(perthickness.filled(np.nan))
-    return np.squeeze(sat_thickness)
+        hds = np.where(hds < botm, botm, hds)  # for NWT when hds < botm
+        unconf_thickness = np.where(hds > top, top - botm, hds - botm)
+        perthickness = np.where(is_conf, thickness, unconf_thickness)
+        sat_thickness.append(perthickness)
+    sat_thickness = np.squeeze(sat_thickness)
+
+    return sat_thickness
 
 
 def get_gradients(heads, m, nodata, per_idx=None):
@@ -344,9 +346,13 @@ def get_extended_budget(
         that the z axis is considered to increase in the upward direction.
     """
     import flopy.utils.binaryfile as bf
+    import flopy.utils.formattedfile as fm
 
     # define useful stuff
-    cbf = bf.CellBudgetFile(cbcfile, precision=precision)
+    if isinstance(cbcfile, bf.CellBudgetFile):
+        cbf = cbcfile
+    else:
+        cbf = bf.CellBudgetFile(cbcfile)
     nlay, nrow, ncol = cbf.nlay, cbf.nrow, cbf.ncol
     rec_names = cbf.get_unique_record_names(decode=True)
     err_msg = " not found in the budget file."
@@ -418,7 +424,13 @@ def get_extended_budget(
             raise ValueError(
                 "hdsfile must be provided when using " "boundary_ifaces"
             )
-        hds = bf.HeadFile(hdsfile, precision=precision)
+        if isinstance(hdsfile, (bf.HeadFile, fm.FormattedHeadFile)):
+            hds = hdsfile
+        else:
+            try:
+                hds = bf.HeadFile(hdsfile)
+            except:
+                hds = fm.FormattedHeadFile(hdsfile, precision=precision)
         head = hds.get_data(idx=idx, kstpkper=kstpkper, totim=totim)
 
         # get hnoflo and hdry values
@@ -599,14 +611,9 @@ def get_extended_budget(
 
 
 def get_specific_discharge(
+    vectors,
     model,
-    cbcfile,
-    precision="single",
-    idx=None,
-    kstpkper=None,
-    totim=None,
-    boundary_ifaces=None,
-    hdsfile=None,
+    head=None,
     position="centers",
 ):
     """
@@ -617,48 +624,16 @@ def get_specific_discharge(
 
     Parameters
     ----------
-    model : flopy.modflow.Modflow object
-        Modflow model instance.
-    cbcfile : str
-        Cell by cell file produced by Modflow.
-    precision : str
-        Binary file precision, default is 'single'.
-    idx : int or list
-            The zero-based record number.
-    kstpkper : tuple of ints
-        A tuple containing the time step and stress period (kstp, kper).
-        The kstp and kper values are zero based.
-    totim : float
-        The simulation time.
-    boundary_ifaces : dictionary {str: int or list}
-        A dictionary defining how to treat stress flows at boundary cells.
-        Only implemented for "classical" MODFLOW versions where the budget is
-        recorded as FLOW RIGHT FACE, FLOW FRONT FACE and FLOW LOWER FACE
-        arrays.
-        The keys are budget terms corresponding to stress packages (same term
-        as in the overall volumetric budget printed in the listing file).
-        The values are either a single iface number to be applied to all cells
-        for the stress package, or a list of lists describing individual
-        boundary cells in the same way as in the package input plus the iface
-        number appended. The iface number indicates the face to which the
-        stress flow is assigned, following the MODPATH convention (see MODPATH
-        user guide).
-        Example:
-        boundary_ifaces = {
-        'RECHARGE': 6,
-        'RIVER LEAKAGE': 6,
-        'WELLS': [[lay, row, col, flux, iface], ...],
-        'HEAD DEP BOUNDS': [[lay, row, col, head, cond, iface], ...]}.
-        Note: stresses that are not informed in boundary_ifaces are implicitly
-        treated as internally-distributed sinks/sources.
-    hdsfile : str
-        Head file produced by MODFLOW. Head is used to calculate saturated
-        thickness and to determine if a cell is inactive or dry. If not
-        provided, all cells are considered fully saturated.
-        hdsfile is also required if the budget term 'HEAD DEP BOUNDS',
-        'RIVER LEAKAGE' or 'DRAINS' is present in boundary_ifaces and that the
-        corresponding value is a list.
-    position : str
+    vectors : tuple, np.recarray
+        either a tuple of (flow right face, flow front face, flow lower face)
+        numpy arrays from a MODFLOW-2005 compatible Cell Budget File
+        or
+        a specific discharge recarray from a MODFLOW 6 Cell Budget File
+    model : object
+        flopy model object
+    head : np.ndarray
+        numpy array of head values for a specific model
+     position : str
         Position at which the specific discharge will be calculated. Possible
         values are "centers" (default), "faces" and "vertices".
 
@@ -672,54 +647,79 @@ def get_specific_discharge(
         in the north direction.
         The sign of qz is such that the z axis is considered to increase
         in the upward direction.
-        Note: if hdsfile is provided, inactive and dry cells are set to NaN.
+        Note: if a head array is provided, inactive and dry cells are
+        set to NaN.
     """
-    import flopy.utils.binaryfile as bf
 
-    # check if budget file has classical budget terms
-    cbf = bf.CellBudgetFile(cbcfile, precision=precision)
-    rec_names = cbf.get_unique_record_names(decode=True)
-    classical_budget_terms = [
-        "FLOW RIGHT FACE",
-        "FLOW FRONT FACE",
-        "FLOW RIGHT FACE",
-    ]
     classical_budget = False
-    for budget_term in classical_budget_terms:
-        matched_name = [s for s in rec_names if budget_term in s]
-        if matched_name:
-            classical_budget = True
-            break
+    spdis, tqx, tqy, tqz = None, None, None, None
+    modelgrid = model.modelgrid
 
-    if hdsfile is not None:
-        hds = bf.HeadFile(hdsfile, precision=precision)
-        head = hds.get_data(idx=idx, kstpkper=kstpkper, totim=totim)
+    if head is not None:
+        head.shape = modelgrid.shape
+
+    if isinstance(vectors, (list, tuple)):
+        classical_budget = True
+        for ix, vector in enumerate(vectors):
+            if vector is None:
+                continue
+            else:
+                tshp = list(modelgrid.shape)[::-1]
+                tshp[ix] += 1
+                ext_shape = tuple(tshp[::-1])
+                break
+
+        if vectors[ix].shape == modelgrid.shape:
+            tqx = np.zeros(
+                (modelgrid.nlay, modelgrid.nrow, modelgrid.ncol + 1),
+                dtype=np.float32,
+            )
+            tqy = np.zeros(
+                (modelgrid.nlay, modelgrid.nrow + 1, modelgrid.ncol),
+                dtype=np.float32,
+            )
+            tqz = np.zeros(
+                (modelgrid.nlay + 1, modelgrid.nrow, modelgrid.ncol),
+                dtype=np.float32,
+            )
+            if vectors[0] is not None:
+                tqx[:, :, 1:] = vectors[0]
+            if vectors[1] is not None:
+                tqy[:, 1:, :] = -vectors[1]
+            if len(vectors) > 2 and vectors[2] is not None:
+                tqz[1:, :, :] = -vectors[2]
+
+        elif vectors[ix].shape == ext_shape:
+            if vectors[0] is not None:
+                tqx = vectors[0]
+            if vectors[1] is not None:
+                tqy = vectors[1]
+            if len(vectors) > 2 and vectors[2] is not None:
+                tqz = vectors[2]
+
+        else:
+            raise IndexError(
+                "Classical budget components must have "
+                "the same shape as the modelgrid"
+            )
+    else:
+        spdis = vectors
 
     if classical_budget:
-        # get extended budget
-        Qx_ext, Qy_ext, Qz_ext = get_extended_budget(
-            cbcfile,
-            precision=precision,
-            idx=idx,
-            kstpkper=kstpkper,
-            totim=totim,
-            boundary_ifaces=boundary_ifaces,
-            hdsfile=hdsfile,
-            model=model,
-        )
-
         # get saturated thickness (head - bottom elev for unconfined layer)
-        if hdsfile is None:
-            sat_thk = model.dis.thickness.array
+        if head is None:
+            sat_thk = modelgrid.thick
         else:
-            sat_thk = get_saturated_thickness(head, model, model.hdry)
-            sat_thk = sat_thk.reshape(model.modelgrid.shape)
+            sat_thk = modelgrid.saturated_thick(
+                head, mask=[model.hdry, model.hnoflo]
+            )
+            sat_thk.shape = model.modelgrid.shape
 
         # inform modelgrid of no-flow and dry cells
         modelgrid = model.modelgrid
         if modelgrid._idomain is None:
             modelgrid._idomain = model.dis.ibound
-        if hdsfile is not None:
+        if head is not None:
             noflo_or_dry = np.logical_or(
                 head == model.hnoflo, head == model.hdry
             )
@@ -727,12 +727,10 @@ def get_specific_discharge(
 
         # get cross section areas along x
         delc = np.reshape(modelgrid.delc, (1, modelgrid.nrow, 1))
-        cross_area_x = np.empty(modelgrid.shape, dtype=float)
         cross_area_x = delc * sat_thk
 
         # get cross section areas along y
         delr = np.reshape(modelgrid.delr, (1, 1, modelgrid.ncol))
-        cross_area_y = np.empty(modelgrid.shape, dtype=float)
         cross_area_y = delr * sat_thk
 
         # get cross section areas along z
@@ -740,16 +738,31 @@ def get_specific_discharge(
 
         # calculate qx, qy, qz
         if position == "centers":
-            qx = 0.5 * (Qx_ext[:, :, 1:] + Qx_ext[:, :, :-1]) / cross_area_x
-            qy = 0.5 * (Qy_ext[:, 1:, :] + Qy_ext[:, :-1, :]) / cross_area_y
-            qz = 0.5 * (Qz_ext[1:, :, :] + Qz_ext[:-1, :, :]) / cross_area_z
+            qx = np.zeros(modelgrid.shape, dtype=np.float32)
+            qy = np.zeros(modelgrid.shape, dtype=np.float32)
+            cross_area_x = (
+                delc[:] * 0.5 * (sat_thk[:, :, :-1] + sat_thk[:, :, 1:])
+            )
+            cross_area_y = (
+                delr * 0.5 * (sat_thk[:, 1:, :] + sat_thk[:, :-1, :])
+            )
+            qx[:, :, 1:] = (
+                0.5 * (tqx[:, :, 2:] + tqx[:, :, 1:-1]) / cross_area_x
+            )
+            qx[:, :, 0] = 0.5 * tqx[:, :, 1] / cross_area_x[:, :, 0]
+            qy[:, 1:, :] = (
+                0.5 * (tqy[:, 2:, :] + tqy[:, 1:-1, :]) / cross_area_y
+            )
+            qy[:, 0, :] = 0.5 * tqy[:, 1, :] / cross_area_y[:, 0, :]
+            qz = 0.5 * (tqz[1:, :, :] + tqz[:-1, :, :]) / cross_area_z
+
         elif position == "faces" or position == "vertices":
             cross_area_x = modelgrid.array_at_faces(cross_area_x, "x")
             cross_area_y = modelgrid.array_at_faces(cross_area_y, "y")
             cross_area_z = modelgrid.array_at_faces(cross_area_z, "z")
-            qx = Qx_ext / cross_area_x
-            qy = Qy_ext / cross_area_y
-            qz = Qz_ext / cross_area_z
+            qx = tqx / cross_area_x
+            qy = tqy / cross_area_y
+            qz = tqz / cross_area_z
         else:
             raise ValueError(
                 '"' + position + '" is not a valid value for ' "position"
@@ -760,52 +773,20 @@ def get_specific_discharge(
             qz = modelgrid.array_at_verts(qz)
 
     else:
-        # check valid options
-        if boundary_ifaces is not None:
-            import warnings
-
-            warnings.warn(
-                "the boundary_ifaces option is not implemented "
-                'for "non-classical" MODFLOW versions where the '
-                "budget is not recorded as FLOW RIGHT FACE, "
-                "FLOW FRONT FACE and FLOW LOWER FACE; it will be "
-                "ignored",
-                UserWarning,
-            )
-        if position != "centers":
-            raise NotImplementedError(
-                'position can only be "centers" for '
-                '"non-classical" MODFLOW versions where '
-                "the budget is not recorded as FLOW "
-                "RIGHT FACE, FLOW FRONT FACE and FLOW "
-                "LOWER FACE"
-            )
-
-        is_spdis = [s for s in rec_names if "DATA-SPDIS" in s]
-        if not is_spdis:
-            err_msg = (
-                "Could not find suitable records in the budget file "
-                "to construct the discharge vector."
-            )
-            raise RuntimeError(err_msg)
-        spdis = cbf.get_data(
-            text="DATA-SPDIS", idx=idx, kstpkper=kstpkper, totim=totim
-        )[0]
         nnodes = model.modelgrid.nnodes
-        qx = np.full((nnodes), np.nan)
-        qy = np.full((nnodes), np.nan)
-        qz = np.full((nnodes), np.nan)
+        qx = np.full((nnodes), np.nan, dtype=np.float64)
+        qy = np.full((nnodes), np.nan, dtype=np.float64)
+        qz = np.full((nnodes), np.nan, dtype=np.float64)
         idx = np.array(spdis["node"]) - 1
         qx[idx] = spdis["qx"]
         qy[idx] = spdis["qy"]
         qz[idx] = spdis["qz"]
-        shape = model.modelgrid.shape
-        qx.shape = shape
-        qy.shape = shape
-        qz.shape = shape
+        qx.shape = modelgrid.shape
+        qy.shape = modelgrid.shape
+        qz.shape = modelgrid.shape
 
     # set no-flow and dry cells to NaN
-    if hdsfile is not None and position == "centers":
+    if head is not None and position == "centers":
         noflo_or_dry = np.logical_or(head == model.hnoflo, head == model.hdry)
         qx[noflo_or_dry] = np.nan
         qy[noflo_or_dry] = np.nan

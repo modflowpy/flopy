@@ -12,7 +12,7 @@ import warnings
 from collections import OrderedDict
 
 from ..datbase import DataType, DataInterface
-from ..utils import Util3d, SpatialReference
+from ..utils import Util3d
 
 # web address of spatial reference dot org
 srefhttp = "https://spatialreference.org"
@@ -73,7 +73,7 @@ def write_gridlines_shapefile(filename, mg):
     shapefile = import_shapefile()
     wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
     wr.field("number", "N", 18, 0)
-    if isinstance(mg, SpatialReference):
+    if mg.__class__.__name__ == "SpatialReference":
         grid_lines = mg.get_grid_lines()
         warnings.warn(
             "SpatialReference has been deprecated. Use StructuredGrid"
@@ -125,13 +125,14 @@ def write_grid_shapefile(
     w = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
     w.autoBalance = 1
 
-    if isinstance(mg, SpatialReference):
+    if mg.__class__.__name__ == "SpatialReference":
         verts = copy.deepcopy(mg.vertices)
         warnings.warn(
             "SpatialReference has been deprecated. Use StructuredGrid"
             " instead.",
             category=DeprecationWarning,
         )
+        mg.grid_type = "structured"
     elif mg.grid_type == "structured":
         verts = [
             mg.get_cell_vertices(i, j)
@@ -146,7 +147,7 @@ def write_grid_shapefile(
         raise Exception("Grid type {} not supported.".format(mg.grid_type))
 
     # set up the attribute fields and arrays of attributes
-    if isinstance(mg, SpatialReference) or mg.grid_type == "structured":
+    if mg.grid_type == "structured":
         names = ["node", "row", "column"] + list(array_dict.keys())
         dtypes = [
             ("node", np.dtype("int")),
@@ -192,7 +193,7 @@ def write_grid_shapefile(
         names = enforce_10ch_limit(names)
 
     # flag nan values and explicitly set the dtypes
-    if at.dtype in [np.float, np.float32, np.float64]:
+    if at.dtype in [float, np.float32, np.float64]:
         at[np.isnan(at)] = nan_val
     at = np.array([tuple(i) for i in at], dtype=dtypes)
 
@@ -490,12 +491,12 @@ def get_pyshp_field_info(dtypename):
 def get_pyshp_field_dtypes(code):
     """Returns a numpy dtype for a pyshp field type."""
     dtypes = {
-        "N": np.int,
-        "F": np.float,
-        "L": np.bool,
-        "C": np.object,
+        "N": int,
+        "F": float,
+        "L": bool,
+        "C": object,
     }
-    return dtypes.get(code, np.object)
+    return dtypes.get(code, object)
 
 
 def shp2recarray(shpname):
@@ -524,7 +525,7 @@ def shp2recarray(shpname):
     records = [
         tuple(r) + (geoms[i],) for i, r in enumerate(sfobj.iterRecords())
     ]
-    dtype += [("geometry", np.object)]
+    dtype += [("geometry", object)]
 
     recarray = np.array(records, dtype=dtype).view(np.recarray)
     return recarray
@@ -659,7 +660,7 @@ def write_prj(shpname, mg=None, epsg=None, prj=None, wkt_string=None):
             output.write(prjtxt)
 
 
-class CRS(object):
+class CRS:
     """
     Container to parse and store coordinate reference system parameters,
     and translate between different formats.

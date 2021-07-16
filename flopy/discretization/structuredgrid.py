@@ -1,4 +1,6 @@
 import copy
+import os.path
+
 import numpy as np
 from .grid import Grid, CachedData
 
@@ -154,7 +156,7 @@ class StructuredGrid(Grid):
         ncol=None,
         laycbd=None,
     ):
-        super(StructuredGrid, self).__init__(
+        super().__init__(
             "structured",
             top,
             botm,
@@ -195,7 +197,7 @@ class StructuredGrid(Grid):
         if laycbd is not None:
             self.__laycbd = laycbd
         else:
-            self.__laycbd = np.zeros(self.__nlay, dtype=int)
+            self.__laycbd = np.zeros(self.__nlay or (), dtype=int)
 
     ####################
     # Properties
@@ -211,7 +213,7 @@ class StructuredGrid(Grid):
         if (
             self.__delc is not None
             and self.__delr is not None
-            and super(StructuredGrid, self).is_complete
+            and super().is_complete
         ):
             return True
         return False
@@ -229,8 +231,28 @@ class StructuredGrid(Grid):
         return self.__ncol
 
     @property
+    def ncpl(self):
+        return self.__nrow * self.__ncol
+
+    @property
     def nnodes(self):
         return self.__nlay * self.__nrow * self.__ncol
+
+    @property
+    def nvert(self):
+        return (self.__nrow + 1) * (self.__ncol + 1)
+
+    @property
+    def iverts(self):
+        if self._iverts is None:
+            self._set_structured_iverts()
+        return self._iverts
+
+    @property
+    def verts(self):
+        if self._verts is None:
+            self._set_structured_verts()
+        return self._verts
 
     @property
     def shape(self):
@@ -722,6 +744,32 @@ class StructuredGrid(Grid):
         else:
             return self._cache_dict[cache_index].data_nocopy
 
+    @property
+    def map_polygons(self):
+        """
+        Get a list of matplotlib Polygon patches for plotting
+
+        Returns
+        -------
+            list of Polygon objects
+        """
+        try:
+            import matplotlib.path as mpath
+        except ImportError:
+            raise ImportError("matplotlib required to use this method")
+        cache_index = "xyzgrid"
+        if (
+            cache_index not in self._cache_dict
+            or self._cache_dict[cache_index].out_of_date
+        ):
+            self.xyzvertices
+            self._polygons = None
+
+        if self._polygons is None:
+            self._polygons = (self.xvertices, self.yvertices)
+
+        return self._polygons
+
     ###############
     ### Methods ###
     ###############
@@ -753,7 +801,7 @@ class StructuredGrid(Grid):
 
         """
         # transform x and y to local coordinates
-        x, y = super(StructuredGrid, self).intersect(x, y, local, forgive)
+        x, y = super().intersect(x, y, local, forgive)
 
         # get the cell edges in local coordinates
         xe, ye = self.xyedges
@@ -800,15 +848,38 @@ class StructuredGrid(Grid):
             vrts = np.array(pts).transpose([2, 0, 1])
             return [v.tolist() for v in vrts]
 
-    def get_cell_vertices(self, i, j):
+    @property
+    def top_botm(self):
+        new_top = np.expand_dims(self._top, 0)
+        return np.concatenate((new_top, self._botm), axis=0)
+
+    def get_cell_vertices(self, *args, **kwargs):
         """
         Method to get a set of cell vertices for a single cell
-            used in the Shapefile export utilities
+            used in the Shapefile export utilities and plotting code
+        :param node: (int) node number
         :param i: (int) cell row number
         :param j: (int) cell column number
         Returns
         ------- list of x,y cell vertices
         """
+        nn = None
+        if kwargs:
+            if "node" in kwargs:
+                nn = kwargs.pop("node")
+            else:
+                i = kwargs.pop("i")
+                j = kwargs.pop("j")
+
+        if len(args) > 0:
+            if len(args) == 1:
+                nn = args[0]
+            else:
+                i, j = args[0:2]
+
+        if nn is not None:
+            k, i, j = self.get_lrc(nn)[0]
+
         self._copy_cache = False
         cell_verts = [
             (self.xvertices[i, j], self.yvertices[i, j]),
@@ -818,6 +889,48 @@ class StructuredGrid(Grid):
         ]
         self._copy_cache = True
         return cell_verts
+
+    def get_lrc(self, nodes):
+        """
+        Get layer, row, column from a list of zero based
+        MODFLOW node numbers.
+
+        Returns
+        -------
+        v : list of tuples containing the layer (k), row (i),
+            and column (j) for each node in the input list
+        """
+        if not isinstance(nodes, list):
+            nodes = [nodes]
+        ncpl = self.ncpl
+        v = []
+        for node in nodes:
+            k = int(np.floor(node / ncpl))
+            ij = int((node) - (ncpl * k))
+            i = int(np.floor(ij / self.__ncol))
+            j = int(ij - (i * self.__ncol))
+
+            v.append((k, i, j))
+        return v
+
+    def get_node(self, lrc_list):
+        """
+        Get node number from a list of zero based MODFLOW
+        layer, row, column tuples.
+
+        Returns
+        -------
+        v : list of MODFLOW nodes for each layer (k), row (i),
+            and column (j) tuple in the input list
+        """
+        if not isinstance(lrc_list, list):
+            lrc_list = [lrc_list]
+        nrc = self.__nrow * self.__ncol
+        v = []
+        for [k, i, j] in lrc_list:
+            node = int(((k) * nrc) + ((i) * self.__ncol) + j)
+            v.append(node)
+        return v
 
     def plot(self, **kwargs):
         """
@@ -1370,6 +1483,44 @@ class StructuredGrid(Grid):
 
         return afaces
 
+    @property
+    def cross_section_vertices(self):
+        """
+        Get a set of xvertices and yvertices ordered by node
+        for plotting cross sections
+
+        Returns
+        -------
+            xverts, yverts: (np.ndarray, np.ndarray)
+
+        """
+        xv = self.xyzvertices[0]
+        yv = self.xyzvertices[1]
+
+        xverts, yverts = [], []
+        for i in range(self.nrow):
+            for j in range(self.ncol):
+                xverts.append(
+                    [
+                        xv[i, j],
+                        xv[i + 1, j],
+                        xv[i + 1, j + 1],
+                        xv[i, j + 1],
+                        xv[i, j],
+                    ]
+                )
+                yverts.append(
+                    [
+                        yv[i, j],
+                        yv[i + 1, j],
+                        yv[i + 1, j + 1],
+                        yv[i, j + 1],
+                        yv[i, j],
+                    ]
+                )
+
+        return np.array(xverts), np.array(yverts)
+
     def get_number_plottable_layers(self, a):
         """
         Calculate and return the number of 2d plottable arrays that can be
@@ -1415,27 +1566,110 @@ class StructuredGrid(Grid):
         assert plotarray.shape == required_shape, msg
         return plotarray
 
+    def _set_structured_iverts(self):
+        """
+        Build a list of the vertices that define each model cell and the x, y
+        pair for each vertex
 
-if __name__ == "__main__":
-    delc = np.ones((10,)) * 1
-    delr = np.ones((20,)) * 1
+        """
+        iverts = []
+        inode = 0
+        for i in range(self.nrow):
+            for j in range(self.ncol):
+                iverts.append([inode] + self._build_structured_iverts(i, j))
+                inode += 1
+        self._iverts = iverts
+        return
 
-    top = np.ones((10, 20)) * 2000
-    botm = np.ones((1, 10, 20)) * 1100
+    def _build_structured_iverts(self, i, j):
+        """
+        Build list of vertex numbers for a cell
 
-    t = StructuredGrid(delc, delr, top, botm, xoff=0, yoff=0, angrot=45)
+        Parameters
+        ----------
+        i : int
+            row index
+        j : int
+            column index
 
-    t.use_ref_coords = False
-    x = t.xvertices
-    y = t.yvertices
-    xc = t.xcellcenters
-    yc = t.ycellcenters
-    grid = t.grid_lines
+        Returns
+        -------
+        iv_list : list
+            list of vertex numbers for a cell
 
-    t.use_ref_coords = True
-    sr_x = t.xvertices
-    sr_y = t.yvertices
-    sr_xc = t.xcellcenters
-    sr_yc = t.ycellcenters
-    sr_grid = t.grid_lines
-    print(sr_grid)
+        """
+        iv_list = [i * (self.ncol + 1) + j]
+        iv_list.append(i * (self.ncol + 1) + j + 1)
+        iv_list.append((i + 1) * (self.ncol + 1) + j + 1)
+        iv_list.append((i + 1) * (self.ncol + 1) + j)
+        return iv_list
+
+    def _set_structured_verts(self):
+        """
+        Build a list of the vertices that define each model cell and the x, y
+        pair for each vertex
+
+        Returns
+        -------
+        verts : np.ndarray
+            Array with x, y pairs for every vertex used to define the model.
+
+        """
+        self._verts = np.column_stack(
+            (self.xvertices.flatten(), self.yvertices.flatten())
+        )
+        return
+
+    # initialize grid from a grb file
+    @classmethod
+    def from_binary_grid_file(cls, file_path, verbose=False):
+        """
+        Instantiate a StructuredGrid model grid from a MODFLOW 6 binary
+        grid (*.grb) file.
+
+        Parameters
+        ----------
+        file_path : str
+            file path for the MODFLOW 6 binary grid file
+        verbose : bool
+            Write information to standard output.  Default is False.
+
+        Returns
+        -------
+        return : StructuredGrid
+
+        """
+        from ..mf6.utils.binarygrid_util import MfGrdFile
+
+        grb_obj = MfGrdFile(file_path, verbose=verbose)
+        if grb_obj.grid_type != "DIS":
+            err_msg = (
+                "Binary grid file ({}) ".format(os.path.basename(file_path))
+                + "is not a structured (DIS) grid."
+            )
+            raise ValueError(err_msg)
+
+        idomain = grb_obj.idomain
+        xorigin = grb_obj.xorigin
+        yorigin = grb_obj.yorigin
+        angrot = grb_obj.angrot
+
+        nlay, nrow, ncol = (
+            grb_obj.nlay,
+            grb_obj.nrow,
+            grb_obj.ncol,
+        )
+        delr, delc = grb_obj.delr, grb_obj.delc
+        top, botm = grb_obj.top, grb_obj.bot
+        top.shape = (nrow, ncol)
+        botm.shape = (nlay, nrow, ncol)
+        return cls(
+            delc,
+            delr,
+            top,
+            botm,
+            idomain=idomain,
+            xoff=xorigin,
+            yoff=yorigin,
+            angrot=angrot,
+        )

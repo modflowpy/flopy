@@ -325,10 +325,10 @@ class ModflowFhb(Package):
     @staticmethod
     def get_default_dtype(nbdtim=1, structured=True, head=False):
         if structured:
-            dtype = [("k", np.int), ("i", np.int), ("j", np.int)]
+            dtype = [("k", int), ("i", int), ("j", int)]
         else:
-            dtype = [("node", np.int)]
-        dtype.append(("iaux", np.int))
+            dtype = [("node", int)]
+        dtype.append(("iaux", int))
         for n in range(nbdtim):
             if head:
                 name = "sbhed{}".format(n + 1)

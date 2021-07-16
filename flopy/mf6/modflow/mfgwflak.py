@@ -1,5 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
+# FILE created on March 19, 2021 03:08:37 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -353,13 +354,13 @@ class ModflowGwflak(mfpackage.MFPackage):
                 * rate (string) real or character value that defines the
                   extraction rate for the lake outflow. A positive value
                   indicates inflow and a negative value indicates outflow from
-                  the lake. RATE only applies to active (IBOUND :math:`>` 0)
-                  lakes. A specified RATE is only applied if COUTTYPE for the
-                  OUTLETNO is SPECIFIED. If the Options block includes a
-                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
-                  values can be obtained from a time series by entering the
-                  time-series name in place of a numeric value. By default, the
-                  RATE for each SPECIFIED lake outlet is zero.
+                  the lake. RATE only applies to active (IBOUND > 0) lakes. A
+                  specified RATE is only applied if COUTTYPE for the OUTLETNO
+                  is SPECIFIED. If the Options block includes a TIMESERIESFILE
+                  entry (see the "Time-Variable Input" section), values can be
+                  obtained from a time series by entering the time-series name
+                  in place of a numeric value. By default, the RATE for each
+                  SPECIFIED lake outlet is zero.
             invert : [string]
                 * invert (string) real or character value that defines the
                   invert elevation for the lake outlet. A specified INVERT
@@ -1219,7 +1220,7 @@ class ModflowGwflak(mfpackage.MFPackage):
         pname=None,
         parent_file=None,
     ):
-        super(ModflowGwflak, self).__init__(
+        super().__init__(
             model, "lak", filename, pname, loading_package, parent_file
         )
 

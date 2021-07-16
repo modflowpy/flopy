@@ -161,7 +161,7 @@ concentration = ucnobj.get_data(totim=times[-1])
 cbbobj = bf.CellBudgetFile("henry.cbc")
 times = cbbobj.get_times()
 qx = cbbobj.get_data(text="flow right face", totim=times[-1])[0]
-qy = np.zeros((nlay, nrow, ncol), dtype=np.float)
+qy = np.zeros((nlay, nrow, ncol), dtype=float)
 qz = cbbobj.get_data(text="flow lower face", totim=times[-1])[0]
 
 # ### Create a plot with concentrations and flow vectors

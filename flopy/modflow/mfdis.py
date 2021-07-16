@@ -15,11 +15,13 @@ import numpy as np
 
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
-from ..utils.reference import SpatialReference, TemporalReference
+from ..utils.reference import TemporalReference
 from ..utils.flopy_io import line_parse
 
 ITMUNI = {"u": 0, "s": 1, "m": 2, "h": 3, "d": 4, "y": 5}
 LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}
+
+warnings.simplefilter("always", PendingDeprecationWarning)
 
 
 class ModflowDis(Package):
@@ -62,7 +64,7 @@ class ModflowDis(Package):
         Number of time steps in each stress period (default is 1).
     tsmult : float or array of floats (nper)
         Time step multiplier (default is 1.0).
-    steady : boolean or array of boolean (nper)
+    steady : bool or array of bool (nper)
         true or False indicating whether or not stress period is steady state
         (default is True).
     itmuni : int
@@ -236,9 +238,7 @@ class ModflowDis(Package):
         self.tsmult = Util2d(
             model, (self.nper,), np.float32, tsmult, name="tsmult"
         )
-        self.steady = Util2d(
-            model, (self.nper,), np.bool, steady, name="steady"
-        )
+        self.steady = Util2d(model, (self.nper,), bool, steady, name="steady")
 
         try:
             self.itmuni = int(itmuni)
@@ -282,21 +282,6 @@ class ModflowDis(Package):
             yll = mg._yul_to_yll(yul)
         mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation, proj4=proj4_str)
 
-        xll = mg.xoffset
-        yll = mg.yoffset
-        rotation = mg.angrot
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=DeprecationWarning)
-            self._sr = SpatialReference(
-                self.delr,
-                self.delc,
-                self.lenuni,
-                xll=xll,
-                yll=yll,
-                rotation=rotation or 0.0,
-                proj4_str=proj4_str,
-            )
-
         self.tr = TemporalReference(
             itmuni=self.itmuni, start_datetime=start_datetime
         )
@@ -307,10 +292,23 @@ class ModflowDis(Package):
 
     @property
     def sr(self):
+        from ..utils.reference import SpatialReference
+
         warnings.warn(
             "SpatialReference has been deprecated. Use Grid instead.",
             DeprecationWarning,
         )
+        if not hasattr(self, "_sr"):
+            mg = self.parent.modelgrid
+            self._sr = SpatialReference(
+                self.delr,
+                self.delc,
+                self.lenuni,
+                xll=mg.xoffset,
+                yll=mg.yoffset,
+                rotation=mg.angrot or 0.0,
+                proj4_str=mg.proj4,
+            )
         return self._sr
 
     @sr.setter
@@ -326,7 +324,7 @@ class ModflowDis(Package):
         Check layer thickness.
 
         """
-        return (self.thickness > 0).all()
+        return (self.parent.modelgrid.thick > 0).all()
 
     def get_totim(self):
         """
@@ -356,7 +354,7 @@ class ModflowDis(Package):
                 totim.append(t)
                 if m > 1:
                     dt *= m
-        return np.array(totim, dtype=np.float)
+        return np.array(totim, dtype=float)
 
     def get_final_totim(self):
         """
@@ -473,7 +471,7 @@ class ModflowDis(Package):
         """
         vol = np.empty((self.nlay, self.nrow, self.ncol))
         for l in range(self.nlay):
-            vol[l, :, :] = self.thickness.array[l]
+            vol[l, :, :] = self.parent.modelgrid.thick[l]
         for r in range(self.nrow):
             vol[:, r, :] *= self.delc[r]
         for c in range(self.ncol):
@@ -553,7 +551,7 @@ class ModflowDis(Package):
 
     def get_lrc(self, nodes):
         """
-        Get layer, row, column from a list of zero based
+        Get zero-based layer, row, column from a list of zero-based
         MODFLOW node numbers.
 
         Returns
@@ -561,25 +559,11 @@ class ModflowDis(Package):
         v : list of tuples containing the layer (k), row (i),
             and column (j) for each node in the input list
         """
-        if not isinstance(nodes, list):
-            nodes = [nodes]
-        nrc = self.nrow * self.ncol
-        v = []
-        for node in nodes:
-            k = int((node + 1) / nrc)
-            if (k * nrc) < node:
-                k += 1
-            ij = int(node - (k - 1) * nrc)
-            i = int(ij / self.ncol)
-            if (i * self.ncol) < ij:
-                i += 1
-            j = ij - (i - 1) * self.ncol
-            v.append((k - 1, i - 1, j))
-        return v
+        return self.parent.modelgrid.get_lrc(nodes)
 
     def get_node(self, lrc_list):
         """
-        Get node number from a list of zero based MODFLOW
+        Get zero-based node number from a list of zero-based MODFLOW
         layer, row, column tuples.
 
         Returns
@@ -587,14 +571,7 @@ class ModflowDis(Package):
         v : list of MODFLOW nodes for each layer (k), row (i),
             and column (j) tuple in the input list
         """
-        if not isinstance(lrc_list, list):
-            lrc_list = [lrc_list]
-        nrc = self.nrow * self.ncol
-        v = []
-        for [k, i, j] in lrc_list:
-            node = int(((k) * nrc) + ((i) * self.ncol) + j)
-            v.append(node)
-        return v
+        return self.parent.modelgrid.get_node(lrc_list)
 
     def get_layer(self, i, j, elev):
         """Return the layer for an elevation at an i, j location.
@@ -637,40 +614,34 @@ class ModflowDis(Package):
             return self.botm.array[k, :, :]
 
     def __calculate_thickness(self):
-        thk = []
-        thk.append(self.top - self.botm[0])
-        for k in range(1, self.nlay + sum(self.laycbd)):
-            thk.append(self.botm[k - 1] - self.botm[k])
+        # thk = []
+        # thk.append(self.top - self.botm[0])
+        # for k in range(1, self.nlay + sum(self.laycbd)):
+        #     thk.append(self.botm[k - 1] - self.botm[k])
         self.__thickness = Util3d(
             self.parent,
             (self.nlay + sum(self.laycbd), self.nrow, self.ncol),
             np.float32,
-            thk,
+            self.parent.modelgrid.thick,
             name="thickness",
         )
 
     @property
     def thickness(self):
         """
-        Get a Util3d array of cell thicknesses.
+        Return cell thicknesses.
 
         Returns
         -------
-        thickness : util3d array of floats (nlay, nrow, ncol)
+        thickness : array of floats (nlay, nrow, ncol)
 
         """
-        # return self.__thickness
-        thk = []
-        thk.append(self.top - self.botm[0])
-        for k in range(1, self.nlay + sum(self.laycbd)):
-            thk.append(self.botm[k - 1] - self.botm[k])
-        return Util3d(
-            self.parent,
-            (self.nlay + sum(self.laycbd), self.nrow, self.ncol),
-            np.float32,
-            thk,
-            name="thickness",
+        warnings.warn(
+            "ModflowDis.thickness will be deprecated and removed "
+            "in version 3.3.5.  Use grid.thick().",
+            PendingDeprecationWarning,
         )
+        return self.parent.modelgrid.thick
 
     def write_file(self, check=True):
         """
@@ -678,7 +649,7 @@ class ModflowDis(Package):
 
         Parameters
         ----------
-        check : boolean
+        check : bool
             Check package data for common errors. (default True)
 
         Returns
@@ -698,9 +669,6 @@ class ModflowDis(Package):
         f_dis = open(self.fn_path, "w")
         # Item 0: heading
         f_dis.write("{0:s}\n".format(self.heading))
-        # f_dis.write('#{0:s}'.format(str(self.sr)))
-        # f_dis.write(" ,{0:s}:{1:s}\n".format("start_datetime",
-        #                                    self.start_datetime))
         # Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI
         f_dis.write(
             "{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}\n".format(
@@ -773,7 +741,7 @@ class ModflowDis(Package):
         active = chk.get_active(include_cbd=True)
 
         # Use either a numpy array or masked array
-        thickness = self.thickness.array
+        thickness = self.parent.modelgrid.thick
         non_finite = ~(np.isfinite(thickness))
         if non_finite.any():
             thickness[non_finite] = 0
@@ -827,7 +795,7 @@ class ModflowDis(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
-        check : boolean
+        check : bool
             Check package data for common errors. (default True)
 
         Returns
@@ -941,13 +909,13 @@ class ModflowDis(Package):
                 )
             )
             print("   loading laycbd...")
-        laycbd = np.zeros(nlay, dtype=np.int)
+        laycbd = np.zeros(nlay, dtype=int)
         d = 0
         while True:
             line = f.readline()
             raw = line.strip("\n").split()
             for val in raw:
-                if (np.int(val)) != 0:
+                if int(val) != 0:
                     laycbd[d] = 1
                 d += 1
                 if d == nlay:

@@ -7,7 +7,7 @@ from flopy.utils import MfList
 
 # instance testing
 #override the default data type
-dtype = np.dtype([("k",int),("i",np.int),("j",np.int),\
+dtype = np.dtype([("k", int), ("i", int), ("j", int),\
                   ("stage",np.float32),("cond",np.float32),("rbot",np.float32),\
     ("aux1",np.float32),("aux2",np.float32),])#("comments",object)])
 

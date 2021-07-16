@@ -5,12 +5,17 @@ the ModflowDisU class as `flopy.modflow.ModflowDisU`.
 """
 
 import sys
+import warnings
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, read1d
+from ..utils.reference import TemporalReference
+from ..discretization.unstructuredgrid import UnstructuredGrid
 
 ITMUNI = {"u": 0, "s": 1, "m": 2, "h": 3, "d": 4, "y": 5}
 LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}
+
+warnings.simplefilter("always", PendingDeprecationWarning)
 
 
 class ModflowDisU(Package):
@@ -157,8 +162,8 @@ class ModflowDisU(Package):
         Number of time steps in each stress period (default is 1).
     tsmult : float or array of floats (nper)
         Time step multiplier (default is 1.0).
-    steady : boolean or array of boolean (nper)
-        true or False indicating whether or not stress period is steady state
+    steady : bool or array of bool (nper)
+        True or False indicating whether or not stress period is steady state
         (default is True).
     extension : string
         Filename extension (default is 'dis')
@@ -442,9 +447,7 @@ class ModflowDisU(Package):
         self.tsmult = Util2d(
             model, (self.nper,), np.float32, tsmult, name="tsmult"
         )
-        self.steady = Util2d(
-            model, (self.nper,), np.bool, steady, name="steady"
-        )
+        self.steady = Util2d(model, (self.nper,), bool, steady, name="steady")
 
         self.itmuni_dict = {
             0: "undefined",
@@ -455,13 +458,28 @@ class ModflowDisU(Package):
             5: "years",
         }
 
-        #        self.sr = reference.SpatialReference(self.delr.array, self.delc.array,
-        #                                             self.lenuni, xul=xul,
-        #                                             yul=yul, rotation=rotation)
+        if start_datetime is None:
+            start_datetime = model._start_datetime
+
+        if model.modelgrid is None:
+            model.modelgrid = UnstructuredGrid(
+                ncpl=self.nodelay.array,
+                top=self.top.array,
+                botm=self.bot.array,
+                lenuni=self.lenuni,
+            )
+
+        self.tr = TemporalReference(
+            itmuni=self.itmuni, start_datetime=start_datetime
+        )
+
         self.start_datetime = start_datetime
 
         # calculate layer thicknesses
         self.__calculate_thickness()
+
+        # get neighboring nodes
+        self._get_neighboring_nodes()
 
         # Add package and return
         self.parent.add_package(self)
@@ -476,28 +494,37 @@ class ModflowDisU(Package):
         for k in range(self.nlay):
             thk.append(self.top[k] - self.bot[k])
         self.__thickness = Util3d(
-            self.parent, (nlay, nrow, ncol), np.float32, thk, name="thickness"
+            self.parent,
+            (nlay, nrow, ncol),
+            np.float32,
+            thk,
+            name="thickness",
         )
         return
 
     @property
     def thickness(self):
         """
-        Get a Util2d array of cell thicknesses.
+        Return cell thicknesses.
 
         Returns
         -------
-        thickness : util2d array of floats (nodes,)
+        thickness : array of floats (nodes,)
 
         """
-        return self.__thickness
+        warnings.warn(
+            "ModflowDisU.thickness will be deprecated and removed "
+            "in version 3.3.5.  Use grid.thick().",
+            PendingDeprecationWarning,
+        )
+        return self.__thickness.array
 
     def checklayerthickness(self):
         """
         Check layer thickness.
 
         """
-        return (self.thickness > 0).all()
+        return (self.parent.modelgrid.thick > 0).all()
 
     def get_cell_volumes(self):
         """
@@ -533,7 +560,7 @@ class ModflowDisU(Package):
         return self.nodes / self.nlay
 
     @classmethod
-    def load(cls, f, model, ext_unit_dict=None, check=False):
+    def load(cls, f, model, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -550,7 +577,7 @@ class ModflowDisU(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
-        check : boolean
+        check : bool
             Check package data for common errors. (default False; not setup yet)
 
         Returns
@@ -930,265 +957,22 @@ class ModflowDisU(Package):
     def _defaultunit():
         return 11
 
-        # def get_node_coordinates(self):
+    def _get_neighboring_nodes(self):
+        """
+        For each node, get node numbers for all neighbors.
 
-    #     """
-    #     Get y, x, and z cell centroids.
-    #
-    #     Returns
-    #     -------
-    #     y : list of cell y-centroids
-    #
-    #     x : list of cell x-centroids
-    #
-    #     z : array of floats (nlay, nrow, ncol)
-    #     """
-    #     # In row direction
-    #     y = np.empty((self.nrow))
-    #     for r in range(self.nrow):
-    #         if (r == 0):
-    #             y[r] = self.delc[r] / 2.
-    #         else:
-    #             y[r] = y[r - 1] + (self.delc[r] + self.delc[r - 1]) / 2.
-    #     # Invert y to convert to a cartesian coordinate system
-    #     y = y[::-1]
-    #     # In column direction
-    #     x = np.empty((self.ncol))
-    #     for c in range(self.ncol):
-    #         if (c == 0):
-    #             x[c] = self.delr[c] / 2.
-    #         else:
-    #             x[c] = x[c - 1] + (self.delr[c] + self.delr[c - 1]) / 2.
-    #     # In layer direction
-    #     z = np.empty((self.nlay, self.nrow, self.ncol))
-    #     for l in range(self.nlay):
-    #         if (l == 0):
-    #             z[l, :, :] = (self.top[:, :] + self.botm[l, :, :]) / 2.
-    #         else:
-    #             z[l, :, :] = (self.botm[l - 1, :, :] + self.botm[l, :, :]) / 2.
-    #     return y, x, z
-    #
-    # def get_lrc(self, nodes):
-    #     """
-    #     Get layer, row, column from a list of MODFLOW node numbers.
-    #
-    #     Returns
-    #     -------
-    #     v : list of tuples containing the layer (k), row (i),
-    #         and column (j) for each node in the input list
-    #     """
-    #     if not isinstance(nodes, list):
-    #         nodes = [nodes]
-    #     nrc = self.nrow * self.ncol
-    #     v = []
-    #     for node in nodes:
-    #         k = int(node / nrc)
-    #         if (k * nrc) < node:
-    #             k += 1
-    #         ij = int(node - (k - 1) * nrc)
-    #         i = int(ij / self.ncol)
-    #         if (i * self.ncol) < ij:
-    #             i += 1
-    #         j = ij - (i - 1) * self.ncol
-    #         v.append((k, i, j))
-    #     return v
-    #
-    # def get_node(self, lrc_list):
-    #     """
-    #     Get node number from a list of MODFLOW layer, row, column tuples.
-    #
-    #     Returns
-    #     -------
-    #     v : list of MODFLOW nodes for each layer (k), row (i),
-    #         and column (j) tuple in the input list
-    #     """
-    #     if not isinstance(lrc_list, list):
-    #         lrc_list = [lrc_list]
-    #     nrc = self.nrow * self.ncol
-    #     v = []
-    #     for [k, i, j] in lrc_list:
-    #         node = int(((k - 1) * nrc) + ((i - 1) * self.ncol) + j)
-    #         v.append(node)
-    #     return v
-    #
-    # def read_from_cnf(self, cnf_file_name, n_per_line=0):
-    #     """
-    #     Read discretization information from an MT3D configuration file.
-    #
-    #     """
-    #
-    #     def getn(ii, jj):
-    #         if (jj == 0):
-    #             n = 1
-    #         else:
-    #             n = int(ii / jj)
-    #             if (ii % jj != 0):
-    #                 n = n + 1
-    #
-    #         return n
-    #
-    #     try:
-    #         f_cnf = open(cnf_file_name, 'r')
-    #
-    #         # nlay, nrow, ncol
-    #         line = f_cnf.readline()
-    #         s = line.split()
-    #         cnf_nlay = int(s[0])
-    #         cnf_nrow = int(s[1])
-    #         cnf_ncol = int(s[2])
-    #
-    #         # ncol column widths delr[c]
-    #         line = ''
-    #         for dummy in range(getn(cnf_ncol, n_per_line)):
-    #             line = line + f_cnf.readline()
-    #         cnf_delr = [float(s) for s in line.split()]
-    #
-    #         # nrow row widths delc[r]
-    #         line = ''
-    #         for dummy in range(getn(cnf_nrow, n_per_line)):
-    #             line = line + f_cnf.readline()
-    #         cnf_delc = [float(s) for s in line.split()]
-    #
-    #         # nrow * ncol htop[r, c]
-    #         line = ''
-    #         for dummy in range(getn(cnf_nrow * cnf_ncol, n_per_line)):
-    #             line = line + f_cnf.readline()
-    #         cnf_top = [float(s) for s in line.split()]
-    #         cnf_top = np.reshape(cnf_top, (cnf_nrow, cnf_ncol))
-    #
-    #         # nlay * nrow * ncol layer thickness dz[l, r, c]
-    #         line = ''
-    #         for dummy in range(
-    #                 getn(cnf_nlay * cnf_nrow * cnf_ncol, n_per_line)):
-    #             line = line + f_cnf.readline()
-    #         cnf_dz = [float(s) for s in line.split()]
-    #         cnf_dz = np.reshape(cnf_dz, (cnf_nlay, cnf_nrow, cnf_ncol))
-    #
-    #         # cinact, cdry, not used here so commented
-    #         '''line = f_cnf.readline()
-    #         s = line.split()
-    #         cinact = float(s[0])
-    #         cdry = float(s[1])'''
-    #
-    #         f_cnf.close()
-    #     finally:
-    #         self.nlay = cnf_nlay
-    #         self.nrow = cnf_nrow
-    #         self.ncol = cnf_ncol
-    #
-    #         self.delr = Util2d(model, (self.ncol,), np.float32, cnf_delr,
-    #                             name='delr', locat=self.unit_number[0])
-    #         self.delc = Util2d(model, (self.nrow,), np.float32, cnf_delc,
-    #                             name='delc', locat=self.unit_number[0])
-    #         self.top = Util2d(model, (self.nrow, self.ncol), np.float32,
-    #                            cnf_top, name='model_top',
-    #                            locat=self.unit_number[0])
-    #
-    #         cnf_botm = np.empty((self.nlay + sum(self.laycbd), self.nrow,
-    #                              self.ncol))
-    #
-    #         # First model layer
-    #         cnf_botm[0:, :, :] = cnf_top - cnf_dz[0, :, :]
-    #         # All other layers
-    #         for l in range(1, self.nlay):
-    #             cnf_botm[l, :, :] = cnf_botm[l - 1, :, :] - cnf_dz[l, :, :]
-    #
-    #         self.botm = Util3d(model, (self.nlay + sum(self.laycbd),
-    #                                     self.nrow, self.ncol), np.float32,
-    #                             cnf_botm, 'botm',
-    #                             locat=self.unit_number[0])
-    #
-    # def gettop(self):
-    #     """
-    #     Get the top array.
-    #
-    #     Returns
-    #     -------
-    #     top : array of floats (nrow, ncol)
-    #     """
-    #     return self.top.array
-    #
-    # def getbotm(self, k=None):
-    #     """
-    #     Get the bottom array.
-    #
-    #     Returns
-    #     -------
-    #     botm : array of floats (nlay, nrow, ncol), or
-    #
-    #     botm : array of floats (nrow, ncol) if k is not none
-    #     """
-    #     if k is None:
-    #         return self.botm.array
-    #     else:
-    #         return self.botm.array[k, :, :]
-    #
-    # def check(self, f=None, verbose=True, level=1):
-    #     """
-    #     Check dis package data for zero and negative thicknesses.
-    #
-    #     Parameters
-    #     ----------
-    #     f : str or file handle
-    #         String defining file name or file handle for summary file
-    #         of check method output. If a sting is passed a file handle
-    #         is created. If f is None, check method does not write
-    #         results to a summary file. (default is None)
-    #     verbose : bool
-    #         Boolean flag used to determine if check method results are
-    #         written to the screen
-    #     level : int
-    #         Check method analysis level. If level=0, summary checks are
-    #         performed. If level=1, full checks are performed.
-    #
-    #     Returns
-    #     -------
-    #     None
-    #
-    #     Examples
-    #     --------
-    #
-    #     >>> import flopy
-    #     >>> m = flopy.modflow.Modflow.load('model.nam')
-    #     >>> m.dis.check()
-    #     """
-    #     if f is not None:
-    #         if isinstance(f, str):
-    #             pth = os.path.join(self.parent.model_ws, f)
-    #             f = open(pth, 'w', 0)
-    #
-    #     errors = False
-    #     txt = '\n{} PACKAGE DATA VALIDATION:\n'.format(self.name[0])
-    #     t = ''
-    #     t1 = ''
-    #     inactive = self.parent.bas6.ibound.array == 0
-    #     # thickness errors
-    #     d = self.thickness.array
-    #     d[inactive] = 1.
-    #     if d.min() <= 0:
-    #         errors = True
-    #         t = '{}  ERROR: Negative or zero cell thickness specified.\n'.format(
-    #             t)
-    #         if level > 0:
-    #             idx = np.column_stack(np.where(d <= 0.))
-    #             t1 = self.level1_arraylist(idx, d, self.thickness.name, t1)
-    #     else:
-    #         t = '{}  Specified cell thickness is OK.\n'.format(t)
-    #
-    #     # add header to level 0 text
-    #     txt += t
-    #
-    #     if level > 0:
-    #         if errors:
-    #             txt += '\n  DETAILED SUMMARY OF {} ERRORS:\n'.format(
-    #                 self.name[0])
-    #             # add level 1 header to level 1 text
-    #             txt += t1
-    #
-    #     # write errors to summary file
-    #     if f is not None:
-    #         f.write('{}\n'.format(txt))
-    #
-    #     # write errors to stdout
-    #     if verbose:
-    #         print(txt)
+        Returns
+        -------
+        Jagged list of numpy arrays for each node.
+        Each array contains base-1 neighboring node indices.
+        """
+        ja = self.ja.array
+        iac_sum = np.cumsum(self.iac.array)
+        ja_slices = np.asarray(
+            [
+                np.s_[iac_sum[i - 1] + 1 : x] if i > 0 else np.s_[1:x]
+                for i, x in enumerate(iac_sum)
+            ]
+        )  # note: this removes the diagonal - neighbors only
+        self._neighboring_nodes = [ja[sl] for sl in ja_slices]
+        return

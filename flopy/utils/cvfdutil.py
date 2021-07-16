@@ -36,7 +36,7 @@ def centroid_of_polygon(points):
     return (result_x, result_y)
 
 
-class Point(object):
+class Point:
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -176,7 +176,7 @@ def to_cvfd(
     # In the process, filter out any duplicate vertices
     vertexdict = OrderedDict()
     vertexlist = []
-    xcyc = np.empty((ncells, 2), dtype=np.float)
+    xcyc = np.empty((ncells, 2), dtype=float)
     iv = 0
     nvertstart = 0
     if verbose:
@@ -304,7 +304,7 @@ def shapefile_to_xcyc(shp):
     sf = shapefile.Reader(shp)
     shapes = sf.shapes()
     ncells = len(shapes)
-    xcyc = np.empty((ncells, 2), dtype=np.float)
+    xcyc = np.empty((ncells, 2), dtype=float)
     for icell, shape in enumerate(shapes):
         points = shape.points
         xc, yc = centroid_of_polygon(points)
@@ -368,7 +368,7 @@ def get_disv_gridprops(verts, iverts, xcyc=None):
     nvert = verts.shape[0]
     ncpl = len(iverts)
     if xcyc is None:
-        xcyc = np.empty((ncpl, 2), dtype=np.float)
+        xcyc = np.empty((ncpl, 2), dtype=float)
         for icell in range(ncpl):
             vlist = [
                 (verts[ivert, 0], verts[ivert, 1]) for ivert in iverts[icell]

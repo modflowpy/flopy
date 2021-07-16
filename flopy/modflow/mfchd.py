@@ -212,9 +212,9 @@ class ModflowChd(Package):
         if structured:
             dtype = np.dtype(
                 [
-                    ("k", np.int),
-                    ("i", np.int),
-                    ("j", np.int),
+                    ("k", int),
+                    ("i", int),
+                    ("j", int),
                     ("shead", np.float32),
                     ("ehead", np.float32),
                 ]
@@ -222,7 +222,7 @@ class ModflowChd(Package):
         else:
             dtype = np.dtype(
                 [
-                    ("node", np.int),
+                    ("node", int),
                     ("shead", np.float32),
                     ("ehead", np.float32),
                 ]

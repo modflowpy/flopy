@@ -188,7 +188,7 @@ def cf_model(imod, ion, nmax, k, i, j, Qt, base, hdry):
     line += "  row {} - col {}\n".format(i + 1, j + 1)
     line += "  {}\n".format(elt)
     # get the results
-    v = np.zeros((10), dtype=np.float)
+    v = np.zeros((10), dtype=float)
     if success:
         try:
             hedObj = flopy.utils.HeadFile(
@@ -289,7 +289,7 @@ def doit():
     )
 
     # create array to store capture fraction data (subset of model)
-    cf_array = np.empty((10, nrow2, ncol2), dtype=np.float)
+    cf_array = np.empty((10, nrow2, ncol2), dtype=float)
     cf_array.fill(np.nan)
 
     # timer for capture fraction analysis

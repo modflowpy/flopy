@@ -1,5 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
+# FILE created on March 19, 2021 03:08:37 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -201,8 +202,8 @@ class ModflowIms(mfpackage.MFPackage):
           residual increases, while a low value serves to control step size
           more severely. The value usually ranges from 1.0 to 10:math:`^6`; a
           value of 10:math:`^4` works well for most problems but lower values
-          like 1.1 may be required for harder problems. BACKTRACKING\_TOLERANCE
-          only needs to be specified if BACKTRACKING\_NUMBER is greater than
+          like 1.1 may be required for harder problems. BACKTRACKING_TOLERANCE
+          only needs to be specified if BACKTRACKING_NUMBER is greater than
           zero.
     backtracking_reduction_factor : double
         * backtracking_reduction_factor (double) real value defining the
@@ -230,9 +231,9 @@ class ModflowIms(mfpackage.MFPackage):
           for convergence of the inner (linear) iterations, in units of length.
           When the maximum absolute value of the head change at all nodes
           during an iteration is less than or equal to INNER_HCLOSE, the matrix
-          solver assumes convergence. Commonly, INNER_HCLOSE is set an order of
-          magnitude less than the OUTER_HCLOSE value specified for the
-          NONLINEAR block. The INNER_HCLOSE keyword has been deprecated in
+          solver assumes convergence. Commonly, INNER_HCLOSE is set equal to or
+          an order of magnitude less than the OUTER_HCLOSE value specified for
+          the NONLINEAR block. The INNER_HCLOSE keyword has been deprecated in
           favor of the more general INNER_DVCLOSE (for dependent variable),
           however either one can be specified in order to maintain backward
           compatibility.
@@ -243,43 +244,44 @@ class ModflowIms(mfpackage.MFPackage):
           length for head). When the maximum absolute value of the dependent-
           variable change at all nodes during an iteration is less than or
           equal to INNER_DVCLOSE, the matrix solver assumes convergence.
-          Commonly, INNER_DVCLOSE is set an order of magnitude less than the
-          OUTER_DVCLOSE value specified for the NONLINEAR block. The keyword,
-          INNER_HCLOSE can be still be specified instead of INNER_DVCLOSE for
-          backward compatibility with previous versions of MODFLOW 6 but
-          eventually INNER_HCLOSE will be deprecated and specification of
-          INNER_HCLOSE will cause MODFLOW 6 to terminate with an error.
+          Commonly, INNER_DVCLOSE is set equal to or an order of magnitude less
+          than the OUTER_DVCLOSE value specified for the NONLINEAR block. The
+          keyword, INNER_HCLOSE can be still be specified instead of
+          INNER_DVCLOSE for backward compatibility with previous versions of
+          MODFLOW 6 but eventually INNER_HCLOSE will be deprecated and
+          specification of INNER_HCLOSE will cause MODFLOW 6 to terminate with
+          an error.
     rcloserecord : [inner_rclose, rclose_option]
         * inner_rclose (double) real value that defines the flow residual
           tolerance for convergence of the IMS linear solver and specific flow
           residual criteria used. This value represents the maximum allowable
           residual at any single node. Value is in units of length cubed per
-          time, and must be consistent with mf length and time units. Usually a
-          value of :math:`1.0 \\times 10^{-1}` is sufficient for the flow-
-          residual criteria when meters and seconds are the defined \mf length
-          and time.
+          time, and must be consistent with MODFLOW 6 length and time units.
+          Usually a value of :math:`1.0 \\times 10^{-1}` is sufficient for the
+          flow-residual criteria when meters and seconds are the defined
+          MODFLOW 6 length and time.
         * rclose_option (string) an optional keyword that defines the specific
           flow residual criterion used. STRICT--an optional keyword that is
           used to specify that INNER_RCLOSE represents a infinity-Norm
           (absolute convergence criteria) and that the dependent-variable (for
           example, head) and flow convergence criteria must be met on the first
           inner iteration (this criteria is equivalent to the criteria used by
-          the MODFLOW-2005 PCG package~citep{hill1990preconditioned}).
-          L2NORM_RCLOSE--an optional keyword that is used to specify that
-          INNER_RCLOSE represents a L-2 Norm closure criteria instead of a
-          infinity-Norm (absolute convergence criteria). When L2NORM_RCLOSE is
-          specified, a reasonable initial INNER_RCLOSE value is 0.1 times the
-          number of active cells when meters and seconds are the defined mf
-          length and time. RELATIVE_RCLOSE--an optional keyword that is used to
-          specify that INNER_RCLOSE represents a relative L-2 Norm reduction
-          closure criteria instead of a infinity-Norm (absolute convergence
-          criteria). When RELATIVE_RCLOSE is specified, a reasonable initial
-          INNER_RCLOSE value is :math:`1.0 \\times 10^{-4}` and convergence is
-          achieved for a given inner (linear) iteration when :math:`\\Delta h
-          \\le` INNER_DVCLOSE and the current L-2 Norm is :math:`\\le` the
-          product of the RELATIVE\_RCLOSE and the initial L-2 Norm for the
-          current inner (linear) iteration. If RCLOSE\_OPTION is not specified,
-          an absolute residual (infinity-norm) criterion is used.
+          the MODFLOW-2005 PCG package (Hill, 1990)). L2NORM_RCLOSE--an
+          optional keyword that is used to specify that INNER_RCLOSE represents
+          a L-2 Norm closure criteria instead of a infinity-Norm (absolute
+          convergence criteria). When L2NORM_RCLOSE is specified, a reasonable
+          initial INNER_RCLOSE value is 0.1 times the number of active cells
+          when meters and seconds are the defined MODFLOW 6 length and time.
+          RELATIVE_RCLOSE--an optional keyword that is used to specify that
+          INNER_RCLOSE represents a relative L-2 Norm reduction closure
+          criteria instead of a infinity-Norm (absolute convergence criteria).
+          When RELATIVE_RCLOSE is specified, a reasonable initial INNER_RCLOSE
+          value is :math:`1.0 \\times 10^{-4}` and convergence is achieved for
+          a given inner (linear) iteration when :math:`\\Delta h \\le`
+          INNER_DVCLOSE and the current L-2 Norm is :math:`\\le` the product of
+          the RELATIVE_RCLOSE and the initial L-2 Norm for the current inner
+          (linear) iteration. If RCLOSE_OPTION is not specified, an absolute
+          residual (infinity-norm) criterion is used.
     linear_acceleration : string
         * linear_acceleration (string) a keyword that defines the linear
           acceleration method used by the default IMS linear solvers. CG -
@@ -312,7 +314,7 @@ class ModflowIms(mfpackage.MFPackage):
           defines the drop tolerance used to drop preconditioner terms based on
           the magnitude of matrix entries in the ILUT and MILUT
           preconditioners. A value of :math:`10^{-4}` works well for most
-          problems. By default, PRECONDITIONER\_DROP\_TOLERANCE is zero and the
+          problems. By default, PRECONDITIONER_DROP_TOLERANCE is zero and the
           zero-fill incomplete LU factorization preconditioners (ILU(0) and
           MILU(0)) are used.
     number_orthogonalizations : integer
@@ -732,7 +734,7 @@ class ModflowIms(mfpackage.MFPackage):
         pname=None,
         parent_file=None,
     ):
-        super(ModflowIms, self).__init__(
+        super().__init__(
             simulation, "ims", filename, pname, loading_package, parent_file
         )
 

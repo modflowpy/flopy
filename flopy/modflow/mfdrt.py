@@ -194,26 +194,26 @@ class ModflowDrt(Package):
         if structured:
             dtype = np.dtype(
                 [
-                    ("k", np.int),
-                    ("i", np.int),
-                    ("j", np.int),
+                    ("k", int),
+                    ("i", int),
+                    ("j", int),
                     ("elev", np.float32),
                     ("cond", np.float32),
-                    ("layr", np.int),
-                    ("rowr", np.int),
-                    ("colr", np.int),
+                    ("layr", int),
+                    ("rowr", int),
+                    ("colr", int),
                     ("rfprop", np.float32),
                 ]
             )
         else:
             dtype = np.dtype(
                 [
-                    ("inode", np.int),
+                    ("inode", int),
                     ("elev", np.float32),
                     ("cond", np.float32),
-                    ("layr", np.int),
-                    ("rowr", np.int),
-                    ("colr", np.int),
+                    ("layr", int),
+                    ("rowr", int),
+                    ("colr", int),
                     ("rfprop", np.float32),
                 ]
             )

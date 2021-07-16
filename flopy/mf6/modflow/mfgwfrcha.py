@@ -1,5 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
+# FILE created on March 19, 2021 03:08:37 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator, ArrayTemplateGenerator
 
@@ -302,7 +303,7 @@ class ModflowGwfrcha(mfpackage.MFPackage):
         pname=None,
         parent_file=None,
     ):
-        super(ModflowGwfrcha, self).__init__(
+        super().__init__(
             model, "rcha", filename, pname, loading_package, parent_file
         )
 

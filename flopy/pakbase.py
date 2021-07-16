@@ -20,7 +20,7 @@ from .utils import OptionBlock
 from .utils.flopy_io import ulstrd
 
 
-class PackageInterface(object):
+class PackageInterface:
     @property
     @abc.abstractmethod
     def name(self):
@@ -112,12 +112,16 @@ class PackageInterface(object):
         )
 
         # check vkcb if there are any quasi-3D layers
-        if self.parent.dis.laycbd.sum() > 0:
+        if "DIS" in self.parent.get_package_list():
+            dis = self.parent.dis
+        else:
+            dis = self.parent.disu
+        if dis.laycbd.sum() > 0:
             # pad non-quasi-3D layers in vkcb array with ones so
             # they won't fail checker
             vkcb = self.vkcb.array.copy()
             for l in range(self.vkcb.shape[0]):
-                if self.parent.dis.laycbd[l] == 0:
+                if dis.laycbd[l] == 0:
                     # assign 1 instead of zero as default value that
                     # won't violate checker
                     # (allows for same structure as other checks)
@@ -203,11 +207,21 @@ class PackageInterface(object):
             if kp in self.__dict__:
                 kparams[kp] = name
         if "hk" in self.__dict__:
-            hk = self.hk.array.copy()
+            if self.hk.shape[1] == None:
+                hk = np.asarray(
+                    [a.array.flatten() for a in self.hk], dtype=object
+                )
+            else:
+                hk = self.hk.array.copy()
         else:
             hk = self.k.array.copy()
         if "vka" in self.__dict__ and self.layvka.sum() > 0:
-            vka = self.vka.array
+            if self.vka.shape[1] == None:
+                vka = np.asarray(
+                    [a.array.flatten() for a in self.vka], dtype=object
+                )
+            else:
+                vka = self.vka.array
             vka_param = kparams.pop("vka")
         elif "k33" in self.__dict__:
             vka = self.k33.array
@@ -351,7 +365,6 @@ class PackageInterface(object):
                     + "storage coefficients"
                 )
                 chk._add_to_summary(type="Warning", desc=desc)
-
             chk.values(
                 sarrays["ss"],
                 active & (sarrays["ss"] < 0),
@@ -376,8 +389,25 @@ class PackageInterface(object):
                         for l in self.laytyp
                     ]
                 )
-                sarrays["sy"] = sarrays["sy"][inds, :, :]
-                active = active[inds, :, :]
+                if self.ss.shape[1] is None:
+                    # unstructured; build flat nodal property array slicers (by layer)
+                    node_to = np.cumsum([s.array.size for s in self.ss])
+                    node_from = np.array([0] + list(node_to[:-1]))
+                    node_k_slices = np.array(
+                        [
+                            np.s_[n_from:n_to]
+                            for n_from, n_to in zip(node_from, node_to)
+                        ]
+                    )[inds]
+                    sarrays["sy"] = np.asarray(
+                        [sarrays["sy"][sl] for sl in node_k_slices]
+                    ).flatten()
+                    active = np.asarray(
+                        [active[sl] for sl in node_k_slices]
+                    ).flatten()
+                else:
+                    sarrays["sy"] = sarrays["sy"][inds, :, :]
+                    active = active[inds, :, :]
             else:
                 iconvert = self.iconvert.array
                 for ishape in np.ndindex(active.shape):
@@ -585,7 +615,7 @@ class Package(PackageInterface):
                             )
                         value = new_list
 
-        super(Package, self).__setattr__(key, value)
+        super().__setattr__(key, value)
 
     @property
     def name(self):
@@ -899,10 +929,10 @@ class Package(PackageInterface):
         nppak = 0
         if "parameter" in line.lower():
             t = line.strip().split()
-            nppak = np.int(t[1])
+            nppak = int(t[1])
             mxl = 0
             if nppak > 0:
-                mxl = np.int(t[2])
+                mxl = int(t[2])
                 if model.verbose:
                     msg = (
                         3 * " "
@@ -931,7 +961,7 @@ class Package(PackageInterface):
                     msg = 3 * " " + "implicit nppak in {}".format(filename)
                     print(msg)
             if nppak > 0:
-                mxl = np.int(t[3])
+                mxl = int(t[3])
                 imax += 1
                 if model.verbose:
                     msg = (
@@ -1089,12 +1119,12 @@ class Package(PackageInterface):
 
                 #  get appropriate parval
                 if model.mfpar.pval is None:
-                    parval = np.float(par_dict["parval"])
+                    parval = float(par_dict["parval"])
                 else:
                     try:
-                        parval = np.float(model.mfpar.pval.pval_dict[pname])
+                        parval = float(model.mfpar.pval.pval_dict[pname])
                     except:
-                        parval = np.float(par_dict["parval"])
+                        parval = float(par_dict["parval"])
 
                 # fill current parameter data (par_current)
                 for ibnd, t in enumerate(data_dict):

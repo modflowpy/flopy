@@ -12,7 +12,7 @@ from ..utils.recarray_utils import create_empty_recarray
 from ..pakbase import Package
 
 
-class Mnw(object):
+class Mnw:
     """
     Multi-Node Well object class
 
@@ -545,15 +545,15 @@ class Mnw(object):
         if structured:
             return np.dtype(
                 [
-                    ("k", np.int),
-                    ("i", np.int),
-                    ("j", np.int),
-                    ("per", np.int),
+                    ("k", int),
+                    ("i", int),
+                    ("j", int),
+                    ("per", int),
                     ("qdes", np.float32),
-                    ("capmult", np.int),
+                    ("capmult", int),
                     ("cprime", np.float32),
                     ("hlim", np.float32),
-                    ("qcut", np.int),
+                    ("qcut", int),
                     ("qfrcmn", np.float32),
                     ("qfrcmx", np.float32),
                 ]
@@ -1218,17 +1218,17 @@ class ModflowMnw2(Package):
         if structured:
             return np.dtype(
                 [
-                    ("k", np.int),
-                    ("i", np.int),
-                    ("j", np.int),
+                    ("k", int),
+                    ("i", int),
+                    ("j", int),
                     ("ztop", np.float32),
                     ("zbotm", np.float32),
-                    ("wellid", np.object),
-                    ("losstype", np.object),
-                    ("pumploc", np.int),
-                    ("qlimit", np.int),
-                    ("ppflag", np.int),
-                    ("pumpcap", np.int),
+                    ("wellid", object),
+                    ("losstype", object),
+                    ("pumploc", int),
+                    ("qlimit", int),
+                    ("ppflag", int),
+                    ("pumpcap", int),
                     ("rw", np.float32),
                     ("rskin", np.float32),
                     ("kskin", np.float32),
@@ -1237,12 +1237,12 @@ class ModflowMnw2(Package):
                     ("P", np.float32),
                     ("cwc", np.float32),
                     ("pp", np.float32),
-                    ("pumplay", np.int),
-                    ("pumprow", np.int),
-                    ("pumpcol", np.int),
+                    ("pumplay", int),
+                    ("pumprow", int),
+                    ("pumpcol", int),
                     ("zpump", np.float32),
                     ("hlim", np.float32),
-                    ("qcut", np.int),
+                    ("qcut", int),
                     ("qfrcmn", np.float32),
                     ("qfrcmx", np.float32),
                     ("hlift", np.float32),
@@ -1307,15 +1307,15 @@ class ModflowMnw2(Package):
         if structured:
             return np.dtype(
                 [
-                    ("k", np.int),
-                    ("i", np.int),
-                    ("j", np.int),
-                    ("wellid", np.object),
+                    ("k", int),
+                    ("i", int),
+                    ("j", int),
+                    ("wellid", object),
                     ("qdes", np.float32),
-                    ("capmult", np.int),
+                    ("capmult", int),
                     ("cprime", np.float32),
                     ("hlim", np.float32),
-                    ("qcut", np.int),
+                    ("qcut", int),
                     ("qfrcmn", np.float32),
                     ("qfrcmx", np.float32),
                 ]
@@ -1753,7 +1753,7 @@ class ModflowMnw2(Package):
         self.stress_period_data = MfList(self, spd, dtype=dtype)
         """
 
-        return super(ModflowMnw2, self).export(f, **kwargs)
+        return super().export(f, **kwargs)
 
     def _write_1(self, f_mnw):
         """

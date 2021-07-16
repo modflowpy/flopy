@@ -508,11 +508,11 @@ class ModflowStr(Package):
         if structured:
             dtype = np.dtype(
                 [
-                    ("k", np.int),
-                    ("i", np.int),
-                    ("j", np.int),
-                    ("segment", np.int),
-                    ("reach", np.int),
+                    ("k", int),
+                    ("i", int),
+                    ("j", int),
+                    ("segment", int),
+                    ("reach", int),
                     ("flow", np.float32),
                     ("stage", np.float32),
                     ("cond", np.float32),
@@ -526,9 +526,9 @@ class ModflowStr(Package):
         else:
             dtype = np.dtype(
                 [
-                    ("node", np.int),
-                    ("segment", np.int),
-                    ("reach", np.int),
+                    ("node", int),
+                    ("segment", int),
+                    ("reach", int),
                     ("flow", np.float32),
                     ("stage", np.float32),
                     ("cond", np.float32),
@@ -542,17 +542,17 @@ class ModflowStr(Package):
 
         dtype2 = np.dtype(
             [
-                ("itrib01", np.int),
-                ("itrib02", np.int),
-                ("itrib03", np.int),
-                ("itrib04", np.int),
-                ("itrib05", np.int),
-                ("itrib06", np.int),
-                ("itrib07", np.int),
-                ("itrib08", np.int),
-                ("itrib09", np.int),
-                ("itrib10", np.int),
-                ("iupseg", np.int),
+                ("itrib01", int),
+                ("itrib02", int),
+                ("itrib03", int),
+                ("itrib04", int),
+                ("itrib05", int),
+                ("itrib06", int),
+                ("itrib07", int),
+                ("itrib08", int),
+                ("itrib09", int),
+                ("itrib10", int),
+                ("iupseg", int),
             ]
         )
         return dtype, dtype2
@@ -890,14 +890,14 @@ class ModflowStr(Package):
 
                         #  get appropriate parval
                         if model.mfpar.pval is None:
-                            parval = np.float(par_dict["parval"])
+                            parval = float(par_dict["parval"])
                         else:
                             try:
-                                parval = np.float(
+                                parval = float(
                                     model.mfpar.pval.pval_dict[pname]
                                 )
                             except:
-                                parval = np.float(par_dict["parval"])
+                                parval = float(par_dict["parval"])
 
                         # fill current parameter data (par_current)
                         for ibnd, t in enumerate(data_dict):

@@ -38,7 +38,7 @@ def max_tuple_abs_size(some_tuple):
     return max_size
 
 
-class DatumUtil(object):
+class DatumUtil:
     @staticmethod
     def is_int(str):
         try:
@@ -70,7 +70,7 @@ class DatumUtil(object):
         return False
 
 
-class PyListUtil(object):
+class PyListUtil:
     """
     Class contains miscellaneous methods to work with and compare python lists
 
@@ -173,7 +173,9 @@ class PyListUtil(object):
     def max_multi_dim_list_size(current_list):
         max_length = -1
         for item in current_list:
-            if len(item) > max_length:
+            if isinstance(item, str):
+                return len(current_list)
+            elif len(item) > max_length:
                 max_length = len(item)
         return max_length
 
@@ -263,34 +265,34 @@ class PyListUtil(object):
             # consistent delimiter has been found.  continue using that
             # delimiter without doing further checks
             if PyListUtil.delimiter_used is None:
-                comment_split = line.strip().split("#", 1)
+                comment_split = line.split("#", 1)
                 clean_line = comment_split[0].strip().split()
             else:
-                comment_split = line.strip().split("#", 1)
+                comment_split = line.split("#", 1)
                 clean_line = (
                     comment_split[0].strip().split(PyListUtil.delimiter_used)
                 )
                 if len(comment_split) > 1:
                     clean_line.append("#")
-                    clean_line.append(comment_split[1])
+                    clean_line.append(comment_split[1].strip())
         else:
             # compare against the default split option without comments split
-            comment_split = line.strip().split("#", 1)
+            comment_split = line.split("#", 1)
             clean_line = comment_split[0].strip().split()
             if len(comment_split) > 1:
                 clean_line.append("#")
-                clean_line.append(comment_split[1])
+                clean_line.append(comment_split[1].strip())
             # try different delimiters and use the one the breaks the data
             # apart the most
             max_split_size = len(clean_line)
             max_split_type = None
             max_split_list = clean_line
             for delimiter in PyListUtil.delimiter_list:
-                comment_split = line.strip().split("#")
+                comment_split = line.split("#")
                 alt_split = comment_split[0].strip().split(delimiter)
                 if len(comment_split) > 1:
                     alt_split.append("#")
-                    alt_split.append(comment_split[1])
+                    alt_split.append(comment_split[1].strip())
                 alt_split_len = len(alt_split)
                 if alt_split_len > max_split_size:
                     max_split_size = len(alt_split)
@@ -316,7 +318,8 @@ class PyListUtil(object):
         arr_fixed_line = []
         index = 0
         # loop through line to fix quotes and delimiters
-        while index < len(clean_line):
+        len_cl = len(clean_line)
+        while index < len_cl:
             item = clean_line[index]
             if item and item not in PyListUtil.delimiter_list:
                 if item and item[0] in PyListUtil.quote_list:
@@ -326,9 +329,9 @@ class PyListUtil(object):
                     else:
                         arr_fixed_line.append(item[1:])
                         # loop until trailing quote found
-                        while index < len(clean_line):
+                        while index < len_cl:
                             index += 1
-                            if index < len(clean_line):
+                            if index < len_cl:
                                 item = clean_line[index]
                                 if item[-1] in PyListUtil.quote_list:
                                     arr_fixed_line[-1] = "{} {}".format(
@@ -598,7 +601,7 @@ class MultiList:
         return MultiListIter(self.multi_dim_list, False)
 
 
-class ArrayIndexIter(object):
+class ArrayIndexIter:
     def __init__(self, array_shape, index_as_tuple=False):
         self.array_shape = array_shape
         self.current_location = []
@@ -641,7 +644,7 @@ class ArrayIndexIter(object):
     next = __next__  # Python 2 support
 
 
-class MultiListIter(object):
+class MultiListIter:
     def __init__(self, multi_list, detailed_info=False, iter_leaf_lists=False):
         self.multi_list = multi_list
         self.detailed_info = detailed_info
@@ -663,7 +666,7 @@ class MultiListIter(object):
     next = __next__  # Python 2 support
 
 
-class ConstIter(object):
+class ConstIter:
     def __init__(self, value):
         self.value = value
 
@@ -676,7 +679,7 @@ class ConstIter(object):
     next = __next__  # Python 2 support
 
 
-class FileIter(object):
+class FileIter:
     def __init__(self, file_path):
         self.eof = False
         try:
@@ -719,7 +722,7 @@ class FileIter(object):
     next = __next__  # Python 2 support
 
 
-class NameIter(object):
+class NameIter:
     def __init__(self, name, first_not_numbered=True):
         self.name = name
         self.iter_num = -1
@@ -738,7 +741,7 @@ class NameIter(object):
     next = __next__  # Python 2 support
 
 
-class PathIter(object):
+class PathIter:
     def __init__(self, path, first_not_numbered=True):
         self.path = path
         self.name_iter = NameIter(path[-1], first_not_numbered)

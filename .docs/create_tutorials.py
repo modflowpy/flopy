@@ -16,6 +16,9 @@ def create_notebooks():
     for dirpath, _, filenames in os.walk(pth):
         py_files += [os.path.join(dirpath, filename) for filename in
                      sorted(filenames) if filename.endswith(".py")]
+    # sort the python files
+    py_files = sorted(py_files)
+
     # copy the python files
     for src in py_files:
         dst = os.path.join(wpth, os.path.basename(src))

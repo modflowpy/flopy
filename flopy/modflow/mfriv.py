@@ -223,9 +223,7 @@ class ModflowRiv(Package):
         >>> m.riv.check()
 
         """
-        basechk = super(ModflowRiv, self).check(
-            verbose=False, checktype=checktype
-        )
+        basechk = super().check(verbose=False, checktype=checktype)
         chk = self._get_check(f, verbose, level, checktype)
         chk.summary_array = basechk.summary_array
 
@@ -277,9 +275,9 @@ class ModflowRiv(Package):
         if structured:
             dtype = np.dtype(
                 [
-                    ("k", np.int),
-                    ("i", np.int),
-                    ("j", np.int),
+                    ("k", int),
+                    ("i", int),
+                    ("j", int),
                     ("stage", np.float32),
                     ("cond", np.float32),
                     ("rbot", np.float32),
@@ -288,7 +286,7 @@ class ModflowRiv(Package):
         else:
             dtype = np.dtype(
                 [
-                    ("node", np.int),
+                    ("node", int),
                     ("stage", np.float32),
                     ("cond", np.float32),
                     ("rbot", np.float32),

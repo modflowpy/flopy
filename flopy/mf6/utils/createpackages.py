@@ -1,5 +1,6 @@
 import os
 import io
+import datetime
 import textwrap
 from enum import Enum
 from flopy.mf6.data import mfstructure, mfdatautil
@@ -658,10 +659,7 @@ def create_packages():
             init_var = "simulation"
         else:
             init_var = "model"
-        parent_init_string = (
-            "        super(Modflow{}, self)"
-            ".__init__(".format(package_name.title())
-        )
+        parent_init_string = "        super().__init__("
         spaces = " " * len(parent_init_string)
         parent_init_string = (
             '{}{}, "{}", filename, pname,\n{}'
@@ -670,9 +668,13 @@ def create_packages():
                 parent_init_string, init_var, package_short_name, spaces
             )
         )
+        local_datetime = datetime.datetime.now(datetime.timezone.utc)
         comment_string = (
             "# DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE "
-            "MUST BE CREATED BY\n# mf6/utils/createpackages.py"
+            + "MUST BE CREATED BY\n# mf6/utils/createpackages.py\n# FILE "
+            + "created on {} UTC".format(
+                local_datetime.strftime("%B %d, %Y %H:%M:%S")
+            )
         )
         # assemble full package string
         package_string = "{}\n{}\n\n\n{}{}\n{}\n{}\n\n{}{}\n{}\n".format(
@@ -821,10 +823,7 @@ def create_packages():
                 model_name, model_name
             )
             class_var_string = "    model_type = '{}'\n".format(model_name)
-            mparent_init_string = (
-                "        super(Modflow{}, self)"
-                ".__init__(".format(model_name.capitalize())
-            )
+            mparent_init_string = "        super().__init__("
             spaces = " " * len(mparent_init_string)
             mparent_init_string = (
                 "{}simulation, model_type='{}6',\n{}"

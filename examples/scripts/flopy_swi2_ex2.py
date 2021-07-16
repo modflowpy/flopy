@@ -90,11 +90,11 @@ def run():
     nsurf = 2
     x = np.arange(0.5 * delr, ncol * delr, delr)
     xedge = np.linspace(0, float(ncol) * delr, len(x) + 1)
-    ibound = np.ones((nrow, ncol), np.int)
+    ibound = np.ones((nrow, ncol), int)
     ibound[0, 0] = -1
     # swi2 data
-    z0 = np.zeros((nlay, nrow, ncol), np.float)
-    z1 = np.zeros((nlay, nrow, ncol), np.float)
+    z0 = np.zeros((nlay, nrow, ncol), float)
+    z1 = np.zeros((nlay, nrow, ncol), float)
     z0[0, 0, 30:38] = np.arange(-2.5, -40, -5)
     z0[0, 0, 38:] = -40
     z1[0, 0, 22:30] = np.arange(-2.5, -40, -5)
@@ -217,15 +217,15 @@ def run():
     swt_nrow = 1
     swt_nlay = int(swt_zmax / swt_delz)  # 80
     print(swt_nlay, swt_nrow, swt_ncol)
-    swt_ibound = np.ones((swt_nlay, swt_nrow, swt_ncol), np.int)
+    swt_ibound = np.ones((swt_nlay, swt_nrow, swt_ncol), int)
     # swt_ibound[0, swt_ncol-1, 0] = -1
     swt_ibound[0, 0, 0] = -1
     swt_x = np.arange(0.5 * swt_delr, swt_ncol * swt_delr, swt_delr)
     swt_xedge = np.linspace(0, float(ncol) * delr, len(swt_x) + 1)
     swt_top = 0.0
     z0 = swt_top
-    swt_botm = np.zeros((swt_nlay), np.float)
-    swt_z = np.zeros((swt_nlay), np.float)
+    swt_botm = np.zeros((swt_nlay), float)
+    swt_z = np.zeros((swt_nlay), float)
     zcell = -swt_delz / 2.0
     for ilay in range(0, swt_nlay):
         z0 -= swt_delz
@@ -236,10 +236,10 @@ def run():
     swt_X, swt_Z = np.meshgrid(swt_x, swt_z)
     # mt3d
     # mt3d boundary array set to all active
-    icbund = np.ones((swt_nlay, swt_nrow, swt_ncol), np.int)
+    icbund = np.ones((swt_nlay, swt_nrow, swt_ncol), int)
     # create initial concentrations for MT3D
-    sconc = np.ones((swt_nlay, swt_nrow, swt_ncol), np.float)
-    sconcp = np.zeros((swt_nlay, swt_ncol), np.float)
+    sconc = np.ones((swt_nlay, swt_nrow, swt_ncol), float)
+    sconcp = np.zeros((swt_nlay, swt_ncol), float)
     xsb = 110
     xbf = 150
     for ilay in range(0, swt_nlay):
@@ -346,7 +346,7 @@ def run():
     ukstpkper = uobj.get_kstpkper()
     print(ukstpkper)
     c = uobj.get_data(totim=times[-1])
-    conc = np.zeros((swt_nlay, swt_ncol), np.float)
+    conc = np.zeros((swt_nlay, swt_ncol), float)
     for icol in range(0, swt_ncol):
         for ilay in range(0, swt_nlay):
             conc[ilay, icol] = c[ilay, 0, icol]

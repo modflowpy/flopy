@@ -5,21 +5,22 @@ import os
 import shutil
 import filecmp
 import flopy
+
 try:
     import pymake
 except ImportError:
-    print('could not import pymake')
+    print("could not import pymake")
     pymake = False
 
-path = os.path.join('..', 'examples', 'data', 'pcgn_test')
-cpth = os.path.join('temp', 't044')
+path = os.path.join("..", "examples", "data", "pcgn_test")
+cpth = os.path.join("temp", "t044")
 # delete the directory if it exists
 if os.path.isdir(cpth):
     shutil.rmtree(cpth)
 # make the directory
 os.makedirs(cpth)
 
-mf_items = ['twri.nam', 'MNW2.nam']
+mf_items = ["twri.nam", "MNW2.nam"]
 pths = []
 for val in mf_items:
     pths.append(path)
@@ -29,13 +30,13 @@ def load_and_write_pcgn(mfnam, pth):
     """
     test044 load and write of MODFLOW-2005 PCGN example problem
     """
-    exe_name = 'mf2005'
+    exe_name = "mf2005"
     v = flopy.which(exe_name)
 
     if pymake:
         run = v is not None
         lpth = os.path.join(cpth, os.path.splitext(mfnam)[0])
-        apth = os.path.join(lpth, 'flopy')
+        apth = os.path.join(lpth, "flopy")
         compth = lpth
         pymake.setup(os.path.join(pth, mfnam), lpth)
     else:
@@ -44,10 +45,11 @@ def load_and_write_pcgn(mfnam, pth):
         apth = cpth
         compth = cpth
 
-    m = flopy.modflow.Modflow.load(mfnam, model_ws=lpth, verbose=True,
-                                   exe_name=exe_name)
+    m = flopy.modflow.Modflow.load(
+        mfnam, model_ws=lpth, verbose=True, exe_name=exe_name
+    )
     assert m.load_fail is False
-    if mfnam in ['twri.nam']:  # update this list for fixed models
+    if mfnam in ["twri.nam"]:  # update this list for fixed models
         assert m.free_format_input is False
     else:
         assert m.free_format_input is True
@@ -57,7 +59,7 @@ def load_and_write_pcgn(mfnam, pth):
             success, buff = m.run_model(silent=False)
         except:
             success = False
-        assert success, 'base model run did not terminate successfully'
+        assert success, "base model run did not terminate successfully"
         fn0 = os.path.join(lpth, mfnam)
 
     # rewrite files
@@ -68,35 +70,38 @@ def load_and_write_pcgn(mfnam, pth):
             success, buff = m.run_model(silent=False)
         except:
             success = False
-        assert success, 'new model run did not terminate successfully'
+        assert success, "new model run did not terminate successfully"
         fn1 = os.path.join(apth, mfnam)
 
     if run:
-        fsum = os.path.join(compth,
-                            '{}.head.out'.format(os.path.splitext(mfnam)[0]))
+        fsum = os.path.join(
+            compth, "{}.head.out".format(os.path.splitext(mfnam)[0])
+        )
         success = False
         try:
             success = pymake.compare_heads(fn0, fn1, outfile=fsum, htol=0.005)
         except:
             success = False
-            print('could not perform head comparison')
+            print("could not perform head comparison")
 
-        assert success, 'head comparison failure'
+        assert success, "head comparison failure"
 
-        fsum = os.path.join(compth,
-                            '{}.budget.out'.format(os.path.splitext(mfnam)[0]))
+        fsum = os.path.join(
+            compth, "{}.budget.out".format(os.path.splitext(mfnam)[0])
+        )
         success = False
         try:
-            success = pymake.compare_budget(fn0, fn1,
-                                            max_incpd=0.1, max_cumpd=0.1,
-                                            outfile=fsum)
+            success = pymake.compare_budget(
+                fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
+            )
         except:
             success = False
-            print('could not perform budget comparison')
+            print("could not perform budget comparison")
 
-        assert success, 'budget comparison failure'
+        assert success, "budget comparison failure"
 
     return
+
 
 def test_mf2005pcgnload():
     for namfile, pth in zip(mf_items, pths):
@@ -104,7 +109,7 @@ def test_mf2005pcgnload():
     return
 
 
-if __name__ == '__main__':
-    #for namfile, pth in zip(mf_items, pths):
+if __name__ == "__main__":
+    # for namfile, pth in zip(mf_items, pths):
     #    load_and_write_pcgn(namfile, pth)
-    load_and_write_pcgn(mf_items[1],pths[1] )
+    load_and_write_pcgn(mf_items[1], pths[1])

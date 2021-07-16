@@ -6,7 +6,7 @@ from datetime import timedelta
 import numpy as np
 
 
-class FlopyBinaryData(object):
+class FlopyBinaryData:
     """
     The FlopyBinaryData class is a class to that defines the data types for
     integer, floating point, and character data in MODFLOW binary
@@ -38,12 +38,8 @@ class FlopyBinaryData(object):
         return
 
     def read_text(self, nchar=20):
-        textvalue = self._read_values(self.character, nchar).tostring()
-        if not isinstance(textvalue, str):
-            textvalue = textvalue.decode().strip()
-        else:
-            textvalue = textvalue.strip()
-        return textvalue
+        bytesvalue = self._read_values(self.character, nchar).tobytes()
+        return bytesvalue.decode().strip()
 
     def read_integer(self):
         return self._read_values(self.integer, 1)[0]
@@ -106,3 +102,37 @@ def totim_to_datetime(totim, start="1-1-1970", timeunit="D"):
         t = timedelta(**kwargs)
         out.append(start + t)
     return out
+
+
+def get_pak_vals_shape(model, vals):
+    """Function to define shape of package input data for Util2d.
+
+    Parameters
+    ----------
+    model : flopy model object
+    vals : Package input values (dict of arrays or scalars, or ndarray, or
+        single scalar).
+
+    Returns
+    -------
+    shape: tuple
+        shape of input data for Util2d
+
+    """
+    nrow, ncol, nlay, nper = model.nrow_ncol_nlay_nper
+    if nrow is None:  # unstructured
+        if isinstance(vals, dict):
+            try:  # check for iterable
+                _ = (v for v in list(vals.values())[0])
+            except:
+                return (1, ncol[0])  # default to layer 1 node count
+            return np.array(list(vals.values())[0], ndmin=2).shape
+        else:
+            # check for single iterable
+            try:
+                _ = (v for v in vals)
+            except:
+                return (1, ncol[0])  # default to layer 1 node count
+            return np.array(vals, ndmin=2).shape
+    else:
+        return (nrow, ncol)  # structured

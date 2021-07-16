@@ -1,5 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
+# FILE created on March 19, 2021 03:08:37 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -30,9 +31,31 @@ class ModflowGwtssm(mfpackage.MFPackage):
     sources : [pname, srctype, auxname]
         * pname (string) name of the package for which an auxiliary variable
           contains a source concentration.
-        * srctype (string) type of the source. Must be AUX.
-        * auxname (string) name of the auxiliary variable in the package PNAME
-          that contains the source concentration.
+        * srctype (string) keyword indicating how concentration will be
+          assigned for sources and sinks. Keyword must be specified as either
+          AUX or AUXMIXED. For both options the user must provide an auxiliary
+          variable in the corresponding flow package. The auxiliary variable
+          must have the same name as the AUXNAME value that follows. If the AUX
+          keyword is specified, then the auxiliary variable specified by the
+          user will be assigned as the concenration value for groundwater
+          sources (flows with a positive sign). For negative flow rates
+          (sinks), groundwater will be withdrawn from the cell at the simulated
+          concentration of the cell. The AUXMIXED option provides an
+          alternative method for how to determine the concentration of sinks.
+          If the cell concentration is larger than the user-specified auxiliary
+          concentration, then the concentration of groundwater withdrawn from
+          the cell will be assigned as the user-specified concentration.
+          Alternatively, if the user-specified auxiliary concentration is
+          larger than the cell concentration, then groundwater will be
+          withdrawn at the cell concentration. Thus, the AUXMIXED option is
+          designed to work with the Evapotranspiration (EVT) and Recharge (RCH)
+          Packages where water may be withdrawn at a concentration that is less
+          than the cell concentration.
+        * auxname (string) name of the auxiliary variable in the package PNAME.
+          This auxiliary variable must exist and be specified by the user in
+          that package. The values in this auxiliary variable will be used to
+          set the concentration associated with the flows for that boundary
+          package.
     filename : String
         File name for this package.
     pname : String
@@ -110,7 +133,7 @@ class ModflowGwtssm(mfpackage.MFPackage):
         pname=None,
         parent_file=None,
     ):
-        super(ModflowGwtssm, self).__init__(
+        super().__init__(
             model, "ssm", filename, pname, loading_package, parent_file
         )
 

@@ -2,6 +2,7 @@ import os
 import numpy as np
 from numpy.lib import recfunctions
 from ..utils.recarray_utils import recarray
+from ..utils.util_array import Util3d
 
 
 class check:
@@ -436,7 +437,8 @@ class check:
         """
         mg = self.model.modelgrid
         if mg.grid_type == "structured":
-            inds = (mg.nlay, mg.nrow, mg.ncol)
+            nlaycbd = mg._StructuredGrid__laycbd.sum() if include_cbd else 0
+            inds = (mg.nlay + nlaycbd, mg.nrow, mg.ncol)
         elif mg.grid_type == "vertex":
             inds = (mg.nlay, mg.ncpl)
         else:
@@ -645,25 +647,92 @@ class check:
             # include node column for structured grids (useful for indexing)
             return np.dtype(
                 [
-                    ("type", np.object),
-                    ("package", np.object),
-                    ("k", np.int),
-                    ("i", np.int),
-                    ("j", np.int),
-                    ("value", np.float),
-                    ("desc", np.object),
+                    ("type", object),
+                    ("package", object),
+                    ("k", int),
+                    ("i", int),
+                    ("j", int),
+                    ("value", float),
+                    ("desc", object),
                 ]
             )
         else:
             return np.dtype(
                 [
-                    ("type", np.object),
-                    ("package", np.object),
-                    ("node", np.int),
-                    ("value", np.float),
-                    ("desc", np.object),
+                    ("type", object),
+                    ("package", object),
+                    ("node", int),
+                    ("value", float),
+                    ("desc", object),
                 ]
             )
+
+    def get_neighbors(self, a):
+        """
+        For a structured grid, this returns the 6 neighboring values for each
+        value in a. For an unstructured grid, this returns the n_max neighboring
+        values, where n_max is the maximum number of nodal connections for any
+        node within the model; nodes with less than n_max connections are assigned
+        np.nan for indices above the number of connections for that node.
+
+        Parameters
+        ----------
+        a : 3-D Model array in layer, row, column order array, even for an
+        unstructured grid; for instance, a Util3d array
+        (e.g. flopy.modflow.ModflowBas.ibound).
+
+        Returns
+        -------
+        neighbors : 4-D array
+            Array of neighbors, where axis 0 contains the n neighboring
+            values for each value in a, and subsequent axes are in layer, row,
+            column order. "n" is 6 for a structured grid, and "n" is n_max
+            for an unstructured grid, as described above. Nan is returned for
+            values at edges.
+        """
+        if self.structured:
+            nk, ni, nj = a.shape
+            tmp = np.empty((nk + 2, ni + 2, nj + 2), dtype=float)
+            tmp[:, :, :] = np.nan
+            tmp[1:-1, 1:-1, 1:-1] = a[:, :, :]
+            neighbors = np.vstack(
+                [
+                    tmp[0:-2, 1:-1, 1:-1].ravel(),  # k-1
+                    tmp[2:, 1:-1, 1:-1].ravel(),  # k+1
+                    tmp[1:-1, 0:-2, 1:-1].ravel(),  # i-1
+                    tmp[1:-1, 2:, 1:-1].ravel(),  # i+1
+                    tmp[1:-1, 1:-1, :-2].ravel(),  # j-1
+                    tmp[1:-1, 1:-1, 2:].ravel(),
+                ]
+            )  # j+1
+            return neighbors.reshape(6, nk, ni, nj)
+        else:
+            if "DISU" in self.model.get_package_list():
+                disu = self.model.disu
+                neighbors = disu._neighboring_nodes
+                if isinstance(a, Util3d):
+                    a = a.array
+                pad_value = int(-1e9)
+                n_max = (
+                    np.max(disu.iac.array) - 1
+                )  # -1 for self, removed below
+                arr_neighbors = [
+                    np.pad(
+                        a[n - 1],
+                        (0, n_max - n.size),
+                        "constant",
+                        constant_values=(0, pad_value),
+                    )
+                    for n in neighbors
+                ]
+                arr_neighbors = np.where(
+                    arr_neighbors == -1e9, np.nan, arr_neighbors
+                )
+                neighbors = arr_neighbors.T
+            else:
+                # if no disu, we can't define neighbours for this ugrid
+                neighbors = None
+            return neighbors
 
 
 def _fmt_string_list(array, float_format="{}"):
@@ -737,40 +806,6 @@ def fields_view(arr, fields):
     return np.ndarray(arr.shape, dtype2, arr, 0, arr.strides)
 
 
-def get_neighbors(a):
-    """
-    Returns the 6 neighboring values for each value in a.
-
-    Parameters
-    ----------
-    a : 3-D array
-        Model array in layer, row, column order.
-
-    Returns
-    -------
-    neighbors : 4-D array
-        Array of neighbors, where axis 0 contains the 6 neighboring
-        values for each value in a, and subsequent axes are in layer, row,
-        column order.
-        Nan is returned for values at edges.
-    """
-    nk, ni, nj = a.shape
-    tmp = np.empty((nk + 2, ni + 2, nj + 2), dtype=float)
-    tmp[:, :, :] = np.nan
-    tmp[1:-1, 1:-1, 1:-1] = a[:, :, :]
-    neighbors = np.vstack(
-        [
-            tmp[0:-2, 1:-1, 1:-1].ravel(),  # k-1
-            tmp[2:, 1:-1, 1:-1].ravel(),  # k+1
-            tmp[1:-1, 0:-2, 1:-1].ravel(),  # i-1
-            tmp[1:-1, 2:, 1:-1].ravel(),  # i+1
-            tmp[1:-1, 1:-1, :-2].ravel(),  # j-1
-            tmp[1:-1, 1:-1, 2:].ravel(),
-        ]
-    )  # j+1
-    return neighbors.reshape(6, nk, ni, nj)
-
-
 class mf6check(check):
     def __init__(
         self,
@@ -780,9 +815,7 @@ class mf6check(check):
         level=1,
         property_threshold_values={},
     ):
-        super(mf6check, self).__init__(
-            package, f, verbose, level, property_threshold_values
-        )
+        super().__init__(package, f, verbose, level, property_threshold_values)
         if hasattr(package, "model_or_sim"):
             self.model = package.model_or_sim
 
@@ -813,34 +846,34 @@ class mf6check(check):
         if mg.grid_type == "structured":
             return np.dtype(
                 [
-                    ("type", np.object),
-                    ("package", np.object),
-                    ("k", np.int),
-                    ("i", np.int),
-                    ("j", np.int),
-                    ("value", np.float),
-                    ("desc", np.object),
+                    ("type", object),
+                    ("package", object),
+                    ("k", int),
+                    ("i", int),
+                    ("j", int),
+                    ("value", float),
+                    ("desc", object),
                 ]
             )
         elif mg.grid_type == "vertex":
             return np.dtype(
                 [
-                    ("type", np.object),
-                    ("package", np.object),
-                    ("lay", np.int),
-                    ("cell", np.int),
-                    ("value", np.float),
-                    ("desc", np.object),
+                    ("type", object),
+                    ("package", object),
+                    ("lay", int),
+                    ("cell", int),
+                    ("value", float),
+                    ("desc", object),
                 ]
             )
         else:
             return np.dtype(
                 [
-                    ("type", np.object),
-                    ("package", np.object),
-                    ("node", np.int),
-                    ("value", np.float),
-                    ("desc", np.object),
+                    ("type", object),
+                    ("package", object),
+                    ("node", int),
+                    ("value", float),
+                    ("desc", object),
                 ]
             )
 

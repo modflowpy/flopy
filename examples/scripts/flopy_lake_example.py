@@ -75,7 +75,7 @@ def run():
     # the other starting values matter). So we set the starting heads to `h1` everywhere, except for
     # the head at the center of the model in the top layer.
     Nhalf = int((N - 1) / 2)
-    ibound = np.ones((Nlay, N, N), dtype=np.int)
+    ibound = np.ones((Nlay, N, N), dtype=int)
     ibound[:, 0, :] = -1
     ibound[:, -1, :] = -1
     ibound[:, :, 0] = -1

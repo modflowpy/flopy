@@ -50,7 +50,7 @@ class SwrFile(FlopyBinaryData):
         Class constructor.
 
         """
-        super(SwrFile, self).__init__()
+        super().__init__()
         self.set_float(precision=precision)
         self.header_dtype = np.dtype(
             [
@@ -335,7 +335,7 @@ class SwrFile(FlopyBinaryData):
         self.conn_dtype = np.dtype(
             [("reach", "i4"), ("from", "i4"), ("to", "i4")]
         )
-        conn = np.zeros((self.nrecord, 3), np.int)
+        conn = np.zeros((self.nrecord, 3), int)
         icount = 0
         for nrg in range(self.flowitems):
             flowitems = self.read_integer()
@@ -405,7 +405,7 @@ class SwrFile(FlopyBinaryData):
     def _read_header(self):
         nitems = 0
         if self.type == "exchange" or self.type == "structure":
-            itemlist = np.zeros(self.nrecord, np.int)
+            itemlist = np.zeros(self.nrecord, int)
             try:
                 for i in range(self.nrecord):
                     itemlist[i] = self.read_integer()
@@ -680,7 +680,7 @@ class SwrStage(SwrFile):
     """
 
     def __init__(self, filename, precision="double", verbose=False):
-        super(SwrStage, self).__init__(
+        super().__init__(
             filename, swrtype="stage", precision=precision, verbose=verbose
         )
         return
@@ -720,7 +720,7 @@ class SwrBudget(SwrFile):
     """
 
     def __init__(self, filename, precision="double", verbose=False):
-        super(SwrBudget, self).__init__(
+        super().__init__(
             filename, swrtype="budget", precision=precision, verbose=verbose
         )
         return
@@ -760,7 +760,7 @@ class SwrFlow(SwrFile):
     """
 
     def __init__(self, filename, precision="double", verbose=False):
-        super(SwrFlow, self).__init__(
+        super().__init__(
             filename, swrtype="flow", precision=precision, verbose=verbose
         )
         return
@@ -800,7 +800,7 @@ class SwrExchange(SwrFile):
     """
 
     def __init__(self, filename, precision="double", verbose=False):
-        super(SwrExchange, self).__init__(
+        super().__init__(
             filename, swrtype="exchange", precision=precision, verbose=verbose
         )
         return
@@ -841,7 +841,7 @@ class SwrStructure(SwrFile):
     """
 
     def __init__(self, filename, precision="double", verbose=False):
-        super(SwrStructure, self).__init__(
+        super().__init__(
             filename, swrtype="structure", precision=precision, verbose=verbose
         )
         return

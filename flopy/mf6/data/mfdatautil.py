@@ -20,7 +20,7 @@ def get_first_val(arr):
 
 # convert_data(data, type) : type
 #    converts data "data" to type "type" and returns the converted data
-def convert_data(data, data_dimensions, data_type, data_item=None):
+def convert_data(data, data_dimensions, data_type, data_item=None, sub_amt=1):
     if data_type == DatumType.double_precision:
         if data_item is not None and data_item.support_negative_index:
             val = int(PyListUtil.clean_numeric(data))
@@ -85,7 +85,7 @@ def convert_data(data, data_dimensions, data_type, data_item=None):
                     )
     elif data_type == DatumType.integer:
         if data_item is not None and data_item.numeric_index:
-            return int(PyListUtil.clean_numeric(data)) - 1
+            return int(PyListUtil.clean_numeric(data)) - sub_amt
         try:
             return int(data)
         except (ValueError, TypeError):
@@ -126,6 +126,7 @@ def to_string(
     is_cellid=False,
     possible_cellid=False,
     data_item=None,
+    verify_data=True,
 ):
     if data_type == DatumType.double_precision:
         if data_item is not None and data_item.support_negative_index:
@@ -158,10 +159,14 @@ def to_string(
     elif is_cellid or (possible_cellid and isinstance(val, tuple)):
         if DatumUtil.is_int(val):
             return str(val + 1)
-        if len(val) > 0 and isinstance(val, str) and val.lower() == "none":
+        if len(val) == 4 and isinstance(val, str) and val.lower() == "none":
             # handle case that cellid is 'none'
             return val
-        if is_cellid and data_dim.get_model_dim(None).model_name is not None:
+        if (
+            verify_data
+            and is_cellid
+            and data_dim.get_model_dim(None).model_name is not None
+        ):
             model_grid = data_dim.get_model_grid()
             cellid_size = model_grid.get_num_spatial_coordinates()
             if len(val) != cellid_size:
@@ -199,10 +204,7 @@ def to_string(
         return " ".join(string_val)
     elif data_type == DatumType.integer:
         if data_item is not None and data_item.numeric_index:
-            if isinstance(val, str):
-                return str(int(val) + 1)
-            else:
-                return str(int(val) + 1)
+            return str(int(val) + 1)
         return str(int(val))
     elif data_type == DatumType.string:
         try:
@@ -222,7 +224,7 @@ def to_string(
         return str(val)
 
 
-class MFComment(object):
+class MFComment:
     """
     Represents a variable in a MF6 input file
 
@@ -257,7 +259,7 @@ class MFComment(object):
         checks to see if comment is just an empty string ''.  if
         include_whitespace is set to false a string with only whitespace is
         considered empty
-    is_comment(text, include_empty_line=False) : boolean
+    is_comment(text, include_empty_line=False) : bool
         returns true if text is a comment.  an empty line is considered a
         comment if include_empty_line is true.
 
@@ -428,7 +430,7 @@ class MFComment(object):
                     fd.write(" {}".format(item))
 
 
-class TemplateGenerator(object):
+class TemplateGenerator:
     """
     Abstract base class for building a data template for different data types.
     This is a generic class that is initialized with a path that identifies
@@ -490,7 +492,7 @@ class ArrayTemplateGenerator(TemplateGenerator):
 
     Methods
     -------
-    empty: (model: MFModel, layered: boolean, data_storage_type_list: boolean,
+    empty: (model: MFModel, layered: bool, data_storage_type_list: bool,
             default_value: int/float) : variable
         Builds a template for the data you need to specify for a specific data
         type (ie. "hk") in a specific model.  The data type and dimensions
@@ -506,7 +508,7 @@ class ArrayTemplateGenerator(TemplateGenerator):
     """
 
     def __init__(self, path):
-        super(ArrayTemplateGenerator, self).__init__(path)
+        super().__init__(path)
 
     def empty(
         self,
@@ -655,7 +657,7 @@ class ListTemplateGenerator(TemplateGenerator):
 
     Methods
     -------
-    empty: (maxbound: int, aux_vars: list, boundnames: boolean, nseg: int) :
+    empty: (maxbound: int, aux_vars: list, boundnames: bool, nseg: int) :
             dictionary
         Builds a template for the data you need to specify for a specific data
         type (ie. "stress_period_data") in a specific model.  The data type is
@@ -670,7 +672,7 @@ class ListTemplateGenerator(TemplateGenerator):
     """
 
     def __init__(self, path):
-        super(ListTemplateGenerator, self).__init__(path)
+        super().__init__(path)
 
     def _build_template_data(self, type_list):
         template_data = []
@@ -805,7 +807,7 @@ class ListTemplateGenerator(TemplateGenerator):
             return rec_array
 
 
-class MFDocString(object):
+class MFDocString:
     """
     Helps build a python class doc string
 

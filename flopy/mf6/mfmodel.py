@@ -1,7 +1,3 @@
-"""
-mfmodel module.  Contains the MFModel class
-
-"""
 import os, sys, inspect, warnings
 import numpy as np
 from .mfbase import (
@@ -29,74 +25,39 @@ from ..utils.check import mf6check
 
 class MFModel(PackageContainer, ModelInterface):
     """
-    MODFLOW Model Class.  Represents a single model in a simulation.
+    MODFLOW-6 model base class.  Represents a single model in a simulation.
 
     Parameters
     ----------
     simulation_data : MFSimulationData
-        simulation data object
+        Simulation data object of the simulation this model will belong to
     structure : MFModelStructure
-        structure of this type of model
-    modelname : string
-        name of the model
-    model_nam_file : string
-        relative path to the model name file from model working folder
-    version : string
-        version of modflow
-    exe_name : string
-        model executable name
-    model_ws : string
-        model working folder path
-    disfile : string
-        relative path to dis file from model working folder
-    grid_type : string
-        type of grid the model will use (structured, unstructured, vertices)
+        Structure of this type of model
+    modelname : str
+        Name of the model
+    model_nam_file : str
+        Relative path to the model name file from model working folder
+    version : str
+        Version of modflow
+    exe_name : str
+        Model executable name
+    model_ws : str
+        Model working folder path
+    disfile : str
+        Relative path to dis file from model working folder
+    grid_type : str
+        Type of grid the model will use (structured, unstructured, vertices)
     verbose : bool
-        verbose setting for model operations (default False)
+        Verbose setting for model operations (default False)
 
     Attributes
     ----------
-    model_name : string
-        name of the model
-    exe_name : string
-        model executable name
+    name : str
+        Name of the model
+    exe_name : str
+        Model executable name
     packages : OrderedDict(MFPackage)
-        dictionary of model packages
-    _name_file_io : MFNameFile
-        name file
-
-    Methods
-    -------
-    load : (simulation : MFSimulationData, model_name : string,
-      namfile : string, type : string, version : string, exe_name : string,
-      model_ws : string, strict : boolean) : MFSimulation
-        a class method that loads a model from files
-    write
-        writes the simulation to files
-    remove_package : (package_name : string)
-        removes package from the model.  package_name can be the
-        package's name, type, or package object to be removed from
-        the model
-    set_model_relative_path : (path : string)
-        sets the file path to the model folder and updates all model file
-        paths
-    is_valid : () : boolean
-        checks the validity of the model and all of its packages
-    rename_all_packages : (name : string)
-        renames all packages in the model
-    set_all_data_external : (check_data : boolean)
-        sets the model's list and array data to be stored externally,
-        check_data determines if data error checking is enabled during this
-        process
-
-    See Also
-    --------
-
-    Notes
-    -----
-
-    Examples
-    --------
+        Dictionary of model packages
 
     """
 
@@ -114,7 +75,7 @@ class MFModel(PackageContainer, ModelInterface):
         verbose=False,
         **kwargs
     ):
-        super(MFModel, self).__init__(simulation.simulation_data, modelname)
+        super().__init__(simulation.simulation_data, modelname)
         self.simulation = simulation
         self.simulation_data = simulation.simulation_data
         self.name = modelname
@@ -257,6 +218,14 @@ class MFModel(PackageContainer, ModelInterface):
 
     @property
     def nper(self):
+        """Number of stress periods.
+
+        Returns
+        -------
+        nper : int
+            Number of stress periods in the simulation.
+
+        """
         try:
             return self.simulation.tdis.nper.array
         except AttributeError:
@@ -264,6 +233,15 @@ class MFModel(PackageContainer, ModelInterface):
 
     @property
     def modeltime(self):
+        """Model time discretization information.
+
+        Returns
+        -------
+        modeltime : ModelTime
+            FloPy object containing time discretization information for the
+            simulation.
+
+        """
         tdis = self.simulation.get_package("tdis")
         period_data = tdis.perioddata.get_data()
 
@@ -306,6 +284,17 @@ class MFModel(PackageContainer, ModelInterface):
 
     @property
     def modeldiscrit(self):
+        """Basic model spatial discretization information.  This is used
+        internally prior to model spatial discretization information being
+        fully loaded.
+
+        Returns
+        -------
+        model grid : Grid subclass
+            FloPy object containing basic spatial discretization information
+            for the model.
+
+        """
         if self.get_grid_type() == DiscretizationType.DIS:
             dis = self.get_package("dis")
             return StructuredGrid(
@@ -321,11 +310,21 @@ class MFModel(PackageContainer, ModelInterface):
         elif self.get_grid_type() == DiscretizationType.DISU:
             dis = self.get_package("disu")
             nodes = dis.nodes.get_data()
-            ncpl = np.array([nodes], dtype=np.int)
+            ncpl = np.array([nodes], dtype=int)
             return UnstructuredGrid(ncpl=ncpl)
 
     @property
     def modelgrid(self):
+        """Model spatial discretization information.
+
+        Returns
+        -------
+        model grid : Grid subclass
+            FloPy object containing spatial discretization information for the
+            model.
+
+        """
+
         if not self._mg_resync:
             return self._modelgrid
         if self.get_grid_type() == DiscretizationType.DIS:
@@ -410,7 +409,7 @@ class MFModel(PackageContainer, ModelInterface):
             iac = dis.iac.array
             ncpl = UnstructuredGrid.ncpl_from_ihc(ihc, iac)
             if ncpl is None:
-                ncpl = np.array([dis.nodes.get_data()], dtype=np.int)
+                ncpl = np.array([dis.nodes.get_data()], dtype=int)
             cell2d = dis.cell2d.array
             idomain = np.ones(dis.nodes.array, np.int32)
             if cell2d is None:
@@ -532,27 +531,39 @@ class MFModel(PackageContainer, ModelInterface):
 
     @property
     def packagelist(self):
+        """List of model packages."""
         return self._packagelist
 
     @property
     def namefile(self):
+        """Model namefile object."""
         return self.model_nam_file
 
     @property
     def model_ws(self):
+        """Model file path."""
         file_mgr = self.simulation_data.mfpath
         return file_mgr.get_model_path(self.name)
 
     @property
     def exename(self):
+        """MODFLOW executable name"""
         return self.exe_name
 
     @property
     def version(self):
+        """Version of MODFLOW"""
         return self._version
 
     @property
     def solver_tols(self):
+        """Returns the solver inner hclose and rclose values.
+
+        Returns
+        -------
+        inner_hclose, rclose : float, float
+
+        """
         ims = self.get_ims_package()
         if ims is not None:
             rclose = ims.rcloserecord.get_data()
@@ -563,6 +574,7 @@ class MFModel(PackageContainer, ModelInterface):
 
     @property
     def laytyp(self):
+        """Layering type"""
         try:
             return self.npf.icelltype.array
         except AttributeError:
@@ -570,27 +582,63 @@ class MFModel(PackageContainer, ModelInterface):
 
     @property
     def hdry(self):
+        """Dry cell value"""
         return -1e30
 
     @property
     def hnoflo(self):
+        """No-flow cell value"""
         return 1e30
 
     @property
     def laycbd(self):
+        """Quasi-3D confining bed.  Not supported in MODFLOW-6.
+
+        Returns
+        -------
+        None : None
+
+        """
         return None
 
+    @property
+    def output(self):
+        try:
+            return self.oc.output
+        except AttributeError:
+            return None
+
     def export(self, f, **kwargs):
+        """Method to export a model to a shapefile or netcdf file
+
+        Parameters
+        ----------
+        f : str
+            File name (".nc" for netcdf or ".shp" for shapefile)
+            or dictionary of ....
+        **kwargs : keyword arguments
+            modelgrid: flopy.discretization.Grid
+                User supplied modelgrid object which will supercede the built
+                in modelgrid object
+            epsg : int
+                EPSG projection code
+            prj : str
+                The prj file name
+            if fmt is set to 'vtk', parameters of vtk.export_model
+
+        """
         from ..export import utils
 
         return utils.model_export(f, self, **kwargs)
 
     @property
     def verbose(self):
+        """Verbose setting for model operations (True/False)"""
         return self._verbose
 
     @verbose.setter
     def verbose(self, verbose):
+        """Verbose setting for model operations (True/False)"""
         self._verbose = verbose
 
     def check(self, f=None, verbose=True, level=1):
@@ -613,7 +661,7 @@ class MFModel(PackageContainer, ModelInterface):
 
         Returns
         -------
-        None
+        success : bool
 
         Examples
         --------
@@ -642,7 +690,7 @@ class MFModel(PackageContainer, ModelInterface):
         load_only=None,
     ):
         """
-        Load an existing model.
+        Class method that loads an existing model.
 
         Parameters
         ----------
@@ -652,19 +700,19 @@ class MFModel(PackageContainer, ModelInterface):
             simulation data object
         structure : MFModelStructure
             structure of this type of model
-        model_name : string
+        model_name : str
             name of the model
-        model_nam_file : string
+        model_nam_file : str
             relative path to the model name file from model working folder
-        version : string
+        version : str
             version of modflow
-        exe_name : string
+        exe_name : str
             model executable name
-        model_ws : string
+        model_ws : str
             model working folder relative to simulation working folder
-        strict : boolean
+        strict : bool
             strict mode when loading files
-        model_rel_path : string
+        model_rel_path : str
             relative path of model folder to simulation folder
         load_only : list
             list of package abbreviations or package names corresponding to
@@ -776,20 +824,15 @@ class MFModel(PackageContainer, ModelInterface):
 
     def write(self, ext_file_action=ExtFileAction.copy_relative_paths):
         """
-        write model to model files
+        Writes out model's package files.
 
         Parameters
         ----------
         ext_file_action : ExtFileAction
-            defines what to do with external files when the simulation path has
+            Defines what to do with external files when the simulation path has
             changed.  defaults to copy_relative_paths which copies only files
             with relative paths, leaving files defined by absolute paths fixed.
 
-        Returns
-        -------
-
-        Examples
-        --------
         """
 
         # write name file
@@ -853,6 +896,12 @@ class MFModel(PackageContainer, ModelInterface):
         return DiscretizationType.UNDEFINED
 
     def get_ims_package(self):
+        """Get the IMS package associated with this model.
+
+        Returns
+        -------
+        IMS package : ModflowIms
+        """
         solution_group = self.simulation.name_file.solutiongroup.get_data()
         for record in solution_group:
             for model_name in record[2:]:
@@ -861,6 +910,13 @@ class MFModel(PackageContainer, ModelInterface):
         return None
 
     def get_steadystate_list(self):
+        """Returns a list of stress periods that are steady state.
+
+        Returns
+        -------
+        steady state list : list
+
+        """
         ss_list = []
         tdis = self.simulation.get_package("tdis")
         period_data = tdis.perioddata.get_data()
@@ -885,17 +941,12 @@ class MFModel(PackageContainer, ModelInterface):
 
     def is_valid(self):
         """
-        checks the validity of the model and all of its packages
-
-        Parameters
-        ----------
+        Checks the validity of the model and all of its packages
 
         Returns
         -------
-        valid : boolean
+        valid : bool
 
-        Examples
-        --------
         """
 
         # valid name file
@@ -919,20 +970,15 @@ class MFModel(PackageContainer, ModelInterface):
 
     def set_model_relative_path(self, model_ws):
         """
-        sets the file path to the model folder relative to the simulation
+        Sets the file path to the model folder relative to the simulation
         folder and updates all model file paths, placing them in the model
-        folder
+        folder.
 
         Parameters
         ----------
-        model_ws : string
-            model working folder relative to simulation working folder
+        model_ws : str
+            Model working folder relative to simulation working folder
 
-        Returns
-        -------
-
-        Examples
-        --------
         """
         # update path in the file manager
         file_mgr = self.simulation_data.mfpath
@@ -1006,19 +1052,16 @@ class MFModel(PackageContainer, ModelInterface):
 
     def remove_package(self, package_name):
         """
-        removes a package and all child packages from the model
+        Removes package and all child packages from the model.
+        `package_name` can be the package's name, type, or package object to
+        be removed from the model.
 
         Parameters
         ----------
         package_name : str
-            package name, package type, or package object to be removed from
-            the model
+            Package name, package type, or package object to be removed from
+            the model.
 
-        Returns
-        -------
-
-        Examples
-        --------
         """
         if isinstance(package_name, MFPackage):
             packages = [package_name]
@@ -1105,6 +1148,15 @@ class MFModel(PackageContainer, ModelInterface):
                 self._remove_package_from_dictionaries(child_package)
 
     def rename_all_packages(self, name):
+        """Renames all package files in the model.
+
+        Parameters
+        ----------
+            name : str
+                Prefix of package names.  Packages files will be named
+                <name>.<package ext>.
+
+        """
         package_type_count = {}
         self.name_file.filename = "{}.nam".format(name)
         for package in self.packagelist:
@@ -1120,6 +1172,15 @@ class MFModel(PackageContainer, ModelInterface):
                 )
 
     def set_all_data_external(self, check_data=True):
+        """Sets the model's list and array data to be stored externally.
+
+        Parameters
+        ----------
+            check_data : bool
+                Determines if data error checking is enabled during this
+                process.
+
+        """
         for package in self.packagelist:
             package.set_all_data_external(check_data)
 
@@ -1131,25 +1192,24 @@ class MFModel(PackageContainer, ModelInterface):
         set_package_filename=True,
     ):
         """
-        registers a package with the model
+        Registers a package with the model.  This method is used internally
+        by FloPy and is not intended for use by the end user.
 
         Parameters
         ----------
         package : MFPackage
-            package to register
+            Package to register
         add_to_package_list : bool
-            add package to lookup list
+            Add package to lookup list
         set_package_name : bool
-            produce a package name for this package
+            Produce a package name for this package
         set_package_filename : bool
-            produce a filename for this package
+            Produce a filename for this package
 
         Returns
         -------
-        (path : tuple, package structure : MFPackageStructure)
+        path, package structure : tuple, MFPackageStructure
 
-        Examples
-        --------
         """
         package.container_type = [PackageContainerType.model]
         if package.parent_file is not None:
@@ -1266,21 +1326,22 @@ class MFModel(PackageContainer, ModelInterface):
         parent_package=None,
     ):
         """
-        loads a package from a file
+        Loads a package from a file.  This method is used internally by FloPy
+        and is not intended for the end user.
 
         Parameters
         ----------
-        ftype : string
+        ftype : str
             the file type
-        fname : string
+        fname : str
             the name of the file containing the package input
-        pname : string
+        pname : str
             the user-defined name for the package
         strict : bool
             strict mode when loading the file
-        ref_path : string
+        ref_path : str
             path to the file. uses local path if set to None
-        dict_package_name : string
+        dict_package_name : str
             package name for dictionary lookup
         parent_package : MFPackage
             parent package

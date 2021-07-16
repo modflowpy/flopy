@@ -159,7 +159,7 @@ class XmlWriterAscii(XmlWriterInterface):
     """
 
     def __init__(self, file_path):
-        super(XmlWriterAscii, self).__init__(file_path)
+        super().__init__(file_path)
 
     def _open_file(self, file_path):
         """
@@ -231,7 +231,7 @@ class XmlWriterBinary(XmlWriterInterface):
     """
 
     def __init__(self, file_path):
-        super(XmlWriterBinary, self).__init__(file_path)
+        super().__init__(file_path)
 
         if sys.byteorder == "little":
             self.byte_order = "<"
@@ -328,10 +328,10 @@ class XmlWriterBinary(XmlWriterInterface):
         self.close_element("AppendedData")
 
         # call super final
-        super(XmlWriterBinary, self).final()
+        super().final()
 
 
-class _Array(object):
+class _Array:
     # class to store array and tell if array is 2d
     def __init__(self, array, array2d):
         self.array = array
@@ -347,7 +347,7 @@ def _get_basic_modeltime(perlen_list):
     return totim
 
 
-class Vtk(object):
+class Vtk:
     """
     Class to build VTK object for exporting flopy vtk
 
@@ -1070,12 +1070,12 @@ class Vtk(object):
         """
         # build 1d index array
         shape1d = self.shape[0] * self.shape[1] * self.shape[2]
-        actwcells1d = np.zeros(shape1d, dtype=np.int)
+        actwcells1d = np.zeros(shape1d, dtype=int)
         if self.has_point_data:
             shape1d_verts = (
                 self.shape_verts[0] * self.shape_verts[1] * self.shape_verts[2]
             )
-            actwcells1d_verts = np.zeros(shape1d_verts, dtype=np.int)
+            actwcells1d_verts = np.zeros(shape1d_verts, dtype=int)
 
         # loop through arrays
         for a in self.arrays.values():

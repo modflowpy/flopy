@@ -3,7 +3,7 @@ import numpy as np
 from ..utils import flopy_io
 
 
-class OptionBlock(object):
+class OptionBlock:
     """
     Parent class to for option blocks within
     Modflow-nwt models. This class contains base
@@ -163,12 +163,12 @@ class OptionBlock(object):
             self.__dict__[key] = value
 
         elif value is None:
-            super(OptionBlock, self).__setattr__(key, value)
+            super().__setattr__(key, value)
 
         elif isinstance(value, np.recarray):
             for name in value.dtype.names:
                 if self._attr_types[name] == np.bool_:
-                    if not isinstance(value, (bool, np.bool_, np.bool)):
+                    if not isinstance(value, (bool, np.bool_)):
                         raise TypeError(err_msg.format(self._attr_types[name]))
                 else:
                     try:
@@ -180,7 +180,7 @@ class OptionBlock(object):
 
         elif key in self._attr_types:
             if self._attr_types[key] == np.bool_:
-                if not isinstance(value, (bool, np.bool_, np.bool)):
+                if not isinstance(value, (bool, np.bool_)):
                     raise TypeError(err_msg.format(self._attr_types[key]))
             else:
                 try:
@@ -191,7 +191,7 @@ class OptionBlock(object):
             self.__dict__[key] = value
 
         else:
-            super(OptionBlock, self).__setattr__(key, value)
+            super().__setattr__(key, value)
 
     def __getattribute__(self, item):
         """
@@ -249,14 +249,14 @@ class OptionBlock(object):
         """
         # set up all attributes for the class!
         for key, ctx in self._context.items():
-            if ctx[OptionBlock.dtype] in (np.bool_, bool, np.bool):
+            if ctx[OptionBlock.dtype] in (np.bool_, bool):
                 self.__setattr__(key, False)
             else:
                 self.__setattr__(key, None)
 
             if ctx[OptionBlock.nested]:
                 for k, d in ctx[OptionBlock.vars].items():
-                    if d[OptionBlock.dtype] in (np.bool_, bool, np.bool):
+                    if d[OptionBlock.dtype] in (np.bool_, bool):
                         self.__setattr__(k, False)
                     else:
                         self.__setattr__(k, None)
@@ -413,7 +413,7 @@ class OptionBlock(object):
                 return cls(options_line=option_line, package=package)
 
 
-class OptionUtil(object):
+class OptionUtil:
     @staticmethod
     def isfloat(s):
         """

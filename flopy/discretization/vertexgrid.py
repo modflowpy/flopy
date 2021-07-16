@@ -1,3 +1,5 @@
+import os
+import copy
 import numpy as np
 
 try:
@@ -52,7 +54,7 @@ class VertexGrid(Grid):
         ncpl=None,
         cell1d=None,
     ):
-        super(VertexGrid, self).__init__(
+        super().__init__(
             "vertex",
             top,
             botm,
@@ -91,7 +93,7 @@ class VertexGrid(Grid):
         if (
             self._vertices is not None
             and (self._cell2d is not None or self._cell1d is not None)
-            and super(VertexGrid, self).is_complete
+            and super().is_complete
         ):
             return True
         return False
@@ -111,6 +113,8 @@ class VertexGrid(Grid):
             return len(self._cell1d)
         if self._botm is not None:
             return len(self._botm[0])
+        if self._cell2d is not None and self._nlay is None:
+            return len(self._cell2d)
         else:
             return self._ncpl
 
@@ -119,8 +123,26 @@ class VertexGrid(Grid):
         return self.nlay * self.ncpl
 
     @property
+    def nvert(self):
+        return len(self._vertices)
+
+    @property
+    def iverts(self):
+        return [[t[0]] + t[4:] for t in self._cell2d]
+
+    @property
+    def verts(self):
+        return np.array([t[1:] for t in self._vertices], dtype=float)
+
+    @property
     def shape(self):
         return self.nlay, self.ncpl
+
+    @property
+    def top_botm(self):
+        new_top = np.expand_dims(self._top, 0)
+        # new_botm = np.expand_dims(self._botm, 0)
+        return np.concatenate((new_top, self._botm), axis=0)
 
     @property
     def extent(self):
@@ -195,6 +217,34 @@ class VertexGrid(Grid):
         else:
             return self._cache_dict[cache_index].data_nocopy
 
+    @property
+    def map_polygons(self):
+        """
+        Get a list of matplotlib Polygon patches for plotting
+
+        Returns
+        -------
+            list of Polygon objects
+        """
+        try:
+            import matplotlib.path as mpath
+        except ImportError:
+            raise ImportError("matplotlib required to use this method")
+        cache_index = "xyzgrid"
+        if (
+            cache_index not in self._cache_dict
+            or self._cache_dict[cache_index].out_of_date
+        ):
+            self.xyzvertices
+            self._polygons = None
+        if self._polygons is None:
+            self._polygons = [
+                mpath.Path(self.get_cell_vertices(nn))
+                for nn in range(self.ncpl)
+            ]
+
+        return copy.copy(self._polygons)
+
     def intersect(self, x, y, local=False, forgive=False):
         """
         Get the CELL2D number of a point with coordinates x and y
@@ -229,7 +279,7 @@ class VertexGrid(Grid):
 
         if local:
             # transform x and y to real-world coordinates
-            x, y = super(VertexGrid, self).get_coords(x, y)
+            x, y = super().get_coords(x, y)
         xv, yv, zv = self.xyzvertices
         for icell2d in range(self.ncpl):
             xa = np.array(xv[icell2d])
@@ -262,6 +312,15 @@ class VertexGrid(Grid):
         Returns
         ------- list of x,y cell vertices
         """
+        while cellid >= self.ncpl:
+            if cellid > self.nnodes:
+                err = "cellid {} out of index for size {}".format(
+                    cellid, self.nnodes
+                )
+                raise IndexError(err)
+
+            cellid -= self.ncpl
+
         self._copy_cache = False
         cell_verts = list(zip(self.xvertices[cellid], self.yvertices[cellid]))
         self._copy_cache = True
@@ -361,7 +420,7 @@ class VertexGrid(Grid):
             yvertices = yvertxform
 
         self._cache_dict[cache_index_cc] = CachedData(
-            [xcenters, ycenters, zcenters]
+            [np.array(xcenters), np.array(ycenters), np.array(zcenters)]
         )
         self._cache_dict[cache_index_vert] = CachedData(
             [xvertices, yvertices, zvertices]
@@ -435,3 +494,54 @@ class VertexGrid(Grid):
         msg = "{} /= {}".format(plotarray.shape[0], required_shape)
         assert plotarray.shape == required_shape, msg
         return plotarray
+
+    # initialize grid from a grb file
+    @classmethod
+    def from_binary_grid_file(cls, file_path, verbose=False):
+        """
+        Instantiate a VertexGrid model grid from a MODFLOW 6 binary
+        grid (*.grb) file.
+
+        Parameters
+        ----------
+        file_path : str
+            file path for the MODFLOW 6 binary grid file
+        verbose : bool
+            Write information to standard output.  Default is False.
+
+        Returns
+        -------
+        return : VertexGrid
+
+        """
+        from ..mf6.utils.binarygrid_util import MfGrdFile
+
+        grb_obj = MfGrdFile(file_path, verbose=verbose)
+        if grb_obj.grid_type != "DISV":
+            err_msg = (
+                "Binary grid file ({}) ".format(os.path.basename(file_path))
+                + "is not a vertex (DISV) grid."
+            )
+            raise ValueError(err_msg)
+
+        idomain = grb_obj.idomain
+        xorigin = grb_obj.xorigin
+        yorigin = grb_obj.yorigin
+        angrot = grb_obj.angrot
+
+        nlay, ncpl = grb_obj.nlay, grb_obj.ncpl
+        top = np.ravel(grb_obj.top)
+        botm = grb_obj.bot
+        botm.shape = (nlay, ncpl)
+        vertices, cell2d = grb_obj.cell2d
+
+        return cls(
+            vertices,
+            cell2d,
+            top,
+            botm,
+            idomain,
+            xoff=xorigin,
+            yoff=yorigin,
+            angrot=angrot,
+        )

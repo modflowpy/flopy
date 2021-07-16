@@ -9,12 +9,12 @@ longname save calculated flows to budget file
 description REPLACE save_flows {'{#1}': 'IST'}
 
 block options
-name sorbtion
+name sorption
 type keyword
 reader urword
 optional true
-longname activate sorbtion
-description is a text keyword to indicate that sorbtion will be activated.  Use of this keyword requires that BULK\_DENSITY and DISTCOEF are specified in the GRIDDATA block.
+longname activate sorption
+description is a text keyword to indicate that sorption will be activated.  Use of this keyword requires that BULK\_DENSITY and DISTCOEF are specified in the GRIDDATA block.  The linear sorption isotherm is the only isotherm presently supported in the IST Package.
 
 block options
 name first_order_decay
@@ -74,7 +74,7 @@ reader urword
 tagged false
 optional false
 longname file keyword
-description name of the output file to write immobile concentrations.
+description name of the output file to write immobile concentrations.  This file is a binary file that has the same format and structure as a binary head and concentration file.  The value for the text variable written to the file is CIM.  Immobile domain concentrations will be written to this file at the same interval as mobile domain concentrations are saved, as specified in the GWT Model Output Control file.
 
 block options
 name cimprintrecord
@@ -199,7 +199,7 @@ reader readarray
 optional true
 layered true
 longname second rate coefficient
-description is the rate coefficient for first or zero-order decay for the sorbed phase of the immobile domain.  A negative value indicates solute production.  The dimensions of decay\_sorbed for first-order decay is one over time.  The dimensions of decay\_sorbed for zero-order decay is mass of solute per mass of aquifer per time.  If decay\_sorbed is not specified and both decay and sorbtion are active, then the sorbed decay rate will be set equal to the aqueous decay rate.  decay\_sorbed will have no affect on simulation results unless the SORPTION keyword and either first- or zero-order decay are specified in the options block.
+description is the rate coefficient for first or zero-order decay for the sorbed phase of the immobile domain.  A negative value indicates solute production.  The dimensions of decay\_sorbed for first-order decay is one over time.  The dimensions of decay\_sorbed for zero-order decay is mass of solute per mass of aquifer per time.  If decay\_sorbed is not specified and both decay and sorbtion are active, then the program will terminate with an error.  decay\_sorbed will have no affect on simulation results unless the SORPTION keyword and either first- or zero-order decay are specified in the options block.
 
 block griddata
 name bulk_density

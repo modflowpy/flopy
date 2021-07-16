@@ -5,11 +5,11 @@ from nose.tools import raises
 
 def test_loadfreyberg():
     cwd = os.getcwd()
-    pth = os.path.join('..', 'examples', 'data', 'freyberg')
+    pth = os.path.join("..", "examples", "data", "freyberg")
     print(pth)
-    assert (os.path.isdir(pth))
+    assert os.path.isdir(pth)
     os.chdir(pth)
-    namefile = 'freyberg.nam'
+    namefile = "freyberg.nam"
     ml = flopy.modflow.Modflow.load(namefile, verbose=True)
     os.chdir(cwd)
     assert isinstance(ml, flopy.modflow.Modflow)
@@ -20,10 +20,10 @@ def test_loadfreyberg():
 
 def test_loadoahu():
     cwd = os.getcwd()
-    pth = os.path.join('..', 'examples', 'data', 'parameters')
-    assert (os.path.isdir(pth))
+    pth = os.path.join("..", "examples", "data", "parameters")
+    assert os.path.isdir(pth)
     os.chdir(pth)
-    namefile = 'Oahu_01.nam'
+    namefile = "Oahu_01.nam"
     ml = flopy.modflow.Modflow.load(namefile, verbose=True)
     os.chdir(cwd)
     assert isinstance(ml, flopy.modflow.Modflow)
@@ -34,24 +34,24 @@ def test_loadoahu():
 
 def test_loadtwrip():
     cwd = os.getcwd()
-    pth = os.path.join('..', 'examples', 'data', 'parameters')
-    assert (os.path.isdir(pth))
+    pth = os.path.join("..", "examples", "data", "parameters")
+    assert os.path.isdir(pth)
     os.chdir(pth)
-    namefile = 'twrip.nam'
+    namefile = "twrip.nam"
     ml = flopy.modflow.Modflow.load(namefile, verbose=True)
     os.chdir(cwd)
     assert isinstance(ml, flopy.modflow.Modflow)
     assert ml.load_fail is False
 
     return
-    
-    
+
+
 def test_loadtwrip_upw():
     cwd = os.getcwd()
-    pth = os.path.join('..', 'examples', 'data', 'parameters')
-    assert (os.path.isdir(pth))
+    pth = os.path.join("..", "examples", "data", "parameters")
+    assert os.path.isdir(pth)
     os.chdir(pth)
-    namefile = 'twrip_upw.nam'
+    namefile = "twrip_upw.nam"
     ml = flopy.modflow.Modflow.load(namefile, verbose=True)
     os.chdir(cwd)
     assert isinstance(ml, flopy.modflow.Modflow)
@@ -61,11 +61,11 @@ def test_loadtwrip_upw():
 
 
 def test_loadoc():
-    ws = os.path.join('temp', 't003')
+    ws = os.path.join("temp", "t003")
     ml = flopy.modflow.Modflow(model_ws=ws)
-    fpth = os.path.join('..', 'examples', 'data', 'mf2005_test', 'fhb.dis')
+    fpth = os.path.join("..", "examples", "data", "mf2005_test", "fhb.dis")
     dis = flopy.modflow.ModflowDis.load(fpth, ml, check=False)
-    fpth = os.path.join('..', 'examples', 'data', 'mf2005_test', 'fhb.oc')
+    fpth = os.path.join("..", "examples", "data", "mf2005_test", "fhb.oc")
     oc = flopy.modflow.ModflowOc.load(fpth, ml, ext_unit_dict=None)
 
     return
@@ -73,9 +73,9 @@ def test_loadoc():
 
 @raises(IOError)
 def test_loadoc_lenfail():
-    ws = os.path.join('temp', 't003')
+    ws = os.path.join("temp", "t003")
     ml = flopy.modflow.Modflow(model_ws=ws)
-    fpth = os.path.join('..', 'examples', 'data', 'mf2005_test', 'fhb.oc')
+    fpth = os.path.join("..", "examples", "data", "mf2005_test", "fhb.oc")
     oc = flopy.modflow.ModflowOc.load(fpth, ml, nper=3, nstp=1, nlay=1)
 
     return
@@ -83,9 +83,9 @@ def test_loadoc_lenfail():
 
 @raises(ValueError)
 def test_loadoc_nperfail():
-    ws = os.path.join('temp', 't003')
+    ws = os.path.join("temp", "t003")
     ml = flopy.modflow.Modflow(model_ws=ws)
-    fpth = os.path.join('..', 'examples', 'data', 'mf2005_test', 'fhb.oc')
+    fpth = os.path.join("..", "examples", "data", "mf2005_test", "fhb.oc")
     oc = flopy.modflow.ModflowOc.load(fpth, ml, nper=0, nlay=1)
 
     return
@@ -93,9 +93,9 @@ def test_loadoc_nperfail():
 
 @raises(ValueError)
 def test_loadoc_nlayfail():
-    ws = os.path.join('temp', 't003')
+    ws = os.path.join("temp", "t003")
     ml = flopy.modflow.Modflow(model_ws=ws)
-    fpth = os.path.join('..', 'examples', 'data', 'mf2005_test', 'fhb.oc')
+    fpth = os.path.join("..", "examples", "data", "mf2005_test", "fhb.oc")
     oc = flopy.modflow.ModflowOc.load(fpth, ml, nper=3, nlay=0)
 
     return
@@ -103,9 +103,9 @@ def test_loadoc_nlayfail():
 
 @raises(ValueError)
 def test_loadoc_nstpfail():
-    ws = os.path.join('temp', 't003')
+    ws = os.path.join("temp", "t003")
     ml = flopy.modflow.Modflow(model_ws=ws)
-    fpth = os.path.join('..', 'examples', 'data', 'mf2005_test', 'fhb.oc')
+    fpth = os.path.join("..", "examples", "data", "mf2005_test", "fhb.oc")
     oc = flopy.modflow.ModflowOc.load(fpth, ml, nper=3, nlay=1)
 
     return
@@ -113,15 +113,15 @@ def test_loadoc_nstpfail():
 
 @raises(IOError)
 def test_load_nam_mf_nonexistant_file():
-    ml = flopy.modflow.Modflow.load('nonexistant.nam')
+    ml = flopy.modflow.Modflow.load("nonexistant.nam")
 
 
 @raises(IOError)
 def test_load_nam_mt_nonexistant_file():
-    ml = flopy.mt3d.Mt3dms.load('nonexistant.nam')
+    ml = flopy.mt3d.Mt3dms.load("nonexistant.nam")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_loadoc()
     test_loadoc_nstpfail()
     test_load_nam_mf_nonexistant_file()

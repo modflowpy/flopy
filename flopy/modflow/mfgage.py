@@ -230,10 +230,10 @@ class ModflowGage(Package):
     def get_default_dtype():
         dtype = np.dtype(
             [
-                ("gageloc", np.int),
-                ("gagerch", np.int),
-                ("unit", np.int),
-                ("outtype", np.int),
+                ("gageloc", int),
+                ("gagerch", int),
+                ("unit", int),
+                ("outtype", int),
             ]
         )
         return dtype

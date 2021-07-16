@@ -230,8 +230,8 @@ class ModflowWel(Package):
                 if "specify" in opt:
                     t = opt.strip().split()
                     self.specify = True
-                    self.phiramp = np.float(t[1])
-                    self.iunitramp = np.int(t[2])
+                    self.phiramp = float(t[1])
+                    self.iunitramp = int(t[2])
                     self.options.pop(idx)
                     break
 
@@ -384,14 +384,14 @@ class ModflowWel(Package):
         if structured:
             dtype = np.dtype(
                 [
-                    ("k", np.int),
-                    ("i", np.int),
-                    ("j", np.int),
+                    ("k", int),
+                    ("i", int),
+                    ("j", int),
                     ("flux", np.float32),
                 ]
             )
         else:
-            dtype = np.dtype([("node", np.int), ("flux", np.float32)])
+            dtype = np.dtype([("node", int), ("flux", np.float32)])
         return dtype
 
     @staticmethod

@@ -25,9 +25,9 @@ plt.rcParams.update(updates)
 
 def MergeData(ndim, zdata, tb):
     sv = 0.05
-    md = np.empty((ndim), np.float)
+    md = np.empty((ndim), float)
     md.fill(np.nan)
-    found = np.empty((ndim), np.bool)
+    found = np.empty((ndim), bool)
     found.fill(False)
     for idx, layer in enumerate(zdata):
         for jdx, z in enumerate(layer):
@@ -102,7 +102,7 @@ def run():
     zini = np.hstack(
         (-9 * np.ones(24), np.arange(-9, -50, -0.5), -50 * np.ones(94))
     )[np.newaxis, :]
-    iso = np.zeros((1, 200), dtype=np.int)
+    iso = np.zeros((1, 200), dtype=int)
     iso[:, :30] = -2
     # model objects
     ml = flopy.modflow.Modflow(
@@ -279,8 +279,8 @@ def run():
     )
     # ghyben herzberg
     zeta1 = -9 - 40.0 * (head[0, 0, :])
-    gbh = np.empty(len(zeta1), np.float)
-    gbho = np.empty(len(zeta1), np.float)
+    gbh = np.empty(len(zeta1), float)
+    gbho = np.empty(len(zeta1), float)
     for idx, z1 in enumerate(zeta1):
         if z1 >= -9.0 or z1 <= -50.0:
             gbh[idx] = np.nan

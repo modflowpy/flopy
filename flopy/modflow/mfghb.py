@@ -251,16 +251,16 @@ class ModflowGhb(Package):
         if structured:
             dtype = np.dtype(
                 [
-                    ("k", np.int),
-                    ("i", np.int),
-                    ("j", np.int),
+                    ("k", int),
+                    ("i", int),
+                    ("j", int),
                     ("bhead", np.float32),
                     ("cond", np.float32),
                 ]
             )
         else:
             dtype = np.dtype(
-                [("node", np.int), ("bhead", np.float32), ("cond", np.float32)]
+                [("node", int), ("bhead", np.float32), ("cond", np.float32)]
             )
         return dtype
 

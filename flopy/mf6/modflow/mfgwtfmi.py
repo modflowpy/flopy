@@ -1,5 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
+# FILE created on March 19, 2021 03:08:37 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -19,7 +20,13 @@ class ModflowGwtfmi(mfpackage.MFPackage):
     flow_imbalance_correction : boolean
         * flow_imbalance_correction (boolean) correct for an imbalance in flows
           by assuming that any residual flow error comes in or leaves at the
-          concentration of the cell.
+          concentration of the cell. When this option is activated, the GWT
+          Model budget written to the listing file will contain two additional
+          entries: FLOW-ERROR and FLOW-CORRECTION. These two entries will be
+          equal but opposite in sign. The FLOW-CORRECTION term is a mass flow
+          that is added to offset the error caused by an imprecise flow
+          balance. If these terms are not relatively small, the flow model
+          should be rerun with stricter convergence tolerances.
     packagedata : [flowtype, fname]
         * flowtype (string) is the word GWFBUDGET, GWFHEAD, GWFMOVER or the
           name of an advanced GWF stress package. If GWFBUDGET is specified,
@@ -102,7 +109,7 @@ class ModflowGwtfmi(mfpackage.MFPackage):
         pname=None,
         parent_file=None,
     ):
-        super(ModflowGwtfmi, self).__init__(
+        super().__init__(
             model, "fmi", filename, pname, loading_package, parent_file
         )
 

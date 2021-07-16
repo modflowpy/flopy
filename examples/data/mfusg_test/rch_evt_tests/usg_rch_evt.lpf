@@ -1,0 +1,21 @@
+# MODFLOW-USG Layer Property Flow (LPF) Package
+ 50 -1.000000e+030 0 0      NOVFC  
+ 4 4 4
+ 0 0 0
+ 1.000000e+000
+ 1.000000e+000
+ 1.000000e+000
+ 0 0 0
+ 0 0 0
+CONSTANT  1.000000e+000              Kx Layer 1
+CONSTANT  1.000000e-001              Kz Layer 1
+CONSTANT  1.000000e-006              Ss Layer 1
+CONSTANT  1.000000e-002              Sy Layer 1
+CONSTANT  1.000000e+000              Kx Layer 2
+CONSTANT  1.000000e-001              Kz Layer 2
+CONSTANT  1.000000e-006              Ss Layer 2
+CONSTANT  1.000000e-002              Sy Layer 2
+CONSTANT  1.000000e+000              Kx Layer 3
+CONSTANT  1.000000e-001              Kz Layer 3
+CONSTANT  1.000000e-006              Ss Layer 3
+CONSTANT  1.000000e-002              Sy Layer 3

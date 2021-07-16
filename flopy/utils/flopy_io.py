@@ -187,14 +187,14 @@ def write_fixed_var(v, length=10, ipos=None, free=False, comment=None):
         if free:
             write_fmt = "{} "
         else:
-            if isinstance(v[n], (float, np.float, np.float32, np.float64)):
+            if isinstance(v[n], (float, np.float32, np.float64)):
                 width = ipos[n] - 6
                 vmin, vmax = 10 ** -width, 10 ** width
                 if abs(v[n]) < vmin or abs(v[n]) > vmax:
                     ctype = "g"
                 else:
                     ctype = ".{}f".format(width)
-            elif isinstance(v[n], (int, np.int, np.int32, np.int64)):
+            elif isinstance(v[n], (int, np.int32, np.int64)):
                 ctype = "d"
             else:
                 ctype = ""

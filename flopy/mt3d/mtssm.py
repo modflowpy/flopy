@@ -8,7 +8,7 @@ from ..utils import Util2d, MfList, Transient2d
 SsmLabels = ["WEL", "DRN", "RCH", "EVT", "RIV", "GHB", "BAS6", "CHD", "PBC"]
 
 
-class SsmPackage(object):
+class SsmPackage:
     def __init__(self, label="", instance=None, needTFstr=False):
         self.label = label
         self.instance = instance
@@ -43,7 +43,7 @@ class Mt3dSsm(Package):
         can be specified for additional species by passing additional
         arguments to the Mt3dSsm constructor.  For example, to specify the
         recharge concentration for species two one could use
-        crch2={0: 0., 1: 10*np.ones((nrow, ncol), dtype=np.float)} as
+        crch2={0: 0., 1: 10*np.ones((nrow, ncol), dtype=float)} as
         and additional keyword argument that is passed to Mt3dSsm when making
         the ssm object.
     cevt : Transient2d, scalar, array of floats, or dictionary
@@ -63,9 +63,9 @@ class Mt3dSsm(Package):
         values in the dictionary are recarrays of SSM boundaries.  The
         dtype for the recarray can be obtained using ssm.dtype (after the
         ssm package has been created).  The default dtype for the recarray is
-        np.dtype([('k', np.int), ("i", np.int), ("j", np.int),
-        ("css", np.float32), ("itype", np.int),
-        ((cssms(n), np.float), n=1, ncomp)])
+        np.dtype([('k', int), ("i", int), ("j", int),
+        ("css", np.float32), ("itype", int),
+        ((cssms(n), float), n=1, ncomp)])
         If there are more than one component species, then additional entries
         will be added to the dtype as indicated by cssm(n).
         Note that if the number of dictionary entries is less than the number
@@ -205,7 +205,8 @@ class Mt3dSsm(Package):
                     "Deprecation Warning: Keyword argument '"
                     + key
                     + "' no longer supported. Use "
-                    + "'stress_period_data' instead."
+                    + "'stress_period_data' instead.",
+                    category=UserWarning,
                 )
 
         # Set dimensions
@@ -242,10 +243,14 @@ class Mt3dSsm(Package):
             )
 
         if mxss is None and mf is None:
+            wmsg = (
+                "SSM Package: mxss is None and modflowmodel is None. "
+                + "Cannot calculate max number of sources and sinks. "
+                + "Estimating from stress_period_data. "
+            )
             warnings.warn(
-                "SSM Package: mxss is None and modflowmodel is "
-                + "None.  Cannot calculate max number of sources "
-                + "and sinks.  Estimating from stress_period_data. "
+                wmsg,
+                category=UserWarning,
             )
 
         if mxss is None:
@@ -440,11 +445,11 @@ class Mt3dSsm(Package):
         and sinks
         """
         type_list = [
-            ("k", np.int),
-            ("i", np.int),
-            ("j", np.int),
+            ("k", int),
+            ("i", int),
+            ("j", int),
             ("css", np.float32),
-            ("itype", np.int),
+            ("itype", int),
         ]
         if ncomp > 1:
             for comp in range(1, ncomp + 1):

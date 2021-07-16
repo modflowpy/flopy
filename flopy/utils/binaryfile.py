@@ -31,7 +31,7 @@ class BinaryHeader(Header):
     """
 
     def __init__(self, bintype=None, precision="single"):
-        super(BinaryHeader, self).__init__(bintype, precision)
+        super().__init__(bintype, precision)
 
     def set_values(self, **kwargs):
         """
@@ -280,9 +280,7 @@ class BinaryLayerFile(LayerFile):
     """
 
     def __init__(self, filename, precision, verbose, kwargs):
-        super(BinaryLayerFile, self).__init__(
-            filename, precision, verbose, kwargs
-        )
+        super().__init__(filename, precision, verbose, kwargs)
         return
 
     def __enter__(self):
@@ -300,6 +298,9 @@ class BinaryLayerFile(LayerFile):
         header = self._get_header()
         self.nrow = header["nrow"]
         self.ncol = header["ncol"]
+        if header["ilay"] > self.nlay:
+            self.nlay = header["ilay"]
+
         if self.nrow < 0 or self.ncol < 0:
             raise Exception("negative nrow, ncol")
         if self.nrow > 1 and self.nrow * self.ncol > 10000000:
@@ -413,10 +414,10 @@ class BinaryLayerFile(LayerFile):
                 )  # change ilay from header to zero-based
                 if ilay != k:
                     continue
-                ipos = np.long(self.iposarray[irec])
+                ipos = int(self.iposarray[irec])
 
                 # Calculate offset necessary to reach intended cell
-                self.file.seek(ipos + np.long(ioffset), 0)
+                self.file.seek(ipos + int(ioffset), 0)
 
                 # Find the time index and then put value into result in the
                 # correct location.
@@ -492,7 +493,7 @@ class HeadFile(BinaryLayerFile):
         self.header_dtype = BinaryHeader.set_dtype(
             bintype="Head", precision=precision
         )
-        super(HeadFile, self).__init__(filename, precision, verbose, kwargs)
+        super().__init__(filename, precision, verbose, kwargs)
         return
 
 
@@ -562,7 +563,7 @@ class UcnFile(BinaryLayerFile):
         self.header_dtype = BinaryHeader.set_dtype(
             bintype="Ucn", precision=precision
         )
-        super(UcnFile, self).__init__(filename, precision, verbose, kwargs)
+        super().__init__(filename, precision, verbose, kwargs)
         return
 
 
@@ -570,7 +571,7 @@ class BudgetIndexError(Exception):
     pass
 
 
-class CellBudgetFile(object):
+class CellBudgetFile:
     """
     CellBudgetFile Class.
 
@@ -641,11 +642,10 @@ class CellBudgetFile(object):
             self.dis = kwargs.pop("dis")
             self.modelgrid = self.dis.parent.modelgrid
         if "sr" in kwargs.keys():
-            from ..utils import SpatialReferenceUnstructured
             from ..discretization import StructuredGrid, UnstructuredGrid
 
             sr = kwargs.pop("sr")
-            if isinstance(sr, SpatialReferenceUnstructured):
+            if sr.__class__.__name__ == "SpatialReferenceUnstructured":
                 self.modelgrid = UnstructuredGrid(
                     vertices=sr.verts,
                     iverts=sr.iverts,
@@ -653,7 +653,7 @@ class CellBudgetFile(object):
                     ycenters=sr.yc,
                     ncpl=sr.ncpl,
                 )
-            else:
+            elif sr.__class__.__name__ == "SpatialReference":
                 self.modelgrid = StructuredGrid(
                     delc=sr.delc,
                     delr=sr.delr,
@@ -1526,7 +1526,7 @@ class CellBudgetFile(object):
             idx = np.array([idx])
 
         header = self.recordarray[idx]
-        ipos = np.long(self.iposarray[idx])
+        ipos = int(self.iposarray[idx])
         self.file.seek(ipos, 0)
         imeth = header["imeth"][0]
 
@@ -1755,9 +1755,9 @@ class CellBudgetFile(object):
         nlay = self.nlay
         nrow = self.nrow
         ncol = self.ncol
-        residual = np.zeros((nlay, nrow, ncol), dtype=np.float)
+        residual = np.zeros((nlay, nrow, ncol), dtype=float)
         if scaled:
-            inflow = np.zeros((nlay, nrow, ncol), dtype=np.float)
+            inflow = np.zeros((nlay, nrow, ncol), dtype=float)
         select_indices = np.where((self.recordarray["totim"] == totim))[0]
 
         for i in select_indices:
@@ -1802,7 +1802,7 @@ class CellBudgetFile(object):
                     inflow[idx] += flow[idx]
 
         if scaled:
-            residual_scaled = np.zeros((nlay, nrow, ncol), dtype=np.float)
+            residual_scaled = np.zeros((nlay, nrow, ncol), dtype=float)
             idx = inflow > 0.0
             residual_scaled[idx] = residual[idx] / inflow[idx]
             return residual_scaled
@@ -1890,7 +1890,7 @@ class HeadUFile(BinaryLayerFile):
         self.header_dtype = BinaryHeader.set_dtype(
             bintype="Head", precision=precision
         )
-        super(HeadUFile, self).__init__(filename, precision, verbose, kwargs)
+        super().__init__(filename, precision, verbose, kwargs)
         return
 
     def _get_data_array(self, totim=0.0):
