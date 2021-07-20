@@ -421,7 +421,32 @@ class UnstructuredGrid(Grid):
             plotarray, xcenter array, ycenter array, and a boolean flag
             for contouring
         """
-        return plotarray, xcenters, None, False
+        if self.ncpl[0] != self.nnodes:
+            return plotarray, xcenters, None, False
+        else:
+            zcenters = []
+            if isinstance(head, np.ndarray):
+                head = head.reshape(1, self.nnodes)
+                head = np.vstack((head, head))
+            else:
+                head = elev.reshape(2, self.nnodes)
+
+            elev = elev.reshape(2, self.nnodes)
+            for k, ev in enumerate(elev):
+                if k == 0:
+                    zc = [
+                        ev[i] if head[k][i] > ev[i] else head[k][i]
+                        for i in sorted(projpts)
+                    ]
+                else:
+                    zc = [ev[i] for i in sorted(projpts)]
+                zcenters.append(zc)
+
+            plotarray = np.vstack((plotarray, plotarray))
+            xcenters = np.vstack((xcenters, xcenters))
+            zcenters = np.array(zcenters)
+
+            return plotarray, xcenters, zcenters, True
 
     @property
     def map_polygons(self):
