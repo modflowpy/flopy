@@ -1573,9 +1573,7 @@ class MFTransientArray(MFArray, MFTransient):
             layer_storage = self._get_storage_obj().layer_storage
             if (
                 layer_storage.get_total_size() > 0
-                and self._get_storage_obj()
-                .layer_storage[0]
-                .data_storage_type
+                and self._get_storage_obj().layer_storage[0].data_storage_type
                 != DataStorageType.external_file
             ):
                 fname, ext = os.path.splitext(external_file_path)
@@ -1613,9 +1611,7 @@ class MFTransientArray(MFArray, MFTransient):
             layer_storage = self._get_storage_obj().layer_storage
             if (
                 layer_storage.get_total_size() > 0
-                and self._get_storage_obj()
-                .layer_storage[0]
-                .data_storage_type
+                and self._get_storage_obj().layer_storage[0].data_storage_type
                 == DataStorageType.external_file
             ):
                 super().store_internal(
