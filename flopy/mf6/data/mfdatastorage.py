@@ -1753,7 +1753,6 @@ class DataStorage:
         read_file = self._simulation_data.mfpath.resolve_path(
             self.layer_storage[layer].fname, model_name
         )
-        # read_file = self.layer_storage[layer].fname
         # currently support files containing ndarrays or recarrays
         if self.data_structure_type == DataStructureType.ndarray:
             file_access = MFFileAccessArray(
