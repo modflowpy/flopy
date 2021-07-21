@@ -3,7 +3,7 @@ import numpy as np
 from collections import OrderedDict
 from ..data.mfstructure import DatumType
 from .mfdatastorage import DataStorage, DataStructureType, DataStorageType
-from ...utils.datautil import MultiList
+from ...utils.datautil import MultiList, DatumUtil
 from ..mfbase import ExtFileAction, MFDataException, VerbosityLevel
 from ..utils.mfenums import DiscretizationType
 from ...datbase import DataType
@@ -1567,31 +1567,29 @@ class MFTransientArray(MFArray, MFTransient):
             check_data : bool
                 Verify data prior to storing
         """
-        sim_time = self._data_dimensions.package_dim.model_dim[
-            0
-        ].simulation_time
-        num_sp = sim_time.get_num_stress_periods()
         # store each stress period in separate file(s)
-        for sp in range(0, num_sp):
-            if sp in self._data_storage:
-                self._current_key = sp
-                layer_storage = self._get_storage_obj().layer_storage
-                if (
-                    layer_storage.get_total_size() > 0
-                    and self._get_storage_obj()
-                    .layer_storage[0]
-                    .data_storage_type
-                    != DataStorageType.external_file
-                ):
-                    fname, ext = os.path.splitext(external_file_path)
+        for sp in self._data_storage.keys():
+            self._current_key = sp
+            layer_storage = self._get_storage_obj().layer_storage
+            if (
+                layer_storage.get_total_size() > 0
+                and self._get_storage_obj()
+                .layer_storage[0]
+                .data_storage_type
+                != DataStorageType.external_file
+            ):
+                fname, ext = os.path.splitext(external_file_path)
+                if DatumUtil.is_int(sp):
                     full_name = "{}_{}{}".format(fname, sp + 1, ext)
-                    super().store_as_external_file(
-                        full_name,
-                        layer,
-                        binary,
-                        replace_existing_external,
-                        check_data,
-                    )
+                else:
+                    full_name = "{}_{}{}".format(fname, sp, ext)
+                super().store_as_external_file(
+                    full_name,
+                    layer,
+                    binary,
+                    replace_existing_external,
+                    check_data,
+                )
 
     def store_internal(
         self,
@@ -1610,26 +1608,20 @@ class MFTransientArray(MFArray, MFTransient):
             check_data : bool
                 Verify data prior to storing
         """
-        sim_time = self._data_dimensions.package_dim.model_dim[
-            0
-        ].simulation_time
-        num_sp = sim_time.get_num_stress_periods()
-        # store each stress period in separate file(s)
-        for sp in range(0, num_sp):
-            if sp in self._data_storage:
-                self._current_key = sp
-                layer_storage = self._get_storage_obj().layer_storage
-                if (
-                    layer_storage.get_total_size() > 0
-                    and self._get_storage_obj()
-                    .layer_storage[0]
-                    .data_storage_type
-                    == DataStorageType.external_file
-                ):
-                    super().store_internal(
-                        layer,
-                        check_data,
-                    )
+        for sp in self._data_storage.keys():
+            self._current_key = sp
+            layer_storage = self._get_storage_obj().layer_storage
+            if (
+                layer_storage.get_total_size() > 0
+                and self._get_storage_obj()
+                .layer_storage[0]
+                .data_storage_type
+                == DataStorageType.external_file
+            ):
+                super().store_internal(
+                    layer,
+                    check_data,
+                )
 
     def get_data(self, layer=None, apply_mult=True, **kwargs):
         """Returns the data associated with stress period key `layer`.
