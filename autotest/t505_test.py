@@ -34,6 +34,7 @@ from flopy.mf6.modflow.mfutlobs import ModflowUtlobs
 from flopy.mf6.modflow.mfutlts import ModflowUtlts
 from flopy.mf6.utils import testutils
 from flopy.mf6.mfbase import MFDataException
+from flopy.mf6.mfbase import ExtFileAction
 
 try:
     import shapefile
@@ -408,6 +409,40 @@ def np001():
         head_file = os.path.join(os.getcwd(), expected_head_file)
         head_new = os.path.join(run_folder, "np001_mod.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
+        assert pymake.compare_heads(
+            None, None, files1=head_file, files2=head_new, outfile=outfile
+        )
+
+        budget_frf = sim.simulation_data.mfdata[
+            (model_name, "CBC", "FLOW-JA-FACE")
+        ]
+        assert array_util.array_comp(budget_frf_valid, budget_frf)
+
+        # clean up
+        sim.delete_output_files()
+
+    # test path changes, model file path relative to the simulation folder
+    md_folder = "model_folder"
+    model.set_model_relative_path(md_folder)
+    run_folder_new = os.path.join(run_folder, md_folder)
+    # set all data external
+    model.set_all_data_external()
+    sim.write_simulation()
+    # run simulation from new path with external files
+    if run:
+        sim.run_simulation()
+
+        # get expected results
+        budget_file = os.path.join(os.getcwd(), expected_cbc_file)
+        budget_obj = bf.CellBudgetFile(budget_file, precision="double")
+        budget_frf_valid = np.array(
+            budget_obj.get_data(text="FLOW-JA-FACE", full3D=True)
+        )
+
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file)
+        head_new = os.path.join(run_folder_new, "np001_mod.hds")
+        outfile = os.path.join(run_folder_new, "head_compare.dat")
         assert pymake.compare_heads(
             None, None, files1=head_file, files2=head_new, outfile=outfile
         )
@@ -3165,12 +3200,12 @@ def test_transport():
 
 
 if __name__ == "__main__":
-    np002()
     np001()
+    np002()
     test004_bcfss()
     test005_advgw_tidal()
-    test006_2models_gnc()
     test006_gwf3_disv()
+    test006_2models_gnc()
     test021_twri()
     test028_sfr()
     test035_fhb()
