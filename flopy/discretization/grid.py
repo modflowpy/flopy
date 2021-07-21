@@ -630,9 +630,9 @@ class Grid:
 
     def set_coord_info(
         self,
-        xoff=0.0,
-        yoff=0.0,
-        angrot=0.0,
+        xoff=None,
+        yoff=None,
+        angrot=None,
         epsg=None,
         proj4=None,
         merge_coord_info=True,
@@ -648,6 +648,13 @@ class Grid:
                 epsg = self._epsg
             if proj4 is None:
                 proj4 = self._proj4
+
+        if xoff is None:
+            xoff = 0.0
+        if yoff is None:
+            yoff = 0.0
+        if angrot is None:
+            angrot = 0.0
 
         self._xoff = xoff
         self._yoff = yoff

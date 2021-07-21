@@ -327,6 +327,21 @@ class UnstructuredGrid(Grid):
         else:
             return self._cache_dict[cache_index].data_nocopy
 
+    @property
+    def cross_section_vertices(self):
+        """
+        Method to get vertices for cross-sectional plotting
+
+        Returns
+        -------
+            xvertices, yvertices
+        """
+        xv, yv = self.xyzvertices[0], self.xyzvertices[1]
+        if len(xv) == self.ncpl[0]:
+            xv *= self.nlay
+            yv *= self.nlay
+        return xv, yv
+
     def cross_section_lay_ncpl_ncb(self, ncb):
         """
         Get PlotCrossSection compatible layers, ncpl, and ncb
