@@ -526,7 +526,7 @@ class Grid:
             plotarray, xcenter array, ycenter array, and a boolean flag
             for contouring
         """
-        if self.nlay != 1:
+        if self.ncpl != self.nnodes:
             return plotarray, xcenters, None, False
         else:
             zcenters = []
