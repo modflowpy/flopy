@@ -809,16 +809,17 @@ class MFBlock:
                 fd_block.readline()
                 fd_path = os.path.split(os.path.realpath(fd_block.name))[0]
                 try:
+                    file_name = os.path.split(arr_line[1])[-1]
                     if (
                         self._simulation_data.verbosity_level.value
                         >= VerbosityLevel.verbose.value
                     ):
                         print(
                             '        opening external file "{}"..'
-                            ".".format(arr_line[1])
+                            ".".format(file_name)
                         )
                     external_file_info = arr_line
-                    fd_block = open(os.path.join(fd_path, arr_line[1]), "r")
+                    fd_block = open(os.path.join(fd_path, file_name), "r")
                     # read first line of external file
                     line = fd_block.readline()
                     arr_line = datautil.PyListUtil.split_data_line(line)
@@ -1215,6 +1216,28 @@ class MFBlock:
                     check_data=check_data,
                 )
 
+    def set_all_data_internal(self, check_data=True):
+        """Sets the block's list and array data to be stored internally,
+        check_data determines if data error checking is enabled during this
+        process.
+
+        Parameters
+        ----------
+            check_data : bool
+                Whether to do data error checking.
+
+        """
+        for key, dataset in self.datasets.items():
+            if (
+                isinstance(dataset, mfdataarray.MFArray)
+                or (
+                    isinstance(dataset, mfdatalist.MFList)
+                    and dataset.structure.type == DatumType.recarray
+                )
+                and dataset.enabled
+            ):
+                dataset.store_internal(check_data=check_data)
+
     def _find_repeating_datasets(self):
         repeating_datasets = []
         for key, dataset in self.datasets.items():
@@ -1535,9 +1558,10 @@ class MFPackage(PackageContainer, PackageInterface):
                     message,
                     model_or_sim.simulation_data.debug,
                 )
-
+            # only store the file name.  model relative path handled
+            # internally
+            filename = os.path.split(filename)[-1]
             self._filename = MFFileMgmt.string_to_file_path(filename)
-
         self.path, self.structure = model_or_sim.register_package(
             self, not loading_package, pname is None, filename is None
         )
@@ -2001,6 +2025,22 @@ class MFPackage(PackageContainer, PackageInterface):
         # set sub-packages
         for package in self._packagelist:
             package.set_all_data_external(check_data)
+
+    def set_all_data_internal(self, check_data=True):
+        """Sets the package's list and array data to be stored internally.
+
+        Parameters
+        ----------
+            check_data : bool
+                Determine if data error checking is enabled
+
+        """
+        # set blocks
+        for key, block in self.blocks.items():
+            block.set_all_data_internal(check_data)
+        # set sub-packages
+        for package in self._packagelist:
+            package.set_all_data_internal(check_data)
 
     def load(self, strict=True):
         """Loads the package from file.

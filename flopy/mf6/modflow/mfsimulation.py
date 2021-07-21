@@ -225,7 +225,7 @@ class MFSimulationData:
 
     """
 
-    def __init__(self, path):
+    def __init__(self, path, mfsim):
         # --- formatting variables ---
         self.indent_string = "  "
         self.constant_formatting = ["constant", ""]
@@ -247,7 +247,7 @@ class MFSimulationData:
         self._update_str_format()
 
         # --- file path ---
-        self.mfpath = MFFileMgmt(path)
+        self.mfpath = MFFileMgmt(path, mfsim)
 
         # --- ease of use variables to make working with modflow input and
         # output data easier --- model dimension class for each model
@@ -367,7 +367,7 @@ class MFSimulation(PackageContainer):
         memory_print_option=None,
         write_headers=True,
     ):
-        super().__init__(MFSimulationData(sim_ws), sim_name)
+        super().__init__(MFSimulationData(sim_ws, self), sim_name)
         self.simulation_data.verbosity_level = self._resolve_verbosity_level(
             verbosity_level
         )
@@ -1182,6 +1182,22 @@ class MFSimulation(PackageContainer):
         for package in self._exchange_files.values():
             package.set_all_data_external(check_data)
 
+    def set_all_data_internal(self, check_data=True):
+        # set data external for all packages in all models
+        for model in self._models.values():
+            model.set_all_data_internal(check_data)
+        # set data external for ims packages
+        for package in self._ims_files.values():
+            package.set_all_data_internal(check_data)
+        # set data external for ghost node packages
+        for package in self._ghost_node_files.values():
+            package.set_all_data_internal(check_data)
+        # set data external for mover packages
+        for package in self._mover_files.values():
+            package.set_all_data_internal(check_data)
+        for package in self._exchange_files.values():
+            package.set_all_data_internal(check_data)
+
     def write_simulation(
         self, ext_file_action=ExtFileAction.copy_relative_paths, silent=False
     ):
@@ -1315,27 +1331,6 @@ class MFSimulation(PackageContainer):
                             "written.".format(mvr_file)
                         )
 
-        if ext_file_action == ExtFileAction.copy_relative_paths:
-            # move external files with relative paths
-            num_files_copied = self.simulation_data.mfpath.copy_files()
-        elif ext_file_action == ExtFileAction.copy_all:
-            # move all external files
-            num_files_copied = self.simulation_data.mfpath.copy_files(
-                copy_relative_only=False
-            )
-        else:
-            num_files_copied = 0
-        if (
-            self.simulation_data.verbosity_level.value
-            >= VerbosityLevel.verbose.value
-            and num_files_copied > 0
-        ):
-            print(
-                "INFORMATION: {} external files copied".format(
-                    num_files_copied
-                )
-            )
-
         # write other packages
         for pp in self._other_files.values():
             if (
@@ -1370,7 +1365,15 @@ class MFSimulation(PackageContainer):
             Relative or absolute path to simulation root folder.
 
         """
-        self.simulation_data.mfpath.set_sim_path(path)
+        # set all data internal
+        self.set_all_data_internal()
+
+        # set simulation path
+        self.simulation_data.mfpath.set_sim_path(path, True)
+
+        if not os.path.exists(path):
+            # create new simulation folder
+            os.makedirs(path)
 
     def run_simulation(
         self,

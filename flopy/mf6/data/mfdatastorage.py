@@ -1,5 +1,6 @@
 from copy import deepcopy
 import sys
+import os
 import inspect
 from shutil import copyfile
 from collections import OrderedDict
@@ -910,6 +911,8 @@ class DataStorage:
                         )
                 self.process_open_close_line(data, layer)
                 return
+            elif "data" in data:
+                data = data["data"]
         if isinstance(data, list):
             if (
                 len(data) > 0
@@ -1024,7 +1027,10 @@ class DataStorage:
                 return True
             elif "data" in data:
                 multiplier, iprn = self.process_internal_line(data)
-                if len(data["data"]) == 1:
+                if len(data["data"]) == 1 and (
+                    DatumUtil.is_float(data["data"][0])
+                    or DatumUtil.is_int(data["data"][0])
+                ):
                     # merge multiplier with single value and make constant
                     if DatumUtil.is_float(multiplier):
                         mult = 1.0
@@ -1169,7 +1175,9 @@ class DataStorage:
                         # check data line length
                         self._check_list_length(data)
 
-                    if autofill and data is not None:
+                    if isinstance(data, np.recarray):
+                        self.layer_storage.first_item().internal_data = data
+                    elif autofill and data is not None:
                         if isinstance(data, tuple) and isinstance(
                             data[0], tuple
                         ):
@@ -1503,15 +1511,21 @@ class DataStorage:
             multiplier = [self.get_default_mult()]
         layer_new, multiplier = self._store_prep(layer, multiplier)
 
+        # pathing to external file
+        data_dim = self.data_dimensions
+        model_name = data_dim.package_dim.model_dim[0].model_name
+        fp = self._simulation_data.mfpath.resolve_path(file_path, model_name)
+        fp_relative = file_path
+        if model_name is not None:
+            rel_path = self._simulation_data.mfpath.model_relative_path[
+                model_name
+            ]
+            if rel_path is not None and len(rel_path) > 0 and rel_path != ".":
+                # include model relative path in external file path
+                fp_relative = os.path.join(rel_path, file_path)
         if data is not None:
             if self.data_structure_type == DataStructureType.recarray:
-
                 # create external file and write file entry to the file
-                data_dim = self.data_dimensions
-                model_name = data_dim.package_dim.model_dim[0].model_name
-                fp = self._simulation_data.mfpath.resolve_path(
-                    file_path, model_name
-                )
                 # store data internally first so that a file entry
                 # can be generated
                 self.store_internal(
@@ -1569,19 +1583,14 @@ class DataStorage:
             else:
                 # store data externally in file
                 data_size = self.get_data_size(layer_new)
-                data_dim = self.data_dimensions
                 data_type = data_dim.structure.data_item_structures[0].type
-                model_name = data_dim.package_dim.model_dim[0].model_name
-                fp = self._simulation_data.mfpath.resolve_path(
-                    file_path, model_name
-                )
 
                 if self._calc_data_size(data, 2) == 1 and data_size > 1:
                     # constant data, need to expand
                     self.layer_storage[layer_new].data_const_value = data
                     self.layer_storage[
                         layer_new
-                    ].DataStorageType = DataStorageType.internal_constant
+                    ].data_storage_type = DataStorageType.internal_constant
                     data = self._fill_const_layer(layer)
                 elif isinstance(data, list):
                     data = self._to_ndarray(data, layer)
@@ -1630,7 +1639,7 @@ class DataStorage:
                 self.layer_storage[layer_new].factor = multiplier
                 self.layer_storage[layer_new].internal_data = None
         self.set_ext_file_attributes(
-            layer_new, file_path, print_format, binary
+            layer_new, fp_relative, print_format, binary
         )
 
     def set_ext_file_attributes(self, layer, file_path, print_format, binary):
@@ -1744,6 +1753,7 @@ class DataStorage:
         read_file = self._simulation_data.mfpath.resolve_path(
             self.layer_storage[layer].fname, model_name
         )
+        # read_file = self.layer_storage[layer].fname
         # currently support files containing ndarrays or recarrays
         if self.data_structure_type == DataStructureType.ndarray:
             file_access = MFFileAccessArray(
@@ -2305,7 +2315,7 @@ class DataStorage:
                     0
                 ].model_name
                 read_file = self._simulation_data.mfpath.resolve_path(
-                    self.layer_storage[layer].fname, model_name
+                    self.layer_storage[layer].fname, ""
                 )
 
                 if self.layer_storage[layer].binary:

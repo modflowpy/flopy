@@ -9,6 +9,7 @@ from ..utils.mfenums import DiscretizationType
 from ...datbase import DataType
 from .mffileaccess import MFFileAccessArray
 from .mfdata import MFMultiDimVar, MFTransient
+from ...mbase import ModelInterface
 
 
 class MFArray(MFMultiDimVar):
@@ -483,7 +484,6 @@ class MFArray(MFMultiDimVar):
             check_data : bool
                 Verify data prior to storing
         """
-
         storage = self._get_storage_obj()
         if storage is None:
             self._set_storage_obj(self._new_storage(False, True))
@@ -563,7 +563,6 @@ class MFArray(MFMultiDimVar):
                 self._set_data(
                     external_data, layer=current_layer, check_data=False
                 )
-
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(
@@ -572,6 +571,93 @@ class MFArray(MFMultiDimVar):
                     self._path,
                     "storing data in external file "
                     "{}".format(external_file_path),
+                    self.structure.name,
+                    inspect.stack()[0][3],
+                    type_,
+                    value_,
+                    traceback_,
+                    None,
+                    self._simulation_data.debug,
+                    ex,
+                )
+
+    def store_internal(
+        self,
+        layer=None,
+        check_data=True,
+    ):
+        """Stores data from layer `layer` internally.  For unlayered data do
+        not pass in `layer`.  If layer is not specified all layers will be
+        stored internally
+
+        Parameters
+        ----------
+            layer : int
+                Which layer to store in external file, `None` value stores all
+                layers.
+            check_data : bool
+                Verify data prior to storing
+        """
+        storage = self._get_storage_obj()
+        if storage is None:
+            self._set_storage_obj(self._new_storage(False, True))
+            storage = self._get_storage_obj()
+        # build list of layers
+        if layer is None:
+            layer_list = []
+            for index in range(0, storage.layer_storage.get_total_size()):
+                if (
+                    storage.layer_storage[index].data_storage_type
+                    == DataStorageType.external_file
+                ):
+                    layer_list.append(index)
+        else:
+            if (
+                storage.layer_storage[layer].data_storage_type
+                == DataStorageType.external_file
+            ):
+                layer_list = [layer]
+            else:
+                layer_list = []
+
+        # store data from each layer
+        for current_layer in layer_list:
+            if isinstance(current_layer, int):
+                current_layer = (current_layer,)
+            # get the layer's data
+            data = self._get_data(current_layer, True)
+
+            if data is None:
+                # do not write empty data to an internal file
+                continue
+            try:
+                # store layer's data internally
+                if (
+                    self._simulation_data.verbosity_level.value
+                    >= VerbosityLevel.verbose.value
+                ):
+                    print(
+                        "Storing {} layer {} internally.."
+                        ".".format(
+                            self.structure.name,
+                            current_layer[0] + 1,
+                        )
+                    )
+                factor = storage.layer_storage[current_layer].factor
+                internal_data = {
+                    "data": self._get_data(current_layer, True),
+                    "factor": factor,
+                }
+                self._set_data(
+                    internal_data, layer=current_layer, check_data=False
+                )
+            except Exception as ex:
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    self.structure.get_model(),
+                    self.structure.get_package(),
+                    self._path,
+                    "storing data {} internally".format(self.structure.name),
                     self.structure.name,
                     inspect.stack()[0][3],
                     type_,
@@ -1481,7 +1567,6 @@ class MFTransientArray(MFArray, MFTransient):
             check_data : bool
                 Verify data prior to storing
         """
-
         sim_time = self._data_dimensions.package_dim.model_dim[
             0
         ].simulation_time
@@ -1495,7 +1580,7 @@ class MFTransientArray(MFArray, MFTransient):
                     layer_storage.get_total_size() > 0
                     and self._get_storage_obj()
                     .layer_storage[0]
-                    .layer_storage_type
+                    .data_storage_type
                     != DataStorageType.external_file
                 ):
                     fname, ext = os.path.splitext(external_file_path)
@@ -1505,6 +1590,44 @@ class MFTransientArray(MFArray, MFTransient):
                         layer,
                         binary,
                         replace_existing_external,
+                        check_data,
+                    )
+
+    def store_internal(
+        self,
+        layer=None,
+        check_data=True,
+    ):
+        """Stores data from layer `layer` internally.  For unlayered data do
+        not pass in `layer`. If layer is not specified all layers will be
+        stored internally.
+
+        Parameters
+        ----------
+            layer : int
+                Which layer to store internally file, `None` value stores all
+                layers.
+            check_data : bool
+                Verify data prior to storing
+        """
+        sim_time = self._data_dimensions.package_dim.model_dim[
+            0
+        ].simulation_time
+        num_sp = sim_time.get_num_stress_periods()
+        # store each stress period in separate file(s)
+        for sp in range(0, num_sp):
+            if sp in self._data_storage:
+                self._current_key = sp
+                layer_storage = self._get_storage_obj().layer_storage
+                if (
+                    layer_storage.get_total_size() > 0
+                    and self._get_storage_obj()
+                    .layer_storage[0]
+                    .data_storage_type
+                    == DataStorageType.external_file
+                ):
+                    super().store_internal(
+                        layer,
                         check_data,
                     )
 
