@@ -167,10 +167,6 @@ class MFDataException(Exception):
             error_message_4,
             error_message_5,
         )
-        # if self.debug:
-        #    tb_string = ''.join(self.org_tb_string)
-        #    error_message = '{}\nCall Stack\n{}'.format(error_message,
-        #                                                tb_string)
         Exception.__init__(self, error_message)
 
 
@@ -293,36 +289,8 @@ class MFFileMgmt:
     def get_updated_path(
         self, external_file_path, model_name, ext_file_action
     ):
+        """For internal FloPy use, not intended for end user."""
         return external_file_path
-
-        """Get updated external file path information.  For internal
-        FloPy use, not intended for end user."""
-        """
-        external_file_path = self.string_to_file_path(external_file_path)
-        if ext_file_action == ExtFileAction.copy_all:
-            if os.path.isabs(external_file_path):
-                # move file path to local model or simulation path
-                file_name = os.path.split(external_file_path)[1]
-                if model_name:
-                    return os.path.join(
-                        self.get_model_path(model_name), file_name
-                    )
-                else:
-                    return os.path.join(self.get_sim_path(), file_name)
-            else:
-                return external_file_path
-        elif ext_file_action == ExtFileAction.copy_relative_paths:
-            return external_file_path
-        elif ext_file_action == ExtFileAction.copy_none:
-            if os.path.isabs(external_file_path):
-                return external_file_path
-            else:
-                return os.path.join(
-                    self._build_relative_path(model_name), external_file_path
-                )
-        else:
-            return None
-        """
 
     def _build_relative_path(self, model_name):
         old_abs_path = self.resolve_path("", model_name, True)
@@ -487,21 +455,12 @@ class MFFileMgmt:
         if os.path.isabs(file_path):
             # path is an absolute path
             if move_abs_paths:
-                # if model_name is None:
                 return self.get_sim_path(last_loaded_path)
-                # else:
-                #   return self.get_model_path(model_name, last_loaded_path)
             else:
                 return file_path
         else:
             # path is a relative path
-            # if model_name is None:
             return os.path.join(self.get_sim_path(last_loaded_path), file_path)
-            # else:
-            #    return os.path.join(
-            #        self.get_model_path(model_name, last_loaded_path),
-            #        file_path,
-            #    )
 
 
 class PackageContainer:
