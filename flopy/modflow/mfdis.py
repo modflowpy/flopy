@@ -289,6 +289,7 @@ class ModflowDis(Package):
         self.start_datetime = start_datetime
         # calculate layer thicknesses
         self.__calculate_thickness()
+        self._totim = None
 
     @property
     def sr(self):
@@ -326,9 +327,16 @@ class ModflowDis(Package):
         """
         return (self.parent.modelgrid.thick > 0).all()
 
-    def get_totim(self):
+    def get_totim(self, use_cached=False):
         """
         Get the totim at the end of each time step
+
+        Parameters
+        ----------
+        use_cached : bool
+            method to use cached totim values instead of calculating totim
+            dynamically
+
 
         Returns
         -------
@@ -336,25 +344,28 @@ class ModflowDis(Package):
             numpy array with simulation totim at the end of each time step
 
         """
-        totim = []
-        nstp = self.nstp.array
-        perlen = self.perlen.array
-        tsmult = self.tsmult.array
-        t = 0.0
-        for kper in range(self.nper):
-            m = tsmult[kper]
-            p = float(nstp[kper])
-            dt = perlen[kper]
-            if m > 1:
-                dt *= (m - 1.0) / (m ** p - 1.0)
-            else:
-                dt = dt / p
-            for kstp in range(nstp[kper]):
-                t += dt
-                totim.append(t)
+        if not use_cached or self._totim is None:
+            totim = []
+            nstp = self.nstp.array
+            perlen = self.perlen.array
+            tsmult = self.tsmult.array
+            t = 0.0
+            for kper in range(self.nper):
+                m = tsmult[kper]
+                p = float(nstp[kper])
+                dt = perlen[kper]
                 if m > 1:
-                    dt *= m
-        return np.array(totim, dtype=float)
+                    dt *= (m - 1.0) / (m ** p - 1.0)
+                else:
+                    dt = dt / p
+                for kstp in range(nstp[kper]):
+                    t += dt
+                    totim.append(t)
+                    if m > 1:
+                        dt *= m
+            self._totim = np.array(totim, dtype=float)
+
+        return self._totim
 
     def get_final_totim(self):
         """
@@ -368,7 +379,7 @@ class ModflowDis(Package):
         """
         return self.get_totim()[-1]
 
-    def get_kstp_kper_toffset(self, t=0.0):
+    def get_kstp_kper_toffset(self, t=0.0, use_cached_totim=False):
         """
         Get the stress period, time step, and time offset from passed time.
 
@@ -377,6 +388,10 @@ class ModflowDis(Package):
         t : float
             totim to return the stress period, time step, and toffset for
             based on time discretization data. Default is 0.
+        use_cached_totim : bool
+            optional flag to use a cached calculation of totim, vs. dynamically
+            calculating totim. Setting to True significantly speeds up looped
+            operations that call this function (default is False).
 
         Returns
         -------
@@ -391,7 +406,7 @@ class ModflowDis(Package):
 
         if t < 0.0:
             t = 0.0
-        totim = self.get_totim()
+        totim = self.get_totim(use_cached_totim)
         nstp = self.nstp.array
         ipos = 0
         t0 = 0.0
@@ -415,7 +430,9 @@ class ModflowDis(Package):
                 break
         return kstp, kper, toffset
 
-    def get_totim_from_kper_toffset(self, kper=0, toffset=0.0):
+    def get_totim_from_kper_toffset(
+        self, kper=0, toffset=0.0, use_cached_totim=False
+    ):
         """
         Get totim from a passed kper and time offset from the beginning
         of a stress period
@@ -426,6 +443,10 @@ class ModflowDis(Package):
             stress period. Default is 0
         toffset : float
             time offset relative to the beginning of kper
+        use_cached_totim : bool
+            optional flag to use a cached calculation of totim, vs. dynamically
+            calculating totim. Setting to True significantly speeds up looped
+            operations that call this function (default is False).
 
         Returns
         -------
@@ -443,8 +464,9 @@ class ModflowDis(Package):
                 + "must be less than "
                 + "to nper ({}).".format(self.nper)
             )
-            raise ValueError()
-        totim = self.get_totim()
+            raise ValueError(msg)
+
+        totim = self.get_totim(use_cached_totim)
         nstp = self.nstp.array
         ipos = 0
         t0 = 0.0
