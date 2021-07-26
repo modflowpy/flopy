@@ -456,6 +456,7 @@ class Raster:
                 for _ in range(len(threads)):
                     node, val = q.get()
                     data[node] = val
+
             else:
                 for node in range(ncpl):
                     verts = modelgrid.get_cell_vertices(node)
@@ -476,7 +477,6 @@ class Raster:
             xc = modelgrid.xcellcenters
             yc = modelgrid.ycellcenters
 
-            data_shape = xc.shape
             xc = xc.flatten()
             yc = yc.flatten()
 
@@ -488,9 +488,18 @@ class Raster:
             rxc = rxc.flatten()
             ryc = ryc.flatten()
 
+            arr = self.get_array(band, masked=True).flatten()
+
+            # filter out nan values from the original dataset
+            if np.isnan(np.sum(arr)):
+                idx = np.isfinite(arr)
+                rxc = rxc[idx]
+                ryc = ryc[idx]
+                arr = arr[idx]
+
             extrapolate = griddata(
                 (rxc, ryc),
-                self.get_array(band, masked=True).flatten(),
+                arr,
                 (xc, yc),
                 method="nearest",
             )
