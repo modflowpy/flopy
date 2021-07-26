@@ -170,16 +170,18 @@ class SfrFile:
             SFR output as a pandas dataframe
 
         """
-
-        df = self.pd.read_csv(
-            self.filename,
-            delim_whitespace=True,
-            header=None,
-            names=self.names,
-            error_bad_lines=False,
-            skiprows=self.sr,
-            low_memory=False,
-        )
+        kwargs = {
+            "filepath_or_buffer": self.filename,
+            "delim_whitespace": True,
+            "header": None,
+            "names": self.names,
+            "skiprows": self.sr,
+            "low_memory": False,
+        }
+        try:  # since pandas 1.3.0
+            df = self.pd.read_csv(**kwargs, on_bad_lines="skip")
+        except TypeError:  # before pandas 1.3.0
+            df = self.pd.read_csv(**kwargs, error_bad_lines=False)
 
         # drop text between stress periods; convert to numeric
         df["layer"] = self.pd.to_numeric(df.layer, errors="coerce")
