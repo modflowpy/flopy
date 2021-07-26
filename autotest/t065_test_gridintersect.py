@@ -1359,3 +1359,6 @@ def test_rasters():
         raise AssertionError
 
     del rio
+
+if __name__ == "__main__":
+    test_rasters()

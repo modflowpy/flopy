@@ -348,6 +348,7 @@ class Raster:
         method="nearest",
         multithread=False,
         thread_pool=2,
+        extrapolate_edges=False,
     ):
         """
         Method to resample the raster data to a
@@ -363,11 +364,26 @@ class Raster:
         band : int
             raster band to re-sample
         method : str
-            scipy interpolation method options
+            scipy interpolation methods
 
-            "linear" for bi-linear interpolation
-            "nearest" for nearest neighbor
-            "cubic" for bi-cubic interpolation
+            ``linear`` for bi-linear interpolation
+
+            ``nearest`` for nearest neighbor
+
+            ``cubic`` for bi-cubic interpolation
+
+            ``mean`` for mean sampling
+
+            ``median`` for median sampling
+        multithread : bool
+            boolean flag indicating if multithreading should be used with
+            the ``mean`` and ``median`` sampling methods
+        thread_pool : int
+            number of threads to use for mean and median sampling
+        extrapolate_edges : bool
+            boolean flag indicating if areas without data should be filled
+            using the ``nearest`` interpolation method. This option
+            has no effect when using the ``nearest`` interpolation method.
 
         Returns
         -------
@@ -405,7 +421,12 @@ class Raster:
             arr = arr.flatten()
 
             # step 3: use griddata interpolation to snap to grid
-            data = griddata((rxc, ryc), arr, (xc, yc), method=method)
+            data = griddata(
+                (rxc, ryc),
+                arr,
+                (xc, yc),
+                method=method,
+            )
 
         elif method in ("median", "mean"):
             # these methods are slow and could use a speed u
@@ -435,6 +456,7 @@ class Raster:
                 for _ in range(len(threads)):
                     node, val = q.get()
                     data[node] = val
+
             else:
                 for node in range(ncpl):
                     verts = modelgrid.get_cell_vertices(node)
@@ -450,6 +472,38 @@ class Raster:
                     data[node] = val
         else:
             raise TypeError("{} method not supported".format(method))
+
+        if extrapolate_edges and method != "nearest":
+            xc = modelgrid.xcellcenters
+            yc = modelgrid.ycellcenters
+
+            xc = xc.flatten()
+            yc = yc.flatten()
+
+            # step 1: create grid from raster bounds
+            rxc = self.xcenters
+            ryc = self.ycenters
+
+            # step 2: flatten grid
+            rxc = rxc.flatten()
+            ryc = ryc.flatten()
+
+            arr = self.get_array(band, masked=True).flatten()
+
+            # filter out nan values from the original dataset
+            if np.isnan(np.sum(arr)):
+                idx = np.isfinite(arr)
+                rxc = rxc[idx]
+                ryc = ryc[idx]
+                arr = arr[idx]
+
+            extrapolate = griddata(
+                (rxc, ryc),
+                arr,
+                (xc, yc),
+                method="nearest",
+            )
+            data = np.where(np.isnan(data), extrapolate, data)
 
         # step 4: return grid to user in shape provided
         data.shape = data_shape
