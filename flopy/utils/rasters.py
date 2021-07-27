@@ -449,6 +449,7 @@ class Raster:
                     threads.append(t)
 
                 for thread in threads:
+                    thread.daemon = True
                     thread.start()
                 for thread in threads:
                     thread.join()
