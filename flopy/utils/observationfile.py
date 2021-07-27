@@ -490,20 +490,24 @@ class CsvFile:
     ----------
     csvfile : str
         csv file name
+    delimiter : str
+        optional delimiter for the csv or formatted text file,
+        defaults to ","
 
     """
 
-    def __init__(self, csvfile):
+    def __init__(self, csvfile, delimiter=","):
 
         self.file = open(csvfile, "r")
+        self.delimiter = delimiter
 
         # read header line
         line = self.file.readline()
-        self._header = line.rstrip().split(",")
+        self._header = line.rstrip().split(delimiter)
         self.floattype = "f8"
         self.dtype = _build_dtype(self._header, self.floattype)
 
-        self.data = self.read_csv(self.file, self.dtype)
+        self.data = self.read_csv(self.file, self.dtype, delimiter)
 
     @property
     def obsnames(self):
@@ -528,7 +532,7 @@ class CsvFile:
         return len(self.obsnames)
 
     @staticmethod
-    def read_csv(fobj, dtype):
+    def read_csv(fobj, dtype, delimiter=","):
         """
 
         Parameters
@@ -536,12 +540,15 @@ class CsvFile:
         fobj : file object
             open text file object to read
         dtype : np.dtype
+        delimiter : str
+            optional delimiter for the csv or formatted text file,
+            defaults to ","
 
         Returns
         -------
         np.recarray
         """
-        arr = np.genfromtxt(fobj, dtype=dtype, delimiter=",")
+        arr = np.genfromtxt(fobj, dtype=dtype, delimiter=delimiter)
         return arr.view(np.recarray)
 
 
@@ -593,8 +600,11 @@ def _build_dtype(obsnames, floattype="f4"):
 
     """
     dtype = []
-    if "time" in obsnames:
-        idx = obsnames.index("time")
+    if "time" in obsnames or "TIME" in obsnames:
+        try:
+            idx = obsnames.index("time")
+        except ValueError:
+            idx = obsnames.index("TIME")
         obsnames[idx] = "totim"
 
     elif "totim" not in obsnames:
@@ -605,7 +615,12 @@ def _build_dtype(obsnames, floattype="f4"):
             site_name = site.decode().strip()
         else:
             site_name = site.strip()
-        dtype.append((site_name, floattype))
+
+        if site_name in ("KPER", "KSTP", "NULL"):
+            dtype.append((site_name, int))
+        else:
+            dtype.append((site_name, floattype))
+
     return np.dtype(dtype)
 
 
@@ -663,25 +678,25 @@ def get_reduced_pumping(f, structured=True):
     with open(f) as foo:
         data = []
         while True:
-            l = foo.readline()
-            if l == "":
+            line = foo.readline()
+            if line == "":
                 break
             # If l is reduced ppg header row
-            if key in l:
+            if key in line:
                 # Extract sp and ts
-                ts, sp = get_ts_sp(l)
+                ts, sp = get_ts_sp(line)
                 # Skip line of data column titles
                 foo.readline()
                 # Iterate through lines of reduced ppg data
                 while True:
-                    l = foo.readline()
+                    line = foo.readline()
                     # Condition to exit loop
-                    if len(l.strip().split()) < 6:
+                    if len(line.strip().split()) < 6:
                         break
                     # Create list of hold line of data
                     ls = [sp, ts]
                     # Add other data to list
-                    ls.extend([float(x) for x in l.split()])
+                    ls.extend([float(x) for x in line.split()])
                     # Add list to overall list of data
                     data.append(tuple(ls))
 

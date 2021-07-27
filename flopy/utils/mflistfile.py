@@ -563,7 +563,10 @@ class ListBudget:
                 + "TO THE MAIN LISTING FILE"
             )
 
-            if not open(self.f.name).read().find(check_str) > 0:
+            check_str_ag = "AG WELLS WITH REDUCED PUMPING FOR STRESS PERIOD"
+
+            if not open(self.f.name).read().find(check_str) > 0 and \
+                    not open(self.f.name).read().find(check_str_ag) > 0:
                 err = (
                     "Pumping reductions not written to list file. "
                     'Try removing "noprint" keyword from well file.'
