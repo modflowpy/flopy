@@ -218,7 +218,9 @@ def test_zonbud_readwrite_zbarray():
     """
     x = np.random.randint(100, 200, size=(5, 150, 200))
     ZoneBudget.write_zone_file(os.path.join(outpth, "randint"), x)
-    ZoneBudget.write_zone_file(os.path.join(outpth, "randint"), x, fmtin=35, iprn=2)
+    ZoneBudget.write_zone_file(
+        os.path.join(outpth, "randint"), x, fmtin=35, iprn=2
+    )
     z = ZoneBudget.read_zone_file(os.path.join(outpth, "randint"))
     assert np.array_equal(x, z), "Input and output arrays do not match."
     return
@@ -397,7 +399,7 @@ def test_zonebudget_6():
     except ImportError:
         return
 
-    exe_name = 'mf6'
+    exe_name = "mf6"
     zb_exe_name = "zbud6"
     cpth = os.path.join(".", "temp", "t039")
 
@@ -407,8 +409,8 @@ def test_zonebudget_6():
     sim.write_simulation()
     success, _ = sim.run_simulation()
 
-    grb_file = os.path.join(cpth, 'test001e_UZF_3lay.dis.grb')
-    cbc_file = os.path.join(cpth, 'test001e_UZF_3lay.cbc')
+    grb_file = os.path.join(cpth, "test001e_UZF_3lay.dis.grb")
+    cbc_file = os.path.join(cpth, "test001e_UZF_3lay.cbc")
 
     ml = sim.get_model("gwf_1")
     idomain = np.ones(ml.modelgrid.shape, dtype=int)

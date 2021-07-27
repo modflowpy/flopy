@@ -48,8 +48,10 @@ def test_usg_disu_load():
     ):
         if isinstance(value1, (flopy.utils.Util2d, flopy.utils.Util3d)):
             assert np.array_equal(value1.array, value2.array)
-        elif isinstance(value1, list): #this is for the jagged _get_neighbours list
-            assert np.all([np.all(v1 == v2) for v1,v2 in zip(value1,value2)])
+        elif isinstance(
+            value1, list
+        ):  # this is for the jagged _get_neighbours list
+            assert np.all([np.all(v1 == v2) for v1, v2 in zip(value1, value2)])
         elif not isinstance(value1, flopy.utils.reference.TemporalReference):
             assert value1 == value2
 
@@ -136,8 +138,11 @@ def test_usg_model():
             success, buff = mf.run_model()
             assert success
 
+
 def test_usg_load_01B():
-    print("testing 1-layer unstructured mfusg model loading: 01A_nestedgrid_nognc.nam")
+    print(
+        "testing 1-layer unstructured mfusg model loading: 01A_nestedgrid_nognc.nam"
+    )
     pthusgtest = os.path.join(
         "..", "examples", "data", "mfusg_test", "01A_nestedgrid_nognc"
     )
@@ -162,11 +167,10 @@ def test_usg_load_01B():
     msg = "flopy failed on loading mfusg sms package"
     assert isinstance(m.sms, flopy.modflow.mfsms.ModflowSms), msg
 
+
 def test_usg_load_45usg():
     print("testing 3-layer unstructured mfusg model loading: 45usg.nam")
-    pthusgtest = os.path.join(
-        "..", "examples", "data", "mfusg_test", "45usg"
-    )
+    pthusgtest = os.path.join("..", "examples", "data", "mfusg_test", "45usg")
     fname = os.path.join(pthusgtest, "45usg.nam")
     assert os.path.isfile(fname), "nam file not found {}".format(fname)
 
@@ -192,50 +196,66 @@ def test_usg_load_45usg():
     msg = "flopy failed on loading mfusg wel package"
     assert isinstance(m.wel, flopy.modflow.mfwel.ModflowWel), msg
 
+
 def test_usg_rch_evt_models01():
     # this test has RCH nrchop == 1, and EVT nevtop == 1
-    print("testing unstructured mfusg RCH nrchop == 1, and EVT nevtop == 1: \
-usg_rch_evt.nam")
+    print(
+        "testing unstructured mfusg RCH nrchop == 1, and EVT nevtop == 1: \
+usg_rch_evt.nam"
+    )
     model_ws = os.path.join(
-        '..', 'examples', 'data', 'mfusg_test', 'rch_evt_tests')
-    nam = 'usg_rch_evt.nam'
+        "..", "examples", "data", "mfusg_test", "rch_evt_tests"
+    )
+    nam = "usg_rch_evt.nam"
     m = flopy.modflow.Modflow.load(
-        nam, model_ws=model_ws, version='mfusg', exe_name=v)
+        nam, model_ws=model_ws, version="mfusg", exe_name=v
+    )
     m.model_ws = tpth
     m.write_input()
     if run:
         success, buff = m.run_model()
         assert success
 
+
 def test_usg_rch_evt_models02():
     # this test has RCH nrchop == 2, and EVT nevtop == 2
-    print("testing unstructured mfusg RCH nrchop == 2, and EVT nevtop == 2: \
-usg_rch_evt_nrchop2.nam")
+    print(
+        "testing unstructured mfusg RCH nrchop == 2, and EVT nevtop == 2: \
+usg_rch_evt_nrchop2.nam"
+    )
     model_ws = os.path.join(
-        '..', 'examples', 'data', 'mfusg_test', 'rch_evt_tests')
-    nam = 'usg_rch_evt_nrchop2.nam'
+        "..", "examples", "data", "mfusg_test", "rch_evt_tests"
+    )
+    nam = "usg_rch_evt_nrchop2.nam"
     m = flopy.modflow.Modflow.load(
-        nam, model_ws=model_ws, version='mfusg', exe_name=v)
+        nam, model_ws=model_ws, version="mfusg", exe_name=v
+    )
     m.model_ws = tpth
     m.write_input()
     if run:
         success, buff = m.run_model()
-        assert success    
+        assert success
+
 
 def test_usg_rch_evt_models02a():
     # this test has RCH nrchop == 2, and EVT nevtop == 2
-    print("testing unstructured mfusg RCH nrchop == 2, and EVT nevtop == 2,\
- but with fewer irch nodes: than in nodelay[0] usg_rch_evt_nrchop2.nam")
+    print(
+        "testing unstructured mfusg RCH nrchop == 2, and EVT nevtop == 2,\
+ but with fewer irch nodes: than in nodelay[0] usg_rch_evt_nrchop2.nam"
+    )
     model_ws = os.path.join(
-        '..', 'examples', 'data', 'mfusg_test', 'rch_evt_tests')
-    nam = 'usg_rch_evt_nrchop2a.nam'
+        "..", "examples", "data", "mfusg_test", "rch_evt_tests"
+    )
+    nam = "usg_rch_evt_nrchop2a.nam"
     m = flopy.modflow.Modflow.load(
-        nam, model_ws=model_ws, version='mfusg', exe_name=v)
+        nam, model_ws=model_ws, version="mfusg", exe_name=v
+    )
     m.model_ws = tpth
     m.write_input()
     if run:
         success, buff = m.run_model()
-        assert success    
+        assert success
+
 
 if __name__ == "__main__":
     test_usg_disu_load()
@@ -246,4 +266,3 @@ if __name__ == "__main__":
     test_usg_rch_evt_models01()
     test_usg_rch_evt_models02()
     test_usg_rch_evt_models02a()
-    
