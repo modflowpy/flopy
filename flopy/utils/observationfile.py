@@ -1,6 +1,7 @@
 import numpy as np
 import io
 from ..utils.utils_def import FlopyBinaryData
+from ..utils.flopy_io import get_ts_sp
 
 
 class ObsFiles(FlopyBinaryData):
@@ -606,3 +607,82 @@ def _build_dtype(obsnames, floattype="f4"):
             site_name = site.strip()
         dtype.append((site_name, floattype))
     return np.dtype(dtype)
+
+
+def get_reduced_pumping(f, structured=True):
+    """
+    Method to read reduced pumping from a list file or an external
+    reduced pumping observation file
+
+    Parameters
+    ----------
+    f : str
+        file name
+    structured : bool
+        boolean flag to indicate if model is Structured or USG model. Defaults
+        to True (structured grid).
+
+    Returns
+    -------
+        np.recarray : recarray of reduced pumping records.
+
+    """
+    # Set dtypes for resulting data
+    if structured:
+        dtype = np.dtype(
+            [
+                ("SP", int),
+                ("TS", int),
+                ("LAY", int),
+                ("ROW", int),
+                ("COL", int),
+                ("APPL.Q", float),
+                ("ACT.Q", float),
+                ("GW-HEAD", float),
+                ("CELL-BOT", float),
+            ]
+        )
+
+        key = "WELLS WITH REDUCED PUMPING FOR STRESS PERIOD"
+    else:
+        dtype = np.dtype(
+            [
+                ("SP", int),
+                ("TS", int),
+                ("WELL.NO", int),
+                ("CLN NODE", int),
+                ("APPL.Q", float),
+                ("ACT.Q", float),
+                ("GW_HEAD", float),
+                ("CELL_BOT", float),
+            ]
+        )
+
+        key = "WELLS WITH REDUCED PUMPING FOR STRESS PERIOD"
+
+    with open(f) as foo:
+        data = []
+        while True:
+            l = foo.readline()
+            if l == "":
+                break
+            # If l is reduced ppg header row
+            if key in l:
+                # Extract sp and ts
+                ts, sp = get_ts_sp(l)
+                # Skip line of data column titles
+                foo.readline()
+                # Iterate through lines of reduced ppg data
+                while True:
+                    l = foo.readline()
+                    # Condition to exit loop
+                    if len(l.strip().split()) < 6:
+                        break
+                    # Create list of hold line of data
+                    ls = [sp, ts]
+                    # Add other data to list
+                    ls.extend([float(x) for x in l.split()])
+                    # Add list to overall list of data
+                    data.append(tuple(ls))
+
+    return np.rec.fromrecords(data, dtype=dtype)
