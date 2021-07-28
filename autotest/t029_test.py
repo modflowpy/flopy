@@ -241,7 +241,7 @@ def test_faceflows():
     sim.run_simulation()
 
     # get output
-    gwf = sim.get_model("gwf_1")
+    gwf = sim.get_model("freyberg")
     head = gwf.output.head().get_data()
     cbc = gwf.output.budget()
 
@@ -305,7 +305,7 @@ def test_flowja_residuals():
     )
 
     # get output
-    gwf = sim.get_model("gwf_1")
+    gwf = sim.get_model("freyberg")
     grb_file = os.path.join(tpth, "freyberg.dis.grb")
     cbc = gwf.output.budget()
 
