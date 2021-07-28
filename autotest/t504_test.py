@@ -76,9 +76,12 @@ def test001a_tharmonic():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
-    sim.set_all_data_external()
+    sim.set_all_data_external(external_data_folder="data")
     sim.write_simulation(silent=True)
-
+    # verify external data written to correct location
+    data_path = os.path.join(run_folder, "data", "flow15.dis_botm.txt")
+    assert os.path.exists(data_path)
+    # model export test
     model = sim.get_model(model_name)
     model.export("{}/tharmonic.nc".format(model.model_ws))
     model.export("{}/tharmonic.shp".format(model.model_ws))

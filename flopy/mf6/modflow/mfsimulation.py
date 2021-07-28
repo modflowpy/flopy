@@ -201,7 +201,8 @@ class MFSimulationData:
     open_close_formatting : list
         List defining string to use for open/close
     max_columns_of_data : int
-        Maximum columns of data before line wraps
+        Maximum columns of data before line wraps.  For structured grids this
+        is set to ncol by default.  For all other grids the default is 20.
     wrap_multidim_arrays : bool
         Whether to wrap line for multi-dimensional arrays at the end of a
         row/column/layer
@@ -229,7 +230,7 @@ class MFSimulationData:
         # --- formatting variables ---
         self.indent_string = "  "
         self.constant_formatting = ["constant", ""]
-        self.max_columns_of_data = 20
+        self._max_columns_of_data = 20
         self.wrap_multidim_arrays = True
         self.float_precision = 8
         self.float_characters = 15
@@ -243,6 +244,8 @@ class MFSimulationData:
         self.debug = False
         self.verbose = True
         self.verbosity_level = VerbosityLevel.normal
+        self.max_columns_user_set = False
+        self.max_columns_auto_set = False
 
         self._update_str_format()
 
@@ -259,6 +262,18 @@ class MFSimulationData:
         # --- temporary variables ---
         # other external files referenced
         self.referenced_files = collections.OrderedDict()
+
+    @property
+    def max_columns_of_data(self):
+        return self._max_columns_of_data
+
+    @max_columns_of_data.setter
+    def max_columns_of_data(self, val):
+        if not self.max_columns_user_set and (
+            not self.max_columns_auto_set or val > self._max_columns_of_data
+        ):
+            self._max_columns_of_data = val
+            self.max_columns_user_set = True
 
     def set_sci_note_upper_thres(self, value):
         """Sets threshold number where any number larger than threshold
@@ -1155,7 +1170,9 @@ class MFSimulation(PackageContainer):
         for model in self._models.values():
             model.rename_all_packages(name)
 
-    def set_all_data_external(self, check_data=True):
+    def set_all_data_external(
+        self, check_data=True, external_data_folder=None
+    ):
         """Sets the simulation's list and array data to be stored externally.
 
         Parameters
@@ -1163,24 +1180,27 @@ class MFSimulation(PackageContainer):
             check_data: bool
                 Determines if data error checking is enabled during this
                 process.  Data error checking can be slow on large datasets.
-
+            external_data_folder
+                Folder, relative to the simulation path or model relative path
+                (see use_model_relative_path parameter), where external data
+                will be stored
         """
         # copy any files whose paths have changed
         self.simulation_data.mfpath.copy_files()
         # set data external for all packages in all models
         for model in self._models.values():
-            model.set_all_data_external(check_data)
+            model.set_all_data_external(check_data, external_data_folder)
         # set data external for ims packages
         for package in self._ims_files.values():
-            package.set_all_data_external(check_data)
+            package.set_all_data_external(check_data, external_data_folder)
         # set data external for ghost node packages
         for package in self._ghost_node_files.values():
-            package.set_all_data_external(check_data)
+            package.set_all_data_external(check_data, external_data_folder)
         # set data external for mover packages
         for package in self._mover_files.values():
-            package.set_all_data_external(check_data)
+            package.set_all_data_external(check_data, external_data_folder)
         for package in self._exchange_files.values():
-            package.set_all_data_external(check_data)
+            package.set_all_data_external(check_data, external_data_folder)
 
     def set_all_data_internal(self, check_data=True):
         # set data external for all packages in all models
@@ -1213,6 +1233,16 @@ class MFSimulation(PackageContainer):
                 Writes out the simulation in silent mode (verbosity_level = 0)
 
         """
+        sim_data = self.simulation_data
+        if not sim_data.max_columns_user_set:
+            # search for dis packages
+            for model in self._models.values():
+                dis = model.get_package("dis")
+                if dis is not None and hasattr(dis, "ncol"):
+                    sim_data.max_columns_of_data = dis.ncol.get_data()
+                    sim_data.max_columns_user_set = False
+                    sim_data.max_columns_auto_set = True
+
         saved_verb_lvl = self.simulation_data.verbosity_level
         if silent:
             self.simulation_data.verbosity_level = VerbosityLevel.quiet

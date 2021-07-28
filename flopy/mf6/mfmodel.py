@@ -799,7 +799,14 @@ class MFModel(PackageContainer, ModelInterface):
                     print("    loading package {}...".format(ftype))
                 # load package
                 instance.load_package(ftype, fname, pname, strict, None)
-
+                sim_data = simulation.simulation_data
+                if ftype == "dis" and not sim_data.max_columns_user_set:
+                    # set column wrap to ncol
+                    dis = instance.get_package("dis")
+                    if dis is not None and hasattr(dis, "ncol"):
+                        sim_data.max_columns_of_data = dis.ncol.get_data()
+                        sim_data.max_columns_user_set = False
+                        sim_data.max_columns_auto_set = True
         # load referenced packages
         if modelname in instance.simulation_data.referenced_files:
             for ref_file in instance.simulation_data.referenced_files[
@@ -1178,7 +1185,9 @@ class MFModel(PackageContainer, ModelInterface):
                     package.package_type,
                 )
 
-    def set_all_data_external(self, check_data=True):
+    def set_all_data_external(
+        self, check_data=True, external_data_folder=None
+    ):
         """Sets the model's list and array data to be stored externally.
 
         Parameters
@@ -1186,10 +1195,14 @@ class MFModel(PackageContainer, ModelInterface):
             check_data : bool
                 Determines if data error checking is enabled during this
                 process.
+            external_data_folder
+                Folder, relative to the simulation path or model relative path
+                (see use_model_relative_path parameter), where external data
+                will be stored
 
         """
         for package in self.packagelist:
-            package.set_all_data_external(check_data)
+            package.set_all_data_external(check_data, external_data_folder)
 
     def set_all_data_internal(self, check_data=True):
         """Sets the model's list and array data to be stored externally.

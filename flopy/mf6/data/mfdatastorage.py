@@ -1373,6 +1373,9 @@ class DataStorage:
                 self._check_line_size(data_check, min_line_size)
 
     def _build_recarray(self, data, key, autofill):
+        if not mfdatautil.PyListUtil.is_iterable(data) or len(data) == 0:
+            # set data to build empty recarray
+            data = [()]
         self.build_type_list(data=data, key=key)
         if not self.tuple_cellids(data):
             # fix data so cellid is a single tuple
@@ -1514,7 +1517,6 @@ class DataStorage:
         # pathing to external file
         data_dim = self.data_dimensions
         model_name = data_dim.package_dim.model_dim[0].model_name
-        fp = self._simulation_data.mfpath.resolve_path(file_path, model_name)
         fp_relative = file_path
         if model_name is not None:
             rel_path = self._simulation_data.mfpath.model_relative_path[
@@ -1523,6 +1525,7 @@ class DataStorage:
             if rel_path is not None and len(rel_path) > 0 and rel_path != ".":
                 # include model relative path in external file path
                 fp_relative = os.path.join(rel_path, file_path)
+        fp = self._simulation_data.mfpath.resolve_path(fp_relative, model_name)
         if data is not None:
             if self.data_structure_type == DataStructureType.recarray:
                 # create external file and write file entry to the file

@@ -393,6 +393,9 @@ def np001():
     # write simulation to new location
     sim.set_all_data_external()
     sim.write_simulation()
+    assert (
+        sim.simulation_data.max_columns_of_data == dis_package.ncol.get_data()
+    )
 
     # run simulation
     if run:
@@ -426,8 +429,12 @@ def np001():
     model.set_model_relative_path(md_folder)
     run_folder_new = os.path.join(run_folder, md_folder)
     # set all data external
-    model.set_all_data_external()
+    sim.set_all_data_external(external_data_folder="data")
     sim.write_simulation()
+
+    assert (
+        sim.simulation_data.max_columns_of_data == dis_package.ncol.get_data()
+    )
     # run simulation from new path with external files
     if run:
         sim.run_simulation()
@@ -629,6 +636,8 @@ def np002():
         sim_ws=run_folder,
         nocheck=True,
     )
+    sim.simulation_data.max_columns_of_data = 22
+
     name = sim.name_file
     assert name.continue_.get_data() == None
     assert name.nocheck.get_data() == True
@@ -694,6 +703,9 @@ def np002():
         idomain=2,
         filename="{}.dis".format(model_name),
     )
+    assert sim.simulation_data.max_columns_of_data == 22
+    sim.simulation_data.max_columns_of_data = dis_package.ncol.get_data()
+
     ic_vals = [
         100.0,
         100.0,
@@ -849,6 +861,20 @@ def np002():
     ghb2 = md2.get_package("ghb")
     spd2 = ghb2.stress_period_data.get_data(1)
     assert spd2 is None
+
+    # test paths
+    sim_path_test = os.path.join(run_folder, "sim_path")
+    sim.set_sim_path(sim_path_test)
+    model.set_model_relative_path("model")
+    # make external data folder path relative to simulation folder
+    ext_folder = os.path.join("..", "data")
+    sim.set_all_data_external(external_data_folder=ext_folder)
+    sim.write_simulation()
+    # test
+    ext_full_path = os.path.join(sim_path_test, "data")
+    assert os.path.exists(
+        os.path.join(ext_full_path, "np002_mod.dis_botm.txt")
+    )
 
     return
 
@@ -2560,7 +2586,6 @@ def test006_2models_gnc():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
-    sim.set_all_data_external()
     sim.write_simulation()
 
     # run simulation
@@ -2582,6 +2607,24 @@ def test006_2models_gnc():
         assert pymake.compare_heads(
             None, None, files1=head_file, files2=head_new, outfile=outfile
         )
+
+    # test external file paths
+    sim_path = os.path.join(run_folder, "path_test")
+    sim.simulation_data.mfpath.set_sim_path(sim_path)
+    model_1.set_model_relative_path("model1")
+    model_2.set_model_relative_path("model2")
+    sim.set_all_data_external(external_data_folder="data")
+    sim.write_simulation()
+    ext_file_path_1 = os.path.join(
+        sim_path, "model1", "data", "model1.dis_botm.txt"
+    )
+    assert os.path.exists(ext_file_path_1)
+    ext_file_path_2 = os.path.join(
+        sim_path, "model2", "data", "model2.dis_botm.txt"
+    )
+    assert os.path.exists(ext_file_path_2)
+    if run:
+        sim.run_simulation()
 
         # clean up
         sim.delete_output_files()
@@ -3204,8 +3247,8 @@ if __name__ == "__main__":
     np002()
     test004_bcfss()
     test005_advgw_tidal()
-    test006_gwf3_disv()
     test006_2models_gnc()
+    test006_gwf3_disv()
     test021_twri()
     test028_sfr()
     test035_fhb()
