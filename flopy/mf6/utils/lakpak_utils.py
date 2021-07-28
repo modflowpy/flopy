@@ -9,15 +9,15 @@ def get_lak_connections(modelgrid, lake_map, bedleak=0.1):
     and are vertically connected to cells at the top of the model. Otherwise
     the lakes are embedded in the grid.
 
-    todo: implement embedded lakes for VertexGrid
+    TODO: implement embedded lakes for VertexGrid
 
-    todo: add support for UnstructuredGrid
+    TODO: add support for UnstructuredGrid
 
     Parameters
     ----------
     modelgrid : StructuredGrid, VertexGrid
         model grid
-    lake_map : ndarray, list, tuple
+    lake_map : MaskedArray, ndarray, list, tuple
         location and zero-based lake number for lakes in the model domain.
         If lake_map is of size (nrow, ncol) or (ncpl) lakes are located on
         top of the model and vertically connected to cells in model layer 1.
@@ -53,7 +53,13 @@ def get_lak_connections(modelgrid, lake_map, bedleak=0.1):
     if isinstance(lake_map, (list, tuple)):
         lake_map = np.array(lake_map, dtype=np.int32)
     elif isinstance(lake_map, (int, float)):
-        raise TypeError("lake_map must be a ndarray, list, or tuple")
+        raise TypeError(
+            "lake_map must be a Masked Array, ndarray, list, or tuple"
+        )
+
+    # determine if masked array, in not convert to masked array
+    if not np.ma.is_masked(lake_map):
+        lake_map = np.ma.masked_where(lake_map < 0, lake_map)
 
     # convert bedleak to numpy array if necessary
     if isinstance(bedleak, (float, int)):
@@ -164,7 +170,7 @@ def __structured_lake_connections(lake_map, cell_index, dx, dy, elevations):
     # back face
     if i > 0:
         ci = (k, i - 1, j)
-        if lake_map[ci] < 0:
+        if np.ma.is_masked(lake_map[ci]):
             cellids.append(ci)
             claktypes.append("horizontal")
             belevs.append(elevations[k + 1, i, j])
@@ -175,7 +181,7 @@ def __structured_lake_connections(lake_map, cell_index, dx, dy, elevations):
     # right face
     if j > 0:
         ci = (k, i, j - 1)
-        if lake_map[ci] < 0:
+        if np.ma.is_masked(lake_map[ci]):
             cellids.append(ci)
             claktypes.append("horizontal")
             belevs.append(elevations[k + 1, i, j])
@@ -186,7 +192,7 @@ def __structured_lake_connections(lake_map, cell_index, dx, dy, elevations):
     # left face
     if j < ncol - 1:
         ci = (k, i, j + 1)
-        if lake_map[ci] < 0:
+        if np.ma.is_masked(lake_map[ci]):
             cellids.append(ci)
             claktypes.append("horizontal")
             belevs.append(elevations[k + 1, i, j])
@@ -197,7 +203,7 @@ def __structured_lake_connections(lake_map, cell_index, dx, dy, elevations):
     # front face
     if i < nrow - 1:
         ci = (k, i + 1, j)
-        if lake_map[ci] < 0:
+        if np.ma.is_masked(lake_map[ci]):
             cellids.append(ci)
             claktypes.append("horizontal")
             belevs.append(elevations[k + 1, i, j])
@@ -208,7 +214,7 @@ def __structured_lake_connections(lake_map, cell_index, dx, dy, elevations):
     # lower face
     if k < nlay - 1:
         ci = (k + 1, i, j)
-        if lake_map[ci] < 0:
+        if np.ma.is_masked(lake_map[ci]):
             cellids.append(ci)
             claktypes.append("vertical")
             belevs.append(0.0)
