@@ -516,3 +516,34 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
         file_handle.close()
 
     return ra
+
+
+def get_ts_sp(line):
+    """
+    Reader method to get time step and stress period numbers from
+    list files and Modflow other output files
+
+    Parameters
+    ----------
+    line : str
+        line containing information about the stress period and time step.
+        The line must contain "STRESS PERIOD   <x> TIME STEP   <y>"
+
+    Returns
+    -------
+        tuple of stress period and time step numbers
+    """
+    # Get rid of nasty things
+    line = line.replace(",", "").replace("*", "")
+
+    searchstring = "TIME STEP"
+    idx = line.index(searchstring) + len(searchstring)
+    ll = line[idx:].strip().split()
+    ts = int(ll[0])
+
+    searchstring = "STRESS PERIOD"
+    idx = line.index(searchstring) + len(searchstring)
+    ll = line[idx:].strip().split()
+    sp = int(ll[0])
+
+    return ts, sp
