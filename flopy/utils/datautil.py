@@ -83,6 +83,8 @@ class PyListUtil:
 
     Methods
     -------
+    is_iterable : (obj : unknown) : boolean
+        determines if obj is iterable
     is_empty_list : (current_list : list) : boolean
         determines if an n-dimensional list is empty
     con_convert : (data : string, data_type : type that has conversion
@@ -151,6 +153,14 @@ class PyListUtil:
             isinstance(current_list[0], list)
             or isinstance(current_list, np.ndarray)
         ) and len(current_list[0] != 0):
+            return False
+        return True
+
+    @staticmethod
+    def is_iterable(obj):
+        try:
+            iterator = iter(obj)
+        except TypeError:
             return False
         return True
 

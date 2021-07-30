@@ -24,6 +24,7 @@ from ..pakbase import PackageInterface
 from .data.mfdatautil import MFComment
 from ..utils.check import mf6check
 from .utils.output_util import MF6Output
+from ..mbase import ModelInterface
 from ..version import __version__
 
 
@@ -807,18 +808,19 @@ class MFBlock:
             if arr_line[0].lower() == "open/close":
                 # open block contents from external file
                 fd_block.readline()
-                fd_path = os.path.split(os.path.realpath(fd_block.name))[0]
+                root_path = self._simulation_data.mfpath.get_sim_path()
                 try:
+                    file_name = os.path.split(arr_line[1])[-1]
                     if (
                         self._simulation_data.verbosity_level.value
                         >= VerbosityLevel.verbose.value
                     ):
                         print(
                             '        opening external file "{}"..'
-                            ".".format(arr_line[1])
+                            ".".format(file_name)
                         )
                     external_file_info = arr_line
-                    fd_block = open(os.path.join(fd_path, arr_line[1]), "r")
+                    fd_block = open(os.path.join(root_path, arr_line[1]), "r")
                     # read first line of external file
                     line = fd_block.readline()
                     arr_line = datautil.PyListUtil.split_data_line(line)
@@ -1187,7 +1189,9 @@ class MFBlock:
                     return True
         return False
 
-    def set_all_data_external(self, base_name, check_data=True):
+    def set_all_data_external(
+        self, base_name, check_data=True, external_data_folder=None
+    ):
         """Sets the block's list and array data to be stored externally,
         base_name is external file name's prefix, check_data determines
         if data error checking is enabled during this process.
@@ -1196,6 +1200,55 @@ class MFBlock:
         ----------
             base_name : str
                 Base file name of external files where data will be written to.
+            check_data : bool
+                Whether to do data error checking.
+            external_data_folder
+                Folder where external data will be stored
+
+        """
+        for key, dataset in self.datasets.items():
+            if (
+                isinstance(dataset, mfdataarray.MFArray)
+                or (
+                    isinstance(dataset, mfdatalist.MFList)
+                    and dataset.structure.type == DatumType.recarray
+                )
+                and dataset.enabled
+            ):
+                file_path = "{}_{}.txt".format(
+                    base_name, dataset.structure.name
+                )
+                if external_data_folder is not None:
+                    # get simulation root path
+                    root_path = self._simulation_data.mfpath.get_sim_path()
+                    # get model relative path, if it exists
+                    if isinstance(self._model_or_sim, ModelInterface):
+                        name = self._model_or_sim.name
+                        rel_path = (
+                            self._simulation_data.mfpath.model_relative_path[
+                                name
+                            ]
+                        )
+                        if rel_path is not None:
+                            root_path = os.path.join(root_path, rel_path)
+                    full_path = os.path.join(root_path, external_data_folder)
+                    if not os.path.exists(full_path):
+                        # create new external data folder
+                        os.makedirs(full_path)
+                    file_path = os.path.join(external_data_folder, file_path)
+                dataset.store_as_external_file(
+                    file_path,
+                    replace_existing_external=False,
+                    check_data=check_data,
+                )
+
+    def set_all_data_internal(self, check_data=True):
+        """Sets the block's list and array data to be stored internally,
+        check_data determines if data error checking is enabled during this
+        process.
+
+        Parameters
+        ----------
             check_data : bool
                 Whether to do data error checking.
 
@@ -1209,11 +1262,7 @@ class MFBlock:
                 )
                 and dataset.enabled
             ):
-                dataset.store_as_external_file(
-                    "{}_{}.txt".format(base_name, dataset.structure.name),
-                    replace_existing_external=False,
-                    check_data=check_data,
-                )
+                dataset.store_internal(check_data=check_data)
 
     def _find_repeating_datasets(self):
         repeating_datasets = []
@@ -1535,9 +1584,10 @@ class MFPackage(PackageContainer, PackageInterface):
                     message,
                     model_or_sim.simulation_data.debug,
                 )
-
+            # only store the file name.  model relative path handled
+            # internally
+            filename = os.path.split(filename)[-1]
             self._filename = MFFileMgmt.string_to_file_path(filename)
-
         self.path, self.structure = model_or_sim.register_package(
             self, not loading_package, pname is None, filename is None
         )
@@ -1985,8 +2035,30 @@ class MFPackage(PackageContainer, PackageInterface):
         for package in self._packagelist:
             package.set_model_relative_path(model_ws)
 
-    def set_all_data_external(self, check_data=True):
+    def set_all_data_external(
+        self, check_data=True, external_data_folder=None
+    ):
         """Sets the package's list and array data to be stored externally.
+
+        Parameters
+        ----------
+            check_data : bool
+                Determine if data error checking is enabled
+            external_data_folder
+                Folder where external data will be stored
+        """
+        # set blocks
+        for key, block in self.blocks.items():
+            file_name = os.path.split(self.filename)[1]
+            block.set_all_data_external(
+                file_name, check_data, external_data_folder
+            )
+        # set sub-packages
+        for package in self._packagelist:
+            package.set_all_data_external(check_data, external_data_folder)
+
+    def set_all_data_internal(self, check_data=True):
+        """Sets the package's list and array data to be stored internally.
 
         Parameters
         ----------
@@ -1996,11 +2068,10 @@ class MFPackage(PackageContainer, PackageInterface):
         """
         # set blocks
         for key, block in self.blocks.items():
-            file_name = os.path.split(self.filename)[1]
-            block.set_all_data_external(file_name, check_data=check_data)
+            block.set_all_data_internal(check_data)
         # set sub-packages
         for package in self._packagelist:
-            package.set_all_data_external(check_data)
+            package.set_all_data_internal(check_data)
 
     def load(self, strict=True):
         """Loads the package from file.

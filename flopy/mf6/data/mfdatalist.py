@@ -13,7 +13,7 @@ from ...datbase import DataListInterface, DataType
 from ...mbase import ModelInterface
 from .mffileaccess import MFFileAccessList
 from .mfdatastorage import DataStorage, DataStorageType, DataStructureType
-from .mfdatautil import to_string, iterable
+from .mfdatautil import to_string
 
 
 class MFList(mfdata.MFMultiDimVar, DataListInterface):
@@ -284,6 +284,41 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                         "binary": binary,
                     }
                     self._set_data(external_data, check_data=check_data)
+
+    def store_internal(
+        self,
+        check_data=True,
+    ):
+        """Store all data internally.
+
+        Parameters
+        ----------
+            check_data : bool
+                Verify data prior to storing
+
+        """
+        storage = self._get_storage_obj()
+        # check if data is already stored external
+        if (
+            storage is None
+            or storage.layer_storage.first_item().data_storage_type
+            == DataStorageType.external_file
+        ):
+            data = self._get_data()
+            # if not empty dataset
+            if data is not None:
+                if (
+                    self._simulation_data.verbosity_level.value
+                    >= VerbosityLevel.verbose.value
+                ):
+                    print(
+                        "Storing {} internally.."
+                        ".".format(self.structure.name)
+                    )
+                internal_data = {
+                    "data": data,
+                }
+                self._set_data(internal_data, check_data=check_data)
 
     def has_data(self):
         """Returns whether this MFList has any data associated with it."""
@@ -1529,29 +1564,50 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
 
         """
         self._cache_model_grid = True
-        sim_time = self._data_dimensions.package_dim.model_dim[
-            0
-        ].simulation_time
-        num_sp = sim_time.get_num_stress_periods()
-        for sp in range(0, num_sp):
-            if sp in self._data_storage:
-                self._current_key = sp
-                layer_storage = self._get_storage_obj().layer_storage
-                if (
-                    layer_storage.get_total_size() > 0
-                    and self._get_storage_obj()
-                    .layer_storage[0]
-                    .layer_storage_type
-                    != DataStorageType.external_file
-                ):
-                    fname, ext = os.path.splitext(external_file_path)
+        for sp in self._data_storage.keys():
+            self._current_key = sp
+            layer_storage = self._get_storage_obj().layer_storage
+            if (
+                layer_storage.get_total_size() > 0
+                and self._get_storage_obj().layer_storage[0].data_storage_type
+                != DataStorageType.external_file
+            ):
+                fname, ext = os.path.splitext(external_file_path)
+                if datautil.DatumUtil.is_int(sp):
                     full_name = "{}_{}{}".format(fname, sp + 1, ext)
-                    super().store_as_external_file(
-                        full_name,
-                        binary,
-                        replace_existing_external,
-                        check_data,
-                    )
+                else:
+                    full_name = "{}_{}{}".format(fname, sp, ext)
+
+                super().store_as_external_file(
+                    full_name,
+                    binary,
+                    replace_existing_external,
+                    check_data,
+                )
+        self._cache_model_grid = False
+
+    def store_internal(
+        self,
+        check_data=True,
+    ):
+        """Store all data internally.
+
+        Parameters
+        ----------
+            check_data : bool
+                Verify data prior to storing
+
+        """
+        self._cache_model_grid = True
+        for sp in self._data_storage.keys():
+            self._current_key = sp
+            if (
+                self._get_storage_obj().layer_storage[0].data_storage_type
+                == DataStorageType.external_file
+            ):
+                super().store_internal(
+                    check_data,
+                )
         self._cache_model_grid = False
 
     def get_data(self, key=None, apply_mult=False, **kwargs):
