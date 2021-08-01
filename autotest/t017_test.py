@@ -240,15 +240,15 @@ def test_cellbudgetfile_readrecord():
     t = v.get_data(text="STREAM LEAKAGE", full3D=True)
     assert t[0].shape == (1, 15, 10), (
         "3D sfr budget data does not have correct shape (1, 15,10) - "
-        + "returned shape {}".format(t[0].shape)
+        "returned shape {}".format(t[0].shape)
     )
 
     for kk in kstpkper:
         t = v.get_data(kstpkper=kk, text="STREAM LEAKAGE", full3D=True)[0]
         assert t.shape == (1, 15, 10), (
-            "3D sfr budget data for kstpkper {} ".format(kk)
-            + "does not have correct shape (1, 15,10) - "
-            + "returned shape {}".format(t[0].shape)
+            "3D sfr budget data for kstpkper {} "
+            "does not have correct shape (1, 15,10) - "
+            "returned shape {}".format(kk, t[0].shape)
         )
 
     idx = v.get_indices()
@@ -295,15 +295,15 @@ def test_cellbudgetfile_readrecord_waux():
     t = v.get_data(text="WELLS", full3D=True)
     assert t[0].shape == (1, 15, 10), (
         "3D wel budget data does not have correct shape (1, 15,10) - "
-        + "returned shape {}".format(t[0].shape)
+        "returned shape {}".format(t[0].shape)
     )
 
     for kk in kstpkper:
         t = v.get_data(kstpkper=kk, text="wells", full3D=True)[0]
         assert t.shape == (1, 15, 10), (
-            "3D wel budget data for kstpkper {} ".format(kk)
-            + "does not have correct shape (1, 15,10) - "
-            + "returned shape {}".format(t[0].shape)
+            "3D wel budget data for kstpkper {} "
+            "does not have correct shape (1, 15,10) - "
+            "returned shape {}".format(kk, t[0].shape)
         )
 
     idx = v.get_indices()

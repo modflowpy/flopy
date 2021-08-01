@@ -68,8 +68,8 @@ class FormattedHeader(Header):
             and arrheader[4].upper() != self.text_ident.upper()
         ):
             raise Exception(
-                "Expected header not found.  Make sure the file being processed includes headers "
-                + "(LABEL output control option): "
+                "Expected header not found.  Make sure the file being "
+                "processed includes headers (LABEL output control option): "
                 + header_text
             )
         if (
@@ -178,7 +178,7 @@ class FormattedLayerFile(LayerFile):
         """
         raise Exception(
             "Abstract method _get_text_header called in FormattedLayerFile. "
-            + "This method needs to be overridden."
+            "This method needs to be overridden."
         )
 
     def _read_data(self, shp):
@@ -203,7 +203,7 @@ class FormattedLayerFile(LayerFile):
                 if not is_float(val):
                     raise Exception(
                         "Invalid data encountered while reading data file."
-                        + " Unable to convert data to float."
+                        " Unable to convert data to float."
                     )
                 result[current_row, current_col] = float(val)
                 current_col += 1
@@ -234,7 +234,7 @@ class FormattedLayerFile(LayerFile):
                 if not is_float(val):
                     raise Exception(
                         "Invalid data encountered while reading data file."
-                        + " Unable to convert data to float."
+                        " Unable to convert data to float."
                     )
                 result = float(val)
                 current_col = current_col + 1
@@ -396,12 +396,10 @@ class FormattedHeadFile(FormattedLayerFile):
             data_count += len(arr_column_data)
 
         if data_count != header["ncol"]:
-            e = (
-                "Unexpected data formatting in head file.  Expected "
-                + "{:d} columns, ".format(header["ncol"])
-                + "but found {:d}.".format(data_count)
+            raise Exception(
+                "Unexpected data formatting in head file.  Expected {:d} "
+                "columns, but found {:d}.".format(header["ncol"], data_count)
             )
-            raise Exception(e)
 
         # Calculate seek distance based on data size
         stop_pos = self.file.tell()

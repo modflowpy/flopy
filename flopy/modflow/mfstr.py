@@ -324,7 +324,7 @@ class ModflowStr(Package):
         if ntrib > 10:
             raise Exception(
                 "ModflowStr error: ntrib must be less that 10: "
-                + "specified value = {}".format(ntrib)
+                "specified value = {}".format(ntrib)
             )
 
         if options is None:
@@ -405,11 +405,8 @@ class ModflowStr(Package):
                     d = np.array(d)
                 if isinstance(d, np.recarray):
                     e = (
-                        "ModflowStr error: recarray dtype: "
-                        + str(d.dtype)
-                        + " does not match "
-                        + "self dtype: "
-                        + str(self.dtype)
+                        "ModflowStr error: recarray dtype: {} does not match "
+                        "self dtype: {}".format(d.dtype, self.dtype)
                     )
                     assert d.dtype == self.dtype, e
                 elif isinstance(d, np.ndarray):
@@ -419,26 +416,20 @@ class ModflowStr(Package):
                 elif isinstance(d, int):
                     if model.verbose:
                         if d < 0:
-                            msg = (
-                                3 * " "
-                                + "reusing str data from previous stress period"
+                            print(
+                                "   reusing str data from previous "
+                                "stress period"
                             )
-                            print(msg)
                         elif d == 0:
-                            msg = (
-                                3 * " "
-                                + "no str data for stress "
-                                + "period {}".format(key)
+                            print(
+                                "   no str data for stress "
+                                "period {}".format(key)
                             )
-                            print(msg)
                 else:
-                    e = (
+                    raise Exception(
                         "ModflowStr error: unsupported data type: "
-                        + str(type(d))
-                        + " at kper "
-                        + "{0:d}".format(key)
+                        "{} at kper {}".format(type(d), key)
                     )
-                    raise Exception(e)
 
         # add stress_period_data to package
         self.stress_period_data = MfList(self, stress_period_data)
@@ -450,11 +441,8 @@ class ModflowStr(Package):
                     d = np.array(d)
                 if isinstance(d, np.recarray):
                     e = (
-                        "ModflowStr error: recarray dtype: "
-                        + str(d.dtype)
-                        + " does not match "
-                        + "self dtype: "
-                        + str(self.dtype2)
+                        "ModflowStr error: recarray dtype: {} does not match "
+                        "self dtype: {}".format(d.dtype, self.dtype2)
                     )
                     assert d.dtype == self.dtype2, e
                 elif isinstance(d, np.ndarray):
@@ -464,27 +452,20 @@ class ModflowStr(Package):
                 elif isinstance(d, int):
                     if model.verbose:
                         if d < 0:
-                            msg = (
-                                3 * " "
-                                + "reusing str segment data "
-                                + "from previous stress period"
+                            print(
+                                "   reusing str segment data "
+                                "from previous stress period"
                             )
-                            print(msg)
                         elif d == 0:
-                            msg = (
-                                3 * " "
-                                + "no str segment data for "
-                                + "stress period {}".format(key)
+                            print(
+                                "   no str segment data for "
+                                "stress period {}".format(key)
                             )
-                            print(msg)
                 else:
-                    e = (
+                    raise Exception(
                         "ModflowStr error: unsupported data type: "
-                        + str(type(d))
-                        + " at kper "
-                        + "{0:d}".format(key)
+                        "{} at kper {}".format(type(d), key)
                     )
-                    raise Exception(e)
 
         # add segment_data to package
         self.segment_data = segment_data
@@ -638,11 +619,8 @@ class ModflowStr(Package):
                     itmp = -1
                 else:
                     itmp = tdata.shape[0]
-            line = (
-                "{:10d}".format(itmp)
-                + "{:10d}".format(self.irdflg[iper])
-                + "{:10d}".format(self.iptflg[iper])
-                + "  # stress period {}\n".format(iper + 1)
+            line = "{:10d}{:10d}{:10d}  # stress period {}\n".format(
+                itmp, self.irdflg[iper], self.iptflg[iper], iper + 1
             )
             f_str.write(line)
             if itmp > 0:
@@ -828,9 +806,7 @@ class ModflowStr(Package):
         for iper in range(nper):
             if model.verbose:
                 print(
-                    "   loading "
-                    + str(ModflowStr)
-                    + " for kper {0:5d}".format(iper + 1)
+                    "   loading {} for kper {:5d}".format(ModflowStr, iper + 1)
                 )
             line = f.readline()
             if line == "":
@@ -878,7 +854,7 @@ class ModflowStr(Package):
                             if model.verbose:
                                 print(
                                     "  implicit static instance for "
-                                    + "parameter {}".format(pname)
+                                    "parameter {}".format(pname)
                                 )
 
                         par_dict, current_dict = pak_parms.get(pname)

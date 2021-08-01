@@ -134,7 +134,7 @@ class LayerStorage:
 
     def __str__(self):
         if self.data_storage_type == DataStorageType.internal_constant:
-            return "{}".format(self.get_data_const_val())
+            return str(self.get_data_const_val())
         else:
             return str(self.get_data())
 
@@ -461,7 +461,7 @@ class DataStorage:
                     header = self._get_layer_header_str(index)
                     if formal:
                         if self.layered:
-                            data_str = "{}{}{{{}}}" "\n({})\n".format(
+                            data_str = "{}{}{{{}}}\n({})\n".format(
                                 data_str,
                                 layer_str,
                                 header,
@@ -486,14 +486,14 @@ class DataStorage:
             ):
                 if formal:
                     if storage.data_const_value is not None:
-                        data_str = "{}{}{{{}}}" "\n".format(
+                        data_str = "{}{}{{{}}}\n".format(
                             data_str,
                             layer_str,
                             self._get_layer_header_str(index),
                         )
                 else:
                     if storage.data_const_value is not None:
-                        data_str = "{}{}{{{}}}" "\n".format(
+                        data_str = "{}{}{{{}}}\n".format(
                             data_str,
                             layer_str,
                             self._get_layer_header_str(index),
@@ -507,7 +507,7 @@ class DataStorage:
             == DataStorageType.external_file
         ):
             header_list.append(
-                "open/close " "{}".format(self.layer_storage[layer].fname)
+                "open/close {}".format(self.layer_storage[layer].fname)
             )
         elif (
             self.layer_storage[layer].data_storage_type
@@ -523,11 +523,11 @@ class DataStorage:
             and self.data_structure_type != DataStructureType.recarray
         ):
             header_list.append(
-                "factor " "{}".format(self.layer_storage[layer].factor)
+                "factor {}".format(self.layer_storage[layer].factor)
             )
         if self.layer_storage[layer].iprn is not None:
             header_list.append(
-                "iprn " "{}".format(self.layer_storage[layer].iprn)
+                "iprn {}".format(self.layer_storage[layer].iprn)
             )
         if len(header_list) > 0:
             return ", ".join(header_list)
@@ -1244,10 +1244,8 @@ class DataStorage:
                     )
                 except:
                     message = (
-                        "An error occurred when reshaping data "
-                        '"{}" to store.  Expected data '
-                        "dimensions: "
-                        "{}".format(
+                        'An error occurred when reshaping data "{}" to store. '
+                        "Expected data dimensions: {}".format(
                             self.data_dimensions.structure.name, dimensions
                         )
                     )
@@ -1985,8 +1983,7 @@ class DataStorage:
             if len(arr_line) < 2 and store:
                 message = (
                     'Data array "{}" contains a OPEN/CLOSE '
-                    "that is not followed by a file. "
-                    "{}".format(
+                    "that is not followed by a file. {}".format(
                         data_dim.structure.name, data_dim.structure.path
                     )
                 )

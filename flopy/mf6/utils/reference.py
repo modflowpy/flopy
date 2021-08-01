@@ -935,12 +935,12 @@ class SpatialReference:
 
         elif distype == "unstructured":
             raise NotImplementedError(
-                "Unstructured discretization not yet " "implemented"
+                "Unstructured discretization not yet implemented"
             )
 
         else:
             raise TypeError(
-                "Discretization type {} not " "supported".format(distype)
+                "Discretization type {} not supported".format(distype)
             )
 
         return new

@@ -156,7 +156,7 @@ class MFTransient:
             return True
         if not ("tdis", "dimensions", "nper") in self._simulation_data.mfdata:
             raise FlopyException(
-                "Could not find number of stress periods (" "nper)."
+                "Could not find number of stress periods (nper)."
             )
         nper = self._simulation_data.mfdata[("tdis", "dimensions", "nper")]
         if not (sp_num <= nper.get_data()):
@@ -290,19 +290,19 @@ class MFData(DataInterface):
     @property
     def data_type(self):
         raise NotImplementedError(
-            "must define dat_type in child " "class to use this base class"
+            "must define dat_type in child class to use this base class"
         )
 
     @property
     def dtype(self):
         raise NotImplementedError(
-            "must define dtype in child " "class to use this base class"
+            "must define dtype in child class to use this base class"
         )
 
     @property
     def plottable(self):
         raise NotImplementedError(
-            "must define plottable in child " "class to use this base class"
+            "must define plottable in child class to use this base class"
         )
 
     @property
@@ -544,13 +544,13 @@ class MFMultiDimVar(MFData):
     @property
     def data_type(self):
         raise NotImplementedError(
-            "must define dat_type in child " "class to use this base class"
+            "must define dat_type in child class to use this base class"
         )
 
     @property
     def plottable(self):
         raise NotImplementedError(
-            "must define plottable in child " "class to use this base class"
+            "must define plottable in child class to use this base class"
         )
 
     def _get_internal_formatting_string(self, layer):

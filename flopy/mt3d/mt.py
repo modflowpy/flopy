@@ -183,17 +183,14 @@ class Mt3dms(BaseModel):
                 ):
                     pass
                 else:
-                    msg = (
+                    print(
                         "Specified value of ftlfree conflicts with FTL "
-                        + "file format"
+                        "file format"
                     )
-                    print(msg)
-                    msg = (
+                    print(
                         "Switching ftlfree from "
-                        + "{} ".format(str(self.ftlfree))
-                        + "to {}".format(str(not self.ftlfree))
+                        "{} to {}".format(self.ftlfree, not self.ftlfree)
                     )
-                    print(msg)
                     self.ftlfree = not self.ftlfree  # Flip the bool
 
         # external option stuff
@@ -428,11 +425,11 @@ class Mt3dms(BaseModel):
                 )
             )
         # write file entries in name file
-        f_nam.write("{}".format(self.get_name_file_entries()))
+        f_nam.write(str(self.get_name_file_entries()))
 
         # write the external files
         for u, f in zip(self.external_units, self.external_fnames):
-            f_nam.write("DATA           {0:5d}  ".format(u) + f + "\n")
+            f_nam.write("DATA           {:5d}  {}\n".format(u, f))
 
         # write the output files
         for u, f, b in zip(
@@ -441,11 +438,9 @@ class Mt3dms(BaseModel):
             if u == 0:
                 continue
             if b:
-                f_nam.write(
-                    "DATA(BINARY)   {0:5d}  ".format(u) + f + " REPLACE\n"
-                )
+                f_nam.write("DATA(BINARY)   {:5d}  {} REPLACE\n".format(u, f))
             else:
-                f_nam.write("DATA           {0:5d}  ".format(u) + f + "\n")
+                f_nam.write("DATA           {:5d}  {}\n".format(u, f))
 
         f_nam.close()
         return
@@ -718,26 +713,25 @@ class Mt3dms(BaseModel):
                     item.filehandle.close()
             except KeyError:
                 if mt.verbose:
-                    msg = (
+                    sys.stdout.write(
                         "\nWARNING:\n    External file unit "
-                        + "{} does not exist in ext_unit_dict.\n".format(key)
+                        "{} does not exist in ext_unit_dict.\n".format(key)
                     )
-                    sys.stdout.write(msg)
 
         # write message indicating packages that were successfully loaded
         if mt.verbose:
-            print(1 * "\n")
-            s = "   The following {0} packages were successfully loaded.".format(
-                len(files_successfully_loaded)
+            print(
+                "\n   The following {0} packages were "
+                "successfully loaded.".format(len(files_successfully_loaded))
             )
-            print(s)
             for fname in files_successfully_loaded:
                 print("      " + os.path.basename(fname))
             if len(files_not_loaded) > 0:
-                s = "   The following {0} packages were not loaded.".format(
-                    len(files_not_loaded)
+                print(
+                    "   The following {0} packages were not loaded.".format(
+                        len(files_not_loaded)
+                    )
                 )
-                print(s)
                 for fname in files_not_loaded:
                     print("      " + os.path.basename(fname))
                 print("\n")
@@ -802,15 +796,12 @@ class Mt3dms(BaseModel):
         with open(fname, "r") as f:
             line = f.readline()
             if line.strip() != firstline:
-                msg = "First line in file must be \n{}\nFound {}".format(
-                    firstline, line.strip()
-                )
-                msg += (
-                    "\n{} does not appear to be a valid MT3D OBS file".format(
-                        fname
+                raise Exception(
+                    "First line in file must be \n{}\nFound {}\n"
+                    "{} does not appear to be a valid MT3D OBS file".format(
+                        firstline, line.strip(), fname
                     )
                 )
-                raise Exception(msg)
 
             # Read obs names (when break, line will have first data line)
             nlineperrec = 0

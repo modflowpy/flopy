@@ -227,7 +227,7 @@ class MFBlockHeader:
                 )
             else:
                 entry = self.data_items[0].get_file_entry()
-            fd.write("{}".format(entry.rstrip()))
+            fd.write(str(entry.rstrip()))
             if len(self.data_items) > 1:
                 for data_item in self.data_items[1:]:
                     entry = data_item.get_file_entry(values_only=True)
@@ -255,7 +255,7 @@ class MFBlockHeader:
                 )
             else:
                 entry = self.data_items[0].get_file_entry()
-            fd.write("{}".format(entry.rstrip()))
+            fd.write(str(entry.rstrip()))
         fd.write("\n")
 
     def get_transient_key(self):
@@ -1515,7 +1515,7 @@ class MFPackage(PackageContainer, PackageInterface):
                 self.model_name,
                 pname,
                 "",
-                "initializing " "package",
+                "initializing package",
                 None,
                 inspect.stack()[0][3],
                 type_,
@@ -1740,7 +1740,7 @@ class MFPackage(PackageContainer, PackageInterface):
             )
         )
         if self.parent_file is not None and formal:
-            data_str = "{}parent_file = " "{}\n\n".format(
+            data_str = "{}parent_file = {}\n\n".format(
                 data_str, self.parent_file._get_pname()
             )
         else:
@@ -1769,9 +1769,9 @@ class MFPackage(PackageContainer, PackageInterface):
 
     def _get_pname(self):
         if self.package_name is not None:
-            return "{}".format(self.package_name)
+            return str(self.package_name)
         else:
-            return "{}".format(self._filename)
+            return str(self._filename)
 
     def _get_block_header_info(self, line, path):
         # init
@@ -1885,8 +1885,7 @@ class MFPackage(PackageContainer, PackageInterface):
                             ):
                                 print(
                                     "INFORMATION: {} in {} changed to {} "
-                                    "based on size of "
-                                    "{}".format(
+                                    "based on size of {}".format(
                                         size_def_name,
                                         size_def.structure.path[:-1],
                                         new_size,
@@ -2091,7 +2090,7 @@ class MFPackage(PackageContainer, PackageInterface):
             fd_input_file = open(self.get_file_path(), "r")
         except OSError as e:
             if e.errno == errno.ENOENT:
-                message = "File {} of type {} could not be opened" ".".format(
+                message = "File {} of type {} could not be opened.".format(
                     self.get_file_path(), self.package_type
                 )
                 type_, value_, traceback_ = sys.exc_info()
@@ -2312,9 +2311,7 @@ class MFPackage(PackageContainer, PackageInterface):
                         arr_line = datautil.PyListUtil.split_data_line(
                             clean_line
                         )
-                        self.post_block_comments.add_text(
-                            "{}".format(line), True
-                        )
+                        self.post_block_comments.add_text(str(line), True)
                         while arr_line and (
                             len(line) <= 2 or arr_line[0][:3].upper() != "END"
                         ):
@@ -2324,7 +2321,7 @@ class MFPackage(PackageContainer, PackageInterface):
                             )
                             if arr_line:
                                 self.post_block_comments.add_text(
-                                    "{}".format(line), True
+                                    str(line), True
                                 )
                         self._simulation_data.mfdata[
                             cur_block.block_headers[-1].blk_post_comment_path
@@ -2479,9 +2476,7 @@ class MFPackage(PackageContainer, PackageInterface):
                 self.simulation_data.verbosity_level.value
                 >= VerbosityLevel.verbose.value
             ):
-                print(
-                    "      writing block {}.." ".".format(block.structure.name)
-                )
+                print("      writing block {}...".format(block.structure.name))
             # write block
             block.write(fd, ext_file_action=ext_file_action)
             block_num += 1

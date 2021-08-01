@@ -256,7 +256,7 @@ class Observations:
             for key in keys:
                 if key not in data:
                     raise KeyError(
-                        "Supplied data key: {} is not " "valid".format(key)
+                        "Supplied data key: {} is not valid".format(key)
                     )
                 else:
                     pass
@@ -533,7 +533,7 @@ class MFObservationRequester:
 
         else:
             raise KeyError(
-                "{} is not a valid observation " "type".format(package)
+                "{} is not a valid observation type".format(package)
             )
 
     @staticmethod

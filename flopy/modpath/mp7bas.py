@@ -104,21 +104,18 @@ class Modpath7Bas(Package):
             defaultifacecount = 0
         else:
             if not isinstance(defaultiface, dict):
-                msg = (
+                raise ValueError(
                     "defaultiface must be a dictionary with package "
-                    + "name keys and values between 0 and 6"
+                    "name keys and values between 0 and 6"
                 )
-                raise ValueError(msg)
             defaultifacecount = len(defaultiface.keys())
             for key, value in defaultiface.items():
                 # check iface value
                 if value < 0 or value > 6:
-                    msg = (
-                        "defaultiface for package {}".format(key)
-                        + "must be between 0 and 1 "
-                        + "({} specified)".format(value)
+                    raise ValueError(
+                        "defaultiface for package {} must be between 0 and 1 "
+                        "({} specified)".format(key, value)
                     )
-                    raise ValueError(msg)
 
         self.defaultifacecount = defaultifacecount
         self.defaultiface = defaultiface

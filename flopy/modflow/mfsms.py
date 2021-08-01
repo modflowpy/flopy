@@ -448,13 +448,10 @@ class ModflowSms(Package):
             sys.stdout.write("loading sms package file...\n")
 
         if model.version != "mfusg":
-            msg = (
-                "Warning: model version was reset from "
-                + "'{}' to 'mfusg' in order to load a SMS file".format(
-                    model.version
-                )
+            print(
+                "Warning: model version was reset from '{}' to 'mfusg' "
+                "in order to load a SMS file".format(model.version)
             )
-            print(msg)
             model.version = "mfusg"
 
         openfile = not hasattr(f, "read")
@@ -481,12 +478,10 @@ class ModflowSms(Package):
 
         # Record 1b -- line will have already been read
         if model.verbose:
-            msg = (
-                3 * " "
-                + "   loading HCLOSE HICLOSE MXITER ITER1 "
-                + "IPRSMS NONLINMETH LINMETH..."
+            print(
+                "   loading HCLOSE HICLOSE MXITER ITER1 "
+                "IPRSMS NONLINMETH LINMETH..."
             )
-            print(msg)
         ll = line_parse(line)
         hclose = float(ll.pop(0))
         hiclose = float(ll.pop(0))
@@ -515,12 +510,10 @@ class ModflowSms(Package):
         reslim = None
         if nonlinmeth != 0 and nopt == 0:
             if model.verbose:
-                msg = (
-                    3 * " "
-                    + "loading THETA AKAPPA GAMMA AMOMENTUM "
-                    + "NUMTRACK BTOL BREDUC RESLIM..."
+                print(
+                    "   loading THETA AKAPPA GAMMA AMOMENTUM "
+                    "NUMTRACK BTOL BREDUC RESLIM..."
                 )
-                print(msg)
             while True:
                 line = f.readline()
                 if line[0] != "#":
@@ -554,12 +547,10 @@ class ModflowSms(Package):
         epsrn = None
         if linmeth == 1 and nopt == 0:
             if model.verbose:
-                msg = (
-                    3 * " "
-                    + "loading IACL NORDER LEVEL NORTH "
-                    + "IREDSYS RRCTOL IDROPTOL EPSRN"
+                print(
+                    "   loading IACL NORDER LEVEL NORTH "
+                    "IREDSYS RRCTOL IDROPTOL EPSRN"
                 )
-                print(msg)
             while True:
                 line = f.readline()
                 if line[0] != "#":
@@ -591,12 +582,7 @@ class ModflowSms(Package):
         relaxpcgu = None
         if linmeth == 2 and nopt == 0:
             if model.verbose:
-                msg = (
-                    3 * " "
-                    + "loading [CLIN] IPC ISCL IORD "
-                    + "RCLOSEPCGU [RELAXPCGU]"
-                )
-                print(msg)
+                print("   loading [CLIN] IPC ISCL IORD RCLOSEPCGU [RELAXPCGU]")
             while True:
                 line = f.readline()
                 if line[0] != "#":

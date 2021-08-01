@@ -376,10 +376,8 @@ class Mt3dBtn(Package):
                     val = kwargs.pop(name)
                 else:
                     print(
-                        "BTN: setting sconc for component "
-                        + str(icomp)
-                        + " to zero, kwarg name "
-                        + name
+                        "BTN: setting sconc for component {} "
+                        "to zero, kwarg name {}".format(icomp, name)
                     )
                 u3d = Util3d(
                     model,

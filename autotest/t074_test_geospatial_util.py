@@ -214,7 +214,7 @@ def test_multipolygon():
 
         if not is_equal:
             raise AssertionError(
-                "GeoSpatialUtil multipolygon " "conversion error"
+                "GeoSpatialUtil multipolygon conversion error"
             )
 
 
@@ -247,7 +247,7 @@ def test_point():
         is_equal = gi1 == gi2
 
         if not is_equal:
-            raise AssertionError("GeoSpatialUtil point " "conversion error")
+            raise AssertionError("GeoSpatialUtil point conversion error")
 
 
 def test_multipoint():
@@ -279,9 +279,7 @@ def test_multipoint():
         is_equal = gi1 == gi2
 
         if not is_equal:
-            raise AssertionError(
-                "GeoSpatialUtil multipoint " "conversion error"
-            )
+            raise AssertionError("GeoSpatialUtil multipoint conversion error")
 
 
 def test_linestring():
@@ -313,9 +311,7 @@ def test_linestring():
         is_equal = gi1 == gi2
 
         if not is_equal:
-            raise AssertionError(
-                "GeoSpatialUtil linestring " "conversion error"
-            )
+            raise AssertionError("GeoSpatialUtil linestring conversion error")
 
 
 def test_multilinestring():
@@ -348,7 +344,7 @@ def test_multilinestring():
 
         if not is_equal:
             raise AssertionError(
-                "GeoSpatialUtil multilinestring " "conversion error"
+                "GeoSpatialUtil multilinestring conversion error"
             )
 
 
@@ -386,7 +382,7 @@ def test_polygon_collection():
 
             if not is_equal:
                 raise AssertionError(
-                    "GeoSpatialCollection Polygon " "conversion error"
+                    "GeoSpatialCollection Polygon conversion error"
                 )
 
 
@@ -420,7 +416,7 @@ def test_point_collection():
 
             if not is_equal:
                 raise AssertionError(
-                    "GeoSpatialCollection Point " "conversion error"
+                    "GeoSpatialCollection Point conversion error"
                 )
 
 
@@ -454,7 +450,7 @@ def test_linestring_collection():
 
             if not is_equal:
                 raise AssertionError(
-                    "GeoSpatialCollection Linestring " "conversion error"
+                    "GeoSpatialCollection Linestring conversion error"
                 )
 
 

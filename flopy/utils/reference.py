@@ -408,20 +408,17 @@ class SpatialReference:
                 try:
                     d["xul"] = float(item.split(":")[1])
                 except:
-                    print("   could not parse xul " + "in {}".format(namefile))
+                    print("   could not parse xul in {}".format(namefile))
             elif "yul" in item.lower():
                 try:
                     d["yul"] = float(item.split(":")[1])
                 except:
-                    print("   could not parse yul " + "in {}".format(namefile))
+                    print("   could not parse yul in {}".format(namefile))
             elif "rotation" in item.lower():
                 try:
                     d["rotation"] = float(item.split(":")[1])
                 except:
-                    print(
-                        "   could not parse rotation "
-                        + "in {}".format(namefile)
-                    )
+                    print("   could not parse rotation in {}".format(namefile))
             elif "proj4_str" in item.lower():
                 try:
                     proj4_str = ":".join(item.split(":")[1:]).strip()
@@ -430,16 +427,13 @@ class SpatialReference:
                     d["proj4_str"] = proj4_str
                 except:
                     print(
-                        "   could not parse proj4_str "
-                        + "in {}".format(namefile)
+                        "   could not parse proj4_str in {}".format(namefile)
                     )
             elif "start" in item.lower():
                 try:
                     d["start_datetime"] = item.split(":")[1].strip()
                 except:
-                    print(
-                        "   could not parse start " + "in {}".format(namefile)
-                    )
+                    print("   could not parse start in {}".format(namefile))
 
             # spatial reference length units
             elif "units" in item.lower():
@@ -1058,11 +1052,9 @@ class SpatialReference:
         try:
             from matplotlib.collections import QuadMesh
         except:
-            err_msg = (
-                "matplotlib must be installed to "
-                + "use get_grid_map_plotter()"
+            raise ImportError(
+                "matplotlib must be installed to use get_grid_map_plotter()"
             )
-            raise ImportError(err_msg)
 
         verts = np.vstack((self.xgrid.flatten(), self.ygrid.flatten())).T
         qm = QuadMesh(self.ncol, self.nrow, verts)
@@ -1084,11 +1076,9 @@ class SpatialReference:
         try:
             import matplotlib.pyplot as plt
         except:
-            err_msg = (
-                "matplotlib must be installed to "
-                + "use reference.plot_array()"
+            raise ImportError(
+                "matplotlib must be installed to use reference.plot_array()"
             )
-            raise ImportError(err_msg)
 
         if ax is None:
             ax = plt.gca()
@@ -1333,11 +1323,10 @@ class SpatialReference:
         try:
             import matplotlib.pyplot as plt
         except:
-            err_msg = (
+            raise ImportError(
                 "matplotlib must be installed to "
-                + "use cvfd_to_patch_collection()"
+                "use cvfd_to_patch_collection()"
             )
-            raise ImportError(err_msg)
 
         if epsg is None:
             epsg = self._epsg
@@ -1348,10 +1337,8 @@ class SpatialReference:
             vmin = np.nanmin(a)
             vmax = np.nanmax(a)
             nlevels = np.round(np.abs(vmax - vmin) / interval, 2)
-            msg = (
-                "{:.0f} levels ".format(nlevels)
-                + "at interval of {} > ".format(interval)
-                + "maxlevels = {}".format(maxlevels)
+            msg = "{:.0f} levels at interval of {} > " "maxlevels = {}".format(
+                nlevels, interval, maxlevels
             )
             assert nlevels < maxlevels, msg
             levels = np.arange(vmin, vmax, interval)
@@ -1742,7 +1729,7 @@ class SpatialReferenceUnstructured(SpatialReference):
             assert self.xc.shape[0] == self.ncpl[0]
             assert self.yc.shape[0] == self.ncpl[0]
         else:
-            msg = "Length of iverts must equal ncpl.sum " "({} {})".format(
+            msg = "Length of iverts must equal ncpl.sum ({} {})".format(
                 len(iverts), ncpl
             )
             assert len(iverts) == ncpl.sum(), msg
@@ -2368,8 +2355,7 @@ def get_spatialreference(epsg, text="esriwkt"):
     elif result is None and text != "epsg":
         for cat in epsg_categories:
             error_msg = (
-                "No internet connection or "
-                + "epsg code {} ".format(epsg)
+                "No internet connection or epsg code {} ".format(epsg)
                 + "not found at {}/ref/".format(srefhttp)
                 + "{}/{}/{}".format(cat, cat, epsg)
             )

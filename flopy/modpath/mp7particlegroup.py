@@ -48,11 +48,10 @@ class _Modpath7ParticleGroup:
             self.external = True
 
         if releasedata is None:
-            msg = (
+            raise ValueError(
                 "releasedata must be provided to instantiate "
-                + "a MODPATH 7 particle group"
+                "a MODPATH 7 particle group"
             )
-            raise ValueError(msg)
 
         # convert releasedata to a list, if required
         if isinstance(releasedata, (float, int)):
@@ -86,17 +85,14 @@ class _Modpath7ParticleGroup:
             ):
                 releasedata[1] = np.array(releasedata[1])
             if releasedata[1].shape[0] != releasetimecount:
-                msg = (
-                    "The number of releasetimes data "
-                    + "({}) ".format(releasedata[1].shape[0])
-                    + "is not equal to releasetimecount "
-                    + "({}).".format(releasetimecount)
+                raise ValueError(
+                    "The number of releasetimes data ({}) "
+                    "is not equal to releasetimecount "
+                    "({}).".format(releasedata[1].shape[0], releasetimecount)
                 )
-                raise ValueError(msg)
             releasetimes = np.array(releasedata[1], dtype=np.float32)
         else:
-            msg = "releasedata must have 1, 2, or 3 entries"
-            raise ValueError(msg)
+            raise ValueError("releasedata must have 1, 2, or 3 entries")
 
         # set release data
         self.releaseoption = releaseoption
@@ -122,13 +118,12 @@ class _Modpath7ParticleGroup:
 
         # validate that a valid file object was passed
         if not hasattr(fp, "write"):
-            msg = (
-                "Cannot write data for particle group "
-                + "{} ".format(self.particlegroupname)
-                + "without passing a valid file object ({}) ".format(fp)
-                + "open for writing"
+            raise ValueError(
+                "Cannot write data for particle group {} without passing a "
+                "valid file object ({}) open for writing".format(
+                    self.particlegroupname, fp
+                )
             )
-            raise ValueError(msg)
 
         # item 26
         fp.write("{}\n".format(self.particlegroupname))
@@ -395,13 +390,10 @@ class ParticleGroupLRCTemplate(_ParticleGroupTemplate):
         """
         # validate that a valid file object was passed
         if not hasattr(fp, "write"):
-            msg = (
-                "{}: cannot write data for ".format(self.name)
-                + "template without passing a valid file object "
-                + "({}) ".format(fp)
-                + "open for writing"
+            raise ValueError(
+                "{}: cannot write data for template without passing a valid "
+                "file object ({}) open for writing".format(self.name, fp)
             )
-            raise ValueError(msg)
 
         # call base class write method to write common data
         _Modpath7ParticleGroup.write(self, fp, ws)
@@ -496,13 +488,10 @@ class ParticleGroupNodeTemplate(_ParticleGroupTemplate):
         """
         # validate that a valid file object was passed
         if not hasattr(fp, "write"):
-            msg = (
-                "{}: cannot write data for ".format(self.name)
-                + "template without passing a valid file object "
-                + "({}) ".format(fp)
-                + "open for writing"
+            raise ValueError(
+                "{}: cannot write data for template without passing a valid "
+                "file object ({}) open for writing".format(self.name, fp)
             )
-            raise ValueError(msg)
 
         # call base class write method to write common data
         _Modpath7ParticleGroup.write(self, fp, ws)

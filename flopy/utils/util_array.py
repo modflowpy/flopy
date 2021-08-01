@@ -78,7 +78,7 @@ class ArrayFormat:
 
         assert isinstance(
             u2d, Util2d
-        ), "ArrayFormat only supports Util2d," + "not {0}".format(type(u2d))
+        ), "ArrayFormat only supports Util2d, not {0}".format(type(u2d))
         if len(u2d.shape) == 1:
             self._npl_full = u2d.shape[0]
         else:
@@ -107,8 +107,8 @@ class ArrayFormat:
 
         if python is not None and fortran is not None:
             raise Exception(
-                "only one of [python,fortran] can be passed"
-                + "to ArrayFormat constructor"
+                "only one of [python,fortran] can be passed "
+                "to ArrayFormat constructor"
             )
 
         if python is not None:
@@ -139,7 +139,7 @@ class ArrayFormat:
         else:
             raise Exception(
                 "ArrayFormat._set_defaults() error: "
-                + "unsupported dtype: {0}".format(str(self.dtype))
+                "unsupported dtype: {0}".format(str(self.dtype))
             )
 
     def __str__(self):
@@ -158,7 +158,7 @@ class ArrayFormat:
         else:
             raise Exception(
                 "ArrayFormat.get_default_numpy_fmt(): unrecognized "
-                + "dtype, must be np.int32 or np.float32"
+                "dtype, must be np.int32 or np.float32"
             )
 
     @classmethod
@@ -225,7 +225,7 @@ class ArrayFormat:
             elif self.dtype == np.float32 and width < self.default_float_width:
                 print(
                     "ArrayFormat warning:setting width less "
-                    + "than default of {0}".format(self.default_float_width)
+                    "than default of {0}".format(self.default_float_width)
                 )
                 self._width = width
         elif key == "decimal":
@@ -235,15 +235,14 @@ class ArrayFormat:
                 value = int(value)
                 if value < self.default_float_decimal:
                     print(
-                        "ArrayFormat warning: setting decimal "
-                        + " less than default of "
-                        + "{0}".format(self.default_float_decimal)
+                        "ArrayFormat warning: setting decimal less than "
+                        "default of {0}".format(self.default_float_decimal)
                     )
                 if value < self.decimal:
                     print(
                         "ArrayFormat warning: setting decimal "
-                        + " less than current value of "
-                        + "{0}".format(self.default_float_decimal)
+                        "less than current value of "
+                        "{0}".format(self.default_float_decimal)
                     )
                 self._decimal = int(value)
             else:
@@ -301,7 +300,7 @@ class ArrayFormat:
             else:
                 raise Exception(
                     "ArrayFormat._get_python_format() error: "
-                    + "format is not 'free' and npl is not set"
+                    "format is not 'free' and npl is not set"
                 )
 
         return (self.npl, pd)
@@ -413,10 +412,7 @@ class ArrayFormat:
                     fmt = "E"
                 return npl, fmt, width, decimal
         raise Exception(
-            "Unrecognized format type: "
-            + str(fd)
-            + " looking for: "
-            + str(fmts)
+            "Unrecognized format type: {} looking for: {}".format(fd, fmts)
         )
 
 
@@ -838,11 +834,10 @@ class Util3d(DataInterface):
             isinstance(self.__value, np.ndarray) and (self.__value.ndim == 1)
         ):
 
-            assert len(self.__value) == self.shape[0], (
-                "length of 3d enumerable:"
-                + str(len(self.__value))
-                + " != to shape[0]:"
-                + str(self.shape[0])
+            assert (
+                len(self.__value) == self.shape[0]
+            ), "length of 3d enumerable: {} != to shape[0]: {}".format(
+                len(self.__value), self.shape[0]
             )
 
             for i, item in enumerate(self.__value):
@@ -888,10 +883,8 @@ class Util3d(DataInterface):
                 else:
                     raise Exception(
                         "value shape[0] != to self.shape[0] and"
-                        + "value.shape[[1,2]] != self.shape[[1,2]]"
-                        + str(self.__value.shape)
-                        + " "
-                        + str(self.shape)
+                        "value.shape[[1,2]] != self.shape[[1,2]] "
+                        "{} {}".format(self.__value.shape, self.shape)
                     )
             for i, a in enumerate(self.__value):
                 a = np.atleast_2d(a)
@@ -917,8 +910,7 @@ class Util3d(DataInterface):
         else:
             raise Exception(
                 "util_array_3d: value attribute must be list "
-                + " or ndarray, not"
-                + str(type(self.__value))
+                "or ndarray, not {}".format(type(self.__value))
             )
         return u2ds
 
@@ -1146,8 +1138,8 @@ class Transient3d(DataInterface):
                 if i in list(self.transient_3ds.keys()):
                     return self.transient_3ds[i]
             raise Exception(
-                "Transient2d.__getitem__(): error:"
-                + " could not find an entry before kper {0:d}".format(kper)
+                "Transient2d.__getitem__(): error: "
+                "could not find an entry before kper {0:d}".format(kper)
             )
 
     def __setitem__(self, key, value):
@@ -1156,13 +1148,13 @@ class Transient3d(DataInterface):
         except Exception as e:
             raise Exception(
                 "Transient3d.__setitem__() error: "
-                + "'key'could not be cast to int:{0}".format(str(e))
+                "'key'could not be cast to int:{0}".format(str(e))
             )
         nper = self._model.nper
         if key > self._model.nper or key < 0:
             raise Exception(
                 "Transient3d.__setitem__() error: "
-                + "key {0} not in nper range {1}:{2}".format(key, 0, nper)
+                "key {0} not in nper range {1}:{2}".format(key, 0, nper)
             )
 
         self.transient_3ds[key] = self.__get_3d_instance(key, value)
@@ -1212,24 +1204,19 @@ class Transient3d(DataInterface):
                 except:
                     raise Exception(
                         "Transient3d error: can't cast key: "
-                        + str(key)
-                        + " to kper integer"
+                        "{} to kper integer".format(key)
                     )
                 if key < 0:
                     raise Exception(
-                        "Transient3d error: key can't be "
-                        + " negative: "
-                        + str(key)
+                        "Transient3d error: key can't be negative: "
+                        "{}".format(key)
                     )
                 try:
                     u3d = self.__get_3d_instance(key, val)
                 except Exception as e:
                     raise Exception(
-                        "Transient3d error building Util3d "
-                        + " instance from value at kper: "
-                        + str(key)
-                        + "\n"
-                        + str(e)
+                        "Transient3d error building Util3d instance from "
+                        "value at kper: {}\n{}".format(key, e)
                     )
                 tran_seq[key] = u3d
             return tran_seq
@@ -1251,13 +1238,12 @@ class Transient3d(DataInterface):
         elif isinstance(self.__value, list):
             raise Exception(
                 "Transient3d error: value cannot be a list "
-                + "anymore.  try a dict{kper,value}"
+                "anymore.  try a dict{kper,value}"
             )
         else:
             raise Exception(
-                "Transient3d error: value type not "
-                + " recognized: "
-                + str(type(self.__value))
+                "Transient3d error: value type not recognized: "
+                "{}".format(type(self.__value))
             )
 
     def __get_3d_instance(self, kper, arg):
@@ -1641,8 +1627,8 @@ class Transient2d(DataInterface):
                 if i in list(self.transient_2ds.keys()):
                     return self.transient_2ds[i]
             raise Exception(
-                "Transient2d.__getitem__(): error:"
-                + " could not find an entry before kper {0:d}".format(kper)
+                "Transient2d.__getitem__(): error: "
+                "could not find an entry before kper {0:d}".format(kper)
             )
 
     def __setitem__(self, key, value):
@@ -1651,13 +1637,13 @@ class Transient2d(DataInterface):
         except Exception as e:
             raise Exception(
                 "Transient2d.__setitem__() error: "
-                + "'key'could not be cast to int:{0}".format(str(e))
+                "'key'could not be cast to int:{0}".format(str(e))
             )
         nper = self._model.nper
         if key > self._model.nper or key < 0:
             raise Exception(
                 "Transient2d.__setitem__() error: "
-                + "key {0} not in nper range {1}:{2}".format(key, 0, nper)
+                "key {0} not in nper range {1}:{2}".format(key, 0, nper)
             )
 
         self.transient_2ds[key] = self.__get_2d_instance(key, value)
@@ -1704,24 +1690,19 @@ class Transient2d(DataInterface):
                 except:
                     raise Exception(
                         "Transient2d error: can't cast key: "
-                        + str(key)
-                        + " to kper integer"
+                        "{} to kper integer".format(key)
                     )
                 if key < 0:
                     raise Exception(
-                        "Transient2d error: key can't be "
-                        + " negative: "
-                        + str(key)
+                        "Transient2d error: key can't be negative: "
+                        "{}".format(key)
                     )
                 try:
                     u2d = self.__get_2d_instance(key, val)
                 except Exception as e:
                     raise Exception(
-                        "Transient2d error building Util2d "
-                        + " instance from value at kper: "
-                        + str(key)
-                        + "\n"
-                        + str(e)
+                        "Transient2d error building Util2d instance from "
+                        "value at kper: {}\n{}".format(key, e)
                     )
                 tran_seq[key] = u2d
             return tran_seq
@@ -1743,13 +1724,12 @@ class Transient2d(DataInterface):
         elif isinstance(self.__value, list):
             raise Exception(
                 "Transient2d error: value cannot be a list "
-                + "anymore.  try a dict{kper,value}"
+                "anymore.  try a dict{kper,value}"
             )
         else:
             raise Exception(
-                "Transient2d error: value type not "
-                + " recognized: "
-                + str(type(self.__value))
+                "Transient2d error: value type not recognized: "
+                "{}".format(type(self.__value))
             )
 
     def __get_2d_instance(self, kper, arg):
@@ -2193,7 +2173,7 @@ class Util2d(DataInterface):
             else:
                 raise Exception(
                     "Util2d.__getitem__() error: an integer was passed, "
-                    + "self.shape > 1 in both dimensions"
+                    "self.shape > 1 in both dimensions"
                 )
         else:
             if isinstance(k, tuple):
@@ -2326,8 +2306,8 @@ class Util2d(DataInterface):
         if self.format.binary:
             if locat is None:
                 raise Exception(
-                    "Util2d._get_fixed_cr(): locat is None but"
-                    + "format is binary"
+                    "Util2d._get_fixed_cr(): locat is None but "
+                    "format is binary"
                 )
             if not self.format.array_free_format:
                 locat = -1 * np.abs(locat)
@@ -2416,10 +2396,9 @@ class Util2d(DataInterface):
             and self.locat is None
         ):
             print(
-                "Util2d {0}: locat is None, but ".format(self._name)
-                + "model does not "
-                + "support free format and how is internal..."
-                + "resetting how = external"
+                "Util2d {0}: locat is None, but model does not "
+                "support free format and how is internal... "
+                "resetting how = external".format(self._name)
             )
             how = "external"
 
@@ -2427,26 +2406,23 @@ class Util2d(DataInterface):
             "constant",
             "internal",
         ]:
-            print(
-                "Util2d:{0}: ".format(self._name)
-                + "resetting 'how' to external"
-            )
+            print("Util2d:{0}: resetting 'how' to external".format(self._name))
             if self.format.array_free_format:
                 how = "openclose"
             else:
                 how = "external"
         if how == "internal":
-            assert not self.format.binary, (
-                "Util2d error: 'how' is internal, but" + "format is binary"
-            )
+            assert (
+                not self.format.binary
+            ), "Util2d error: 'how' is internal, but format is binary"
             cr = self.get_internal_cr()
             return cr + self.string
 
         elif how == "external" or how == "openclose":
             if how == "openclose":
                 assert self.format.array_free_format, (
-                    "Util2d error: 'how' is openclose,"
-                    + "but model doesn't support free fmt"
+                    "Util2d error: 'how' is openclose, "
+                    "but model doesn't support free fmt"
                 )
 
             # write a file if needed
@@ -2472,7 +2448,7 @@ class Util2d(DataInterface):
                     if self._model.verbose:
                         print(
                             "Util2d warning: removing existing array "
-                            + "file {0}".format(self.model_file_path)
+                            "file {0}".format(self.model_file_path)
                         )
                     try:
                         os.remove(self.python_file_path)
@@ -2487,7 +2463,7 @@ class Util2d(DataInterface):
                 except Exception as e:
                     raise Exception(
                         "Util2d.get_file_array(): error copying "
-                        + "{0} to {1}:{2}".format(
+                        "{0} to {1}:{2}".format(
                             self.__value, self.python_file_path, str(e)
                         )
                     )
@@ -2499,10 +2475,9 @@ class Util2d(DataInterface):
         elif how == "constant":
             if self.vtype not in [np.int32, np.float32]:
                 u = np.unique(self._array)
-                assert u.shape[0] == 1, (
-                    "Util2d error: 'how' is constant, but array "
-                    + "is not uniform"
-                )
+                assert (
+                    u.shape[0] == 1
+                ), "Util2d error: 'how' is constant, but array is not uniform"
                 value = u[0]
             else:
                 value = self.__value
@@ -2511,7 +2486,7 @@ class Util2d(DataInterface):
         else:
             raise Exception(
                 "Util2d.get_file_entry() error: "
-                + "unrecognized 'how':{0}".format(how)
+                "unrecognized 'how':{0}".format(how)
             )
 
     @property
@@ -2778,11 +2753,11 @@ class Util2d(DataInterface):
                 )
             except:
                 raise Exception(
-                    "Util2d.write_txt: \nunable to parse"
-                    + "python_format:\n    {0}\n".format(python_format)
-                    + "  python_format should be a list with\n"
-                    + "   [column_length, fmt]\n"
-                    + "    e.g., [10, {0:10.2e}]"
+                    "Util2d.write_txt: \nunable to parse "
+                    "python_format:\n    {0}\n"
+                    "  python_format should be a list with\n"
+                    "   [column_length, fmt]\n"
+                    "    e.g., [10, {0:10.2e}]".format(python_format)
                 )
         # write the array to a string
         len_data = data.size
@@ -2885,13 +2860,11 @@ class Util2d(DataInterface):
                 except:
                     raise Exception(
                         "Util2d:could not cast "
-                        + 'boolean value to type "bool": '
-                        + str(value)
+                        'boolean value to type "bool": {}'.format(value)
                     )
             else:
                 raise Exception(
-                    "Util2d:value type is bool, "
-                    + " but dtype not set as bool"
+                    "Util2d:value type is bool, but dtype not set as bool"
                 )
         elif isinstance(value, str):
             if os.path.exists(value):
@@ -2903,7 +2876,7 @@ class Util2d(DataInterface):
                 except:
                     raise Exception(
                         "Util2d error: str not a file and "
-                        + "couldn't be cast to int: {0}".format(value)
+                        "couldn't be cast to int: {0}".format(value)
                     )
 
             else:
@@ -2912,7 +2885,7 @@ class Util2d(DataInterface):
                 except:
                     raise Exception(
                         "Util2d error: str not a file and "
-                        + "couldn't be cast to float: {0}".format(value)
+                        "couldn't be cast to float: {0}".format(value)
                     )
 
         elif np.isscalar(value):
@@ -2922,8 +2895,7 @@ class Util2d(DataInterface):
                 except:
                     raise Exception(
                         "Util2d:could not cast scalar "
-                        + 'value to type "int": '
-                        + str(value)
+                        'value to type "int": {}'.format(value)
                     )
             elif self._dtype == np.float32:
                 try:
@@ -2931,8 +2903,7 @@ class Util2d(DataInterface):
                 except:
                     raise Exception(
                         "Util2d:could not cast "
-                        + 'scalar value to type "float": '
-                        + str(value)
+                        'scalar value to type "float": {}'.format(value)
                     )
 
         elif isinstance(value, np.ndarray):
@@ -2942,10 +2913,8 @@ class Util2d(DataInterface):
                 value = value[0]
             if self.shape != value.shape:
                 raise Exception(
-                    "Util2d:self.shape: "
-                    + str(self.shape)
-                    + " does not match value.shape: "
-                    + str(value.shape)
+                    "Util2d:self.shape: {} does not match value.shape: "
+                    "{}".format(self.shape, value.shape)
                 )
             if self._dtype != value.dtype:
                 value = value.astype(self._dtype)
@@ -3024,11 +2993,10 @@ class Util2d(DataInterface):
             fname = fname.replace("\\", os.path.sep)
             fname = os.path.join(model.model_ws, fname)
             # load_txt(shape, file_in, dtype, fmtin):
-            assert os.path.exists(fname), (
-                "Util2d.load() error: open/close "
-                + "file "
-                + str(fname)
-                + " not found"
+            assert os.path.exists(
+                fname
+            ), "Util2d.load() error: open/close file {} not found".format(
+                fname
             )
             if str("binary") not in str(cr_dict["fmtin"].lower()):
                 f = open(fname, "r")
@@ -3164,7 +3132,7 @@ class Util2d(DataInterface):
                     except:
                         print(
                             "   could not determine filename "
-                            + "for unit {}".format(raw[1])
+                            "for unit {}".format(raw[1])
                         )
 
                 nunit = int(raw[1])

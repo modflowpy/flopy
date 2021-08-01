@@ -81,8 +81,7 @@ class MtListBudget:
         try:
             import pandas as pd
         except:
-            msg = "MtListBudget.parse: pandas not available"
-            raise ImportError(msg)
+            raise ImportError("MtListBudget.parse: pandas not available")
 
         self.gw_data = {}
         self.sw_data = {}
@@ -192,8 +191,7 @@ class MtListBudget:
         try:
             import pandas as pd
         except:
-            msg = "MtListBudget._diff: pandas not available"
-            raise ImportError(msg)
+            raise ImportError("MtListBudget._diff: pandas not available")
 
         out_cols = [
             c for c in df.columns if "_out" in c and not c.startswith("net_")
@@ -421,10 +419,10 @@ class MtListBudget:
             try:
                 item, cval, fval = self._parse_sw_line(line)
             except Exception as e:
-                msg = "error parsing 'in' SW items on line {}: " + "{}".format(
-                    self.lcount, str(e)
+                raise Exception(
+                    "error parsing 'in' SW items on line {}: "
+                    "{}".format(self.lcount, str(e))
                 )
-                raise Exception(msg)
             self._add_to_sw_data("in", item, cval, fval, comp)
             if break_next:
                 break

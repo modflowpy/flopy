@@ -139,7 +139,7 @@ class ModflowBct(Package):
         #
         # arad
         if self.idisp != 0:
-            f_bct.write("open/close arad.dat 1.0 (free) -1" + "\n")
+            f_bct.write("open/close arad.dat 1.0 (free) -1\n")
         #
         # dlh
         if self.idisp == 1:

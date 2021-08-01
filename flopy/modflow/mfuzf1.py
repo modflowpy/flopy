@@ -490,17 +490,15 @@ class ModflowUzf1(Package):
             self.parent.get_package("RCH") != None
             or self.parent.get_package("EVT") != None
         ):
-            msg = (
+            print(
                 "WARNING!\n The RCH and EVT packages should not be "
-                + "active when the UZF1 package is active!"
+                "active when the UZF1 package is active!"
             )
-            print(msg)
         if self.parent.version == "mf2000":
-            msg = (
+            print(
                 "WARNING!\nThe UZF1 package is only compatible "
-                + "with MODFLOW-2005 and MODFLOW-NWT!"
+                "with MODFLOW-2005 and MODFLOW-NWT!"
             )
-            print(msg)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
 
         self.heading = (
@@ -533,11 +531,10 @@ class ModflowUzf1(Package):
             try:
                 float(etsquare)
             except:
-                msg = (
+                print(
                     "etsquare must be specified by entering a real "
-                    + "number for smoothfact."
+                    "number for smoothfact."
                 )
-                print(msg)
             self.etsquare = True
             self.smoothfact = etsquare
         self.netflux = False
@@ -665,12 +662,10 @@ class ModflowUzf1(Package):
 
     def __setattr__(self, key, value):
         if key == "uzgag":
-            msg = (
-                "Uzgag must be set by the constructor"
-                + "modifying this attribute requires creating a "
-                + "new ModflowUzf1 instance"
+            print(
+                "Uzgag must be set by the constructor modifying this "
+                "attribute requires creating a new ModflowUzf1 instance"
             )
-            print(msg)
         else:
             super().__setattr__(key, value)
 

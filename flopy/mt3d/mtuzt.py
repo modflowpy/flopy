@@ -248,10 +248,8 @@ class Mt3dUzt(Package):
                         val = kwargs.pop(name)
                     else:
                         print(
-                            "UZT: setting cuzinf for component "
-                            + str(icomp)
-                            + " to zero. kwarg name "
-                            + name
+                            "UZT: setting cuzinf for component {} to zero. "
+                            "kwarg name {}".format(icomp, name)
                         )
 
                     t2d = Transient2d(
@@ -283,10 +281,8 @@ class Mt3dUzt(Package):
                         val = kwargs.pop(name)
                     else:
                         print(
-                            "UZT: setting cuzet for component "
-                            + str(icomp)
-                            + " to zero. kwarg name "
-                            + name
+                            "UZT: setting cuzet for component {} to zero. "
+                            "kwarg name {}".format(icomp, name)
                         )
 
                     t2d = Transient2d(
@@ -318,10 +314,8 @@ class Mt3dUzt(Package):
                         val = kwargs.pop(name)
                     else:
                         print(
-                            "UZT: setting cgwet for component "
-                            + str(icomp)
-                            + " to zero. kwarg name "
-                            + name
+                            "UZT: setting cgwet for component {} to zero. "
+                            "kwarg name {}".format(icomp, name)
                         )
 
                     t2d = Transient2d(

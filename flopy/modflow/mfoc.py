@@ -789,11 +789,10 @@ class ModflowOc(Package):
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
 
         if nper == 0 or nlay == 0:
-            msg = (
+            raise ValueError(
                 "discretization package not defined for the model, "
-                + "nper and nlay must be provided to the .load() method"
+                "nper and nlay must be provided to the .load() method"
             )
-            raise ValueError(msg)
 
         # set nstp
         if nstp is None:
@@ -801,11 +800,10 @@ class ModflowOc(Package):
             if dis is None:
                 dis = model.get_package("DISU")
             if dis is None:
-                msg = (
+                raise ValueError(
                     "discretization package not defined for the model, "
-                    + "a nstp list must be provided to the .load() method"
+                    "a nstp list must be provided to the .load() method"
                 )
-                raise ValueError(msg)
             nstp = list(dis.nstp.array)
         else:
             if isinstance(nstp, (int, float)):

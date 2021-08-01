@@ -314,14 +314,14 @@ def test_zonebudget_output_to_netcdf():
 
     # test built in export function
     zbout = "freyberg_mlt.2.csv"
-    ncf_name = zbout + ".bi1" + ".nc"
+    ncf_name = zbout + ".bi1.nc"
 
     zb = ZoneBudgetOutput(os.path.join(zb_ws, zbout), ml.dis, zone_array)
     zb.export(os.path.join(outpth, ncf_name), ml)
 
     # test built in export function with NetCdf output object
     zbout = "freyberg_mlt.2.csv"
-    ncf_name = zbout + ".bi2" + ".nc"
+    ncf_name = zbout + ".bi2.nc"
 
     zb = ZoneBudgetOutput(os.path.join(zb_ws, zbout), ml.dis, zone_array)
     export_dict = {"hds": hds}

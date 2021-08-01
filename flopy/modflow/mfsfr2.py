@@ -1627,11 +1627,9 @@ class ModflowSfr2(Package):
         try:
             import matplotlib.pyplot as plt
         except:
-            err_msg = (
-                "matplotlib must be installed to use "
-                + "ModflowSfr2.plot_path()"
+            raise ImportError(
+                "matplotlib must be installed to use ModflowSfr2.plot_path()"
             )
-            raise ImportError(err_msg)
         if not pd:
             err_msg = "ModflowSfr2.plot_path: pandas not available"
             raise ImportError(err_msg)
@@ -1685,7 +1683,7 @@ class ModflowSfr2(Package):
         xlocs = dist[inds]
         pad = 0.04 * (ymax - ymin)
         for x, sn in zip(xlocs, plot_segnumbers):
-            ax.text(x, ymin + pad, "{}".format(sn), va="top")
+            ax.text(x, ymin + pad, str(sn), va="top")
         ax.text(
             xlocs[0],
             ymin + pad * 1.2,
@@ -1693,9 +1691,7 @@ class ModflowSfr2(Package):
             va="bottom",
             fontweight="bold",
         )
-        ax.text(
-            dist[-1], ymin + pad, "{}".format(end_seg), ha="center", va="top"
-        )
+        ax.text(dist[-1], ymin + pad, str(end_seg), ha="center", va="top")
         return ax
 
     def _get_headwaters(self, per=0):
@@ -1834,9 +1830,9 @@ class ModflowSfr2(Package):
     def _write_reach_data(self, f_sfr):
 
         # Write the recarray (data) to the file (or file handle) f
-        assert isinstance(self.reach_data, np.recarray), (
-            "MfList.__tofile() data arg " + "not a recarray"
-        )
+        assert isinstance(
+            self.reach_data, np.recarray
+        ), "MfList.__tofile() data arg not a recarray"
 
         # decide which columns to write
         # columns = self._get_item2_names()
@@ -2598,7 +2594,7 @@ class check:
         else:
             txt += (
                 "No DIS package or SpatialReference object; cannot "
-                + "check reach proximities."
+                "check reach proximities."
             )
             self._txt_footer(headertxt, txt, "")
 
@@ -2610,7 +2606,7 @@ class check:
         """
         headertxt = (
             "Checking for model cells with multiple non-zero "
-            + "SFR conductances...\n"
+            "SFR conductances...\n"
         )
         txt = ""
         if self.verbose:
@@ -2718,7 +2714,7 @@ class check:
         """
         headertxt = (
             "Checking for streambed tops of less "
-            + "than {}...\n".format(min_strtop)
+            "than {}...\n".format(min_strtop)
         )
         txt = ""
         if self.verbose:
@@ -2749,7 +2745,7 @@ class check:
 
         headertxt = (
             "Checking for streambed tops of "
-            + "greater than {}...\n".format(max_strtop)
+            "greater than {}...\n".format(max_strtop)
         )
         txt = ""
         if self.verbose:
@@ -2760,7 +2756,7 @@ class check:
             if np.diff(self.reach_data.strtop).max() == 0:
                 txt += (
                     "isfropt setting of 1,2 or 3 "
-                    + "requires strtop information!\n"
+                    "requires strtop information!\n"
                 )
             else:
                 is_greater = self.reach_data.strtop > max_strtop
@@ -2784,7 +2780,7 @@ class check:
 
         headertxt = (
             "Checking segment_data for "
-            + "downstream rises in streambed elevation...\n"
+            "downstream rises in streambed elevation...\n"
         )
         txt = ""
         if self.verbose:
@@ -2811,7 +2807,7 @@ class check:
                 if len(t) > 0:
                     txt += (
                         "Elevation check requires "
-                        + "consecutive segment numbering."
+                        "consecutive segment numbering."
                     )
                     self._txt_footer(headertxt, txt, "")
                     return
@@ -2875,18 +2871,15 @@ class check:
                 passed = True
         else:
             txt += (
-                "Segment elevup and elevdn not "
-                + "specified for nstrm="
-                + "{} and isfropt={}\n".format(
-                    self.sfr.nstrm, self.sfr.isfropt
-                )
+                "Segment elevup and elevdn not specified for nstrm={} "
+                "and isfropt={}\n".format(self.sfr.nstrm, self.sfr.isfropt)
             )
             passed = True
         self._txt_footer(headertxt, txt, "segment elevations", passed)
 
         headertxt = (
             "Checking reach_data for "
-            + "downstream rises in streambed elevation...\n"
+            "downstream rises in streambed elevation...\n"
         )
         txt = ""
         if self.verbose:
@@ -3067,7 +3060,7 @@ class check:
 
         headertxt = (
             "Checking segment_data for inconsistencies "
-            + "between segment end elevations and the model grid...\n"
+            "between segment end elevations and the model grid...\n"
         )
         txt = ""
         if self.verbose:

@@ -414,7 +414,7 @@ class ListBudget:
             except:
                 print(
                     "   could not retrieve kstpkper "
-                    + "{} from the lst file".format(kstpkper)
+                    "{} from the lst file".format(kstpkper)
                 )
         elif totim is not None:
             try:
@@ -422,7 +422,7 @@ class ListBudget:
             except:
                 print(
                     "   could not retrieve totime "
-                    + "{} from the lst file".format(totim)
+                    "{} from the lst file".format(totim)
                 )
         elif idx is not None:
             ipos = idx
@@ -560,7 +560,7 @@ class ListBudget:
             # to list file
             check_str = (
                 "WELLS WITH REDUCED PUMPING WILL BE REPORTED "
-                + "TO THE MAIN LISTING FILE"
+                "TO THE MAIN LISTING FILE"
             )
 
             check_str_ag = "AG WELLS WITH REDUCED PUMPING FOR STRESS PERIOD"
@@ -593,25 +593,23 @@ class ListBudget:
                     pump_reduction_flag = True
 
                     if int(line.strip().split()[-1]) != list_unit:
-                        err = (
+                        raise AssertionError(
                             "Pumping reductions not written to list file. "
                             "External pumping reduction files can be "
                             "read using: flopy.utils.observationfile."
                             "get_pumping_reduction(<file>, structured=False)"
                         )
-                        raise AssertionError(err)
 
             if not pump_reduction_flag:
                 raise AssertionError("Auto pumping reductions not active.")
 
         else:
-            msg = (
+            raise NotImplementedError(
                 "get_reduced_pumping() is only implemented for the "
-                + "MfListBudget or MfusgListBudget classes. Please "
-                + "feel free to expand the functionality to other "
-                + "ListBudget classes."
+                "MfListBudget or MfusgListBudget classes. Please "
+                "feel free to expand the functionality to other "
+                "ListBudget classes."
             )
-            raise NotImplementedError(msg)
 
         return get_reduced_pumping(self.f.name, structured)
 

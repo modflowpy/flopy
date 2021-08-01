@@ -269,10 +269,8 @@ class Mt3dRct(Package):
                     val = kwargs.pop(name)
                 else:
                     print(
-                        "RCT: setting srconc for component "
-                        + str(icomp)
-                        + " to zero, kwarg name "
-                        + name
+                        "RCT: setting srconc for component {} to zero, "
+                        "kwarg name {}".format(icomp, name)
                     )
                 u3d = Util3d(
                     model,
@@ -307,10 +305,8 @@ class Mt3dRct(Package):
                     val = kwargs.pop(name)
                 else:
                     print(
-                        "RCT: setting sp1 for component "
-                        + str(icomp)
-                        + " to zero, kwarg name "
-                        + name
+                        "RCT: setting sp1 for component {} to zero, "
+                        "kwarg name {}".format(icomp, name)
                     )
                 u3d = Util3d(
                     model,
@@ -345,10 +341,8 @@ class Mt3dRct(Package):
                     val = kwargs.pop(name)
                 else:
                     print(
-                        "RCT: setting sp2 for component "
-                        + str(icomp)
-                        + " to zero, kwarg name "
-                        + name
+                        "RCT: setting sp2 for component {} to zero, "
+                        "kwarg name {}".format(icomp, name)
                     )
                 u3d = Util3d(
                     model,
@@ -383,10 +377,8 @@ class Mt3dRct(Package):
                     val = kwargs.pop(name)
                 else:
                     print(
-                        "RCT: setting rc1 for component "
-                        + str(icomp)
-                        + " to zero, kwarg name "
-                        + name
+                        "RCT: setting rc1 for component {} to zero, "
+                        "kwarg name {}".format(icomp, name)
                     )
                 u3d = Util3d(
                     model,
@@ -421,10 +413,8 @@ class Mt3dRct(Package):
                     val = kwargs.pop(name)
                 else:
                     print(
-                        "RCT: setting rc2 for component "
-                        + str(icomp)
-                        + " to zero, kwarg name "
-                        + name
+                        "RCT: setting rc2 for component {} to zero, "
+                        "kwarg name {}".format(icomp, name)
                     )
                 u3d = Util3d(
                     model,

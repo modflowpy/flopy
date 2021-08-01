@@ -117,7 +117,7 @@ class MFFileAccess:
             if not keyword_match and aux_var_index is None:
                 aux_text = ""
                 if aux_var_names is not None:
-                    aux_text = " or auxiliary variables " "{}".format(
+                    aux_text = " or auxiliary variables {}".format(
                         aux_var_names[0]
                     )
                 message = (
@@ -430,7 +430,7 @@ class MFFileAccessArray(MFFileAccess):
             return bin_data
 
     def get_data_string(self, data, data_type, data_indent=""):
-        layer_data_string = ["{}".format(data_indent)]
+        layer_data_string = [str(data_indent)]
         line_data_count = 0
         indent_str = self._simulation_data.indent_string
         data_iter = datautil.PyListUtil.next_item(data)
@@ -488,7 +488,7 @@ class MFFileAccessArray(MFFileAccess):
 
             if jagged_def is not None:
                 if line_data_count == jagged_def[jagged_def_index]:
-                    layer_data_string.append("{}".format(data_indent))
+                    layer_data_string.append(str(data_indent))
                     line_data_count = 0
                     jagged_def_index += 1
             else:
@@ -497,7 +497,7 @@ class MFFileAccessArray(MFFileAccess):
                     == self._simulation_data.max_columns_of_data
                     or last_item
                 ):
-                    layer_data_string.append("{}".format(data_indent))
+                    layer_data_string.append(str(data_indent))
                     line_data_count = 0
         if len(layer_data_string) > 0:
             # clean up the text at the end of the array
@@ -841,7 +841,7 @@ class MFFileAccessArray(MFFileAccess):
                     self.structure.get_model(),
                     self.structure.get_package(),
                     self._path,
-                    "reading data from file " "{}".format(file_handle.name),
+                    "reading data from file {}".format(file_handle.name),
                     self.structure.name,
                     inspect.stack()[0][3],
                     type_,
@@ -1250,7 +1250,7 @@ class MFFileAccessList(MFFileAccess):
                     struct.get_model(),
                     struct.get_package(),
                     struct.path,
-                    "loading data list from " "package file",
+                    "loading data list from package file",
                     struct.name,
                     inspect.stack()[0][3],
                     type_,
@@ -1451,7 +1451,7 @@ class MFFileAccessList(MFFileAccess):
                         struct.get_model(),
                         struct.get_package(),
                         struct.path,
-                        "loading data list from " "package file",
+                        "loading data list from package file",
                         struct.name,
                         inspect.stack()[0][3],
                         type_,
@@ -2064,7 +2064,7 @@ class MFFileAccessList(MFFileAccess):
                         struct.get_model(),
                         struct.get_package(),
                         struct.path,
-                        "loading data list from package " "file",
+                        "loading data list from package file",
                         struct.name,
                         inspect.stack()[0][3],
                         type_,
@@ -2094,7 +2094,7 @@ class MFFileAccessList(MFFileAccess):
                             struct.get_model(),
                             struct.get_package(),
                             struct.path,
-                            "loading data list from package " "file",
+                            "loading data list from package file",
                             struct.name,
                             inspect.stack()[0][3],
                             type_,
@@ -2269,7 +2269,7 @@ class MFFileAccessScalar(MFFileAccess):
                 storage.set_data(converted_data, key=self._current_key)
                 index_num += 1
             except Exception as ex:
-                message = 'Could not set data "{}" with key ' '"{}".'.format(
+                message = 'Could not set data "{}" with key "{}".'.format(
                     converted_data, self._current_key
                 )
                 type_, value_, traceback_ = sys.exc_info()
@@ -2295,7 +2295,7 @@ class MFFileAccessScalar(MFFileAccess):
             try:
                 storage.set_data(True, key=self._current_key)
             except Exception as ex:
-                message = 'Could not set data "True" with key ' '"{}".'.format(
+                message = 'Could not set data "True" with key "{}".'.format(
                     self._current_key
                 )
                 type_, value_, traceback_ = sys.exc_info()
@@ -2370,7 +2370,7 @@ class MFFileAccessScalar(MFFileAccess):
                 # read next word as data
                 storage.set_data(converted_data, key=self._current_key)
             except Exception as ex:
-                message = 'Could not set data "{}" with key ' '"{}".'.format(
+                message = 'Could not set data "{}" with key "{}".'.format(
                     converted_data, self._current_key
                 )
                 type_, value_, traceback_ = sys.exc_info()

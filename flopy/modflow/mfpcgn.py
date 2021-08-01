@@ -310,11 +310,10 @@ class ModflowPcgn(Package):
         self.ipunit = ipunit
         # error trapping
         if self.ifill < 0 or self.ifill > 1:
-            e = (
+            raise TypeError(
                 "PCGN: ifill must be 0 or 1 - an ifill value of "
-                + "{} was specified".format(self.ifill)
+                "{} was specified".format(self.ifill)
             )
-            raise TypeError(e)
         # add package
         self.parent.add_package(self)
 

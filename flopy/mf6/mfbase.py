@@ -139,7 +139,7 @@ class MFDataException(Exception):
         # build error string
         error_message_0 = "An error occurred in "
         if self.data_element is not None and self.data_element != "":
-            error_message_1 = 'data element "{}"' " ".format(self.data_element)
+            error_message_1 = 'data element "{}" '.format(self.data_element)
         else:
             error_message_1 = ""
         if self.model is not None and self.model != "":

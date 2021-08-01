@@ -598,13 +598,10 @@ class ModflowDisU(Package):
             sys.stdout.write("loading disu package file...\n")
 
         if model.version != "mfusg":
-            msg = (
-                "Warning: model version was reset from "
-                + "'{}' to 'mfusg' in order to load a DISU file".format(
-                    model.version
-                )
+            print(
+                "Warning: model version was reset from '{}' to 'mfusg' "
+                "in order to load a DISU file".format(model.version)
             )
-            print(msg)
             model.version = "mfusg"
 
         openfile = not hasattr(f, "read")

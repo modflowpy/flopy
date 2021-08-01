@@ -458,8 +458,7 @@ class Mt3dLkt(Package):
             ntmp = int(vals[0])
             if model.verbose:
                 print(
-                    "   {0:5d}".format(ntmp)
-                    + " lkt boundary conditions specified "
+                    "   {0:5d} lkt boundary conditions specified ".format(ntmp)
                 )
                 if (iper == 0) and (ntmp < 0):
                     print("   ntmp < 0 not allowed for first stress period   ")

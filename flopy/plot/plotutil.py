@@ -1042,7 +1042,7 @@ class PlotUtilities:
         if "modelgrid" in kwargs:
             modelgrid = kwargs.pop("modelgrid")
 
-        title = "{}".format(scalar.name.replace("_", "").upper())
+        title = scalar.name.replace("_", "").upper()
 
         if filename_base is not None:
             filename = filename_base + ".{}".format(fext)
@@ -1120,12 +1120,10 @@ class PlotUtilities:
 
         # check that matplotlib is installed
         if plt is None:
-            err_msg = (
-                "Could not import matplotlib. "
-                "Must install matplotlib "
-                + " in order to plot LayerFile data."
+            raise PlotException(
+                "Could not import matplotlib.  Must install matplotlib "
+                "in order to plot LayerFile data."
             )
-            raise PlotException(err_msg)
 
         for key in defaults:
             if key in kwargs:
@@ -1275,11 +1273,10 @@ class PlotUtilities:
         from .map import PlotMapView
 
         if plt is None:
-            s = (
+            raise PlotException(
                 "Could not import matplotlib.  Must install matplotlib "
-                + " in order to plot boundary condition data."
+                "in order to plot boundary condition data."
             )
-            raise PlotException(s)
 
         defaults = {
             "figsize": None,
@@ -2135,17 +2132,15 @@ def shapefile_to_patch_collection(shp, radius=500.0, idx=None):
 
     """
     if shapefile is None:
-        s = (
+        raise PlotException(
             "Could not import shapefile.  Must install pyshp "
             "in order to plot shapefiles."
         )
-        raise PlotException(s)
     if plt is None:
-        err_msg = (
+        raise ImportError(
             "matplotlib must be installed to "
-            + "use shapefile_to_patch_collection()"
+            "use shapefile_to_patch_collection()"
         )
-        raise ImportError(err_msg)
     else:
         from matplotlib.patches import Polygon, Circle, PathPatch
         import matplotlib.path as MPath
@@ -2345,11 +2340,9 @@ def cvfd_to_patch_collection(verts, iverts):
     )
 
     if plt is None:
-        err_msg = (
-            "matplotlib must be installed to "
-            + "use cvfd_to_patch_collection()"
+        raise ImportError(
+            "matplotlib must be installed to use cvfd_to_patch_collection()"
         )
-        raise ImportError(err_msg)
     else:
         from matplotlib.patches import Polygon
         from matplotlib.collections import PatchCollection
@@ -2682,14 +2675,12 @@ def filter_modpath_by_travel_time(recarray, travel_time):
                     time = float(travel_time)
                     idx = recarray["time"] <= time
                 except (ValueError, KeyError):
-                    errmsg = (
-                        "flopy.map.plot_pathline travel_time "
-                        + "variable cannot be parsed. "
-                        + "Acceptable logical variables are , "
-                        + "<=, <, >=, and >. "
-                        + "You passed {}".format(travel_time)
+                    raise Exception(
+                        "flopy.map.plot_pathline travel_time variable cannot "
+                        "be parsed. Acceptable logical variables are , "
+                        "<=, <, >=, and >. "
+                        "You passed {}".format(travel_time)
                     )
-                    raise Exception(errmsg)
         else:
             time = float(travel_time)
             idx = recarray["time"] <= time
@@ -2971,21 +2962,17 @@ def parse_modpath_selection_options(
                 idx = (ep[ksel] == k) & (ep[isel] == i) & (ep[jsel] == j)
                 tep = ep[idx]
             else:
-                errmsg = (
-                    "plot_endpoint selection must be "
-                    + "a zero-based layer, row, column tuple "
-                    + "(l, r, c) or node number (MODPATH 7) of "
-                    + "the location to evaluate (i.e., well location)."
+                raise Exception(
+                    "plot_endpoint selection must be a zero-based layer, row, "
+                    "column tuple (l, r, c) or node number (MODPATH 7) of "
+                    "the location to evaluate (i.e., well location)."
                 )
-                raise Exception(errmsg)
         except (ValueError, KeyError, IndexError):
-            errmsg = (
-                "plot_endpoint selection must be a "
-                + "zero-based layer, row, column tuple (l, r, c) "
-                + "or node number (MODPATH 7) of the location "
-                + "to evaluate (i.e., well location)."
+            raise Exception(
+                "plot_endpoint selection must be a zero-based layer, row, "
+                "column tuple (l, r, c) or node number (MODPATH 7) of the "
+                "location to evaluate (i.e., well location)."
             )
-            raise Exception(errmsg)
     else:
         tep = ep.copy()
 

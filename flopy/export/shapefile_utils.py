@@ -929,8 +929,7 @@ class CRS:
         elif result is None and text != "epsg":
             for cat in epsg_categories:
                 error_msg = (
-                    "No internet connection or "
-                    + "epsg code {} ".format(epsg)
+                    "No internet connection or epsg code {} ".format(epsg)
                     + "not found at {}/ref/".format(srefhttp)
                     + "{}/{}/{}".format(cat, epsg, text)
                 )

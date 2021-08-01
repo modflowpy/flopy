@@ -76,18 +76,11 @@ class Logger:
         pass
         t = datetime.now()
         if phrase in self.items.keys():
-            s = (
-                str(t)
-                + " finished: "
-                + str(phrase)
-                + ", took: "
-                + str(t - self.items[phrase])
-                + "\n"
+            s = "{} finished: {}, took: {}\n".format(
+                t, phrase, t - self.items[phrase]
             )
             if self.echo:
-                print(
-                    s,
-                )
+                print(s)
             if self.filename:
                 self.f.write(s)
             self.items.pop(phrase)
@@ -207,7 +200,7 @@ class NetCdf:
         except:
             print(
                 "python-dateutil is not installed\n"
-                + "try pip install python-dateutil"
+                "try pip install python-dateutil"
             )
             return
 
@@ -362,9 +355,7 @@ class NetCdf:
                 vname_norm = self.normalize_name(vname)
                 assert (
                     vname_norm in self.nc.variables.keys()
-                ), "dict var not in " "self.vars:{0}-->".format(
-                    vname
-                ) + ",".join(
+                ), "dict var not in self.vars:{0}-->".format(vname) + ",".join(
                     self.nc.variables.keys()
                 )
 
@@ -451,10 +442,7 @@ class NetCdf:
             output_filename = (
                 str(time.mktime(datetime.now().timetuple())) + ".nc"
             )
-            print(
-                "creating temporary netcdf file..."
-                + "{}".format(output_filename)
-            )
+            print("creating temporary netcdf file..." + output_filename)
 
         new_net = cls(
             output_filename,
@@ -500,9 +488,9 @@ class NetCdf:
 
         """
 
-        assert self.nc is not None, (
-            "can't call difference() if nc " + "hasn't been populated"
-        )
+        assert (
+            self.nc is not None
+        ), "can't call difference() if nc hasn't been populated"
         try:
             import netCDF4
         except Exception as e:
@@ -513,7 +501,7 @@ class NetCdf:
         if isinstance(other, str):
             assert os.path.exists(
                 other
-            ), "filename 'other' not found:" + "{0}".format(other)
+            ), "filename 'other' not found:{0}".format(other)
             other = netCDF4.Dataset(other, "r")
 
         assert isinstance(other, netCDF4.Dataset)
@@ -524,8 +512,7 @@ class NetCdf:
         diff = self_vars.symmetric_difference(other_vars)
         if len(diff) > 0:
             self.logger.warn(
-                "variables are not the same between the two "
-                + "nc files: "
+                "variables are not the same between the two nc files: "
                 + ",".join(diff)
             )
             return
@@ -540,7 +527,7 @@ class NetCdf:
             if len(self_dimens[d]) != len(other_dimens[d]):
                 self.logger.warn(
                     "dimension not consistent: "
-                    + "{0}:{1}".format(self_dimens[d], other_dimens[d])
+                    "{0}:{1}".format(self_dimens[d], other_dimens[d])
                 )
                 return
         # should be good to go
@@ -686,7 +673,7 @@ class NetCdf:
             htol, rtol = self.model.solver_tols()
         except Exception as e:
             self.logger.warn(
-                "unable to get solver tolerances:" + "{0}".format(str(e))
+                "unable to get solver tolerances:{0}".format(str(e))
             )
         self.global_attributes["solver_head_tolerance"] = htol
         self.global_attributes["solver_flux_tolerance"] = rtol
@@ -830,9 +817,7 @@ class NetCdf:
         self.nc.setncattr(
             "date_created", datetime.utcnow().strftime("%Y-%m-%dT%H:%M:00Z")
         )
-        self.nc.setncattr(
-            "geospatial_vertical_positive", "{}".format(self.z_positive)
-        )
+        self.nc.setncattr("geospatial_vertical_positive", str(self.z_positive))
         min_vertical = np.min(self.zs)
         max_vertical = np.max(self.zs)
         self.nc.setncattr("geospatial_vertical_min", min_vertical)
@@ -1004,8 +989,8 @@ class NetCdf:
             if self.model_grid.angrot != 0:
                 delc.comments = (
                     "This is the row spacing that applied to the UNROTATED grid. "
-                    + "This grid HAS been rotated before being saved to NetCDF. "
-                    + "To compute the unrotated grid, use the origin point and this array."
+                    "This grid HAS been rotated before being saved to NetCDF. "
+                    "To compute the unrotated grid, use the origin point and this array."
                 )
 
             # delr
@@ -1020,8 +1005,8 @@ class NetCdf:
             if self.model_grid.angrot != 0:
                 delr.comments = (
                     "This is the col spacing that applied to the UNROTATED grid. "
-                    + "This grid HAS been rotated before being saved to NetCDF. "
-                    + "To compute the unrotated grid, use the origin point and this array."
+                    "This grid HAS been rotated before being saved to NetCDF. "
+                    "To compute the unrotated grid, use the origin point and this array."
                 )
         # else:
         # vertices
@@ -1257,7 +1242,7 @@ class NetCdf:
             except:
                 self.logger.warn(
                     "error setting attribute"
-                    + "{} for group {} variable {}".format(k, group, name)
+                    "{} for group {} variable {}".format(k, group, name)
                 )
         self.log("creating group {} variable: {}".format(group, name))
 
@@ -1358,7 +1343,7 @@ class NetCdf:
             except:
                 self.logger.warn(
                     "error setting attribute"
-                    + "{0} for variable {1}".format(k, name)
+                    "{0} for variable {1}".format(k, name)
                 )
         self.log("creating variable: " + str(name))
         return var
@@ -1384,7 +1369,7 @@ class NetCdf:
             # self.initialize_file()
             mess = (
                 "NetCDF.add_global_attributes() should only "
-                + "be called after the file has been initialized"
+                "be called after the file has been initialized"
             )
             self.logger.warn(mess)
             raise Exception(mess)

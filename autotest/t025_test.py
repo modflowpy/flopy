@@ -50,7 +50,7 @@ def load_lak(mfnam, pth, run):
         try:
             success, buff = m.run_model(silent=True)
         except:
-            msg = "could not run base model " + "{}".format(
+            msg = "could not run base model {}".format(
                 os.path.splitext(mfnam)[0]
             )
             print(msg)
@@ -79,7 +79,7 @@ def load_lak(mfnam, pth, run):
         try:
             success, buff = m.run_model(silent=False)
         except:
-            msg = "could not run new model " + "{}".format(
+            msg = "could not run new model {}".format(
                 os.path.splitext(mfnam)[0]
             )
             print(msg)

@@ -486,7 +486,7 @@ class Modflow(BaseModel):
                 self.lst.file_name[0],
             )
         )
-        f_nam.write("{}".format(self.get_name_file_entries()))
+        f_nam.write(str(self.get_name_file_entries()))
 
         # write the external files
         for u, f, b, o in zip(
@@ -499,17 +499,15 @@ class Modflow(BaseModel):
                 continue
             replace_text = ""
             if o:
-                replace_text = "REPLACE"
+                replace_text = " REPLACE"
             if b:
-                line = (
-                    "DATA(BINARY)   {0:5d}  ".format(u)
-                    + f
-                    + replace_text
-                    + "\n"
+                line = "DATA(BINARY)   {:5d}  {}{}\n".format(
+                    u, f, replace_text
                 )
+
                 f_nam.write(line)
             else:
-                f_nam.write("DATA           {0:5d}  ".format(u) + f + "\n")
+                f_nam.write("DATA           {:5d}  {}\n".format(u, f))
 
         # write the output files
         for u, f, b in zip(
@@ -518,11 +516,9 @@ class Modflow(BaseModel):
             if u == 0:
                 continue
             if b:
-                f_nam.write(
-                    "DATA(BINARY)   {0:5d}  ".format(u) + f + " REPLACE\n"
-                )
+                f_nam.write("DATA(BINARY)   {:5d}  {} REPLACE\n".format(u, f))
             else:
-                f_nam.write("DATA           {0:5d}  ".format(u) + f + "\n")
+                f_nam.write("DATA           {:5d}  {}\n".format(u, f))
 
         # close the name file
         f_nam.close()
@@ -901,14 +897,12 @@ class Modflow(BaseModel):
                         except Exception as e:
                             ml.load_fail = True
                             if ml.verbose:
-                                msg = (
-                                    3 * " "
-                                    + "{:4s} ".format(item.filetype)
-                                    + "package load...failed\n"
-                                    + 3 * " "
-                                    + "{!s}".format(e)
+                                print(
+                                    "   {:4s} package load...failed".format(
+                                        item.filetype
+                                    )
                                 )
-                                print(msg)
+                                print("   {!s}".format(e))
                             files_not_loaded.append(item.filename)
                     else:
                         if "check" in package_load_args:
@@ -926,40 +920,31 @@ class Modflow(BaseModel):
                             )
                         files_successfully_loaded.append(item.filename)
                         if ml.verbose:
-                            msg = (
-                                3 * " "
-                                + "{:4s} ".format(item.filetype)
-                                + "package load...success"
+                            print(
+                                "   {:4s} package load...success".format(
+                                    item.filetype
+                                )
                             )
-                            print(msg)
                 else:
                     if ml.verbose:
-                        msg = (
-                            3 * " "
-                            + "{:4s} ".format(item.filetype)
-                            + "package load...skipped"
+                        print(
+                            "   {:4s} package load...skipped".format(
+                                item.filetype
+                            )
                         )
-                        print(msg)
                     files_not_loaded.append(item.filename)
             elif "data" not in item.filetype.lower():
                 files_not_loaded.append(item.filename)
                 if ml.verbose:
-                    msg = (
-                        3 * " "
-                        + "{:4s} ".format(item.filetype)
-                        + "package load...skipped"
+                    print(
+                        "   {:4s} package load...skipped".format(item.filetype)
                     )
-                    print(msg)
             elif "data" in item.filetype.lower():
                 if ml.verbose:
-                    msg = (
-                        3 * " "
-                        + "{:s} ".format(item.filetype)
-                        + "file load...skipped\n"
-                        + 6 * " "
-                        + "{}".format(os.path.basename(item.filename))
+                    print(
+                        "   {:s} package load...skipped".format(item.filetype)
                     )
-                    print(msg)
+                    print("      {}".format(os.path.basename(item.filename)))
                 if key not in ml.pop_key_list:
                     # do not add unit number (key) if it already exists
                     if key not in ml.external_units:
@@ -982,33 +967,27 @@ class Modflow(BaseModel):
                     item.filehandle.close()
             except KeyError:
                 if ml.verbose:
-                    msg = (
-                        "\nWARNING:\n    External file "
-                        + "unit {} ".format(key)
-                        + "does not exist in ext_unit_dict."
+                    print(
+                        "\nWARNING:\n    External file unit {} does not "
+                        "exist in ext_unit_dict.".format(key)
                     )
-                    print(msg)
 
         # write message indicating packages that were successfully loaded
         if ml.verbose:
-            msg = (
-                3 * " "
-                + "The following "
-                + "{} ".format(len(files_successfully_loaded))
-                + "packages were successfully loaded."
-            )
             print("")
-            print(msg)
+            print(
+                "   The following {} packages were successfully loaded.".format(
+                    len(files_successfully_loaded)
+                )
+            )
             for fname in files_successfully_loaded:
                 print("      " + os.path.basename(fname))
             if len(files_not_loaded) > 0:
-                msg = (
-                    3 * " "
-                    + "The following "
-                    + "{} ".format(len(files_not_loaded))
-                    + "packages were not loaded."
+                print(
+                    "   The following {} packages were not loaded.".format(
+                        len(files_not_loaded)
+                    )
                 )
-                print(msg)
                 for fname in files_not_loaded:
                     print("      " + os.path.basename(fname))
         if check:

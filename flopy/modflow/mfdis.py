@@ -459,12 +459,10 @@ class ModflowDis(Package):
         if kper < 0:
             kper = 0.0
         if kper >= self.nper:
-            msg = (
-                "kper ({}) ".format(kper)
-                + "must be less than "
-                + "to nper ({}).".format(self.nper)
+            raise ValueError(
+                "kper ({}) must be less than "
+                "to nper ({}).".format(kper, self.nper)
             )
-            raise ValueError(msg)
 
         totim = self.get_totim(use_cached_totim)
         nstp = self.nstp.array
@@ -862,20 +860,14 @@ class ModflowDis(Package):
                     xul = float(item.split(":")[1])
                 except:
                     if model.verbose:
-                        print(
-                            "   could not parse xul "
-                            + "in {}".format(filename)
-                        )
+                        print("   could not parse xul in {}".format(filename))
                 dep = True
             elif "yul" in item.lower():
                 try:
                     yul = float(item.split(":")[1])
                 except:
                     if model.verbose:
-                        print(
-                            "   could not parse yul "
-                            + "in {}".format(filename)
-                        )
+                        print("   could not parse yul in {}".format(filename))
                 dep = True
             elif "rotation" in item.lower():
                 try:
@@ -884,7 +876,7 @@ class ModflowDis(Package):
                     if model.verbose:
                         print(
                             "   could not parse rotation "
-                            + "in {}".format(filename)
+                            "in {}".format(filename)
                         )
                 dep = True
             elif "proj4_str" in item.lower():
@@ -894,7 +886,7 @@ class ModflowDis(Package):
                     if model.verbose:
                         print(
                             "   could not parse proj4_str "
-                            + "in {}".format(filename)
+                            "in {}".format(filename)
                         )
                 dep = True
             elif "start" in item.lower():
@@ -903,8 +895,7 @@ class ModflowDis(Package):
                 except:
                     if model.verbose:
                         print(
-                            "   could not parse start "
-                            + "in {}".format(filename)
+                            "   could not parse start in {}".format(filename)
                         )
                 dep = True
         if dep:
@@ -925,10 +916,8 @@ class ModflowDis(Package):
         # dataset 2 -- laycbd
         if model.verbose:
             print(
-                "   Loading dis package with:\n      "
-                + "{0} layers, {1} rows, {2} columns, and {3} stress periods".format(
-                    nlay, nrow, ncol, nper
-                )
+                "   Loading dis package with:\n      {} layers, {} rows, {} "
+                "columns, and {} stress periods".format(nlay, nrow, ncol, nper)
             )
             print("   loading laycbd...")
         laycbd = np.zeros(nlay, dtype=int)
@@ -967,8 +956,7 @@ class ModflowDis(Package):
         if model.verbose:
             print("   loading botm...")
             print(
-                "      for {} layers and ".format(nlay)
-                + "{} confining beds".format(ncbd)
+                "      for {} layers and {} confining beds".format(nlay, ncbd)
             )
         if nlay > 1:
             botm = Util3d.load(

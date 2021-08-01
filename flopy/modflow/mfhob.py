@@ -298,7 +298,7 @@ class ModflowHob(Package):
                     line += "{:20} ".format(t["toffset"])
                     line += "{:10.4f} ".format(t["hobs"])
                     line += 55 * " "
-                    line += "  # DATASET 6 - " + "Observation {}.{}".format(
+                    line += "  # DATASET 6 - Observation {}.{}".format(
                         idx + 1, jdx + 1
                     )
                     f.write("{}\n".format(line))
@@ -634,12 +634,13 @@ class HeadObservation:
             for key, value in self.mlay.items():
                 tot += value
             if not (np.isclose(tot, 1.0, rtol=0)):
-                msg = (
+                raise ValueError(
                     "sum of dataset 4 proportions must equal 1.0 - "
-                    + "sum of dataset 4 proportions = {tot} for "
-                    + "observation name {obsname}."
-                ).format(tot=tot, obsname=self.obsname)
-                raise ValueError(msg)
+                    "sum of dataset 4 proportions = {tot} for "
+                    "observation name {obsname}.".format(
+                        tot=tot, obsname=self.obsname
+                    )
+                )
 
         # convert passed time_series_data to a numpy array
         if isinstance(time_series_data, list):
@@ -672,19 +673,16 @@ class HeadObservation:
             if isinstance(names, str):
                 names = [names]
             elif not isinstance(names, list):
-                msg = (
+                raise ValueError(
                     "HeadObservation names must be a "
-                    + "string or a list of strings"
+                    "string or a list of strings"
                 )
-                raise ValueError(msg)
             if len(names) < self.nobs:
-                msg = (
-                    "a name must be specified for every valid "
-                    + "observation - {} ".format(len(names))
-                    + "names were passed but at least "
-                    + "{} names are required.".format(self.nobs)
+                raise ValueError(
+                    "a name must be specified for every valid observation "
+                    "- {} names were passed but at least "
+                    "{} names are required.".format(len(names), self.nobs)
                 )
-                raise ValueError(msg)
 
         # set use_cached_totim to False first to ensure totim is updated
         use_cached_totim = False

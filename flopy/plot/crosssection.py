@@ -57,11 +57,10 @@ class PlotCrossSection:
         self.ax = ax
         self.geographic_coords = geographic_coords
         if plt is None:
-            s = (
+            raise ImportError(
                 "Could not import matplotlib.  Must install matplotlib "
-                + " in order to use ModelCrossSection method"
+                "in order to use ModelCrossSection method"
             )
-            raise ImportError(s)
 
         self.model = model
 
@@ -506,9 +505,7 @@ class PlotCrossSection:
 
         """
         if plt is None:
-            err_msg = (
-                "matplotlib must be installed to " + "use contour_array()"
-            )
+            err_msg = "matplotlib must be installed to use contour_array()"
             raise ImportError(err_msg)
         else:
             import matplotlib.tri as tri
@@ -1124,10 +1121,10 @@ class PlotCrossSection:
         )
 
         if self.mg.grid_type != "structured":
-            err_msg = "Use plot_specific_discharge for " "{} grids".format(
-                self.mg.grid_type
+            raise NotImplementedError(
+                "Use plot_specific_discharge for "
+                "{} grids".format(self.mg.grid_type)
             )
-            raise NotImplementedError(err_msg)
 
         else:
             delr = self.mg.delr
