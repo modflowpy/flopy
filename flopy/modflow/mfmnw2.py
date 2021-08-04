@@ -559,11 +559,10 @@ class Mnw:
                 ]
             )
         else:
-            msg = (
+            raise NotImplementedError(
                 "Mnw2: get_default_spd_dtype not implemented for "
-                + "unstructured grids"
+                "unstructured grids"
             )
-            raise NotImplementedError(msg)
 
     @staticmethod
     def get_item2_names(mnw2obj=None, node_data=None):
@@ -1928,10 +1927,8 @@ def _parse_2(f):
     line = line_parse(get_next_line(f))
     if len(line) > 2:
         warnings.warn(
-            "MNW2: {}\n".format(line)
-            + "Extra items in Dataset 2a!"
-            + "Check for WELLIDs with space "
-            + "but not enclosed in quotes."
+            "MNW2: {}\nExtra items in Dataset 2a! Check for WELLIDs with "
+            "space but not enclosed in quotes.".format(line)
         )
     wellid = pop_item(line).lower()
     nnodes = pop_item(line, int)
@@ -2192,10 +2189,8 @@ class ItmpError(Exception):
         self.nactivewells = nactivewells
 
     def __str__(self):
-        s = (
-            "\n\nItmp value of {} ".format(self.itmp)
-            + "is positive but does not equal the number of active wells "
-            + "specified ({}). ".format(self.nactivewells)
-            + "See MNW2 package documentation for details."
+        return (
+            "\n\nItmp value of {} is positive but does not equal the number "
+            "of active wells specified ({}). See MNW2 package documentation "
+            "for details.".format(self.itmp, self.nactivewells)
         )
-        return s

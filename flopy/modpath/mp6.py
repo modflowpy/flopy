@@ -111,11 +111,10 @@ class Modpath6(BaseModel):
             if p is None:
                 p = self.__mf.get_package("UPW")
             if p is None:
-                msg = (
+                raise Exception(
                     "LPF, BCF6, or UPW packages must be included in the "
-                    + "passed MODFLOW model"
+                    "passed MODFLOW model"
                 )
-                raise Exception(msg)
             iu = p.ipakcb
             budget_file = self.__mf.get_output(unit=iu)
             dis_file = (
@@ -128,23 +127,20 @@ class Modpath6(BaseModel):
         self.dis_unit = dis_unit
         # make sure the valid files are available
         if self.head_file is None:
-            msg = (
+            raise ValueError(
                 "the head file in the MODFLOW model or passed "
-                + "to __init__ cannot be None"
+                "to __init__ cannot be None"
             )
-            raise ValueError(msg)
         if self.budget_file is None:
-            msg = (
+            raise ValueError(
                 "the budget file in the MODFLOW model or passed "
-                + "to __init__ cannot be None"
+                "to __init__ cannot be None"
             )
-            raise ValueError(msg)
         if self.dis_file is None:
-            msg = (
+            raise ValueError(
                 "the dis file in the MODFLOW model or passed "
-                + "to __init__ cannot be None"
+                "to __init__ cannot be None"
             )
-            raise ValueError(msg)
 
         # set the rest of the attributes
         self.__sim = None
@@ -442,8 +438,8 @@ class Modpath6(BaseModel):
                         "detected a particle starting locations file in packages"
                     )
                     assert len(packages) == 1, (
-                        "if a particle starting locations file is passed"
-                        + ", other packages cannot be specified"
+                        "if a particle starting locations file is passed, "
+                        "other packages cannot be specified"
                     )
                     ParticleGenerationOption = 2
                     strt_file = package

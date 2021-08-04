@@ -126,11 +126,10 @@ class Util3dTpl:
 
         if "layers" in p.span and "idx" in p.span:
             if p.span["idx"] is not None:
-                e = (
+                raise Exception(
                     "For a Util3d object, cannot have layers and "
-                    + "idx in parameter.span"
+                    "idx in parameter.span"
                 )
-                raise Exception(e)
 
         if "layers" in p.span:
             for l in p.span["layers"]:

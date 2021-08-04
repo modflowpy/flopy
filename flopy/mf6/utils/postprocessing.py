@@ -39,16 +39,15 @@ def get_structured_faceflows(
         if grb.grid_type != "DIS":
             raise ValueError(
                 "get_structured_faceflows method "
-                + "is only for structured DIS grids"
+                "is only for structured DIS grids"
             )
         ia, ja = grb.ia, grb.ja
     else:
         if ia is None or ja is None:
-            err_msg = (
+            raise ValueError(
                 "ia and ja arrays must be specified if the MODFLOW 6"
-                + "binary grid file name is not specified."
+                "binary grid file name is not specified."
             )
-            raise ValueError(err_msg)
 
     # flatten flowja, if necessary
     if len(flowja.shape) > 0:
@@ -116,11 +115,10 @@ def get_residuals(
         ia, ja = grb.ia, grb.ja
     else:
         if ia is None or ja is None:
-            err_msg = (
-                "ia and ja arrays must be specified if the MODFLOW 6"
-                + "binary grid file name is not specified."
+            raise ValueError(
+                "ia and ja arrays must be specified if the MODFLOW 6 "
+                "binary grid file name is not specified."
             )
-            raise ValueError(err_msg)
 
     # flatten flowja, if necessary
     if len(flowja.shape) > 0:
@@ -154,6 +152,6 @@ def __check_flowja_size(flowja, ja):
     """
     if flowja.shape != ja.shape:
         raise ValueError(
-            "size of flowja ({}) ".format(flowja.shape)
-            + "not equal to {}".format(ja.shape)
+            "size of flowja ({}) not equal to "
+            "{}".format(flowja.shape, ja.shape)
         )

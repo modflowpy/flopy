@@ -1016,15 +1016,15 @@ def test_namfile_readwrite():
     m2 = fm.Modflow.load("junk.nam", model_ws=os.path.join("temp", "t007"))
 
     t_value = abs(m2.modelgrid.xoffset - xll)
-    msg = "m2.modelgrid.xoffset ({}) ".format(
-        m2.modelgrid.xoffset
-    ) + "does not equal {}".format(xll)
+    msg = "m2.modelgrid.xoffset ({}) does not equal {}".format(
+        m2.modelgrid.xoffset, xll
+    )
     assert t_value < 1e-2, msg
 
     t_value = abs(m2.modelgrid.yoffset - yll)
-    msg = "m2.modelgrid.yoffset ({}) ".format(
-        m2.modelgrid.yoffset
-    ) + "does not equal {}".format(yll)
+    msg = "m2.modelgrid.yoffset ({}) does not equal {}".format(
+        m2.modelgrid.yoffset, yll
+    )
     assert t_value < 1e-2
 
     msg = (

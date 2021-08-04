@@ -38,13 +38,13 @@ def _fmt_string(array, float_format="{}"):
             fmt_string += "{} "
         elif vtype == "s":
             raise Exception(
-                "MfList error: 'str' type found in dtype."
-                + " This gives unpredictable results when "
-                + "recarray to file - change to 'object' type"
+                "MfList error: 'str' type found in dtype. "
+                "This gives unpredictable results when "
+                "recarray to file - change to 'object' type"
             )
         else:
             raise Exception(
-                "MfList.fmt_string error: unknown vtype " + "in dtype:" + vtype
+                "MfList.fmt_string error: unknown vtype in dtype:" + vtype
             )
     return fmt_string
 
@@ -176,12 +176,10 @@ def write_fixed_var(v, length=10, ipos=None, free=False, comment=None):
         elif isinstance(ipos, int):
             ipos = [ipos]
         if len(ipos) < ncol:
-            err = (
-                "user provided ipos length ({})".format(len(ipos))
-                + "should be greater than or equal "
-                + "to the length of v ({})".format(ncol)
+            raise Exception(
+                "user provided ipos length ({}) should be greater than or "
+                "equal to the length of v ({})".format(len(ipos), ncol)
             )
-            raise Exception(err)
     out = ""
     for n in range(ncol):
         if free:

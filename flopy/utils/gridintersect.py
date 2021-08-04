@@ -1459,7 +1459,7 @@ class GridIntersect:
             if plt is None:
                 msg = (
                     "matplotlib and descartes packages needed for "
-                    + "plotting polygons"
+                    "plotting polygons"
                 )
             raise ImportError(msg)
 

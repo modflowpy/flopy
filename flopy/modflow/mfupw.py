@@ -162,11 +162,10 @@ class ModflowUpw(Package):
     ):
 
         if model.version != "mfnwt":
-            err = (
+            raise Exception(
                 "Error: model version must be mfnwt to use "
-                + "{} package".format(ModflowUpw._ftype())
+                "{} package".format(ModflowUpw._ftype())
             )
-            raise Exception(err)
 
         # set default unit number of one is not specified
         if unitnumber is None:
@@ -394,13 +393,10 @@ class ModflowUpw(Package):
             sys.stdout.write("loading upw package file...\n")
 
         if model.version != "mfnwt":
-            msg = (
-                "Warning: model version was reset from "
-                + "'{}' to 'mfnwt' in order to load a UPW file".format(
-                    model.version
-                )
+            print(
+                "Warning: model version was reset from '{}' to 'mfnwt' "
+                "in order to load a UPW file".format(model.version)
             )
-            print(msg)
             model.version = "mfnwt"
 
         openfile = not hasattr(f, "read")

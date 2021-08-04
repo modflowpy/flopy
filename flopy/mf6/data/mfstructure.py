@@ -1722,11 +1722,9 @@ class MFDataStructure:
                         or self.type == DatumType.record
                         or self.type == DatumType.repeating_record
                     ):
-                        type_array.append("{}".format(item.name))
+                        type_array.append(str(item.name))
                     else:
-                        type_array.append(
-                            "{}".format(self._resolve_item_type(item))
-                        )
+                        type_array.append(str(self._resolve_item_type(item)))
 
     def get_description(
         self, line_size=79, initial_indent="        ", level_indent="    "
@@ -1828,7 +1826,7 @@ class MFDataStructure:
                         (
                             self,
                             index,
-                            "{}".format(self._resolve_item_type(item)),
+                            str(self._resolve_item_type(item)),
                         )
                     )
 

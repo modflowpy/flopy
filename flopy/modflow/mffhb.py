@@ -260,57 +260,55 @@ class ModflowFhb(Package):
 
         # perform some simple verification
         if len(self.bdtime) != self.nbdtim:
-            msg = "bdtime has {} entries ".format(
-                len(self.bdtime)
-            ) + "but requires {} entries.".format(self.nbdtim)
-            raise ValueError(msg)
+            raise ValueError(
+                "bdtime has {} entries but requires "
+                "{} entries.".format(len(self.bdtime), self.nbdtim)
+            )
 
         if self.nflw > 0:
             if self.ds5 is None:
-                msg = (
+                raise TypeError(
                     "dataset 5 is not specified but "
-                    + "nflw > 0 ({})".format(self.nflw)
+                    "nflw > 0 ({})".format(self.nflw)
                 )
-                raise TypeError(msg)
 
             if self.ds5.shape[0] != self.nflw:
-                msg = "dataset 5 has {} rows ".format(
-                    self.ds5.shape[0]
-                ) + "but requires {} rows.".format(self.nflw)
-                raise ValueError(msg)
+                raise ValueError(
+                    "dataset 5 has {} rows but requires "
+                    "{} rows.".format(self.ds5.shape[0], self.nflw)
+                )
             nc = self.nbdtim
             if model.structured:
                 nc += 4
             else:
                 nc += 2
             if len(self.ds5.dtype.names) != nc:
-                msg = "dataset 5 has {} ".format(
-                    len(self.ds5.dtype.names)
-                ) + "columns but requires {} columns.".format(nc)
-                raise ValueError(msg)
+                raise ValueError(
+                    "dataset 5 has {} columns but requires "
+                    "{} columns.".format(len(self.ds5.dtype.names), nc)
+                )
 
         if self.nhed > 0:
             if self.ds7 is None:
-                msg = (
+                raise TypeError(
                     "dataset 7 is not specified but "
-                    + "nhed > 0 ({})".format(self.nhed)
+                    "nhed > 0 ({})".format(self.nhed)
                 )
-                raise TypeError(msg)
             if self.ds7.shape[0] != self.nhed:
-                msg = "dataset 7 has {} rows ".format(
-                    self.ds7.shape[0]
-                ) + "but requires {} rows.".format(self.nhed)
-                raise ValueError(msg)
+                raise ValueError(
+                    "dataset 7 has {} rows but requires "
+                    "{} rows.".format(self.ds7.shape[0], self.nhed)
+                )
             nc = self.nbdtim
             if model.structured:
                 nc += 4
             else:
                 nc += 2
             if len(self.ds7.dtype.names) != nc:
-                msg = "dataset 7 has {} ".format(
-                    len(self.ds7.dtype.names)
-                ) + "columns but requires {} columns.".format(nc)
-                raise ValueError(msg)
+                raise ValueError(
+                    "dataset 7 has {} columns but requires "
+                    "{} columns.".format(len(self.ds7.dtype.names), nc)
+                )
 
         self.parent.add_package(self)
 
@@ -502,11 +500,9 @@ class ModflowFhb(Package):
         if nfhbx1 > 0:
             if model.verbose:
                 sys.stdout.write("loading fhb dataset 2\n")
-            msg = (
-                "dataset 2 will not be preserved "
-                + "in the created hfb object.\n"
+            sys.stdout.write(
+                "dataset 2 will not be preserved in the created hfb object.\n"
             )
-            sys.stdout.write(msg)
             for idx in range(nfhbx1):
                 line = f.readline()
                 raw = line.strip().split()
@@ -521,11 +517,9 @@ class ModflowFhb(Package):
         if nfhbx2 > 0:
             if model.verbose:
                 sys.stdout.write("loading fhb dataset 3\n")
-            msg = (
-                "dataset 3 will not be preserved "
-                + "in the created hfb object.\n"
+            sys.stdout.write(
+                "dataset 3 will not be preserved in the created hfb object.\n"
             )
-            sys.stdout.write(msg)
             for idx in range(nfhbx2):
                 line = f.readline()
                 raw = line.strip().split()
@@ -542,10 +536,10 @@ class ModflowFhb(Package):
         raw = line.strip().split()
         ifhbun = int(raw[0])
         if ifhbun != iufhb:
-            msg = "fhb dataset 4a must be in the fhb file "
-            msg += "(unit={}) ".format(iufhb)
-            msg += "fhb data is specified in unit={}".format(ifhbun)
-            raise ValueError(msg)
+            raise ValueError(
+                "fhb dataset 4a must be in the fhb file (unit={}) "
+                "fhb data is specified in unit={}".format(iufhb, ifhbun)
+            )
         bdtimecnstm = float(raw[1])
         ifhbpt = max(ifhbpt, int(raw[2]))
 
@@ -571,10 +565,10 @@ class ModflowFhb(Package):
             raw = line.strip().split()
             ifhbun = int(raw[0])
             if ifhbun != iufhb:
-                msg = "fhb dataset 5a must be in the fhb file "
-                msg += "(unit={}) ".format(iufhb)
-                msg += "fhb data is specified in unit={}".format(ifhbun)
-                raise ValueError(msg)
+                raise ValueError(
+                    "fhb dataset 5a must be in the fhb file (unit={}) "
+                    "fhb data is specified in unit={}".format(iufhb, ifhbun)
+                )
             cnstm5 = float(raw[1])
             ifhbpt = max(ifhbpt, int(raw[2]))
 
@@ -612,37 +606,34 @@ class ModflowFhb(Package):
                     if model.verbose:
                         sys.stdout.write(
                             "loading fhb dataset 6a - aux "
-                            + "{}\n".format(naux + 1)
+                            "{}\n".format(naux + 1)
                         )
-                    msg = (
+                    sys.stdout.write(
                         "dataset 6a will not be preserved in "
-                        + "the created hfb object.\n"
+                        "the created hfb object.\n"
                     )
-                    sys.stdout.write(msg)
                     # Dataset 6a IFHBUN CNSTM IFHBPT
                     line = f.readline()
                     raw = line.strip().split()
                     ifhbun = int(raw[0])
                     if ifhbun != iufhb:
-                        msg = "fhb dataset 6a must be in the fhb file "
-                        msg += "(unit={}) ".format(iufhb)
-                        msg += "fhb data is specified in " + "unit={}".format(
-                            ifhbun
+                        raise ValueError(
+                            "fhb dataset 6a must be in the fhb file (unit={}) "
+                            "fhb data is specified in "
+                            "unit={}".format(iufhb, ifhbun)
                         )
-                        raise ValueError(msg)
                     cnstm6.append(float(raw[1]))
                     ifhbpt = max(ifhbpt, int(raw[2]))
 
                     if model.verbose:
                         sys.stdout.write(
                             "loading fhb dataset 6b - aux "
-                            + "{}\n".format(naux + 1)
+                            "{}\n".format(naux + 1)
                         )
-                    msg = (
+                    sys.stdout.write(
                         "dataset 6b will not be preserved in "
-                        + "the created hfb object.\n"
+                        "the created hfb object.\n"
                     )
-                    sys.stdout.write(msg)
                     current = np.recarray(nflw, dtype=dtype)
                     for n in range(nflw):
                         line = f.readline()
@@ -663,10 +654,10 @@ class ModflowFhb(Package):
             raw = line.strip().split()
             ifhbun = int(raw[0])
             if ifhbun != iufhb:
-                msg = "fhb dataset 7a must be in the fhb file "
-                msg += "(unit={}) ".format(iufhb)
-                msg += "fhb data is specified in unit={}".format(ifhbun)
-                raise ValueError(msg)
+                raise ValueError(
+                    "fhb dataset 7a must be in the fhb file (unit={}) "
+                    "fhb data is specified in unit={}".format(iufhb, ifhbun)
+                )
             cnstm7 = float(raw[1])
             ifhbpt = max(ifhbpt, int(raw[2]))
 
@@ -704,24 +695,22 @@ class ModflowFhb(Package):
                     if model.verbose:
                         sys.stdout.write(
                             "loading fhb dataset 8a - aux "
-                            + "{}\n".format(naux + 1)
+                            "{}\n".format(naux + 1)
                         )
-                    msg = (
+                    sys.stdout.write(
                         "dataset 8a will not be preserved in "
-                        + "the created hfb object.\n"
+                        "the created hfb object.\n"
                     )
-                    sys.stdout.write(msg)
                     # Dataset 6a IFHBUN CNSTM IFHBPT
                     line = f.readline()
                     raw = line.strip().split()
                     ifhbun = int(raw[0])
                     if ifhbun != iufhb:
-                        msg = "fhb dataset 8a must be in the fhb file "
-                        msg += "(unit={}) ".format(iufhb)
-                        msg += "fhb data is specified in " + "unit={}".format(
-                            ifhbun
+                        raise ValueError(
+                            "fhb dataset 8a must be in the fhb file (unit={}) "
+                            "fhb data is specified in "
+                            "unit={}".format(iufhb, ifhbun)
                         )
-                        raise ValueError(msg)
                     cnstm8.append(float(raw[1]))
                     ifhbpt6 = int(raw[2])
                     ifhbpt = max(ifhbpt, ifhbpt6)
@@ -729,13 +718,12 @@ class ModflowFhb(Package):
                     if model.verbose:
                         sys.stdout.write(
                             "loading fhb dataset 8b - aux "
-                            + "{}\n".format(naux + 1)
+                            "{}\n".format(naux + 1)
                         )
-                    msg = (
+                    sys.stdout.write(
                         "dataset 8b will not be preserved in "
-                        + "the created hfb object."
+                        "the created hfb object."
                     )
-                    sys.stdout.write(msg)
                     current = np.recarray(nflw, dtype=dtype)
                     for n in range(nhed):
                         line = f.readline()

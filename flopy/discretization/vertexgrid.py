@@ -273,7 +273,7 @@ class VertexGrid(Grid):
         if Path is None:
             s = (
                 "Could not import matplotlib.  Must install matplotlib "
-                + " in order to use VertexGrid.intersect() method"
+                "in order to use VertexGrid.intersect() method"
             )
             raise ImportError(s)
 

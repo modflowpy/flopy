@@ -394,18 +394,14 @@ def output_helper(f, ml, oudic, **kwargs):
 
     assert len(common_times) > 0
     if len(skipped_times) > 0:
+        msg = (
+            "the following output times are not common to all "
+            "output files and are being skipped:\n{0}".format(skipped_times)
+        )
         if logger:
-            logger.warn(
-                "the following output times are not common to all"
-                + " output files and are being skipped:\n"
-                + "{0}".format(skipped_times)
-            )
+            logger.warn(msg)
         else:
-            print(
-                "the following output times are not common to all"
-                + " output files and are being skipped:\n"
-                + "{0}".format(skipped_times)
-            )
+            print(msg)
     times = [t for t in common_times[::stride]]
     if isinstance(f, str) and f.lower().endswith(".nc"):
         f = NetCdf(
@@ -572,12 +568,11 @@ def output_helper(f, ml, oudic, **kwargs):
             shapefile_utils.write_grid_shapefile(f, ml.modelgrid, attrib_dict)
 
     else:
+        msg = "unrecognized export argument:{0}".format(f)
         if logger:
-            logger.lraise("unrecognized export argument:{0}".format(f))
+            logger.lraise(msg)
         else:
-            raise NotImplementedError(
-                "unrecognized export argument" + ":{0}".format(f)
-            )
+            raise NotImplementedError(msg)
     return f
 
 
@@ -782,16 +777,15 @@ def generic_array_export(
     """
     if isinstance(f, str) and f.lower().endswith(".nc"):
         assert "model" in kwargs.keys(), (
-            "creating a new netCDF using "
-            "generic_array_helper requires a "
+            "creating a new netCDF using generic_array_helper requires a "
             "'model' kwarg"
         )
         assert isinstance(kwargs["model"], BaseModel)
         f = NetCdf(f, kwargs.pop("model"), **kwargs)
 
-    assert array.ndim == len(dimensions), (
-        "generic_array_helper() " + "array.ndim != dimensions"
-    )
+    assert array.ndim == len(
+        dimensions
+    ), "generic_array_helper() array.ndim != dimensions"
     coords_dims = {
         "time": "time",
         "layer": "layer",
@@ -1153,9 +1147,9 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
 
     """
 
-    assert isinstance(u3d, DataInterface), (
-        "array3d_export only helps " "instances that support " "DataInterface"
-    )
+    assert isinstance(
+        u3d, DataInterface
+    ), "array3d_export only helps instances that support DataInterface"
 
     min_valid = kwargs.get("min_valid", -1.0e9)
     max_valid = kwargs.get("max_valid", 1.0e9)
@@ -1327,9 +1321,9 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
         if fmt is set to 'vtk', parameters of vtk.export_array
 
     """
-    assert isinstance(u2d, DataInterface), (
-        "util2d_helper only helps " "instances that support " "DataInterface"
-    )
+    assert isinstance(
+        u2d, DataInterface
+    ), "util2d_helper only helps instances that support DataInterface"
     assert len(u2d.array.shape) == 2, "util2d_helper only supports 2D arrays"
 
     min_valid = kwargs.get("min_valid", -1.0e9)

@@ -286,12 +286,11 @@ class MfGrdFile(FlopyBinaryData):
                         [xc.shape[0]],
                     )
                 except:
-                    msg = (
+                    print(
                         "could not set spatial reference for "
-                        + "{} discretization ".format(self._grid_type)
-                        + "defined in {}".format(self.file.name)
+                        "{} discretization defined in "
+                        "{}".format(self._grid_type, self.file.name)
                     )
-                    print(msg)
             elif self._grid_type == "DIS":
                 from flopy.utils.reference import SpatialReference
 

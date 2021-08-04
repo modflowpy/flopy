@@ -194,12 +194,10 @@ class ModflowSor(Package):
 
         # dataset 0 -- header
 
-        msg = (
-            3 * " "
-            + "Warning: load method not completed. "
-            + "Default sor object created."
+        print(
+            "   Warning: load method not completed. "
+            "Default sor object created."
         )
-        print(msg)
 
         if openfile:
             f.close()

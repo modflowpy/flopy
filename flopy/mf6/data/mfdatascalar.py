@@ -185,7 +185,7 @@ class MFScalar(mfdata.MFData):
             )
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            comment = 'Could not convert data "{}" to type ' '"{}".'.format(
+            comment = 'Could not convert data "{}" to type "{}".'.format(
                 data, self._data_type
             )
             raise MFDataException(
@@ -206,7 +206,7 @@ class MFScalar(mfdata.MFData):
             storage.set_data(converted_data, key=self._current_key)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            comment = 'Could not set data "{}" to type ' '"{}".'.format(
+            comment = 'Could not set data "{}" to type "{}".'.format(
                 data, self._data_type
             )
             raise MFDataException(

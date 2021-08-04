@@ -202,10 +202,8 @@ class Mt3dSsm(Package):
         for key in kwargs:
             if key in deprecated_kwargs:
                 warnings.warn(
-                    "Deprecation Warning: Keyword argument '"
-                    + key
-                    + "' no longer supported. Use "
-                    + "'stress_period_data' instead.",
+                    "Deprecation Warning: Keyword argument '{}' no longer "
+                    "supported. Use 'stress_period_data' instead.".format(key),
                     category=UserWarning,
                 )
 
@@ -243,13 +241,10 @@ class Mt3dSsm(Package):
             )
 
         if mxss is None and mf is None:
-            wmsg = (
-                "SSM Package: mxss is None and modflowmodel is None. "
-                + "Cannot calculate max number of sources and sinks. "
-                + "Estimating from stress_period_data. "
-            )
             warnings.warn(
-                wmsg,
+                "SSM Package: mxss is None and modflowmodel is None. "
+                "Cannot calculate max number of sources and sinks. "
+                "Estimating from stress_period_data.",
                 category=UserWarning,
             )
 
@@ -313,10 +308,8 @@ class Mt3dSsm(Package):
                         val = kwargs.pop(name)
                     else:
                         print(
-                            "SSM: setting crch for component "
-                            + str(icomp)
-                            + " to zero. kwarg name "
-                            + name
+                            "SSM: setting crch for component {} to zero. "
+                            "kwarg name {}".format(icomp, name)
                         )
                     t2d = Transient2d(
                         model,
@@ -376,10 +369,8 @@ class Mt3dSsm(Package):
                         kwargs.pop(name)
                     else:
                         print(
-                            "SSM: setting cevt for component "
-                            + str(icomp)
-                            + " to zero, kwarg name "
-                            + name
+                            "SSM: setting cevt for component {} to zero, "
+                            "kwarg name {}".format(icomp, name)
                         )
                     t2d = Transient2d(
                         model,

@@ -112,12 +112,11 @@ class Modpath7(BaseModel):
         self.mpbas_file = "{}.mpbas".format(modelname)
 
         if not isinstance(flowmodel, (Modflow, MFModel)):
-            msg = (
+            raise TypeError(
                 "Modpath7: flow model is not an instance of "
-                + "flopy.modflow.Modflow or flopy.mf6.MFModel. "
-                + "Passed object of type {}".format(type(flowmodel))
+                "flopy.modflow.Modflow or flopy.mf6.MFModel. "
+                "Passed object of type {}".format(type(flowmodel))
             )
-            raise TypeError(msg)
 
         # if a MFModel instance ensure flowmodel is a MODFLOW 6 GWF model
         if isinstance(flowmodel, MFModel):
@@ -125,11 +124,10 @@ class Modpath7(BaseModel):
                 flowmodel.model_type != "gwf"
                 and flowmodel.model_type != "gwf6"
             ):
-                msg = (
+                raise TypeError(
                     "Modpath7: flow model type must be gwf. "
-                    + "Passed model_type is {}.".format(flowmodel.model_type)
+                    "Passed model_type is {}.".format(flowmodel.model_type)
                 )
-                raise TypeError(msg)
 
         # set flowmodel and flow_version attributes
         self.flowmodel = flowmodel
@@ -140,11 +138,10 @@ class Modpath7(BaseModel):
             ibound = None
             dis = self.flowmodel.get_package("DIS")
             if dis is None:
-                msg = (
+                raise Exception(
                     "DIS, DISV, or DISU packages must be "
-                    + "included in the passed MODFLOW 6 model"
+                    "included in the passed MODFLOW 6 model"
                 )
-                raise Exception(msg)
             else:
                 if dis.package_name.lower() == "dis":
                     nlay, nrow, ncol = (
@@ -162,20 +159,18 @@ class Modpath7(BaseModel):
                         nodes,
                     )
                 else:
-                    msg = (
+                    raise TypeError(
                         "DIS, DISV, or DISU packages must be "
-                        + "included in the passed MODFLOW 6 model"
+                        "included in the passed MODFLOW 6 model"
                     )
-                    raise TypeError(msg)
 
             # terminate (for now) if mf6 model does not use dis or disv
             if len(shape) < 2:
-                msg = (
+                raise TypeError(
                     "DIS and DISV are currently the only supported "
-                    + "MODFLOW 6 discretization packages that can be "
-                    + "used with MODPATH 7"
+                    "MODFLOW 6 discretization packages that can be "
+                    "used with MODPATH 7"
                 )
-                raise TypeError(msg)
 
             # set ib
             ib = dis.idomain.array
@@ -190,11 +185,10 @@ class Modpath7(BaseModel):
 
             tdis = self.flowmodel.simulation.get_package("TDIS")
             if tdis is None:
-                msg = (
+                raise Exception(
                     "TDIS package must be "
-                    + "included in the passed MODFLOW 6 model"
+                    "included in the passed MODFLOW 6 model"
                 )
-                raise Exception(msg)
             tdis_file = tdis.filename
 
             # get stress period data
@@ -230,23 +224,20 @@ class Modpath7(BaseModel):
                 nlay, nrow, ncol = dis.nlay, dis.nrow, dis.ncol
                 shape = (nlay, nrow, ncol)
             if dis is None:
-                msg = (
+                raise Exception(
                     "DIS, or DISU packages must be "
-                    + "included in the passed MODFLOW model"
+                    "included in the passed MODFLOW model"
                 )
-                raise Exception(msg)
             elif dis is not None and shape is None:
                 nlay, nodes = dis.nlay, dis.nodes
                 shape = (nodes,)
 
             # terminate (for now) if mf6 model does not use dis
             if len(shape) != 3:
-                msg = (
+                raise Exception(
                     "DIS currently the only supported MODFLOW "
-                    + "discretization package that can be used with "
-                    + "MODPATH 7"
+                    "discretization package that can be used with MODPATH 7"
                 )
-                raise Exception(msg)
 
             # get stress period data
             nper = dis.nper
@@ -275,11 +266,10 @@ class Modpath7(BaseModel):
             if p is None:
                 p = self.flowmodel.get_package("UPW")
             if p is None:
-                msg = (
+                raise Exception(
                     "LPF, BCF6, or UPW packages must be "
-                    + "included in the passed MODFLOW model"
+                    "included in the passed MODFLOW model"
                 )
-                raise Exception(msg)
 
             # set budget file name
             if budgetfilename is None:
@@ -318,23 +308,20 @@ class Modpath7(BaseModel):
 
         # make sure the valid files are available
         if self.headfilename is None:
-            msg = (
+            raise ValueError(
                 "the head file in the MODFLOW model or passed "
-                + "to __init__ cannot be None"
+                "to __init__ cannot be None"
             )
-            raise ValueError(msg)
         if self.budgetfilename is None:
-            msg = (
+            raise ValueError(
                 "the budget file in the MODFLOW model or passed "
-                + "to __init__ cannot be None"
+                "to __init__ cannot be None"
             )
-            raise ValueError(msg)
         if self.dis_file is None and self.grbdis_file is None:
-            msg = (
+            raise ValueError(
                 "the dis file in the MODFLOW model or passed "
-                + "to __init__ cannot be None"
+                "to __init__ cannot be None"
             )
-            raise ValueError(msg)
 
         # set ib and ibound
         self.ib = ib

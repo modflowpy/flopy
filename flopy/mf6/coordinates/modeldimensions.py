@@ -410,7 +410,7 @@ class ModelDimensions:
     ):
         if structure is None:
             raise FlopyException(
-                "get_data_shape requires a valid structure " "object"
+                "get_data_shape requires a valid structure object"
             )
         if self.locked:
             if data_item is not None and data_item.path in self.stored_shapes:

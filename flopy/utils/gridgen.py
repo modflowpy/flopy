@@ -684,7 +684,7 @@ class Gridgen:
         try:
             import matplotlib.pyplot as plt
         except:
-            err_msg = "matplotlib must be installed to " + "use gridgen.plot()"
+            err_msg = "matplotlib must be installed to use gridgen.plot()"
             raise ImportError(err_msg)
 
         from ..plot import plot_shapefile, shapefile_extents
@@ -1682,14 +1682,14 @@ class Gridgen:
         return gridprops
 
     def to_disu6(self, fname, writevertices=True):
-        msg = (
-            "Use: " "flopy.mf6.ModflowGwfdisu(gwf, **g.get_gridprops_disu6())"
+        raise DeprecationWarning(
+            "Use: flopy.mf6.ModflowGwfdisu(gwf, **g.get_gridprops_disu6())"
         )
-        raise DeprecationWarning(msg)
 
     def to_disv6(self, fname, verbose=False):
-        msg = "Use: " "flopy.mf6.ModflowGwfdisv(gwf, **g.get_gridprops_disv())"
-        raise DeprecationWarning(msg)
+        raise DeprecationWarning(
+            "Use: flopy.mf6.ModflowGwfdisv(gwf, **g.get_gridprops_disv())"
+        )
 
     def intersect(self, features, featuretype, layer):
         """
@@ -1770,13 +1770,13 @@ class Gridgen:
 
     def _intersection_block(self, shapefile, featuretype, layer):
         s = ""
-        s += "BEGIN GRID_INTERSECTION intersect" + "\n"
+        s += "BEGIN GRID_INTERSECTION intersect\n"
         s += "  GRID = quadtreegrid\n"
         s += "  LAYER = {}\n".format(layer + 1)
         s += "  SHAPEFILE = {}\n".format(shapefile)
         s += "  FEATURE_TYPE = {}\n".format(featuretype)
         s += "  OUTPUT_FILE = {}\n".format("intersection.ifo")
-        s += "END GRID_INTERSECTION intersect" + "\n"
+        s += "END GRID_INTERSECTION intersect\n"
         return s
 
     def _mfgrid_block(self):
@@ -1788,7 +1788,7 @@ class Gridgen:
         angrot = self.modelgrid.angrot
 
         s = ""
-        s += "BEGIN MODFLOW_GRID basegrid" + "\n"
+        s += "BEGIN MODFLOW_GRID basegrid\n"
         s += "  ROTATION_ANGLE = {}\n".format(angrot)
         s += "  X_OFFSET = {}\n".format(xoff)
         s += "  Y_OFFSET = {}\n".format(yoff)
@@ -1841,7 +1841,7 @@ class Gridgen:
                 fname = os.path.join(self.model_ws, "bot{}.dat".format(k + 1))
                 np.savetxt(fname, bot)
 
-        s += "END MODFLOW_GRID" + "\n"
+        s += "END MODFLOW_GRID\n"
         return s
 
     def _rf_blocks(self):

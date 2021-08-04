@@ -25,35 +25,35 @@ class PackageInterface:
     @abc.abstractmethod
     def name(self):
         raise NotImplementedError(
-            "must define name in child " "class to use this base class"
+            "must define name in child class to use this base class"
         )
 
     @name.setter
     @abc.abstractmethod
     def name(self, name):
         raise NotImplementedError(
-            "must define name in child " "class to use this base class"
+            "must define name in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def parent(self):
         raise NotImplementedError(
-            "must define parent in child " "class to use this base class"
+            "must define parent in child class to use this base class"
         )
 
     @parent.setter
     @abc.abstractmethod
     def parent(self, name):
         raise NotImplementedError(
-            "must define parent in child " "class to use this base class"
+            "must define parent in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def package_type(self):
         raise NotImplementedError(
-            "must define package_type in child " "class to use this base class"
+            "must define package_type in child class to use this base class"
         )
 
     @property
@@ -61,20 +61,20 @@ class PackageInterface:
     def data_list(self):
         # [data_object, data_object, ...]
         raise NotImplementedError(
-            "must define data_list in child " "class to use this base class"
+            "must define data_list in child class to use this base class"
         )
 
     @abc.abstractmethod
     def export(self, f, **kwargs):
         raise NotImplementedError(
-            "must define export in child " "class to use this base class"
+            "must define export in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def plottable(self):
         raise NotImplementedError(
-            "must define plottable in child " "class to use this base class"
+            "must define plottable in child class to use this base class"
         )
 
     @property
@@ -338,7 +338,7 @@ class PackageInterface:
                 storage_coeff = False
             self._check_storage(chk, storage_coeff)
         else:
-            txt = "check method not implemented for " + "{} Package.".format(
+            txt = "check method not implemented for {} Package.".format(
                 self.name[0]
             )
             if f is not None:
@@ -360,9 +360,8 @@ class PackageInterface:
             # convert to specific for checking
             if storage_coeff:
                 desc = (
-                    "\r    STORAGECOEFFICIENT option is "
-                    + "activated, storage values are read "
-                    + "storage coefficients"
+                    "\r    STORAGECOEFFICIENT option is activated, "
+                    "storage values are read storage coefficients"
                 )
                 chk._add_to_summary(type="Warning", desc=desc)
             chk.values(
@@ -492,18 +491,16 @@ class Package(PackageInterface):
                     if len(value) == 1:
                         s += " {:s} = {:s}\n".format(attr, str(value[0]))
                     else:
-                        s += " {:s} ".format(
-                            attr
-                        ) + "(list, items = {:d})\n".format(len(value))
+                        s += " {:s} (list, items = {:d})\n".format(
+                            attr, len(value)
+                        )
                 elif isinstance(value, np.ndarray):
-                    s += " {:s} (array, shape = ".format(
-                        attr
-                    ) + "{:s})\n".format(value.shape.__str__()[1:-1])
+                    s += " {:s} (array, shape = {:s})\n".format(
+                        attr, str(value.shape)[1:-1]
+                    )
                 else:
-                    s += (
-                        " {:s} = ".format(attr)
-                        + "{:s} ".format(str(value))
-                        + "({:s})\n".format(str(type(value))[7:-2])
+                    s += " {:s} = {:s} ({:s})\n".format(
+                        attr, str(value), str(type(value))[7:-2]
                     )
         return s
 
@@ -515,26 +512,22 @@ class Package(PackageInterface):
             if isinstance(item, MfList):
                 if not isinstance(item, list) and not isinstance(item, tuple):
                     msg = (
-                        "package.__getitem__() kper "
-                        + str(item)
-                        + " not in data.keys()"
+                        "package.__getitem__() kper {} "
+                        "not in data.keys()".format(item)
                     )
                     assert item in list(spd.data.keys()), msg
                     return spd[item]
 
                 if item[1] not in self.dtype.names:
-                    msg = (
-                        "package.__getitem(): item "
-                        + str(item)
-                        + " not in dtype names "
-                        + str(self.dtype.names)
+                    raise Exception(
+                        "package.__getitem(): item {} not in dtype names "
+                        "{}".format(item, self.dtype.names)
                     )
-                    raise Exception(msg)
 
                 msg = (
-                    "package.__getitem__() kper "
-                    + str(item[0])
-                    + " not in data.keys()"
+                    "package.__getitem__() kper {} not in data.keys()".format(
+                        item[0]
+                    )
                 )
                 assert item[0] in list(spd.data.keys()), msg
 
@@ -727,7 +720,7 @@ class Package(PackageInterface):
             if confined and l > 0:
                 desc = (
                     "\r    LAYTYP: unconfined (convertible) "
-                    + "layer below confined layer"
+                    "layer below confined layer"
                 )
                 chk._add_to_summary(type="Warning", desc=desc)
 
@@ -739,22 +732,15 @@ class Package(PackageInterface):
                 if k > kon:
                     kon = k
                     tag = name[k].lower().replace(" layer ", "")
-                    txt += (
-                        "    {:>10s}".format("layer")
-                        + "{:>10s}".format("row")
-                        + "{:>10s}".format("column")
-                        + "{:>15s}\n".format(tag)
+                    txt += "    {:>10s}{:>10s}{:>10s}{:>15s}\n".format(
+                        "layer", "row", "column", tag
                     )
                 txt += "    {:10d}{:10d}{:10d}{:15.7g}\n".format(
                     k + 1, i + 1, j + 1, v[k, i, j]
                 )
         elif ndim == 2:
             tag = name[0].lower().replace(" layer ", "")
-            txt += (
-                "    {:>10s}".format("row")
-                + "{:>10s}".format("column")
-                + "{:>15s}\n".format(tag)
-            )
+            txt += "    {:>10s}{:>10s}{:>15s}\n".format("row", "column", tag)
             for [i, j] in idx:
                 txt += "    {:10d}{:10d}{:15.7g}\n".format(
                     i + 1, j + 1, v[i, j]
@@ -934,12 +920,10 @@ class Package(PackageInterface):
             if nppak > 0:
                 mxl = int(t[2])
                 if model.verbose:
-                    msg = (
-                        3 * " "
-                        + "Parameters detected. Number of "
-                        + "parameters = {}".format(nppak)
+                    print(
+                        "   Parameters detected. Number of "
+                        "parameters = {}".format(nppak)
                     )
-                    print(msg)
             line = f.readline()
 
         # dataset 2a
@@ -950,26 +934,22 @@ class Package(PackageInterface):
             ipakcb = int(t[1])
         except:
             if model.verbose:
-                msg = 3 * " " + "implicit ipakcb in {}".format(filename)
-                print(msg)
+                print("   implicit ipakcb in {}".format(filename))
         if "modflowdrt" in pak_type_str:
             try:
                 nppak = int(t[2])
                 imax += 1
             except:
                 if model.verbose:
-                    msg = 3 * " " + "implicit nppak in {}".format(filename)
-                    print(msg)
+                    print("   implicit nppak in {}".format(filename))
             if nppak > 0:
                 mxl = int(t[3])
                 imax += 1
                 if model.verbose:
-                    msg = (
-                        3 * " "
-                        + "Parameters detected. Number of "
-                        + "parameters = {}".format(nppak)
+                    print(
+                        "   Parameters detected. Number of "
+                        "parameters = {}".format(nppak)
                     )
-                    print(msg)
 
         options = []
         aux_names = []
@@ -1047,11 +1027,7 @@ class Package(PackageInterface):
         current = None
         for iper in range(nper):
             if model.verbose:
-                msg = (
-                    "   loading "
-                    + str(pak_type)
-                    + " for kper {:5d}".format(iper + 1)
-                )
+                msg = "   loading {} for kper {:5d}".format(pak_type, iper + 1)
                 print(msg)
             line = f.readline()
             if line == "":
@@ -1107,7 +1083,7 @@ class Package(PackageInterface):
                     if model.verbose:
                         print(
                             "  implicit static instance for "
-                            + "parameter {}".format(pname)
+                            "parameter {}".format(pname)
                         )
 
                 par_dict, current_dict = pak_parms.get(pname)

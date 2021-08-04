@@ -747,13 +747,13 @@ def _fmt_string_list(array, float_format="{}"):
             fmt_string += ["{}"]
         elif vtype == "s":
             raise Exception(
-                "MfList error: 'str' type found in dtype."
-                + " This gives unpredictable results when "
-                + "recarray to file - change to 'object' type"
+                "MfList error: 'str' type found in dtype. "
+                "This gives unpredictable results when "
+                "recarray to file - change to 'object' type"
             )
         else:
             raise Exception(
-                "MfList.fmt_string error: unknown vtype " + "in dtype:" + vtype
+                "MfList.fmt_string error: unknown vtype in dtype:" + vtype
             )
     return fmt_string
 
@@ -889,7 +889,7 @@ class mf6check(check):
             ) and "cellid1" not in set(stress_period_data.dtype.names):
                 self._add_to_summary(
                     type="Error",
-                    desc="\r    Stress period data missing " "cellid.",
+                    desc="\r    Stress period data missing cellid.",
                 )
                 return False
         return True

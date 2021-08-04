@@ -271,10 +271,9 @@ class ModflowRch(Package):
 
                 if len(lessthan) > 0:
                     txt = (
-                        "\r    Mean R/T ratio < checker warning "
-                        + "threshold of {}".format(RTmin)
+                        "\r    Mean R/T ratio < checker warning threshold of "
+                        "{} for {} stress periods".format(RTmin, len(lessthan))
                     )
-                    txt += " for {} stress periods".format(len(lessthan))
                     chk._add_to_summary(
                         type="Warning", value=R_T.min(), desc=txt
                     )
@@ -285,9 +284,9 @@ class ModflowRch(Package):
                 if len(greaterthan) > 0:
                     txt = (
                         "\r    Mean R/T ratio > checker warning "
-                        + "threshold of {}".format(RTmax)
+                        "threshold of {} for "
+                        "{} stress periods".format(RTmax, len(greaterthan))
                     )
-                    txt += " for {} stress periods".format(len(greaterthan))
                     chk._add_to_summary(
                         type="Warning", value=R_T.max(), desc=txt
                     )
@@ -448,12 +447,10 @@ class ModflowRch(Package):
             npar = int(raw[1])
             if npar > 0:
                 if model.verbose:
-                    txt = (
-                        3 * " "
-                        + "Parameters detected. Number of "
-                        + "parameters = {}".format(npar)
+                    print(
+                        "   Parameters detected. "
+                        "Number of parameters = {}".format(npar)
                     )
-                    print(txt)
             line = f.readline()
         # dataset 2
         t = line_parse(line)
@@ -501,12 +498,10 @@ class ModflowRch(Package):
             if inrech >= 0:
                 if npar == 0:
                     if model.verbose:
-                        txt = (
-                            3 * " "
-                            + "loading rech stress "
-                            + "period {0:3d}...".format(iper + 1)
+                        print(
+                            "   loading rech stress "
+                            "period {0:3d}...".format(iper + 1)
                         )
-                        print(txt)
                     t = Util2d.load(
                         f,
                         model,
@@ -540,12 +535,10 @@ class ModflowRch(Package):
             if nrchop == 2:
                 if inirch >= 0:
                     if model.verbose:
-                        txt = (
-                            3 * " "
-                            + "loading irch stress "
-                            + "period {0:3d}...".format(iper + 1)
+                        print(
+                            "   loading irch stress "
+                            "period {0:3d}...".format(iper + 1)
                         )
-                        print(txt)
                     t = Util2d.load(
                         f, model, u2d_shape, np.int32, "irch", ext_unit_dict
                     )

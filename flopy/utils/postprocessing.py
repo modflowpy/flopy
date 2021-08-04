@@ -422,7 +422,7 @@ def get_extended_budget(
         # need calculated heads for some stresses and to check hnoflo and hdry
         if hdsfile is None:
             raise ValueError(
-                "hdsfile must be provided when using " "boundary_ifaces"
+                "hdsfile must be provided when using boundary_ifaces"
             )
         if isinstance(hdsfile, (bf.HeadFile, fm.FormattedHeadFile)):
             hds = hdsfile
@@ -436,7 +436,7 @@ def get_extended_budget(
         # get hnoflo and hdry values
         if model is None:
             raise ValueError(
-                "model must be provided when using " "boundary_ifaces"
+                "model must be provided when using boundary_ifaces"
             )
         noflo_or_dry = np.logical_or(head == model.hnoflo, head == model.hdry)
 
@@ -515,8 +515,7 @@ def get_extended_budget(
                     raise ValueError(
                         "This function imposes the use of a "
                         "unique iface (normally = 6) for the "
-                        + budget_term
-                        + " budget term."
+                        "{} budget term.".format(budget_term)
                     )
 
                 # loop through boundary cells
@@ -604,7 +603,7 @@ def get_extended_budget(
                         Qz_ext[lay, row, col] -= Q_stress_cell
             else:
                 raise TypeError(
-                    "boundary_ifaces value must be either " "int or list."
+                    "boundary_ifaces value must be either int or list."
                 )
 
     return Qx_ext, Qy_ext, Qz_ext

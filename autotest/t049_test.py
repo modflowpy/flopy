@@ -79,7 +79,7 @@ def test_modpath():
         except:
             success = False
         assert success, (
-            "forward modpath model run " + "did not terminate successfully"
+            "forward modpath model run did not terminate successfully"
         )
 
     mpnam = "freybergmpp"
@@ -107,7 +107,7 @@ def test_modpath():
         except:
             success = False
         assert success, (
-            "backward modpath model run " + "did not terminate successfully"
+            "backward modpath model run did not terminate successfully"
         )
 
     # load modpath output files
@@ -415,7 +415,7 @@ def eval_timeseries(file):
         tsd = ts.get_alldata()
     except:
         pass
-    msg = "could not load data using get_alldata() from " + "{}.".format(
+    msg = "could not load data using get_alldata() from {}.".format(
         os.path.basename(file)
     )
     assert len(tsd) > 0, msg

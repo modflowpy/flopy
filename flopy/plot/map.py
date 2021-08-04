@@ -48,11 +48,10 @@ class PlotMapView:
     ):
 
         if plt is None:
-            s = (
+            raise ImportError(
                 "Could not import matplotlib.  Must install matplotlib "
-                + " in order to use ModelMap method"
+                "in order to use ModelMap method"
             )
-            raise ImportError(s)
 
         self.model = model
         self.layer = layer
@@ -825,10 +824,10 @@ class PlotMapView:
         )
 
         if self.mg.grid_type != "structured":
-            err_msg = "Use plot_specific_discharge for " "{} grids".format(
-                self.mg.grid_type
+            raise NotImplementedError(
+                "Use plot_specific_discharge for "
+                "{} grids".format(self.mg.grid_type)
             )
-            raise NotImplementedError(err_msg)
 
         else:
             if self.mg.top is None:

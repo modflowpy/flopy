@@ -154,7 +154,7 @@ def create_basic_init(clean_ds_name):
 
 
 def create_property(clean_ds_name):
-    return "    {} = property(get_{}, set_{}" ")".format(
+    return "    {} = property(get_{}, set_{})".format(
         clean_ds_name, clean_ds_name, clean_ds_name
     )
 
@@ -450,7 +450,7 @@ def create_packages():
                 )
             else:
                 package_container_text = ""
-            ds = "Modflow{} defines a {} package" "{}.".format(
+            ds = "Modflow{} defines a {} package{}.".format(
                 package_name.title(),
                 package[0].file_type,
                 package_container_text,
@@ -489,7 +489,7 @@ def create_packages():
                 build_doc_string(
                     "exgtype",
                     "<string>",
-                    "is the exchange type (GWF-GWF or " "GWF-GWT).",
+                    "is the exchange type (GWF-GWF or GWF-GWT).",
                     indent,
                 ),
                 None,
@@ -571,7 +571,7 @@ def create_packages():
 
         import_string = "from .. import mfpackage"
         if template_gens:
-            import_string = "{}\nfrom ..data.mfdatautil import" " ".format(
+            import_string = "{}\nfrom ..data.mfdatautil import ".format(
                 import_string
             )
             first_string = True
@@ -583,10 +583,10 @@ def create_packages():
                     import_string = "{}, {}".format(import_string, template)
         # add extra docstrings for additional variables
         doc_string.add_parameter(
-            "    filename : String\n        " "File name for this package."
+            "    filename : String\n        File name for this package."
         )
         doc_string.add_parameter(
-            "    pname : String\n        " "Package name for this package."
+            "    pname : String\n        Package name for this package."
         )
         doc_string.add_parameter(
             "    parent_file : MFPackage\n        "
@@ -671,8 +671,8 @@ def create_packages():
         local_datetime = datetime.datetime.now(datetime.timezone.utc)
         comment_string = (
             "# DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE "
-            + "MUST BE CREATED BY\n# mf6/utils/createpackages.py\n# FILE "
-            + "created on {} UTC".format(
+            "MUST BE CREATED BY\n# mf6/utils/createpackages.py\n"
+            "# FILE created on {} UTC".format(
                 local_datetime.strftime("%B %d, %Y %H:%M:%S")
             )
         )
@@ -753,7 +753,7 @@ def create_packages():
                     chld_appn, init_param_list[:-1], whsp_1
                 )
                 append_pkg = (
-                    "\n        self._append_package(new_package, " "filename)"
+                    "\n        self._append_package(new_package, filename)"
                 )
                 params_appn = (
                     "        new_package = ModflowUtl{}("

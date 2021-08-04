@@ -229,11 +229,10 @@ class _ModpathSeries(object):
             try:
                 raslice = ra[["k", "i", "j"]]
             except (KeyError, ValueError):
-                msg = (
+                raise KeyError(
                     "could not extract 'k', 'i', and 'j' keys "
-                    + "from {} data".format(self.output_type.lower())
+                    "from {} data".format(self.output_type.lower())
                 )
-                raise KeyError(msg)
         else:
             try:
                 raslice = ra[["node"]]
@@ -531,11 +530,10 @@ class PathlineFile(_ModpathSeries):
                 ]
             )
         elif self.version == 7:
-            msg = (
+            raise TypeError(
                 "_get_dtypes() should not be called for "
-                + "MODPATH 7 pathline files"
+                "MODPATH 7 pathline files"
             )
-            raise TypeError(msg)
         return dtype
 
     def _get_mp7data(self):
@@ -1058,19 +1056,15 @@ class EndpointFile:
 
                 # add particle id to new array
                 if self.verbose:
-                    msg = (
+                    print(
                         "writing particleid (pids) to new "
-                        + "structured data array"
+                        "structured data array"
                     )
-                    print(msg)
                 data["particleid"] = pids["particleid"]
 
                 # add remaining data to the new array
                 if self.verbose:
-                    msg = (
-                        "writing remaining data to new "
-                        + "structured data array"
-                    )
+                    msg = "writing remaining data to new structured data array"
                     print(msg)
                 for name in self._data.dtype.names:
                     data[name] = self._data[name]
@@ -1220,14 +1214,11 @@ class EndpointFile:
             try:
                 raslice = ra_slice(ra, keys)
             except (KeyError, ValueError):
-                msg = (
-                    "could not extract"
-                    + "'"
+                raise KeyError(
+                    "could not extract "
                     + "', '".join(keys)
-                    + "'"
-                    + "from endpoint data."
+                    + " from endpoint data."
                 )
-                raise KeyError(msg)
         else:
             if source:
                 keys = ["node0"]
@@ -1304,11 +1295,10 @@ class EndpointFile:
         elif direction.lower() == "starting":
             xcol, ycol, zcol = "x0", "y0", "z0"
         else:
-            errmsg = (
+            raise Exception(
                 'flopy.map.plot_endpoint direction must be "ending" '
-                + 'or "starting".'
+                'or "starting".'
             )
-            raise Exception(errmsg)
         if mg is None and sr.__class__.__name__ == "SpatialReference":
             warnings.warn(
                 "Deprecation warning: SpatialReference is deprecated."
@@ -1431,11 +1421,9 @@ class TimeseriesFile(_ModpathSeries):
                 else:
                     self.version = None
                 if self.version is None:
-                    errmsg = (
-                        "{} ".format(self.fname)
-                        + "is not a valid timeseries file"
+                    raise Exception(
+                        "{} is not a valid timeseries file".format(self.fname)
                     )
-                    raise Exception(errmsg)
             self.skiprows += 1
             if self.version == 6 or self.version == 7:
                 if "end header" in line.lower():

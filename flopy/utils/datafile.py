@@ -116,11 +116,10 @@ class Header:
         else:
             self.dtype = None
             self.header = None
-            msg = (
-                "Specified {} ".format(self.header_type)
-                + "type is not available. Available types are:"
+            print(
+                "Specified {} type is not available. "
+                "Available types are:".format(self.header_type)
             )
-            print(msg)
             for idx, t in enumerate(self.header_types):
                 print("  {0} {1}".format(idx + 1, t))
         return
@@ -268,12 +267,12 @@ class LayerFile:
         ).transpose()
         if mflay != None:
             attrib_dict = {
-                attrib_name + "{}".format(mflay): plotarray[0, :, :]
+                "{}{}".format(attrib_name, mflay): plotarray[0, :, :]
             }
         else:
             attrib_dict = {}
             for k in range(plotarray.shape[0]):
-                name = attrib_name + "{}".format(k)
+                name = "{}{}".format(attrib_name, k)
                 attrib_dict[name] = plotarray[k]
 
         from ..export.shapefile_utils import write_grid_shapefile
@@ -404,11 +403,10 @@ class LayerFile:
         Build the recordarray and iposarray, which maps the header information
         to the position in the formatted file.
         """
-        e = (
+        raise Exception(
             "Abstract method _build_index called in LayerFile.  "
-            + "This method needs to be overridden."
+            "This method needs to be overridden."
         )
-        raise Exception(e)
 
     def list_records(self):
         """
@@ -586,11 +584,10 @@ class LayerFile:
         Read data from file
 
         """
-        e = (
+        raise Exception(
             "Abstract method _read_data called in LayerFile.  "
-            + "This method needs to be overridden."
+            "This method needs to be overridden."
         )
-        raise Exception(e)
 
     def _build_kijlist(self, idx):
         if isinstance(idx, list):
@@ -604,12 +601,6 @@ class LayerFile:
         # the seek approach won't work.  Can't use k = -1, for example.
         for k, i, j in kijlist:
             fail = False
-            errmsg = (
-                "Invalid cell index. Cell "
-                + str((k, i, j))
-                + " not within model grid: "
-                + str((self.nlay, self.nrow, self.ncol))
-            )
             if k < 0 or k > self.nlay - 1:
                 fail = True
             if i < 0 or i > self.nrow - 1:
@@ -617,7 +608,10 @@ class LayerFile:
             if j < 0 or j > self.ncol - 1:
                 fail = True
             if fail:
-                raise Exception(errmsg)
+                raise Exception(
+                    "Invalid cell index. Cell {} not within model grid: "
+                    "{}".format((k, i, j), (self.nlay, self.nrow, self.ncol))
+                )
         return kijlist
 
     def _get_nstation(self, idx, kijlist):

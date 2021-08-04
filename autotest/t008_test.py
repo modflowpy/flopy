@@ -118,10 +118,8 @@ def load_nwt(nwtfile):
     ]
     for l in lst:
         msg = (
-            "{} data ".format(l)
-            + "instantiated from "
-            + "{} load ".format(os.path.basename(nwtfile))
-            + " is not the same as written to {}".format(os.path.basename(fn))
+            "{} data instantiated from {} load  is not the same as written to "
+            "{}".format(l, nwtfile, os.path.basename(fn))
         )
         assert nwt2[l] == nwt[l], msg
 
@@ -151,9 +149,8 @@ def load_nwt_model(nfile):
         ]
         for l in lst:
             msg = (
-                "{}.{} data ".format(pn, l)
-                + "instantiated from {} load ".format(model_ws)
-                + " is not the same as written to {}".format(tpth)
+                "{}.{} data instantiated from {} load  is not the same as "
+                "written to {}".format(pn, l, model_ws, tpth)
             )
             assert p[l] == p2[l], msg
 

@@ -839,7 +839,7 @@ class MFDocString:
     def __init__(self, description):
         self.indent = "    "
         self.description = description
-        self.parameter_header = "{}Parameters\n{}" "----------".format(
+        self.parameter_header = "{}Parameters\n{}----------".format(
             self.indent, self.indent
         )
         self.parameters = []

@@ -292,7 +292,7 @@ def test_filenames():
     # Write the model input files
     m.write_input()
 
-    s = "output filename ({}) does " "not match specified name".format(
+    s = "output filename ({}) does not match specified name".format(
         m.get_output(unit=51)
     )
     assert m.get_output(unit=51) == f_out, s
