@@ -16,7 +16,7 @@ if os.path.isdir(tpth):
 os.makedirs(tpth)
 
 
-def export_ascii_grid(modelgrid, file_path, v, nodata=0.0):
+def __export_ascii_grid(modelgrid, file_path, v, nodata=0.0):
     shape = v.shape
     xcenters = modelgrid.xcellcenters[0, :]
     cellsize = xcenters[1] - xcenters[0]
@@ -29,6 +29,104 @@ def export_ascii_grid(modelgrid, file_path, v, nodata=0.0):
         f.write("NODATA_VALUE {}\n".format(nodata))
         np.savetxt(f, v, fmt="%.4f")
     return
+
+
+# derived from original modflow6-examples function in ex-gwt-prudic2004t2
+def __get_lake_connection_data(
+    nrow, ncol, delr, delc, lakibd, idomain, lakebed_leakance
+):
+    lakeconnectiondata = []
+    nlakecon = [0, 0]
+    lak_leakance = lakebed_leakance
+    for i in range(nrow):
+        for j in range(ncol):
+            if lakibd[i, j] == 0:
+                continue
+            else:
+                ilak = lakibd[i, j] - 1
+                # back
+                if i > 0:
+                    ci2d, ci = (i - 1, j), (0, i - 1, j)
+                    if lakibd[ci2d] == 0 and idomain[ci] > 0:
+                        h = [
+                            ilak,
+                            nlakecon[ilak],
+                            ci,
+                            "horizontal",
+                            lak_leakance,
+                            0.0,
+                            0.0,
+                            0.5 * delc,
+                            delr,
+                        ]
+                        nlakecon[ilak] += 1
+                        lakeconnectiondata.append(h)
+                # left
+                if j > 0:
+                    ci2d, ci = (i, j - 1), (0, i, j - 1)
+                    if lakibd[ci2d] == 0 and idomain[ci] > 0:
+                        h = [
+                            ilak,
+                            nlakecon[ilak],
+                            ci,
+                            "horizontal",
+                            lak_leakance,
+                            0.0,
+                            0.0,
+                            0.5 * delr,
+                            delc,
+                        ]
+                        nlakecon[ilak] += 1
+                        lakeconnectiondata.append(h)
+                # right
+                if j < ncol - 1:
+                    ci2d, ci = (i, j + 1), (0, i, j + 1)
+                    if lakibd[ci2d] == 0 and idomain[ci] > 0:
+                        h = [
+                            ilak,
+                            nlakecon[ilak],
+                            ci,
+                            "horizontal",
+                            lak_leakance,
+                            0.0,
+                            0.0,
+                            0.5 * delr,
+                            delc,
+                        ]
+                        nlakecon[ilak] += 1
+                        lakeconnectiondata.append(h)
+                # front
+                if i < nrow - 1:
+                    ci2d, ci = (i + 1, j), (0, i + 1, j)
+                    if lakibd[ci2d] == 0 and idomain[ci] > 0:
+                        h = [
+                            ilak,
+                            nlakecon[ilak],
+                            ci,
+                            "horizontal",
+                            lak_leakance,
+                            0.0,
+                            0.0,
+                            0.5 * delc,
+                            delr,
+                        ]
+                        nlakecon[ilak] += 1
+                        lakeconnectiondata.append(h)
+                # vertical
+                v = [
+                    ilak,
+                    nlakecon[ilak],
+                    (1, i, j),
+                    "vertical",
+                    lak_leakance,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                ]
+                nlakecon[ilak] += 1
+                lakeconnectiondata.append(v)
+    return lakeconnectiondata, nlakecon
 
 
 def test_base_run():
@@ -52,20 +150,20 @@ def test_base_run():
     # export bottom, water levels, and k11 as ascii raster files
     # for interpolation in test_lake()
     bot = gwf.dis.botm.array.squeeze()
-    export_ascii_grid(
+    __export_ascii_grid(
         gwf.modelgrid,
         os.path.join(ws, "bot.asc"),
         bot,
     )
     top = gwf.output.head().get_data().squeeze() + 2.0
     top = np.where(gwf.dis.idomain.array.squeeze() < 1.0, 0.0, top)
-    export_ascii_grid(
+    __export_ascii_grid(
         gwf.modelgrid,
         os.path.join(ws, "top.asc"),
         top,
     )
     k11 = gwf.npf.k.array.squeeze()
-    export_ascii_grid(
+    __export_ascii_grid(
         gwf.modelgrid,
         os.path.join(ws, "k11.asc"),
         k11,
@@ -144,7 +242,11 @@ def test_lake():
     # mm = flopy.plot.PlotMapView(modelgrid=gwf.modelgrid)
     # mm.plot_array(k11_tm)
 
-    pakdata_dict, connectiondata = flopy.mf6.utils.get_lak_connections(
+    (
+        idomain,
+        pakdata_dict,
+        connectiondata,
+    ) = flopy.mf6.utils.get_lak_connections(
         gwf.modelgrid,
         lakes,
         bedleak=5e-9,
@@ -181,7 +283,6 @@ def test_lake():
 
 def test_embedded_lak_ex01():
     nper = 1
-    perioddata = [(1.0, 1, 1.0)]
     nlay, nrow, ncol = 5, 17, 17
     shape3d = (nlay, nrow, ncol)
     delr = (
@@ -212,12 +313,10 @@ def test_embedded_lak_ex01():
         77.0,
         67.0,
     )
-    idomain = np.ones(shape3d, dtype=np.int32)
-    idomain[0, 6:11, 6:11] = 0
-    idomain[1, 7:10, 7:10] = 0
-
-    lake_map = idomain.copy()
-    lake_map[idomain == 1] = -1
+    lake_map = np.ones(shape3d, dtype=np.int32) * -1
+    lake_map[0, 6:11, 6:11] = 0
+    lake_map[1, 7:10, 7:10] = 0
+    lake_map = np.ma.masked_where(lake_map < 0, lake_map)
 
     strt = 115.0
 
@@ -282,7 +381,6 @@ def test_embedded_lak_ex01():
     tdis = flopy.mf6.ModflowTdis(
         sim,
         nper=nper,
-        perioddata=perioddata,
     )
     ims = flopy.mf6.ModflowIms(
         sim,
@@ -308,7 +406,6 @@ def test_embedded_lak_ex01():
         delc=delc,
         top=top,
         botm=botm,
-        idomain=idomain,
     )
     ic = flopy.mf6.ModflowGwfic(
         gwf,
@@ -339,7 +436,11 @@ def test_embedded_lak_ex01():
         printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
     )
 
-    pakdata_dict, connectiondata = flopy.mf6.utils.get_lak_connections(
+    (
+        idomain,
+        pakdata_dict,
+        connectiondata,
+    ) = flopy.mf6.utils.get_lak_connections(
         gwf.modelgrid,
         lake_map,
         bedleak=0.1,
@@ -364,12 +465,127 @@ def test_embedded_lak_ex01():
         pname="LAK-1",
     )
 
+    # reset idomain
+    gwf.dis.idomain = idomain
+
     # write the simulation files and run the model
     sim.write_simulation()
     sim.run_simulation(silent=False)
 
 
+def test_embedded_lak_prudic():
+    lakebed_leakance = 1.0  # Lakebed leakance ($ft^{-1}$)
+    nlay = 8  # Number of layers
+    nrow = 36  # Number of rows
+    ncol = 23  # Number of columns
+    delr = float(405.665)  # Column width ($ft$)
+    delc = float(403.717)  # Row width ($ft$)
+    delv = 15.0  # Layer thickness ($ft$)
+    top = 100.0  # Top of the model ($ft$)
+
+    shape2d = (nrow, ncol)
+    shape3d = (nlay, nrow, ncol)
+
+    # load data from text files
+    data_ws = os.path.join("..", "examples", "data", "mf6_test")
+    fname = os.path.join(data_ws, "prudic2004t2_bot1.dat")
+    bot0 = np.loadtxt(fname)
+    botm = np.array(
+        [bot0]
+        + [
+            np.ones(shape2d, dtype=float) * (bot0 - (delv * k))
+            for k in range(1, nlay)
+        ]
+    )
+    fname = os.path.join(data_ws, "prudic2004t2_idomain1.dat")
+    idomain0 = np.loadtxt(fname, dtype=np.int32)
+    idomain = np.array(nlay * [idomain0], dtype=np.int32)
+    fname = os.path.join(data_ws, "prudic2004t2_lakibd.dat")
+    lakibd = np.loadtxt(fname, dtype=int)
+    lake_map = np.ones(shape3d, dtype=np.int32) * -1
+    lake_map[0, :, :] = lakibd[:, :] - 1
+
+    # build StructuredGrid
+    model_grid = flopy.discretization.StructuredGrid(
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=np.ones(ncol, dtype=float) * delr,
+        delc=np.ones(nrow, dtype=float) * delc,
+        top=np.ones(shape2d, dtype=float) * top,
+        botm=botm,
+        idomain=idomain,
+    )
+
+    # base case
+    cdata, lakconn = __get_lake_connection_data(
+        nrow, ncol, delr, delc, lakibd, idomain, lakebed_leakance
+    )
+
+    # flopy test
+    (
+        idomain_rev,
+        pakdata_dict,
+        connectiondata,
+    ) = flopy.mf6.utils.get_lak_connections(
+        model_grid,
+        lake_map,
+        idomain=idomain,
+        bedleak=lakebed_leakance,
+    )
+
+    # evaluate the number of connections
+    for idx, nconn in enumerate(lakconn):
+        assert pakdata_dict[idx] == nconn, (
+            "number of connections calculated by "
+            + "get_lak_connections ({}) ".format(pakdata_dict[idx])
+            + "not equal to {} for lake {}.".format(nconn, idx + 1)
+        )
+
+    # compare connectiondata
+    for idx, (cd, cdbase) in enumerate(zip(connectiondata, cdata)):
+        for jdx in (
+            0,
+            1,
+            2,
+            3,
+            7,
+            8,
+        ):
+            match = True
+            if jdx not in (
+                7,
+                8,
+            ):
+                if cd[jdx] != cdbase[jdx]:
+                    match = False
+            else:
+                match = np.allclose(cd[jdx], cdbase[jdx])
+            if not match:
+                print(
+                    "connection data do match for "
+                    + "connection {} ".format(idx)
+                    + "for lake {}".format(cd[0])
+                )
+                break
+        assert match, "connection data do not match for connection {}".format(
+            jdx
+        )
+
+    # evaluate the revised idomain, only layer 1 has been adjusted
+    idomain0_test = idomain[0, :, :].copy()
+    idomain0_test[lakibd > 0] = 0
+    idomain_test = idomain.copy()
+    idomain[0, :, :] = idomain0_test
+    assert np.array_equal(
+        idomain_rev, idomain_test
+    ), "idomain not updated correctly with lakibd"
+
+    return
+
+
 if __name__ == "__main__":
     # test_base_run()
     # test_lake()
-    test_embedded_lak_ex01()
+    # test_embedded_lak_ex01()
+    test_embedded_lak_prudic()
