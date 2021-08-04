@@ -251,6 +251,18 @@ def test_lake():
         lakes,
         bedleak=5e-9,
     )
+
+    assert (
+        pakdata_dict[0] == 54
+    ), "number of lake connections ({}) not equal " "to 54.".format(
+        pakdata_dict[0]
+    )
+
+    assert len(connectiondata) == 54, (
+        "number of lake connectiondata entries ({}) not equal "
+        "to 54.".format(len(connectiondata))
+    )
+
     lak_pak_data = []
     for key, value in pakdata_dict.items():
         lak_pak_data.append([key, 35.0, value])
@@ -276,7 +288,9 @@ def test_lake():
 
     # write the revised simulation files and run the model
     sim.write_simulation()
-    sim.run_simulation(silent=False)
+    success = sim.run_simulation(silent=False)
+
+    assert success, "could not run {} with lake".format(sim.name)
 
     return
 
@@ -445,6 +459,18 @@ def test_embedded_lak_ex01():
         lake_map,
         bedleak=0.1,
     )
+
+    assert (
+        pakdata_dict[0] == 57
+    ), "number of lake connections ({}) not equal " "to 57.".format(
+        pakdata_dict[0]
+    )
+
+    assert len(connectiondata) == 57, (
+        "number of lake connectiondata entries ({}) not equal "
+        "to 57.".format(len(connectiondata))
+    )
+
     lak_pak_data = []
     for key, value in pakdata_dict.items():
         lak_pak_data.append([key, 110.0, value])
@@ -470,7 +496,9 @@ def test_embedded_lak_ex01():
 
     # write the simulation files and run the model
     sim.write_simulation()
-    sim.run_simulation(silent=False)
+    success = sim.run_simulation(silent=False)
+
+    assert success, "could not run {}".format(sim.name)
 
 
 def test_embedded_lak_prudic():
@@ -537,9 +565,10 @@ def test_embedded_lak_prudic():
     # evaluate the number of connections
     for idx, nconn in enumerate(lakconn):
         assert pakdata_dict[idx] == nconn, (
-            "number of connections calculated by "
-            + "get_lak_connections ({}) ".format(pakdata_dict[idx])
-            + "not equal to {} for lake {}.".format(nconn, idx + 1)
+            "number of connections calculated by get_lak_connections ({}) "
+            "not equal to {} for lake {}.".format(
+                pakdata_dict[idx], nconn, idx + 1
+            )
         )
 
     # compare connectiondata
@@ -563,9 +592,8 @@ def test_embedded_lak_prudic():
                 match = np.allclose(cd[jdx], cdbase[jdx])
             if not match:
                 print(
-                    "connection data do match for "
-                    + "connection {} ".format(idx)
-                    + "for lake {}".format(cd[0])
+                    "connection data do match for connection {} "
+                    "for lake {}".format(idx, cd[0])
                 )
                 break
         assert match, "connection data do not match for connection {}".format(
@@ -585,7 +613,7 @@ def test_embedded_lak_prudic():
 
 
 if __name__ == "__main__":
-    # test_base_run()
-    # test_lake()
-    # test_embedded_lak_ex01()
+    test_base_run()
+    test_lake()
+    test_embedded_lak_ex01()
     test_embedded_lak_prudic()

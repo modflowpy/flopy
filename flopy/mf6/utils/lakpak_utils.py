@@ -68,8 +68,8 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=0.1):
     if shape_map != shape3d:
         if shape_map != shape2d:
             raise ValueError(
-                "lake_map shape ({}) must be equal to ".format(shape_map)
-                + "the grid shape for each layer ({})".format(shape2d)
+                "lake_map shape ({}) must be equal to the grid shape for "
+                "each layer ({})".format(shape_map, shape2d)
             )
         else:
             embedded = False
@@ -85,7 +85,8 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=0.1):
     # check dimensions of idomain
     if idomain.shape != shape3d:
         raise ValueError(
-            "shape of idomain ({}) ".format + "not equal to {}".format(shape3d)
+            "shape of idomain "
+            "({}) not equal to {}".format(idomain.shape, shape3d)
         )
 
     # convert bedleak to numpy array if necessary
