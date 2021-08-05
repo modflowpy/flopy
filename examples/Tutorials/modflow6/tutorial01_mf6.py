@@ -56,7 +56,7 @@ q = -1000.0
 # an iterative model solution (`IMS`), which controls how the GWF model is
 # solved.
 
-# ### Create the Flopy simulation object
+# ### Create the FloPy simulation object
 
 sim = flopy.mf6.MFSimulation(
     sim_name=name, exe_name="mf6", version="mf6", sim_ws="."
