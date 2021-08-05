@@ -211,44 +211,48 @@ def __structured_lake_connections(
         # back face
         if i > 0:
             ci = (k, i - 1, j)
+            cit = (k + 1, i - 1, j)
             if np.ma.is_masked(lake_map[ci]) and idomain[ci] > 0:
                 cellids.append(ci)
                 claktypes.append("horizontal")
-                belevs.append(elevations[k + 1, i, j])
-                televs.append(elevations[k, i, j])
+                belevs.append(elevations[cit])
+                televs.append(elevations[ci])
                 connlens.append(0.5 * dy[i - 1])
                 connwidths.append(dx[j])
 
         # left face
         if j > 0:
             ci = (k, i, j - 1)
+            cit = (k + 1, i, j - 1)
             if np.ma.is_masked(lake_map[ci]) and idomain[ci] > 0:
                 cellids.append(ci)
                 claktypes.append("horizontal")
-                belevs.append(elevations[k + 1, i, j])
-                televs.append(elevations[k, i, j])
+                belevs.append(elevations[cit])
+                televs.append(elevations[ci])
                 connlens.append(0.5 * dx[j - 1])
                 connwidths.append(dy[i])
 
         # right face
         if j < ncol - 1:
             ci = (k, i, j + 1)
+            cit = (k + 1, i, j + 1)
             if np.ma.is_masked(lake_map[ci]) and idomain[ci] > 0:
                 cellids.append(ci)
                 claktypes.append("horizontal")
-                belevs.append(elevations[k + 1, i, j])
-                televs.append(elevations[k, i, j])
+                belevs.append(elevations[cit])
+                televs.append(elevations[ci])
                 connlens.append(0.5 * dx[j + 1])
                 connwidths.append(dy[i])
 
         # front face
         if i < nrow - 1:
             ci = (k, i + 1, j)
+            cit = (k + 1, i + 1, j)
             if np.ma.is_masked(lake_map[ci]) and idomain[ci] > 0:
                 cellids.append(ci)
                 claktypes.append("horizontal")
-                belevs.append(elevations[k + 1, i, j])
-                televs.append(elevations[k, i, j])
+                belevs.append(elevations[cit])
+                televs.append(elevations[ci])
                 connlens.append(0.5 * dy[i + 1])
                 connwidths.append(dx[j])
 

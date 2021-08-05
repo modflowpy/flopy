@@ -78,9 +78,9 @@ def test_modpath():
             success, buff = mp.run_model(silent=False)
         except:
             success = False
-        assert success, (
-            "forward modpath model run did not terminate successfully"
-        )
+        assert (
+            success
+        ), "forward modpath model run did not terminate successfully"
 
     mpnam = "freybergmpp"
     mpp = flopy.modpath.Modpath6(
@@ -106,9 +106,9 @@ def test_modpath():
             success, buff = mpp.run_model(silent=False)
         except:
             success = False
-        assert success, (
-            "backward modpath model run did not terminate successfully"
-        )
+        assert (
+            success
+        ), "backward modpath model run did not terminate successfully"
 
     # load modpath output files
     if run:
