@@ -12,7 +12,7 @@
 #     name: python3
 # ---
 
-# # MODFLOW 6 Tutorial 3: Observation packages
+# # MODFLOW 6: Observation packages
 #
 
 # ## Introduction to Observations

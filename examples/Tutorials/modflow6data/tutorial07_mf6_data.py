@@ -12,7 +12,7 @@
 #     name: python3
 # ---
 
-# # MODFLOW 6 Tutorial 8: Working with MODFLOW Grid Array Data
+# # MODFLOW 6: Working with MODFLOW Grid Array Data
 #
 # This tutorial shows how to view, access, and change the underlying data
 # variables for MODFLOW 6 objects in FloPy.  Interaction with a FloPy

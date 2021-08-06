@@ -181,8 +181,8 @@ html_theme = "sphinx_rtd_theme"
 # html_static_path = ["_static"]
 
 html_theme_options = {
-    "github_url": "https://github.com/modflowpy/flopy",
-    "use_edit_page_button": False,
+    # "github_url": "https://github.com/modflowpy/flopy",
+    # "use_edit_page_button": False,
 }
 
 autosummary_generate = True
@@ -222,7 +222,7 @@ html_use_index = True
 html_split_index = False
 
 # If true, links to the reST sources are added to the pages.
-# html_show_sourcelink = True
+html_show_sourcelink = False
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
 html_show_sphinx = True

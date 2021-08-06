@@ -12,7 +12,7 @@
 #     name: python3
 # ---
 
-# # MODFLOW 6 Tutorial 5: Time Array Series Packages
+# # MODFLOW 6: Time Array Series Packages
 #
 
 # ## Introduction to Time Array Series

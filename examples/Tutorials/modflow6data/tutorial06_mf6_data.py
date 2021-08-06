@@ -12,7 +12,7 @@
 #     name: python3
 # ---
 
-# # MODFLOW 6 Tutorial 7: Working with MODFLOW List Data.
+# # MODFLOW 6: Working with MODFLOW List Data.
 #
 # This tutorial shows how to view, access, and change the underlying data
 # variables for MODFLOW 6 objects in FloPy.  Interaction with a FloPy
