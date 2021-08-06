@@ -22,7 +22,7 @@ type keyword
 reader urword
 optional true
 longname activate first-order decay
-description is a text keyword to indicate that first-order decay will occur.  Use of this keyword requires that DECAY and DECAY\_SORBED (if sorbtion is active) are specified in the GRIDDATA block.
+description is a text keyword to indicate that first-order decay will occur.  Use of this keyword requires that DECAY and DECAY\_SORBED (if sorption is active) are specified in the GRIDDATA block.
 
 block options
 name zero_order_decay
@@ -30,7 +30,7 @@ type keyword
 reader urword
 optional true
 longname activate zero-order decay
-description is a text keyword to indicate that zero-order decay will occur.  Use of this keyword requires that DECAY and DECAY\_SORBED (if sorbtion is active) are specified in the GRIDDATA block.
+description is a text keyword to indicate that zero-order decay will occur.  Use of this keyword requires that DECAY and DECAY\_SORBED (if sorption is active) are specified in the GRIDDATA block.
 
 block options
 name cim_filerecord
@@ -189,7 +189,7 @@ reader readarray
 layered true
 optional true
 longname first rate coefficient
-description is the rate coefficient for first or zero-order decay for the aqueous phase of the immobile domain.  A negative value indicates solute production.  The dimensions of decay for first-order decay is one over time.  The dimensions of decay for zero-order decay is mass per length cubed per time.  decay will have no affect on simulation results unless either first- or zero-order decay is specified in the options block.
+description is the rate coefficient for first or zero-order decay for the aqueous phase of the immobile domain.  A negative value indicates solute production.  The dimensions of decay for first-order decay is one over time.  The dimensions of decay for zero-order decay is mass per length cubed per time.  Decay will have no effect on simulation results unless either first- or zero-order decay is specified in the options block.
 
 block griddata
 name decay_sorbed
@@ -199,7 +199,7 @@ reader readarray
 optional true
 layered true
 longname second rate coefficient
-description is the rate coefficient for first or zero-order decay for the sorbed phase of the immobile domain.  A negative value indicates solute production.  The dimensions of decay\_sorbed for first-order decay is one over time.  The dimensions of decay\_sorbed for zero-order decay is mass of solute per mass of aquifer per time.  If decay\_sorbed is not specified and both decay and sorbtion are active, then the program will terminate with an error.  decay\_sorbed will have no affect on simulation results unless the SORPTION keyword and either first- or zero-order decay are specified in the options block.
+description is the rate coefficient for first or zero-order decay for the sorbed phase of the immobile domain.  A negative value indicates solute production.  The dimensions of decay\_sorbed for first-order decay is one over time.  The dimensions of decay\_sorbed for zero-order decay is mass of solute per mass of aquifer per time.  If decay\_sorbed is not specified and both decay and sorption are active, then the program will terminate with an error.  decay\_sorbed will have no effect on simulation results unless the SORPTION keyword and either first- or zero-order decay are specified in the options block.
 
 block griddata
 name bulk_density
@@ -208,7 +208,7 @@ shape (nodes)
 reader readarray
 layered true
 longname bulk density
-description is the bulk density of the aquifer in mass per length cubed.  bulk\_density will have no affect on simulation results unless the SORBTION keyword is specified in the options block.
+description is the bulk density of the aquifer in mass per length cubed.  bulk\_density will have no effect on simulation results unless the SORPTION keyword is specified in the options block.
 
 block griddata
 name distcoef
@@ -217,5 +217,5 @@ shape (nodes)
 reader readarray
 layered true
 longname distribution coefficient
-description is the distribution coefficient for the equilibrium-controlled linear sorption isotherm in dimensions of length cubed per mass.  distcoef will have no affect on simulation results unless the SORBTION keyword is specified in the options block.
+description is the distribution coefficient for the equilibrium-controlled linear sorption isotherm in dimensions of length cubed per mass.  distcoef will have no effect on simulation results unless the SORPTION keyword is specified in the options block.
 

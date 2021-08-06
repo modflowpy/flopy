@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 19, 2021 03:08:37 UTC
+# FILE created on August 06, 2021 20:56:59 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -25,9 +25,13 @@ class ModflowTdis(mfpackage.MFPackage):
     start_date_time : string
         * start_date_time (string) is the starting date and time of the
           simulation. This is a text string that is used as a label within the
-          simulation list file. The value has no affect on the simulation. The
+          simulation list file. The value has no effect on the simulation. The
           recommended format for the starting date and time is described at
           https://www.w3.org/TR/NOTE-datetime.
+    ats_filerecord : [ats6_filename]
+        * ats6_filename (string) defines an adaptive time step (ATS) input file
+          defining ATS controls. Records in the ATS file can be used to
+          override the time step behavior for selected stress periods.
     nper : integer
         * nper (integer) is the number of stress periods for the simulation.
     perioddata : [perlen, nstp, tsmult]
@@ -50,6 +54,9 @@ class ModflowTdis(mfpackage.MFPackage):
 
     """
 
+    ats_filerecord = ListTemplateGenerator(
+        ("tdis", "options", "ats_filerecord")
+    )
     perioddata = ListTemplateGenerator(("tdis", "perioddata", "perioddata"))
     package_abbr = "tdis"
     _package_type = "tdis"
@@ -69,6 +76,45 @@ class ModflowTdis(mfpackage.MFPackage):
             "type string",
             "reader urword",
             "optional true",
+        ],
+        [
+            "block options",
+            "name ats_filerecord",
+            "type record ats6 filein ats6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name ats6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name ats6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
         ],
         [
             "block dimensions",
@@ -121,6 +167,7 @@ class ModflowTdis(mfpackage.MFPackage):
         loading_package=False,
         time_units=None,
         start_date_time=None,
+        ats_filerecord=None,
         nper=1,
         perioddata=((1.0, 1, 1.0),),
         filename=None,
@@ -135,6 +182,9 @@ class ModflowTdis(mfpackage.MFPackage):
         self.time_units = self.build_mfdata("time_units", time_units)
         self.start_date_time = self.build_mfdata(
             "start_date_time", start_date_time
+        )
+        self.ats_filerecord = self.build_mfdata(
+            "ats_filerecord", ats_filerecord
         )
         self.nper = self.build_mfdata("nper", nper)
         self.perioddata = self.build_mfdata("perioddata", perioddata)

@@ -52,6 +52,39 @@ longname save well flows to budget file
 description REPLACE save_flows {'{#1}': 'UZF'}
 
 block options
+name wc_filerecord
+type record water_content fileout wcfile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name water_content
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname water_content keyword
+description keyword to specify that record corresponds to unsaturated zone water contents.
+
+block options
+name wcfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the binary output file to write water content information.
+
+block options
 name budget_filerecord
 type record budget fileout budgetfile
 shape
@@ -364,7 +397,7 @@ tagged false
 in_record true
 reader urword
 longname vertical saturated hydraulic conductivity
-description is the vertical saturated hydraulic conductivity of the UZF cell.
+description is the saturated vertical hydraulic conductivity of the UZF cell.  This value is used with the Brooks-Corey function and the simulated water content to calculate the partially saturated hydraulic conductivity.
 
 block packagedata
 name thtr
@@ -374,7 +407,7 @@ tagged false
 in_record true
 reader urword
 longname residual water content
-description is the residual (irreducible) water content of the UZF cell.
+description is the residual (irreducible) water content of the UZF cell.  This residual water is not available to plants and will not drain into underlying aquifer cells.
 
 block packagedata
 name thts
@@ -384,7 +417,7 @@ tagged false
 in_record true
 reader urword
 longname saturated water content
-description is the saturated water content of the UZF cell.
+description is the saturated water content of the UZF cell.  The values for saturated and residual water content should be set in a manner that is consistent with the specific yield value specified in the Storage Package.  The saturated water content must be greater than the residual content.
 
 block packagedata
 name thti
@@ -394,7 +427,7 @@ tagged false
 in_record true
 reader urword
 longname initial water content
-description is the initial water content of the UZF cell.
+description is the initial water content of the UZF cell.  The value must be greater than or equal to the residual water content and less than or equal to the saturated water content.
 
 block packagedata
 name eps
@@ -403,8 +436,8 @@ shape
 tagged false
 in_record true
 reader urword
-longname initial water content
-description is the epsilon exponent of the UZF cell.
+longname Brooks-Corey exponent
+description is the exponent used in the Brooks-Corey function.  The Brooks-Corey function is used by UZF to calculated hydraulic conductivity under partially saturated conditions as a function of water content and the user-specified saturated hydraulic conductivity.
 
 block packagedata
 name boundname
@@ -494,7 +527,7 @@ in_record true
 reader urword
 time_series true
 longname extinction water content
-description real or character value that defines the evapotranspiration extinction water content of the UZF cell. EXTWC is always specified, but is only used if SIMULATE\_ET and UNSAT\_ETWC are specified in the OPTIONS block. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real or character value that defines the evapotranspiration extinction water content of the UZF cell. EXTWC is always specified, but is only used if SIMULATE\_ET and UNSAT\_ETWC are specified in the OPTIONS block. The evapotranspiration rate from the unsaturated zone will be set to zero when the calculated water content is at or less than this value.  The value for EXTWC cannot be less than the residual water content, and if it is specified as being less than the residual water content it is set to the residual water content. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period
 name ha

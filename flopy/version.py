@@ -1,5 +1,5 @@
 # flopy version file automatically created using...make-release.py
-# created on...August 05, 2021 14:43:06
+# created on...August 06, 2021 16:38:32
 
 major = 3
 minor = 3

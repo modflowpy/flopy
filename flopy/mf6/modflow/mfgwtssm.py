@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 19, 2021 03:08:37 UTC
+# FILE created on August 06, 2021 20:57:00 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -29,8 +29,11 @@ class ModflowGwtssm(mfpackage.MFPackage):
           written to the file specified with "BUDGET FILEOUT" in Output
           Control.
     sources : [pname, srctype, auxname]
-        * pname (string) name of the package for which an auxiliary variable
-          contains a source concentration.
+        * pname (string) name of the flow package for which an auxiliary
+          variable contains a source concentration. If this flow package is
+          represented using an advanced transport package (SFT, LKT, MWT, or
+          UZT), then the advanced transport package will override SSM terms
+          specified here.
         * srctype (string) keyword indicating how concentration will be
           assigned for sources and sinks. Keyword must be specified as either
           AUX or AUXMIXED. For both options the user must provide an auxiliary

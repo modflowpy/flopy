@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 19, 2021 03:08:37 UTC
+# FILE created on August 06, 2021 20:57:00 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -17,6 +17,10 @@ class ModflowGwtfmi(mfpackage.MFPackage):
     loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
+    save_flows : boolean
+        * save_flows (boolean) keyword to indicate that FMI flow terms will be
+          written to the file specified with "BUDGET FILEOUT" in Output
+          Control.
     flow_imbalance_correction : boolean
         * flow_imbalance_correction (boolean) correct for an imbalance in flows
           by assuming that any residual flow error comes in or leaves at the
@@ -56,6 +60,13 @@ class ModflowGwtfmi(mfpackage.MFPackage):
     dfn_file_name = "gwt-fmi.dfn"
 
     dfn = [
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
         [
             "block options",
             "name flow_imbalance_correction",
@@ -103,6 +114,7 @@ class ModflowGwtfmi(mfpackage.MFPackage):
         self,
         model,
         loading_package=False,
+        save_flows=None,
         flow_imbalance_correction=None,
         packagedata=None,
         filename=None,
@@ -114,6 +126,7 @@ class ModflowGwtfmi(mfpackage.MFPackage):
         )
 
         # set up variables
+        self.save_flows = self.build_mfdata("save_flows", save_flows)
         self.flow_imbalance_correction = self.build_mfdata(
             "flow_imbalance_correction", flow_imbalance_correction
         )
