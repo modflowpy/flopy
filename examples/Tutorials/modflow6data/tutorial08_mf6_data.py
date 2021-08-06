@@ -12,7 +12,7 @@
 #     name: python3
 # ---
 
-# # MODFLOW 6 Tutorial 9: Data Storage Information - How and Where to Store MODFLOW-6 Data
+# # MODFLOW 6: Data Storage Information - How and Where to Store MODFLOW-6 Data
 #
 # This tutorial shows the different options for storing MODFLOW data in FloPy.
 # Interaction with a FloPy MODFLOW 6 model is different from other models,

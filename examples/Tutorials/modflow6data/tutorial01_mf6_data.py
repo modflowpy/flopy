@@ -12,7 +12,7 @@
 #     name: python3
 # ---
 
-# # MODFLOW 6 Tutorial 2: Accessing Simulation Settings, Models, and Packages
+# # MODFLOW 6: Accessing Simulation Settings, Models, and Packages
 #
 # This tutorial shows how to view, access, and change the underlying package
 # variables for MODFLOW 6 objects in FloPy.  Interaction with a FloPy

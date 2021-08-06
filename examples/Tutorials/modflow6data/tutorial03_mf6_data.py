@@ -12,7 +12,7 @@
 #     name: python3
 # ---
 
-# # MODFLOW 6 Tutorial 4: Time Series Packages
+# # MODFLOW 6: Time Series Packages
 #
 
 # ## Introduction to Time Series

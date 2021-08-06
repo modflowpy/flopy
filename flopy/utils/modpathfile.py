@@ -217,7 +217,8 @@ class _ModpathSeries(object):
         -------
         series : np.recarray
             Slice of data array (e.g. PathlineFile._data, TimeseriesFile._data)
-            containing only pathlines with final k,i,j in dest_cells.
+            containing endpoint, pathline, or timeseries data that intersect
+            (k,i,j) or (node) dest_cells.
 
         """
 
@@ -720,7 +721,7 @@ class PathlineFile(_ModpathSeries):
 
     def get_destination_pathline_data(self, dest_cells, to_recarray=False):
         """
-        Get pathline data for set of destination cells.
+        Get pathline data that pass through a set of destination cells.
 
         Parameters
         ----------
@@ -738,7 +739,8 @@ class PathlineFile(_ModpathSeries):
         -------
         pthldest : np.recarray
             Slice of pathline data array (e.g. PathlineFile._data)
-            containing only pathlines with final k,i,j in dest_cells.
+            containing only pathlines that pass through (k,i,j) or (node)
+            dest_cells.
 
         Examples
         --------
@@ -1177,7 +1179,7 @@ class EndpointFile:
 
     def get_destination_endpoint_data(self, dest_cells, source=False):
         """
-        Get endpoint data for set of destination cells.
+        Get endpoint data that terminate in a set of destination cells.
 
         Parameters
         ----------
@@ -1192,7 +1194,8 @@ class EndpointFile:
         -------
         epdest : np.recarray
             Slice of endpoint data array (e.g. EndpointFile.get_alldata)
-            containing only data with final k,i,j in dest_cells.
+            containing only endpoint data with final locations in (k,i,j) or
+            (node) dest_cells.
 
         Examples
         --------
@@ -1628,7 +1631,7 @@ class TimeseriesFile(_ModpathSeries):
 
     def get_destination_timeseries_data(self, dest_cells):
         """
-        Get timeseries data for set of destination cells.
+        Get timeseries data that pass through a set of destination cells.
 
         Parameters
         ----------
@@ -1640,7 +1643,8 @@ class TimeseriesFile(_ModpathSeries):
         -------
         tsdest : np.recarray
             Slice of timeseries data array (e.g. TmeseriesFile._data)
-            containing only pathlines with final k,i,j in dest_cells.
+            containing only timeseries that pass through (k,i,j) or
+            (node) dest_cells.
 
         Examples
         --------
