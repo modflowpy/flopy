@@ -204,7 +204,8 @@ class _ModpathSeries(object):
         Parameters
         ----------
         dest_cells : list or array of tuples
-            (k, i, j) of each destination cell (zero-based)
+            (k, i, j) of each destination cell for MODPATH versions less than
+            MODPATH 7 or node number of each destination cell. (zero based)
         to_recarray : bool
             Boolean that controls returned series. If to_recarray is True,
             a single recarray with all of the pathlines that intersect
@@ -724,7 +725,8 @@ class PathlineFile(_ModpathSeries):
         Parameters
         ----------
         dest_cells : list or array of tuples
-            (k, i, j) of each destination cell (zero-based)
+            (k, i, j) of each destination cell for MODPATH versions less than
+            MODPATH 7 or node number of each destination cell. (zero based)
         to_recarray : bool
             Boolean that controls returned pthldest. If to_recarray is True,
             a single recarray with all of the pathlines that intersect
@@ -1180,7 +1182,8 @@ class EndpointFile:
         Parameters
         ----------
         dest_cells : list or array of tuples
-            (k, i, j) or (node,) of each destination cell (zero-based)
+            (k, i, j) of each destination cell for MODPATH versions less than
+            MODPATH 7 or node number of each destination cell. (zero based)
         source : bool
             Boolean to specify is dest_cells applies to source or
             destination cells (default is False).
@@ -1630,7 +1633,8 @@ class TimeseriesFile(_ModpathSeries):
         Parameters
         ----------
         dest_cells : list or array of tuples
-            (k, i, j) or nodes of each destination cell (zero-based)
+            (k, i, j) of each destination cell for MODPATH versions less than
+            MODPATH 7 or node number of each destination cell. (zero based)
 
         Returns
         -------

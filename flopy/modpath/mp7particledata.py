@@ -340,9 +340,17 @@ class ParticleData:
         d = np.recarray.copy(self.particledata)
         lnames = [name.lower() for name in d.dtype.names]
         # Add one to the kij and node indices
-        for idx in ["k", "i", "j", "node", "id"]:
+        for idx in (
+            "k",
+            "i",
+            "j",
+            "node",
+        ):
             if idx in lnames:
                 d[idx] += 1
+        # Add one to the particle id if required
+        if self.particleidoption == 0 and "id" in lnames:
+            d["id"] += 1
 
         # write the particle data
         fmt = self._fmt_string + "\n"
