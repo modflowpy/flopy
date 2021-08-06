@@ -12,6 +12,7 @@ import sys
 import numpy as np
 from .mfparbc import ModflowParBc as mfparbc
 from ..utils import Transient2d, Util2d
+from ..utils.utils_def import get_pak_vals_shape
 
 from ..pakbase import Package
 
@@ -155,17 +156,22 @@ class ModflowEvt(Package):
         else:
             load = model.load
 
+        surf_u2d_shape = get_pak_vals_shape(model, evtr)
+        evtr_u2d_shape = get_pak_vals_shape(model, evtr)
+        exdp_u2d_shape = get_pak_vals_shape(model, exdp)
+        ievt_u2d_shape = get_pak_vals_shape(model, ievt)
+
         self.surf = Transient2d(
-            model, (nrow, ncol), np.float32, surf, name="surf"
+            model, surf_u2d_shape, np.float32, surf, name="surf"
         )
         self.evtr = Transient2d(
-            model, (nrow, ncol), np.float32, evtr, name="evtr"
+            model, evtr_u2d_shape, np.float32, evtr, name="evtr"
         )
         self.exdp = Transient2d(
-            model, (nrow, ncol), np.float32, exdp, name="exdp"
+            model, exdp_u2d_shape, np.float32, exdp, name="exdp"
         )
         self.ievt = Transient2d(
-            model, (nrow, ncol), np.int32, ievt, name="ievt"
+            model, ievt_u2d_shape, np.int32, ievt, name="ievt"
         )
         self.np = 0
         self.parent.add_package(self)
@@ -199,11 +205,22 @@ class ModflowEvt(Package):
             f_evt = open(self.fn_path, "w")
         f_evt.write("{0:s}\n".format(self.heading))
         f_evt.write("{0:10d}{1:10d}\n".format(self.nevtop, self.ipakcb))
+        if self.nevtop == 2 and not self.parent.structured:
+            mxndevt = np.max(
+                [
+                    u2d.array.size
+                    for kper, u2d in self.ievt.transient_2ds.items()
+                ]
+            )
+            f_evt.write("{0:10d}\n".format(mxndevt))
+
         for n in range(nper):
             insurf, surf = self.surf.get_kper_entry(n)
             inevtr, evtr = self.evtr.get_kper_entry(n)
             inexdp, exdp = self.exdp.get_kper_entry(n)
             inievt, ievt = self.ievt.get_kper_entry(n)
+            if self.nevtop == 2 and not self.parent.structured:
+                inievt = self.ievt[n].array.size
             comment = "Evapotranspiration  dataset 5 for stress period " + str(
                 n + 1
             )
@@ -285,6 +302,12 @@ class ModflowEvt(Package):
         nevtop = int(t[0])
         ipakcb = int(t[1])
 
+        # dataset 2b for mfusg
+        if not model.structured and nevtop == 2:
+            line = f.readline()
+            t = line.strip().split()
+            mxndevt = int(t[0])
+
         # Dataset 3 and 4 - parameters data
         pak_parms = None
         if npar > 0:
@@ -292,6 +315,8 @@ class ModflowEvt(Package):
 
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
+        else:
+            nrow, ncol, nlay, _ = model.get_nrow_ncol_nlay_nper()
 
         # Read data for every stress period
         surf = {}
@@ -310,6 +335,15 @@ class ModflowEvt(Package):
             inexdp = int(t[2])
             if nevtop == 2:
                 inievt = int(t[3])
+            elif not model.structured:
+                # usg uses only layer 1 nodes for options 1 and 3. ncol is nodelay for mfusg models.
+                inievt = ncol[0]
+
+            if model.structured:
+                u2d_shape = (nrow, ncol)
+            else:
+                u2d_shape = (1, inievt)
+
             if insurf >= 0:
                 if model.verbose:
                     print(
@@ -318,7 +352,7 @@ class ModflowEvt(Package):
                         )
                     )
                 t = Util2d.load(
-                    f, model, (nrow, ncol), np.float32, "surf", ext_unit_dict
+                    f, model, u2d_shape, np.float32, "surf", ext_unit_dict
                 )
                 current_surf = t
             surf[iper] = current_surf
@@ -334,7 +368,7 @@ class ModflowEvt(Package):
                     t = Util2d.load(
                         f,
                         model,
-                        (nrow, ncol),
+                        u2d_shape,
                         np.float32,
                         "evtr",
                         ext_unit_dict,
@@ -359,7 +393,7 @@ class ModflowEvt(Package):
                             iname = "static"
                         parm_dict[pname] = iname
                     t = mfparbc.parameter_bcfill(
-                        model, (nrow, ncol), parm_dict, pak_parms
+                        model, u2d_shape, parm_dict, pak_parms
                     )
 
                 current_evtr = t
@@ -372,7 +406,7 @@ class ModflowEvt(Package):
                         )
                     )
                 t = Util2d.load(
-                    f, model, (nrow, ncol), np.float32, "exdp", ext_unit_dict
+                    f, model, u2d_shape, np.float32, "exdp", ext_unit_dict
                 )
                 current_exdp = t
             exdp[iper] = current_exdp
@@ -385,7 +419,7 @@ class ModflowEvt(Package):
                             )
                         )
                     t = Util2d.load(
-                        f, model, (nrow, ncol), np.int32, "ievt", ext_unit_dict
+                        f, model, u2d_shape, np.int32, "ievt", ext_unit_dict
                     )
                     current_ievt = t
                 ievt[iper] = current_ievt

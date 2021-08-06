@@ -125,20 +125,16 @@ class ModflowGage(Package):
                 elif isinstance(files, int) or isinstance(files, float):
                     files = ["{}.go".format(files)]
                 if len(files) < numgage:
-                    err = (
-                        "a filename needs to be provided "
-                        + "for {} gages ".format(numgage)
-                        + "- {} filenames were provided".format(len(files))
+                    raise Exception(
+                        "a filename needs to be provided for {} gages - {} "
+                        "filenames were provided".format(numgage, len(files))
                     )
-                    raise Exception(err)
             else:
                 if len(filenames) < numgage + 1:
-                    err = (
-                        "filenames must have a "
-                        + "length of {} ".format(numgage + 1)
-                        + "the length provided is {}".format(len(filenames))
+                    raise Exception(
+                        "filenames must have a length of {} the length "
+                        "provided is {}".format(numgage + 1, len(filenames))
                     )
-                    raise Exception(err)
                 else:
                     files = []
                     for n in range(numgage):
@@ -172,11 +168,10 @@ class ModflowGage(Package):
                     d["outtype"][n] = outtype
                 gage_data = d
             else:
-                err = (
-                    "gage_data must be a numpy record array, numpy array"
-                    + "or a list"
+                raise Exception(
+                    "gage_data must be a numpy record array, numpy array "
+                    "or a list"
                 )
-                raise Exception(err)
 
             # add gage output files to model
             for n in range(numgage):

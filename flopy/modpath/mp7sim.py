@@ -36,7 +36,7 @@ def sim_enum_error(v, s, e):
     -------
 
     """
-    msg = "Invalid {} ({})".format(v, s) + ". Valid types are "
+    msg = "Invalid {} ({}). Valid types are ".format(v, s)
     for i, c in enumerate(e):
         if i > 0:
             msg += ", "
@@ -335,36 +335,30 @@ class Modpath7Sim(Package):
             tracemode = 1
             if isinstance(traceparticledata, (list, tuple)):
                 if len(traceparticledata) != 2:
-                    msg = (
+                    raise ValueError(
                         "traceparticledata must be a list or tuple "
-                        + "with 2 items (a integer and an integer). "
-                        + "Passed item {}.".format(traceparticledata)
+                        "with 2 items (a integer and an integer). "
+                        "Passed item {}.".format(traceparticledata)
                     )
-                    raise ValueError(msg)
                 try:
                     traceparticlegroup = int(traceparticledata[0])
                 except:
-                    msg = (
-                        "traceparticledata[0] "
-                        + "({}) ".format(traceparticledata[0])
-                        + "cannot be converted to a integer."
+                    raise ValueError(
+                        "traceparticledata[0] ({}) cannot be converted to a "
+                        "integer.".format(traceparticledata[0])
                     )
-                    raise ValueError(msg)
                 try:
                     traceparticleid = int(traceparticledata[1])
                 except:
-                    msg = (
-                        "traceparticledata[1] "
-                        + "({}) ".format(traceparticledata[0])
-                        + "cannot be converted to a integer."
+                    raise ValueError(
+                        "traceparticledata[1] ({}) cannot be converted to a "
+                        "integer.".format(traceparticledata[0])
                     )
-                    raise ValueError(msg)
             else:
-                msg = (
+                raise ValueError(
                     "traceparticledata must be a list or "
-                    + "tuple with 2 items (a integer and an integer)."
+                    "tuple with 2 items (a integer and an integer)."
                 )
-                raise ValueError(msg)
 
         # set tracemode, traceparticlegroup, and traceparticleid
         self.tracemode = tracemode
@@ -384,14 +378,13 @@ class Modpath7Sim(Package):
                 if cell < 0 or cell >= ncells:
                     if msg == "":
                         msg = (
-                            "Specified cell number(s) exceed the "
-                            + "number of cells in the model "
-                            + "(Valid cells = 0-{}). ".format(ncells - 1)
-                            + "Invalid cells are: "
+                            "Specified cell number(s) exceed the number of "
+                            "cells in the model (Valid cells = 0-{}). "
+                            "Invalid cells are: ".format(ncells - 1)
                         )
                     else:
                         msg += ", "
-                    msg += "{}".format(cell)
+                    msg += str(cell)
             if msg != "":
                 raise ValueError(msg)
             # create Util2d object
@@ -417,59 +410,46 @@ class Modpath7Sim(Package):
             # validate referencetime data
             t = referencetime[0]
             if t < 0.0 or t > self.parent.time_end:
-                msg = (
-                    "referencetime must be between 0. and "
-                    + "{} ".format(self.parent.time_end)
-                    + "(specified value = {}).".format(t)
+                raise ValueError(
+                    "referencetime must be between 0. and {} "
+                    "(specified value = {}).".format(self.parent.time_end, t)
                 )
-                raise ValueError(msg)
         elif len(referencetime) == 3:
             referencetimeOption = 2
             # validate referencetime data
             # StressPeriod
             iper = referencetime[0]
             if iper < 0 or iper >= self.parent.nper:
-                msg = (
-                    "StressPeriod must be between 0 and "
-                    + "{} ".format(self.parent.nper - 1)
-                    + "(specified value = {}).".format(iper)
+                raise ValueError(
+                    "StressPeriod must be between 0 and {} (specified value "
+                    "= {}).".format(self.parent.nper - 1, iper)
                 )
-                raise ValueError(msg)
 
             # TimeStep
             istp = referencetime[1]
             maxstp = self.parent.nstp[iper] + 1
             if istp < 0 or istp >= maxstp:
-                msg = (
-                    "TimeStep for StressPeriod {} ".format(iper)
-                    + "must be between 0 and "
-                    + "{} ".format(maxstp - 1)
-                    + "(specified value = {}).".format(istp)
+                raise ValueError(
+                    "TimeStep for StressPeriod {} must be between 0 and {} "
+                    "(specified value = {}).".format(iper, maxstp - 1, istp)
                 )
-                raise ValueError(msg)
 
             # TimeFraction
             tf = referencetime[2]
             if tf < 0.0 or tf > 1.0:
-                msg = (
+                raise ValueError(
                     "TimeFraction value must be between 0 and 1 "
-                    + "(specified value={}).".format(tf)
+                    "(specified value={}).".format(tf)
                 )
-                raise ValueError(msg)
         else:
-            msg = (
+            raise ValueError(
                 "referencetime must be a float (referencetime) or "
-                + "a list with one item [referencetime] or three items "
-                + "[StressPeriod, TimeStep, TimeFraction]. "
-                + "{}".format(len(referencetime))
-                + " items were passed as referencetime ["
+                "a list with one item [referencetime] or three items "
+                "[StressPeriod, TimeStep, TimeFraction]. "
+                "{} items were passed as referencetime {}.".format(
+                    len(referencetime), referencetime
+                )
             )
-            for i, v in enumerate(referencetime):
-                if i > 0:
-                    msg += ", "
-                msg += "{}".format(v)
-            msg += "]."
-            raise ValueError(msg)
         self.referencetimeOption = referencetimeOption
         self.referencetime = referencetime
 
@@ -494,15 +474,13 @@ class Modpath7Sim(Package):
         # timepointdata
         if timepointdata is not None:
             if not isinstance(timepointdata, (list, tuple)):
-                msg = "timepointdata must be a list or tuple"
-                raise ValueError(msg)
+                raise ValueError("timepointdata must be a list or tuple")
             else:
                 if len(timepointdata) != 2:
-                    msg = (
+                    raise ValueError(
                         "timepointdata must be a have 2 entries "
-                        + "({} provided)".format(len(timepointdata))
+                        "({} provided)".format(len(timepointdata))
                     )
-                    raise ValueError(msg)
                 else:
                     if isinstance(timepointdata[1], (list, tuple)):
                         timepointdata[1] = np.array(timepointdata[1])
@@ -511,13 +489,12 @@ class Modpath7Sim(Package):
                     if timepointdata[1].shape[0] == timepointdata[0]:
                         timepointoption = 2
                     elif timepointdata[1].shape[0] > 1:
-                        msg = (
-                            "The number of TimePoint data "
-                            + "({}) ".format(timepointdata[1].shape[0])
-                            + "is not equal to TimePointCount "
-                            + "({}).".format(timepointdata[0])
+                        raise ValueError(
+                            "The number of TimePoint data ({}) is not equal "
+                            "to TimePointCount ({}).".format(
+                                timepointdata[1].shape[0], timepointdata[0]
+                            )
                         )
-                        raise ValueError(msg)
                     else:
                         timepointoption = 1
         else:
@@ -536,15 +513,15 @@ class Modpath7Sim(Package):
             if stopzone is None:
                 stopzone = -1
             if stopzone < -1:
-                msg = (
-                    "Specified stopzone value ({}) ".format(stopzone)
-                    + "must be greater than 0."
+                raise ValueError(
+                    "Specified stopzone value ({}) "
+                    "must be greater than 0.".format(stopzone)
                 )
-                raise ValueError(msg)
             self.stopzone = stopzone
             if zones is None:
-                msg = "zones must be specified if zonedataoption='on'."
-                raise ValueError(msg)
+                raise ValueError(
+                    "zones must be specified if zonedataoption='on'."
+                )
             self.zones = Util3d(
                 model,
                 self.parent.shape,
@@ -565,11 +542,10 @@ class Modpath7Sim(Package):
             )
         if self.retardationfactoroption == 2:
             if retardation is None:
-                msg = (
+                raise ValueError(
                     "retardation must be specified if "
-                    + "retardationfactoroption='on'."
+                    "retardationfactoroption='on'."
                 )
-                raise ValueError(msg)
             self.retardation = Util3d(
                 model,
                 self.parent.shape,

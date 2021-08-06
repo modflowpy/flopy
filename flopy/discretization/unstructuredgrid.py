@@ -1,3 +1,5 @@
+import os
+import copy
 import numpy as np
 from .grid import Grid, CachedData
 
@@ -90,7 +92,7 @@ class UnstructuredGrid(Grid):
         yoff=0.0,
         angrot=0.0,
     ):
-        super(UnstructuredGrid, self).__init__(
+        super().__init__(
             "unstructured",
             top,
             botm,
@@ -165,10 +167,7 @@ class UnstructuredGrid(Grid):
 
     @property
     def is_complete(self):
-        if (
-            self.is_valid is not None
-            and super(UnstructuredGrid, self).is_complete
-        ):
+        if self.is_valid is not None and super().is_complete:
             return True
         return False
 
@@ -195,6 +194,33 @@ class UnstructuredGrid(Grid):
             return None
         else:
             return self.ncpl.sum()
+
+    @property
+    def nvert(self):
+        return len(self._vertices)
+
+    @property
+    def iverts(self):
+        return self._iverts
+
+    @property
+    def verts(self):
+        if self._vertices is None:
+            return self._vertices
+        else:
+            return np.array([t[1:] for t in self._vertices], dtype=float)
+
+    @property
+    def ia(self):
+        if self._ia is None:
+            self._set_unstructured_iaja()
+        return self._ia
+
+    @property
+    def ja(self):
+        if self._ja is None:
+            self._set_unstructured_iaja()
+        return self._ja
 
     @property
     def ncpl(self):
@@ -301,9 +327,195 @@ class UnstructuredGrid(Grid):
         else:
             return self._cache_dict[cache_index].data_nocopy
 
+    @property
+    def cross_section_vertices(self):
+        """
+        Method to get vertices for cross-sectional plotting
+
+        Returns
+        -------
+            xvertices, yvertices
+        """
+        xv, yv = self.xyzvertices[0], self.xyzvertices[1]
+        if len(xv) == self.ncpl[0]:
+            xv *= self.nlay
+            yv *= self.nlay
+        return xv, yv
+
+    def cross_section_lay_ncpl_ncb(self, ncb):
+        """
+        Get PlotCrossSection compatible layers, ncpl, and ncb
+        variables
+
+        Parameters
+        ----------
+        ncb : int
+            number of confining beds
+
+        Returns
+        -------
+            tuple : (int, int, int) layers, ncpl, ncb
+        """
+        return 1, self.nnodes, 0
+
+    def cross_section_nodeskip(self, nlay, xypts):
+        """
+        Get a nodeskip list for PlotCrossSection. This is a correction
+        for UnstructuredGridPlotting
+
+        Parameters
+        ----------
+        nlay : int
+            nlay is nlay + ncb
+        xypts : dict
+            dictionary of node number and xyvertices of a cross-section
+
+        Returns
+        -------
+            list : n-dimensional list of nodes to not plot for each layer
+        """
+        strt = 0
+        end = 0
+        nodeskip = []
+        for ncpl in self.ncpl:
+            end += ncpl
+            layskip = []
+            for nn, verts in xypts.items():
+                if strt <= nn < end:
+                    continue
+                else:
+                    layskip.append(nn)
+
+            strt += ncpl
+            nodeskip.append(layskip)
+
+        return nodeskip
+
+    def cross_section_adjust_indicies(self, k, cbcnt):
+        """
+        Method to get adjusted indicies by layer and confining bed
+        for PlotCrossSection plotting
+
+        Parameters
+        ----------
+        k : int
+            zero based model layer
+        cbcnt : int
+            confining bed counter
+
+        Returns
+        -------
+            tuple: (int, int, int) (adjusted layer, nodeskip layer, node
+            adjustment value based on number of confining beds and the layer)
+        """
+        return 1, k + 1, 0
+
+    def cross_section_set_contour_arrays(
+        self, plotarray, xcenters, head, elev, projpts
+    ):
+        """
+        Method to set countour array centers for rare instances where
+        matplotlib contouring is prefered over trimesh plotting
+
+        Parameters
+        ----------
+        plotarray : np.ndarray
+            array of data for contouring
+        xcenters : np.ndarray
+            xcenters array
+        head : np.ndarray
+            head array to adjust cell centers location
+        elev : np.ndarray
+            cell elevation array
+        projpts : dict
+            dictionary of projected cross sectional vertices
+
+        Returns
+        -------
+            tuple: (np.ndarray, np.ndarray, np.ndarray, bool)
+            plotarray, xcenter array, ycenter array, and a boolean flag
+            for contouring
+        """
+        if self.ncpl[0] != self.nnodes:
+            return plotarray, xcenters, None, False
+        else:
+            zcenters = []
+            if isinstance(head, np.ndarray):
+                head = head.reshape(1, self.nnodes)
+                head = np.vstack((head, head))
+            else:
+                head = elev.reshape(2, self.nnodes)
+
+            elev = elev.reshape(2, self.nnodes)
+            for k, ev in enumerate(elev):
+                if k == 0:
+                    zc = [
+                        ev[i] if head[k][i] > ev[i] else head[k][i]
+                        for i in sorted(projpts)
+                    ]
+                else:
+                    zc = [ev[i] for i in sorted(projpts)]
+                zcenters.append(zc)
+
+            plotarray = np.vstack((plotarray, plotarray))
+            xcenters = np.vstack((xcenters, xcenters))
+            zcenters = np.array(zcenters)
+
+            return plotarray, xcenters, zcenters, True
+
+    @property
+    def map_polygons(self):
+        """
+        Property to get Matplotlib polygon objects for the modelgrid
+
+        Returns
+        -------
+            list or dict of matplotlib.collections.Polygon
+        """
+        try:
+            from matplotlib.path import Path
+        except ImportError:
+            raise ImportError("matplotlib required to use this method")
+
+        cache_index = "xyzgrid"
+        if (
+            cache_index not in self._cache_dict
+            or self._cache_dict[cache_index].out_of_date
+        ):
+            self.xyzvertices
+            self._polygons = None
+
+        if self._polygons is None:
+            if self.grid_varies_by_layer:
+                self._polygons = {}
+                ilay = 0
+                lay_break = np.cumsum(self.ncpl)
+                for nn in range(self.nnodes):
+                    if nn in lay_break:
+                        ilay += 1
+
+                    if ilay not in self._polygons:
+                        self._polygons[ilay] = []
+
+                    p = Path(self.get_cell_vertices(nn))
+                    self._polygons[ilay].append(p)
+            else:
+                self._polygons = [
+                    Path(self.get_cell_vertices(nn))
+                    for nn in range(self.ncpl[0])
+                ]
+
+        return copy.copy(self._polygons)
+
     def intersect(self, x, y, local=False, forgive=False):
-        x, y = super(UnstructuredGrid, self).intersect(x, y, local, forgive)
+        x, y = super().intersect(x, y, local, forgive)
         raise Exception("Not implemented yet")
+
+    @property
+    def top_botm(self):
+        new_top = np.expand_dims(self._top, 0)
+        new_botm = np.expand_dims(self._botm, 0)
+        return np.concatenate((new_top, new_botm), axis=0)
 
     def get_cell_vertices(self, cellid):
         """
@@ -475,8 +687,7 @@ class UnstructuredGrid(Grid):
     @classmethod
     def from_argus_export(cls, fname, nlay=1):
         """
-        Create a new SpatialReferenceUnstructured grid from an Argus One
-        Trimesh file
+        Create a new UnstructuredGrid from an Argus One Trimesh file
 
         Parameters
         ----------
@@ -488,7 +699,7 @@ class UnstructuredGrid(Grid):
 
         Returns
         -------
-            sru : flopy.utils.reference.SpatialReferenceUnstructured
+        flopy.discretization.unstructuredgrid.UnstructuredGrid
 
         """
         from ..utils.geometry import get_polygon_centroid
@@ -574,3 +785,65 @@ class UnstructuredGrid(Grid):
         if not valid:
             ncpl = None
         return ncpl
+
+    # initialize grid from a grb file
+    @classmethod
+    def from_binary_grid_file(cls, file_path, verbose=False):
+        """
+        Instantiate a UnstructuredGrid model grid from a MODFLOW 6 binary
+        grid (*.grb) file.
+
+        Parameters
+        ----------
+        file_path : str
+            file path for the MODFLOW 6 binary grid file
+        verbose : bool
+            Write information to standard output.  Default is False.
+
+        Returns
+        -------
+        return : UnstructuredGrid
+
+        """
+        from ..mf6.utils.binarygrid_util import MfGrdFile
+
+        grb_obj = MfGrdFile(file_path, verbose=verbose)
+        if grb_obj.grid_type != "DISU":
+            err_msg = (
+                "Binary grid file ({}) ".format(os.path.basename(file_path))
+                + "is not a vertex (DISU) grid."
+            )
+            raise ValueError(err_msg)
+
+        iverts = grb_obj.iverts
+        if iverts is not None:
+            verts = grb_obj.verts
+            vertc = grb_obj.cellcenters
+            xc, yc = vertc[:, 0], vertc[:, 1]
+
+            idomain = grb_obj.idomain
+            xorigin = grb_obj.xorigin
+            yorigin = grb_obj.yorigin
+            angrot = grb_obj.angrot
+
+            top = np.ravel(grb_obj.top)
+            botm = grb_obj.bot
+
+            return cls(
+                vertices=verts,
+                iverts=iverts,
+                xcenters=xc,
+                ycenters=yc,
+                top=top,
+                botm=botm,
+                idomain=idomain,
+                xoff=xorigin,
+                yoff=yorigin,
+                angrot=angrot,
+            )
+        else:
+            err_msg = (
+                "{} binary grid file".format(os.path.basename(file_path))
+                + " does not include vertex data"
+            )
+            raise TypeError(err_msg)

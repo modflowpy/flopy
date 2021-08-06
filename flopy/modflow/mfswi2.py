@@ -274,11 +274,9 @@ class ModflowSwi2(Package):
                 if obslrc.ndim == 1 and obslrc.size == 3:
                     obslrc = obslrc.reshape((1, 3))
             else:
-                errmsg = (
-                    "ModflowSwi2: obslrc must be a tuple or "
-                    + "list of tuples."
+                raise Exception(
+                    "ModflowSwi2: obslrc must be a tuple or list of tuples."
                 )
-                raise Exception(errmsg)
             nobs = obslrc.shape[0]
 
             if obsnam is None:
@@ -289,11 +287,10 @@ class ModflowSwi2(Package):
                 if not isinstance(obsnam, list):
                     obsnam = [obsnam]
                 if len(obsnam) != nobs:
-                    errmsg = (
+                    raise Exception(
                         "ModflowSwi2: obsnam must be a list with a "
-                        + "length of {} not {}.".format(nobs, len(obsnam))
+                        "length of {} not {}.".format(nobs, len(obsnam))
                     )
-                    raise Exception(errmsg)
 
         if nobs > 0:
             binflag = False

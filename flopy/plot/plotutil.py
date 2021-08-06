@@ -9,6 +9,7 @@ import os
 import sys
 import math
 import numpy as np
+import warnings
 from ..utils import Util3d
 from ..datbase import DataType, DataInterface
 
@@ -21,6 +22,8 @@ try:
     import matplotlib.pyplot as plt
 except ImportError:
     plt = None
+
+warnings.simplefilter("ignore", RuntimeWarning)
 
 bc_color_dict = {
     "default": "black",
@@ -38,10 +41,10 @@ bc_color_dict = {
 
 class PlotException(Exception):
     def __init__(self, message):
-        super(PlotException, self).__init__(message)
+        super().__init__(message)
 
 
-class PlotUtilities(object):
+class PlotUtilities:
     """
     Class which groups a collection of plotting utilities
     which Flopy and Flopy6 can use to generate map based plots
@@ -211,6 +214,7 @@ class PlotUtilities(object):
                     mflay=defaults["mflay"],
                     key=defaults["key"],
                     model_name=defaults["model_name"],
+                    model_grid=model.modelgrid,
                 )
                 # unroll nested lists of axes into a single list of axes
                 if isinstance(caxs, list):
@@ -236,9 +240,11 @@ class PlotUtilities(object):
                             mflay=defaults["mflay"],
                             key=defaults["key"],
                             model_name=defaults["model_name"],
+                            modelgrid=model.modelgrid,
                         )
 
-                        # unroll nested lists of axes into a single list of axes
+                        # unroll nested lists of axes into a single list
+                        # of axes
                         if isinstance(caxs, list):
                             for c in caxs:
                                 axes.append(c)
@@ -294,6 +300,7 @@ class PlotUtilities(object):
             "key": None,
             "initial_fig": 0,
             "model_name": "",
+            "modelgrid": None,
         }
 
         for key in defaults:
@@ -344,6 +351,7 @@ class PlotUtilities(object):
                                 fignum=fignum,
                                 model_name=model_name,
                                 colorbar=True,
+                                modelgrid=defaults["modelgrid"],
                             )
                         )
 
@@ -388,7 +396,8 @@ class PlotUtilities(object):
                         )
                     )
                     defaults["initial_fig"] = fignum[-1] + 1
-                    # need to keep this as value.plot() because of mf6 datatype issues
+                    # need to keep this as value.plot() because of
+                    # mf6 datatype issues
                     ax = value.plot(
                         defaults["key"],
                         names,
@@ -398,6 +407,7 @@ class PlotUtilities(object):
                         mflay=defaults["mflay"],
                         fignum=fignum,
                         colorbar=colorbar,
+                        modelgrid=defaults["modelgrid"],
                         **kwargs
                     )
 
@@ -433,6 +443,7 @@ class PlotUtilities(object):
                                 fignum=fignum,
                                 model_name=model_name,
                                 colorbar=True,
+                                modelgrid=defaults["modelgrid"],
                             )
                         )
 
@@ -463,6 +474,7 @@ class PlotUtilities(object):
                                     fignum=fignum,
                                     model_name=model_name,
                                     colorbar=True,
+                                    modelgrid=defaults["modelgrid"],
                                 )
                             )
 
@@ -492,6 +504,7 @@ class PlotUtilities(object):
                                 kper=defaults["kper"],
                                 fignum=fignum,
                                 colorbar=True,
+                                modelgrid=defaults["modelgrid"],
                             )
                         )
 
@@ -592,6 +605,10 @@ class PlotUtilities(object):
         if "model_name" in kwargs:
             model_name = kwargs.pop("model_name") + " "
 
+        modelgrid = None
+        if "modelgrid" in kwargs:
+            modelgrid = kwargs.pop("modelgrid")
+
         filenames = None
         if filename_base is not None:
             if mflay is not None:
@@ -638,6 +655,7 @@ class PlotUtilities(object):
                 names=names,
                 filenames=filenames,
                 mflay=mflay,
+                modelgrid=modelgrid,
                 **kwargs
             )
         else:
@@ -659,6 +677,7 @@ class PlotUtilities(object):
                 names=names,
                 filenames=filenames,
                 mflay=mflay,
+                modelgrid=modelgrid,
                 **kwargs
             )
         return axes
@@ -728,6 +747,10 @@ class PlotUtilities(object):
         if "model_name" in kwargs:
             model_name = kwargs.pop("model_name") + " "
 
+        modelgrid = None
+        if "modelgrid" in kwargs:
+            modelgrid = kwargs.pop("modelgrid")
+
         if title is None:
             title = "{}{}".format(model_name, util2d.name)
 
@@ -746,6 +769,7 @@ class PlotUtilities(object):
             names=title,
             filenames=filename,
             fignum=fignum,
+            modelgrid=modelgrid,
             **kwargs
         )
         return axes
@@ -815,15 +839,21 @@ class PlotUtilities(object):
         if "model_name" in kwargs:
             model_name = kwargs.pop("model_name")
 
+        modelgrid = None
+        if "modelgrid" in kwargs:
+            modelgrid = kwargs.pop("modelgrid")
+
         if file_extension is not None:
             fext = file_extension
         else:
             fext = "png"
 
-        # flopy6 adaption
         model = util3d.model
-        modelgrid = model.modelgrid
-        nplottable_layers = modelgrid.nlay
+        if isinstance(util3d, Util3d):
+            nplottable_layers = util3d.shape[0]
+        else:
+            # flopy6 adaption
+            nplottable_layers = model.modelgrid.nlay
         array = util3d.array
         name = util3d.name
         if isinstance(name, str):
@@ -836,18 +866,10 @@ class PlotUtilities(object):
 
         filenames = None
         if filename_base is not None:
-            if mflay is not None:
-                i0 = int(mflay)
-                if i0 + 1 >= nplottable_layers:
-                    i0 = nplottable_layers - 1
-                i1 = i0 + 1
-            else:
-                i0 = 0
-                i1 = nplottable_layers
             # build filenames, use local "name" variable (flopy6 adaptation)
             filenames = [
                 "{}_{}_Layer{}.{}".format(filename_base, name[k], k + 1, fext)
-                for k in range(i0, i1)
+                for k in range(nplottable_layers)
             ]
 
         axes = PlotUtilities._plot_array_helper(
@@ -857,6 +879,7 @@ class PlotUtilities(object):
             filenames=filenames,
             mflay=mflay,
             fignum=fignum,
+            modelgrid=modelgrid,
             **kwargs
         )
         return axes
@@ -930,6 +953,10 @@ class PlotUtilities(object):
         else:
             fext = "png"
 
+        modelgrid = None
+        if "modelgrid" in kwargs:
+            modelgrid = kwargs.pop("modelgrid")
+
         if isinstance(kper, int):
             k0 = kper
             k1 = kper + 1
@@ -974,6 +1001,7 @@ class PlotUtilities(object):
                     names=title,
                     filenames=filename,
                     fignum=fignum[idx],
+                    modelgrid=modelgrid,
                     **kwargs
                 )
             )
@@ -1010,7 +1038,11 @@ class PlotUtilities(object):
         if "mflay" in kwargs:
             kwargs.pop("mflay")
 
-        title = "{}".format(scalar.name.replace("_", "").upper())
+        modelgrid = None
+        if "modelgrid" in kwargs:
+            modelgrid = kwargs.pop("modelgrid")
+
+        title = scalar.name.replace("_", "").upper()
 
         if filename_base is not None:
             filename = filename_base + ".{}".format(fext)
@@ -1022,6 +1054,7 @@ class PlotUtilities(object):
             scalar.model,
             names=title,
             filenames=filename,
+            modelgrid=modelgrid,
             **kwargs
         )
         return axes
@@ -1087,12 +1120,10 @@ class PlotUtilities(object):
 
         # check that matplotlib is installed
         if plt is None:
-            err_msg = (
-                "Could not import matplotlib. "
-                "Must install matplotlib "
-                + " in order to plot LayerFile data."
+            raise PlotException(
+                "Could not import matplotlib.  Must install matplotlib "
+                "in order to plot LayerFile data."
             )
-            raise PlotException(err_msg)
 
         for key in defaults:
             if key in kwargs:
@@ -1242,11 +1273,10 @@ class PlotUtilities(object):
         from .map import PlotMapView
 
         if plt is None:
-            s = (
+            raise PlotException(
                 "Could not import matplotlib.  Must install matplotlib "
-                + " in order to plot boundary condition data."
+                "in order to plot boundary condition data."
             )
-            raise PlotException(s)
 
         defaults = {
             "figsize": None,
@@ -1567,8 +1597,9 @@ class PlotUtilities(object):
         """
         DEPRECATED. Use postprocessing.get_specific_discharge() instead.
 
-        Using the MODFLOW discharge, calculate the cell centered specific discharge
-        by dividing by the flow width and then averaging to the cell center.
+        Using the MODFLOW discharge, calculate the cell centered specific
+        discharge by dividing by the flow width and then averaging
+        to the cell center.
 
         Parameters
         ----------
@@ -1578,8 +1609,9 @@ class PlotUtilities(object):
             MODFLOW 'flow front face'.  The sign on this array will be flipped
             by this function so that the y axis is positive to north.
         Qz : numpy.ndarray
-            MODFLOW 'flow lower face'.  The sign on this array will be flipped by
-            this function so that the z axis is positive in the upward direction.
+            MODFLOW 'flow lower face'.  The sign on this array will be
+            flipped by this function so that the z axis is positive
+            in the upward direction.
         delr : numpy.ndarray
             MODFLOW delr array
         delc : numpy.ndarray
@@ -1596,7 +1628,8 @@ class PlotUtilities(object):
         import warnings
 
         warnings.warn(
-            "centered_specific_discharge() has been deprecated. Use "
+            "centered_specific_discharge() has been deprecated and will be "
+            "removed in version 3.3.5. Use "
             "postprocessing.get_specific_discharge() instead.",
             DeprecationWarning,
         )
@@ -1656,7 +1689,7 @@ class PlotUtilities(object):
         return (qx, qy, qz)
 
 
-class UnstructuredPlotUtilities(object):
+class UnstructuredPlotUtilities:
     """
     Collection of unstructured grid and vertex grid compatible
     plotting helper functions
@@ -1731,13 +1764,13 @@ class UnstructuredPlotUtilities(object):
                     # only cycle through the cells that intersect
                     # the infinite line
                     cvert_ix = []
-                    for ix in range(len(cpv)):
-                        if cpv[ix - 1] < 0 and cpv[ix] > 0:
-                            cvert_ix.append(ix - 1)
-                        elif cpv[ix - 1] > 0 and cpv[ix] < 0:
-                            cvert_ix.append(ix - 1)
-                        elif cpv[ix - 1] == 0 and cpv[ix] == 0:
-                            cvert_ix += [ix - 1, ix]
+                    for vx in range(len(cpv)):
+                        if cpv[vx - 1] < 0 and cpv[vx] > 0:
+                            cvert_ix.append(vx - 1)
+                        elif cpv[vx - 1] > 0 and cpv[vx] < 0:
+                            cvert_ix.append(vx - 1)
+                        elif cpv[vx - 1] == 0 and cpv[vx] == 0:
+                            cvert_ix += [vx - 1, vx]
                         else:
                             pass
 
@@ -1758,13 +1791,13 @@ class UnstructuredPlotUtilities(object):
             x = x1 + ua * (x2 - x1)
             y = y1 + ua * (y2 - y1)
 
-            for ix, cell in enumerate(cells):
+            for iix, cell in enumerate(cells):
                 xc = x[cell]
                 yc = y[cell]
                 verts = [
                     (xt, yt)
                     for xt, yt in zip(
-                        xc[cell_vertex_ix[ix]], yc[cell_vertex_ix[ix]]
+                        xc[cell_vertex_ix[iix]], yc[cell_vertex_ix[iix]]
                     )
                 ]
 
@@ -1845,6 +1878,7 @@ class UnstructuredPlotUtilities(object):
         adj_xverts = []
         for xv in xverts:
             if len(xv) < max_verts:
+                xv = list(xv)
                 n = max_verts - len(xv)
                 adj_xverts.append(xv + [xv[-1]] * n)
             else:
@@ -1853,6 +1887,7 @@ class UnstructuredPlotUtilities(object):
         adj_yverts = []
         for yv in yverts:
             if len(yv) < max_verts:
+                yv = list(yv)
                 n = max_verts - len(yv)
                 adj_yverts.append(yv + [yv[-1]] * n)
             else:
@@ -1864,9 +1899,10 @@ class UnstructuredPlotUtilities(object):
         return xverts, yverts
 
     @staticmethod
-    def arctan2(verts):
+    def arctan2(verts, reverse=False):
         """
-        Reads 2 dimensional set of verts and orders them using the arctan 2 method
+        Reads 2 dimensional set of verts and orders them using the
+        arctan 2 method
 
         Parameters
         ----------
@@ -1887,6 +1923,8 @@ class UnstructuredPlotUtilities(object):
         angleidx = angles.argsort()
 
         verts = verts[angleidx]
+        if reverse:
+            return verts[::-1]
         return verts
 
 
@@ -2094,22 +2132,25 @@ def shapefile_to_patch_collection(shp, radius=500.0, idx=None):
 
     """
     if shapefile is None:
-        s = "Could not import shapefile.  Must install pyshp in order to plot shapefiles."
-        raise PlotException(s)
-    if plt is None:
-        err_msg = (
-            "matplotlib must be installed to "
-            + "use shapefile_to_patch_collection()"
+        raise PlotException(
+            "Could not import shapefile.  Must install pyshp "
+            "in order to plot shapefiles."
         )
-        raise ImportError(err_msg)
+    if plt is None:
+        raise ImportError(
+            "matplotlib must be installed to "
+            "use shapefile_to_patch_collection()"
+        )
     else:
-        from matplotlib.patches import Polygon, Circle, Path, PathPatch
+        from matplotlib.patches import Polygon, Circle, PathPatch
+        import matplotlib.path as MPath
         from matplotlib.collections import PatchCollection
-    if isinstance(shp, str):
-        sf = shapefile.Reader(shp)
-    else:
-        sf = shp
-    shapes = sf.shapes()
+        from ..utils.geospatial_utils import GeoSpatialCollection
+        from ..utils.geometry import point_in_polygon
+
+    geofeats = GeoSpatialCollection(shp)
+    shapes = geofeats.shape
+
     nshp = len(shapes)
     ptchs = []
     if idx is None:
@@ -2125,16 +2166,66 @@ def shapefile_to_patch_collection(shp, radius=500.0, idx=None):
             vertices = []
             for p in shapes[n].points:
                 vertices.append([p[0], p[1]])
+            vertices += vertices[::-1]
             vertices = np.array(vertices)
-            path = Path(vertices)
-            ptchs.append(PathPatch(path, fill=False))
+            ptchs.append(Polygon(vertices))
         elif st in [5, 25, 31]:
             # polygons
             pts = np.array(shapes[n].points)
             prt = shapes[n].parts
             par = list(prt) + [pts.shape[0]]
+            polys = []
             for pij in range(len(prt)):
-                ptchs.append(Polygon(pts[par[pij] : par[pij + 1]]))
+                poly = np.array(pts[par[pij] : par[pij + 1]])
+                if not polys:
+                    polys.append(poly)
+                else:
+                    temp = []
+                    for ix, p in enumerate(polys):
+                        # check multipolygons for holes!
+                        mask = point_in_polygon(
+                            poly.T[0].reshape(1, -1),
+                            poly.T[1].reshape(1, -1),
+                            p,
+                        )
+
+                        if np.all(mask):
+                            temp.append((poly, ix))
+                        else:
+                            temp.append((poly, -1))
+
+                    for p, flag in temp:
+                        if flag < 0:
+                            polys.append(p)
+                        else:
+                            # hole in polygon
+                            if isinstance(polys[flag], list):
+                                polys[flag].append(p)
+                            else:
+                                polys[flag] = [polys[flag], p]
+
+            for poly in polys:
+                if isinstance(poly, list):
+                    codes = []
+                    for path in poly:
+                        c = (
+                            np.ones(len(path), dtype=MPath.Path.code_type)
+                            * MPath.Path.LINETO
+                        )
+                        c[0] = MPath.Path.MOVETO
+                        if len(codes) == 0:
+                            codes = c
+                            verts = path
+                        else:
+                            codes = np.concatenate((codes, c))
+                            verts = np.concatenate((verts, path))
+
+                    mplpath = MPath.Path(verts, codes)
+                    ptchs.append(PathPatch(mplpath))
+
+                else:
+                    ptchs.append(Polygon(poly))
+
     pc = PatchCollection(ptchs)
     return pc
 
@@ -2189,18 +2280,14 @@ def plot_shapefile(
     """
 
     if shapefile is None:
-        s = "Could not import shapefile.  Must install pyshp in order to plot shapefiles."
+        s = (
+            "Could not import shapefile.  Must install pyshp in "
+            "order to plot shapefiles."
+        )
         raise PlotException(s)
 
-    if "vmin" in kwargs:
-        vmin = kwargs.pop("vmin")
-    else:
-        vmin = None
-
-    if "vmax" in kwargs:
-        vmax = kwargs.pop("vmax")
-    else:
-        vmax = None
+    vmin = kwargs.pop("vmin", None)
+    vmax = kwargs.pop("vmax", None)
 
     if ax is None:
         ax = plt.gca()
@@ -2246,12 +2333,16 @@ def cvfd_to_patch_collection(verts, iverts):
         should be of len(ncells) with a list of vertex numbers for each cell
 
     """
+    warnings.warn(
+        "cvfd_to_patch_collection is deprecated and will be removed in "
+        "version 3.3.5. Use PlotMapView for plotting",
+        DeprecationWarning,
+    )
+
     if plt is None:
-        err_msg = (
-            "matplotlib must be installed to "
-            + "use cvfd_to_patch_collection()"
+        raise ImportError(
+            "matplotlib must be installed to use cvfd_to_patch_collection()"
         )
-        raise ImportError(err_msg)
     else:
         from matplotlib.patches import Polygon
         from matplotlib.collections import PatchCollection
@@ -2319,6 +2410,11 @@ def plot_cvfd(
     --------
 
     """
+    warnings.warn(
+        "plot_cvfd is deprecated and will be removed in version 3.3.5. "
+        "Use PlotMapView for plotting",
+        DeprecationWarning,
+    )
     if plt is None:
         err_msg = "matplotlib must be installed to use plot_cvfd()"
         raise ImportError(err_msg)
@@ -2409,252 +2505,6 @@ def plot_cvfd(
     return pc
 
 
-def findrowcolumn(pt, xedge, yedge):
-    """
-    Find the MODFLOW cell containing the x- and y- point provided.
-
-    Parameters
-    ----------
-    pt : list or tuple
-        A list or tuple containing a x- and y- coordinate
-    xedge : numpy.ndarray
-        x-coordinate of the edge of each MODFLOW column. xedge is dimensioned
-        to NCOL + 1. If xedge is not a numpy.ndarray it is converted to a
-        numpy.ndarray.
-    yedge : numpy.ndarray
-        y-coordinate of the edge of each MODFLOW row. yedge is dimensioned
-        to NROW + 1. If yedge is not a numpy.ndarray it is converted to a
-        numpy.ndarray.
-
-    Returns
-    -------
-    irow, jcol : int
-        Row and column location containing x- and y- point passed to function.
-
-    Examples
-    --------
-    >>> import flopy
-    >>> irow, jcol = flopy.plotutil.findrowcolumn(pt, xedge, yedge)
-
-    """
-
-    # make sure xedge and yedge are numpy arrays
-    if not isinstance(xedge, np.ndarray):
-        xedge = np.array(xedge)
-    if not isinstance(yedge, np.ndarray):
-        yedge = np.array(yedge)
-
-    # find column
-    jcol = -100
-    for jdx, xmf in enumerate(xedge):
-        if xmf > pt[0]:
-            jcol = jdx - 1
-            break
-
-    # find row
-    irow = -100
-    for jdx, ymf in enumerate(yedge):
-        if ymf < pt[1]:
-            irow = jdx - 1
-            break
-    return irow, jcol
-
-
-def line_intersect_grid(ptsin, xedge, yedge, returnvertices=False):
-    """
-    Intersect a list of polyline vertices with a rectilinear MODFLOW
-    grid. Vertices at the intersection of the polyline with the grid
-    cell edges is returned. Optionally the original polyline vertices
-    are returned.
-
-    Parameters
-    ----------
-    ptsin : list
-        A list of x, y points defining the vertices of a polyline that will be
-        intersected with the rectilinear MODFLOW grid
-    xedge : numpy.ndarray
-        x-coordinate of the edge of each MODFLOW column. xedge is dimensioned
-        to NCOL + 1. If xedge is not a numpy.ndarray it is converted to a
-        numpy.ndarray.
-    yedge : numpy.ndarray
-        y-coordinate of the edge of each MODFLOW row. yedge is dimensioned
-        to NROW + 1. If yedge is not a numpy.ndarray it is converted to a
-        numpy.ndarray.
-    returnvertices: bool
-        Return the original polyline vertices in the list of numpy.ndarray
-        containing vertices resulting from intersection of the provided
-        polygon and the MODFLOW model grid if returnvertices=True.
-        (default is False).
-
-    Returns
-    -------
-    (x, y, dlen) : numpy.ndarray of tuples
-        numpy.ndarray of tuples containing the x, y, and segment length of the
-        intersection of the provided polyline with the rectilinear MODFLOW
-        grid.
-
-    Examples
-    --------
-    >>> import flopy
-    >>> ptsout = flopy.plotutil.line_intersect_grid(ptsin, xedge, yedge)
-
-    """
-
-    small_value = 1.0e-4
-
-    # make sure xedge and yedge are numpy arrays
-    if not isinstance(xedge, np.ndarray):
-        xedge = np.array(xedge)
-    if not isinstance(yedge, np.ndarray):
-        yedge = np.array(yedge)
-
-    # build list of points along current line
-    pts = []
-    npts = len(ptsin)
-    dlen = 0.0
-    for idx in range(1, npts):
-        x0 = ptsin[idx - 1][0]
-        x1 = ptsin[idx][0]
-        y0 = ptsin[idx - 1][1]
-        y1 = ptsin[idx][1]
-        a = x1 - x0
-        b = y1 - y0
-        c = math.sqrt(math.pow(a, 2.0) + math.pow(b, 2.0))
-        # find cells with (x0, y0) and (x1, y1)
-        irow0, jcol0 = findrowcolumn((x0, y0), xedge, yedge)
-        irow1, jcol1 = findrowcolumn((x1, y1), xedge, yedge)
-        # determine direction to go in the x- and y-directions
-        jx = 0
-        incx = abs(small_value * a / c)
-        iy = 0
-        incy = -abs(small_value * b / c)
-        if a == 0.0:
-            incx = 0.0
-        # go to the right
-        elif a > 0.0:
-            jx = 1
-            incx *= -1.0
-        if b == 0.0:
-            incy = 0.0
-        # go down
-        elif b < 0.0:
-            iy = 1
-            incy *= -1.0
-        # process data
-        if irow0 >= 0 and jcol0 >= 0:
-            iadd = True
-            if idx > 1 and returnvertices:
-                iadd = False
-            if iadd:
-                pts.append((x0, y0, dlen))
-        icnt = 0
-        while True:
-            icnt += 1
-            dx = xedge[jcol0 + jx] - x0
-            dlx = 0.0
-            if a != 0.0:
-                dlx = c * dx / a
-            dy = yedge[irow0 + iy] - y0
-            dly = 0.0
-            if b != 0.0:
-                dly = c * dy / b
-            if dlx != 0.0 and dly != 0.0:
-                if abs(dlx) < abs(dly):
-                    dy = dx * b / a
-                else:
-                    dx = dy * a / b
-            xt = x0 + dx + incx
-            yt = y0 + dy + incy
-            dl = math.sqrt(math.pow((xt - x0), 2.0) + math.pow((yt - y0), 2.0))
-            dlen += dl
-            if not returnvertices:
-                pts.append((xt, yt, dlen))
-            x0, y0 = xt, yt
-            xt = x0 - 2.0 * incx
-            yt = y0 - 2.0 * incy
-            dl = math.sqrt(math.pow((xt - x0), 2.0) + math.pow((yt - y0), 2.0))
-            dlen += dl
-            x0, y0 = xt, yt
-            irow0, jcol0 = findrowcolumn((x0, y0), xedge, yedge)
-            if irow0 >= 0 and jcol0 >= 0:
-                if not returnvertices:
-                    pts.append((xt, yt, dlen))
-            elif irow1 < 0 or jcol1 < 0:
-                dl = math.sqrt(
-                    math.pow((x1 - x0), 2.0) + math.pow((y1 - y0), 2.0)
-                )
-                dlen += dl
-                break
-            if irow0 == irow1 and jcol0 == jcol1:
-                dl = math.sqrt(
-                    math.pow((x1 - x0), 2.0) + math.pow((y1 - y0), 2.0)
-                )
-                dlen += dl
-                pts.append((x1, y1, dlen))
-                break
-    return np.array(pts)
-
-
-def cell_value_points(pts, xedge, yedge, vdata):
-    """
-    Intersect a list of polyline vertices with a rectilinear MODFLOW
-    grid. Vertices at the intersection of the polyline with the grid
-    cell edges is returned. Optionally the original polyline vertices
-    are returned.
-
-    Parameters
-    ----------
-    pts : list
-        A list of x, y points and polyline length to extract defining the
-        vertices of a polyline that
-    xedge : numpy.ndarray
-        x-coordinate of the edge of each MODFLOW column. The shape of xedge is
-        (NCOL + 1). If xedge is not a numpy.ndarray it is converted to a
-        numpy.ndarray.
-    yedge : numpy.ndarray
-        y-coordinate of the edge of each MODFLOW row. The shape of yedge is
-        (NROW + 1). If yedge is not a numpy.ndarray it is converted to a
-        numpy.ndarray.
-    vdata : numpy.ndarray
-        Data (i.e., head, hk, etc.) for a rectilinear MODFLOW model grid. The
-        shape of vdata is (NROW, NCOL). If vdata is not a numpy.ndarray it is
-        converted to a numpy.ndarray.
-
-    Returns
-    -------
-    vcell : numpy.ndarray
-        numpy.ndarray of of data values from the vdata numpy.ndarray at x- and
-        y-coordinate locations in pts.
-
-    Examples
-    --------
-    >>> import flopy
-    >>> vcell = flopy.plotutil.cell_value_points(xpts, xedge, yedge, head[0, :, :])
-
-    """
-
-    # make sure xedge and yedge are numpy arrays
-    if not isinstance(xedge, np.ndarray):
-        xedge = np.array(xedge)
-    if not isinstance(yedge, np.ndarray):
-        yedge = np.array(yedge)
-    if not isinstance(vdata, np.ndarray):
-        vdata = np.array(vdata)
-
-    vcell = []
-    for (xt, yt, _) in pts:
-        # find the modflow cell containing point
-        irow, jcol = findrowcolumn((xt, yt), xedge, yedge)
-        if irow >= 0 and jcol >= 0:
-            if np.isnan(vdata[irow, jcol]):
-                vcell.append(np.nan)
-            else:
-                v = np.asarray(vdata[irow, jcol])
-                vcell.append(v)
-
-    return np.array(vcell)
-
-
 def _set_coord_info(mg, xul, yul, xll, yll, rotation):
     """
 
@@ -2720,7 +2570,9 @@ def _depreciated_dis_handler(modelgrid, dis):
     import warnings
 
     warnings.warn(
-        "the dis parameter has been depreciated.", PendingDeprecationWarning
+        "the dis parameter has been depreciated and will be removed in "
+        "version 3.3.5.",
+        PendingDeprecationWarning,
     )
     if modelgrid.grid_type == "vertex":
         modelgrid = VertexGrid(
@@ -2793,3 +2645,335 @@ def advanced_package_bc_helper(pkg, modelgrid, kper):
             "Pkg {} not implemented for bc plotting".format(pkg.package_type)
         )
     return idx
+
+
+def filter_modpath_by_travel_time(recarray, travel_time):
+    """
+
+    :param recarray:
+    :param travel_time:
+    :return:
+    """
+    if travel_time is None:
+        tp = recarray.copy()
+    else:
+        if isinstance(travel_time, str):
+            funcs = {
+                "<=": lambda a, b: a["time"] <= b,
+                ">=": lambda a, b: a["time"] >= b,
+                "<": lambda a, b: a["time"] < b,
+                ">": lambda a, b: a["time"] > b,
+            }
+            idx = None
+            for k, func in sorted(funcs.items())[::-1]:
+                if k in travel_time:
+                    time = float(travel_time.replace(k, ""))
+                    idx = func(recarray, time)
+                    break
+            if idx is None:
+                try:
+                    time = float(travel_time)
+                    idx = recarray["time"] <= time
+                except (ValueError, KeyError):
+                    raise Exception(
+                        "flopy.map.plot_pathline travel_time variable cannot "
+                        "be parsed. Acceptable logical variables are , "
+                        "<=, <, >=, and >. "
+                        "You passed {}".format(travel_time)
+                    )
+        else:
+            time = float(travel_time)
+            idx = recarray["time"] <= time
+        tp = recarray[idx]
+
+    return tp
+
+
+def intersect_modpath_with_crosssection(
+    recarrays,
+    projpts,
+    xvertices,
+    yvertices,
+    projection,
+    ncpl,
+    method="cell",
+    starting=False,
+):
+    """
+    Method to intersect modpath output with a cross-section
+
+    Parameters
+    ----------
+    recarrays : list
+        list of numpy recarrays
+    projpts : dict
+        dict of crossectional cell vertices
+    xvertices : np.array
+        array of modelgrid xvertices
+    yvertices : np.array
+        array of modelgrid yvertices
+    projection : str
+        projection direction (x or y)
+    ncpl : int
+        number of cells per layer (cross sectional version)
+    method : str
+        intersection method ('cell' or 'all')
+    starting : bool
+        modpath starting location flag
+
+    Returns
+    -------
+        dict : dictionary of intersecting recarrays
+    """
+
+    from ..utils.geometry import point_in_polygon
+
+    xp, yp, zp = "x", "y", "z"
+    if starting:
+        xp, yp, zp = "x0", "y0", "z0"
+
+    if not isinstance(recarrays, list):
+        recarrays = [
+            recarrays,
+        ]
+
+    if projection == "x":
+        v_opp = yvertices
+        v_norm = xvertices
+        oprj = yp
+        prj = xp
+    else:
+        v_opp = xvertices
+        v_norm = yvertices
+        oprj = xp
+        prj = yp
+
+    # set points opposite projection direction
+    oppts = {}
+    nppts = {}
+
+    for cell, verts in projpts.items():
+        tcell = cell
+        while tcell >= ncpl:
+            tcell -= ncpl
+        zmin = np.min(np.array(verts)[:, 1])
+        zmax = np.max(np.array(verts)[:, 1])
+        nmin = np.min(v_norm[tcell])
+        nmax = np.max(v_norm[tcell])
+        omin = np.min(v_opp[tcell])
+        omax = np.max(v_opp[tcell])
+        oppts[cell] = np.array(
+            [
+                [omin, zmax],
+                [omax, zmax],
+                [omax, zmin],
+                [omin, zmin],
+                [omin, zmax],
+            ]
+        )
+
+        # intersects w/actual...
+        nppts[cell] = np.array(
+            [
+                [nmin, zmax],
+                [nmax, zmax],
+                [nmax, zmin],
+                [nmin, zmin],
+                [nmin, zmax],
+            ]
+        )
+
+    idict = {}
+    for recarray in recarrays:
+        for cell, _ in projpts.items():
+            m0 = point_in_polygon(
+                recarray[prj].reshape(1, -1),
+                recarray[zp].reshape(1, -1),
+                nppts[cell],
+            )
+            if method == "cell":
+                m1 = point_in_polygon(
+                    recarray[oprj].reshape(1, -1),
+                    recarray[zp].reshape(1, -1),
+                    oppts[cell],
+                )
+                idx = [
+                    i
+                    for i, (x, y) in enumerate(zip(m0[0], m1[0]))
+                    if x == y == True
+                ]
+            else:
+                idx = [i for i, x in enumerate(m0[0]) if x == True]
+
+            if idx:
+                if cell not in idict:
+                    idict[cell] = [recarray[idx]]
+                else:
+                    idict[cell].append(recarray[idx])
+
+    return idict
+
+
+def reproject_modpath_to_crosssection(
+    idict,
+    projpts,
+    xypts,
+    projection,
+    modelgrid,
+    ncpl,
+    geographic_coords,
+    starting=False,
+):
+    """
+    Method to reproject modpath points onto cross sectional line
+
+    Parameters
+    ----------
+    idict : dict
+        dictionary of intersecting points
+    projpts : dict
+        dictionary of cross sectional cells
+    xypts : dict
+        dictionary of cross sectional line
+    projection : str
+        projection direction (x or y)
+    modelgrid : Grid object
+        flopy modelgrid object
+    ncpl : int
+        number of cells per layer (cross sectional version)
+    geographic_coords : bool
+        flag for plotting in geographic coordinates
+    starting : bool
+        flag for modpath position
+
+    Returns
+    -------
+        dictionary of projected modpath lines or points
+    """
+    from ..utils import geometry
+
+    xp, yp, zp = "x", "y", "z"
+    if starting:
+        xp, yp, zp = "x0", "y0", "z0"
+
+    proj = xp
+    if projection == "y":
+        proj = yp
+
+    ptdict = {}
+    if not geographic_coords:
+        for cell, recarrays in idict.items():
+            tcell = cell
+            while tcell >= ncpl:
+                tcell -= ncpl
+            line = xypts[tcell]
+            if projection == "x":
+                d0 = np.min([i[0] for i in projpts[cell]])
+            else:
+                d0 = np.max([i[0] for i in projpts[cell]])
+            for rec in recarrays:
+                pts = list(zip(rec[xp], rec[yp]))
+                x, y = geometry.project_point_onto_xc_line(
+                    line, pts, d0, projection
+                )
+                rec[xp] = x
+                rec[yp] = y
+                pid = rec["particleid"][0]
+                pline = list(zip(rec[proj], rec[zp]))
+                if pid not in ptdict:
+                    ptdict[pid] = pline
+                else:
+                    ptdict[pid] += pline
+    else:
+        for cell, recarrays in idict.items():
+            for rec in recarrays:
+                x, y = geometry.transform(
+                    rec[xp],
+                    rec[yp],
+                    modelgrid.xoffset,
+                    modelgrid.yoffset,
+                    modelgrid.angrot_radians,
+                )
+                rec[xp] = x
+                rec[yp] = y
+                pid = rec["particleid"][0]
+                pline = list(zip(rec[proj], rec[zp]))
+                if pid not in ptdict:
+                    ptdict[pid] = pline
+                else:
+                    ptdict[pid] += pline
+
+    return ptdict
+
+
+def parse_modpath_selection_options(
+    ep,
+    direction,
+    selection,
+    selection_direction,
+):
+    """
+
+    :return:
+    """
+    ep = ep.copy()
+    direction = direction.lower()
+    if direction == "starting":
+        istart = True
+        xp, yp = "x0", "y0"
+
+    else:
+        istart = False
+        direction = "ending"
+        xp, yp = "x", "y"
+
+    if selection_direction is not None:
+        selection_direction = selection_direction.lower()
+        if selection_direction != "starting":
+            selection_direction = "ending"
+
+    else:
+        if direction.lower() == "starting":
+            selection_direction = "ending"
+        elif direction.lower() == "ending":
+            selection_direction = "starting"
+
+    # selection of endpoints
+    if selection is not None:
+        if isinstance(selection, int):
+            selection = tuple((selection,))
+        try:
+            if len(selection) == 1:
+                node = selection[0]
+                if selection_direction.lower() == "starting":
+                    nsel = "node0"
+                else:
+                    nsel = "node"
+                # make selection
+                idx = ep[nsel] == node
+                tep = ep[idx]
+            elif len(selection) == 3:
+                k, i, j = selection[0], selection[1], selection[2]
+                if selection_direction.lower() == "starting":
+                    ksel, isel, jsel = "k0", "i0", "j0"
+                else:
+                    ksel, isel, jsel = "k", "i", "j"
+                # make selection
+                idx = (ep[ksel] == k) & (ep[isel] == i) & (ep[jsel] == j)
+                tep = ep[idx]
+            else:
+                raise Exception(
+                    "plot_endpoint selection must be a zero-based layer, row, "
+                    "column tuple (l, r, c) or node number (MODPATH 7) of "
+                    "the location to evaluate (i.e., well location)."
+                )
+        except (ValueError, KeyError, IndexError):
+            raise Exception(
+                "plot_endpoint selection must be a zero-based layer, row, "
+                "column tuple (l, r, c) or node number (MODPATH 7) of the "
+                "location to evaluate (i.e., well location)."
+            )
+    else:
+        tep = ep.copy()
+
+    return tep, istart, xp, yp

@@ -40,6 +40,15 @@ optional true
 longname rotation angle
 description counter-clockwise rotation angle (in degrees) of the model grid coordinate system relative to a real-world coordinate system.  If not specified, then a default value of 0.0 is assigned.  The value for ANGROT does not affect the model simulation, but it is written to the binary grid file so that postprocessors can locate the grid in space.
 
+block options
+name vertical_offset_tolerance
+type double precision
+reader urword
+optional true
+default_value 0.0
+longname vertical length dimension for top and bottom checking
+description checks are performed to ensure that the top of a cell is not higher than the bottom of an overlying cell.  This option can be used to specify the tolerance that is used for checking.  If top of a cell is above the bottom of an overlying cell by a value less than this tolerance, then the program will not terminate with an error.  The default value is zero.  This option should generally not be used.
+
 # --------------------- gwf disu dimensions ---------------------
 
 block dimensions

@@ -10,7 +10,35 @@ Contents:
    :maxdepth: 2
 
    _notebooks/tutorial01_mf6
-   _notebooks/tutorial02_mf6
+
+
+MODFLOW 6 FloPy Use Tutorials
+-----------------------------
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   _notebooks/tutorial01_mf6_data
+   _notebooks/tutorial02_mf6_data
+   _notebooks/tutorial03_mf6_data
+   _notebooks/tutorial04_mf6_data
+   _notebooks/tutorial05_mf6_data
+   _notebooks/tutorial06_mf6_data
+   _notebooks/tutorial07_mf6_data
+   _notebooks/tutorial08_mf6_data
+
+
+MODFLOW 6 Output Tutorials
+--------------------------
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   _notebooks/tutorial01_mf6_output
 
 
 MODFLOW Tutorials

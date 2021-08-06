@@ -6,7 +6,7 @@ stress period classes
 """
 
 
-class StressPeriod(object):
+class StressPeriod:
     """
     Represents a stress period
 
@@ -62,7 +62,7 @@ class StressPeriod(object):
     # def get_ts_length(self, timestep):
 
 
-class SimulationTime(object):
+class SimulationTime:
     """
     Represents a block in a MF6 input file
 

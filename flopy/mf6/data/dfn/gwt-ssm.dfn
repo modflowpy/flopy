@@ -34,7 +34,7 @@ type string
 tagged false
 reader urword
 longname package name
-description name of the package for which an auxiliary variable contains a source concentration.
+description name of the flow package for which an auxiliary variable contains a source concentration.  If this flow package is represented using an advanced transport package (SFT, LKT, MWT, or UZT), then the advanced transport package will override SSM terms specified here.
 
 block sources
 name srctype

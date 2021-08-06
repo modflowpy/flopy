@@ -24,14 +24,15 @@ from .version import __version__
 from .discretization.modeltime import ModelTime
 from .discretization.grid import Grid
 
-# Global variables
-iconst = 1  # Multiplier for individual array elements in integer and real arrays read by MODFLOW's U2DREL, U1DREL and U2DINT.
-iprn = (
-    -1
-)  # Printout flag. If >= 0 then array values read are printed in listing file.
+## Global variables
+# Multiplier for individual array elements in integer and real arrays read by
+# MODFLOW's U2DREL, U1DREL and U2DINT.
+iconst = 1
+# Printout flag. If >= 0 then array values read are printed in listing file.
+iprn = -1
 
 
-class FileDataEntry(object):
+class FileDataEntry:
     def __init__(self, fname, unit, binflag=False, output=False, package=None):
         self.fname = fname
         self.unit = unit
@@ -40,7 +41,7 @@ class FileDataEntry(object):
         self.package = package
 
 
-class FileData(object):
+class FileData:
     def __init__(self):
         self.file_data = []
         return
@@ -59,7 +60,7 @@ class FileData(object):
         return
 
 
-class ModelInterface(object):
+class ModelInterface:
     def __init__(self):
         self._mg_resync = True
         self._modelgrid = None
@@ -78,96 +79,96 @@ class ModelInterface(object):
     @abc.abstractmethod
     def modelgrid(self):
         raise NotImplementedError(
-            "must define modelgrid in child " "class to use this base class"
+            "must define modelgrid in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def packagelist(self):
         raise NotImplementedError(
-            "must define packagelist in child " "class to use this base class"
+            "must define packagelist in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def namefile(self):
         raise NotImplementedError(
-            "must define namefile in child " "class to use this base class"
+            "must define namefile in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def model_ws(self):
         raise NotImplementedError(
-            "must define model_ws in child " "class to use this base class"
+            "must define model_ws in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def exename(self):
         raise NotImplementedError(
-            "must define exename in child " "class to use this base class"
+            "must define exename in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def version(self):
         raise NotImplementedError(
-            "must define version in child " "class to use this base class"
+            "must define version in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def solver_tols(self):
         raise NotImplementedError(
-            "must define version in child " "class to use this base class"
+            "must define version in child class to use this base class"
         )
 
     @abc.abstractmethod
     def export(self, f, **kwargs):
         raise NotImplementedError(
-            "must define export in child " "class to use this base class"
+            "must define export in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def laytyp(self):
         raise NotImplementedError(
-            "must define laytyp in child " "class to use this base class"
+            "must define laytyp in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def hdry(self):
         raise NotImplementedError(
-            "must define hdry in child " "class to use this base class"
+            "must define hdry in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def hnoflo(self):
         raise NotImplementedError(
-            "must define hnoflo in child " "class to use this base class"
+            "must define hnoflo in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def laycbd(self):
         raise NotImplementedError(
-            "must define laycbd in child " "class to use this base class"
+            "must define laycbd in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def verbose(self):
         raise NotImplementedError(
-            "must define verbose in child " "class to use this base class"
+            "must define verbose in child class to use this base class"
         )
 
     @abc.abstractmethod
     def check(self, f=None, verbose=True, level=1):
         raise NotImplementedError(
-            "must define check in child " "class to use this base class"
+            "must define check in child class to use this base class"
         )
 
     def get_package_list(self, ftype=None):
@@ -277,25 +278,31 @@ class ModelInterface(object):
 
 class BaseModel(ModelInterface):
     """
-    MODFLOW based models base class
+    MODFLOW-based models base class.
 
     Parameters
     ----------
-
-    modelname : string
-        Name of the model.  Model files will be given this name. (default is
-        'modflowtest'
-
-    namefile_ext : string
-        name file extension (default is 'nam')
-
-    exe_name : string
-        name of the modflow executable
-
-    model_ws : string
+    modelname : str, default "modflowtest"
+        Name of the model, which is also used for model file names.
+    namefile_ext : str, default "nam"
+        Name file extension, without "."
+    exe_name : str, default "mf2k.exe"
+        Name of the modflow executable.
+    model_ws : str, optional
         Path to the model workspace.  Model files will be created in this
         directory.  Default is None, in which case model_ws is assigned
         to the current working directory.
+    structured : bool, default True
+        Specify if model grid is structured (default) or unstructured.
+    verbose : bool, default False
+        Print additional information to the screen.
+    **kwargs : dict, optional
+        Used to define: ``xll``/``yll`` for the x- and y-coordinates of
+        the lower-left corner of the grid, ``xul``/``yul`` for the
+        x- and y-coordinates of the upper-left corner of the grid
+        (deprecated), ``rotation`` for the grid rotation (default 0.0),
+        ``proj4_str`` for a PROJ string, and ``start_datetime`` for
+        model start date (default "1-1-1970").
 
     """
 
@@ -309,10 +316,8 @@ class BaseModel(ModelInterface):
         verbose=False,
         **kwargs
     ):
-        """
-        BaseModel init
-        """
-        ModelInterface.__init__(self)
+        """Initialize BaseModel."""
+        super().__init__()
         self.__name = modelname
         self.namefile_ext = namefile_ext or ""
         self._namefile = self.__name + "." + self.namefile_ext
@@ -386,13 +391,13 @@ class BaseModel(ModelInterface):
     @property
     def modeltime(self):
         raise NotImplementedError(
-            "must define modeltime in child " "class to use this base class"
+            "must define modeltime in child class to use this base class"
         )
 
     @property
     def modelgrid(self):
         raise NotImplementedError(
-            "must define modelgrid in child " "class to use this base class"
+            "must define modelgrid in child class to use this base class"
         )
 
     @property
@@ -567,12 +572,10 @@ class BaseModel(ModelInterface):
                     except:
                         pn = p.name
                     if self.verbose:
-                        msg = (
-                            "\nWARNING:\n    unit {} ".format(u)
-                            + "of package {} ".format(pn)
-                            + "already in use."
+                        print(
+                            "\nWARNING:\n    unit {} of package {} "
+                            "already in use.".format(u, pn)
                         )
-                        print(msg)
             self.package_units.append(u)
         for i, pp in enumerate(self.packagelist):
             if pp.allowDuplicates:
@@ -581,8 +584,7 @@ class BaseModel(ModelInterface):
                 if self.verbose:
                     print(
                         "\nWARNING:\n    Two packages of the same type, "
-                        + "Replacing existing "
-                        + "'{}' package.".format(p.name[0])
+                        "Replacing existing '{}' package.".format(p.name[0])
                     )
                 self.packagelist[i] = p
                 return
@@ -697,10 +699,8 @@ class BaseModel(ModelInterface):
         else:
             txt1 = "Removing"
             txt2 = "from"
-        msg = (
-            "{} {} ".format(txt1, self.output_fnames[i])
-            + "(unit={}) ".format(self.output_units[i])
-            + "{} the output list.".format(txt2)
+        msg = "{} {} (unit={}) {} the output list.".format(
+            txt1, self.output_fnames[i], self.output_units[i], txt2
         )
         print(msg)
 
@@ -792,7 +792,7 @@ class BaseModel(ModelInterface):
             if self.verbose:
                 msg = (
                     "BaseModel.add_output() warning: "
-                    + "replacing existing filename {}".format(fname)
+                    "replacing existing filename {}".format(fname)
                 )
                 print(msg)
             idx = self.output_fnames.index(fname)
@@ -909,7 +909,7 @@ class BaseModel(ModelInterface):
         else:
             msg = (
                 " either fname or unit must be passed "
-                + " to set_output_attribute()"
+                "to set_output_attribute()"
             )
             raise Exception(msg)
         if attr is not None:
@@ -951,7 +951,7 @@ class BaseModel(ModelInterface):
         else:
             raise Exception(
                 " either fname or unit must be passed "
-                + " to set_output_attribute()"
+                "to set_output_attribute()"
             )
         v = None
         if attr is not None:
@@ -984,7 +984,7 @@ class BaseModel(ModelInterface):
             if self.verbose:
                 msg = (
                     "BaseModel.add_external() warning: "
-                    + "replacing existing filename {}".format(fname)
+                    "replacing existing filename {}".format(fname)
                 )
                 print(msg)
             idx = self.external_fnames.index(fname)
@@ -996,7 +996,7 @@ class BaseModel(ModelInterface):
             if self.verbose:
                 msg = (
                     "BaseModel.add_external() warning: "
-                    + "replacing existing unit {}".format(unit)
+                    "replacing existing unit {}".format(unit)
                 )
                 print(msg)
             idx = self.external_units.index(unit)
@@ -1077,7 +1077,7 @@ class BaseModel(ModelInterface):
         #     if ptype in pak.name:
         #         print("BaseModel.add_existing_package() warning: " +\
         #               "replacing existing package {0}".format(ptype))
-        class Obj(object):
+        class Obj:
             pass
 
         fake_package = Obj()
@@ -1108,10 +1108,10 @@ class BaseModel(ModelInterface):
             for i in range(len(p.name)):
                 if p.unit_number[i] == 0:
                     continue
-                s = (
-                    "{:14s} ".format(p.name[i])
-                    + "{:5d}  ".format(p.unit_number[i])
-                    + "{}".format(p.file_name[i])
+                s = "{:14s} {:5d}  {}".format(
+                    p.name[i],
+                    p.unit_number[i],
+                    p.file_name[i],
                 )
                 if p.extra[i]:
                     s += " " + p.extra[i]
@@ -1171,8 +1171,7 @@ class BaseModel(ModelInterface):
         # check that this is a valid model version
         if self.version not in list(self.version_types.keys()):
             err = (
-                "Error: Unsupported model "
-                + "version ({}).".format(self.version)
+                "Error: Unsupported model version ({}).".format(self.version)
                 + " Valid model versions are:"
             )
             for v in list(self.version_types.keys()):
@@ -1180,10 +1179,8 @@ class BaseModel(ModelInterface):
             raise Exception(err)
 
         # set namefile heading
-        heading = (
-            "# Name file for "
-            + "{}, ".format(self.version_types[self.version])
-            + "generated by Flopy version {}.".format(__version__)
+        heading = "# Name file for {}, generated by Flopy version {}.".format(
+            self.version_types[self.version], __version__
         )
         self.heading = heading
 
@@ -1222,14 +1219,10 @@ class BaseModel(ModelInterface):
             new_pth = os.getcwd()
         if not os.path.exists(new_pth):
             try:
-                line = "\ncreating model workspace...\n" + "   {}".format(
-                    new_pth
-                )
-                print(line)
+                print("\ncreating model workspace...\n   {}".format(new_pth))
                 os.makedirs(new_pth)
             except:
-                line = "\n{} not valid, workspace-folder ".format(new_pth)
-                raise OSError(line)
+                raise OSError("{} not valid, workspace-folder".format(new_pth))
                 # line = '\n{} not valid, workspace-folder '.format(new_pth) + \
                 #        'was changed to {}\n'.format(os.getcwd())
                 # print(line)
@@ -1310,13 +1303,12 @@ class BaseModel(ModelInterface):
         if key == "free_format_input":
             # if self.bas6 is not None:
             #    self.bas6.ifrefm = value
-            super(BaseModel, self).__setattr__(key, value)
+            super().__setattr__(key, value)
         elif key == "name":
             self._set_name(value)
         elif key == "model_ws":
             self.change_model_ws(value)
-        elif key == "sr":
-            assert isinstance(value, utils.reference.SpatialReference)
+        elif key == "sr" and value.__class__.__name__ == "SpatialReference":
             warnings.warn(
                 "SpatialReference has been deprecated.",
                 category=DeprecationWarning,
@@ -1325,7 +1317,7 @@ class BaseModel(ModelInterface):
                 self.dis.sr = value
             else:
                 raise Exception(
-                    "cannot set SpatialReference -" "ModflowDis not found"
+                    "cannot set SpatialReference - ModflowDis not found"
                 )
         elif key == "tr":
             assert isinstance(
@@ -1335,7 +1327,7 @@ class BaseModel(ModelInterface):
                 self.dis.tr = value
             else:
                 raise Exception(
-                    "cannot set TemporalReference -" "ModflowDis not found"
+                    "cannot set TemporalReference - ModflowDis not found"
                 )
         elif key == "start_datetime":
             if self.dis is not None:
@@ -1343,10 +1335,10 @@ class BaseModel(ModelInterface):
                 self.tr.start_datetime = value
             else:
                 raise Exception(
-                    "cannot set start_datetime -" "ModflowDis not found"
+                    "cannot set start_datetime - ModflowDis not found"
                 )
         else:
-            super(BaseModel, self).__setattr__(key, value)
+            super().__setattr__(key, value)
 
     def run_model(
         self,
@@ -1416,7 +1408,7 @@ class BaseModel(ModelInterface):
             if self.verbose:
                 print(
                     "\nResetting free_format_input to True to "
-                    + "preserve the precision of the parameter data."
+                    "preserve the precision of the parameter data."
                 )
             self.free_format_input = True
 
@@ -1715,24 +1707,24 @@ def run_model(
             if not exe_name.lower().endswith(".exe"):
                 exe = which(exe_name + ".exe")
     if exe is None:
-        s = "The program {} does not exist or is not executable.".format(
-            exe_name
+        raise Exception(
+            "The program {} does not exist or is not executable.".format(
+                exe_name
+            )
         )
-        raise Exception(s)
     else:
         if not silent:
-            s = (
+            print(
                 "FloPy is using the following "
-                + " executable to run the model: {}".format(exe)
+                "executable to run the model: {}".format(exe)
             )
-            print(s)
 
     if namefile is not None:
         if not os.path.isfile(os.path.join(model_ws, namefile)):
-            s = "The namefile for this model " + "does not exists: {}".format(
-                namefile
+            raise Exception(
+                "The namefile for this model does not exists: "
+                "{}".format(namefile)
             )
-            raise Exception(s)
 
     # simple little function for the thread to target
     def q_output(output, q):

@@ -32,29 +32,34 @@ class Seawat(BaseModel):
 
     Parameters
     ----------
-    modelname : string, optional
+    modelname : str, default "swttest"
         Name of model.  This string will be used to name the SEAWAT input
-        that are created with write_model. (the default is 'swttest')
-    namefile_ext : string, optional
-        Extension for the namefile (the default is 'nam')
-    version : string, optional
-        Version of SEAWAT to use (the default is 'seawat').
-    exe_name : string, optional
-        The name of the executable to use (the default is
-        'swtv4.exe').
-    listunit : integer, optional
-        Unit number for the list file (the default is 2).
-    model_ws : string, optional
-        model workspace.  Directory name to create model data sets.
-        (default is the present working directory).
-    external_path : string
-        Location for external files (default is None).
-    verbose : boolean, optional
-        Print additional information to the screen (default is False).
-    load : boolean, optional
-         (default is True).
-    silent : integer
-        (default is 0)
+        that are created with write_model.
+    namefile_ext : str, default "nam"
+        Extension for the namefile.
+    modflowmodel : Modflow, default None
+        Instance of a Modflow object.
+    mt3dmodel : Mt3dms, default None
+        Instance of a Mt3dms object.
+    version : str, default "seawat"
+        Version of SEAWAT to use. Valid versions are "seawat" (default).
+    exe_name : str, default "swtv4"
+        The name of the executable to use.
+    structured : bool, default True
+        Specify if model grid is structured (default) or unstructured.
+    listunit : int, default 2
+        Unit number for the list file.
+    model_ws : str, default "."
+        Model workspace.  Directory name to create model data sets.
+        Default is the present working directory.
+    external_path : str, optional
+        Location for external files.
+    verbose : bool, default False
+        Print additional information to the screen.
+    load : bool, default True
+         Load model.
+    silent : int, default 0
+        Silent option.
 
     Attributes
     ----------
@@ -70,7 +75,6 @@ class Seawat(BaseModel):
 
     Examples
     --------
-
     >>> import flopy
     >>> m = flopy.seawat.swt.Seawat()
 
@@ -92,10 +96,7 @@ class Seawat(BaseModel):
         load=True,
         silent=0,
     ):
-
-        # Call constructor for parent object
-        BaseModel.__init__(
-            self,
+        super().__init__(
             modelname,
             namefile_ext,
             exe_name,
@@ -139,9 +140,9 @@ class Seawat(BaseModel):
         # the starting external data unit number
         self._next_ext_unit = 3000
         if external_path is not None:
-            assert model_ws == ".", (
-                "ERROR: external cannot be used " + "with model_ws"
-            )
+            assert (
+                model_ws == "."
+            ), "ERROR: external cannot be used with model_ws"
 
             # external_path = os.path.join(model_ws, external_path)
             if os.path.exists(external_path):
@@ -296,7 +297,7 @@ class Seawat(BaseModel):
 
     def _set_name(self, value):
         # Overrides BaseModel's setter for name property
-        BaseModel._set_name(self, value)
+        super()._set_name(value)
 
         # for i in range(len(self.lst.extension)):
         #    self.lst.file_name[i] = self.name + '.' + self.lst.extension[i]
@@ -313,9 +314,7 @@ class Seawat(BaseModel):
             self._mt.change_model_ws(
                 new_pth=new_pth, reset_external=reset_external
             )
-        super(Seawat, self).change_model_ws(
-            new_pth=new_pth, reset_external=reset_external
-        )
+        super().change_model_ws(new_pth=new_pth, reset_external=reset_external)
 
     def write_name_file(self):
         """
@@ -351,7 +350,7 @@ class Seawat(BaseModel):
         )
 
         # Write SEAWAT entries and close
-        f_nam.write("{}".format(self.get_name_file_entries()))
+        f_nam.write(str(self.get_name_file_entries()))
 
         if self._mf is not None:
             # write the external files
@@ -375,10 +374,10 @@ class Seawat(BaseModel):
                     continue
                 if b:
                     f_nam.write(
-                        "DATA(BINARY)   {0:5d}  ".format(u) + f + " REPLACE\n"
+                        "DATA(BINARY)   {:5d}  {} REPLACE\n".format(u, f)
                     )
                 else:
-                    f_nam.write("DATA           {0:5d}  ".format(u) + f + "\n")
+                    f_nam.write("DATA           {:5d}  {}\n".format(u, f))
 
         if self._mt is not None:
             # write the external files
@@ -402,10 +401,10 @@ class Seawat(BaseModel):
                     continue
                 if b:
                     f_nam.write(
-                        "DATA(BINARY)   {0:5d}  ".format(u) + f + " REPLACE\n"
+                        "DATA(BINARY)   {:5d}  {} REPLACE\n".format(u, f)
                     )
                 else:
-                    f_nam.write("DATA           {0:5d}  ".format(u) + f + "\n")
+                    f_nam.write("DATA           {:5d}  {}\n".format(u, f))
 
         # write the external files
         for b, u, f in zip(
@@ -423,11 +422,9 @@ class Seawat(BaseModel):
             if u == 0:
                 continue
             if b:
-                f_nam.write(
-                    "DATA(BINARY)   {0:5d}  ".format(u) + f + " REPLACE\n"
-                )
+                f_nam.write("DATA(BINARY)   {:5d}  {} REPLACE\n".format(u, f))
             else:
-                f_nam.write("DATA           {0:5d}  ".format(u) + f + "\n")
+                f_nam.write("DATA           {:5d}  {}\n".format(u, f))
 
         f_nam.close()
         return
@@ -447,37 +444,27 @@ class Seawat(BaseModel):
 
         Parameters
         ----------
-        f : string
-            Full path and name of SEAWAT name file.
-
-        version : string
-            The version of SEAWAT (seawat)
-            (default is seawat)
-
-        exe_name : string
-            The name of the executable to use if this loaded model is run.
-            (default is swtv4.exe)
-
-        verbose : bool
-            Write information on the load process if True.
-            (default is False)
-
-        model_ws : string
-            The path for the model workspace.
-            (default is the current working directory '.')
-
-        load_only : list of strings
-            Filetype(s) to load (e.g. ['lpf', 'adv'])
-            (default is None, which means that all will be loaded)
+        f : str
+            Path to SEAWAT name file to load.
+        version : str, default "seawat"
+            Version of SEAWAT to use. Valid versions are "seawat" (default).
+        exe_name : str, default "swtv4"
+            The name of the executable to use.
+        verbose : bool, default False
+            Print additional information to the screen.
+        model_ws : str, default "."
+            Model workspace.  Directory name to create model data sets.
+            Default is the present working directory.
+        load_only : list of str, optional
+            Packages to load (e.g. ["lpf", "adv"]). Default None
+            means that all packages will be loaded.
 
         Returns
         -------
-        m : flopy.seawat.swt.Seawat
-            flopy Seawat model object
+        flopy.seawat.swt.Seawat
 
         Examples
         --------
-
         >>> import flopy
         >>> m = flopy.seawat.swt.Seawat.load(f)
 

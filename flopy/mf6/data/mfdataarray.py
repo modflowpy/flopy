@@ -3,17 +3,21 @@ import numpy as np
 from collections import OrderedDict
 from ..data.mfstructure import DatumType
 from .mfdatastorage import DataStorage, DataStructureType, DataStorageType
-from ...utils.datautil import MultiList
+from ...utils.datautil import MultiList, DatumUtil
 from ..mfbase import ExtFileAction, MFDataException, VerbosityLevel
 from ..utils.mfenums import DiscretizationType
 from ...datbase import DataType
 from .mffileaccess import MFFileAccessArray
 from .mfdata import MFMultiDimVar, MFTransient
+from ...mbase import ModelInterface
 
 
 class MFArray(MFMultiDimVar):
     """
     Provides an interface for the user to access and update MODFLOW array data.
+    MFArray objects are not designed to be directly constructed by the end
+    user. When a FloPy for MODFLOW 6 package object is constructed, the
+    appropriate MFArray objects are automatically built.
 
     Parameters
     ----------
@@ -30,81 +34,6 @@ class MFArray(MFMultiDimVar):
     dimensions : MFDataDimensions
         dimension information related to the model, package, and array
 
-    Attributes
-    ----------
-    data_type : DataType
-        type of data stored in the scalar
-    plottable : bool
-        if the scalar is plottable
-    dtype : numpy.dtype
-        the scalar's numpy data type
-    data : variable
-        calls get_data with default parameters
-
-    Methods
-    -------
-    new_simulation : (sim_data : MFSimulationData)
-        initialize MFArray object for a new simulation
-    supports_layered : bool
-        Returns whether this MFArray supports layered data
-    set_layered_data : (layered_data : bool)
-        Sets whether this MFArray supports layered data
-    store_as_external_file : (external_file_path : string, layer_num : int,
-                             replace_existing_external : bool)
-        Stores data from layer "layer_num" to an external file at
-        "external_file_path".  For unlayered data do not pass in "layer".
-        If layer is not specified all layers will be stored with each layer
-        as a separate file. If replace_existing_external is set to False,
-        this method will not do anything if the data is already in an
-        external file.
-    store_as_internal_array : (multiplier : float, layer_num : int)
-        Stores data from layer "layer_num" internally within the MODFLOW file
-        with a multiplier "multiplier". For unlayered data do not pass in
-        "layer".
-    has_data : (layer_num : int) : bool
-        Returns whether layer "layer_num" has any data associated with it.
-        For unlayered data do not pass in "layer".
-    get_data : (layer_num : int) : ndarray
-        Returns the data associated with layer "layer_num".  If "layer_num" is
-        None, returns all data.
-    set_data : (data : ndarray/list, multiplier : float, layer_num : int)
-        Sets the contents of the data at layer "layer_num" to "data" with
-        multiplier "multiplier". For unlayered
-        data do not pass in "layer_num".  data can have the following formats:
-        1) ndarray - numpy ndarray containing all of the data
-        2) [data] - python list containing all of the data
-        3) val - a single constant value to be used for all of the data
-        4) {'filename':filename, 'factor':fct, 'iprn':print, 'data':data} -
-        dictionary defining external file information
-        5) {'data':data, 'factor':fct, 'iprn':print) - dictionary defining
-        internal information. Data that is layered can also be set by defining
-        a list with a length equal to the number of layers in the model.
-        Each layer in the list contains the data as defined in the
-        formats above:
-            [layer_1_val, [layer_2_array_vals],
-            {'filename':file_with_layer_3_data, 'factor':fct, 'iprn':print}]
-
-    load : (first_line : string, file_handle : file descriptor,
-            block_header : MFBlockHeader, pre_data_comments : MFComment) :
-            tuple (bool, string)
-        Loads data from first_line (the first line of data) and open file
-        file_handle which is pointing to the second line of data.  Returns a
-        tuple with the first item indicating whether all data was read and
-        the second item being the last line of text read from the file.
-    get_file_entry : (layer : int) : string
-        Returns a string containing the data in layer "layer".  For unlayered
-        data do not pass in "layer".
-
-    See Also
-    --------
-
-    Notes
-    -----
-
-    Examples
-    --------
-
-
     """
 
     def __init__(
@@ -117,7 +46,7 @@ class MFArray(MFMultiDimVar):
         path=None,
         dimensions=None,
     ):
-        super(MFArray, self).__init__(
+        super().__init__(
             sim_data, model_or_sim, structure, enable, path, dimensions
         )
         if self.structure.layered:
@@ -204,7 +133,7 @@ class MFArray(MFMultiDimVar):
         elif name == "binary":
             self._get_storage_obj().layer_storage.first_item().binary = value
         else:
-            super(MFArray, self).__setattr__(name, value)
+            super().__setattr__(name, value)
 
     def __getitem__(self, k):
         if isinstance(k, int):
@@ -365,6 +294,7 @@ class MFArray(MFMultiDimVar):
 
     @property
     def data_type(self):
+        """Type of data (DataType) stored in the array"""
         if self.structure.layered:
             return DataType.array3d
         else:
@@ -372,21 +302,46 @@ class MFArray(MFMultiDimVar):
 
     @property
     def dtype(self):
+        """Type of data (numpy.dtype) stored in the array"""
         return self._get_data().dtype.type
 
     @property
     def plottable(self):
+        """If the array is plottable"""
         if self.model is None:
             return False
         else:
             return True
 
+    @property
+    def data(self):
+        """Returns array data.  Calls get_data with default parameters."""
+        return self._get_data()
+
     def new_simulation(self, sim_data):
-        super(MFArray, self).new_simulation(sim_data)
+        """Initialize MFArray object for a new simulation
+
+        Parameters
+        ----------
+            sim_data : MFSimulationData
+                Data dictionary containing simulation data.
+
+
+        """
+        super().new_simulation(sim_data)
         self._data_storage = self._new_storage(False)
         self._layer_shape = (1,)
 
     def supports_layered(self):
+        """Returns whether this MFArray supports layered data
+
+        Returns
+        -------
+            layered data supported: bool
+                Whether or not this data object supports layered data
+
+        """
+
         try:
             model_grid = self._data_dimensions.get_model_grid()
         except Exception as ex:
@@ -411,6 +366,14 @@ class MFArray(MFMultiDimVar):
         )
 
     def set_layered_data(self, layered_data):
+        """Sets whether this MFArray supports layered data
+
+        Parameters
+        ----------
+        layered_data : bool
+            Whether data is layered or not.
+
+        """
         if layered_data is True and self.structure.layered is False:
             if (
                 self._data_dimensions.get_model_grid().grid_type()
@@ -442,6 +405,8 @@ class MFArray(MFMultiDimVar):
         self._get_storage_obj().layered = layered_data
 
     def make_layered(self):
+        """Changes the data to be stored by layer instead of as a single array."""
+
         if self.supports_layered():
             try:
                 self._get_storage_obj().make_layered()
@@ -498,6 +463,27 @@ class MFArray(MFMultiDimVar):
         replace_existing_external=True,
         check_data=True,
     ):
+        """Stores data from layer `layer` to an external file at
+        `external_file_path`.  For unlayered data do not pass in `layer`.
+        If layer is not specified all layers will be stored with each layer
+        as a separate file. If replace_existing_external is set to False,
+        this method will not do anything if the data is already in an
+        external file.
+
+        Parameters
+        ----------
+            external_file_path : str
+                Path to external file
+            layer : int
+                Which layer to store in external file, `None` value stores all
+                layers.
+            binary : bool
+                Store data in a binary file
+            replace_existing_external : bool
+                Whether to replace an existing external file.
+            check_data : bool
+                Verify data prior to storing
+        """
         storage = self._get_storage_obj()
         if storage is None:
             self._set_storage_obj(self._new_storage(False, True))
@@ -577,7 +563,6 @@ class MFArray(MFMultiDimVar):
                 self._set_data(
                     external_data, layer=current_layer, check_data=False
                 )
-
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(
@@ -596,7 +581,108 @@ class MFArray(MFMultiDimVar):
                     ex,
                 )
 
+    def store_internal(
+        self,
+        layer=None,
+        check_data=True,
+    ):
+        """Stores data from layer `layer` internally.  For unlayered data do
+        not pass in `layer`.  If layer is not specified all layers will be
+        stored internally
+
+        Parameters
+        ----------
+            layer : int
+                Which layer to store in external file, `None` value stores all
+                layers.
+            check_data : bool
+                Verify data prior to storing
+        """
+        storage = self._get_storage_obj()
+        if storage is None:
+            self._set_storage_obj(self._new_storage(False, True))
+            storage = self._get_storage_obj()
+        # build list of layers
+        if layer is None:
+            layer_list = []
+            for index in range(0, storage.layer_storage.get_total_size()):
+                if (
+                    storage.layer_storage[index].data_storage_type
+                    == DataStorageType.external_file
+                ):
+                    layer_list.append(index)
+        else:
+            if (
+                storage.layer_storage[layer].data_storage_type
+                == DataStorageType.external_file
+            ):
+                layer_list = [layer]
+            else:
+                layer_list = []
+
+        # store data from each layer
+        for current_layer in layer_list:
+            if isinstance(current_layer, int):
+                current_layer = (current_layer,)
+            # get the layer's data
+            data = self._get_data(current_layer, True)
+
+            if data is None:
+                # do not write empty data to an internal file
+                continue
+            try:
+                # store layer's data internally
+                if (
+                    self._simulation_data.verbosity_level.value
+                    >= VerbosityLevel.verbose.value
+                ):
+                    print(
+                        "Storing {} layer {} internally.."
+                        ".".format(
+                            self.structure.name,
+                            current_layer[0] + 1,
+                        )
+                    )
+                factor = storage.layer_storage[current_layer].factor
+                internal_data = {
+                    "data": self._get_data(current_layer, True),
+                    "factor": factor,
+                }
+                self._set_data(
+                    internal_data, layer=current_layer, check_data=False
+                )
+            except Exception as ex:
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    self.structure.get_model(),
+                    self.structure.get_package(),
+                    self._path,
+                    "storing data {} internally".format(self.structure.name),
+                    self.structure.name,
+                    inspect.stack()[0][3],
+                    type_,
+                    value_,
+                    traceback_,
+                    None,
+                    self._simulation_data.debug,
+                    ex,
+                )
+
     def has_data(self, layer=None):
+        """Returns whether layer "layer_num" has any data associated with it.
+
+        Parameters
+        ----------
+            layer_num : int
+                Layer number to check for data.  For unlayered data do not
+                pass anything in
+
+        Returns
+        -------
+            has data: bool
+                Returns if there is data.
+
+        """
         storage = self._get_storage_obj()
         if storage is None:
             return False
@@ -621,11 +707,20 @@ class MFArray(MFMultiDimVar):
                 ex,
             )
 
-    @property
-    def data(self):
-        return self._get_data()
-
     def get_data(self, layer=None, apply_mult=False, **kwargs):
+        """Returns the data associated with layer "layer_num".  If "layer_num"
+        is None, returns all data.
+
+        Parameters
+        ----------
+            layer_num : int
+
+        Returns
+        -------
+             data : ndarray
+                Array data in an ndarray
+
+        """
         return self._get_data(layer, apply_mult, **kwargs)
 
     def _get_data(self, layer=None, apply_mult=False, **kwargs):
@@ -663,6 +758,32 @@ class MFArray(MFMultiDimVar):
         return None
 
     def set_data(self, data, multiplier=None, layer=None):
+        """Sets the contents of the data at layer `layer` to `data` with
+        multiplier `multiplier`. For unlayered data do not pass in
+        `layer`.  Data can have the following formats:
+        1) ndarray - numpy ndarray containing all of the data
+        2) [data] - python list containing all of the data
+        3) val - a single constant value to be used for all of the data
+        4) {'filename':filename, 'factor':fct, 'iprn':print, 'data':data} -
+        dictionary defining external file information
+        5) {'data':data, 'factor':fct, 'iprn':print) - dictionary defining
+        internal information. Data that is layered can also be set by defining
+        a list with a length equal to the number of layers in the model.
+        Each layer in the list contains the data as defined in the
+        formats above:
+            [layer_1_val, [layer_2_array_vals],
+            {'filename':file_with_layer_3_data, 'factor':fct, 'iprn':print}]
+
+        Parameters
+        ----------
+        data : ndarray/list
+            An ndarray or nested lists containing the data to set.
+        multiplier : float
+            Multiplier to apply to data
+        layer : int
+            Data layer that is being set
+
+        """
         self._set_data(data, multiplier, layer)
 
     def _set_data(self, data, multiplier=None, layer=None, check_data=True):
@@ -785,7 +906,34 @@ class MFArray(MFMultiDimVar):
         pre_data_comments=None,
         external_file_info=None,
     ):
-        super(MFArray, self).load(
+        """Loads data from first_line (the first line of data) and open file
+        file_handle which is pointing to the second line of data.  Returns a
+        tuple with the first item indicating whether all data was read and
+        the second item being the last line of text read from the file.  This
+        method is for internal flopy use and is not intended for the end user.
+
+        Parameters
+        ----------
+            first_line : str
+                A string containing the first line of data in this array.
+            file_handle : file descriptor
+                A file handle for the data file which points to the second
+                line of data for this array
+            block_header : MFBlockHeader
+                Block header object that contains block header information
+                for the block containing this data
+            pre_data_comments : MFComment
+                Comments immediately prior to the data
+            external_file_info : list
+                Contains information about storing files externally
+
+        Returns
+        -------
+            more data : bool,
+            next data line : str
+
+        """
+        super().load(
             first_line,
             file_handle,
             block_header,
@@ -859,6 +1007,21 @@ class MFArray(MFMultiDimVar):
     def get_file_entry(
         self, layer=None, ext_file_action=ExtFileAction.copy_relative_paths
     ):
+        """Returns a string containing the data in layer "layer" formatted for
+        a MODFLOW 6 file.  For unlayered data do not pass in "layer".
+
+        Parameters
+        ----------
+            layer : int
+                The layer to return file entry for.
+            ext_file_action : ExtFileAction
+                How to handle external paths.
+
+        Returns
+        -------
+            file entry : str
+
+        """
         return self._get_file_entry(layer, ext_file_action)
 
     def _get_file_entry(
@@ -1265,7 +1428,7 @@ class MFArray(MFMultiDimVar):
                 "not available."
             )
 
-        modelgrid = self.model.modelgrid
+        modelgrid = self._get_model_grid()
         a = self.array
         num_plottable_layers = modelgrid.get_number_plottable_layers(a)
 
@@ -1296,7 +1459,9 @@ class MFArray(MFMultiDimVar):
 class MFTransientArray(MFArray, MFTransient):
     """
     Provides an interface for the user to access and update MODFLOW transient
-    array data.
+    array data.  MFTransientArray objects are not designed to be directly
+    constructed by the end user. When a FloPy for MODFLOW 6 package object is
+    constructed, the appropriate MFArray objects are automatically built.
 
     Parameters
     ----------
@@ -1313,39 +1478,8 @@ class MFTransientArray(MFArray, MFTransient):
     dimensions : MFDataDimensions
         dimension information related to the model, package, and array
 
-    Methods
-    -------
-    add_transient_key : (transient_key : int)
-        Adds a new transient time allowing data for that time to be stored and
-        retrieved using the key "transient_key"
-    get_data : (layer_num : int, key : int) : ndarray
-        Returns the data associated with layer "layer_num" during time "key".
-        If "layer_num" is None, returns all data for time "key".
-    set_data : (data : ndarray/list, multiplier : float, layer_num : int,
-        key : int)
-        Sets the contents of the data at layer "layer_num" and time "key" to
-        "data" with multiplier "multiplier". For unlayered data do not pass
-        in "layer_num".
-    load : (first_line : string, file_handle : file descriptor,
-            block_header : MFBlockHeader, pre_data_comments : MFComment) :
-            tuple (bool, string)
-        Loads data from first_line (the first line of data) and open file
-        handle which is pointing to the second line of data.  Returns a
-        tuple with the first item indicating whether all data was read
-        and the second item being the last line of text read from the file.
-    get_file_entry : (layer : int, key : int) : string
-        Returns a string containing the data in layer "layer" at time "key".
-        For unlayered data do not pass in "layer".
-
-    See Also
-    --------
-
-    Notes
-    -----
-
     Examples
     --------
-
 
     """
 
@@ -1358,7 +1492,7 @@ class MFTransientArray(MFArray, MFTransient):
         path=None,
         dimensions=None,
     ):
-        super(MFTransientArray, self).__init__(
+        super().__init__(
             sim_data=sim_data,
             model_or_sim=model_or_sim,
             structure=structure,
@@ -1372,17 +1506,37 @@ class MFTransientArray(MFArray, MFTransient):
 
     @property
     def data_type(self):
+        """Type of data (DataType) stored in the array"""
         return DataType.transient2d
 
     def remove_transient_key(self, transient_key):
+        """Removes a new transient time `transient_key` and any data stored
+        at that time.  This method is intended for internal library usage only.
+
+        Parameters
+        ----------
+            transient_key : int
+                Zero-based stress period
+
+        """
         if transient_key in self._data_storage:
             del self._data_storage[transient_key]
 
     def add_transient_key(self, transient_key):
-        super(MFTransientArray, self).add_transient_key(transient_key)
-        self._data_storage[transient_key] = super(
-            MFTransientArray, self
-        )._new_storage(stress_period=transient_key)
+        """Adds a new transient time allowing data for that time to be stored
+        and retrieved using the key `transient_key`.  This method is intended
+        for internal library usage only.
+
+        Parameters
+        ----------
+            transient_key : int
+                Zero-based stress period
+
+        """
+        super().add_transient_key(transient_key)
+        self._data_storage[transient_key] = super()._new_storage(
+            stress_period=transient_key
+        )
 
     def store_as_external_file(
         self,
@@ -1392,33 +1546,91 @@ class MFTransientArray(MFArray, MFTransient):
         replace_existing_external=True,
         check_data=True,
     ):
-        sim_time = self._data_dimensions.package_dim.model_dim[
-            0
-        ].simulation_time
-        num_sp = sim_time.get_num_stress_periods()
+        """Stores data from layer `layer` to an external file at
+        `external_file_path`.  For unlayered data do not pass in `layer`.
+        If layer is not specified all layers will be stored with each layer
+        as a separate file. If replace_existing_external is set to False,
+        this method will not do anything if the data is already in an
+        external file.
+
+        Parameters
+        ----------
+            external_file_path : str
+                Path to external file
+            layer : int
+                Which layer to store in external file, `None` value stores all
+                layers.
+            binary : bool
+                Store data in a binary file
+            replace_existing_external : bool
+                Whether to replace an existing external file.
+            check_data : bool
+                Verify data prior to storing
+        """
         # store each stress period in separate file(s)
-        for sp in range(0, num_sp):
-            if sp in self._data_storage:
-                self._current_key = sp
-                layer_storage = self._get_storage_obj().layer_storage
-                if (
-                    layer_storage.get_total_size() > 0
-                    and self._get_storage_obj()
-                    .layer_storage[0]
-                    .layer_storage_type
-                    != DataStorageType.external_file
-                ):
-                    fname, ext = os.path.splitext(external_file_path)
+        for sp in self._data_storage.keys():
+            self._current_key = sp
+            layer_storage = self._get_storage_obj().layer_storage
+            if (
+                layer_storage.get_total_size() > 0
+                and self._get_storage_obj().layer_storage[0].data_storage_type
+                != DataStorageType.external_file
+            ):
+                fname, ext = os.path.splitext(external_file_path)
+                if DatumUtil.is_int(sp):
                     full_name = "{}_{}{}".format(fname, sp + 1, ext)
-                    super(MFTransientArray, self).store_as_external_file(
-                        full_name,
-                        layer,
-                        binary,
-                        replace_existing_external,
-                        check_data,
-                    )
+                else:
+                    full_name = "{}_{}{}".format(fname, sp, ext)
+                super().store_as_external_file(
+                    full_name,
+                    layer,
+                    binary,
+                    replace_existing_external,
+                    check_data,
+                )
+
+    def store_internal(
+        self,
+        layer=None,
+        check_data=True,
+    ):
+        """Stores data from layer `layer` internally.  For unlayered data do
+        not pass in `layer`. If layer is not specified all layers will be
+        stored internally.
+
+        Parameters
+        ----------
+            layer : int
+                Which layer to store internally file, `None` value stores all
+                layers.
+            check_data : bool
+                Verify data prior to storing
+        """
+        for sp in self._data_storage.keys():
+            self._current_key = sp
+            layer_storage = self._get_storage_obj().layer_storage
+            if (
+                layer_storage.get_total_size() > 0
+                and self._get_storage_obj().layer_storage[0].data_storage_type
+                == DataStorageType.external_file
+            ):
+                super().store_internal(
+                    layer,
+                    check_data,
+                )
 
     def get_data(self, layer=None, apply_mult=True, **kwargs):
+        """Returns the data associated with stress period key `layer`.
+        If `layer` is None, returns all data for time `layer`.
+
+        Parameters
+        ----------
+            layer : int
+                Zero-based stress period of data to return
+            apply_mult : bool
+                Whether to apply multiplier to data prior to returning it
+
+        """
         if self._data_storage is not None and len(self._data_storage) > 0:
             if layer is None:
                 output = None
@@ -1431,7 +1643,7 @@ class MFTransientArray(MFArray, MFTransient):
                     for sp in range(0, num_sp):
                         if sp in self._data_storage:
                             self.get_data_prep(sp)
-                            data = super(MFTransientArray, self).get_data(
+                            data = super().get_data(
                                 apply_mult=apply_mult, **kwargs
                             )
                             data = np.expand_dims(data, 0)
@@ -1439,7 +1651,7 @@ class MFTransientArray(MFArray, MFTransient):
                             if data is None:
                                 # get any data
                                 self.get_data_prep(self._data_storage.key()[0])
-                                data = super(MFTransientArray, self).get_data(
+                                data = super().get_data(
                                     apply_mult=apply_mult, **kwargs
                                 )
                                 data = np.expand_dims(data, 0)
@@ -1457,7 +1669,7 @@ class MFTransientArray(MFArray, MFTransient):
                         data = None
                         if sp in self._data_storage:
                             self.get_data_prep(sp)
-                            data = super(MFTransientArray, self).get_data(
+                            data = super().get_data(
                                 apply_mult=apply_mult, **kwargs
                             )
                         if output is None:
@@ -1473,13 +1685,33 @@ class MFTransientArray(MFArray, MFTransient):
                     return output
             else:
                 self.get_data_prep(layer)
-                return super(MFTransientArray, self).get_data(
-                    apply_mult=apply_mult
-                )
+                return super().get_data(apply_mult=apply_mult)
         else:
             return None
 
     def set_data(self, data, multiplier=None, layer=None, key=None):
+        """Sets the contents of the data at layer `layer` and time `key` to
+        `data` with multiplier `multiplier`. For unlayered data do not pass
+        in `layer`.
+
+        Parameters
+        ----------
+            data : dict, ndarray, list
+                Data being set.  Data can be a dictionary with keys as
+                zero-based stress periods and values as the data.  If data is
+                an ndarray or list of lists, it will be assigned to the the
+                stress period specified in `key`.  If any is set to None, that
+                stress period of data will be removed.
+            multiplier : int
+                multiplier to apply to data
+            layer : int
+                Layer of data being set.  Keep default of None of data is not
+                layered.
+            key : int
+                Zero based stress period to assign data too.  Does not apply
+                if `data` is a dictionary.
+        """
+
         if isinstance(data, dict) or isinstance(data, OrderedDict):
             # each item in the dictionary is a list for one stress period
             # the dictionary key is the stress period the list is for
@@ -1490,9 +1722,7 @@ class MFTransientArray(MFArray, MFTransient):
                     del_keys.append(key)
                 else:
                     self._set_data_prep(list_item, key)
-                    super(MFTransientArray, self).set_data(
-                        list_item, multiplier, layer
-                    )
+                    super().set_data(list_item, multiplier, layer)
             for key in del_keys:
                 del data[key]
         else:
@@ -1511,15 +1741,28 @@ class MFTransientArray(MFArray, MFTransient):
                 self.remove_transient_key(key)
             else:
                 self._set_data_prep(data, key)
-                super(MFTransientArray, self).set_data(data, multiplier, layer)
+                super().set_data(data, multiplier, layer)
 
     def get_file_entry(
         self, key=0, ext_file_action=ExtFileAction.copy_relative_paths
     ):
+        """Returns a string containing the data in stress period "key".
+
+        Parameters
+        ----------
+            key : int
+                The stress period to return file entry for.
+            ext_file_action : ExtFileAction
+                How to handle external paths.
+
+        Returns
+        -------
+            file entry : str
+
+        """
+
         self._get_file_entry_prep(key)
-        return super(MFTransientArray, self).get_file_entry(
-            ext_file_action=ext_file_action
-        )
+        return super().get_file_entry(ext_file_action=ext_file_action)
 
     def load(
         self,
@@ -1529,8 +1772,36 @@ class MFTransientArray(MFArray, MFTransient):
         pre_data_comments=None,
         external_file_info=None,
     ):
+        """Loads data from first_line (the first line of data) and open file
+        handle which is pointing to the second line of data.  Returns a
+        tuple with the first item indicating whether all data was read
+        and the second item being the last line of text read from the file.
+        This method is for internal flopy use and is not intended to be called
+        by the end user.
+
+        Parameters
+        ----------
+            first_line : str
+                A string containing the first line of data in this array.
+            file_handle : file descriptor
+                A file handle for the data file which points to the second
+                line of data for this array
+            block_header : MFBlockHeader
+                Block header object that contains block header information
+                for the block containing this data
+            pre_data_comments : MFComment
+                Comments immediately prior to the data
+            external_file_info : list
+                Contains information about storing files externally
+
+        Returns
+        -------
+            more data : bool,
+            next data line : str
+
+        """
         self._load_prep(block_header)
-        return super(MFTransientArray, self).load(
+        return super().load(
             first_line, file_handle, pre_data_comments, external_file_info
         )
 
@@ -1540,7 +1811,7 @@ class MFTransientArray(MFArray, MFTransient):
         if base_storage:
             if not isinstance(stress_period, int):
                 stress_period = 1
-            return super(MFTransientArray, self)._new_storage(
+            return super()._new_storage(
                 set_layers, base_storage, stress_period
             )
         else:

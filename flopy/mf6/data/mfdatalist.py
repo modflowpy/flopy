@@ -13,13 +13,15 @@ from ...datbase import DataListInterface, DataType
 from ...mbase import ModelInterface
 from .mffileaccess import MFFileAccessList
 from .mfdatastorage import DataStorage, DataStorageType, DataStructureType
-from .mfdatautil import to_string, iterable
+from .mfdatautil import to_string
 
 
 class MFList(mfdata.MFMultiDimVar, DataListInterface):
     """
     Provides an interface for the user to access and update MODFLOW
-    scalar data.
+    list data.  MFList objects are not designed to be directly constructed by
+    the end user. When a flopy for MODFLOW 6 package object is constructed, the
+    appropriate MFList objects are automatically built.
 
     Parameters
     ----------
@@ -36,79 +38,6 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
     dimensions : MFDataDimensions
         dimension information related to the model, package, and array
 
-    Attributes
-    ----------
-    data_type : DataType
-        type of data stored in the scalar
-    plottable : bool
-        if the scalar is plottable
-    dtype : numpy.dtype
-        the scalar's numpy data type
-    data : variable
-        calls get_data with default parameters
-
-    Methods
-    -------
-    new_simulation : (sim_data : MFSimulationData)
-        initialize MFArray object for a new simulation
-    has_data : (layer_num : int) : bool
-        Returns whether layer "layer_num" has any data associated with it.
-        For unlayered data do not pass in "layer".
-    get_data : (layer_num : int) : ndarray
-        Returns the data associated with layer "layer_num".  If "layer_num" is
-        None, returns all data.
-    set_data : (data : ndarray/list/dict, multiplier : float, layer_num : int)
-        Sets the contents of the data at layer "layer_num" to "data" with
-        multiplier "multiplier".  For unlayered data do not pass in
-        "layer_num".  data can have the following formats:
-            1) ndarray - ndarray containing the datalist
-            2) [(line_one), (line_two), ...] - list where each like of the
-               datalist is a tuple within the list
-            3) {'filename':filename, factor=fct, iprn=print_code, data=data}
-               - dictionary defining the external file containing the datalist.
-        If the data is transient, a dictionary can be used to specify each
-        stress period where the dictionary key is <stress period> - 1 and
-        the dictionary value is the datalist data defined above:
-        {0:ndarray, 1:[(line_one), (line_two), ...], 2:{'filename':filename})
-    append_data : (data : list(tuple))
-        Appends "data" to the end of this list.  Assumes data is in a format
-        that can be appended directly to a numpy recarray.
-    append_list_as_record : (data : list)
-        Appends the list "data" as a single record in this list's recarray.
-        Assumes "data" has the correct dimensions.
-    update_record : (record : list, key_index : int)
-        Updates a record at index "key_index" with the contents of "record".
-        If the index does not exist update_record appends the contents of
-        "record" to this list's recarray.
-    search_data : (search_term : string, col : int)
-        Searches the list data at column "col" for "search_term".  If col is
-        None search_data searches the entire list.
-    load : (first_line : string, file_handle : file descriptor,
-            block_header : MFBlockHeader, pre_data_comments : MFComment) :
-            tuple (bool, string)
-        Loads data from first_line (the first line of data) and open file
-        file_handle which is pointing to the second line of data.  Returns a
-        tuple with the first item indicating whether all data was read
-        and the second item being the last line of text read from the file.
-    get_file_entry : (layer : int) : string
-        Returns a string containing the data in layer "layer".  For unlayered
-        data do not pass in "layer".
-    store_as_external_file : (external_file_path : str, binary : bool)
-        store all data externally in file external_file_path. the binary
-        allows storage in a binary file. If replace_existing_external is set
-        to False, this method will not do anything if the data is already in
-        an external file.
-
-    See Also
-    --------
-
-    Notes
-    -----
-
-    Examples
-    --------
-
-
     """
 
     def __init__(
@@ -122,7 +51,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         dimensions=None,
         package=None,
     ):
-        super(MFList, self).__init__(
+        super().__init__(
             sim_data, model_or_sim, structure, enable, path, dimensions
         )
         try:
@@ -170,24 +99,45 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
 
     @property
     def data_type(self):
+        """Type of data (DataType) stored in the list"""
         return DataType.list
 
     @property
     def package(self):
+        """Package object that this data belongs to."""
         return self._package
 
     @property
     def dtype(self):
+        """Type of data (numpy.dtype) stored in the list"""
         return self.get_data().dtype
 
     @property
     def plottable(self):
+        """If this list data is plottable"""
         if self.model is None:
             return False
         else:
             return True
 
     def to_array(self, kper=0, mask=False):
+        """Convert stress period boundary condition (MFDataList) data for a
+        specified stress period to a 3-D numpy array.
+
+        Parameters
+        ----------
+        kper : int
+            MODFLOW zero-based stress period number to return. (default is
+            zero)
+        mask : bool
+            return array with np.NaN instead of zero
+
+        Returns
+        ----------
+        out : dict of numpy.ndarrays
+            Dictionary of 3-D numpy arrays containing the stress period data
+            for a selected stress period. The dictionary keys are the
+            MFDataList dtype names for the stress period data."""
         i0 = 1
         sarr = self.get_data(key=kper)
         if not isinstance(sarr, list):
@@ -250,8 +200,17 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         return arrays
 
     def new_simulation(self, sim_data):
+        """Initialize MFList object for a new simulation.
+
+        Parameters
+        ----------
+            sim_data : MFSimulationData
+                Simulation data object for the simulation containing this
+                data.
+
+        """
         try:
-            super(MFList, self).new_simulation(sim_data)
+            super().new_simulation(sim_data)
             self._data_storage = self._new_storage()
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
@@ -279,6 +238,23 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         replace_existing_external=True,
         check_data=True,
     ):
+        """Store all data externally in file external_file_path. the binary
+        allows storage in a binary file. If replace_existing_external is set
+        to False, this method will not do anything if the data is already in
+        an external file.
+
+        Parameters
+        ----------
+            external_file_path : str
+                Path to external file
+            binary : bool
+                Store data in a binary file
+            replace_existing_external : bool
+                Whether to replace an existing external file.
+            check_data : bool
+                Verify data prior to storing
+
+        """
         # only store data externally (do not subpackage info)
         if self.structure.construct_package is None:
             storage = self._get_storage_obj()
@@ -309,7 +285,43 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                     }
                     self._set_data(external_data, check_data=check_data)
 
+    def store_internal(
+        self,
+        check_data=True,
+    ):
+        """Store all data internally.
+
+        Parameters
+        ----------
+            check_data : bool
+                Verify data prior to storing
+
+        """
+        storage = self._get_storage_obj()
+        # check if data is already stored external
+        if (
+            storage is None
+            or storage.layer_storage.first_item().data_storage_type
+            == DataStorageType.external_file
+        ):
+            data = self._get_data()
+            # if not empty dataset
+            if data is not None:
+                if (
+                    self._simulation_data.verbosity_level.value
+                    >= VerbosityLevel.verbose.value
+                ):
+                    print(
+                        "Storing {} internally.."
+                        ".".format(self.structure.name)
+                    )
+                internal_data = {
+                    "data": data,
+                }
+                self._set_data(internal_data, check_data=check_data)
+
     def has_data(self):
+        """Returns whether this MFList has any data associated with it."""
         try:
             if self._get_storage_obj() is None:
                 return False
@@ -354,35 +366,57 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             )
 
     def get_data(self, apply_mult=False, **kwargs):
+        """Returns the list's data.
+
+        Parameters
+        ----------
+            apply_mult : bool
+                Whether to apply a multiplier.
+
+        Returns
+        -------
+            data : recarray
+
+        """
         return self._get_data(apply_mult, **kwargs)
 
+    def _get_min_record_entries(self, data=None):
+        try:
+            if isinstance(data, dict) and "data" in data:
+                data = data["data"]
+            type_list = self._get_storage_obj().build_type_list(
+                data=data,
+                min_size=True,
+                overwrite_existing_type_list=False,
+            )
+        except Exception as ex:
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self._path,
+                "getting min record entries",
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                None,
+                self._simulation_data.debug,
+                ex,
+            )
+        return len(type_list)
+
     def _set_data(self, data, autofill=False, check_data=True):
-        if isinstance(data, dict):
-            if "data" in data:
-                data_check = data["data"]
-            else:
-                data_check = None
-        else:
-            data_check = data
-        if iterable(data_check) and check_data:
-            # verify data length
-            min_line_size = self.structure.get_min_record_entries()
-            if isinstance(data_check[0], np.record) or (
-                iterable(data_check[0]) and not isinstance(data_check[0], str)
-            ):
-                # data contains multiple records
-                for data_line in data_check:
-                    self._check_line_size(data_line, min_line_size)
-            else:
-                # data is a single record
-                self._check_line_size(data_check, min_line_size)
         # set data
         self._resync()
         try:
             if self._get_storage_obj() is None:
                 self._data_storage = self._new_storage()
             # store data
-            self._get_storage_obj().set_data(data, autofill=autofill)
+            self._get_storage_obj().set_data(
+                data, autofill=autofill, check_data=check_data
+            )
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(
@@ -399,7 +433,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 self._simulation_data.debug,
                 ex,
             )
-        if check_data:
+        if check_data and self._simulation_data.verify_data:
             # verify cellids
             self._check_valid_cellids()
 
@@ -409,7 +443,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             self._model_or_sim, "modelgrid"
         ):
             # get model grid info
-            mg = self._model_or_sim.modelgrid
+            mg = self._get_model_grid()
             if not mg.is_complete:
                 return
             idomain = mg.idomain
@@ -481,7 +515,6 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
 
     def _check_line_size(self, data_line, min_line_size):
         if 0 < len(data_line) < min_line_size:
-            min_line_size = self.structure.get_min_record_entries()
             message = (
                 "Data line {} only has {} entries, "
                 "minimum number of entries is "
@@ -502,10 +535,41 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 self._simulation_data.debug,
             )
 
-    def set_data(self, data, autofill=False):
-        self._set_data(data, autofill)
+    def set_data(self, data, autofill=False, check_data=True):
+        """Sets the contents of the data to "data" with.  Data can have the
+        following formats:
+            1) recarray - recarray containing the datalist
+            2) [(line_one), (line_two), ...] - list where each line of the
+               datalist is a tuple within the list
+            3) {'filename':filename, factor=fct, iprn=print_code, data=data}
+               - dictionary defining the external file containing the datalist.
+        If the data is transient, a dictionary can be used to specify each
+        stress period where the dictionary key is <stress period> - 1 and
+        the dictionary value is the datalist data defined above:
+        {0:ndarray, 1:[(line_one), (line_two), ...], 2:{'filename':filename})
+
+        Parameters
+        ----------
+            data : ndarray/list/dict
+                Data to set
+            autofill : bool
+                Automatically correct data
+            check_data : bool
+                Whether to verify the data
+
+        """
+        self._set_data(data, autofill, check_data=check_data)
 
     def append_data(self, data):
+        """Appends "data" to the end of this list.  Assumes data is in a format
+        that can be appended directly to a numpy recarray.
+
+        Parameters
+        ----------
+            data : list(tuple)
+                Data to append.
+
+        """
         try:
             self._resync()
             if self._get_storage_obj() is None:
@@ -530,6 +594,16 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             )
 
     def append_list_as_record(self, record):
+        """Appends the list `record` as a single record in this list's
+        recarray.  Assumes "data" has the correct dimensions.
+
+        Parameters
+        ----------
+            record : list
+                List to be appended as a single record to the data's existing
+                recarray.
+
+        """
         self._resync()
         try:
             # convert to tuple
@@ -556,9 +630,31 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             )
 
     def update_record(self, record, key_index):
+        """Updates a record at index "key_index" with the contents of "record".
+        If the index does not exist update_record appends the contents of
+        "record" to this list's recarray.
+
+        Parameters
+        ----------
+            record : list
+                New record to update data with
+            key_index : int
+                Stress period key of record to update.  Only used in transient
+                data types.
+        """
         self.append_list_as_record(record)
 
     def search_data(self, search_term, col=None):
+        """Searches the list data at column "col" for "search_term".  If col is
+        None search_data searches the entire list.
+
+        Parameters
+        ----------
+            search_term : str
+                String to search for
+            col : int
+                Column number to search
+        """
         try:
             data = self._get_storage_obj().get_data()
             if data is not None:
@@ -595,14 +691,25 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
 
     def get_file_entry(
         self,
-        values_only=False,
         ext_file_action=ExtFileAction.copy_relative_paths,
     ):
-        return self._get_file_entry(values_only, ext_file_action)
+        """Returns a string containing the data formatted for a MODFLOW 6
+        file.
+
+        Parameters
+        ----------
+            ext_file_action : ExtFileAction
+                How to handle external paths.
+
+        Returns
+        -------
+            file entry : str
+
+        """
+        return self._get_file_entry(ext_file_action)
 
     def _get_file_entry(
         self,
-        values_only=False,
         ext_file_action=ExtFileAction.copy_relative_paths,
     ):
         try:
@@ -773,17 +880,19 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                             for aux_var_name in aux_var_names[0]:
                                 if aux_var_name.lower() != "auxiliary":
                                     data_val = data_line[index]
-                                    text_line.append(
-                                        to_string(
-                                            data_val,
-                                            data_item.type,
-                                            self._simulation_data,
-                                            self._data_dimensions,
-                                            data_item.is_cellid,
-                                            data_item.possible_cellid,
-                                            data_item,
+                                    if data_val is not None:
+                                        text_line.append(
+                                            to_string(
+                                                data_val,
+                                                data_item.type,
+                                                self._simulation_data,
+                                                self._data_dimensions,
+                                                data_item.is_cellid,
+                                                data_item.possible_cellid,
+                                                data_item,
+                                                self._simulation_data.verify_data,
+                                            )
                                         )
-                                    )
                                     index += 1
                     except Exception as ex:
                         type_, value_, traceback_ = sys.exc_info()
@@ -791,7 +900,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                             self.structure.get_model(),
                             self.structure.get_package(),
                             self._path,
-                            "processing auxiliary " "variables",
+                            "processing auxiliary variables",
                             self.structure.name,
                             inspect.stack()[0][3],
                             type_,
@@ -899,7 +1008,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                             type_,
                             value_,
                             traceback_,
-                            "Verify that your data is the " "correct shape",
+                            "Verify that your data is the correct shape",
                             self._simulation_data.debug,
                             ex,
                         )
@@ -959,6 +1068,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                                     k_data_item.is_cellid,
                                                     k_data_item.possible_cellid,
                                                     k_data_item,
+                                                    self._simulation_data.verify_data,
                                                 )
                                             )
                                         except Exception as ex:
@@ -1018,6 +1128,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                                 self._data_dimensions,
                                                 False,
                                                 data_item=data_item,
+                                                verify_data=self._simulation_data.verify_data,
                                             )
                                         )
                                         index += 1
@@ -1031,6 +1142,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                             data_item.is_cellid,
                                             data_item.possible_cellid,
                                             data_item,
+                                            self._simulation_data.verify_data,
                                         )
                                     )
                                 except Exception as ex:
@@ -1053,7 +1165,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                         self.structure.get_model(),
                                         self.structure.get_package(),
                                         self._path,
-                                        "converting data " "to a string",
+                                        "converting data to a string",
                                         self.structure.name,
                                         inspect.stack()[0][3],
                                         type_,
@@ -1099,7 +1211,35 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         pre_data_comments=None,
         external_file_info=None,
     ):
-        super(MFList, self).load(
+        """Loads data from first_line (the first line of data) and open file
+        file_handle which is pointing to the second line of data.  Returns a
+        tuple with the first item indicating whether all data was read
+        and the second item being the last line of text read from the file.
+        This method was only designed for internal FloPy use and is not
+        recommended for end users.
+
+        Parameters
+        ----------
+            first_line : str
+                A string containing the first line of data in this list.
+            file_handle : file descriptor
+                A file handle for the data file which points to the second
+                line of data for this list
+            block_header : MFBlockHeader
+                Block header object that contains block header information
+                for the block containing this data
+            pre_data_comments : MFComment
+                Comments immediately prior to the data
+            external_file_info : list
+                Contains information about storing files externally
+
+        Returns
+        -------
+            more data : bool,
+            next data line : str
+
+        """
+        super().load(
             first_line, file_handle, block_header, pre_data_comments=None
         )
         self._resync()
@@ -1234,44 +1374,6 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
     dimensions : MFDataDimensions
         dimension information related to the model, package, and array
 
-    Methods
-    -------
-    add_transient_key : (transient_key : int)
-        Adds a new transient time allowing data for that time to be stored and
-        retrieved using the key "transient_key"
-    add_one :(transient_key : int)
-        Adds one to the data stored at key "transient_key"
-    get_data : (key : int) : ndarray
-        Returns the data during time "key".
-    set_data : (data : ndarray/list, multiplier : float, key : int)
-        Sets the contents of the data at time "key" to "data" with
-        multiplier "multiplier".
-    load : (first_line : string, file_handle : file descriptor,
-            block_header : MFBlockHeader, pre_data_comments : MFComment) :
-            tuple (bool, string)
-        Loads data from first_line (the first line of data) and open file
-        file_handle which is pointing to the second line of data.  Returns a
-        tuple with the first item indicating whether all data was read
-        and the second item being the last line of text read from the file.
-    get_file_entry : (key : int) : string
-        Returns a string containing the data at time "key".
-    append_list_as_record : (data : list, key : int)
-        Appends the list "data" as a single record in this list's recarray at
-        time "key".  Assumes "data" has the correct dimensions.
-    update_record : (record : list, key_index : int, key : int)
-        Updates a record at index "key_index" and time "key" with the contents
-        of "record".  If the index does not exist update_record appends the
-        contents of "record" to this list's recarray.
-    See Also
-    --------
-
-    Notes
-    -----
-
-    Examples
-    --------
-
-
     """
 
     def __init__(
@@ -1284,7 +1386,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         dimensions=None,
         package=None,
     ):
-        super(MFTransientList, self).__init__(
+        super().__init__(
             sim_data=sim_data,
             model_or_sim=model_or_sim,
             structure=structure,
@@ -1296,6 +1398,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         )
         self._transient_setup(self._data_storage)
         self.repeating = True
+        self.empty_keys = {}
 
     @property
     def data_type(self):
@@ -1310,7 +1413,13 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             return None
 
     @property
+    def data(self):
+        """Returns list data.  Calls get_data with default parameters."""
+        return self.get_data()
+
+    @property
     def masked_4D_arrays(self):
+        """Returns list data as a masked 4D array."""
         model_grid = self._data_dimensions.get_model_grid()
         nper = self._data_dimensions.package_dim.model_dim[
             0
@@ -1357,6 +1466,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                 return m3ds
 
     def masked_4D_arrays_itr(self):
+        """Returns list data as an iterator of a masked 4D array."""
         model_grid = self._data_dimensions.get_model_grid()
         nper = self._data_dimensions.package_dim.model_dim[
             0
@@ -1400,25 +1510,34 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                     yield name, m3d
 
     def to_array(self, kper=0, mask=False):
-        return super(MFTransientList, self).to_array(kper, mask)
+        """Returns list data as an array."""
+        return super().to_array(kper, mask)
 
     def remove_transient_key(self, transient_key):
+        """Remove transient stress period key.  Method is used
+        internally by FloPy and is not intended to the end user.
+
+        """
         if transient_key in self._data_storage:
             del self._data_storage[transient_key]
 
     def add_transient_key(self, transient_key):
-        super(MFTransientList, self).add_transient_key(transient_key)
+        """Adds a new transient time allowing data for that time to be stored
+        and retrieved using the key `transient_key`.  Method is used
+        internally by FloPy and is not intended to the end user.
+
+        Parameters
+        ----------
+            transient_key : int
+                Zero-based stress period to add
+
+        """
+        super().add_transient_key(transient_key)
         if isinstance(transient_key, int):
             stress_period = transient_key
         else:
             stress_period = 1
-        self._data_storage[transient_key] = super(
-            MFTransientList, self
-        )._new_storage(stress_period)
-
-    @property
-    def data(self):
-        return self.get_data()
+        self._data_storage[transient_key] = super()._new_storage(stress_period)
 
     def store_as_external_file(
         self,
@@ -1427,31 +1546,85 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         replace_existing_external=True,
         check_data=True,
     ):
-        sim_time = self._data_dimensions.package_dim.model_dim[
-            0
-        ].simulation_time
-        num_sp = sim_time.get_num_stress_periods()
-        for sp in range(0, num_sp):
-            if sp in self._data_storage:
-                self._current_key = sp
-                layer_storage = self._get_storage_obj().layer_storage
-                if (
-                    layer_storage.get_total_size() > 0
-                    and self._get_storage_obj()
-                    .layer_storage[0]
-                    .layer_storage_type
-                    != DataStorageType.external_file
-                ):
-                    fname, ext = os.path.splitext(external_file_path)
+        """Store all data externally in file external_file_path. the binary
+        allows storage in a binary file. If replace_existing_external is set
+        to False, this method will not do anything if the data is already in
+        an external file.
+
+        Parameters
+        ----------
+            external_file_path : str
+                Path to external file
+            binary : bool
+                Store data in a binary file
+            replace_existing_external : bool
+                Whether to replace an existing external file.
+            check_data : bool
+                Verify data prior to storing
+
+        """
+        self._cache_model_grid = True
+        for sp in self._data_storage.keys():
+            self._current_key = sp
+            layer_storage = self._get_storage_obj().layer_storage
+            if (
+                layer_storage.get_total_size() > 0
+                and self._get_storage_obj().layer_storage[0].data_storage_type
+                != DataStorageType.external_file
+            ):
+                fname, ext = os.path.splitext(external_file_path)
+                if datautil.DatumUtil.is_int(sp):
                     full_name = "{}_{}{}".format(fname, sp + 1, ext)
-                    super(MFTransientList, self).store_as_external_file(
-                        full_name,
-                        binary,
-                        replace_existing_external,
-                        check_data,
-                    )
+                else:
+                    full_name = "{}_{}{}".format(fname, sp, ext)
+
+                super().store_as_external_file(
+                    full_name,
+                    binary,
+                    replace_existing_external,
+                    check_data,
+                )
+        self._cache_model_grid = False
+
+    def store_internal(
+        self,
+        check_data=True,
+    ):
+        """Store all data internally.
+
+        Parameters
+        ----------
+            check_data : bool
+                Verify data prior to storing
+
+        """
+        self._cache_model_grid = True
+        for sp in self._data_storage.keys():
+            self._current_key = sp
+            if (
+                self._get_storage_obj().layer_storage[0].data_storage_type
+                == DataStorageType.external_file
+            ):
+                super().store_internal(
+                    check_data,
+                )
+        self._cache_model_grid = False
 
     def get_data(self, key=None, apply_mult=False, **kwargs):
+        """Returns the data for stress period `key`.
+
+        Parameters
+        ----------
+            key : int
+                Zero-based stress period to return data from.
+            apply_mult : bool
+                Apply multiplier
+
+        Returns
+        -------
+            data : recarray
+
+        """
         if self._data_storage is not None and len(self._data_storage) > 0:
             if key is None:
                 if "array" in kwargs:
@@ -1464,9 +1637,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                         if sp in self._data_storage:
                             self.get_data_prep(sp)
                             output.append(
-                                super(MFTransientList, self).get_data(
-                                    apply_mult=apply_mult
-                                )
+                                super().get_data(apply_mult=apply_mult)
                             )
                         else:
                             output.append(None)
@@ -1475,16 +1646,31 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                     output = {}
                     for key in self._data_storage.keys():
                         self.get_data_prep(key)
-                        output[key] = super(MFTransientList, self).get_data(
-                            apply_mult=apply_mult
-                        )
+                        output[key] = super().get_data(apply_mult=apply_mult)
                     return output
             self.get_data_prep(key)
-            return super(MFTransientList, self).get_data(apply_mult=apply_mult)
+            return super().get_data(apply_mult=apply_mult)
         else:
             return None
 
     def set_data(self, data, key=None, autofill=False):
+        """Sets the contents of the data at time `key` to `data`.
+
+        Parameters
+        ----------
+        data : dict, recarray, list
+            Data being set.  Data can be a dictionary with keys as
+            zero-based stress periods and values as the data.  If data is
+            an recarray or list of tuples, it will be assigned to the the
+            stress period specified in `key`.  If any is set to None, that
+            stress period of data will be removed.
+        key : int
+            Zero based stress period to assign data too.  Does not apply
+            if `data` is a dictionary.
+        autofill : bool
+            Automatically correct data.
+        """
+        self._cache_model_grid = True
         if isinstance(data, dict) or isinstance(data, OrderedDict):
             if "filename" not in data:
                 # each item in the dictionary is a list for one stress period
@@ -1494,16 +1680,25 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                     if list_item is None:
                         self.remove_transient_key(key)
                         del_keys.append(key)
+                        self.empty_keys[key] = False
+                    elif isinstance(list_item, list) and len(list_item) == 0:
+                        self.empty_keys[key] = True
                     else:
+                        self.empty_keys[key] = False
+                        if "check" in list_item:
+                            check = list_item["check"]
+                        else:
+                            check = True
                         self._set_data_prep(list_item, key)
-                        super(MFTransientList, self).set_data(
-                            list_item, autofill=autofill
+                        super().set_data(
+                            list_item, autofill=autofill, check_data=check
                         )
                 for key in del_keys:
                     del data[key]
             else:
+                self.empty_keys[key] = False
                 self._set_data_prep(data["data"], key)
-                super(MFTransientList, self).set_data(data, autofill)
+                super().set_data(data, autofill)
         else:
             if key is None:
                 # search for a key
@@ -1512,19 +1707,40 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                     key = data[new_key_index]
                 else:
                     key = 0
-            if data is None:
-                self.remove_transient_key(key)
+            if isinstance(data, list) and len(data) == 0:
+                self.empty_keys[key] = True
             else:
-                self._set_data_prep(data, key)
-                super(MFTransientList, self).set_data(data, autofill)
+                self.empty_keys[key] = False
+                if data is None:
+                    self.remove_transient_key(key)
+                else:
+                    self._set_data_prep(data, key)
+                    super().set_data(data, autofill)
+        self._cache_model_grid = False
 
     def get_file_entry(
         self, key=0, ext_file_action=ExtFileAction.copy_relative_paths
     ):
-        self._get_file_entry_prep(key)
-        return super(MFTransientList, self).get_file_entry(
-            ext_file_action=ext_file_action
-        )
+        """Returns a string containing the data at time `key` formatted for a
+        MODFLOW 6 file.
+
+        Parameters
+        ----------
+            key : int
+                Zero based stress period to return data from.
+            ext_file_action : ExtFileAction
+                How to handle external paths.
+
+        Returns
+        -------
+            file entry : str
+
+        """
+        if key in self.empty_keys and self.empty_keys[key]:
+            return ""
+        else:
+            self._get_file_entry_prep(key)
+            return super().get_file_entry(ext_file_action=ext_file_action)
 
     def load(
         self,
@@ -1534,8 +1750,29 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         pre_data_comments=None,
         external_file_info=None,
     ):
+        """Loads data from first_line (the first line of data) and open file
+        file_handle which is pointing to the second line of data.  Returns a
+        tuple with the first item indicating whether all data was read
+        and the second item being the last line of text read from the file.
+
+        Parameters
+        ----------
+            first_line : str
+                A string containing the first line of data in this list.
+            file_handle : file descriptor
+                A file handle for the data file which points to the second
+                line of data for this array
+            block_header : MFBlockHeader
+                Block header object that contains block header information
+                for the block containing this data
+            pre_data_comments : MFComment
+                Comments immediately prior to the data
+            external_file_info : list
+                Contains information about storing files externally
+
+        """
         self._load_prep(block_header)
-        return super(MFTransientList, self).load(
+        return super().load(
             first_line,
             file_handle,
             block_header,
@@ -1544,12 +1781,38 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         )
 
     def append_list_as_record(self, record, key=0):
+        """Appends the list `data` as a single record in this list's recarray
+        at time `key`.  Assumes `data` has the correct dimensions.
+
+        Parameters
+        ----------
+            data : list
+                Data to append
+            key : int
+                Zero based stress period to append data too.
+
+        """
         self._append_list_as_record_prep(record, key)
-        super(MFTransientList, self).append_list_as_record(record)
+        super().append_list_as_record(record)
 
     def update_record(self, record, key_index, key=0):
+        """Updates a record at index `key_index` and time `key` with the
+        contents of `record`.  If the index does not exist update_record
+        appends the contents of `record` to this list's recarray.
+
+        Parameters
+        ----------
+            record : list
+                Record to append
+            key_index : int
+                Index to update
+            key : int
+                Zero based stress period to append data too
+
+        """
+
         self._update_record_prep(key)
-        super(MFTransientList, self).update_record(record, key_index)
+        super().update_record(record, key_index)
 
     def _new_storage(self, stress_period=0):
         return OrderedDict()
@@ -1674,16 +1937,6 @@ class MFMultipleList(MFTransientList):
     dimensions : MFDataDimensions
         dimension information related to the model, package, and array
 
-    See Also
-    --------
-
-    Notes
-    -----
-
-    Examples
-    --------
-
-
     """
 
     def __init__(
@@ -1696,7 +1949,7 @@ class MFMultipleList(MFTransientList):
         dimensions=None,
         package=None,
     ):
-        super(MFMultipleList, self).__init__(
+        super().__init__(
             sim_data=sim_data,
             model_or_sim=model_or_sim,
             structure=structure,
@@ -1707,6 +1960,18 @@ class MFMultipleList(MFTransientList):
         )
 
     def get_data(self, key=None, apply_mult=False, **kwargs):
-        return super(MFMultipleList, self).get_data(
-            key=key, apply_mult=apply_mult, **kwargs
-        )
+        """Returns the data for stress period `key`.
+
+        Parameters
+        ----------
+            key : int
+                Zero-based stress period to return data from.
+            apply_mult : bool
+                Apply multiplier
+
+        Returns
+        -------
+            data : ndarray
+
+        """
+        return super().get_data(key=key, apply_mult=apply_mult, **kwargs)

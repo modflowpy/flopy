@@ -40,12 +40,7 @@ from .swroutputfile import (
     SwrStructure,
 )
 from .observationfile import HydmodObs, SwrObs, Mf6Obs
-from .reference import (
-    SpatialReference,
-    SpatialReferenceUnstructured,
-    crs,
-    TemporalReference,
-)
+from .reference import TemporalReference
 from .mflistfile import (
     MfListBudget,
     MfusgListBudget,
@@ -53,21 +48,23 @@ from .mflistfile import (
     SwrListBudget,
     Mf6ListBudget,
 )
-from .check import check, get_neighbors
+from .check import check
 from .utils_def import FlopyBinaryData, totim_to_datetime
 from .flopy_io import read_fixed_var, write_fixed_var
 from .zonbud import (
     ZoneBudget,
     read_zbarray,
     write_zbarray,
+    ZoneFile6,
+    ZoneBudget6,
     ZoneBudgetOutput,
     ZBNetOutput,
 )
-from .mfgrdfile import MfGrdFile
-from .postprocessing import get_transmissivities
+from .postprocessing import get_transmissivities, get_specific_discharge
 from .sfroutputfile import SfrFile
 from .recarray_utils import create_empty_recarray, ra_slice
 from .mtlistfile import MtListBudget
 from .optionblock import OptionBlock
 from .rasters import Raster
 from .gridintersect import GridIntersect, ModflowGridIndices
+from .binarygrid_util import MfGrdFile

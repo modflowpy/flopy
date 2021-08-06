@@ -223,9 +223,7 @@ class ModflowRiv(Package):
         >>> m.riv.check()
 
         """
-        basechk = super(ModflowRiv, self).check(
-            verbose=False, checktype=checktype
-        )
+        basechk = super().check(verbose=False, checktype=checktype)
         chk = self._get_check(f, verbose, level, checktype)
         chk.summary_array = basechk.summary_array
 

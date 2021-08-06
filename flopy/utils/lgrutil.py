@@ -3,7 +3,7 @@ from ..modflow import Modflow
 from .util_array import Util2d, Util3d
 
 
-class Lgr(object):
+class Lgr:
     def __init__(
         self,
         nlayp,
@@ -77,7 +77,7 @@ class Lgr(object):
 
         # # child cells per parent and child cells per parent layer
         self.ncpp = ncpp
-        self.ncppl = Util2d(m, (nlayp,), int, ncppl, "ncppl").array
+        self.ncppl = Util2d(m, (nlayp,), np.int32, ncppl, "ncppl").array
 
         # calculate ibcl which is the bottom child layer (one based) in each
         # parent layer

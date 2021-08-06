@@ -75,9 +75,7 @@ def get_branch():
 
             for line in b.splitlines():
                 if "On branch" in line:
-                    branch = (
-                        line.replace("On branch ", "").rstrip().lower()
-                    )
+                    branch = line.replace("On branch ", "").rstrip().lower()
 
         except:
             msg = "Could not determine current branch. Is git installed?"

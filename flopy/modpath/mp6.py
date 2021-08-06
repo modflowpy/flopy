@@ -29,7 +29,42 @@ class Modpath6List(Package):
 
 class Modpath6(BaseModel):
     """
-    Modpath base class
+    Modpath6 class.
+
+    Parameters
+    ----------
+    modelname : str, default "modpathtest"
+        Basename for MODPATH 6 input and output files.
+    simfile_ext : str, default "mpsim"
+        Filename extension of the MODPATH 6 simulation file.
+    namefile_ext : str, default mpnam"
+        Filename extension of the MODPATH 6 namefile.
+    version : str, default "modpath"
+        String that defines the MODPATH version. Valid versions are
+        "modpath" (default).
+    exe_name : str, default "mp6.exe"
+        The name of the executable to use.
+    modflowmodel : flopy.modflow.Modflow
+        MODFLOW model object with one of LPF, BCF6, or UPW packages.
+    dis_file : str
+        Required dis file name.
+    dis_unit : int, default 87
+        Optional dis file unit number.
+    head_file : str
+        Required filename of the MODFLOW output head file.
+    budget_file : str
+        Required filename of the MODFLOW output cell-by-cell budget file.
+    model_ws : str, optional
+        Model workspace.  Directory name to create model data sets.
+        Default is the current working directory.
+    external_path : str, optional
+        Location for external files.
+    verbose : bool, default False
+        Print additional information to the screen.
+    load : bool, default True
+         Load model.
+    listunit : int, default 7
+        LIST file unit number.
 
     """
 
@@ -51,12 +86,7 @@ class Modpath6(BaseModel):
         load=True,
         listunit=7,
     ):
-        """
-        Model constructor.
-
-        """
-        BaseModel.__init__(
-            self,
+        super().__init__(
             modelname,
             simfile_ext,
             exe_name,
@@ -81,11 +111,10 @@ class Modpath6(BaseModel):
             if p is None:
                 p = self.__mf.get_package("UPW")
             if p is None:
-                msg = (
+                raise Exception(
                     "LPF, BCF6, or UPW packages must be included in the "
-                    + "passed MODFLOW model"
+                    "passed MODFLOW model"
                 )
-                raise Exception(msg)
             iu = p.ipakcb
             budget_file = self.__mf.get_output(unit=iu)
             dis_file = (
@@ -98,23 +127,20 @@ class Modpath6(BaseModel):
         self.dis_unit = dis_unit
         # make sure the valid files are available
         if self.head_file is None:
-            msg = (
+            raise ValueError(
                 "the head file in the MODFLOW model or passed "
-                + "to __init__ cannot be None"
+                "to __init__ cannot be None"
             )
-            raise ValueError(msg)
         if self.budget_file is None:
-            msg = (
+            raise ValueError(
                 "the budget file in the MODFLOW model or passed "
-                + "to __init__ cannot be None"
+                "to __init__ cannot be None"
             )
-            raise ValueError(msg)
         if self.dis_file is None:
-            msg = (
+            raise ValueError(
                 "the dis file in the MODFLOW model or passed "
-                + "to __init__ cannot be None"
+                "to __init__ cannot be None"
             )
-            raise ValueError(msg)
 
         # set the rest of the attributes
         self.__sim = None
@@ -412,8 +438,8 @@ class Modpath6(BaseModel):
                         "detected a particle starting locations file in packages"
                     )
                     assert len(packages) == 1, (
-                        "if a particle starting locations file is passed"
-                        + ", other packages cannot be specified"
+                        "if a particle starting locations file is passed, "
+                        "other packages cannot be specified"
                     )
                     ParticleGenerationOption = 2
                     strt_file = package

@@ -5,9 +5,9 @@ from ..utils import geometry
 try:
     import matplotlib.pyplot as plt
     import matplotlib.colors
-    from matplotlib.collections import PatchCollection
-    from matplotlib.patches import Polygon
-except ImportError:
+    from matplotlib.collections import PathCollection, LineCollection
+    from matplotlib.path import Path
+except (ImportError, ModuleNotFoundError):
     plt = None
 
 from . import plotutil
@@ -16,7 +16,7 @@ import warnings
 warnings.simplefilter("always", PendingDeprecationWarning)
 
 
-class PlotMapView(object):
+class PlotMapView:
     """
     Class to create a map of the model. Delegates plotting
     functionality based on model grid type.
@@ -48,33 +48,28 @@ class PlotMapView(object):
     ):
 
         if plt is None:
-            s = (
+            raise ImportError(
                 "Could not import matplotlib.  Must install matplotlib "
-                + " in order to use ModelMap method"
+                "in order to use ModelMap method"
             )
-            raise ImportError(s)
 
         self.model = model
         self.layer = layer
         self.mg = None
 
-        if model is not None:
-            self.mg = model.modelgrid
-        elif modelgrid is not None:
+        if modelgrid is not None:
             self.mg = modelgrid
+        elif model is not None:
+            self.mg = model.modelgrid
         else:
             err_msg = "A model grid instance must be provided to PlotMapView"
             raise AssertionError(err_msg)
-
-        if self.mg.grid_type not in ("structured", "vertex", "unstructured"):
-            err_msg = "Unrecognized modelgrid type {}"
-            raise TypeError(err_msg.format(self.mg.grid_type))
 
         if ax is None:
             try:
                 self.ax = plt.gca()
                 self.ax.set_aspect("equal")
-            except:
+            except (AttributeError, ValueError):
                 self.ax = plt.subplot(1, 1, 1, aspect="equal", axisbg="white")
         else:
             self.ax = ax
@@ -111,11 +106,6 @@ class PlotMapView(object):
 
         """
 
-        if self.mg.grid_type not in ("structured", "vertex", "unstructured"):
-            raise TypeError(
-                "Unrecognized grid type {}".format(self.mg.grid_type)
-            )
-
         if not isinstance(a, np.ndarray):
             a = np.array(a)
 
@@ -130,50 +120,39 @@ class PlotMapView(object):
         # add NaN values to mask
         plotarray = np.ma.masked_where(np.isnan(plotarray), plotarray)
 
-        if "ax" in kwargs:
-            ax = kwargs.pop("ax")
-        else:
-            ax = self.ax
+        ax = kwargs.pop("ax", self.ax)
 
-        # Get vertices for the selected layer
-        xgrid = self.mg.get_xvertices_for_layer(self.layer)
-        ygrid = self.mg.get_yvertices_for_layer(self.layer)
+        # use cached patch collection for plotting
+        polygons = self.mg.map_polygons
+        if isinstance(polygons, dict):
+            polygons = polygons[self.layer]
 
-        if self.mg.grid_type == "structured":
-            quadmesh = ax.pcolormesh(xgrid, ygrid, plotarray)
+        if len(polygons) == 0:
+            return
+
+        if not isinstance(polygons[0], Path):
+            collection = ax.pcolormesh(
+                self.mg.xvertices, self.mg.yvertices, plotarray
+            )
+
         else:
-            # use patch collection for vertex and unstructured
-            patches = [
-                Polygon(list(zip(xgrid[i], ygrid[i])), closed=True)
-                for i in range(xgrid.shape[0])
-            ]
-            quadmesh = PatchCollection(patches)
-            quadmesh.set_array(plotarray)
+            plotarray = plotarray.ravel()
+            collection = PathCollection(polygons)
+            collection.set_array(plotarray)
 
         # set max and min
-        if "vmin" in kwargs:
-            vmin = kwargs.pop("vmin")
-        else:
-            vmin = None
+        vmin = kwargs.pop("vmin", None)
+        vmax = kwargs.pop("vmax", None)
 
-        if "vmax" in kwargs:
-            vmax = kwargs.pop("vmax")
-        else:
-            vmax = None
-
-        # limit the color range
-        quadmesh.set_clim(vmin=vmin, vmax=vmax)
-
-        # send rest of kwargs to quadmesh
-        quadmesh.set(**kwargs)
-
-        # add collection to axis
-        ax.add_collection(quadmesh)
+        # set matplotlib kwargs
+        collection.set_clim(vmin=vmin, vmax=vmax)
+        collection.set(**kwargs)
+        ax.add_collection(collection)
 
         # set limits
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
-        return quadmesh
+        return collection
 
     def contour_array(self, a, masked_values=None, **kwargs):
         """
@@ -210,15 +189,8 @@ class PlotMapView(object):
         # work around for tri-contour ignore vmin & vmax
         # necessary block for tri-contour NaN issue
         if "levels" not in kwargs:
-            if "vmin" not in kwargs:
-                vmin = np.nanmin(plotarray)
-            else:
-                vmin = kwargs.pop("vmin")
-            if "vmax" not in kwargs:
-                vmax = np.nanmax(plotarray)
-            else:
-                vmax = kwargs.pop("vmax")
-
+            vmin = kwargs.pop("vmin", np.nanmin(plotarray))
+            vmax = kwargs.pop("vmax", np.nanmax(plotarray))
             levels = np.linspace(vmin, vmax, 7)
             kwargs["levels"] = levels
 
@@ -241,10 +213,7 @@ class PlotMapView(object):
                     t = np.isclose(plotarray, mval)
                     ismasked += t
 
-        if "ax" in kwargs:
-            ax = kwargs.pop("ax")
-        else:
-            ax = self.ax
+        ax = kwargs.pop("ax", self.ax)
 
         if "colors" in kwargs.keys():
             if "cmap" in kwargs.keys():
@@ -311,9 +280,6 @@ class PlotMapView(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        if plt is None:
-            err_msg = "matplotlib must be installed to use plot_inactive()"
-            raise ImportError(err_msg)
 
         if ibound is None:
             if self.mg.idomain is None:
@@ -359,9 +325,6 @@ class PlotMapView(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        if plt is None:
-            err_msg = "matplotlib must be installed to use plot_ibound()"
-            raise ImportError(err_msg)
 
         if ibound is None:
             if self.model is not None:
@@ -399,32 +362,25 @@ class PlotMapView(object):
         lc : matplotlib.collections.LineCollection
 
         """
-        if plt is None:
-            err_msg = "matplotlib must be installed to use plot_grid()"
-            raise ImportError(err_msg)
-        else:
-            from matplotlib.collections import LineCollection
 
-        if "ax" in kwargs:
-            ax = kwargs.pop("ax")
-        else:
-            ax = self.ax
+        from matplotlib.collections import PatchCollection
 
-        if "colors" not in kwargs:
-            kwargs["colors"] = "0.5"
+        ax = kwargs.pop("ax", self.ax)
+        colors = kwargs.pop("colors", "grey")
+        colors = kwargs.pop("color", colors)
+        colors = kwargs.pop("ec", colors)
+        colors = kwargs.pop("edgecolor", colors)
 
         grid_lines = self.mg.grid_lines
         if isinstance(grid_lines, dict):
-            # grid_lines are passed back as a dictionary with keys equal to
-            # layers for an UnstructuredGrid
             grid_lines = grid_lines[self.layer]
-        lc = LineCollection(grid_lines, **kwargs)
 
-        ax.add_collection(lc)
+        collection = LineCollection(grid_lines, colors=colors, **kwargs)
+
+        ax.add_collection(collection)
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
-
-        return lc
+        return collection
 
     def plot_bc(
         self,
@@ -522,14 +478,10 @@ class PlotMapView(object):
                 else:
                     idx = mflist["node"]
 
-        if plotAll and self.mg.grid_type == "unstructured":
-            raise Exception("plotAll cannot be used with unstructured grid.")
-        else:
-            nlay = self.mg.nlay
+        nlay = self.mg.nlay
 
-        # Plot the list locations
         plotarray = np.zeros(self.mg.shape, dtype=int)
-        if plotAll:
+        if plotAll and len(self.mg.shape) > 1:
             pa = np.zeros(self.mg.shape[1:], dtype=int)
             pa[tuple(idx[1:])] = 1
             for k in range(nlay):
@@ -574,18 +526,43 @@ class PlotMapView(object):
             Keyword arguments passed to plotutil.plot_shapefile()
 
         """
-        if "ax" in kwargs:
-            ax = kwargs.pop("ax")
-        else:
-            ax = self.ax
-        patch_collection = plotutil.plot_shapefile(shp, ax, **kwargs)
+        return self.plot_shapes(shp, **kwargs)
 
+    def plot_shapes(self, obj, **kwargs):
+        """
+        Plot shapes is a method that facilitates plotting a collection
+        of geospatial objects
+
+        Parameters
+        ----------
+        obj : collection object
+            obj can accept the following types
+
+            str : shapefile name
+            shapefile.Reader object
+            list of [shapefile.Shape, shapefile.Shape,]
+            shapefile.Shapes object
+            flopy.utils.geometry.Collection object
+            list of [flopy.utils.geometry, ...] objects
+            geojson.GeometryCollection object
+            geojson.FeatureCollection object
+            shapely.GeometryCollection object
+            list of [[vertices], ...]
+        kwargs : dictionary
+            keyword arguments passed to plotutil.plot_shapefile()
+
+        Returns
+        -------
+            matplotlib.Collection object
+        """
+        ax = kwargs.pop("ax", self.ax)
+        patch_collection = plotutil.plot_shapefile(obj, ax, **kwargs)
         return patch_collection
 
     def plot_cvfd(self, verts, iverts, **kwargs):
         """
-        Plot a cvfd grid.  The vertices must be in the same coordinates as
-        the rotated and offset grid.
+        Plot a cvfd grid.  The vertices must be in the same
+        coordinates as the rotated and offset grid.
 
         Parameters
         ----------
@@ -598,20 +575,23 @@ class PlotMapView(object):
             Keyword arguments passed to plotutil.plot_cvfd()
 
         """
-        if "ax" in kwargs:
-            ax = kwargs.pop("ax")
-        else:
-            ax = self.ax
-        patch_collection = plotutil.plot_cvfd(
-            verts, iverts, ax, self.layer, **kwargs
+        warnings.warn(
+            "plot_cvfd will be deprecated and will be removed in version "
+            "3.3.5. Use plot_grid or plot_array",
+            PendingDeprecationWarning,
         )
-        return patch_collection
+        a = kwargs.pop("a", None)
+        if a is None:
+            return self.plot_grid(**kwargs)
+        else:
+            return self.plot_array(a, **kwargs)
 
     def contour_array_cvfd(self, vertc, a, masked_values=None, **kwargs):
         """
-        Contour a cvfd array.  If the array is three-dimensional, then the method
-        will contour the layer tied to this class (self.layer). The vertices
-        must be in the same coordinates as the rotated and offset grid.
+        Contour a cvfd array.  If the array is three-dimensional,
+        then the method will contour the layer tied to this class (self.layer).
+        The vertices must be in the same coordinates as the rotated and
+        offset grid.
 
         Parameters
         ----------
@@ -629,69 +609,13 @@ class PlotMapView(object):
         contour_set : matplotlib.pyplot.contour
 
         """
-        try:
-            import matplotlib.tri as tri
-        except ImportError:
-            err_msg = "matplotlib must be updated to use contour_array()"
-            raise ImportError(err_msg)
+        warnings.warn(
+            "contour_cvfd will be deprecated and removed in version 3.3.5. "
+            " Use contour_array",
+            PendingDeprecationWarning,
+        )
 
-        if "ncpl" in kwargs:
-            nlay = self.layer + 1
-            ncpl = kwargs.pop("ncpl")
-            if isinstance(ncpl, int):
-                i = int(ncpl)
-                ncpl = np.ones((nlay,), dtype=int) * i
-            elif isinstance(ncpl, list) or isinstance(ncpl, tuple):
-                ncpl = np.array(ncpl)
-            i0 = 0
-            i1 = 0
-            for k in range(nlay):
-                i0 = i1
-                i1 = i0 + ncpl[k]
-            # retain vertc in selected layer
-            vertc = vertc[i0:i1, :]
-        else:
-            i0 = 0
-            i1 = vertc.shape[0]
-
-        plotarray = a[i0:i1]
-
-        ismasked = None
-        if masked_values is not None:
-            for mval in masked_values:
-                if ismasked is None:
-                    ismasked = np.isclose(plotarray, mval)
-                else:
-                    t = np.isclose(plotarray, mval)
-                    ismasked += t
-
-        # add NaN values to mask
-        if ismasked is None:
-            ismasked = np.isnan(plotarray)
-        else:
-            ismasked += np.isnan(plotarray)
-
-        if "ax" in kwargs:
-            ax = kwargs.pop("ax")
-        else:
-            ax = self.ax
-
-        if "colors" in kwargs.keys():
-            if "cmap" in kwargs.keys():
-                kwargs.pop("cmap")
-
-        triang = tri.Triangulation(vertc[:, 0], vertc[:, 1])
-
-        if ismasked is not None:
-            ismasked = ismasked.flatten()
-            mask = np.any(
-                np.where(ismasked[triang.triangles], True, False), axis=1
-            )
-            triang.set_mask(mask)
-
-        contour_set = ax.tricontour(triang, plotarray, **kwargs)
-
-        return contour_set
+        return self.contour_array(a, masked_values=masked_values, **kwargs)
 
     def plot_vector(
         self,
@@ -734,34 +658,37 @@ class PlotMapView(object):
             result of the quiver function
 
         """
-        if "pivot" in kwargs:
-            pivot = kwargs.pop("pivot")
-        else:
-            pivot = "middle"
+        pivot = kwargs.pop("pivot", "middle")
+        ax = kwargs.pop("ax", self.ax)
 
-        if "ax" in kwargs:
-            ax = kwargs.pop("ax")
-        else:
-            ax = self.ax
+        # get ibound array to mask inactive cells
+        ib = np.ones((self.mg.nnodes,), dtype=int)
+        if self.mg.idomain is not None:
+            ib = self.mg.idomain.ravel()
 
-        # get actual values to plot
-        if self.mg.grid_type == "structured":
-            x = self.mg.xcellcenters[::istep, ::jstep]
-            y = self.mg.ycellcenters[::istep, ::jstep]
-            u = vx[self.layer, ::istep, ::jstep]
-            v = vy[self.layer, ::istep, ::jstep]
-        else:
-            x = self.mg.xcellcenters[::istep]
-            y = self.mg.ycellcenters[::istep]
-            u = vx[self.layer, ::istep]
-            v = vy[self.layer, ::istep]
+        xcentergrid = self.mg.get_xcellcenters_for_layer(self.layer)
+        ycentergrid = self.mg.get_ycellcenters_for_layer(self.layer)
+        vx = self.mg.get_plottable_layer_array(vx, self.layer)
+        vy = self.mg.get_plottable_layer_array(vy, self.layer)
+        ib = self.mg.get_plottable_layer_array(ib, self.layer)
+
+        try:
+            x = xcentergrid[::istep, ::jstep]
+            y = ycentergrid[::istep, ::jstep]
+            u = vx[::istep, ::jstep]
+            v = vy[::istep, ::jstep]
+            ib = ib[::istep, ::jstep]
+        except IndexError:
+            x = xcentergrid[::jstep]
+            y = ycentergrid[::jstep]
+            u = vx[::jstep]
+            v = vy[::jstep]
+            ib = ib[::jstep]
 
         # if necessary, copy to avoid changing the passed values
         if masked_values is not None or normalize:
-            import copy
-
-            u = copy.copy(u)
-            v = copy.copy(v)
+            u = np.copy(u)
+            v = np.copy(v)
 
         # mask values
         if masked_values is not None:
@@ -777,13 +704,13 @@ class PlotMapView(object):
             u[idx] /= vmag[idx]
             v[idx] /= vmag[idx]
 
+        u[ib == 0] = np.nan
+        v[ib == 0] = np.nan
+
         # rotate and plot, offsets must be zero since
         # these are vectors not locations
         urot, vrot = geometry.rotate(u, v, 0.0, 0.0, self.mg.angrot_radians)
-
-        # plot with quiver
         quiver = ax.quiver(x, y, urot, vrot, pivot=pivot, **kwargs)
-
         return quiver
 
     def plot_specific_discharge(
@@ -806,6 +733,10 @@ class PlotMapView(object):
             row frequency to plot. (Default is 1.)
         jstep : int
             column frequency to plot. (Default is 1.)
+        normalize : bool
+            boolean flag used to determine if discharge vectors should
+            be normalized using the magnitude of the specific discharge in each
+            cell. (default is False)
         kwargs : matplotlib.pyplot keyword arguments for the
             plt.quiver method.
 
@@ -816,21 +747,11 @@ class PlotMapView(object):
 
         """
         warnings.warn(
-            "plot_specific_discharge() has been deprecated. Use "
-            "plot_vector() instead, which should follow after "
-            "postprocessing.get_specific_discharge()",
+            "plot_specific_discharge() has been deprecated and will be "
+            "removed in version 3.3.5. Use plot_vector() instead, which "
+            "should follow after postprocessing.get_specific_discharge()",
             DeprecationWarning,
         )
-
-        if "pivot" in kwargs:
-            pivot = kwargs.pop("pivot")
-        else:
-            pivot = "middle"
-
-        if "ax" in kwargs:
-            ax = kwargs.pop("ax")
-        else:
-            ax = self.ax
 
         if isinstance(spdis, list):
             print(
@@ -848,39 +769,7 @@ class PlotMapView(object):
         qx[idx] = spdis["qx"]
         qy[idx] = spdis["qy"]
 
-        qx = self.mg.get_plottable_layer_array(qx, self.layer)
-        qy = self.mg.get_plottable_layer_array(qy, self.layer)
-
-        # Get vertices for the selected layer
-        xcentergrid = self.mg.get_xcellcenters_for_layer(self.layer)
-        ycentergrid = self.mg.get_ycellcenters_for_layer(self.layer)
-
-        if self.mg.grid_type == "structured":
-            x = xcentergrid[::istep, ::jstep]
-            y = ycentergrid[::istep, ::jstep]
-            u = qx[::istep, ::jstep]
-            v = qy[::istep, ::jstep]
-        else:
-            x = xcentergrid[::istep]
-            y = ycentergrid[::istep]
-            u = qx[::istep]
-            v = qy[::istep]
-
-        # normalize
-        if normalize:
-            vmag = np.sqrt(u ** 2.0 + v ** 2.0)
-            idx = vmag > 0.0
-            u[idx] /= vmag[idx]
-            v[idx] /= vmag[idx]
-
-        u[u == 0] = np.nan
-        v[v == 0] = np.nan
-
-        # Rotate and plot, offsets must be zero since
-        # these are vectors not locations
-        urot, vrot = geometry.rotate(u, v, 0.0, 0.0, self.mg.angrot_radians)
-        quiver = ax.quiver(x, y, urot, vrot, pivot=pivot, **kwargs)
-        return quiver
+        return self.plot_vector(qx, qy, istep, jstep, normalize, **kwargs)
 
     def plot_discharge(
         self,
@@ -928,17 +817,17 @@ class PlotMapView(object):
 
         """
         warnings.warn(
-            "plot_discharge() has been deprecated. Use "
-            "plot_vector() instead, which should follow after "
-            "postprocessing.get_specific_discharge()",
+            "plot_discharge() has been deprecated and will be replaced "
+            "in version 3.3.5. Use plot_vector() instead, which should "
+            "follow after postprocessing.get_specific_discharge()",
             DeprecationWarning,
         )
 
         if self.mg.grid_type != "structured":
-            err_msg = "Use plot_specific_discharge for " "{} grids".format(
-                self.mg.grid_type
+            raise NotImplementedError(
+                "Use plot_specific_discharge for "
+                "{} grids".format(self.mg.grid_type)
             )
-            raise NotImplementedError(err_msg)
 
         else:
             if self.mg.top is None:
@@ -947,10 +836,6 @@ class PlotMapView(object):
                     "botm defined to use plot_discharge()"
                 )
                 raise AssertionError(err)
-
-            ib = np.ones((self.mg.nlay, self.mg.nrow, self.mg.ncol))
-            if self.mg.idomain is not None:
-                ib = self.mg.idomain
 
             delr = self.mg.delr
             delc = self.mg.delc
@@ -998,26 +883,8 @@ class PlotMapView(object):
             qx, qy, qz = plotutil.PlotUtilities.centered_specific_discharge(
                 frf, fff, flf, delr, delc, sat_thk
             )
-            ib = ib.ravel()
-            qx = qx.ravel()
-            qy = qy.ravel()
-            del qz
 
-            temp = []
-            for ix, val in enumerate(ib):
-                if val != 0:
-                    temp.append((ix + 1, qx[ix], qy[ix]))
-
-            spdis = np.recarray(
-                (len(temp),),
-                dtype=[("node", int), ("qx", float), ("qy", float)],
-            )
-            for ix, tup in enumerate(temp):
-                spdis[ix] = tup
-
-            return self.plot_specific_discharge(
-                spdis, istep=istep, jstep=jstep, normalize=normalize, **kwargs
-            )
+            return self.plot_vector(qx, qy, istep, jstep, normalize, **kwargs)
 
     def plot_pathline(self, pl, travel_time=None, **kwargs):
         """
@@ -1049,11 +916,8 @@ class PlotMapView(object):
         lc : matplotlib.collections.LineCollection
 
         """
-        if plt is None:
-            err_msg = "matplotlib must be installed to use plot_pathline()"
-            raise ImportError(err_msg)
-        else:
-            from matplotlib.collections import LineCollection
+
+        from matplotlib.collections import LineCollection
 
         # make sure pathlines is a list
         if not isinstance(pl, list):
@@ -1071,32 +935,12 @@ class PlotMapView(object):
         else:
             kon = self.layer
 
-        if "marker" in kwargs:
-            marker = kwargs.pop("marker")
-        else:
-            marker = None
-
-        if "markersize" in kwargs:
-            markersize = kwargs.pop("markersize")
-        elif "ms" in kwargs:
-            markersize = kwargs.pop("ms")
-        else:
-            markersize = None
-
-        if "markercolor" in kwargs:
-            markercolor = kwargs.pop("markercolor")
-        else:
-            markercolor = None
-
-        if "markerevery" in kwargs:
-            markerevery = kwargs.pop("markerevery")
-        else:
-            markerevery = 1
-
-        if "ax" in kwargs:
-            ax = kwargs.pop("ax")
-        else:
-            ax = self.ax
+        marker = kwargs.pop("marker", None)
+        markersize = kwargs.pop("markersize", None)
+        markersize = kwargs.pop("ms", markersize)
+        markercolor = kwargs.pop("markercolor", None)
+        markerevery = kwargs.pop("markerevery", 1)
+        ax = kwargs.pop("ax", self.ax)
 
         if "colors" not in kwargs:
             kwargs["colors"] = "0.5"
@@ -1104,39 +948,7 @@ class PlotMapView(object):
         linecol = []
         markers = []
         for p in pl:
-            if travel_time is None:
-                tp = p.copy()
-            else:
-                if isinstance(travel_time, str):
-                    if "<=" in travel_time:
-                        time = float(travel_time.replace("<=", ""))
-                        idx = p["time"] <= time
-                    elif "<" in travel_time:
-                        time = float(travel_time.replace("<", ""))
-                        idx = p["time"] < time
-                    elif ">=" in travel_time:
-                        time = float(travel_time.replace(">=", ""))
-                        idx = p["time"] >= time
-                    elif "<" in travel_time:
-                        time = float(travel_time.replace(">", ""))
-                        idx = p["time"] > time
-                    else:
-                        try:
-                            time = float(travel_time)
-                            idx = p["time"] <= time
-                        except:
-                            errmsg = (
-                                "flopy.map.plot_pathline travel_time "
-                                + "variable cannot be parsed. "
-                                + "Acceptable logical variables are , "
-                                + "<=, <, >=, and >. "
-                                + "You passed {}".format(travel_time)
-                            )
-                            raise Exception(errmsg)
-                else:
-                    time = float(travel_time)
-                    idx = p["time"] <= time
-                tp = p[idx]
+            tp = plotutil.filter_modpath_by_travel_time(p, travel_time)
 
             # transform data!
             x0r, y0r = geometry.transform(
@@ -1162,7 +974,7 @@ class PlotMapView(object):
                     linecol.append(arr)
                     if marker is not None:
                         for xy in arr[::markerevery]:
-                            if not xy.mask:
+                            if not np.all(xy.mask):
                                 markers.append(xy)
         # create line collection
         lc = None
@@ -1210,104 +1022,10 @@ class PlotMapView(object):
         -------
             lo : list of Line2D objects
         """
-        if plt is None:
-            err_msg = "matplotlib must be installed to use plot_timeseries()"
-            raise ImportError(err_msg)
+        if "color" in kwargs:
+            kwargs["markercolor"] = kwargs["color"]
 
-        # make sure timeseries is a list
-        if not isinstance(ts, list):
-            ts = [ts]
-
-        if "layer" in kwargs:
-            kon = kwargs.pop("layer")
-
-            if isinstance(kon, bytes):
-                kon = kon.decode()
-
-            if isinstance(kon, str):
-                if kon.lower() == "all":
-                    kon = -1
-                else:
-                    kon = self.layer
-        else:
-            kon = self.layer
-
-        if "ax" in kwargs:
-            ax = kwargs.pop("ax")
-
-        else:
-            ax = self.ax
-
-        if "color" not in kwargs:
-            kwargs["color"] = "red"
-
-        linecol = []
-        for t in ts:
-            if travel_time is None:
-                tp = t.copy()
-
-            else:
-                if isinstance(travel_time, str):
-                    if "<=" in travel_time:
-                        time = float(travel_time.replace("<=", ""))
-                        idx = t["time"] <= time
-                    elif "<" in travel_time:
-                        time = float(travel_time.replace("<", ""))
-                        idx = t["time"] < time
-                    elif ">=" in travel_time:
-                        time = float(travel_time.replace(">=", ""))
-                        idx = t["time"] >= time
-                    elif "<" in travel_time:
-                        time = float(travel_time.replace(">", ""))
-                        idx = t["time"] > time
-                    else:
-                        try:
-                            time = float(travel_time)
-                            idx = t["time"] <= time
-                        except:
-                            errmsg = (
-                                "flopy.map.plot_pathline travel_time "
-                                + "variable cannot be parsed. "
-                                + "Acceptable logical variables are , "
-                                + "<=, <, >=, and >. "
-                                + "You passed {}".format(travel_time)
-                            )
-                            raise Exception(errmsg)
-                else:
-                    time = float(travel_time)
-                    idx = t["time"] <= time
-                tp = ts[idx]
-
-            x0r, y0r = geometry.transform(
-                tp["x"],
-                tp["y"],
-                self.mg.xoffset,
-                self.mg.yoffset,
-                self.mg.angrot_radians,
-            )
-
-            # build polyline array
-            arr = np.vstack((x0r, y0r)).T
-            # select based on layer
-            if kon >= 0:
-                kk = t["k"].copy().reshape(t.shape[0], 1)
-                kk = np.repeat(kk, 2, axis=1)
-                arr = np.ma.masked_where((kk != kon), arr)
-
-            else:
-                arr = np.ma.asarray(arr)
-
-            # append line to linecol if there is some unmasked segment
-            if not arr.mask.all():
-                linecol.append(arr)
-
-        # plot timeseries data
-        lo = []
-        for lc in linecol:
-            if not lc.mask.all():
-                lo += ax.plot(lc[:, 0], lc[:, 1], **kwargs)
-
-        return lo
+        return self.plot_pathline(ts, travel_time=travel_time, **kwargs)
 
     def plot_endpoint(
         self,
@@ -1353,89 +1071,12 @@ class PlotMapView(object):
         sp : matplotlib.pyplot.scatter
 
         """
-        if plt is None:
-            err_msg = "matplotlib must be installed to use plot_endpoint()"
-            raise ImportError(err_msg)
 
-        ep = ep.copy()
-        direction = direction.lower()
-        if direction == "starting":
-            xp, yp = "x0", "y0"
+        ax = kwargs.pop("ax", self.ax)
 
-        elif direction == "ending":
-            xp, yp = "x", "y"
-
-        else:
-            errmsg = (
-                'flopy.map.plot_endpoint direction must be "ending" '
-                + 'or "starting".'
-            )
-            raise Exception(errmsg)
-
-        if selection_direction is not None:
-            if (
-                selection_direction.lower() != "starting"
-                and selection_direction.lower() != "ending"
-            ):
-                errmsg = (
-                    "flopy.map.plot_endpoint selection_direction "
-                    + 'must be "ending" or "starting".'
-                )
-                raise Exception(errmsg)
-        else:
-            if direction.lower() == "starting":
-                selection_direction = "ending"
-            elif direction.lower() == "ending":
-                selection_direction = "starting"
-
-        # selection of endpoints
-        if selection is not None:
-            if isinstance(selection, int):
-                selection = tuple((selection,))
-            try:
-                if len(selection) == 1:
-                    node = selection[0]
-                    if selection_direction.lower() == "starting":
-                        nsel = "node0"
-                    else:
-                        nsel = "node"
-                    # make selection
-                    idx = ep[nsel] == node
-                    tep = ep[idx]
-                elif len(selection) == 3:
-                    k, i, j = selection[0], selection[1], selection[2]
-                    if selection_direction.lower() == "starting":
-                        ksel, isel, jsel = "k0", "i0", "j0"
-                    else:
-                        ksel, isel, jsel = "k", "i", "j"
-                    # make selection
-                    idx = (ep[ksel] == k) & (ep[isel] == i) & (ep[jsel] == j)
-                    tep = ep[idx]
-                else:
-                    errmsg = (
-                        "flopy.map.plot_endpoint selection must be "
-                        + "a zero-based layer, row, column tuple "
-                        + "(l, r, c) or node number (MODPATH 7) of "
-                        + "the location to evaluate (i.e., well location)."
-                    )
-                    raise Exception(errmsg)
-            except:
-                errmsg = (
-                    "flopy.map.plot_endpoint selection must be a "
-                    + "zero-based layer, row, column tuple (l, r, c) "
-                    + "or node number (MODPATH 7) of the location "
-                    + "to evaluate (i.e., well location)."
-                )
-                raise Exception(errmsg)
-        # all endpoints
-        else:
-            tep = ep.copy()
-
-        if "ax" in kwargs:
-            ax = kwargs.pop("ax")
-        else:
-            ax = self.ax
-
+        tep, _, xp, yp = plotutil.parse_modpath_selection_options(
+            ep, direction, selection, selection_direction
+        )
         # scatter kwargs that users may redefine
         if "c" not in kwargs:
             c = tep["time"] - tep["time0"]
@@ -1443,24 +1084,13 @@ class PlotMapView(object):
             c = np.empty((tep.shape[0]), dtype="S30")
             c.fill(kwargs.pop("c"))
 
-        s = 50
-        if "s" in kwargs:
-            s = float(kwargs.pop("s")) ** 2.0
-        elif "size" in kwargs:
-            s = float(kwargs.pop("size")) ** 2.0
+        s = kwargs.pop("s", np.sqrt(50))
+        s = float(kwargs.pop("size", s)) ** 2.0
 
         # colorbar kwargs
-        createcb = False
-        if "colorbar" in kwargs:
-            createcb = kwargs.pop("colorbar")
-
-        colorbar_label = "Endpoint Time"
-        if "colorbar_label" in kwargs:
-            colorbar_label = kwargs.pop("colorbar_label")
-
-        shrink = 1.0
-        if "shrink" in kwargs:
-            shrink = float(kwargs.pop("shrink"))
+        createcb = kwargs.pop("colorbar", False)
+        colorbar_label = kwargs.pop("colorbar_label", "Endpoint Time")
+        shrink = float(kwargs.pop("shrink", 1.0))
 
         # transform data!
         x0r, y0r = geometry.transform(
@@ -1503,7 +1133,7 @@ class DeprecatedMapView(PlotMapView):
     def __init__(
         self, model=None, modelgrid=None, ax=None, layer=0, extent=None
     ):
-        super(DeprecatedMapView, self).__init__(
+        super().__init__(
             model=model, modelgrid=modelgrid, ax=ax, layer=layer, extent=extent
         )
 
@@ -1559,7 +1189,7 @@ class DeprecatedMapView(PlotMapView):
                 modelgrid=self.mg, dis=dis
             )
 
-        super(DeprecatedMapView, self).plot_discharge(
+        super().plot_discharge(
             frf=frf,
             fff=fff,
             flf=flf,
@@ -1571,9 +1201,9 @@ class DeprecatedMapView(PlotMapView):
         )
 
 
-class ModelMap(object):
+class ModelMap:
     """
-    Pending Depreciation: ModelMap acts as a PlotMapView factory
+    DEPRECATED. ModelMap acts as a PlotMapView factory
     object. Please migrate to PlotMapView for plotting
     functionality and future code compatibility
 
@@ -1634,13 +1264,12 @@ class ModelMap(object):
 
         from ..utils.reference import SpatialReferenceUnstructured
 
-        # from ..plot.plotbase import DeprecatedMapView
-
         err_msg = (
-            "ModelMap will be replaced by "
-            "PlotMapView(); Calling PlotMapView()"
+            "ModelMap is deprecated and has been replaced by "
+            "PlotMapView(). ModelMap will be removed in version 3.3.5; "
+            "Calling PlotMapView()"
         )
-        warnings.warn(err_msg, PendingDeprecationWarning)
+        warnings.warn(err_msg, DeprecationWarning)
 
         modelgrid = None
         if model is not None:

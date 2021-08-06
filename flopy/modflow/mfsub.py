@@ -758,12 +758,10 @@ class ModflowSub(Package):
             dp = np.zeros((nmz, 3), dtype=np.float32)
             for k in range(nmz):
                 if model.verbose:
-                    msg = (
-                        2 * " "
-                        + "loading sub dataset 9 for material "
-                        + "zone {}\n".format(k + 1)
+                    sys.stdout.write(
+                        "  loading sub dataset 9 for material "
+                        "zone {}\n".format(k + 1)
                     )
-                    sys.stdout.write(msg)
                 line = f.readline()
                 t = line.strip().split()
                 dp[k, :] = float(t[0]), float(t[1]), float(t[2])
@@ -783,12 +781,9 @@ class ModflowSub(Package):
                 kk = ldn[k] + 1
                 # dstart
                 if model.verbose:
-                    msg = (
-                        2 * " "
-                        + "loading sub dataset 10 for "
-                        + "layer {}\n".format(kk)
+                    sys.stdout.write(
+                        "  loading sub dataset 10 for layer {}\n".format(kk)
                     )
-                    sys.stdout.write(msg)
                 t = Util2d.load(
                     f,
                     model,
@@ -800,12 +795,9 @@ class ModflowSub(Package):
                 dstart[k] = t
                 # dhc
                 if model.verbose:
-                    msg = (
-                        2 * " "
-                        + "loading sub dataset 11 for "
-                        + "layer {}\n".format(kk)
+                    sys.stdout.write(
+                        "  loading sub dataset 11 for layer {}\n".format(kk)
                     )
-                    sys.stdout.write(msg)
                 t = Util2d.load(
                     f,
                     model,
@@ -817,12 +809,9 @@ class ModflowSub(Package):
                 dhc[k] = t
                 # dcom
                 if model.verbose:
-                    msg = (
-                        2 * " "
-                        + "loading sub dataset 12 for "
-                        + "layer {}\n".format(kk)
+                    sys.stdout.write(
+                        "  loading sub dataset 12 for layer {}\n".format(kk)
                     )
-                    sys.stdout.write(msg)
                 t = Util2d.load(
                     f,
                     model,
@@ -834,12 +823,9 @@ class ModflowSub(Package):
                 dcom[k] = t
                 # dz
                 if model.verbose:
-                    msg = (
-                        2 * " "
-                        + "loading sub dataset 13 for "
-                        + "layer {}\n".format(kk)
+                    sys.stdout.write(
+                        "  loading sub dataset 13 for layer {}\n".format(kk)
                     )
-                    sys.stdout.write(msg)
                 t = Util2d.load(
                     f,
                     model,
@@ -851,12 +837,9 @@ class ModflowSub(Package):
                 dz[k] = t
                 # nz
                 if model.verbose:
-                    msg = (
-                        2 * " "
-                        + "loading sub dataset 14 for "
-                        + "layer {}\n".format(kk)
+                    sys.stdout.write(
+                        "  loading sub dataset 14 for layer {}\n".format(kk)
                     )
-                    sys.stdout.write(msg)
                 t = Util2d.load(
                     f,
                     model,
@@ -872,24 +855,19 @@ class ModflowSub(Package):
         if isuboc > 0:
             # dataset 15
             if model.verbose:
-                msg = (
-                    2 * " "
-                    + "loading sub dataset 15 for "
-                    + "layer {}\n".format(kk)
+                sys.stdout.write(
+                    "  loading sub dataset 15 for layer {}\n".format(kk)
                 )
-                sys.stdout.write(msg)
             ids15 = np.empty(12, dtype=np.int32)
             ids15 = read1d(f, ids15)
             # dataset 16
             ids16 = [0] * isuboc
             for k in range(isuboc):
                 if model.verbose:
-                    msg = (
-                        2 * " "
-                        + "loading sub dataset 16 for "
-                        + "isuboc {}\n".format(k + 1)
+                    sys.stdout.write(
+                        "  loading sub dataset 16 for "
+                        "isuboc {}\n".format(k + 1)
                     )
-                    sys.stdout.write(msg)
                 t = np.empty(17, dtype=np.int32)
                 t = read1d(f, t)
                 t[0:4] -= 1

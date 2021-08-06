@@ -37,7 +37,7 @@ class DfnType(Enum):
     unknown = 999
 
 
-class Dfn(object):
+class Dfn:
     """
     Base class for package file definitions
 
@@ -80,7 +80,9 @@ class Dfn(object):
             "gwfriv": 0,
             "gwfghb": 0,
             "gwfrch": 0,
+            "gwfrcha": 0,
             "gwfevt": 0,
+            "gwfevta": 0,
             "gwfmaw": 0,
             "gwfsfr": 0,
             "gwflak": 0,
@@ -206,7 +208,7 @@ class DfnPackage(Dfn):
     """
 
     def __init__(self, package):
-        super(DfnPackage, self).__init__()
+        super().__init__()
         self.package = package
         self.package_type = package._package_type
         self.dfn_file_name = package.dfn_file_name
@@ -468,7 +470,7 @@ class DfnFile(Dfn):
     """
 
     def __init__(self, file):
-        super(DfnFile, self).__init__()
+        super().__init__()
 
         dfn_path, tail = os.path.split(os.path.realpath(__file__))
         dfn_path = os.path.join(dfn_path, "dfn")
@@ -799,7 +801,7 @@ class BlockType(Enum):
     transient = 3
 
 
-class MFDataItemStructure(object):
+class MFDataItemStructure:
     """
     Defines the structure of a single MF6 data item in a dfn file
 
@@ -1283,7 +1285,7 @@ class MFDataItemStructure(object):
         return item_type
 
 
-class MFDataStructure(object):
+class MFDataStructure:
     """
     Defines the structure of a single MF6 data item in a dfn file
 
@@ -1720,11 +1722,9 @@ class MFDataStructure(object):
                         or self.type == DatumType.record
                         or self.type == DatumType.repeating_record
                     ):
-                        type_array.append("{}".format(item.name))
+                        type_array.append(str(item.name))
                     else:
-                        type_array.append(
-                            "{}".format(self._resolve_item_type(item))
-                        )
+                        type_array.append(str(self._resolve_item_type(item)))
 
     def get_description(
         self, line_size=79, initial_indent="        ", level_indent="    "
@@ -1826,7 +1826,7 @@ class MFDataStructure(object):
                         (
                             self,
                             index,
-                            "{}".format(self._resolve_item_type(item)),
+                            str(self._resolve_item_type(item)),
                         )
                     )
 
@@ -1917,7 +1917,7 @@ class MFDataStructure(object):
         return ""
 
 
-class MFBlockStructure(object):
+class MFBlockStructure:
     """
     Defines the structure of a MF6 block.
 
@@ -2030,7 +2030,7 @@ class MFBlockStructure(object):
         return recarray_list
 
 
-class MFInputFileStructure(object):
+class MFInputFileStructure:
     """
     MODFLOW Input File Stucture class.  Loads file
     structure information for individual input file
@@ -2051,7 +2051,7 @@ class MFInputFileStructure(object):
 
     Attributes
     ----------
-    valid : boolean
+    valid : bool
         simulation structure validity
     path : tuple
         path defining the location of this input file structure within the
@@ -2115,7 +2115,7 @@ class MFInputFileStructure(object):
             return None
 
 
-class MFModelStructure(object):
+class MFModelStructure:
     """
     Defines the structure of a MF6 model and its packages
 
@@ -2126,7 +2126,7 @@ class MFModelStructure(object):
 
     Attributes
     ----------
-    valid : boolean
+    valid : bool
         simulation structure validity
     name_file_struct_obj : MFInputFileStructure
         describes the structure of the simulation name file
@@ -2205,7 +2205,7 @@ class MFModelStructure(object):
             return None
 
 
-class MFSimulationStructure(object):
+class MFSimulationStructure:
     """
     Defines the structure of a MF6 simulation and its packages
     and models.
@@ -2399,7 +2399,7 @@ class MFSimulationStructure(object):
                     package_struct.read_as_arrays = True
 
 
-class MFStructure(object):
+class MFStructure:
     """
     Singleton class for accessing the contents of the json structure file
     (only one instance of this class can exist, which loads the json file on
@@ -2422,7 +2422,7 @@ class MFStructure(object):
 
     def __new__(cls, internal_request=False, load_from_dfn_files=False):
         if cls._instance is None:
-            cls._instance = super(MFStructure, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
 
             # Initialize variables
             cls._instance.mf_version = 6

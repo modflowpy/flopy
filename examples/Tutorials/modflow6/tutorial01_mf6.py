@@ -25,20 +25,20 @@ import matplotlib.pyplot as plt
 import flopy
 
 # We are creating a square model with a specified head equal to `h1` along
-# all boundaries. The head at the cell in the center in the top layer is
-# fixed to `h2`. First, set the name of the model and the parameters of the
-# model: the number of layers `Nlay`, the number of rows and columns `N`,
-# lengths of the sides of the model `L`, aquifer thickness `H`,
-# hydraulic conductivity `k`
+# the edge of the model in layer 1. A well is located in the center of the
+# upper-left quadrant in layer 10. First, set the name of the model and
+# the parameters of the model: the number of layers `Nlay`, the number of
+# rows and columns `N`, lengths of the sides of the model `L`, aquifer
+# thickness `H`, hydraulic conductivity `k`, and the well pumping rate `q`.
 
 name = "tutorial01_mf6"
 h1 = 100
-h2 = 90
 Nlay = 10
 N = 101
 L = 400.0
 H = 50.0
 k = 1.0
+q = -1000.0
 
 # ### Create the Flopy Model Objects
 #
@@ -56,7 +56,7 @@ k = 1.0
 # an iterative model solution (`IMS`), which controls how the GWF model is
 # solved.
 
-# ### Create the Flopy simulation object
+# ### Create the FloPy simulation object
 
 sim = flopy.mf6.MFSimulation(
     sim_name=name, exe_name="mf6", version="mf6", sim_ws="."
@@ -70,12 +70,23 @@ tdis = flopy.mf6.ModflowTdis(
 
 # ### Create the Flopy `IMS` Package object
 
-ims = flopy.mf6.ModflowIms(sim, pname="ims", complexity="SIMPLE")
+ims = flopy.mf6.ModflowIms(
+    sim,
+    pname="ims",
+    complexity="SIMPLE",
+    linear_acceleration="BICGSTAB",
+)
 
 # Create the Flopy groundwater flow (gwf) model object
 
 model_nam_file = "{}.nam".format(name)
-gwf = flopy.mf6.ModflowGwf(sim, modelname=name, model_nam_file=model_nam_file)
+gwf = flopy.mf6.ModflowGwf(
+    sim,
+    modelname=name,
+    model_nam_file=model_nam_file,
+    save_flows=True,
+    newtonoptions="NEWTON UNDER_RELAXATION",
+)
 
 # Now that the overall simulation is set up, we can focus on building the
 # groundwater flow model. The groundwater flow model will be built by
@@ -109,7 +120,11 @@ ic = flopy.mf6.ModflowGwfic(gwf, pname="ic", strt=start)
 
 # ### Create the node property flow (`NPF`) Package
 
-npf = flopy.mf6.ModflowGwfnpf(gwf, icelltype=1, k=k, save_flows=True)
+npf = flopy.mf6.ModflowGwfnpf(
+    gwf,
+    icelltype=1,
+    k=k,
+)
 
 # ### Create the constant head (`CHD`) Package
 #
@@ -119,19 +134,16 @@ npf = flopy.mf6.ModflowGwfnpf(gwf, icelltype=1, k=k, save_flows=True)
 # zero-based indices!
 
 chd_rec = []
-chd_rec.append(((0, int(N / 4), int(N / 4)), h2))
-for layer in range(0, Nlay):
-    for row_col in range(0, N):
-        chd_rec.append(((layer, row_col, 0), h1))
-        chd_rec.append(((layer, row_col, N - 1), h1))
-        if row_col != 0 and row_col != N - 1:
-            chd_rec.append(((layer, 0, row_col), h1))
-            chd_rec.append(((layer, N - 1, row_col), h1))
+layer = 0
+for row_col in range(0, N):
+    chd_rec.append(((layer, row_col, 0), h1))
+    chd_rec.append(((layer, row_col, N - 1), h1))
+    if row_col != 0 and row_col != N - 1:
+        chd_rec.append(((layer, 0, row_col), h1))
+        chd_rec.append(((layer, N - 1, row_col), h1))
 chd = flopy.mf6.ModflowGwfchd(
     gwf,
-    maxbound=len(chd_rec),
     stress_period_data=chd_rec,
-    save_flows=True,
 )
 
 # The `CHD` Package stored the constant heads in a structured array,
@@ -142,7 +154,21 @@ iper = 0
 ra = chd.stress_period_data.get_data(key=iper)
 ra
 
-# Create the output control (`OC`) Package
+# ### Create the well (`WEL`) Package
+#
+# Add a well in model layer 10.
+
+wel_rec = [(Nlay - 1, int(N / 4), int(N / 4), q)]
+wel = flopy.mf6.ModflowGwfwel(
+    gwf,
+    stress_period_data=wel_rec,
+)
+
+# ### Create the output control (`OC`) Package
+#
+# Save heads and budget output to binary files and print heads to the model
+# listing file at the end of the stress period.
+
 headfile = "{}.hds".format(name)
 head_filerecord = [headfile]
 budgetfile = "{}.cbb".format(name)
@@ -184,22 +210,26 @@ if not success:
 
 # ## Post-Process Head Results
 #
-# First, a link to the heads file is created with `HeadFile`. The link can then be accessed with the `get_data` function, by specifying, in this case, the step number and period number for which we want to retrieve data. A three-dimensional array is returned of size `nlay, nrow, ncol`. Matplotlib contouring functions are used to make contours of the layers or a cross-section.
+# First, a link to the heads file is created with using the `.output.head()` method on the groundwater flow model. The link and the `get_data` method are used with the step number and period number for which we want to retrieve data. A three-dimensional array is returned of size `nlay, nrow, ncol`. Matplotlib contouring functions are used to make contours of the layers or a cross-section.
 
 # Read the binary head file and plot the results. We can use the Flopy
-# `HeadFile()` class because the format of the headfile for MODFLOW 6 is
-# the same as for previous MODFLOW versions.
+# `.output.head()` method on the groundwater flow model object (`gwf`).
+# Also set a few variables that will be used for plotting.
+#
+
+h = gwf.output.head().get_data(kstpkper=(0, 0))
+x = y = np.linspace(0, L, N)
+y = y[::-1]
+vmin, vmax = 90.0, 100.0
+contour_intervals = np.arange(90, 100.1, 1.)
+
 
 # ### Plot a Map of Layer 1
 
-hds = flopy.utils.binaryfile.HeadFile(headfile)
-h = hds.get_data(kstpkper=(0, 0))
-x = y = np.linspace(0, L, N)
-y = y[::-1]
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
-c = ax.contour(x, y, h[0], np.arange(90, 100.1, 0.2), colors="black")
-plt.clabel(c, fmt="%2.1f")
+c = ax.contour(x, y, h[0], contour_intervals, colors="black")
+plt.clabel(c, fmt="%2.1f");
 
 
 # ### Plot a Map of Layer 10
@@ -208,48 +238,111 @@ x = y = np.linspace(0, L, N)
 y = y[::-1]
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
-c = ax.contour(x, y, h[-1], np.arange(90, 100.1, 0.2), colors="black")
-plt.clabel(c, fmt="%1.1f")
+c = ax.contour(x, y, h[-1], contour_intervals, colors="black")
+plt.clabel(c, fmt="%1.1f");
 
-# ### Plot a Cross-section along row 51
+# ### Plot a Cross-section along row 25
 
 z = np.linspace(-H / Nlay / 2, -H + H / Nlay / 2, Nlay)
-fig = plt.figure(figsize=(5, 2.5))
+fig = plt.figure(figsize=(9, 3))
 ax = fig.add_subplot(1, 1, 1, aspect="auto")
-c = ax.contour(x, z, h[:, 50, :], np.arange(90, 100.1, 0.2), colors="black")
-plt.clabel(c, fmt="%1.1f")
+c = ax.contour(x, z, h[:, int(N / 4), :], contour_intervals, colors="black")
+plt.clabel(c, fmt="%1.1f");
 
-# ### We can also use the Flopy `PlotMapView()` capabilities for MODFLOW 6
+# ### Use the FloPy `PlotMapView()` capabilities for MODFLOW 6
 #
-# Before we start we will create a MODFLOW-2005 ibound array to use to plot
-# the locations of the constant heads.
-
-ibd = np.ones((Nlay, N, N), dtype=int)
-for k, i, j in ra["cellid"]:
-    ibd[k, i, j] = -1
-
-# ### Plot a Map of Layers 1 and 10
+# ### Plot a Map of heads in Layers 1 and 10
 
 fig, axes = plt.subplots(2, 1, figsize=(6, 12), constrained_layout=True)
 # first subplot
 ax = axes[0]
 ax.set_title("Model Layer 1")
 modelmap = flopy.plot.PlotMapView(model=gwf, ax=ax)
-quadmesh = modelmap.plot_ibound(ibound=ibd)
+pa = modelmap.plot_array(h, vmin=vmin, vmax=vmax)
+quadmesh = modelmap.plot_bc("CHD")
 linecollection = modelmap.plot_grid(lw=0.5, color="0.5")
 contours = modelmap.contour_array(
-    h[0], levels=np.arange(90, 100.1, 0.2), colors="black"
+    h,
+    levels=contour_intervals,
+    colors="black",
 )
 ax.clabel(contours, fmt="%2.1f")
+cb = plt.colorbar(pa, shrink=0.5, ax=ax)
 # second subplot
 ax = axes[1]
 ax.set_title("Model Layer {}".format(Nlay))
 modelmap = flopy.plot.PlotMapView(model=gwf, ax=ax, layer=Nlay - 1)
-quadmesh = modelmap.plot_ibound(ibound=ibd)
 linecollection = modelmap.plot_grid(lw=0.5, color="0.5")
-pa = modelmap.plot_array(h[0])
+pa = modelmap.plot_array(h, vmin=vmin, vmax=vmax)
+quadmesh = modelmap.plot_bc("CHD")
 contours = modelmap.contour_array(
-    h[0], levels=np.arange(90, 100.1, 0.2), colors="black"
+    h,
+    levels=contour_intervals,
+    colors="black",
 )
-cb = plt.colorbar(pa, shrink=0.5, ax=ax)
 ax.clabel(contours, fmt="%2.1f")
+cb = plt.colorbar(pa, shrink=0.5, ax=ax);
+
+
+# ### Use the FloPy `PlotCrossSection()` capabilities for MODFLOW 6
+#
+# ### Plot a cross-section of heads along row 25
+
+fig, ax = plt.subplots(1, 1, figsize=(9, 3), constrained_layout=True)
+# first subplot
+ax.set_title("Row 25")
+modelmap = flopy.plot.PlotCrossSection(
+    model=gwf,
+    ax=ax,
+    line={"row": int(N / 4)},
+)
+pa = modelmap.plot_array(h, vmin=vmin, vmax=vmax)
+quadmesh = modelmap.plot_bc("CHD")
+linecollection = modelmap.plot_grid(lw=0.5, color="0.5")
+contours = modelmap.contour_array(
+    h,
+    levels=contour_intervals,
+    colors="black",
+)
+ax.clabel(contours, fmt="%2.1f")
+cb = plt.colorbar(pa, shrink=0.5, ax=ax);
+
+
+# ## Determine the Flow Residual
+#
+# The `FLOW-JA-FACE` cell-by-cell budget data can be processed to
+# determine the flow residual for each cell in a MODFLOW 6 model. The
+# diagonal position for each row in the `FLOW-JA-FACE` cell-by-cell
+# budget data contains the flow residual for each cell and can be
+# extracted using the `flopy.mf6.utils.get_residuals()` function.
+#
+# First extract the `FLOW-JA-FACE` array from the cell-by-cell budget file
+
+flowja = gwf.oc.output.budget().get_data(
+    text="FLOW-JA-FACE", kstpkper=(0, 0)
+)[0]
+
+# Next extract the flow residual. The MODFLOW 6 binary grid file is passed
+# into the function because it contains the ia array that defines
+# the location of the diagonal position in the `FLOW-JA-FACE` array.
+
+grb_file = "{}.dis.grb".format(name)
+residual = flopy.mf6.utils.get_residuals(flowja, grb_file=grb_file)
+
+# ### Plot a Map of the flow error in Layer 10
+
+fig, ax = plt.subplots(1, 1, figsize=(6, 6), constrained_layout=True)
+ax.set_title("Model Layer 10")
+modelmap = flopy.plot.PlotMapView(model=gwf, ax=ax, layer=Nlay - 1)
+pa = modelmap.plot_array(residual)
+quadmesh = modelmap.plot_bc("CHD")
+linecollection = modelmap.plot_grid(lw=0.5, color="0.5")
+contours = modelmap.contour_array(
+    h,
+    levels=contour_intervals,
+    colors="black",
+)
+ax.clabel(contours, fmt="%2.1f")
+plt.colorbar(pa, shrink=0.5);
+
+

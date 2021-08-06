@@ -1,0 +1,9 @@
+2 50
+9
+1 1 1 9
+CONSTANT            30.0   # surf kper1
+CONSTANT            1.000000E-4   # evtr kper1
+CONSTANT            1.000000E+0   # exdp kper1
+INTERNAL  1  (FREE)  -1  ievt kper1
+ 1 2 3 4 5 6 16 17 18
+

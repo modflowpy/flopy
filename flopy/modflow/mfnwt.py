@@ -414,13 +414,10 @@ class ModflowNwt(Package):
             sys.stdout.write("loading nwt package file...\n")
 
         if model.version != "mfnwt":
-            msg = (
-                "Warning: model version was reset from "
-                + "'{}' to 'mfnwt' in order to load a NWT file".format(
-                    model.version
-                )
+            print(
+                "Warning: model version was reset from '{}' to 'mfnwt' in "
+                "order to load a NWT file".format(model.version)
             )
-            print(msg)
             model.version = "mfnwt"
 
         openfile = not hasattr(f, "read")

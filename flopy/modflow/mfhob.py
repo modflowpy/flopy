@@ -298,7 +298,7 @@ class ModflowHob(Package):
                     line += "{:20} ".format(t["toffset"])
                     line += "{:10.4f} ".format(t["hobs"])
                     line += 55 * " "
-                    line += "  # DATASET 6 - " + "Observation {}.{}".format(
+                    line += "  # DATASET 6 - Observation {}.{}".format(
                         idx + 1, jdx + 1
                     )
                     f.write("{}\n".format(line))
@@ -376,6 +376,10 @@ class ModflowHob(Package):
 
         # read datasets 3-6
         nobs = 0
+
+        # set to False for 1st call to ensure that totim cache is updated
+        use_cached_totim = False
+
         while True:
             # read dataset 3
             line = f.readline()
@@ -429,11 +433,12 @@ class ModflowHob(Package):
                 itt = 1
                 irefsp0 -= 1
                 totim = model.dis.get_totim_from_kper_toffset(
-                    irefsp0, toffset * tomulth
+                    irefsp0, toffset * tomulth, use_cached_totim
                 )
                 names = [obsnam]
                 tsd = [totim, hob]
                 nobs += 1
+                use_cached_totim = True
             else:
                 names = []
                 tsd = []
@@ -449,11 +454,12 @@ class ModflowHob(Package):
                     irefsp = int(t[1]) - 1
                     toffset = float(t[2])
                     totim = model.dis.get_totim_from_kper_toffset(
-                        irefsp, toffset * tomulth
+                        irefsp, toffset * tomulth, use_cached_totim
                     )
                     hob = float(t[3])
                     tsd.append([totim, hob])
                     nobs += 1
+                    use_cached_totim = True
 
             obs_data.append(
                 HeadObservation(
@@ -510,7 +516,7 @@ class ModflowHob(Package):
         return 39
 
 
-class HeadObservation(object):
+class HeadObservation:
     """
     Create single HeadObservation instance from a time series array. A list of
     HeadObservation instances are passed to the ModflowHob package.
@@ -628,12 +634,13 @@ class HeadObservation(object):
             for key, value in self.mlay.items():
                 tot += value
             if not (np.isclose(tot, 1.0, rtol=0)):
-                msg = (
+                raise ValueError(
                     "sum of dataset 4 proportions must equal 1.0 - "
-                    + "sum of dataset 4 proportions = {tot} for "
-                    + "observation name {obsname}."
-                ).format(tot=tot, obsname=self.obsname)
-                raise ValueError(msg)
+                    "sum of dataset 4 proportions = {tot} for "
+                    "observation name {obsname}.".format(
+                        tot=tot, obsname=self.obsname
+                    )
+                )
 
         # convert passed time_series_data to a numpy array
         if isinstance(time_series_data, list):
@@ -666,30 +673,33 @@ class HeadObservation(object):
             if isinstance(names, str):
                 names = [names]
             elif not isinstance(names, list):
-                msg = (
+                raise ValueError(
                     "HeadObservation names must be a "
-                    + "string or a list of strings"
+                    "string or a list of strings"
                 )
-                raise ValueError(msg)
             if len(names) < self.nobs:
-                msg = (
-                    "a name must be specified for every valid "
-                    + "observation - {} ".format(len(names))
-                    + "names were passed but at least "
-                    + "{} names are required.".format(self.nobs)
+                raise ValueError(
+                    "a name must be specified for every valid observation "
+                    "- {} names were passed but at least "
+                    "{} names are required.".format(len(names), self.nobs)
                 )
-                raise ValueError(msg)
+
+        # set use_cached_totim to False first to ensure totim is updated
+        use_cached_totim = False
 
         # create time_series_data
         self.time_series_data = self._get_empty(ncells=shape[0])
         for idx in range(self.nobs):
             t = time_series_data[idx, 0]
-            kstp, kper, toffset = model.dis.get_kstp_kper_toffset(t)
+            kstp, kper, toffset = model.dis.get_kstp_kper_toffset(
+                t, use_cached_totim
+            )
             self.time_series_data[idx]["totim"] = t
             self.time_series_data[idx]["irefsp"] = kper
             self.time_series_data[idx]["toffset"] = toffset / tomulth
             self.time_series_data[idx]["hobs"] = time_series_data[idx, 1]
             self.time_series_data[idx]["obsname"] = names[idx]
+            use_cached_totim = True
 
         if self.nobs > 1:
             self.irefsp = -self.nobs

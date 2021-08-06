@@ -10,6 +10,7 @@ from .mfgwfgwt import ModflowGwfgwt
 from .mfutlobs import ModflowUtlobs
 from .mfutlts import ModflowUtlts
 from .mfutltas import ModflowUtltas
+from .mfutlats import ModflowUtlats
 from .mfutllaktab import ModflowUtllaktab
 from .mfgwfnam import ModflowGwfnam
 from .mfgwf import ModflowGwf
@@ -38,9 +39,11 @@ from .mfgwfgnc import ModflowGwfgnc
 from .mfgwfoc import ModflowGwfoc
 from .mfgwfcsub import ModflowGwfcsub
 from .mfgwfbuy import ModflowGwfbuy
+from .mfgwfapi import ModflowGwfapi
 from .mfgwtnam import ModflowGwtnam
 from .mfgwt import ModflowGwt
 from .mfgwtuzt import ModflowGwtuzt
+from .mfgwtapi import ModflowGwtapi
 from .mfgwtmvt import ModflowGwtmvt
 from .mfgwtdsp import ModflowGwtdsp
 from .mfgwtssm import ModflowGwtssm

@@ -1,7 +1,7 @@
 
 <img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
-### Version 3.3.3
+### Version 3.3.4
 [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=master)](https://travis-ci.org/modflowpy/flopy)
 [![codecov](https://codecov.io/gh/modflowpy/flopy/branch/develop/graph/badge.svg)](https://codecov.io/gh/modflowpy/flopy)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/b23a5edd021b4aa19e947545ab49e577)](https://www.codacy.com/manual/jdhughes-usgs/flopy?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=modflowpy/flopy&amp;utm_campaign=Badge_Grade)
@@ -41,7 +41,12 @@ The release candidate version can also be installed from the git repository usin
 Documentation
 -----------------------------------------------
 
-FloPy code documentation is available at [https://flopy.readthedocs.io](https://flopy.readthedocs.io)
+Documentation is available on **Read the Docs** and includes information
+on FloPy; tutorials for using FloPy with MODFLOW 6 and previous versions
+of MODFLOW, MT3DMS, MT3D-USGS, MODPATH, and ZONEBUDGET; and code documentation.
+
+ - Read the Docs for the [latest release](https://flopy.readthedocs.io).
+ - Read the Docs for the [current release candidate](https://flopy.readthedocs.io/en/latest/).
 
 
 Getting Started
@@ -71,9 +76,10 @@ oc = flopy.mf6.ModflowGwfoc(gwf,
                             saverecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')])
 sim.write_simulation()
 sim.run_simulation()
-head = flopy.utils.HeadFile(os.path.join(ws, head_file)).get_data()
-bud = flopy.utils.CellBudgetFile(os.path.join(ws, budget_file),
-                                 precision='double')
+
+head = gwf.output.head().get_data()
+bud = gwf.output.budget()
+
 spdis = bud.get_data(text='DATA-SPDIS')[0]
 pmv = flopy.plot.PlotMapView(gwf)
 pmv.plot_array(head)
@@ -139,7 +145,7 @@ How to Cite
 
 ##### ***Software/Code citation for FloPy:***
 
-[Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N., 2021, FloPy v3.3.3: U.S. Geological Survey Software Release, 18 February 2021, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, Mark, Post, Vincent, Hughes, J. D., Langevin, C. D., White, J. T., Leaf, A. T., Paulinski, S. R., Bellino, J. C., Morway, E. D., Toews, M. W., Larsen, J. D., Fienen, M. N., Starn, J. J., and Brakenhoff, Davíd, 2021, FloPy v3.3.4: U.S. Geological Survey Software Release, 06 August 2021, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 MODFLOW Resources

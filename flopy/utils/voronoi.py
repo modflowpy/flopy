@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import Voronoi
 from .cvfdutil import get_disv_gridprops
-from ..plot.plotutil import plot_cvfd
 
 
 def get_sorted_vertices(icell_vertices, vertices):
@@ -28,8 +27,12 @@ def get_valid_faces(vor):
     return nvalid_faces
 
 
+# todo: send this to point in polygon method defined in Rasters
 def point_in_cell(point, vertices):
-    from shapely.geometry import Point, Polygon
+    try:
+        from shapely.geometry import Point, Polygon
+    except:
+        raise ModuleNotFoundError("shapely is not installed")
 
     p = Point(point)
     poly = Polygon(vertices)
@@ -39,6 +42,7 @@ def point_in_cell(point, vertices):
         return False
 
 
+# todo: find out how this is different from get_sorted_vertices()
 def sort_vertices(vlist):
     x, y = zip(*vlist)
     x = np.array(x)
@@ -251,7 +255,12 @@ class VoronoiGrid:
             patch collection of model
 
         """
-        pc = plot_cvfd(self.verts, self.iverts, ax=ax, **kwargs)
+        from ..discretization import VertexGrid
+        from ..plot import PlotMapView
+
+        modelgrid = VertexGrid(**self.get_gridprops_vertexgrid())
+        pmv = PlotMapView(modelgrid=modelgrid, ax=ax)
+        pc = pmv.plot_grid(**kwargs)
         return pc
 
     def plot(self, ax=None, plot_title=True, **kwargs):
@@ -276,8 +285,6 @@ class VoronoiGrid:
         if ax is None:
             ax = plt.subplot(1, 1, 1, aspect="equal")
         pc = self.get_patch_collection(ax, **kwargs)
-        ax.set_xlim(self.verts[:, 0].min(), self.verts[:, 0].max())
-        ax.set_ylim(self.verts[:, 1].min(), self.verts[:, 1].max())
         if plot_title:
             ax.set_title(
                 "ncells: {}; nverts: {}".format(self.ncpl, self.nverts)

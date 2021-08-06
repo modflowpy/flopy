@@ -12,7 +12,7 @@ import warnings
 from collections import OrderedDict
 
 from ..datbase import DataType, DataInterface
-from ..utils import Util3d, SpatialReference
+from ..utils import Util3d
 
 # web address of spatial reference dot org
 srefhttp = "https://spatialreference.org"
@@ -73,7 +73,7 @@ def write_gridlines_shapefile(filename, mg):
     shapefile = import_shapefile()
     wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
     wr.field("number", "N", 18, 0)
-    if isinstance(mg, SpatialReference):
+    if mg.__class__.__name__ == "SpatialReference":
         grid_lines = mg.get_grid_lines()
         warnings.warn(
             "SpatialReference has been deprecated. Use StructuredGrid"
@@ -125,13 +125,14 @@ def write_grid_shapefile(
     w = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
     w.autoBalance = 1
 
-    if isinstance(mg, SpatialReference):
+    if mg.__class__.__name__ == "SpatialReference":
         verts = copy.deepcopy(mg.vertices)
         warnings.warn(
             "SpatialReference has been deprecated. Use StructuredGrid"
             " instead.",
             category=DeprecationWarning,
         )
+        mg.grid_type = "structured"
     elif mg.grid_type == "structured":
         verts = [
             mg.get_cell_vertices(i, j)
@@ -146,7 +147,7 @@ def write_grid_shapefile(
         raise Exception("Grid type {} not supported.".format(mg.grid_type))
 
     # set up the attribute fields and arrays of attributes
-    if isinstance(mg, SpatialReference) or mg.grid_type == "structured":
+    if mg.grid_type == "structured":
         names = ["node", "row", "column"] + list(array_dict.keys())
         dtypes = [
             ("node", np.dtype("int")),
@@ -659,7 +660,7 @@ def write_prj(shpname, mg=None, epsg=None, prj=None, wkt_string=None):
             output.write(prjtxt)
 
 
-class CRS(object):
+class CRS:
     """
     Container to parse and store coordinate reference system parameters,
     and translate between different formats.
@@ -928,8 +929,7 @@ class CRS(object):
         elif result is None and text != "epsg":
             for cat in epsg_categories:
                 error_msg = (
-                    "No internet connection or "
-                    + "epsg code {} ".format(epsg)
+                    "No internet connection or epsg code {} ".format(epsg)
                     + "not found at {}/ref/".format(srefhttp)
                     + "{}/{}/{}".format(cat, epsg, text)
                 )

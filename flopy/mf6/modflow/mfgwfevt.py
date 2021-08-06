@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 18, 2021 16:23:05 UTC
+# FILE created on August 06, 2021 20:56:59 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -439,7 +439,7 @@ class ModflowGwfevt(mfpackage.MFPackage):
         pname=None,
         parent_file=None,
     ):
-        super(ModflowGwfevt, self).__init__(
+        super().__init__(
             model, "evt", filename, pname, loading_package, parent_file
         )
 

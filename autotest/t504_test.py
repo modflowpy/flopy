@@ -76,9 +76,12 @@ def test001a_tharmonic():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
-    sim.set_all_data_external()
+    sim.set_all_data_external(external_data_folder="data")
     sim.write_simulation(silent=True)
-
+    # verify external data written to correct location
+    data_path = os.path.join(run_folder, "data", "flow15.dis_botm.txt")
+    assert os.path.exists(data_path)
+    # model export test
     model = sim.get_model(model_name)
     model.export("{}/tharmonic.nc".format(model.model_ws))
     model.export("{}/tharmonic.shp".format(model.model_ws))
@@ -925,7 +928,11 @@ def test045_lake2tr():
         head_file = os.path.join(os.getcwd(), expected_head_file_a)
         head_new = os.path.join(run_folder, "lakeex2a.hds")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new
+            None,
+            None,
+            files1=head_file,
+            files2=head_new,
+            htol=10.0,
         )
 
     # change some settings
@@ -951,7 +958,11 @@ def test045_lake2tr():
         head_file = os.path.join(os.getcwd(), expected_head_file_b)
         head_new = os.path.join(save_folder, "lakeex2a.hds")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new
+            None,
+            None,
+            files1=head_file,
+            files2=head_new,
+            htol=10.0,
         )
 
 
@@ -1082,7 +1093,12 @@ def test027_timeseriestest():
         head_new = os.path.join(run_folder, "timeseriestest.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new, outfile=outfile
+            None,
+            None,
+            files1=head_file,
+            files2=head_new,
+            outfile=outfile,
+            htol=10.0,
         )
 
     model = sim.get_model(model_name)
@@ -1105,7 +1121,11 @@ def test027_timeseriestest():
         head_file = os.path.join(os.getcwd(), expected_head_file_b)
         head_new = os.path.join(save_folder, "timeseriestest.hds")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new
+            None,
+            None,
+            files1=head_file,
+            files2=head_new,
+            htol=10.0,
         )
 
 
@@ -1140,6 +1160,73 @@ def test_replace_ims_package():
         raise AssertionError()
 
 
+def test_mf6_output():
+    sim_ws = os.path.join("..", "examples", "data", "mf6", "test001e_UZF_3lay")
+    sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws, exe_name=exe_name)
+    sim.simulation_data.mfpath.set_sim_path(cpth)
+    sim.write_simulation()
+    sim.run_simulation()
+
+    ml = sim.get_model("gwf_1")
+
+    bud = ml.oc.output.budget()
+    hds = ml.oc.output.head()
+
+    idomain = np.ones(ml.modelgrid.shape, dtype=int)
+    zonbud = ml.oc.output.zonebudget(idomain)
+
+    if not isinstance(bud, flopy.utils.CellBudgetFile):
+        raise TypeError()
+
+    if not isinstance(hds, flopy.utils.HeadFile):
+        raise TypeError()
+
+    if not isinstance(zonbud, flopy.utils.ZoneBudget6):
+        raise AssertionError()
+
+    bud = ml.output.budget()
+    hds = ml.output.head()
+    zonbud = ml.output.zonebudget(idomain)
+
+    if not isinstance(bud, flopy.utils.CellBudgetFile):
+        raise TypeError()
+
+    if not isinstance(hds, flopy.utils.HeadFile):
+        raise TypeError()
+
+    if not isinstance(zonbud, flopy.utils.ZoneBudget6):
+        raise TypeError()
+
+    uzf = ml.uzf
+    uzf_bud = uzf.output.budget()
+    conv = uzf.output.package_convergence()
+    uzf_obs = uzf.output.obs()
+    uzf_zonbud = uzf.output.zonebudget(idomain)
+
+    if not isinstance(uzf_bud, flopy.utils.CellBudgetFile):
+        raise TypeError()
+
+    if conv is not None:
+        if not isinstance(conv, flopy.utils.observationfile.CsvFile):
+            raise TypeError()
+
+    if not isinstance(uzf_obs, flopy.utils.Mf6Obs):
+        raise TypeError()
+
+    if not isinstance(uzf_zonbud, flopy.utils.ZoneBudget6):
+        raise TypeError()
+
+    if len(uzf.output.methods()) != 4:
+        print(uzf.output.__dict__)
+        raise AssertionError(", ".join(uzf.output.methods()))
+
+    if len(ml.output.methods()) != 3:
+        raise AssertionError()
+
+    if ml.dis.output.methods() is not None:
+        raise AssertionError()
+
+
 if __name__ == "__main__":
     test001a_tharmonic()
     test001e_uzf_3lay()
@@ -1153,3 +1240,4 @@ if __name__ == "__main__":
     test045_lake2tr()
     test_cbc_precision()
     test_replace_ims_package()
+    test_mf6_output()

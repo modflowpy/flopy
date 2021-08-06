@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 18, 2021 16:23:05 UTC
+# FILE created on August 06, 2021 20:57:00 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -42,7 +42,7 @@ class ModflowGwtmwt(mfpackage.MFPackage):
           specified with this name. Note that the flow package must have an
           auxiliary variable with this name or the program will terminate with
           an error. If the flows for this advanced transport package are read
-          from a file, then this option will have no affect.
+          from a file, then this option will have no effect.
     boundnames : boolean
         * boundnames (boolean) keyword to indicate that boundary names may be
           provided with the list of well cells.
@@ -574,7 +574,7 @@ class ModflowGwtmwt(mfpackage.MFPackage):
         pname=None,
         parent_file=None,
     ):
-        super(ModflowGwtmwt, self).__init__(
+        super().__init__(
             model, "mwt", filename, pname, loading_package, parent_file
         )
 

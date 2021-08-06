@@ -11,6 +11,7 @@ from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam
 from ..discretization.structuredgrid import StructuredGrid
+from ..discretization.unstructuredgrid import UnstructuredGrid
 from ..discretization.grid import Grid
 from flopy.discretization.modeltime import ModelTime
 from .mfpar import ModflowPar
@@ -58,29 +59,27 @@ class Modflow(BaseModel):
 
     Parameters
     ----------
-    modelname : string, optional
+    modelname : str, default "modflowtest"
         Name of model.  This string will be used to name the MODFLOW input
-        that are created with write_model. (the default is 'modflowtest')
-    namefile_ext : string, optional
-        Extension for the namefile (the default is 'nam')
-    version : string, optional
-        Version of MODFLOW to use (the default is 'mf2005').
-    exe_name : string, optional
-        The name of the executable to use (the default is
-        'mf2005').
-    listunit : integer, optional
-        Unit number for the list file (the default is 2).
-    model_ws : string, optional
-        model workspace.  Directory name to create model data sets.
+        that are created with write_model.
+    namefile_ext : str, default "nam"
+        Extension for the namefile.
+    version : str, default "mf2005"
+        MODFLOW version. Choose one of: "mf2k", "mf2005" (default),
+        "mfnwt", or "mfusg".
+    exe_name : str, default "mf2005.exe"
+        The name of the executable to use.
+    structured : bool, default True
+        Specify if model grid is structured (default) or unstructured.
+    listunit : int, default 2
+        Unit number for the list file.
+    model_ws : str, default "."
+        Model workspace.  Directory name to create model data sets.
         (default is the present working directory).
-    external_path : string
-        Location for external files (default is None).
-    verbose : boolean, optional
-        Print additional information to the screen (default is False).
-    load : boolean, optional
-         (default is True).
-    silent : integer
-        (default is 0)
+    external_path : str, optional
+        Location for external files.
+    verbose : bool, default False
+        Print additional information to the screen.
 
     Attributes
     ----------
@@ -96,7 +95,6 @@ class Modflow(BaseModel):
 
     Examples
     --------
-
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
 
@@ -115,8 +113,7 @@ class Modflow(BaseModel):
         verbose=False,
         **kwargs
     ):
-        BaseModel.__init__(
-            self,
+        super().__init__(
             modelname,
             namefile_ext,
             exe_name,
@@ -268,17 +265,21 @@ class Modflow(BaseModel):
 
     @property
     def modeltime(self):
+        if self.get_package("disu") is not None:
+            dis = self.disu
+        else:
+            dis = self.dis
         # build model time
         data_frame = {
-            "perlen": self.dis.perlen.array,
-            "nstp": self.dis.nstp.array,
-            "tsmult": self.dis.tsmult.array,
+            "perlen": dis.perlen.array,
+            "nstp": dis.nstp.array,
+            "tsmult": dis.tsmult.array,
         }
         self._model_time = ModelTime(
             data_frame,
-            self.dis.itmuni_dict[self.dis.itmuni],
-            self.dis.start_datetime,
-            self.dis.steady.array,
+            dis.itmuni_dict[dis.itmuni],
+            dis.start_datetime,
+            dis.steady.array,
         )
         return self._model_time
 
@@ -293,11 +294,18 @@ class Modflow(BaseModel):
             ibound = None
 
         if self.get_package("disu") is not None:
-            self._modelgrid = Grid(
-                grid_type="USG-Unstructured",
-                top=self.disu.top,
-                botm=self.disu.bot,
+            # build unstructured grid
+            self._modelgrid = UnstructuredGrid(
+                grid_type="unstructured",
+                vertices=self._modelgrid.vertices,
+                ivert=self._modelgrid.iverts,
+                xcenters=self._modelgrid.xcenters,
+                ycenters=self._modelgrid.ycenters,
+                ncpl=self.disu.nodelay.array,
+                top=self.disu.top.array,
+                botm=self.disu.bot.array,
                 idomain=ibound,
+                lenuni=self.disu.lenuni,
                 proj4=self._modelgrid.proj4,
                 epsg=self._modelgrid.epsg,
                 xoff=self._modelgrid.xoffset,
@@ -443,7 +451,7 @@ class Modflow(BaseModel):
 
     def _set_name(self, value):
         # Overrides BaseModel's setter for name property
-        BaseModel._set_name(self, value)
+        super()._set_name(value)
 
         if self.version == "mf2k":
             for i in range(len(self.glo.extension)):
@@ -478,7 +486,7 @@ class Modflow(BaseModel):
                 self.lst.file_name[0],
             )
         )
-        f_nam.write("{}".format(self.get_name_file_entries()))
+        f_nam.write(str(self.get_name_file_entries()))
 
         # write the external files
         for u, f, b, o in zip(
@@ -491,17 +499,15 @@ class Modflow(BaseModel):
                 continue
             replace_text = ""
             if o:
-                replace_text = "REPLACE"
+                replace_text = " REPLACE"
             if b:
-                line = (
-                    "DATA(BINARY)   {0:5d}  ".format(u)
-                    + f
-                    + replace_text
-                    + "\n"
+                line = "DATA(BINARY)   {:5d}  {}{}\n".format(
+                    u, f, replace_text
                 )
+
                 f_nam.write(line)
             else:
-                f_nam.write("DATA           {0:5d}  ".format(u) + f + "\n")
+                f_nam.write("DATA           {:5d}  {}\n".format(u, f))
 
         # write the output files
         for u, f, b in zip(
@@ -510,11 +516,9 @@ class Modflow(BaseModel):
             if u == 0:
                 continue
             if b:
-                f_nam.write(
-                    "DATA(BINARY)   {0:5d}  ".format(u) + f + " REPLACE\n"
-                )
+                f_nam.write("DATA(BINARY)   {:5d}  {} REPLACE\n".format(u, f))
             else:
-                f_nam.write("DATA           {0:5d}  ".format(u) + f + "\n")
+                f_nam.write("DATA           {:5d}  {}\n".format(u, f))
 
         # close the name file
         f_nam.close()
@@ -688,17 +692,18 @@ class Modflow(BaseModel):
         ----------
         f : str
             Path to MODFLOW name file to load.
-        version : str, optional
-            MODFLOW version. Default 'mf2005', although can be modified on
-            loading packages unique to different MODFLOW versions.
-        exe_name : str, optional
-            MODFLOW executable name. Default 'mf2005.exe'.
-        verbose : bool, optional
-            Show messages that can be useful for debugging. Default False.
-        model_ws : str
-            Model workspace path. Default '.' or current directory.
+        version : str, default "mf2005"
+            MODFLOW version. Choose one of: "mf2k", "mf2005" (default),
+            "mfnwt", or "mfusg". Note that this can be modified on loading
+            packages unique to different MODFLOW versions.
+        exe_name : str, default "mf2005.exe"
+            MODFLOW executable name.
+        verbose : bool, default False
+            Show messages that can be useful for debugging.
+        model_ws : str, default "."
+            Model workspace path. Default is the current directory.
         load_only : list, str or None
-            List of case insensitive filetypes to load, e.g. ["bas6", "lpf"].
+            List of case insensitive packages to load, e.g. ["bas6", "lpf"].
             One package can also be specified, e.g. "rch". Default is None,
             which attempts to load all files. An empty list [] will not load
             any additional packages than is necessary. At a minimum, "dis" or
@@ -711,16 +716,14 @@ class Modflow(BaseModel):
 
         Returns
         -------
-        ml : Modflow object
+        flopy.modflow.mf.Modflow
 
         Examples
         --------
-
         >>> import flopy
         >>> ml = flopy.modflow.Modflow.load('model.nam')
 
         """
-
         # similar to modflow command: if file does not exist , try file.nam
         namefile_path = os.path.join(model_ws, f)
         if not os.path.isfile(namefile_path) and os.path.isfile(
@@ -894,14 +897,12 @@ class Modflow(BaseModel):
                         except Exception as e:
                             ml.load_fail = True
                             if ml.verbose:
-                                msg = (
-                                    3 * " "
-                                    + "{:4s} ".format(item.filetype)
-                                    + "package load...failed\n"
-                                    + 3 * " "
-                                    + "{!s}".format(e)
+                                print(
+                                    "   {:4s} package load...failed".format(
+                                        item.filetype
+                                    )
                                 )
-                                print(msg)
+                                print("   {!s}".format(e))
                             files_not_loaded.append(item.filename)
                     else:
                         if "check" in package_load_args:
@@ -919,40 +920,31 @@ class Modflow(BaseModel):
                             )
                         files_successfully_loaded.append(item.filename)
                         if ml.verbose:
-                            msg = (
-                                3 * " "
-                                + "{:4s} ".format(item.filetype)
-                                + "package load...success"
+                            print(
+                                "   {:4s} package load...success".format(
+                                    item.filetype
+                                )
                             )
-                            print(msg)
                 else:
                     if ml.verbose:
-                        msg = (
-                            3 * " "
-                            + "{:4s} ".format(item.filetype)
-                            + "package load...skipped"
+                        print(
+                            "   {:4s} package load...skipped".format(
+                                item.filetype
+                            )
                         )
-                        print(msg)
                     files_not_loaded.append(item.filename)
             elif "data" not in item.filetype.lower():
                 files_not_loaded.append(item.filename)
                 if ml.verbose:
-                    msg = (
-                        3 * " "
-                        + "{:4s} ".format(item.filetype)
-                        + "package load...skipped"
+                    print(
+                        "   {:4s} package load...skipped".format(item.filetype)
                     )
-                    print(msg)
             elif "data" in item.filetype.lower():
                 if ml.verbose:
-                    msg = (
-                        3 * " "
-                        + "{:s} ".format(item.filetype)
-                        + "file load...skipped\n"
-                        + 6 * " "
-                        + "{}".format(os.path.basename(item.filename))
+                    print(
+                        "   {:s} package load...skipped".format(item.filetype)
                     )
-                    print(msg)
+                    print("      {}".format(os.path.basename(item.filename)))
                 if key not in ml.pop_key_list:
                     # do not add unit number (key) if it already exists
                     if key not in ml.external_units:
@@ -975,33 +967,27 @@ class Modflow(BaseModel):
                     item.filehandle.close()
             except KeyError:
                 if ml.verbose:
-                    msg = (
-                        "\nWARNING:\n    External file "
-                        + "unit {} ".format(key)
-                        + "does not exist in ext_unit_dict."
+                    print(
+                        "\nWARNING:\n    External file unit {} does not "
+                        "exist in ext_unit_dict.".format(key)
                     )
-                    print(msg)
 
         # write message indicating packages that were successfully loaded
         if ml.verbose:
-            msg = (
-                3 * " "
-                + "The following "
-                + "{} ".format(len(files_successfully_loaded))
-                + "packages were successfully loaded."
-            )
             print("")
-            print(msg)
+            print(
+                "   The following {} packages were successfully loaded.".format(
+                    len(files_successfully_loaded)
+                )
+            )
             for fname in files_successfully_loaded:
                 print("      " + os.path.basename(fname))
             if len(files_not_loaded) > 0:
-                msg = (
-                    3 * " "
-                    + "The following "
-                    + "{} ".format(len(files_not_loaded))
-                    + "packages were not loaded."
+                print(
+                    "   The following {} packages were not loaded.".format(
+                        len(files_not_loaded)
+                    )
                 )
-                print(msg)
                 for fname in files_not_loaded:
                     print("      " + os.path.basename(fname))
         if check:

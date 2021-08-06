@@ -12,13 +12,13 @@ class MFGridException(Exception):
         Exception.__init__(self, "MFGridException: {}".format(error))
 
 
-class ModelCell(object):
+class ModelCell:
     """
     Represents a model cell
 
     Parameters
     ----------
-    cellid : string
+    cellid : str
         id of model cell
 
     Methods
@@ -44,11 +44,11 @@ class UnstructuredModelCell(ModelCell):
 
     Parameters
     ----------
-    cellid : string
+    cellid : str
         id of model cell
     simulation_data : object
         contains all simulation related data
-    model_name : string
+    model_name : str
         name of the model
 
     Methods
@@ -73,10 +73,10 @@ class UnstructuredModelCell(ModelCell):
         returns the connection areas for all connections to this cell
     get_connection_anglex : ()
         returns the connection angles for all connections to this cell
-    set_top : (top_elv : float, update_connections : boolean)
+    set_top : (top_elv : float, update_connections : bool)
         sets the top elevation of the model cell and updates the connection
         properties if update_connections is true
-    set_bot : (bot_elv : float, update_connections : boolean)
+    set_bot : (bot_elv : float, update_connections : bool)
         sets the bottom elevation of the model cell and updates the connection
         properties if update_connections is true
     set_area : (area : float)
@@ -328,13 +328,13 @@ class UnstructuredModelCell(ModelCell):
                 fahl[connecting_cell - 1][rev_con_number] *= con_area_mult
 
 
-class ModelGrid(object):
+class ModelGrid:
     """
     Base class for a structured or unstructured model grid
 
     Parameters
     ----------
-    model_name : string
+    model_name : str
         name of the model
     simulation_data : object
         contains all simulation related data
@@ -421,7 +421,7 @@ class ModelGrid(object):
         ----------
         simulation_data : MFSimulationData
             object containing simulation data for a simulation
-        model_name : string
+        model_name : str
             name of a model in the simulation
         Returns
         -------
@@ -594,13 +594,14 @@ class ModelGrid(object):
             return ["node"]
 
     def get_num_spatial_coordinates(self):
-        if self.grid_type() == DiscretizationType.DIS:
+        grid_type = self.grid_type()
+        if grid_type == DiscretizationType.DIS:
             return 3
-        elif self.grid_type() == DiscretizationType.DISV:
+        elif grid_type == DiscretizationType.DISV:
             return 2
         elif (
-            self.grid_type() == DiscretizationType.DISU
-            or self.grid_type() == DiscretizationType.DISL
+            grid_type == DiscretizationType.DISU
+            or grid_type == DiscretizationType.DISL
         ):
             return 1
 
@@ -713,7 +714,7 @@ class UnstructuredModelGrid(ModelGrid):
 
     Parameters
     ----------
-    model_name : string
+    model_name : str
         name of the model
     simulation_data : object
         contains all simulation related data
@@ -734,9 +735,7 @@ class UnstructuredModelGrid(ModelGrid):
     """
 
     def __init__(self, model_name, simulation_data):
-        super(UnstructuredModelGrid, self).__init__(
-            model_name, simulation_data, DiscretizationType.DISU
-        )
+        super().__init__(model_name, simulation_data, DiscretizationType.DISU)
 
     def __getitem__(self, index):
         return UnstructuredModelCell(

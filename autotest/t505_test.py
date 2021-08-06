@@ -34,10 +34,12 @@ from flopy.mf6.modflow.mfutlobs import ModflowUtlobs
 from flopy.mf6.modflow.mfutlts import ModflowUtlts
 from flopy.mf6.utils import testutils
 from flopy.mf6.mfbase import MFDataException
+from flopy.mf6.mfbase import ExtFileAction
 
 try:
     import shapefile
-    if int(shapefile.__version__.split('.')[0]) < 2:
+
+    if int(shapefile.__version__.split(".")[0]) < 2:
         shapefile = None
 except ImportError:
     shapefile = None
@@ -251,12 +253,15 @@ def np001():
         head_filerecord=[("np001_mod.hds",)],
         saverecord={
             0: [("HEAD", "ALL"), ("BUDGET", "ALL")],
-            1: [("HEAD", "ALL"), ("BUDGET", "ALL")],
+            1: [],
         },
-        printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+        printrecord=[("HEAD", "ALL")],
     )
+    empty_sp_text = oc_package.saverecord.get_file_entry(1)
+    assert empty_sp_text == ""
     oc_package.printrecord.add_transient_key(1)
     oc_package.printrecord.set_data([("HEAD", "ALL"), ("BUDGET", "ALL")], 1)
+    oc_package.saverecord.set_data([("HEAD", "ALL"), ("BUDGET", "ALL")], 1)
 
     sto_package = ModflowGwfsto(
         model, save_flows=True, iconvert=1, ss=0.000001, sy=0.15
@@ -388,6 +393,9 @@ def np001():
     # write simulation to new location
     sim.set_all_data_external()
     sim.write_simulation()
+    assert (
+        sim.simulation_data.max_columns_of_data == dis_package.ncol.get_data()
+    )
 
     # run simulation
     if run:
@@ -404,6 +412,44 @@ def np001():
         head_file = os.path.join(os.getcwd(), expected_head_file)
         head_new = os.path.join(run_folder, "np001_mod.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
+        assert pymake.compare_heads(
+            None, None, files1=head_file, files2=head_new, outfile=outfile
+        )
+
+        budget_frf = sim.simulation_data.mfdata[
+            (model_name, "CBC", "FLOW-JA-FACE")
+        ]
+        assert array_util.array_comp(budget_frf_valid, budget_frf)
+
+        # clean up
+        sim.delete_output_files()
+
+    # test path changes, model file path relative to the simulation folder
+    md_folder = "model_folder"
+    model.set_model_relative_path(md_folder)
+    run_folder_new = os.path.join(run_folder, md_folder)
+    # set all data external
+    sim.set_all_data_external(external_data_folder="data")
+    sim.write_simulation()
+
+    assert (
+        sim.simulation_data.max_columns_of_data == dis_package.ncol.get_data()
+    )
+    # run simulation from new path with external files
+    if run:
+        sim.run_simulation()
+
+        # get expected results
+        budget_file = os.path.join(os.getcwd(), expected_cbc_file)
+        budget_obj = bf.CellBudgetFile(budget_file, precision="double")
+        budget_frf_valid = np.array(
+            budget_obj.get_data(text="FLOW-JA-FACE", full3D=True)
+        )
+
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file)
+        head_new = os.path.join(run_folder_new, "np001_mod.hds")
+        outfile = os.path.join(run_folder_new, "head_compare.dat")
         assert pymake.compare_heads(
             None, None, files1=head_file, files2=head_new, outfile=outfile
         )
@@ -510,6 +556,58 @@ def np001():
                 found_cellid = True
     assert found_cellid
 
+    # test empty stress period
+    well_spd = {0: [(-1, -1, -1, -2000.0), (0, 0, 7, -2.0)], 1: []}
+    wel_package = ModflowGwfwel(
+        model,
+        print_input=True,
+        print_flows=True,
+        save_flows=True,
+        maxbound=2,
+        stress_period_data=well_spd,
+    )
+    wel_package.write()
+    found_begin = False
+    found_end = False
+    text_between_begin_and_end = False
+    with open(os.path.join(mpath, "np001_mod.wel"), "r") as fd:
+        for line in fd:
+            if line.strip().lower() == "begin period  2":
+                found_begin = True
+            elif found_begin and not found_end:
+                if line.strip().lower() == "end period  2":
+                    found_end = True
+                else:
+                    if len(line.strip()) > 0:
+                        text_between_begin_and_end = True
+    assert found_begin and found_end and not text_between_begin_and_end
+
+    # test loading and re-writing empty stress period
+    test_sim = MFSimulation.load(
+        test_ex_name,
+        "mf6",
+        exe_name,
+        run_folder,
+        write_headers=False,
+    )
+    wel = test_sim.get_model().wel
+    wel._filename = "np001_spd_test.wel"
+    wel.write()
+    found_begin = False
+    found_end = False
+    text_between_begin_and_end = False
+    with open(os.path.join(mpath, "np001_spd_test.wel"), "r") as fd:
+        for line in fd:
+            if line.strip().lower() == "begin period  2":
+                found_begin = True
+            elif found_begin and not found_end:
+                if line.strip().lower() == "end period  2":
+                    found_end = True
+                else:
+                    if len(line.strip()) > 0:
+                        text_between_begin_and_end = True
+    assert found_begin and found_end and not text_between_begin_and_end
+
     return
 
 
@@ -538,6 +636,8 @@ def np002():
         sim_ws=run_folder,
         nocheck=True,
     )
+    sim.simulation_data.max_columns_of_data = 22
+
     name = sim.name_file
     assert name.continue_.get_data() == None
     assert name.nocheck.get_data() == True
@@ -603,6 +703,9 @@ def np002():
         idomain=2,
         filename="{}.dis".format(model_name),
     )
+    assert sim.simulation_data.max_columns_of_data == 22
+    sim.simulation_data.max_columns_of_data = dis_package.ncol.get_data()
+
     ic_vals = [
         100.0,
         100.0,
@@ -657,6 +760,7 @@ def np002():
         maxbound=1,
         stress_period_data=[((0, 0, 9), 125.0, 60.0)],
     )
+
     rch_package = ModflowGwfrch(
         model,
         print_input=True,
@@ -667,7 +771,6 @@ def np002():
 
     # write simulation to new location
     sim.write_simulation()
-
     assert os.path.isfile(top_data_file)
 
     if run:
@@ -735,6 +838,43 @@ def np002():
         "checker threshold of 0.5" in summary
     )
     assert "Not a number" in summary
+
+    # check case where aux variable defined and stress period data has empty
+    # stress period
+    model.remove_package("ghb")
+    ghb_package = ModflowGwfghb(
+        model,
+        print_input=True,
+        print_flows=True,
+        maxbound=1,
+        stress_period_data={0: [((0, 0, 9), 125.0, 60.0, 0.0)], 1: [()]},
+        auxiliary=["CONCENTRATION"],
+    )
+    sim.write_simulation()
+    sim2 = MFSimulation.load(
+        sim_name=test_ex_name,
+        version="mf6",
+        exe_name=exe_name,
+        sim_ws=run_folder,
+    )
+    md2 = sim2.get_model()
+    ghb2 = md2.get_package("ghb")
+    spd2 = ghb2.stress_period_data.get_data(1)
+    assert spd2 is None
+
+    # test paths
+    sim_path_test = os.path.join(run_folder, "sim_path")
+    sim.set_sim_path(sim_path_test)
+    model.set_model_relative_path("model")
+    # make external data folder path relative to simulation folder
+    ext_folder = os.path.join("..", "data")
+    sim.set_all_data_external(external_data_folder=ext_folder)
+    sim.write_simulation()
+    # test
+    ext_full_path = os.path.join(sim_path_test, "data")
+    assert os.path.exists(
+        os.path.join(ext_full_path, "np002_mod.dis_botm.txt")
+    )
 
     return
 
@@ -1134,6 +1274,28 @@ def test005_advgw_tidal():
         timeseries=ts_dict,
     )
 
+    # test nseg = 1
+    evt_period = ModflowGwfevt.stress_period_data.empty(model, 150, nseg=1)
+    for col in range(0, 10):
+        for row in range(0, 15):
+            evt_period[0][col * 15 + row] = (
+                (0, row, col),
+                50.0,
+                0.0004,
+                10.0,
+                None,
+            )
+    evt_package_test = ModflowGwfevt(
+        model,
+        print_input=True,
+        print_flows=True,
+        save_flows=True,
+        maxbound=150,
+        nseg=1,
+        stress_period_data=evt_period,
+    )
+    evt_package_test.remove()
+
     # test empty
     evt_period = ModflowGwfevt.stress_period_data.empty(model, 150, nseg=3)
     for col in range(0, 10):
@@ -1264,7 +1426,15 @@ def test005_advgw_tidal():
             ("rv2-upper", "RIV", "riv2_upper"),
             ("rv-2-7-4", "RIV", (0, 6, 3)),
             ("rv2-8-5", "RIV", (0, 6, 4)),
-            ("rv-2-9-6", "RIV", (0, 5, 5,)),
+            (
+                "rv-2-9-6",
+                "RIV",
+                (
+                    0,
+                    5,
+                    5,
+                ),
+            ),
         ],
         "riv_flowsA.csv": [
             ("riv1-3-1", "RIV", (0, 2, 0)),
@@ -2416,7 +2586,6 @@ def test006_2models_gnc():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
-    sim.set_all_data_external()
     sim.write_simulation()
 
     # run simulation
@@ -2438,6 +2607,24 @@ def test006_2models_gnc():
         assert pymake.compare_heads(
             None, None, files1=head_file, files2=head_new, outfile=outfile
         )
+
+    # test external file paths
+    sim_path = os.path.join(run_folder, "path_test")
+    sim.simulation_data.mfpath.set_sim_path(sim_path)
+    model_1.set_model_relative_path("model1")
+    model_2.set_model_relative_path("model2")
+    sim.set_all_data_external(external_data_folder="data")
+    sim.write_simulation()
+    ext_file_path_1 = os.path.join(
+        sim_path, "model1", "data", "model1.dis_botm.txt"
+    )
+    assert os.path.exists(ext_file_path_1)
+    ext_file_path_2 = os.path.join(
+        sim_path, "model2", "data", "model2.dis_botm.txt"
+    )
+    assert os.path.exists(ext_file_path_2)
+    if run:
+        sim.run_simulation()
 
         # clean up
         sim.delete_output_files()
@@ -2807,13 +2994,252 @@ def test028_sfr():
         head_new = os.path.join(run_folder, "test1tr.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new, outfile=outfile
+            None,
+            None,
+            files1=head_file,
+            files2=head_new,
+            outfile=outfile,
+            htol=10.0,
         )
 
         # clean up
         sim.delete_output_files()
 
     return
+
+
+def test_transport():
+    # init paths
+    test_ex_name = "test_transport"
+    name = "mst03"
+
+    pth = os.path.join(
+        "..", "examples", "data", "mf6", "create_tests", test_ex_name
+    )
+    run_folder = os.path.join(cpth, test_ex_name)
+    if not os.path.isdir(run_folder):
+        os.makedirs(run_folder)
+
+    expected_output_folder = os.path.join(pth, "expected_output")
+    expected_head_file = os.path.join(expected_output_folder, "gwf_mst03.hds")
+    expected_conc_file = os.path.join(expected_output_folder, "gwt_mst03.unc")
+
+    ws = os.path.join("temp", "t505", test_ex_name)
+    laytyp = [1]
+    ss = [1.0e-10]
+    sy = [0.1]
+    nlay, nrow, ncol = 1, 1, 1
+
+    nper = 2
+    perlen = [2.0, 2.0]
+    nstp = [14, 14]
+    tsmult = [1.0, 1.0]
+    delr = 10.0
+    delc = 10.0
+    top = 10.0
+    botm = [0.0]
+    strt = top
+    hk = 1.0
+
+    nouter, ninner = 100, 300
+    hclose, rclose, relax = 1e-6, 1e-6, 0.97
+
+    tdis_rc = []
+    for idx in range(nper):
+        tdis_rc.append((perlen[idx], nstp[idx], tsmult[idx]))
+    idx = 0
+
+    # build MODFLOW 6 files
+    sim = flopy.mf6.MFSimulation(
+        sim_name=name, version="mf6", exe_name="mf6", sim_ws=ws
+    )
+    # create tdis package
+    tdis = flopy.mf6.ModflowTdis(
+        sim, time_units="DAYS", nper=nper, perioddata=tdis_rc
+    )
+
+    # create gwf model
+    gwfname = "gwf_" + name
+    newtonoptions = ["NEWTON", "UNDER_RELAXATION"]
+    gwf = flopy.mf6.ModflowGwf(
+        sim,
+        modelname=gwfname,
+        newtonoptions=newtonoptions,
+    )
+
+    # create iterative model solution and register the gwf model with it
+    imsgwf = flopy.mf6.ModflowIms(
+        sim,
+        print_option="SUMMARY",
+        outer_dvclose=hclose,
+        outer_maximum=nouter,
+        under_relaxation="DBD",
+        under_relaxation_theta=0.7,
+        inner_maximum=ninner,
+        inner_dvclose=hclose,
+        rcloserecord=rclose,
+        linear_acceleration="BICGSTAB",
+        scaling_method="NONE",
+        reordering_method="NONE",
+        relaxation_factor=relax,
+        filename="{}.ims".format(gwfname),
+    )
+    sim.register_ims_package(imsgwf, [gwf.name])
+
+    dis = flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=delr,
+        delc=delc,
+        top=top,
+        botm=botm,
+        idomain=np.ones((nlay, nrow, ncol), dtype=int),
+    )
+
+    # initial conditions
+    ic = flopy.mf6.ModflowGwfic(gwf, strt=strt)
+
+    # node property flow
+    npf = flopy.mf6.ModflowGwfnpf(
+        gwf, save_flows=False, icelltype=laytyp[idx], k=hk, k33=hk
+    )
+    # storage
+    sto = flopy.mf6.ModflowGwfsto(
+        gwf,
+        save_flows=False,
+        iconvert=laytyp[idx],
+        ss=ss[idx],
+        sy=sy[idx],
+        steady_state={0: False},
+        transient={0: True},
+    )
+
+    # wel files
+    welspdict = {0: [[(0, 0, 0), -25.0, 0.0]], 1: [[(0, 0, 0), 25.0, 0.0]]}
+    wel = flopy.mf6.ModflowGwfwel(
+        gwf,
+        print_input=True,
+        print_flows=True,
+        stress_period_data=welspdict,
+        save_flows=False,
+        auxiliary="CONCENTRATION",
+        pname="WEL-1",
+    )
+
+    # output control
+    oc = flopy.mf6.ModflowGwfoc(
+        gwf,
+        budget_filerecord="{}.cbc".format(gwfname),
+        head_filerecord="{}.hds".format(gwfname),
+        headprintrecord=[("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "GENERAL")],
+        saverecord=[("HEAD", "ALL")],
+        printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
+
+    # create gwt model
+    gwtname = "gwt_" + name
+    gwt = flopy.mf6.MFModel(
+        sim,
+        model_type="gwt6",
+        modelname=gwtname,
+        model_nam_file="{}.nam".format(gwtname),
+    )
+
+    # create iterative model solution and register the gwt model with it
+    imsgwt = flopy.mf6.ModflowIms(
+        sim,
+        print_option="SUMMARY",
+        outer_dvclose=hclose,
+        outer_maximum=nouter,
+        under_relaxation="NONE",
+        inner_maximum=ninner,
+        inner_dvclose=hclose,
+        rcloserecord=rclose,
+        linear_acceleration="BICGSTAB",
+        scaling_method="NONE",
+        reordering_method="NONE",
+        relaxation_factor=relax,
+        filename="{}.ims".format(gwtname),
+    )
+    sim.register_ims_package(imsgwt, [gwt.name])
+
+    dis = flopy.mf6.ModflowGwtdis(
+        gwt,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=delr,
+        delc=delc,
+        top=top,
+        botm=botm,
+        idomain=1,
+        filename="{}.dis".format(gwtname),
+    )
+
+    # initial conditions
+    ic = flopy.mf6.ModflowGwtic(gwt, strt=100.0)
+
+    # advection
+    adv = flopy.mf6.ModflowGwtadv(
+        gwt, scheme="UPSTREAM", filename="{}.adv".format(gwtname)
+    )
+
+    # mass storage and transfer
+    mst = flopy.mf6.ModflowGwtmst(
+        gwt, porosity=sy[idx], filename="{}.mst".format(gwtname)
+    )
+
+    # sources
+    sourcerecarray = [("WEL-1", "AUX", "CONCENTRATION")]
+    ssm = flopy.mf6.ModflowGwtssm(
+        gwt, sources=sourcerecarray, filename="{}.ssm".format(gwtname)
+    )
+
+    # output control
+    oc = flopy.mf6.ModflowGwtoc(
+        gwt,
+        budget_filerecord="{}.cbc".format(gwtname),
+        concentration_filerecord="{}.ucn".format(gwtname),
+        concentrationprintrecord=[
+            ("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "GENERAL")
+        ],
+        saverecord=[("CONCENTRATION", "ALL")],
+        printrecord=[("CONCENTRATION", "ALL"), ("BUDGET", "ALL")],
+    )
+
+    # GWF GWT exchange
+    gwfgwt = flopy.mf6.ModflowGwfgwt(
+        sim,
+        exgtype="GWF6-GWT6",
+        exgmnamea=gwfname,
+        exgmnameb=gwtname,
+        filename="{}.gwfgwt".format(name),
+    )
+
+    # write MODFLOW 6 files
+    sim.write_simulation()
+
+    # run simulation
+    if run:
+        sim.run_simulation()
+
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file)
+        head_new = os.path.join(run_folder, "gwf_mst03.hds")
+        outfile = os.path.join(run_folder, "head_compare.dat")
+        assert pymake.compare_heads(
+            None, None, files1=head_file, files2=head_new, outfile=outfile
+        )
+        conc_file = os.path.join(os.getcwd(), expected_conc_file)
+        conc_new = os.path.join(run_folder, "gwt_mst03.ucn")
+        assert pymake.compare_concs(
+            None, None, files1=conc_file, files2=conc_new, outfile=outfile
+        )
+
+        # clean up
+        sim.delete_output_files()
 
 
 if __name__ == "__main__":
@@ -2827,3 +3253,4 @@ if __name__ == "__main__":
     test028_sfr()
     test035_fhb()
     test050_circle_island()
+    test_transport()

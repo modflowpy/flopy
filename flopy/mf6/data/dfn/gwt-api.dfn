@@ -1,0 +1,96 @@
+# --------------------- gwt api options ---------------------
+
+block options
+name boundnames
+type keyword
+shape
+reader urword
+optional true
+longname
+description REPLACE boundnames {'{#1}': 'api boundary'}
+
+block options
+name print_input
+type keyword
+reader urword
+optional true
+longname print input to listing file
+description REPLACE print_input {'{#1}': 'api boundary'}
+
+block options
+name print_flows
+type keyword
+reader urword
+optional true
+longname print calculated flows to listing file
+description REPLACE print_flows {'{#1}': 'api boundary'}
+
+block options
+name save_flows
+type keyword
+reader urword
+optional true
+longname save api flows to budget file
+description REPLACE save_flows {'{#1}': 'api boundary'}
+
+block options
+name obs_filerecord
+type record obs6 filein obs6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name obs6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname obs keyword
+description keyword to specify that record corresponds to an observations file.
+
+block options
+name filein
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block options
+name obs6_filename
+type string
+preserve_case true
+in_record true
+tagged false
+reader urword
+optional false
+longname obs6 input filename
+description REPLACE obs6_filename {'{#1}': 'api boundary'}
+
+block options
+name mover
+type keyword
+tagged true
+reader urword
+optional true
+longname
+description REPLACE mover {'{#1}': 'api boundary'}
+
+# --------------------- gwt api dimensions ---------------------
+
+block dimensions
+name maxbound
+type integer
+reader urword
+optional false
+longname maximum number of user-defined api boundaries
+description REPLACE maxbound {'{#1}': 'api boundary'}

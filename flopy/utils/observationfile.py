@@ -1,11 +1,12 @@
 import numpy as np
-
+import io
 from ..utils.utils_def import FlopyBinaryData
+from ..utils.flopy_io import get_ts_sp
 
 
 class ObsFiles(FlopyBinaryData):
     def __init__(self):
-        super(ObsFiles, self).__init__()
+        super().__init__()
         return
 
     def get_times(self):
@@ -227,7 +228,6 @@ class ObsFiles(FlopyBinaryData):
                 elif r.size == 0:
                     break
                 else:
-                    # should be hstack based on (https://mail.scipy.org/pipermail/numpy-discussion/2010-June/051107.html)
                     self.data = np.hstack((self.data, r))
             except:
                 break
@@ -239,7 +239,8 @@ class ObsFiles(FlopyBinaryData):
         to the position in the formatted file.
         """
         raise Exception(
-            "Abstract method _build_dtype called in BinaryFiles.  This method needs to be overridden."
+            "Abstract method _build_dtype called in BinaryFiles. "
+            "This method needs to be overridden."
         )
 
     def _build_index(self):
@@ -248,7 +249,8 @@ class ObsFiles(FlopyBinaryData):
         to the position in the formatted file.
         """
         raise Exception(
-            "Abstract method _build_index called in BinaryFiles.  This method needs to be overridden."
+            "Abstract method _build_index called in BinaryFiles. "
+            "This method needs to be overridden."
         )
 
 
@@ -263,8 +265,10 @@ class Mf6Obs(ObsFiles):
     verbose : boolean
         If true, print additional information to to the screen during the
         extraction.  (default is False)
-    hydlbl_len : int
-        Length of hydmod labels. (default is 20)
+    isBinary : str, bool
+        default is "auto", code will attempt to automatically check if
+        file is binary. User can change this to True or False if the auto
+        check fails to work
 
     Returns
     -------
@@ -272,14 +276,25 @@ class Mf6Obs(ObsFiles):
 
     """
 
-    def __init__(self, filename, verbose=False, isBinary=True):
+    def __init__(self, filename, verbose=False, isBinary="auto"):
         """
         Class constructor.
 
         """
-        super(Mf6Obs, self).__init__()
+        super().__init__()
         # initialize class information
         self.verbose = verbose
+
+        # check if this is a binary file
+        if isBinary == "auto":
+            with open(filename) as foo:
+                if isinstance(foo, io.TextIOBase):
+                    isBinary = False
+                elif isinstance(foo, (io.RawIOBase, io.BufferedIOBase)):
+                    isBinary = True
+                else:
+                    err = "Could not determine if file is binary or ascii"
+                    raise IOError(err)
         if isBinary:
             # --open binary head file
             self.file = open(filename, "rb")
@@ -307,7 +322,7 @@ class Mf6Obs(ObsFiles):
             self.obsnames = np.array(obsnames)
 
             # build dtype
-            self._build_dtype()
+            self.dtype = _build_dtype(self.obsnames, self.floattype)
 
             # build index
             self._build_index()
@@ -315,47 +330,11 @@ class Mf6Obs(ObsFiles):
             self.data = None
             self._read_data()
         else:
-            # --open binary head file
-            self.file = open(filename, "r")
-
-            # read header line
-            line = self.file.readline()
-            t = line.rstrip().split(",")
-            self.set_float("double")
-
-            # get number of observations
-            self.nobs = len(t) - 1
-
-            # set obsnames
-            obsnames = []
-            for idx in range(1, self.nobs + 1):
-                obsnames.append(t[idx])
-            self.obsnames = np.array(obsnames)
-
-            # build dtype
-            self._build_dtype()
-
-            # build index
-            self._build_index()
-
             # read ascii data
-            self.data = np.loadtxt(
-                self.file, dtype=self.dtype, delimiter=",", ndmin=1
-            )
-        return
-
-    def _build_dtype(self):
-
-        # create dtype
-        dtype = [("totim", self.floattype)]
-        for site in self.obsnames:
-            if not isinstance(site, str):
-                site_name = site.decode().strip()
-            else:
-                site_name = site.strip()
-            dtype.append((site_name, self.floattype))
-        self.dtype = np.dtype(dtype)
-        return
+            csv = CsvFile(filename)
+            self.obsnames = csv.obsnames
+            self.nobs = csv.nobs
+            self.data = csv.data
 
     def _build_index(self):
         return
@@ -386,7 +365,7 @@ class HydmodObs(ObsFiles):
         Class constructor.
 
         """
-        super(HydmodObs, self).__init__()
+        super().__init__()
         # initialize class information
         self.verbose = verbose
         # --open binary head file
@@ -413,26 +392,13 @@ class HydmodObs(ObsFiles):
         self.hydlbl = np.array(hydlbl)
 
         # build dtype
-        self._build_dtype()
+        self.dtype = _build_dtype(self.hydlbl, self.floattype)
 
         # build index
         self._build_index()
 
         self.data = None
         self._read_data()
-
-    def _build_dtype(self):
-
-        # create dtype
-        dtype = [("totim", self.floattype)]
-        for site in self.hydlbl:
-            if not isinstance(site, str):
-                site_name = site.decode().strip()
-            else:
-                site_name = site.strip()
-            dtype.append((site_name, self.floattype))
-        self.dtype = np.dtype(dtype)
-        return
 
     def _build_index(self):
         return
@@ -477,7 +443,7 @@ class SwrObs(ObsFiles):
         Class constructor.
 
         """
-        super(SwrObs, self).__init__()
+        super().__init__()
         self.set_float(precision=precision)
         # initialize class information
         self.verbose = verbose
@@ -516,6 +482,76 @@ class SwrObs(ObsFiles):
         return
 
 
+class CsvFile:
+    """
+    Class for reading csv based output files
+
+    Parameters
+    ----------
+    csvfile : str
+        csv file name
+    delimiter : str
+        optional delimiter for the csv or formatted text file,
+        defaults to ","
+
+    """
+
+    def __init__(self, csvfile, delimiter=","):
+
+        self.file = open(csvfile, "r")
+        self.delimiter = delimiter
+
+        # read header line
+        line = self.file.readline()
+        self._header = line.rstrip().split(delimiter)
+        self.floattype = "f8"
+        self.dtype = _build_dtype(self._header, self.floattype)
+
+        self.data = self.read_csv(self.file, self.dtype, delimiter)
+
+    @property
+    def obsnames(self):
+        """
+        Method to get the observation names
+
+        Returns
+        -------
+        list
+        """
+        return [i for i in self._header if i.lower() != "totim"]
+
+    @property
+    def nobs(self):
+        """
+        Method to get the number of observations
+
+        Returns
+        -------
+        int
+        """
+        return len(self.obsnames)
+
+    @staticmethod
+    def read_csv(fobj, dtype, delimiter=","):
+        """
+
+        Parameters
+        ----------
+        fobj : file object
+            open text file object to read
+        dtype : np.dtype
+        delimiter : str
+            optional delimiter for the csv or formatted text file,
+            defaults to ","
+
+        Returns
+        -------
+        np.recarray
+        """
+        arr = np.genfromtxt(fobj, dtype=dtype, delimiter=delimiter)
+        return arr.view(np.recarray)
+
+
 def get_selection(data, names):
     """
 
@@ -545,3 +581,123 @@ def get_selection(data, names):
     # Valid list of names so make a selection
     dtype2 = np.dtype({name: data.dtype.fields[name] for name in names})
     return np.ndarray(data.shape, dtype2, data, 0, data.strides)
+
+
+def _build_dtype(obsnames, floattype="f4"):
+    """
+    Generic method to build observation file dtypes
+
+    Parameters
+    ----------
+    obsnames : list
+        observation names (column headers)
+    floattype : str
+        floating point type "f4" or "f8"
+
+    Returns
+    -------
+    np.dtype object
+
+    """
+    dtype = []
+    if "time" in obsnames or "TIME" in obsnames:
+        try:
+            idx = obsnames.index("time")
+        except ValueError:
+            idx = obsnames.index("TIME")
+        obsnames[idx] = "totim"
+
+    elif "totim" not in obsnames:
+        dtype = [("totim", floattype)]
+
+    for site in obsnames:
+        if not isinstance(site, str):
+            site_name = site.decode().strip()
+        else:
+            site_name = site.strip()
+
+        if site_name in ("KPER", "KSTP", "NULL"):
+            dtype.append((site_name, int))
+        else:
+            dtype.append((site_name, floattype))
+
+    return np.dtype(dtype)
+
+
+def get_reduced_pumping(f, structured=True):
+    """
+    Method to read reduced pumping from a list file or an external
+    reduced pumping observation file
+
+    Parameters
+    ----------
+    f : str
+        file name
+    structured : bool
+        boolean flag to indicate if model is Structured or USG model. Defaults
+        to True (structured grid).
+
+    Returns
+    -------
+        np.recarray : recarray of reduced pumping records.
+
+    """
+    # Set dtypes for resulting data
+    if structured:
+        dtype = np.dtype(
+            [
+                ("SP", int),
+                ("TS", int),
+                ("LAY", int),
+                ("ROW", int),
+                ("COL", int),
+                ("APPL.Q", float),
+                ("ACT.Q", float),
+                ("GW-HEAD", float),
+                ("CELL-BOT", float),
+            ]
+        )
+
+        key = "WELLS WITH REDUCED PUMPING FOR STRESS PERIOD"
+    else:
+        dtype = np.dtype(
+            [
+                ("SP", int),
+                ("TS", int),
+                ("WELL.NO", int),
+                ("CLN NODE", int),
+                ("APPL.Q", float),
+                ("ACT.Q", float),
+                ("GW_HEAD", float),
+                ("CELL_BOT", float),
+            ]
+        )
+
+        key = "WELLS WITH REDUCED PUMPING FOR STRESS PERIOD"
+
+    with open(f) as foo:
+        data = []
+        while True:
+            line = foo.readline()
+            if line == "":
+                break
+            # If l is reduced ppg header row
+            if key in line:
+                # Extract sp and ts
+                ts, sp = get_ts_sp(line)
+                # Skip line of data column titles
+                foo.readline()
+                # Iterate through lines of reduced ppg data
+                while True:
+                    line = foo.readline()
+                    # Condition to exit loop
+                    if len(line.strip().split()) < 6:
+                        break
+                    # Create list of hold line of data
+                    ls = [sp, ts]
+                    # Add other data to list
+                    ls.extend([float(x) for x in line.split()])
+                    # Add list to overall list of data
+                    data.append(tuple(ls))
+
+    return np.rec.fromrecords(data, dtype=dtype)

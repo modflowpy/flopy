@@ -31,7 +31,7 @@ class BinaryHeader(Header):
     """
 
     def __init__(self, bintype=None, precision="single"):
-        super(BinaryHeader, self).__init__(bintype, precision)
+        super().__init__(bintype, precision)
 
     def set_values(self, **kwargs):
         """
@@ -261,11 +261,10 @@ def get_headfile_precision(filename):
             result = "double"
         except:
             f.close()
-            e = (
+            raise IOError(
                 "Could not determine the precision of "
-                + "the headfile {}".format(filename)
+                "the headfile {}".format(filename)
             )
-            raise IOError(e)
 
     # close and return result
     f.close()
@@ -280,9 +279,7 @@ class BinaryLayerFile(LayerFile):
     """
 
     def __init__(self, filename, precision, verbose, kwargs):
-        super(BinaryLayerFile, self).__init__(
-            filename, precision, verbose, kwargs
-        )
+        super().__init__(filename, precision, verbose, kwargs)
         return
 
     def __enter__(self):
@@ -300,6 +297,9 @@ class BinaryLayerFile(LayerFile):
         header = self._get_header()
         self.nrow = header["nrow"]
         self.ncol = header["ncol"]
+        if header["ilay"] > self.nlay:
+            self.nlay = header["ilay"]
+
         if self.nrow < 0 or self.ncol < 0:
             raise Exception("negative nrow, ncol")
         if self.nrow > 1 and self.nrow * self.ncol > 10000000:
@@ -492,7 +492,7 @@ class HeadFile(BinaryLayerFile):
         self.header_dtype = BinaryHeader.set_dtype(
             bintype="Head", precision=precision
         )
-        super(HeadFile, self).__init__(filename, precision, verbose, kwargs)
+        super().__init__(filename, precision, verbose, kwargs)
         return
 
 
@@ -562,7 +562,7 @@ class UcnFile(BinaryLayerFile):
         self.header_dtype = BinaryHeader.set_dtype(
             bintype="Ucn", precision=precision
         )
-        super(UcnFile, self).__init__(filename, precision, verbose, kwargs)
+        super().__init__(filename, precision, verbose, kwargs)
         return
 
 
@@ -570,7 +570,7 @@ class BudgetIndexError(Exception):
     pass
 
 
-class CellBudgetFile(object):
+class CellBudgetFile:
     """
     CellBudgetFile Class.
 
@@ -641,11 +641,10 @@ class CellBudgetFile(object):
             self.dis = kwargs.pop("dis")
             self.modelgrid = self.dis.parent.modelgrid
         if "sr" in kwargs.keys():
-            from ..utils import SpatialReferenceUnstructured
             from ..discretization import StructuredGrid, UnstructuredGrid
 
             sr = kwargs.pop("sr")
-            if isinstance(sr, SpatialReferenceUnstructured):
+            if sr.__class__.__name__ == "SpatialReferenceUnstructured":
                 self.modelgrid = UnstructuredGrid(
                     vertices=sr.verts,
                     iverts=sr.iverts,
@@ -653,7 +652,7 @@ class CellBudgetFile(object):
                     ycenters=sr.yc,
                     ncpl=sr.ncpl,
                 )
-            else:
+            elif sr.__class__.__name__ == "SpatialReference":
                 self.modelgrid = StructuredGrid(
                     delc=sr.delc,
                     delr=sr.delr,
@@ -682,10 +681,10 @@ class CellBudgetFile(object):
             raise Exception("Unknown precision specified: " + precision)
 
         if not success:
-            s = "Budget file could not be read using {} " "precision".format(
-                precision
+            raise Exception(
+                "Budget file could not be read using "
+                "{} precision".format(precision)
             )
-            raise Exception(s)
 
         return
 
@@ -1019,11 +1018,10 @@ class CellBudgetFile(object):
                     paknam16 = t
                     break
             if paknam16 is None:
-                errmsg = (
+                raise Exception(
                     "The specified package name string is not "
-                    + "in the budget file."
+                    "in the budget file."
                 )
-                raise Exception(errmsg)
         return paknam16
 
     def list_records(self):
@@ -1370,11 +1368,10 @@ class CellBudgetFile(object):
         """
         # issue exception if text not provided
         if text is None:
-            etxt = (
+            raise Exception(
                 "text keyword must be provided to CellBudgetFile "
-                + "get_ts() method."
+                "get_ts() method."
             )
-            raise Exception(etxt)
 
         kijlist = self._build_kijlist(idx)
         nstation = self._get_nstation(idx, kijlist)
@@ -1391,12 +1388,11 @@ class CellBudgetFile(object):
                 if isinstance(times, np.ndarray):
                     times = times.tolist()
                 if len(times) != len(kk):
-                    etxt = (
+                    raise Exception(
                         "times passed to CellBudgetFile get_ts() "
-                        + "method must be equal to {} ".format(len(kk))
-                        + "not {}".format(len(times))
+                        "method must be equal to {} "
+                        "not {}".format(len(kk), len(times))
                     )
-                    raise Exception(etxt)
                 timesint = times
         for idx, t in enumerate(timesint):
             result[idx, 0] = t
@@ -1456,12 +1452,6 @@ class CellBudgetFile(object):
         # the seek approach won't work.  Can't use k = -1, for example.
         for k, i, j in kijlist:
             fail = False
-            errmsg = (
-                "Invalid cell index. Cell "
-                + str((k, i, j))
-                + " not within model grid: "
-                + str((self.nlay, self.nrow, self.ncol))
-            )
             if k < 0 or k > self.nlay - 1:
                 fail = True
             if i < 0 or i > self.nrow - 1:
@@ -1469,7 +1459,10 @@ class CellBudgetFile(object):
             if j < 0 or j > self.ncol - 1:
                 fail = True
             if fail:
-                raise Exception(errmsg)
+                raise Exception(
+                    "Invalid cell index. Cell {} not within model grid: "
+                    "{}".format((k, i, j), (self.nlay, self.nrow, self.ncol))
+                )
         return kijlist
 
     def _get_nstation(self, idx, kijlist):
@@ -1562,11 +1555,11 @@ class CellBudgetFile(object):
             dtype = np.dtype([("node", np.int32), ("q", self.realtype)])
             if self.verbose:
                 if full3D:
-                    s += "a numpy masked array of size ({},{},{})".format(
+                    s += "a numpy masked array of size ({}, {}, {})".format(
                         nlay, nrow, ncol
                     )
                 else:
-                    s += "a numpy recarray of size (" + str(nlist) + ", 2)"
+                    s += "a numpy recarray of size ({}, 2)".format(nlist)
                 print(s)
             data = binaryread(self.file, dtype, shape=(nlist,))
             if full3D:
@@ -1580,17 +1573,17 @@ class CellBudgetFile(object):
             data = binaryread(self.file, self.realtype(1), shape=(nrow, ncol))
             if self.verbose:
                 if full3D:
-                    s += "a numpy masked array of size ({},{},{})".format(
+                    s += "a numpy masked array of size ({}, {}, {})".format(
                         nlay, nrow, ncol
                     )
                 else:
-                    s += "a list of two 2D numpy arrays.  "
                     s += (
-                        "The first is an integer layer array of shape  "
-                        + str((nrow, ncol))
-                    )
-                    s += "The second is real data array of shape  " + str(
-                        (nrow, ncol)
+                        "a list of two 2D numpy arrays.  "
+                        "The first is an integer layer array of shape {}.  "
+                        "The second is real data array of shape {}".format(
+                            (nrow, ncol),
+                            (nrow, ncol),
+                        )
                     )
                 print(s)
             if full3D:
@@ -1605,7 +1598,7 @@ class CellBudgetFile(object):
         # imeth 4
         elif imeth == 4:
             if self.verbose:
-                s += "a 2d numpy array of size ({},{})".format(nrow, ncol)
+                s += "a 2d numpy array of size ({}, {})".format(nrow, ncol)
                 print(s)
             return binaryread(self.file, self.realtype(1), shape=(nrow, ncol))
 
@@ -1624,17 +1617,15 @@ class CellBudgetFile(object):
             data = binaryread(self.file, dtype, shape=(nlist,))
             if full3D:
                 if self.verbose:
-                    s += "a list array of shape ({},{},{})".format(
+                    s += "a list array of shape ({}, {}, {})".format(
                         nlay, nrow, ncol
                     )
                     print(s)
                 return self.create3D(data, nlay, nrow, ncol)
             else:
                 if self.verbose:
-                    s += (
-                        "a numpy recarray of size ("
-                        + str(nlist)
-                        + ", {})".format(2 + naux)
+                    s += "a numpy recarray of size ({}, {})".format(
+                        nlist, 2 + naux
                     )
                     print(s)
                 return data.view(np.recarray)
@@ -1657,13 +1648,13 @@ class CellBudgetFile(object):
                 if full3D:
                     s += (
                         "full 3D arrays not supported for "
-                        + "imeth = {}".format(imeth)
+                        "imeth = {}".format(imeth)
                     )
                 else:
-                    s += "a numpy recarray of size (" + str(nlist) + ", 2)"
+                    s += "a numpy recarray of size ({}, 2)".format(nlist)
                 print(s)
             if full3D:
-                s += "full 3D arrays not supported for " + "imeth = {}".format(
+                s += "full 3D arrays not supported for imeth = {}".format(
                     imeth
                 )
                 raise ValueError(s)
@@ -1890,7 +1881,7 @@ class HeadUFile(BinaryLayerFile):
         self.header_dtype = BinaryHeader.set_dtype(
             bintype="Head", precision=precision
         )
-        super(HeadUFile, self).__init__(filename, precision, verbose, kwargs)
+        super().__init__(filename, precision, verbose, kwargs)
         return
 
     def _get_data_array(self, totim=0.0):

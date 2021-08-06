@@ -162,11 +162,10 @@ class ModflowUpw(Package):
     ):
 
         if model.version != "mfnwt":
-            err = (
+            raise Exception(
                 "Error: model version must be mfnwt to use "
-                + "{} package".format(ModflowUpw._ftype())
+                "{} package".format(ModflowUpw._ftype())
             )
-            raise Exception(err)
 
         # set default unit number of one is not specified
         if unitnumber is None:
@@ -342,7 +341,7 @@ class ModflowUpw(Package):
         transient = not self.parent.get_package("DIS").steady.all()
         for k in range(nlay):
             f_upw.write(self.hk[k].get_file_entry())
-            if self.chani[k] < 1:
+            if self.chani[k] < 0:
                 f_upw.write(self.hani[k].get_file_entry())
             f_upw.write(self.vka[k].get_file_entry())
             if transient:
@@ -394,13 +393,10 @@ class ModflowUpw(Package):
             sys.stdout.write("loading upw package file...\n")
 
         if model.version != "mfnwt":
-            msg = (
-                "Warning: model version was reset from "
-                + "'{}' to 'mfnwt' in order to load a UPW file".format(
-                    model.version
-                )
+            print(
+                "Warning: model version was reset from '{}' to 'mfnwt' "
+                "in order to load a UPW file".format(model.version)
             )
-            print(msg)
             model.version = "mfnwt"
 
         openfile = not hasattr(f, "read")
@@ -499,7 +495,7 @@ class ModflowUpw(Package):
             hk[k] = t
 
             # hani
-            if chani[k] < 1:
+            if chani[k] < 0:
                 if model.verbose:
                     print("   loading hani layer {0:3d}...".format(k + 1))
                 if "hani" not in par_types:

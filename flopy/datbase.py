@@ -13,12 +13,12 @@ class DataType(Enum):
     transientscalar = 8
 
 
-class DataInterface(object):
+class DataInterface:
     @property
     @abc.abstractmethod
     def data_type(self):
         raise NotImplementedError(
-            "must define dat_type in child " "class to use this base class"
+            "must define dat_type in child class to use this base class"
         )
 
     @property
@@ -26,44 +26,44 @@ class DataInterface(object):
     def dtype(self):
         def dtype(self):
             raise NotImplementedError(
-                "must define dtype in child " "class to use this base class"
+                "must define dtype in child class to use this base class"
             )
 
     @property
     @abc.abstractmethod
     def array(self):
         raise NotImplementedError(
-            "must define array in child " "class to use this base class"
+            "must define array in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def name(self):
         raise NotImplementedError(
-            "must define name in child " "class to use this base class"
+            "must define name in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def model(self):
         raise NotImplementedError(
-            "must define name in child " "class to use this base class"
+            "must define name in child class to use this base class"
         )
 
     @property
     @abc.abstractmethod
     def plottable(self):
         raise NotImplementedError(
-            "must define plottable in child " "class to use this base class"
+            "must define plottable in child class to use this base class"
         )
 
 
-class DataListInterface(object):
+class DataListInterface:
     @property
     @abc.abstractmethod
     def package(self):
         raise NotImplementedError(
-            "must define package in child " "class to use this base class"
+            "must define package in child class to use this base class"
         )
 
     @property
@@ -71,7 +71,7 @@ class DataListInterface(object):
     def to_array(self, kper=0, mask=False):
         def to_array(self):
             raise NotImplementedError(
-                "must define to_array in child " "class to use this base class"
+                "must define to_array in child class to use this base class"
             )
 
     @abc.abstractmethod

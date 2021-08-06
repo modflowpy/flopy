@@ -894,12 +894,10 @@ class ModflowSwt(Package):
             ids17 = [0] * iswtoc
             for k in range(iswtoc):
                 if model.verbose:
-                    msg = (
-                        2 * " "
-                        + "loading swt dataset 17 for "
-                        + "iswtoc {}\n".format(k + 1)
+                    sys.stdout.write(
+                        "  loading swt dataset 17 for "
+                        "iswtoc {}\n".format(k + 1)
                     )
-                    sys.stdout.write(msg)
                 t = np.empty(30, dtype=np.int32)
                 t = read1d(f, t)
                 t[0:4] -= 1

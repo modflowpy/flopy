@@ -22,8 +22,40 @@ try:
     from shapely.prepared import prep
 
     shply = True
-except ImportError:
+except:
     shply = False
+
+import contextlib
+import warnings
+from distutils.version import LooseVersion
+
+try:
+    import shapely
+
+    SHAPELY_GE_20 = str(shapely.__version__) >= LooseVersion("2.0")
+except:
+    shapely = None
+    SHAPELY_GE_20 = False
+
+try:
+    from shapely.errors import ShapelyDeprecationWarning as shapely_warning
+except:
+    shapely_warning = None
+
+if shapely_warning is not None and not SHAPELY_GE_20:
+
+    @contextlib.contextmanager
+    def ignore_shapely_warnings_for_object_array():
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=shapely_warning)
+            yield
+
+
+else:
+
+    @contextlib.contextmanager
+    def ignore_shapely_warnings_for_object_array():
+        yield
 
 
 def parse_shapely_ix_result(collection, ix_result, shptyps=None):
@@ -62,7 +94,7 @@ def parse_shapely_ix_result(collection, ix_result, shptyps=None):
         return collection
     # recursion for collections
     elif hasattr(ix_result, "geoms"):
-        for ishp in ix_result:
+        for ishp in ix_result.geoms:
             parse_shapely_ix_result(collection, ishp, shptyps=shptyps)
     # if collecting all types
     elif shptyps[0] is None:
@@ -118,7 +150,7 @@ class GridIntersect:
                 "Please install shapely if you need to use grid intersect "
                 "functionality."
             )
-            raise ImportError(msg)
+            raise ModuleNotFoundError(msg)
 
         self.mfgrid = mfgrid
         if method is None:
@@ -465,7 +497,8 @@ class GridIntersect:
             names=["cellids", "vertices", "ixshapes"],
             formats=["O", "O", "O"],
         )
-        rec.ixshapes = isectshp
+        with ignore_shapely_warnings_for_object_array():
+            rec.ixshapes = isectshp
         rec.vertices = vertices
         rec.cellids = cellids
 
@@ -534,7 +567,8 @@ class GridIntersect:
             names=["cellids", "vertices", "lengths", "ixshapes"],
             formats=["O", "O", "f8", "O"],
         )
-        rec.ixshapes = isectshp
+        with ignore_shapely_warnings_for_object_array():
+            rec.ixshapes = isectshp
         rec.vertices = vertices
         rec.lengths = lengths
         rec.cellids = cellids
@@ -597,7 +631,8 @@ class GridIntersect:
             names=["cellids", "vertices", "areas", "ixshapes"],
             formats=["O", "O", "f8", "O"],
         )
-        rec.ixshapes = isectshp
+        with ignore_shapely_warnings_for_object_array():
+            rec.ixshapes = isectshp
         rec.vertices = vertices
         rec.areas = areas
         rec.cellids = cellids
@@ -649,10 +684,12 @@ class GridIntersect:
 
         Xe, Ye = self.mfgrid.xyedges
 
-        try:
-            iter(shp)
-        except TypeError:
+        if isinstance(shp, Point):
             shp = [shp]
+        elif isinstance(shp, MultiPoint):
+            shp = list(shp.geoms)
+        else:
+            raise ValueError("expected Point or MultiPoint")
 
         ixshapes = []
         for p in shp:
@@ -710,7 +747,8 @@ class GridIntersect:
             len(nodelist), names=["cellids", "ixshapes"], formats=["O", "O"]
         )
         rec.cellids = nodelist
-        rec.ixshapes = ixshapes
+        with ignore_shapely_warnings_for_object_array():
+            rec.ixshapes = ixshapes
         return rec
 
     def _intersect_linestring_structured(self, shp, keepzerolengths=False):
@@ -764,7 +802,7 @@ class GridIntersect:
         if lineclip.geom_type == "MultiLineString":  # there are multiple lines
             nodelist, lengths, vertices = [], [], []
             ixshapes = []
-            for ls in lineclip:
+            for ls in lineclip.geoms:
                 n, l, v, ixs = self._get_nodes_intersecting_linestring(ls)
                 nodelist += n
                 lengths += l
@@ -888,7 +926,8 @@ class GridIntersect:
         rec.vertices = vertices
         rec.lengths = lengths
         rec.cellids = nodelist
-        rec.ixshapes = ixshapes
+        with ignore_shapely_warnings_for_object_array():
+            rec.ixshapes = ixshapes
 
         return rec
 
@@ -1320,7 +1359,8 @@ class GridIntersect:
         rec.vertices = vertices
         rec.areas = areas
         rec.cellids = nodelist
-        rec.ixshapes = ixshapes
+        with ignore_shapely_warnings_for_object_array():
+            rec.ixshapes = ixshapes
 
         return rec
 
@@ -1419,7 +1459,7 @@ class GridIntersect:
             if plt is None:
                 msg = (
                     "matplotlib and descartes packages needed for "
-                    + "plotting polygons"
+                    "plotting polygons"
                 )
             raise ImportError(msg)
 

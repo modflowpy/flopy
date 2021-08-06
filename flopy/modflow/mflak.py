@@ -325,16 +325,16 @@ class ModflowLak(Package):
             # make sure the number of tabfiles is equal to the number of lakes
             if len(tab_files) < nlakes:
                 msg = (
-                    "a tabfile must be specified for each lake"
-                    + "{} tabfiles specified ".format(len(tab_files))
-                    + "instead of {} tabfiles".format(nlakes)
+                    "a tabfile must be specified for each lake "
+                    "{} tabfiles specified "
+                    "instead of {} tabfiles".format(len(tab_files), nlakes)
                 )
             # make sure tab_files are not None
             for idx, fname in enumerate(tab_files):
                 if fname is None:
                     msg = (
                         "a filename must be specified for the "
-                        + "tabfile for lake {}".format(idx + 1)
+                        "tabfile for lake {}".format(idx + 1)
                     )
                     raise ValueError(msg)
             # set unit for tab files if not passed to __init__
@@ -391,7 +391,7 @@ class ModflowLak(Package):
         elif isinstance(stages, list):
             stages = np.array(stages)
         if stages.shape[0] != nlakes:
-            err = "stages shape should be " + "({}) but is only ({}).".format(
+            err = "stages shape should be ({}) but is only ({}).".format(
                 nlakes, stages.shape[0]
             )
             raise Exception(err)
@@ -404,20 +404,16 @@ class ModflowLak(Package):
             if isinstance(stage_range, list):
                 stage_range = np.array(stage_range)
             elif isinstance(stage_range, float):
-                err = (
+                raise Exception(
                     "stage_range should be a list or "
-                    + "array of size ({}, 2)".format(nlakes)
+                    "array of size ({}, 2)".format(nlakes)
                 )
-                raise Exception(err)
         if self.parent.dis.steady[0]:
             if stage_range.shape != (nlakes, 2):
-                err = (
-                    "stages shape should be "
-                    + "({},2) but is only {}.".format(
-                        nlakes, stage_range.shape
-                    )
+                raise Exception(
+                    "stages shape should be ({},2) but is only "
+                    "{}.".format(nlakes, stage_range.shape)
                 )
-                raise Exception(err)
         self.stage_range = stage_range
 
         # tabfile data
@@ -458,11 +454,10 @@ class ModflowLak(Package):
                         td[k] = value[k, :].tolist()
                     flux_data[key] = td
                     if len(list(flux_data.keys())) != nlakes:
-                        err = (
+                        raise Exception(
                             "flux_data dictionary must "
-                            + "have {} entries".format(nlakes)
+                            "have {} entries".format(nlakes)
                         )
-                        raise Exception(err)
                 elif isinstance(value, float) or isinstance(value, int):
                     td = {}
                     for k in range(self.nlakes):
@@ -479,14 +474,11 @@ class ModflowLak(Package):
                     for k in range(self.nlakes):
                         td = value[k]
                         if len(td) < nlen:
-                            err = (
-                                "flux_data entry for stress period".format(
-                                    key + 1
-                                )
-                                + "has {} entries but ".format(nlen)
-                                + "should have {} entries".format(len(td))
+                            raise Exception(
+                                "flux_data entry for stress period {} "
+                                "has {} entries but should have "
+                                "{} entries".format(key + 1, nlen, len(td))
                             )
-                            raise Exception(err)
 
         self.flux_data = flux_data
         self.sill_data = sill_data
@@ -775,7 +767,7 @@ class ModflowLak(Package):
             if model.verbose:
                 print(
                     "   reading lak dataset 4 - "
-                    + "for stress period {}".format(iper + 1)
+                    "for stress period {}".format(iper + 1)
                 )
             line = f.readline().rstrip()
             if model.array_free_format:
@@ -789,7 +781,7 @@ class ModflowLak(Package):
                 if model.verbose:
                     print(
                         "   reading lak dataset 5 - "
-                        + "for stress period {}".format(iper + 1)
+                        "for stress period {}".format(iper + 1)
                     )
                 name = "LKARR_StressPeriod_{}".format(iper)
                 lakarr = Util3d.load(
@@ -798,7 +790,7 @@ class ModflowLak(Package):
                 if model.verbose:
                     print(
                         "   reading lak dataset 6 - "
-                        + "for stress period {}".format(iper + 1)
+                        "for stress period {}".format(iper + 1)
                     )
                 name = "BDLKNC_StressPeriod_{}".format(iper)
                 bdlknc = Util3d.load(
@@ -816,7 +808,7 @@ class ModflowLak(Package):
                 if model.verbose:
                     print(
                         "   reading lak dataset 7 - "
-                        + "for stress period {}".format(iper + 1)
+                        "for stress period {}".format(iper + 1)
                     )
                 line = f.readline().rstrip()
                 t = line.split()
@@ -826,7 +818,7 @@ class ModflowLak(Package):
                     if model.verbose:
                         print(
                             "   reading lak dataset 8 - "
-                            + "for stress period {}".format(iper + 1)
+                            "for stress period {}".format(iper + 1)
                         )
                     for i in range(nslms):
                         line = f.readline().rstrip()
@@ -853,7 +845,7 @@ class ModflowLak(Package):
                 if model.verbose:
                     print(
                         "   reading lak dataset 9 - "
-                        + "for stress period {}".format(iper + 1)
+                        "for stress period {}".format(iper + 1)
                     )
                 ds9 = {}
                 for n in range(nlakes):

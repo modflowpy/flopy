@@ -277,8 +277,10 @@ class ModflowWel(Package):
             unit number of phiramp file
 
         """
-        err = "phiramp_unit will be replaced " "with iunitramp for consistency"
-        warnings.warn(err, DeprecationWarning)
+        warnings.warn(
+            "phiramp_unit will be replaced with iunitramp for consistency",
+            DeprecationWarning,
+        )
         return self.iunitramp
 
     @phiramp_unit.setter

@@ -24,3 +24,4 @@ dependencies:
   - pyproj
   - shapely
   - geos=3.8.1  # required until 3.9.2 is available
+  - geojson

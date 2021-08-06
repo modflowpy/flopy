@@ -1,5 +1,5 @@
 """
-mf module.  Contains the ModflowGlobal, ModflowList, and Modflow classes.
+mflgr module.
 
 
 """
@@ -63,27 +63,32 @@ class ModflowLgr(BaseModel):
 
     Parameters
     ----------
-    modelname : string, optional
+    modelname : str, default "modflowlgrtest".
         Name of model.  This string will be used to name the MODFLOW input
-        that are created with write_model. (the default is 'modflowtest')
-    namefile_ext : string, optional
-        Extension for the namefile (the default is 'nam')
-    version : string, optional
-        Version of MODFLOW to use (the default is 'mf2005').
-    exe_name : string, optional
-        The name of the executable to use (the default is
-        'mf2005').
-    listunit : integer, optional
-        Unit number for the list file (the default is 2).
-    model_ws : string, optional
-        model workspace.  Directory name to create model data sets.
-        (default is the present working directory).
-    external_path : string
-        Location for external files (default is None).
-    verbose : boolean, optional
-        Print additional information to the screen (default is False).
-    load : boolean, optional
-         (default is True).
+        that are created with write_model.
+    namefile_ext : str, default "lgr"
+        Extension for the namefile.
+    version : str, default "mflgr".
+        Version of MODFLOW-LGR to use.
+    exe_name : str, default "mflgr.exe"
+        The name of the executable to use.
+    iupbhsv : int, default 0
+        Unit number with boundary heads.
+    iupbfsv : int, default 0
+        Unit number with boundary fluxes.
+    parent : Modflow, optional
+        Instance of a Modflow object.
+    children : list, optional
+        List of instances of 1 or more Modflow objects.
+    children_data : list, optional
+        List of LgrChild objects.
+    model_ws : str, default "."
+        Model workspace.  Directory name to create model data sets.
+        Default is the present working directory.
+    external_path : str, optional
+        Location for external files.
+    verbose : bool, default False
+        Print additional information to the screen.
 
     Attributes
     ----------
@@ -99,10 +104,9 @@ class ModflowLgr(BaseModel):
 
     Examples
     --------
-
     >>> import flopy
     >>> lgr = flopy.modflowlgr.ModflowLgr(parent=parent, children=children,
-    >>>                                   children_data=children_data)
+    ...                                   children_data=children_data)
 
     """
 
@@ -122,8 +126,7 @@ class ModflowLgr(BaseModel):
         verbose=False,
         **kwargs
     ):
-        BaseModel.__init__(
-            self,
+        super().__init__(
             modelname,
             namefile_ext,
             exe_name,
@@ -237,7 +240,7 @@ class ModflowLgr(BaseModel):
 
     def _padline(self, line, comment=None, line_len=79):
         if len(line) < line_len:
-            fmt = "{:" + "{}".format(line_len) + "s}"
+            fmt = "{:" + str(line_len) + "s}"
             line = fmt.format(line)
         if comment is not None:
             line += "  # {}\n".format(comment)
@@ -253,7 +256,7 @@ class ModflowLgr(BaseModel):
             rpth = os.path.join(rpth, fpth)
             msg = (
                 "namefiles must be in the same directory as "
-                + "the lgr control file\n"
+                "the lgr control file\n"
             )
             msg += "Control file path: {}\n".format(lpth)
             msg += "Namefile path: {}\n".format(mpth)
@@ -298,7 +301,7 @@ class ModflowLgr(BaseModel):
         f.write(line)
 
         # dataset 2
-        line = "{}".format(self.ngrids)
+        line = str(self.ngrids)
         line = self._padline(line, comment="data set 2 - ngridsS")
         f.write(line)
 
@@ -343,33 +346,30 @@ class ModflowLgr(BaseModel):
                 child_data.iucbfsv,
             )
             comment = (
-                "data set 8 - child {} ".format(idx + 1)
-                + "ishflg, ibflg, iucbhsv, iucbfsv"
+                "data set 8 - child {} "
+                "ishflg, ibflg, iucbhsv, iucbfsv".format(idx + 1)
             )
             line = self._padline(line, comment=comment)
             f.write(line)
 
             # dataset 9
             line = "{} {}".format(child_data.mxlgriter, child_data.ioutlgr)
-            comment = (
-                "data set 9 - child {} ".format(idx + 1) + "mxlgriter, ioutlgr"
+            comment = "data set 9 - child {} mxlgriter, ioutlgr".format(
+                idx + 1
             )
             line = self._padline(line, comment=comment)
             f.write(line)
 
             # dataset 10
             line = "{} {}".format(child_data.relaxh, child_data.relaxf)
-            comment = (
-                "data set 10 - child {} ".format(idx + 1) + "relaxh, relaxf"
-            )
+            comment = "data set 10 - child {} relaxh, relaxf".format(idx + 1)
             line = self._padline(line, comment=comment)
             f.write(line)
 
             # dataset 11
             line = "{} {}".format(child_data.hcloselgr, child_data.fcloselgr)
-            comment = (
-                "data set 11 - child {} ".format(idx + 1)
-                + "hcloselgr, fcloselgr"
+            comment = "data set 11 - child {} hcloselgr, fcloselgr".format(
+                idx + 1
             )
             line = self._padline(line, comment=comment)
             f.write(line)
@@ -380,9 +380,8 @@ class ModflowLgr(BaseModel):
                 child_data.nprbeg + 1,
                 child_data.npcbeg + 1,
             )
-            comment = (
-                "data set 12 - child {} ".format(idx + 1)
-                + "nplbeg, nprbeg, npcbeg"
+            comment = "data set 12 - child {} nplbeg, nprbeg, npcbeg".format(
+                idx + 1
             )
             line = self._padline(line, comment=comment)
             f.write(line)
@@ -393,16 +392,15 @@ class ModflowLgr(BaseModel):
                 child_data.nprend + 1,
                 child_data.npcend + 1,
             )
-            comment = (
-                "data set 13 - child {} ".format(idx + 1)
-                + "nplend, nprend, npcend"
+            comment = "data set 13 - child {} nplend, nprend, npcend".format(
+                idx + 1
             )
             line = self._padline(line, comment=comment)
             f.write(line)
 
             # dataset 14
-            line = "{}".format(child_data.ncpp)
-            comment = "data set 14 - child {} ".format(idx + 1) + "ncpp"
+            line = str(child_data.ncpp)
+            comment = "data set 14 - child {} ncpp".format(idx + 1)
             line = self._padline(line, comment=comment)
             f.write(line)
 
@@ -410,7 +408,7 @@ class ModflowLgr(BaseModel):
             line = ""
             for ndx in child_data.ncppl:
                 line += "{} ".format(ndx)
-            comment = "data set 15 - child {} ".format(idx + 1) + "ncppl"
+            comment = "data set 15 - child {} ncppl".format(idx + 1)
             line = self._padline(line, comment=comment)
             f.write(line)
 
@@ -445,11 +443,12 @@ class ModflowLgr(BaseModel):
                 )
                 os.makedirs(new_pth)
             except:
-                line = "\n{} not valid, workspace-folder ".format(
-                    new_pth
-                ) + "was changed to {}\n".format(os.getcwd())
-                print(line)
+                not_valid = new_pth
                 new_pth = os.getcwd()
+                print(
+                    "\n{} not valid, workspace-folder was changed to {}"
+                    "\n".format(not_valid, new_pth)
+                )
         # --reset the model workspace
         old_pth = self._model_ws
         self._model_ws = new_pth
@@ -495,26 +494,29 @@ class ModflowLgr(BaseModel):
 
         Parameters
         ----------
-        f : filename or file handle
-            MODFLOW name file to load.
+        f : str or file handle
+            Path to MODFLOW-LGR name file to load.
+        version : str, default "mflgr".
+            Version of MODFLOW-LGR to use.
+        exe_name : str, default "mflgr.exe"
+            The name of the executable to use.
+        verbose : bool, default False
+            Print additional information to the screen.
+        model_ws : str, default "."
+            Model workspace.  Directory name to create model data sets.
+            Default is the present working directory.
+        load_only : list of str, optional
+            Packages to load (e.g. ["bas6", "lpf"]). Default None
+            means that all packages will be loaded.
+        forgive : bool, default False
+            Option to raise exceptions on package load failure, which can be
+            useful for debugging.
+        check : bool, default True
+            Check model input for common errors.
 
-        model_ws : model workspace path
-
-        load_only : (optional) filetype(s) to load (e.g. ["bas6", "lpf"])
-
-        forgive : flag to raise exception(s) on package load failure - good for debugging
-
-        check : boolean
-            Check model input for common errors. (default True)
         Returns
         -------
-        ml : Modflow object
-
-        Examples
-        --------
-
-        >>> import flopy
-        >>> ml = flopy.modflow.Modflow.load(f)
+        flopy.modflowlgr.mflgr.ModflowLgr
 
         """
         # test if name file is passed with extension (i.e., is a valid file)
@@ -574,12 +576,10 @@ class ModflowLgr(BaseModel):
         # non-zero values for IUPBHSV and IUPBFSV in dataset 5 are not
         # supported
         if iupbhsv + iupbfsv > 0:
-            msg = (
-                "nonzero values for IUPBHSV () ".format(iupbhsv)
-                + "and IUPBFSV ({}) ".format(iupbfsv)
-                + "are not supported."
+            raise ValueError(
+                "nonzero values for IUPBHSV ({}) and IUPBFSV ({}) are not "
+                "supported.".format(iupbhsv, iupbfsv)
             )
-            raise ValueError(msg)
 
         # load the parent model
         parent = Modflow.load(
