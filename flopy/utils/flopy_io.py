@@ -185,18 +185,25 @@ def write_fixed_var(v, length=10, ipos=None, free=False, comment=None):
         if free:
             write_fmt = "{} "
         else:
+            width = ipos[n]
             if isinstance(v[n], (float, np.float32, np.float64)):
-                width = ipos[n] - 6
-                vmin, vmax = 10 ** -width, 10 ** width
+                decimal = width - 6
+                vmin, vmax = 10 ** -decimal, 10 ** decimal
                 if abs(v[n]) < vmin or abs(v[n]) > vmax:
-                    ctype = "g"
+                    ctype = "g"  # default precision is 6 if not specified
                 else:
-                    ctype = ".{}f".format(width)
+                    ctype = ".{}f".format(decimal)
+                    # evaluate if the fixed format value will exceed width
+                    if (
+                        len("{{:>{}{}}}".format(width, ctype).format(v[n]))
+                        > width
+                    ):
+                        ctype = ".{}g".format(decimal)  # preserve precision
             elif isinstance(v[n], (int, np.int32, np.int64)):
                 ctype = "d"
             else:
                 ctype = ""
-            write_fmt = "{{:>{}{}}}".format(ipos[n], ctype)
+            write_fmt = "{{:>{}{}}}".format(width, ctype)
         out += write_fmt.format(v[n])
     if comment is not None:
         out += "  # {}".format(comment)
