@@ -1,9 +1,9 @@
 # flopy version file automatically created using...make-release.py
-# created on...August 06, 2021 16:38:32
+# created on...August 07, 2021 08:14:57
 
 major = 3
 minor = 3
-micro = 4
+micro = 5
 __version__ = "{:d}.{:d}.{:d}".format(major, minor, micro)
 
 __pakname__ = "flopy"
