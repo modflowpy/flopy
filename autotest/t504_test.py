@@ -1171,6 +1171,7 @@ def test_mf6_output():
 
     bud = ml.oc.output.budget()
     hds = ml.oc.output.head()
+    lst = ml.oc.output.list()
 
     idomain = np.ones(ml.modelgrid.shape, dtype=int)
     zonbud = ml.oc.output.zonebudget(idomain)
@@ -1184,9 +1185,13 @@ def test_mf6_output():
     if not isinstance(zonbud, flopy.utils.ZoneBudget6):
         raise AssertionError()
 
+    if not isinstance(lst, flopy.utils.MfListBudget):
+        raise AssertionError()
+
     bud = ml.output.budget()
     hds = ml.output.head()
     zonbud = ml.output.zonebudget(idomain)
+    lst = ml.output.list()
 
     if not isinstance(bud, flopy.utils.CellBudgetFile):
         raise TypeError()
@@ -1195,6 +1200,9 @@ def test_mf6_output():
         raise TypeError()
 
     if not isinstance(zonbud, flopy.utils.ZoneBudget6):
+        raise TypeError()
+
+    if not isinstance(lst, flopy.utils.MfListBudget):
         raise TypeError()
 
     uzf = ml.uzf
@@ -1220,7 +1228,7 @@ def test_mf6_output():
         print(uzf.output.__dict__)
         raise AssertionError(", ".join(uzf.output.methods()))
 
-    if len(ml.output.methods()) != 3:
+    if len(ml.output.methods()) != 4:
         raise AssertionError()
 
     if ml.dis.output.methods() is not None:
