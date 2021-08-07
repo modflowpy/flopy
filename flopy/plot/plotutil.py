@@ -20,7 +20,7 @@ except ImportError:
 
 try:
     import matplotlib.pyplot as plt
-except ImportError:
+except (ImportError, RuntimeError):
     plt = None
 
 warnings.simplefilter("ignore", RuntimeWarning)

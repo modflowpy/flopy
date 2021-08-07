@@ -208,7 +208,7 @@ class UnstructuredGrid(Grid):
         if self._vertices is None:
             return self._vertices
         else:
-            return np.array([t[1:] for t in self._vertices], dtype=float)
+            return np.array([list(t)[1:] for t in self._vertices], dtype=float)
 
     @property
     def ia(self):

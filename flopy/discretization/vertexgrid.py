@@ -4,7 +4,7 @@ import numpy as np
 
 try:
     from matplotlib.path import Path
-except ImportError:
+except (ImportError, RuntimeError):
     Path = None
 
 from .grid import Grid, CachedData
@@ -128,11 +128,11 @@ class VertexGrid(Grid):
 
     @property
     def iverts(self):
-        return [[t[0]] + t[4:] for t in self._cell2d]
+        return [[t[0]] + list(t)[4:] for t in self._cell2d]
 
     @property
     def verts(self):
-        return np.array([t[1:] for t in self._vertices], dtype=float)
+        return np.array([list(t)[1:] for t in self._vertices], dtype=float)
 
     @property
     def shape(self):

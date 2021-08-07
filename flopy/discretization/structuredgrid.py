@@ -195,9 +195,9 @@ class StructuredGrid(Grid):
         else:
             self.__nlay = nlay
         if laycbd is not None:
-            self.__laycbd = laycbd
+            self._laycbd = laycbd
         else:
-            self.__laycbd = np.zeros(self.__nlay or (), dtype=int)
+            self._laycbd = np.zeros(self.__nlay or (), dtype=int)
 
     ####################
     # Properties
@@ -464,7 +464,7 @@ class StructuredGrid(Grid):
                 z = np.empty((self.__nlay, self.__nrow, self.__ncol))
                 z[0, :, :] = (self._top[:, :] + self._botm[0, :, :]) / 2.0
                 ibs = np.arange(self.__nlay)
-                quasi3d = [cbd != 0 for cbd in self.__laycbd]
+                quasi3d = [cbd != 0 for cbd in self._laycbd]
                 if np.any(quasi3d):
                     ibs[1:] = ibs[1:] + np.cumsum(quasi3d)[: self.__nlay - 1]
                 for l, ib in enumerate(ibs[1:], 1):

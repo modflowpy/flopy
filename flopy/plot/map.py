@@ -7,7 +7,7 @@ try:
     import matplotlib.colors
     from matplotlib.collections import PathCollection, LineCollection
     from matplotlib.path import Path
-except (ImportError, ModuleNotFoundError):
+except (ImportError, ModuleNotFoundError, RuntimeError):
     plt = None
 
 from . import plotutil

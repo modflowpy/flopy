@@ -2,7 +2,7 @@ import numpy as np
 
 try:
     import matplotlib.pyplot as plt
-except ImportError:
+except (ImportError, RuntimeError):
     plt = None
 
 from .geometry import transform

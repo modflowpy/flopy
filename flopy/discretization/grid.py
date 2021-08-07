@@ -180,6 +180,7 @@ class Grid:
 
         self._iverts = None
         self._verts = None
+        self._laycbd = None
 
     ###################################
     # access to basic grid properties
@@ -284,6 +285,13 @@ class Grid:
     @property
     def top_botm(self):
         raise NotImplementedError("must define top_botm in child class")
+
+    @property
+    def laycbd(self):
+        if self._laycbd is None:
+            return None
+        else:
+            return self._laycbd
 
     @property
     def thick(self):
