@@ -40,7 +40,7 @@ sim = flopy.mf6.MFSimulation.load(
     sim_ws=sim_ws, exe_name=exe_name, verbosity_level=0,
 )
 # change the simulation path, rewrite the files, and run the model
-sim_ws = os.path.join("..", "..", "..", "autotest", "temp")
+sim_ws = os.path.join("..", "..", "autotest", "temp", "mf6_output")
 sim.set_sim_path(sim_ws)
 sim.write_simulation(silent=True)
 sim.run_simulation(silent=True)
