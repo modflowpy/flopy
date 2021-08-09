@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.spatial import Voronoi
 from .cvfdutil import get_disv_gridprops
 
@@ -282,6 +281,8 @@ class VoronoiGrid:
             axes that contains the voronoi model grid
 
         """
+        import matplotlib.pyplot as plt
+
         if ax is None:
             ax = plt.subplot(1, 1, 1, aspect="equal")
         pc = self.get_patch_collection(ax, **kwargs)

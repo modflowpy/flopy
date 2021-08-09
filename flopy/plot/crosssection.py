@@ -4,7 +4,7 @@ try:
     import matplotlib.pyplot as plt
     import matplotlib.colors
     from matplotlib.patches import Polygon
-except (ImportError, ModuleNotFoundError):
+except (ImportError, ModuleNotFoundError, RuntimeError):
     plt = None
 
 from flopy.plot import plotutil
