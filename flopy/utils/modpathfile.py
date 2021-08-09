@@ -1028,53 +1028,8 @@ class EndpointFile:
             shaped = self._data.shape[0]
             pids = np.arange(1, shaped + 1, 1, dtype=np.int32)
 
-            # determine numpy version
-            npv = np.__version__
-            v = [int(s) for s in npv.split(".")]
-            if self.verbose:
-                print("numpy version {}".format(npv))
-
             # for numpy version 1.14 and higher
-            if v[0] > 1 or (v[0] == 1 and v[1] > 13):
-                self._data = append_fields(self._data, "particleid", pids)
-            # numpy versions prior to 1.14
-            else:
-                if self.verbose:
-                    print(self._data.dtype)
-
-                # convert pids to structured array
-                pids = np.array(
-                    pids, dtype=np.dtype([("particleid", np.int32)])
-                )
-
-                # create new dtype
-                dtype = self._get_mp35_dtype(add_id=True)
-                if self.verbose:
-                    print(dtype)
-
-                # create new array with new dtype and fill with available data
-                data = np.zeros(shaped, dtype=dtype)
-                if self.verbose:
-                    print("new data shape {}".format(data.shape))
-                    print("\nFilling new structured data array")
-
-                # add particle id to new array
-                if self.verbose:
-                    print(
-                        "writing particleid (pids) to new "
-                        "structured data array"
-                    )
-                data["particleid"] = pids["particleid"]
-
-                # add remaining data to the new array
-                if self.verbose:
-                    msg = "writing remaining data to new structured data array"
-                    print(msg)
-                for name in self._data.dtype.names:
-                    data[name] = self._data[name]
-                if self.verbose:
-                    print("replacing data with copy of new data array")
-                self._data = data.copy()
+            self._data = append_fields(self._data, "particleid", pids)
         return
 
     def get_maxid(self):

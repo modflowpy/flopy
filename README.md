@@ -24,7 +24,7 @@ For general modeling issues, please consult a modeling forum, such as the [MODFL
 Installation
 -----------------------------------------------
 
-FloPy requires **Python** 3.5 (or higher) and **NumPy** 1.9 (or higher).  Dependencies for optional FloPy methods are summarized [here](docs/flopy_method_dependencies.md).
+FloPy requires **Python** 3.7 (or higher) and **NumPy** 1.15 (or higher).  Dependencies for optional FloPy methods are summarized [here](docs/flopy_method_dependencies.md).
 
 To install FloPy type:
 
