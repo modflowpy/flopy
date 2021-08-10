@@ -4,8 +4,6 @@ mbase module
   all of the other models inherit from.
 
 """
-
-from __future__ import print_function
 import abc
 import sys
 import os

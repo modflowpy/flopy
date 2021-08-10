@@ -8,7 +8,6 @@ important classes that can be accessed by the user.
 *  CellBudgetFile (Binary cell-by-cell flow file)
 
 """
-from __future__ import print_function
 import numpy as np
 import warnings
 from collections import OrderedDict

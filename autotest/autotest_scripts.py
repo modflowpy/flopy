@@ -1,5 +1,4 @@
 # Remove the temp directory and then create a fresh one
-from __future__ import print_function
 import os
 import sys
 import shutil

@@ -5,8 +5,6 @@ util_array module.  Contains the util_2d, util_3d and transient_2d classes.
  instantiate these classes directly.
 
 """
-from __future__ import division, print_function
-
 # from future.utils import with_metaclass
 
 import os

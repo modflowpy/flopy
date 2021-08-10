@@ -3,7 +3,6 @@ Module to read MODFLOW output files.  The module contains shared
 abstract classes that should not be directly accessed.
 
 """
-from __future__ import print_function
 import numpy as np
 import flopy.utils
 from ..discretization.structuredgrid import StructuredGrid

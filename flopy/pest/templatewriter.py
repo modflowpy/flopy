@@ -1,4 +1,3 @@
-from __future__ import print_function
 from ..pest import tplarray as tplarray
 
 

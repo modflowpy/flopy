@@ -4,9 +4,6 @@ pakbase module
   all of the other packages inherit from.
 
 """
-
-from __future__ import print_function
-
 import abc
 import os
 import webbrowser as wb

@@ -4,7 +4,6 @@ using ModelMap and ModelCrossSection. Functions for plotting
 shapefiles are also included.
 
 """
-from __future__ import print_function
 import os
 import sys
 import math
