@@ -7,8 +7,6 @@ util_list module.  Contains the mflist class.
     some more info
 
 """
-from __future__ import division, print_function
-
 import os
 import warnings
 import numpy as np

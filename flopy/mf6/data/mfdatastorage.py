@@ -2423,10 +2423,10 @@ class DataStorage:
             data_array = np.ndarray(shape=dimensions, dtype=np_dtype)
             # fill array
             for index in ArrayIndexIter(dimensions):
-                data_array.itemset(index, data_iter.__next__())
+                data_array.itemset(index, next(data_iter))
             return data_array
         elif self.data_structure_type == DataStructureType.scalar:
-            return data_iter.__next__()
+            return next(data_iter)
         else:
             data_array = None
             data_line = ()
@@ -2471,7 +2471,7 @@ class DataStorage:
                         )
                     current_col = 0
                     data_line = ()
-                data_array[index] = data_iter.next()
+                data_array[index] = next(data_iter)
             return data_array
 
     def set_tas(self, tas_name, tas_label, current_key, check_name=True):

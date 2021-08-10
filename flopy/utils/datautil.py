@@ -594,7 +594,7 @@ class MultiList:
         aii = ArrayIndexIter(self.list_shape, True)
         index_num = 0
         while index_num <= n:
-            index = aii.next()
+            index = next(aii)
             index_num += 1
         return index
 
@@ -651,8 +651,6 @@ class ArrayIndexIter:
                 self.current_index -= 1
         raise StopIteration()
 
-    next = __next__  # Python 2 support
-
 
 class MultiListIter:
     def __init__(self, multi_list, detailed_info=False, iter_leaf_lists=False):
@@ -673,8 +671,6 @@ class MultiListIter:
         else:
             return next_val[0]
 
-    next = __next__  # Python 2 support
-
 
 class ConstIter:
     def __init__(self, value):
@@ -685,8 +681,6 @@ class ConstIter:
 
     def __next__(self):
         return self.value
-
-    next = __next__  # Python 2 support
 
 
 class FileIter:
@@ -729,8 +723,6 @@ class FileIter:
             return
         self._current_data = PyListUtil.split_data_line(data_line)
 
-    next = __next__  # Python 2 support
-
 
 class NameIter:
     def __init__(self, name, first_not_numbered=True):
@@ -748,8 +740,6 @@ class NameIter:
         else:
             return "{}_{}".format(self.name, self.iter_num)
 
-    next = __next__  # Python 2 support
-
 
 class PathIter:
     def __init__(self, path, first_not_numbered=True):
@@ -760,6 +750,4 @@ class PathIter:
         return self
 
     def __next__(self):
-        return self.path[0:-1] + (self.name_iter.__next__(),)
-
-    next = __next__  # Python 2 support
+        return self.path[0:-1] + (next(self.name_iter),)
