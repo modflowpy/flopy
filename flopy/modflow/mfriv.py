@@ -238,7 +238,10 @@ class ModflowRiv(Package):
 
                 # check that river stage and bottom are above model cell
                 # bottoms also checks for nan values
-                botms = self.parent.dis.botm.array[inds]
+                if self.parent.structured:
+                    botms = self.parent.dis.botm.array[inds]
+                else:
+                    botms = self.parent.disu.bot.array[inds]
 
                 for elev in ["stage", "rbot"]:
                     txt = "{} below cell bottom".format(elev)

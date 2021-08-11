@@ -210,6 +210,7 @@ usg_rch_evt.nam"
     m = flopy.modflow.Modflow.load(
         nam, model_ws=model_ws, version="mfusg", exe_name=v
     )
+    m.riv.check()
     m.model_ws = tpth
     m.write_input()
     if run:
