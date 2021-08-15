@@ -23,6 +23,7 @@ from flopy.utils.gridgen import Gridgen
 try:
     import matplotlib
     import matplotlib.pyplot as plt
+    from matplotlib.collections import QuadMesh, PathCollection, LineCollection
 except:
     print("Matplotlib not installed, tests cannot be run.")
     matplotlib = None
@@ -304,6 +305,36 @@ def test_mf6disu():
             plt.savefig(fname)
             plt.close("all")
 
+            # check plot_bc works for unstructured mf6 grids
+            # (for each layer, and then for all layers in one plot)
+            plot_ranges = [range(gwf.modelgrid.nlay), range(1)]
+            plot_alls = [False, True]
+            for plot_range, plot_all in zip(plot_ranges, plot_alls):
+                f_bc = plt.figure(figsize=(10, 10))
+                for ilay in plot_range:
+                    ax = plt.subplot(1, plot_range[-1] + 1, ilay + 1)
+                    pmv = flopy.plot.PlotMapView(gwf, layer=ilay, ax=ax)
+                    ax.set_aspect("equal")
+
+                    pmv.plot_bc(
+                        "CHD", plotAll=plot_all, edgecolor="None", zorder=2
+                    )
+                    pmv.plot_grid(
+                        colors="k", linewidth=0.3, alpha=0.1, zorder=1
+                    )
+
+                    if len(ax.collections) == 0:
+                        raise AssertionError(
+                            "Boundary condition was not drawn"
+                        )
+
+                    for col in ax.collections:
+                        if not isinstance(
+                            col, (QuadMesh, PathCollection, LineCollection)
+                        ):
+                            raise AssertionError("Unexpected collection type")
+                plt.close()
+
     return
 
 
@@ -398,6 +429,36 @@ def test_mfusg():
             fname = os.path.join(ws, fname)
             plt.savefig(fname)
             plt.close("all")
+
+            # check plot_bc works for unstructured mfusg grids
+            # (for each layer, and then for all layers in one plot)
+            plot_ranges = [range(disu.nlay), range(1)]
+            plot_alls = [False, True]
+            for plot_range, plot_all in zip(plot_ranges, plot_alls):
+                f_bc = plt.figure(figsize=(10, 10))
+                for ilay in plot_range:
+                    ax = plt.subplot(1, plot_range[-1] + 1, ilay + 1)
+                    pmv = flopy.plot.PlotMapView(m, layer=ilay, ax=ax)
+                    ax.set_aspect("equal")
+
+                    pmv.plot_bc(
+                        "CHD", plotAll=plot_all, edgecolor="None", zorder=2
+                    )
+                    pmv.plot_grid(
+                        colors="k", linewidth=0.3, alpha=0.1, zorder=1
+                    )
+
+                    if len(ax.collections) == 0:
+                        raise AssertionError(
+                            "Boundary condition was not drawn"
+                        )
+
+                    for col in ax.collections:
+                        if not isinstance(
+                            col, (QuadMesh, PathCollection, LineCollection)
+                        ):
+                            raise AssertionError("Unexpected collection type")
+                plt.close()
 
         # re-run with an LPF keyword specified. This would have thrown an error
         # before the addition of ikcflag to mflpf.py (flopy 3.3.3 and earlier).
