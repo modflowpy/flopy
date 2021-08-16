@@ -40,7 +40,7 @@ jobs:
 
     - name: Base flopy installation
       run: |
-        pip install .
+        pip install . --use-feature=in-tree-build
 
     - name: Print flopy version
       run: |
