@@ -164,7 +164,7 @@ jobs:
       run: |
         pip install https://github.com/modflowpy/pymake/zipball/master
         pip install xmipy
-        pip install .
+        pip install . --use-feature=in-tree-build
 
     - name: Setup symbolic link to gfortran on Linux
       if: runner.os == 'Linux'
