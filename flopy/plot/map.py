@@ -940,5 +940,3 @@ class PlotMapView:
             cb = plt.colorbar(sp, ax=ax, shrink=shrink)
             cb.set_label(colorbar_label)
         return sp
-
-
