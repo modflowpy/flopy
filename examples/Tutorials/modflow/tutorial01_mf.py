@@ -175,6 +175,9 @@ cbb = bf.CellBudgetFile(modelname + ".cbc")
 kstpkper_list = cbb.get_kstpkper()
 frf = cbb.get_data(text="FLOW RIGHT FACE", totim=times[-1])[0]
 fff = cbb.get_data(text="FLOW FRONT FACE", totim=times[-1])[0]
+qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(
+    (frf, fff, None), mf, head
+)
 
 # Create the figure
 
@@ -184,4 +187,4 @@ modelmap = flopy.plot.PlotMapView(model=mf, layer=0, ax=ax)
 qm = modelmap.plot_ibound()
 lc = modelmap.plot_grid()
 cs = modelmap.contour_array(head, levels=np.linspace(0, 10, 11))
-quiver = modelmap.plot_discharge(frf, fff, head=head)
+quiver = modelmap.plot_vector(qx, qy)
