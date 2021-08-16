@@ -256,6 +256,30 @@ def test_usg_rch_evt_models02a():
         success, buff = m.run_model()
         assert success
 
+def test_usg_ss_to_tr():
+    # Test switching steady model to transient
+    # https://github.com/modflowpy/flopy/issues/1187
+    model_ws = os.path.join(
+        "..", "examples", "data", "mfusg_test", "01A_nestedgrid_nognc"
+    )
+    nam = "flow.nam"
+    m = flopy.modflow.Modflow.load(
+        nam, model_ws=model_ws, version="mfusg", exe_name=v
+    )
+    m.model_ws = tpth
+    m.disu.steady = [False]
+    m.write_input()
+    if run:
+        success, buff = m.run_model()
+        assert success
+
+    m = flopy.modflow.Modflow.load(
+        nam, model_ws=tpth, version="mfusg", exe_name=v
+    )
+    if run:
+        success, buff = m.run_model()
+        assert success
+
 
 if __name__ == "__main__":
     test_usg_disu_load()
@@ -266,3 +290,4 @@ if __name__ == "__main__":
     test_usg_rch_evt_models01()
     test_usg_rch_evt_models02()
     test_usg_rch_evt_models02a()
+    test_usg_ss_to_tr()

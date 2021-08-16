@@ -399,7 +399,7 @@ class PackageInterface:
                         [sarrays["sy"][sl] for sl in node_k_slices]
                     ).flatten()
                     active = np.asarray(
-                        [active[sl] for sl in node_k_slices]
+                        [active[sl] for sl in node_k_slices], dtype=bool
                     ).flatten()
                 else:
                     sarrays["sy"] = sarrays["sy"][inds, :, :]
