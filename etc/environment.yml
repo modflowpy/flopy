@@ -24,5 +24,5 @@ dependencies:
   - descartes
   - pyproj
   - shapely
-  - geos>3.9.1, <3.9.1  # required until 3.9.2 is available
+  - geos>=3.9.2,<3.9.0  # required until 3.9.2 is available
   - geojson
