@@ -20,6 +20,7 @@ from flopy.discretization.modeltime import ModelTime
 from ..mbase import ModelInterface
 from .utils.mfenums import DiscretizationType
 from .data import mfstructure
+from .utils.output_util import MF6Output
 from ..utils.check import mf6check
 
 
@@ -606,7 +607,7 @@ class MFModel(PackageContainer, ModelInterface):
         try:
             return self.oc.output
         except AttributeError:
-            return None
+            return MF6Output(self)
 
     def export(self, f, **kwargs):
         """Method to export a model to a shapefile or netcdf file
