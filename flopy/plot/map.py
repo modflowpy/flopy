@@ -486,8 +486,10 @@ class PlotMapView:
             pa[tuple(idx[1:])] = 1
             for k in range(nlay):
                 plotarray[k] = pa.copy()
-        else:
+        elif len(self.mg.shape) > 1:
             plotarray[tuple(idx)] = 1
+        else:
+            plotarray[idx] = 1
 
         # mask the plot array
         plotarray = np.ma.masked_equal(plotarray, 0)
