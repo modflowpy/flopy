@@ -1507,5 +1507,3 @@ class PlotCrossSection:
             patches = None
 
         return patches
-
-
