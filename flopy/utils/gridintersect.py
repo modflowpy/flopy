@@ -1481,7 +1481,7 @@ class GridIntersect:
         return ax
 
     @staticmethod
-    def plot_linestring(rec, ax=None, **kwargs):
+    def plot_linestring(rec, ax=None, cmap=None, **kwargs):
         """method to plot the linestring intersection results from the
         resulting numpy.recarray.
 
@@ -1494,6 +1494,8 @@ class GridIntersect:
             (the resulting shapes)
         ax : matplotlib.pyplot.axes, optional
             axes to plot onto, if not provided, creates a new figure
+        cmap : str
+            matplotlib colormap
         **kwargs:
             passed to the plot function
 
@@ -1509,13 +1511,24 @@ class GridIntersect:
         if ax is None:
             _, ax = plt.subplots()
 
+        specified_color = True
+        if "c" in kwargs:
+            c = kwargs.pop("c")
+        elif "color" in kwargs:
+            c = kwargs.pop("color")
+        else:
+            specified_color = False
+
+        if cmap is not None:
+            colormap = plt.get_cmap(cmap)
+            colors = colormap(np.linspace(0, 1, rec.shape[0]))
+
         for i, ishp in enumerate(rec.ixshapes):
-            if "c" in kwargs:
-                c = kwargs.pop("c")
-            elif "color" in kwargs:
-                c = kwargs.pop("color")
-            else:
-                c = "C{}".format(i % 10)
+            if not specified_color:
+                if cmap is None:
+                    c = "C{}".format(i % 10)
+                else:
+                    c = colors[i]
             if ishp.type == "MultiLineString":
                 for part in ishp:
                     ax.plot(part.xy[0], part.xy[1], ls="-", c=c, **kwargs)

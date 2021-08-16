@@ -612,7 +612,82 @@ def test_embedded_lak_prudic():
     return
 
 
+def test_embedded_lak_prudic_mixed():
+    lakebed_leakance = 1.0  # Lakebed leakance ($ft^{-1}$)
+    nlay = 8  # Number of layers
+    nrow = 36  # Number of rows
+    ncol = 23  # Number of columns
+    delr = float(405.665)  # Column width ($ft$)
+    delc = float(403.717)  # Row width ($ft$)
+    delv = 15.0  # Layer thickness ($ft$)
+    top = 100.0  # Top of the model ($ft$)
+
+    shape2d = (nrow, ncol)
+    shape3d = (nlay, nrow, ncol)
+
+    # load data from text files
+    data_ws = os.path.join("..", "examples", "data", "mf6_test")
+    fname = os.path.join(data_ws, "prudic2004t2_bot1.dat")
+    bot0 = np.loadtxt(fname)
+    botm = np.array(
+        [bot0]
+        + [
+            np.ones(shape2d, dtype=float) * (bot0 - (delv * k))
+            for k in range(1, nlay)
+        ]
+    )
+    fname = os.path.join(data_ws, "prudic2004t2_idomain1.dat")
+    idomain0 = np.loadtxt(fname, dtype=np.int32)
+    idomain = np.array(nlay * [idomain0], dtype=np.int32)
+    fname = os.path.join(data_ws, "prudic2004t2_lakibd.dat")
+    lakibd = np.loadtxt(fname, dtype=int)
+    lake_map = np.ones(shape3d, dtype=np.int32) * -1
+    lake_map[0, :, :] = lakibd[:, :] - 1
+
+    lakebed_leakance = np.zeros(shape2d, dtype=object)
+    idx = np.where(lake_map[0, :, :] == 0)
+    lakebed_leakance[idx] = "none"
+    idx = np.where(lake_map[0, :, :] == 1)
+    lakebed_leakance[idx] = 1.0
+    lakebed_leakance = lakebed_leakance.tolist()
+
+    # build StructuredGrid
+    model_grid = flopy.discretization.StructuredGrid(
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=np.ones(ncol, dtype=float) * delr,
+        delc=np.ones(nrow, dtype=float) * delc,
+        top=np.ones(shape2d, dtype=float) * top,
+        botm=botm,
+        idomain=idomain,
+    )
+
+    # test mixed lakebed leakance list
+    (_, _, connectiondata,) = flopy.mf6.utils.get_lak_connections(
+        model_grid,
+        lake_map,
+        idomain=idomain,
+        bedleak=lakebed_leakance,
+    )
+
+    # test the connections
+    for data in connectiondata:
+        lakeno, bedleak = data[0], data[4]
+        if lakeno == 0:
+            assert (
+                bedleak == "none"
+            ), "bedleak for lake 0 " "is not 'none' ({})".format(bedleak)
+        else:
+            assert (
+                bedleak == 1.0
+            ), "bedleak for lake 1 " "is not 1.0 ({})".format(bedleak)
+
+    return
+
+
 if __name__ == "__main__":
+    test_embedded_lak_prudic_mixed()
     test_base_run()
     test_lake()
     test_embedded_lak_ex01()
