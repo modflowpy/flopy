@@ -13,13 +13,6 @@ import numpy as np
 from ..datbase import DataInterface, DataListInterface, DataType
 from ..utils.recarray_utils import create_empty_recarray
 
-try:
-    from numpy.lib import NumpyVersion
-
-    numpy114 = NumpyVersion(np.__version__) >= "1.14.0"
-except ImportError:
-    numpy114 = False
-
 
 class MfList(DataInterface, DataListInterface):
     """
@@ -279,11 +272,7 @@ class MfList(DataInterface, DataListInterface):
                     fmts.append("%10d")
             elif vtype == "f":
                 if use_free:
-                    if numpy114:
-                        # Use numpy's floating-point formatter (Dragon4)
-                        fmts.append("%15s")
-                    else:
-                        fmts.append("%15.7E")
+                    fmts.append("%15s")
                 else:
                     fmts.append("%10G")
             elif vtype == "o":
@@ -745,7 +734,7 @@ class MfList(DataInterface, DataListInterface):
 
             if kper_vtype == np.recarray:
                 name = f.name
-                if self.__binary or not numpy114:
+                if self.__binary:
                     f.close()
                     # switch file append mode to binary
                     with open(name, "ab+") as f:
