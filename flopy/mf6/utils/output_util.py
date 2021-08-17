@@ -6,7 +6,6 @@ from ...utils import (
     ZoneBudget6,
     ZoneFile6,
     MfListBudget,
-    MtListBudget,
 )
 from ...utils.observationfile import CsvFile
 from ...pakbase import PackageInterface
@@ -101,6 +100,28 @@ class MF6Output:
                                         if str(ky[-2]).lower() == "fileout":
                                             data = [[ky[-1]]]
                                             break
+                                        elif (
+                                            str(ky[-3]) == "continuous"
+                                            and str(ky[-1]) == "output"
+                                        ):
+                                            if (
+                                                obj._simulation_data.mfdata[
+                                                    ky
+                                                ].array[0][0]
+                                                == "fileout"
+                                            ):
+                                                data = [
+                                                    [
+                                                        obj._simulation_data.mfdata[
+                                                            ky
+                                                        ].array[
+                                                            0
+                                                        ][
+                                                            -2
+                                                        ]
+                                                    ]
+                                                ]
+                                                break
 
                             if rectype == "package_convergence":
                                 rectype = "csv"
@@ -301,13 +322,9 @@ class MF6Output:
             MfListBudget, MtListBudget object
         """
         if self._lst is not None:
-            reader = MfListBudget
-            if self._mtype == "gwt":
-                reader = MtListBudget
-
             try:
                 list_file = os.path.join(self._sim_ws, self._lst)
-                return reader(list_file)
+                return MfListBudget(list_file)
             except (AssertionError, IOError, FileNotFoundError):
                 return None
 
