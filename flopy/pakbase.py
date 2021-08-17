@@ -376,6 +376,7 @@ class PackageInterface:
             )
 
             # only check specific yield for convertible layers
+            skip_sy_check = False
             if "laytyp" in self.__dict__:
                 inds = np.array(
                     [
@@ -405,6 +406,8 @@ class PackageInterface:
                     else:
                         sarrays["sy"] = sarrays["sy"][inds, :, :]
                         active = active[inds, :, :]
+                else:
+                    skip_sy_check = True
             else:
                 iconvert = self.iconvert.array
                 for ishape in np.ndindex(active.shape):
@@ -412,19 +415,20 @@ class PackageInterface:
                         active[ishape] = (
                             iconvert[ishape] > 0 or iconvert[ishape] < 0
                         )
-            chk.values(
-                sarrays["sy"],
-                active & (sarrays["sy"] < 0),
-                "zero or negative specific yield values",
-                "Error",
-            )
-            self._check_thresholds(
-                chk,
-                sarrays["sy"],
-                active,
-                chk.property_threshold_values["sy"],
-                "specific yield",
-            )
+            if not skip_sy_check:
+                chk.values(
+                    sarrays["sy"],
+                    active & (sarrays["sy"] < 0),
+                    "zero or negative specific yield values",
+                    "Error",
+                )
+                self._check_thresholds(
+                    chk,
+                    sarrays["sy"],
+                    active,
+                    chk.property_threshold_values["sy"],
+                    "specific yield",
+                )
 
 
 class Package(PackageInterface):
