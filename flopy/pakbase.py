@@ -385,7 +385,7 @@ class PackageInterface:
                         for l in self.laytyp
                     ]
                 )
-                if self.ss.shape[1] is None:
+                if self.sy.shape[1] is None:
                     # unstructured; build flat nodal property array slicers (by layer)
                     node_to = np.cumsum([s.array.size for s in self.ss])
                     node_from = np.array([0] + list(node_to[:-1]))
@@ -395,11 +395,11 @@ class PackageInterface:
                             for n_from, n_to in zip(node_from, node_to)
                         ]
                     )[inds]
-                    sarrays["sy"] = np.asarray(
+                    sarrays["sy"] = np.concatenate(
                         [sarrays["sy"][sl] for sl in node_k_slices]
                     ).flatten()
-                    active = np.asarray(
-                        [active[sl] for sl in node_k_slices], dtype=bool
+                    active = np.concatenate(
+                        [active[sl] for sl in node_k_slices]
                     ).flatten()
                 else:
                     sarrays["sy"] = sarrays["sy"][inds, :, :]
