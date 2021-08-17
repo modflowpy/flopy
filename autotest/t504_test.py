@@ -1235,6 +1235,40 @@ def test_mf6_output():
         raise AssertionError()
 
 
+def test_mf6_output_add_observation():
+    model_name = "lakeex2a"
+    sim_ws = os.path.join("..", "examples", "data", "mf6", "test045_lake2tr")
+    sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws, exe_name=exe_name)
+    gwf = sim.get_model(model_name)
+
+    # remove sfr_obs and add a new sfr obs
+    sfr = gwf.sfr
+
+    obs_file = "{}.sfr.obs".format(model_name)
+    csv_file = obs_file + ".csv"
+    obs_dict = {
+        csv_file: [
+            ("l08_stage", "stage", (8,)),
+            ("l09_stage", "stage", (9,)),
+            ("l14_stage", "stage", (14,)),
+            ("l15_stage", "stage", (15,)),
+        ]
+    }
+    gwf.sfr.obs.initialize(
+        filename=obs_file, digits=10, print_input=True, continuous=obs_dict
+    )
+
+    sim.simulation_data.mfpath.set_sim_path(cpth)
+    sim.write_simulation()
+    sim.run_simulation()
+
+    # check that .output finds the newly added OBS package
+    sfr_obs = gwf.sfr.output.obs()
+
+    if not isinstance(sfr_obs, flopy.utils.Mf6Obs):
+        raise TypeError("remove and add observation test (Mf6Output) failed")
+
+
 if __name__ == "__main__":
     test001a_tharmonic()
     test001e_uzf_3lay()
@@ -1249,3 +1283,4 @@ if __name__ == "__main__":
     test_cbc_precision()
     test_replace_ims_package()
     test_mf6_output()
+    test_mf6_output_add_observation()
