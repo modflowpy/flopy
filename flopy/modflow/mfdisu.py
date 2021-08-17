@@ -15,8 +15,6 @@ from ..discretization.unstructuredgrid import UnstructuredGrid
 ITMUNI = {"u": 0, "s": 1, "m": 2, "h": 3, "d": 4, "y": 5}
 LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}
 
-warnings.simplefilter("always", PendingDeprecationWarning)
-
 
 class ModflowDisU(Package):
     """
@@ -475,49 +473,12 @@ class ModflowDisU(Package):
 
         self.start_datetime = start_datetime
 
-        # calculate layer thicknesses
-        self.__calculate_thickness()
-
         # get neighboring nodes
         self._get_neighboring_nodes()
 
         # Add package and return
         self.parent.add_package(self)
         return
-
-    def __calculate_thickness(self):
-        # set ncol and nrow for array readers
-        nrow = None
-        ncol = self.nodelay.array
-        nlay = self.nlay
-        thk = []
-        for k in range(self.nlay):
-            thk.append(self.top[k] - self.bot[k])
-        self.__thickness = Util3d(
-            self.parent,
-            (nlay, nrow, ncol),
-            np.float32,
-            thk,
-            name="thickness",
-        )
-        return
-
-    @property
-    def thickness(self):
-        """
-        Return cell thicknesses.
-
-        Returns
-        -------
-        thickness : array of floats (nodes,)
-
-        """
-        warnings.warn(
-            "ModflowDisU.thickness will be deprecated and removed "
-            "in version 3.3.5.  Use grid.thick().",
-            PendingDeprecationWarning,
-        )
-        return self.__thickness.array
 
     def checklayerthickness(self):
         """

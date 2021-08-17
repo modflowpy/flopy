@@ -21,8 +21,6 @@ from ..utils.flopy_io import line_parse
 ITMUNI = {"u": 0, "s": 1, "m": 2, "h": 3, "d": 4, "y": 5}
 LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}
 
-warnings.simplefilter("always", PendingDeprecationWarning)
-
 
 class ModflowDis(Package):
     """
@@ -287,8 +285,6 @@ class ModflowDis(Package):
         )
 
         self.start_datetime = start_datetime
-        # calculate layer thicknesses
-        self.__calculate_thickness()
         self._totim = None
 
     @property
@@ -632,36 +628,6 @@ class ModflowDis(Package):
             return self.botm.array
         else:
             return self.botm.array[k, :, :]
-
-    def __calculate_thickness(self):
-        # thk = []
-        # thk.append(self.top - self.botm[0])
-        # for k in range(1, self.nlay + sum(self.laycbd)):
-        #     thk.append(self.botm[k - 1] - self.botm[k])
-        self.__thickness = Util3d(
-            self.parent,
-            (self.nlay + sum(self.laycbd), self.nrow, self.ncol),
-            np.float32,
-            self.parent.modelgrid.thick,
-            name="thickness",
-        )
-
-    @property
-    def thickness(self):
-        """
-        Return cell thicknesses.
-
-        Returns
-        -------
-        thickness : array of floats (nlay, nrow, ncol)
-
-        """
-        warnings.warn(
-            "ModflowDis.thickness will be deprecated and removed "
-            "in version 3.3.5.  Use grid.thick().",
-            PendingDeprecationWarning,
-        )
-        return self.parent.modelgrid.thick
 
     def write_file(self, check=True):
         """
