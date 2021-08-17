@@ -385,25 +385,26 @@ class PackageInterface:
                         for l in self.laytyp
                     ]
                 )
-                if self.sy.shape[1] is None:
-                    # unstructured; build flat nodal property array slicers (by layer)
-                    node_to = np.cumsum([s.array.size for s in self.ss])
-                    node_from = np.array([0] + list(node_to[:-1]))
-                    node_k_slices = np.array(
-                        [
-                            np.s_[n_from:n_to]
-                            for n_from, n_to in zip(node_from, node_to)
-                        ]
-                    )[inds]
-                    sarrays["sy"] = np.concatenate(
-                        [sarrays["sy"][sl] for sl in node_k_slices]
-                    ).flatten()
-                    active = np.concatenate(
-                        [active[sl] for sl in node_k_slices]
-                    ).flatten()
-                else:
-                    sarrays["sy"] = sarrays["sy"][inds, :, :]
-                    active = active[inds, :, :]
+                if inds.any():
+                    if self.sy.shape[1] is None:
+                        # unstructured; build flat nodal property array slicers (by layer)
+                        node_to = np.cumsum([s.array.size for s in self.ss])
+                        node_from = np.array([0] + list(node_to[:-1]))
+                        node_k_slices = np.array(
+                            [
+                                np.s_[n_from:n_to]
+                                for n_from, n_to in zip(node_from, node_to)
+                            ]
+                        )[inds]
+                        sarrays["sy"] = np.concatenate(
+                            [sarrays["sy"][sl] for sl in node_k_slices]
+                        ).flatten()
+                        active = np.concatenate(
+                            [active[sl] for sl in node_k_slices]
+                        ).flatten()
+                    else:
+                        sarrays["sy"] = sarrays["sy"][inds, :, :]
+                        active = active[inds, :, :]
             else:
                 iconvert = self.iconvert.array
                 for ishape in np.ndindex(active.shape):
