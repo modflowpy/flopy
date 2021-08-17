@@ -152,12 +152,9 @@ def test_mf6disv():
 
     if mf6_exe is not None:
         sim.run_simulation(silent=True)
-        head = flopy.utils.HeadFile(os.path.join(ws, head_file)).get_data()
-        bud = flopy.utils.CellBudgetFile(
-            os.path.join(ws, budget_file), precision="double"
-        )
+        head = gwf.output.head().get_data()
+        bud = gwf.output.budget()
         spdis = bud.get_data(text="DATA-SPDIS")[0]
-
         if matplotlib is not None:
             f = plt.figure(figsize=(10, 10))
             vmin = head.min()
@@ -178,7 +175,7 @@ def test_mf6disv():
                     vmax=vmax,
                 )
                 ax.set_title("Layer {}".format(ilay + 1))
-                pmv.plot_specific_discharge(spdis, color="white")
+                pmv.plot_vector(spdis["qx"], spdis["qy"], color="white")
             fname = "results.png"
             fname = os.path.join(ws, fname)
             plt.savefig(fname)
@@ -273,10 +270,8 @@ def test_mf6disu():
 
     if mf6_exe is not None:
         sim.run_simulation(silent=True)
-        head = flopy.utils.HeadFile(os.path.join(ws, head_file)).get_data()
-        bud = flopy.utils.CellBudgetFile(
-            os.path.join(ws, budget_file), precision="double"
-        )
+        head = gwf.output.head().get_data()
+        bud = gwf.output.budget()
         spdis = bud.get_data(text="DATA-SPDIS")[0]
 
         if matplotlib is not None:
@@ -299,7 +294,7 @@ def test_mf6disu():
                     vmax=vmax,
                 )
                 ax.set_title("Layer {}".format(ilay + 1))
-                pmv.plot_specific_discharge(spdis, color="white")
+                pmv.plot_vector(spdis["qx"], spdis["qy"], color="white")
             fname = "results.png"
             fname = os.path.join(ws, fname)
             plt.savefig(fname)
