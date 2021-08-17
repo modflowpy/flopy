@@ -735,7 +735,7 @@ def test_mg():
         botm=botm,
     )
     bas = flopy.modflow.ModflowBas(ms, ifrefm=True)
-    t = dis.thickness
+    t = ms.modelgrid.thick
 
     # test instantiation of an empty basic Structured Grid
     mg = flopy.discretization.StructuredGrid(dis.delc.array, dis.delr.array)
@@ -1503,20 +1503,28 @@ def test_model_dot_plot():
     import matplotlib.pyplot as plt
 
     loadpth = os.path.join("..", "examples", "data", "mf2005_test")
-    ml = flopy.modflow.Modflow.load("ibs2k.nam", "mf2k", model_ws=loadpth)
+    ml = flopy.modflow.Modflow.load(
+        "ibs2k.nam", "mf2k", model_ws=loadpth, check=False
+    )
     ax = ml.plot()
-    assert isinstance(ax, list)
-    assert len(ax) == 20
+    assert isinstance(ax, list), "ml.plot() ax is is not a list"
+    assert len(ax) == 18, "number of axes ({}) is " "not equal to 18".format(
+        len(ax)
+    )
     plt.close("all")
 
     # plot specific dataset
     ax = ml.bcf6.hy.plot()
-    assert isinstance(ax, list)
-    assert len(ax) == 2
+    assert isinstance(ax, list), "ml.bcf6.hy.plot() ax is is not a list"
+    assert len(ax) == 2, "number of hy axes ({}) " "is not equal to 2".format(
+        len(ax)
+    )
 
     # special case where nlay != plottable
     ax = ml.bcf6.vcont.plot()
-    assert isinstance(ax, plt.Axes)
+    assert isinstance(
+        ax, plt.Axes
+    ), "ml.bcf6.vcont.plot() ax is is not of type plt.Axes"
     plt.close("all")
 
 
@@ -1783,12 +1791,12 @@ def main():
     # test_netcdf_classmethods()
     # build_netcdf()
     # build_sfr_netcdf()
-    test_twri_mg()
+    # test_twri_mg()
     # test_mg()
     # test_mbase_modelgrid()
     # test_mt_modelgrid()
     # test_rotation()
-    # test_model_dot_plot()
+    test_model_dot_plot()
     # test_get_lrc_get_node()
     # test_vertex_model_dot_plot()
     # test_sr_with_Map()
