@@ -376,6 +376,7 @@ class PackageInterface:
             )
 
             # only check specific yield for convertible layers
+            skip_sy_check = False
             if "laytyp" in self.__dict__:
                 inds = np.array(
                     [
@@ -385,25 +386,28 @@ class PackageInterface:
                         for l in self.laytyp
                     ]
                 )
-                if self.ss.shape[1] is None:
-                    # unstructured; build flat nodal property array slicers (by layer)
-                    node_to = np.cumsum([s.array.size for s in self.ss])
-                    node_from = np.array([0] + list(node_to[:-1]))
-                    node_k_slices = np.array(
-                        [
-                            np.s_[n_from:n_to]
-                            for n_from, n_to in zip(node_from, node_to)
-                        ]
-                    )[inds]
-                    sarrays["sy"] = np.asarray(
-                        [sarrays["sy"][sl] for sl in node_k_slices]
-                    ).flatten()
-                    active = np.asarray(
-                        [active[sl] for sl in node_k_slices], dtype=bool
-                    ).flatten()
+                if inds.any():
+                    if self.sy.shape[1] is None:
+                        # unstructured; build flat nodal property array slicers (by layer)
+                        node_to = np.cumsum([s.array.size for s in self.ss])
+                        node_from = np.array([0] + list(node_to[:-1]))
+                        node_k_slices = np.array(
+                            [
+                                np.s_[n_from:n_to]
+                                for n_from, n_to in zip(node_from, node_to)
+                            ]
+                        )[inds]
+                        sarrays["sy"] = np.concatenate(
+                            [sarrays["sy"][sl] for sl in node_k_slices]
+                        ).flatten()
+                        active = np.concatenate(
+                            [active[sl] for sl in node_k_slices]
+                        ).flatten()
+                    else:
+                        sarrays["sy"] = sarrays["sy"][inds, :, :]
+                        active = active[inds, :, :]
                 else:
-                    sarrays["sy"] = sarrays["sy"][inds, :, :]
-                    active = active[inds, :, :]
+                    skip_sy_check = True
             else:
                 iconvert = self.iconvert.array
                 for ishape in np.ndindex(active.shape):
@@ -411,19 +415,20 @@ class PackageInterface:
                         active[ishape] = (
                             iconvert[ishape] > 0 or iconvert[ishape] < 0
                         )
-            chk.values(
-                sarrays["sy"],
-                active & (sarrays["sy"] < 0),
-                "zero or negative specific yield values",
-                "Error",
-            )
-            self._check_thresholds(
-                chk,
-                sarrays["sy"],
-                active,
-                chk.property_threshold_values["sy"],
-                "specific yield",
-            )
+            if not skip_sy_check:
+                chk.values(
+                    sarrays["sy"],
+                    active & (sarrays["sy"] < 0),
+                    "zero or negative specific yield values",
+                    "Error",
+                )
+                self._check_thresholds(
+                    chk,
+                    sarrays["sy"],
+                    active,
+                    chk.property_threshold_values["sy"],
+                    "specific yield",
+                )
 
 
 class Package(PackageInterface):
