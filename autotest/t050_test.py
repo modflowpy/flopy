@@ -175,7 +175,7 @@ def test_vtk_export_packages():
     # totalbytes = os.path.getsize(filetocheck)
     # assert(totalbytes==1019857)
     nlines = count_lines_in_file(filetocheck)
-    assert nlines == 8496
+    assert nlines == 8491, "nlines ({}) not equal to 8491".format(nlines)
 
     # upw with point scalar output
     output_dir = os.path.join(cpth, "UPW")
@@ -184,7 +184,7 @@ def test_vtk_export_packages():
     # totalbytes1 = os.path.getsize(filetocheck)
     # assert(totalbytes1==2559173)
     nlines1 = count_lines_in_file(filetocheck)
-    assert nlines1 == 21215
+    assert nlines1 == 21215, "nlines ({}) not equal to 21215".format(nlines)
 
     # bas with smoothing on
     output_dir = os.path.join(cpth, "BAS")
@@ -528,7 +528,7 @@ def test_vtk_vti():
     # totalbytes = os.path.getsize(filetocheck)
     # assert(totalbytes==1075)
     nlines = count_lines_in_file(filetocheck)
-    assert nlines == 21
+    assert nlines == 17, "nlines ({}) not equal to 17".format(nlines)
 
     # with point scalar
     dis.export(output_dir + "_points", fmt="vtk", point_scalars=True)
@@ -536,7 +536,7 @@ def test_vtk_vti():
     # totalbytes1 = os.path.getsize(filetocheck)
     # assert(totalbytes1==2474)
     nlines1 = count_lines_in_file(filetocheck)
-    assert nlines1 == 38
+    assert nlines1 == 29, "nlines1 ({}) not equal to 29".format(nlines1)
 
     # with binary
     dis.export(output_dir + "_bin", fmt="vtk", binary=True)
@@ -554,7 +554,7 @@ def test_vtk_vti():
     # totalbytes3 = os.path.getsize(filetocheck)
     # assert(totalbytes3==1606)
     nlines3 = count_lines_in_file(filetocheck)
-    assert nlines3 == 41
+    assert nlines3 == 37, "nlines3 ({}) not equal to 37".format(nlines3)
 
     # force .vtu
     filenametocheck = "DIS.vtu"
@@ -563,7 +563,7 @@ def test_vtk_vti():
     # totalbytes4 = os.path.getsize(filetocheck)
     # assert(totalbytes4==5723)
     nlines4 = count_lines_in_file(filetocheck)
-    assert nlines4 == 129
+    assert nlines4 == 125, "nlines4 ({}) not equal to 125".format(nlines4)
 
     # vector
     filenametocheck = "vect.vti"
@@ -954,17 +954,17 @@ def test_vtk_export_true2d_nonregyz():
 
 
 if __name__ == "__main__":
-    test_vtk_export_array2d()
-    test_vtk_export_array3d()
-    test_vtk_transient_array_2d()
+    # test_vtk_export_array2d()
+    # test_vtk_export_array3d()
+    # test_vtk_transient_array_2d()
     test_vtk_export_packages()
-    test_vtk_mf6()
-    test_vtk_binary_head_export()
-    test_vtk_cbc()
-    test_vtk_vector()
+    # test_vtk_mf6()
+    # test_vtk_binary_head_export()
+    # test_vtk_cbc()
+    # test_vtk_vector()
     test_vtk_vti()
-    test_vtk_vtr()
-    test_vtk_export_true2d_regular()
-    test_vtk_export_true2d_nonregxy()
-    test_vtk_export_true2d_nonregxz()
-    test_vtk_export_true2d_nonregyz()
+    # test_vtk_vtr()
+    # test_vtk_export_true2d_regular()
+    # test_vtk_export_true2d_nonregxy()
+    # test_vtk_export_true2d_nonregxz()
+    # test_vtk_export_true2d_nonregyz()
