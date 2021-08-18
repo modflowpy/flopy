@@ -707,12 +707,13 @@ def get_specific_discharge(
     if classical_budget:
         # get saturated thickness (head - bottom elev for unconfined layer)
         if head is None:
-            sat_thk = modelgrid.thick
+            sat_thk = modelgrid.remove_confining_beds(modelgrid.thick)
         else:
             sat_thk = modelgrid.saturated_thick(
                 head, mask=[model.hdry, model.hnoflo]
             )
-            sat_thk.shape = model.modelgrid.shape
+
+        sat_thk.shape = modelgrid.shape
 
         # inform modelgrid of no-flow and dry cells
         modelgrid = model.modelgrid

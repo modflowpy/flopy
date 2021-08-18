@@ -199,7 +199,53 @@ def test_unstructured_thick():
     return
 
 
+def test_ncb_thick():
+    nlay = 3
+    nrow = ncol = 15
+    laycbd = np.array([1, 2, 0], dtype=int)
+    ncb = np.count_nonzero(laycbd)
+    dx = dy = 150
+    delc = np.array([dy,] * nrow)
+    delr = np.array([dx, ] * ncol)
+    top = np.ones((15, 15))
+    botm = np.ones((nlay + ncb, nrow, ncol))
+    elevations = np.array([-10, -20, -40, -50, -70])[:, np.newaxis]
+    botm *= elevations[:, None]
+
+    modelgrid = StructuredGrid(
+        delc=delc,
+        delr=delr,
+        top=top,
+        botm=botm,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        laycbd=laycbd
+    )
+
+    thick = modelgrid.thick
+
+    if not thick.shape[0] == nlay + ncb:
+        raise AssertionError("grid thick attribute returns incorrect shape")
+
+    thick = modelgrid.remove_confining_beds(modelgrid.thick)
+    if not thick.shape == modelgrid.shape:
+        raise AssertionError("quasi3d confining beds not properly removed")
+
+    sat_thick = modelgrid.saturated_thick(modelgrid.thick)
+    if not sat_thick.shape == modelgrid.shape:
+        raise AssertionError(
+            "saturated_thickness confining beds not removed"
+        )
+
+    if sat_thick[1, 0, 0] != 20:
+        raise AssertionError(
+            "saturated_thickness is not properly indexing confining beds"
+        )
+
+
 if __name__ == "__main__":
     test_unstructured_thick()
     test_vertices_thick()
     test_structured_thick()
+    test_ncb_thick()

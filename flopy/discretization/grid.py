@@ -325,6 +325,11 @@ class Grid:
         thick = self.thick
         top = self.top_botm[:-1].reshape(thick.shape)
         bot = self.top_botm[1:].reshape(thick.shape)
+        thick = self.remove_confining_beds(thick)
+        top = self.remove_confining_beds(top)
+        bot = self.remove_confining_beds(bot)
+        array = self.remove_confining_beds(array)
+
         idx = np.where((array < top) & (array > bot))
         thick[idx] = array[idx] - bot[idx]
         idx = np.where(array <= bot)
@@ -450,6 +455,32 @@ class Grid:
     @property
     def cross_section_vertices(self):
         return self.xyzvertices[0], self.xyzvertices[1]
+
+    def remove_confining_beds(self, array):
+        """
+        Method to remove confining bed layers from an array
+
+        Parameters
+        ----------
+        array : np.ndarray
+            array to remove quasi3d confining bed data from. Shape of axis 0
+            should be (self.lay + ncb) to remove beds
+        Returns
+        -------
+            np.ndarray
+        """
+        if self.laycbd is not None:
+            ncb = np.count_nonzero(self.laycbd)
+            if ncb > 0:
+                if array.shape[0] == self.shape[0] + ncb:
+                    cb = 0
+                    idx = []
+                    for ix, i in enumerate(self.laycbd):
+                        idx.append(ix + cb)
+                        if i > 0:
+                            cb += 1
+                    array = array[idx]
+        return array
 
     def cross_section_lay_ncpl_ncb(self, ncb):
         """
