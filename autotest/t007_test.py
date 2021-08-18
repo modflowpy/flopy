@@ -7,7 +7,6 @@ import glob
 import os
 import shutil
 import numpy as np
-import warnings
 import flopy
 
 pth = os.path.join("..", "examples", "data", "mf2005_test")
@@ -238,7 +237,7 @@ def test_freyberg_export():
     assert os.path.exists(outshp)
     remove_shp(outshp)
     m.modelgrid = StructuredGrid(
-        delc=m.dis.delc.array, delr=m.dis.delr.array, epsg=5070
+        delc=m.dis.delc.array, delr=m.dis.delr.array, epsg=3070
     )
     # test export with an sr, regardless of whether or not wkt was found
     m.drn.stress_period_data.export(outshp, sparse=True)
@@ -255,14 +254,17 @@ def test_freyberg_export():
     assert m.drn.stress_period_data.mg.angrot == m.modelgrid.angrot
 
     # if wkt text was fetched from spatialreference.org
-    if m.sr.wkt is not None:
+    wkt = flopy.export.shapefile_utils.CRS.get_spatialreference(
+        m.modelgrid.epsg
+    )
+    if m.modelgrid.proj4 is not None:
         # test default package export
         outshp = os.path.join(spth, namfile[:-4] + "_dis.shp")
         m.dis.export(outshp)
         prjfile = outshp.replace(".shp", ".prj")
         with open(prjfile) as src:
             prjtxt = src.read()
-        assert prjtxt == m.sr.wkt
+        assert prjtxt == wkt
         remove_shp(outshp)
 
         # test default package export to higher level dir
@@ -271,7 +273,7 @@ def test_freyberg_export():
         prjfile = outshp.replace(".shp", ".prj")
         with open(prjfile) as src:
             prjtxt = src.read()
-        assert prjtxt == m.sr.wkt
+        assert prjtxt == wkt
         remove_shp(outshp)
 
         # test sparse package export
@@ -281,7 +283,7 @@ def test_freyberg_export():
         assert os.path.exists(prjfile)
         with open(prjfile) as src:
             prjtxt = src.read()
-        assert prjtxt == m.sr.wkt
+        assert prjtxt == wkt
         remove_shp(outshp)
 
 
@@ -436,8 +438,7 @@ def test_export_array():
                 rot_cellsize = (
                     np.cos(np.radians(m.modelgrid.angrot))
                     * m.modelgrid.delr[0]
-                )  # * m.sr.length_multiplier
-                # assert np.abs(val - rot_cellsize) < 1e-6
+                )
                 break
     rotate = False
     rasterio = None
@@ -643,15 +644,14 @@ def test_sr():
         proj4_str="test test test",
     )
     flopy.modflow.ModflowDis(m, 10, 10, 10)
-    m.sr.xll = 12345
-    m.sr.yll = 12345
     m.write_input()
     mm = flopy.modflow.Modflow.load("test.nam", model_ws="./temp")
-    if mm.sr.xul != 12345:
+    extents = mm.modelgrid.extent
+    if extents[2] != 12345:
         raise AssertionError()
-    if mm.sr.yul != 12355:
+    if extents[3] != 12355:
         raise AssertionError()
-    if mm.sr.proj4_str != "test test test":
+    if mm.modelgrid.proj4 != "test test test":
         raise AssertionError()
 
 
@@ -681,11 +681,6 @@ def test_dis_sr():
         proj4_str="epsg:2243",
     )
 
-    # SpatialReference has been deprecated
-    # if abs(dis.sr.xul - xul) > 0.01:
-    #     raise AssertionError()
-    # if abs(dis.sr.yul - yul) > 0.01:
-    #     raise AssertionError()
     # Use StructuredGrid instead
     x, y = bg.modelgrid.get_coords(0, delc * nrow)
     np.testing.assert_almost_equal(x, xul)
@@ -745,8 +740,6 @@ def test_mg():
         dis.delc.array, dis.delr.array, xoff=1, yoff=1
     )
 
-    # txt = 'yul does not approximately equal 100 - ' + \
-    #      '(xul, yul) = ({}, {})'.format( ms.sr.yul, ms.sr.yul)
     assert abs(ms.modelgrid.extent[-1] - Ly) < 1e-3  # , txt
     ms.modelgrid.set_coord_info(xoff=111, yoff=0)
     assert ms.modelgrid.xoffset == 111
@@ -795,7 +788,6 @@ def test_mg():
     assert str(ms1.modelgrid) == str(ms.modelgrid)
     assert ms1.start_datetime == ms.start_datetime
     assert ms1.modelgrid.lenuni == ms.modelgrid.lenuni
-    # assert ms1.sr.lenuni != sr.lenuni
 
 
 def test_epsgs():
@@ -838,156 +830,29 @@ def test_dynamic_xll_yll():
     dis = flopy.modflow.ModflowDis(
         ms2, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr, delc=delc
     )
-    sr1 = flopy.utils.reference.SpatialReference(
-        delr=ms2.dis.delr.array,
-        delc=ms2.dis.delc.array,
-        lenuni=2,
-        xll=xll,
-        yll=yll,
-        rotation=30,
+
+    ms2.modelgrid.set_coord_info(xoff=xll, yoff=yll, angrot=30.0)
+    xll1, yll1 = ms2.modelgrid.xoffset, ms2.modelgrid.yoffset
+
+    assert xll1 == xll, "modelgrid.xoffset ({}) is not equal to {}".format(
+        xll1, xll
     )
-    xul, yul = sr1.xul, sr1.yul
-    sr1.length_multiplier = 1.0 / 3.281
-
-    msg = "sr1.xll ({}) is not equal to {}".format(sr1.xll, xll)
-    assert sr1.xll == xll, msg
-
-    msg = "sr1.yll ({}) is not equal to {}".format(sr1.yll, yll)
-    assert sr1.yll == yll, msg
-
-    sr2 = flopy.utils.reference.SpatialReference(
-        delr=ms2.dis.delr.array,
-        delc=ms2.dis.delc.array,
-        lenuni=2,
-        xul=xul,
-        yul=yul,
-        rotation=30,
+    assert yll1 == yll, "modelgrid.yoffset ({}) is not equal to {}".format(
+        yll1, yll
     )
-    sr2.length_multiplier = 1.0 / 3.281
 
-    msg = "sr2.xul ({}) is not equal to {}".format(sr2.xul, xul)
-    assert sr2.xul == xul, msg
+    # check that xll, yll are being recomputed
+    xll += 10.0
+    yll += 21.0
+    ms2.modelgrid.set_coord_info(xoff=xll, yoff=yll, angrot=30.0)
+    xll1, yll1 = ms2.modelgrid.xoffset, ms2.modelgrid.yoffset
 
-    msg = "sr2.yul ({}) is not equal to {}".format(sr2.yul, yul)
-    assert sr2.yul == yul, msg
-
-    # test resetting of attributes
-    sr3 = flopy.utils.reference.SpatialReference(
-        delr=ms2.dis.delr.array,
-        delc=ms2.dis.delc.array,
-        lenuni=2,
-        xll=xll,
-        yll=yll,
-        rotation=30,
+    assert xll1 == xll, "modelgrid.xoffset ({}) is not equal to {}".format(
+        xll1, xll
     )
-    # check that xul, yul and xll, yll are being recomputed
-    sr3.xll += 10.0
-    sr3.yll += 21.0
-
-    t_value = np.abs(sr3.xul - (xul + 10.0))
-    msg = "xul is not being recomputed correctly ({})".format(t_value)
-    assert t_value < 1e-6, msg
-
-    t_value = np.abs(sr3.yul - (yul + 21.0))
-    msg = "yul is not being recomputed correctly ({})".format(t_value)
-    assert t_value < 1e-6, msg
-
-    sr4 = flopy.utils.reference.SpatialReference(
-        delr=ms2.dis.delr.array,
-        delc=ms2.dis.delc.array,
-        lenuni=2,
-        xul=xul,
-        yul=yul,
-        rotation=30,
+    assert yll1 == yll, "modelgrid.yoffset ({}) is not equal to {}".format(
+        yll1, yll
     )
-    assert sr4.origin_loc == "ul"
-    sr4.xul += 10.0
-    sr4.yul += 21.0
-
-    t_value = np.abs(sr4.xll - (xll + 10.0))
-    msg = "xll is not being recomputed correctly ({})".format(t_value)
-    assert t_value < 1e-6, msg
-
-    t_value = np.abs(sr4.yll - (yll + 21.0))
-    msg = "yll is not being recomputed correctly ({})".format(t_value)
-    assert t_value < 1e-6, msg
-
-    sr4.rotation = 0.0
-
-    # these shouldn't move because ul has priority
-    t_value = np.abs(sr4.xul - (xul + 10.0))
-    msg = "rotation should not affect xul ({})".format(t_value)
-    assert t_value < 1e-6, msg
-
-    t_value = np.abs(sr4.yul - (yul + 21.0))
-    msg = "rotation should not affect yul ({})".format(t_value)
-    assert t_value < 1e-6, msg
-
-    t_value = np.abs(sr4.xll - sr4.xul)
-    msg = "rotation should not affect xul and xll ({})".format(t_value)
-    assert t_value < 1e-6, msg
-
-    t_value = np.abs(sr4.yll - (sr4.yul - sr4.yedge[0]))
-    msg = "rotation should not affect yul and yll ({})".format(t_value)
-    assert t_value < 1e-6, msg
-
-    sr4.xll = 0.0
-    sr4.yll = 10.0
-    assert sr4.origin_loc == "ll", "origin_loc is not 'll'"
-
-    assert sr4.xul == 0.0, "xul is not 0 ({})".format(sr4.xul)
-
-    t_value = sr4.yedge[0] + 10.0
-    msg = "yul ({}) is not {}".format(sr4.yul, t_value)
-    assert sr4.yul == t_value, msg
-
-    sr4.xul = xul
-    sr4.yul = yul
-    assert sr4.origin_loc == "ul", "origin_loc is not 'ul'"
-
-    sr4.rotation = 30.0
-
-    t_value = np.abs(sr4.xll - xll)
-    msg = "sr4.xll ({}) does not equal {}".format(sr4.xll, xll)
-    assert t_value < 1e-6, msg
-
-    t_value = np.abs(sr4.yll - yll)
-    msg = "sr4.yll ({}) does not equal {}".format(sr4.yll, yll)
-    assert t_value < 1e-6, msg
-
-    sr5 = flopy.utils.reference.SpatialReference(
-        delr=ms2.dis.delr.array,
-        delc=ms2.dis.delc.array,
-        lenuni=2,
-        xll=xll,
-        yll=yll,
-        rotation=0,
-        epsg=26915,
-    )
-    sr5.lenuni = 1
-    assert (
-        sr5.length_multiplier == 0.3048
-    ), "sr5 length multiplier is not .3048"
-
-    assert sr5.yul == sr5.yll + sr5.yedge[0] * sr5.length_multiplier
-
-    sr5.lenuni = 2
-    msg = "sr5.length_multiplier ({}) is not 1.".format(sr5.length_multiplier)
-    assert sr5.length_multiplier == 1.0, msg
-
-    t_value = sr5.yll + sr5.yedge[0]
-    msg = "sr4.yul ({}) does not equal {}".format(sr5.yul, t_value)
-    assert sr5.yul == t_value, msg
-
-    sr5.proj4_str = "+proj=utm +zone=16 +datum=NAD83 +units=us-ft +no_defs"
-    msg = "sr5 units ({}) is not 'feet'".format(sr5.units)
-    assert sr5.units == "feet", msg
-
-    t_value = 1 / 0.3048
-    msg = "sr5 length_multiplier ({}) is not {}".format(
-        sr5.length_multiplier, t_value
-    )
-    assert sr5.length_multiplier == t_value, msg
 
 
 def test_namfile_readwrite():
@@ -1202,11 +1067,19 @@ def test_modelgrid_with_PlotMapView():
 
     # Model domain and grid definition
     dis = flopy.modflow.ModflowDis(
-        mf, nlay=1, nrow=10, ncol=20, delr=1.0, delc=1.0, xul=100, yul=210
+        mf,
+        nlay=1,
+        nrow=10,
+        ncol=20,
+        delr=1.0,
+        delc=1.0,
     )
-
+    xul, yul = 100.0, 210.0
+    mg = mf.modelgrid
+    mf.modelgrid.set_coord_info(
+        xoff=mg._xul_to_xll(xul, 0.0), yoff=mg._yul_to_yll(yul, 0.0)
+    )
     verts = [[101.0, 201.0], [119.0, 209.0]]
-    mf.modelgrid.set_coord_info(xoff=mf.dis.sr.xll, yoff=mf.dis.sr.yll)
     modelxsect = flopy.plot.PlotCrossSection(model=mf, line={"line": verts})
     patchcollection = modelxsect.plot_grid()
     plt.close()
@@ -1420,7 +1293,6 @@ def test_tricontour_NaN():
 
 
 def test_get_vertices():
-    from flopy.utils.reference import SpatialReference
     from flopy.discretization import StructuredGrid
 
     m = flopy.modflow.Modflow(rotation=20.0)
@@ -1428,16 +1300,14 @@ def test_get_vertices():
     dis = flopy.modflow.ModflowDis(
         m, nlay=1, nrow=nrow, ncol=ncol, delr=250.0, delc=250.0, top=10, botm=0
     )
+    mmg = m.modelgrid
     xul, yul = 500000, 2934000
-    sr = SpatialReference(
-        delc=m.dis.delc.array, xul=xul, yul=yul, rotation=45.0
-    )
     mg = StructuredGrid(
         delc=m.dis.delc.array,
         delr=m.dis.delr.array,
-        xoff=sr.xll,
-        yoff=sr.yll,
-        angrot=sr.rotation,
+        xoff=mmg._xul_to_xll(xul, 45.0),
+        yoff=mmg._yul_to_yll(xul, 45.0),
+        angrot=45.0,
     )
 
     xgrid = mg.xvertices
@@ -1796,7 +1666,7 @@ def main():
     # test_mbase_modelgrid()
     # test_mt_modelgrid()
     # test_rotation()
-    test_model_dot_plot()
+    # test_model_dot_plot()
     # test_get_lrc_get_node()
     # test_vertex_model_dot_plot()
     # test_sr_with_Map()
@@ -1810,7 +1680,7 @@ def main():
     # test_get_vertices()
     # test_export_output()
     # for namfile in namfiles:
-    # test_freyberg_export()
+    test_freyberg_export()
     # test_export_array()
     # test_write_shapefile()
     # test_wkt_parse()
@@ -1819,7 +1689,7 @@ def main():
     # test_export_array_contours()
     # test_tricontour_NaN()
     # test_export_contourf()
-    # test_sr()
+    test_sr()
     # test_shapefile_polygon_closed()
     # test_mapview_plot_bc()
     # test_crosssection_plot_bc()

@@ -12,7 +12,6 @@ import numpy as np
 from flopy.discretization import StructuredGrid
 from flopy.utils.modpathfile import EndpointFile, PathlineFile
 from flopy.utils.recarray_utils import ra_slice
-from flopy.utils.reference import SpatialReference
 from flopy.modpath.mp6sim import StartingLocationsFile
 
 try:
@@ -135,7 +134,6 @@ def test_get_destination_data():
     )
 
     # test deprecation
-    sr2 = SpatialReference(xll=mg.xoffset, yll=mg.yoffset, rotation=-30)
     if shapefile:
         m.dis.export(path + "/dis.shp")
 
@@ -204,7 +202,7 @@ def test_get_destination_data():
         well_pthld,
         one_per_particle=True,
         direction="starting",
-        sr=sr2,
+        mg=mg,
         shpname=fpth,
     )
     fpth = os.path.join(path, "pathlines.shp")
@@ -262,9 +260,7 @@ def test_get_destination_data():
     # arbitrary spatial reference with ll specified instead of ul
     ra = shp2recarray(os.path.join(path, "pathlines_1per2_ll.shp"))
     p3_2 = ra.geometry[ra.particleid == 4][0]
-    # sr3 = SpatialReference(xll=sr.xll, yll=sr.yll, rotation=-30,
-    #                       delc=list(m.dis.delc))
-    mg.set_coord_info(xoff=mg.xoffset, yoff=mg.yoffset, angrot=-30.0)
+    mg.set_coord_info(xoff=mg.xoffset, yoff=mg.yoffset, angrot=30.0)
     assert (
         np.abs(
             p3_2.x[0]

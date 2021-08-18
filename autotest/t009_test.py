@@ -24,7 +24,6 @@ import flopy
 fm = flopy.modflow
 from flopy.utils.sfroutputfile import SfrFile
 from flopy.discretization import StructuredGrid
-from flopy.utils.reference import SpatialReference
 
 path = os.path.join("..", "examples", "data", "mf2005_test")
 path2 = os.path.join("..", "examples", "data", "sfr_test")

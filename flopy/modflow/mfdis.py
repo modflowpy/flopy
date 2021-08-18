@@ -287,35 +287,6 @@ class ModflowDis(Package):
         self.start_datetime = start_datetime
         self._totim = None
 
-    @property
-    def sr(self):
-        from ..utils.reference import SpatialReference
-
-        warnings.warn(
-            "SpatialReference has been deprecated. Use Grid instead.",
-            DeprecationWarning,
-        )
-        if not hasattr(self, "_sr"):
-            mg = self.parent.modelgrid
-            self._sr = SpatialReference(
-                self.delr,
-                self.delc,
-                self.lenuni,
-                xll=mg.xoffset,
-                yll=mg.yoffset,
-                rotation=mg.angrot or 0.0,
-                proj4_str=mg.proj4,
-            )
-        return self._sr
-
-    @sr.setter
-    def sr(self, sr):
-        warnings.warn(
-            "SpatialReference has been deprecated. Use Grid instead.",
-            DeprecationWarning,
-        )
-        self._sr = sr
-
     def checklayerthickness(self):
         """
         Check layer thickness.
