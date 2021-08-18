@@ -161,7 +161,7 @@ class StructuredGrid(Grid):
                 self.__nlay = nlay
             else:
                 if laycbd is not None:
-                    self.__nlay = len(botm) - np.sum(laycbd > 0)
+                    self.__nlay = len(botm) - np.count_nonzero(laycbd)
                 else:
                     self.__nlay = len(botm)
         else:

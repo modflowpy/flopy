@@ -331,7 +331,7 @@ class Modflow(BaseModel):
                 yoff=self._modelgrid.yoffset,
                 angrot=self._modelgrid.angrot,
                 nlay=self.dis.nlay,
-                laycbd=self.dis.laycbd,
+                laycbd=self.dis.laycbd.array,
             )
 
         # resolve offsets
