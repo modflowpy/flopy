@@ -19,7 +19,6 @@ import copy
 import numpy as np
 from flopy import utils, discretization
 from .version import __version__
-from .discretization.modeltime import ModelTime
 from .discretization.grid import Grid
 
 ## Global variables
@@ -360,7 +359,10 @@ class BaseModel(ModelInterface):
 
         # build model discretization objects
         self._modelgrid = Grid(
-            proj4=self._proj4_str, xoff=xll, yoff=yll, angrot=self._rotation
+            proj4=self._proj4_str,
+            xoff=xll,
+            yoff=yll,
+            angrot=self._rotation,
         )
         self._modeltime = None
 
@@ -644,16 +646,12 @@ class BaseModel(ModelInterface):
         if item == "output_packages" or not hasattr(self, "output_packages"):
             raise AttributeError(item)
 
-        if item == "sr":
-            if self.dis is not None:
-                return self.dis.sr
-            else:
-                return None
         if item == "tr":
             if self.dis is not None:
                 return self.dis.tr
             else:
                 return None
+
         if item == "start_datetime":
             if self.dis is not None:
                 return self.dis.start_datetime

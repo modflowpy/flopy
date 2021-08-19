@@ -9,7 +9,6 @@ important classes that can be accessed by the user.
 
 import itertools
 import collections
-import warnings
 import numpy as np
 
 from numpy.lib.recfunctions import append_fields, stack_arrays
@@ -280,7 +279,6 @@ class _ModpathSeries(object):
         shpname="endpoints.shp",
         mg=None,
         epsg=None,
-        sr=None,
         **kwargs
     ):
         """
@@ -330,20 +328,8 @@ class _ModpathSeries(object):
         series = series.copy()
         series.sort(order=["particleid", "time"])
 
-        if mg is None and sr.__class__.__name__ == "SpatialReference":
-            warnings.warn(
-                "Deprecation warning: SpatialReference is deprecated."
-                "Use the Grid class instead.",
-                DeprecationWarning,
-            )
-            mg = StructuredGrid(sr.delc, sr.delr)
-            mg.set_coord_info(
-                xoff=sr.xll,
-                yoff=sr.yll,
-                angrot=sr.rotation,
-                epsg=sr.epsg,
-                proj4=sr.proj4_str,
-            )
+        if mg is None:
+            raise ValueError("A modelgrid object was not provided.")
 
         if epsg is None:
             epsg = mg.epsg
@@ -763,7 +749,6 @@ class PathlineFile(_ModpathSeries):
         shpname="pathlines.shp",
         mg=None,
         epsg=None,
-        sr=None,
         **kwargs
     ):
         """
@@ -802,7 +787,6 @@ class PathlineFile(_ModpathSeries):
             shpname=shpname,
             mg=mg,
             epsg=epsg,
-            sr=sr,
             **kwargs
         )
 
@@ -1218,7 +1202,6 @@ class EndpointFile:
         direction="ending",
         mg=None,
         epsg=None,
-        sr=None,
         **kwargs
     ):
         """
@@ -1260,20 +1243,8 @@ class EndpointFile:
                 'flopy.map.plot_endpoint direction must be "ending" '
                 'or "starting".'
             )
-        if mg is None and sr.__class__.__name__ == "SpatialReference":
-            warnings.warn(
-                "Deprecation warning: SpatialReference is deprecated."
-                "Use the Grid class instead.",
-                DeprecationWarning,
-            )
-            mg = StructuredGrid(sr.delc, sr.delr)
-            mg.set_coord_info(
-                xoff=sr.xll,
-                yoff=sr.yll,
-                angrot=sr.rotation,
-                epsg=sr.epsg,
-                proj4=sr.proj4_str,
-            )
+        if mg is None:
+            raise ValueError("A modelgrid object was not provided.")
         if epsg is None:
             epsg = mg.epsg
 
@@ -1620,7 +1591,6 @@ class TimeseriesFile(_ModpathSeries):
         shpname="pathlines.shp",
         mg=None,
         epsg=None,
-        sr=None,
         **kwargs
     ):
         """
@@ -1659,6 +1629,5 @@ class TimeseriesFile(_ModpathSeries):
             shpname=shpname,
             mg=mg,
             epsg=epsg,
-            sr=sr,
             **kwargs
         )

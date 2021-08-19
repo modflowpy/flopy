@@ -166,26 +166,6 @@ jobs:
         pip install xmipy
         pip install . --use-feature=in-tree-build
 
-    - name: Setup symbolic link to gfortran on Linux
-      if: runner.os == 'Linux'
-      run: |
-        sudo ln -fs /usr/bin/gfortran-10 /usr/local/bin/gfortran
-        sudo ln -fs /usr/bin/gcc-10 /usr/local/bin/gcc
-        sudo ln -fs /usr/bin/g++-10 /usr/local/bin/g++
-
-    - name: Setup symbolic link to gfortran on macOS
-      if: runner.os == 'macOS'
-      run: |
-        sudo ln -fs /usr/local/bin/gfortran-10 /usr/local/bin/gfortran
-        sudo ln -fs /usr/local/bin/gcc-10 /usr/local/bin/gcc
-        sudo ln -fs /usr/local/bin/g++-10 /usr/local/bin/g++
-
-    - name: Print GNU compiler versions
-      run: |
-        gfortran --version
-        gcc --version
-        g++ --version
-
     - name: Download executables needed for tests
       run: |
         cd autotest

@@ -261,59 +261,6 @@ class MfGrdFile(FlopyBinaryData):
 
         return
 
-    def __set_spatialreference(self):
-        """
-        Define structured or unstructured spatial reference based on
-        MODFLOW 6 discretization type.
-        Returns
-        -------
-        sr : SpatialReference
-        """
-        sr = None
-        try:
-            if self._grid_type in ("DISV", "DISU"):
-                from flopy.utils.reference import SpatialReferenceUnstructured
-
-                try:
-                    vertc = self.xycentroids()
-                    xc = vertc[:, 0]
-                    yc = vertc[:, 1]
-                    sr = SpatialReferenceUnstructured(
-                        xc,
-                        yc,
-                        self.__modelgrid.verts,
-                        self.__modelgrid.iverts,
-                        [xc.shape[0]],
-                    )
-                except:
-                    print(
-                        "could not set spatial reference for "
-                        "{} discretization defined in "
-                        "{}".format(self._grid_type, self.file.name)
-                    )
-            elif self._grid_type == "DIS":
-                from flopy.utils.reference import SpatialReference
-
-                delr, delc = self._datadict["DELR"], self._datadict["DELC"]
-                xorigin, yorigin, rot = (
-                    self._datadict["XORIGIN"],
-                    self._datadict["YORIGIN"],
-                    self._datadict["ANGROT"],
-                )
-                sr = SpatialReference(
-                    delr=delr,
-                    delc=delc,
-                    xll=xorigin,
-                    yll=yorigin,
-                    rotation=rot,
-                )
-        except:
-            print(
-                "could not set spatial reference for {}".format(self.file.name)
-            )
-
-        return sr
-
     def __build_vertices_cell2d(self):
         """
         Build the mf6 vertices and cell2d array to generate a VertexGrid
@@ -774,20 +721,3 @@ class MfGrdFile(FlopyBinaryData):
         else:
             vertices, cell2d = None, None
         return vertices, cell2d
-
-    @property
-    def spatialreference(self):
-        """
-        Spatial reference for model grid.
-
-        Returns
-        -------
-        spatialreference : SpatialReference
-        """
-        warnings.warn(
-            "SpatialReference has been deprecated and will be "
-            "removed in version 3.3.5. Use get_modelgrid instead.",
-            category=DeprecationWarning,
-        )
-
-        return self.__set_spatialreference()
