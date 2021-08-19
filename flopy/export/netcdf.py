@@ -953,7 +953,7 @@ class NetCdf:
         y[:] = self.model_grid.xyzcellcenters[1]
 
         # grid mapping variable
-        crs = flopy.utils.reference.crs(
+        crs = flopy.export.shapefile_utils.CRS(
             prj=self.model_grid.prj, epsg=self.model_grid.epsg
         )
         attribs = crs.grid_mapping_attribs
