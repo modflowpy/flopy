@@ -253,11 +253,12 @@ def test_freyberg_export():
     assert m.drn.stress_period_data.mg.yoffset == m.modelgrid.yoffset
     assert m.drn.stress_period_data.mg.angrot == m.modelgrid.angrot
 
-    # if wkt text was fetched from spatialreference.org
+    # get wkt text was fetched from spatialreference.org
     wkt = flopy.export.shapefile_utils.CRS.get_spatialreference(
         m.modelgrid.epsg
     )
-    if m.modelgrid.proj4 is not None:
+    # if wkt text was fetched from spatialreference.org
+    if wkt is not None:
         # test default package export
         outshp = os.path.join(spth, namfile[:-4] + "_dis.shp")
         m.dis.export(outshp)

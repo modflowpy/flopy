@@ -3,7 +3,6 @@ Module spatial referencing for flopy model objects
 
 """
 import json
-import numpy as np
 import os
 import warnings
 
