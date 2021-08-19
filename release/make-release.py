@@ -5,7 +5,6 @@ import os
 import sys
 import datetime
 import json
-from collections import OrderedDict
 
 # file_paths dictionary has file names and the path to the file. Enter '.'
 # as the path if the file is in the root repository directory
@@ -237,7 +236,7 @@ def update_codejson(vmajor, vminor, vmicro):
 
     # load and modify json file
     with open(json_fname, "r") as f:
-        data = json.load(f, object_pairs_hook=OrderedDict)
+        data = json.load(f)
 
     # modify the json file data
     now = datetime.datetime.now()

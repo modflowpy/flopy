@@ -8,12 +8,6 @@ MODFLOW Guide
 
 """
 import os
-import sys
-
-if sys.version_info < (3, 6):
-    from collections import OrderedDict
-
-    dict = OrderedDict
 
 
 class NamData:
@@ -113,12 +107,10 @@ def parsenamefile(namfilename, packages, verbose=True):
 
     Returns
     -------
-    dict or OrderedDict
+    dict
         For each file listed in the name file, a
         :class:`flopy.utils.mfreadnam.NamData` instance
-        is stored in the returned dict keyed by unit number. Prior to Python
-        version 3.6 the return object is an OrderedDict to retain the order
-        of items in the nam file.
+        is stored in the returned dict keyed by unit number.
 
     Raises
     ------
@@ -127,8 +119,8 @@ def parsenamefile(namfilename, packages, verbose=True):
     ValueError:
         For lines that cannot be parsed.
     """
-    # initiate the ext_unit_dict ordered dictionary
-    ext_unit_dict = dict()
+    # initiate the ext_unit_dict dictionary
+    ext_unit_dict = {}
 
     if verbose:
         print("Parsing the namefile --> {0:s}".format(namfilename))

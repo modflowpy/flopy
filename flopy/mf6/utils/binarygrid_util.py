@@ -6,7 +6,6 @@ be accessed by the user.
 """
 
 import numpy as np
-import collections
 
 from ...utils.utils_def import FlopyBinaryData
 import warnings
@@ -62,8 +61,8 @@ class MfGrdFile(FlopyBinaryData):
         self.set_float(precision=precision)
         self.verbose = verbose
         self._initial_len = 50
-        self._recorddict = collections.OrderedDict()
-        self._datadict = collections.OrderedDict()
+        self._recorddict = {}
+        self._datadict = {}
         self._recordkeys = []
         self.filename = filename
 

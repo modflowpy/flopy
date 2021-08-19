@@ -3,7 +3,6 @@ import sys
 import os
 import inspect
 from shutil import copyfile
-from collections import OrderedDict
 from enum import Enum
 import numpy as np
 from ..mfbase import MFDataException, VerbosityLevel
@@ -205,7 +204,7 @@ class DataStorage:
         is the data layered
     pre_data_comments : string
         any comments before the start of the data
-    comments : OrderedDict
+    comments : dict
         any comments mixed in with the data, dictionary keys are data lines
     post_data_comments : string
         any comments after the end of the data
@@ -331,7 +330,7 @@ class DataStorage:
 
         # initialize comments
         self.pre_data_comments = None
-        self.comments = OrderedDict()
+        self.comments = {}
 
     def __repr__(self):
         return self.get_data_str(True)

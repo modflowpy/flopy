@@ -404,8 +404,6 @@ class ModflowNwt(Package):
         >>> nwt = flopy.modflow.ModflowPcg.load('test.nwt', m)
 
         """
-        import collections
-
         if model.verbose:
             sys.stdout.write("loading nwt package file...\n")
 
@@ -436,18 +434,17 @@ class ModflowNwt(Package):
         # dataset 1
         ifrfm = True  # model.free_format_input
 
-        vars = (
-            ("headtol", float),
-            ("fluxtol", float),
-            ("maxiterout", int),
-            ("thickfact", float),
-            ("linmeth", int),
-            ("iprnwt", int),
-            ("ibotav", int),
-            ("options", str),
-            ("Continue", str),
-        )
-        vars = collections.OrderedDict(vars)
+        vars = {
+            "headtol": float,
+            "fluxtol": float,
+            "maxiterout": int,
+            "thickfact": float,
+            "linmeth": int,
+            "iprnwt": int,
+            "ibotav": int,
+            "options": str,
+            "Continue": str,
+        }
         kwargs = {}
         if ifrfm:
             t = line.split()
@@ -472,17 +469,16 @@ class ModflowNwt(Package):
             else:
                 kwargs.pop("Continue")
 
-        specdict = (
-            ("dbdtheta", float),
-            ("dbdkappa", float),
-            ("dbdgamma", float),
-            ("momfact", float),
-            ("backflag", int),
-            ("maxbackiter", int),
-            ("backtol", float),
-            ("backreduce", float),
-        )
-        specdict = collections.OrderedDict(specdict)
+        specdict = {
+            "dbdtheta": float,
+            "dbdkappa": float,
+            "dbdgamma": float,
+            "momfact": float,
+            "backflag": int,
+            "maxbackiter": int,
+            "backtol": float,
+            "backreduce": float,
+        }
         ipos = len(kwargs)
         if kwargs["options"].lower().strip() == "specified":
             for (k, c) in specdict.items():
@@ -504,27 +500,26 @@ class ModflowNwt(Package):
 
             lindict = {}
             if kwargs["linmeth"] == 1:
-                lindict = (
-                    ("maxitinner", int),
-                    ("ilumethod", int),
-                    ("levfill", int),
-                    ("stoptol", float),
-                    ("msdr", int),
-                )
+                lindict = {
+                    "maxitinner": int,
+                    "ilumethod": int,
+                    "levfill": int,
+                    "stoptol": float,
+                    "msdr": int,
+                }
             elif kwargs["linmeth"] == 2:
-                lindict = (
-                    ("iacl", int),
-                    ("norder", int),
-                    ("level", int),
-                    ("north", int),
-                    ("iredsys", int),
-                    ("rrctols", float),
-                    ("idroptol", int),
-                    ("epsrn", float),
-                    ("hclosexmd", float),
-                    ("mxiterxmd", int),
-                )
-            lindict = collections.OrderedDict(lindict)
+                lindict = {
+                    "iacl": int,
+                    "norder": int,
+                    "level": int,
+                    "north": int,
+                    "iredsys": int,
+                    "rrctols": float,
+                    "idroptol": int,
+                    "epsrn": float,
+                    "hclosexmd": float,
+                    "mxiterxmd": int,
+                }
             if ifrfm:
                 t = line.split()
             else:

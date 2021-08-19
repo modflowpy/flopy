@@ -57,7 +57,7 @@ class MFModel(PackageContainer, ModelInterface):
         Name of the model
     exe_name : str
         Model executable name
-    packages : OrderedDict(MFPackage)
+    packages : dict of MFPackage
         Dictionary of model packages
 
     """

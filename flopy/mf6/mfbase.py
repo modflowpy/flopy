@@ -2,7 +2,6 @@ import glob
 import importlib
 import inspect, sys, traceback
 import os, copy
-from collections import OrderedDict
 from collections.abc import Iterable
 from shutil import copyfile
 from enum import Enum
@@ -221,7 +220,7 @@ class MFFileMgmt:
     Attributes
     ----------
 
-    model_relative_path : OrderedDict
+    model_relative_path : dict
         Dictionary of relative paths to each model folder
 
     """
@@ -235,10 +234,10 @@ class MFFileMgmt:
         self.existing_file_dict = {}
         # keys:filenames,vals:instance name
 
-        self.model_relative_path = OrderedDict()
+        self.model_relative_path = {}
 
         self._last_loaded_sim_path = None
-        self._last_loaded_model_relative_path = OrderedDict()
+        self._last_loaded_model_relative_path = {}
 
     def copy_files(self, copy_relative_only=True):
         """Copy files external to updated path.

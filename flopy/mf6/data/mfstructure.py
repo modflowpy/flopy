@@ -9,7 +9,6 @@ import ast
 import keyword
 from enum import Enum
 from textwrap import TextWrapper
-from collections import OrderedDict
 import numpy as np
 from ..mfbase import PackageContainer, StructException
 
@@ -228,7 +227,7 @@ class DfnPackage(Dfn):
         return self.package.package_abbr in self.multi_package
 
     def get_block_structure_dict(self, path, common, model_file):
-        block_dict = OrderedDict()
+        block_dict = {}
         dataset_items_in_block = {}
         self.dataset_items_needed_dict = {}
         keystring_items_needed_dict = {}
@@ -497,7 +496,7 @@ class DfnFile(Dfn):
         return base_file in self.multi_package
 
     def dict_by_name(self):
-        name_dict = OrderedDict()
+        name_dict = {}
         name = None
         dfn_fp = open(self._file_path, "r")
         for line in dfn_fp:
@@ -512,7 +511,7 @@ class DfnFile(Dfn):
 
     def get_block_structure_dict(self, path, common, model_file):
         self.dfn_list = []
-        block_dict = OrderedDict()
+        block_dict = {}
         dataset_items_in_block = {}
         self.dataset_items_needed_dict = {}
         keystring_items_needed_dict = {}
@@ -1430,9 +1429,9 @@ class MFDataStructure:
         self.parameter_name = data_item.parameter_name
         self.one_per_pkg = data_item.one_per_pkg
 
-        # self.data_item_structures_dict = OrderedDict()
+        # self.data_item_structures_dict = {}
         self.data_item_structures = []
-        self.expected_data_items = OrderedDict()
+        self.expected_data_items = {}
         self.shape = data_item.shape
         if (
             self.type == DatumType.recarray
@@ -1941,7 +1940,7 @@ class MFBlockStructure:
         (<model>, <package>, <block>)
     model_block : bool
         true if this block is part of a model
-    data_structures : OrderedDict
+    data_structures : dict
         dictionary of data items in this block, with the data item name as
         the key
     block_header_structure : list
@@ -1982,7 +1981,7 @@ class MFBlockStructure:
 
     def __init__(self, name, path, model_block):
         # initialize
-        self.data_structures = OrderedDict()
+        self.data_structures = {}
         self.block_header_structure = []
         self.name = name
         self.path = path + (self.name,)
@@ -2130,7 +2129,7 @@ class MFModelStructure:
         simulation structure validity
     name_file_struct_obj : MFInputFileStructure
         describes the structure of the simulation name file
-    package_struct_objs : OrderedDict
+    package_struct_objs : dict
         describes the structure of the simulation packages
     model_type : string
         dictionary containing simulation package structure
@@ -2161,7 +2160,7 @@ class MFModelStructure:
         # add name file structure
         self.model_type = model_type
         self.name_file_struct_obj = None
-        self.package_struct_objs = OrderedDict()
+        self.package_struct_objs = {}
         self.utl_struct_objs = utl_struct_objs
 
     def add_namefile(self, dfn_file, common):
@@ -2217,13 +2216,13 @@ class MFSimulationStructure:
     ----------
     name_file_struct_obj : MFInputFileStructure
         describes the structure of the simulation name file
-    package_struct_objs : OrderedDict
+    package_struct_objs : dict
         describes the structure of the simulation packages
-    model_struct_objs : OrderedDict
+    model_struct_objs : dict
         describes the structure of the supported model types
-    utl_struct_objs : OrderedDict
+    utl_struct_objs : dict
         describes the structure of the supported utility packages
-    common : OrderedDict
+    common : dict
         common file information
     model_type : string
         placeholder
@@ -2265,9 +2264,9 @@ class MFSimulationStructure:
     def __init__(self):
         # initialize
         self.name_file_struct_obj = None
-        self.package_struct_objs = OrderedDict()
-        self.utl_struct_objs = OrderedDict()
-        self.model_struct_objs = OrderedDict()
+        self.package_struct_objs = {}
+        self.utl_struct_objs = {}
+        self.model_struct_objs = {}
         self.common = None
         self.model_type = ""
 

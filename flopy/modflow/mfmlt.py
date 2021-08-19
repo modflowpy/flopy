@@ -7,7 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/mult.htm>`_.
 
 """
-import collections
 import sys
 
 import numpy as np
@@ -184,7 +183,7 @@ class ModflowMlt(Package):
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
 
         # read zone data
-        mult_dict = collections.OrderedDict()
+        mult_dict = {}
         for n in range(nml):
             line = f.readline()
             t = line.strip().split()

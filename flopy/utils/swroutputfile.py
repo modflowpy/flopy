@@ -1,6 +1,5 @@
 import sys
 import numpy as np
-from collections import OrderedDict
 
 from ..utils.utils_def import FlopyBinaryData
 
@@ -604,7 +603,7 @@ class SwrFile(FlopyBinaryData):
         self._ntimes = 0
         self._times = []
         self._kswrkstpkper = []
-        self.recorddict = OrderedDict()
+        self.recorddict = {}
 
         idx = 0
         while True:

@@ -5,7 +5,6 @@ recarrays, which can then be easily plotted.
 
 """
 
-import collections
 import os
 import re
 import numpy as np
@@ -688,9 +687,9 @@ class ListBudget:
                 "entry in list file"
             )
         self.entries = incdict.keys()
-        null_entries = collections.OrderedDict()
-        incdict = collections.OrderedDict()
-        cumdict = collections.OrderedDict()
+        null_entries = {}
+        incdict = {}
+        cumdict = {}
         for entry in self.entries:
             incdict[entry] = []
             cumdict[entry] = []
@@ -767,8 +766,8 @@ class ListBudget:
                 break
 
         tag = "IN"
-        incdict = collections.OrderedDict()
-        cumdict = collections.OrderedDict()
+        incdict = {}
+        cumdict = {}
         entrydict = {}
         while True:
 

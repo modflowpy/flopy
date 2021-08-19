@@ -1,5 +1,4 @@
 import sys
-import collections
 import numpy as np
 from ..pakbase import Package
 from ..utils.recarray_utils import create_empty_recarray
@@ -397,7 +396,7 @@ class ModflowHob(Package):
             else:
                 line = f.readline()
                 t = line.strip().split()
-                mlay = collections.OrderedDict()
+                mlay = {}
                 if len(t) >= abs(layer) * 2:
                     for j in range(0, abs(layer) * 2, 2):
                         k = int(t[j]) - 1

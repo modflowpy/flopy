@@ -14,7 +14,6 @@ from ..utils.flopy_io import pop_item, line_parse
 from ..pakbase import Package
 from ..utils import Util2d, Transient2d
 from ..utils.optionblock import OptionBlock
-from collections import OrderedDict
 import warnings
 
 
@@ -318,7 +317,7 @@ class ModflowUzf1(Package):
 
     """
 
-    _options = OrderedDict(
+    _options = dict(
         [
             ("specifythtr", OptionBlock.simple_flag),
             ("specifythti", OptionBlock.simple_flag),
@@ -342,7 +341,7 @@ class ModflowUzf1(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 2,
-                    OptionBlock.vars: OrderedDict(
+                    OptionBlock.vars: dict(
                         [
                             ("unitrech", OptionBlock.simple_int),
                             ("unitdis", OptionBlock.simple_int),
