@@ -9,7 +9,6 @@ import json
 import numpy as np
 import os
 import warnings
-from collections import OrderedDict
 
 from ..datbase import DataType, DataInterface
 from ..utils import Util3d
@@ -989,10 +988,10 @@ class EpsgReference:
         """
         returns dict with EPSG code integer key, and WKT CRS text
         """
-        data = OrderedDict()
+        data = {}
         if os.path.exists(self.location):
             with open(self.location, "r") as f:
-                loaded_data = json.load(f, object_pairs_hook=OrderedDict)
+                loaded_data = json.load(f)
             # convert JSON key from str to EPSG integer
             for key, value in loaded_data.items():
                 try:

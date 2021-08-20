@@ -219,7 +219,7 @@ class MFSimulationData:
         Numbers less than this threshold are written in scientific notation
     mfpath : MFFileMgmt
         File path location information for the simulation
-    model_dimensions : OrderedDict
+    model_dimensions : dict
         Dictionary containing discretization information for each model
     mfdata : SimulationDict
         Custom dictionary containing all model data for the simulation
@@ -254,14 +254,14 @@ class MFSimulationData:
 
         # --- ease of use variables to make working with modflow input and
         # output data easier --- model dimension class for each model
-        self.model_dimensions = collections.OrderedDict()
+        self.model_dimensions = {}
 
         # --- model data ---
         self.mfdata = SimulationDict(self.mfpath)
 
         # --- temporary variables ---
         # other external files referenced
-        self.referenced_files = collections.OrderedDict()
+        self.referenced_files = {}
 
     @property
     def max_columns_of_data(self):
@@ -402,13 +402,13 @@ class MFSimulation(PackageContainer):
 
         self.version = version
         self.exe_name = exe_name
-        self._models = collections.OrderedDict()
+        self._models = {}
         self._tdis_file = None
-        self._exchange_files = collections.OrderedDict()
-        self._ims_files = collections.OrderedDict()
+        self._exchange_files = {}
+        self._ims_files = {}
         self._ghost_node_files = {}
         self._mover_files = {}
-        self._other_files = collections.OrderedDict()
+        self._other_files = {}
         self.structure = fpdata.sim_struct
         self.model_type = None
 

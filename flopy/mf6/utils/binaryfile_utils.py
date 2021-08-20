@@ -13,7 +13,7 @@ class MFOutput:
     ----------
     path: binary file path location
     mfdict: SimulationDict() object
-    key: OrderedDictionary key ex. ('flow15','CBC','FLOW RIGHT FACE')
+    key: dict key ex. ('flow15','CBC','FLOW RIGHT FACE')
 
     Returns
     -------
@@ -55,7 +55,7 @@ class MFOutputRequester:
 
     Parameters:
     ----------
-    mfdict: OrderedDict
+    mfdict: dict
         local instance of the SimulationDict() object
     path:
         pointer to the MFSimulationPath object

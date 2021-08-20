@@ -14,7 +14,6 @@ from ..utils import MfList
 from ..pakbase import Package
 from ..utils.recarray_utils import create_empty_recarray
 from ..utils.optionblock import OptionBlock
-from collections import OrderedDict
 import warnings
 
 
@@ -111,7 +110,7 @@ class ModflowWel(Package):
 
     """
 
-    _options = OrderedDict(
+    _options = dict(
         [
             (
                 "specify",
@@ -119,12 +118,12 @@ class ModflowWel(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 2,
-                    OptionBlock.vars: OrderedDict(
+                    OptionBlock.vars: dict(
                         [
                             ("phiramp", OptionBlock.simple_float),
                             (
                                 "iunitramp",
-                                OrderedDict(
+                                dict(
                                     [
                                         (OptionBlock.dtype, int),
                                         (OptionBlock.nested, False),

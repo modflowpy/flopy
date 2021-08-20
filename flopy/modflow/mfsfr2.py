@@ -11,7 +11,6 @@ from ..utils import MfList
 from ..utils.flopy_io import line_parse
 from ..utils.recarray_utils import create_empty_recarray
 from ..utils.optionblock import OptionBlock
-from collections import OrderedDict
 
 try:
     import pandas as pd
@@ -268,7 +267,7 @@ class ModflowSfr2(Package):
 
     """
 
-    _options = OrderedDict(
+    _options = dict(
         [
             ("reachinput", OptionBlock.simple_flag),
             ("transroute", OptionBlock.simple_flag),

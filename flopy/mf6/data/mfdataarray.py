@@ -1,6 +1,5 @@
 import sys, inspect, copy, os
 import numpy as np
-from collections import OrderedDict
 from ..data.mfstructure import DatumType
 from .mfdatastorage import DataStorage, DataStructureType, DataStorageType
 from ...utils.datautil import MultiList, DatumUtil
@@ -1712,7 +1711,7 @@ class MFTransientArray(MFArray, MFTransient):
                 if `data` is a dictionary.
         """
 
-        if isinstance(data, dict) or isinstance(data, OrderedDict):
+        if isinstance(data, dict):
             # each item in the dictionary is a list for one stress period
             # the dictionary key is the stress period the list is for
             del_keys = []
@@ -1815,7 +1814,7 @@ class MFTransientArray(MFArray, MFTransient):
                 set_layers, base_storage, stress_period
             )
         else:
-            return OrderedDict()
+            return {}
 
     def _set_storage_obj(self, storage):
         self._data_storage[self._current_key] = storage

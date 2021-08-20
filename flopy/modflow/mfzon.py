@@ -8,7 +8,6 @@ MODFLOW Guide
 
 """
 import sys
-import collections
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d
@@ -187,7 +186,7 @@ class ModflowZon(Package):
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
 
         # read zone data
-        zone_dict = collections.OrderedDict()
+        zone_dict = {}
         for n in range(nzn):
             line = f.readline()
             t = line.strip().split()

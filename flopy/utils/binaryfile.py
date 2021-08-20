@@ -10,7 +10,6 @@ important classes that can be accessed by the user.
 """
 import numpy as np
 import warnings
-from collections import OrderedDict
 from ..utils.datafile import Header, LayerFile
 
 
@@ -806,7 +805,7 @@ class CellBudgetFile:
         self.file.seek(0, 2)
         self.totalbytes = self.file.tell()
         self.file.seek(0, 0)
-        self.recorddict = OrderedDict()
+        self.recorddict = {}
         ipos = 0
         while ipos < self.totalbytes:
             self.iposheader.append(ipos)

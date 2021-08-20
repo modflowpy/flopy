@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import numpy as np
 
 
@@ -174,7 +173,7 @@ def to_cvfd(
     # First create vertexdict {(x1, y1): ivert1, (x2, y2): ivert2, ...} and
     # vertexlist [[ivert1, ivert2, ...], [ivert9, ivert10, ...], ...]
     # In the process, filter out any duplicate vertices
-    vertexdict = OrderedDict()
+    vertexdict = {}
     vertexlist = []
     xcyc = np.empty((ncells, 2), dtype=float)
     iv = 0
@@ -217,7 +216,7 @@ def to_cvfd(
             "Reduced total number of vertices by {}".format(nvertstart - nvert)
         )
         print("Creating dict of vertices with their associated cells")
-    vertex_cell_dict = OrderedDict()
+    vertex_cell_dict = {}
     for icell in range(nodestart, nodestop):
         ivertlist = vertexlist[icell]
         for ivert in ivertlist:

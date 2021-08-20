@@ -4,7 +4,6 @@ import errno
 import inspect
 import datetime
 import numpy as np
-from collections import OrderedDict
 
 from .mfbase import PackageContainer, ExtFileAction, PackageContainerType
 from .mfbase import (
@@ -347,7 +346,7 @@ class MFBlock:
         ]
         self.structure = structure
         self.path = path
-        self.datasets = OrderedDict()
+        self.datasets = {}
         self.datasets_keyword = {}
         # initially disable if optional
         self.enabled = structure.number_non_optional_data() > 0
@@ -1475,7 +1474,7 @@ class MFPackage(PackageContainer, PackageInterface):
 
     Attributes
     ----------
-    blocks : OrderedDict
+    blocks : dict
         Dictionary of blocks contained in this package by block name
     path : tuple
         Data dictionary path to this package
@@ -1530,7 +1529,7 @@ class MFPackage(PackageContainer, PackageInterface):
         self.parent = model_or_sim
         self._simulation_data = model_or_sim.simulation_data
         self.parent_file = parent_file
-        self.blocks = OrderedDict()
+        self.blocks = {}
         self.container_type = []
         self.loading_package = loading_package
         if pname is not None:

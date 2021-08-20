@@ -8,7 +8,6 @@ important classes that can be accessed by the user.
 """
 
 import itertools
-import collections
 import numpy as np
 
 from numpy.lib.recfunctions import append_fields, stack_arrays
@@ -560,7 +559,7 @@ class PathlineFile(_ModpathSeries):
             ]
         )
         idx = 0
-        part_dict = collections.OrderedDict()
+        part_dict = {}
         ndata = 0
         while True:
             if idx == 0:

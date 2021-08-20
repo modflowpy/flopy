@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import numpy as np
 from ..utils import flopy_io
 
@@ -27,27 +26,19 @@ class OptionBlock:
     vars = "vars"
     optional = "optional"
 
-    simple_flag = OrderedDict(
-        [(dtype, np.bool_), (nested, False), (optional, False)]
-    )
-    simple_str = OrderedDict(
-        [(dtype, str), (nested, False), (optional, False)]
-    )
-    simple_float = OrderedDict(
-        [(dtype, float), (nested, False), (optional, False)]
-    )
-    simple_int = OrderedDict(
-        [(dtype, int), (nested, False), (optional, False)]
-    )
+    simple_flag = dict([(dtype, np.bool_), (nested, False), (optional, False)])
+    simple_str = dict([(dtype, str), (nested, False), (optional, False)])
+    simple_float = dict([(dtype, float), (nested, False), (optional, False)])
+    simple_int = dict([(dtype, int), (nested, False), (optional, False)])
 
-    simple_tabfile = OrderedDict(
+    simple_tabfile = dict(
         [
             (dtype, np.bool_),
             (nested, True),
             (n_nested, 2),
             (
                 vars,
-                OrderedDict([("numtab", simple_int), ("maxval", simple_int)]),
+                dict([("numtab", simple_int), ("maxval", simple_int)]),
             ),
         ]
     )

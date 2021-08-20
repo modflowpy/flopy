@@ -1,6 +1,5 @@
 import os
 import sys
-import collections
 
 import numpy as np
 
@@ -48,7 +47,7 @@ def run():
     if cleanFiles:
         print("cleaning all files")
         print("excluding *.py files")
-        file_dict = collections.OrderedDict()
+        file_dict = {}
         file_dict[0] = os.listdir(dirs[0])
         file_dict[1] = os.listdir(dirs[1])
         file_dict[-1] = os.listdir(workspace)

@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import math
 import sys
 import os
@@ -1671,7 +1670,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             Automatically correct data.
         """
         self._cache_model_grid = True
-        if isinstance(data, dict) or isinstance(data, OrderedDict):
+        if isinstance(data, dict):
             if "filename" not in data:
                 # each item in the dictionary is a list for one stress period
                 # the dictionary key is the stress period the list is for
@@ -1815,7 +1814,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         super().update_record(record, key_index)
 
     def _new_storage(self, stress_period=0):
-        return OrderedDict()
+        return {}
 
     def _get_storage_obj(self):
         if (
