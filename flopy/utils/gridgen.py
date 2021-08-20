@@ -1379,13 +1379,6 @@ class Gridgen:
             cellxy[n, 1] = y
         return cellxy
 
-    def get_gridprops(self):
-        msg = (
-            "Use: "
-            "get_gridprops_disu5, get_gridprops_disu6, get_gridprops_disv"
-        )
-        raise DeprecationWarning(msg)
-
     @staticmethod
     def gridarray_to_flopyusg_gridarray(nodelay, a):
         nlay = nodelay.shape[0]
@@ -1679,16 +1672,6 @@ class Gridgen:
         gridprops["botm"] = bot
 
         return gridprops
-
-    def to_disu6(self, fname, writevertices=True):
-        raise DeprecationWarning(
-            "Use: flopy.mf6.ModflowGwfdisu(gwf, **g.get_gridprops_disu6())"
-        )
-
-    def to_disv6(self, fname, verbose=False):
-        raise DeprecationWarning(
-            "Use: flopy.mf6.ModflowGwfdisv(gwf, **g.get_gridprops_disv())"
-        )
 
     def intersect(self, features, featuretype, layer):
         """

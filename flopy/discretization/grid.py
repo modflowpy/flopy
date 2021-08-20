@@ -745,19 +745,11 @@ class Grid:
             elif "xul" in item.lower():
                 try:
                     xul = float(item.split(":")[1])
-                    warnings.warn(
-                        "xul/yul have been deprecated. Use xll/yll instead.",
-                        DeprecationWarning,
-                    )
                 except:
                     pass
             elif "yul" in item.lower():
                 try:
                     yul = float(item.split(":")[1])
-                    warnings.warn(
-                        "xul/yul have been deprecated. Use xll/yll instead.",
-                        DeprecationWarning,
-                    )
                 except:
                     pass
             elif "rotation" in item.lower():
