@@ -904,6 +904,30 @@ class StructuredGrid(Grid):
             v.append(node)
         return v
 
+    def get_ij(self, x, y):
+        """Return the row and column of a point or sequence of points
+        in real-world coordinates.
+
+        Parameters
+        ----------
+        x : scalar or sequence of x coordinates
+        y : scalar or sequence of y coordinates
+
+        Returns
+        -------
+        i : row or sequence of rows (zero-based)
+        j : column or sequence of columns (zero-based)
+        """
+        if np.isscalar(x):
+            c = (np.abs(self.xcellcenters[0] - x)).argmin()
+            r = (np.abs(self.ycellcenters[:, 0] - y)).argmin()
+        else:
+            xcp = np.array([self.xcellcenters[0]] * (len(x)))
+            ycp = np.array([self.ycellcenters[:, 0]] * (len(x)))
+            c = (np.abs(xcp.transpose() - x)).argmin(axis=0)
+            r = (np.abs(ycp.transpose() - y)).argmin(axis=0)
+        return r, c
+
     def plot(self, **kwargs):
         """
         Plot the grid lines.
