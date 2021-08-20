@@ -185,8 +185,10 @@ def update_version():
         # write new version file
         f = open(fpth, "w")
         f.write(
-            "# {} version file automatically ".format(pak)
-            + "created using...{0}\n".format(os.path.basename(__file__))
+            (
+                "# {} version file automatically created "
+                "using...{}\n".format(pak, os.path.basename(__file__))
+            )
         )
         f.write(
             "# created on..."
@@ -284,26 +286,33 @@ def update_readme_markdown(vmajor, vminor, vmicro):
             line = "### Version {}".format(version)
             if not is_approved:
                 line += " &mdash; release candidate"
-        elif "[Build Status]" in line:
+        elif "[flopy continuous integration]" in line:
             line = (
-                "[![Build Status](https://travis-ci.org/modflowpy/"
-                + "flopy.svg?branch={})]".format(branch)
-                + "(https://travis-ci.org/modflowpy/flopy)"
+                "[![flopy continuous integration](https://github.com/"
+                "modflowpy/flopy/actions/workflows/ci.yml/badge.svg?"
+                "branch={})](https://github.com/modflowpy/flopy/actions/"
+                "workflows/ci.yml)".format(branch)
+            )
+        elif "[Read the Docs]" in line:
+            line = (
+                "[![Read the Docs](https://github.com/modflowpy/flopy/"
+                "actions/workflows/rtd.yml/badge.svg?branch={})]"
+                "(https://github.com/modflowpy/flopy/actions/"
+                "workflows/rtd.yml)".format(branch)
             )
         elif "[Coverage Status]" in line:
             line = (
                 "[![Coverage Status](https://coveralls.io/repos/github/"
-                + "modflowpy/flopy/badge.svg?branch={})]".format(branch)
-                + "(https://coveralls.io/github/modflowpy/"
-                + "flopy?branch={})".format(branch)
+                "modflowpy/flopy/badge.svg?branch={0})]"
+                "(https://coveralls.io/github/modflowpy/"
+                "flopy?branch={0})".format(branch)
             )
         elif "[Binder]" in line:
             # [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/modflowpy/flopy.git/develop)
             line = (
                 "[![Binder](https://mybinder.org/badge_logo.svg)]"
-                + "(https://mybinder.org/v2/gh/modflowpy/flopy.git/"
-                + "{}".format(branch)
-                + ")"
+                "(https://mybinder.org/v2/gh/modflowpy/flopy.git/"
+                "{})".format(branch)
             )
         elif "http://dx.doi.org/10.5066/F7BK19FH" in line:
             line = get_software_citation(version, is_approved)
@@ -350,12 +359,12 @@ def update_notebook_examples_markdown():
             # [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/modflowpy/flopy.git/develop)
             line = (
                 "[![Binder](https://mybinder.org/badge_logo.svg)]"
-                + "(https://mybinder.org/v2/gh/modflowpy/flopy.git/"
-                + "{}".format(branch)
-                + ")"
+                "(https://mybinder.org/v2/gh/modflowpy/flopy.git/"
+                "{})".format(branch)
             )
         f.write("{}\n".format(line))
     f.close()
+
 
 def update_PyPi_release(vmajor, vminor, vmicro):
     # create disclaimer text
