@@ -659,38 +659,6 @@ class Util3d(DataInterface):
 
         return export.utils.array3d_export(f, self, **kwargs)
 
-    def to_shapefile(self, filename):
-        """
-        Export 3-D model data to shapefile (polygons).  Adds an
-            attribute for each Util2d in self.u2ds
-
-        Parameters
-        ----------
-        filename : str
-            Shapefile name to write
-
-        Returns
-        ----------
-        None
-
-        See Also
-        --------
-
-        Notes
-        -----
-
-        Examples
-        --------
-        >>> import flopy
-        >>> ml = flopy.modflow.Modflow.load('test.nam')
-        >>> ml.lpf.hk.to_shapefile('test_hk.shp')
-        """
-        warn(
-            "Deprecation warning: to_shapefile() is deprecated. use .export()",
-            DeprecationWarning,
-        )
-        self.export(filename)
-
     def plot(
         self,
         filename_base=None,
@@ -1494,38 +1462,6 @@ class Transient2d(DataInterface):
             array_free_format=self.array_free_format,
         )
 
-    def to_shapefile(self, filename):
-        """
-        Export transient 2D data to a shapefile (as polygons). Adds an
-            attribute for each unique Util2d instance in self.data
-
-        Parameters
-        ----------
-        filename : str
-            Shapefile name to write
-
-        Returns
-        ----------
-        None
-
-        See Also
-        --------
-
-        Notes
-        -----
-
-        Examples
-        --------
-        >>> import flopy
-        >>> ml = flopy.modflow.Modflow.load('test.nam')
-        >>> ml.rch.rech.as_shapefile('test_rech.shp')
-        """
-        warn(
-            "Deprecation warning: to_shapefile() is deprecated. use .export()",
-            DeprecationWarning,
-        )
-        self.export(filename)
-
     def plot(
         self,
         filename_base=None,
@@ -2075,38 +2011,6 @@ class Util2d(DataInterface):
         from flopy import export
 
         return export.utils.array2d_export(f, self, **kwargs)
-
-    def to_shapefile(self, filename):
-        """
-        Export 2-D model data to a shapefile (as polygons) of self.array
-
-        Parameters
-        ----------
-        filename : str
-            Shapefile name to write
-
-        Returns
-        ----------
-        None
-
-        See Also
-        --------
-
-        Notes
-        -----
-
-        Examples
-        --------
-        >>> import flopy
-        >>> ml = flopy.modflow.Modflow.load('test.nam')
-        >>> ml.dis.top.as_shapefile('test_top.shp')
-        """
-
-        warn(
-            "Deprecation warning: to_shapefile() is deprecated. use .export()",
-            DeprecationWarning,
-        )
-        self.export(filename)
 
     def set_fmtin(self, fmtin):
         self._format = ArrayFormat(

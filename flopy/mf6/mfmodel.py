@@ -113,17 +113,7 @@ class MFModel(PackageContainer, ModelInterface):
         xll = kwargs.pop("xll", None)
         yll = kwargs.pop("yll", None)
         self._xul = kwargs.pop("xul", None)
-        if self._xul is not None:
-            warnings.warn(
-                "xul/yul have been deprecated. Use xll/yll instead.",
-                DeprecationWarning,
-            )
         self._yul = kwargs.pop("yul", None)
-        if self._yul is not None:
-            warnings.warn(
-                "xul/yul have been deprecated. Use xll/yll instead.",
-                DeprecationWarning,
-            )
         rotation = kwargs.pop("rotation", 0.0)
         proj4 = kwargs.pop("proj4_str", None)
         # build model grid object

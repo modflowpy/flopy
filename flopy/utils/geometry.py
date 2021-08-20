@@ -701,42 +701,6 @@ def transform(
     return xrot, yrot
 
 
-def shape(pyshp_shpobj):
-    """
-    Convert a pyshp geometry object to a flopy geometry object.
-
-    Parameters
-    ----------
-    pyshp_shpobj : shapefile._Shape instance
-
-    Returns
-    -------
-    shape : flopy.utils.geometry Polygon, Linestring, or Point
-
-    Notes
-    -----
-    Currently only regular Polygons, LineStrings and Points (pyshp types 5, 3, 1) supported.
-
-    Examples
-    --------
-    >>> import shapefile as sf
-    >>> from flopy.utils.geometry import shape
-    >>> sfobj = sf.Reader('shapefile.shp')
-    >>> flopy_geom = shape(list(sfobj.iterShapes())[0])
-
-    """
-    import warnings
-
-    warnings.warn(
-        "Method will be Deprecated, calling GeoSpatialUtil",
-        DeprecationWarning,
-    )
-
-    from .geospatial_utils import GeoSpatialUtil
-
-    return GeoSpatialUtil(pyshp_shpobj).flopy_geometry
-
-
 def get_polygon_area(geom):
     """
     Calculate the area of a closed polygon

@@ -347,11 +347,6 @@ class BaseModel(ModelInterface):
         yll = kwargs.pop("yll", None)
         self._xul = kwargs.pop("xul", None)
         self._yul = kwargs.pop("yul", None)
-        if self._xul is not None or self._yul is not None:
-            warnings.warn(
-                "xul/yul have been deprecated. Use xll/yll instead.",
-                DeprecationWarning,
-            )
 
         self._rotation = kwargs.pop("rotation", 0.0)
         self._proj4_str = kwargs.pop("proj4_str", None)

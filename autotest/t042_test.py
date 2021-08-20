@@ -11,7 +11,6 @@ from flopy.utils.postprocessing import (
     get_transmissivities,
     get_water_table,
     get_gradients,
-    get_saturated_thickness,
 )
 
 mf = flopy.modflow
