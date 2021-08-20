@@ -257,6 +257,7 @@ def test_freyberg_export():
     wkt = flopy.export.shapefile_utils.CRS.get_spatialreference(
         m.modelgrid.epsg
     )
+
     # if wkt text was fetched from spatialreference.org
     if wkt is not None:
         # test default package export
@@ -795,31 +796,34 @@ def test_epsgs():
     import flopy.export.shapefile_utils as shp
 
     # test setting a geographic (lat/lon) coordinate reference
-    # (also tests sr.crs parsing of geographic crs info)
+    # (also tests shapefile_utils.CRS parsing of geographic crs info)
     delr = np.ones(10)
     delc = np.ones(10)
-    sr = flopy.discretization.StructuredGrid(delr=delr, delc=delc)
+    mg = flopy.discretization.StructuredGrid(delr=delr, delc=delc)
 
-    sr.epsg = 102733
-    msg = "sr.epsg is not 102733 ({})".format(sr.epsg)
-    assert sr.epsg == 102733, msg
+    mg.epsg = 102733
+    assert mg.epsg == 102733, "mg.epsg is not 102733 ({})".format(mg.epsg)
 
-    t_value = sr.__repr__()
-    msg = "proj4_str:epsg:102733 not in sr.__repr__(): ({})".format(t_value)
+    t_value = mg.__repr__()
     if not "proj4_str:epsg:102733" in t_value:
-        raise AssertionError(msg)
+        raise AssertionError(
+            "proj4_str:epsg:102733 not in mg.__repr__(): ({})".format(t_value)
+        )
 
-    sr.epsg = 4326  # WGS 84
+    mg.epsg = 4326  # WGS 84
     crs = shp.CRS(epsg=4326)
-    assert crs.crs["proj"] == "longlat"
-    t_value = crs.grid_mapping_attribs["grid_mapping_name"]
-    msg = "grid_mapping_name is not latitude_longitude: {}".format(t_value)
-    assert t_value == "latitude_longitude", msg
+    if crs.grid_mapping_attribs is not None:
+        assert crs.crs["proj"] == "longlat"
+        t_value = crs.grid_mapping_attribs["grid_mapping_name"]
+        assert (
+            t_value == "latitude_longitude"
+        ), "grid_mapping_name is not latitude_longitude: {}".format(t_value)
 
-    t_value = sr.__repr__()
-    msg = "proj4_str:epsg:4326 not in sr.__repr__(): ({})".format(t_value)
+    t_value = mg.__repr__()
     if not "proj4_str:epsg:4326" in t_value:
-        raise AssertionError(msg)
+        raise AssertionError(
+            "proj4_str:epsg:4326 not in sr.__repr__(): ({})".format(t_value)
+        )
 
 
 def test_dynamic_xll_yll():
@@ -1672,7 +1676,7 @@ def main():
     # test_vertex_model_dot_plot()
     # test_sr_with_Map()
     # test_modelgrid_with_PlotMapView()
-    # test_epsgs()
+    test_epsgs()
     # test_sr_scaling()
     # test_read_usgs_model_reference()
     # test_dynamic_xll_yll()
