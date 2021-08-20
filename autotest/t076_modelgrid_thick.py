@@ -205,8 +205,18 @@ def test_ncb_thick():
     laycbd = np.array([1, 2, 0], dtype=int)
     ncb = np.count_nonzero(laycbd)
     dx = dy = 150
-    delc = np.array([dy,] * nrow)
-    delr = np.array([dx, ] * ncol)
+    delc = np.array(
+        [
+            dy,
+        ]
+        * nrow
+    )
+    delr = np.array(
+        [
+            dx,
+        ]
+        * ncol
+    )
     top = np.ones((15, 15))
     botm = np.ones((nlay + ncb, nrow, ncol))
     elevations = np.array([-10, -20, -40, -50, -70])[:, np.newaxis]
@@ -220,7 +230,7 @@ def test_ncb_thick():
         nlay=nlay,
         nrow=nrow,
         ncol=ncol,
-        laycbd=laycbd
+        laycbd=laycbd,
     )
 
     thick = modelgrid.thick
@@ -234,9 +244,7 @@ def test_ncb_thick():
 
     sat_thick = modelgrid.saturated_thick(modelgrid.thick)
     if not sat_thick.shape == modelgrid.shape:
-        raise AssertionError(
-            "saturated_thickness confining beds not removed"
-        )
+        raise AssertionError("saturated_thickness confining beds not removed")
 
     if sat_thick[1, 0, 0] != 20:
         raise AssertionError(
