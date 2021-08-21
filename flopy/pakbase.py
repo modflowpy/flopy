@@ -979,13 +979,14 @@ class Package(PackageInterface):
                 it += 1
 
         # add auxillary information to nwt options
-        if nwt_options is not None and options:
-            if options[0] == "noprint":
-                nwt_options.noprint = True
-                if len(options) > 1:
-                    nwt_options.auxillary = options[1:]
-            else:
-                nwt_options.auxillary = options
+        if nwt_options is not None:
+            if options:
+                if options[0] == "noprint":
+                    nwt_options.noprint = True
+                    if len(options) > 1:
+                        nwt_options.auxillary = options[1:]
+                else:
+                    nwt_options.auxillary = options
 
             options = nwt_options
 

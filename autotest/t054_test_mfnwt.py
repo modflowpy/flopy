@@ -115,7 +115,7 @@ def mfnwt_model(namfile, model_ws):
     wel = m.get_package("WEL")
     wel.specify = True
     wel.phiramp = 1.0e-5
-    wel.phiramp_unit = 2
+    wel.iunitramp = 2
 
     # change workspace and write MODFLOW-NWT model
     tdir = os.path.splitext(namfile)[0]
