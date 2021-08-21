@@ -1185,7 +1185,7 @@ def test_mf6_output():
     if not isinstance(zonbud, flopy.utils.ZoneBudget6):
         raise AssertionError()
 
-    if not isinstance(lst, flopy.utils.MfListBudget):
+    if not isinstance(lst, flopy.utils.Mf6ListBudget):
         raise AssertionError()
 
     bud = ml.output.budget()
@@ -1202,7 +1202,7 @@ def test_mf6_output():
     if not isinstance(zonbud, flopy.utils.ZoneBudget6):
         raise TypeError()
 
-    if not isinstance(lst, flopy.utils.MfListBudget):
+    if not isinstance(lst, flopy.utils.Mf6ListBudget):
         raise TypeError()
 
     uzf = ml.uzf
