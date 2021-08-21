@@ -2,7 +2,6 @@ import os
 import copy
 import numpy as np
 from itertools import groupby
-from collections import OrderedDict
 from .utils_def import totim_to_datetime
 
 
@@ -152,9 +151,7 @@ class ZoneBudget:
 
         self.izone = izone
         self.allzones = np.unique(izone)
-        self._zonenamedict = OrderedDict(
-            [(z, "ZONE_{}".format(z)) for z in self.allzones]
-        )
+        self._zonenamedict = {z: "ZONE_{}".format(z) for z in self.allzones}
 
         if aliases is not None:
             s = (
@@ -2199,10 +2196,8 @@ class ZoneFile6:
         self._parent.add_package("zon", self)
         self.filename = self._parent.name + extension
         self.aliases = aliases
-        self.allzones = [int(zn) for zn in np.unique(izone) if zn != 0]
-        self._zonenamedict = OrderedDict(
-            [(zn, "ZONE_{}".format(zn)) for zn in self.allzones]
-        )
+        self.allzones = [int(z) for z in np.unique(izone) if z != 0]
+        self._zonenamedict = {z: "ZONE_{}".format(z) for z in self.allzones}
 
         if aliases is not None:
             if not isinstance(aliases, dict):
