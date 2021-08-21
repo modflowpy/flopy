@@ -5,7 +5,7 @@ from ...utils import (
     Mf6Obs,
     ZoneBudget6,
     ZoneFile6,
-    MfListBudget,
+    Mf6ListBudget,
 )
 from ...utils.observationfile import CsvFile
 from ...pakbase import PackageInterface
@@ -319,12 +319,12 @@ class MF6Output:
 
         Returns
         -------
-            MfListBudget, MtListBudget object
+            Mf6ListBudget object
         """
         if self._lst is not None:
             try:
                 list_file = os.path.join(self._sim_ws, self._lst)
-                return MfListBudget(list_file)
+                return Mf6ListBudget(list_file)
             except (AssertionError, IOError, FileNotFoundError):
                 return None
 

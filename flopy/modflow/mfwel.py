@@ -262,32 +262,6 @@ class ModflowWel(Package):
 
         self.parent.add_package(self)
 
-    @property
-    def phiramp_unit(self):
-        """Get phiramp unit
-
-        Returns
-        -------
-        iunitramp: int
-            unit number of phiramp file
-
-        """
-        warnings.warn(
-            "phiramp_unit will be replaced with iunitramp for consistency",
-            DeprecationWarning,
-        )
-        return self.iunitramp
-
-    @phiramp_unit.setter
-    def phiramp_unit(self, phiramp_unit):
-        """Set phiramp unit
-
-        Returns
-        -------
-
-        """
-        self.iunitramp = phiramp_unit
-
     def _ncells(self):
         """Maximum number of cells that have wells (developed for
         MT3DMS SSM package).
