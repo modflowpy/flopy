@@ -2,7 +2,6 @@ import os
 import copy
 import numpy as np
 from itertools import groupby
-from collections import OrderedDict
 from .utils_def import totim_to_datetime
 
 
@@ -152,7 +151,7 @@ class ZoneBudget:
 
         self.izone = izone
         self.allzones = np.unique(izone)
-        self._zonenamedict = OrderedDict(
+        self._zonenamedict = dict(
             [(z, "ZONE_{}".format(z)) for z in self.allzones]
         )
 
@@ -2200,7 +2199,7 @@ class ZoneFile6:
         self.filename = self._parent.name + extension
         self.aliases = aliases
         self.allzones = [int(zn) for zn in np.unique(izone) if zn != 0]
-        self._zonenamedict = OrderedDict(
+        self._zonenamedict = dict(
             [(zn, "ZONE_{}".format(zn)) for zn in self.allzones]
         )
 
