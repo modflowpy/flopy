@@ -86,12 +86,17 @@ def get_rect_grid(angrot=0.0, xyoffset=0.0, top=None, botm=None):
     return sgr
 
 
-def get_rect_vertex_grid(angrot=0.0, xyoffset=0.0):
+def get_rect_vertex_grid(angrot=0.0, xyoffset=0.0, top=None, botm=None):
+    # Creates a 2-layer, 2x2 rectangular vertex grid
     cell2d = [
         [0, 5.0, 5.0, 4, 0, 1, 4, 3],
         [1, 15.0, 5.0, 4, 1, 2, 5, 4],
         [2, 5.0, 15.0, 4, 3, 4, 7, 6],
         [3, 15.0, 15.0, 4, 4, 5, 8, 7],
+        [4, 5.0, 5.0, 4, 0, 1, 4, 3],
+        [5, 15.0, 5.0, 4, 1, 2, 5, 4],
+        [6, 5.0, 15.0, 4, 3, 4, 7, 6],
+        [7, 15.0, 15.0, 4, 4, 5, 8, 7],
     ]
     vertices = [
         [0, 0.0, 0.0],
@@ -107,8 +112,8 @@ def get_rect_vertex_grid(angrot=0.0, xyoffset=0.0):
     tgr = fgrid.VertexGrid(
         vertices,
         cell2d,
-        botm=np.atleast_2d(np.zeros(len(cell2d))),
-        top=np.ones(len(cell2d)),
+        top=top,
+        botm=botm,
         xoff=xyoffset,
         yoff=xyoffset,
         angrot=angrot,
@@ -317,7 +322,10 @@ def test_rect_vertex_grid_point_in_one_cell_shapely(rtree=True):
         import shapely
     except:
         return
-    gr = get_rect_vertex_grid()
+    botm = np.concatenate([np.ones(4), 0.5 * np.ones(4), np.zeros(4)]).reshape(
+        3, 2, 2
+    )
+    gr = get_rect_vertex_grid(top=np.ones(4), botm=botm)
     ix = GridIntersect(gr, method="vertex", rtree=rtree)
     result = ix.intersect(Point(4.0, 4.0))
     assert len(result) == 1
@@ -331,6 +339,25 @@ def test_rect_vertex_grid_point_in_one_cell_shapely(rtree=True):
     result = ix.intersect(Point(6.0, 4.0))
     assert len(result) == 1
     assert result.cellids[0] == 0
+    return result
+
+
+def test_rect_vertex_grid_point_in_one_cell_shapely_all_layers(rtree=True):
+    # avoid test fail when shapely not available
+    try:
+        import shapely
+    except:
+        return
+    # botm = np.concatenate([np.ones(4), np.zeros(4)]).reshape(2, 2, 2)
+    botm = np.concatenate([np.ones(4), 0.5 * np.ones(4), np.zeros(4)]).reshape(
+        3, 2, 2
+    )
+    gr = get_rect_vertex_grid(top=np.ones(4), botm=botm)
+    ix = GridIntersect(gr, method="vertex", rtree=rtree)
+    result = ix.intersect(Point(4.0, 4.0), keep_stacked_cells=True)
+    assert len(result) == 2
+    assert result.cellids[0] == 0
+    assert result.cellids[1] == 4
     return result
 
 
@@ -593,6 +620,26 @@ def test_rect_grid_linestring_in_2cells_shapely(rtree=True):
     assert result.cellids[0] == (1, 0)
     assert result.cellids[1] == (1, 1)
     return result
+
+
+def test_rect_grid_linestring_in_2cells_shapely_all_layers(rtree=True):
+    # avoid test fail when shapely not available
+    try:
+        import shapely
+    except:
+        return
+    botm = np.concatenate([np.ones(4), 0.5 * np.ones(4), np.zeros(4)]).reshape(
+        3, 2, 2
+    )
+    gr = get_rect_vertex_grid(top=np.ones(4), botm=botm)
+    ix = GridIntersect(gr, method="vertex", rtree=rtree)
+    result = ix.intersect(LineString([(5.0, 5.0), (15.0, 5.0)]), keep_stacked_cells=True)
+    assert len(result) == 4
+    assert result.lengths.sum() == 20.0
+    assert result.cellids[0] == 0
+    assert result.cellids[1] == 1
+    assert result.cellids[2] == 4
+    assert result.cellids[3] == 5
 
 
 def test_rect_grid_linestring_on_outer_boundary_shapely(rtree=True):

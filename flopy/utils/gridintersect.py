@@ -223,6 +223,8 @@ class GridIntersect:
         keepzerolengths : bool
             boolean method to keep zero length intersections for
             linestring intersection
+        keep_stacked_cells : bool
+            For shapely only, keeps all intersected cells even if cell vertices are already in the results.
 
         Returns
         -------
@@ -233,6 +235,7 @@ class GridIntersect:
         shp = gu.shapely
         sort_by_cellid = kwargs.pop("sort_by_cellid", True)
         keepzerolengths = kwargs.pop("keepzerolengths", False)
+        keep_stacked_cells = kwargs.pop("keep_stacked_cells", False)
 
         if gu.shapetype in ("Point", "MultiPoint"):
             if (
@@ -241,7 +244,9 @@ class GridIntersect:
             ):
                 rec = self._intersect_point_structured(shp)
             else:
-                rec = self._intersect_point_shapely(shp, sort_by_cellid)
+                rec = self._intersect_point_shapely(
+                    shp, sort_by_cellid, keep_stacked_cells
+                )
         elif gu.shapetype in ("LineString", "MultiLineString"):
             if (
                 self.method == "structured"
@@ -252,7 +257,7 @@ class GridIntersect:
                 )
             else:
                 rec = self._intersect_linestring_shapely(
-                    shp, keepzerolengths, sort_by_cellid
+                    shp, keepzerolengths, sort_by_cellid, keep_stacked_cells
                 )
         elif gu.shapetype in ("Polygon", "MultiPolygon"):
             if (
@@ -456,7 +461,9 @@ class GridIntersect:
         shapelist.sort(key=sort_key)
         return shapelist
 
-    def _intersect_point_shapely(self, shp, sort_by_cellid=True):
+    def _intersect_point_shapely(
+        self, shp, sort_by_cellid=True, keep_stacked_cells=False
+    ):
         """intersect grid with Point or MultiPoint.
 
         Parameters
@@ -468,6 +475,8 @@ class GridIntersect:
         sort_by_cellid : bool, optional
             flag whether to sort cells by id, used to ensure node
             with lowest id is returned, by default True
+        keep_stacked_cells : bool, optional
+            For shapely only, keeps all intersected cells even if cell vertices are already in the results.
 
         Returns
         -------
@@ -505,7 +514,7 @@ class GridIntersect:
             for c in collection:
                 verts = c.__geo_interface__["coordinates"]
                 # avoid returning multiple cells for points on boundaries
-                if verts in parsed_points:
+                if not keep_stacked_cells and verts in parsed_points:
                     continue
                 parsed_points.append(verts)
                 cell_shps.append(c)  # collect only new points
@@ -534,7 +543,11 @@ class GridIntersect:
         return rec
 
     def _intersect_linestring_shapely(
-        self, shp, keepzerolengths=False, sort_by_cellid=True
+        self,
+        shp,
+        keepzerolengths=False,
+        sort_by_cellid=True,
+        keep_stacked_cells=False,
     ):
         """intersect with LineString or MultiLineString.
 
@@ -547,6 +560,8 @@ class GridIntersect:
         sort_by_cellid : bool, optional
             flag whether to sort cells by id, used to ensure node
             with lowest id is returned, by default True
+        keep_stacked_cells : bool, optional
+            For shapely only, keeps all intersected cells even if cell vertices are already in the results.
 
         Returns
         -------
@@ -580,7 +595,7 @@ class GridIntersect:
             for c in collection:
                 verts = c.__geo_interface__["coordinates"]
                 # test if linestring was already processed (if on boundary)
-                if verts in vertices:
+                if not keep_stacked_cells and verts in vertices:
                     continue
                 # if keep zero don't check length
                 if not keepzerolengths:
