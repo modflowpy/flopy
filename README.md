@@ -57,7 +57,6 @@ Getting Started
 ### MODFLOW 6 Quick Start
 
 ```python
-import os
 import flopy
 ws = './mymodel'
 name = 'mymodel'
@@ -83,11 +82,12 @@ head = gwf.output.head().get_data()
 bud = gwf.output.budget()
 
 spdis = bud.get_data(text='DATA-SPDIS')[0]
+qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(spdis, gwf)
 pmv = flopy.plot.PlotMapView(gwf)
 pmv.plot_array(head)
 pmv.plot_grid(colors='white')
 pmv.contour_array(head, levels=[.2, .4, .6, .8], linewidths=3.)
-pmv.plot_specific_discharge(spdis, color='white')
+pmv.plot_vector(qx, qy, normalize=True, color="white")
 ```
 <img src="examples/images/quickstart.png" alt="plot" style="width:30;height:30">
 
