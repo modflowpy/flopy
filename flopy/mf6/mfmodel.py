@@ -74,7 +74,7 @@ class MFModel(PackageContainer, ModelInterface):
         structure=None,
         model_rel_path=".",
         verbose=False,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(simulation.simulation_data, modelname)
         self.simulation = simulation
@@ -86,7 +86,7 @@ class MFModel(PackageContainer, ModelInterface):
         self.type = "Model"
 
         if model_nam_file is None:
-            model_nam_file = "{}.nam".format(modelname)
+            model_nam_file = f"{modelname}.nam"
 
         if add_to_simulation:
             self.structure = simulation.register_model(
@@ -105,7 +105,7 @@ class MFModel(PackageContainer, ModelInterface):
         self._verbose = verbose
 
         if model_nam_file is None:
-            self.model_nam_file = "{}.nam".format(modelname)
+            self.model_nam_file = f"{modelname}.nam"
         else:
             self.model_nam_file = model_nam_file
 
@@ -126,8 +126,7 @@ class MFModel(PackageContainer, ModelInterface):
         if len(kwargs) > 0:
             kwargs_str = ", ".join(kwargs.keys())
             excpt_str = (
-                'Extraneous kwargs "{}" provided to '
-                "MFModel.".format(kwargs_str)
+                f'Extraneous kwargs "{kwargs_str}" provided to MFModel.'
             )
             raise FlopyException(excpt_str)
 
@@ -135,8 +134,8 @@ class MFModel(PackageContainer, ModelInterface):
         # create name file based on model type - support different model types
         package_obj = self.package_factory("nam", model_type[0:3])
         if not package_obj:
-            excpt_str = "Name file could not be found for model" "{}.".format(
-                model_type[0:3]
+            excpt_str = (
+                f"Name file could not be found for model{model_type[0:3]}."
             )
             raise FlopyException(excpt_str)
 
@@ -742,9 +741,9 @@ class MFModel(PackageContainer, ModelInterface):
         vnum = mfstructure.MFStructure().get_version_string()
         # FIX: Transport - Priority packages maybe should not be hard coded
         priority_packages = {
-            "dis{}".format(vnum): 1,
-            "disv{}".format(vnum): 1,
-            "disu{}".format(vnum): 1,
+            f"dis{vnum}": 1,
+            f"disv{vnum}": 1,
+            f"disu{vnum}": 1,
         }
         packages_ordered = []
         package_recarray = instance.simulation_data.mfdata[
@@ -777,7 +776,7 @@ class MFModel(PackageContainer, ModelInterface):
                         simulation.simulation_data.verbosity_level.value
                         >= VerbosityLevel.normal.value
                     ):
-                        print("    skipping package {}...".format(ftype))
+                        print(f"    skipping package {ftype}...")
                     continue
                 if model_rel_path and model_rel_path != ".":
                     # strip off model relative path from the file path
@@ -787,7 +786,7 @@ class MFModel(PackageContainer, ModelInterface):
                     simulation.simulation_data.verbosity_level.value
                     >= VerbosityLevel.normal.value
                 ):
-                    print("    loading package {}...".format(ftype))
+                    print(f"    loading package {ftype}...")
                 # load package
                 instance.load_package(ftype, fname, pname, strict, None)
                 sim_data = simulation.simulation_data
@@ -848,7 +847,7 @@ class MFModel(PackageContainer, ModelInterface):
                 self.simulation_data.verbosity_level.value
                 >= VerbosityLevel.normal.value
             ):
-                print("    writing package {}...".format(pp._get_pname()))
+                print(f"    writing package {pp._get_pname()}...")
             pp.write(ext_file_action=ext_file_action)
 
     def get_grid_type(self):
@@ -864,28 +863,28 @@ class MFModel(PackageContainer, ModelInterface):
         structure = mfstructure.MFStructure()
         if (
             package_recarray.search_data(
-                "dis{}".format(structure.get_version_string()), 0
+                f"dis{structure.get_version_string()}", 0
             )
             is not None
         ):
             return DiscretizationType.DIS
         elif (
             package_recarray.search_data(
-                "disv{}".format(structure.get_version_string()), 0
+                f"disv{structure.get_version_string()}", 0
             )
             is not None
         ):
             return DiscretizationType.DISV
         elif (
             package_recarray.search_data(
-                "disu{}".format(structure.get_version_string()), 0
+                f"disu{structure.get_version_string()}", 0
             )
             is not None
         ):
             return DiscretizationType.DISU
         elif (
             package_recarray.search_data(
-                "disl{}".format(structure.get_version_string()), 0
+                f"disl{structure.get_version_string()}", 0
             )
             is not None
         ):
@@ -1163,10 +1162,10 @@ class MFModel(PackageContainer, ModelInterface):
 
         """
         package_type_count = {}
-        self.name_file.filename = "{}.nam".format(name)
+        self.name_file.filename = f"{name}.nam"
         for package in self.packagelist:
             if package.package_type not in package_type_count:
-                package.filename = "{}.{}".format(name, package.package_type)
+                package.filename = f"{name}.{package.package_type}"
                 package_type_count[package.package_type] = 1
             else:
                 package_type_count[package.package_type] += 1
@@ -1303,7 +1302,7 @@ class MFModel(PackageContainer, ModelInterface):
                 package.package_name = package.package_type
 
         if set_package_filename:
-            package._filename = "{}.{}".format(self.name, package.package_type)
+            package._filename = f"{self.name}.{package.package_type}"
 
         if add_to_package_list:
             self._add_package(package, path)
@@ -1320,7 +1319,7 @@ class MFModel(PackageContainer, ModelInterface):
                 # recarray
                 self.name_file.packages.update_record(
                     [
-                        "{}6".format(pkg_type),
+                        f"{pkg_type}6",
                         package._filename,
                         package.package_name,
                     ],
@@ -1386,9 +1385,7 @@ class MFModel(PackageContainer, ModelInterface):
             # resolve dictionary name for package
             if dict_package_name is not None:
                 if parent_package is not None:
-                    dict_package_name = "{}_{}".format(
-                        parent_package.path[-1], ftype
-                    )
+                    dict_package_name = f"{parent_package.path[-1]}_{ftype}"
                 else:
                     # use dict_package_name as the base name
                     if ftype in self._ftype_num_dict:
@@ -1408,8 +1405,8 @@ class MFModel(PackageContainer, ModelInterface):
                 if pname is not None:
                     dict_package_name = pname
                 else:
-                    dict_package_name = "{}_{}".format(
-                        ftype, self._ftype_num_dict[ftype]
+                    dict_package_name = (
+                        f"{ftype}_{self._ftype_num_dict[ftype]}"
                     )
         else:
             dict_package_name = ftype
@@ -1432,7 +1429,7 @@ class MFModel(PackageContainer, ModelInterface):
             package.load(strict)
         except ReadAsArraysException:
             #  create ReadAsArrays package and load it instead
-            package_obj = self.package_factory("{}a".format(ftype), model_type)
+            package_obj = self.package_factory(f"{ftype}a", model_type)
             package = package_obj(
                 self,
                 filename=fname,

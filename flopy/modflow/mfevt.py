@@ -199,8 +199,8 @@ class ModflowEvt(Package):
             f_evt = f
         else:
             f_evt = open(self.fn_path, "w")
-        f_evt.write("{0:s}\n".format(self.heading))
-        f_evt.write("{0:10d}{1:10d}\n".format(self.nevtop, self.ipakcb))
+        f_evt.write(f"{self.heading}\n")
+        f_evt.write(f"{self.nevtop:10d}{self.ipakcb:10d}\n")
         if self.nevtop == 2 and not self.parent.structured:
             mxndevt = np.max(
                 [
@@ -208,7 +208,7 @@ class ModflowEvt(Package):
                     for kper, u2d in self.ievt.transient_2ds.items()
                 ]
             )
-            f_evt.write("{0:10d}\n".format(mxndevt))
+            f_evt.write(f"{mxndevt:10d}\n")
 
         for n in range(nper):
             insurf, surf = self.surf.get_kper_entry(n)
@@ -217,13 +217,9 @@ class ModflowEvt(Package):
             inievt, ievt = self.ievt.get_kper_entry(n)
             if self.nevtop == 2 and not self.parent.structured:
                 inievt = self.ievt[n].array.size
-            comment = "Evapotranspiration  dataset 5 for stress period " + str(
-                n + 1
-            )
+            comment = f"Evapotranspiration dataset 5 for stress period {n + 1}"
             f_evt.write(
-                "{0:10d}{1:10d}{2:10d}{3:10d} # {4:s}\n".format(
-                    insurf, inevtr, inexdp, inievt, comment
-                )
+                f"{insurf:10d}{inevtr:10d}{inexdp:10d}{inievt:10d} # {comment}\n"
             )
             if insurf >= 0:
                 f_evt.write(surf)
@@ -342,11 +338,7 @@ class ModflowEvt(Package):
 
             if insurf >= 0:
                 if model.verbose:
-                    print(
-                        "   loading surf stress period {0:3d}...".format(
-                            iper + 1
-                        )
-                    )
+                    print(f"   loading surf stress period {iper + 1:3d}...")
                 t = Util2d.load(
                     f, model, u2d_shape, np.float32, "surf", ext_unit_dict
                 )
@@ -357,9 +349,7 @@ class ModflowEvt(Package):
                 if npar == 0:
                     if model.verbose:
                         print(
-                            "   loading evtr stress period {0:3d}...".format(
-                                iper + 1
-                            )
+                            f"   loading evtr stress period {iper + 1:3d}..."
                         )
                     t = Util2d.load(
                         f,
@@ -396,11 +386,7 @@ class ModflowEvt(Package):
             evtr[iper] = current_evtr
             if inexdp >= 0:
                 if model.verbose:
-                    print(
-                        "   loading exdp stress period {0:3d}...".format(
-                            iper + 1
-                        )
-                    )
+                    print(f"   loading exdp stress period {iper + 1:3d}...")
                 t = Util2d.load(
                     f, model, u2d_shape, np.float32, "exdp", ext_unit_dict
                 )
@@ -410,9 +396,7 @@ class ModflowEvt(Package):
                 if inievt >= 0:
                     if model.verbose:
                         print(
-                            "   loading ievt stress period {0:3d}...".format(
-                                iper + 1
-                            )
+                            f"   loading ievt stress period {iper + 1:3d}..."
                         )
                     t = Util2d.load(
                         f, model, u2d_shape, np.int32, "ievt", ext_unit_dict

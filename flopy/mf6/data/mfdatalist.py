@@ -310,10 +310,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                     self._simulation_data.verbosity_level.value
                     >= VerbosityLevel.verbose.value
                 ):
-                    print(
-                        "Storing {} internally.."
-                        ".".format(self.structure.name)
-                    )
+                    print(f"Storing {self.structure.name} internally...")
                 internal_data = {
                     "data": data,
                 }
@@ -683,7 +680,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 type_,
                 value_,
                 traceback_,
-                "search_term={}\ncol={}".format(search_term, col),
+                f"search_term={search_term}\ncol={col}",
                 self._simulation_data.debug,
                 ex,
             )
@@ -749,7 +746,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 ext_string = self._get_external_formatting_string(
                     0, ext_file_action
                 )
-                file_entry.append("{}{}{}".format(indent, indent, ext_string))
+                file_entry.append(f"{indent}{indent}{ext_string}")
                 # write file
 
             except Exception as ex:
@@ -818,9 +815,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 ):
                     text_line.append(storage.comments[mflist_line].text)
 
-                file_entry.append(
-                    "{}{}\n".format(indent, indent.join(text_line))
-                )
+                file_entry.append(f"{indent}{indent.join(text_line)}\n")
                 self._crnt_line_num += 1
 
         # unfreeze model grid
@@ -847,9 +842,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 const_str = self._get_constant_formatting_string(
                     storage.get_const_val(0), 0, data_type, ""
                 )
-                text_line.append(
-                    "{}{}{}".format(indent, indent, const_str.upper())
-                )
+                text_line.append(f"{indent}{indent}{const_str.upper()}")
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(
@@ -1032,7 +1025,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                 data_key = data_val.lower()
                                 if data_key not in data_item.keystring_dict:
                                     keystr_struct = data_item.keystring_dict[
-                                        "{}record".format(data_key)
+                                        f"{data_key}record"
                                     ]
                                 else:
                                     keystr_struct = data_item.keystring_dict[
@@ -1279,7 +1272,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         filename_base=None,
         file_extension=None,
         mflay=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot boundary condition (MfList) data
@@ -1349,7 +1342,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             filename_base=None,
             file_extension=None,
             mflay=None,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -1573,9 +1566,9 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             ):
                 fname, ext = os.path.splitext(external_file_path)
                 if datautil.DatumUtil.is_int(sp):
-                    full_name = "{}_{}{}".format(fname, sp + 1, ext)
+                    full_name = f"{fname}_{sp + 1}{ext}"
                 else:
-                    full_name = "{}_{}{}".format(fname, sp, ext)
+                    full_name = f"{fname}_{sp}{ext}"
 
                 super().store_as_external_file(
                     full_name,
@@ -1832,7 +1825,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         filename_base=None,
         file_extension=None,
         mflay=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot stress period boundary condition (MfList) data for a specified
@@ -1910,7 +1903,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             filename_base=filename_base,
             file_extension=file_extension,
             mflay=mflay,
-            **kwargs
+            **kwargs,
         )
         return axes
 

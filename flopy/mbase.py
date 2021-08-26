@@ -266,8 +266,7 @@ class ModelInterface:
                     chk.summary_array, r.summary_array
                 ).view(np.recarray)
                 chk.passed += [
-                    "{} package: {}".format(r.package.name[0], psd)
-                    for psd in r.passed
+                    f"{r.package.name[0]} package: {psd}" for psd in r.passed
                 ]
         chk.summarize()
         return chk
@@ -311,7 +310,7 @@ class BaseModel(ModelInterface):
         model_ws=None,
         structured=True,
         verbose=False,
-        **kwargs
+        **kwargs,
     ):
         """Initialize BaseModel."""
         super().__init__()
@@ -331,9 +330,8 @@ class BaseModel(ModelInterface):
                 os.makedirs(model_ws)
             except:
                 print(
-                    "\n{0:s} not valid, workspace-folder was changed to {1:s}\n".format(
-                        model_ws, os.getcwd()
-                    )
+                    f"\n{model_ws} not valid, "
+                    f"workspace-folder was changed to {os.getcwd()}\n"
                 )
                 model_ws = os.getcwd()
         self._model_ws = model_ws
@@ -568,8 +566,7 @@ class BaseModel(ModelInterface):
                         pn = p.name
                     if self.verbose:
                         print(
-                            "\nWARNING:\n    unit {} of package {} "
-                            "already in use.".format(u, pn)
+                            f"\nWARNING:\n    unit {u} of package {pn} already in use."
                         )
             self.package_units.append(u)
         for i, pp in enumerate(self.packagelist):
@@ -579,7 +576,7 @@ class BaseModel(ModelInterface):
                 if self.verbose:
                     print(
                         "\nWARNING:\n    Two packages of the same type, "
-                        "Replacing existing '{}' package.".format(p.name[0])
+                        f"Replacing existing '{p.name[0]}' package."
                     )
                 self.packagelist[i] = p
                 return
@@ -690,10 +687,10 @@ class BaseModel(ModelInterface):
         else:
             txt1 = "Removing"
             txt2 = "from"
-        msg = "{} {} (unit={}) {} the output list.".format(
-            txt1, self.output_fnames[i], self.output_units[i], txt2
+        print(
+            f"{txt1} {self.output_fnames[i]} (unit={self.output_units[i]}) "
+            f"{txt2} the output list."
         )
-        print(msg)
 
     def add_output_file(
         self, unit, fname=None, extension="cbc", binflag=True, package=None
@@ -743,7 +740,7 @@ class BaseModel(ModelInterface):
 
         if add_cbc:
             if fname is None:
-                fname = self.name + "." + extension
+                fname = f"{self.name}.{extension}"
                 # check if this file name exists for a different unit number
                 if fname in self.output_fnames:
                     idx = self.output_fnames.index(fname)
@@ -752,12 +749,10 @@ class BaseModel(ModelInterface):
                         # include unit number in fname if package has
                         # not been passed
                         if package is None:
-                            fname = self.name + ".{}.".format(unit) + extension
+                            fname = f"{self.name}.{unit}.{extension}"
                         # include package name in fname
                         else:
-                            fname = (
-                                self.name + ".{}.".format(package) + extension
-                            )
+                            fname = f"{self.name}.{package}.{extension}"
             else:
                 fname = os.path.basename(fname)
             self.add_output(fname, unit, binflag=binflag, package=package)
@@ -781,11 +776,10 @@ class BaseModel(ModelInterface):
         """
         if fname in self.output_fnames:
             if self.verbose:
-                msg = (
+                print(
                     "BaseModel.add_output() warning: "
-                    "replacing existing filename {}".format(fname)
+                    f"replacing existing filename {fname}"
                 )
-                print(msg)
             idx = self.output_fnames.index(fname)
             if self.verbose:
                 self._output_msg(idx, add=False)
@@ -973,11 +967,10 @@ class BaseModel(ModelInterface):
         """
         if fname in self.external_fnames:
             if self.verbose:
-                msg = (
+                print(
                     "BaseModel.add_external() warning: "
-                    "replacing existing filename {}".format(fname)
+                    f"replacing existing filename {fname}"
                 )
-                print(msg)
             idx = self.external_fnames.index(fname)
             self.external_fnames.pop(idx)
             self.external_units.pop(idx)
@@ -985,10 +978,7 @@ class BaseModel(ModelInterface):
             self.external_output.pop(idx)
         if unit in self.external_units:
             if self.verbose:
-                msg = (
-                    "BaseModel.add_external() warning: "
-                    "replacing existing unit {}".format(unit)
-                )
+                msg = f"BaseModel.add_external() warning: replacing existing unit {unit}"
                 print(msg)
             idx = self.external_units.index(unit)
             self.external_fnames.pop(idx)
@@ -1099,11 +1089,7 @@ class BaseModel(ModelInterface):
             for i in range(len(p.name)):
                 if p.unit_number[i] == 0:
                     continue
-                s = "{:14s} {:5d}  {}".format(
-                    p.name[i],
-                    p.unit_number[i],
-                    p.file_name[i],
-                )
+                s = f"{p.name[i]:14s} {p.unit_number[i]:5d}  {p.file_name[i]}"
                 if p.extra[i]:
                     s += " " + p.extra[i]
                 lines.append(s)
@@ -1162,18 +1148,18 @@ class BaseModel(ModelInterface):
         # check that this is a valid model version
         if self.version not in list(self.version_types.keys()):
             err = (
-                "Error: Unsupported model version ({}).".format(self.version)
-                + " Valid model versions are:"
+                f"Error: Unsupported model version ({self.version}). "
+                "Valid model versions are:"
             )
             for v in list(self.version_types.keys()):
-                err += " {}".format(v)
+                err += f" {v}"
             raise Exception(err)
 
         # set namefile heading
-        heading = "# Name file for {}, generated by Flopy version {}.".format(
-            self.version_types[self.version], __version__
+        self.heading = (
+            f"# Name file for {self.version_types[self.version]}, "
+            f"generated by Flopy version {__version__}."
         )
-        self.heading = heading
 
         # set heading for each package
         for p in self.get_package_list():
@@ -1205,10 +1191,10 @@ class BaseModel(ModelInterface):
             new_pth = os.getcwd()
         if not os.path.exists(new_pth):
             try:
-                print("\ncreating model workspace...\n   {}".format(new_pth))
+                print(f"\ncreating model workspace...\n   {new_pth}")
                 os.makedirs(new_pth)
             except:
-                raise OSError("{} not valid, workspace-folder".format(new_pth))
+                raise OSError(f"{new_pth} not valid, workspace-folder")
                 # line = '\n{} not valid, workspace-folder '.format(new_pth) + \
                 #        'was changed to {}\n'.format(os.getcwd())
                 # print(line)
@@ -1217,7 +1203,7 @@ class BaseModel(ModelInterface):
         # --reset the model workspace
         old_pth = self._model_ws
         self._model_ws = new_pth
-        line = "\nchanging model workspace...\n   {}\n".format(new_pth)
+        line = f"\nchanging model workspace...\n   {new_pth}\n"
         sys.stdout.write(line)
         # reset the paths for each package
         for pp in self.packagelist:
@@ -1384,9 +1370,7 @@ class BaseModel(ModelInterface):
         """
         if check:
             # run check prior to writing input
-            self.check(
-                f="{}.chk".format(self.name), verbose=self.verbose, level=1
-            )
+            self.check(f=f"{self.name}.chk", verbose=self.verbose, level=1)
 
         # reset the model to free_format if parameter substitution was
         # performed on a model load
@@ -1694,22 +1678,18 @@ def run_model(
                 exe = which(exe_name + ".exe")
     if exe is None:
         raise Exception(
-            "The program {} does not exist or is not executable.".format(
-                exe_name
-            )
+            f"The program {exe_name} does not exist or is not executable."
         )
     else:
         if not silent:
             print(
-                "FloPy is using the following "
-                "executable to run the model: {}".format(exe)
+                f"FloPy is using the following executable to run the model: {exe}"
             )
 
     if namefile is not None:
         if not os.path.isfile(os.path.join(model_ws, namefile)):
             raise Exception(
-                "The namefile for this model does not exists: "
-                "{}".format(namefile)
+                f"The namefile for this model does not exists: {namefile}"
             )
 
     # simple little function for the thread to target
@@ -1775,7 +1755,7 @@ def run_model(
                 now = datetime.now()
                 dt = now - last
                 tsecs = dt.total_seconds() - lastsec
-                line = "(elapsed:{0})-->{1}".format(tsecs, line)
+                line = f"(elapsed:{tsecs})-->{line}"
                 lastsec = tsecs + lastsec
                 buff.append(line)
                 if not silent:

@@ -381,7 +381,7 @@ class ModflowSfr2(Package):
                     ext = "bin"
                 fname = filenames[2]
                 if fname is None:
-                    fname = model.name + ".sfr.{}".format(ext)
+                    fname = f"{model.name}.sfr.{ext}"
                 model.add_output_file(
                     abs(istcb2),
                     fname=fname,
@@ -1123,7 +1123,7 @@ class ModflowSfr2(Package):
             if isinstance(f, str):
                 pth = os.path.join(self.parent.model_ws, f)
                 f = open(pth, "w")
-            f.write("{}\n".format(chk.txt))
+            f.write(f"{chk.txt}\n")
             # f.close()
         return chk
 
@@ -1470,7 +1470,7 @@ class ModflowSfr2(Package):
         for per in range(self.nper):
             inds = self.segment_data[per].nseg - 1
             all_data[inds, per] = self.segment_data[per][varname]
-            dtype.append(("{}{}".format(varname, per), float))
+            dtype.append((f"{varname}{per}", float))
         isvar = all_data.sum(axis=1) != 0
         ra = np.core.records.fromarrays(
             all_data[isvar].transpose().copy(), dtype=dtype
@@ -1639,7 +1639,7 @@ class ModflowSfr2(Package):
         ax.plot(dist, tops, label="Model top")
         ax.plot(dist, tmp.strtop, label="Streambed top")
         ax.set_xlabel("Distance along path, in miles")
-        ax.set_ylabel("Elevation, in {}".format(mfunits))
+        ax.set_ylabel(f"Elevation, in {mfunits}")
         ymin, ymax = ax.get_ylim()
         plt.autoscale(False)
 
@@ -1781,28 +1781,22 @@ class ModflowSfr2(Package):
             self.nstrm = abs(
                 self.nstrm
             )  # see explanation for dataset 1c in online guide
-            f_sfr.write("{:.0f} ".format(self.isfropt))
+            f_sfr.write(f"{self.isfropt:.0f} ")
             if self.isfropt > 1:
                 f_sfr.write(
-                    "{:.0f} {:.0f} {:.0f} ".format(
-                        self.nstrail, self.isuzn, self.nsfrsets
-                    )
+                    f"{self.nstrail:.0f} {self.isuzn:.0f} {self.nsfrsets:.0f} "
                 )
         if self.nstrm < 0:
-            f_sfr.write("{:.0f} ".format(self.isfropt))
+            f_sfr.write(f"{self.isfropt:.0f} ")
             if self.isfropt > 1:
                 f_sfr.write(
-                    "{:.0f} {:.0f} {:.0f} ".format(
-                        self.nstrail, self.isuzn, self.nsfrsets
-                    )
+                    f"{self.nstrail:.0f} {self.isuzn:.0f} {self.nsfrsets:.0f} "
                 )
         if self.nstrm < 0 or self.transroute:
-            f_sfr.write("{:.0f} ".format(self.irtflg))
+            f_sfr.write(f"{self.irtflg:.0f} ")
             if self.irtflg > 0:
                 f_sfr.write(
-                    "{:.0f} {:.8f} {:.8f} ".format(
-                        self.numtim, self.weight, self.flwtol
-                    )
+                    f"{self.numtim:.0f} {self.weight:.8f} {self.flwtol:.8f} "
                 )
         f_sfr.write("\n")
 
@@ -2028,7 +2022,7 @@ class ModflowSfr2(Package):
         f_sfr = open(self.fn_path, "w")
 
         # Item 0 -- header
-        f_sfr.write("{0}\n".format(self.heading))
+        f_sfr.write(f"{self.heading}\n")
 
         # Item 1
         if (
@@ -2078,14 +2072,14 @@ class ModflowSfr2(Package):
                                 for d in self.channel_geometry_data[i][nseg][
                                     k
                                 ]:
-                                    f_sfr.write("{:.2f} ".format(d))
+                                    f_sfr.write(f"{d:.2f} ")
                                 f_sfr.write("\n")
 
                     if icalc == 4:
                         # nstrpts = self.segment_data[i][j][5]
                         for k in range(3):
                             for d in self.channel_flow_data[i][nseg][k]:
-                                f_sfr.write("{:.2f} ".format(d))
+                                f_sfr.write(f"{d:.2f} ")
                             f_sfr.write("\n")
             if self.tabfiles and i == 0:
                 for j in sorted(self.tabfiles_dict.keys()):
@@ -2269,7 +2263,7 @@ class check:
         self.passed = []
         self.warnings = []
         self.errors = []
-        self.txt = "\n{} ERRORS:\n".format(self.sfr.name[0])
+        self.txt = f"\n{self.sfr.name[0]} ERRORS:\n"
         self.summary_array = None
 
     def _boolean_compare(
@@ -2393,15 +2387,15 @@ class check:
         isnan = np.any(np.isnan(np.array(self.reach_data.tolist())), axis=1)
         nanreaches = self.reach_data[isnan]
         if np.any(isnan):
-            txt += "Found {} reachs with nans:\n".format(len(nanreaches))
+            txt += f"Found {len(nanreaches)} reachs with nans:\n"
             if self.level == 1:
                 txt += _print_rec_array(nanreaches, delimiter=" ")
         for per, sd in self.segment_data.items():
             isnan = np.any(np.isnan(np.array(sd.tolist())), axis=1)
             nansd = sd[isnan]
             if np.any(isnan):
-                txt += "Per {}: found {} segments with nans:\n".format(
-                    per, len(nanreaches)
+                txt += (
+                    f"Per {per}: found {len(nanreaches)} segments with nans:\n"
                 )
                 if self.level == 1:
                     txt += _print_rec_array(nansd, delimiter=" ")
@@ -2438,7 +2432,7 @@ class check:
                 len(reaches), reaches, level=self.level, datatype="reach"
             )
             if len(t) > 0:
-                txt += "Segment {} has {}".format(segment, t)
+                txt += f"Segment {segment} has {t}"
         if txt == "":
             passed = True
         self._txt_footer(
@@ -2468,7 +2462,7 @@ class check:
                 txt += "nseg outseg\n"
                 t = ""
                 for nseg, outseg in decreases:
-                    t += "{} {}\n".format(nseg, outseg)
+                    t += f"{nseg} {outseg}\n"
                 txt += t  # '\n'.join(textwrap.wrap(t, width=10))
         if len(t) == 0:
             passed = True
@@ -2501,7 +2495,7 @@ class check:
                 np.savetxt(
                     f, circular_segs, fmt="%d", delimiter=",", header=txt
                 )
-                txt += "See {} for details.".format(f)
+                txt += f"See {f} for details."
             if self.verbose:
                 print(txt)
         self._txt_footer(headertxt, txt, "circular routing", warning=False)
@@ -2550,8 +2544,8 @@ class check:
             segments_with_breaks = set(breaks_reach_data.iseg)
             if len(breaks) > 0:
                 txt += (
-                    "{0} segments ".format(len(segments_with_breaks))
-                    + "with non-adjacent reaches found.\n"
+                    f"{len(segments_with_breaks)} segments "
+                    "with non-adjacent reaches found.\n"
                 )
                 if self.level == 1:
                     txt += "At segments:\n"
@@ -2564,7 +2558,7 @@ class check:
                     with open(fpath, "w") as fp:
                         fp.write(",".join(rd.dtype.names) + "\n")
                         np.savetxt(fp, rd, "%s", ",")
-                    txt += "See {} for details.".format(fpath)
+                    txt += f"See {fpath} for details."
                 if self.verbose:
                     print(txt)
             self._txt_footer(
@@ -2637,10 +2631,9 @@ class check:
 
         if len(nodes_with_multiple_conductance) > 0:
             txt += (
-                "{} model cells with multiple non-zero SFR conductances found.\n"
-                "This may lead to circular routing between collocated reaches.\n".format(
-                    len(nodes_with_multiple_conductance)
-                )
+                f"{len(nodes_with_multiple_conductance)} model cells with "
+                "multiple non-zero SFR conductances found.\n"
+                "This may lead to circular routing between collocated reaches.\n"
             )
             if self.level == 1:
                 txt += "Nodes with overlapping conductances:\n"
@@ -2692,8 +2685,7 @@ class check:
 
         """
         headertxt = (
-            "Checking for streambed tops of less "
-            "than {}...\n".format(min_strtop)
+            f"Checking for streambed tops of less than {min_strtop}...\n"
         )
         txt = ""
         if self.verbose:
@@ -2716,15 +2708,12 @@ class check:
                 if len(txt) == 0:
                     passed = True
         else:
-            txt += "strtop not specified for isfropt={}\n".format(
-                self.sfr.isfropt
-            )
+            txt += f"strtop not specified for isfropt={self.sfr.isfropt}\n"
             passed = True
         self._txt_footer(headertxt, txt, "minimum streambed top", passed)
 
         headertxt = (
-            "Checking for streambed tops of "
-            "greater than {}...\n".format(max_strtop)
+            f"Checking for streambed tops of greater than {max_strtop}...\n"
         )
         txt = ""
         if self.verbose:
@@ -2742,8 +2731,8 @@ class check:
                 if np.any(is_greater):
                     above_max = self.reach_data[is_greater]
                     txt += (
-                        "{} instances ".format(len(above_max))
-                        + "of streambed top above the maximum found.\n"
+                        f"{len(above_max)} instances "
+                        "of streambed top above the maximum found.\n"
                     )
                     if self.level == 1:
                         txt += "Reaches with high strtop:\n"
@@ -2751,9 +2740,7 @@ class check:
                 if len(txt) == 0:
                     passed = True
         else:
-            txt += "strtop not specified for isfropt={}\n".format(
-                self.sfr.isfropt
-            )
+            txt += f"strtop not specified for isfropt={self.sfr.isfropt}\n"
             passed = True
         self._txt_footer(headertxt, txt, "maximum streambed top", passed)
 
@@ -2802,7 +2789,7 @@ class check:
                     ],
                     col1="d_elev",
                     col2=np.zeros(len(segment_data)),
-                    level0txt="Stress Period {}: ".format(per + 1)
+                    level0txt=f"Stress Period {per + 1}: "
                     + "{} segments encountered with elevdn > elevup.",
                     level1txt="Backwards segments:",
                 )
@@ -2840,7 +2827,7 @@ class check:
                     ],
                     col1="d_elev2",
                     col2=np.zeros(len(non_outlets_seg_data)),
-                    level0txt="Stress Period {}: ".format(per + 1)
+                    level0txt=f"Stress Period {per + 1}: "
                     + "{} segments encountered with segments encountered "
                     "with outseg elevup > elevdn.",
                     level1txt="Backwards segment connections:",
@@ -3123,9 +3110,7 @@ class check:
         where stage is computed.
         """
         headertxt = (
-            "Checking for streambed slopes of less than {}...\n".format(
-                minimum_slope
-            )
+            f"Checking for streambed slopes of less than {minimum_slope}...\n"
         )
         txt = ""
         if self.verbose:
@@ -3150,17 +3135,11 @@ class check:
                 if len(txt) == 0:
                     passed = True
         else:
-            txt += "slope not specified for isfropt={}\n".format(
-                self.sfr.isfropt
-            )
+            txt += f"slope not specified for isfropt={self.sfr.isfropt}\n"
             passed = True
         self._txt_footer(headertxt, txt, "minimum slope", passed)
 
-        headertxt = (
-            "Checking for streambed slopes of greater than {}...\n".format(
-                maximum_slope
-            )
-        )
+        headertxt = f"Checking for streambed slopes of greater than {maximum_slope}...\n"
         txt = ""
         if self.verbose:
             print(headertxt.strip())
@@ -3185,9 +3164,7 @@ class check:
                 if len(txt) == 0:
                     passed = True
         else:
-            txt += "slope not specified for isfropt={}\n".format(
-                self.sfr.isfropt
-            )
+            txt += f"slope not specified for isfropt={self.sfr.isfropt}\n"
             passed = True
         self._txt_footer(headertxt, txt, "maximum slope", passed)
 
@@ -3213,14 +3190,14 @@ def _check_numbers(n, numbers, level=1, datatype="reach"):
     txt = ""
     num_range = np.arange(1, n + 1)
     if not np.array_equal(num_range, numbers):
-        txt += "Invalid {} numbering\n".format(datatype)
+        txt += f"Invalid {datatype} numbering\n"
         if level == 1:
             # consistent dimension for boolean array
             non_consecutive = np.append(np.diff(numbers) != 1, False)
             gaps = num_range[non_consecutive] + 1
             if len(gaps) > 0:
                 gapstr = " ".join(map(str, gaps))
-                txt += "Gaps in numbering at positions {}\n".format(gapstr)
+                txt += f"Gaps in numbering at positions {gapstr}\n"
     return txt
 
 
@@ -3331,9 +3308,7 @@ def _fmt_string_list(array, float_format="{!s}"):
                 "recarray to file - change to 'object' type".format(name)
             )
         else:
-            raise ValueError(
-                "unknown dtype for {!r}: {!r}".format(name, vtype)
-            )
+            raise ValueError(f"unknown dtype for {name!r}: {vtype!r}")
     return fmt_list
 
 

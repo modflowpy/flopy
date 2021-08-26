@@ -50,19 +50,16 @@ def load_lak(mfnam, pth, run):
         try:
             success, buff = m.run_model(silent=True)
         except:
-            msg = "could not run base model {}".format(
-                os.path.splitext(mfnam)[0]
-            )
-            print(msg)
+            print(f"could not run base model {os.path.splitext(mfnam)[0]}")
             pass
         msg = (
-            "base model {} ".format(os.path.splitext(mfnam)[0])
-            + "run did not terminate successfully"
+            f"base model {os.path.splitext(mfnam)[0]} "
+            "run did not terminate successfully"
         )
         assert success, msg
         msg = (
-            "base model {} ".format(os.path.splitext(mfnam)[0])
-            + "run terminated successfully"
+            f"base model {os.path.splitext(mfnam)[0]} "
+            "run terminated successfully"
         )
         print(msg)
         fn0 = os.path.join(lpth, mfnam)
@@ -79,26 +76,21 @@ def load_lak(mfnam, pth, run):
         try:
             success, buff = m.run_model(silent=False)
         except:
-            msg = "could not run new model {}".format(
-                os.path.splitext(mfnam)[0]
-            )
-            print(msg)
+            print(f"could not run new model {os.path.splitext(mfnam)[0]}")
             pass
         msg = (
-            "new model {} ".format(os.path.splitext(mfnam)[0])
-            + "run did not terminate successfully"
+            f"new model {os.path.splitext(mfnam)[0]} "
+            "run did not terminate successfully"
         )
         assert success, msg
         msg = (
-            "new model {} ".format(os.path.splitext(mfnam)[0])
-            + "run terminated successfully"
+            f"new model {os.path.splitext(mfnam)[0]} "
+            "run terminated successfully"
         )
         print(msg)
         fn1 = os.path.join(apth, mfnam)
 
-        fsum = os.path.join(
-            compth, "{}.budget.out".format(os.path.splitext(mfnam)[0])
-        )
+        fsum = os.path.join(compth, f"{os.path.splitext(mfnam)[0]}.budget.out")
     if run:
         try:
             success = pymake.compare_budget(

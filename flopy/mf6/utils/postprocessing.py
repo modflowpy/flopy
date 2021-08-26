@@ -152,6 +152,5 @@ def __check_flowja_size(flowja, ja):
     """
     if flowja.shape != ja.shape:
         raise ValueError(
-            "size of flowja ({}) not equal to "
-            "{}".format(flowja.shape, ja.shape)
+            f"size of flowja ({flowja.shape}) not equal to {ja.shape}"
         )

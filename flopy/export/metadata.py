@@ -40,9 +40,7 @@ class acdd:
         self.model_grid = model.modelgrid
         self.model_time = model.modeltime
         self.sciencebase_url = (
-            "https://www.sciencebase.gov/catalog/item/{}".format(
-                sciencebase_id
-            )
+            f"https://www.sciencebase.gov/catalog/item/{sciencebase_id}"
         )
         self.sb = self.get_sciencebase_metadata(sciencebase_id)
         if self.sb is None:
@@ -140,7 +138,7 @@ class acdd:
     @property
     def creator_url(self):
         urlname = "-".join(self.creator.get("name").replace(".", "").split())
-        url = "https://www.usgs.gov/staff-profiles/" + urlname.lower()
+        url = f"https://www.usgs.gov/staff-profiles/{urlname.lower()}"
         # check if it exists
         txt = get_url_text(url)
         if txt is not None:
@@ -208,7 +206,7 @@ class acdd:
             strt = pd.Timestamp(self.model_time.start_datetime)
             mlen = self.model_time.perlen.sum()
             tunits = self.model_time.time_units
-            tc["duration"] = "{} {}".format(mlen, tunits)
+            tc["duration"] = f"{mlen} {tunits}"
             end = strt + pd.Timedelta(mlen, unit="d")
             tc["end"] = str(end)
         return tc

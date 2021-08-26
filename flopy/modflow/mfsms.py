@@ -353,7 +353,7 @@ class ModflowSms(Package):
 
         """
         f = open(self.fn_path, "w")
-        f.write("{}\n".format(self.heading))
+        f.write(f"{self.heading}\n")
         nopt = len(self.options)
         if nopt > 0:
             f.write(" ".join(self.options) + "\n")
@@ -487,13 +487,13 @@ class ModflowSms(Package):
         nonlinmeth = int(ll.pop(0))
         linmeth = int(ll.pop(0))
         if model.verbose:
-            print("   HCLOSE {}".format(hclose))
-            print("   HICLOSE {}".format(hiclose))
-            print("   MXITER {}".format(mxiter))
-            print("   ITER1 {}".format(iter1))
-            print("   IPRSMS {}".format(iprsms))
-            print("   NONLINMETH {}".format(nonlinmeth))
-            print("   LINMETH {}".format(linmeth))
+            print(f"   HCLOSE {hclose}")
+            print(f"   HICLOSE {hiclose}")
+            print(f"   MXITER {mxiter}")
+            print(f"   ITER1 {iter1}")
+            print(f"   IPRSMS {iprsms}")
+            print(f"   NONLINMETH {nonlinmeth}")
+            print(f"   LINMETH {linmeth}")
 
         # Record 2
         theta = None
@@ -524,14 +524,14 @@ class ModflowSms(Package):
             breduc = float(ll.pop(0))
             reslim = float(ll.pop(0))
             if model.verbose:
-                print("   THETA {}".format(theta))
-                print("   AKAPPA {}".format(akappa))
-                print("   GAMMA {}".format(gamma))
-                print("   AMOMENTUM {}".format(amomentum))
-                print("   NUMTRACK {}".format(numtrack))
-                print("   BTOL {}".format(btol))
-                print("   BREDUC {}".format(breduc))
-                print("   RESLIM {}".format(reslim))
+                print(f"   THETA {theta}")
+                print(f"   AKAPPA {akappa}")
+                print(f"   GAMMA {gamma}")
+                print(f"   AMOMENTUM {amomentum}")
+                print(f"   NUMTRACK {numtrack}")
+                print(f"   BTOL {btol}")
+                print(f"   BREDUC {breduc}")
+                print(f"   RESLIM {reslim}")
 
         iacl = None
         norder = None
@@ -561,14 +561,14 @@ class ModflowSms(Package):
             idroptol = int(ll.pop(0))
             epsrn = float(ll.pop(0))
             if model.verbose:
-                print("   IACL {}".format(iacl))
-                print("   NORDER {}".format(norder))
-                print("   LEVEL {}".format(level))
-                print("   NORTH {}".format(north))
-                print("   IREDSYS {}".format(iredsys))
-                print("   RRCTOL {}".format(rrctol))
-                print("   IDROPTOL {}".format(idroptol))
-                print("   EPSRN {}".format(epsrn))
+                print(f"   IACL {iacl}")
+                print(f"   NORDER {norder}")
+                print(f"   LEVEL {level}")
+                print(f"   NORTH {north}")
+                print(f"   IREDSYS {iredsys}")
+                print(f"   RRCTOL {rrctol}")
+                print(f"   IDROPTOL {idroptol}")
+                print(f"   EPSRN {epsrn}")
 
         clin = None
         ipc = None
@@ -593,12 +593,12 @@ class ModflowSms(Package):
             if len(ll) > 0:
                 relaxpcgu = float(ll.pop(0))
             if model.verbose:
-                print("   CLIN {}".format(clin))
-                print("   IPC {}".format(ipc))
-                print("   ISCL {}".format(iscl))
-                print("   IORD {}".format(iord))
-                print("   RCLOSEPCGU {}".format(rclosepcgu))
-                print("   RELAXPCGU {}".format(relaxpcgu))
+                print(f"   CLIN {clin}")
+                print(f"   IPC {ipc}")
+                print(f"   ISCL {iscl}")
+                print(f"   IORD {iord}")
+                print(f"   RCLOSEPCGU {rclosepcgu}")
+                print(f"   RELAXPCGU {relaxpcgu}")
 
         if openfile:
             f.close()

@@ -59,12 +59,12 @@ import flopy.utils.binaryfile as bf
 fig = plt.figure(figsize=(10,10))
 ax = fig.add_subplot(1, 1, 1, aspect='equal')
 
-hds = bf.HeadFile(os.path.join('data', modelname+'.hds'))
+hds = bf.HeadFile(os.path.join('data', f"{modelname}.hds"))
 times = hds.get_times()
 head = hds.get_data(totim=times[-1])
 levels = np.linspace(0, 10, 11)
 
-cbb = bf.CellBudgetFile(os.path.join('data', modelname+'.cbc'))
+cbb = bf.CellBudgetFile(os.path.join('data', f"{modelname}.cbc"))
 kstpkper_list = cbb.get_kstpkper()
 frf = cbb.get_data(text='FLOW RIGHT FACE', totim=times[-1])[0]
 fff = cbb.get_data(text='FLOW FRONT FACE', totim=times[-1])[0]

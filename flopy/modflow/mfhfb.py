@@ -199,10 +199,8 @@ class ModflowHfb(Package):
 
         """
         f_hfb = open(self.fn_path, "w")
-        f_hfb.write("{}\n".format(self.heading))
-        f_hfb.write(
-            "{:10d}{:10d}{:10d}".format(self.nphfb, self.mxfb, self.nhfbnp)
-        )
+        f_hfb.write(f"{self.heading}\n")
+        f_hfb.write(f"{self.nphfb:10d}{self.mxfb:10d}{self.nhfbnp:10d}")
         for option in self.options:
             f_hfb.write("  {}".format(option))
         f_hfb.write("\n")
@@ -212,7 +210,7 @@ class ModflowHfb(Package):
                     a[0] + 1, a[1] + 1, a[2] + 1, a[3] + 1, a[4] + 1, a[5]
                 )
             )
-        f_hfb.write("{:10d}".format(self.nacthfb))
+        f_hfb.write(f"{self.nacthfb:10d}")
         f_hfb.close()
 
     @staticmethod

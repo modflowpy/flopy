@@ -64,7 +64,7 @@ def mfnwt_model(namfile, model_ws):
         check=False,
         exe_name=mfnwt_exe,
     )
-    assert m, "Could not load namefile {}".format(namfile)
+    assert m, f"Could not load namefile {namfile}"
     assert m.load_fail is False
     # convert to MODFLOW-NWT model
     m.set_version("mfnwt")
@@ -139,7 +139,7 @@ def mfnwt_model(namfile, model_ws):
         check=False,
         exe_name=mfnwt_exe,
     )
-    assert m, "Could not load namefile {}".format(namfile)
+    assert m, f"Could not load namefile {namfile}"
     assert m.load_fail is False
 
     # change workspace and write MODFLOW-NWT model
@@ -155,7 +155,7 @@ def mfnwt_model(namfile, model_ws):
         fn1 = os.path.join(pthf, namfile)
 
     if run:
-        fsum = os.path.join(pth, "{}.head.out".format(tdir))
+        fsum = os.path.join(pth, f"{tdir}.head.out")
         success = False
         try:
             success = pymake.compare_heads(fn0, fn1, outfile=fsum)
@@ -165,7 +165,7 @@ def mfnwt_model(namfile, model_ws):
 
         assert success, "head comparison failure"
 
-        fsum = os.path.join(pth, "{}.budget.out".format(tdir))
+        fsum = os.path.join(pth, f"{tdir}.budget.out")
         success = False
         try:
             success = pymake.compare_budget(

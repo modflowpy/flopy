@@ -25,9 +25,9 @@ NC_PRECISION_TYPE = {
 }
 
 path = os.path.split(netcdf.__file__)[0]
-with open(path + "/longnames.json") as f:
+with open(f"{path}/longnames.json") as f:
     NC_LONG_NAMES = json.load(f)
-with open(path + "/unitsformat.json") as f:
+with open(f"{path}/unitsformat.json") as f:
     NC_UNITS_FORMAT = json.load(f)
 
 
@@ -87,7 +87,7 @@ def ensemble_helper(
             outputs_filename,
             models[0],
             models[0].load_results(as_dict=True),
-            **kwargs
+            **kwargs,
         )
         vdict = {}
         vdicts = [
@@ -95,7 +95,7 @@ def ensemble_helper(
                 vdict,
                 models[0],
                 models[0].load_results(as_dict=True),
-                **kwargs
+                **kwargs,
             )
         ]
         i = 1
@@ -149,7 +149,7 @@ def _add_output_nc_variable(
     mask_array3d=None,
 ):
     if logger:
-        logger.log("creating array for {0}".format(var_name))
+        logger.log(f"creating array for {var_name}")
 
     array = np.zeros(
         (len(times), shape3d[0], shape3d[1], shape3d[2]), dtype=np.float32
@@ -203,7 +203,7 @@ def _add_output_nc_variable(
                     continue
 
     if logger:
-        logger.log("creating array for {0}".format(var_name))
+        logger.log(f"creating array for {var_name}")
 
     for mask_val in mask_vals:
         array[np.where(array == mask_val)] = np.NaN
@@ -238,7 +238,7 @@ def _add_output_nc_variable(
             dimensions=dim_tuple,
         )
     except Exception as e:
-        estr = "error creating variable {0}:\n{1}".format(var_name, str(e))
+        estr = f"error creating variable {var_name}:\n{e!s}"
         if logger:
             logger.lraise(estr)
         else:
@@ -247,9 +247,7 @@ def _add_output_nc_variable(
     try:
         var[:] = array
     except Exception as e:
-        estr = "error setting array to variable {0}:\n{1}".format(
-            var_name, str(e)
-        )
+        estr = f"error setting array to variable {var_name}:\n{e!s}"
         if logger:
             logger.lraise(estr)
         else:
@@ -274,16 +272,16 @@ def _add_output_nc_zonebudget_variable(f, array, var_name, flux, logger=None):
 
     """
     if logger:
-        logger.log("creating array for {}".format(var_name))
+        logger.log(f"creating array for {var_name}")
 
     mn = np.min(array)
     mx = np.max(array)
 
     precision_str = "f4"
     if flux:
-        units = "{}^3/{}".format(f.grid_units, f.time_units)
+        units = f"{f.grid_units}^3/{f.time_units}"
     else:
-        units = "{}^3".format(f.grid_units)
+        units = f"{f.grid_units}^3"
     attribs = {"long_name": var_name}
     attribs["coordinates"] = "time zone"
     attribs["min"] = mn
@@ -339,7 +337,7 @@ def output_helper(f, ml, oudic, **kwargs):
         mask_vals = kwargs.pop("masked_vals")
     if len(kwargs) > 0 and logger is not None:
         str_args = ",".join(kwargs)
-        logger.warn("unused kwargs: " + str_args)
+        logger.warn(f"unused kwargs: {str_args}")
 
     zonebud = None
     zbkey = None
@@ -355,9 +353,7 @@ def output_helper(f, ml, oudic, **kwargs):
     # that they will line up
     for key in oudic.keys():
         out = oudic[key]
-        times = [
-            float("{0:15.6f}".format(t)) for t in out.recordarray["totim"]
-        ]
+        times = [float(f"{t:15.6f}") for t in out.recordarray["totim"]]
         out.recordarray["totim"] = times
 
     times = []
@@ -395,7 +391,7 @@ def output_helper(f, ml, oudic, **kwargs):
     if len(skipped_times) > 0:
         msg = (
             "the following output times are not common to all "
-            "output files and are being skipped:\n{0}".format(skipped_times)
+            f"output files and are being skipped:\n{skipped_times}"
         )
         if logger:
             logger.warn(msg)
@@ -475,7 +471,7 @@ def output_helper(f, ml, oudic, **kwargs):
                     )
 
             else:
-                estr = "unrecognized file extension:{0}".format(filename)
+                estr = f"unrecognized file extension:{filename}"
                 if logger:
                     logger.lraise(estr)
                 else:
@@ -534,7 +530,7 @@ def output_helper(f, ml, oudic, **kwargs):
                             continue
                         if mflay is not None and k != mflay:
                             continue
-                        name = attrib_name + "{}_{}".format(per, k)
+                        name = f"{attrib_name}{per}_{k}"
                         attrib_dict[name] = plotarray[per][k]
 
             elif isinstance(out_obj, CellBudgetFile):
@@ -560,14 +556,14 @@ def output_helper(f, ml, oudic, **kwargs):
                                 continue
                             if mflay is not None and k != mflay:
                                 continue
-                            name = attrib_name + "{}_{}".format(per, k)
+                            name = f"{attrib_name}{per}_{k}"
                             attrib_dict[name] = plotarray[per][k]
 
         if attrib_dict:
             shapefile_utils.write_grid_shapefile(f, ml.modelgrid, attrib_dict)
 
     else:
-        msg = "unrecognized export argument:{0}".format(f)
+        msg = f"unrecognized export argument:{f}"
         if logger:
             logger.lraise(msg)
         else:
@@ -647,7 +643,7 @@ def model_export(f, ml, fmt=None, **kwargs):
         )
 
     else:
-        raise NotImplementedError("unrecognized export argument:{0}".format(f))
+        raise NotImplementedError(f"unrecognized export argument:{f}")
 
     return f
 
@@ -700,9 +696,7 @@ def package_export(f, pak, fmt=None, **kwargs):
                         try:
                             f = array2d_export(f, a, **kwargs)
                         except:
-                            f.logger.warn(
-                                "error adding {0} as variable".format(a.name)
-                            )
+                            f.logger.warn(f"error adding {a.name} as variable")
                     elif a.data_type == DataType.array3d:
                         f = array3d_export(f, a, **kwargs)
                     elif a.data_type == DataType.transient2d:
@@ -741,7 +735,7 @@ def package_export(f, pak, fmt=None, **kwargs):
         )
 
     else:
-        raise NotImplementedError("unrecognized export argument:{0}".format(f))
+        raise NotImplementedError(f"unrecognized export argument:{f}")
 
 
 def generic_array_export(
@@ -751,7 +745,7 @@ def generic_array_export(
     dimensions=("time", "layer", "y", "x"),
     precision_str="f4",
     units="unitless",
-    **kwargs
+    **kwargs,
 ):
     """
     Method to export a generic array to NetCdf
@@ -806,7 +800,7 @@ def generic_array_export(
     attribs["min"] = mn
     attribs["max"] = mx
     if np.isnan(attribs["min"]) or np.isnan(attribs["max"]):
-        raise Exception("error processing {0}: all NaNs".format(var_name))
+        raise Exception(f"error processing {var_name}: all NaNs")
     try:
         var = f.create_variable(
             var_name,
@@ -815,15 +809,13 @@ def generic_array_export(
             dimensions=dimensions,
         )
     except Exception as e:
-        estr = "error creating variable {0}:\n{1}".format(var_name, str(e))
+        estr = f"error creating variable {var_name}:\n{e!s}"
         f.logger.warn(estr)
         raise Exception(estr)
     try:
         var[:] = array
     except Exception as e:
-        estr = "error setting array to variable {0}:\n{1}".format(
-            var_name, str(e)
-        )
+        estr = f"error setting array to variable {var_name}:\n{e!s}"
         f.logger.warn(estr)
         raise Exception(estr)
     return f
@@ -883,7 +875,7 @@ def mflist_export(f, mfl, **kwargs):
                     for k in range(array.shape[0]):
                         # aname = name+"{0:03d}_{1:02d}".format(kk, k)
                         n = shapefile_utils.shape_attr_name(name, length=4)
-                        aname = "{}{}{}".format(n, k + 1, int(kk) + 1)
+                        aname = f"{n}{k + 1}{int(kk) + 1}"
                         array_dict[aname] = array[k]
             shapefile_utils.write_grid_shapefile(f, modelgrid, array_dict)
         else:
@@ -917,11 +909,11 @@ def mflist_export(f, mfl, **kwargs):
 
         # for name, array in m4d.items():
         for name, array in mfl.masked_4D_arrays_itr():
-            var_name = base_name + "_" + name
+            var_name = f"{base_name}_{name}"
             if isinstance(f, dict):
                 f[var_name] = array
                 continue
-            f.log("processing {0} attribute".format(name))
+            f.log(f"processing {name} attribute")
 
             units = None
             if var_name in NC_UNITS_FORMAT:
@@ -937,9 +929,7 @@ def mflist_export(f, mfl, **kwargs):
             attribs["min"] = np.nanmin(array)
             attribs["max"] = np.nanmax(array)
             if np.isnan(attribs["min"]) or np.isnan(attribs["max"]):
-                raise Exception(
-                    "error processing {0}: all NaNs".format(var_name)
-                )
+                raise Exception(f"error processing {var_name}: all NaNs")
 
             if units is not None:
                 attribs["units"] = units
@@ -952,9 +942,7 @@ def mflist_export(f, mfl, **kwargs):
                     dimensions=dim_tuple,
                 )
             except Exception as e:
-                estr = "error creating variable {0}:\n{1}".format(
-                    var_name, str(e)
-                )
+                estr = f"error creating variable {var_name}:\n{e!s}"
                 f.logger.warn(estr)
                 raise Exception(estr)
 
@@ -962,16 +950,14 @@ def mflist_export(f, mfl, **kwargs):
             try:
                 var[:] = array
             except Exception as e:
-                estr = "error setting array to variable {0}:\n{1}".format(
-                    var_name, str(e)
-                )
+                estr = f"error setting array to variable {var_name}:\n{e!s}"
                 f.logger.warn(estr)
                 raise Exception(estr)
-            f.log("processing {0} attribute".format(name))
+            f.log(f"processing {name} attribute")
 
         return f
     else:
-        raise NotImplementedError("unrecognized export argument:{0}".format(f))
+        raise NotImplementedError(f"unrecognized export argument:{f}")
 
 
 def transient2d_export(f, t2d, fmt=None, **kwargs):
@@ -1015,9 +1001,7 @@ def transient2d_export(f, t2d, fmt=None, **kwargs):
         array_dict = {}
         for kper in range(t2d.model.modeltime.nper):
             u2d = t2d[kper]
-            name = "{}_{}".format(
-                shapefile_utils.shape_attr_name(u2d.name), kper + 1
-            )
+            name = f"{shapefile_utils.shape_attr_name(u2d.name)}_{kper + 1}"
             array_dict[name] = u2d.array
         shapefile_utils.write_grid_shapefile(f, modelgrid, array_dict)
 
@@ -1076,7 +1060,7 @@ def transient2d_export(f, t2d, fmt=None, **kwargs):
         attribs["min"] = mn
         attribs["max"] = mx
         if np.isnan(attribs["min"]) or np.isnan(attribs["max"]):
-            raise Exception("error processing {0}: all NaNs".format(var_name))
+            raise Exception(f"error processing {var_name}: all NaNs")
         try:
             dim_tuple = ("time",) + f.dimension_names
             var = f.create_variable(
@@ -1086,15 +1070,13 @@ def transient2d_export(f, t2d, fmt=None, **kwargs):
                 dimensions=dim_tuple,
             )
         except Exception as e:
-            estr = "error creating variable {0}:\n{1}".format(var_name, str(e))
+            estr = f"error creating variable {var_name}:\n{e!s}"
             f.logger.warn(estr)
             raise Exception(estr)
         try:
             var[:, 0] = array
         except Exception as e:
-            estr = "error setting array to variable {0}:\n{1}".format(
-                var_name, str(e)
-            )
+            estr = f"error setting array to variable {var_name}:\n{e!s}"
             f.logger.warn(estr)
             raise Exception(estr)
         return f
@@ -1123,7 +1105,7 @@ def transient2d_export(f, t2d, fmt=None, **kwargs):
             kpers=kpers,
         )
     else:
-        raise NotImplementedError("unrecognized export argument:{0}".format(f))
+        raise NotImplementedError(f"unrecognized export argument:{f}")
 
 
 def array3d_export(f, u3d, fmt=None, **kwargs):
@@ -1170,9 +1152,7 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
             else:
                 dname = u2d.name
                 array = u2d.array
-            name = "{}_{}".format(
-                shapefile_utils.shape_attr_name(dname), ilay + 1
-            )
+            name = f"{shapefile_utils.shape_attr_name(dname)}_{ilay + 1}"
             array_dict[name] = array
         shapefile_utils.write_grid_shapefile(f, modelgrid, array_dict)
 
@@ -1250,7 +1230,7 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
         attribs["min"] = mn
         attribs["max"] = mx
         if np.isnan(attribs["min"]) or np.isnan(attribs["max"]):
-            raise Exception("error processing {0}: all NaNs".format(var_name))
+            raise Exception(f"error processing {var_name}: all NaNs")
         try:
             var = f.create_variable(
                 var_name,
@@ -1259,15 +1239,13 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
                 dimensions=f.dimension_names,
             )
         except Exception as e:
-            estr = "error creating variable {0}:\n{1}".format(var_name, str(e))
+            estr = f"error creating variable {var_name}:\n{e!s}"
             f.logger.warn(estr)
             raise Exception(estr)
         try:
             var[:] = array
         except Exception as e:
-            estr = "error setting array to variable {0}:\n{1}".format(
-                var_name, str(e)
-            )
+            estr = f"error setting array to variable {var_name}:\n{e!s}"
             f.logger.warn(estr)
             raise Exception(estr)
         return f
@@ -1298,7 +1276,7 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
         )
 
     else:
-        raise NotImplementedError("unrecognized export argument:{0}".format(f))
+        raise NotImplementedError(f"unrecognized export argument:{f}")
 
 
 def array2d_export(f, u2d, fmt=None, **kwargs):
@@ -1395,7 +1373,7 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
         attribs["min"] = mn
         attribs["max"] = mx
         if np.isnan(attribs["min"]) or np.isnan(attribs["max"]):
-            raise Exception("error processing {0}: all NaNs".format(var_name))
+            raise Exception(f"error processing {var_name}: all NaNs")
         try:
             var = f.create_variable(
                 var_name,
@@ -1404,15 +1382,13 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
                 dimensions=f.dimension_names[1:],
             )
         except Exception as e:
-            estr = "error creating variable {0}:\n{1}".format(var_name, str(e))
+            estr = f"error creating variable {var_name}:\n{e!s}"
             f.logger.warn(estr)
             raise Exception(estr)
         try:
             var[:] = array
         except Exception as e:
-            estr = "error setting array to variable {0}:\n{1}".format(
-                var_name, str(e)
-            )
+            estr = f"error setting array to variable {var_name}:\n{e!s}"
             f.logger.warn(estr)
             raise Exception(estr)
         return f
@@ -1442,7 +1418,7 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
         )
 
     else:
-        raise NotImplementedError("unrecognized export argument:{0}".format(f))
+        raise NotImplementedError(f"unrecognized export argument:{f}")
 
 
 def export_array(
@@ -1523,18 +1499,18 @@ def export_array(
         )  # enforce .asc ending
         nrow, ncol = a.shape
         a[np.isnan(a)] = nodata
-        txt = "ncols  {:d}\n".format(ncol)
-        txt += "nrows  {:d}\n".format(nrow)
-        txt += "xllcorner  {:f}\n".format(xoffset)
-        txt += "yllcorner  {:f}\n".format(yoffset)
-        txt += "cellsize  {}\n".format(cellsize)
+        txt = f"ncols  {ncol}\n"
+        txt += f"nrows  {nrow}\n"
+        txt += f"xllcorner  {xoffset:f}\n"
+        txt += f"yllcorner  {yoffset:f}\n"
+        txt += f"cellsize  {cellsize}\n"
         # ensure that nodata fmt consistent w values
-        txt += "NODATA_value  {}\n".format(fmt) % (nodata)
+        txt += f"NODATA_value  {fmt}\n" % (nodata)
         with open(filename, "w") as output:
             output.write(txt)
         with open(filename, "ab") as output:
             np.savetxt(output, a, **kwargs)
-        print("wrote {}".format(filename))
+        print(f"wrote {filename}")
 
     elif filename.lower().endswith(".tif"):
         if (
@@ -1575,7 +1551,7 @@ def export_array(
         elif a.dtype.name == "float32":
             dtype = rasterio.float32
         else:
-            msg = 'ERROR: invalid dtype "{}"'.format(a.dtype.name)
+            msg = f'ERROR: invalid dtype "{a.dtype.name}"'
             raise TypeError(msg)
 
         meta = {
@@ -1591,7 +1567,7 @@ def export_array(
         meta.update(kwargs)
         with rasterio.open(filename, "w", **meta) as dst:
             dst.write(a)
-        print("wrote {}".format(filename))
+        print(f"wrote {filename}")
 
     elif filename.lower().endswith(".shp"):
         from ..export.shapefile_utils import write_grid_shapefile
@@ -1617,7 +1593,7 @@ def export_contours(
     fieldname="level",
     epsg=None,
     prj=None,
-    **kwargs
+    **kwargs,
 ):
     """
     Convert matplotlib contour plot object to shapefile.
@@ -1754,7 +1730,7 @@ def export_contourf(
         pg = Polygon([(x, y) for x, y in zip(xa, ya)], interiors=interiors)
         geoms += [pg]
 
-    print("Writing {} polygons".format(len(level)))
+    print(f"Writing {len(level)} polygons")
 
     # Create recarray
     ra = np.array(level, dtype=[(fieldname, float)]).view(np.recarray)
@@ -1773,7 +1749,7 @@ def export_array_contours(
     maxlevels=1000,
     epsg=None,
     prj=None,
-    **kwargs
+    **kwargs,
 ):
     """
     Contour an array using matplotlib; write shapefile of contours.
@@ -1816,9 +1792,7 @@ def export_array_contours(
         imin = np.nanmin(a)
         imax = np.nanmax(a)
         nlevels = np.round(np.abs(imax - imin) / interval, 2)
-        msg = "{:.0f} levels at interval of {} > maxlevels={}".format(
-            nlevels, interval, maxlevels
-        )
+        msg = f"{nlevels:.0f} levels at interval of {interval} > maxlevels={maxlevels}"
         assert nlevels < maxlevels, msg
         levels = np.arange(imin, imax, interval)
     ax = plt.subplots()[-1]

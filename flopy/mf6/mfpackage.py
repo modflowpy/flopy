@@ -215,7 +215,7 @@ class MFBlockHeader:
             File object to write block header to.
 
         """
-        fd.write("BEGIN {}".format(self.name))
+        fd.write(f"BEGIN {self.name}")
         if len(self.data_items) > 0:
             if isinstance(self.data_items[0], mfdatascalar.MFScalar):
                 one_based = (
@@ -245,7 +245,7 @@ class MFBlockHeader:
             File object to write block footer to.
 
         """
-        fd.write("END {}".format(self.name))
+        fd.write(f"END {self.name}")
         if len(self.data_items) > 0:
             one_based = self.data_items[0].structure.type == DatumType.integer
             if isinstance(self.data_items[0], mfdatascalar.MFScalar):
@@ -366,14 +366,14 @@ class MFBlock:
             if formal:
                 ds_repr = repr(dataset)
                 if len(ds_repr.strip()) > 0:
-                    data_str = "{}{}\n{}\n".format(
-                        data_str, dataset.structure.name, repr(dataset)
+                    data_str = (
+                        f"{data_str}{dataset.structure.name}\n{dataset!r}\n"
                     )
             else:
                 ds_str = str(dataset)
                 if len(ds_str.strip()) > 0:
-                    data_str = "{}{}\n{}\n".format(
-                        data_str, dataset.structure.name, str(dataset)
+                    data_str = (
+                        f"{data_str}{dataset.structure.name}\n{dataset!s}\n"
                     )
         return data_str
 
@@ -815,8 +815,7 @@ class MFBlock:
                         >= VerbosityLevel.verbose.value
                     ):
                         print(
-                            '        opening external file "{}"..'
-                            ".".format(file_name)
+                            f'        opening external file "{file_name}"...'
                         )
                     external_file_info = arr_line
                     fd_block = open(os.path.join(root_path, arr_line[1]), "r")
@@ -825,10 +824,7 @@ class MFBlock:
                     arr_line = datautil.PyListUtil.split_data_line(line)
                 except:
                     type_, value_, traceback_ = sys.exc_info()
-                    message = (
-                        "Error reading external file specified in "
-                        'line "{}"'.format(line)
-                    )
+                    message = f'Error reading external file specified in line "{line}"'
                     raise MFDataException(
                         self._container_package.model_name,
                         self._container_package._get_pname(),
@@ -851,8 +847,7 @@ class MFBlock:
                         >= VerbosityLevel.verbose.value
                     ):
                         print(
-                            "        loading data {}.."
-                            ".".format(dataset.structure.name)
+                            f"        loading data {dataset.structure.name}..."
                         )
                     next_line = dataset.load(
                         line,
@@ -882,8 +877,7 @@ class MFBlock:
                             >= VerbosityLevel.verbose.value
                         ):
                             print(
-                                "        loading child package {}.."
-                                ".".format(package_info[0])
+                                f"        loading child package {package_info[0]}..."
                             )
                         pkg = self._model_or_sim.load_package(
                             package_info[0],
@@ -929,7 +923,7 @@ class MFBlock:
                         line, fd_block, initial_comment
                     )
                 except MFInvalidTransientBlockHeaderException as e:
-                    warning_str = "WARNING: {}".format(e)
+                    warning_str = f"WARNING: {e}"
                     print(warning_str)
                     self.block_headers.pop()
                     return
@@ -978,7 +972,7 @@ class MFBlock:
                         self._simulation_data.verbosity_level.value
                         >= VerbosityLevel.verbose.value
                     ):
-                        print("        loading data {}...".format(ds_name))
+                        print(f"        loading data {ds_name}...")
                     next_line = self.datasets[ds_name].load(
                         next_line[1],
                         fd,
@@ -1008,8 +1002,7 @@ class MFBlock:
                             >= VerbosityLevel.verbose.value
                         ):
                             print(
-                                "        loading child package {}.."
-                                ".".format(package_info[1])
+                                f"        loading child package {package_info[1]}..."
                             )
                         pkg = self._model_or_sim.load_package(
                             package_info[0],
@@ -1065,8 +1058,7 @@ class MFBlock:
                         >= VerbosityLevel.verbose.value
                     ):
                         print(
-                            "        loading child package {}.."
-                            ".".format(package_info[0])
+                            f"        loading child package {package_info[0]}..."
                         )
                     pkg = self._model_or_sim.load_package(
                         package_info[0],
@@ -1122,9 +1114,7 @@ class MFBlock:
                         file_location = data
                     package_info_list = []
                     file_path, file_name = os.path.split(file_location)
-                    dict_package_name = "{}_{}".format(
-                        package_type, self.path[-2]
-                    )
+                    dict_package_name = f"{package_type}_{self.path[-2]}"
                     package_info_list.append(
                         (package_type, file_name, file_path, dict_package_name)
                     )
@@ -1214,9 +1204,7 @@ class MFBlock:
                 )
                 and dataset.enabled
             ):
-                file_path = "{}_{}.txt".format(
-                    base_name, dataset.structure.name
-                )
+                file_path = f"{base_name}_{dataset.structure.name}.txt"
                 if external_data_folder is not None:
                     # get simulation root path
                     root_path = self._simulation_data.mfpath.get_sim_path()
@@ -1280,19 +1268,15 @@ class MFBlock:
         if self.external_file_name is not None:
             # write block contents to external file
             indent_string = self._simulation_data.indent_string
-            fd.write(
-                "{}open/close {}\n".format(
-                    indent_string, self.external_file_name
-                )
-            )
+            fd.write(f"{indent_string}open/close {self.external_file_name}\n")
             fd_main = fd
             fd_path = os.path.split(os.path.realpath(fd.name))[0]
             try:
                 fd = open(os.path.join(fd_path, self.external_file_name), "w")
             except:
                 type_, value_, traceback_ = sys.exc_info()
-                message = "Error reading external file " '"{}"'.format(
-                    self.external_file_name
+                message = (
+                    f'Error reading external file "{self.external_file_name}"'
                 )
                 raise MFDataException(
                     self._container_package.model_name,
@@ -1317,8 +1301,7 @@ class MFBlock:
                         >= VerbosityLevel.verbose.value
                     ):
                         print(
-                            "        writing data {}.."
-                            ".".format(dataset.structure.name)
+                            f"        writing data {dataset.structure.name}..."
                         )
                     fd.write(
                         dataset.get_file_entry(ext_file_action=ext_file_action)
@@ -1349,10 +1332,10 @@ class MFBlock:
                     mfdata_except=mfde,
                     model=self._container_package.model_name,
                     package=self._container_package._get_pname(),
-                    message="Error occurred while writing "
-                    'data "{}" in block "{}" to file'
-                    ' "{}".'.format(
-                        dataset.structure.name, self.structure.name, fd.name
+                    message=(
+                        "Error occurred while writing data "
+                        f'"{dataset.structure.name}" in block '
+                        f'"{self.structure.name}" to file "{fd.name}"'
                     ),
                 )
         # write trailing comments
@@ -1560,7 +1543,7 @@ class MFPackage(PackageContainer, PackageInterface):
 
         if filename is None:
             self._filename = MFFileMgmt.string_to_file_path(
-                "{}.{}".format(self.model_or_sim.name, package_type)
+                f"{self.model_or_sim.name}.{package_type}"
             )
         else:
             if not isinstance(filename, str):
@@ -1739,11 +1722,11 @@ class MFPackage(PackageContainer, PackageInterface):
             )
         )
         if self.parent_file is not None and formal:
-            data_str = "{}parent_file = {}\n\n".format(
-                data_str, self.parent_file._get_pname()
+            data_str = (
+                f"{data_str}parent_file = {self.parent_file._get_pname()}\n\n"
             )
         else:
-            data_str = "{}\n".format(data_str)
+            data_str = f"{data_str}\n"
         if show_data:
             for block in self.blocks.values():
                 if formal:
@@ -1906,7 +1889,7 @@ class MFPackage(PackageContainer, PackageInterface):
             pkg_type, self.model_or_sim.model_type
         )
         # create child package object
-        child_pkgs_name = "utl{}packages".format(pkg_type)
+        child_pkgs_name = f"utl{pkg_type}packages"
         child_pkgs_obj = self.package_factory(child_pkgs_name, "")
         child_pkgs = child_pkgs_obj(
             self.model_or_sim, self, pkg_type, filerecord, None, package_obj
@@ -2137,15 +2120,13 @@ class MFPackage(PackageContainer, PackageInterface):
                 and not block.enabled
                 and block.is_allowed()
             ):
-                self.last_error = 'Required block "{}" not ' "enabled".format(
-                    block.block_header.name
+                self.last_error = (
+                    f'Required block "{block.block_header.name}" not enabled'
                 )
                 return False
             # Enabled blocks must be valid
             if block.enabled and not block.is_valid:
-                self.last_error = "Invalid block " '"{}"'.format(
-                    block.block_header.name
-                )
+                self.last_error = f'Invalid block "{block.block_header.name}"'
                 return False
 
         return True
@@ -2199,9 +2180,7 @@ class MFPackage(PackageContainer, PackageInterface):
                 # resolve the correct block to use
                 block_key = block_header_info.name.lower()
                 block_num = 1
-                possible_key = "{}-{}".format(
-                    block_header_info.name.lower(), block_num
-                )
+                possible_key = f"{block_header_info.name.lower()}-{block_num}"
                 if possible_key in self.blocks:
                     block_key = possible_key
                     block_header_name = block_header_info.name.lower()
@@ -2209,9 +2188,7 @@ class MFPackage(PackageContainer, PackageInterface):
                         block_key in self.blocks
                         and not self.blocks[block_key].is_allowed()
                     ):
-                        block_key = "{}-{}".format(
-                            block_header_name, block_num
-                        )
+                        block_key = f"{block_header_name}-{block_num}"
                         block_num += 1
 
                 if block_key not in self.blocks:
@@ -2284,9 +2261,7 @@ class MFPackage(PackageContainer, PackageInterface):
                             >= VerbosityLevel.verbose.value
                         ):
                             print(
-                                "      loading block {}...".format(
-                                    cur_block.structure.name
-                                )
+                                f"      loading block {cur_block.structure.name}..."
                             )
                         # reset comments
                         self.post_block_comments = MFComment(
@@ -2475,7 +2450,7 @@ class MFPackage(PackageContainer, PackageInterface):
                 self.simulation_data.verbosity_level.value
                 >= VerbosityLevel.verbose.value
             ):
-                print("      writing block {}...".format(block.structure.name))
+                print(f"      writing block {block.structure.name}...")
             # write block
             block.write(fd, ext_file_action=ext_file_action)
             block_num += 1
@@ -2602,7 +2577,7 @@ class MFChildPackages:
         if isinstance(k, int):
             if k < len(self._packages):
                 return self._packages[k]
-        raise ValueError("Package index {} does not exist.".format(k))
+        raise ValueError(f"Package index {k} does not exist.")
 
     def __setattr__(self, key, value):
         if (
@@ -2634,13 +2609,11 @@ class MFChildPackages:
         file_name = ".".join(stem_lst[:-1])
         if len(stem_lst) > 1:
             file_ext = stem_lst[-1]
-            return "{}.{}{}.{}".format(
-                file_name, file_ext, suffix, self._pkg_type
-            )
+            return f"{file_name}.{file_ext}{suffix}.{self._pkg_type}"
         elif suffix != "":
-            return "{}.{}".format(stem, self._pkg_type)
+            return f"{stem}.{self._pkg_type}"
         else:
-            return "{}.{}.{}".format(stem, suffix, self._pkg_type)
+            return f"{stem}.{suffix}.{self._pkg_type}"
 
     def __file_path_taken(self, possible_path):
         for package in self._packages:

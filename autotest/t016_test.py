@@ -22,7 +22,7 @@ def test_usg_disu_load():
         "..", "examples", "data", "mfusg_test", "01A_nestedgrid_nognc"
     )
     fname = os.path.join(pthusgtest, "flow.disu")
-    assert os.path.isfile(fname), "disu file not found {}".format(fname)
+    assert os.path.isfile(fname), f"disu file not found {fname}"
 
     # Create the model
     m = flopy.modflow.Modflow(modelname="usgload", verbose=True)
@@ -38,7 +38,7 @@ def test_usg_disu_load():
     # Write the disu file
     disu.write_file()
     assert os.path.isfile(
-        os.path.join(model_ws, "{}.{}".format(m.name, m.disu.extension[0]))
+        os.path.join(model_ws, f"{m.name}.{m.disu.extension[0]}")
     )
 
     # Load disu file
@@ -64,7 +64,7 @@ def test_usg_sms_load():
         "..", "examples", "data", "mfusg_test", "01A_nestedgrid_nognc"
     )
     fname = os.path.join(pthusgtest, "flow.sms")
-    assert os.path.isfile(fname), "sms file not found {}".format(fname)
+    assert os.path.isfile(fname), f"sms file not found {fname}"
 
     # Create the model
     m = flopy.modflow.Modflow(modelname="usgload", verbose=True)
@@ -80,7 +80,7 @@ def test_usg_sms_load():
     # Write the sms file
     sms.write_file()
     assert os.path.isfile(
-        os.path.join(model_ws, "{}.{}".format(m.name, m.sms.extension[0]))
+        os.path.join(model_ws, f"{m.name}.{m.sms.extension[0]}")
     )
 
     # Load sms file
@@ -90,9 +90,7 @@ def test_usg_sms_load():
     ):
         assert (
             value1 == value2
-        ), "key1 {}, value 1 {} != key2 {} value 2 {}".format(
-            key1, value1, key2, value2
-        )
+        ), f"key1 {key1}, value 1 {value1} != key2 {key2} value 2 {value2}"
 
     return
 
@@ -131,7 +129,7 @@ def test_usg_model():
 
     # try different complexity options; all should run successfully
     for complexity in ["simple", "moderate", "complex"]:
-        print("testing MFUSG with sms complexity: " + complexity)
+        print(f"testing MFUSG with sms complexity: {complexity}")
         sms = flopy.modflow.ModflowSms(mf, options=complexity)
         sms.write_file()
         if run:
@@ -147,7 +145,7 @@ def test_usg_load_01B():
         "..", "examples", "data", "mfusg_test", "01A_nestedgrid_nognc"
     )
     fname = os.path.join(pthusgtest, "flow.nam")
-    assert os.path.isfile(fname), "nam file not found {}".format(fname)
+    assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
     m = flopy.modflow.Modflow(modelname="usgload_1b", verbose=True)
@@ -172,7 +170,7 @@ def test_usg_load_45usg():
     print("testing 3-layer unstructured mfusg model loading: 45usg.nam")
     pthusgtest = os.path.join("..", "examples", "data", "mfusg_test", "45usg")
     fname = os.path.join(pthusgtest, "45usg.nam")
-    assert os.path.isfile(fname), "nam file not found {}".format(fname)
+    assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
     m = flopy.modflow.Modflow(modelname="45usg", verbose=True)

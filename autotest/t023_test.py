@@ -63,7 +63,7 @@ def test_mt3d_multispecies():
     )
 
     # Load the MT3D model into mt2 and then write it out
-    fname = modelname + ".nam"
+    fname = f"{modelname}.nam"
     mt2 = flopy.mt3d.Mt3dms.load(fname, model_ws=testpth, verbose=True)
     # check obs I/O
     assert np.all(mt.btn.obs == mt2.btn.obs)

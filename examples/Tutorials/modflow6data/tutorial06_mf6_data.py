@@ -86,7 +86,7 @@ tdis = flopy.mf6.modflow.mftdis.ModflowTdis(
     perioddata=[(1.0, 1, 1.0), (1.0, 1, 1.0)],
 )
 # create the Flopy groundwater flow (gwf) model object
-model_nam_file = "{}.nam".format(name)
+model_nam_file = f"{name}.nam"
 gwf = flopy.mf6.ModflowGwf(sim, modelname=name, model_nam_file=model_nam_file)
 # create the flopy iterative model solver (ims) package object
 ims = flopy.mf6.modflow.mfims.ModflowIms(sim, pname="ims", complexity="SIMPLE")

@@ -287,7 +287,5 @@ class VoronoiGrid:
             ax = plt.subplot(1, 1, 1, aspect="equal")
         pc = self.get_patch_collection(ax, **kwargs)
         if plot_title:
-            ax.set_title(
-                "ncells: {}; nverts: {}".format(self.ncpl, self.nverts)
-            )
+            ax.set_title(f"ncells: {self.ncpl}; nverts: {self.nverts}")
         return ax

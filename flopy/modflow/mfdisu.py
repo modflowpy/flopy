@@ -598,19 +598,19 @@ class ModflowDisU(Package):
         else:
             idsymrd = 0
         if model.verbose:
-            print("   NODES {}".format(nodes))
-            print("   NLAY {}".format(nlay))
-            print("   NJAG {}".format(njag))
-            print("   IVSD {}".format(ivsd))
-            print("   NPER {}".format(nper))
-            print("   ITMUNI {}".format(itmuni))
-            print("   LENUNI {}".format(lenuni))
-            print("   IDSYMRD {}".format(idsymrd))
+            print(f"   NODES {nodes}")
+            print(f"   NLAY {nlay}")
+            print(f"   NJAG {njag}")
+            print(f"   IVSD {ivsd}")
+            print(f"   NPER {nper}")
+            print(f"   ITMUNI {itmuni}")
+            print(f"   LENUNI {lenuni}")
+            print(f"   IDSYMRD {idsymrd}")
 
         # Calculate njags
         njags = int((njag - nodes) / 2)
         if model.verbose:
-            print("   NJAGS calculated as {}".format(njags))
+            print(f"   NJAGS calculated as {njags}")
 
         # dataset 2 -- laycbd
         if model.verbose:
@@ -618,7 +618,7 @@ class ModflowDisU(Package):
         laycbd = np.empty((nlay,), np.int32)
         laycbd = read1d(f, laycbd)
         if model.verbose:
-            print("   LAYCBD {}".format(laycbd))
+            print(f"   LAYCBD {laycbd}")
 
         # dataset 3 -- nodelay
         if model.verbose:
@@ -627,7 +627,7 @@ class ModflowDisU(Package):
             f, model, (nlay,), np.int32, "nodelay", ext_unit_dict
         )
         if model.verbose:
-            print("   NODELAY {}".format(nodelay))
+            print(f"   NODELAY {nodelay}")
 
         # dataset 4 -- top
         if model.verbose:
@@ -640,7 +640,7 @@ class ModflowDisU(Package):
             top[k] = tpk
         if model.verbose:
             for k, tpk in enumerate(top):
-                print("   TOP layer {}: {}".format(k, tpk.array))
+                print(f"   TOP layer {k}: {tpk.array}")
 
         # dataset 5 -- bot
         if model.verbose:
@@ -653,7 +653,7 @@ class ModflowDisU(Package):
             bot[k] = btk
         if model.verbose:
             for k, btk in enumerate(bot):
-                print("   BOT layer {}: {}".format(k, btk.array))
+                print(f"   BOT layer {k}: {btk.array}")
 
         # dataset 6 -- area
         if model.verbose:
@@ -671,21 +671,21 @@ class ModflowDisU(Package):
                 area[k] = ak
         if model.verbose:
             for k, ak in enumerate(area):
-                print("   AREA layer {}: {}".format(k, ak))
+                print(f"   AREA layer {k}: {ak}")
 
         # dataset 7 -- iac
         if model.verbose:
             print("   loading IAC...")
         iac = Util2d.load(f, model, (nodes,), np.int32, "iac", ext_unit_dict)
         if model.verbose:
-            print("   IAC {}".format(iac))
+            print(f"   IAC {iac}")
 
         # dataset 8 -- ja
         if model.verbose:
             print("   loading JA...")
         ja = Util2d.load(f, model, (njag,), np.int32, "ja", ext_unit_dict)
         if model.verbose:
-            print("   JA {}".format(ja))
+            print(f"   JA {ja}")
 
         # dataset 9 -- ivc
         ivc = None
@@ -696,7 +696,7 @@ class ModflowDisU(Package):
                 f, model, (njag,), np.int32, "ivc", ext_unit_dict
             )
             if model.verbose:
-                print("   IVC {}".format(ivc))
+                print(f"   IVC {ivc}")
 
         # dataset 10a -- cl1
         cl1 = None
@@ -707,7 +707,7 @@ class ModflowDisU(Package):
                 f, model, (njags,), np.float32, "cl1", ext_unit_dict
             )
             if model.verbose:
-                print("   CL1 {}".format(cl1))
+                print(f"   CL1 {cl1}")
 
         # dataset 10b -- cl2
         cl2 = None
@@ -718,7 +718,7 @@ class ModflowDisU(Package):
                 f, model, (njags,), np.float32, "cl2", ext_unit_dict
             )
             if model.verbose:
-                print("   CL2 {}".format(cl2))
+                print(f"   CL2 {cl2}")
 
         # dataset 11 -- cl12
         cl12 = None
@@ -729,7 +729,7 @@ class ModflowDisU(Package):
                 f, model, (njag,), np.float32, "cl12", ext_unit_dict
             )
             if model.verbose:
-                print("   CL12 {}".format(cl12))
+                print(f"   CL12 {cl12}")
 
         # dataset 12 -- fahl
         fahl = None
@@ -741,7 +741,7 @@ class ModflowDisU(Package):
             print("   loading FAHL...")
         fahl = Util2d.load(f, model, (n,), np.float32, "fahl", ext_unit_dict)
         if model.verbose:
-            print("   FAHL {}".format(fahl))
+            print(f"   FAHL {fahl}")
 
         # dataset 7 -- stress period info
         if model.verbose:
@@ -765,10 +765,10 @@ class ModflowDisU(Package):
             tsmult.append(a3)
             steady.append(a4)
         if model.verbose:
-            print("   PERLEN {}".format(perlen))
-            print("   NSTP {}".format(nstp))
-            print("   TSMULT {}".format(tsmult))
-            print("   STEADY {}".format(steady))
+            print(f"   PERLEN {perlen}")
+            print(f"   NSTP {nstp}")
+            print(f"   TSMULT {tsmult}")
+            print(f"   STEADY {steady}")
 
         if openfile:
             f.close()
@@ -828,7 +828,7 @@ class ModflowDisU(Package):
         f_dis = open(self.fn_path, "w")
 
         # Item 0: heading
-        f_dis.write("{0:s}\n".format(self.heading))
+        f_dis.write(f"{self.heading}\n")
 
         # Item 1: NODES NLAY NJAG IVSD NPER ITMUNI LENUNI IDSYMRD
         s = ""
@@ -847,7 +847,7 @@ class ModflowDisU(Package):
 
         # Item 2: LAYCBD
         for k in range(self.nlay):
-            f_dis.write("{0:3d}".format(self.laycbd[k]))
+            f_dis.write(f"{self.laycbd[k]:3d}")
         f_dis.write("\n")
 
         # Item 3: NODELAY
@@ -890,9 +890,7 @@ class ModflowDisU(Package):
         # Item 13: NPER, NSTP, TSMULT, Ss/tr
         for t in range(self.nper):
             f_dis.write(
-                "{0:14f}{1:14d}{2:10f} ".format(
-                    self.perlen[t], self.nstp[t], self.tsmult[t]
-                )
+                f"{self.perlen[t]:14f}{self.nstp[t]:14d}{self.tsmult[t]:10f} "
             )
             if self.steady[t]:
                 f_dis.write(" {0:3s}\n".format("SS"))

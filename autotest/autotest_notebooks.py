@@ -28,7 +28,7 @@ def run_notebook(dpth, fn):
     )
     print(" ".join(arg))
     ival = os.system(" ".join(arg))
-    assert ival == 0, "could not run {}".format(fn)
+    assert ival == 0, f"could not run {fn}"
 
 
 def test_notebooks():

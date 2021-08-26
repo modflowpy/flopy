@@ -50,7 +50,7 @@ class ZoneBudget:
         totim=None,
         aliases=None,
         verbose=False,
-        **kwargs
+        **kwargs,
     ):
         from .binaryfile import CellBudgetFile
 
@@ -59,9 +59,7 @@ class ZoneBudget:
         elif isinstance(cbc_file, str) and os.path.isfile(cbc_file):
             self.cbc = CellBudgetFile(cbc_file)
         else:
-            raise Exception(
-                "Cannot load cell budget file: {}.".format(cbc_file)
-            )
+            raise Exception(f"Cannot load cell budget file: {cbc_file}.")
 
         if isinstance(z, np.ndarray):
             assert np.issubdtype(
@@ -88,7 +86,7 @@ class ZoneBudget:
             self.dis = kwargs.pop("dis")
         if len(kwargs.keys()) > 0:
             args = ",".join(kwargs.keys())
-            raise Exception("LayerFile error: unrecognized kwargs: " + args)
+            raise Exception(f"LayerFile error: unrecognized kwargs: {args}")
 
         # Check the shape of the cbc budget file arrays
         self.cbc_shape = self.cbc.get_data(idx=0, full3D=True)[0].shape
@@ -102,10 +100,7 @@ class ZoneBudget:
             if isinstance(kstpkper, tuple):
                 kstpkper = [kstpkper]
             for kk in kstpkper:
-                s = (
-                    "The specified time step/stress period "
-                    "does not exist {}".format(kk)
-                )
+                s = f"The specified time step/stress period does not exist {kk}"
                 assert kk in self.cbc.get_kstpkper(), s
             self.kstpkper = kstpkper
         elif totim is not None:
@@ -114,10 +109,7 @@ class ZoneBudget:
             elif isinstance(totim, int):
                 totim = [float(totim)]
             for t in totim:
-                s = (
-                    "The specified simulation time "
-                    "does not exist {}".format(t)
-                )
+                s = f"The specified simulation time does not exist {t}"
                 assert t in self.cbc.get_times(), s
             self.totim = totim
         else:
@@ -146,12 +138,12 @@ class ZoneBudget:
             izone = np.zeros(self.cbc_shape, self.int_type)
             izone[:] = z[0, :, :]
         else:
-            e = "Shape of the zone array is not recognized: {}".format(z.shape)
+            e = f"Shape of the zone array is not recognized: {z.shape}"
             raise Exception(e)
 
         self.izone = izone
         self.allzones = np.unique(izone)
-        self._zonenamedict = {z: "ZONE_{}".format(z) for z in self.allzones}
+        self._zonenamedict = {z: f"ZONE_{z}" for z in self.allzones}
 
         if aliases is not None:
             s = (
@@ -237,7 +229,7 @@ class ZoneBudget:
         elif self.totim is not None:
             for t in self.totim:
                 if verbose:
-                    s = "Computing the budget for time {}".format(t)
+                    s = f"Computing the budget for time {t}"
                     print(s)
                 self._compute_budget(totim=t)
 
@@ -1061,7 +1053,7 @@ class ZoneBudget:
         else:
             # Should not happen
             raise Exception(
-                'Unrecognized "imeth" for {} record: {}'.format(recname, imeth)
+                f'Unrecognized "imeth" for {recname} record: {imeth}'
             )
 
         # Inflows
@@ -1518,9 +1510,7 @@ class ZoneBudget:
                     # READ EXTERNAL FILE
                     fname = rowitems[0]
                     if not os.path.isfile(fname):
-                        errmsg = 'Could not find external file "{}"'.format(
-                            fname
-                        )
+                        errmsg = f'Could not find external file "{fname}"'
                         raise Exception(errmsg)
                     with open(fname, "r") as ext_f:
                         ext_flines = ext_f.readlines()
@@ -1537,7 +1527,7 @@ class ZoneBudget:
                         raise Exception(errmsg)
                 else:
                     # Should not get here
-                    raise Exception("Locat not recognized: {}".format(locat))
+                    raise Exception(f"Locat not recognized: {locat}")
 
                     # IGNORE COMPOSITE ZONES
 
@@ -1602,9 +1592,7 @@ class ZoneBudget:
             array = b.copy()
         elif len(array.shape) < 2 or len(array.shape) > 3:
             raise Exception(
-                "Shape of the input array is not recognized: {}".format(
-                    array.shape
-                )
+                f"Shape of the input array is not recognized: {array.shape}"
             )
         if np.ma.is_masked(array):
             array = np.ma.filled(array, 0)
@@ -1623,18 +1611,14 @@ class ZoneBudget:
         if iprn is None or iprn <= iprnmin:
             iprn = iprnmin + 1
 
-        formatter_str = "{{:>{iprn}}}".format(iprn=iprn)
+        formatter_str = f"{{:>{iprn}}}"
         formatter = formatter_str.format
 
         with open(fname, "w") as f:
-            header = "{nlay} {nrow} {ncol}\n".format(
-                nlay=nlay, nrow=nrow, ncol=ncol
-            )
+            header = f"{nlay} {nrow} {ncol}\n"
             f.write(header)
             for lay in range(nlay):
-                record_2 = "INTERNAL\t({fmtin}I{iprn})\n".format(
-                    fmtin=fmtin, iprn=iprn
-                )
+                record_2 = f"INTERNAL\t({fmtin}I{iprn})\n"
                 f.write(record_2)
                 if fmtin < ncol:
                     for row in range(nrow):
@@ -1861,7 +1845,7 @@ class ZoneBudget6:
 
     def __getattr__(self, item):
         if item in ("zon", "bud", "grb", "name", "model_ws"):
-            item = "_{}".format(item)
+            item = f"_{item}"
         return super().__getattribute__(item)
 
     def add_package(self, pkg_name, pkg):
@@ -1882,7 +1866,7 @@ class ZoneBudget6:
                 pkg_name = "bud"
             else:
                 raise KeyError(
-                    "{} package is not valid for zonebudget".format(pkg_name)
+                    f"{pkg_name} package is not valid for zonebudget"
                 )
 
         if isinstance(pkg, str):
@@ -1898,7 +1882,7 @@ class ZoneBudget6:
         else:
             pass
 
-        pkg_name = "_{}".format(pkg_name)
+        pkg_name = f"_{pkg_name}"
         self.__setattr__(pkg_name, pkg)
         if pkg is not None:
             self.package_dict[pkg_name[1:]] = pkg
@@ -1929,9 +1913,7 @@ class ZoneBudget6:
         """
         self._name = name
         if self._zon is not None:
-            self._zon.filename = "{}.{}".format(
-                name, self._zon.filename.split(".")[-1]
-            )
+            self._zon.filename = f"{name}.{self._zon.filename.split('.')[-1]}"
 
     def get_dataframes(
         self,
@@ -2021,7 +2003,7 @@ class ZoneBudget6:
             aliases = self._zon.aliases
 
         if f is None and self._recarray is None:
-            f = os.path.join(self._model_ws, self._name + ".csv")
+            f = os.path.join(self._model_ws, f"{self._name}.csv")
             self._recarray = _read_zb_csv2(
                 f, add_prefix=False, aliases=aliases
             )
@@ -2094,7 +2076,7 @@ class ZoneBudget6:
             else:
                 path = pkg.filename
                 pkg.write_input(line_length=line_length)
-            nam.append("  {}   {}\n".format(pkg_nam.upper(), path))
+            nam.append(f"  {pkg_nam.upper()}   {path}\n")
 
         path = os.path.join(self._model_ws, self._name + self._extension)
         with open(path, "w") as foo:
@@ -2197,7 +2179,7 @@ class ZoneFile6:
         self.filename = self._parent.name + extension
         self.aliases = aliases
         self.allzones = [int(z) for z in np.unique(izone) if z != 0]
-        self._zonenamedict = {z: "ZONE_{}".format(z) for z in self.allzones}
+        self._zonenamedict = {z: f"ZONE_{z}" for z in self.allzones}
 
         if aliases is not None:
             if not isinstance(aliases, dict):
@@ -2210,7 +2192,7 @@ class ZoneFile6:
                     self.aliases[zn] = "_".join(alias.split())
                 else:
                     pop_list.append(zn)
-                    print("warning: zone number {} not found".format(zn))
+                    print(f"warning: zone number {zn} not found")
 
             for p in pop_list:
                 aliases.pop(p)
@@ -2240,8 +2222,8 @@ class ZoneFile6:
         with open(f, "w") as foo:
             bfmt = ["  {:d}"]
             foo.write(
-                "BEGIN DIMENSIONS\n    NCELLS  {:d}\n"
-                "END DIMENSIONS\n\n".format(self.ncells)
+                f"BEGIN DIMENSIONS\n    NCELLS  {self.ncells}\n"
+                "END DIMENSIONS\n\n"
             )
 
             foo.write("BEGIN GRIDDATA\n  IZONE\n")
@@ -2389,11 +2371,11 @@ def _recarray_to_dataframe(
     try:
         import pandas as pd
     except Exception as e:
-        msg = "ZoneBudget.get_dataframes() error import pandas: " + str(e)
+        msg = f"ZoneBudget.get_dataframes() error import pandas: {e!s}"
         raise ImportError(msg)
 
     valid_index_keys = ["totim", "kstpkper"]
-    s = 'index_key "{}" is not valid.'.format(index_key)
+    s = f'index_key "{index_key}" is not valid.'
     assert index_key in valid_index_keys, s
 
     valid_timeunit = ["S", "M", "H", "D", "Y"]
@@ -2410,8 +2392,7 @@ def _recarray_to_dataframe(
         timeunit = "Y"
 
     errmsg = (
-        "Specified time units ({}) not recognized. "
-        "Please use one of ".format(timeunit)
+        f"Specified time units ({timeunit}) not recognized. Please use one of "
     )
     assert timeunit in valid_timeunit, errmsg + ", ".join(valid_timeunit) + "."
 
@@ -2640,8 +2621,8 @@ def _read_zb_zblst(fname):
                     line = foo.readline().strip()
                     zones = [int(i) for i in line.split()]
                     for zone in zones:
-                        data["TO_ZONE_{}".format(zone)] = []
-                        data["FROM_ZONE_{}".format(zone)] = []
+                        data[f"TO_ZONE_{zone}"] = []
+                        data[f"FROM_ZONE_{zone}"] = []
 
             if "FLOW BUDGET FOR ZONE" in line:
                 flow_budget = True
@@ -2675,9 +2656,9 @@ def _read_zb_zblst(fname):
                     if "ZONE" in line:
                         if prefix == "FROM_":
                             zlist.append(int(label.split()[1]))
-                            label = "FROM_ZONE_{}".format(label.split()[1])
+                            label = f"FROM_ZONE_{label.split()[1]}"
                         else:
-                            label = "TO_ZONE_{}".format(label.split()[-1])
+                            label = f"TO_ZONE_{label.split()[-1]}"
 
                     elif "TOTAL" in line or "PERCENT DISCREPANCY" in line:
                         label = "_".join(label.split())
@@ -2698,8 +2679,8 @@ def _read_zb_zblst(fname):
                         for zone in zones:
                             if zone in zlist:
                                 continue
-                            data["FROM_ZONE_{}".format(zone)].append(0)
-                            data["TO_ZONE_{}".format(zone)].append(0)
+                            data[f"FROM_ZONE_{zone}"].append(0)
+                            data[f"TO_ZONE_{zone}"].append(0)
 
                 elif "OUT:" in line:
                     prefix = "TO_"
@@ -2896,9 +2877,9 @@ def _zb_dict_to_recarray(data, aliases=None):
             if zn in aliases:
                 zone_dtypes.append((aliases[zn], float))
             else:
-                zone_dtypes.append(("ZONE_{}".format(int(zn)), float))
+                zone_dtypes.append((f"ZONE_{int(zn)}", float))
         else:
-            zone_dtypes.append(("ZONE_{}".format(int(zn)), float))
+            zone_dtypes.append((f"ZONE_{int(zn)}", float))
 
     dtype = [
         ("totim", float),

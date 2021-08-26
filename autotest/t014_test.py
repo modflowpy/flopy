@@ -43,7 +43,7 @@ def load_str(mfnam, pth):
         assert success, "base model run did not terminate successfully"
 
     # load files
-    pth = os.path.join(cpth, "{}.str".format(m.name))
+    pth = os.path.join(cpth, f"{m.name}.str")
     str2 = flopy.modflow.ModflowStr.load(pth, m)
     for name in str2.dtype.names:
         assert (

@@ -56,13 +56,10 @@ class _ModpathSeries(object):
             if isinstance(line, bytes):
                 line = line.decode()
             if self.skiprows < 1:
-                if (
-                    "MODPATH_{}_FILE 6".format(self.output_type)
-                    in line.upper()
-                ):
+                if f"MODPATH_{self.output_type}_FILE 6" in line.upper():
                     self.version = 6
                 elif (
-                    "MODPATH_{}_FILE         7".format(self.output_type)
+                    f"MODPATH_{self.output_type}_FILE         7"
                     in line.upper()
                 ):
                     self.version = 7
@@ -278,7 +275,7 @@ class _ModpathSeries(object):
         shpname="endpoints.shp",
         mg=None,
         epsg=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Write pathlines or timeseries to a shapefile
@@ -748,7 +745,7 @@ class PathlineFile(_ModpathSeries):
         shpname="pathlines.shp",
         mg=None,
         epsg=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Write pathlines to a shapefile
@@ -786,7 +783,7 @@ class PathlineFile(_ModpathSeries):
             shpname=shpname,
             mg=mg,
             epsg=epsg,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -878,9 +875,7 @@ class EndpointFile:
                 else:
                     self.version = None
                 if self.version is None:
-                    errmsg = "{} is not a valid endpoint file".format(
-                        self.fname
-                    )
+                    errmsg = f"{self.fname} is not a valid endpoint file"
                     raise Exception(errmsg)
             self.skiprows += 1
             if self.version == 6 or self.version == 7:
@@ -897,7 +892,7 @@ class EndpointFile:
         self.file.seek(0)
 
         if self.verbose:
-            print("MODPATH version {} endpoint file".format(self.version))
+            print(f"MODPATH version {self.version} endpoint file")
 
     def _get_dtypes(self):
         """
@@ -1171,10 +1166,7 @@ class EndpointFile:
             try:
                 raslice = ra_slice(ra, keys)
             except (KeyError, ValueError):
-                msg = (
-                    "could not extract '{}' ".format(keys[0])
-                    + "key from endpoint data"
-                )
+                msg = f"could not extract '{keys[0]}' key from endpoint data"
                 raise KeyError(msg)
             if isinstance(dest_cells, (list, tuple)):
                 allint = all(isinstance(el, int) for el in dest_cells)
@@ -1201,7 +1193,7 @@ class EndpointFile:
         direction="ending",
         mg=None,
         epsg=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Write particle starting / ending locations to shapefile.
@@ -1353,7 +1345,7 @@ class TimeseriesFile(_ModpathSeries):
                     self.version = None
                 if self.version is None:
                     raise Exception(
-                        "{} is not a valid timeseries file".format(self.fname)
+                        f"{self.fname} is not a valid timeseries file"
                     )
             self.skiprows += 1
             if self.version == 6 or self.version == 7:
@@ -1590,7 +1582,7 @@ class TimeseriesFile(_ModpathSeries):
         shpname="pathlines.shp",
         mg=None,
         epsg=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Write pathlines to a shapefile
@@ -1628,5 +1620,5 @@ class TimeseriesFile(_ModpathSeries):
             shpname=shpname,
             mg=mg,
             epsg=epsg,
-            **kwargs
+            **kwargs,
         )

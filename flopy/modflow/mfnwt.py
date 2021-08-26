@@ -323,7 +323,7 @@ class ModflowNwt(Package):
         """
         # Open file for writing
         f = open(self.fn_path, "w")
-        f.write("%s\n" % self.heading)
+        f.write(f"{self.heading}\n")
         f.write(
             "{:10.3e}{:10.3e}{:10d}{:10.3e}{:10d}{:10d}{:10d}".format(
                 self.headtol,
@@ -341,33 +341,33 @@ class ModflowNwt(Package):
             if option.lower() == "specified":
                 isspecified = True
         if isspecified:
-            f.write("{0:10.4g}".format(self.dbdtheta))
-            f.write("{0:10.4g}".format(self.dbdkappa))
-            f.write("{0:10.4g}".format(self.dbdgamma))
-            f.write("{0:10.4g}".format(self.momfact))
-            f.write("{0:10d}".format(self.backflag))
+            f.write(f"{self.dbdtheta:10.4g}")
+            f.write(f"{self.dbdkappa:10.4g}")
+            f.write(f"{self.dbdgamma:10.4g}")
+            f.write(f"{self.momfact:10.4g}")
+            f.write(f"{self.backflag:10d}")
             if self.backflag > 0:
-                f.write("{0:10d}".format(self.maxbackiter))
-                f.write("{0:10.4g}".format(self.backtol))
-                f.write("{0:10.4g}".format(self.backreduce))
+                f.write(f"{self.maxbackiter:10d}")
+                f.write(f"{self.backtol:10.4g}")
+                f.write(f"{self.backreduce:10.4g}")
             f.write("\n")
             if self.linmeth == 1:
-                f.write("{0:10d}".format(self.maxitinner))
-                f.write("{0:10d}".format(self.ilumethod))
-                f.write("{0:10d}".format(self.levfill))
-                f.write("{0:10.4g}".format(self.stoptol))
-                f.write("{0:10d}".format(self.msdr))
+                f.write(f"{self.maxitinner:10d}")
+                f.write(f"{self.ilumethod:10d}")
+                f.write(f"{self.levfill:10d}")
+                f.write(f"{self.stoptol:10.4g}")
+                f.write(f"{self.msdr:10d}")
             elif self.linmeth == 2:
-                f.write("{0:10d}".format(self.iacl))
-                f.write("{0:10d}".format(self.norder))
-                f.write("{0:10d}".format(self.level))
-                f.write("{0:10d}".format(self.north))
-                f.write("{0:10d}".format(self.iredsys))
-                f.write("{0:10.4g}".format(self.rrctols))
-                f.write("{0:10d}".format(self.idroptol))
-                f.write("{0:10.4g}".format(self.epsrn))
-                f.write("{0:10.4g}".format(self.hclosexmd))
-                f.write("{0:10d}".format(self.mxiterxmd))
+                f.write(f"{self.iacl:10d}")
+                f.write(f"{self.norder:10d}")
+                f.write(f"{self.level:10d}")
+                f.write(f"{self.north:10d}")
+                f.write(f"{self.iredsys:10d}")
+                f.write(f"{self.rrctols:10.4g}")
+                f.write(f"{self.idroptol:10d}")
+                f.write(f"{self.epsrn:10.4g}")
+                f.write(f"{self.hclosexmd:10.4g}")
+                f.write(f"{self.mxiterxmd:10d}")
 
         f.write("\n")
 

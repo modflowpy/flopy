@@ -192,9 +192,7 @@ class ModflowMlt(Package):
             else:
                 mltnam = t[0].lower()
             if model.verbose:
-                sys.stdout.write(
-                    '   reading data for "{:<10s}" mult\n'.format(mltnam)
-                )
+                sys.stdout.write(f'   reading data for "{mltnam:<10s}" mult\n')
             readArray = True
             kwrd = None
             if len(t) > 1:
@@ -268,8 +266,7 @@ class ModflowMlt(Package):
             elif op == "^":
                 multarray = multarray ** atemp
             else:
-                s = "Invalid MULT operation {}".format(op)
-                raise Exception(s)
+                raise Exception(f"Invalid MULT operation {op}")
         return multarray
 
     @staticmethod

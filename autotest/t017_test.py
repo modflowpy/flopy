@@ -36,9 +36,10 @@ def test_formattedfile_read():
     ), "formatted head read using totim != head read using idx"
 
     ts = h.get_ts((0, 7, 5))
+    expected = 944.487
     assert np.isclose(
-        ts[0, 1], 944.487, 1e-6
-    ), "time series value ({}) != {}".format(ts[0, 1], 944.487)
+        ts[0, 1], expected, 1e-6
+    ), f"time series value ({ts[0, 1]}) != {expected}"
     h.close()
 
     # Check error when reading empty file
@@ -59,7 +60,7 @@ def test_binaryfile_read():
     assert isinstance(h, flopy.utils.HeadFile)
 
     times = h.get_times()
-    assert np.isclose(times[0], 10.0), "times[0] != {}".format(times[0])
+    assert np.isclose(times[0], 10.0), f"times[0] != {times[0]}"
 
     kstpkper = h.get_kstpkper()
     assert kstpkper[0] == (0, 0), "kstpkper[0] != (0, 0)"
@@ -75,9 +76,10 @@ def test_binaryfile_read():
     ), "binary head read using totim != head read using idx"
 
     ts = h.get_ts((0, 7, 5))
+    expected = 26.00697135925293
     assert np.isclose(
-        ts[0, 1], 26.00697135925293
-    ), "time series value ({}) != {}".format(ts[0, 1], -26.00697135925293)
+        ts[0, 1], expected
+    ), f"time series value ({ts[0, 1]}) != {expected}"
     h.close()
 
     # Check error when reading empty file
@@ -160,11 +162,11 @@ def test_cellbudgetfile_position():
     idx = 8767
     ipos = v.get_position(idx)
     ival = 50235424
-    assert ipos == ival, "position of index 8767 != {}".format(ival)
+    assert ipos == ival, f"position of index 8767 != {ival}"
 
     ipos = v.get_position(idx, header=True)
     ival = 50235372
-    assert ipos == ival, "position of index 8767 header != {}".format(ival)
+    assert ipos == ival, f"position of index 8767 header != {ival}"
 
     cbcd = []
     for i in range(idx, v.get_nrecords()):
@@ -191,7 +193,7 @@ def test_cellbudgetfile_position():
     try:
         v2.list_records()
     except:
-        assert False, "could not list records on {}".format(opth)
+        assert False, f"could not list records on {opth}"
 
     names = v2.get_unique_record_names(decode=True)
 
@@ -201,7 +203,7 @@ def test_cellbudgetfile_position():
     v2.close()
 
     for i, (d1, d2) in enumerate(zip(cbcd, cbcd2)):
-        msg = "{} data from slice is not identical".format(names[i].rstrip())
+        msg = f"{names[i].rstrip()} data from slice is not identical"
         assert np.array_equal(d1, d2), msg
 
     # Check error when reading empty file

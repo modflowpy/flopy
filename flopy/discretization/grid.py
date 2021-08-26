@@ -193,16 +193,16 @@ class Grid:
             and self.angrot is not None
         ):
             items += [
-                "xll:" + str(self.xoffset),
-                "yll:" + str(self.yoffset),
-                "rotation:" + str(self.angrot),
+                f"xll:{self.xoffset!s}",
+                f"yll:{self.yoffset!s}",
+                f"rotation:{self.angrot!s}",
             ]
         if self.proj4 is not None:
-            items.append("proj4_str:" + str(self.proj4))
+            items.append(f"proj4_str:{self.proj4}")
         if self.units is not None:
-            items.append("units:" + str(self.units))
+            items.append(f"units:{self.units}")
         if self.lenuni is not None:
-            items.append("lenuni:" + str(self.lenuni))
+            items.append(f"lenuni:{self.lenuni}")
         return "; ".join(items)
 
     @property
@@ -259,7 +259,7 @@ class Grid:
             else:
                 proj4 = self._proj4
         elif self.epsg is not None:
-            proj4 = "epsg:{}".format(self.epsg)
+            proj4 = f"epsg:{self.epsg}"
         return proj4
 
     @proj4.setter

@@ -51,10 +51,10 @@ def test_simplelgr_load_and_write(silent=True):
 
     # get the namefiles of the parent and child
     namefiles = lgr.get_namefiles()
-    msg = "get_namefiles returned {} items instead of 2".format(len(namefiles))
+    msg = f"get_namefiles returned {len(namefiles)} items instead of 2"
     assert len(namefiles) == 2, msg
     tpth = os.path.dirname(namefiles[0])
-    msg = "dir path is {} not {}".format(tpth, opth)
+    msg = f"dir path is {tpth} not {opth}"
     assert tpth == opth, msg
 
     # run the lgr model
@@ -71,10 +71,10 @@ def test_simplelgr_load_and_write(silent=True):
 
     # get the namefiles of the parent and child
     namefiles = lgr.get_namefiles()
-    msg = "get_namefiles returned {} items instead of 2".format(len(namefiles))
+    msg = f"get_namefiles returned {len(namefiles)} items instead of 2"
     assert len(namefiles) == 2, msg
     tpth = os.path.dirname(namefiles[0])
-    msg = "dir path is {} not {}".format(tpth, npth)
+    msg = f"dir path is {tpth} not {npth}"
     assert tpth == npth, msg
 
     # write the lgr model in to the new path
@@ -137,11 +137,11 @@ def singleModel(
     lRunSingle=False,
 ):
     if iChild > 0:
-        print("child model" + modelname)
+        print(f"child model {modelname}")
         iLUoffset = 100 * int(iChild)
-        print("increase Unit Numbers by " + str(iLUoffset))
+        print(f"increase Unit Numbers by {iLUoffset}")
     else:
-        print("parent model " + modelname)
+        print(f"parent model {modelname}")
         iLUoffset = 0
     if steady:
         nper = 1
@@ -294,7 +294,7 @@ def test_simple_lgrmodel_from_scratch(silent=True):
     nstp = [ats]
     tsmult = 1.07
     steady = True
-    rundir = cpth + "b"
+    rundir = f"{cpth}b"
     lgrExe = exe_name
 
     # wel data

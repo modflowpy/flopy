@@ -247,7 +247,7 @@ class ModflowWel(Package):
                         ladd = False
                         break
                 if ladd:
-                    options.append("aux {} ".format(name))
+                    options.append(f"aux {name} ")
 
         if isinstance(self.options, OptionBlock):
             if not self.options.auxillary:
@@ -294,7 +294,7 @@ class ModflowWel(Package):
         else:
             f_wel = open(self.fn_path, "w")
 
-        f_wel.write("%s\n" % self.heading)
+        f_wel.write(f"{self.heading}\n")
 
         if (
             isinstance(self.options, OptionBlock)
@@ -305,9 +305,7 @@ class ModflowWel(Package):
             if self.options.block:
                 self.options.write_options(f_wel)
 
-        line = " {0:9d} {1:9d} ".format(
-            self.stress_period_data.mxact, self.ipakcb
-        )
+        line = f" {self.stress_period_data.mxact:9d} {self.ipakcb:9d} "
 
         if isinstance(self.options, OptionBlock):
             if self.options.noprint:
@@ -336,9 +334,7 @@ class ModflowWel(Package):
         else:
             if self.specify and self.parent.version == "mfnwt":
                 f_wel.write(
-                    "SPECIFY {0:10.5g} {1:10d}\n".format(
-                        self.phiramp, self.iunitramp
-                    )
+                    f"SPECIFY {self.phiramp:10.5g} {self.iunitramp:10d}\n"
                 )
 
         self.stress_period_data.write_transient(f_wel)
@@ -348,7 +344,7 @@ class ModflowWel(Package):
         try:
             self.stress_period_data.add_record(kper, index, values)
         except Exception as e:
-            raise Exception("mfwel error adding record to list: " + str(e))
+            raise Exception(f"mfwel error adding record to list: {e!s}")
 
     @staticmethod
     def get_default_dtype(structured=True):

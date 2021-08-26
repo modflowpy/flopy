@@ -195,9 +195,7 @@ class ModflowZon(Package):
             else:
                 zonnam = t[0].lower()
             if model.verbose:
-                sys.stdout.write(
-                    '   reading data for "{:<10s}" zone\n'.format(zonnam)
-                )
+                sys.stdout.write(f'   reading data for "{zonnam:<10s}" zone\n')
             # load data
             t = Util2d.load(
                 f, model, (nrow, ncol), np.int32, zonnam, ext_unit_dict

@@ -87,7 +87,7 @@ class ModflowGage(Package):
         extension="gage",
         unitnumber=None,
         filenames=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Package constructor.
@@ -115,15 +115,13 @@ class ModflowGage(Package):
                 if files is None:
                     files = []
                     for idx in range(numgage):
-                        files.append(
-                            "{}.gage{}.go".format(model.name, idx + 1)
-                        )
+                        files.append(f"{model.name}.gage{idx + 1}.go")
                 if isinstance(files, np.ndarray):
                     files = files.flatten().tolist()
                 elif isinstance(files, str):
                     files = [files]
                 elif isinstance(files, int) or isinstance(files, float):
-                    files = ["{}.go".format(files)]
+                    files = [f"{files}.go"]
                 if len(files) < numgage:
                     raise Exception(
                         "a filename needs to be provided for {} gages - {} "

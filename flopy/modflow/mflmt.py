@@ -136,19 +136,11 @@ class ModflowLmt(Package):
 
         """
         f = open(self.fn_path, "w")
-        f.write("{}\n".format(self.heading))
-        f.write("{:20s}\n".format("OUTPUT_FILE_NAME " + self.output_file_name))
-        f.write(
-            "{:20s} {:10d}\n".format(
-                "OUTPUT_FILE_UNIT ", self.output_file_unit
-            )
-        )
-        f.write(
-            "{:20s}\n".format("OUTPUT_FILE_HEADER " + self.output_file_header)
-        )
-        f.write(
-            "{:20s}\n".format("OUTPUT_FILE_FORMAT " + self.output_file_format)
-        )
+        f.write(f"{self.heading}\n")
+        f.write(f"OUTPUT_FILE_NAME     {self.output_file_name:20s}\n")
+        f.write(f"OUTPUT_FILE_UNIT     {self.output_file_unit:10d}\n")
+        f.write(f"OUTPUT_FILE_HEADER   {self.output_file_header:20s}\n")
+        f.write(f"OUTPUT_FILE_FORMAT   {self.output_file_format:20s}\n")
         if self.package_flows:  # check that the list is not empty
             # Generate a string to write
             pckgs = ""
@@ -161,8 +153,7 @@ class ModflowLmt(Package):
             if "all" in [x.lower() for x in self.package_flows]:
                 pckgs += "ALL"
 
-            line = "PACKAGE_FLOWS " + pckgs
-            f.write("%s\n" % (line))
+            f.write(f"PACKAGE_FLOWS {pckgs}\n")
 
         f.close()
 
@@ -214,9 +205,9 @@ class ModflowLmt(Package):
         # set default values
         if filename:
             prefix = os.path.splitext(os.path.basename(filename))[0]
-            output_file_name = prefix + ".ftl"
+            output_file_name = f"{prefix}.ftl"
         else:
-            output_file_name = model.name + ".ftl"
+            output_file_name = f"{model.name}.ftl"
         output_file_unit = 333
         output_file_header = "standard"
         output_file_format = "unformatted"

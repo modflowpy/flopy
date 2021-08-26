@@ -31,9 +31,7 @@ def test_mfnwt_run():
     exe = flopy.which(exe_name)
 
     if exe is None:
-        print(
-            "Specified executable {} does not exist in path".format(exe_name)
-        )
+        print(f"Specified executable {exe_name} does not exist in path")
         return
 
     modelname = "watertable"
@@ -128,7 +126,7 @@ def test_mfnwt_run():
 
     # remove existing heads results, if necessary
     try:
-        os.remove(os.path.join(model_ws, "{0}.hds".format(modelname)))
+        os.remove(os.path.join(model_ws, f"{modelname}.hds"))
     except:
         pass
     # run existing model
@@ -136,7 +134,7 @@ def test_mfnwt_run():
 
     # Read the simulated MODFLOW-2005 model results
     # Create the headfile object
-    headfile = os.path.join(model_ws, "{0}.hds".format(modelname))
+    headfile = os.path.join(model_ws, f"{modelname}.hds")
     headobj = flopy.utils.HeadFile(headfile, precision="single")
     times = headobj.get_times()
     head = headobj.get_data(totim=times[-1])
@@ -165,7 +163,7 @@ def test_mfnwt_run():
         ax.set_xlabel("Horizontal distance, in m")
         ax.set_ylabel("Percent Error")
 
-        fig.savefig(os.path.join(model_ws, "{}.png".format(modelname)))
+        fig.savefig(os.path.join(model_ws, f"{modelname}.png"))
 
     return
 

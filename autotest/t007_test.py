@@ -51,14 +51,14 @@ def remove_shp(shpname):
 
 
 def export_mf6_netcdf(path):
-    print("in export_mf6_netcdf: {}".format(path))
+    print(f"in export_mf6_netcdf: {path}")
     sim = flopy.mf6.modflow.mfsimulation.MFSimulation.load(sim_ws=path)
     for name, model in sim.get_model_itr():
         export_netcdf(model)
 
 
 def export_mf2005_netcdf(namfile):
-    print("in export_mf2005_netcdf: {}".format(namfile))
+    print(f"in export_mf2005_netcdf: {namfile}")
     if namfile in skip:
         return
     m = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=False)
@@ -70,8 +70,8 @@ def export_mf2005_netcdf(namfile):
     if m.dis.botm.shape[0] != m.nlay:
         print("skipping...botm.shape[0] != nlay")
         return
-    assert m, "Could not load namefile {}".format(namfile)
-    msg = "Could not load {} model".format(namfile)
+    assert m, f"Could not load namefile {namfile}"
+    msg = f"Could not load {namfile} model"
     assert isinstance(m, flopy.modflow.Modflow), msg
     export_netcdf(m)
 
@@ -83,61 +83,57 @@ def export_netcdf(m):
         import pyproj
     except:
         return
-    fnc = m.export(os.path.join(npth, m.name + ".nc"))
+    fnc = m.export(os.path.join(npth, f"{m.name}.nc"))
     fnc.write()
-    fnc_name = os.path.join(npth, m.name + ".nc")
+    fnc_name = os.path.join(npth, f"{m.name}.nc")
     try:
         fnc = m.export(fnc_name)
         fnc.write()
     except Exception as e:
-        msg = "ncdf export fail for namfile {}:\n{}  ".format(m.name, str(e))
+        msg = f"ncdf export fail for namfile {m.name}:\n{e!s}  "
         raise Exception(msg)
 
     try:
         nc = netCDF4.Dataset(fnc_name, "r")
     except Exception as e:
-        msg = "ncdf import fail for nc file {}:\n{}".format(fnc_name, str(e))
+        msg = f"ncdf import fail for nc file {fnc_name}:\n{e!s}"
         raise Exception()
     return
 
 
 def export_shapefile(namfile):
-    print("in export_shapefile: {}".format(namfile))
+    print(f"in export_shapefile: {namfile}")
     shp = import_shapefile()
     if shp is None:
         return
 
     m = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=False)
 
-    assert m, "Could not load namefile {}".format(namfile)
-    msg = "Could not load {} model".format(namfile)
+    assert m, f"Could not load namefile {namfile}"
+    msg = f"Could not load {namfile} model"
     assert isinstance(m, flopy.modflow.Modflow), msg
-    fnc_name = os.path.join(spth, m.name + ".shp")
+    fnc_name = os.path.join(spth, f"{m.name}.shp")
 
     try:
         fnc = m.export(fnc_name)
         # fnc2 = m.export(fnc_name, package_names=None)
         # fnc3 = m.export(fnc_name, package_names=['DIS'])
     except Exception as e:
-        msg = "shapefile export fail for namfile {}:\n{}".format(
-            namfile, str(e)
-        )
+        msg = f"shapefile export fail for namfile {namfile}:\n{e!s}"
         raise Exception(msg)
 
     try:
         s = shp.Reader(fnc_name)
     except Exception as e:
-        msg = "shapefile import fail for {}:\n{}".format(fnc_name, str(e))
+        msg = f"shapefile import fail for {fnc_name}:\n{e!s}"
         raise Exception(msg)
-    msg = "wrong number of records in shapefile {}:{:d}".format(
-        fnc_name, s.numRecords
-    )
+    msg = f"wrong number of records in shapefile {fnc_name}:{s.numRecords}"
     assert s.numRecords == m.nrow * m.ncol, msg
     return
 
 
 def export_shapefile_modelgrid_override(namfile):
-    print("in export_modelgrid_override: {}".format(namfile))
+    print(f"in export_modelgrid_override: {namfile}")
     shp = import_shapefile()
     if shp is None:
         return
@@ -160,9 +156,9 @@ def export_shapefile_modelgrid_override(namfile):
         angrot=mg0.angrot,
     )
 
-    assert m, "Could not load namefile {}".format(namfile)
+    assert m, f"Could not load namefile {namfile}"
     assert isinstance(m, flopy.modflow.Modflow)
-    fnc_name = os.path.join(spth, m.name + ".shp")
+    fnc_name = os.path.join(spth, f"{m.name}.shp")
 
     try:
         fnc = m.export(fnc_name, modelgrid=modelgrid)
@@ -170,14 +166,12 @@ def export_shapefile_modelgrid_override(namfile):
         # fnc3 = m.export(fnc_name, package_names=['DIS'])
 
     except Exception as e:
-        msg = "shapefile export fail for namfile {}:\n{}".format(
-            namfile, str(e)
-        )
+        msg = f"shapefile export fail for namfile {namfile}:\n{e!s}"
         raise Exception(msg)
     try:
         s = shp.Reader(fnc_name)
     except Exception as e:
-        msg = "shapefile import fail for {}:{}".format(fnc_name, str(e))
+        msg = f"shapefile import fail for {fnc_name}:{e!s}"
         raise Exception(msg)
 
 
@@ -216,10 +210,10 @@ def test_freyberg_export():
         namfile, model_ws=model_ws, check=False, verbose=False
     )
     # test export at model, package and object levels
-    m.export("{}/model.shp".format(spth))
-    m.wel.export("{}/wel.shp".format(spth))
-    m.lpf.hk.export("{}/hk.shp".format(spth))
-    m.riv.stress_period_data.export("{}/riv_spd.shp".format(spth))
+    m.export(f"{spth}/model.shp")
+    m.wel.export(f"{spth}/wel.shp")
+    m.lpf.hk.export(f"{spth}/hk.shp")
+    m.riv.stress_period_data.export(f"{spth}/riv_spd.shp")
 
     # transient
     # (doesn't work at model level because the total size of
@@ -232,7 +226,7 @@ def test_freyberg_export():
         load_only=["DIS", "BAS6", "NWT", "OC", "RCH", "WEL", "DRN", "UPW"],
     )
     # test export without instantiating an sr
-    outshp = os.path.join(spth, namfile[:-4] + "_drn_sparse.shp")
+    outshp = os.path.join(spth, f"{namfile[:-4]}_drn_sparse.shp")
     m.drn.stress_period_data.export(outshp, sparse=True)
     assert os.path.exists(outshp)
     remove_shp(outshp)
@@ -261,7 +255,7 @@ def test_freyberg_export():
     # if wkt text was fetched from spatialreference.org
     if wkt is not None:
         # test default package export
-        outshp = os.path.join(spth, namfile[:-4] + "_dis.shp")
+        outshp = os.path.join(spth, f"{namfile[:-4]}_dis.shp")
         m.dis.export(outshp)
         prjfile = outshp.replace(".shp", ".prj")
         with open(prjfile) as src:
@@ -270,7 +264,7 @@ def test_freyberg_export():
         remove_shp(outshp)
 
         # test default package export to higher level dir
-        outshp = os.path.join(spth, namfile[:-4] + "_dis.shp")
+        outshp = os.path.join(spth, f"{namfile[:-4]}_dis.shp")
         m.dis.export(outshp)
         prjfile = outshp.replace(".shp", ".prj")
         with open(prjfile) as src:
@@ -279,7 +273,7 @@ def test_freyberg_export():
         remove_shp(outshp)
 
         # test sparse package export
-        outshp = os.path.join(spth, namfile[:-4] + "_drn_sparse.shp")
+        outshp = os.path.join(spth, f"{namfile[:-4]}_drn_sparse.shp")
         m.drn.stress_period_data.export(outshp, sparse=True)
         prjfile = outshp.replace(".shp", ".prj")
         assert os.path.exists(prjfile)
@@ -697,14 +691,14 @@ def test_twri_mg():
         mg, flopy.discretization.StructuredGrid
     ), "modelgrid is not an StructuredGrid instance"
     shape = (3, 15, 15)
-    assert mg.shape == shape, "modelgrid shape {} not equal to {}".format(
-        mg.shape, shape
-    )
+    assert (
+        mg.shape == shape
+    ), f"modelgrid shape {mg.shape} not equal to {shape}"
     thick = mg.thick
     shape = (5, 15, 15)
-    assert thick.shape == shape, "thickness shape {} not equal to {}".format(
-        thick.shape, shape
-    )
+    assert (
+        thick.shape == shape
+    ), f"thickness shape {thick.shape} not equal to {shape}"
     return
 
 
@@ -802,12 +796,12 @@ def test_epsgs():
     mg = flopy.discretization.StructuredGrid(delr=delr, delc=delc)
 
     mg.epsg = 102733
-    assert mg.epsg == 102733, "mg.epsg is not 102733 ({})".format(mg.epsg)
+    assert mg.epsg == 102733, f"mg.epsg is not 102733 ({mg.epsg})"
 
     t_value = mg.__repr__()
     if not "proj4_str:epsg:102733" in t_value:
         raise AssertionError(
-            "proj4_str:epsg:102733 not in mg.__repr__(): ({})".format(t_value)
+            f"proj4_str:epsg:102733 not in mg.__repr__(): ({t_value})"
         )
 
     mg.epsg = 4326  # WGS 84
@@ -817,12 +811,12 @@ def test_epsgs():
         t_value = crs.grid_mapping_attribs["grid_mapping_name"]
         assert (
             t_value == "latitude_longitude"
-        ), "grid_mapping_name is not latitude_longitude: {}".format(t_value)
+        ), f"grid_mapping_name is not latitude_longitude: {t_value}"
 
     t_value = mg.__repr__()
     if not "proj4_str:epsg:4326" in t_value:
         raise AssertionError(
-            "proj4_str:epsg:4326 not in sr.__repr__(): ({})".format(t_value)
+            f"proj4_str:epsg:4326 not in sr.__repr__(): ({t_value})"
         )
 
 
@@ -839,12 +833,8 @@ def test_dynamic_xll_yll():
     ms2.modelgrid.set_coord_info(xoff=xll, yoff=yll, angrot=30.0)
     xll1, yll1 = ms2.modelgrid.xoffset, ms2.modelgrid.yoffset
 
-    assert xll1 == xll, "modelgrid.xoffset ({}) is not equal to {}".format(
-        xll1, xll
-    )
-    assert yll1 == yll, "modelgrid.yoffset ({}) is not equal to {}".format(
-        yll1, yll
-    )
+    assert xll1 == xll, f"modelgrid.xoffset ({xll1}) is not equal to {xll}"
+    assert yll1 == yll, f"modelgrid.yoffset ({yll1}) is not equal to {yll}"
 
     # check that xll, yll are being recomputed
     xll += 10.0
@@ -852,12 +842,8 @@ def test_dynamic_xll_yll():
     ms2.modelgrid.set_coord_info(xoff=xll, yoff=yll, angrot=30.0)
     xll1, yll1 = ms2.modelgrid.xoffset, ms2.modelgrid.yoffset
 
-    assert xll1 == xll, "modelgrid.xoffset ({}) is not equal to {}".format(
-        xll1, xll
-    )
-    assert yll1 == yll, "modelgrid.yoffset ({}) is not equal to {}".format(
-        yll1, yll
-    )
+    assert xll1 == xll, f"modelgrid.xoffset ({xll1}) is not equal to {xll}"
+    assert yll1 == yll, f"modelgrid.yoffset ({yll1}) is not equal to {yll}"
 
 
 def test_namfile_readwrite():
@@ -886,21 +872,14 @@ def test_namfile_readwrite():
     m2 = fm.Modflow.load("junk.nam", model_ws=os.path.join("temp", "t007"))
 
     t_value = abs(m2.modelgrid.xoffset - xll)
-    msg = "m2.modelgrid.xoffset ({}) does not equal {}".format(
-        m2.modelgrid.xoffset, xll
-    )
+    msg = f"m2.modelgrid.xoffset ({m2.modelgrid.xoffset}) does not equal {xll}"
     assert t_value < 1e-2, msg
 
     t_value = abs(m2.modelgrid.yoffset - yll)
-    msg = "m2.modelgrid.yoffset ({}) does not equal {}".format(
-        m2.modelgrid.yoffset, yll
-    )
+    msg = f"m2.modelgrid.yoffset ({m2.modelgrid.yoffset}) does not equal {yll}"
     assert t_value < 1e-2
 
-    msg = (
-        "m2.modelgrid.angrot ({}) ".format(m2.modelgrid.angrot)
-        + "does not equal 30"
-    )
+    msg = f"m2.modelgrid.angrot ({m2.modelgrid.angrot}) does not equal 30"
     assert m2.modelgrid.angrot == 30, msg
 
     model_ws = os.path.join(
@@ -971,8 +950,8 @@ def test_read_usgs_model_reference():
     assert m2.modelgrid.epsg == mg.epsg
 
     # test reading non-default units from usgs.model.reference
-    shutil.copy(mrf, mrf + "_copy")
-    with open(mrf + "_copy") as src:
+    shutil.copy(mrf, f"{mrf}_copy")
+    with open(f"{mrf}_copy") as src:
         with open(mrf, "w") as dst:
             for line in src:
                 if "epsg" in line:
@@ -984,7 +963,7 @@ def test_read_usgs_model_reference():
 
     assert m2.modelgrid.epsg == 4326
     # have to delete this, otherwise it will mess up other tests
-    to_del = glob.glob(mrf + "*")
+    to_del = glob.glob(f"{mrf}*")
     for f in to_del:
         if os.path.exists(f):
             os.remove(os.path.join(f))
@@ -1345,14 +1324,14 @@ def test_get_lrc_get_node():
     for node, (l, r, c) in enumerate(zip(layers, rows, cols)):
         # ensure get_lrc returns zero-based layer row col
         lrc = dis.get_lrc(node)[0]
-        assert lrc == (l, r, c), "get_lrc() returned {}, expecting {}".format(
-            lrc, (l, r, c)
-        )
+        assert lrc == (
+            l,
+            r,
+            c,
+        ), f"get_lrc() returned {lrc}, expecting {l, r, c}"
         # ensure get_node returns zero-based node number
         n = dis.get_node((l, r, c))[0]
-        assert node == n, "get_node() returned {}, expecting {}".format(
-            n, node
-        )
+        assert node == n, f"get_node() returned {n}, expecting {node}"
     return
 
 
@@ -1383,17 +1362,13 @@ def test_model_dot_plot():
     )
     ax = ml.plot()
     assert isinstance(ax, list), "ml.plot() ax is is not a list"
-    assert len(ax) == 18, "number of axes ({}) is " "not equal to 18".format(
-        len(ax)
-    )
+    assert len(ax) == 18, f"number of axes ({len(ax)}) is not equal to 18"
     plt.close("all")
 
     # plot specific dataset
     ax = ml.bcf6.hy.plot()
     assert isinstance(ax, list), "ml.bcf6.hy.plot() ax is is not a list"
-    assert len(ax) == 2, "number of hy axes ({}) " "is not equal to 2".format(
-        len(ax)
-    )
+    assert len(ax) == 2, f"number of hy axes ({len(ax)}) is not equal to 2"
 
     # special case where nlay != plottable
     ax = ml.bcf6.vcont.plot()
@@ -1428,12 +1403,8 @@ def test_get_rc_from_node_coordinates():
             x = xgrid[j]
             y = ygrid[i]
             r, c = mfdis.get_rc_from_node_coordinates(x, y)
-            assert r == i, "row {} not equal {} for xy ({}, {})".format(
-                r, i, x, y
-            )
-            assert c == j, "col {} not equal {} for xy ({}, {})".format(
-                c, j, x, y
-            )
+            assert r == i, f"row {r} not equal {i} for xy ({x}, {y})"
+            assert c == j, f"col {c} not equal {j} for xy ({x}, {y})"
 
 
 def test_netcdf_classmethods():
@@ -1519,7 +1490,7 @@ def test_shapefile_ibound():
     shp = shapefile.Reader(shape_name)
     field_names = [item[0] for item in shp.fields][1:]
     ib_idx = field_names.index("ibound_1")
-    txt = "should be int instead of {0}".format(type(shp.record(0)[ib_idx]))
+    txt = f"should be int instead of {type(shp.record(0)[ib_idx])}"
     assert type(shp.record(0)[ib_idx]) == int, txt
 
 

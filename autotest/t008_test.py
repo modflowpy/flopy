@@ -38,7 +38,7 @@ def load_model(namfile):
     m = flopy.modflow.Modflow.load(
         namfile, model_ws=pth, version="mf2005", verbose=True
     )
-    assert m, "Could not load namefile {}".format(namfile)
+    assert m, f"Could not load namefile {namfile}"
     assert m.load_fail is False
 
 
@@ -46,7 +46,7 @@ def load_parameter_model(namfile):
     m = flopy.modflow.Modflow.load(
         namfile, model_ws=ppth, version="mf2005", verbose=True
     )
-    assert m, "Could not load namefile {}".format(namfile)
+    assert m, f"Could not load namefile {namfile}"
     assert m.load_fail is False
 
 
@@ -59,7 +59,7 @@ def load_only_bas6_model(namfile):
         load_only=["bas6"],
         check=False,
     )
-    assert m, "Could not load namefile {}".format(namfile)
+    assert m, f"Could not load namefile {namfile}"
     assert m.load_fail is False
 
 
@@ -93,7 +93,7 @@ def test_nwt_model_load():
 
 def load_nwt(nwtfile):
     ml = flopy.modflow.Modflow(model_ws=tpth, version="mfnwt")
-    fn = os.path.join(tpth, "{}.nwt".format(ml.name))
+    fn = os.path.join(tpth, f"{ml.name}.nwt")
     if os.path.isfile(fn):
         os.remove(fn)
     if "fmt." in nwtfile.lower():
@@ -102,11 +102,11 @@ def load_nwt(nwtfile):
         ml.array_free_format = True
 
     nwt = flopy.modflow.ModflowNwt.load(nwtfile, ml)
-    msg = "{} load unsuccessful".format(os.path.basename(nwtfile))
+    msg = f"{os.path.basename(nwtfile)} load unsuccessful"
     assert isinstance(nwt, flopy.modflow.ModflowNwt), msg
 
     nwt.write_file()
-    msg = "{} write unsuccessful".format(os.path.basename(nwtfile))
+    msg = f"{os.path.basename(nwtfile)} write unsuccessful"
     assert os.path.isfile(fn), msg
 
     ml2 = flopy.modflow.Modflow(model_ws=tpth, version="mfnwt")

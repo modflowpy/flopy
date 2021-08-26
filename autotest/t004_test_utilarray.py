@@ -336,7 +336,7 @@ def stress_util2d(ml, nlay, nrow, ncol):
     # save hk up one dir from model_ws
     fnames = []
     for i, h in enumerate(hk):
-        fname = os.path.join(out_dir, "test_{0}.ref".format(i))
+        fname = os.path.join(out_dir, f"test_{i}.ref")
         fnames.append(fname)
         np.savetxt(fname, h, fmt="%15.6e", delimiter="")
         vk[i] = i + 1.0
@@ -406,7 +406,7 @@ def stress_util2d_for_joe_the_file_king(ml, nlay, nrow, ncol):
     # save hk up one dir from model_ws
     fnames = []
     for i, h in enumerate(hk):
-        fname = os.path.join("test_{0}.ref".format(i))
+        fname = os.path.join(f"test_{i}.ref")
         fnames.append(fname)
         np.savetxt(fname, h, fmt="%15.6e", delimiter="")
         vk[i] = i + 1.0
@@ -746,7 +746,7 @@ def test_mflist():
             .to_records(index=True)
             .astype(data.dtype)
         )
-        errmsg = "data not equal:\n  {}\n  {}".format(dfdata, data)
+        errmsg = f"data not equal:\n  {dfdata}\n  {data}"
         assert np.array_equal(dfdata, data), errmsg
 
     m4ds = ml.wel.stress_period_data.masked_4D_arrays

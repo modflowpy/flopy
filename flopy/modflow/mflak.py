@@ -387,9 +387,7 @@ class ModflowLak(Package):
         elif isinstance(stages, list):
             stages = np.array(stages)
         if stages.shape[0] != nlakes:
-            err = "stages shape should be ({}) but is only ({}).".format(
-                nlakes, stages.shape[0]
-            )
+            err = f"stages shape should be ({nlakes}) but is only ({stages.shape[0]})."
             raise Exception(err)
         self.stages = stages
         if stage_range is None:
@@ -401,8 +399,7 @@ class ModflowLak(Package):
                 stage_range = np.array(stage_range)
             elif isinstance(stage_range, float):
                 raise Exception(
-                    "stage_range should be a list or "
-                    "array of size ({}, 2)".format(nlakes)
+                    f"stage_range should be a list or array of size ({nlakes}, 2)"
                 )
         if self.parent.dis.steady[0]:
             if stage_range.shape != (nlakes, 2):
@@ -451,8 +448,7 @@ class ModflowLak(Package):
                     flux_data[key] = td
                     if len(list(flux_data.keys())) != nlakes:
                         raise Exception(
-                            "flux_data dictionary must "
-                            "have {} entries".format(nlakes)
+                            f"flux_data dictionary must have {nlakes} entries"
                         )
                 elif isinstance(value, float) or isinstance(value, int):
                     td = {}
@@ -570,7 +566,7 @@ class ModflowLak(Package):
             else:
                 tmplwrt = self.lwrt
             t = [itmp, itmp2, tmplwrt]
-            comment = "Stress period {}".format(kper + 1)
+            comment = f"Stress period {kper + 1}"
             f.write(
                 write_fixed_var(
                     t, free=self.parent.free_format_input, comment=comment
@@ -760,8 +756,7 @@ class ModflowLak(Package):
         for iper in range(nper):
             if model.verbose:
                 print(
-                    "   reading lak dataset 4 - "
-                    "for stress period {}".format(iper + 1)
+                    f"   reading lak dataset 4 - for stress period {iper + 1}"
                 )
             line = f.readline().rstrip()
             if model.array_free_format:
@@ -774,19 +769,17 @@ class ModflowLak(Package):
             if itmp > 0:
                 if model.verbose:
                     print(
-                        "   reading lak dataset 5 - "
-                        "for stress period {}".format(iper + 1)
+                        f"   reading lak dataset 5 - for stress period {iper + 1}"
                     )
-                name = "LKARR_StressPeriod_{}".format(iper)
+                name = f"LKARR_StressPeriod_{iper}"
                 lakarr = Util3d.load(
                     f, model, (nlay, nrow, ncol), np.int32, name, ext_unit_dict
                 )
                 if model.verbose:
                     print(
-                        "   reading lak dataset 6 - "
-                        "for stress period {}".format(iper + 1)
+                        f"   reading lak dataset 6 - for stress period {iper + 1}"
                     )
-                name = "BDLKNC_StressPeriod_{}".format(iper)
+                name = f"BDLKNC_StressPeriod_{iper}"
                 bdlknc = Util3d.load(
                     f,
                     model,
@@ -801,8 +794,7 @@ class ModflowLak(Package):
 
                 if model.verbose:
                     print(
-                        "   reading lak dataset 7 - "
-                        "for stress period {}".format(iper + 1)
+                        f"   reading lak dataset 7 - for stress period {iper + 1}"
                     )
                 line = f.readline().rstrip()
                 t = line.split()
@@ -811,8 +803,7 @@ class ModflowLak(Package):
                 if nslms > 0:
                     if model.verbose:
                         print(
-                            "   reading lak dataset 8 - "
-                            "for stress period {}".format(iper + 1)
+                            f"   reading lak dataset 8 - for stress period {iper + 1}"
                         )
                     for i in range(nslms):
                         line = f.readline().rstrip()
@@ -838,8 +829,7 @@ class ModflowLak(Package):
             if itmp1 >= 0:
                 if model.verbose:
                     print(
-                        "   reading lak dataset 9 - "
-                        "for stress period {}".format(iper + 1)
+                        f"   reading lak dataset 9 - for stress period {iper + 1}"
                     )
                 ds9 = {}
                 for n in range(nlakes):

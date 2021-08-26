@@ -344,14 +344,10 @@ class PyListUtil:
                             if index < len_cl:
                                 item = clean_line[index]
                                 if item[-1] in PyListUtil.quote_list:
-                                    arr_fixed_line[-1] = "{} {}".format(
-                                        arr_fixed_line[-1], item[:-1]
-                                    )
+                                    arr_fixed_line[-1] += f" {item[:-1]}"
                                     break
                                 else:
-                                    arr_fixed_line[-1] = "{} {}".format(
-                                        arr_fixed_line[-1], item
-                                    )
+                                    arr_fixed_line[-1] += f" {item}"
                 else:
                     # no quote, just append
                     arr_fixed_line.append(item)
@@ -392,13 +388,13 @@ class PyListUtil:
     def save_array(self, filename, multi_array):
         file_path = os.path.join(self.path, filename)
         with open(file_path, "w") as outfile:
-            outfile.write("{}\n".format(str(multi_array.shape)))
+            outfile.write(f"{multi_array.shape}\n")
             if len(multi_array.shape) == 4:
                 for slice in multi_array:
                     for second_slice in slice:
                         for third_slice in second_slice:
                             for item in third_slice:
-                                outfile.write(" {:10.3e}".format(item))
+                                outfile.write(f" {item:10.3e}")
                             outfile.write("\n")
                         outfile.write("\n")
                     outfile.write("\n")
@@ -738,7 +734,7 @@ class NameIter:
         if self.iter_num == 0 and self.first_not_numbered:
             return self.name
         else:
-            return "{}_{}".format(self.name, self.iter_num)
+            return f"{self.name}_{self.iter_num}"
 
 
 class PathIter:

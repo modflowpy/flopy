@@ -261,7 +261,7 @@ def test_filenames():
     modelname = "hob_simple"
     pkglst = ["dis", "bas6", "pcg", "lpf"]
     m = flopy.modflow.Modflow.load(
-        modelname + ".nam",
+        f"{modelname}.nam",
         model_ws=pth,
         check=False,
         load_only=pkglst,
@@ -277,8 +277,8 @@ def test_filenames():
         column=5,
         time_series_data=[[1.0, 54.4], [2.0, 55.2]],
     )
-    f_in = modelname + "_custom_fname.hob"
-    f_out = modelname + "_custom_fname.hob.out"
+    f_in = f"{modelname}_custom_fname.hob"
+    f_out = f"{modelname}_custom_fname.hob.out"
     filenames = [f_in, f_out]
     hob = flopy.modflow.ModflowHob(
         m,
@@ -292,9 +292,7 @@ def test_filenames():
     # Write the model input files
     m.write_input()
 
-    s = "output filename ({}) does not match specified name".format(
-        m.get_output(unit=51)
-    )
+    s = f"output filename ({m.get_output(unit=51)}) does not match specified name"
     assert m.get_output(unit=51) == f_out, s
     s = "specified HOB input file not found"
     assert os.path.isfile(os.path.join(pth, f_in)), s
@@ -453,23 +451,23 @@ def test_flwob_load():
     )
 
     # check variables were read properly
-    s = "nqfb loaded from {} read incorrectly".format(m.drob.fn_path)
+    s = f"nqfb loaded from {m.drob.fn_path} read incorrectly"
     assert drob.nqfb == m.drob.nqfb, s
-    s = "nqcfb loaded from {} read incorrectly".format(m.drob.fn_path)
+    s = f"nqcfb loaded from {m.drob.fn_path} read incorrectly"
     assert drob.nqcfb == m.drob.nqcfb, s
-    s = "nqtfb loaded from {} read incorrectly".format(m.drob.fn_path)
+    s = f"nqtfb loaded from {m.drob.fn_path} read incorrectly"
     assert drob.nqtfb == m.drob.nqtfb, s
-    s = "obsnam loaded from {} read incorrectly".format(m.drob.fn_path)
+    s = f"obsnam loaded from {m.drob.fn_path} read incorrectly"
     assert list([n for n in drob.obsnam]) == list(
         [n for n in m.drob.obsnam]
     ), s
-    s = "flwobs loaded from {} read incorrectly".format(m.drob.fn_path)
+    s = f"flwobs loaded from {m.drob.fn_path} read incorrectly"
     assert np.array_equal(drob.flwobs, m.drob.flwobs), s
-    s = "layer loaded from {} read incorrectly".format(m.drob.fn_path)
+    s = f"layer loaded from {m.drob.fn_path} read incorrectly"
     assert np.array_equal(drob.layer, m.drob.layer), s
-    s = "row loaded from {} read incorrectly".format(m.drob.fn_path)
+    s = f"row loaded from {m.drob.fn_path} read incorrectly"
     assert np.array_equal(drob.row, m.drob.row), s
-    s = "column loaded from {} read incorrectly".format(m.drob.fn_path)
+    s = f"column loaded from {m.drob.fn_path} read incorrectly"
     assert np.array_equal(drob.column, m.drob.column), s
 
     return

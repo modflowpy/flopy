@@ -61,7 +61,7 @@ def run(silent=False):
                 if os.path.isdir(fpth):
                     continue
                 if ".py" != os.path.splitext(f)[1].lower():
-                    print("  removing...{}".format(os.path.basename(f)))
+                    print(f"  removing...{os.path.basename(f)}")
                     try:
                         os.remove(fpth)
                     except:
@@ -144,7 +144,7 @@ def run(silent=False):
     for k in range(0, nlay):
         if zall[k] > -20.0 and zall[k + 1] <= -20:
             nwell = k + 1
-    print("nlay={} dz={} nwell={}".format(nlay, dz, nwell))
+    print(f"nlay={nlay} dz={dz} nwell={nwell}")
     wellQ = -2400.0
     wellbtm = -20.0
     wellQpm = wellQ / abs(wellbtm)
@@ -243,7 +243,7 @@ def run(silent=False):
     get_stp = [364, 729, 1094, 1459, 364, 729, 1094, 1459]
     get_per = [0, 0, 0, 0, 1, 1, 1, 1]
     nswi_times = len(get_per)
-    zetafile = os.path.join(dirs[0], "{}.zta".format(modelname))
+    zetafile = os.path.join(dirs[0], f"{modelname}.zta")
     zobj = flopy.utils.CellBudgetFile(zetafile)
     zeta = []
     for kk in zip(get_stp, get_per):
@@ -309,7 +309,7 @@ def run(silent=False):
     for k in range(0, nlay_swt):
         if bot[k, 0, 0] >= -20.0:
             nwell = k + 1
-    print("nlay_swt={} dz={} nwell={}".format(nlay_swt, dz, nwell))
+    print(f"nlay_swt={nlay_swt} dz={dz} nwell={nwell}")
     well_data = {}
     ssm_data = {}
     wellQ = -2400.0
@@ -531,8 +531,8 @@ def run(silent=False):
         for icol in range(0, ncol):
             for klay in range(0, nlay):
                 # top and bottom of layer
-                ztop = float("{0:10.3e}".format(zall[klay]))
-                zbot = float("{0:10.3e}".format(zall[klay + 1]))
+                ztop = float(f"{zall[klay]:10.3e}")
+                zbot = float(f"{zall[klay + 1]:10.3e}")
                 # fresh-salt zeta surface
                 zt = zeta[itime, klay, 0, icol]
                 if (ztop - zt) > eps:
@@ -609,9 +609,9 @@ def run(silent=False):
             ax = axes.flatten()[isp]
         iyr = itime + 1
         if iyr > 1:
-            ctxt = "{} years".format(iyr)
+            ctxt = f"{iyr} years"
         else:
-            ctxt = "{} year".format(iyr)
+            ctxt = f"{iyr} year"
         ax.text(
             0.95,
             0.925,
@@ -622,7 +622,7 @@ def run(silent=False):
             size="8",
         )
 
-    outfig = os.path.join(workspace, "Figure11_swi2ex5.{0}".format(fext))
+    outfig = os.path.join(workspace, f"Figure11_swi2ex5.{fext}")
     xsf.savefig(outfig, dpi=300)
     print("created...", outfig)
 

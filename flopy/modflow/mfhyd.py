@@ -184,10 +184,10 @@ class ModflowHyd(Package):
         obs = ModflowHyd.get_empty(nhyd)
         if isinstance(obsdata, list):
             if len(obsdata) != nhyd:
-                e = "ModflowHyd: nhyd ({}) does not equal ".format(
-                    nhyd
-                ) + "length of obsdata ({}).".format(len(obsdata))
-                raise RuntimeError(e)
+                raise RuntimeError(
+                    f"ModflowHyd: nhyd ({nhyd}) does not equal "
+                    f"length of obsdata ({len(obsdata)})."
+                )
             for idx in range(nhyd):
                 obs["pckg"][idx] = obsdata[idx][0]
                 obs["arr"][idx] = obsdata[idx][1]
@@ -240,21 +240,17 @@ class ModflowHyd(Package):
         f = open(self.fn_path, "w")
 
         # write dataset 1
-        f.write(
-            "{} {} {} {}\n".format(
-                self.nhyd, self.ihydun, self.hydnoh, self.heading
-            )
-        )
+        f.write(f"{self.nhyd} {self.ihydun} {self.hydnoh} {self.heading}\n")
 
         # write dataset 2
         for idx in range(self.nhyd):
-            f.write("{} ".format(self.obsdata["pckg"][idx].decode()))
-            f.write("{} ".format(self.obsdata["arr"][idx].decode()))
-            f.write("{} ".format(self.obsdata["intyp"][idx].decode()))
-            f.write("{} ".format(self.obsdata["klay"][idx] + 1))
-            f.write("{} ".format(self.obsdata["xl"][idx]))
-            f.write("{} ".format(self.obsdata["yl"][idx]))
-            f.write("{} ".format(self.obsdata["hydlbl"][idx].decode()))
+            f.write(f"{self.obsdata['pckg'][idx].decode()} ")
+            f.write(f"{self.obsdata['arr'][idx].decode()} ")
+            f.write(f"{self.obsdata['intyp'][idx].decode()} ")
+            f.write(f"{self.obsdata['klay'][idx] + 1} ")
+            f.write(f"{self.obsdata['xl'][idx]} ")
+            f.write(f"{self.obsdata['yl'][idx]} ")
+            f.write(f"{self.obsdata['hydlbl'][idx].decode()} ")
             f.write("\n")
 
         # close hydmod file

@@ -116,7 +116,7 @@ class PlotUtilities:
 
             model_filename_base = None
             if filename_base is not None:
-                model_filename_base = filename_base + "_" + model_name
+                model_filename_base = f"{filename_base}_{model_name}"
 
             if model.verbose:
                 print("   Plotting Model:   ", model_name)
@@ -131,7 +131,7 @@ class PlotUtilities:
                 key=defaults["key"],
                 initial_fig=ifig,
                 model_name=model_name,
-                **kwargs
+                **kwargs,
             )
 
             if isinstance(caxs, list):
@@ -407,7 +407,7 @@ class PlotUtilities:
                         fignum=fignum,
                         colorbar=colorbar,
                         modelgrid=defaults["modelgrid"],
-                        **kwargs
+                        **kwargs,
                     )
 
                     if ax is not None:
@@ -535,7 +535,7 @@ class PlotUtilities:
         filename_base=None,
         file_extension=None,
         mflay=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot stress period boundary condition (MfList) data for a specified
@@ -655,7 +655,7 @@ class PlotUtilities:
                 filenames=filenames,
                 mflay=mflay,
                 modelgrid=modelgrid,
-                **kwargs
+                **kwargs,
             )
         else:
             arr_dict = mflist.to_array(kper, mask=True)
@@ -664,9 +664,9 @@ class PlotUtilities:
                 arr = arr_dict[key]
             except:
                 err_msg = "Cannot find key to plot\n"
-                err_msg += "  Provided key={}\n  Available keys=".format(key)
+                err_msg += f"  Provided key={key}\n  Available keys="
                 for name, arr in arr_dict.items():
-                    err_msg += "{}, ".format(name)
+                    err_msg += f"{name}, "
                 err_msg += "\n"
                 raise PlotException(err_msg)
 
@@ -677,7 +677,7 @@ class PlotUtilities:
                 filenames=filenames,
                 mflay=mflay,
                 modelgrid=modelgrid,
-                **kwargs
+                **kwargs,
             )
         return axes
 
@@ -688,7 +688,7 @@ class PlotUtilities:
         filename_base=None,
         file_extension=None,
         fignum=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot 2-D model input data
@@ -751,7 +751,7 @@ class PlotUtilities:
             modelgrid = kwargs.pop("modelgrid")
 
         if title is None:
-            title = "{}{}".format(model_name, util2d.name)
+            title = f"{model_name}{util2d.name}"
 
         if file_extension is not None:
             fext = file_extension
@@ -760,7 +760,7 @@ class PlotUtilities:
 
         filename = None
         if filename_base is not None:
-            filename = "{}_{}.{}".format(filename_base, util2d.name, fext)
+            filename = f"{filename_base}_{util2d.name}.{fext}"
 
         axes = PlotUtilities._plot_array_helper(
             util2d.array,
@@ -769,7 +769,7 @@ class PlotUtilities:
             filenames=filename,
             fignum=fignum,
             modelgrid=modelgrid,
-            **kwargs
+            **kwargs,
         )
         return axes
 
@@ -780,7 +780,7 @@ class PlotUtilities:
         file_extension=None,
         mflay=None,
         fignum=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot 3-D model input data
@@ -859,7 +859,7 @@ class PlotUtilities:
             name = [name] * nplottable_layers
 
         names = [
-            "{}{} layer {}".format(model_name, name[k], k + 1)
+            f"{model_name}{name[k]} layer {k + 1}"
             for k in range(nplottable_layers)
         ]
 
@@ -867,7 +867,7 @@ class PlotUtilities:
         if filename_base is not None:
             # build filenames, use local "name" variable (flopy6 adaptation)
             filenames = [
-                "{}_{}_Layer{}.{}".format(filename_base, name[k], k + 1, fext)
+                f"{filename_base}_{name[k]}_Layer{k + 1}.{fext}"
                 for k in range(nplottable_layers)
             ]
 
@@ -879,7 +879,7 @@ class PlotUtilities:
             mflay=mflay,
             fignum=fignum,
             modelgrid=modelgrid,
-            **kwargs
+            **kwargs,
         )
         return axes
 
@@ -890,7 +890,7 @@ class PlotUtilities:
         file_extension=None,
         kper=0,
         fignum=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot transient 2-D model input data
@@ -989,7 +989,7 @@ class PlotUtilities:
             )
 
             if filename_base is not None:
-                filename = filename_base + "_{:05d}.{}".format(kper + 1, fext)
+                filename = f"{filename_base}_{kper + 1:05d}.{fext}"
             else:
                 filename = None
 
@@ -1001,7 +1001,7 @@ class PlotUtilities:
                     filenames=filename,
                     fignum=fignum[idx],
                     modelgrid=modelgrid,
-                    **kwargs
+                    **kwargs,
                 )
             )
         return axes
@@ -1044,7 +1044,7 @@ class PlotUtilities:
         title = scalar.name.replace("_", "").upper()
 
         if filename_base is not None:
-            filename = filename_base + ".{}".format(fext)
+            filename = f"{filename_base}.{fext}"
         else:
             filename = None
 
@@ -1054,7 +1054,7 @@ class PlotUtilities:
             names=title,
             filenames=filename,
             modelgrid=modelgrid,
-            **kwargs
+            **kwargs,
         )
         return axes
 
@@ -1068,7 +1068,7 @@ class PlotUtilities:
         filenames=None,
         fignum=None,
         mflay=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Helper method to plot array objects
@@ -1187,7 +1187,7 @@ class PlotUtilities:
                     plotarray,
                     masked_values=defaults["masked_values"],
                     ax=axes[idx],
-                    **kwargs
+                    **kwargs,
                 )
 
                 if defaults["colorbar"]:
@@ -1203,7 +1203,7 @@ class PlotUtilities:
                     ax=axes[idx],
                     colors=defaults["colors"],
                     levels=defaults["levels"],
-                    **kwargs
+                    **kwargs,
                 )
                 if defaults["clabel"]:
                     axes[idx].clabel(cl, fmt=defaults["fmt"], **kwargs)
@@ -1222,9 +1222,7 @@ class PlotUtilities:
             for idx, k in enumerate(range(i0, i1)):
                 fig = plt.figure(num=fignum[idx])
                 fig.savefig(filenames[idx], dpi=defaults["dpi"])
-                print(
-                    "    created...{}".format(os.path.basename(filenames[idx]))
-                )
+                print(f"    created...{os.path.basename(filenames[idx])}")
             # there will be nothing to return when done
             axes = None
             plt.close("all")
@@ -1240,7 +1238,7 @@ class PlotUtilities:
         filenames=None,
         fignum=None,
         mflay=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Helper method to plot bc objects from flopy packages
@@ -1341,9 +1339,7 @@ class PlotUtilities:
                 fig = plt.figure(num=fignum[idx])
                 fig.savefig(filenames[idx], dpi=defaults["dpi"])
                 plt.close(fignum[idx])
-                print(
-                    "    created...{}".format(os.path.basename(filenames[idx]))
-                )
+                print(f"    created...{os.path.basename(filenames[idx])}")
             # there will be nothing to return when done
             axes = None
             plt.close("all")
@@ -1404,13 +1400,10 @@ class PlotUtilities:
         if names is not None:
             if not isinstance(names, list):
                 if maxlay > 1:
-                    names = [
-                        "{} layer {}".format(names, i + 1)
-                        for i in range(maxlay)
-                    ]
+                    names = [f"{names} layer {i + 1}" for i in range(maxlay)]
                 else:
                     names = [names]
-            msg = "{} /= {}: {}".format(len(names), maxlay, names)
+            msg = f"{len(names)} /= {maxlay}: {names}"
             assert len(names) == maxlay, msg
         return names
 
@@ -1440,7 +1433,7 @@ class PlotUtilities:
         if fignum is not None:
             if not isinstance(fignum, list):
                 fignum = [fignum]
-            msg = "{} /= {}".format(len(fignum), maxlay)
+            msg = f"{len(fignum)} /= {maxlay}"
             assert len(fignum) == maxlay, msg
             # check for existing figures
             f0 = fignum[0]
@@ -1504,7 +1497,7 @@ class PlotUtilities:
                     klay = k
                     if mflay is not None:
                         klay = int(mflay)
-                    title = "{} Layer {}".format("data", klay + 1)
+                    title = f"data Layer {klay + 1}"
                 ax.set_title(title)
                 axes.append(ax)
 
@@ -2239,7 +2232,7 @@ def plot_shapefile(
     a=None,
     masked_values=None,
     idx=None,
-    **kwargs
+    **kwargs,
 ):
     """
     Generic function for plotting a shapefile.
@@ -2370,7 +2363,7 @@ def plot_cvfd(
     facecolor="scaled",
     a=None,
     masked_values=None,
-    **kwargs
+    **kwargs,
 ):
     """
     Generic function for plotting a control volume finite difference grid of
@@ -2637,7 +2630,7 @@ def advanced_package_bc_helper(pkg, modelgrid, kper):
             idx = np.array(idx)
     else:
         raise NotImplementedError(
-            "Pkg {} not implemented for bc plotting".format(pkg.package_type)
+            f"Pkg {pkg.package_type} not implemented for bc plotting"
         )
     return idx
 

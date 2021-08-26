@@ -274,7 +274,7 @@ class ModflowRch(Package):
                         type="Warning", value=R_T.min(), desc=txt
                     )
                     chk.remove_passed(
-                        "Mean R/T is between {} and {}".format(RTmin, RTmax)
+                        f"Mean R/T is between {RTmin} and {RTmax}"
                     )
 
                 if len(greaterthan) > 0:
@@ -287,11 +287,11 @@ class ModflowRch(Package):
                         type="Warning", value=R_T.max(), desc=txt
                     )
                     chk.remove_passed(
-                        "Mean R/T is between {} and {}".format(RTmin, RTmax)
+                        f"Mean R/T is between {RTmin} and {RTmax}"
                     )
                 elif len(lessthan) == 0 and len(greaterthan) == 0:
                     chk.append_passed(
-                        "Mean R/T is between {} and {}".format(RTmin, RTmax)
+                        f"Mean R/T is between {RTmin} and {RTmax}"
                     )
 
         # check for NRCHOP values != 3
@@ -334,7 +334,7 @@ class ModflowRch(Package):
         # allows turning off package checks when writing files at model level
         if check:
             self.check(
-                f="{}.chk".format(self.name[0]),
+                f=f"{self.name[0]}.chk",
                 verbose=self.parent.verbose,
                 level=1,
             )
@@ -344,8 +344,8 @@ class ModflowRch(Package):
             f_rch = f
         else:
             f_rch = open(self.fn_path, "w")
-        f_rch.write("{0:s}\n".format(self.heading))
-        f_rch.write("{0:10d}{1:10d}\n".format(self.nrchop, self.ipakcb))
+        f_rch.write(f"{self.heading}\n")
+        f_rch.write(f"{self.nrchop:10d}{self.ipakcb:10d}\n")
 
         if self.nrchop == 2:
             irch = {}
@@ -365,7 +365,7 @@ class ModflowRch(Package):
                         for kper, u2d in self.irch.transient_2ds.items()
                     ]
                 )
-                f_rch.write("{0:10d}\n".format(mxndrch))
+                f_rch.write(f"{mxndrch:10d}\n")
 
         for kper in range(nper):
             inrech, file_entry_rech = self.rech.get_kper_entry(kper)
@@ -376,9 +376,7 @@ class ModflowRch(Package):
             else:
                 inirch = -1
             f_rch.write(
-                "{0:10d}{1:10d} # {2:s}\n".format(
-                    inrech, inirch, "Stress period " + str(kper + 1)
-                )
+                f"{inrech:10d}{inirch:10d} # Stress period {kper + 1}\n"
             )
             if inrech >= 0:
                 f_rch.write(file_entry_rech)
@@ -444,8 +442,7 @@ class ModflowRch(Package):
             if npar > 0:
                 if model.verbose:
                     print(
-                        "   Parameters detected. "
-                        "Number of parameters = {}".format(npar)
+                        f"   Parameters detected. Number of parameters = {npar}"
                     )
             line = f.readline()
         # dataset 2
@@ -495,8 +492,7 @@ class ModflowRch(Package):
                 if npar == 0:
                     if model.verbose:
                         print(
-                            "   loading rech stress "
-                            "period {0:3d}...".format(iper + 1)
+                            f"   loading rech stress period {iper + 1:3d}..."
                         )
                     t = Util2d.load(
                         f,
@@ -532,8 +528,7 @@ class ModflowRch(Package):
                 if inirch >= 0:
                     if model.verbose:
                         print(
-                            "   loading irch stress "
-                            "period {0:3d}...".format(iper + 1)
+                            f"   loading irch stress period {iper + 1:3d}..."
                         )
                     t = Util2d.load(
                         f, model, u2d_shape, np.int32, "irch", ext_unit_dict
@@ -571,7 +566,7 @@ class ModflowRch(Package):
         )
         if check:
             rch.check(
-                f="{}.chk".format(rch.name[0]),
+                f=f"{rch.name[0]}.chk",
                 verbose=rch.parent.verbose,
                 level=0,
             )

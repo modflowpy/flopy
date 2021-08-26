@@ -377,8 +377,7 @@ def get_extended_budget(
             matched_name = [s for s in rec_names if budget_term in s]
             if not matched_name:
                 raise RuntimeError(
-                    "Budget term " + budget_term + " not found"
-                    ' in "' + cbcfile + '" file.'
+                    f'Budget term {budget_term} not found in "{cbcfile}" file.'
                 )
             if len(matched_name) > 1:
                 raise RuntimeError(
@@ -696,9 +695,7 @@ def get_specific_discharge(
             qy = tqy / cross_area_y
             qz = tqz / cross_area_z
         else:
-            raise ValueError(
-                '"' + position + '" is not a valid value for ' "position"
-            )
+            raise ValueError(f'"{position}" is not a valid value for position')
         if position == "vertices":
             qx = modelgrid.array_at_verts(qx)
             qy = modelgrid.array_at_verts(qy)

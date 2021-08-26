@@ -155,7 +155,7 @@ class ModflowOc(Package):
         unitnumber=None,
         filenames=None,
         label="LABEL",
-        **kwargs
+        **kwargs,
     ):
 
         """
@@ -393,15 +393,13 @@ class ModflowOc(Package):
                                 chk._add_to_summary(
                                     "Warning",
                                     package="OC",  # value=kperkstp,
-                                    desc="action {!r} ignored; too few words".format(
-                                        action
-                                    ),
+                                    desc=f"action {action!r} ignored; too few words",
                                 )
                             elif words[0:2] not in expected_actions:
                                 chk._add_to_summary(
                                     "Warning",
                                     package="OC",  # value=kperkstp,
-                                    desc="action {!r} ignored".format(action),
+                                    desc=f"action {action!r} ignored",
                                 )
                             # TODO: check data list of layers for some actions
             for kperkstp in keys:
@@ -425,37 +423,31 @@ class ModflowOc(Package):
 
         """
         f_oc = open(self.fn_path, "w")
-        f_oc.write("{}\n".format(self.heading))
+        f_oc.write(f"{self.heading}\n")
 
         # write options
-        line = "HEAD PRINT FORMAT {0:3.0f}\n".format(self.ihedfm)
+        line = f"HEAD PRINT FORMAT {self.ihedfm:3.0f}\n"
         f_oc.write(line)
         if self.chedfm is not None:
-            line = "HEAD SAVE FORMAT {0:20s} {1}\n".format(
-                self.chedfm, self.label
-            )
+            line = f"HEAD SAVE FORMAT {self.chedfm:20s} {self.label}\n"
             f_oc.write(line)
         if self.savehead:
-            line = "HEAD SAVE UNIT {0:5.0f}\n".format(self.iuhead)
+            line = f"HEAD SAVE UNIT {self.iuhead:5.0f}\n"
             f_oc.write(line)
 
-        f_oc.write("DRAWDOWN PRINT FORMAT {0:3.0f}\n".format(self.iddnfm))
+        f_oc.write(f"DRAWDOWN PRINT FORMAT {self.iddnfm:3.0f}\n")
         if self.cddnfm is not None:
-            line = "DRAWDOWN SAVE FORMAT {0:20s} {1}\n".format(
-                self.cddnfm, self.label
-            )
+            line = f"DRAWDOWN SAVE FORMAT {self.cddnfm:20s} {self.label}\n"
             f_oc.write(line)
         if self.saveddn:
-            line = "DRAWDOWN SAVE UNIT {0:5.0f}\n".format(self.iuddn)
+            line = f"DRAWDOWN SAVE UNIT {self.iuddn:5.0f}\n"
             f_oc.write(line)
 
         if self.saveibnd:
             if self.cboufm is not None:
-                line = "IBOUND SAVE FORMAT {0:20s} {1}\n".format(
-                    self.cboufm, self.label
-                )
+                line = f"IBOUND SAVE FORMAT {self.cboufm:20s} {self.label}\n"
                 f_oc.write(line)
-            line = "IBOUND SAVE UNIT {0:5.0f}\n".format(self.iuibnd)
+            line = f"IBOUND SAVE UNIT {self.iuibnd:5.0f}\n"
             f_oc.write(line)
 
         if self.compact:
@@ -491,13 +483,9 @@ class ModflowOc(Package):
                             if "DDREFERENCE" in item.upper():
                                 ddnref = item.lower()
                             else:
-                                lines += "  {}\n".format(item)
+                                lines += f"  {item}\n"
                 if len(lines) > 0:
-                    f_oc.write(
-                        "period {} step {} {}\n".format(
-                            kper + 1, kstp + 1, ddnref
-                        )
-                    )
+                    f_oc.write(f"period {kper + 1} step {kstp + 1} {ddnref}\n")
                     f_oc.write(lines)
                     f_oc.write("\n")
                     ddnref = ""
@@ -807,10 +795,10 @@ class ModflowOc(Package):
 
         # validate the size of nstp
         if len(nstp) != nper:
-            msg = "nstp must be a list with {} entries, ".format(
-                nper
-            ) + "provided nstp list has {} entries.".format(len(nstp))
-            raise IOError(msg)
+            raise IOError(
+                f"nstp must be a list with {nper} entries, "
+                f"provided nstp list has {len(nstp)} entries."
+            )
 
         # initialize
         ihedfm = 0
@@ -903,21 +891,21 @@ class ModflowOc(Package):
                             hdpr, ddpr = int(lnlst[0]), int(lnlst[1])
                             hdsv, ddsv = int(lnlst[2]), int(lnlst[3])
                             if hdpr != 0:
-                                headprint += " {}".format(k + 1)
+                                headprint += f" {k + 1}"
                             if ddpr != 0:
-                                ddnprint += " {}".format(k + 1)
+                                ddnprint += f" {k + 1}"
                             if hdsv != 0:
-                                headsave += " {}".format(k + 1)
+                                headsave += f" {k + 1}"
                             if ddsv != 0:
-                                ddnsave += " {}".format(k + 1)
+                                ddnsave += f" {k + 1}"
                         if len(headprint) > 0:
-                            lines.append("PRINT HEAD" + headprint)
+                            lines.append(f"PRINT HEAD{headprint}")
                         if len(ddnprint) > 0:
-                            lines.append("PRINT DRAWDOWN" + ddnprint)
+                            lines.append(f"PRINT DRAWDOWN{ddnprint}")
                         if len(headsave) > 0:
-                            lines.append("SAVE HEAD" + headsave)
+                            lines.append(f"SAVE HEAD{headsave}")
                         if len(ddnsave) > 0:
-                            lines.append("SAVE DRAWDOWN" + ddnsave)
+                            lines.append(f"SAVE DRAWDOWN{ddnsave}")
                     stress_period_data[(iperoc, itsoc)] = list(lines)
         else:
             iperoc, itsoc = 0, 0
@@ -1024,13 +1012,9 @@ class ModflowOc(Package):
                         stress_period_data[kperkstp] = []
                 # dataset 3
                 elif "PRINT" in lnlst[0].upper():
-                    lines.append(
-                        "{} {}".format(lnlst[0].lower(), lnlst[1].lower())
-                    )
+                    lines.append(f"{lnlst[0].lower()} {lnlst[1].lower()}")
                 elif "SAVE" in lnlst[0].upper():
-                    lines.append(
-                        "{} {}".format(lnlst[0].lower(), lnlst[1].lower())
-                    )
+                    lines.append(f"{lnlst[0].lower()} {lnlst[1].lower()}")
                 else:
                     print("Error encountered in OC import.")
                     print("Creating default OC package.")

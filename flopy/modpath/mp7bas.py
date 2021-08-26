@@ -134,18 +134,16 @@ class Modpath7Bas(Package):
         """
         # Open file for writing
         f = open(self.fn_path, "w")
-        f.write("# {}\n".format(self.heading))
+        f.write(f"# {self.heading}\n")
         if self.parent.flowmodel.version != "mf6":
-            f.write("{:g} {:g}\n".format(self.parent.hnoflo, self.parent.hdry))
+            f.write(f"{self.parent.hnoflo:g} {self.parent.hdry:g}\n")
 
         # default IFACE
-        f.write(
-            "{:<20d}{}\n".format(self.defaultifacecount, "# DEFAULTIFACECOUNT")
-        )
+        f.write(f"{self.defaultifacecount:<20d}# DEFAULTIFACECOUNT\n")
         if self.defaultifacecount > 0:
             for key, value in self.defaultiface.items():
-                f.write("{:20s}{}\n".format(key, "# PACKAGE LABEL"))
-                f.write("{:<20d}{}\n".format(value, "# DEFAULT IFACE VALUE"))
+                f.write(f"{key:20s}# PACKAGE LABEL\n")
+                f.write(f"{value:<20d}# DEFAULT IFACE VALUE\n")
 
         # laytyp
         if self.parent.flow_version != "mf6":

@@ -80,9 +80,7 @@ class SfrFile:
                     break
         if not evaluated_format:
             raise ValueError(
-                "could not evaluate format of {!r} for SfrFile".format(
-                    self.filename
-                )
+                f"could not evaluate format of {self.filename!r} for SfrFile"
             )
         # all outputs start with the same 15 columns
         self.names = [
@@ -259,5 +257,5 @@ class SfrFile:
                 if len(srresults) > 0:
                     results = results.append(srresults)
                 else:
-                    print("No results for segment {}, reach {}!".format(s, r))
+                    print(f"No results for segment {s}, reach {r}!")
         return results

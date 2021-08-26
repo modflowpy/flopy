@@ -28,26 +28,26 @@ def build_model():
         ml.run_model()
 
         hds_geo = flopy.utils.HeadFile(
-            os.path.join(model_ws, ml.name + ".swt_geostatic_stress.hds"),
+            os.path.join(model_ws, f"{ml.name}.swt_geostatic_stress.hds"),
             text="stress",
         ).get_alldata()
         hds_eff = flopy.utils.HeadFile(
-            os.path.join(model_ws, ml.name + ".swt_eff_stress.hds"),
+            os.path.join(model_ws, f"{ml.name}.swt_eff_stress.hds"),
             text="effective stress",
         ).get_alldata()
 
         hds_sub = flopy.utils.HeadFile(
-            os.path.join(model_ws, ml.name + ".swt_subsidence.hds"),
+            os.path.join(model_ws, f"{ml.name}.swt_subsidence.hds"),
             text="subsidence",
         ).get_alldata()
 
         hds_comp = flopy.utils.HeadFile(
-            os.path.join(model_ws, ml.name + ".swt_total_comp.hds"),
+            os.path.join(model_ws, f"{ml.name}.swt_total_comp.hds"),
             text="layer compaction",
         ).get_alldata()
 
         hds_precon = flopy.utils.HeadFile(
-            os.path.join(model_ws, ml.name + ".swt_precon_stress.hds"),
+            os.path.join(model_ws, f"{ml.name}.swt_precon_stress.hds"),
             text="preconsol stress",
         ).get_alldata()
 

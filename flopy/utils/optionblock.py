@@ -273,7 +273,7 @@ class OptionBlock:
                     ix += 1
 
                 else:
-                    err_msg = "Option: {} not a valid option".format(t[ix])
+                    err_msg = f"Option: {t[ix]} not a valid option"
                     raise KeyError(err_msg)
 
             else:
@@ -352,8 +352,7 @@ class OptionBlock:
                 options = open(options, "r")
             except IOError:
                 err_msg = (
-                    "Unrecognized type for options"
-                    " variable: {}".format(type(options))
+                    f"Unrecognized type for options variable: {type(options)}"
                 )
                 raise TypeError(err_msg)
 
@@ -389,10 +388,7 @@ class OptionBlock:
                                 valid = True
 
                             if not valid:
-                                err_msg = (
-                                    "Invalid type set to variable "
-                                    "{} in option block".format(k)
-                                )
+                                err_msg = f"Invalid type set to variable {k} in option block"
                                 raise TypeError(err_msg)
 
                             option_line += t[ix] + " "
@@ -479,10 +475,7 @@ class OptionUtil:
                 pass
 
         if not valid:
-            err_msg = (
-                "Invalid type set to variable "
-                "{} in option block".format(val)
-            )
+            err_msg = f"Invalid type set to variable {val} in option block"
             raise TypeError(err_msg)
 
         return valid

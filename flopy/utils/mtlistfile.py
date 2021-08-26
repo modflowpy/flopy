@@ -265,9 +265,7 @@ class MtListBudget:
             totim = float(line.split()[-2])
         except Exception as e:
             raise Exception(
-                "error parsing totim on line {0}: {1}".format(
-                    self.lcount, str(e)
-                )
+                f"error parsing totim on line {self.lcount}: {e!s}"
             )
 
         for _ in range(3):
@@ -284,14 +282,12 @@ class MtListBudget:
                 tkstp = int(tkstp_str)
         except Exception as e:
             raise Exception(
-                "error parsing time step info on line {0}: {1}".format(
-                    self.lcount, str(e)
-                )
+                f"error parsing time step info on line {self.lcount}: {e!s}"
             )
         for lab, val in zip(
             ["totim", "kper", "kstp", "tkstp"], [totim, kper, kstp, tkstp]
         ):
-            lab += "_{0}".format(comp)
+            lab += f"_{comp}"
             if lab not in self.gw_data.keys():
                 self.gw_data[lab] = []
             self.gw_data[lab].append(val)
@@ -315,9 +311,7 @@ class MtListBudget:
                 item, ival, oval = self._parse_gw_line(line)
             except Exception as e:
                 raise Exception(
-                    "error parsing GW items on line {0}: {1}".format(
-                        self.lcount, str(e)
-                    )
+                    f"error parsing GW items on line {self.lcount}: {e!s}"
                 )
             self._add_to_gw_data(item, ival, oval, comp)
             if break_next:
@@ -344,8 +338,7 @@ class MtListBudget:
                 item, ival, oval = self._parse_gw_line(line)
             except Exception as e:
                 raise Exception(
-                    "error parsing GW items "
-                    "on line {0}: {1}".format(self.lcount, str(e))
+                    f"error parsing GW items on line {self.lcount}: {e!s}"
                 )
             self._add_to_gw_data(item, ival, oval, comp)
             if "discrepancy" in item:
@@ -358,7 +351,7 @@ class MtListBudget:
         idx_ival = 0
         idx_oval = 1
         if self.imm:
-            item = "imm_" + item
+            item = f"imm_{item}"
         if "TOTAL" in item.upper():
             idx_oval += 1  # to deal with the units in the total string
         # net (in-out) and discrepancy will only have 1 entry
@@ -371,7 +364,7 @@ class MtListBudget:
         return item, ival, oval
 
     def _add_to_gw_data(self, item, ival, oval, comp):
-        item += "_{0}".format(comp)
+        item += f"_{comp}"
         if oval is None:
             lab_val = zip([""], [ival], [""])
         else:
@@ -394,12 +387,10 @@ class MtListBudget:
                 tkstp = int(tkstp_str)
         except Exception as e:
             raise Exception(
-                "error parsing time step info on line {0}: {1}".format(
-                    self.lcount, str(e)
-                )
+                f"error parsing time step info on line {self.lcount}: {e!s}"
             )
         for lab, val in zip(["kper", "kstp", "tkstp"], [kper, kstp, tkstp]):
-            lab += "_{0}".format(comp)
+            lab += f"_{comp}"
             if lab not in self.sw_data.keys():
                 self.sw_data[lab] = []
             self.sw_data[lab].append(val)
@@ -420,8 +411,7 @@ class MtListBudget:
                 item, cval, fval = self._parse_sw_line(line)
             except Exception as e:
                 raise Exception(
-                    "error parsing 'in' SW items on line {}: "
-                    "{}".format(self.lcount, str(e))
+                    f"error parsing 'in' SW items on line {self.lcount}: {e!s}"
                 )
             self._add_to_sw_data("in", item, cval, fval, comp)
             if break_next:
@@ -442,9 +432,7 @@ class MtListBudget:
                 item, cval, fval = self._parse_sw_line(line)
             except Exception as e:
                 raise Exception(
-                    "error parsing 'out' SW items on line {0}: {1}".format(
-                        self.lcount, str(e)
-                    )
+                    f"error parsing 'out' SW items on line {self.lcount}: {e!s}"
                 )
             self._add_to_sw_data("out", item, cval, fval, comp)
             if break_next:
@@ -467,9 +455,7 @@ class MtListBudget:
                 item, cval, fval = self._parse_sw_line(line)
             except Exception as e:
                 raise Exception(
-                    "error parsing 'out' SW items on line {0}: {1}".format(
-                        self.lcount, str(e)
-                    )
+                    f"error parsing 'out' SW items on line {self.lcount}: {e!s}"
                 )
             self._add_to_sw_data("net", item, cval, fval, comp)
         # out_tots = self._parse_sw_line(line)
@@ -489,9 +475,9 @@ class MtListBudget:
         return citem, cval, fval
 
     def _add_to_sw_data(self, inout, item, cval, fval, comp):
-        item += "_{0}".format(comp)
+        item += f"_{comp}"
         if inout.lower() in set(["in", "out"]):
-            item += "_{0}".format(inout)
+            item += f"_{inout}"
         if fval is None:
             lab_val = zip([""], [cval])
         else:

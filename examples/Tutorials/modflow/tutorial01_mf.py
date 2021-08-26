@@ -149,7 +149,7 @@ import flopy.utils.binaryfile as bf
 
 # Extract the heads
 
-hds = bf.HeadFile(modelname + ".hds")
+hds = bf.HeadFile(f"{modelname}.hds")
 head = hds.get_data(totim=1.0)
 
 # Contour the heads
@@ -165,13 +165,13 @@ ax.contour(head[0, :, :], levels=np.arange(1, 10, 1), extent=extent)
 # plot head contours, and plot vectors:
 
 # Extract the heads
-hds = bf.HeadFile(modelname + ".hds")
+hds = bf.HeadFile(f"{modelname}.hds")
 times = hds.get_times()
 head = hds.get_data(totim=times[-1])
 
 # Extract the cell-by-cell flows
 
-cbb = bf.CellBudgetFile(modelname + ".cbc")
+cbb = bf.CellBudgetFile(f"{modelname}.cbc")
 kstpkper_list = cbb.get_kstpkper()
 frf = cbb.get_data(text="FLOW RIGHT FACE", totim=times[-1])[0]
 fff = cbb.get_data(text="FLOW FRONT FACE", totim=times[-1])[0]

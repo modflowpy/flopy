@@ -314,9 +314,7 @@ class VertexGrid(Grid):
         """
         while cellid >= self.ncpl:
             if cellid > self.nnodes:
-                err = "cellid {} out of index for size {}".format(
-                    cellid, self.nnodes
-                )
+                err = f"cellid {cellid} out of index for size {self.nnodes}"
                 raise IndexError(err)
 
             cellid -= self.ncpl
@@ -491,7 +489,7 @@ class VertexGrid(Grid):
                 plotarray = plotarray[layer, :]
         else:
             raise Exception("Array to plot must be of dimension 1 or 2")
-        msg = "{} /= {}".format(plotarray.shape[0], required_shape)
+        msg = f"{plotarray.shape[0]} /= {required_shape}"
         assert plotarray.shape == required_shape, msg
         return plotarray
 
@@ -518,11 +516,10 @@ class VertexGrid(Grid):
 
         grb_obj = MfGrdFile(file_path, verbose=verbose)
         if grb_obj.grid_type != "DISV":
-            err_msg = (
-                "Binary grid file ({}) ".format(os.path.basename(file_path))
-                + "is not a vertex (DISV) grid."
+            raise ValueError(
+                f"Binary grid file ({os.path.basename(file_path)}) "
+                "is not a vertex (DISV) grid."
             )
-            raise ValueError(err_msg)
 
         idomain = grb_obj.idomain
         xorigin = grb_obj.xorigin

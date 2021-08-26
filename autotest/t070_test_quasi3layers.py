@@ -89,12 +89,10 @@ def test_plotting_with_quasi3d_layers():
         assert success, "test_plotting_with_quasi3d_layers() failed"
 
         # read output
-        hf = flopy.utils.HeadFile(
-            os.path.join(mf.model_ws, "{}.hds".format(mf.name))
-        )
+        hf = flopy.utils.HeadFile(os.path.join(mf.model_ws, f"{mf.name}.hds"))
         head = hf.get_data(totim=1.0)
         cbb = flopy.utils.CellBudgetFile(
-            os.path.join(mf.model_ws, "{}.cbc".format(mf.name))
+            os.path.join(mf.model_ws, f"{mf.name}.cbc")
         )
         frf = cbb.get_data(text="FLOW RIGHT FACE", totim=1.0)[0]
         fff = cbb.get_data(text="FLOW FRONT FACE", totim=1.0)[0]

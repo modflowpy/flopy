@@ -144,12 +144,8 @@ class Mt3dGcg(Package):
         """
         # Open file for writing
         f_gcg = open(self.fn_path, "w")
-        f_gcg.write(
-            "{} {} {} {}\n".format(
-                self.mxiter, self.iter1, self.isolve, self.ncrs
-            )
-        )
-        f_gcg.write("{} {} {}\n".format(self.accl, self.cclose, self.iprgcg))
+        f_gcg.write(f"{self.mxiter} {self.iter1} {self.isolve} {self.ncrs}\n")
+        f_gcg.write(f"{self.accl} {self.cclose} {self.iprgcg}\n")
         f_gcg.close()
         return
 
@@ -210,10 +206,10 @@ class Mt3dGcg(Package):
         isolve = int(t[2])
         ncrs = int(t[3])
         if model.verbose:
-            print("   MXITER {}".format(mxiter))
-            print("   ITER1 {}".format(iter1))
-            print("   ISOLVE {}".format(isolve))
-            print("   NCRS {}".format(ncrs))
+            print(f"   MXITER {mxiter}")
+            print(f"   ITER1 {iter1}")
+            print(f"   ISOLVE {isolve}")
+            print(f"   NCRS {ncrs}")
 
         # Item F2: ACCL, CCLOSE, IPRGCG
         if model.verbose:
@@ -224,9 +220,9 @@ class Mt3dGcg(Package):
         cclose = float(t[1])
         iprgcg = int(t[2])
         if model.verbose:
-            print("   ACCL {}".format(accl))
-            print("   CCLOSE {}".format(cclose))
-            print("   IPRGCG {}".format(iprgcg))
+            print(f"   ACCL {accl}")
+            print(f"   CCLOSE {cclose}")
+            print(f"   IPRGCG {iprgcg}")
 
         if openfile:
             f.close()

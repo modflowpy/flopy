@@ -188,7 +188,7 @@ class ModflowPval(Package):
 
         if model.verbose:
             sys.stdout.write(
-                '   reading parameter values from "{:<10s}"\n'.format(filename)
+                f'   reading parameter values from "{filename:<10s}"\n'
             )
 
         # read PVAL data

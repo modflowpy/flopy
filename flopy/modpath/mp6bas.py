@@ -137,13 +137,13 @@ class Modpath6Bas(Package):
         ModflowDis = self.parent.mf.get_package("DIS")
         # Open file for writing
         f_bas = open(self.fn_path, "w")
-        f_bas.write("#{0:s}\n#{1:s}\n".format(self.heading1, self.heading2))
-        f_bas.write("{0:16.6f} {1:16.6f}\n".format(self.hnoflo, self.hdry))
-        f_bas.write("{0:4d}\n".format(self.def_face_ct))
+        f_bas.write(f"#{self.heading1}\n#{self.heading2}\n")
+        f_bas.write(f"{self.hnoflo:16.6f} {self.hdry:16.6f}\n")
+        f_bas.write(f"{self.def_face_ct:4d}\n")
         if self.def_face_ct > 0:
             for i in range(self.def_face_ct):
-                f_bas.write("{0:20s}\n".format(self.bud_label[i]))
-                f_bas.write("{0:2d}\n".format(self.def_iface[i]))
+                f_bas.write(f"{self.bud_label[i]:20s}\n")
+                f_bas.write(f"{self.def_iface[i]:2d}\n")
         # f_bas.write('\n')
 
         flow_package = self.parent.mf.get_package("BCF6")

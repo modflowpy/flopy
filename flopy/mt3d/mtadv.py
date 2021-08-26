@@ -336,10 +336,10 @@ class Mt3dAdv(Package):
             if len(line[30:40].strip()) > 0:
                 nadvfd = int(line[30:40])
         if model.verbose:
-            print("   MIXELM {}".format(mixelm))
-            print("   PERCEL {}".format(nadvfd))
-            print("   MXPART {}".format(mxpart))
-            print("   NADVFD {}".format(nadvfd))
+            print(f"   MIXELM {mixelm}")
+            print(f"   PERCEL {nadvfd}")
+            print(f"   MXPART {mxpart}")
+            print(f"   NADVFD {nadvfd}")
 
         # Item B2: ITRACK WD
         itrack = None
@@ -351,8 +351,8 @@ class Mt3dAdv(Package):
             itrack = int(line[0:10])
             wd = float(line[10:20])
             if model.verbose:
-                print("   ITRACK {}".format(itrack))
-                print("   WD {}".format(wd))
+                print(f"   ITRACK {itrack}")
+                print(f"   WD {wd}")
 
         # Item B3: DCEPS, NPLANE, NPL, NPH, NPMIN, NPMAX
         dceps = None
@@ -372,12 +372,12 @@ class Mt3dAdv(Package):
             npmin = int(line[40:50])
             npmax = int(line[50:60])
             if model.verbose:
-                print("   DCEPS {}".format(dceps))
-                print("   NPLANE {}".format(nplane))
-                print("   NPL {}".format(npl))
-                print("   NPH {}".format(nph))
-                print("   NPMIN {}".format(npmin))
-                print("   NPMAX {}".format(npmax))
+                print(f"   DCEPS {dceps}")
+                print(f"   NPLANE {nplane}")
+                print(f"   NPL {npl}")
+                print(f"   NPH {nph}")
+                print(f"   NPMIN {npmin}")
+                print(f"   NPMAX {npmax}")
 
         # Item B4: INTERP, NLSINK, NPSINK
         interp = None
@@ -391,9 +391,9 @@ class Mt3dAdv(Package):
             nlsink = int(line[10:20])
             npsink = int(line[20:30])
             if model.verbose:
-                print("   INTERP {}".format(interp))
-                print("   NLSINK {}".format(nlsink))
-                print("   NPSINK {}".format(npsink))
+                print(f"   INTERP {interp}")
+                print(f"   NLSINK {nlsink}")
+                print(f"   NPSINK {npsink}")
 
         # Item B5: DCHMOC
         dchmoc = None
@@ -403,7 +403,7 @@ class Mt3dAdv(Package):
             line = f.readline()
             dchmoc = float(line[0:10])
             if model.verbose:
-                print("   DCHMOC {}".format(dchmoc))
+                print(f"   DCHMOC {dchmoc}")
 
         if openfile:
             f.close()

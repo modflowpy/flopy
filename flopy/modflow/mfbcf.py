@@ -282,22 +282,14 @@ class ModflowBcf(Package):
         for k in range(nlay):
             if ifrefm:
                 if self.intercellt[k] > 0:
-                    f_bcf.write(
-                        "{0:1d}{1:1d} ".format(
-                            self.intercellt[k], self.laycon[k]
-                        )
-                    )
+                    f_bcf.write(f"{self.intercellt[k]:1d}{self.laycon[k]:1d} ")
                 else:
-                    f_bcf.write("0{0:1d} ".format(self.laycon[k]))
+                    f_bcf.write(f"0{self.laycon[k]:1d} ")
             else:
                 if self.intercellt[k] > 0:
-                    f_bcf.write(
-                        "{0:1d}{1:1d}".format(
-                            self.intercellt[k], self.laycon[k]
-                        )
-                    )
+                    f_bcf.write(f"{self.intercellt[k]:1d}{self.laycon[k]:1d}")
                 else:
-                    f_bcf.write("0{0:1d}".format(self.laycon[k]))
+                    f_bcf.write(f"0{self.laycon[k]:1d}")
         f_bcf.write("\n")
         f_bcf.write(self.trpy.get_file_entry())
         transient = not dis.steady.all()
@@ -463,7 +455,7 @@ class ModflowBcf(Package):
             # sf1
             if transient:
                 if model.verbose:
-                    print("   loading sf1 layer {0:3d}...".format(k + 1))
+                    print(f"   loading sf1 layer {k + 1:3d}...")
                 t = Util2d.load(
                     f, model, (nrow, ncol), np.float32, "sf1", ext_unit_dict
                 )
@@ -472,14 +464,14 @@ class ModflowBcf(Package):
             # tran or hy
             if (laycon[k] == 0) or (laycon[k] == 2):
                 if model.verbose:
-                    print("   loading tran layer {0:3d}...".format(k + 1))
+                    print(f"   loading tran layer {k + 1:3d}...")
                 t = Util2d.load(
                     f, model, (nrow, ncol), np.float32, "tran", ext_unit_dict
                 )
                 tran[k] = t
             else:
                 if model.verbose:
-                    print("   loading hy layer {0:3d}...".format(k + 1))
+                    print(f"   loading hy layer {k + 1:3d}...")
                 t = Util2d.load(
                     f, model, (nrow, ncol), np.float32, "hy", ext_unit_dict
                 )
@@ -488,7 +480,7 @@ class ModflowBcf(Package):
             # vcont
             if k < (nlay - 1):
                 if model.verbose:
-                    print("   loading vcont layer {0:3d}...".format(k + 1))
+                    print(f"   loading vcont layer {k + 1:3d}...")
                 t = Util2d.load(
                     f, model, (nrow, ncol), np.float32, "vcont", ext_unit_dict
                 )
@@ -497,7 +489,7 @@ class ModflowBcf(Package):
             # sf2
             if transient and ((laycon[k] == 2) or (laycon[k] == 3)):
                 if model.verbose:
-                    print("   loading sf2 layer {0:3d}...".format(k + 1))
+                    print(f"   loading sf2 layer {k + 1:3d}...")
                 t = Util2d.load(
                     f, model, (nrow, ncol), np.float32, "sf2", ext_unit_dict
                 )
@@ -506,7 +498,7 @@ class ModflowBcf(Package):
             # wetdry
             if (iwdflg != 0) and ((laycon[k] == 1) or (laycon[k] == 3)):
                 if model.verbose:
-                    print("   loading sf2 layer {0:3d}...".format(k + 1))
+                    print(f"   loading sf2 layer {k + 1:3d}...")
                 t = Util2d.load(
                     f, model, (nrow, ncol), np.float32, "wetdry", ext_unit_dict
                 )

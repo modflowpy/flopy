@@ -34,7 +34,7 @@ def load_check_sfr(i, mfnam, model_ws, checker_output_path):
     # print('Testing {}\n'.format(mfnam) + '='*100)
     m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws)
     m.model_ws = checker_output_path
-    checker_outfile = os.path.join(tpth, "SFRcheck_{}.txt".format(m.name))
+    checker_outfile = os.path.join(tpth, f"SFRcheck_{m.name}.txt")
 
     chk = m.sfr.check(checker_outfile, level=1)
 
@@ -123,7 +123,7 @@ def test_sfrloadcheck():
 
 def load_sfr_isfropt_icalc(isfropt, icalc):
     pth = os.path.join("..", "examples", "data", "sfr_test")
-    nam = "sfrtest{}{}.nam".format(isfropt, icalc)
+    nam = f"sfrtest{isfropt}{icalc}.nam"
     ml = flopy.modflow.Modflow.load(
         nam, check=False, model_ws=pth, exe_name="mfnwt"
     )
@@ -136,8 +136,8 @@ def load_sfr_isfropt_icalc(isfropt, icalc):
     success = ml.run_model()[0]
     if not success:
         raise AssertionError(
-            "sfrtest{}{}.nam".format(isfropt, icalc)
-            + "is broken, please fix SFR 6a, 6bc logic!"
+            f"sfrtest{isfropt}{icalc}.nam "
+            "is broken, please fix SFR 6a, 6bc logic!"
         )
 
 

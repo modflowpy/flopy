@@ -76,7 +76,7 @@ class ArrayFormat:
 
         assert isinstance(
             u2d, Util2d
-        ), "ArrayFormat only supports Util2d, not {0}".format(type(u2d))
+        ), f"ArrayFormat only supports Util2d, not {type(u2d)}"
         if len(u2d.shape) == 1:
             self._npl_full = u2d.shape[0]
         else:
@@ -144,7 +144,7 @@ class ArrayFormat:
         s = "ArrayFormat: npl:{0},format:{1},width:{2},decimal{3}".format(
             self.npl, self.format, self.width, self.decimal
         )
-        s += ",isfree:{0},isbinary:{1}".format(self._isfree, self._isbinary)
+        s += f",isfree:{self._isfree},isbinary:{self._isbinary}"
         return s
 
     @staticmethod
@@ -316,9 +316,9 @@ class ArrayFormat:
         if self._isbinary:
             return "(BINARY)"
 
-        fd = "({0:d}{1:s}{2:d}".format(self.npl, self.format, self.width)
+        fd = f"({self.npl}{self.format}{self.width}"
         if self.decimal is not None:
-            fd += ".{0:d})".format(self.decimal)
+            fd += f".{self.decimal})"
         else:
             fd += ")"
         return fd
@@ -359,7 +359,7 @@ class ArrayFormat:
         return self._get_numpy_format()
 
     def _get_numpy_format(self):
-        return "%{0}{1}.{2}".format(self.width, self.format, self.decimal)
+        return f"%{self.width}{self.format}.{self.decimal}"
 
     @staticmethod
     def decode_fortran_descriptor(fd):
@@ -409,9 +409,7 @@ class ArrayFormat:
                 elif fmt == "EN":
                     fmt = "E"
                 return npl, fmt, width, decimal
-        raise Exception(
-            "Unrecognized format type: {} looking for: {}".format(fd, fmts)
-        )
+        raise Exception(f"Unrecognized format type: {fd} looking for: {fmts}")
 
 
 def read1d(f, a):
@@ -422,7 +420,7 @@ def read1d(f, a):
     """
     if len(a.shape) != 1:
         raise ValueError(
-            "read1d: expected 1 dimension, found shape {0}".format(a.shape)
+            f"read1d: expected 1 dimension, found shape {a.shape}"
         )
     values = []
     while len(values) < a.shape[0]:
@@ -555,7 +553,7 @@ class Util3d(DataInterface):
             return
         if len(shape) != 3:
             raise ValueError(
-                "Util3d: expected 3 dimensions, found shape {0}".format(shape)
+                f"Util3d: expected 3 dimensions, found shape {shape}"
             )
         self._model = model
         self.shape = shape
@@ -578,7 +576,7 @@ class Util3d(DataInterface):
                 self.name_base.append(self.name[k])
             else:
                 if "Layer" not in self.name[k]:
-                    self.name_base.append(self.name[k] + " Layer ")
+                    self.name_base.append(f"{self.name[k]} Layer ")
                 else:
                     self.name_base.append(self.name[k])
         self.fmtin = fmtin
@@ -611,7 +609,7 @@ class Util3d(DataInterface):
             self.util_2ds[k] = new_u2d(self.util_2ds[k], value)
         else:
             raise NotImplementedError(
-                "Util3d doesn't support setitem indices" + str(k)
+                f"Util3d doesn't support setitem indices: {k}"
             )
 
     def __setattr__(self, key, value):
@@ -665,7 +663,7 @@ class Util3d(DataInterface):
         file_extension=None,
         mflay=None,
         fignum=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot 3-D model input data
@@ -736,7 +734,7 @@ class Util3d(DataInterface):
             file_extension=file_extension,
             mflay=mflay,
             fignum=fignum,
-            **kwargs
+            **kwargs,
         )
         return axes
 
@@ -748,7 +746,7 @@ class Util3d(DataInterface):
         elif len(k) == 3:
             return self.array[k[0], k[1], k[2]]
         else:
-            raise Exception("Util3d error: unsupported indices:" + str(k))
+            raise Exception(f"Util3d error: unsupported indices: {k}")
 
     def get_file_entry(self):
         s = ""
@@ -810,9 +808,9 @@ class Util3d(DataInterface):
                 if isinstance(item, Util2d):
                     # we need to reset the external name because most of the
                     # load() methods don't use layer-specific names
-                    item._ext_filename = self.ext_filename_base[
-                        i
-                    ] + "{0}.ref".format(i + 1)
+                    item._ext_filename = (
+                        f"{self.ext_filename_base[i]}{i + 1}.ref"
+                    )
                     # reset the model instance in cases these Util2d's
                     # came from another model instance
                     item.model = self._model
@@ -822,7 +820,7 @@ class Util3d(DataInterface):
                     ext_filename = None
                     if self._model.external_path is not None:
                         ext_filename = (
-                            self.ext_filename_base[i] + str(i + 1) + ".ref"
+                            f"{self.ext_filename_base[i]}{i + 1}.ref"
                         )
                     shape = self.shape[1:]
                     if shape[0] is None:
@@ -857,9 +855,7 @@ class Util3d(DataInterface):
                 ext_filename = None
                 name = self.name_base[i] + str(i + 1)
                 if self._model.external_path is not None:
-                    ext_filename = (
-                        self.ext_filename_base[i] + str(i + 1) + ".ref"
-                    )
+                    ext_filename = f"{self.ext_filename_base[i]}{i + 1}.ref"
                 u2d = Util2d(
                     self._model,
                     self.shape[1:],
@@ -893,12 +889,12 @@ class Util3d(DataInterface):
     ):
         if len(shape) != 3:
             raise ValueError(
-                "Util3d: expected 3 dimensions, found shape {0}".format(shape)
+                f"Util3d: expected 3 dimensions, found shape {shape}"
             )
         nlay, nrow, ncol = shape
         u2ds = []
         for k in range(nlay):
-            u2d_name = name + "_Layer_{0}".format(k)
+            u2d_name = f"{name}_Layer_{k}"
             if nrow is None:
                 nr = 1
                 nc = ncol[k]
@@ -1084,7 +1080,7 @@ class Transient3d(DataInterface):
         return False
 
     def get_zero_3d(self, kper):
-        name = self.name_base + str(kper + 1) + "(filled zero)"
+        name = f"{self.name_base}{kper + 1}(filled zero)"
         return Util3d(
             self._model,
             self.shape,
@@ -1105,7 +1101,7 @@ class Transient3d(DataInterface):
                     return self.transient_3ds[i]
             raise Exception(
                 "Transient2d.__getitem__(): error: "
-                "could not find an entry before kper {0:d}".format(kper)
+                f"could not find an entry before kper {kper}"
             )
 
     def __setitem__(self, key, value):
@@ -1169,13 +1165,11 @@ class Transient3d(DataInterface):
                     key = int(key)
                 except:
                     raise Exception(
-                        "Transient3d error: can't cast key: "
-                        "{} to kper integer".format(key)
+                        f"Transient3d error: can't cast key: {key} to kper integer"
                     )
                 if key < 0:
                     raise Exception(
-                        "Transient3d error: key can't be negative: "
-                        "{}".format(key)
+                        f"Transient3d error: key can't be negative: {key}"
                     )
                 try:
                     u3d = self.__get_3d_instance(key, val)
@@ -1208,15 +1202,14 @@ class Transient3d(DataInterface):
             )
         else:
             raise Exception(
-                "Transient3d error: value type not recognized: "
-                "{}".format(type(self.__value))
+                f"Transient3d error: value type not recognized: {type(self.__value)}"
             )
 
     def __get_3d_instance(self, kper, arg):
         """
         parse an argument into a Util3d instance
         """
-        name = "{}_period{}".format(self.name_base, kper + 1)
+        name = f"{self.name_base}_period{kper + 1}"
         u3d = Util3d(
             self._model,
             self.shape,
@@ -1338,8 +1331,7 @@ class Transient2d(DataInterface):
         self._model = model
         if len(shape) != 2:
             raise ValueError(
-                "Transient2d: expected 2 dimensions (nrow, ncol), found "
-                "shape {0}".format(shape)
+                f"Transient2d: expected 2 dimensions (nrow, ncol), found shape {shape}"
             )
         if shape[0] is None:
             # allow for unstructured so that ncol changes by layer
@@ -1452,7 +1444,7 @@ class Transient2d(DataInterface):
         super().__setattr__(key, value)
 
     def get_zero_2d(self, kper):
-        name = self.name_base + str(kper + 1) + "(filled zero)"
+        name = f"{self.name_base}{kper + 1}(filled zero)"
         return Util2d(
             self._model,
             self.shape,
@@ -1468,7 +1460,7 @@ class Transient2d(DataInterface):
         file_extension=None,
         kper=0,
         fignum=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot transient 2-D model input data
@@ -1546,7 +1538,7 @@ class Transient2d(DataInterface):
             file_extension=file_extension,
             kper=kper,
             fignum=fignum,
-            **kwargs
+            **kwargs,
         )
 
         return axes
@@ -1562,7 +1554,7 @@ class Transient2d(DataInterface):
                     return self.transient_2ds[i]
             raise Exception(
                 "Transient2d.__getitem__(): error: "
-                "could not find an entry before kper {0:d}".format(kper)
+                f"could not find an entry before kper {kper}"
             )
 
     def __setitem__(self, key, value):
@@ -1623,13 +1615,11 @@ class Transient2d(DataInterface):
                     key = int(key)
                 except:
                     raise Exception(
-                        "Transient2d error: can't cast key: "
-                        "{} to kper integer".format(key)
+                        f"Transient2d error: can't cast key: {key} to kper integer"
                     )
                 if key < 0:
                     raise Exception(
-                        "Transient2d error: key can't be negative: "
-                        "{}".format(key)
+                        f"Transient2d error: key can't be negative: {key}"
                     )
                 try:
                     u2d = self.__get_2d_instance(key, val)
@@ -1662,8 +1652,7 @@ class Transient2d(DataInterface):
             )
         else:
             raise Exception(
-                "Transient2d error: value type not recognized: "
-                "{}".format(type(self.__value))
+                f"Transient2d error: value type not recognized: {type(self.__value)}"
             )
 
     def __get_2d_instance(self, kper, arg):
@@ -1672,7 +1661,8 @@ class Transient2d(DataInterface):
         """
         ext_filename = None
         name = self.name_base + str(kper + 1)
-        ext_filename = self.ext_filename_base + str(kper) + ".ref"
+        # TODO: should ext_filename have "kper + 1" too?
+        ext_filename = f"{self.ext_filename_base}{kper}.ref"
         u2d = Util2d(
             self._model,
             self.shape,
@@ -1840,13 +1830,12 @@ class Util2d(DataInterface):
             if np.dtype(int).itemsize != 4:
                 # show warning for platforms where int is not 4-bytes
                 warn(
-                    "Util2d: setting integer dtype from {} to int32 for array {}".format(
-                        dtype, name
-                    )
+                    f"Util2d: setting integer dtype from {dtype} to int32 "
+                    f"for array {name}"
                 )
             dtype = np.int32
         if dtype not in [np.int32, np.float32, bool]:
-            raise TypeError("Util2d:unsupported dtype: " + str(dtype))
+            raise TypeError(f"Util2d:unsupported dtype: {dtype!s}")
 
         if name is not None:
             name = name.lower()
@@ -1932,7 +1921,7 @@ class Util2d(DataInterface):
         filename_base=None,
         file_extension=None,
         fignum=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot 2-D model input data
@@ -2003,7 +1992,7 @@ class Util2d(DataInterface):
             filename_base=filename_base,
             file_extension=file_extension,
             fignum=fignum,
-            **kwargs
+            **kwargs,
         )
         return axes
 
@@ -2192,11 +2181,13 @@ class Util2d(DataInterface):
     def get_constant_cr(self, value):
 
         if self.format.array_free_format:
-            lay_space = "{0:>27s}".format("")
+            lay_space = " " * 27
             if self.vtype in [int, np.int32]:
-                lay_space = "{0:>32s}".format("")
-            cr = "CONSTANT " + self.format.py[1].format(value)
-            cr = "{0:s}{1:s}#{2:<30s}\n".format(cr, lay_space, self._name)
+                lay_space = " " * 32
+            cr = (
+                f"CONSTANT {self.format.py[1].format(value)}"
+                f"{lay_space}#{self._name:<30s}\n"
+            )
         else:
             cr = self._get_fixed_cr(0, value=value)
         return cr
@@ -2246,7 +2237,7 @@ class Util2d(DataInterface):
         if isinstance(self.cnstnt, str):
             return self.cnstnt
         else:
-            return "{0:15.6G}".format(self.cnstnt)
+            return f"{self.cnstnt:15.6G}"
 
     def get_openclose_cr(self):
         cr = "OPEN/CLOSE  {0:>30s} {1:15} {2:>10s} {3:2.0f} {4:<30s}\n".format(
@@ -2285,11 +2276,7 @@ class Util2d(DataInterface):
             how = self._how
 
         if not self.format.array_free_format and self.format.free:
-            print(
-                "Util2d {0}: can't be free format...resetting".format(
-                    self._name
-                )
-            )
+            print(f"Util2d {self._name}: can't be free format...resetting")
             self.format._isfree = False
 
         if (
@@ -2308,7 +2295,7 @@ class Util2d(DataInterface):
             "constant",
             "internal",
         ]:
-            print("Util2d:{0}: resetting 'how' to external".format(self._name))
+            print(f"Util2d:{self._name}: resetting 'how' to external")
             if self.format.array_free_format:
                 how = "openclose"
             else:
@@ -2387,8 +2374,7 @@ class Util2d(DataInterface):
 
         else:
             raise Exception(
-                "Util2d.get_file_entry() error: "
-                "unrecognized 'how':{0}".format(how)
+                f"Util2d.get_file_entry() error: unrecognized 'how':{how}"
             )
 
     @property
@@ -2425,7 +2411,7 @@ class Util2d(DataInterface):
 
         """
         if isinstance(self.cnstnt, str):
-            print("WARNING: cnstnt is str for {0}".format(self.name))
+            print(f"WARNING: cnstnt is str for {self.name}")
             return self._array.astype(self.dtype)
         if isinstance(self.cnstnt, (int, np.int32)):
             cnstnt = self.cnstnt
@@ -2490,9 +2476,7 @@ class Util2d(DataInterface):
         """
         if len(shape) != 2:
             raise ValueError(
-                "Util2d.load_block(): expected 2 dimensions, found shape {0}".format(
-                    shape
-                )
+                f"Util2d.load_block(): expected 2 dimensions, found shape {shape}"
             )
         nrow, ncol = shape
         data = np.ma.zeros(shape, dtype=dtype)
@@ -2507,8 +2491,7 @@ class Util2d(DataInterface):
             raw = line.split()
             if len(raw) < 5:
                 raise ValueError(
-                    "Util2d.load_block(): expected 5 items, "
-                    "found {0}: {1}".format(len(raw), line)
+                    f"Util2d.load_block(): expected 5 items, found {len(raw)}: {line}"
                 )
             i1, i2 = int(raw[0]) - 1, int(raw[1])
             j1, j2 = int(raw[2]) - 1, int(raw[3])
@@ -2549,9 +2532,7 @@ class Util2d(DataInterface):
             num_items = nrow * ncol
         else:
             raise ValueError(
-                "Util2d.load_txt(): expected 1 or 2 dimensions, found shape {0}".format(
-                    shape
-                )
+                f"Util2d.load_txt(): expected 1 or 2 dimensions, found shape {shape}"
             )
         openfile = not hasattr(file_in, "read")
         if openfile:
@@ -2642,11 +2623,9 @@ class Util2d(DataInterface):
                 decimal,
             ) = ArrayFormat.decode_fortran_descriptor(fortran_format)
             if decimal is None:
-                output_fmt = "{0}0:{1}{2}{3}".format("{", width, "d", "}")
+                output_fmt = f"{{0:{width}d}}"
             else:
-                output_fmt = "{0}0:{1}.{2}{3}{4}".format(
-                    "{", width, decimal, fmt, "}"
-                )
+                output_fmt = f"{{0:{width}.{decimal}{fmt}}}"
         else:
             try:
                 column_length, output_fmt = (
@@ -2708,11 +2687,7 @@ class Util2d(DataInterface):
             dtype = np.dtype(dtype)
             if dtype.itemsize != 4:
                 # show warning for platforms where int is not 4-bytes
-                warn(
-                    "Util2d: setting integer dtype from {0} to int32".format(
-                        dtype
-                    )
-                )
+                warn(f"Util2d: setting integer dtype from {dtype} to int32")
             dtype = np.int32
         openfile = not hasattr(file_in, "read")
         if openfile:
@@ -2761,8 +2736,7 @@ class Util2d(DataInterface):
 
                 except:
                     raise Exception(
-                        "Util2d:could not cast "
-                        'boolean value to type "bool": {}'.format(value)
+                        f'Util2d:could not cast boolean value to type "bool": {value}'
                     )
             else:
                 raise Exception(
@@ -2796,16 +2770,14 @@ class Util2d(DataInterface):
                     self.__value = np.int32(value)
                 except:
                     raise Exception(
-                        "Util2d:could not cast scalar "
-                        'value to type "int": {}'.format(value)
+                        f'Util2d:could not cast scalar value to type "int": {value}'
                     )
             elif self._dtype == np.float32:
                 try:
                     self.__value = np.float32(value)
                 except:
                     raise Exception(
-                        "Util2d:could not cast "
-                        'scalar value to type "float": {}'.format(value)
+                        f'Util2d:could not cast scalar value to type "float": {value}'
                     )
 
         elif isinstance(value, np.ndarray):
@@ -2824,7 +2796,7 @@ class Util2d(DataInterface):
 
         else:
             raise Exception(
-                "Util2d:unsupported type in util_array: " + str(type(value))
+                f"Util2d:unsupported type in util_array: {type(value)}"
             )
 
     @classmethod
@@ -2897,9 +2869,7 @@ class Util2d(DataInterface):
             # load_txt(shape, file_in, dtype, fmtin):
             assert os.path.exists(
                 fname
-            ), "Util2d.load() error: open/close file {} not found".format(
-                fname
-            )
+            ), f"Util2d.load() error: open/close file {fname} not found"
             if str("binary") not in str(cr_dict["fmtin"].lower()):
                 f = open(fname, "r")
                 data = Util2d.load_txt(
@@ -3033,8 +3003,7 @@ class Util2d(DataInterface):
                         fname = ext_unit_dict[int(raw[1])].filename.strip()
                     except:
                         print(
-                            "   could not determine filename "
-                            "for unit {}".format(raw[1])
+                            f"   could not determine filename for unit {raw[1]}"
                         )
 
                 nunit = int(raw[1])

@@ -31,7 +31,7 @@ def load_model(namfile, model_ws):
     m = flopy.modflow.Modflow.load(
         namfile, model_ws=model_ws, version="mfusg", verbose=True, check=False
     )
-    assert m, "Could not load namefile {}".format(namfile)
+    assert m, f"Could not load namefile {namfile}"
     assert m.load_fail is False
     m.change_model_ws(tpth)
     m.write_input()
