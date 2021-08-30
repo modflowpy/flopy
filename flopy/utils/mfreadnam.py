@@ -65,9 +65,7 @@ class NamData:
             self.package = packages[self.filetype.lower()]
 
     def __repr__(self):
-        return "filename:{0}, filetype:{1}".format(
-            self.filename, self.filetype
-        )
+        return f"filename:{self.filename}, filetype:{self.filetype}"
 
 
 def getfiletypeunit(nf, filetype):
@@ -87,7 +85,7 @@ def getfiletypeunit(nf, filetype):
     for cunit, cvals in nf.items():
         if cvals.filetype.lower() == filetype.lower():
             return cunit
-    print('Name file does not contain file of type "{0}"'.format(filetype))
+    print(f'Name file does not contain file of type "{filetype}"')
     return None
 
 
@@ -123,14 +121,14 @@ def parsenamefile(namfilename, packages, verbose=True):
     ext_unit_dict = {}
 
     if verbose:
-        print("Parsing the namefile --> {0:s}".format(namfilename))
+        print(f"Parsing the namefile --> {namfilename}")
 
     if not os.path.isfile(namfilename):
         # help diagnose the namfile and directory
-        e = "Could not find {} ".format(
-            namfilename
-        ) + "in directory {}".format(os.path.dirname(namfilename))
-        raise IOError(e)
+        raise IOError(
+            f"Could not find {namfilename} "
+            f"in directory {os.path.dirname(namfilename)}"
+        )
     with open(namfilename, "r") as fp:
         lines = fp.readlines()
 
@@ -142,7 +140,7 @@ def parsenamefile(namfilename, packages, verbose=True):
         items = line.split()
         # ensure we have at least three items
         if len(items) < 3:
-            e = "line number {} has fewer than 3 items: {}".format(ln, line)
+            e = f"line number {ln} has fewer than 3 items: {line}"
             raise ValueError(e)
         ftype, key, fpath = items[0:3]
         ftype = ftype.upper()
@@ -183,7 +181,7 @@ def parsenamefile(namfilename, packages, verbose=True):
             filehandle = open(fname, openmode, **kwargs)
         except IOError:
             if verbose:
-                print("could not set filehandle to {0:s}".format(fpath))
+                print(f"could not set filehandle to {fpath}")
             filehandle = None
         # be sure the second value is an integer
         try:
@@ -232,31 +230,31 @@ def attribs_from_namfile_header(namefile):
                 xll = float(item.split(":")[1])
                 defaults["xll"] = xll
             except:
-                print("   could not parse xll in {}".format(namefile))
+                print(f"   could not parse xll in {namefile}")
         elif "yll" in item.lower():
             try:
                 yll = float(item.split(":")[1])
                 defaults["yll"] = yll
             except:
-                print("   could not parse yll in {}".format(namefile))
+                print(f"   could not parse yll in {namefile}")
         elif "xul" in item.lower():
             try:
                 xul = float(item.split(":")[1])
                 defaults["xul"] = xul
             except:
-                print("   could not parse xul in {}".format(namefile))
+                print(f"   could not parse xul in {namefile}")
         elif "yul" in item.lower():
             try:
                 yul = float(item.split(":")[1])
                 defaults["yul"] = yul
             except:
-                print("   could not parse yul in {}".format(namefile))
+                print(f"   could not parse yul in {namefile}")
         elif "rotation" in item.lower():
             try:
                 angrot = float(item.split(":")[1])
                 defaults["rotation"] = angrot
             except:
-                print("   could not parse rotation in {}".format(namefile))
+                print(f"   could not parse rotation in {namefile}")
         elif "proj4_str" in item.lower():
             try:
                 proj4 = ":".join(item.split(":")[1:]).strip()
@@ -264,11 +262,11 @@ def attribs_from_namfile_header(namefile):
                     proj4 = None
                 defaults["proj4_str"] = proj4
             except:
-                print("   could not parse proj4_str in {}".format(namefile))
+                print(f"   could not parse proj4_str in {namefile}")
         elif "start" in item.lower():
             try:
                 start_datetime = item.split(":")[1].strip()
                 defaults["start_datetime"] = start_datetime
             except:
-                print("   could not parse start in {}".format(namefile))
+                print(f"   could not parse start in {namefile}")
     return defaults

@@ -489,7 +489,7 @@ class Raster:
 
                     data[node] = val
         else:
-            raise TypeError("{} method not supported".format(method))
+            raise TypeError(f"{method} method not supported")
 
         if extrapolate_edges and method != "nearest":
             xc = modelgrid.xcellcenters
@@ -941,7 +941,7 @@ class Raster:
                 ax=ax,
                 contour=contour,
                 transform=self._meta["transform"],
-                **kwargs
+                **kwargs,
             )
 
         return ax

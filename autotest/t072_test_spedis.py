@@ -23,12 +23,12 @@ modelname_mf6 = "t070_mf6"
 postproc_test_ws = os.path.join(".", "temp", "t072")
 modelws_mf2005 = os.path.join(postproc_test_ws, modelname_mf2005)
 modelws_mf6 = os.path.join(postproc_test_ws, modelname_mf6)
-cbcfile_mf2005 = os.path.join(modelws_mf2005, modelname_mf2005 + ".cbc")
-cbcfile_mf6 = os.path.join(modelws_mf6, modelname_mf6 + ".cbc")
-hdsfile_mf2005 = os.path.join(modelws_mf2005, modelname_mf2005 + ".hds")
-hdsfile_mf6 = os.path.join(modelws_mf6, modelname_mf6 + ".hds")
-namfile_mf2005 = os.path.join(modelws_mf2005, modelname_mf2005 + ".nam")
-namfile_mf6 = os.path.join(modelws_mf6, modelname_mf6 + ".nam")
+cbcfile_mf2005 = os.path.join(modelws_mf2005, f"{modelname_mf2005}.cbc")
+cbcfile_mf6 = os.path.join(modelws_mf6, f"{modelname_mf6}.cbc")
+hdsfile_mf2005 = os.path.join(modelws_mf2005, f"{modelname_mf2005}.hds")
+hdsfile_mf6 = os.path.join(modelws_mf6, f"{modelname_mf6}.hds")
+namfile_mf2005 = os.path.join(modelws_mf2005, f"{modelname_mf2005}.nam")
+namfile_mf6 = os.path.join(modelws_mf6, f"{modelname_mf6}.nam")
 
 # model domain, grid definition and properties
 Lx = 100.0
@@ -200,7 +200,7 @@ def build_model_mf6():
     gwf = flopy.mf6.ModflowGwf(
         sim,
         modelname=modelname_mf6,
-        model_nam_file="{}.nam".format(modelname_mf6),
+        model_nam_file=f"{modelname_mf6}.nam",
     )
     gwf.name_file.save_flows = True
 
@@ -294,8 +294,8 @@ def build_model_mf6():
     oc = flopy.mf6.ModflowGwfoc(
         gwf,
         pname="oc",
-        budget_filerecord="{}.cbc".format(modelname_mf6),
-        head_filerecord="{}.hds".format(modelname_mf6),
+        budget_filerecord=f"{modelname_mf6}.cbc",
+        head_filerecord=f"{modelname_mf6}.hds",
         headprintrecord=[("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "GENERAL")],
         saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
         printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],

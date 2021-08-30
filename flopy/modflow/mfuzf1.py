@@ -449,7 +449,7 @@ class ModflowUzf1(Package):
             for key, value in uzgag.items():
                 fname = filenames[ipos]
                 iu = abs(key)
-                uzgagext = "uzf{}.out".format(iu)
+                uzgagext = f"uzf{iu}.out"
                 model.add_output_file(
                     iu,
                     fname=fname,
@@ -729,7 +729,7 @@ class ModflowUzf1(Package):
             if self.nosurfleak > 0:
                 specify_temp += "NOSURFLEAK"
             if (self.specifythtr + self.specifythti + self.nosurfleak) > 0:
-                f_uzf.write("{}\n".format(specify_temp))
+                f_uzf.write(f"{specify_temp}\n")
             del specify_temp
         else:
             txt = "options\n"
@@ -743,11 +743,11 @@ class ModflowUzf1(Package):
             ]:
                 value = self.__dict__[var]
                 if int(value) > 0:
-                    txt += "{}\n".format(var)
+                    txt += f"{var}\n"
             if self.etsquare:
-                txt += "etsquare {}\n".format(self.smoothfact)
+                txt += f"etsquare {self.smoothfact}\n"
             if self.netflux:
-                txt += "netflux {} {}\n".format(self.unitrech, self.unitdis)
+                txt += f"netflux {self.unitrech} {self.unitdis}\n"
             txt += "end\n"
             f_uzf.write(txt)
 
@@ -769,7 +769,7 @@ class ModflowUzf1(Package):
                 f_uzf = f
         else:
             f_uzf = open(self.fn_path, "w")
-        f_uzf.write("{}\n".format(self.heading))
+        f_uzf.write(f"{self.heading}\n")
 
         # Dataset 1a
         if (
@@ -857,18 +857,18 @@ class ModflowUzf1(Package):
                     comment = " #IUZROW IUZCOL IFTUNIT IUZOPT"
                     values.insert(2, iftunit)
                     for v in values:
-                        f_uzf.write("{:10d}".format(v))
-                    f_uzf.write("{}\n".format(comment))
+                        f_uzf.write(f"{v:10d}")
+                    f_uzf.write(f"{comment}\n")
                 else:
                     comment = " #IFTUNIT"
-                    f_uzf.write("{:10d}".format(iftunit))
-                    f_uzf.write("{}\n".format(comment))
+                    f_uzf.write(f"{iftunit:10d}")
+                    f_uzf.write(f"{comment}\n")
 
         def write_transient(name):
             invar, var = self.__dict__[name].get_kper_entry(n)
 
-            comment = " #{} for stress period ".format(name) + str(n + 1)
-            f_uzf.write("{0:10d}{1:20s}\n".format(invar, comment))
+            comment = f" #{name} for stress period {n + 1}"
+            f_uzf.write(f"{invar:10d}{comment:20s}\n")
             if invar >= 0:
                 f_uzf.write(var)
 
@@ -1009,7 +1009,7 @@ class ModflowUzf1(Package):
         }
 
         def load_util2d(name, dtype, per=None):
-            print("   loading {} array...".format(name))
+            print(f"   loading {name} array...")
             if per is not None:
                 arrays[name][per] = Util2d.load(
                     f, model, (nrow, ncol), dtype, name, ext_unit_dict
@@ -1063,7 +1063,7 @@ class ModflowUzf1(Package):
 
         # dataset 9
         for per in range(nper):
-            print("stress period {}:".format(per + 1))
+            print(f"stress period {per + 1}:")
             line = line_parse(f.readline())
             nuzf1 = pop_item(line, int)
 
@@ -1168,7 +1168,7 @@ class ModflowUzf1(Package):
             unitnumber=unitnumber,
             filenames=filenames,
             options=options,
-            **arrays
+            **arrays,
         )
 
     @staticmethod

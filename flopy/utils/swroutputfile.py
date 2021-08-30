@@ -66,12 +66,9 @@ class SwrFile(FlopyBinaryData):
         if swrtype.lower() in self.types:
             self.type = swrtype.lower()
         else:
-            err = (
-                "SWR type ({}) is not defined. ".format(type)
-                + "Available types are:\n"
-            )
+            err = f"SWR type ({type}) is not defined. Available types are:\n"
             for t in self.types:
-                err = "{}  {}\n".format(err, t)
+                err += f"  {t}\n"
             raise Exception(err)
 
         # set data dtypes

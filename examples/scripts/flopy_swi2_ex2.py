@@ -60,7 +60,7 @@ def run():
                 if os.path.isdir(fpth):
                     continue
                 if ".py" != os.path.splitext(f)[1].lower():
-                    print("  removing...{}".format(os.path.basename(f)))
+                    print(f"  removing...{os.path.basename(f)}")
                     try:
                         os.remove(fpth)
                     except:
@@ -146,7 +146,7 @@ def run():
     if not skipRuns:
         m = ml.run_model(silent=False)
     # read stratified results
-    zetafile = os.path.join(dirs[0], "{}.zta".format(modelname))
+    zetafile = os.path.join(dirs[0], f"{modelname}.zta")
     zobj = flopy.utils.CellBudgetFile(zetafile)
     zkstpkper = zobj.get_kstpkper()
     zeta = zobj.get_data(kstpkper=zkstpkper[-1], text="ZETASRF  1")[0]
@@ -195,7 +195,7 @@ def run():
     if not skipRuns:
         m = ml.run_model(silent=False)
     # read vd model data
-    zetafile = os.path.join(dirs[0], "{}.zta".format(modelname))
+    zetafile = os.path.join(dirs[0], f"{modelname}.zta")
     zobj = flopy.utils.CellBudgetFile(zetafile)
     zkstpkper = zobj.get_kstpkper()
     zetavd = zobj.get_data(kstpkper=zkstpkper[-1], text="ZETASRF  1")[0]
@@ -468,7 +468,7 @@ def run():
     ax.set_xlabel("Horizontal distance, in meters")
     ax.set_ylabel("Elevation, in meters")
 
-    outfig = os.path.join(workspace, "Figure07_swi2ex2.{0}".format(fext))
+    outfig = os.path.join(workspace, f"Figure07_swi2ex2.{fext}")
     xsf.savefig(outfig, dpi=300)
     print("created...", outfig)
 

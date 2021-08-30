@@ -15,7 +15,7 @@ class MFInvalidTransientBlockHeaderException(Exception):
 
     def __init__(self, error):
         Exception.__init__(
-            self, "MFInvalidTransientBlockHeaderException: {}".format(error)
+            self, f"MFInvalidTransientBlockHeaderException: {error}"
         )
 
 
@@ -26,7 +26,7 @@ class ReadAsArraysException(Exception):
     """
 
     def __init__(self, error):
-        Exception.__init__(self, "ReadAsArraysException: {}".format(error))
+        Exception.__init__(self, f"ReadAsArraysException: {error}")
 
 
 # external exceptions for users
@@ -37,9 +37,7 @@ class FlopyException(Exception):
 
     def __init__(self, error, location=""):
         self.message = error
-        Exception.__init__(
-            self, "FlopyException: {} ({})".format(error, location)
-        )
+        Exception.__init__(self, f"FlopyException: {error} ({location})")
 
 
 class StructException(Exception):
@@ -49,9 +47,7 @@ class StructException(Exception):
 
     def __init__(self, error, location):
         self.message = error
-        Exception.__init__(
-            self, "StructException: {} ({})".format(error, location)
-        )
+        Exception.__init__(self, f"StructException: {error} ({location})")
 
 
 class MFDataException(Exception):
@@ -138,14 +134,14 @@ class MFDataException(Exception):
         # build error string
         error_message_0 = "An error occurred in "
         if self.data_element is not None and self.data_element != "":
-            error_message_1 = 'data element "{}" '.format(self.data_element)
+            error_message_1 = f'data element "{self.data_element}" '
         else:
             error_message_1 = ""
         if self.model is not None and self.model != "":
-            error_message_2 = 'model "{}" '.format(self.model)
+            error_message_2 = f'model "{self.model}" '
         else:
             error_message_2 = ""
-        error_message_3 = 'package "{}".'.format(self.package)
+        error_message_3 = f'package "{self.package}".'
         error_message_4 = (
             ' The error occurred while {} in the "{}" method'
             ".".format(self.current_process, self.method_caught_in)
@@ -153,9 +149,7 @@ class MFDataException(Exception):
         if len(self.messages) > 0:
             error_message_5 = "\nAdditional Information:\n"
             for index, message in enumerate(self.messages):
-                error_message_5 = "{}({}) {}\n".format(
-                    error_message_5, index + 1, message
-                )
+                error_message_5 = f"{error_message_5}({index + 1}) {message}\n"
         else:
             error_message_5 = ""
         error_message = "{}{}{}{}{}{}".format(
@@ -324,9 +318,9 @@ class MFFileMgmt:
     def _build_file(file_name, num):
         file, ext = os.path.splitext(file_name)
         if ext:
-            return "{}_{}{}".format(file, num, ext)
+            return f"{file}_{num}{ext}"
         else:
-            return "{}_{}".format(file, num)
+            return f"{file}_{num}"
 
     @staticmethod
     def string_to_file_path(fp_string):
@@ -338,9 +332,7 @@ class MFFileMgmt:
             arr_string = new_string.split(delimiter)
             if len(arr_string) > 1:
                 if os.path.isabs(fp_string):
-                    new_string = "{}{}{}".format(
-                        arr_string[0], delimiter, arr_string[1]
-                    )
+                    new_string = f"{arr_string[0]}{delimiter}{arr_string[1]}"
                 else:
                     new_string = os.path.join(arr_string[0], arr_string[1])
                 if len(arr_string) > 2:
@@ -511,8 +503,8 @@ class PackageContainer:
             package : MFPackage subclass
 
         """
-        package_abbr = "{}{}".format(model_type, package_type)
-        package_utl_abbr = "utl{}".format(package_type)
+        package_abbr = f"{model_type}{package_type}"
+        package_utl_abbr = f"utl{package_type}"
         package_list = []
         # iterate through python files
         package_file_paths = PackageContainer.get_package_file_paths()
@@ -591,16 +583,12 @@ class PackageContainer:
         internal FloPy use only, not intended for end users."""
         package_file_name = os.path.basename(package_file_path)
         module_path = os.path.splitext(package_file_name)[0]
-        module_name = "{}{}{}".format(
-            "Modflow", module_path[2].upper(), module_path[3:]
-        )
+        module_name = f"Modflow{module_path[2].upper()}{module_path[3:]}"
         if module_name.startswith("__"):
             return None
 
         # import
-        return importlib.import_module(
-            "flopy.mf6.modflow.{}".format(module_path)
-        )
+        return importlib.import_module(f"flopy.mf6.modflow.{module_path}")
 
     @staticmethod
     def get_package_file_paths():

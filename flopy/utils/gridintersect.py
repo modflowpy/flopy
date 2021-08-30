@@ -263,7 +263,7 @@ class GridIntersect:
             else:
                 rec = self._intersect_polygon_shapely(shp, sort_by_cellid)
         else:
-            err = "Shapetype {} is not supported".format(gu.shapetype)
+            err = f"Shapetype {gu.shapetype} is not supported"
             raise TypeError(err)
 
         return rec
@@ -320,7 +320,7 @@ class GridIntersect:
             for icell in self.mfgrid._cell2d.icell2d:
                 points = []
                 icverts = [
-                    "icvert_{}".format(i)
+                    f"icvert_{i}"
                     for i in range(self.mfgrid._cell2d["ncvert"][icell])
                 ]
                 for iv in self.mfgrid._cell2d[icverts][icell]:
@@ -1503,7 +1503,7 @@ class GridIntersect:
             if "facecolor" in kwargs:
                 fc = kwargs.pop("facecolor")
             else:
-                fc = "C{}".format(i % 10)
+                fc = f"C{i % 10}"
             ppi = PolygonPatch(ishp, facecolor=fc, **kwargs)
             ax.add_patch(ppi)
 
@@ -1555,7 +1555,7 @@ class GridIntersect:
         for i, ishp in enumerate(rec.ixshapes):
             if not specified_color:
                 if cmap is None:
-                    c = "C{}".format(i % 10)
+                    c = f"C{i % 10}"
                 else:
                     c = colors[i]
             if ishp.type == "MultiLineString":

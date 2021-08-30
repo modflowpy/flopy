@@ -88,8 +88,7 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
     # check dimensions of idomain
     if idomain.shape != shape3d:
         raise ValueError(
-            "shape of idomain "
-            "({}) not equal to {}".format(idomain.shape, shape3d)
+            f"shape of idomain ({idomain.shape}) not equal to {shape3d}"
         )
 
     # convert bedleak to numpy array if necessary
@@ -104,8 +103,7 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
     # check the dimensions of the bedleak array
     if bedleak.shape != shape2d:
         raise ValueError(
-            "shape of bedleak "
-            "({}) not equal to {}".format(bedleak.shape, shape2d)
+            f"shape of bedleak ({bedleak.shape}) not equal to {shape2d}"
         )
 
     # get the model grid elevations and reset lake_map using idomain

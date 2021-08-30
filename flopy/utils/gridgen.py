@@ -72,7 +72,7 @@ def features_to_shapefile(features, featuretype, filename):
         "linestring",
         "polygon",
     ]:
-        raise Exception("Unrecognized feature type: {}".format(featuretype))
+        raise Exception(f"Unrecognized feature type: {featuretype}")
 
     if featuretype.lower() in ("line", "linestring"):
         wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
@@ -106,12 +106,12 @@ def ndarray_to_asciigrid(fname, a, extent, nodata=1.0e30):
     dx = (xmax - xmin) / ncol
     assert dx == (ymax - ymin) / nrow
     # header
-    header = "ncols     {}\n".format(ncol)
-    header += "nrows    {}\n".format(nrow)
-    header += "xllcorner {}\n".format(xmin)
-    header += "yllcorner {}\n".format(ymin)
-    header += "cellsize {}\n".format(dx)
-    header += "NODATA_value {}\n".format(float(nodata))
+    header = f"ncols     {ncol}\n"
+    header += f"nrows    {nrow}\n"
+    header += f"xllcorner {xmin}\n"
+    header += f"yllcorner {ymin}\n"
+    header += f"cellsize {dx}\n"
+    header += f"NODATA_value {float(nodata)}\n"
     # replace nan with nodata
     idx = np.isnan(a)
     a[idx] = float(nodata)
@@ -307,7 +307,7 @@ class Gridgen:
                         "ymin, ymax: {}".format(elev_extent)
                     )
 
-                nm = "_gridgen.lay{}.asc".format(isurf)
+                nm = f"_gridgen.lay{isurf}.asc"
                 fname = os.path.join(self.model_ws, nm)
                 ndarray_to_asciigrid(fname, elev, elev_extent)
                 self._asciigrid_dict[isurf] = nm
@@ -354,7 +354,7 @@ class Gridgen:
         self.nja = 0
 
         # Create shapefile or set shapefile to feature
-        adname = "ad{}".format(len(self._addict))
+        adname = f"ad{len(self._addict)}"
         if isinstance(feature, list):
             # Create a shapefile
             adname_w_path = os.path.join(self.model_ws, adname)
@@ -364,8 +364,8 @@ class Gridgen:
             shapefile = feature
 
         self._addict[adname] = shapefile
-        sn = os.path.join(self.model_ws, shapefile + ".shp")
-        assert os.path.isfile(sn), "Shapefile does not exist: {}".format(sn)
+        sn = os.path.join(self.model_ws, f"{shapefile}.shp")
+        assert os.path.isfile(sn), f"Shapefile does not exist: {sn}"
 
         for k in layers:
             self._active_domain[k] = adname
@@ -404,7 +404,7 @@ class Gridgen:
         self.nja = 0
 
         # Create shapefile or set shapefile to feature
-        rfname = "rf{}".format(len(self._rfdict))
+        rfname = f"rf{len(self._rfdict)}"
         if isinstance(features, list):
             rfname_w_path = os.path.join(self.model_ws, rfname)
             features_to_shapefile(features, featuretype, rfname_w_path)
@@ -413,8 +413,8 @@ class Gridgen:
             shapefile = features
 
         self._rfdict[rfname] = [shapefile, featuretype, level]
-        sn = os.path.join(self.model_ws, shapefile + ".shp")
-        assert os.path.isfile(sn), "Shapefile does not exist: {}".format(sn)
+        sn = os.path.join(self.model_ws, f"{shapefile}.shp")
+        assert os.path.isfile(sn), f"Shapefile does not exist: {sn}"
 
         for k in layers:
             self._refinement_features[k].append(rfname)
@@ -549,7 +549,7 @@ class Gridgen:
         f.close()
         assert os.path.isfile(
             fname
-        ), "Could not create export dfn file: {}".format(fname)
+        ), f"Could not create export dfn file: {fname}"
 
         # Export shapefiles
         cmds = [
@@ -645,7 +645,7 @@ class Gridgen:
         cmap="Dark2",
         a=None,
         masked_values=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot the grid.  This method will plot the grid using the shapefile
@@ -704,7 +704,7 @@ class Gridgen:
             a=a,
             masked_values=masked_values,
             idx=idx,
-            **kwargs
+            **kwargs,
         )
         plt.xlim(xmin, xmax)
         plt.ylim(ymin, ymax)
@@ -807,9 +807,7 @@ class Gridgen:
         # top
         top = [0] * nlay
         for k in range(nlay):
-            fname = os.path.join(
-                self.model_ws, "quadtreegrid.top{}.dat".format(k + 1)
-            )
+            fname = os.path.join(self.model_ws, f"quadtreegrid.top{k + 1}.dat")
             f = open(fname, "r")
             tpk = np.empty((nodelay[k]), dtype=np.float32)
             tpk = read1d(f, tpk)
@@ -822,16 +820,14 @@ class Gridgen:
                     (nodelay[k],),
                     np.float32,
                     np.reshape(tpk, (nodelay[k],)),
-                    name="top {}".format(k + 1),
+                    name=f"top {k + 1}",
                 )
             top[k] = tpk
 
         # bot
         bot = [0] * nlay
         for k in range(nlay):
-            fname = os.path.join(
-                self.model_ws, "quadtreegrid.bot{}.dat".format(k + 1)
-            )
+            fname = os.path.join(self.model_ws, f"quadtreegrid.bot{k + 1}.dat")
             f = open(fname, "r")
             btk = np.empty((nodelay[k]), dtype=np.float32)
             btk = read1d(f, btk)
@@ -844,7 +840,7 @@ class Gridgen:
                     (nodelay[k],),
                     np.float32,
                     np.reshape(btk, (nodelay[k],)),
-                    name="bot {}".format(k + 1),
+                    name=f"bot {k + 1}",
                 )
             bot[k] = btk
 
@@ -867,7 +863,7 @@ class Gridgen:
                     (nodelay[k],),
                     np.float32,
                     np.reshape(ark, (nodelay[k],)),
-                    name="area layer {}".format(k + 1),
+                    name=f"area layer {k + 1}",
                 )
             area[k] = ark
             istart = istop
@@ -1011,9 +1007,7 @@ class Gridgen:
         istart = 0
         for k in range(nlay):
             istop = istart + nodelay[k]
-            fname = os.path.join(
-                self.model_ws, "quadtreegrid.top{}.dat".format(k + 1)
-            )
+            fname = os.path.join(self.model_ws, f"quadtreegrid.top{k + 1}.dat")
             f = open(fname, "r")
             tpk = np.empty((nodelay[k]), dtype=np.float32)
             tpk = read1d(f, tpk)
@@ -1039,9 +1033,7 @@ class Gridgen:
         istart = 0
         for k in range(nlay):
             istop = istart + nodelay[k]
-            fname = os.path.join(
-                self.model_ws, "quadtreegrid.bot{}.dat".format(k + 1)
-            )
+            fname = os.path.join(self.model_ws, f"quadtreegrid.bot{k + 1}.dat")
             f = open(fname, "r")
             btk = np.empty((nodelay[k]), dtype=np.float32)
             btk = read1d(f, btk)
@@ -1694,15 +1686,15 @@ class Gridgen:
         ifname = "intersect_feature"
         if isinstance(features, list):
             ifname_w_path = os.path.join(self.model_ws, ifname)
-            if os.path.exists(ifname_w_path + ".shp"):
-                os.remove(ifname_w_path + ".shp")
+            if os.path.exists(f"{ifname_w_path}.shp"):
+                os.remove(f"{ifname_w_path}.shp")
             features_to_shapefile(features, featuretype, ifname_w_path)
             shapefile = ifname
         else:
             shapefile = features
 
-        sn = os.path.join(self.model_ws, shapefile + ".shp")
-        assert os.path.isfile(sn), "Shapefile does not exist: {}".format(sn)
+        sn = os.path.join(self.model_ws, f"{shapefile}.shp")
+        assert os.path.isfile(sn), f"Shapefile does not exist: {sn}"
 
         fname = os.path.join(self.model_ws, "_intersect.dfn")
         if os.path.isfile(fname):
@@ -1754,10 +1746,10 @@ class Gridgen:
         s = ""
         s += "BEGIN GRID_INTERSECTION intersect\n"
         s += "  GRID = quadtreegrid\n"
-        s += "  LAYER = {}\n".format(layer + 1)
-        s += "  SHAPEFILE = {}\n".format(shapefile)
-        s += "  FEATURE_TYPE = {}\n".format(featuretype)
-        s += "  OUTPUT_FILE = {}\n".format("intersection.ifo")
+        s += f"  LAYER = {layer + 1}\n"
+        s += f"  SHAPEFILE = {shapefile}\n"
+        s += f"  FEATURE_TYPE = {featuretype}\n"
+        s += "  OUTPUT_FILE = intersection.ifo\n"
         s += "END GRID_INTERSECTION intersect\n"
         return s
 
@@ -1771,17 +1763,17 @@ class Gridgen:
 
         s = ""
         s += "BEGIN MODFLOW_GRID basegrid\n"
-        s += "  ROTATION_ANGLE = {}\n".format(angrot)
-        s += "  X_OFFSET = {}\n".format(xoff)
-        s += "  Y_OFFSET = {}\n".format(yoff)
-        s += "  NLAY = {}\n".format(self.nlay)
-        s += "  NROW = {}\n".format(self.nrow)
-        s += "  NCOL = {}\n".format(self.ncol)
+        s += f"  ROTATION_ANGLE = {angrot}\n"
+        s += f"  X_OFFSET = {xoff}\n"
+        s += f"  Y_OFFSET = {yoff}\n"
+        s += f"  NLAY = {self.nlay}\n"
+        s += f"  NROW = {self.nrow}\n"
+        s += f"  NCOL = {self.ncol}\n"
 
         # delr
         delr = self.dis.delr.array
         if delr.min() == delr.max():
-            s += "  DELR = CONSTANT {}\n".format(delr.min())
+            s += f"  DELR = CONSTANT {delr.min()}\n"
         else:
             s += "  DELR = OPEN/CLOSE delr.dat\n"
             fname = os.path.join(self.model_ws, "delr.dat")
@@ -1790,7 +1782,7 @@ class Gridgen:
         # delc
         delc = self.dis.delc.array
         if delc.min() == delc.max():
-            s += "  DELC = CONSTANT {}\n".format(delc.min())
+            s += f"  DELC = CONSTANT {delc.min()}\n"
         else:
             s += "  DELC = OPEN/CLOSE delc.dat\n"
             fname = os.path.join(self.model_ws, "delc.dat")
@@ -1799,7 +1791,7 @@ class Gridgen:
         # top
         top = self.dis.top.array
         if top.min() == top.max():
-            s += "  TOP = CONSTANT {}\n".format(top.min())
+            s += f"  TOP = CONSTANT {top.min()}\n"
         else:
             s += "  TOP = OPEN/CLOSE top.dat\n"
             fname = os.path.join(self.model_ws, "top.dat")
@@ -1813,14 +1805,12 @@ class Gridgen:
             else:
                 bot = botm[k]
             if bot.min() == bot.max():
-                s += "  BOTTOM LAYER {} = CONSTANT {}\n".format(
-                    k + 1, bot.min()
-                )
+                s += f"  BOTTOM LAYER {k + 1} = CONSTANT {bot.min()}\n"
             else:
                 s += "  BOTTOM LAYER {0} = OPEN/CLOSE bot{0}.dat\n".format(
                     k + 1
                 )
-                fname = os.path.join(self.model_ws, "bot{}.dat".format(k + 1))
+                fname = os.path.join(self.model_ws, f"bot{k + 1}.dat")
                 np.savetxt(fname, bot)
 
         s += "END MODFLOW_GRID\n"
@@ -1830,10 +1820,10 @@ class Gridgen:
         s = ""
         for rfname, rf in self._rfdict.items():
             shapefile, featuretype, level = rf
-            s += "BEGIN REFINEMENT_FEATURES {}\n".format(rfname)
-            s += "  SHAPEFILE = {}\n".format(shapefile)
-            s += "  FEATURE_TYPE = {}\n".format(featuretype)
-            s += "  REFINEMENT_LEVEL = {}\n".format(level)
+            s += f"BEGIN REFINEMENT_FEATURES {rfname}\n"
+            s += f"  SHAPEFILE = {shapefile}\n"
+            s += f"  FEATURE_TYPE = {featuretype}\n"
+            s += f"  REFINEMENT_LEVEL = {level}\n"
             s += "END REFINEMENT_FEATURES\n"
             s += 2 * "\n"
         return s
@@ -1841,10 +1831,10 @@ class Gridgen:
     def _ad_blocks(self):
         s = ""
         for adname, shapefile in self._addict.items():
-            s += "BEGIN ACTIVE_DOMAIN {}\n".format(adname)
-            s += "  SHAPEFILE = {}\n".format(shapefile)
-            s += "  FEATURE_TYPE = {}\n".format("polygon")
-            s += "  INCLUDE_BOUNDARY = {}\n".format("True")
+            s += f"BEGIN ACTIVE_DOMAIN {adname}\n"
+            s += f"  SHAPEFILE = {shapefile}\n"
+            s += "  FEATURE_TYPE = polygon\n"
+            s += "  INCLUDE_BOUNDARY = True\n"
             s += "END ACTIVE_DOMAIN\n"
             s += 2 * "\n"
         return s
@@ -1857,15 +1847,15 @@ class Gridgen:
         for k, adk in enumerate(self._active_domain):
             if adk is None:
                 continue
-            s += "  ACTIVE_DOMAIN LAYER {} = {}\n".format(k + 1, adk)
+            s += f"  ACTIVE_DOMAIN LAYER {k + 1} = {adk}\n"
 
         # Write refinement feature information
         for k, rfkl in enumerate(self._refinement_features):
             if len(rfkl) == 0:
                 continue
-            s += "  REFINEMENT_FEATURES LAYER {} = ".format(k + 1)
+            s += f"  REFINEMENT_FEATURES LAYER {k + 1} = "
             for rf in rfkl:
-                s += rf + " "
+                s += f"{rf} "
             s += "\n"
 
         s += "  SMOOTHING = full\n"
@@ -1875,18 +1865,14 @@ class Gridgen:
                 grd = self._asciigrid_dict[k]
             else:
                 grd = "basename"
-            s += "  TOP LAYER {} = {} {}\n".format(
-                k + 1, self.surface_interpolation[k], grd
-            )
+            s += f"  TOP LAYER {k + 1} = {self.surface_interpolation[k]} {grd}\n"
 
         for k in range(self.nlay):
             if self.surface_interpolation[k + 1] == "ASCIIGRID":
                 grd = self._asciigrid_dict[k + 1]
             else:
                 grd = "basename"
-            s += "  BOTTOM LAYER {} = {} {}\n".format(
-                k + 1, self.surface_interpolation[k + 1], grd
-            )
+            s += f"  BOTTOM LAYER {k + 1} = {self.surface_interpolation[k + 1]} {grd}\n"
 
         s += "  GRID_DEFINITION_FILE = quadtreegrid.dfn\n"
         s += "END QUADTREE_BUILDER\n"
@@ -1908,9 +1894,7 @@ class Gridgen:
         s += "BEGIN GRID_TO_USGDATA grid_to_usgdata\n"
         s += "  GRID = quadtreegrid\n"
         s += "  USG_DATA_PREFIX = qtg\n"
-        s += "  VERTICAL_PASS_THROUGH = {0}\n".format(
-            self.vertical_pass_through
-        )
+        s += f"  VERTICAL_PASS_THROUGH = {self.vertical_pass_through}\n"
         s += "END GRID_TO_USGDATA\n"
         s += "\n"
         s += "BEGIN GRID_TO_VTKFILE grid_to_vtk\n"
@@ -1941,7 +1925,7 @@ class Gridgen:
         fname = os.path.join(self.model_ws, "qtg.nod")
         if not os.path.isfile(fname):
             raise Exception(
-                "File {} should have been created by gridgen.".format(fname)
+                f"File {fname} should have been created by gridgen."
             )
         f = open(fname, "r")
         line = f.readline()

@@ -21,12 +21,12 @@ def __export_ascii_grid(modelgrid, file_path, v, nodata=0.0):
     xcenters = modelgrid.xcellcenters[0, :]
     cellsize = xcenters[1] - xcenters[0]
     with open(file_path, "w") as f:
-        f.write("NCOLS {}\n".format(shape[1]))
-        f.write("NROWS {}\n".format(shape[0]))
-        f.write("XLLCENTER {}\n".format(modelgrid.xoffset + 0.5 * cellsize))
-        f.write("YLLCENTER {}\n".format(modelgrid.yoffset + 0.5 * cellsize))
-        f.write("CELLSIZE {}\n".format(cellsize))
-        f.write("NODATA_VALUE {}\n".format(nodata))
+        f.write(f"NCOLS {shape[1]}\n")
+        f.write(f"NROWS {shape[0]}\n")
+        f.write(f"XLLCENTER {modelgrid.xoffset + 0.5 * cellsize}\n")
+        f.write(f"YLLCENTER {modelgrid.yoffset + 0.5 * cellsize}\n")
+        f.write(f"CELLSIZE {cellsize}\n")
+        f.write(f"NODATA_VALUE {nodata}\n")
         np.savetxt(f, v, fmt="%.4f")
     return
 
@@ -254,9 +254,7 @@ def test_lake():
 
     assert (
         pakdata_dict[0] == 54
-    ), "number of lake connections ({}) not equal " "to 54.".format(
-        pakdata_dict[0]
-    )
+    ), f"number of lake connections ({pakdata_dict[0]}) not equal to 54."
 
     assert len(connectiondata) == 54, (
         "number of lake connectiondata entries ({}) not equal "
@@ -290,7 +288,7 @@ def test_lake():
     sim.write_simulation()
     success = sim.run_simulation(silent=False)
 
-    assert success, "could not run {} with lake".format(sim.name)
+    assert success, f"could not run {sim.name} with lake"
 
     return
 
@@ -462,9 +460,7 @@ def test_embedded_lak_ex01():
 
     assert (
         pakdata_dict[0] == 57
-    ), "number of lake connections ({}) not equal " "to 57.".format(
-        pakdata_dict[0]
-    )
+    ), f"number of lake connections ({pakdata_dict[0]}) not equal to 57."
 
     assert len(connectiondata) == 57, (
         "number of lake connectiondata entries ({}) not equal "
@@ -498,7 +494,7 @@ def test_embedded_lak_ex01():
     sim.write_simulation()
     success = sim.run_simulation(silent=False)
 
-    assert success, "could not run {}".format(sim.name)
+    assert success, f"could not run {sim.name}"
 
 
 def test_embedded_lak_prudic():
@@ -592,13 +588,10 @@ def test_embedded_lak_prudic():
                 match = np.allclose(cd[jdx], cdbase[jdx])
             if not match:
                 print(
-                    "connection data do match for connection {} "
-                    "for lake {}".format(idx, cd[0])
+                    f"connection data do match for connection {idx} for lake {cd[0]}"
                 )
                 break
-        assert match, "connection data do not match for connection {}".format(
-            jdx
-        )
+        assert match, f"connection data do not match for connection {jdx}"
 
     # evaluate the revised idomain, only layer 1 has been adjusted
     idomain0_test = idomain[0, :, :].copy()
@@ -677,11 +670,9 @@ def test_embedded_lak_prudic_mixed():
         if lakeno == 0:
             assert (
                 bedleak == "none"
-            ), "bedleak for lake 0 " "is not 'none' ({})".format(bedleak)
+            ), f"bedleak for lake 0 is not 'none' ({bedleak})"
         else:
-            assert (
-                bedleak == 1.0
-            ), "bedleak for lake 1 " "is not 1.0 ({})".format(bedleak)
+            assert bedleak == 1.0, f"bedleak for lake 1 is not 1.0 ({bedleak})"
 
     return
 

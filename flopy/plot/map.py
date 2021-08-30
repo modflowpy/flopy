@@ -303,7 +303,7 @@ class PlotMapView:
         color_noflow="black",
         color_ch="blue",
         color_vpt="red",
-        **kwargs
+        **kwargs,
     ):
         """
         Make a plot of ibound.  If not specified, then pull ibound from the
@@ -389,7 +389,7 @@ class PlotMapView:
         kper=0,
         color=None,
         plotAll=False,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot boundary conditions locations for a specific boundary
@@ -446,7 +446,7 @@ class PlotMapView:
                         mflist = pp.stress_period_data.array[kper]
                     except Exception as e:
                         raise Exception(
-                            "Not a list-style boundary package: " + str(e)
+                            f"Not a list-style boundary package: {e!s}"
                         )
                     if mflist is None:
                         return
@@ -469,7 +469,7 @@ class PlotMapView:
                     mflist = p.stress_period_data[kper]
                 except Exception as e:
                     raise Exception(
-                        "Not a list-style boundary package: " + str(e)
+                        f"Not a list-style boundary package: {e!s}"
                     )
                 if mflist is None:
                     return
@@ -627,7 +627,7 @@ class PlotMapView:
         jstep=1,
         normalize=False,
         masked_values=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot a vector.
@@ -862,7 +862,7 @@ class PlotMapView:
         direction="ending",
         selection=None,
         selection_direction=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot the MODPATH endpoints.

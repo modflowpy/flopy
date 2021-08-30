@@ -264,8 +264,7 @@ class ModflowFhb(Package):
         if self.nflw > 0:
             if self.ds5 is None:
                 raise TypeError(
-                    "dataset 5 is not specified but "
-                    "nflw > 0 ({})".format(self.nflw)
+                    f"dataset 5 is not specified but nflw > 0 ({self.nflw})"
                 )
 
             if self.ds5.shape[0] != self.nflw:
@@ -287,8 +286,7 @@ class ModflowFhb(Package):
         if self.nhed > 0:
             if self.ds7 is None:
                 raise TypeError(
-                    "dataset 7 is not specified but "
-                    "nhed > 0 ({})".format(self.nhed)
+                    f"dataset 7 is not specified but nhed > 0 ({self.nhed})"
                 )
             if self.ds7.shape[0] != self.nhed:
                 raise ValueError(
@@ -325,9 +323,9 @@ class ModflowFhb(Package):
         dtype.append(("iaux", int))
         for n in range(nbdtim):
             if head:
-                name = "sbhed{}".format(n + 1)
+                name = f"sbhed{n + 1}"
             else:
-                name = "flwrat{}".format(n + 1)
+                name = f"flwrat{n + 1}"
             dtype.append((name, np.float32))
         return np.dtype(dtype)
 
@@ -357,34 +355,34 @@ class ModflowFhb(Package):
         # f.write('{0:s}\n'.format(self.heading))
 
         # Data set 1
-        f.write("{} ".format(self.nbdtim))
-        f.write("{} ".format(self.nflw))
-        f.write("{} ".format(self.nhed))
-        f.write("{} ".format(self.ifhbss))
-        f.write("{} ".format(self.ipakcb))
-        f.write("{} ".format(self.nfhbx1))
-        f.write("{}\n".format(self.nfhbx2))
+        f.write(f"{self.nbdtim} ")
+        f.write(f"{self.nflw} ")
+        f.write(f"{self.nhed} ")
+        f.write(f"{self.ifhbss} ")
+        f.write(f"{self.ipakcb} ")
+        f.write(f"{self.nfhbx1} ")
+        f.write(f"{self.nfhbx2}\n")
 
         # Dataset 2 - flow auxiliary names
 
         # Dataset 3 - head auxiliary names
 
         # Dataset 4a IFHBUN CNSTM IFHBPT
-        f.write("{} ".format(self.unit_number[0]))
-        f.write("{} ".format(self.bdtimecnstm))
-        f.write("{}\n".format(self.ifhbpt))
+        f.write(f"{self.unit_number[0]} ")
+        f.write(f"{self.bdtimecnstm} ")
+        f.write(f"{self.ifhbpt}\n")
 
         # Dataset 4b
         for n in range(self.nbdtim):
-            f.write("{} ".format(self.bdtime[n]))
+            f.write(f"{self.bdtime[n]} ")
         f.write("\n")
 
         # Dataset 5 and 6
         if self.nflw > 0:
             # Dataset 5a IFHBUN CNSTM IFHBPT
-            f.write("{} ".format(self.unit_number[0]))
-            f.write("{} ".format(self.cnstm5))
-            f.write("{}\n".format(self.ifhbpt))
+            f.write(f"{self.unit_number[0]} ")
+            f.write(f"{self.cnstm5} ")
+            f.write(f"{self.ifhbpt}\n")
 
             # Dataset 5b
             for n in range(self.nflw):
@@ -392,7 +390,7 @@ class ModflowFhb(Package):
                     v = self.ds5[n][name]
                     if name in ["k", "i", "j", "node"]:
                         v += 1
-                    f.write("{} ".format(v))
+                    f.write(f"{v} ")
                 f.write("\n")
 
             # Dataset 6a and 6b - flow auxiliary data
@@ -402,9 +400,9 @@ class ModflowFhb(Package):
         # Dataset 7
         if self.nhed > 0:
             # Dataset 7a IFHBUN CNSTM IFHBPT
-            f.write("{} ".format(self.unit_number[0]))
-            f.write("{} ".format(self.cnstm7))
-            f.write("{}\n".format(self.ifhbpt))
+            f.write(f"{self.unit_number[0]} ")
+            f.write(f"{self.cnstm7} ")
+            f.write(f"{self.ifhbpt}\n")
 
             # Dataset 7b IFHBUN CNSTM IFHBPT
             for n in range(self.nhed):
@@ -412,7 +410,7 @@ class ModflowFhb(Package):
                     v = self.ds7[n][name]
                     if name in ["k", "i", "j", "node"]:
                         v += 1
-                    f.write("{} ".format(v))
+                    f.write(f"{v} ")
                 f.write("\n")
 
             # Dataset 8a and 8b - head auxiliary data
@@ -601,8 +599,7 @@ class ModflowFhb(Package):
                 for naux in range(nfhbx1):
                     if model.verbose:
                         sys.stdout.write(
-                            "loading fhb dataset 6a - aux "
-                            "{}\n".format(naux + 1)
+                            f"loading fhb dataset 6a - aux {naux + 1}\n"
                         )
                     sys.stdout.write(
                         "dataset 6a will not be preserved in "
@@ -623,8 +620,7 @@ class ModflowFhb(Package):
 
                     if model.verbose:
                         sys.stdout.write(
-                            "loading fhb dataset 6b - aux "
-                            "{}\n".format(naux + 1)
+                            f"loading fhb dataset 6b - aux {naux + 1}\n"
                         )
                     sys.stdout.write(
                         "dataset 6b will not be preserved in "
@@ -690,8 +686,7 @@ class ModflowFhb(Package):
                 for naux in range(nfhbx1):
                     if model.verbose:
                         sys.stdout.write(
-                            "loading fhb dataset 8a - aux "
-                            "{}\n".format(naux + 1)
+                            f"loading fhb dataset 8a - aux {naux + 1}\n"
                         )
                     sys.stdout.write(
                         "dataset 8a will not be preserved in "
@@ -713,8 +708,7 @@ class ModflowFhb(Package):
 
                     if model.verbose:
                         sys.stdout.write(
-                            "loading fhb dataset 8b - aux "
-                            "{}\n".format(naux + 1)
+                            f"loading fhb dataset 8b - aux {naux + 1}\n"
                         )
                     sys.stdout.write(
                         "dataset 8b will not be preserved in "

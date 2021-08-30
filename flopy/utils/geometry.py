@@ -173,7 +173,7 @@ class Collection(list):
         super().__init__(geometries)
 
     def __repr__(self):
-        return "Shapes: {}".format(list(self))
+        return f"Shapes: {list(self)}"
 
     @property
     def __geo_interface__(self):
@@ -238,7 +238,7 @@ class MultiPolygon(Collection):
             super().__init__(polygons)
 
     def __repr__(self):
-        return "MultiPolygon: {}".format(list(self))
+        return f"MultiPolygon: {list(self)}"
 
     @property
     def __geo_interface__(self):
@@ -266,7 +266,7 @@ class MultiLineString(Collection):
             super().__init__(linestrings)
 
     def __repr__(self):
-        return "LineString: {}".format(list(self))
+        return f"LineString: {list(self)}"
 
     @property
     def __geo_interface__(self):
@@ -294,7 +294,7 @@ class MultiPoint(Collection):
             super().__init__(points)
 
     def __repr__(self):
-        return "MultiPoint: {}".format(list(self))
+        return f"MultiPoint: {list(self)}"
 
     @property
     def __geo_interface__(self):

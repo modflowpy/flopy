@@ -79,7 +79,7 @@ ims = flopy.mf6.ModflowIms(
 
 # Create the Flopy groundwater flow (gwf) model object
 
-model_nam_file = "{}.nam".format(name)
+model_nam_file = f"{name}.nam"
 gwf = flopy.mf6.ModflowGwf(
     sim,
     modelname=name,
@@ -169,9 +169,9 @@ wel = flopy.mf6.ModflowGwfwel(
 # Save heads and budget output to binary files and print heads to the model
 # listing file at the end of the stress period.
 
-headfile = "{}.hds".format(name)
+headfile = f"{name}.hds"
 head_filerecord = [headfile]
-budgetfile = "{}.cbb".format(name)
+budgetfile = f"{name}.cbb"
 budget_filerecord = [budgetfile]
 saverecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
 printrecord = [("HEAD", "LAST")]
@@ -270,7 +270,7 @@ ax.clabel(contours, fmt="%2.1f")
 cb = plt.colorbar(pa, shrink=0.5, ax=ax)
 # second subplot
 ax = axes[1]
-ax.set_title("Model Layer {}".format(Nlay))
+ax.set_title(f"Model Layer {Nlay}")
 modelmap = flopy.plot.PlotMapView(model=gwf, ax=ax, layer=Nlay - 1)
 linecollection = modelmap.plot_grid(lw=0.5, color="0.5")
 pa = modelmap.plot_array(h, vmin=vmin, vmax=vmax)
@@ -326,7 +326,7 @@ flowja = gwf.oc.output.budget().get_data(
 # into the function because it contains the ia array that defines
 # the location of the diagonal position in the `FLOW-JA-FACE` array.
 
-grb_file = "{}.dis.grb".format(name)
+grb_file = f"{name}.dis.grb"
 residual = flopy.mf6.utils.get_residuals(flowja, grb_file=grb_file)
 
 # ### Plot a Map of the flow error in Layer 10

@@ -142,7 +142,7 @@ class Dfn:
             if package_abbr not in file_order:
                 file_order.append(package_abbr)
         return [
-            fname + ".dfn" for fname in file_order if fname + ".dfn" in files
+            f"{fname}.dfn" for fname in file_order if f"{fname}.dfn" in files
         ]
 
     def _file_type(self, file_name):
@@ -951,7 +951,7 @@ class MFDataItemStructure:
                 self.python_name = self.name.replace("-", "_").lower()
                 # don't allow name to be a python keyword
                 if keyword.iskeyword(self.name):
-                    self.python_name = "{}_".format(self.python_name)
+                    self.python_name = f"{self.python_name}_"
                 # performance optimizations
                 if self.name == "aux":
                     self.is_aux = True
@@ -1099,20 +1099,18 @@ class MFDataItemStructure:
                 self.jagged_array = arr_line[1]
 
     def get_type_string(self):
-        return "[{}]".format(self.type_string)
+        return f"[{self.type_string}]"
 
     def get_description(self, line_size, initial_indent, level_indent):
-        item_desc = "* {} ({}) {}".format(
-            self.name, self.type_string, self.description
-        )
+        item_desc = f"* {self.name} ({self.type_string}) {self.description}"
         if self.numeric_index or self.is_cellid:
             # append zero-based index text
-            item_desc = "{} {}".format(item_desc, numeric_index_text)
+            item_desc = f"{item_desc} {numeric_index_text}"
         twr = TextWrapper(
             width=line_size,
             initial_indent=initial_indent,
             drop_whitespace=True,
-            subsequent_indent="  {}".format(initial_indent),
+            subsequent_indent=f"  {initial_indent}",
         )
         item_desc = "\n".join(twr.wrap(item_desc))
         return item_desc
@@ -1121,25 +1119,22 @@ class MFDataItemStructure:
         description = self.get_description(
             line_size, initial_indent + level_indent, level_indent
         )
-        param_doc_string = "{} : {}".format(
-            self.python_name, self.get_type_string()
-        )
+        param_doc_string = f"{self.python_name} : {self.get_type_string()}"
         twr = TextWrapper(
             width=line_size,
             initial_indent=initial_indent,
-            subsequent_indent="  {}".format(initial_indent),
+            subsequent_indent=f"  {initial_indent}",
             drop_whitespace=True,
         )
         param_doc_string = "\n".join(twr.wrap(param_doc_string))
-        param_doc_string = "{}\n{}".format(param_doc_string, description)
+        param_doc_string = f"{param_doc_string}\n{description}"
         return param_doc_string
 
     def get_keystring_desc(self, line_size, initial_indent, level_indent):
         if self.type != DatumType.keystring:
             raise StructException(
-                'Can not get keystring description for "{}" '
-                "because it is not a keystring"
-                ".".format(self.name),
+                f'Can not get keystring description for "{self.name}" '
+                "because it is not a keystring",
                 self.path,
             )
 
@@ -1147,7 +1142,7 @@ class MFDataItemStructure:
         description = ""
         for key, item in self.keystring_dict.items():
             if description:
-                description = "{}\n".format(description)
+                description = f"{description}\n"
             description = "{}{}".format(
                 description,
                 item.get_doc_string(line_size, initial_indent, level_indent),
@@ -1205,7 +1200,7 @@ class MFDataItemStructure:
             return arr_line
         if not (arr_line[2] in common and len(arr_line) >= 4):
             raise StructException(
-                'Could not find line "{}" in common dfn' ".".format(arr_line)
+                f'Could not find line "{arr_line}" in common dfn.'
             )
         close_bracket_loc = MFDataItemStructure._find_close_bracket(
             arr_line[2:]
@@ -1274,7 +1269,7 @@ class MFDataItemStructure:
         elif type_string.lower() == "repeating_record":
             return DatumType.repeating_record
         else:
-            exc_text = 'Data item type "{}" not supported.'.format(type_string)
+            exc_text = f'Data item type "{type_string}" not supported.'
             raise StructException(exc_text, self.path)
 
     def get_rec_type(self):
@@ -1579,7 +1574,7 @@ class MFDataStructure:
         if item.name.lower() in mfstruct.flopy_dict:
             # read flopy-specific dfn data
             for name, value in mfstruct.flopy_dict[item.name.lower()].items():
-                line = "{} {}".format(name, value)
+                line = f"{name} {value}"
                 item.set_value(line, None)
                 if dfn_list is not None:
                     dfn_list[-1].append(line)
@@ -1706,9 +1701,9 @@ class MFDataStructure:
             type_header = "["
             type_footer = "]"
             if self.repeating:
-                type_footer = "] ... [{}]".format(type_string)
+                type_footer = f"] ... [{type_string}]"
 
-        return "{}{}{}".format(type_header, type_string, type_footer)
+        return f"{type_header}{type_string}{type_footer}"
 
     def get_docstring_type_array(self, type_array):
         for index, item in enumerate(self.data_item_structures):
@@ -1739,28 +1734,28 @@ class MFDataStructure:
                 item_desc = item.get_description(
                     line_size, initial_indent + level_indent, level_indent
                 )
-                description = "{}\n{}".format(description, item_desc)
+                description = f"{description}\n{item_desc}"
             elif datastr.display_item(index):
                 if len(description.strip()) > 0:
-                    description = "{}\n".format(description)
+                    description = f"{description}\n"
                 item_desc = item.description
                 if item.numeric_index or item.is_cellid:
                     # append zero-based index text
-                    item_desc = "{} {}".format(item_desc, numeric_index_text)
+                    item_desc = f"{item_desc} {numeric_index_text}"
 
-                item_desc = "* {} ({}) {}".format(item.name, itype, item_desc)
+                item_desc = f"* {item.name} ({itype}) {item_desc}"
                 twr = TextWrapper(
                     width=line_size,
                     initial_indent=initial_indent,
-                    subsequent_indent="  {}".format(initial_indent),
+                    subsequent_indent=f"  {initial_indent}",
                 )
                 item_desc = "\n".join(twr.wrap(item_desc))
-                description = "{}{}".format(description, item_desc)
+                description = f"{description}{item_desc}"
                 if item.type == DatumType.keystring:
                     keystr_desc = item.get_keystring_desc(
                         line_size, initial_indent + level_indent, level_indent
                     )
-                    description = "{}\n{}".format(description, keystr_desc)
+                    description = f"{description}\n{keystr_desc}"
         return description
 
     def get_subpackage_description(
@@ -1783,7 +1778,7 @@ class MFDataStructure:
         twr = TextWrapper(
             width=line_size,
             initial_indent=initial_indent,
-            subsequent_indent="  {}".format(initial_indent),
+            subsequent_indent=f"  {initial_indent}",
         )
         return "\n".join(twr.wrap(item_desc))
 
@@ -1795,9 +1790,7 @@ class MFDataStructure:
                 line_size, initial_indent + level_indent, level_indent
             )
             var_name = self.parameter_name
-            type_name = "{}varname:data{} or {} data".format(
-                "{", "}", self.construct_data
-            )
+            type_name = f"{{varname:data}} or {self.construct_data} data"
         else:
             description = self.get_description(
                 line_size, initial_indent + level_indent, level_indent
@@ -1805,14 +1798,14 @@ class MFDataStructure:
             var_name = self.python_name
             type_name = self.get_type_string()
 
-        param_doc_string = "{} : {}".format(var_name, type_name)
+        param_doc_string = f"{var_name} : {type_name}"
         twr = TextWrapper(
             width=line_size,
             initial_indent=initial_indent,
-            subsequent_indent="  {}".format(initial_indent),
+            subsequent_indent=f"  {initial_indent}",
         )
         param_doc_string = "\n".join(twr.wrap(param_doc_string))
-        param_doc_string = "{}\n{}".format(param_doc_string, description)
+        param_doc_string = f"{param_doc_string}\n{description}"
         return param_doc_string
 
     def get_type_array(self, type_array):
@@ -2296,9 +2289,7 @@ class MFSimulationStructure:
             or dfn_file.dfn_type == DfnType.gnc_file
             or dfn_file.dfn_type == DfnType.mvr_file
         ):
-            model_ver = "{}{}".format(
-                dfn_file.model_type, MFStructure(True).get_version_string()
-            )
+            model_ver = f"{dfn_file.model_type}{MFStructure(True).get_version_string()}"
             if model_ver not in self.model_struct_objs:
                 self.add_model(model_ver)
             if dfn_file.dfn_type == DfnType.model_file:

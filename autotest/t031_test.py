@@ -41,9 +41,9 @@ def test_mpsim():
         exe_name="mp6",
         modflowmodel=m,
         model_ws=path,
-        dis_file=m.name + ".dis",
-        head_file=m.name + ".hed",
-        budget_file=m.name + ".bud",
+        dis_file=f"{m.name}.dis",
+        head_file=f"{m.name}.hed",
+        budget_file=f"{m.name}.bud",
     )
 
     mpb = flopy.modpath.Modpath6Bas(
@@ -135,7 +135,7 @@ def test_get_destination_data():
 
     # test deprecation
     if shapefile:
-        m.dis.export(path + "/dis.shp")
+        m.dis.export(f"{path}/dis.shp")
 
     pthld = PathlineFile(os.path.join(path, "EXAMPLE-3.pathline"))
     epd = EndpointFile(os.path.join(path, "EXAMPLE-3.endpoint"))

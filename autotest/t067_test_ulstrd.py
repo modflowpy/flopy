@@ -59,27 +59,25 @@ def test_ulstrd():
     # rewrite ghb
     fname = os.path.join(ws, "original.ghb")
     with open(fname, "w") as f:
-        f.write("{} {}\n".format(ghbra.shape[0], 0))
+        f.write(f"{ghbra.shape[0]} 0\n")
         for kper in range(nper):
-            f.write("{} {}\n".format(ghbra.shape[0], 0))
+            f.write(f"{ghbra.shape[0]} 0\n")
             f.write("open/close original.ghb.dat\n")
 
     # write ghb list
     sfacghb = 5
     fname = os.path.join(ws, "original.ghb.dat")
     with open(fname, "w") as f:
-        f.write("sfac {}\n".format(sfacghb))
+        f.write(f"sfac {sfacghb}\n")
         for k, i, j, stage, cond in ghbra:
-            f.write(
-                "{} {} {} {} {}\n".format(k + 1, i + 1, j + 1, stage, cond)
-            )
+            f.write(f"{k + 1} {i + 1} {j + 1} {stage} {cond}\n")
 
     # rewrite drn
     fname = os.path.join(ws, "original.drn")
     with open(fname, "w") as f:
-        f.write("{} {}\n".format(drnra.shape[0], 0))
+        f.write(f"{drnra.shape[0]} 0\n")
         for kper in range(nper):
-            f.write("{} {}\n".format(drnra.shape[0], 0))
+            f.write(f"{drnra.shape[0]} 0\n")
             f.write("external 71\n")
 
     # write drn list
@@ -87,18 +85,16 @@ def test_ulstrd():
     fname = os.path.join(ws, "original.drn.dat")
     with open(fname, "w") as f:
         for kper in range(nper):
-            f.write("sfac {}\n".format(sfacdrn))
+            f.write(f"sfac {sfacdrn}\n")
             for k, i, j, stage, cond in drnra:
-                f.write(
-                    "{} {} {} {} {}\n".format(k + 1, i + 1, j + 1, stage, cond)
-                )
+                f.write(f"{k + 1} {i + 1} {j + 1} {stage} {cond}\n")
 
     # rewrite wel
     fname = os.path.join(ws, "original.wel")
     with open(fname, "w") as f:
-        f.write("{} {}\n".format(drnra.shape[0], 0))
+        f.write(f"{drnra.shape[0]} 0\n")
         for kper in range(nper):
-            f.write("{} {}\n".format(drnra.shape[0], 0))
+            f.write(f"{drnra.shape[0]} 0\n")
             f.write("external 72 (binary)\n")
 
     # create the wells, but use an all float dtype to write a binary file

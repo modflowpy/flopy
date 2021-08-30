@@ -248,15 +248,14 @@ class ModflowBas(Package):
         # allows turning off package checks when writing files at model level
         if check:
             self.check(
-                f="{}.chk".format(self.name[0]),
+                f=f"{self.name[0]}.chk",
                 verbose=self.parent.verbose,
                 level=1,
             )
         # Open file for writing
         f_bas = open(self.fn_path, "w")
         # First line: heading
-        # f_bas.write('%s\n' % self.heading)
-        f_bas.write("{0:s}\n".format(self.heading))
+        f_bas.write(f"{self.heading}\n")
         # Second line: format specifier
         opts = []
         if self.ixsec:
@@ -266,7 +265,7 @@ class ModflowBas(Package):
         if self.ifrefm:
             opts.append("FREE")
         if self.stoper is not None:
-            opts.append("STOPERROR {0}".format(self.stoper))
+            opts.append(f"STOPERROR {self.stoper}")
         self.options = " ".join(opts)
         f_bas.write(self.options + "\n")
         # IBOUND array
@@ -275,7 +274,7 @@ class ModflowBas(Package):
         str_hnoflo = str(self.hnoflo).rjust(10)
         if not self.ifrefm and len(str_hnoflo) > 10:
             # write fixed-width no more than 10 characters
-            str_hnoflo = "{0:10.4G}".format(self.hnoflo)
+            str_hnoflo = f"{self.hnoflo:10.4G}"
             assert len(str_hnoflo) <= 10, str_hnoflo
         f_bas.write(str_hnoflo + "\n")
         # Starting heads array
@@ -409,7 +408,7 @@ class ModflowBas(Package):
         )
         if check:
             bas.check(
-                f="{}.chk".format(bas.name[0]),
+                f=f"{bas.name[0]}.chk",
                 verbose=bas.parent.verbose,
                 level=0,
             )

@@ -113,7 +113,7 @@ class Mt3dDsp(Package):
         multiDiff=False,
         unitnumber=None,
         filenames=None,
-        **kwargs
+        **kwargs,
     ):
 
         if unitnumber is None:
@@ -200,7 +200,7 @@ class Mt3dDsp(Package):
         )
         self.dmcoef.append(u2or3)
         for icomp in range(2, nmcomp + 1):
-            name = "dmcoef" + str(icomp)
+            name = f"dmcoef{icomp}"
             val = 0.0
             if name in list(kwargs.keys()):
                 val = kwargs.pop(name)
@@ -401,7 +401,7 @@ class Mt3dDsp(Package):
             )
             if model.mcomp > 1:
                 for icomp in range(2, model.mcomp + 1):
-                    name = "dmcoef" + str(icomp)
+                    name = f"dmcoef{icomp}"
                     u3d = Util3d.load(
                         f,
                         model,
@@ -450,7 +450,7 @@ class Mt3dDsp(Package):
             multiDiff=multiDiff,
             unitnumber=unitnumber,
             filenames=filenames,
-            **kwargs
+            **kwargs,
         )
 
     @staticmethod

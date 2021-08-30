@@ -40,12 +40,12 @@ if not dotlocal:
 if dotlocal:
     bindir = os.path.join(os.path.expanduser("~"), ".local", "bin")
     bindir = os.path.abspath(bindir)
-    print("bindir: {}".format(bindir))
+    print(f"bindir: {bindir}")
     if not os.path.isdir(bindir):
         os.makedirs(bindir)
 
 # write where the executables will be downloaded
-print('modflow executables will be downloaded to:\n\n    "{}"'.format(bindir))
+print(f'modflow executables will be downloaded to:\n\n    "{bindir}"')
 
 
 def get_branch():
@@ -97,13 +97,13 @@ def move_exe():
             continue
         src = os.path.join(exe_pth, file)
         dst = os.path.join(bindir, file)
-        print("moving {} -> {}".format(src, dst))
+        print(f"moving {src} -> {dst}")
         shutil.move(src, dst)
     return
 
 
 def list_exes():
-    cmd = "ls -l {}".format(bindir)
+    cmd = f"ls -l {bindir}"
     os.system(cmd)
     return
 
@@ -125,7 +125,7 @@ def test_download_nightly_build():
 
     # get the current branch
     branch = get_branch()
-    print("current branch: {}".format(branch))
+    print(f"current branch: {branch}")
 
     # No need to replace MODFLOW 6 executables
     if branch == "master":

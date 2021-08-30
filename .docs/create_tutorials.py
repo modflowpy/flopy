@@ -22,7 +22,7 @@ def create_notebooks():
     # copy the python files
     for src in py_files:
         dst = os.path.join(wpth, os.path.basename(src))
-        print("{} -> {}".format(src, dst))
+        print(f"{src} -> {dst}")
         shutil.copyfile(src, dst)
 
     # create and run notebooks

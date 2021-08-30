@@ -67,11 +67,11 @@ def test_binary_well():
     if run:
         success, buff = ml.run_model(silent=False)
         assert success, "could not run MODFLOW-2005 model"
-        fn0 = os.path.join(cpth, mfnam + ".nam")
+        fn0 = os.path.join(cpth, f"{mfnam}.nam")
 
     # load the model
     m = flopy.modflow.Modflow.load(
-        mfnam + ".nam", model_ws=cpth, verbose=True, exe_name=exe_name
+        f"{mfnam}.nam", model_ws=cpth, verbose=True, exe_name=exe_name
     )
 
     wl = m.wel.stress_period_data[0]
@@ -100,13 +100,11 @@ def test_binary_well():
     if run:
         success, buff = m.run_model(silent=False)
         assert success, "could not run the new MODFLOW-2005 model"
-        fn1 = os.path.join(pth, mfnam + ".nam")
+        fn1 = os.path.join(pth, f"{mfnam}.nam")
 
     # compare the files
     if run:
-        fsum = os.path.join(
-            cpth, "{}.head.out".format(os.path.splitext(mfnam)[0])
-        )
+        fsum = os.path.join(cpth, f"{os.path.splitext(mfnam)[0]}.head.out")
         success = False
         try:
             success = pymake.compare_heads(fn0, fn1, outfile=fsum)
@@ -115,9 +113,7 @@ def test_binary_well():
 
         assert success, "head comparison failure"
 
-        fsum = os.path.join(
-            cpth, "{}.budget.out".format(os.path.splitext(mfnam)[0])
-        )
+        fsum = os.path.join(cpth, f"{os.path.splitext(mfnam)[0]}.budget.out")
         success = False
         try:
             success = pymake.compare_budget(

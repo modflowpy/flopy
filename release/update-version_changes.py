@@ -63,7 +63,7 @@ def get_version():
 
     f.close()
 
-    return "{:d}.{:d}.{:d}".format(major, minor, micro)
+    return f"{major}.{minor}.{micro}"
 
 
 def get_branch():
@@ -111,7 +111,7 @@ def get_hash_dict(branch):
 
     # get hash and
     fmt = '--pretty="%H"'
-    since = '--since="{}"'.format(tag_date)
+    since = f'--since="{tag_date}"'
     hash_dict = {"fix": {}, "feat": {}}
     cmdlist = ("git", "log", branch, fmt, since)
     stdout = process_Popen(cmdlist)
@@ -124,7 +124,7 @@ def get_hash_dict(branch):
     # parse stdout
     for line in stdout.splitlines():
         hash = line.split()[0].replace('"', "")
-        url = "https://github.com/modflowpy/flopy/commit/{}".format(hash)
+        url = f"https://github.com/modflowpy/flopy/commit/{hash}"
         fmt = '--pretty="%s."'
         cmdlist = ("git", "log", fmt, "-n1", hash)
         subject = process_Popen(cmdlist).strip().replace('"', "")
@@ -135,7 +135,7 @@ def get_hash_dict(branch):
         key = None
         if ipos > -1:
             type = subject[0:ipos]
-            subject = subject.replace(type + ":", "").strip().capitalize()
+            subject = subject.replace(f"{type}:", "").strip().capitalize()
             for tag in fix_tags:
                 if type.lower().startswith(tag):
                     key = "fix"
@@ -162,8 +162,8 @@ def get_hash_dict(branch):
                         break
 
         if key is not None:
-            message = "[{}]({}): ".format(type, url)
-            message += subject + " " + cdate
+            message = f"[{type}]({url}): "
+            message += f"{subject} {cdate}"
             if key == "fix":
                 fix_dict[hash] = message
             elif key == "feat":
@@ -180,7 +180,7 @@ def create_md(hash_dict):
     # get current version information
     version = get_version()
     tag = "### Version"
-    version_text = "{} {}".format(tag, version)
+    version_text = f"{tag} {version}"
     #
 
     # read the lines in the existing version_changes.md
@@ -202,11 +202,11 @@ def create_md(hash_dict):
             # write the changes for the latest comment
             if write_update:
                 write_update = False
-                f.write("{}\n\n".format(version_text))
+                f.write(f"{version_text}\n\n")
                 write_version_changes(f, hash_dict)
 
         if write_line:
-            f.write("{}\n".format(line))
+            f.write(f"{line}\n")
 
     f.close()
 

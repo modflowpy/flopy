@@ -279,10 +279,10 @@ class ModflowPcgn(Package):
 
         # check if a valid model version has been specified
         if model.version == "mfusg":
-            err = "Error: cannot use {} package ".format(
-                self.name
-            ) + "with model version {}".format(model.version)
-            raise Exception(err)
+            raise Exception(
+                f"Error: cannot use {self.name} package "
+                f"with model version {model.version}"
+            )
 
         self._generate_heading()
         self.url = "pcgn.htm"
@@ -324,38 +324,38 @@ class ModflowPcgn(Package):
         """
         # Open file for writing
         f = open(self.fn_path, "w")
-        f.write("{0:s}\n".format(self.heading))
+        f.write(f"{self.heading}\n")
 
         ifrfm = self.parent.get_ifrefm()
         if ifrfm:
             # dataset 1
-            line = "{} ".format(self.iter_mo)
-            line += "{} ".format(self.iter_mi)
-            line += "{} ".format(self.close_r)
-            line += "{}\n".format(self.close_h)
+            line = f"{self.iter_mo} "
+            line += f"{self.iter_mi} "
+            line += f"{self.close_r} "
+            line += f"{self.close_h}\n"
             f.write(line)
 
             # dataset 2
-            line = "{} ".format(self.relax)
-            line += "{} ".format(self.ifill)
-            line += "{} ".format(self.unit_pc)
-            line += "{}\n".format(self.unit_ts)
+            line = f"{self.relax} "
+            line += f"{self.ifill} "
+            line += f"{self.unit_pc} "
+            line += f"{self.unit_ts}\n"
             f.write(line)
 
             # dataset 3
-            line = "{} ".format(self.adamp)
-            line += "{} ".format(self.damp)
-            line += "{} ".format(self.damp_lb)
-            line += "{} ".format(self.rate_d)
-            line += "{}\n".format(self.chglimit)
+            line = f"{self.adamp} "
+            line += f"{self.damp} "
+            line += f"{self.damp_lb} "
+            line += f"{self.rate_d} "
+            line += f"{self.chglimit}\n"
             f.write(line)
 
             # dataset 4
-            line = "{} ".format(self.acnvg)
-            line += "{} ".format(self.cnvg_lb)
-            line += "{} ".format(self.mcnvg)
-            line += "{} ".format(self.rate_c)
-            line += "{}\n".format(self.ipunit)
+            line = f"{self.acnvg} "
+            line += f"{self.cnvg_lb} "
+            line += f"{self.mcnvg} "
+            line += f"{self.rate_c} "
+            line += f"{self.ipunit}\n"
             f.write(line)
 
         else:

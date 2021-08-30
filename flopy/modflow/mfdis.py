@@ -423,8 +423,7 @@ class ModflowDis(Package):
             kper = 0.0
         if kper >= self.nper:
             raise ValueError(
-                "kper ({}) must be less than "
-                "to nper ({}).".format(kper, self.nper)
+                f"kper ({kper}) must be less than to nper ({self.nper})."
             )
 
         totim = self.get_totim(use_cached_totim)
@@ -614,14 +613,14 @@ class ModflowDis(Package):
             check
         ):  # allows turning off package checks when writing files at model level
             self.check(
-                f="{}.chk".format(self.name[0]),
+                f=f"{self.name[0]}.chk",
                 verbose=self.parent.verbose,
                 level=1,
             )
         # Open file for writing
         f_dis = open(self.fn_path, "w")
         # Item 0: heading
-        f_dis.write("{0:s}\n".format(self.heading))
+        f_dis.write(f"{self.heading}\n")
         # Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI
         f_dis.write(
             "{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}\n".format(
@@ -635,7 +634,7 @@ class ModflowDis(Package):
         )
         # Item 2: LAYCBD
         for l in range(0, self.nlay):
-            f_dis.write("{0:3d}".format(self.laycbd[l]))
+            f_dis.write(f"{self.laycbd[l]:3d}")
         f_dis.write("\n")
         # Item 3: DELR
         f_dis.write(self.delr.get_file_entry())
@@ -649,9 +648,7 @@ class ModflowDis(Package):
         # Item 6: NPER, NSTP, TSMULT, Ss/tr
         for t in range(self.nper):
             f_dis.write(
-                "{0:14f}{1:14d}{2:10f} ".format(
-                    self.perlen[t], self.nstp[t], self.tsmult[t]
-                )
+                f"{self.perlen[t]:14f}{self.nstp[t]:14d}{self.tsmult[t]:10f} "
             )
             if self.steady[t]:
                 f_dis.write(" {0:3s}\n".format("SS"))
@@ -793,43 +790,35 @@ class ModflowDis(Package):
                     xul = float(item.split(":")[1])
                 except:
                     if model.verbose:
-                        print("   could not parse xul in {}".format(filename))
+                        print(f"   could not parse xul in {filename}")
                 dep = True
             elif "yul" in item.lower():
                 try:
                     yul = float(item.split(":")[1])
                 except:
                     if model.verbose:
-                        print("   could not parse yul in {}".format(filename))
+                        print(f"   could not parse yul in {filename}")
                 dep = True
             elif "rotation" in item.lower():
                 try:
                     rotation = float(item.split(":")[1])
                 except:
                     if model.verbose:
-                        print(
-                            "   could not parse rotation "
-                            "in {}".format(filename)
-                        )
+                        print(f"   could not parse rotation in {filename}")
                 dep = True
             elif "proj4_str" in item.lower():
                 try:
                     proj4_str = ":".join(item.split(":")[1:]).strip()
                 except:
                     if model.verbose:
-                        print(
-                            "   could not parse proj4_str "
-                            "in {}".format(filename)
-                        )
+                        print(f"   could not parse proj4_str in {filename}")
                 dep = True
             elif "start" in item.lower():
                 try:
                     start_datetime = item.split(":")[1].strip()
                 except:
                     if model.verbose:
-                        print(
-                            "   could not parse start in {}".format(filename)
-                        )
+                        print(f"   could not parse start in {filename}")
                 dep = True
         if dep:
             warnings.warn(
@@ -888,9 +877,7 @@ class ModflowDis(Package):
         ncbd = laycbd.sum()
         if model.verbose:
             print("   loading botm...")
-            print(
-                "      for {} layers and {} confining beds".format(nlay, ncbd)
-            )
+            print(f"      for {nlay} layers and {ncbd} confining beds")
         if nlay > 1:
             botm = Util3d.load(
                 f,
@@ -907,7 +894,7 @@ class ModflowDis(Package):
         # dataset 7 -- stress period info
         if model.verbose:
             print("   loading stress period data...")
-            print("       for {} stress periods".format(nper))
+            print(f"       for {nper} stress periods")
         perlen = []
         nstp = []
         tsmult = []
@@ -966,7 +953,7 @@ class ModflowDis(Package):
         )
         if check:
             dis.check(
-                f="{}.chk".format(dis.name[0]),
+                f=f"{dis.name[0]}.chk",
                 verbose=dis.parent.verbose,
                 level=0,
             )

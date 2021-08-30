@@ -205,7 +205,7 @@ class SeawatVdf(Package):
         extension="vdf",
         unitnumber=None,
         filenames=None,
-        **kwargs
+        **kwargs,
     ):
 
         if unitnumber is None:
@@ -409,10 +409,10 @@ class SeawatVdf(Package):
         nswtcpl = int(t[2])
         iwtable = int(t[3])
         if model.verbose:
-            print("   MT3DRHOFLG {}".format(mt3drhoflg))
-            print("   MFNADVFD {}".format(mfnadvfd))
-            print("   NSWTCPL {}".format(nswtcpl))
-            print("   IWTABLE {}".format(iwtable))
+            print(f"   MT3DRHOFLG {mt3drhoflg}")
+            print(f"   MFNADVFD {mfnadvfd}")
+            print(f"   NSWTCPL {nswtcpl}")
+            print(f"   IWTABLE {iwtable}")
 
         # Item 2 -- DENSEMIN DENSEMAX
         if model.verbose:
@@ -491,15 +491,14 @@ class SeawatVdf(Package):
 
                 if model.verbose:
                     print(
-                        "   loading INDENSE "
-                        "for stress period {}...".format(iper + 1)
+                        f"   loading INDENSE for stress period {iper + 1}..."
                     )
                 line = f.readline()
                 t = line.strip().split()
                 indense = int(t[0])
 
                 if indense > 0:
-                    name = "DENSE_StressPeriod_{}".format(iper)
+                    name = f"DENSE_StressPeriod_{iper}"
                     t = Util3d.load(
                         f,
                         model,

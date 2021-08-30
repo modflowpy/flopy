@@ -242,7 +242,7 @@ class ModflowStr(Package):
         unitnumber=None,
         filenames=None,
         options=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Package constructor.
@@ -417,10 +417,7 @@ class ModflowStr(Package):
                                 "stress period"
                             )
                         elif d == 0:
-                            print(
-                                "   no str data for stress "
-                                "period {}".format(key)
-                            )
+                            print(f"   no str data for stress period {key}")
                 else:
                     raise Exception(
                         "ModflowStr error: unsupported data type: "
@@ -454,8 +451,7 @@ class ModflowStr(Package):
                             )
                         elif d == 0:
                             print(
-                                "   no str segment data for "
-                                "stress period {}".format(key)
+                                f"   no str segment data for stress period {key}"
                             )
                 else:
                     raise Exception(
@@ -562,7 +558,7 @@ class ModflowStr(Package):
         f_str = open(self.fn_path, "w")
 
         # dataset 0
-        f_str.write("{0}\n".format(self.heading))
+        f_str.write(f"{self.heading}\n")
 
         # dataset 1 - parameters not supported on write
 
@@ -761,14 +757,14 @@ class ModflowStr(Package):
                 model.add_pop_key_list(istcb1)
         except:
             if model.verbose:
-                print("  could not remove unit number {}".format(istcb1))
+                print(f"  could not remove unit number {istcb1}")
         try:
             if istcb2 != 0:
                 ipakcb = 53
                 model.add_pop_key_list(istcb2)
         except:
             if model.verbose:
-                print("  could not remove unit number {}".format(istcb2))
+                print(f"  could not remove unit number {istcb2}")
 
         options = []
         aux_names = []
@@ -801,9 +797,7 @@ class ModflowStr(Package):
         segment_data = {}
         for iper in range(nper):
             if model.verbose:
-                print(
-                    "   loading {} for kper {:5d}".format(ModflowStr, iper + 1)
-                )
+                print(f"   loading {ModflowStr} for kper {iper + 1:5d}")
             line = f.readline()
             if line == "":
                 break
@@ -849,8 +843,7 @@ class ModflowStr(Package):
                         except:
                             if model.verbose:
                                 print(
-                                    "  implicit static instance for "
-                                    "parameter {}".format(pname)
+                                    f"  implicit static instance for parameter {pname}"
                                 )
 
                         par_dict, current_dict = pak_parms.get(pname)

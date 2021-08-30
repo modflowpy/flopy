@@ -72,7 +72,7 @@ sim = flopy.mf6.MFSimulation(
 )
 
 # create the flopy groundwater flow (gwf) model object
-model_nam_file = "{}.nam".format(name)
+model_nam_file = f"{name}.nam"
 gwf = flopy.mf6.ModflowGwf(sim, modelname=name, model_nam_file=model_nam_file)
 # create the flopy iterative model solver (ims) package object
 # (both pname and complexity are scalar data)

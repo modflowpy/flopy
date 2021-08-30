@@ -180,7 +180,7 @@ def test_oc_check():
 
 
 if __name__ == "__main__":
-    print("numpy version: {}".format(np.__version__))
+    print(f"numpy version: {np.__version__}")
     for mfnam in testmodels:
         checker_on_load(mfnam)
     test_bcs_check()

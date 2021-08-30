@@ -1534,7 +1534,7 @@ class StructuredGrid(Grid):
                 plotarray = plotarray[layer, :, :]
         else:
             raise Exception("Array to plot must be of dimension 1, 2, or 3")
-        msg = "{} /= {}".format(plotarray.shape, required_shape)
+        msg = f"{plotarray.shape} /= {required_shape}"
         assert plotarray.shape == required_shape, msg
         return plotarray
 
@@ -1615,11 +1615,10 @@ class StructuredGrid(Grid):
 
         grb_obj = MfGrdFile(file_path, verbose=verbose)
         if grb_obj.grid_type != "DIS":
-            err_msg = (
-                "Binary grid file ({}) ".format(os.path.basename(file_path))
-                + "is not a structured (DIS) grid."
+            raise ValueError(
+                f"Binary grid file ({os.path.basename(file_path)}) "
+                "is not a structured (DIS) grid."
             )
-            raise ValueError(err_msg)
 
         idomain = grb_obj.idomain
         xorigin = grb_obj.xorigin

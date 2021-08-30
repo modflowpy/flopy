@@ -292,26 +292,22 @@ class ModflowGmg(Package):
 
         """
         f_gmg = open(self.fn_path, "w")
-        f_gmg.write("%s\n" % self.heading)
+        f_gmg.write(f"{self.heading}\n")
         # dataset 0
         f_gmg.write(
-            "{} {} {} {}\n".format(
-                self.rclose, self.iiter, self.hclose, self.mxiter
-            )
+            f"{self.rclose} {self.iiter} {self.hclose} {self.mxiter}\n"
         )
         # dataset 1
         f_gmg.write(
-            "{} {} {} {}\n".format(
-                self.damp, self.iadamp, self.ioutgmg, self.iunitmhc
-            )
+            f"{self.damp} {self.iadamp} {self.ioutgmg} {self.iunitmhc}\n"
         )
         # dataset 2
-        f_gmg.write("{} {} ".format(self.ism, self.isc))
+        f_gmg.write(f"{self.ism} {self.isc} ")
         if self.iadamp == 2:
-            f_gmg.write("{} {} {}".format(self.dup, self.dlow, self.chglimit))
+            f_gmg.write(f"{self.dup} {self.dlow} {self.chglimit}")
         f_gmg.write("\n")
         # dataset 3
-        f_gmg.write("{}\n".format(self.relax))
+        f_gmg.write(f"{self.relax}\n")
         f_gmg.close()
 
     @classmethod

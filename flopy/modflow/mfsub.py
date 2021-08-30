@@ -500,39 +500,30 @@ class ModflowSub(Package):
         if f is None:
             f = open(self.fn_path, "w")
         # First line: heading
-        f.write("{}\n".format(self.heading))
+        f.write(f"{self.heading}\n")
         # write dataset 1
         f.write(
-            "{} {} {} {} {} {} ".format(
-                self.ipakcb,
-                self.isuboc,
-                self.nndb,
-                self.ndb,
-                self.nmz,
-                self.nn,
-            )
+            f"{self.ipakcb} {self.isuboc} {self.nndb} {self.ndb} {self.nmz} {self.nn} "
         )
 
         f.write(
-            "{} {} {} {} {}".format(
-                self.ac1, self.ac2, self.itmin, self.idsave, self.idrest
-            )
+            f"{self.ac1} {self.ac2} {self.itmin} {self.idsave} {self.idrest}"
         )
         line = ""
         if self.idbit is not None:
-            line += " {}".format(self.idbit)
+            line += f" {self.idbit}"
         line += "\n"
         f.write(line)
 
         if self.nndb > 0:
             t = self.ln.array
             for tt in t:
-                f.write("{} ".format(tt + 1))
+                f.write(f"{tt + 1} ")
             f.write("\n")
         if self.ndb > 0:
             t = self.ldn.array
             for tt in t:
-                f.write("{} ".format(tt + 1))
+                f.write(f"{tt + 1} ")
             f.write("\n")
 
         # write dataset 4
@@ -551,9 +542,10 @@ class ModflowSub(Package):
         # write dataset 9
         if self.ndb > 0:
             for k in range(self.nmz):
-                line = "{:15.6g} {:15.6g} {:15.6g}".format(
-                    self.dp[k, 0], self.dp[k, 1], self.dp[k, 2]
-                ) + "    #material zone {} data\n".format(k + 1)
+                line = (
+                    f"{self.dp[k, 0]:15.6g} {self.dp[k, 1]:15.6g} "
+                    f"{self.dp[k, 2]:15.6g}    #material zone {k + 1} data\n"
+                )
                 f.write(line)
         # write dataset 10 to 14
         if self.ndb > 0:
@@ -568,7 +560,7 @@ class ModflowSub(Package):
         if self.isuboc > 0:
             # dataset 15
             for i in self.ids15:
-                f.write("{} ".format(i))
+                f.write(f"{i} ")
             f.write("  #dataset 15\n")
 
             # dataset 16
@@ -576,8 +568,8 @@ class ModflowSub(Package):
                 t = self.ids16[k, :]
                 t[0:4] += 1
                 for i in t:
-                    f.write("{} ".format(i))
-                f.write("  #dataset 16 isuboc {}\n".format(k + 1))
+                    f.write(f"{i} ")
+                f.write(f"  #dataset 16 isuboc {k + 1}\n")
 
         # close sub file
         f.close()
@@ -676,7 +668,7 @@ class ModflowSub(Package):
                     model,
                     (nrow, ncol),
                     np.float32,
-                    "rnb delay bed {}".format(k + 1),
+                    f"rnb delay bed {k + 1}",
                     ext_unit_dict,
                 )
                 rnb[k] = t
@@ -694,56 +686,56 @@ class ModflowSub(Package):
                 # hc
                 if model.verbose:
                     sys.stdout.write(
-                        "  loading sub dataset 5 for layer {}\n".format(kk)
+                        f"  loading sub dataset 5 for layer {kk}\n"
                     )
                 t = Util2d.load(
                     f,
                     model,
                     (nrow, ncol),
                     np.float32,
-                    "hc layer {}".format(kk),
+                    f"hc layer {kk}",
                     ext_unit_dict,
                 )
                 hc[k] = t
                 # sfe
                 if model.verbose:
                     sys.stdout.write(
-                        "  loading sub dataset 6 for layer {}\n".format(kk)
+                        f"  loading sub dataset 6 for layer {kk}\n"
                     )
                 t = Util2d.load(
                     f,
                     model,
                     (nrow, ncol),
                     np.float32,
-                    "sfe layer {}".format(kk),
+                    f"sfe layer {kk}",
                     ext_unit_dict,
                 )
                 sfe[k] = t
                 # sfv
                 if model.verbose:
                     sys.stdout.write(
-                        "  loading sub dataset 7 for layer {}\n".format(kk)
+                        f"  loading sub dataset 7 for layer {kk}\n"
                     )
                 t = Util2d.load(
                     f,
                     model,
                     (nrow, ncol),
                     np.float32,
-                    "sfv layer {}".format(kk),
+                    f"sfv layer {kk}",
                     ext_unit_dict,
                 )
                 sfv[k] = t
                 # com
                 if model.verbose:
                     sys.stdout.write(
-                        "  loading sub dataset 8 for layer {}\n".format(kk)
+                        f"  loading sub dataset 8 for layer {kk}\n"
                     )
                 t = Util2d.load(
                     f,
                     model,
                     (nrow, ncol),
                     np.float32,
-                    "com layer {}".format(kk),
+                    f"com layer {kk}",
                     ext_unit_dict,
                 )
                 com[k] = t
@@ -755,8 +747,7 @@ class ModflowSub(Package):
             for k in range(nmz):
                 if model.verbose:
                     sys.stdout.write(
-                        "  loading sub dataset 9 for material "
-                        "zone {}\n".format(k + 1)
+                        f"  loading sub dataset 9 for material zone {k + 1}\n"
                     )
                 line = f.readline()
                 t = line.strip().split()
@@ -778,70 +769,70 @@ class ModflowSub(Package):
                 # dstart
                 if model.verbose:
                     sys.stdout.write(
-                        "  loading sub dataset 10 for layer {}\n".format(kk)
+                        f"  loading sub dataset 10 for layer {kk}\n"
                     )
                 t = Util2d.load(
                     f,
                     model,
                     (nrow, ncol),
                     np.float32,
-                    "dstart layer {}".format(kk),
+                    f"dstart layer {kk}",
                     ext_unit_dict,
                 )
                 dstart[k] = t
                 # dhc
                 if model.verbose:
                     sys.stdout.write(
-                        "  loading sub dataset 11 for layer {}\n".format(kk)
+                        f"  loading sub dataset 11 for layer {kk}\n"
                     )
                 t = Util2d.load(
                     f,
                     model,
                     (nrow, ncol),
                     np.float32,
-                    "dhc layer {}".format(kk),
+                    f"dhc layer {kk}",
                     ext_unit_dict,
                 )
                 dhc[k] = t
                 # dcom
                 if model.verbose:
                     sys.stdout.write(
-                        "  loading sub dataset 12 for layer {}\n".format(kk)
+                        f"  loading sub dataset 12 for layer {kk}\n"
                     )
                 t = Util2d.load(
                     f,
                     model,
                     (nrow, ncol),
                     np.float32,
-                    "dcom layer {}".format(kk),
+                    f"dcom layer {kk}",
                     ext_unit_dict,
                 )
                 dcom[k] = t
                 # dz
                 if model.verbose:
                     sys.stdout.write(
-                        "  loading sub dataset 13 for layer {}\n".format(kk)
+                        f"  loading sub dataset 13 for layer {kk}\n"
                     )
                 t = Util2d.load(
                     f,
                     model,
                     (nrow, ncol),
                     np.float32,
-                    "dz layer {}".format(kk),
+                    f"dz layer {kk}",
                     ext_unit_dict,
                 )
                 dz[k] = t
                 # nz
                 if model.verbose:
                     sys.stdout.write(
-                        "  loading sub dataset 14 for layer {}\n".format(kk)
+                        f"  loading sub dataset 14 for layer {kk}\n"
                     )
                 t = Util2d.load(
                     f,
                     model,
                     (nrow, ncol),
                     np.int32,
-                    "nz layer {}".format(kk),
+                    f"nz layer {kk}",
                     ext_unit_dict,
                 )
                 nz[k] = t
@@ -851,9 +842,7 @@ class ModflowSub(Package):
         if isuboc > 0:
             # dataset 15
             if model.verbose:
-                sys.stdout.write(
-                    "  loading sub dataset 15 for layer {}\n".format(kk)
-                )
+                sys.stdout.write(f"  loading sub dataset 15 for layer {kk}\n")
             ids15 = np.empty(12, dtype=np.int32)
             ids15 = read1d(f, ids15)
             # dataset 16
@@ -861,8 +850,7 @@ class ModflowSub(Package):
             for k in range(isuboc):
                 if model.verbose:
                     sys.stdout.write(
-                        "  loading sub dataset 16 for "
-                        "isuboc {}\n".format(k + 1)
+                        f"  loading sub dataset 16 for isuboc {k + 1}\n"
                     )
                 t = np.empty(17, dtype=np.int32)
                 t = read1d(f, t)

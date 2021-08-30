@@ -184,8 +184,8 @@ class MFScalar(mfdata.MFData):
             )
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            comment = 'Could not convert data "{}" to type "{}".'.format(
-                data, self._data_type
+            comment = (
+                f'Could not convert data "{data}" to type "{self._data_type}".'
             )
             raise MFDataException(
                 self.structure.get_model(),
@@ -205,8 +205,8 @@ class MFScalar(mfdata.MFData):
             storage.set_data(converted_data, key=self._current_key)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            comment = 'Could not set data "{}" to type "{}".'.format(
-                data, self._data_type
+            comment = (
+                f'Could not set data "{data}" to type "{self._data_type}".'
             )
             raise MFDataException(
                 self.structure.get_model(),
@@ -270,9 +270,7 @@ class MFScalar(mfdata.MFData):
                     self._get_storage_obj().set_data(current_val + 1)
                 except Exception as ex:
                     type_, value_, traceback_ = sys.exc_info()
-                    comment = 'Could increment data "{}" by one' ".".format(
-                        current_val
-                    )
+                    comment = f'Could increment data "{current_val}" by one.'
                     raise MFDataException(
                         self.structure.get_model(),
                         self.structure.get_package(),
@@ -496,7 +494,7 @@ class MFScalar(mfdata.MFData):
                 index += 1
 
             text = self._simulation_data.indent_string.join(text_line)
-            return "{}{}\n".format(self._simulation_data.indent_string, text)
+            return f"{self._simulation_data.indent_string}{text}\n"
         else:
             data_item = self.structure.data_item_structures[0]
             try:
@@ -569,9 +567,7 @@ class MFScalar(mfdata.MFData):
                     self._simulation_data.debug,
                 )
             if values_only:
-                return "{}{}".format(
-                    self._simulation_data.indent_string, values
-                )
+                return f"{self._simulation_data.indent_string}{values}"
             else:
                 # keyword + data
                 return "{}{}{}{}\n".format(
@@ -682,7 +678,7 @@ class MFScalar(mfdata.MFData):
             self,
             filename_base=filename_base,
             file_extension=file_extension,
-            **kwargs
+            **kwargs,
         )
         return axes
 
@@ -917,7 +913,7 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
         file_extension=None,
         kper=0,
         fignum=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot transient scalar model data
@@ -980,6 +976,6 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
             file_extension=file_extension,
             kper=kper,
             fignum=fignum,
-            **kwargs
+            **kwargs,
         )
         return axes

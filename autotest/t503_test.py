@@ -20,7 +20,7 @@ def download_mf6_examples():
     # create folder for mf6 distribution download
     cpth = os.getcwd()
     dstpth = os.path.join("temp", dirname)
-    print("create...{}".format(dstpth))
+    print(f"create...{dstpth}")
     if not os.path.exists(dstpth):
         os.makedirs(dstpth)
     os.chdir(dstpth)
@@ -71,7 +71,7 @@ for dirName, subdirList, fileList in os.walk(mf6path):
     if useModel:
         for file_name in fileList:
             if file_name.lower() == "mfsim.nam":
-                print("Found directory: {}".format(dirName))
+                print(f"Found directory: {dirName}")
                 src_folders.append(dirName)
 src_folders = sorted(src_folders)
 
@@ -80,7 +80,7 @@ for src in src_folders:
     dirBase = src.partition("{0}mf6examples{0}".format(os.path.sep))[2]
     dst = os.path.join(out_dir, dirBase)
 
-    print("copying {} -> {}".format(src, dst))
+    print(f"copying {src} -> {dst}")
     folders.append(dst)
     shutil.copytree(src, dst)
 folders = sorted(folders)
@@ -95,11 +95,11 @@ if v is None:
 def runmodel(folder):
     f = os.path.basename(os.path.normpath(folder))
     print("\n\n")
-    print("**** RUNNING TEST: {} ****".format(f))
+    print(f"**** RUNNING TEST: {f} ****")
     print("\n")
 
     # load the model into a flopy simulation
-    print("loading {}".format(f))
+    print(f"loading {f}")
     sim = flopy.mf6.MFSimulation.load(f, "mf6", exe_name, folder)
     assert isinstance(sim, flopy.mf6.MFSimulation)
 
@@ -112,7 +112,7 @@ def runmodel(folder):
             f for f in os.listdir(folder) if f.lower().endswith(".hds")
         ]
 
-        folder2 = folder + "-RERUN"
+        folder2 = f"{folder}-RERUN"
         sim.simulation_data.mfpath.set_sim_path(folder2)
         sim.write_simulation()
         success, buff = sim.run_simulation()

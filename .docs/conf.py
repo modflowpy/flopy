@@ -37,9 +37,9 @@ with open(rst_name, "r") as f:
 with open(rst_name, "w") as f:
     for line in lines:
         if line.startswith("**Documentation for version"):
-            line = "**Documentation for version {}".format(__version__)
+            line = f"**Documentation for version {__version__}"
             if rc_text != "":
-                line += " --- {}".format(rc_text)
+                line += f" --- {rc_text}"
             line += "**\n"
         f.write(line)
 
@@ -64,7 +64,7 @@ with open(rst_name, "w") as f:
             )
             authors = __author__.split(sep=",")
             for author in authors:
-                line += " * {}\n".format(author.strip())
+                line += f" * {author.strip()}\n"
             line += " * and others\n\n"
             f.write(line)
         elif line.startswith(tag_end):
@@ -91,7 +91,7 @@ if not on_rtd:
 
 # -- Project information -----------------------------------------------------
 project = "flopy Documentation"
-copyright = "2021, {}".format(__author__)
+copyright = f"2021, {__author__}"
 author = __author__
 
 # The version.

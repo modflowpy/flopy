@@ -122,8 +122,8 @@ def run():
     # Try to delete the output files, to prevent accidental use of older files
     try:
         os.remove(os.path.join(workspace, "MT3D001.UCN"))
-        os.remove(os.path.join(workspace, modelname + ".hds"))
-        os.remove(os.path.join(workspace, modelname + ".cbc"))
+        os.remove(os.path.join(workspace, f"{modelname}.hds"))
+        os.remove(os.path.join(workspace, f"{modelname}.cbc"))
     except:
         pass
 
@@ -176,7 +176,7 @@ def run():
         width=0.0025,
     )
 
-    outfig = os.path.join(workspace, "henry_flows.{0}".format(fext))
+    outfig = os.path.join(workspace, f"henry_flows.{fext}")
     fig.savefig(outfig, dpi=300)
     print("created...", outfig)
 
@@ -194,7 +194,7 @@ def run():
     )
     ax.set_title("Simulated Heads")
 
-    outfig = os.path.join(workspace, "henry_heads.{0}".format(fext))
+    outfig = os.path.join(workspace, f"henry_heads.{fext}")
     fig.savefig(outfig, dpi=300)
     print("created...", outfig)
 

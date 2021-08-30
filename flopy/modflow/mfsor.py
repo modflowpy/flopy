@@ -116,10 +116,10 @@ class ModflowSor(Package):
 
         # check if a valid model version has been specified
         if model.version != "mf2k":
-            err = "Error: cannot use {} ".format(
-                self.name
-            ) + "package with model version {}".format(model.version)
-            raise Exception(err)
+            raise Exception(
+                f"Error: cannot use {self.name} "
+                f"package with model version {model.version}"
+            )
 
         self._generate_heading()
         self.url = "sor.htm"
@@ -140,11 +140,9 @@ class ModflowSor(Package):
         """
         # Open file for writing
         f = open(self.fn_path, "w")
-        f.write("{}\n".format(self.heading))
-        f.write("{:10d}\n".format(self.mxiter))
-        line = "{:10.4g}{:10.4g}{:10d}\n".format(
-            self.accl, self.hclose, self.iprsor
-        )
+        f.write(f"{self.heading}\n")
+        f.write(f"{self.mxiter:10d}\n")
+        line = f"{self.accl:10.4g}{self.hclose:10.4g}{self.iprsor:10d}\n"
         f.write(line)
         f.close()
 

@@ -4,7 +4,7 @@
 major = 3
 minor = 3
 micro = 5
-__version__ = "{:d}.{:d}.{:d}".format(major, minor, micro)
+__version__ = f"{major}.{minor}.{micro}"
 
 __pakname__ = "flopy"
 

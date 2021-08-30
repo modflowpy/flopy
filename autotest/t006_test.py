@@ -116,7 +116,7 @@ def test_cbc_ts():
     )
     zobj = flopy.utils.CellBudgetFile(fpth, precision="single")
     ts = zobj.get_ts(text="ZETASRF  1", idx=(0, 0, 24))
-    errtxt = "shape of zeta timeseries is {} not (4, 2)".format(ts.shape)
+    errtxt = f"shape of zeta timeseries is {ts.shape} not (4, 2)"
     assert ts.shape == (4, 2), errtxt
 
 

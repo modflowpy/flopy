@@ -99,8 +99,8 @@ def np001():
         bad_model = ModflowGwf(
             test_sim,
             modelname=model_name,
-            model_nam_file="{}.nam".format(model_name),
-            **kwargs
+            model_nam_file=f"{model_name}.nam",
+            **kwargs,
         )
     except FlopyException:
         ex = True
@@ -111,9 +111,9 @@ def np001():
     good_model = ModflowGwf(
         test_sim,
         modelname=model_name,
-        model_nam_file="{}.nam".format(model_name),
+        model_nam_file=f"{model_name}.nam",
         model_rel_path="model_folder",
-        **kwargs
+        **kwargs,
     )
 
     # create simulation
@@ -153,7 +153,7 @@ def np001():
     ims_package = ModflowIms(
         sim,
         pname="my_ims_file",
-        filename="{}.ims".format(test_ex_name),
+        filename=f"{test_ex_name}.ims",
         print_option="ALL",
         complexity="SIMPLE",
         outer_hclose=0.00001,
@@ -168,7 +168,7 @@ def np001():
     )
 
     model = ModflowGwf(
-        sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
     )
     # test case insensitive lookup
     assert sim.get_model(model_name.upper()) is not None
@@ -189,7 +189,7 @@ def np001():
         delc=100.0,
         top=60.0,
         botm=50.0,
-        filename="{}.dis".format(model_name),
+        filename=f"{model_name}.dis",
         pname="mydispkg",
     )
     # specifying dis package twice with the same name should automatically
@@ -206,13 +206,13 @@ def np001():
         delc=500.0,
         top=top,
         botm=botm,
-        filename="{}.dis".format(model_name),
+        filename=f"{model_name}.dis",
         pname="mydispkg",
     )
     top_data = dis_package.top.get_data()
     assert top_data[0, 0] == 100.0
     ic_package = flopy.mf6.ModflowGwfic(
-        model, strt="initial_heads.txt", filename="{}.ic".format(model_name)
+        model, strt="initial_heads.txt", filename=f"{model_name}.ic"
     )
     npf_package = ModflowGwfnpf(
         model,
@@ -648,7 +648,7 @@ def np002():
         sim, time_units="DAYS", nper=2, perioddata=tdis_rc
     )
     model = ModflowGwf(
-        sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
     )
     ims_package = ModflowIms(
         sim,
@@ -701,7 +701,7 @@ def np002():
         top=top,
         botm=botm,
         idomain=2,
-        filename="{}.dis".format(model_name),
+        filename=f"{model_name}.dis",
     )
     assert sim.simulation_data.max_columns_of_data == 22
     sim.simulation_data.max_columns_of_data = dis_package.ncol.get_data()
@@ -718,9 +718,7 @@ def np002():
         100.0,
         100.0,
     ]
-    ic_package = ModflowGwfic(
-        model, strt=ic_vals, filename="{}.ic".format(model_name)
-    )
+    ic_package = ModflowGwfic(model, strt=ic_vals, filename=f"{model_name}.ic")
     ic_package.strt.store_as_external_file("initial_heads.txt")
     npf_package = ModflowGwfnpf(model, save_flows=True, icelltype=1, k=100.0)
     npf_package.k.store_as_external_file("k.bin", binary=True)
@@ -903,7 +901,7 @@ def test021_twri():
         sim, time_units="SECONDS", nper=1, perioddata=tdis_rc
     )
     model = ModflowGwf(
-        sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
     )
     ims_package = ModflowIms(
         sim,
@@ -963,7 +961,7 @@ def test021_twri():
         delc=5000.0,
         top=top,
         botm=[-200, -300, -450],
-        filename="{}.dis".format(model_name),
+        filename=f"{model_name}.dis",
     )
     strt = [
         {"filename": "strt.txt", "factor": 1.0, "data": 0.0},
@@ -975,9 +973,7 @@ def test021_twri():
         },
         2.0,
     ]
-    ic_package = ModflowGwfic(
-        model, strt=strt, filename="{}.ic".format(model_name)
-    )
+    ic_package = ModflowGwfic(model, strt=strt, filename=f"{model_name}.ic")
     npf_package = ModflowGwfnpf(
         model,
         save_flows=True,
@@ -1016,9 +1012,7 @@ def test021_twri():
     stress_period_data = []
     drn_heads = [0.0, 0.0, 10.0, 20.0, 30.0, 50.0, 70.0, 90.0, 100.0]
     for col, head in zip(range(1, 10), drn_heads):
-        stress_period_data.append(
-            ((0, 7, col), head, 1.0, "name_{}".format(col))
-        )
+        stress_period_data.append(((0, 7, col), head, 1.0, f"name_{col}"))
     drn_package = ModflowGwfdrn(
         model,
         print_input=True,
@@ -1125,7 +1119,7 @@ def test005_advgw_tidal():
         sim, time_units="DAYS", nper=4, perioddata=tdis_rc
     )
     model = ModflowGwf(
-        sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
     )
     ims_package = ModflowIms(
         sim,
@@ -1153,11 +1147,9 @@ def test005_advgw_tidal():
         delc=500.0,
         top=50.0,
         botm=[5.0, -10.0, {"factor": 1.0, "data": bot_data}],
-        filename="{}.dis".format(model_name),
+        filename=f"{model_name}.dis",
     )
-    ic_package = ModflowGwfic(
-        model, strt=50.0, filename="{}.ic".format(model_name)
-    )
+    ic_package = ModflowGwfic(model, strt=50.0, filename=f"{model_name}.ic")
     npf_package = ModflowGwfnpf(
         model,
         save_flows=True,
@@ -1641,9 +1633,7 @@ def test005_advgw_tidal():
     package_type_dict = {}
     for package in model.packagelist:
         if not package.package_type in package_type_dict:
-            assert package.filename == "new_name.{}".format(
-                package.package_type
-            )
+            assert package.filename == f"new_name.{package.package_type}"
             package_type_dict[package.package_type] = 1
     sim.write_simulation()
     name_file = os.path.join(run_folder, "new_name.nam")
@@ -1655,8 +1645,9 @@ def test005_advgw_tidal():
     package_type_dict = {}
     for package in model.packagelist:
         if not package.package_type in package_type_dict:
-            assert package.filename == "all_files_same_name.{}".format(
-                package.package_type
+            assert (
+                package.filename
+                == f"all_files_same_name.{package.package_type}"
             )
             package_type_dict[package.package_type] = 1
     assert sim._tdis_file.filename == "all_files_same_name.tdis"
@@ -1731,7 +1722,7 @@ def test004_bcfss():
         sim, time_units="DAYS", nper=2, perioddata=tdis_rc
     )
     model = ModflowGwf(
-        sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
     )
     ims_package = ModflowIms(
         sim,
@@ -1759,11 +1750,9 @@ def test004_bcfss():
         delc=500.0,
         top=150.0,
         botm=[50.0, -50.0],
-        filename="{}.dis".format(model_name),
+        filename=f"{model_name}.dis",
     )
-    ic_package = ModflowGwfic(
-        model, strt=0.0, filename="{}.ic".format(model_name)
-    )
+    ic_package = ModflowGwfic(model, strt=0.0, filename=f"{model_name}.ic")
     wetdry_data = []
     for row in range(0, 10):
         if row == 2 or row == 7:
@@ -1888,7 +1877,7 @@ def test035_fhb():
         sim, time_units="DAYS", nper=3, perioddata=tdis_rc
     )
     model = ModflowGwf(
-        sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
     )
     ims_package = ModflowIms(
         sim,
@@ -1916,11 +1905,9 @@ def test035_fhb():
         delc=1000.0,
         top=50.0,
         botm=-200.0,
-        filename="{}.dis".format(model_name),
+        filename=f"{model_name}.dis",
     )
-    ic_package = ModflowGwfic(
-        model, strt=0.0, filename="{}.ic".format(model_name)
-    )
+    ic_package = ModflowGwfic(model, strt=0.0, filename=f"{model_name}.ic")
     npf_package = ModflowGwfnpf(
         model, perched=True, icelltype=0, k=20.0, k33=1.0
     )
@@ -2033,7 +2020,7 @@ def test006_gwf3_disv():
         sim, time_units="DAYS", nper=1, perioddata=tdis_rc
     )
     model = ModflowGwf(
-        sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
     )
     ims_package = ModflowIms(
         sim,
@@ -2062,7 +2049,7 @@ def test006_gwf3_disv():
         idomain=1,
         vertices=vertices,
         cell2d=c2drecarray,
-        filename="{}.disv".format(model_name),
+        filename=f"{model_name}.disv",
     )
     strt_list = [
         1,
@@ -2188,7 +2175,7 @@ def test006_gwf3_disv():
         0,
     ]
     ic_package = ModflowGwfic(
-        model, strt=strt_list, filename="{}.ic".format(model_name)
+        model, strt=strt_list, filename=f"{model_name}.ic"
     )
     k = {"filename": "k.bin", "factor": 1.0, "data": 1.0, "binary": "True"}
     npf_package = ModflowGwfnpf(
@@ -2324,12 +2311,12 @@ def test006_2models_gnc():
     model_1 = ModflowGwf(
         sim,
         modelname=model_name_1,
-        model_nam_file="{}.nam".format(model_name_1),
+        model_nam_file=f"{model_name_1}.nam",
     )
     model_2 = ModflowGwf(
         sim,
         modelname=model_name_2,
-        model_nam_file="{}.nam".format(model_name_2),
+        model_nam_file=f"{model_name_2}.nam",
     )
     ims_package = ModflowIms(
         sim,
@@ -2408,7 +2395,7 @@ def test006_2models_gnc():
         delc=100.0,
         top=0.0,
         botm=-100.0,
-        filename="{}.dis".format(model_name_1),
+        filename=f"{model_name_1}.dis",
     )
     dis_package_2 = ModflowGwfdis(
         model_2,
@@ -2420,7 +2407,7 @@ def test006_2models_gnc():
         delc=33.33,
         top=0.0,
         botm=-100.0,
-        filename="{}.dis".format(model_name_2),
+        filename=f"{model_name_2}.dis",
     )
 
     strt_list = [
@@ -2475,10 +2462,10 @@ def test006_2models_gnc():
         0.0,
     ]
     ic_package_1 = ModflowGwfic(
-        model_1, strt=strt_list, filename="{}.ic".format(model_name_1)
+        model_1, strt=strt_list, filename=f"{model_name_1}.ic"
     )
     ic_package_2 = ModflowGwfic(
-        model_2, strt=1.0, filename="{}.ic".format(model_name_2)
+        model_2, strt=1.0, filename=f"{model_name_2}.ic"
     )
     npf_package_1 = ModflowGwfnpf(
         model_1, save_flows=True, perched=True, icelltype=0, k=1.0, k33=1.0
@@ -2656,7 +2643,7 @@ def test050_circle_island():
         sim, time_units="DAYS", nper=1, perioddata=tdis_rc
     )
     model = ModflowGwf(
-        sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
     )
     ims_package = ModflowIms(
         sim,
@@ -2683,11 +2670,9 @@ def test050_circle_island():
         idomain=1,
         vertices=vertices,
         cell2d=c2drecarray,
-        filename="{}.disv".format(model_name),
+        filename=f"{model_name}.disv",
     )
-    ic_package = ModflowGwfic(
-        model, strt=0.0, filename="{}.ic".format(model_name)
-    )
+    ic_package = ModflowGwfic(model, strt=0.0, filename=f"{model_name}.ic")
     npf_package = ModflowGwfnpf(
         model, save_flows=True, icelltype=0, k=10.0, k33=0.2
     )
@@ -2765,7 +2750,7 @@ def test028_sfr():
         filename="simulation.tdis",
     )
     model = ModflowGwf(
-        sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
     )
     model.name_file.save_flows.set_data(True)
     ims_package = ModflowIms(
@@ -2806,12 +2791,12 @@ def test028_sfr():
         top=top,
         botm=botm,
         idomain=idomain,
-        filename="{}.dis".format(model_name),
+        filename=f"{model_name}.dis",
     )
     strt = testutils.read_std_array(os.path.join(pth, "strt.txt"), "float")
     strt_int = ["internal", "factor", 1.0, "iprn", 0, strt]
     ic_package = ModflowGwfic(
-        model, strt=strt_int, filename="{}.ic".format(model_name)
+        model, strt=strt_int, filename=f"{model_name}.ic"
     )
 
     k_vals = testutils.read_std_array(os.path.join(pth, "k.txt"), "float")
@@ -3059,7 +3044,7 @@ def test_transport():
     )
 
     # create gwf model
-    gwfname = "gwf_" + name
+    gwfname = f"gwf_{name}"
     newtonoptions = ["NEWTON", "UNDER_RELAXATION"]
     gwf = flopy.mf6.ModflowGwf(
         sim,
@@ -3082,7 +3067,7 @@ def test_transport():
         scaling_method="NONE",
         reordering_method="NONE",
         relaxation_factor=relax,
-        filename="{}.ims".format(gwfname),
+        filename=f"{gwfname}.ims",
     )
     sim.register_ims_package(imsgwf, [gwf.name])
 
@@ -3131,20 +3116,20 @@ def test_transport():
     # output control
     oc = flopy.mf6.ModflowGwfoc(
         gwf,
-        budget_filerecord="{}.cbc".format(gwfname),
-        head_filerecord="{}.hds".format(gwfname),
+        budget_filerecord=f"{gwfname}.cbc",
+        head_filerecord=f"{gwfname}.hds",
         headprintrecord=[("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "GENERAL")],
         saverecord=[("HEAD", "ALL")],
         printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
     )
 
     # create gwt model
-    gwtname = "gwt_" + name
+    gwtname = f"gwt_{name}"
     gwt = flopy.mf6.MFModel(
         sim,
         model_type="gwt6",
         modelname=gwtname,
-        model_nam_file="{}.nam".format(gwtname),
+        model_nam_file=f"{gwtname}.nam",
     )
 
     # create iterative model solution and register the gwt model with it
@@ -3161,7 +3146,7 @@ def test_transport():
         scaling_method="NONE",
         reordering_method="NONE",
         relaxation_factor=relax,
-        filename="{}.ims".format(gwtname),
+        filename=f"{gwtname}.ims",
     )
     sim.register_ims_package(imsgwt, [gwt.name])
 
@@ -3175,7 +3160,7 @@ def test_transport():
         top=top,
         botm=botm,
         idomain=1,
-        filename="{}.dis".format(gwtname),
+        filename=f"{gwtname}.dis",
     )
 
     # initial conditions
@@ -3183,25 +3168,25 @@ def test_transport():
 
     # advection
     adv = flopy.mf6.ModflowGwtadv(
-        gwt, scheme="UPSTREAM", filename="{}.adv".format(gwtname)
+        gwt, scheme="UPSTREAM", filename=f"{gwtname}.adv"
     )
 
     # mass storage and transfer
     mst = flopy.mf6.ModflowGwtmst(
-        gwt, porosity=sy[idx], filename="{}.mst".format(gwtname)
+        gwt, porosity=sy[idx], filename=f"{gwtname}.mst"
     )
 
     # sources
     sourcerecarray = [("WEL-1", "AUX", "CONCENTRATION")]
     ssm = flopy.mf6.ModflowGwtssm(
-        gwt, sources=sourcerecarray, filename="{}.ssm".format(gwtname)
+        gwt, sources=sourcerecarray, filename=f"{gwtname}.ssm"
     )
 
     # output control
     oc = flopy.mf6.ModflowGwtoc(
         gwt,
-        budget_filerecord="{}.cbc".format(gwtname),
-        concentration_filerecord="{}.ucn".format(gwtname),
+        budget_filerecord=f"{gwtname}.cbc",
+        concentration_filerecord=f"{gwtname}.ucn",
         concentrationprintrecord=[
             ("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "GENERAL")
         ],
@@ -3215,7 +3200,7 @@ def test_transport():
         exgtype="GWF6-GWT6",
         exgmnamea=gwfname,
         exgmnameb=gwtname,
-        filename="{}.gwfgwt".format(name),
+        filename=f"{name}.gwfgwt",
     )
 
     # write MODFLOW 6 files

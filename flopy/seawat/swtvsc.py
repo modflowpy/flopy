@@ -145,7 +145,7 @@ class SeawatVsc(Package):
         extension="vsc",
         unitnumber=None,
         filenames=None,
-        **kwargs
+        **kwargs,
     ):
 
         if len(list(kwargs.keys())) > 0:
@@ -231,21 +231,19 @@ class SeawatVsc(Package):
         f_vsc = open(self.fn_path, "w")
 
         # item 1
-        f_vsc.write("{}\n".format(self.mt3dmuflg))
+        f_vsc.write(f"{self.mt3dmuflg}\n")
 
         # item 2
-        f_vsc.write("{} {}\n".format(self.viscmin, self.viscmax))
+        f_vsc.write(f"{self.viscmin} {self.viscmax}\n")
 
         # item 3
         if self.mt3dmuflg >= 0:
-            f_vsc.write(
-                "{} {} {}\n".format(self.viscref, self.dmudc, self.cmuref)
-            )
+            f_vsc.write(f"{self.viscref} {self.dmudc} {self.cmuref}\n")
 
         # item 3a-d
         if self.mt3dmuflg == -1:
-            f_vsc.write("{}\n".format(self.viscref))
-            f_vsc.write("{} {}\n".format(self.nsmueos, self.mutempopt))
+            f_vsc.write(f"{self.viscref}\n")
+            f_vsc.write(f"{self.nsmueos} {self.mutempopt}\n")
             # if self.nsmueos == 1:
             #     f_vsc.write('{} {} {}\n'.format(self.mtmuspec, self.dmudc,
             #                                   self.cmuref))
@@ -257,16 +255,12 @@ class SeawatVsc(Package):
             if self.nsmueos > 0:
                 for iwr in range(self.nsmueos):
                     f_vsc.write(
-                        "{} {} {}\n".format(
-                            self.mtmuspec[iwr],
-                            self.dmudc[iwr],
-                            self.cmuref[iwr],
-                        )
+                        f"{self.mtmuspec[iwr]} {self.dmudc[iwr]} {self.cmuref[iwr]}\n"
                     )
 
             # item 3d
             if self.mutempopt > 0:
-                s = "{} ".format(self.mtmutempspec)
+                s = f"{self.mtmutempspec} "
                 for a in tuple(self.amucoeff):
                     s += "{} ".format(a)
                 f_vsc.write(s + "\n")
@@ -281,11 +275,11 @@ class SeawatVsc(Package):
 
                 # item 4 (and possibly 5)
                 if itmp > 0:
-                    f_vsc.write("{}\n".format(self.invisc))
+                    f_vsc.write(f"{self.invisc}\n")
                     f_vsc.write(file_entry_visc)
 
                 else:
-                    f_vsc.write("{}\n".format(itmp))
+                    f_vsc.write(f"{itmp}\n")
 
         f_vsc.close()
         return
@@ -353,7 +347,7 @@ class SeawatVsc(Package):
         t = line.strip().split()
         mt3dmuflg = int(t[0])
         if model.verbose:
-            print("   MT3DMUFLG {}".format(mt3dmuflg))
+            print(f"   MT3DMUFLG {mt3dmuflg}")
 
         # Item 2 -- VISCMIN VISCMAX
         if model.verbose:
@@ -363,8 +357,8 @@ class SeawatVsc(Package):
         viscmin = float(t[0])
         viscmax = float(t[1])
         if model.verbose:
-            print("   VISCMIN {}".format(viscmin))
-            print("   VISCMAX {}".format(viscmax))
+            print(f"   VISCMIN {viscmin}")
+            print(f"   VISCMAX {viscmax}")
 
         # Item 3 -- VISCREF NSMUEOS MUTEMPOPT MTMUSPEC DMUDC CMUREF
         nsmueos = None
@@ -384,9 +378,9 @@ class SeawatVsc(Package):
             cmuref = float(t[2])
             nsmueos = 1
             if model.verbose:
-                print("   VISCREF {}".format(viscref))
-                print("   DMUDC {}".format(dmudc))
-                print("   CMUREF {}".format(cmuref))
+                print(f"   VISCREF {viscref}")
+                print(f"   DMUDC {dmudc}")
+                print(f"   CMUREF {cmuref}")
         else:
             # Item 3a
             if model.verbose:
@@ -395,7 +389,7 @@ class SeawatVsc(Package):
             t = line.strip().split()
             viscref = float(t[0])
             if model.verbose:
-                print("   VISCREF {}".format(viscref))
+                print(f"   VISCREF {viscref}")
 
             # Item 3b
             if model.verbose:
@@ -413,8 +407,8 @@ class SeawatVsc(Package):
             else:
                 muncoeff = None
             if model.verbose:
-                print("   NSMUEOS {}".format(nsmueos))
-                print("   MUTEMPOPT {}".format(mutempopt))
+                print(f"   NSMUEOS {nsmueos}")
+                print(f"   MUTEMPOPT {mutempopt}")
 
             # Item 3c
             if model.verbose:
@@ -429,9 +423,9 @@ class SeawatVsc(Package):
                 dmudc.append(float(t[1]))
                 cmuref.append(float(t[2]))
             if model.verbose:
-                print("   MTMUSPEC {}".format(mtmuspec))
-                print("   DMUDC {}".format(dmudc))
-                print("   CMUREF {}".format(cmuref))
+                print(f"   MTMUSPEC {mtmuspec}")
+                print(f"   DMUDC {dmudc}")
+                print(f"   CMUREF {cmuref}")
 
             # Item 3d
             if mutempopt > 0:
@@ -444,8 +438,8 @@ class SeawatVsc(Package):
                 for i in range(muncoeff):
                     amucoeff.append(float(t[i + 1]))
                 if model.verbose:
-                    print("   MTMUTEMSPEC {}".format(mtmutempspec))
-                    print("   AMUCOEFF {}".format(amucoeff))
+                    print(f"   MTMUTEMSPEC {mtmutempspec}")
+                    print(f"   AMUCOEFF {amucoeff}")
 
         # Items 4 and 5 -- INVISC VISC
         invisc = None
@@ -458,16 +452,13 @@ class SeawatVsc(Package):
             for iper in range(nper):
 
                 if model.verbose:
-                    print(
-                        "   loading INVISC "
-                        "for stress period {}...".format(iper + 1)
-                    )
+                    print(f"   loading INVISC for stress period {iper + 1}...")
                 line = f.readline()
                 t = line.strip().split()
                 invisc = int(t[0])
 
                 if invisc > 0:
-                    name = "VISC_StressPeriod_{}".format(iper)
+                    name = f"VISC_StressPeriod_{iper}"
                     t = Util3d.load(
                         f,
                         model,

@@ -132,8 +132,8 @@ def test_mf6disv():
         gwf, xt3doptions=True, save_specific_discharge=True
     )
     chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chdspd)
-    budget_file = name + ".bud"
-    head_file = name + ".hds"
+    budget_file = f"{name}.bud"
+    head_file = f"{name}.hds"
     oc = flopy.mf6.ModflowGwfoc(
         gwf,
         budget_filerecord=budget_file,
@@ -174,7 +174,7 @@ def test_mf6disv():
                     vmin=vmin,
                     vmax=vmax,
                 )
-                ax.set_title("Layer {}".format(ilay + 1))
+                ax.set_title(f"Layer {ilay + 1}")
                 pmv.plot_vector(spdis["qx"], spdis["qy"], color="white")
             fname = "results.png"
             fname = os.path.join(ws, fname)
@@ -244,8 +244,8 @@ def test_mf6disu():
         gwf, xt3doptions=True, save_specific_discharge=True
     )
     chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chdspd)
-    budget_file = name + ".bud"
-    head_file = name + ".hds"
+    budget_file = f"{name}.bud"
+    head_file = f"{name}.hds"
     oc = flopy.mf6.ModflowGwfoc(
         gwf,
         budget_filerecord=budget_file,
@@ -293,7 +293,7 @@ def test_mf6disu():
                     vmin=vmin,
                     vmax=vmax,
                 )
-                ax.set_title("Layer {}".format(ilay + 1))
+                ax.set_title(f"Layer {ilay + 1}")
                 pmv.plot_vector(spdis["qx"], spdis["qy"], color="white")
             fname = "results.png"
             fname = os.path.join(ws, fname)
@@ -402,7 +402,7 @@ def test_mfusg():
         m.run_model()
 
         # head is returned as a list of head arrays for each layer
-        head_file = os.path.join(ws, name + ".hds")
+        head_file = os.path.join(ws, f"{name}.hds")
         head = flopy.utils.HeadUFile(head_file).get_data()
 
         if matplotlib is not None:
@@ -418,7 +418,7 @@ def test_mfusg():
                 pmv.contour_array(
                     head[ilay], levels=[0.2, 0.4, 0.6, 0.8], linewidths=3.0
                 )
-                ax.set_title("Layer {}".format(ilay + 1))
+                ax.set_title(f"Layer {ilay + 1}")
                 # pmv.plot_specific_discharge(spdis, color='white')
             fname = "results.png"
             fname = os.path.join(ws, fname)
@@ -463,7 +463,7 @@ def test_mfusg():
 
         # also test load of unstructured LPF with keywords
         lpf2 = flopy.modflow.ModflowLpf.load(
-            os.path.join(ws, name + ".lpf"), m, check=False
+            os.path.join(ws, f"{name}.lpf"), m, check=False
         )
         msg = "NOCVCORRECTION and NOVFC should be in lpf options but at least one is not."
         assert (

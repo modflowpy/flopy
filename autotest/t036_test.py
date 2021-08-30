@@ -87,9 +87,7 @@ def test_uzf_unit_numbers():
 
     # compare budget terms
     if run:
-        fsum = os.path.join(
-            compth, "{}.budget.out".format(os.path.splitext(mfnam)[0])
-        )
+        fsum = os.path.join(compth, f"{os.path.splitext(mfnam)[0]}.budget.out")
         try:
             success = pymake.compare_budget(
                 fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
@@ -137,7 +135,7 @@ def test_unitnums_load_and_write():
 
     msg = (
         "modflow-2005 testsfr2_tab does not have "
-        + "1 layer, 7 rows, and 100 columns"
+        "1 layer, 7 rows, and 100 columns"
     )
     v = (m.nlay, m.nrow, m.ncol, m.nper)
     assert v == (1, 7, 100, 50), msg
@@ -162,9 +160,7 @@ def test_unitnums_load_and_write():
         fn1 = os.path.join(apth, mfnam)
 
     if run:
-        fsum = os.path.join(
-            compth, "{}.budget.out".format(os.path.splitext(mfnam)[0])
-        )
+        fsum = os.path.join(compth, f"{os.path.splitext(mfnam)[0]}.budget.out")
         try:
             success = pymake.compare_budget(
                 fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum

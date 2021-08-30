@@ -39,11 +39,11 @@ def test_load():
     # load a real mnw2 package from a steady state model (multiple wells)
     m2 = flopy.modflow.Modflow("br", model_ws=cpth)
     path = os.path.join("..", "examples", "data", "mnw2_examples")
-    mnw2_2 = flopy.modflow.ModflowMnw2.load(path + "/BadRiver_cal.mnw2", m2)
+    mnw2_2 = flopy.modflow.ModflowMnw2.load(f"{path}/BadRiver_cal.mnw2", m2)
     mnw2_2.write_file(os.path.join(cpth, "brtest.mnw2"))
 
     m3 = flopy.modflow.Modflow("br", model_ws=cpth)
-    mnw2_3 = flopy.modflow.ModflowMnw2.load(cpth + "/brtest.mnw2", m3)
+    mnw2_3 = flopy.modflow.ModflowMnw2.load(f"{cpth}/brtest.mnw2", m3)
     mnw2_2.node_data.sort(order="wellid")
     mnw2_3.node_data.sort(order="wellid")
     assert np.array_equal(mnw2_2.node_data, mnw2_3.node_data)
@@ -73,10 +73,10 @@ def test_mnw1_load_write():
         assert len(m.mnw1.stress_period_data[i]) == 17
         assert len(np.unique(m.mnw1.stress_period_data[i]["mnw_no"])) == 15
         assert len(set(m.mnw1.stress_period_data[i]["label"])) == 4
-    shutil.copy(mnw1_path + "/mnw1.nam", cpth)
-    shutil.copy(mnw1_path + "/mnw1.dis", cpth)
-    shutil.copy(mnw1_path + "/mnw1.bas", cpth)
-    m.mnw1.fn_path = cpth + "/mnw1.mnw"
+    shutil.copy(f"{mnw1_path}/mnw1.nam", cpth)
+    shutil.copy(f"{mnw1_path}/mnw1.dis", cpth)
+    shutil.copy(f"{mnw1_path}/mnw1.bas", cpth)
+    m.mnw1.fn_path = f"{cpth}/mnw1.mnw"
     m.mnw1.write_file()
     m2 = flopy.modflow.Modflow.load(
         "mnw1.nam",
@@ -467,13 +467,13 @@ mnw2 103 mymnw2.mnw2"""
     wellids2 = list(spd["wellid"])
     emsg = "incorrect keys returned from load mnw2 stress period data"
     for wellid, wellid2 in zip(wellids, wellids2):
-        emsg += "\n    {} -- {}".format(wellid, wellid2)
+        emsg += f"\n    {wellid} -- {wellid2}"
     assert wellids2 == wellids, emsg
 
     rates2 = list(spd["qdes"])
     emsg = "incorrect qdes rates returned from load mnw2 stress period data"
     for rate, rate2 in zip(rates, rates2):
-        emsg += "\n    {} -- {}".format(rate, rate2)
+        emsg += f"\n    {rate} -- {rate2}"
     assert rates2 == rates, emsg
 
     return

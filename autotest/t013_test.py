@@ -30,45 +30,31 @@ def test_mt3d_create_withmfmodel():
 
     # confirm that MT3D files exist
     assert (
-        os.path.isfile(
-            os.path.join(model_ws, "{}.{}".format(mt.name, btn.extension[0]))
-        )
+        os.path.isfile(os.path.join(model_ws, f"{mt.name}.{btn.extension[0]}"))
         is True
     )
     assert (
-        os.path.isfile(
-            os.path.join(model_ws, "{}.{}".format(mt.name, adv.extension[0]))
-        )
+        os.path.isfile(os.path.join(model_ws, f"{mt.name}.{adv.extension[0]}"))
         is True
     )
     assert (
-        os.path.isfile(
-            os.path.join(model_ws, "{}.{}".format(mt.name, dsp.extension[0]))
-        )
+        os.path.isfile(os.path.join(model_ws, f"{mt.name}.{dsp.extension[0]}"))
         is True
     )
     assert (
-        os.path.isfile(
-            os.path.join(model_ws, "{}.{}".format(mt.name, ssm.extension[0]))
-        )
+        os.path.isfile(os.path.join(model_ws, f"{mt.name}.{ssm.extension[0]}"))
         is True
     )
     assert (
-        os.path.isfile(
-            os.path.join(model_ws, "{}.{}".format(mt.name, gcg.extension[0]))
-        )
+        os.path.isfile(os.path.join(model_ws, f"{mt.name}.{gcg.extension[0]}"))
         is True
     )
     assert (
-        os.path.isfile(
-            os.path.join(model_ws, "{}.{}".format(mt.name, rct.extension[0]))
-        )
+        os.path.isfile(os.path.join(model_ws, f"{mt.name}.{rct.extension[0]}"))
         is True
     )
     assert (
-        os.path.isfile(
-            os.path.join(model_ws, "{}.{}".format(mt.name, tob.extension[0]))
-        )
+        os.path.isfile(os.path.join(model_ws, f"{mt.name}.{tob.extension[0]}"))
         is True
     )
 
@@ -105,7 +91,7 @@ def test_mt3d_create_woutmfmodel():
 
         wrn_msg = "mxss is None and modflowmodel is None."
         if len(w) > 0:
-            print("Number of warnings: {}".format(len(w)))
+            print(f"Number of warnings: {len(w)}")
             ipos = -1
             for idx, wm in enumerate(w):
                 print(wm.message)
@@ -113,10 +99,10 @@ def test_mt3d_create_woutmfmodel():
                     ipos = idx
                     break
 
-        assert ipos >= 0, "'{}' warning message not issued".format(wrn_msg)
-        assert w[ipos].category == UserWarning, "Warning category: {}".format(
-            w[0].category
-        )
+        assert ipos >= 0, f"'{wrn_msg}' warning message not issued"
+        assert (
+            w[ipos].category == UserWarning
+        ), f"Warning category: {w[0].category}"
 
     gcg = flopy.mt3d.Mt3dRct(mt)
     rct = flopy.mt3d.Mt3dGcg(mt)
@@ -127,45 +113,31 @@ def test_mt3d_create_woutmfmodel():
 
     # confirm that MT3D files exist
     assert (
-        os.path.isfile(
-            os.path.join(model_ws, "{}.{}".format(mt.name, btn.extension[0]))
-        )
+        os.path.isfile(os.path.join(model_ws, f"{mt.name}.{btn.extension[0]}"))
         is True
     )
     assert (
-        os.path.isfile(
-            os.path.join(model_ws, "{}.{}".format(mt.name, adv.extension[0]))
-        )
+        os.path.isfile(os.path.join(model_ws, f"{mt.name}.{adv.extension[0]}"))
         is True
     )
     assert (
-        os.path.isfile(
-            os.path.join(model_ws, "{}.{}".format(mt.name, dsp.extension[0]))
-        )
+        os.path.isfile(os.path.join(model_ws, f"{mt.name}.{dsp.extension[0]}"))
         is True
     )
     assert (
-        os.path.isfile(
-            os.path.join(model_ws, "{}.{}".format(mt.name, ssm.extension[0]))
-        )
+        os.path.isfile(os.path.join(model_ws, f"{mt.name}.{ssm.extension[0]}"))
         is True
     )
     assert (
-        os.path.isfile(
-            os.path.join(model_ws, "{}.{}".format(mt.name, gcg.extension[0]))
-        )
+        os.path.isfile(os.path.join(model_ws, f"{mt.name}.{gcg.extension[0]}"))
         is True
     )
     assert (
-        os.path.isfile(
-            os.path.join(model_ws, "{}.{}".format(mt.name, rct.extension[0]))
-        )
+        os.path.isfile(os.path.join(model_ws, f"{mt.name}.{rct.extension[0]}"))
         is True
     )
     assert (
-        os.path.isfile(
-            os.path.join(model_ws, "{}.{}".format(mt.name, tob.extension[0]))
-        )
+        os.path.isfile(os.path.join(model_ws, f"{mt.name}.{tob.extension[0]}"))
         is True
     )
 
@@ -185,7 +157,7 @@ def test_mt3d_pht3d():
 
     # confirm that MT3D files exist
     assert os.path.isfile(
-        os.path.join(model_ws, "{}.{}".format(mt.name, phc.extension[0]))
+        os.path.join(model_ws, f"{mt.name}.{phc.extension[0]}")
     )
 
     return

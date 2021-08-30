@@ -82,10 +82,8 @@ class TestModflowPerformance:
         target = 0.3  # seconds
         assert (
             mfp.init_time < target
-        ), "model init took {:.2f}s, should take {:.1f}s".format(
-            mfp.init_time, target
-        )
-        print("setting up model took {:.2f}s".format(mfp.init_time))
+        ), f"model init took {mfp.init_time:.2f}s, should take {target:.1f}s"
+        print(f"setting up model took {mfp.init_time:.2f}s")
 
     def test_0_write_time(self):
         """test write time"""
@@ -100,10 +98,10 @@ class TestModflowPerformance:
         mfp.m.write_input()
         t1 = time.time() - t0
         if assert_time:
-            assert t1 < target, "model write took {:.2f}s, ".format(
-                t1
-            ) + "should take {:.1f}s".format(target)
-        print("writing input took {:.2f}s".format(t1))
+            assert (
+                t1 < target
+            ), f"model write took {t1:.2f}s, should take {target:.1f}s"
+        print(f"writing input took {t1:.2f}s")
 
     def test_9_load_time(self):
         """test model load time"""
@@ -112,13 +110,13 @@ class TestModflowPerformance:
         target = 3
         t0 = time.time()
         m = fm.Modflow.load(
-            "{}.nam".format(mfp.modelname), model_ws=mfp.model_ws, check=False
+            f"{mfp.modelname}.nam", model_ws=mfp.model_ws, check=False
         )
         t1 = time.time() - t0
         assert (
             t1 < target
-        ), "model load took {:.2f}s, should take {:.1f}s".format(t1, target)
-        print("loading the model took {:.2f}s".format(t1))
+        ), f"model load took {t1:.2f}s, should take {target:.1f}s"
+        print(f"loading the model took {t1:.2f}s")
 
     @classmethod
     def teardown_class(cls):

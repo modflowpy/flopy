@@ -87,7 +87,7 @@ class PlotCrossSection:
                 "dictionary keys specified: "
             )
             for k in line.keys():
-                s += "{} ".format(k)
+                s += f"{k} "
             raise AssertionError(s)
 
         if ax is None:
@@ -179,7 +179,7 @@ class PlotCrossSection:
         if len(self.xypts) < 2:
             s = "cross-section cannot be created\n."
             s += "   less than 2 points intersect the model grid\n"
-            s += "   {} points intersect the grid.".format(len(self.xypts))
+            s += f"   {len(self.xypts)} points intersect the grid."
             raise Exception(s)
 
         if self.geographic_coords:
@@ -430,7 +430,7 @@ class PlotCrossSection:
         colors=("blue", "red"),
         masked_values=None,
         head=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot a three-dimensional array as lines.
@@ -646,7 +646,7 @@ class PlotCrossSection:
         color_ch="blue",
         color_vpt="red",
         head=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Make a plot of ibound.  If not specified, then pull ibound from the
@@ -700,7 +700,7 @@ class PlotCrossSection:
             head=head,
             cmap=cmap,
             norm=norm,
-            **kwargs
+            **kwargs,
         )
         return patches
 
@@ -787,7 +787,7 @@ class PlotCrossSection:
                         mflist = pp.stress_period_data.array[kper]
                     except Exception as e:
                         raise Exception(
-                            "Not a list-style boundary package: " + str(e)
+                            f"Not a list-style boundary package: {e!s}"
                         )
                     if mflist is None:
                         return
@@ -810,7 +810,7 @@ class PlotCrossSection:
                     mflist = p.stress_period_data[kper]
                 except Exception as e:
                     raise Exception(
-                        "Not a list-style boundary package: " + str(e)
+                        f"Not a list-style boundary package: {e!s}"
                     )
                 if mflist is None:
                     return
@@ -846,7 +846,7 @@ class PlotCrossSection:
             head=head,
             cmap=cmap,
             norm=norm,
-            **kwargs
+            **kwargs,
         )
 
         return patches
@@ -861,7 +861,7 @@ class PlotCrossSection:
         hstep=1,
         normalize=False,
         masked_values=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot a vector.
@@ -1150,7 +1150,7 @@ class PlotCrossSection:
         selection_direction=None,
         method="cell",
         head=None,
-        **kwargs
+        **kwargs,
     ):
         """
 

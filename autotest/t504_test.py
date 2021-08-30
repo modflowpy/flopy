@@ -83,9 +83,9 @@ def test001a_tharmonic():
     assert os.path.exists(data_path)
     # model export test
     model = sim.get_model(model_name)
-    model.export("{}/tharmonic.nc".format(model.model_ws))
-    model.export("{}/tharmonic.shp".format(model.model_ws))
-    model.dis.botm.export("{}/botm.shp".format(model.model_ws))
+    model.export(f"{model.model_ws}/tharmonic.nc")
+    model.export(f"{model.model_ws}/tharmonic.shp")
+    model.dis.botm.export(f"{model.model_ws}/botm.shp")
 
     mg = model.modelgrid
 
@@ -234,7 +234,7 @@ def test003_gwfs_disv():
 
     model = sim.get_model(model_name)
     if shapefile:
-        model.export("{}/{}.shp".format(pth, test_ex_name))
+        model.export(f"{pth}/{test_ex_name}.shp")
 
     # change some settings
     chd_head_left = model.get_package("CHD_LEFT")
@@ -763,9 +763,7 @@ def test006_2models_mvr():
                 assert (
                     package in model.package_type_dict
                     or package in sim.package_type_dict
-                ) == (
-                    package in load_only or "{}6".format(package) in load_only
-                )
+                ) == (package in load_only or f"{package}6" in load_only)
         assert (len(sim._exchange_files) > 0) == (
             "gwf6-gwf6" in load_only or "gwf-gwf" in load_only
         )
@@ -882,7 +880,7 @@ def test001e_uzf_3lay():
         model = sim.get_model()
         for package in model_package_check:
             assert (package in model.package_type_dict) == (
-                package in load_only or "{}6".format(package) in load_only
+                package in load_only or f"{package}6" in load_only
             )
     if run:
         # test running a runnable load_only case
@@ -1244,8 +1242,8 @@ def test_mf6_output_add_observation():
     # remove sfr_obs and add a new sfr obs
     sfr = gwf.sfr
 
-    obs_file = "{}.sfr.obs".format(model_name)
-    csv_file = obs_file + ".csv"
+    obs_file = f"{model_name}.sfr.obs"
+    csv_file = f"{obs_file}.csv"
     obs_dict = {
         csv_file: [
             ("l08_stage", "stage", (8,)),

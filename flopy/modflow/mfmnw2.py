@@ -847,16 +847,14 @@ class Mnw:
             if self.pumploc > 0:
                 f_mnw.write(
                     indent
-                    + "{:.0f} {:.0f} {:.0f}\n".format(
-                        self.pumplay, self.pumprow, self.pumpcol
-                    )
+                    + f"{self.pumplay:.0f} {self.pumprow:.0f} {self.pumpcol:.0f}\n"
                 )
             elif self.pumploc < 0:
-                fmt = indent + "{}\n".format(float_format)
+                fmt = indent + f"{float_format}\n"
                 f_mnw.write(fmt.format(self.zpump))
         # dataset 2f
         if self.qlimit > 0:
-            fmt = indent + "{} ".format(float_format) + "{:.0f}"
+            fmt = indent + f"{float_format} " + "{:.0f}"
             f_mnw.write(fmt.format(self.hlim, self.qcut))
             if self.qcut != 0:
                 fmt = " {0} {0}".format(float_format)
@@ -1764,13 +1762,13 @@ class ModflowMnw2(Package):
         None
 
         """
-        f_mnw.write("{:.0f} ".format(self.mnwmax))
+        f_mnw.write(f"{self.mnwmax:.0f} ")
         if self.mnwmax < 0:
-            f_mnw.write("{:.0f} ".format(self.nodtot))
-        f_mnw.write("{:.0f} {:.0f}".format(self.ipakcb, self.mnwprnt))
+            f_mnw.write(f"{self.nodtot:.0f} ")
+        f_mnw.write(f"{self.ipakcb:.0f} {self.mnwprnt:.0f}")
         if len(self.aux) > 0:
             for abc in self.aux:
-                f_mnw.write(" aux {}".format(abc))
+                f_mnw.write(f" aux {abc}")
         f_mnw.write("\n")
 
     def write_file(
@@ -1801,7 +1799,7 @@ class ModflowMnw2(Package):
         f_mnw = open(self.fn_path, "w")
 
         # dataset 0 (header)
-        f_mnw.write("{0}\n".format(self.heading))
+        f_mnw.write(f"{self.heading}\n")
 
         # dataset 1
         self._write_1(f_mnw)
@@ -1820,11 +1818,7 @@ class ModflowMnw2(Package):
 
         # dataset 3
         for per in range(self.nper):
-            f_mnw.write(
-                "{:.0f}  Stress Period {:.0f}\n".format(
-                    self.itmp[per], per + 1
-                )
-            )
+            f_mnw.write(f"{self.itmp[per]:.0f}  Stress Period {per + 1}\n")
             if self.itmp[per] > 0:
 
                 for n in range(self.itmp[per]):

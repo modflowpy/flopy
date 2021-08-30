@@ -123,7 +123,7 @@ class ModflowRiv(Package):
         options=None,
         unitnumber=None,
         filenames=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Package constructor.
@@ -240,7 +240,7 @@ class ModflowRiv(Package):
                     botms = self.parent.disu.bot.array[inds]
 
                 for elev in ["stage", "rbot"]:
-                    txt = "{} below cell bottom".format(elev)
+                    txt = f"{elev} below cell bottom"
                     chk.stress_period_data_values(
                         spd,
                         spd[elev] < botms,
@@ -327,15 +327,13 @@ class ModflowRiv(Package):
         # allows turning off package checks when writing files at model level
         if check:
             self.check(
-                f="{}.chk".format(self.name[0]),
+                f=f"{self.name[0]}.chk",
                 verbose=self.parent.verbose,
                 level=1,
             )
         f_riv = open(self.fn_path, "w")
-        f_riv.write("{0}\n".format(self.heading))
-        line = "{0:10d}{1:10d}".format(
-            self.stress_period_data.mxact, self.ipakcb
-        )
+        f_riv.write(f"{self.heading}\n")
+        line = f"{self.stress_period_data.mxact:10d}{self.ipakcb:10d}"
         for opt in self.options:
             line += " " + str(opt)
         line += "\n"
@@ -347,7 +345,7 @@ class ModflowRiv(Package):
         try:
             self.stress_period_data.add_record(kper, index, values)
         except Exception as e:
-            raise Exception("mfriv error adding record to list: " + str(e))
+            raise Exception(f"mfriv error adding record to list: {e!s}")
 
     @classmethod
     def load(cls, f, model, nper=None, ext_unit_dict=None, check=True):

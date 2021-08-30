@@ -33,7 +33,7 @@ def _fmt_string(array, float_format="{}"):
         if vtype == "i":
             fmt_string += "{:.0f} "
         elif vtype == "f":
-            fmt_string += "{} ".format(float_format)
+            fmt_string += f"{float_format} "
         elif vtype == "o":
             fmt_string += "{} "
         elif vtype == "s":
@@ -44,7 +44,7 @@ def _fmt_string(array, float_format="{}"):
             )
         else:
             raise Exception(
-                "MfList.fmt_string error: unknown vtype in dtype:" + vtype
+                f"MfList.fmt_string error: unknown vtype in dtype:{vtype}"
             )
     return fmt_string
 
@@ -192,21 +192,18 @@ def write_fixed_var(v, length=10, ipos=None, free=False, comment=None):
                 if abs(v[n]) < vmin or abs(v[n]) > vmax:
                     ctype = "g"  # default precision is 6 if not specified
                 else:
-                    ctype = ".{}f".format(decimal)
+                    ctype = f".{decimal}f"
                     # evaluate if the fixed format value will exceed width
-                    if (
-                        len("{{:>{}{}}}".format(width, ctype).format(v[n]))
-                        > width
-                    ):
-                        ctype = ".{}g".format(decimal)  # preserve precision
+                    if len(f"{{:>{width}{ctype}}}".format(v[n])) > width:
+                        ctype = f".{decimal}g"  # preserve precision
             elif isinstance(v[n], (int, np.int32, np.int64)):
                 ctype = "d"
             else:
                 ctype = ""
-            write_fmt = "{{:>{}{}}}".format(width, ctype)
+            write_fmt = f"{{:>{width}{ctype}}}"
         out += write_fmt.format(v[n])
     if comment is not None:
-        out += "  # {}".format(comment)
+        out += f"  # {comment}"
     out += "\n"
     return out
 
@@ -430,7 +427,7 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
     # check for external
     if line.strip().lower().startswith("external"):
         inunit = int(line_list[1])
-        errmsg = "Could not find a file for unit {}".format(inunit)
+        errmsg = f"Could not find a file for unit {inunit}"
         if ext_unit_dict is not None:
             if inunit in ext_unit_dict:
                 namdata = ext_unit_dict[inunit]
@@ -456,11 +453,7 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
             raw = [fname]
         fname = os.path.join(*raw)
         oc_filename = os.path.join(model.model_ws, fname)
-        msg = (
-            "Package.load() error: open/close filename "
-            + oc_filename
-            + " not found"
-        )
+        msg = f"Package.load() error: open/close filename {oc_filename} not found"
         assert os.path.exists(oc_filename), msg
         if "(binary)" in line.lower():
             binary = True

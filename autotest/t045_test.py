@@ -69,9 +69,7 @@ def load_and_write_gmg(mfnam, pth):
         fn1 = os.path.join(apth, mfnam)
 
     if run:
-        fsum = os.path.join(
-            compth, "{}.head.out".format(os.path.splitext(mfnam)[0])
-        )
+        fsum = os.path.join(compth, f"{os.path.splitext(mfnam)[0]}.head.out")
         success = False
         try:
             success = pymake.compare_heads(fn0, fn1, outfile=fsum)
@@ -81,9 +79,7 @@ def load_and_write_gmg(mfnam, pth):
 
         assert success, "head comparison failure"
 
-        fsum = os.path.join(
-            compth, "{}.budget.out".format(os.path.splitext(mfnam)[0])
-        )
+        fsum = os.path.join(compth, f"{os.path.splitext(mfnam)[0]}.budget.out")
         success = False
         try:
             success = pymake.compare_budget(
