@@ -13,20 +13,12 @@ class MFInvalidTransientBlockHeaderException(Exception):
     Exception occurs when parsing a transient block header
     """
 
-    def __init__(self, error):
-        Exception.__init__(
-            self, f"MFInvalidTransientBlockHeaderException: {error}"
-        )
-
 
 class ReadAsArraysException(Exception):
     """
     Exception occurs when loading ReadAsArrays package as non-ReadAsArrays
     package.
     """
-
-    def __init__(self, error):
-        Exception.__init__(self, f"ReadAsArraysException: {error}")
 
 
 # external exceptions for users
@@ -37,7 +29,7 @@ class FlopyException(Exception):
 
     def __init__(self, error, location=""):
         self.message = error
-        Exception.__init__(self, f"FlopyException: {error} ({location})")
+        super().__init__(f"{error} ({location})")
 
 
 class StructException(Exception):
@@ -47,7 +39,7 @@ class StructException(Exception):
 
     def __init__(self, error, location):
         self.message = error
-        Exception.__init__(self, f"StructException: {error} ({location})")
+        super().__init__(f"{error} ({location})")
 
 
 class MFDataException(Exception):
@@ -132,35 +124,21 @@ class MFDataException(Exception):
             self.org_type, self.org_value, self.org_traceback
         )
         # build error string
-        error_message_0 = "An error occurred in "
+        error_message = "An error occurred in "
         if self.data_element is not None and self.data_element != "":
-            error_message_1 = f'data element "{self.data_element}" '
-        else:
-            error_message_1 = ""
+            error_message += f'data element "{self.data_element}" '
         if self.model is not None and self.model != "":
-            error_message_2 = f'model "{self.model}" '
-        else:
-            error_message_2 = ""
-        error_message_3 = f'package "{self.package}".'
-        error_message_4 = (
-            ' The error occurred while {} in the "{}" method'
-            ".".format(self.current_process, self.method_caught_in)
+            error_message += f'model "{self.model}" '
+        error_message += (
+            f'package "{self.package}". The error occurred while '
+            f'{self.current_process} in the "{self.method_caught_in}" method.'
         )
         if len(self.messages) > 0:
-            error_message_5 = "\nAdditional Information:\n"
-            for index, message in enumerate(self.messages):
-                error_message_5 = f"{error_message_5}({index + 1}) {message}\n"
-        else:
-            error_message_5 = ""
-        error_message = "{}{}{}{}{}{}".format(
-            error_message_0,
-            error_message_1,
-            error_message_2,
-            error_message_3,
-            error_message_4,
-            error_message_5,
-        )
-        Exception.__init__(self, error_message)
+            error_message += "\nAdditional Information:\n"
+            error_message += "\n".join(
+                f"({idx}) {msg}" for (idx, msg) in enumerate(self.messages, 1)
+            )
+        super().__init__(error_message)
 
 
 class VerbosityLevel(Enum):
