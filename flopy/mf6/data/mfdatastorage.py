@@ -1738,7 +1738,7 @@ class DataStorage:
     def external_to_internal(self, layer, store_internal=False):
         # reset comments
         self.pre_data_comments = None
-        self.comments = OrderedDict()
+        self.comments = {}
 
         if layer is None:
             layer = 0

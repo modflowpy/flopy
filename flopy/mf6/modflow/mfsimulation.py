@@ -1055,6 +1055,7 @@ class MFSimulation(PackageContainer):
                     )
                 self._remove_package(self._ims_files[file.filename])
                 del self._ims_files[file.filename]
+                break
         # register ims package
         if not in_simulation:
             self._add_package(ims_file, self._get_package_path(ims_file))
