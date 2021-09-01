@@ -462,6 +462,15 @@ def np001():
         # clean up
         sim.delete_output_files()
 
+    # test rename all packages
+    rename_folder = os.path.join(run_folder, "rename")
+    sim.rename_all_packages("file_rename")
+    sim.set_sim_path(rename_folder)
+    sim.write_simulation()
+    if run:
+        sim.run_simulation()
+        sim.delete_output_files()
+
     try:
         error_occurred = False
         well_spd = {
@@ -543,6 +552,7 @@ def np001():
     )
     wel_package.write()
     mpath = sim.simulation_data.mfpath.get_model_path(model.name)
+    spath = sim.simulation_data.mfpath.get_sim_path()
     found_cellid = False
     with open(os.path.join(mpath, "np001_mod.wel"), "r") as fd:
         for line in fd:
@@ -560,6 +570,7 @@ def np001():
     well_spd = {0: [(-1, -1, -1, -2000.0), (0, 0, 7, -2.0)], 1: []}
     wel_package = ModflowGwfwel(
         model,
+        filename="file_rename.wel",
         print_input=True,
         print_flows=True,
         save_flows=True,
@@ -570,7 +581,7 @@ def np001():
     found_begin = False
     found_end = False
     text_between_begin_and_end = False
-    with open(os.path.join(mpath, "np001_mod.wel"), "r") as fd:
+    with open(os.path.join(mpath, "file_rename.wel"), "r") as fd:
         for line in fd:
             if line.strip().lower() == "begin period  2":
                 found_begin = True
@@ -587,7 +598,7 @@ def np001():
         test_ex_name,
         "mf6",
         exe_name,
-        run_folder,
+        spath,
         write_headers=False,
     )
     wel = test_sim.get_model().wel
@@ -2518,28 +2529,6 @@ def test006_2models_gnc():
         stress_period_data=stress_period_data,
     )
 
-    gncrecarray = testutils.read_gncrecarray(os.path.join(pth, "gnc.txt"))
-    # test gnc delete
-    new_gncrecarray = gncrecarray[10:]
-    gnc_package = ModflowGwfgnc(
-        sim,
-        print_input=True,
-        print_flows=True,
-        numgnc=26,
-        numalphaj=1,
-        gncdata=new_gncrecarray,
-    )
-    sim.remove_package(gnc_package.package_type)
-
-    gnc_package = ModflowGwfgnc(
-        sim,
-        print_input=True,
-        print_flows=True,
-        numgnc=36,
-        numalphaj=1,
-        gncdata=gncrecarray,
-    )
-
     exgrecarray = testutils.read_exchangedata(os.path.join(pth, "exg.txt"))
 
     # build obs dictionary
@@ -2580,6 +2569,28 @@ def test006_2models_gnc():
         exgmnamea=model_name_1,
         exgmnameb=model_name_2,
         observations=gwf_obs,
+    )
+
+    gncrecarray = testutils.read_gncrecarray(os.path.join(pth, "gnc.txt"))
+    # test gnc delete
+    new_gncrecarray = gncrecarray[10:]
+    gnc_package = ModflowGwfgnc(
+        sim,
+        print_input=True,
+        print_flows=True,
+        numgnc=26,
+        numalphaj=1,
+        gncdata=new_gncrecarray,
+    )
+    sim.remove_package(gnc_package.package_type)
+
+    gnc_package = ModflowGwfgnc(
+        sim,
+        print_input=True,
+        print_flows=True,
+        numgnc=36,
+        numalphaj=1,
+        gncdata=gncrecarray,
     )
 
     # change folder to save simulation
@@ -2627,6 +2638,15 @@ def test006_2models_gnc():
         sim.run_simulation()
 
         # clean up
+        sim.delete_output_files()
+
+    # test rename all packages
+    rename_folder = os.path.join(run_folder, "rename")
+    sim.rename_all_packages("file_rename")
+    sim.set_sim_path(rename_folder)
+    sim.write_simulation()
+    if run:
+        sim.run_simulation()
         sim.delete_output_files()
 
     return
