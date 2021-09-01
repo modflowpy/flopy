@@ -815,8 +815,9 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                     mflist_line + 1 in storage.comments
                     and storage.comments[mflist_line + 1].text
                 ):
-                    text_line.append(storage.comments[mflist_line + 1].
-                                     get_file_entry(False))
+                    text_line.append(
+                        storage.comments[mflist_line + 1].get_file_entry(False)
+                    )
 
                 file_entry.append(f"{indent}{indent.join(text_line)}\n")
                 self._crnt_line_num += 1
