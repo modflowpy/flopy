@@ -1477,7 +1477,6 @@ class MFPackage(PackageContainer, PackageInterface):
         loading_package=False,
         parent_file=None,
     ):
-
         self.model_or_sim = model_or_sim
         self._data_list = []
         self._package_type = package_type
@@ -1485,6 +1484,10 @@ class MFPackage(PackageContainer, PackageInterface):
             self.model_name = model_or_sim.name
         else:
             self.model_name = None
+
+        # a package must have a dfn_file_name
+        if not hasattr(self, "dfn_file_name"):
+            self.dfn_file_name = ""
 
         if model_or_sim.type != "Model" and model_or_sim.type != "Simulation":
             message = (
@@ -2394,7 +2397,7 @@ class MFPackage(PackageContainer, PackageInterface):
             ):
                 # get exchange file name associated with gnc package
                 exg_file_name = None
-                for exg in self.model_or_sim._exchange_files.values():
+                for exg in self.model_or_sim.exchange_files:
                     gnc_data = exg.gnc_filerecord.get_data()
                     if (
                         gnc_data is not None

@@ -1054,10 +1054,6 @@ class MFModel(PackageContainer, ModelInterface):
             del self._package_paths[package.path]
         self._remove_package(package)
 
-    def _add_package_to_dictionaries(self, package):
-        self._package_paths[package.path] = 1
-        self._add_package(package)
-
     def remove_package(self, package_name):
         """
         Removes package and all child packages from the model.
@@ -1159,6 +1155,16 @@ class MFModel(PackageContainer, ModelInterface):
                     self._remove_package_from_dictionaries(child_package)
 
     def update_package_filename(self, package, new_name):
+        """
+        Updates the filename for a package.  For internal flopy use only.
+
+        Parameters
+        ----------
+        package : MFPackage
+            Package object
+        new_name : str
+            New package name
+        """
         try:
             # get namefile package data
             package_data = self.name_file.packages.get_data()

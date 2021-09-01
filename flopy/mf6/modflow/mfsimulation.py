@@ -565,6 +565,17 @@ class MFSimulation(PackageContainer):
         """
         return self._models.keys()
 
+    @property
+    def exchange_files(self):
+        """Return list of exchange files associated with this simulation.
+
+        Returns
+        --------
+            list: list of exchange names
+
+        """
+        return self._exchange_files.values()
+
     @classmethod
     def load(
         cls,
@@ -1159,8 +1170,6 @@ class MFSimulation(PackageContainer):
                 message=message,
             )
         if exchange_recarray_data is not None:
-            found = False
-            remove_indices = []
             for index, exchange in zip(
                 range(0, len(exchange_recarray_data)),
                 exchange_recarray_data,
@@ -1180,10 +1189,10 @@ class MFSimulation(PackageContainer):
                             "values (exgtype, filename, "
                             'exgmnamea, exgmnameb): "{} {} {}'
                             '{}".'.format(
-                                exgtype,
+                                package.exgtype,
                                 package.filename,
-                                exgmnamea,
-                                exgmnameb,
+                                package.exgmnamea,
+                                package.exgmnameb,
                             )
                         )
                         raise MFDataException(
