@@ -72,10 +72,7 @@ def test_gage_load_and_write():
             for f in files:
                 pth0 = os.path.join(opth, f)
                 pth1 = os.path.join(npth, f)
-                msg = (
-                    'new and original gage file "{}" '.format(f)
-                    + "are not binary equal."
-                )
+                msg = f'new and original gage file "{f}" are not binary equal.'
                 assert filecmp.cmp(pth0, pth1), msg
         except:
             raise ValueError("could not load new GAGE output files")

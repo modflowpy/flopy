@@ -191,10 +191,7 @@ def test_gridgen():
         points = [(4750.0, 5250.0)]
         cells = g.intersect(points, "point", 0)
         n = cells["nodenumber"][0]
-        msg = (
-            "gridgen point intersect did not identify the correct "
-            "cell {} <> {}".format(n, 308)
-        )
+        msg = f"gridgen point intersect did not identify the correct cell {n} <> 308"
         assert n == 308, msg
 
         # test the gridgen line intersection

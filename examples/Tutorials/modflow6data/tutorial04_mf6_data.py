@@ -12,7 +12,7 @@
 #     name: python3
 # ---
 
-# # MODFLOW 6 Tutorial 5: Time Array Series Packages
+# # MODFLOW 6: Time Array Series Packages
 #
 
 # ## Introduction to Time Array Series
@@ -51,7 +51,7 @@ tdis_package = flopy.mf6.modflow.mftdis.ModflowTdis(
     sim, time_units="DAYS", nper=4, perioddata=tdis_rc
 )
 # create the Flopy groundwater flow (gwf) model object
-model_nam_file = "{}.nam".format(name)
+model_nam_file = f"{name}.nam"
 gwf = flopy.mf6.ModflowGwf(sim, modelname=name, model_nam_file=model_nam_file)
 # create the flopy iterative model solver (ims) package object
 ims = flopy.mf6.modflow.mfims.ModflowIms(sim, pname="ims", complexity="SIMPLE")

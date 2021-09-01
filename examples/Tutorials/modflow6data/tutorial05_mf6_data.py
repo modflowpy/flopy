@@ -12,7 +12,7 @@
 #     name: python3
 # ---
 
-# # MODFLOW 6 Tutorial 6: Working with MODFLOW Scalar Data
+# # MODFLOW 6: Working with MODFLOW Scalar Data
 #
 # This tutorial shows how to view, access, and change the underlying data
 # variables for MODFLOW 6 objects in FloPy.  Interaction with a FloPy
@@ -72,7 +72,7 @@ sim = flopy.mf6.MFSimulation(
 )
 
 # create the flopy groundwater flow (gwf) model object
-model_nam_file = "{}.nam".format(name)
+model_nam_file = f"{name}.nam"
 gwf = flopy.mf6.ModflowGwf(sim, modelname=name, model_nam_file=model_nam_file)
 # create the flopy iterative model solver (ims) package object
 # (both pname and complexity are scalar data)

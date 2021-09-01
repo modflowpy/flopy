@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 19, 2021 03:08:37 UTC
+# FILE created on August 06, 2021 20:56:59 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -233,19 +233,19 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           :math:`Q_{DS}` from reach RNO is set equal to DIVFLOW. This
           represents a flood-control type of diversion, as described by Danskin
           and Hanson (2002). (3) CPRIOR = 'THRESHOLD', then if :math:`Q_{DS}`
-          in reach RNO is less than the specified diversion flow (DIVFLOW), no
+          in reach RNO is less than the specified diversion flow DIVFLOW, no
           water is diverted from reach RNO. If :math:`Q_{DS}` in reach RNO is
-          greater than or equal to (DIVFLOW), (DIVFLOW) is diverted and
+          greater than or equal to DIVFLOW, DIVFLOW is diverted and
           :math:`Q_{DS}` is set to the remainder (:math:`Q_{DS} -` DIVFLOW)).
           This approach assumes that once flow in the stream is sufficiently
           low, diversions from the stream cease, and is the 'priority'
           algorithm that originally was programmed into the STR1 Package
           (Prudic, 1989). (4) CPRIOR = 'UPTO' -- if :math:`Q_{DS}` in reach RNO
-          is greater than or equal to the specified diversion flow (DIVFLOW),
+          is greater than or equal to the specified diversion flow DIVFLOW,
           :math:`Q_{DS}` is reduced by DIVFLOW. If :math:`Q_{DS}` in reach RNO
-          is less than (DIVFLOW), DIVFLOW is set to :math:`Q_{DS}` and there
-          will be no flow available for reaches connected to downstream end of
-          reach RNO.
+          is less than DIVFLOW, DIVFLOW is set to :math:`Q_{DS}` and there will
+          be no flow available for reaches connected to downstream end of reach
+          RNO.
     perioddata : [rno, sfrsetting]
         * rno (integer) integer value that defines the reach number associated
           with the specified PERIOD data on the line. RNO must be greater than

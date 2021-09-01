@@ -131,7 +131,7 @@ def plot_vertex_grid(tgr):
 
 def plot_ix_polygon_result(rec, ax):
     for i, ishp in enumerate(rec.ixshapes):
-        ppi = PolygonPatch(ishp, facecolor="C{}".format(i % 10))
+        ppi = PolygonPatch(ishp, facecolor=f"C{i % 10}")
         ax.add_patch(ppi)
 
 
@@ -139,9 +139,9 @@ def plot_ix_linestring_result(rec, ax):
     for i, ishp in enumerate(rec.ixshapes):
         if ishp.type == "MultiLineString":
             for part in ishp:
-                ax.plot(part.xy[0], part.xy[1], ls="-", c="C{}".format(i % 10))
+                ax.plot(part.xy[0], part.xy[1], ls="-", c=f"C{i % 10}")
         else:
-            ax.plot(ishp.xy[0], ishp.xy[1], ls="-", c="C{}".format(i % 10))
+            ax.plot(ishp.xy[0], ishp.xy[1], ls="-", c=f"C{i % 10}")
 
 
 def plot_ix_point_result(rec, ax):

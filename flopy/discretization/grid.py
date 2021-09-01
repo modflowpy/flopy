@@ -180,6 +180,7 @@ class Grid:
 
         self._iverts = None
         self._verts = None
+        self._laycbd = None
 
     ###################################
     # access to basic grid properties
@@ -192,16 +193,16 @@ class Grid:
             and self.angrot is not None
         ):
             items += [
-                "xll:" + str(self.xoffset),
-                "yll:" + str(self.yoffset),
-                "rotation:" + str(self.angrot),
+                f"xll:{self.xoffset!s}",
+                f"yll:{self.yoffset!s}",
+                f"rotation:{self.angrot!s}",
             ]
         if self.proj4 is not None:
-            items.append("proj4_str:" + str(self.proj4))
+            items.append(f"proj4_str:{self.proj4}")
         if self.units is not None:
-            items.append("units:" + str(self.units))
+            items.append(f"units:{self.units}")
         if self.lenuni is not None:
-            items.append("lenuni:" + str(self.lenuni))
+            items.append(f"lenuni:{self.lenuni}")
         return "; ".join(items)
 
     @property
@@ -258,7 +259,7 @@ class Grid:
             else:
                 proj4 = self._proj4
         elif self.epsg is not None:
-            proj4 = "epsg:{}".format(self.epsg)
+            proj4 = f"epsg:{self.epsg}"
         return proj4
 
     @proj4.setter
@@ -284,6 +285,13 @@ class Grid:
     @property
     def top_botm(self):
         raise NotImplementedError("must define top_botm in child class")
+
+    @property
+    def laycbd(self):
+        if self._laycbd is None:
+            return None
+        else:
+            return self._laycbd
 
     @property
     def thick(self):
@@ -317,6 +325,11 @@ class Grid:
         thick = self.thick
         top = self.top_botm[:-1].reshape(thick.shape)
         bot = self.top_botm[1:].reshape(thick.shape)
+        thick = self.remove_confining_beds(thick)
+        top = self.remove_confining_beds(top)
+        bot = self.remove_confining_beds(bot)
+        array = self.remove_confining_beds(array)
+
         idx = np.where((array < top) & (array > bot))
         thick[idx] = array[idx] - bot[idx]
         idx = np.where(array <= bot)
@@ -442,6 +455,32 @@ class Grid:
     @property
     def cross_section_vertices(self):
         return self.xyzvertices[0], self.xyzvertices[1]
+
+    def remove_confining_beds(self, array):
+        """
+        Method to remove confining bed layers from an array
+
+        Parameters
+        ----------
+        array : np.ndarray
+            array to remove quasi3d confining bed data from. Shape of axis 0
+            should be (self.lay + ncb) to remove beds
+        Returns
+        -------
+            np.ndarray
+        """
+        if self.laycbd is not None:
+            ncb = np.count_nonzero(self.laycbd)
+            if ncb > 0:
+                if array.shape[0] == self.shape[0] + ncb:
+                    cb = 0
+                    idx = []
+                    for ix, i in enumerate(self.laycbd):
+                        idx.append(ix + cb)
+                        if i > 0:
+                            cb += 1
+                    array = array[idx]
+        return array
 
     def cross_section_lay_ncpl_ncb(self, ncb):
         """
@@ -706,19 +745,11 @@ class Grid:
             elif "xul" in item.lower():
                 try:
                     xul = float(item.split(":")[1])
-                    warnings.warn(
-                        "xul/yul have been deprecated. Use xll/yll instead.",
-                        DeprecationWarning,
-                    )
                 except:
                     pass
             elif "yul" in item.lower():
                 try:
                     yul = float(item.split(":")[1])
-                    warnings.warn(
-                        "xul/yul have been deprecated. Use xll/yll instead.",
-                        DeprecationWarning,
-                    )
                 except:
                     pass
             elif "rotation" in item.lower():

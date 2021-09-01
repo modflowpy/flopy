@@ -69,7 +69,7 @@ def test_tocvfd3():
     # spot check information for cell 28 (zero based)
     answer = [28, 250.0, 150.0, 7, 38, 142, 143, 45, 46, 44, 38]
     for i, j in zip(cell2d[28], answer):
-        assert i == j, "{} not equal {}".format(i, j)
+        assert i == j, f"{i} not equal {j}"
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 19, 2021 03:08:37 UTC
+# FILE created on August 06, 2021 20:56:59 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator
 
@@ -24,6 +24,12 @@ class ModflowGwfsto(mfpackage.MFPackage):
     storagecoefficient : boolean
         * storagecoefficient (boolean) keyword to indicate that the SS array is
           read as storage coefficient rather than specific storage.
+    ss_confined_only : boolean
+        * ss_confined_only (boolean) keyword to indicate that specific storage
+          is only calculated when a cell is under confined conditions (head
+          greater than or equal to the top of the cell). This option is
+          identical to the approach used to calculate storage changes under
+          confined conditions in MODFLOW-2005.
     iconvert : [integer]
         * iconvert (integer) is a flag for each cell that specifies whether or
           not a cell is convertible for the storage calculation. 0 indicates
@@ -79,6 +85,13 @@ class ModflowGwfsto(mfpackage.MFPackage):
         [
             "block options",
             "name storagecoefficient",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name ss_confined_only",
             "type keyword",
             "reader urword",
             "optional true",
@@ -154,6 +167,7 @@ class ModflowGwfsto(mfpackage.MFPackage):
         loading_package=False,
         save_flows=None,
         storagecoefficient=None,
+        ss_confined_only=None,
         iconvert=0,
         ss=1.0e-5,
         sy=0.15,
@@ -171,6 +185,9 @@ class ModflowGwfsto(mfpackage.MFPackage):
         self.save_flows = self.build_mfdata("save_flows", save_flows)
         self.storagecoefficient = self.build_mfdata(
             "storagecoefficient", storagecoefficient
+        )
+        self.ss_confined_only = self.build_mfdata(
+            "ss_confined_only", ss_confined_only
         )
         self.iconvert = self.build_mfdata("iconvert", iconvert)
         self.ss = self.build_mfdata("ss", ss)

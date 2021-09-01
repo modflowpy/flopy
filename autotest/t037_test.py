@@ -68,9 +68,7 @@ def load_swi(mfnam, pth):
         fn1 = os.path.join(apth, mfnam)
 
     if run:
-        fsum = os.path.join(
-            compth, "{}.budget.out".format(os.path.splitext(mfnam)[0])
-        )
+        fsum = os.path.join(compth, f"{os.path.splitext(mfnam)[0]}.budget.out")
         try:
             success = pymake.compare_budget(
                 fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum

@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 19, 2021 03:08:37 UTC
+# FILE created on August 06, 2021 20:57:00 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator
 
@@ -24,12 +24,12 @@ class ModflowGwtmst(mfpackage.MFPackage):
     first_order_decay : boolean
         * first_order_decay (boolean) is a text keyword to indicate that first-
           order decay will occur. Use of this keyword requires that DECAY and
-          DECAY_SORBED (if sorbtion is active) are specified in the GRIDDATA
+          DECAY_SORBED (if sorption is active) are specified in the GRIDDATA
           block.
     zero_order_decay : boolean
         * zero_order_decay (boolean) is a text keyword to indicate that zero-
           order decay will occur. Use of this keyword requires that DECAY and
-          DECAY_SORBED (if sorbtion is active) are specified in the GRIDDATA
+          DECAY_SORBED (if sorption is active) are specified in the GRIDDATA
           block.
     sorption : string
         * sorption (string) is a text keyword to indicate that sorption will be
@@ -45,7 +45,7 @@ class ModflowGwtmst(mfpackage.MFPackage):
           for the aqueous phase of the mobile domain. A negative value
           indicates solute production. The dimensions of decay for first-order
           decay is one over time. The dimensions of decay for zero-order decay
-          is mass per length cubed per time. decay will have no affect on
+          is mass per length cubed per time. decay will have no effect on
           simulation results unless either first- or zero-order decay is
           specified in the options block.
     decay_sorbed : [double]
@@ -54,14 +54,14 @@ class ModflowGwtmst(mfpackage.MFPackage):
           indicates solute production. The dimensions of decay_sorbed for
           first-order decay is one over time. The dimensions of decay_sorbed
           for zero-order decay is mass of solute per mass of aquifer per time.
-          If decay_sorbed is not specified and both decay and sorbtion are
+          If decay_sorbed is not specified and both decay and sorption are
           active, then the program will terminate with an error. decay_sorbed
-          will have no affect on simulation results unless the SORPTION keyword
+          will have no effect on simulation results unless the SORPTION keyword
           and either first- or zero-order decay are specified in the options
           block.
     bulk_density : [double]
         * bulk_density (double) is the bulk density of the aquifer in mass per
-          length cubed. bulk_density is not required unless the SORBTION
+          length cubed. bulk_density is not required unless the SORPTION
           keyword is specified.
     distcoef : [double]
         * distcoef (double) is the distribution coefficient for the

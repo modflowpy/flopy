@@ -336,7 +336,7 @@ def stress_util2d(ml, nlay, nrow, ncol):
     # save hk up one dir from model_ws
     fnames = []
     for i, h in enumerate(hk):
-        fname = os.path.join(out_dir, "test_{0}.ref".format(i))
+        fname = os.path.join(out_dir, f"test_{i}.ref")
         fnames.append(fname)
         np.savetxt(fname, h, fmt="%15.6e", delimiter="")
         vk[i] = i + 1.0
@@ -406,7 +406,7 @@ def stress_util2d_for_joe_the_file_king(ml, nlay, nrow, ncol):
     # save hk up one dir from model_ws
     fnames = []
     for i, h in enumerate(hk):
-        fname = os.path.join("test_{0}.ref".format(i))
+        fname = os.path.join(f"test_{i}.ref")
         fnames.append(fname)
         np.savetxt(fname, h, fmt="%15.6e", delimiter="")
         vk[i] = i + 1.0
@@ -746,7 +746,7 @@ def test_mflist():
             .to_records(index=True)
             .astype(data.dtype)
         )
-        errmsg = "data not equal:\n  {}\n  {}".format(dfdata, data)
+        errmsg = f"data not equal:\n  {dfdata}\n  {data}"
         assert np.array_equal(dfdata, data), errmsg
 
     m4ds = ml.wel.stress_period_data.masked_4D_arrays
@@ -889,9 +889,41 @@ def test_util3d_reset():
     ml.bas6.strt = arr
 
 
+def test_mflist_fromfile():
+    """test that when a file is passed to stress period data,
+    the .array attribute will load the file
+    """
+    import pandas as pd
+    import flopy
+
+    wel_data = pd.DataFrame(
+        [(0, 1, 2, -50.0), (0, 5, 5, -50.0)], columns=["k", "i", "j", "flux"]
+    )
+    wel_data.to_csv("wel_000.dat", index=False, sep=" ", header=False)
+
+    nwt_model = flopy.modflow.Modflow("nwt_testmodel", verbose=True)
+    dis = flopy.modflow.ModflowDis(
+        nwt_model,
+        nlay=1,
+        nrow=10,
+        ncol=10,
+        delr=500.0,
+        delc=500.0,
+        top=100.0,
+        botm=50.0,
+    )
+    wel = flopy.modflow.ModflowWel(
+        nwt_model, stress_period_data={0: "wel_000.dat"}
+    )
+    flx_array = wel.stress_period_data.array["flux"][0]
+    for k, i, j, flx in zip(wel_data.k, wel_data.i, wel_data.j, wel_data.flux):
+        assert flx_array[k, i, j] == flx
+
+
 if __name__ == "__main__":
     # test_util3d_reset()
-    test_mflist()
+    # test_mflist()
+    test_mflist_fromfile()
     # test_new_get_file_entry()
     # test_arrayformat()
     # test_util2d_external_free_nomodelws()

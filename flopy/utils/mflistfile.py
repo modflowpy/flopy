@@ -5,7 +5,6 @@ recarrays, which can then be easily plotted.
 
 """
 
-import collections
 import os
 import re
 import numpy as np
@@ -45,9 +44,7 @@ class ListBudget:
     def __init__(self, file_name, budgetkey=None, timeunit="days"):
 
         # Set up file reading
-        assert os.path.exists(file_name), "file_name {0} not found".format(
-            file_name
-        )
+        assert os.path.exists(file_name), f"file_name {file_name} not found"
         self.file_name = file_name
         self.f = open(file_name, "r", encoding="ascii", errors="replace")
 
@@ -413,16 +410,14 @@ class ListBudget:
                 ipos = self.get_kstpkper().index(kstpkper)
             except:
                 print(
-                    "   could not retrieve kstpkper "
-                    "{} from the lst file".format(kstpkper)
+                    f"   could not retrieve kstpkper {kstpkper} from the lst file"
                 )
         elif totim is not None:
             try:
                 ipos = self.get_times().index(totim)
             except:
                 print(
-                    "   could not retrieve totime "
-                    "{} from the lst file".format(totim)
+                    f"   could not retrieve totime {totim} from the lst file"
                 )
         elif idx is not None:
             ipos = idx
@@ -431,8 +426,8 @@ class ListBudget:
 
         if ipos is None:
             print("Could not find specified condition.")
-            print("  kstpkper = {}".format(kstpkper))
-            print("  totim = {}".format(totim))
+            print(f"  kstpkper = {kstpkper}")
+            print(f"  totim = {totim}")
             # TODO: return zero-length array, or update docstring return type
             return None
 
@@ -482,7 +477,7 @@ class ListBudget:
         try:
             import pandas as pd
         except Exception as e:
-            msg = "ListBudget.get_dataframe(): requires pandas: " + str(e)
+            msg = f"ListBudget.get_dataframe(): requires pandas: {e!s}"
             raise ImportError(msg)
 
         if not self._isvalid:
@@ -506,8 +501,8 @@ class ListBudget:
 
             base_names = [name.replace("_IN", "") for name in in_names]
             for name in base_names:
-                in_name = name + "_IN"
-                out_name = name + "_OUT"
+                in_name = f"{name}_IN"
+                out_name = f"{name}_OUT"
                 df_flux.loc[:, name.lower()] = (
                     df_flux.loc[:, in_name] - df_flux.loc[:, out_name]
                 )
@@ -675,7 +670,7 @@ class ListBudget:
         if len(self.idx_map) < 1:
             return None, None
         if len(self.entries) > 0:
-            raise Exception("entries already set:" + str(self.entries))
+            raise Exception(f"entries already set:{self.entries}")
         if not self.idx_map:
             raise Exception("must call build_index before call set_entries")
         try:
@@ -688,9 +683,9 @@ class ListBudget:
                 "entry in list file"
             )
         self.entries = incdict.keys()
-        null_entries = collections.OrderedDict()
-        incdict = collections.OrderedDict()
-        cumdict = collections.OrderedDict()
+        null_entries = {}
+        incdict = {}
+        cumdict = {}
         for entry in self.entries:
             incdict[entry] = []
             cumdict[entry] = []
@@ -767,8 +762,8 @@ class ListBudget:
                 break
 
         tag = "IN"
-        incdict = collections.OrderedDict()
-        cumdict = collections.OrderedDict()
+        incdict = {}
+        cumdict = {}
         entrydict = {}
         while True:
 
@@ -814,10 +809,10 @@ class ListBudget:
                     if entry in entrydict:
                         entrydict[entry] += 1
                         inum = entrydict[entry]
-                        entry = "{}{}".format(entry, inum + 1)
+                        entry = f"{entry}{inum + 1}"
                     else:
                         entrydict[entry] = 0
-                    key = "{}_{}".format(entry, tag)
+                    key = f"{entry}_{tag}"
                 incdict[key] = flux
                 cumdict[key] = cumu
             else:

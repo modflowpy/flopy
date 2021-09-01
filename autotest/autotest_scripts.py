@@ -1,5 +1,4 @@
 # Remove the temp directory and then create a fresh one
-from __future__ import print_function
 import os
 import sys
 import shutil
@@ -59,7 +58,7 @@ def copy_scripts(src_dir, dst_dir, include_subdir=False):
         dst = os.path.join(dst_dir, os.path.basename(src))
 
         # copy script
-        print("copying {} from {} to {}".format(filename, filedir, testdir))
+        print(f"copying {filename} from {filedir} to {testdir}")
         shutil.copyfile(src, dst)
 
     return [os.path.basename(filepath) for filepath in files]
@@ -78,29 +77,29 @@ def run_scripts(fn, testdir):
 
     # change to working directory
     opth = os.getcwd()
-    print('changing to working directory "{}"'.format(testdir))
+    print(f'changing to working directory "{testdir}"')
     os.chdir(testdir)
 
     # run the script
     ival = run()
 
     # change back to starting directory
-    print('changing back to starting directory "{}"'.format(opth))
+    print(f'changing back to starting directory "{opth}"')
     os.chdir(opth)
 
     # make sure script ran successfully
-    assert ival == 0, "could not run {}".format(fn)
+    assert ival == 0, f"could not run {fn}"
 
 
 def run_tutorial_scripts(fn, testdir):
     args = ("python", fn)
-    print("running...'{}'".format(" ".join(args)))
+    print(f"running...'{' '.join(args)}'")
     proc = Popen(args, stdout=PIPE, stderr=PIPE, cwd=testdir)
     stdout, stderr = proc.communicate()
     if stdout:
         print(stdout.decode("utf-8"))
     if stderr:
-        print("Errors:\n{}".format(stderr.decode("utf-8")))
+        print(f"Errors:\n{stderr.decode('utf-8')}")
 
     return
 

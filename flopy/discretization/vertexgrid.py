@@ -4,7 +4,7 @@ import numpy as np
 
 try:
     from matplotlib.path import Path
-except ImportError:
+except (ImportError, RuntimeError):
     Path = None
 
 from .grid import Grid, CachedData
@@ -128,11 +128,11 @@ class VertexGrid(Grid):
 
     @property
     def iverts(self):
-        return [[t[0]] + t[4:] for t in self._cell2d]
+        return [[t[0]] + list(t)[4:] for t in self._cell2d]
 
     @property
     def verts(self):
-        return np.array([t[1:] for t in self._vertices], dtype=float)
+        return np.array([list(t)[1:] for t in self._vertices], dtype=float)
 
     @property
     def shape(self):
@@ -314,9 +314,7 @@ class VertexGrid(Grid):
         """
         while cellid >= self.ncpl:
             if cellid > self.nnodes:
-                err = "cellid {} out of index for size {}".format(
-                    cellid, self.nnodes
-                )
+                err = f"cellid {cellid} out of index for size {self.nnodes}"
                 raise IndexError(err)
 
             cellid -= self.ncpl
@@ -491,7 +489,7 @@ class VertexGrid(Grid):
                 plotarray = plotarray[layer, :]
         else:
             raise Exception("Array to plot must be of dimension 1 or 2")
-        msg = "{} /= {}".format(plotarray.shape[0], required_shape)
+        msg = f"{plotarray.shape[0]} /= {required_shape}"
         assert plotarray.shape == required_shape, msg
         return plotarray
 
@@ -518,11 +516,10 @@ class VertexGrid(Grid):
 
         grb_obj = MfGrdFile(file_path, verbose=verbose)
         if grb_obj.grid_type != "DISV":
-            err_msg = (
-                "Binary grid file ({}) ".format(os.path.basename(file_path))
-                + "is not a vertex (DISV) grid."
+            raise ValueError(
+                f"Binary grid file ({os.path.basename(file_path)}) "
+                "is not a vertex (DISV) grid."
             )
-            raise ValueError(err_msg)
 
         idomain = grb_obj.idomain
         xorigin = grb_obj.xorigin

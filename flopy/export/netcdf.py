@@ -76,9 +76,7 @@ class Logger:
         pass
         t = datetime.now()
         if phrase in self.items.keys():
-            s = "{} finished: {}, took: {}\n".format(
-                t, phrase, t - self.items[phrase]
-            )
+            s = f"{t} finished: {phrase}, took: {t - self.items[phrase]}\n"
             if self.echo:
                 print(s)
             if self.filename:
@@ -158,7 +156,7 @@ class NetCdf:
         prj=None,
         logger=None,
         forgive=False,
-        **kwargs
+        **kwargs,
     ):
 
         assert output_filename.lower().endswith(".nc")
@@ -191,7 +189,7 @@ class NetCdf:
         #    self.dimension_names = ('layer', 'ncpl')
         else:
             raise Exception(
-                "Grid type {} not supported.".format(self.model_grid.grid_type)
+                f"Grid type {self.model_grid.grid_type} not supported."
             )
         self.shape = self.model_grid.shape
 
@@ -207,14 +205,14 @@ class NetCdf:
         self.start_datetime = self._dt_str(
             dateutil.parser.parse(self.model_time.start_datetime)
         )
-        self.logger.warn("start datetime:{0}".format(str(self.start_datetime)))
+        self.logger.warn(f"start datetime:{self.start_datetime!s}")
 
         proj4_str = self.model_grid.proj4
         if proj4_str is None:
             proj4_str = "epsg:4326"
             self.log(
                 "Warning: model has no coordinate reference system specified. "
-                "Using default proj4 string: {}".format(proj4_str)
+                f"Using default proj4 string: {proj4_str}"
             )
         self.proj4_str = proj4_str
         self.grid_units = self.model_grid.units
@@ -253,9 +251,7 @@ class NetCdf:
                 )
         else:
             raise Exception(
-                "NetCdf.__add__(): unrecognized other:{0}".format(
-                    str(type(other))
-                )
+                f"NetCdf.__add__(): unrecognized other:{type(other)}"
             )
         return new_net
 
@@ -273,9 +269,7 @@ class NetCdf:
                 )
         else:
             raise Exception(
-                "NetCdf.__sub__(): unrecognized other:{0}".format(
-                    str(type(other))
-                )
+                f"NetCdf.__sub__(): unrecognized other:{type(other)}"
             )
         return new_net
 
@@ -293,9 +287,7 @@ class NetCdf:
                 )
         else:
             raise Exception(
-                "NetCdf.__mul__(): unrecognized other:{0}".format(
-                    str(type(other))
-                )
+                f"NetCdf.__mul__(): unrecognized other:{type(other)}"
             )
         return new_net
 
@@ -318,9 +310,7 @@ class NetCdf:
                     )
             else:
                 raise Exception(
-                    "NetCdf.__sub__(): unrecognized other:{0}".format(
-                        str(type(other))
-                    )
+                    f"NetCdf.__sub__(): unrecognized other:{type(other)}"
                 )
             return new_net
 
@@ -355,7 +345,7 @@ class NetCdf:
                 vname_norm = self.normalize_name(vname)
                 assert (
                     vname_norm in self.nc.variables.keys()
-                ), "dict var not in self.vars:{0}-->".format(vname) + ",".join(
+                ), f"dict var not in self.vars:{vname}-->" + ",".join(
                     self.nc.variables.keys()
                 )
 
@@ -400,10 +390,10 @@ class NetCdf:
         for vname in other.var_attr_dict.keys():
             if new_net.nc.variables.get(vname) is not None:
                 new_net.logger.warn(
-                    "variable {0} already defined, skipping".format(vname)
+                    f"variable {vname} already defined, skipping"
                 )
                 continue
-            new_net.log("adding variable {0}".format(vname))
+            new_net.log(f"adding variable {vname}")
             var = other.nc.variables[vname]
             data = var[:]
             try:
@@ -420,7 +410,7 @@ class NetCdf:
                 dimensions=var.dimensions,
             )
             new_var[:] = new_data
-            new_net.log("adding variable {0}".format(vname))
+            new_net.log(f"adding variable {vname}")
         global_attrs = {}
         for attr in other.nc.ncattrs():
             if attr not in new_net.nc.ncattrs():
@@ -438,7 +428,7 @@ class NetCdf:
             )
 
         while os.path.exists(output_filename):
-            print("{}...already exists".format(output_filename))
+            print(f"{output_filename}...already exists")
             output_filename = (
                 str(time.mktime(datetime.now().timetuple())) + ".nc"
             )
@@ -494,14 +484,12 @@ class NetCdf:
         try:
             import netCDF4
         except Exception as e:
-            mess = "error import netCDF4: {0}".format(str(e))
+            mess = f"error import netCDF4: {e!s}"
             self.logger.warn(mess)
             raise Exception(mess)
 
         if isinstance(other, str):
-            assert os.path.exists(
-                other
-            ), "filename 'other' not found:{0}".format(other)
+            assert os.path.exists(other), f"filename 'other' not found:{other}"
             other = netCDF4.Dataset(other, "r")
 
         assert isinstance(other, netCDF4.Dataset)
@@ -522,12 +510,11 @@ class NetCdf:
         other_dimens = other.dimensions
         for d in self_dimens.keys():
             if d not in other_dimens:
-                self.logger.warn("missing dimension in other:{0}".format(d))
+                self.logger.warn(f"missing dimension in other:{d}")
                 return
             if len(self_dimens[d]) != len(other_dimens[d]):
                 self.logger.warn(
-                    "dimension not consistent: "
-                    "{0}:{1}".format(self_dimens[d], other_dimens[d])
+                    f"dimension not consistent: {self_dimens[d]}:{other_dimens[d]}"
                 )
                 return
         # should be good to go
@@ -543,9 +530,9 @@ class NetCdf:
                 vname not in self.var_attr_dict
                 or new_net.nc.variables.get(vname) is not None
             ):
-                self.logger.warn("skipping variable: {0}".format(vname))
+                self.logger.warn(f"skipping variable: {vname}")
                 continue
-            self.log("processing variable {0}".format(vname))
+            self.log(f"processing variable {vname}")
             s_var = self.nc.variables[vname]
             o_var = other.variables[vname]
             s_data = s_var[:]
@@ -554,7 +541,7 @@ class NetCdf:
 
             # keep the masks to apply later
             if isinstance(s_data, np.ma.MaskedArray):
-                self.logger.warn("masked array for {0}".format(vname))
+                self.logger.warn(f"masked array for {vname}")
                 s_mask = s_data.mask
                 s_data = np.array(s_data)
                 s_data[s_mask] = 0.0
@@ -574,21 +561,19 @@ class NetCdf:
             elif minuend.lower() == "other":
                 d_data = o_data - s_data
             else:
-                mess = "unrecognized minuend {0}".format(minuend)
+                mess = f"unrecognized minuend {minuend}"
                 self.logger.warn(mess)
                 raise Exception(mess)
 
             # check for non-zero diffs
             if onlydiff and d_data.sum() == 0.0:
                 self.logger.warn(
-                    "var {0} has zero differences, skipping...".format(vname)
+                    f"var {vname} has zero differences, skipping..."
                 )
                 continue
 
             self.logger.warn(
-                "resetting diff attrs max,min:{0},{1}".format(
-                    d_data.min(), d_data.max()
-                )
+                f"resetting diff attrs max,min:{d_data.min()},{d_data.max()}"
             )
             attrs = self.var_attr_dict[vname].copy()
             attrs["max"] = np.nanmax(d_data)
@@ -614,12 +599,13 @@ class NetCdf:
             )
 
             var[:] = d_data
-            self.log("processing variable {0}".format(vname))
+            self.log(f"processing variable {vname}")
 
     def _dt_str(self, dt):
         """for datetime to string for year < 1900"""
-        dt_str = "{0:04d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02}Z".format(
-            dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second
+        dt_str = (
+            f"{dt.year:04d}-{dt.month:02d}-{dt.day:02d}T"
+            f"{dt.hour:02d}:{dt.minute:02d}:{dt.second:02}Z"
         )
         return dt_str
 
@@ -637,9 +623,7 @@ class NetCdf:
                 if self.nc.attributes.get(k) is not None:
                     self.nc.setncattr(k, v)
             except Exception:
-                self.logger.warn(
-                    "error setting global attribute {0}".format(k)
-                )
+                self.logger.warn(f"error setting global attribute {k}")
 
         self.nc.sync()
         self.nc.close()
@@ -672,9 +656,7 @@ class NetCdf:
         try:
             htol, rtol = self.model.solver_tols()
         except Exception as e:
-            self.logger.warn(
-                "unable to get solver tolerances:{0}".format(str(e))
-            )
+            self.logger.warn(f"unable to get solver tolerances:{e!s}")
         self.global_attributes["solver_head_tolerance"] = htol
         self.global_attributes["solver_flux_tolerance"] = rtol
         spatial_attribs = {
@@ -714,9 +696,9 @@ class NetCdf:
         pyproj220 = LooseVersion(pyproj.__version__) >= LooseVersion("2.2.0")
 
         proj4_str = self.proj4_str
-        print("initialize_geometry::proj4_str = {}".format(proj4_str))
+        print(f"initialize_geometry::proj4_str = {proj4_str}")
 
-        self.log("building grid crs using proj4 string: {}".format(proj4_str))
+        self.log(f"building grid crs using proj4 string: {proj4_str}")
         if pyproj220:
             self.grid_crs = pyproj.CRS(proj4_str)
         else:
@@ -724,7 +706,7 @@ class NetCdf:
                 proj4_str = "+init=" + proj4_str
             self.grid_crs = pyproj.Proj(proj4_str, preserve_units=True)
 
-        print("initialize_geometry::self.grid_crs = {}".format(self.grid_crs))
+        print(f"initialize_geometry::self.grid_crs = {self.grid_crs}")
 
         vmin, vmax = self.model_grid.botm.min(), self.model_grid.top.max()
         if self.z_positive == "down":
@@ -748,12 +730,10 @@ class NetCdf:
             nc_crs = pyproj.Proj(nc_epsg_str)
             self.transformer = None
 
-        print("initialize_geometry::nc_crs = {}".format(nc_crs))
+        print(f"initialize_geometry::nc_crs = {nc_crs}")
 
         if pyproj220:
-            print(
-                "transforming coordinates using = {}".format(self.transformer)
-            )
+            print(f"transforming coordinates using = {self.transformer}")
 
         self.log("projecting grid cell center arrays")
         if pyproj220:
@@ -804,7 +784,7 @@ class NetCdf:
         try:
             self.nc = netCDF4.Dataset(self.output_filename, "w")
         except Exception as e:
-            msg = "error creating netcdf dataset:\n{}".format(str(e))
+            msg = f"error creating netcdf dataset:\n{e!s}"
             raise Exception(msg)
 
         # write some attributes
@@ -812,7 +792,7 @@ class NetCdf:
 
         self.nc.setncattr(
             "Conventions",
-            "CF-1.6, ACDD-1.3, flopy {}".format(flopy.__version__),
+            f"CF-1.6, ACDD-1.3, flopy {flopy.__version__}",
         )
         self.nc.setncattr(
             "date_created", datetime.utcnow().strftime("%Y-%m-%dT%H:%M:00Z")
@@ -828,9 +808,7 @@ class NetCdf:
             try:
                 self.nc.setncattr(k, v)
             except:
-                self.logger.warn(
-                    "error setting global attribute {0}".format(k)
-                )
+                self.logger.warn(f"error setting global attribute {k}")
         self.global_attributes = {}
         self.log("setting standard attributes")
 
@@ -854,9 +832,7 @@ class NetCdf:
         self.log("setting CRS info")
 
         attribs = {
-            "units": "{} since {}".format(
-                self.time_units, self.start_datetime
-            ),
+            "units": f"{self.time_units} since {self.start_datetime}",
             "standard_name": "time",
             "long_name": NC_LONG_NAMES.get("time", "time"),
             "calendar": "gregorian",
@@ -865,7 +841,7 @@ class NetCdf:
         time = self.create_variable(
             "time", attribs, precision_str="f8", dimensions=("time",)
         )
-        self.logger.warn("time_values:{0}".format(str(time_values)))
+        self.logger.warn(f"time_values:{time_values!s}")
         time[:] = np.asarray(time_values)
 
         # Elevation
@@ -953,7 +929,7 @@ class NetCdf:
         y[:] = self.model_grid.xyzcellcenters[1]
 
         # grid mapping variable
-        crs = flopy.utils.reference.crs(
+        crs = flopy.export.shapefile_utils.CRS(
             prj=self.model_grid.prj, epsg=self.model_grid.epsg
         )
         attribs = crs.grid_mapping_attribs
@@ -1064,13 +1040,13 @@ class NetCdf:
             self.initialize_file()
 
         if group in self.nc.groups:
-            raise AttributeError("{} group already initialized".format(group))
+            raise AttributeError(f"{group} group already initialized")
 
-        self.log("creating netcdf group {}".format(group))
+        self.log(f"creating netcdf group {group}")
         self.nc.createGroup(group)
-        self.log("{} group created".format(group))
+        self.log(f"{group} group created")
 
-        self.log("creating {} group dimensions".format(group))
+        self.log(f"creating {group} group dimensions")
         for dim in dimensions:
             if dim == "time":
                 if "time" not in dimension_data:
@@ -1083,8 +1059,7 @@ class NetCdf:
             else:
                 if dim not in dimension_data:
                     raise AssertionError(
-                        "{} information must be supplied "
-                        "to dimension data".format(dim)
+                        f"{dim} information must be supplied to dimension data"
                     )
                 else:
 
@@ -1092,14 +1067,14 @@ class NetCdf:
                         dim, len(dimension_data[dim])
                     )
 
-        self.log("created {} group dimensions".format(group))
+        self.log(f"created {group} group dimensions")
 
         dim_names = tuple([i for i in dimensions if i != "time"])
         for dim in dimensions:
             if dim.lower() == "time":
                 if "time" not in attributes:
-                    unit_value = "{} since {}".format(
-                        self.time_units, self.start_datetime
+                    unit_value = (
+                        f"{self.time_units} since {self.start_datetime}"
                     )
                     attribs = {
                         "units": unit_value,
@@ -1202,31 +1177,29 @@ class NetCdf:
         if name in self.nc.groups[group].variables.keys():
             if self.forgive:
                 self.logger.warn(
-                    "skipping duplicate {} group variable: {}".format(
-                        group, name
-                    )
+                    f"skipping duplicate {group} group variable: {name}"
                 )
                 return
             else:
                 raise Exception(
-                    "duplicate {} group variable name: {}".format(group, name)
+                    f"duplicate {group} group variable name: {name}"
                 )
 
-        self.log("creating group {} variable: {}".format(group, name))
+        self.log(f"creating group {group} variable: {name}")
 
         if precision_str not in PRECISION_STRS:
             raise AssertionError(
                 "netcdf.create_variable() error: precision "
-                "string {} not in {}".format(precision_str, PRECISION_STRS)
+                f"string {precision_str} not in {PRECISION_STRS}"
             )
 
         if group not in self.nc.groups:
             raise AssertionError(
-                "netcdf group `{}` must be created before "
-                "variables can be added to it".format(group)
+                f"netcdf group `{group}` must be created before "
+                "variables can be added to it"
             )
 
-        self.var_attr_dict["{}/{}".format(group, name)] = attributes
+        self.var_attr_dict[f"{group}/{name}"] = attributes
 
         var = self.nc.groups[group].createVariable(
             name,
@@ -1241,10 +1214,9 @@ class NetCdf:
                 var.setncattr(k, v)
             except:
                 self.logger.warn(
-                    "error setting attribute"
-                    "{} for group {} variable {}".format(k, group, name)
+                    f"error setting attribute{k} for group {group} variable {name}"
                 )
-        self.log("creating group {} variable: {}".format(group, name))
+        self.log(f"creating group {group} variable: {name}")
 
         return var
 
@@ -1296,14 +1268,12 @@ class NetCdf:
             and name in self.nc.variables.keys()
         ):
             if self.forgive:
-                self.logger.warn(
-                    "skipping duplicate variable: {0}".format(name)
-                )
+                self.logger.warn(f"skipping duplicate variable: {name}")
                 return
             else:
-                raise Exception("duplicate variable name: {0}".format(name))
+                raise Exception(f"duplicate variable name: {name}")
         if name in self.nc.variables.keys():
-            raise Exception("duplicate variable name: {0}".format(name))
+            raise Exception(f"duplicate variable name: {name}")
 
         self.log("creating variable: " + str(name))
         assert (
@@ -1342,8 +1312,7 @@ class NetCdf:
                 var.setncattr(k, v)
             except:
                 self.logger.warn(
-                    "error setting attribute"
-                    "{0} for variable {1}".format(k, name)
+                    f"error setting attribute{k} for variable {name}"
                 )
         self.log("creating variable: " + str(name))
         return var

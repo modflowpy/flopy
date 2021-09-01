@@ -115,17 +115,15 @@ def test_hydmodfile_read():
 
     for label in labels:
         data = h.get_data(obsname=label)
-        assert data.shape == (len(times),), "data shape is not ({},)".format(
-            len(times)
-        )
+        assert data.shape == (
+            len(times),
+        ), f"data shape is not ({len(times)},)"
 
     data = h.get_data()
-    assert data.shape == (len(times),), "data shape is not ({},)".format(
-        len(times)
-    )
+    assert data.shape == (len(times),), f"data shape is not ({len(times)},)"
     assert (
         len(data.dtype.names) == nitems + 1
-    ), "data column length is not {}".format(len(nitems + 1))
+    ), f"data column length is not {len(nitems + 1)}"
 
     try:
         import pandas as pd
@@ -171,9 +169,9 @@ def test_mf6obsfile_read():
         assert isinstance(h, flopy.utils.Mf6Obs)
 
         ntimes = h.get_ntimes()
-        assert ntimes == 3, "Not enough times in {} file...{}".format(
-            txt, os.path.basename(pth)
-        )
+        assert (
+            ntimes == 3
+        ), f"Not enough times in {txt} file...{os.path.basename(pth)}"
 
         times = h.get_times()
         assert len(times) == 3, "Not enough times in {} file...{}".format(
@@ -203,15 +201,15 @@ def test_mf6obsfile_read():
             data = h.get_data(obsname=label)
             assert data.shape == (
                 len(times),
-            ), "data shape is not ({},)".format(len(times))
+            ), f"data shape is not ({len(times)},)"
 
         data = h.get_data()
-        assert data.shape == (len(times),), "data shape is not ({},)".format(
-            len(times)
-        )
+        assert data.shape == (
+            len(times),
+        ), f"data shape is not ({len(times)},)"
         assert (
             len(data.dtype.names) == nitems + 1
-        ), "data column length is not {}".format(len(nitems + 1))
+        ), f"data column length is not {len(nitems + 1)}"
 
         if pd is not None:
             for idx in range(ntimes):

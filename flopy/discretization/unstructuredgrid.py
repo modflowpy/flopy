@@ -128,14 +128,13 @@ class UnstructuredGrid(Grid):
 
         if iverts is not None:
             if self.grid_varies_by_layer:
-                msg = "Length of iverts must equal grid nodes ({} {})".format(
-                    len(iverts), self.nnodes
+                msg = (
+                    "Length of iverts must equal grid nodes "
+                    f"({len(iverts)} {self.nnodes})"
                 )
                 assert len(iverts) == self.nnodes, msg
             else:
-                msg = "Length of iverts must equal ncpl ({} {})".format(
-                    len(iverts), self.ncpl
-                )
+                msg = f"Length of iverts must equal ncpl ({len(iverts)} {self.ncpl})"
                 assert np.all([cpl == len(iverts) for cpl in self.ncpl]), msg
 
         return
@@ -208,7 +207,7 @@ class UnstructuredGrid(Grid):
         if self._vertices is None:
             return self._vertices
         else:
-            return np.array([t[1:] for t in self._vertices], dtype=float)
+            return np.array([list(t)[1:] for t in self._vertices], dtype=float)
 
     @property
     def ia(self):
@@ -809,11 +808,10 @@ class UnstructuredGrid(Grid):
 
         grb_obj = MfGrdFile(file_path, verbose=verbose)
         if grb_obj.grid_type != "DISU":
-            err_msg = (
-                "Binary grid file ({}) ".format(os.path.basename(file_path))
-                + "is not a vertex (DISU) grid."
+            raise ValueError(
+                f"Binary grid file ({os.path.basename(file_path)}) "
+                "is not a vertex (DISU) grid."
             )
-            raise ValueError(err_msg)
 
         iverts = grb_obj.iverts
         if iverts is not None:
@@ -842,8 +840,7 @@ class UnstructuredGrid(Grid):
                 angrot=angrot,
             )
         else:
-            err_msg = (
-                "{} binary grid file".format(os.path.basename(file_path))
-                + " does not include vertex data"
+            raise TypeError(
+                f"{os.path.basename(file_path)} binary grid file "
+                "does not include vertex data"
             )
-            raise TypeError(err_msg)

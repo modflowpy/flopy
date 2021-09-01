@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 19, 2021 03:08:37 UTC
+# FILE created on August 06, 2021 20:56:59 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -80,6 +80,22 @@ class ModflowIms(mfpackage.MFPackage):
           steady-state stress periods for models using the Newton-Raphson
           formulation. If NO_PTC_OPTION is not specified, the NO_PTC ALL option
           is used.
+    ats_outer_maximum_fraction : double
+        * ats_outer_maximum_fraction (double) real value defining the fraction
+          of the maximum allowable outer iterations used with the Adaptive Time
+          Step (ATS) capability if it is active. If this value is set to zero
+          by the user, then this solution will have no effect on ATS behavior.
+          This value must be greater than or equal to zero and less than or
+          equal to 0.5 or the program will terminate with an error. If it not
+          specified by the user, then it is assigned a default value of one
+          third. When the number of outer iterations for this solution is less
+          than the product of this value and the maximum allowable outer
+          iterations, then ATS will increase the time step length by a factor
+          of DTADJ in the ATS input file. When the number of outer iterations
+          for this solution is greater than the maximum allowable outer
+          iterations minus the product of this value and the maximum allowable
+          outer iterations, then the ATS (if active) will decrease the time
+          step length by a factor of 1 / DTADJ.
     outer_hclose : double
         * outer_hclose (double) real value defining the head change criterion
           for convergence of the outer (nonlinear) iterations, in units of
@@ -133,8 +149,8 @@ class ModflowIms(mfpackage.MFPackage):
           relaxation is used. Note that the under-relaxation schemes are often
           used in conjunction with problems that use the Newton-Raphson
           formulation, however, experience has indicated that they also work
-          well non-Newton problems, such as those with the wet/dry options of
-          MODFLOW 6.
+          well for non-Newton problems, such as those with the wet/dry options
+          of MODFLOW 6.
     under_relaxation_gamma : double
         * under_relaxation_gamma (double) real value defining either the
           relaxation factor for the SIMPLE scheme or the history or memory term
@@ -506,6 +522,13 @@ class ModflowIms(mfpackage.MFPackage):
             "tagged false",
         ],
         [
+            "block options",
+            "name ats_outer_maximum_fraction",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
             "block nonlinear",
             "name outer_hclose",
             "type double precision",
@@ -706,6 +729,7 @@ class ModflowIms(mfpackage.MFPackage):
         csv_outer_output_filerecord=None,
         csv_inner_output_filerecord=None,
         no_ptcrecord=None,
+        ats_outer_maximum_fraction=None,
         outer_hclose=None,
         outer_dvclose=None,
         outer_rclosebnd=None,
@@ -751,6 +775,9 @@ class ModflowIms(mfpackage.MFPackage):
             "csv_inner_output_filerecord", csv_inner_output_filerecord
         )
         self.no_ptcrecord = self.build_mfdata("no_ptcrecord", no_ptcrecord)
+        self.ats_outer_maximum_fraction = self.build_mfdata(
+            "ats_outer_maximum_fraction", ats_outer_maximum_fraction
+        )
         self.outer_hclose = self.build_mfdata("outer_hclose", outer_hclose)
         self.outer_dvclose = self.build_mfdata("outer_dvclose", outer_dvclose)
         self.outer_rclosebnd = self.build_mfdata(

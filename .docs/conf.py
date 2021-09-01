@@ -15,17 +15,70 @@ import sys
 
 # add flopy root directory to the python path
 sys.path.insert(0, os.path.abspath(".."))
-from flopy import __version__
+from flopy import __version__, __author__
 
 # -- determine if running on readthedocs ------------------------------------
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
+
+# -- determine if this version is a release candidate
+with open("../README.md", "r") as f:
+    lines = f.readlines()
+rc_text = ""
+for line in lines:
+    if line.startswith("### Version"):
+        if "release candidate" in line:
+            rc_text = "release candidate"
+        break
+
+# -- update version number in main.rst
+rst_name = "main.rst"
+with open(rst_name, "r") as f:
+    lines = f.readlines()
+with open(rst_name, "w") as f:
+    for line in lines:
+        if line.startswith("**Documentation for version"):
+            line = f"**Documentation for version {__version__}"
+            if rc_text != "":
+                line += f" --- {rc_text}"
+            line += "**\n"
+        f.write(line)
+
+# -- update authors in introduction.rst
+rst_name = "introduction.rst"
+with open(rst_name, "r") as f:
+    lines = f.readlines()
+tag_start = "FloPy Development Team"
+tag_end = "How to Cite"
+write_line = True
+with open(rst_name, "w") as f:
+    for line in lines:
+        if line.startswith(tag_start):
+            write_line = False
+            # update author list
+            line += (
+                "======================\n\n"
+                "FloPy is developed by a team of MODFLOW users that have "
+                "switched over to using\nPython for model development and "
+                "post-processing.  Members of the team\n"
+                "currently include:\n\n"
+            )
+            authors = __author__.split(sep=",")
+            for author in authors:
+                line += f" * {author.strip()}\n"
+            line += " * and others\n\n"
+            f.write(line)
+        elif line.startswith(tag_end):
+            write_line = True
+        if write_line:
+            f.write(line)
+
 
 # -- create source rst files ------------------------------------------------
 cmd = "sphinx-apidoc -e -o source/ ../flopy/"
 print(cmd)
 os.system(cmd)
 
-# -- programatically create rst files ---------------------------------------
+# -- programmatically create rst files ---------------------------------------
 cmd = ("python", "create_rstfiles.py")
 print(" ".join(cmd))
 os.system(" ".join(cmd))
@@ -38,8 +91,8 @@ if not on_rtd:
 
 # -- Project information -----------------------------------------------------
 project = "flopy Documentation"
-copyright = "2020, Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N."
-author = "Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N."
+copyright = f"2021, {__author__}"
+author = __author__
 
 # The version.
 version = __version__
@@ -128,8 +181,8 @@ html_theme = "sphinx_rtd_theme"
 # html_static_path = ["_static"]
 
 html_theme_options = {
-    "github_url": "https://github.com/modflowpy/flopy",
-    "use_edit_page_button": False,
+    # "github_url": "https://github.com/modflowpy/flopy",
+    # "use_edit_page_button": False,
 }
 
 autosummary_generate = True
@@ -169,7 +222,7 @@ html_use_index = True
 html_split_index = False
 
 # If true, links to the reST sources are added to the pages.
-# html_show_sourcelink = True
+html_show_sourcelink = False
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
 html_show_sphinx = True

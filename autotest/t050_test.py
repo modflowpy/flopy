@@ -175,7 +175,7 @@ def test_vtk_export_packages():
     # totalbytes = os.path.getsize(filetocheck)
     # assert(totalbytes==1019857)
     nlines = count_lines_in_file(filetocheck)
-    assert nlines == 8496
+    assert nlines == 8491, f"nlines ({nlines}) not equal to 8491"
 
     # upw with point scalar output
     output_dir = os.path.join(cpth, "UPW")
@@ -184,7 +184,7 @@ def test_vtk_export_packages():
     # totalbytes1 = os.path.getsize(filetocheck)
     # assert(totalbytes1==2559173)
     nlines1 = count_lines_in_file(filetocheck)
-    assert nlines1 == 21215
+    assert nlines1 == 21215, f"nlines ({nlines}) not equal to 21215"
 
     # bas with smoothing on
     output_dir = os.path.join(cpth, "BAS")
@@ -461,25 +461,25 @@ def test_vtk_vector():
 
     # with point scalars and binary
     vtk.export_vector(
-        m, q, output_dir + "_bin", "discharge", point_scalars=True, binary=True
+        m, q, f"{output_dir}_bin", "discharge", point_scalars=True, binary=True
     )
-    filetocheck = os.path.join(output_dir + "_bin", filenametocheck)
+    filetocheck = os.path.join(f"{output_dir}_bin", filenametocheck)
     # totalbytes1 = os.path.getsize(filetocheck)
     # assert(totalbytes1==942413)
     # nlines1 = count_lines_in_file(filetocheck, binary=True)
     # assert(nlines1==3824)
-    assert os.path.exists(filetocheck), "file (0) does not exist: {}".format(
+    assert os.path.exists(
         filetocheck
-    )
+    ), f"file (0) does not exist: {filetocheck}"
 
     # with values directly given at vertices
     q = pp.get_specific_discharge(vectors, m, head, position="vertices")
     nancount = np.count_nonzero(np.isnan(q[0]))
-    assert nancount == 472, "nancount != 472 ({})".format(nancount)
+    assert nancount == 472, f"nancount != 472 ({nancount})"
     overall = np.nansum(q[0]) + np.nansum(q[1]) + np.nansum(q[2])
     assert np.allclose(
         overall, -15.849639024891047
-    ), "vertices overall = {}".format(overall)
+    ), f"vertices overall = {overall}"
     output_dir = os.path.join(cpth, "freyberg_vector")
     filenametocheck = "discharge_verts.vtu"
     vtk.export_vector(m, q, output_dir, "discharge_verts")
@@ -487,20 +487,20 @@ def test_vtk_vector():
     # totalbytes2 = os.path.getsize(filetocheck)
     # assert(totalbytes2==1990047)
     nlines2 = count_lines_in_file(filetocheck)
-    assert nlines2 == 10598, "nlines != 10598 ({})".format(nlines2)
+    assert nlines2 == 10598, f"nlines != 10598 ({nlines2})"
 
     # with values directly given at vertices and binary
     vtk.export_vector(
-        m, q, output_dir + "_bin", "discharge_verts", binary=True
+        m, q, f"{output_dir}_bin", "discharge_verts", binary=True
     )
-    filetocheck = os.path.join(output_dir + "_bin", filenametocheck)
+    filetocheck = os.path.join(f"{output_dir}_bin", filenametocheck)
     # totalbytes3 = os.path.getsize(filetocheck)
     # assert(totalbytes3==891486)
     # nlines3 = count_lines_in_file(filetocheck, binary=True)
     # assert(nlines3==3012)
-    assert os.path.exists(filetocheck), "file (1) does not exist: {}".format(
+    assert os.path.exists(
         filetocheck
-    )
+    ), f"file (1) does not exist: {filetocheck}"
 
     return
 
@@ -528,19 +528,19 @@ def test_vtk_vti():
     # totalbytes = os.path.getsize(filetocheck)
     # assert(totalbytes==1075)
     nlines = count_lines_in_file(filetocheck)
-    assert nlines == 21
+    assert nlines == 17, f"nlines ({nlines}) not equal to 17"
 
     # with point scalar
-    dis.export(output_dir + "_points", fmt="vtk", point_scalars=True)
-    filetocheck = os.path.join(output_dir + "_points", filenametocheck)
+    dis.export(f"{output_dir}_points", fmt="vtk", point_scalars=True)
+    filetocheck = os.path.join(f"{output_dir}_points", filenametocheck)
     # totalbytes1 = os.path.getsize(filetocheck)
     # assert(totalbytes1==2474)
     nlines1 = count_lines_in_file(filetocheck)
-    assert nlines1 == 38
+    assert nlines1 == 29, f"nlines1 ({nlines1}) not equal to 29"
 
     # with binary
-    dis.export(output_dir + "_bin", fmt="vtk", binary=True)
-    filetocheck = os.path.join(output_dir + "_bin", filenametocheck)
+    dis.export(f"{output_dir}_bin", fmt="vtk", binary=True)
+    filetocheck = os.path.join(f"{output_dir}_bin", filenametocheck)
     # totalbytes2 = os.path.getsize(filetocheck)
     # assert(totalbytes2==1144)
     # nlines2 = count_lines_in_file(filetocheck, binary=True)
@@ -554,7 +554,7 @@ def test_vtk_vti():
     # totalbytes3 = os.path.getsize(filetocheck)
     # assert(totalbytes3==1606)
     nlines3 = count_lines_in_file(filetocheck)
-    assert nlines3 == 41
+    assert nlines3 == 37, f"nlines3 ({nlines3}) not equal to 37"
 
     # force .vtu
     filenametocheck = "DIS.vtu"
@@ -563,7 +563,7 @@ def test_vtk_vti():
     # totalbytes4 = os.path.getsize(filetocheck)
     # assert(totalbytes4==5723)
     nlines4 = count_lines_in_file(filetocheck)
-    assert nlines4 == 129
+    assert nlines4 == 125, f"nlines4 ({nlines4}) not equal to 125"
 
     # vector
     filenametocheck = "vect.vti"
@@ -578,9 +578,9 @@ def test_vtk_vti():
 
     # vector with point scalars and binary
     vtk.export_vector(
-        m, v, output_dir + "_bin", "vect", point_scalars=True, binary=True
+        m, v, f"{output_dir}_bin", "vect", point_scalars=True, binary=True
     )
-    filetocheck = os.path.join(output_dir + "_bin", filenametocheck)
+    filetocheck = os.path.join(f"{output_dir}_bin", filenametocheck)
     # totalbytes6 = os.path.getsize(filetocheck)
     # assert(totalbytes6==2666)
     # nlines6 = count_lines_in_file(filetocheck, binary=True)
@@ -607,16 +607,16 @@ def test_vtk_vtr():
     assert nlines == 87
 
     # with point scalar
-    m.export(output_dir + "_points", fmt="vtk", point_scalars=True)
-    filetocheck = os.path.join(output_dir + "_points", filenametocheck)
+    m.export(f"{output_dir}_points", fmt="vtk", point_scalars=True)
+    filetocheck = os.path.join(f"{output_dir}_points", filenametocheck)
     # totalbytes1 = os.path.getsize(filetocheck)
     # assert(totalbytes1==182168)
     nlines1 = count_lines_in_file(filetocheck)
     assert nlines1 == 121
 
     # with binary
-    m.export(output_dir + "_bin", fmt="vtk", binary=True)
-    filetocheck = os.path.join(output_dir + "_bin", filenametocheck)
+    m.export(f"{output_dir}_bin", fmt="vtk", binary=True)
+    filetocheck = os.path.join(f"{output_dir}_bin", filenametocheck)
     # totalbytes2 = os.path.getsize(filetocheck)
     # assert(totalbytes2==47874)
     # nlines2 = count_lines_in_file(filetocheck, binary=True)
@@ -764,28 +764,28 @@ def test_vtk_export_true2d_nonregxy():
     m.run_model(silent=True)
 
     # export and check head with point scalar
-    hdsfile = os.path.join(output_dir, name + ".hds")
+    hdsfile = os.path.join(output_dir, f"{name}.hds")
     hds = bf.HeadFile(hdsfile)
     head = hds.get_data()
     vtk.export_array(
-        m, head, output_dir, name + "_head", point_scalars=True, true2d=True
+        m, head, output_dir, f"{name}_head", point_scalars=True, true2d=True
     )
-    filetocheck = os.path.join(output_dir, name + "_head.vtr")
+    filetocheck = os.path.join(output_dir, f"{name}_head.vtr")
     # totalbytes = os.path.getsize(filetocheck)
     # assert(totalbytes==4997)
     nlines = count_lines_in_file(filetocheck)
     assert nlines == 59
 
     # export and check specific discharge given at vertices
-    cbcfile = os.path.join(output_dir, name + ".cbc")
+    cbcfile = os.path.join(output_dir, f"{name}.cbc")
     cbc = bf.CellBudgetFile(cbcfile)
     keys = ["FLOW RIGHT FACE", "FLOW FRONT FACE"]
     vectors = [cbc.get_data(text=t)[0] for t in keys]
     q = pp.get_specific_discharge(vectors, m, position="vertices")
     vtk.export_vector(
-        m, q, output_dir, name + "_q", point_scalars=True, true2d=True
+        m, q, output_dir, f"{name}_q", point_scalars=True, true2d=True
     )
-    filetocheck = os.path.join(output_dir, name + "_q.vtr")
+    filetocheck = os.path.join(output_dir, f"{name}_q.vtr")
     # totalbytes1 = os.path.getsize(filetocheck)
     # assert(totalbytes1==5772)
     nlines1 = count_lines_in_file(filetocheck)
@@ -827,45 +827,45 @@ def test_vtk_export_true2d_nonregxz():
     m.run_model(silent=True)
 
     # export and check head
-    hdsfile = os.path.join(output_dir, name + ".hds")
+    hdsfile = os.path.join(output_dir, f"{name}.hds")
     hds = bf.HeadFile(hdsfile)
     head = hds.get_data()
-    vtk.export_array(m, head, output_dir, name + "_head", true2d=True)
-    filetocheck = os.path.join(output_dir, name + "_head.vtu")
+    vtk.export_array(m, head, output_dir, f"{name}_head", true2d=True)
+    filetocheck = os.path.join(output_dir, f"{name}_head.vtu")
     # totalbytes = os.path.getsize(filetocheck)
     # assert(totalbytes==4217)
     nlines = count_lines_in_file(filetocheck)
     assert nlines == 105
 
     # export and check head with point scalar
-    hdsfile = os.path.join(output_dir, name + ".hds")
+    hdsfile = os.path.join(output_dir, f"{name}.hds")
     hds = bf.HeadFile(hdsfile)
     head = hds.get_data()
     vtk.export_array(
         m,
         head,
         output_dir,
-        name + "_head_points",
+        f"{name}_head_points",
         point_scalars=True,
         true2d=True,
     )
-    filetocheck = os.path.join(output_dir, name + "_head_points.vtu")
+    filetocheck = os.path.join(output_dir, f"{name}_head_points.vtu")
     # totalbytes1 = os.path.getsize(filetocheck)
     # assert(totalbytes1==6155)
     nlines1 = count_lines_in_file(filetocheck)
     assert nlines1 == 129
 
     # export and check specific discharge given at vertices
-    cbcfile = os.path.join(output_dir, name + ".cbc")
+    cbcfile = os.path.join(output_dir, f"{name}.cbc")
     cbc = bf.CellBudgetFile(cbcfile)
     keys = ["FLOW RIGHT FACE", "FLOW LOWER FACE"]
     vectors = [cbc.get_data(text=t)[0] for t in keys]
     vectors.insert(1, None)
     q = pp.get_specific_discharge(vectors, m, position="vertices")
     vtk.export_vector(
-        m, q, output_dir, name + "_q", point_scalars=True, true2d=True
+        m, q, output_dir, f"{name}_q", point_scalars=True, true2d=True
     )
-    filetocheck = os.path.join(output_dir, name + "_q.vtu")
+    filetocheck = os.path.join(output_dir, f"{name}_q.vtu")
     # totalbytes2 = os.path.getsize(filetocheck)
     # assert(totalbytes2==7036)
     nlines2 = count_lines_in_file(filetocheck)
@@ -907,45 +907,45 @@ def test_vtk_export_true2d_nonregyz():
     m.run_model(silent=True)
 
     # export and check head
-    hdsfile = os.path.join(output_dir, name + ".hds")
+    hdsfile = os.path.join(output_dir, f"{name}.hds")
     hds = bf.HeadFile(hdsfile)
     head = hds.get_data()
-    vtk.export_array(m, head, output_dir, name + "_head", true2d=True)
-    filetocheck = os.path.join(output_dir, name + "_head.vtu")
+    vtk.export_array(m, head, output_dir, f"{name}_head", true2d=True)
+    filetocheck = os.path.join(output_dir, f"{name}_head.vtu")
     # totalbytes = os.path.getsize(filetocheck)
     # assert(totalbytes==4217)
     nlines = count_lines_in_file(filetocheck)
     assert nlines == 105
 
     # export and check head with point scalar
-    hdsfile = os.path.join(output_dir, name + ".hds")
+    hdsfile = os.path.join(output_dir, f"{name}.hds")
     hds = bf.HeadFile(hdsfile)
     head = hds.get_data()
     vtk.export_array(
         m,
         head,
         output_dir,
-        name + "_head_points",
+        f"{name}_head_points",
         point_scalars=True,
         true2d=True,
     )
-    filetocheck = os.path.join(output_dir, name + "_head_points.vtu")
+    filetocheck = os.path.join(output_dir, f"{name}_head_points.vtu")
     # totalbytes1 = os.path.getsize(filetocheck)
     # assert(totalbytes1==6155)
     nlines1 = count_lines_in_file(filetocheck)
     assert nlines1 == 129
 
     # export and check specific discharge given at vertices
-    cbcfile = os.path.join(output_dir, name + ".cbc")
+    cbcfile = os.path.join(output_dir, f"{name}.cbc")
     cbc = bf.CellBudgetFile(cbcfile)
     keys = ["FLOW FRONT FACE", "FLOW LOWER FACE"]
     vectors = [cbc.get_data(text=t)[0] for t in keys]
     vectors.insert(0, None)
     q = pp.get_specific_discharge(vectors, m, position="vertices")
     vtk.export_vector(
-        m, q, output_dir, name + "_q", point_scalars=True, true2d=True
+        m, q, output_dir, f"{name}_q", point_scalars=True, true2d=True
     )
-    filetocheck = os.path.join(output_dir, name + "_q.vtu")
+    filetocheck = os.path.join(output_dir, f"{name}_q.vtu")
     # totalbytes2 = os.path.getsize(filetocheck)
     # assert(totalbytes2==7032)
     nlines2 = count_lines_in_file(filetocheck)
@@ -954,17 +954,17 @@ def test_vtk_export_true2d_nonregyz():
 
 
 if __name__ == "__main__":
-    test_vtk_export_array2d()
-    test_vtk_export_array3d()
-    test_vtk_transient_array_2d()
+    # test_vtk_export_array2d()
+    # test_vtk_export_array3d()
+    # test_vtk_transient_array_2d()
     test_vtk_export_packages()
-    test_vtk_mf6()
-    test_vtk_binary_head_export()
-    test_vtk_cbc()
-    test_vtk_vector()
+    # test_vtk_mf6()
+    # test_vtk_binary_head_export()
+    # test_vtk_cbc()
+    # test_vtk_vector()
     test_vtk_vti()
-    test_vtk_vtr()
-    test_vtk_export_true2d_regular()
-    test_vtk_export_true2d_nonregxy()
-    test_vtk_export_true2d_nonregxz()
-    test_vtk_export_true2d_nonregyz()
+    # test_vtk_vtr()
+    # test_vtk_export_true2d_regular()
+    # test_vtk_export_true2d_nonregxy()
+    # test_vtk_export_true2d_nonregxz()
+    # test_vtk_export_true2d_nonregyz()

@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 19, 2021 03:08:37 UTC
+# FILE created on August 06, 2021 20:57:00 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -60,7 +60,7 @@ class ModflowGwfbuy(mfpackage.MFPackage):
           value used for this species in the density equation of state.
         * modelname (string) name of GWT model used to simulate a species that
           will be used in the density equation of state. This name will have no
-          affect if the simulation does not include a GWT model that
+          effect if the simulation does not include a GWT model that
           corresponds to this GWF model.
         * auxspeciesname (string) name of an auxiliary variable in a GWF stress
           package that will be used for this species to calculate a density

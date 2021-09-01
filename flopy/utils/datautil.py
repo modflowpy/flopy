@@ -344,14 +344,10 @@ class PyListUtil:
                             if index < len_cl:
                                 item = clean_line[index]
                                 if item[-1] in PyListUtil.quote_list:
-                                    arr_fixed_line[-1] = "{} {}".format(
-                                        arr_fixed_line[-1], item[:-1]
-                                    )
+                                    arr_fixed_line[-1] += f" {item[:-1]}"
                                     break
                                 else:
-                                    arr_fixed_line[-1] = "{} {}".format(
-                                        arr_fixed_line[-1], item
-                                    )
+                                    arr_fixed_line[-1] += f" {item}"
                 else:
                     # no quote, just append
                     arr_fixed_line.append(item)
@@ -392,13 +388,13 @@ class PyListUtil:
     def save_array(self, filename, multi_array):
         file_path = os.path.join(self.path, filename)
         with open(file_path, "w") as outfile:
-            outfile.write("{}\n".format(str(multi_array.shape)))
+            outfile.write(f"{multi_array.shape}\n")
             if len(multi_array.shape) == 4:
                 for slice in multi_array:
                     for second_slice in slice:
                         for third_slice in second_slice:
                             for item in third_slice:
-                                outfile.write(" {:10.3e}".format(item))
+                                outfile.write(f" {item:10.3e}")
                             outfile.write("\n")
                         outfile.write("\n")
                     outfile.write("\n")
@@ -594,7 +590,7 @@ class MultiList:
         aii = ArrayIndexIter(self.list_shape, True)
         index_num = 0
         while index_num <= n:
-            index = aii.next()
+            index = next(aii)
             index_num += 1
         return index
 
@@ -651,8 +647,6 @@ class ArrayIndexIter:
                 self.current_index -= 1
         raise StopIteration()
 
-    next = __next__  # Python 2 support
-
 
 class MultiListIter:
     def __init__(self, multi_list, detailed_info=False, iter_leaf_lists=False):
@@ -673,8 +667,6 @@ class MultiListIter:
         else:
             return next_val[0]
 
-    next = __next__  # Python 2 support
-
 
 class ConstIter:
     def __init__(self, value):
@@ -685,8 +677,6 @@ class ConstIter:
 
     def __next__(self):
         return self.value
-
-    next = __next__  # Python 2 support
 
 
 class FileIter:
@@ -729,8 +719,6 @@ class FileIter:
             return
         self._current_data = PyListUtil.split_data_line(data_line)
 
-    next = __next__  # Python 2 support
-
 
 class NameIter:
     def __init__(self, name, first_not_numbered=True):
@@ -746,9 +734,7 @@ class NameIter:
         if self.iter_num == 0 and self.first_not_numbered:
             return self.name
         else:
-            return "{}_{}".format(self.name, self.iter_num)
-
-    next = __next__  # Python 2 support
+            return f"{self.name}_{self.iter_num}"
 
 
 class PathIter:
@@ -760,6 +746,4 @@ class PathIter:
         return self
 
     def __next__(self):
-        return self.path[0:-1] + (self.name_iter.__next__(),)
-
-    next = __next__  # Python 2 support
+        return self.path[0:-1] + (next(self.name_iter),)

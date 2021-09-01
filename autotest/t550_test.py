@@ -78,7 +78,7 @@ def test_mf6_grid_shp_export():
         sim, pname="tdis", time_units="DAYS", nper=nper, perioddata=perioddata
     )
     gwf = fp6.ModflowGwf(
-        sim, modelname=mf6name, model_nam_file="{}.nam".format(mf6name)
+        sim, modelname=mf6name, model_nam_file=f"{mf6name}.nam"
     )
     dis6 = fp6.ModflowGwfdis(
         gwf, pname="dis", nlay=nlay, nrow=nrow, ncol=ncol, top=top, botm=botm
@@ -102,23 +102,23 @@ def test_mf6_grid_shp_export():
     rch6 = fp6.ModflowGwfrcha(gwf, recharge=rech)
     if shapefile:
         # rch6.export('{}/mf6.shp'.format(tmpdir))
-        m.export("{}/mfnwt.shp".format(tmpdir))
-        gwf.export("{}/mf6.shp".format(tmpdir))
+        m.export(f"{tmpdir}/mfnwt.shp")
+        gwf.export(f"{tmpdir}/mf6.shp")
 
     riv6spdarrays = dict(riv6.stress_period_data.masked_4D_arrays_itr())
     rivspdarrays = dict(riv.stress_period_data.masked_4D_arrays_itr())
     for k, v in rivspdarrays.items():
         assert (
             np.abs(np.nansum(v) - np.nansum(riv6spdarrays[k])) < 1e-6
-        ), "variable {} is not equal".format(k)
+        ), f"variable {k} is not equal"
         pass
 
     if shapefile is None:
         return  # skip remainder
 
     # check that the two shapefiles are the same
-    ra = shp2recarray("{}/mfnwt.shp".format(tmpdir))
-    ra6 = shp2recarray("{}/mf6.shp".format(tmpdir))
+    ra = shp2recarray(f"{tmpdir}/mfnwt.shp")
+    ra6 = shp2recarray(f"{tmpdir}/mf6.shp")
 
     # check first and last exported cells
     assert ra.geometry[0] == ra6.geometry[0]
@@ -130,10 +130,7 @@ def test_mf6_grid_shp_export():
     ]
     assert len(different_fields) == 0
     for l in np.arange(m.nlay) + 1:
-        assert (
-            np.sum(np.abs(ra["rech_{}".format(l)] - ra6["rechar{}".format(l)]))
-            < 1e-6
-        )
+        assert np.sum(np.abs(ra[f"rech_{l}"] - ra6[f"rechar{l}"])) < 1e-6
     common_fields = set(ra.dtype.names).intersection(ra6.dtype.names)
     common_fields.remove("geometry")
     # array values
@@ -172,7 +169,7 @@ def test_huge_shapefile():
         botm=botm,
     )
     if shapefile:
-        m.export("{}/huge.shp".format(tmpdir))
+        m.export(f"{tmpdir}/huge.shp")
 
 
 if __name__ == "__main__":

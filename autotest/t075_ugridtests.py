@@ -76,9 +76,9 @@ def test_unstructured_minimal_grid():
         [(2.0, 1), (2.0, 0.0)],
         [(2.0, 0), (1.0, 0.0)],
     ]
-    assert g.grid_lines == grid_lines, "\n{} \n /=   \n{}".format(
-        g.grid_lines, grid_lines
-    )
+    assert (
+        g.grid_lines == grid_lines
+    ), f"\n{g.grid_lines} \n /=   \n{grid_lines}"
     assert g.extent == (0, 2, 0, 1)
     xv, yv, zv = g.xyzvertices
     assert xv == [[0, 1, 1, 0], [1, 2, 2, 1]]
@@ -142,9 +142,9 @@ def test_unstructured_complete_grid():
         ],
     }
     assert isinstance(g.grid_lines, dict)
-    assert g.grid_lines == grid_lines, "\n{} \n /=   \n{}".format(
-        g.grid_lines, grid_lines
-    )
+    assert (
+        g.grid_lines == grid_lines
+    ), f"\n{g.grid_lines} \n /=   \n{grid_lines}"
     assert g.extent == (0, 2, 0, 1)
     xv, yv, zv = g.xyzvertices
     assert xv == [[0, 1, 1, 0], [1, 2, 2, 1]]
@@ -159,9 +159,9 @@ def test_loading_argus_meshes():
     fnames = [fname for fname in os.listdir(datapth) if fname.endswith(".exp")]
     for fname in fnames:
         fname = os.path.join(datapth, fname)
-        print("Loading Argus mesh ({}) into UnstructuredGrid".format(fname))
+        print(f"Loading Argus mesh ({fname}) into UnstructuredGrid")
         g = UnstructuredGrid.from_argus_export(fname)
-        print("  Number of nodes: {}".format(g.nnodes))
+        print(f"  Number of nodes: {g.nnodes}")
 
 
 def test_create_unstructured_grid_from_verts():
@@ -170,7 +170,7 @@ def test_create_unstructured_grid_from_verts():
 
     # simple functions to load vertices and incidence lists
     def load_verts(fname):
-        print("Loading vertices from: {}".format(fname))
+        print(f"Loading vertices from: {fname}")
         verts = np.genfromtxt(
             fname, dtype=[int, float, float], names=["iv", "x", "y"]
         )
@@ -178,7 +178,7 @@ def test_create_unstructured_grid_from_verts():
         return verts
 
     def load_iverts(fname):
-        print("Loading iverts from: {}".format(fname))
+        print(f"Loading iverts from: {fname}")
         f = open(fname, "r")
         iverts = []
         xc = []

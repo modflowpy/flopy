@@ -1,5 +1,45 @@
 FloPy Changes
 -----------------------------------------------
+### Version 3.3.4
+
+* New features:
+
+    * [feat(mf6-lake)](https://github.com/modflowpy/flopy/commit/73a44059d18ee37f16d8e8fc90c231a0c9b16cf7): Add helper function to create lake connections (#1163). Committed by jdhughes-usgs on 2021-08-04.
+    * [feat(data storage)](https://github.com/modflowpy/flopy/commit/08b95ea0b4b582567bbc99ff89f9923910a33d70): Data automatically stored internally when simulation or model relative path changed (#1126) (#1157). Committed by spaulins-usgs on 2021-07-29.
+    * [feat(get_reduced_pumping)](https://github.com/modflowpy/flopy/commit/86b270d2cc085f92373c1623cb61a23d2befc70e): Update to read external pumping reduction files (#1162). Committed by Joshua Larsen on 2021-07-29.
+    * [feat(raster)](https://github.com/modflowpy/flopy/commit/3ffedb45c4fa017ff64a4d579314c12386696068): Add option to extrapolate using ``nearest`` method (#1159). Committed by jdhughes-usgs on 2021-07-26.
+    * [Feat(ZoneBudget6)](https://github.com/modflowpy/flopy/commit/04fe7e4a3c67cb068de444a2979a3528ccbc3e60): Added zonebudget6 class to zonbud.py (#1149). Committed by Joshua Larsen on 2021-07-12.
+    * [feat(grid)](https://github.com/modflowpy/flopy/commit/0560a4d444c1f0ecd90319c41a6942c8e78dac26): Add thickness method for all grid types (#1138). Committed by jdhughes-usgs on 2021-06-25.
+    * [feat(flopy for mf6 docs)](https://github.com/modflowpy/flopy/commit/fbba027a6c6c59553b0030f6bac2b9f68a14198c): Documentation added and improved for flopy  (#1121). Committed by spaulins-usgs on 2021-06-01.
+    * [Feat(.output)](https://github.com/modflowpy/flopy/commit/df843e00dc9df208e5b16e7a0523456f1e80c004): Added output property method to mf6 packages and models  (#1100). Committed by Joshua Larsen on 2021-04-23.
+
+
+* Bug fixes:
+
+    * [fix(flopy_io)](https://github.com/modflowpy/flopy/commit/5098c56085ee8498654ecf76aa5c71f1067466b6): Limit fixed point format string to fixed column widths (#1172). Committed by jdhughes-usgs on 2021-08-06.
+    * [fix(modpath7)](https://github.com/modflowpy/flopy/commit/9020bf362ea6418a39c12def5c74eb98ecc51746): Address #993 and #1053 (#1170). Committed by jdhughes-usgs on 2021-08-05.
+    * [fix(lakpak_utils)](https://github.com/modflowpy/flopy/commit/08dfff9420a50e66994575344cfd75a9fb7b1173): Fix telev and belev for horizontal connections (#1168). Committed by jdhughes-usgs on 2021-08-05.
+    * [fix(mfsfr2.check)](https://github.com/modflowpy/flopy/commit/cf5ee1c885da2294a385cc3e436aa7a9c68cd143): Make reach_connection_gaps.chk.csv a normal csv file (#1151). Committed by Mike Taves on 2021-07-27.
+    * [fix(modflow/mfrch,mfevt)](https://github.com/modflowpy/flopy/commit/b780bfb9721156fbdd9a96d99cf7b084d99ab452): Mfusg rch,evt load and write fixes (#1148). Committed by Chris Nicol on 2021-07-13.
+    * [fix(Raster)](https://github.com/modflowpy/flopy/commit/679c8844704a4e9b337af06c1826984c2715371f): Update default dtypes to include unsigned integers (#1147). Committed by Joshua Larsen on 2021-07-12.
+    * [fix(utils/check)](https://github.com/modflowpy/flopy/commit/345e0fbfdc007b688982c09bfa82841d56ac5cf7): File check for mfusg unstructured models (#1145). Committed by Chris Nicol on 2021-07-09.
+    * [fix(list parsing)](https://github.com/modflowpy/flopy/commit/148087e2b6f989d8625a2d345fbe1069b58bd99b): Fixed errors caused by parsing certain lists with keywords in the middle (#1135). Committed by spaulins-usgs on 2021-06-25.
+    * [fix(plotutil.py, grid.py)](https://github.com/modflowpy/flopy/commit/e566845172380e3eae06981ca180923d2362ee56): Fix .plot() method using mflay parameter (#1134). Committed by Joshua Larsen on 2021-06-16.
+    * [fix(map.py)](https://github.com/modflowpy/flopy/commit/4cfb11db25c17f70708b47bec79f88479d35a3fe): Fix slow plotting routines  (#1118). Committed by Joshua Larsen on 2021-06-11.
+    * [fix(plot_pathline)](https://github.com/modflowpy/flopy/commit/fa98069de665fcbd45c4b468bef9ac484833c2f9): Update modpath intersection routines  (#1112). Committed by Joshua Larsen on 2021-06-11.
+    * [fix(gridgen)](https://github.com/modflowpy/flopy/commit/ce5dcf9254bc5714d3b4bd5e888bdf4860cd5ecb): Mfusg helper function not indexing correctly (#1124). Committed by langevin-usgs on 2021-05-28.
+    * [fix(numpy)](https://github.com/modflowpy/flopy/commit/6c328e1d57a07b452b08575806c1ef78c1277fe4): Aliases of builtin types is deprecated (#1105). Committed by Mike Taves on 2021-05-07.
+    * [fix(mfsfr2.py)](https://github.com/modflowpy/flopy/commit/870c5773307761af977934a0b6fdfa84e7f30e72): Dataset 6b and 6c write routine, remove blank lines (#1101). Committed by Joshua Larsen on 2021-04-26.
+    * [fix(performance)](https://github.com/modflowpy/flopy/commit/4104cf5e6a35e2a1fd6183442962ae5cb258fa7a): Implemented performance improvements including improvements suggested by @briochh (#1092) (#1097). Committed by spaulins-usgs on 2021-04-12.
+    * [fix(package write)](https://github.com/modflowpy/flopy/commit/58cb48e7a6240d2a01039b5a5ab3c67c5111662c): Allow user to define and write empty stress period blocks to package files (#1091) (#1093). Committed by scottrp on 2021-04-08.
+    * [fix(imports)](https://github.com/modflowpy/flopy/commit/36426534fae226570884f82a93a42374bd0019da): Fix shapely and geojson imports (#1083). Committed by jdhughes-usgs on 2021-03-20.
+    * [fix(shapely)](https://github.com/modflowpy/flopy/commit/ff7b8223a9184ffbe6460ae857be45533d5c874a): Handle deprecation warnings from shapely 1.8 (#1069). Committed by Mike Taves on 2021-03-19.
+    * [fix(mp7particledata)](https://github.com/modflowpy/flopy/commit/44ebec2cd6a4a79a2f3f7165eae8ced7da0340c8): Update dtype comparison for unstructured partlocs (#1071). Committed by rodrperezi on 2021-03-19.
+    * [fix(get_file_entry)](https://github.com/modflowpy/flopy/commit/5604ef78fb8b2366fc7d5d827e68413ac602c7fa): None text removed from empty stress period data with aux variable (#1080) (#1081). Committed by scottrp on 2021-03-19.
+    * [fix(data check)](https://github.com/modflowpy/flopy/commit/179fc4e06b6317f12adcc826597f9586317fc7c0): Minimum number of data columns check fixed (#1062) (#1067). Committed by spaulins-usgs on 2021-03-17.
+    * [fix(plotutil)](https://github.com/modflowpy/flopy/commit/605366bba794a7ca75b67ef956dc232e20c79c48): Number of plottable layers should be from util3d.shape[0] (#1077). Committed by Mike Taves on 2021-03-15.
+    * [fix(data check)](https://github.com/modflowpy/flopy/commit/cb04f9d2ac55f3cbc320ef212945f69045222366): Minimum number of data columns check fixed (#1062) (#1065). Committed by spaulins-usgs on 2021-02-19.
+
 ### Version 3.3.3
 
 * New features:

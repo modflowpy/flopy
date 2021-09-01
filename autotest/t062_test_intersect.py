@@ -151,20 +151,10 @@ def test_intersection():
                 pass
             else:  # should be forgiving x,y out of grid
                 raise e
-        print(
-            "x={},y={} in dis  is in row {} and col {}, so...".format(
-                x, y, row, col
-            )
-        )
+        print(f"x={x},y={y} in dis  is in row {row} and col {col}, so...")
         cell2d_dis = row * ml_dis.modelgrid.ncol + col
-        print(
-            "x={},y={} in dis  is in cell2d-number {}".format(x, y, cell2d_dis)
-        )
-        print(
-            "x={},y={} in disv is in cell2d-number {}".format(
-                x, y, cell2d_disv
-            )
-        )
+        print(f"x={x},y={y} in dis  is in cell2d-number {cell2d_dis}")
+        print(f"x={x},y={y} in disv is in cell2d-number {cell2d_disv}")
 
         if not forgive:
             assert cell2d_dis == cell2d_disv

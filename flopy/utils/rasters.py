@@ -440,23 +440,40 @@ class Raster:
             if multithread:
                 q = queue.Queue()
                 container = threading.BoundedSemaphore(thread_pool)
-                threads = []
-                for node in range(ncpl):
-                    t = threading.Thread(
-                        target=self.__threaded_resampling,
-                        args=(modelgrid, node, band, method, container, q),
-                    )
-                    threads.append(t)
 
-                for thread in threads:
-                    thread.daemon = True
-                    thread.start()
-                for thread in threads:
-                    thread.join()
+                # determine the number of thread pairs required to
+                # fill the grid
+                nthreadpairs = int(ncpl / thread_pool)
+                if ncpl % thread_pool != 0:
+                    nthreadpairs += 1
 
-                for _ in range(len(threads)):
-                    node, val = q.get()
-                    data[node] = val
+                # iterate over the tread pairs
+                for idx in range(nthreadpairs):
+                    i0 = idx * thread_pool
+                    nthreads = thread_pool
+                    if i0 + thread_pool > ncpl:
+                        nthreads = ncpl - i0
+                    i1 = i0 + nthreads
+                    threads = []
+                    for node in range(i0, i1):
+                        t = threading.Thread(
+                            target=self.__threaded_resampling,
+                            args=(modelgrid, node, band, method, container, q),
+                        )
+                        threads.append(t)
+
+                    # start the threads
+                    for thread in threads:
+                        thread.daemon = True
+                        thread.start()
+
+                    # wait until all threads are terminated
+                    for thread in threads:
+                        thread.join()
+
+                    for idx in range(nthreads):
+                        node, val = q.get()
+                        data[node] = val
 
             else:
                 for node in range(ncpl):
@@ -472,7 +489,7 @@ class Raster:
 
                     data[node] = val
         else:
-            raise TypeError("{} method not supported".format(method))
+            raise TypeError(f"{method} method not supported")
 
         if extrapolate_edges and method != "nearest":
             xc = modelgrid.xcellcenters
@@ -924,7 +941,7 @@ class Raster:
                 ax=ax,
                 contour=contour,
                 transform=self._meta["transform"],
-                **kwargs
+                **kwargs,
             )
 
         return ax

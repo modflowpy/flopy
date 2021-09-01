@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 19, 2021 03:08:37 UTC
+# FILE created on August 06, 2021 20:57:00 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -50,6 +50,9 @@ class ModflowGwfuzf(mfpackage.MFPackage):
         * save_flows (boolean) keyword to indicate that UZF flow terms will be
           written to the file specified with "BUDGET FILEOUT" in Output
           Control.
+    wc_filerecord : [wcfile]
+        * wcfile (string) name of the binary output file to write water content
+          information.
     budget_filerecord : [budgetfile]
         * budgetfile (string) name of the binary output file to write budget
           information.
@@ -151,13 +154,26 @@ class ModflowGwfuzf(mfpackage.MFPackage):
           Flopy will automatically subtract one when loading index variables
           and add one when writing index variables.
         * surfdep (double) is the surface depression depth of the UZF cell.
-        * vks (double) is the vertical saturated hydraulic conductivity of the
-          UZF cell.
+        * vks (double) is the saturated vertical hydraulic conductivity of the
+          UZF cell. This value is used with the Brooks-Corey function and the
+          simulated water content to calculate the partially saturated
+          hydraulic conductivity.
         * thtr (double) is the residual (irreducible) water content of the UZF
-          cell.
-        * thts (double) is the saturated water content of the UZF cell.
-        * thti (double) is the initial water content of the UZF cell.
-        * eps (double) is the epsilon exponent of the UZF cell.
+          cell. This residual water is not available to plants and will not
+          drain into underlying aquifer cells.
+        * thts (double) is the saturated water content of the UZF cell. The
+          values for saturated and residual water content should be set in a
+          manner that is consistent with the specific yield value specified in
+          the Storage Package. The saturated water content must be greater than
+          the residual content.
+        * thti (double) is the initial water content of the UZF cell. The value
+          must be greater than or equal to the residual water content and less
+          than or equal to the saturated water content.
+        * eps (double) is the exponent used in the Brooks-Corey function. The
+          Brooks-Corey function is used by UZF to calculated hydraulic
+          conductivity under partially saturated conditions as a function of
+          water content and the user-specified saturated hydraulic
+          conductivity.
         * boundname (string) name of the UZF cell cell. BOUNDNAME is an ASCII
           character variable that can contain as many as 40 characters. If
           BOUNDNAME contains spaces in it, then the entire name must be
@@ -197,10 +213,15 @@ class ModflowGwfuzf(mfpackage.MFPackage):
         * extwc (string) real or character value that defines the
           evapotranspiration extinction water content of the UZF cell. EXTWC is
           always specified, but is only used if SIMULATE_ET and UNSAT_ETWC are
-          specified in the OPTIONS block. If the Options block includes a
-          TIMESERIESFILE entry (see the "Time-Variable Input" section), values
-          can be obtained from a time series by entering the time-series name
-          in place of a numeric value.
+          specified in the OPTIONS block. The evapotranspiration rate from the
+          unsaturated zone will be set to zero when the calculated water
+          content is at or less than this value. The value for EXTWC cannot be
+          less than the residual water content, and if it is specified as being
+          less than the residual water content it is set to the residual water
+          content. If the Options block includes a TIMESERIESFILE entry (see
+          the "Time-Variable Input" section), values can be obtained from a
+          time series by entering the time-series name in place of a numeric
+          value.
         * ha (string) real or character value that defines the air entry
           potential (head) of the UZF cell. HA is always specified, but is only
           used if SIMULATE_ET and UNSAT_ETAE are specified in the OPTIONS
@@ -242,6 +263,9 @@ class ModflowGwfuzf(mfpackage.MFPackage):
     """
 
     auxiliary = ListTemplateGenerator(("gwf6", "uzf", "options", "auxiliary"))
+    wc_filerecord = ListTemplateGenerator(
+        ("gwf6", "uzf", "options", "wc_filerecord")
+    )
     budget_filerecord = ListTemplateGenerator(
         ("gwf6", "uzf", "options", "budget_filerecord")
     )
@@ -307,6 +331,36 @@ class ModflowGwfuzf(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+        ],
+        [
+            "block options",
+            "name wc_filerecord",
+            "type record water_content fileout wcfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name water_content",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name wcfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
         ],
         [
             "block options",
@@ -763,6 +817,7 @@ class ModflowGwfuzf(mfpackage.MFPackage):
         print_input=None,
         print_flows=None,
         save_flows=None,
+        wc_filerecord=None,
         budget_filerecord=None,
         package_convergence_filerecord=None,
         timeseries=None,
@@ -794,6 +849,7 @@ class ModflowGwfuzf(mfpackage.MFPackage):
         self.print_input = self.build_mfdata("print_input", print_input)
         self.print_flows = self.build_mfdata("print_flows", print_flows)
         self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self.wc_filerecord = self.build_mfdata("wc_filerecord", wc_filerecord)
         self.budget_filerecord = self.build_mfdata(
             "budget_filerecord", budget_filerecord
         )

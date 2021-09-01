@@ -178,7 +178,7 @@ class ObsFiles(FlopyBinaryData):
             import pandas as pd
             from ..utils.utils_def import totim_to_datetime
         except Exception as e:
-            msg = "ObsFiles.get_dataframe() error import pandas: " + str(e)
+            msg = f"ObsFiles.get_dataframe() error import pandas: {e!s}"
             raise ImportError(msg)
 
         i0 = 0
@@ -574,9 +574,9 @@ def get_selection(data, names):
     for name in names:
         if name not in data.dtype.names:
             ierr += 1
-            print("Error: {} is not a valid column name".format(name))
+            print(f"Error: {name} is not a valid column name")
     if ierr > 0:
-        raise Exception("Error: {} names did not match".format(ierr))
+        raise Exception(f"Error: {ierr} names did not match")
 
     # Valid list of names so make a selection
     dtype2 = np.dtype({name: data.dtype.fields[name] for name in names})

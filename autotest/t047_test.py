@@ -19,7 +19,7 @@ def get_namefile_entries(fpth):
     try:
         f = open(fpth, "r")
     except:
-        print("could not open...{}".format(fpth))
+        print(f"could not open...{fpth}")
         return None
     dtype = [
         ("ftype", "|S12"),
@@ -77,7 +77,7 @@ def test_gage():
     m.write_input()
 
     # check that the gage output units entries are in the name file
-    fpth = os.path.join(cpth, "{}.nam".format(mnam))
+    fpth = os.path.join(cpth, f"{mnam}.nam")
     entries = get_namefile_entries(fpth)
     for idx, g in enumerate(gages):
         if g[0] < 0:
@@ -91,7 +91,7 @@ def test_gage():
                 found = True
                 iun = iut
                 break
-        assert found, "{} not in name file entries".format(iu)
+        assert found, f"{iu} not in name file entries"
 
     return
 
@@ -124,7 +124,7 @@ def test_gage_files():
     m.write_input()
 
     # check that the gage output file entries are in the name file
-    fpth = os.path.join(cpth, "{}.nam".format(mnam))
+    fpth = os.path.join(cpth, f"{mnam}.nam")
     entries = get_namefile_entries(fpth)
     for idx, f in enumerate(files):
         found = False
@@ -136,11 +136,11 @@ def test_gage_files():
                 found = True
                 iun = entries[jdx]["unit"]
                 break
-        assert found, "{} not in name file entries".format(f)
+        assert found, f"{f} not in name file entries"
         iu = abs(gages[idx][1])
-        assert iu == iun, "{} unit not equal to {} ".format(
-            f, iu
-        ) + "- name file unit = {}".format(iun)
+        assert (
+            iu == iun
+        ), f"{f} unit not equal to {iu} - name file unit = {iun}"
 
     return
 
@@ -173,7 +173,7 @@ def test_gage_filenames0():
     m.write_input()
 
     # check that the gage output units entries are in the name file
-    fpth = os.path.join(cpth, "{}.nam".format(mnam))
+    fpth = os.path.join(cpth, f"{mnam}.nam")
     entries = get_namefile_entries(fpth)
     for idx, g in enumerate(gages):
         if g[0] < 0:
@@ -187,7 +187,7 @@ def test_gage_filenames0():
                 found = True
                 iun = iut
                 break
-        assert found, "{} not in name file entries".format(iu)
+        assert found, f"{iu} not in name file entries"
 
     return
 
@@ -220,7 +220,7 @@ def test_gage_filenames():
     m.write_input()
 
     # check that the gage output file entries are in the name file
-    fpth = os.path.join(cpth, "{}.nam".format(mnam))
+    fpth = os.path.join(cpth, f"{mnam}.nam")
     entries = get_namefile_entries(fpth)
     for idx, f in enumerate(filenames[1:]):
         found = False
@@ -232,11 +232,11 @@ def test_gage_filenames():
                 found = True
                 iun = entries[jdx]["unit"]
                 break
-        assert found, "{} not in name file entries".format(f)
+        assert found, f"{f} not in name file entries"
         iu = abs(gages[idx][1])
-        assert iu == iun, "{} unit not equal to {} ".format(
-            f, iu
-        ) + "- name file unit = {}".format(iun)
+        assert (
+            iu == iun
+        ), f"{f} unit not equal to {iu} - name file unit = {iun}"
 
     return
 

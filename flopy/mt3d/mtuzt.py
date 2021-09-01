@@ -144,7 +144,7 @@ class Mt3dUzt(Package):
         extension="uzt",
         unitnumber=None,
         filenames=None,
-        **kwargs
+        **kwargs,
     ):
 
         # set default unit number of one is not specified
@@ -243,13 +243,13 @@ class Mt3dUzt(Package):
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
                     val = 0.0
-                    name = "cuzinf" + str(icomp)
+                    name = f"cuzinf{icomp}"
                     if name in list(kwargs.keys()):
                         val = kwargs.pop(name)
                     else:
                         print(
-                            "UZT: setting cuzinf for component {} to zero. "
-                            "kwarg name {}".format(icomp, name)
+                            "UZT: setting cuzinf for component "
+                            f"{icomp} to zero. kwarg name {name}"
                         )
 
                     t2d = Transient2d(
@@ -276,13 +276,13 @@ class Mt3dUzt(Package):
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
                     val = 0.0
-                    name = "cuzet" + str(icomp)
+                    name = f"cuzet{icomp}"
                     if name in list(kwargs.keys()):
                         val = kwargs.pop(name)
                     else:
                         print(
-                            "UZT: setting cuzet for component {} to zero. "
-                            "kwarg name {}".format(icomp, name)
+                            "UZT: setting cuzet for component "
+                            f"{icomp} to zero. kwarg name {name}"
                         )
 
                     t2d = Transient2d(
@@ -309,13 +309,13 @@ class Mt3dUzt(Package):
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
                     val = 0.0
-                    name = "cgwet" + str(icomp)
+                    name = f"cgwet{icomp}"
                     if name in list(kwargs.keys()):
                         val = kwargs.pop(name)
                     else:
                         print(
-                            "UZT: setting cgwet for component {} to zero. "
-                            "kwarg name {}".format(icomp, name)
+                            "UZT: setting cgwet for component "
+                            f"{icomp} to zero. kwarg name {name}"
                         )
 
                     t2d = Transient2d(
@@ -345,13 +345,11 @@ class Mt3dUzt(Package):
         f_uzt = open(self.fn_path, "w")
 
         # Write header
-        f_uzt.write("#{0:s}\n".format(self.heading1))
+        f_uzt.write(f"#{self.heading1}\n")
 
         # Item 2
         f_uzt.write(
-            "{0:10d}{1:10d}                    #ICBCUZ, IET\n".format(
-                self.icbcuz, self.iet
-            )
+            f"{self.icbcuz:10d}{self.iet:10d}                    #ICBCUZ, IET\n"
         )
 
         # Item 3
@@ -375,9 +373,7 @@ class Mt3dUzt(Package):
                     if incuzinf == 1:
                         break
                 f_uzt.write(
-                    "{0:10d}          # INCUZINF - SP {1:5d}\n".format(
-                        incuzinf, kper + 1
-                    )
+                    f"{incuzinf:10d}          # INCUZINF - SP {kper + 1:5d}\n"
                 )
                 if incuzinf == 1:
                     for t2d in self.cuzinf:
@@ -396,9 +392,7 @@ class Mt3dUzt(Package):
                         if incuzet == 1:
                             break
                     f_uzt.write(
-                        "{0:10d}          # INCUZET - SP {1:5d}\n".format(
-                            incuzet, kper + 1
-                        )
+                        f"{incuzet:10d}          # INCUZET - SP {kper + 1:5d}\n"
                     )
                     if incuzet == 1:
                         for t2d in self.cuzet:
@@ -416,9 +410,7 @@ class Mt3dUzt(Package):
                         if incgwet == 1:
                             break
                     f_uzt.write(
-                        "{0:10d}          # INCGWET - SP {1:5d}\n".format(
-                            incgwet, kper + 1
-                        )
+                        f"{incgwet:10d}          # INCGWET - SP {kper + 1:5d}\n"
                     )
                     if incgwet == 1:
                         for t2d in self.cgwet:
@@ -501,7 +493,7 @@ class Mt3dUzt(Package):
         while line[0:1] == "#":
             i = 1
             if model.verbose:
-                print("   Comment Line " + str(i) + ": ".format(line.strip()))
+                print(f"   Comment Line {i}: {line.strip()}")
                 i += 1
             line = f.readline()
 
@@ -531,7 +523,7 @@ class Mt3dUzt(Package):
         cuzinf = {0: t2d}
         if ncomp > 1:
             for icomp in range(2, ncomp + 1):
-                name = "cuzinf" + str(icomp)
+                name = f"cuzinf{icomp}"
                 t2d = Transient2d(
                     model, (nrow, ncol), np.float32, 0.0, name=name, locat=0
                 )
@@ -546,7 +538,7 @@ class Mt3dUzt(Package):
             cuzet = {0: t2d}
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
-                    name = "cuzet" + str(icomp)
+                    name = f"cuzet{icomp}"
                     t2d = Transient2d(
                         model,
                         (nrow, ncol),
@@ -565,7 +557,7 @@ class Mt3dUzt(Package):
             cgwet = {0: t2d}
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
-                    name = "cgwet" + str(icomp)
+                    name = f"cgwet{icomp}"
                     t2d = Transient2d(
                         model,
                         (nrow, ncol),
@@ -583,7 +575,7 @@ class Mt3dUzt(Package):
         for iper in range(nper):
 
             if model.verbose:
-                print("   loading UZT data for kper {0:5d}".format(iper + 1))
+                print(f"   loading UZT data for kper {iper + 1:5d}")
 
             # Item 4 (INCUZINF)
             line = f.readline()
@@ -593,10 +585,7 @@ class Mt3dUzt(Package):
             # Item 5 (CUZINF)
             if incuzinf >= 0:
                 if model.verbose:
-                    print(
-                        "   Reading CUZINF array for kper "
-                        "{0:5d}".format(iper + 1)
-                    )
+                    print(f"   Reading CUZINF array for kper {iper + 1:5d}")
                 t = Util2d.load(
                     f, model, (nrow, ncol), np.float32, "cuzinf", ext_unit_dict
                 )
@@ -605,9 +594,9 @@ class Mt3dUzt(Package):
                 # Load each multispecies array
                 if ncomp > 1:
                     for icomp in range(2, ncomp + 1):
-                        name = "cuzinf" + str(icomp)
+                        name = f"cuzinf{icomp}"
                         if model.verbose:
-                            print("   loading {}...".format(name))
+                            print(f"   loading {name}...")
                         t = Util2d.load(
                             f,
                             model,
@@ -634,9 +623,8 @@ class Mt3dUzt(Package):
             elif incuzinf < 0 and iper > 0:
                 if model.verbose:
                     print(
-                        "   Reusing CUZINF array from kper "
-                        "{0:5d}".format(iper) + " in kper "
-                        "{0:5d}".format(iper + 1)
+                        f"   Reusing CUZINF array from kper {iper:5d}"
+                        f" in kper {iper + 1:5d}"
                     )
 
             if iet != 0:
@@ -648,10 +636,7 @@ class Mt3dUzt(Package):
                 # Item 7 (CUZET)
                 if incuzet >= 0:
                     if model.verbose:
-                        print(
-                            "   Reading CUZET array for kper "
-                            "{0:5d}".format(iper + 1)
-                        )
+                        print(f"   Reading CUZET array for kper {iper + 1:5d}")
                     t = Util2d.load(
                         f,
                         model,
@@ -665,9 +650,9 @@ class Mt3dUzt(Package):
                     # Load each multispecies array
                     if ncomp > 1:
                         for icomp in range(2, ncomp + 1):
-                            name = "cuzet" + str(icomp)
+                            name = f"cuzet{icomp}"
                             if model.verbose:
-                                print("   loading {}".format(name))
+                                print(f"   loading {name}")
                             t = Util2d.load(
                                 f,
                                 model,
@@ -693,9 +678,8 @@ class Mt3dUzt(Package):
                 else:
                     if model.verbose:
                         print(
-                            "   Reusing CUZET array from kper "
-                            "{0:5d}".format(iper) + " in kper "
-                            "{0:5d}".format(iper + 1)
+                            f"   Reusing CUZET array from kper {iper:5d}"
+                            f" in kper {iper + 1:5d}"
                         )
 
                 # Item 8 (INCGWET)
@@ -706,10 +690,7 @@ class Mt3dUzt(Package):
                 # Item 9 (CGWET)
                 if model.verbose:
                     if incuzet >= 0:
-                        print(
-                            "   Reading CGWET array for kper "
-                            "{0:5d}".format(iper + 1)
-                        )
+                        print(f"   Reading CGWET array for kper {iper + 1:5d}")
                     t = Util2d.load(
                         f,
                         model,
@@ -723,9 +704,9 @@ class Mt3dUzt(Package):
                     # Load each multispecies array
                     if ncomp > 1:
                         for icomp in range(2, ncomp + 1):
-                            name = "cgwet" + str(icomp)
+                            name = f"cgwet{icomp}"
                             if model.verbose:
-                                print("   loading {}...".format(name))
+                                print(f"   loading {name}...")
                             t = Util2d.load(
                                 f,
                                 model,
@@ -752,9 +733,8 @@ class Mt3dUzt(Package):
                 elif incgwet < 0 and iper > 0:
                     if model.verbose:
                         print(
-                            "   Reusing CGWET array from kper "
-                            "{0:5d}".format(iper) + " in kper "
-                            "{0:5d}".format(iper + 1)
+                            f"   Reusing CGWET array from kper {iper:5d}"
+                            f" in kper {iper + 1:5d}"
                         )
 
         if openfile:
@@ -783,7 +763,7 @@ class Mt3dUzt(Package):
             cgwet=cgwet,
             unitnumber=unitnumber,
             filenames=filenames,
-            **kwargs
+            **kwargs,
         )
 
     @staticmethod

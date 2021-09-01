@@ -26,14 +26,12 @@ def test_mfgrddis_MfGrdFile():
     nodes = grb.nodes
     ia = grb.ia
     shape = ia.shape[0]
-    assert shape == nodes + 1, "ia size ({}) not equal to {}".format(
-        shape, nodes + 1
-    )
+    assert shape == nodes + 1, f"ia size ({shape}) not equal to {nodes + 1}"
 
     nnz = ia[-1]
     ja = grb.ja
     shape = ja.shape[0]
-    assert shape == nnz, "ja size ({}) not equal to {}".format(shape, nnz)
+    assert shape == nnz, f"ja size ({shape}) not equal to {nnz}"
 
     modelgrid = grb.modelgrid
     assert isinstance(
@@ -53,34 +51,30 @@ def test_mfgrddis_modelgrid():
     lc = modelgrid.plot()
     assert isinstance(
         lc, matplotlib.collections.LineCollection
-    ), "could not plot grid object created from {}".format(fn)
+    ), f"could not plot grid object created from {fn}"
     plt.close()
 
     extents = modelgrid.extent
     errmsg = (
-        "extents {} of {} ".format(extents, fn)
-        + "does not equal (0.0, 8000.0, 0.0, 8000.0)"
+        f"extents {extents} of {fn} does not equal (0.0, 8000.0, 0.0, 8000.0)"
     )
     assert extents == (0.0, 8000.0, 0.0, 8000.0), errmsg
 
     ncpl = modelgrid.ncol * modelgrid.nrow
-    assert modelgrid.ncpl == ncpl, "ncpl ({}) does not equal {}".format(
-        modelgrid.ncpl, ncpl
-    )
+    assert (
+        modelgrid.ncpl == ncpl
+    ), f"ncpl ({modelgrid.ncpl}) does not equal {ncpl}"
 
     nvert = modelgrid.nvert
     iverts = modelgrid.iverts
     maxvertex = max([max(sublist[1:]) for sublist in iverts])
-    assert maxvertex + 1 == nvert, "nvert ({}) does not equal {}".format(
-        maxvertex + 1, nvert
-    )
-    verts = modelgrid.verts
     assert (
-        nvert == verts.shape[0]
-    ), "number of vertex (x, y) pairs ({}) ".format(
-        verts.shape[0]
-    ) + "does not equal {}".format(
-        nvert
+        maxvertex + 1 == nvert
+    ), f"nvert ({maxvertex + 1}) does not equal {nvert}"
+    verts = modelgrid.verts
+    assert nvert == verts.shape[0], (
+        f"number of vertex (x, y) pairs ({verts.shape[0]}) "
+        f"does not equal {nvert}"
     )
 
 
@@ -91,19 +85,17 @@ def test_mfgrddisv_MfGrdFile():
     nodes = grb.nodes
     ia = grb.ia
     shape = ia.shape[0]
-    assert shape == nodes + 1, "ia size ({}) not equal to {}".format(
-        shape, nodes + 1
-    )
+    assert shape == nodes + 1, f"ia size ({shape}) not equal to {nodes + 1}"
 
     nnz = ia[-1]
     ja = grb.ja
     shape = ja.shape[0]
-    assert shape == nnz, "ja size ({}) not equal to {}".format(shape, nnz)
+    assert shape == nnz, f"ja size ({shape}) not equal to {nnz}"
 
     mg = grb.modelgrid
     assert isinstance(
         mg, flopy.discretization.VertexGrid
-    ), "invalid grid type ({})".format(type(mg))
+    ), f"invalid grid type ({type(mg)})"
 
 
 def test_mfgrddisv_modelgrid():
@@ -113,42 +105,37 @@ def test_mfgrddisv_modelgrid():
     )
     assert isinstance(
         mg, flopy.discretization.VertexGrid
-    ), "invalid grid type ({})".format(type(mg))
+    ), f"invalid grid type ({type(mg)})"
 
     ncpl = 218
-    assert mg.ncpl == ncpl, "ncpl ({}) does not equal {}".format(mg.ncpl, ncpl)
+    assert mg.ncpl == ncpl, f"ncpl ({mg.ncpl}) does not equal {ncpl}"
 
     lc = mg.plot()
     assert isinstance(
         lc, matplotlib.collections.LineCollection
-    ), "could not plot grid object created from {}".format(fn)
+    ), f"could not plot grid object created from {fn}"
     plt.close("all")
 
     extents = mg.extent
     extents0 = (0.0, 700.0, 0.0, 700.0)
-    errmsg = "extents {} of {} ".format(
-        extents, fn
-    ) + "does not equal {}".format(extents0)
+    errmsg = f"extents {extents} of {fn} does not equal {extents0}"
     assert extents == extents0, errmsg
 
     nvert = mg.nvert
     iverts = mg.iverts
     maxvertex = max([max(sublist[1:]) for sublist in iverts])
-    assert maxvertex + 1 == nvert, "nvert ({}) does not equal {}".format(
-        maxvertex + 1, nvert
-    )
-    verts = mg.verts
     assert (
-        nvert == verts.shape[0]
-    ), "number of vertex (x, y) pairs ({}) ".format(
-        verts.shape[0]
-    ) + "does not equal {}".format(
-        nvert
+        maxvertex + 1 == nvert
+    ), f"nvert ({maxvertex + 1}) does not equal {nvert}"
+    verts = mg.verts
+    assert nvert == verts.shape[0], (
+        f"number of vertex (x, y) pairs ({verts.shape[0]}) "
+        f"does not equal {nvert}"
     )
 
     cellxy = np.column_stack((mg.xyzcellcenters[:2]))
-    errmsg = "shape of flow.disv centroids {} not equal to (218, 2).".format(
-        cellxy.shape
+    errmsg = (
+        f"shape of flow.disv centroids {cellxy.shape} not equal to (218, 2)."
     )
     assert cellxy.shape == (218, 2), errmsg
     return
@@ -161,19 +148,17 @@ def test_mfgrddisu_MfGrdFile():
     nodes = grb.nodes
     ia = grb.ia
     shape = ia.shape[0]
-    assert shape == nodes + 1, "ia size ({}) not equal to {}".format(
-        shape, nodes + 1
-    )
+    assert shape == nodes + 1, f"ia size ({shape}) not equal to {nodes + 1}"
 
     nnz = ia[-1]
     ja = grb.ja
     shape = ja.shape[0]
-    assert shape == nnz, "ja size ({}) not equal to {}".format(shape, nnz)
+    assert shape == nnz, f"ja size ({shape}) not equal to {nnz}"
 
     mg = grb.modelgrid
     assert isinstance(
         mg, flopy.discretization.UnstructuredGrid
-    ), "invalid grid type ({})".format(type(mg))
+    ), f"invalid grid type ({type(mg)})"
 
 
 @raises(TypeError)
@@ -191,34 +176,29 @@ def test_mfgrddisu_modelgrid():
     )
     assert isinstance(
         mg, flopy.discretization.UnstructuredGrid
-    ), "invalid grid type ({})".format(type(mg))
+    ), f"invalid grid type ({type(mg)})"
 
     lc = mg.plot()
     assert isinstance(
         lc, matplotlib.collections.LineCollection
-    ), "could not plot grid object created from {}".format(fn)
+    ), f"could not plot grid object created from {fn}"
     plt.close("all")
 
     extents = mg.extent
     extents0 = (0.0, 10000.0, 0.0, 1.0)
-    errmsg = "extents {} of {} ".format(
-        extents, fn
-    ) + "does not equal {}".format(extents0)
+    errmsg = f"extents {extents} of {fn} does not equal {extents0}"
     assert extents == extents0, errmsg
 
     nvert = mg.nvert
     iverts = mg.iverts
     maxvertex = max([max(sublist[1:]) for sublist in iverts])
-    assert maxvertex + 1 == nvert, "nvert ({}) does not equal {}".format(
-        maxvertex + 1, nvert
-    )
-    verts = mg.verts
     assert (
-        nvert == verts.shape[0]
-    ), "number of vertex (x, y) pairs ({}) ".format(
-        verts.shape[0]
-    ) + "does not equal {}".format(
-        nvert
+        maxvertex + 1 == nvert
+    ), f"nvert ({maxvertex + 1}) does not equal {nvert}"
+    verts = mg.verts
+    assert nvert == verts.shape[0], (
+        f"number of vertex (x, y) pairs ({verts.shape[0]}) "
+        f"does not equal {nvert}"
     )
 
     return

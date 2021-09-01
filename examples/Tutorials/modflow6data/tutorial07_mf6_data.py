@@ -12,7 +12,7 @@
 #     name: python3
 # ---
 
-# # MODFLOW 6 Tutorial 8: Working with MODFLOW Grid Array Data
+# # MODFLOW 6: Working with MODFLOW Grid Array Data
 #
 # This tutorial shows how to view, access, and change the underlying data
 # variables for MODFLOW 6 objects in FloPy.  Interaction with a FloPy
@@ -80,7 +80,7 @@ tdis = flopy.mf6.modflow.mftdis.ModflowTdis(
     perioddata=[(1.0, 1, 1.0), (1.0, 1, 1.0)],
 )
 # create the Flopy groundwater flow (gwf) model object
-model_nam_file = "{}.nam".format(name)
+model_nam_file = f"{name}.nam"
 gwf = flopy.mf6.ModflowGwf(sim, modelname=name, model_nam_file=model_nam_file)
 # create the flopy iterative model solver (ims) package object
 ims = flopy.mf6.modflow.mfims.ModflowIms(sim, pname="ims", complexity="SIMPLE")

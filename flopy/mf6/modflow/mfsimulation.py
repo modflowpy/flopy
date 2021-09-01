@@ -220,7 +220,7 @@ class MFSimulationData:
         Numbers less than this threshold are written in scientific notation
     mfpath : MFFileMgmt
         File path location information for the simulation
-    model_dimensions : OrderedDict
+    model_dimensions : dict
         Dictionary containing discretization information for each model
     mfdata : SimulationDict
         Custom dictionary containing all model data for the simulation
@@ -255,14 +255,14 @@ class MFSimulationData:
 
         # --- ease of use variables to make working with modflow input and
         # output data easier --- model dimension class for each model
-        self.model_dimensions = collections.OrderedDict()
+        self.model_dimensions = {}
 
         # --- model data ---
         self.mfdata = SimulationDict(self.mfpath)
 
         # --- temporary variables ---
         # other external files referenced
-        self.referenced_files = collections.OrderedDict()
+        self.referenced_files = {}
 
     @property
     def max_columns_of_data(self):
@@ -304,10 +304,9 @@ class MFSimulationData:
 
     def _update_str_format(self):
         """Update floating point formatting strings."""
-        self.reg_format_str = "{:.%dE}" % self.float_precision
-        self.sci_format_str = "{:%d.%df" "}" % (
-            self.float_characters,
-            self.float_precision,
+        self.reg_format_str = f"{{:.{self.float_precision}E}}"
+        self.sci_format_str = (
+            f"{{:{self.float_characters}.{self.float_precision}f}}"
         )
 
 
@@ -403,13 +402,13 @@ class MFSimulation(PackageContainer):
 
         self.version = version
         self.exe_name = exe_name
-        self._models = collections.OrderedDict()
+        self._models = {}
         self._tdis_file = None
-        self._exchange_files = collections.OrderedDict()
-        self._ims_files = collections.OrderedDict()
+        self._exchange_files = {}
+        self._ims_files = {}
         self._ghost_node_files = {}
         self._mover_files = {}
-        self._other_files = collections.OrderedDict()
+        self._other_files = {}
         self.structure = fpdata.sim_struct
         self.model_type = None
 
@@ -647,9 +646,7 @@ class MFSimulation(PackageContainer):
         instance.name_file.load(strict)
 
         # load TDIS file
-        tdis_pkg = "tdis{}".format(
-            mfstructure.MFStructure().get_version_string()
-        )
+        tdis_pkg = f"tdis{mfstructure.MFStructure().get_version_string()}"
         tdis_attr = getattr(instance.name_file, tdis_pkg)
         instance._tdis_file = mftdis.ModflowTdis(
             instance, filename=tdis_attr.get_data()
@@ -685,7 +682,7 @@ class MFSimulation(PackageContainer):
             model_obj = PackageContainer.model_factory(item[0][:-1].lower())
             # load model
             if verbosity_level.value >= VerbosityLevel.normal.value:
-                print("  loading model {}...".format(item[0].lower()))
+                print(f"  loading model {item[0].lower()}...")
             instance._models[item[2]] = model_obj.load(
                 instance,
                 instance.structure.model_struct_objs[item[0].lower()],
@@ -735,10 +732,7 @@ class MFSimulation(PackageContainer):
                         instance.simulation_data.verbosity_level.value
                         >= VerbosityLevel.normal.value
                     ):
-                        print(
-                            "    skipping package {}.."
-                            ".".format(exgfile[0].lower())
-                        )
+                        print(f"    skipping package {exgfile[0].lower()}...")
                     continue
                 # get exchange type by removing numbers from exgtype
                 exchange_type = "".join(
@@ -752,9 +746,7 @@ class MFSimulation(PackageContainer):
                     exchange_file_num = instance._exg_file_num[exchange_type]
                     instance._exg_file_num[exchange_type] += 1
 
-                exchange_name = "{}_EXG_{}".format(
-                    exchange_type, exchange_file_num
-                )
+                exchange_name = f"{exchange_type}_EXG_{exchange_file_num}"
                 # find package class the corresponds to this exchange type
                 package_obj = instance.package_factory(
                     exchange_type.replace("-", "").lower(), ""
@@ -792,8 +784,7 @@ class MFSimulation(PackageContainer):
                 )
                 if verbosity_level.value >= VerbosityLevel.normal.value:
                     print(
-                        "  loading exchange package {}.."
-                        ".".format(exchange_file._get_pname())
+                        f"  loading exchange package {exchange_file._get_pname()}..."
                     )
                 exchange_file.load(strict)
                 instance._exchange_files[exgfile[1]] = exchange_file
@@ -826,18 +817,14 @@ class MFSimulation(PackageContainer):
                         >= VerbosityLevel.normal.value
                     ):
                         print(
-                            "    skipping package {}.."
-                            ".".format(solution_info[0].lower())
+                            f"    skipping package {solution_info[0].lower()}..."
                         )
                     continue
                 ims_file = mfims.ModflowIms(
                     instance, filename=solution_info[1], pname=solution_info[2]
                 )
                 if verbosity_level.value >= VerbosityLevel.normal.value:
-                    print(
-                        "  loading ims package {}.."
-                        ".".format(ims_file._get_pname())
-                    )
+                    print(f"  loading ims package {ims_file._get_pname()}...")
                 ims_file.load(strict)
 
         instance.simulation_data.mfpath.set_last_accessed_path()
@@ -880,7 +867,7 @@ class MFSimulation(PackageContainer):
 
         # check models
         for model in self._models.values():
-            print('Checking model "{}"...'.format(model.name))
+            print(f'Checking model "{model.name}"...')
             chk_list.append(model.check(f, verbose, level))
 
         print("Checking for missing simulation packages...")
@@ -952,7 +939,7 @@ class MFSimulation(PackageContainer):
                 else:
                     package_abbr = "GWF"
                 # build package name and package
-                gnc_name = "{}-GNC_{}".format(package_abbr, self._gnc_file_num)
+                gnc_name = f"{package_abbr}-GNC_{self._gnc_file_num}"
                 ghost_node_file = mfgwfgnc.ModflowGwfgnc(
                     self,
                     filename=fname,
@@ -972,7 +959,7 @@ class MFSimulation(PackageContainer):
                 else:
                     package_abbr = "GWF"
                 # build package name and package
-                mvr_name = "{}-MVR_{}".format(package_abbr, self._mvr_file_num)
+                mvr_name = f"{package_abbr}-MVR_{self._mvr_file_num}"
                 mover_file = mfgwfmvr.ModflowGwfmvr(
                     self,
                     filename=fname,
@@ -1077,7 +1064,7 @@ class MFSimulation(PackageContainer):
             # create unique file/package name
             if ims_file.package_name is None:
                 file_num = len(self._ims_files) - 1
-                ims_file.package_name = "ims_{}".format(file_num)
+                ims_file.package_name = f"ims_{file_num}"
             if ims_file.filename in self._ims_files:
                 ims_file.filename = MFFileMgmt.unique_file_name(
                     ims_file.filename, self._ims_files
@@ -1116,7 +1103,7 @@ class MFSimulation(PackageContainer):
                 # associate any models in the model list to this
                 # simulation file
                 version_string = mfstructure.MFStructure().get_version_string()
-                ims_pkg = "ims{}".format(version_string)
+                ims_pkg = f"ims{version_string}"
                 new_record = [ims_pkg, ims_file.filename]
                 for model in model_list:
                     new_record.append(model)
@@ -1144,7 +1131,7 @@ class MFSimulation(PackageContainer):
         # update package file names and count
         for package in package_array:
             if package.package_type not in package_type_count:
-                package.filename = "{}.{}".format(name, package.package_type)
+                package.filename = f"{name}.{package.package_type}"
                 package_type_count[package.package_type] = 1
             else:
                 package_type_count[package.package_type] += 1
@@ -1261,9 +1248,7 @@ class MFSimulation(PackageContainer):
 
         """
         if self._tdis_file is not None:
-            self._tdis_file.filename = "{}.{}".format(
-                name, self._tdis_file.package_type
-            )
+            self._tdis_file.filename = f"{name}.{self._tdis_file.package_type}"
 
         self._rename_package_group(self._exchange_files, name)
         self._rename_package_group(self._ims_files, name)
@@ -1373,10 +1358,7 @@ class MFSimulation(PackageContainer):
                 self.simulation_data.verbosity_level.value
                 >= VerbosityLevel.normal.value
             ):
-                print(
-                    "  writing ims package {}.."
-                    ".".format(ims_file._get_pname())
-                )
+                print(f"  writing ims package {ims_file._get_pname()}...")
             ims_file.write(ext_file_action=ext_file_action)
 
         # write exchange files
@@ -1470,7 +1452,7 @@ class MFSimulation(PackageContainer):
                 self.simulation_data.verbosity_level.value
                 >= VerbosityLevel.normal.value
             ):
-                print("  writing package {}...".format(pp._get_pname()))
+                print(f"  writing package {pp._get_pname()}...")
             pp.write(ext_file_action=ext_file_action)
 
         # FIX: model working folder should be model name file folder
@@ -1481,7 +1463,7 @@ class MFSimulation(PackageContainer):
                 self.simulation_data.verbosity_level.value
                 >= VerbosityLevel.normal.value
             ):
-                print("  writing model {}...".format(model.name))
+                print(f"  writing model {model.name}...")
             model.write(ext_file_action=ext_file_action)
 
         self.simulation_data.mfpath.set_last_accessed_path()
@@ -1668,9 +1650,7 @@ class MFSimulation(PackageContainer):
         if filename in self._exchange_files:
             return self._exchange_files[filename]
         else:
-            excpt_str = 'Exchange file "{}" can not be found' ".".format(
-                filename
-            )
+            excpt_str = f'Exchange file "{filename}" can not be found.'
             raise FlopyException(excpt_str)
 
     def get_mvr_file(self, filename):
@@ -1689,7 +1669,7 @@ class MFSimulation(PackageContainer):
         if filename in self._mover_files:
             return self._mover_files[filename]
         else:
-            excpt_str = 'MVR file "{}" can not be ' "found.".format(filename)
+            excpt_str = f'MVR file "{filename}" can not be found.'
             raise FlopyException(excpt_str)
 
     def get_gnc_file(self, filename):
@@ -1708,7 +1688,7 @@ class MFSimulation(PackageContainer):
         if filename in self._ghost_node_files:
             return self._ghost_node_files[filename]
         else:
-            excpt_str = 'GNC file "{}" can not be ' "found.".format(filename)
+            excpt_str = f'GNC file "{filename}" can not be found.'
             raise FlopyException(excpt_str)
 
     def remove_exchange_file(self, package):
@@ -2051,7 +2031,7 @@ class MFSimulation(PackageContainer):
 
         # get model structure from model type
         if model_type not in self.structure.model_struct_objs:
-            message = 'Invalid model type: "{}".'.format(model_type)
+            message = f'Invalid model type: "{model_type}".'
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(
                 model.name,

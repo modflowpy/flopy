@@ -5,7 +5,6 @@ import os
 import sys
 import datetime
 import json
-from collections import OrderedDict
 
 # file_paths dictionary has file names and the path to the file. Enter '.'
 # as the path if the file is in the root repository directory
@@ -28,9 +27,9 @@ exec(open(os.path.join("..", "flopy", "version.py")).read())
 authors = []
 for key in author_dict.keys():
     t = key.split()
-    author = "{}".format(t[-1])
+    author = f"{t[-1]}"
     for str in t[0:-1]:
-        author += " {}".format(str)
+        author += f" {str}"
     authors.append(author)
 
 approved = """Disclaimer
@@ -108,13 +107,13 @@ def get_branch():
 
 
 def get_version_str(v0, v1, v2):
-    version_type = ("{}".format(v0), "{}".format(v1), "{}".format(v2))
+    version_type = (f"{v0}", f"{v1}", f"{v2}")
     version = ".".join(version_type)
     return version
 
 
 def get_tag(v0, v1, v2):
-    tag_type = ("{}".format(v0), "{}".format(v1), "{}".format(v2))
+    tag_type = (f"{v0}", f"{v1}", f"{v2}")
     tag = ".".join(tag_type)
     return tag
 
@@ -132,26 +131,24 @@ def get_software_citation(version, is_approved):
         if ipos == len(authors) - 1:
             line += "and "
         sv = author.split()
-        tauthor = "{}".format(sv[0])
+        tauthor = f"{sv[0]}"
         if len(sv) < 3:
             gname = sv[1]
             if len(gname) > 1:
-                tauthor += ", {}".format(gname)
+                tauthor += f", {gname}"
             else:
-                tauthor += ", {}.".format(gname[0])
+                tauthor += f", {gname[0]}."
         else:
-            tauthor += ", {}. {}.".format(sv[1][0], sv[2][0])
+            tauthor += f", {sv[1][0]}. {sv[2][0]}."
         # add formatted author name to line
         line += tauthor
 
     # add the rest of the citation
     line += (
-        ", {}, ".format(now.year)
-        + "FloPy v{}{}: ".format(version, sb)
-        + "U.S. Geological Survey Software Release, "
-        + "{}, ".format(now.strftime("%d %B %Y"))
-        + "http://dx.doi.org/10.5066/F7BK19FH]"
-        + "(http://dx.doi.org/10.5066/F7BK19FH)"
+        f", {now.year}, FloPy v{version}{sb}: "
+        f"U.S. Geological Survey Software Release, {now:%d %B %Y}, "
+        "http://dx.doi.org/10.5066/F7BK19FH]"
+        "(http://dx.doi.org/10.5066/F7BK19FH)"
     )
 
     return line
@@ -186,25 +183,24 @@ def update_version():
         # write new version file
         f = open(fpth, "w")
         f.write(
-            "# {} version file automatically ".format(pak)
-            + "created using...{0}\n".format(os.path.basename(__file__))
-        )
-        f.write(
-            "# created on..."
-            + "{0}\n".format(
-                datetime.datetime.now().strftime("%B %d, %Y %H:%M:%S")
+            (
+                f"# {pak} version file automatically created "
+                f"using...{os.path.basename(__file__)}\n"
             )
         )
+        f.write(
+            f"# created on...{datetime.datetime.now():%B %d, %Y %H:%M:%S}\n"
+        )
         f.write("\n")
-        f.write("major = {}\n".format(vmajor))
-        f.write("minor = {}\n".format(vminor))
-        f.write("micro = {}\n".format(vmicro))
-        f.write('__version__ = "{:d}.{:d}.{:d}".format(major, minor, micro)\n')
+        f.write(f"major = {vmajor}\n")
+        f.write(f"minor = {vminor}\n")
+        f.write(f"micro = {vmicro}\n")
+        f.write('__version__ = f"{major}.{minor}.{micro}"\n')
 
         # write the remainder of the version file
         if name_pos is not None:
             for line in lines[name_pos:]:
-                f.write("{}\n".format(line))
+                f.write(f"{line}\n")
         f.close()
         print("Successfully updated version.py")
     except:
@@ -237,7 +233,7 @@ def update_codejson(vmajor, vminor, vmicro):
 
     # load and modify json file
     with open(json_fname, "r") as f:
-        data = json.load(f, object_pairs_hook=OrderedDict)
+        data = json.load(f)
 
     # modify the json file data
     now = datetime.datetime.now()
@@ -282,36 +278,43 @@ def update_readme_markdown(vmajor, vminor, vmicro):
     f = open(fpth, "w")
     for line in lines:
         if "### Version " in line:
-            line = "### Version {}".format(version)
+            line = f"### Version {version}"
             if not is_approved:
                 line += " &mdash; release candidate"
-        elif "[Build Status]" in line:
+        elif "[flopy continuous integration]" in line:
             line = (
-                "[![Build Status](https://travis-ci.org/modflowpy/"
-                + "flopy.svg?branch={})]".format(branch)
-                + "(https://travis-ci.org/modflowpy/flopy)"
+                "[![flopy continuous integration](https://github.com/"
+                "modflowpy/flopy/actions/workflows/ci.yml/badge.svg?"
+                "branch={})](https://github.com/modflowpy/flopy/actions/"
+                "workflows/ci.yml)".format(branch)
+            )
+        elif "[Read the Docs]" in line:
+            line = (
+                "[![Read the Docs](https://github.com/modflowpy/flopy/"
+                "actions/workflows/rtd.yml/badge.svg?branch={})]"
+                "(https://github.com/modflowpy/flopy/actions/"
+                "workflows/rtd.yml)".format(branch)
             )
         elif "[Coverage Status]" in line:
             line = (
                 "[![Coverage Status](https://coveralls.io/repos/github/"
-                + "modflowpy/flopy/badge.svg?branch={})]".format(branch)
-                + "(https://coveralls.io/github/modflowpy/"
-                + "flopy?branch={})".format(branch)
+                "modflowpy/flopy/badge.svg?branch={0})]"
+                "(https://coveralls.io/github/modflowpy/"
+                "flopy?branch={0})".format(branch)
             )
         elif "[Binder]" in line:
             # [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/modflowpy/flopy.git/develop)
             line = (
                 "[![Binder](https://mybinder.org/badge_logo.svg)]"
-                + "(https://mybinder.org/v2/gh/modflowpy/flopy.git/"
-                + "{}".format(branch)
-                + ")"
+                "(https://mybinder.org/v2/gh/modflowpy/flopy.git/"
+                "{})".format(branch)
             )
         elif "http://dx.doi.org/10.5066/F7BK19FH" in line:
             line = get_software_citation(version, is_approved)
         elif "Disclaimer" in line:
             line = disclaimer
             terminate = True
-        f.write("{}\n".format(line))
+        f.write(f"{line}\n")
         if terminate:
             break
 
@@ -351,12 +354,12 @@ def update_notebook_examples_markdown():
             # [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/modflowpy/flopy.git/develop)
             line = (
                 "[![Binder](https://mybinder.org/badge_logo.svg)]"
-                + "(https://mybinder.org/v2/gh/modflowpy/flopy.git/"
-                + "{}".format(branch)
-                + ")"
+                "(https://mybinder.org/v2/gh/modflowpy/flopy.git/"
+                "{})".format(branch)
             )
-        f.write("{}\n".format(line))
+        f.write(f"{line}\n")
     f.close()
+
 
 def update_PyPi_release(vmajor, vminor, vmicro):
     # create disclaimer text
@@ -380,7 +383,7 @@ def update_PyPi_release(vmajor, vminor, vmicro):
         elif "Disclaimer" in line:
             line = disclaimer
             terminate = True
-        f.write("{}\n".format(line))
+        f.write(f"{line}\n")
         if terminate:
             break
 

@@ -126,11 +126,11 @@ def test_mf6():
     ]
     exts_sim = ["gwfgwf", "ims", "tdis"]
     for ext in exts_model:
-        fname = os.path.join(out_dir, "model.{}".format(ext))
-        assert os.path.isfile(fname), fname + " not found"
+        fname = os.path.join(out_dir, f"model.{ext}")
+        assert os.path.isfile(fname), f"{fname} not found"
     for ext in exts_sim:
-        fname = os.path.join(out_dir, "sim.{}".format(ext))
-        assert os.path.isfile(fname), fname + " not found"
+        fname = os.path.join(out_dir, f"sim.{ext}")
+        assert os.path.isfile(fname), f"{fname} not found"
 
     return
 

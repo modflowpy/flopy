@@ -83,9 +83,9 @@ def test001a_tharmonic():
     assert os.path.exists(data_path)
     # model export test
     model = sim.get_model(model_name)
-    model.export("{}/tharmonic.nc".format(model.model_ws))
-    model.export("{}/tharmonic.shp".format(model.model_ws))
-    model.dis.botm.export("{}/botm.shp".format(model.model_ws))
+    model.export(f"{model.model_ws}/tharmonic.nc")
+    model.export(f"{model.model_ws}/tharmonic.shp")
+    model.dis.botm.export(f"{model.model_ws}/botm.shp")
 
     mg = model.modelgrid
 
@@ -234,7 +234,7 @@ def test003_gwfs_disv():
 
     model = sim.get_model(model_name)
     if shapefile:
-        model.export("{}/{}.shp".format(pth, test_ex_name))
+        model.export(f"{pth}/{test_ex_name}.shp")
 
     # change some settings
     chd_head_left = model.get_package("CHD_LEFT")
@@ -763,9 +763,7 @@ def test006_2models_mvr():
                 assert (
                     package in model.package_type_dict
                     or package in sim.package_type_dict
-                ) == (
-                    package in load_only or "{}6".format(package) in load_only
-                )
+                ) == (package in load_only or f"{package}6" in load_only)
         assert (len(sim._exchange_files) > 0) == (
             "gwf6-gwf6" in load_only or "gwf-gwf" in load_only
         )
@@ -882,7 +880,7 @@ def test001e_uzf_3lay():
         model = sim.get_model()
         for package in model_package_check:
             assert (package in model.package_type_dict) == (
-                package in load_only or "{}6".format(package) in load_only
+                package in load_only or f"{package}6" in load_only
             )
     if run:
         # test running a runnable load_only case
@@ -1171,6 +1169,7 @@ def test_mf6_output():
 
     bud = ml.oc.output.budget()
     hds = ml.oc.output.head()
+    lst = ml.oc.output.list()
 
     idomain = np.ones(ml.modelgrid.shape, dtype=int)
     zonbud = ml.oc.output.zonebudget(idomain)
@@ -1184,9 +1183,13 @@ def test_mf6_output():
     if not isinstance(zonbud, flopy.utils.ZoneBudget6):
         raise AssertionError()
 
+    if not isinstance(lst, flopy.utils.Mf6ListBudget):
+        raise AssertionError()
+
     bud = ml.output.budget()
     hds = ml.output.head()
     zonbud = ml.output.zonebudget(idomain)
+    lst = ml.output.list()
 
     if not isinstance(bud, flopy.utils.CellBudgetFile):
         raise TypeError()
@@ -1195,6 +1198,9 @@ def test_mf6_output():
         raise TypeError()
 
     if not isinstance(zonbud, flopy.utils.ZoneBudget6):
+        raise TypeError()
+
+    if not isinstance(lst, flopy.utils.Mf6ListBudget):
         raise TypeError()
 
     uzf = ml.uzf
@@ -1220,11 +1226,45 @@ def test_mf6_output():
         print(uzf.output.__dict__)
         raise AssertionError(", ".join(uzf.output.methods()))
 
-    if len(ml.output.methods()) != 3:
+    if len(ml.output.methods()) != 4:
         raise AssertionError()
 
     if ml.dis.output.methods() is not None:
         raise AssertionError()
+
+
+def test_mf6_output_add_observation():
+    model_name = "lakeex2a"
+    sim_ws = os.path.join("..", "examples", "data", "mf6", "test045_lake2tr")
+    sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws, exe_name=exe_name)
+    gwf = sim.get_model(model_name)
+
+    # remove sfr_obs and add a new sfr obs
+    sfr = gwf.sfr
+
+    obs_file = f"{model_name}.sfr.obs"
+    csv_file = f"{obs_file}.csv"
+    obs_dict = {
+        csv_file: [
+            ("l08_stage", "stage", (8,)),
+            ("l09_stage", "stage", (9,)),
+            ("l14_stage", "stage", (14,)),
+            ("l15_stage", "stage", (15,)),
+        ]
+    }
+    gwf.sfr.obs.initialize(
+        filename=obs_file, digits=10, print_input=True, continuous=obs_dict
+    )
+
+    sim.simulation_data.mfpath.set_sim_path(cpth)
+    sim.write_simulation()
+    sim.run_simulation()
+
+    # check that .output finds the newly added OBS package
+    sfr_obs = gwf.sfr.output.obs()
+
+    if not isinstance(sfr_obs, flopy.utils.Mf6Obs):
+        raise TypeError("remove and add observation test (Mf6Output) failed")
 
 
 if __name__ == "__main__":
@@ -1241,3 +1281,4 @@ if __name__ == "__main__":
     test_cbc_precision()
     test_replace_ims_package()
     test_mf6_output()
+    test_mf6_output_add_observation()

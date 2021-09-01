@@ -29,9 +29,9 @@
         "downloadURL": "https://code.usgs.gov/usgs/modflow/flopy/archive/master.zip",
         "vcs": "git",
         "laborHours": -1,
-        "version": "3.3.4",
+        "version": "3.3.5",
         "date": {
-            "metadataLastUpdated": "2021-02-18"
+            "metadataLastUpdated": "2021-08-07"
         },
         "organization": "U.S. Geological Survey",
         "permissions": {

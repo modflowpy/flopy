@@ -1,7 +1,7 @@
 try:
     import matplotlib.pyplot as plt
     import matplotlib as mpl
-except (ImportError, ModuleNotFoundError):
+except (ImportError, ModuleNotFoundError, RuntimeError):
     plt = None
 
 import os
@@ -54,7 +54,7 @@ class styles:
             None
         """
         mpl.rcParams["font.family"] = family
-        mpl.rcParams["font." + family] = fontname
+        mpl.rcParams[f"font.{family}"] = fontname
         return mpl.rcParams
 
     @classmethod
@@ -112,7 +112,7 @@ class styles:
                 letter = letter.rstrip()
                 if not letter.endswith("."):
                     letter += "."
-                text = letter + " " + heading
+                text = f"{letter} {heading}"
         else:
             text = heading
 
@@ -267,7 +267,7 @@ class styles:
         fontsize=9,
         ha="left",
         va="bottom",
-        **kwargs
+        **kwargs,
     ):
         """Add USGS-style text to a axis object
 
@@ -324,7 +324,7 @@ class styles:
             ha=ha,
             fontdict=font,
             transform=transform,
-            **kwargs
+            **kwargs,
         )
         return text_obj
 
@@ -340,7 +340,7 @@ class styles:
         fontsize=9,
         ha="left",
         va="bottom",
-        **kwargs
+        **kwargs,
     ):
         """Add an annotation to a axis object
 
@@ -436,7 +436,7 @@ class styles:
             dict
         """
         family = mpl.rcParams["font.family"][0]
-        font = mpl.rcParams["font." + family][0]
+        font = mpl.rcParams[f"font.{family}"][0]
 
         if bold:
             weight = "bold"

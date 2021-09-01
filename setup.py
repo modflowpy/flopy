@@ -3,8 +3,8 @@ import sys
 from setuptools import setup
 
 # ensure minimum version of Python is running
-if sys.version_info[0:2] < (3, 5):
-    raise RuntimeError("Flopy requires Python >= 3.5")
+if sys.version_info[0:2] < (3, 7):
+    raise RuntimeError("Flopy requires Python >= 3.7")
 
 # local import of package variables in flopy/version.py
 # imports __version__, __pakname__, __author__, __author_email__
@@ -28,7 +28,9 @@ setup(
     url="https://github.com/modflowpy/flopy/",
     license="CC0",
     platforms="Windows, Mac OS-X, Linux",
-    install_requires=["numpy"],
+    install_requires=[
+        "numpy >=1.15",
+    ],
     packages=[
         "flopy",
         "flopy.modflow",

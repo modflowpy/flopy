@@ -2,6 +2,7 @@ name: flopy
 channels:
   - conda-forge
 dependencies:
+  - python>=3.7
   - pylint
   - flake8
   - black
@@ -10,7 +11,7 @@ dependencies:
   - coverage
   - appdirs
   - requests
-  - numpy
+  - numpy>=1.15
   - matplotlib
   - bmipy
   - affine
@@ -23,5 +24,5 @@ dependencies:
   - descartes
   - pyproj
   - shapely
-  - geos=3.8.1  # required until 3.9.2 is available
+  - geos
   - geojson

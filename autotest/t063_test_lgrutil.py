@@ -62,7 +62,7 @@ def test_lgrutil():
     assert topc.shape == (9, 9)
     assert botmc.shape == (2, 9, 9)
     assert topc.min() == topc.max() == 100.0
-    errmsg = "{} /= {}".format(botmc[:, 0, 0], np.array(botmp[:2]))
+    errmsg = f"{botmc[:, 0, 0]} /= {np.array(botmp[:2])}"
     assert np.allclose(botmc[:, 0, 0], np.array(botmp[:2])), errmsg
 
     # exchange data
@@ -78,7 +78,7 @@ def test_lgrutil():
         0.0,
         354.33819375782156,
     ]
-    errmsg = "{} /= {}".format(ans1, exchange_data[0])
+    errmsg = f"{ans1} /= {exchange_data[0]}"
     assert exchange_data[0] == ans1, errmsg
 
     ans2 = [
@@ -91,7 +91,7 @@ def test_lgrutil():
         180.0,
         100.0,
     ]
-    errmsg = "{} /= {}".format(ans2, exchange_data[-1])
+    errmsg = f"{ans2} /= {exchange_data[-1]}"
     assert exchange_data[-1] == ans2, errmsg
 
     errmsg = "exchanges should be 71 horizontal plus 81 vertical"

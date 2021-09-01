@@ -82,7 +82,7 @@ class ModflowParBc:
                 if parnam.endswith("'"):
                     parnam = parnam[:-1]
                 if verbose:
-                    print('   loading parameter "{}"...'.format(parnam))
+                    print(f'   loading parameter "{parnam}"...')
                 partyp = t[1].lower()
                 parval = t[2]
                 nlst = int(t[3])
@@ -153,7 +153,7 @@ class ModflowParBc:
                 t = line.strip().split()
                 parnam = t[0].lower()
                 if verbose:
-                    print('   loading parameter "{}"...'.format(parnam))
+                    print(f'   loading parameter "{parnam}"...')
                 partyp = t[1].lower()
                 parval = t[2]
                 nclu = int(t[3])

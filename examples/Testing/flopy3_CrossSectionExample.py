@@ -34,11 +34,9 @@ if not success:
 files = ['freyberg.hds', 'freyberg.cbc']
 for f in files:
     if os.path.isfile(os.path.join(modelpth, f)):
-        msg = 'Output file located: {}'.format(f)
-        print (msg)
+        print (f'Output file located: {f}')
     else:
-        errmsg = 'Error. Output file cannot be found: {}'.format(f)
-        print (errmsg)
+        print (f'Error. Output file cannot be found: {f}')
 
 
 fname = os.path.join(modelpth, 'freyberg.hds')

@@ -2,11 +2,7 @@ import os
 import copy
 import numpy as np
 from itertools import groupby
-from collections import OrderedDict
 from .utils_def import totim_to_datetime
-import warnings
-
-warnings.simplefilter("once", PendingDeprecationWarning)
 
 
 class ZoneBudget:
@@ -39,8 +35,8 @@ class ZoneBudget:
     Examples
     --------
 
-    >>> from flopy.utils.zonbud import ZoneBudget, read_zbarray
-    >>> zon = read_zbarray('zone_input_file')
+    >>> from flopy.utils.zonbud import ZoneBudget
+    >>> zon = ZoneBudget.read_zone_file('zone_input_file')
     >>> zb = ZoneBudget('zonebudtest.cbc', zon, kstpkper=(0, 0))
     >>> zb.to_csv('zonebudtest.csv')
     >>> zb_mgd = zb * 7.48052 / 1000000
@@ -54,7 +50,7 @@ class ZoneBudget:
         totim=None,
         aliases=None,
         verbose=False,
-        **kwargs
+        **kwargs,
     ):
         from .binaryfile import CellBudgetFile
 
@@ -63,9 +59,7 @@ class ZoneBudget:
         elif isinstance(cbc_file, str) and os.path.isfile(cbc_file):
             self.cbc = CellBudgetFile(cbc_file)
         else:
-            raise Exception(
-                "Cannot load cell budget file: {}.".format(cbc_file)
-            )
+            raise Exception(f"Cannot load cell budget file: {cbc_file}.")
 
         if isinstance(z, np.ndarray):
             assert np.issubdtype(
@@ -90,12 +84,9 @@ class ZoneBudget:
             self.dis = self.model.dis
         if "dis" in kwargs.keys():
             self.dis = kwargs.pop("dis")
-        if "sr" in kwargs.keys():
-            kwargs.pop("sr")
-            warnings.warn("ignoring 'sr' parameter")
         if len(kwargs.keys()) > 0:
             args = ",".join(kwargs.keys())
-            raise Exception("LayerFile error: unrecognized kwargs: " + args)
+            raise Exception(f"LayerFile error: unrecognized kwargs: {args}")
 
         # Check the shape of the cbc budget file arrays
         self.cbc_shape = self.cbc.get_data(idx=0, full3D=True)[0].shape
@@ -109,10 +100,7 @@ class ZoneBudget:
             if isinstance(kstpkper, tuple):
                 kstpkper = [kstpkper]
             for kk in kstpkper:
-                s = (
-                    "The specified time step/stress period "
-                    "does not exist {}".format(kk)
-                )
+                s = f"The specified time step/stress period does not exist {kk}"
                 assert kk in self.cbc.get_kstpkper(), s
             self.kstpkper = kstpkper
         elif totim is not None:
@@ -121,10 +109,7 @@ class ZoneBudget:
             elif isinstance(totim, int):
                 totim = [float(totim)]
             for t in totim:
-                s = (
-                    "The specified simulation time "
-                    "does not exist {}".format(t)
-                )
+                s = f"The specified simulation time does not exist {t}"
                 assert t in self.cbc.get_times(), s
             self.totim = totim
         else:
@@ -153,14 +138,12 @@ class ZoneBudget:
             izone = np.zeros(self.cbc_shape, self.int_type)
             izone[:] = z[0, :, :]
         else:
-            e = "Shape of the zone array is not recognized: {}".format(z.shape)
+            e = f"Shape of the zone array is not recognized: {z.shape}"
             raise Exception(e)
 
         self.izone = izone
         self.allzones = np.unique(izone)
-        self._zonenamedict = OrderedDict(
-            [(z, "ZONE_{}".format(z)) for z in self.allzones]
-        )
+        self._zonenamedict = {z: f"ZONE_{z}" for z in self.allzones}
 
         if aliases is not None:
             s = (
@@ -246,7 +229,7 @@ class ZoneBudget:
         elif self.totim is not None:
             for t in self.totim:
                 if verbose:
-                    s = "Computing the budget for time {}".format(t)
+                    s = f"Computing the budget for time {t}"
                     print(s)
                 self._compute_budget(totim=t)
 
@@ -1070,7 +1053,7 @@ class ZoneBudget:
         else:
             # Should not happen
             raise Exception(
-                'Unrecognized "imeth" for {} record: {}'.format(recname, imeth)
+                f'Unrecognized "imeth" for {recname} record: {imeth}'
             )
 
         # Inflows
@@ -1350,8 +1333,8 @@ class ZoneBudget:
 
         Examples
         --------
-        >>> from flopy.utils.zonbud import ZoneBudget, read_zbarray
-        >>> zon = read_zbarray('zone_input_file')
+        >>> from flopy.utils.zonbud import ZoneBudget
+        >>> zon = ZoneBudget.read_zone_file('zone_input_file')
         >>> zb = ZoneBudget('zonebudtest.cbc', zon, kstpkper=(0, 0))
         >>> df = zb.get_dataframes()
 
@@ -1527,9 +1510,7 @@ class ZoneBudget:
                     # READ EXTERNAL FILE
                     fname = rowitems[0]
                     if not os.path.isfile(fname):
-                        errmsg = 'Could not find external file "{}"'.format(
-                            fname
-                        )
+                        errmsg = f'Could not find external file "{fname}"'
                         raise Exception(errmsg)
                     with open(fname, "r") as ext_f:
                         ext_flines = ext_f.readlines()
@@ -1546,7 +1527,7 @@ class ZoneBudget:
                         raise Exception(errmsg)
                 else:
                     # Should not get here
-                    raise Exception("Locat not recognized: {}".format(locat))
+                    raise Exception(f"Locat not recognized: {locat}")
 
                     # IGNORE COMPOSITE ZONES
 
@@ -1611,9 +1592,7 @@ class ZoneBudget:
             array = b.copy()
         elif len(array.shape) < 2 or len(array.shape) > 3:
             raise Exception(
-                "Shape of the input array is not recognized: {}".format(
-                    array.shape
-                )
+                f"Shape of the input array is not recognized: {array.shape}"
             )
         if np.ma.is_masked(array):
             array = np.ma.filled(array, 0)
@@ -1632,18 +1611,14 @@ class ZoneBudget:
         if iprn is None or iprn <= iprnmin:
             iprn = iprnmin + 1
 
-        formatter_str = "{{:>{iprn}}}".format(iprn=iprn)
+        formatter_str = f"{{:>{iprn}}}"
         formatter = formatter_str.format
 
         with open(fname, "w") as f:
-            header = "{nlay} {nrow} {ncol}\n".format(
-                nlay=nlay, nrow=nrow, ncol=ncol
-            )
+            header = f"{nlay} {nrow} {ncol}\n"
             f.write(header)
             for lay in range(nlay):
-                record_2 = "INTERNAL\t({fmtin}I{iprn})\n".format(
-                    fmtin=fmtin, iprn=iprn
-                )
+                record_2 = f"INTERNAL\t({fmtin}I{iprn})\n"
                 f.write(record_2)
                 if fmtin < ncol:
                     for row in range(nrow):
@@ -1674,6 +1649,40 @@ class ZoneBudget:
         Return a deepcopy of the object.
         """
         return copy.deepcopy(self)
+
+    def export(self, f, ml, **kwargs):
+        """
+        Method to export a netcdf file, or add zonebudget output to
+        an open netcdf file instance
+
+        Parameters
+        ----------
+        f : str or flopy.export.netcdf.NetCdf object
+        ml : flopy.modflow.Modflow or flopy.mf6.ModflowGwf object
+        **kwargs :
+            logger : flopy.export.netcdf.Logger instance
+            masked_vals : list
+                list of values to mask
+
+        Returns
+        -------
+            flopy.export.netcdf.NetCdf object
+
+        """
+        from flopy.export.utils import output_helper
+
+        if isinstance(f, str):
+            if not f.endswith(".nc"):
+                raise AssertionError(
+                    "File extension must end with .nc to "
+                    "export a netcdf file"
+                )
+
+        zbncfobj = dataframe_to_netcdf_fmt(
+            self.get_dataframes(pivot=True), self.izone, flux=True
+        )
+        oudic = {"zbud": zbncfobj}
+        return output_helper(f, ml, oudic, **kwargs)
 
     def __deepcopy__(self, memo):
         """
@@ -1836,7 +1845,7 @@ class ZoneBudget6:
 
     def __getattr__(self, item):
         if item in ("zon", "bud", "grb", "name", "model_ws"):
-            item = "_{}".format(item)
+            item = f"_{item}"
         return super().__getattribute__(item)
 
     def add_package(self, pkg_name, pkg):
@@ -1857,7 +1866,7 @@ class ZoneBudget6:
                 pkg_name = "bud"
             else:
                 raise KeyError(
-                    "{} package is not valid for zonebudget".format(pkg_name)
+                    f"{pkg_name} package is not valid for zonebudget"
                 )
 
         if isinstance(pkg, str):
@@ -1873,7 +1882,7 @@ class ZoneBudget6:
         else:
             pass
 
-        pkg_name = "_{}".format(pkg_name)
+        pkg_name = f"_{pkg_name}"
         self.__setattr__(pkg_name, pkg)
         if pkg is not None:
             self.package_dict[pkg_name[1:]] = pkg
@@ -1904,9 +1913,7 @@ class ZoneBudget6:
         """
         self._name = name
         if self._zon is not None:
-            self._zon.filename = "{}.{}".format(
-                name, self._zon.filename.split(".")[-1]
-            )
+            self._zon.filename = f"{name}.{self._zon.filename.split('.')[-1]}"
 
     def get_dataframes(
         self,
@@ -1947,10 +1954,10 @@ class ZoneBudget6:
 
         Examples
         --------
-        >>> from flopy.utils.zonbud import ZoneBudget, read_zbarray
-        >>> zon = read_zbarray('zone_input_file')
-        >>> zb = ZoneBudget('zonebudtest.cbc', zon, kstpkper=(0, 0))
-        >>> df = zb.get_dataframes()
+        >>> from flopy.utils.zonbud import ZoneBudget6
+        >>> zb6 = ZoneBudget6.load("my_nam_file", model_ws="my_model_ws")
+        >>> zb6.run_model()
+        >>> df = zb6.get_dataframes()
 
         """
         recarray = self.get_budget(
@@ -1996,7 +2003,7 @@ class ZoneBudget6:
             aliases = self._zon.aliases
 
         if f is None and self._recarray is None:
-            f = os.path.join(self._model_ws, self._name + ".csv")
+            f = os.path.join(self._model_ws, f"{self._name}.csv")
             self._recarray = _read_zb_csv2(
                 f, add_prefix=False, aliases=aliases
             )
@@ -2069,7 +2076,7 @@ class ZoneBudget6:
             else:
                 path = pkg.filename
                 pkg.write_input(line_length=line_length)
-            nam.append("  {}   {}\n".format(pkg_nam.upper(), path))
+            nam.append(f"  {pkg_nam.upper()}   {path}\n")
 
         path = os.path.join(self._model_ws, self._name + self._extension)
         with open(path, "w") as foo:
@@ -2109,6 +2116,40 @@ class ZoneBudget6:
 
         return zb6
 
+    def export(self, f, ml, **kwargs):
+        """
+        Method to export a netcdf file, or add zonebudget output to
+        an open netcdf file instance
+
+        Parameters
+        ----------
+        f : str or flopy.export.netcdf.NetCdf object
+        ml : flopy.modflow.Modflow or flopy.mf6.ModflowGwf object
+        **kwargs :
+            logger : flopy.export.netcdf.Logger instance
+            masked_vals : list
+                list of values to mask
+
+        Returns
+        -------
+            flopy.export.netcdf.NetCdf object
+
+        """
+        from flopy.export.utils import output_helper
+
+        if isinstance(f, str):
+            if not f.endswith(".nc"):
+                raise AssertionError(
+                    "File extension must end with .nc to "
+                    "export a netcdf file"
+                )
+
+        zbncfobj = dataframe_to_netcdf_fmt(
+            self.get_dataframes(pivot=True), self._zon.izone, flux=True
+        )
+        oudic = {"zbud": zbncfobj}
+        return output_helper(f, ml, oudic, **kwargs)
+
 
 class ZoneFile6:
     """
@@ -2137,10 +2178,8 @@ class ZoneFile6:
         self._parent.add_package("zon", self)
         self.filename = self._parent.name + extension
         self.aliases = aliases
-        self.allzones = [int(zn) for zn in np.unique(izone) if zn != 0]
-        self._zonenamedict = OrderedDict(
-            [(zn, "ZONE_{}".format(zn)) for zn in self.allzones]
-        )
+        self.allzones = [int(z) for z in np.unique(izone) if z != 0]
+        self._zonenamedict = {z: f"ZONE_{z}" for z in self.allzones}
 
         if aliases is not None:
             if not isinstance(aliases, dict):
@@ -2153,7 +2192,7 @@ class ZoneFile6:
                     self.aliases[zn] = "_".join(alias.split())
                 else:
                     pop_list.append(zn)
-                    print("warning: zone number {} not found".format(zn))
+                    print(f"warning: zone number {zn} not found")
 
             for p in pop_list:
                 aliases.pop(p)
@@ -2183,8 +2222,8 @@ class ZoneFile6:
         with open(f, "w") as foo:
             bfmt = ["  {:d}"]
             foo.write(
-                "BEGIN DIMENSIONS\n    NCELLS  {:d}\n"
-                "END DIMENSIONS\n\n".format(self.ncells)
+                f"BEGIN DIMENSIONS\n    NCELLS  {self.ncells}\n"
+                "END DIMENSIONS\n\n"
             )
 
             foo.write("BEGIN GRIDDATA\n  IZONE\n")
@@ -2332,11 +2371,11 @@ def _recarray_to_dataframe(
     try:
         import pandas as pd
     except Exception as e:
-        msg = "ZoneBudget.get_dataframes() error import pandas: " + str(e)
+        msg = f"ZoneBudget.get_dataframes() error import pandas: {e!s}"
         raise ImportError(msg)
 
     valid_index_keys = ["totim", "kstpkper"]
-    s = 'index_key "{}" is not valid.'.format(index_key)
+    s = f'index_key "{index_key}" is not valid.'
     assert index_key in valid_index_keys, s
 
     valid_timeunit = ["S", "M", "H", "D", "Y"]
@@ -2353,8 +2392,7 @@ def _recarray_to_dataframe(
         timeunit = "Y"
 
     errmsg = (
-        "Specified time units ({}) not recognized. "
-        "Please use one of ".format(timeunit)
+        f"Specified time units ({timeunit}) not recognized. Please use one of "
     )
     assert timeunit in valid_timeunit, errmsg + ", ".join(valid_timeunit) + "."
 
@@ -2556,50 +2594,6 @@ def _compute_net_budget(recarray, zonenamedict):
     return net_budget
 
 
-def write_zbarray(fname, X, fmtin=None, iprn=None):
-    """
-    Saves a numpy array in a format readable by the zonebudget program
-    executable.
-
-    File format:
-    line 1: nlay, nrow, ncol
-    line 2: INTERNAL (format)
-    line 3: begin data
-    .
-    .
-    .
-
-    example from NACP:
-    19 250 500
-    INTERNAL      (10I8)
-    199     199     199     199     199     199     199     199     199     199
-    199     199     199     199     199     199     199     199     199     199
-    ...
-    INTERNAL      (10I8)
-    199     199     199     199     199     199     199     199     199     199
-    199     199     199     199     199     199     199     199     199     199
-    ...
-
-    Parameters
-    ----------
-    X : array
-        The array of zones to be written.
-    fname :  str
-        The path and name of the file to be written.
-    fmtin : int
-        The number of values to write to each line.
-    iprn : int
-        Padding space to add between each value.
-
-    """
-    warnings.warn(
-        "Deprecation planned in version"
-        " 3.3.5 Use ZoneBudget.write_zone_file()",
-        PendingDeprecationWarning,
-    )
-    ZoneBudget.write_zone_file(fname, X, fmtin, iprn)
-
-
 def _read_zb_zblst(fname):
     """Method to read zonebudget zblst output
 
@@ -2627,8 +2621,8 @@ def _read_zb_zblst(fname):
                     line = foo.readline().strip()
                     zones = [int(i) for i in line.split()]
                     for zone in zones:
-                        data["TO_ZONE_{}".format(zone)] = []
-                        data["FROM_ZONE_{}".format(zone)] = []
+                        data[f"TO_ZONE_{zone}"] = []
+                        data[f"FROM_ZONE_{zone}"] = []
 
             if "FLOW BUDGET FOR ZONE" in line:
                 flow_budget = True
@@ -2662,9 +2656,9 @@ def _read_zb_zblst(fname):
                     if "ZONE" in line:
                         if prefix == "FROM_":
                             zlist.append(int(label.split()[1]))
-                            label = "FROM_ZONE_{}".format(label.split()[1])
+                            label = f"FROM_ZONE_{label.split()[1]}"
                         else:
-                            label = "TO_ZONE_{}".format(label.split()[-1])
+                            label = f"TO_ZONE_{label.split()[-1]}"
 
                     elif "TOTAL" in line or "PERCENT DISCREPANCY" in line:
                         label = "_".join(label.split())
@@ -2685,8 +2679,8 @@ def _read_zb_zblst(fname):
                         for zone in zones:
                             if zone in zlist:
                                 continue
-                            data["FROM_ZONE_{}".format(zone)].append(0)
-                            data["TO_ZONE_{}".format(zone)].append(0)
+                            data[f"FROM_ZONE_{zone}"].append(0)
+                            data[f"TO_ZONE_{zone}"].append(0)
 
                 elif "OUT:" in line:
                     prefix = "TO_"
@@ -2883,9 +2877,9 @@ def _zb_dict_to_recarray(data, aliases=None):
             if zn in aliases:
                 zone_dtypes.append((aliases[zn], float))
             else:
-                zone_dtypes.append(("ZONE_{}".format(int(zn)), float))
+                zone_dtypes.append((f"ZONE_{int(zn)}", float))
         else:
-            zone_dtypes.append(("ZONE_{}".format(int(zn)), float))
+            zone_dtypes.append((f"ZONE_{int(zn)}", float))
 
     dtype = [
         ("totim", float),
@@ -2924,29 +2918,6 @@ def _zb_dict_to_recarray(data, aliases=None):
 
     array = np.array(array, dtype=dtype)
     return array.view(type=np.recarray)
-
-
-def read_zbarray(fname):
-    """
-    Reads an ascii array in a format readable by the zonebudget program
-    executable.
-
-    Parameters
-    ----------
-    fname :  str
-        The path and name of the file to be written.
-
-    Returns
-    -------
-    zones : numpy ndarray
-        An integer array of the zones.
-    """
-    warnings.warn(
-        "Deprecation planned for version 3.3.5, "
-        "use ZoneBudget.read_zone_file()",
-        PendingDeprecationWarning,
-    )
-    return ZoneBudget.read_zone_file(fname)
 
 
 def _pivot_recarray(recarray):
@@ -3069,7 +3040,6 @@ def _volumetric_flux(recarray, modeltime, extrapolate_kper=False):
                         volumetric_data[key].append(zone)
 
                     else:
-                        t = temp[zix][key]
                         tmp = np.nanmean(temp[zix][key])
                         vol = tmp * perlen[per]
                         volumetric_data[key].append(vol)
@@ -3107,219 +3077,56 @@ def _volumetric_flux(recarray, modeltime, extrapolate_kper=False):
     return pd.DataFrame.from_dict(volumetric_data)
 
 
-class ZoneBudgetOutput:
+def dataframe_to_netcdf_fmt(df, zone_array, flux=True):
     """
-    DEPRECATED: Class method to process zonebudget output into
-    volumetric budgets
+    Method to transform a volumetric zonebudget dataframe into
+    array format for netcdf.
+
+    time is on axis 0
+    zone is on axis 1
 
     Parameters
     ----------
-    f : str
-        zonebudget output file path
-    dis : flopy.modflow.ModflowDis object
-    zones : np.ndarray
-        numpy array of zones
+    df : pd.DataFrame
+    zone_array : np.ndarray
+        zonebudget zones array
+    flux : bool
+        boolean flag to indicate if budget data is a flux "L^3/T" (True,
+        default) or if the data have been processed to
+        volumetric values "L^3" (False)
+
+    Returns
+    -------
+        ZBNetOutput object
 
     """
+    zones = np.sort(np.unique(df.zone.values))
+    totim = np.sort(np.unique(df.totim.values))
 
-    def __init__(self, f, dis, zones=None):
-        import pandas as pd
-        from ..modflow import ModflowDis
-
-        warnings.warn(
-            "ZoneBudgetOutput will be deprecated in version 3.3.5,"
-            "Use ZoneBudget.read_output(<file>, pivot=True)"
-            " or ZoneBudget6.get_budget(<file>, pivot=True)",
-            PendingDeprecationWarning,
-        )
-
-        self._filename = f
-        self._otype = None
-        self._zones = zones
-        self.__pd = pd
-
-        if isinstance(dis, ModflowDis):
-            add_prefix = True
-            model = dis.parent
+    data = {}
+    for col in df.columns:
+        if col in ("totim", "zone", "kper", "kstp", "perlen"):
+            pass
         else:
-            add_prefix = False
-            modelname = list(dis.model_or_sim.model_dict.keys())[0]
-            model = dis.model_or_sim.model_dict[modelname]
+            data[col] = np.zeros((totim.size, zones.size), dtype=float)
 
-        self._modeltime = model.modeltime
-        self._data = ZoneBudget.read_output(f, add_prefix=add_prefix, net=True)
-
-    def __repr__(self):
-        """
-        String representation of the ZoneBudgetOutput class
-
-        """
-        zones = ", ".join([str(i) for i in self.zones])
-        l = [
-            "ZoneBudgetOutput Class",
-            "----------------------\n",
-            "Number of zones: {}".format(len(self.zones)),
-            "Unique zones: {}".format(zones),
-            "Number of buget records: {}".format(len(self.dataframe)),
+    for i, time in enumerate(totim):
+        tdf = df.loc[
+            df.totim.isin(
+                [
+                    time,
+                ]
+            )
         ]
+        tdf = tdf.sort_values(by=["zone"])
 
-        return "\n".join(l)
-
-    @property
-    def zone_array(self):
-        """
-        Property method to get the zone array
-
-        """
-        warnings.warn(
-            "ZoneBudgetOutput will be deprecated in version 3.3.5",
-            PendingDeprecationWarning,
-        )
-        return np.asarray(self._zones, dtype=int)
-
-    @property
-    def zones(self):
-        """
-        Get a unique list of zones
-
-        """
-        warnings.warn(
-            "ZoneBudgetOutput will be deprecated in version 3.3.5",
-            PendingDeprecationWarning,
-        )
-        return np.unique(self.zone_array)
-
-    @property
-    def dataframe(self):
-        """
-        Returns a net flux dataframe of the zonebudget output
-
-        """
-        warnings.warn(
-            "ZoneBudgetOutput will be deprecated in version 3.3.5",
-            PendingDeprecationWarning,
-        )
-        data = _pivot_recarray(self._data)
-        return self.__pd.DataFrame.from_records(data)
-
-    def export(self, f, ml, **kwargs):
-        """
-        Method to export a netcdf file, or add zonebudget output to
-        an open netcdf file instance
-
-        Parameters
-        ----------
-        f : str or flopy.export.netcdf.NetCdf object
-        ml : flopy.modflow.Modflow or flopy.mf6.ModflowGwf object
-        **kwargs :
-            logger : flopy.export.netcdf.Logger instance
-            masked_vals : list
-                list of values to mask
-
-        Returns
-        -------
-            flopy.export.netcdf.NetCdf object
-
-        """
-        warnings.warn(
-            "ZoneBudgetOutput will be deprecated in version 3.3.5",
-            PendingDeprecationWarning,
-        )
-        from flopy.export.utils import output_helper
-
-        if isinstance(f, str):
-            if not f.endswith(".nc"):
-                raise AssertionError(
-                    "File extension must end with .nc to "
-                    "export a netcdf file"
-                )
-
-        zbncfobj = self.dataframe_to_netcdf_fmt(self.dataframe)
-        oudic = {"zbud": zbncfobj}
-        return output_helper(f, ml, oudic, **kwargs)
-
-    def volumetric_flux(self, extrapolate_kper=False):
-        """
-        Method to generate a volumetric budget table based on flux information
-
-        Parameters
-        ----------
-        extrapolate_kper : bool
-            flag to determine if we fill in data gaps with other
-            timestep information from the same stress period.
-            if True, we assume that flux is constant throughout a stress period
-            and the pandas dataframe returned contains a
-            volumetric budget per stress period
-
-            if False, calculates volumes from available flux data
-
-        Returns
-        -------
-            pd.DataFrame
-
-        """
-        warnings.warn(
-            "ZoneBudgetOutput.volumetric_flux()"
-            " will be deprecated in version 3.3.5,",
-            PendingDeprecationWarning,
-        )
-        recarray = _pivot_recarray(self._data)
-        return _volumetric_flux(recarray, self._modeltime, extrapolate_kper)
-
-    def dataframe_to_netcdf_fmt(self, df, flux=True):
-        """
-        Method to transform a volumetric zonebudget dataframe into
-        array format for netcdf.
-
-        time is on axis 0
-        zone is on axis 1
-
-        Parameters
-        ----------
-        df : pd.DataFrame
-        flux : bool
-            boolean flag to indicate if budget data is a flux "L^3/T" (True,
-            default) or if the data have been processed to
-            volumetric values "L^3" (False)
-        zone_array : np.ndarray
-            zonebudget zones array
-
-        Returns
-        -------
-            ZBNetOutput object
-
-        """
-        warnings.warn(
-            "ZoneBudgetOutput will be deprecated in version 3.3.5",
-            PendingDeprecationWarning,
-        )
-        zones = np.sort(np.unique(df.zone.values))
-        totim = np.sort(np.unique(df.totim.values))
-
-        data = {}
         for col in df.columns:
             if col in ("totim", "zone", "kper", "kstp", "perlen"):
                 pass
             else:
-                data[col] = np.zeros((totim.size, zones.size), dtype=float)
+                data[col][i, :] = tdf[col].values
 
-        for i, time in enumerate(totim):
-            tdf = df.loc[
-                df.totim.isin(
-                    [
-                        time,
-                    ]
-                )
-            ]
-            tdf = tdf.sort_values(by=["zone"])
-
-            for col in df.columns:
-                if col in ("totim", "zone", "kper", "kstp", "perlen"):
-                    pass
-                else:
-                    data[col][i, :] = tdf[col].values
-
-        return ZBNetOutput(zones, totim, data, self.zone_array, flux=flux)
+    return ZBNetOutput(zones, totim, data, zone_array, flux=flux)
 
 
 class ZBNetOutput:

@@ -87,9 +87,7 @@ def load_and_write(mfnam, pth):
 
     if run:
         # compare heads
-        fsum = os.path.join(
-            compth, "{}.head.out".format(os.path.splitext(mfnam)[0])
-        )
+        fsum = os.path.join(compth, f"{os.path.splitext(mfnam)[0]}.head.out")
         success = False
         try:
             success = pymake.compare_heads(fn0, fn1, outfile=fsum)
@@ -100,9 +98,7 @@ def load_and_write(mfnam, pth):
         assert success, "head comparison failure"
 
         # compare heads
-        fsum = os.path.join(
-            compth, "{}.ddn.out".format(os.path.splitext(mfnam)[0])
-        )
+        fsum = os.path.join(compth, f"{os.path.splitext(mfnam)[0]}.ddn.out")
         success = False
         try:
             success = pymake.compare_heads(
@@ -115,9 +111,7 @@ def load_and_write(mfnam, pth):
         assert success, "head comparison failure"
 
         # compare budgets
-        fsum = os.path.join(
-            compth, "{}.budget.out".format(os.path.splitext(mfnam)[0])
-        )
+        fsum = os.path.join(compth, f"{os.path.splitext(mfnam)[0]}.budget.out")
         success = False
         try:
             success = pymake.compare_budget(

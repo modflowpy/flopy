@@ -20,7 +20,7 @@ def test_create_and_run_model():
     exe_name = "mf6"
 
     # set up simulation
-    tdis_name = "{}.tdis".format(sim_name)
+    tdis_name = f"{sim_name}.tdis"
     sim = MFSimulation(
         sim_name=sim_name, version="mf6", exe_name=exe_name, sim_ws=out_dir
     )
@@ -31,7 +31,7 @@ def test_create_and_run_model():
 
     # create model instance
     model = mfgwf.ModflowGwf(
-        sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
     )
 
     # create solution and add the model
@@ -62,7 +62,7 @@ def test_create_and_run_model():
         delc=500.0,
         top=100.0,
         botm=50.0,
-        filename="{}.dis".format(model_name),
+        filename=f"{model_name}.dis",
     )
     ic_package = mfgwfic.ModflowGwfic(
         model,
@@ -78,7 +78,7 @@ def test_create_and_run_model():
             100.0,
             100.0,
         ],
-        filename="{}.ic".format(model_name),
+        filename=f"{model_name}.ic",
     )
     npf_package = mfgwfnpf.ModflowGwfnpf(
         model, save_flows=True, icelltype=1, k=100.0
@@ -118,8 +118,8 @@ def test_create_and_run_model():
     )
     oc_package = mfgwfoc.ModflowGwfoc(
         model,
-        budget_filerecord=["{}.cbc".format(model_name)],
-        head_filerecord=["{}.hds".format(model_name)],
+        budget_filerecord=[f"{model_name}.cbc"],
+        head_filerecord=[f"{model_name}.hds"],
         saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
         printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
     )

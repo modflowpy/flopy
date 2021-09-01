@@ -1,6 +1,5 @@
 import sys
 import numpy as np
-from collections import OrderedDict
 
 from ..utils.utils_def import FlopyBinaryData
 
@@ -67,12 +66,9 @@ class SwrFile(FlopyBinaryData):
         if swrtype.lower() in self.types:
             self.type = swrtype.lower()
         else:
-            err = (
-                "SWR type ({}) is not defined. ".format(type)
-                + "Available types are:\n"
-            )
+            err = f"SWR type ({type}) is not defined. Available types are:\n"
             for t in self.types:
-                err = "{}  {}\n".format(err, t)
+                err += f"  {t}\n"
             raise Exception(err)
 
         # set data dtypes
@@ -604,7 +600,7 @@ class SwrFile(FlopyBinaryData):
         self._ntimes = 0
         self._times = []
         self._kswrkstpkper = []
-        self.recorddict = OrderedDict()
+        self.recorddict = {}
 
         idx = 0
         while True:

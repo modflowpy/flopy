@@ -2,7 +2,7 @@ import numpy as np
 
 try:
     import matplotlib.pyplot as plt
-except ImportError:
+except (ImportError, RuntimeError):
     plt = None
 
 from .geometry import transform
@@ -29,17 +29,21 @@ import contextlib
 import warnings
 from distutils.version import LooseVersion
 
+NUMPY_GE_121 = str(np.__version__) >= LooseVersion("1.21")
+
 try:
     import shapely
 
     SHAPELY_GE_20 = str(shapely.__version__) >= LooseVersion("2.0")
-except:
+    SHAPELY_LT_18 = str(shapely.__version__) < LooseVersion("1.8")
+except ImportError:
     shapely = None
     SHAPELY_GE_20 = False
+    SHAPELY_LT_18 = False
 
 try:
     from shapely.errors import ShapelyDeprecationWarning as shapely_warning
-except:
+except ImportError:
     shapely_warning = None
 
 if shapely_warning is not None and not SHAPELY_GE_20:
@@ -47,7 +51,32 @@ if shapely_warning is not None and not SHAPELY_GE_20:
     @contextlib.contextmanager
     def ignore_shapely_warnings_for_object_array():
         with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=shapely_warning)
+            warnings.filterwarnings(
+                "ignore",
+                "Iteration|The array interface|__len__",
+                shapely_warning,
+            )
+            if NUMPY_GE_121:
+                # warning from numpy for existing Shapely releases (this is
+                # fixed with Shapely 1.8)
+                warnings.filterwarnings(
+                    "ignore",
+                    "An exception was ignored while fetching",
+                    DeprecationWarning,
+                )
+            yield
+
+
+elif SHAPELY_LT_18 and NUMPY_GE_121:
+
+    @contextlib.contextmanager
+    def ignore_shapely_warnings_for_object_array():
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                "An exception was ignored while fetching",
+                DeprecationWarning,
+            )
             yield
 
 
@@ -234,7 +263,7 @@ class GridIntersect:
             else:
                 rec = self._intersect_polygon_shapely(shp, sort_by_cellid)
         else:
-            err = "Shapetype {} is not supported".format(gu.shapetype)
+            err = f"Shapetype {gu.shapetype} is not supported"
             raise TypeError(err)
 
         return rec
@@ -291,7 +320,7 @@ class GridIntersect:
             for icell in self.mfgrid._cell2d.icell2d:
                 points = []
                 icverts = [
-                    "icvert_{}".format(i)
+                    f"icvert_{i}"
                     for i in range(self.mfgrid._cell2d["ncvert"][icell])
                 ]
                 for iv in self.mfgrid._cell2d[icverts][icell]:
@@ -1474,14 +1503,14 @@ class GridIntersect:
             if "facecolor" in kwargs:
                 fc = kwargs.pop("facecolor")
             else:
-                fc = "C{}".format(i % 10)
+                fc = f"C{i % 10}"
             ppi = PolygonPatch(ishp, facecolor=fc, **kwargs)
             ax.add_patch(ppi)
 
         return ax
 
     @staticmethod
-    def plot_linestring(rec, ax=None, **kwargs):
+    def plot_linestring(rec, ax=None, cmap=None, **kwargs):
         """method to plot the linestring intersection results from the
         resulting numpy.recarray.
 
@@ -1494,6 +1523,8 @@ class GridIntersect:
             (the resulting shapes)
         ax : matplotlib.pyplot.axes, optional
             axes to plot onto, if not provided, creates a new figure
+        cmap : str
+            matplotlib colormap
         **kwargs:
             passed to the plot function
 
@@ -1509,13 +1540,24 @@ class GridIntersect:
         if ax is None:
             _, ax = plt.subplots()
 
+        specified_color = True
+        if "c" in kwargs:
+            c = kwargs.pop("c")
+        elif "color" in kwargs:
+            c = kwargs.pop("color")
+        else:
+            specified_color = False
+
+        if cmap is not None:
+            colormap = plt.get_cmap(cmap)
+            colors = colormap(np.linspace(0, 1, rec.shape[0]))
+
         for i, ishp in enumerate(rec.ixshapes):
-            if "c" in kwargs:
-                c = kwargs.pop("c")
-            elif "color" in kwargs:
-                c = kwargs.pop("color")
-            else:
-                c = "C{}".format(i % 10)
+            if not specified_color:
+                if cmap is None:
+                    c = f"C{i % 10}"
+                else:
+                    c = colors[i]
             if ishp.type == "MultiLineString":
                 for part in ishp:
                     ax.plot(part.xy[0], part.xy[1], ls="-", c=c, **kwargs)

@@ -64,7 +64,7 @@ def test_seawat_array_format():
     subds = ["1_classic_case1"]
     for subd in subds:
         pth = os.path.join(pthtest, d, subd)
-        testpth = os.path.join(newpth, d + "-" + subd)
+        testpth = os.path.join(newpth, f"{d}-{subd}")
         if os.path.isdir(testpth):
             shutil.rmtree(testpth)
         os.mkdir(testpth)
@@ -79,7 +79,7 @@ def test_seawat_array_format():
         m.write_input()
         if isswtv4 is not None and runmodel:
             success, buff = m.run_model(silent=False)
-            assert success, "{} did not run".format(m.name)
+            assert success, f"{m.name} did not run"
     return
 
 
@@ -92,7 +92,7 @@ def test_swtv4():
 def run_swtv4(d, subd):
     # set up paths
     pth = os.path.join(pthtest, d, subd)
-    testpth = os.path.join(newpth, d + "-" + subd)
+    testpth = os.path.join(newpth, f"{d}-{subd}")
     if os.path.isdir(testpth):
         shutil.rmtree(testpth)
     os.mkdir(testpth)
@@ -113,7 +113,7 @@ def run_swtv4(d, subd):
     # run the model
     if isswtv4 is not None and runmodel:
         success, buff = m.run_model(silent=False)
-        assert success, "{} did not run".format(m.name)
+        assert success, f"{m.name} did not run"
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@
 #     name: python3
 # ---
 
-# # MODFLOW 6 Tutorial 2: Accessing Simulation Settings, Models, and Packages
+# # MODFLOW 6: Accessing Simulation Settings, Models, and Packages
 #
 # This tutorial shows how to view, access, and change the underlying package
 # variables for MODFLOW 6 objects in FloPy.  Interaction with a FloPy
@@ -51,8 +51,8 @@ flopy.mf6.ModflowGwfdis(gwf, nlay=3, nrow=4, ncol=5)
 flopy.mf6.ModflowGwfic(gwf)
 flopy.mf6.ModflowGwfnpf(gwf, save_specific_discharge=True)
 flopy.mf6.ModflowGwfchd(gwf, stress_period_data=[[(0, 0, 0), 1.0], [(2, 3, 4), 0.0]])
-budget_file = name + ".bud"
-head_file = name + ".hds"
+budget_file = f"{name}.bud"
+head_file = f"{name}.hds"
 flopy.mf6.ModflowGwfoc(
     gwf,
     budget_filerecord=budget_file,

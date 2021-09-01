@@ -1,7 +1,15 @@
 import os
-from ...utils import HeadFile, CellBudgetFile, Mf6Obs, ZoneBudget6, ZoneFile6
+from ...utils import (
+    HeadFile,
+    CellBudgetFile,
+    Mf6Obs,
+    ZoneBudget6,
+    ZoneFile6,
+    Mf6ListBudget,
+)
 from ...utils.observationfile import CsvFile
 from ...pakbase import PackageInterface
+from ...mbase import ModelInterface
 
 
 class MF6Output:
@@ -16,7 +24,7 @@ class MF6Output:
     """
 
     def __init__(self, obj):
-        from ..modflow import ModflowUtlobs
+        from ..modflow import ModflowUtlobs, ModflowGwtoc, ModflowGwfoc
 
         # set initial observation definitions
         methods = {
@@ -31,8 +39,24 @@ class MF6Output:
         self._methods = []
         self._sim_ws = obj.simulation_data.mfpath.get_sim_path()
 
-        if not isinstance(obj, PackageInterface):
+        if not isinstance(obj, (PackageInterface, ModelInterface)):
             raise TypeError("Only mf6 PackageInterface types can be used")
+
+        # capture the list file for Models and for OC packages
+        if isinstance(obj, (ModelInterface, ModflowGwfoc, ModflowGwtoc)):
+            if isinstance(obj, ModelInterface):
+                ml = obj
+            else:
+                ml = obj.parent
+            self._mtype = ml.model_type
+            nam_file = ml.model_nam_file[:-4]
+            self._lst = ml.name_file.blocks["options"].datasets["list"].array
+            if self._lst is None:
+                self._lst = f"{nam_file}.lst"
+            setattr(self, "list", self.__list)
+            self._methods.append("list()")
+            if isinstance(obj, ModelInterface):
+                return
 
         obspkg = False
         if isinstance(obj, ModflowUtlobs):
@@ -68,7 +92,7 @@ class MF6Output:
                                     self, "zonebudget", methods["zonebudget"]
                                 )
                                 self._methods.append("zonebudget()")
-                            self._methods.append("{}()".format(rectype))
+                            self._methods.append(f"{rectype}()")
                             if rectype == "obs":
                                 data = None
                                 for ky in obj._simulation_data.mfdata:
@@ -76,10 +100,32 @@ class MF6Output:
                                         if str(ky[-2]).lower() == "fileout":
                                             data = [[ky[-1]]]
                                             break
+                                        elif (
+                                            str(ky[-3]) == "continuous"
+                                            and str(ky[-1]) == "output"
+                                        ):
+                                            if (
+                                                obj._simulation_data.mfdata[
+                                                    ky
+                                                ].array[0][0]
+                                                == "fileout"
+                                            ):
+                                                data = [
+                                                    [
+                                                        obj._simulation_data.mfdata[
+                                                            ky
+                                                        ].array[
+                                                            0
+                                                        ][
+                                                            -2
+                                                        ]
+                                                    ]
+                                                ]
+                                                break
 
                             if rectype == "package_convergence":
                                 rectype = "csv"
-                            attr_name = "_{}".format(rectype)
+                            attr_name = f"_{rectype}"
                             # need a check for obs....
                             if data is not None:
                                 if not hasattr(self, attr_name):
@@ -96,10 +142,10 @@ class MF6Output:
 
         else:
             setattr(self, rectype, methods[rectype])
-            self._methods.append("{}()".format(rectype))
+            self._methods.append(f"{rectype}()")
             data = obj.data_list[2].data
             for f in data.keys():
-                attr_name = "_{}".format(rectype)
+                attr_name = f"_{rectype}"
                 if not hasattr(self, attr_name):
                     setattr(self, attr_name, [f])
                 else:
@@ -141,7 +187,7 @@ class MF6Output:
                             return
 
                 setattr(self.__class__, rectype, get_layerfile_data)
-                self._methods.append("{}()".format(rectype))
+                self._methods.append(f"{rectype}()")
 
     def methods(self):
         """
@@ -204,7 +250,7 @@ class MF6Output:
                             is None
                         ):
                             grb = os.path.join(
-                                self._sim_ws, dis.filename + ".grb"
+                                self._sim_ws, f"{dis.filename}.grb"
                             )
             except AttributeError:
                 pass
@@ -267,6 +313,21 @@ class MF6Output:
             except (IOError, FileNotFoundError):
                 return None
 
+    def __list(self):
+        """
+        Method to read list files
+
+        Returns
+        -------
+            Mf6ListBudget object
+        """
+        if self._lst is not None:
+            try:
+                list_file = os.path.join(self._sim_ws, self._lst)
+                return Mf6ListBudget(list_file)
+            except (AssertionError, IOError, FileNotFoundError):
+                return None
+
     def __mulitfile_handler(self, f, flist):
         """
 
@@ -288,10 +349,7 @@ class MF6Output:
             else:
                 idx = flist.index(f)
                 if idx is None:
-                    err = (
-                        "File name not found, "
-                        "available files are {}".format(", ".join(flist))
-                    )
+                    err = f"File name not found, available files are {', '.join(flist)}"
                     raise FileNotFoundError(err)
                 else:
                     filename = flist[idx]

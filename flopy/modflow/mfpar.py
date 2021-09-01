@@ -77,16 +77,12 @@ class ModflowPar:
                 )
                 if model.verbose:
                     sys.stdout.write(
-                        "   {} package load...success\n".format(
-                            self.zone.name[0]
-                        )
+                        f"   {self.zone.name[0]} package load...success\n"
                     )
                 ext_unit_dict.pop(zone_key)
                 model.remove_package("ZONE")
             except BaseException as o:
-                sys.stdout.write(
-                    "   {} package load...failed\n      {!s}".format("ZONE", o)
-                )
+                sys.stdout.write(f"   ZONE package load...failed\n      {o!s}")
         return
 
     def set_mult(self, model, ext_unit_dict):
@@ -128,16 +124,12 @@ class ModflowPar:
                 )
                 if model.verbose:
                     sys.stdout.write(
-                        "   {} package load...success\n".format(
-                            self.mult.name[0]
-                        )
+                        f"   {self.mult.name[0]} package load...success\n"
                     )
                 ext_unit_dict.pop(mult_key)
                 model.remove_package("MULT")
             except BaseException as o:
-                sys.stdout.write(
-                    "   {} package load...failed\n      {!s}".format("MULT", o)
-                )
+                sys.stdout.write(f"   MULT package load...failed\n      {o!s}")
 
         return
 
@@ -180,16 +172,12 @@ class ModflowPar:
                 )
                 if model.verbose:
                     sys.stdout.write(
-                        "   {} package load...success\n".format(
-                            self.pval.name[0]
-                        )
+                        f"   {self.pval.name[0]} package load...success\n"
                     )
                 ext_unit_dict.pop(pval_key)
                 model.remove_package("PVAL")
             except BaseException as o:
-                sys.stdout.write(
-                    "   {} package load...failed\n      {!s}".format("PVAL", o)
-                )
+                sys.stdout.write(f"   PVAL package load...failed\n      {o!s}")
 
         return
 
@@ -229,7 +217,7 @@ class ModflowPar:
                 t = line.strip().split()
                 parnam = t[0].lower()
                 if verbose:
-                    print('   loading parameter "{}"...'.format(parnam))
+                    print(f'   loading parameter "{parnam}"...')
                 partyp = t[1].lower()
                 if partyp not in par_types:
                     par_types.append(partyp)
