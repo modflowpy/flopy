@@ -1064,6 +1064,10 @@ class MFModel(PackageContainer, ModelInterface):
             del self._package_paths[package.path]
         self._remove_package(package)
 
+    def _add_package_to_dictionaries(self, package):
+        self._package_paths[package.path] = 1
+        self._add_package(package)
+
     def remove_package(self, package_name):
         """
         Removes package and all child packages from the model.
@@ -1081,85 +1085,148 @@ class MFModel(PackageContainer, ModelInterface):
             packages = [package_name]
         else:
             packages = self.get_package(package_name)
-            if not isinstance(packages, list):
+            if not isinstance(packages, list) and packages is not None:
                 packages = [packages]
-        for package in packages:
-            if package.model_or_sim.name != self.name:
-                except_text = (
-                    "Package can not be removed from model {} "
-                    "since it is "
-                    "not part of "
-                )
-                raise mfstructure.FlopyException(except_text)
+        if packages is not None:
+            for package in packages:
+                if package.model_or_sim.name != self.name:
+                    except_text = (
+                        "Package can not be removed from model {} "
+                        "since it is "
+                        "not part of "
+                    )
+                    raise mfstructure.FlopyException(except_text)
 
-            self._remove_package_from_dictionaries(package)
+                self._remove_package_from_dictionaries(package)
 
-            try:
-                # remove package from name file
-                package_data = self.name_file.packages.get_data()
-            except MFDataException as mfde:
-                message = (
-                    "Error occurred while reading package names "
-                    "from name file in model "
-                    '"{}".'.format(self.name)
-                )
-                raise MFDataException(
-                    mfdata_except=mfde,
-                    model=self.model_name,
-                    package=self.name_file._get_pname(),
-                    message=message,
-                )
-            try:
-                new_rec_array = None
-                for item in package_data:
-                    if item[1] != package._filename:
-                        if new_rec_array is None:
-                            new_rec_array = np.rec.array(
-                                [item.tolist()], package_data.dtype
-                            )
-                        else:
-                            new_rec_array = np.hstack((item, new_rec_array))
-            except:
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(
-                    self.structure.get_model(),
-                    self.structure.get_package(),
-                    self._path,
-                    "building package recarray",
-                    self.structure.name,
-                    inspect.stack()[0][3],
-                    type_,
-                    value_,
-                    traceback_,
-                    None,
-                    self._simulation_data.debug,
-                )
-            try:
-                self.name_file.packages.set_data(new_rec_array)
-            except MFDataException as mfde:
-                message = (
-                    "Error occurred while setting package names "
-                    'from name file in model "{}".  Package name '
-                    "data:\n{}".format(self.name, new_rec_array)
-                )
-                raise MFDataException(
-                    mfdata_except=mfde,
-                    model=self.model_name,
-                    package=self.name_file._get_pname(),
-                    message=message,
-                )
+                try:
+                    # remove package from name file
+                    package_data = self.name_file.packages.get_data()
+                except MFDataException as mfde:
+                    message = (
+                        "Error occurred while reading package names "
+                        "from name file in model "
+                        '"{}".'.format(self.name)
+                    )
+                    raise MFDataException(
+                        mfdata_except=mfde,
+                        model=self.model_name,
+                        package=self.name_file._get_pname(),
+                        message=message,
+                    )
+                try:
+                    new_rec_array = None
+                    for item in package_data:
+                        if item[1] != package._filename:
+                            if new_rec_array is None:
+                                new_rec_array = np.rec.array(
+                                    [item.tolist()], package_data.dtype
+                                )
+                            else:
+                                new_rec_array = np.hstack(
+                                    (item, new_rec_array)
+                                )
+                except:
+                    type_, value_, traceback_ = sys.exc_info()
+                    raise MFDataException(
+                        self.structure.get_model(),
+                        self.structure.get_package(),
+                        self._path,
+                        "building package recarray",
+                        self.structure.name,
+                        inspect.stack()[0][3],
+                        type_,
+                        value_,
+                        traceback_,
+                        None,
+                        self._simulation_data.debug,
+                    )
+                try:
+                    self.name_file.packages.set_data(new_rec_array)
+                except MFDataException as mfde:
+                    message = (
+                        "Error occurred while setting package names "
+                        'from name file in model "{}".  Package name '
+                        "data:\n{}".format(self.name, new_rec_array)
+                    )
+                    raise MFDataException(
+                        mfdata_except=mfde,
+                        model=self.model_name,
+                        package=self.name_file._get_pname(),
+                        message=message,
+                    )
 
-            # build list of child packages
-            child_package_list = []
-            for pkg in self.packagelist:
-                if (
-                    pkg.parent_file is not None
-                    and pkg.parent_file.path == package.path
-                ):
-                    child_package_list.append(pkg)
-            # remove child packages
-            for child_package in child_package_list:
-                self._remove_package_from_dictionaries(child_package)
+                # build list of child packages
+                child_package_list = []
+                for pkg in self.packagelist:
+                    if (
+                        pkg.parent_file is not None
+                        and pkg.parent_file.path == package.path
+                    ):
+                        child_package_list.append(pkg)
+                # remove child packages
+                for child_package in child_package_list:
+                    self._remove_package_from_dictionaries(child_package)
+
+    def update_package_filename(self, package, new_name):
+        try:
+            # get namefile package data
+            package_data = self.name_file.packages.get_data()
+        except MFDataException as mfde:
+            message = (
+                "Error occurred while updating package names "
+                "from name file in model "
+                '"{}".'.format(self.name)
+            )
+            raise MFDataException(
+                mfdata_except=mfde,
+                model=self.model_name,
+                package=self.name_file._get_pname(),
+                message=message,
+            )
+        try:
+            # update namefile package data with new name
+            new_rec_array = None
+            for item in package_data:
+                base, leaf = os.path.split(item[1])
+                if leaf == package.filename:
+                    item[1] = os.path.join(base, new_name)
+
+                if new_rec_array is None:
+                    new_rec_array = np.rec.array(
+                        [item.tolist()], package_data.dtype
+                    )
+                else:
+                    new_rec_array = np.hstack((item, new_rec_array))
+        except:
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self._path,
+                "updating package filename",
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                None,
+                self._simulation_data.debug,
+            )
+        try:
+            self.name_file.packages.set_data(new_rec_array)
+        except MFDataException as mfde:
+            message = (
+                "Error occurred while updating package names "
+                'from name file in model "{}".  Package name '
+                "data:\n{}".format(self.name, new_rec_array)
+            )
+            raise MFDataException(
+                mfdata_except=mfde,
+                model=self.model_name,
+                package=self.name_file._get_pname(),
+                message=message,
+            )
 
     def rename_all_packages(self, name):
         """Renames all package files in the model.
@@ -1171,10 +1238,14 @@ class MFModel(PackageContainer, ModelInterface):
                 <name>.<package ext>.
 
         """
+        nam_filename = "{}.nam".format(name)
+        self.simulation.rename_model_namefile(self, nam_filename)
+        self.name_file.filename = nam_filename
+        self.model_nam_file = nam_filename
         package_type_count = {}
-        self.name_file.filename = "{}.nam".format(name)
         for package in self.packagelist:
             if package.package_type not in package_type_count:
+
                 package.filename = "{}.{}".format(name, package.package_type)
                 package_type_count[package.package_type] = 1
             else:

@@ -914,10 +914,8 @@ class DataStorage:
             elif "data" in data:
                 data = data["data"]
         if isinstance(data, list):
-            if (
-                len(data) > 0
-                and not isinstance(data[0], tuple)
-                and not isinstance(data[0], list)
+            if len(data) > 0 and (
+                not PyListUtil.is_iterable(data[0]) or isinstance(data[0], str)
             ):
                 # single line of data needs to be encapsulated in a tuple
                 data = [tuple(data)]
@@ -1747,6 +1745,10 @@ class DataStorage:
         )
 
     def external_to_internal(self, layer, store_internal=False):
+        # reset comments
+        self.pre_data_comments = None
+        self.comments = OrderedDict()
+
         if layer is None:
             layer = 0
         # load data from external file

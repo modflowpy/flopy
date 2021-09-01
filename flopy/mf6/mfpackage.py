@@ -1656,9 +1656,12 @@ class MFPackage(PackageContainer, PackageInterface):
             except Exception:
                 print(
                     "WARNING: Unable to update file name for parent"
-                    "package of {}.".format(self.name)
+                    "package of {}.".format(self.package_name)
                 )
-        self._filename = fname
+        if self.model_or_sim is not None and fname is not None:
+            if self._package_type != "nam":
+                self.model_or_sim.update_package_filename(self, fname)
+            self._filename = fname
 
     @property
     def package_type(self):
@@ -2411,6 +2414,61 @@ class MFPackage(PackageContainer, PackageInterface):
                             ),
                         ]
                         break
+            elif (
+                self.dfn_file_name[4:7] == "gnc"
+                and self.model_or_sim.type == "Simulation"
+            ):
+                # get exchange file name associated with gnc package
+                exg_file_name = None
+                for exg in self.model_or_sim._exchange_files.values():
+                    gnc_data = exg.gnc_filerecord.get_data()
+                    if (
+                        gnc_data is not None
+                        and gnc_data[0][0].lower() == self.filename.lower()
+                    ):
+                        exg_file_name = exg.filename
+                        self.parent = exg
+                if exg_file_name is None:
+                    raise Exception(
+                        "Can not create a simulation-level "
+                        "gnc file without a corresponding "
+                        "exchange file. Exchange file must be "
+                        "created first."
+                    )
+                # get models associated with exchange file from sim nam file
+                try:
+                    exchange_recarray_data = (
+                        self.model_or_sim.name_file.exchanges.get_data()
+                    )
+                except MFDataException as mfde:
+                    message = (
+                        "An error occurred while retrieving exchange "
+                        "data from the simulation name file.  The error "
+                        "occurred while processing gnc file "
+                        '"{}".'.format(self.filename)
+                    )
+                    raise MFDataException(
+                        mfdata_except=mfde,
+                        package=self._get_pname(),
+                        message=message,
+                    )
+                assert exchange_recarray_data is not None
+                model_1 = None
+                model_2 = None
+                for exchange in exchange_recarray_data:
+                    if exchange[1] == exg_file_name:
+                        model_1 = exchange[2]
+                        model_2 = exchange[3]
+
+                # assign models to gnc package
+                model_dims = [
+                    modeldimensions.ModelDimensions(
+                        model_1, self._simulation_data
+                    ),
+                    modeldimensions.ModelDimensions(
+                        model_2, self._simulation_data
+                    ),
+                ]
             elif self.parent_file is not None:
                 model_dims = []
                 for md in self.parent_file.dimensions.model_dim:
@@ -2426,6 +2484,7 @@ class MFPackage(PackageContainer, PackageInterface):
                         None, self._simulation_data
                     )
                 ]
+
         return modeldimensions.PackageDimensions(
             model_dims, self.structure, self.path
         )
@@ -2678,8 +2737,14 @@ class MFChildPackages:
         if file_record is not None:
             file_record_data = file_record[0]
             for item in file_record_data:
-                if item.lower() == old_fname.lower():
-                    new_file_record_data.append((new_fname,))
+                base, fname = os.path.split(item)
+                if fname.lower() == old_fname.lower():
+                    if base:
+                        new_file_record_data.append(
+                            (os.path.join(base, new_fname),)
+                        )
+                    else:
+                        new_file_record_data.append((new_fname,))
                 else:
                     new_file_record_data.append((item,))
         else:
