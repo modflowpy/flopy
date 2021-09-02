@@ -684,7 +684,7 @@ class HeadObservation:
         for idx in range(self.nobs):
             t = time_series_data[idx, 0]
             kstp, kper, toffset = model.dis.get_kstp_kper_toffset(
-                t, use_cached_totim = True
+                t, use_cached_totim=True
             )
             self.time_series_data[idx]["totim"] = t
             self.time_series_data[idx]["irefsp"] = kper
