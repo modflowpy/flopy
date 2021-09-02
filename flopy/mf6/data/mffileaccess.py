@@ -87,8 +87,6 @@ class MFFileAccess:
                     arr_line, self._path, self._simulation_data, line_num
                 )
 
-            storage.add_data_line_comment(arr_line, line_num)
-
             line = file_handle.readline()
             arr_line = PyListUtil.split_data_line(line)
         return line
@@ -1175,7 +1173,15 @@ class MFFileAccessList(MFFileAccess):
         # read any pre-data commented lines
         while current_line and MFComment.is_comment(arr_line, True):
             arr_line.insert(0, "\n")
-            storage.add_data_line_comment(arr_line, line_num)
+            if storage.pre_data_comments is None:
+                storage.pre_data_comments = MFComment(
+                    " ".join(arr_line),
+                    self._path,
+                    self._simulation_data,
+                    line_num,
+                )
+            else:
+                storage.pre_data_comments.add_text(" ".join(arr_line))
             PyListUtil.reset_delimiter_used()
             current_line = file_handle.readline()
             arr_line = PyListUtil.split_data_line(current_line)
