@@ -1090,9 +1090,9 @@ class MFModel(PackageContainer, ModelInterface):
                 package_data = self.name_file.packages.get_data()
             except MFDataException as mfde:
                 message = (
-                    f"Error occurred while reading package names "
+                    "Error occurred while reading package names "
                     "from name file in model "
-                    '"{self.name}"'
+                    f'"{self.name}"'
                 )
                 raise MFDataException(
                     mfdata_except=mfde,
@@ -1129,9 +1129,9 @@ class MFModel(PackageContainer, ModelInterface):
                 self.name_file.packages.set_data(new_rec_array)
             except MFDataException as mfde:
                 message = (
-                    f"Error occurred while setting package names "
-                    'from name file in model "{self.name}".  Package name '
-                    "data:\n{new_rec_array}"
+                    "Error occurred while setting package names "
+                    f'from name file in model "{self.name}".  Package name '
+                    f"data:\n{new_rec_array}"
                 )
                 raise MFDataException(
                     mfdata_except=mfde,
@@ -1168,9 +1168,9 @@ class MFModel(PackageContainer, ModelInterface):
             package_data = self.name_file.packages.get_data()
         except MFDataException as mfde:
             message = (
-                f"Error occurred while updating package names "
+                "Error occurred while updating package names "
                 "from name file in model "
-                '"{self.name}".'
+                f'"{self.name}".'
             )
             raise MFDataException(
                 mfdata_except=mfde,
@@ -1211,9 +1211,9 @@ class MFModel(PackageContainer, ModelInterface):
             self.name_file.packages.set_data(new_rec_array)
         except MFDataException as mfde:
             message = (
-                f"Error occurred while updating package names "
-                'from name file in model "{self.name}".  Package name '
-                "data:\n{new_rec_array}"
+                "Error occurred while updating package names "
+                f'from name file in model "{self.name}".  Package name '
+                f"data:\n{new_rec_array}"
             )
             raise MFDataException(
                 mfdata_except=mfde,

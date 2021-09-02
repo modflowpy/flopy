@@ -1641,8 +1641,8 @@ class MFPackage(PackageContainer, PackageInterface):
                 child_pkg_group._update_filename(self._filename, fname)
             except Exception:
                 print(
-                    f"WARNING: Unable to update file name for parent"
-                    "package of {self.package_name}."
+                    "WARNING: Unable to update file name for parent"
+                    f"package of {self.package_name}."
                 )
         if self.model_or_sim is not None and fname is not None:
             if self._package_type != "nam":
@@ -2420,10 +2420,10 @@ class MFPackage(PackageContainer, PackageInterface):
                     )
                 except MFDataException as mfde:
                     message = (
-                        f"An error occurred while retrieving exchange "
+                        "An error occurred while retrieving exchange "
                         "data from the simulation name file.  The error "
                         "occurred while processing gnc file "
-                        '"{self.filename}".'
+                        f'"{self.filename}".'
                     )
                     raise MFDataException(
                         mfdata_except=mfde,

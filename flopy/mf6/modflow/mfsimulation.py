@@ -1173,10 +1173,10 @@ class MFSimulation(PackageContainer):
             exchange_recarray_data = self.name_file.exchanges.get_data()
         except MFDataException as mfde:
             message = (
-                f"An error occurred while retrieving exchange "
+                "An error occurred while retrieving exchange "
                 "data from the simulation name file.  The error "
                 "occurred while registering exchange file "
-                '"{package.filename}".'
+                f'"{package.filename}".'
             )
             raise MFDataException(
                 mfdata_except=mfde,
@@ -1196,14 +1196,14 @@ class MFSimulation(PackageContainer):
                         ex_recarray.set_data(exchange_recarray_data)
                     except MFDataException as mfde:
                         message = (
-                            f"An error occurred while setting "
+                            "An error occurred while setting "
                             "exchange data in the simulation name "
                             "file.  The error occurred while "
                             "registering the following "
                             "values (exgtype, filename, "
-                            'exgmnamea, exgmnameb): "{package.exgtype} '
-                            "{package.filename} {package.exgmnamea}"
-                            '{package.exgmnameb}".'
+                            f'exgmnamea, exgmnameb): "{package.exgtype} '
+                            f"{package.filename} {package.exgmnamea}"
+                            f'{package.exgmnameb}".'
                         )
                         raise MFDataException(
                             mfdata_except=mfde,
@@ -1220,8 +1220,8 @@ class MFSimulation(PackageContainer):
             tdis_attr.set_data(file_name)
         except MFDataException as mfde:
             message = (
-                f"An error occurred while setting the tdis package "
-                'file name "{file_name}".  The error occurred while '
+                "An error occurred while setting the tdis package "
+                f'file name "{file_name}".  The error occurred while '
                 "registering the tdis package with the "
                 "simulation"
             )
@@ -1748,10 +1748,10 @@ class MFSimulation(PackageContainer):
             exchange_recarray_data = self.name_file.exchanges.get_data()
         except MFDataException as mfde:
             message = (
-                f"An error occurred while retrieving exchange "
+                "An error occurred while retrieving exchange "
                 "data from the simulation name file.  The error "
                 "occurred while registering exchange file "
-                '"{package.filename}".'
+                f'"{package.filename}".'
             )
             raise MFDataException(
                 mfdata_except=mfde,
@@ -1803,10 +1803,10 @@ class MFSimulation(PackageContainer):
                 exchange_recarray_data = self.name_file.exchanges.get_data()
             except MFDataException as mfde:
                 message = (
-                    f"An error occurred while retrieving exchange "
+                    "An error occurred while retrieving exchange "
                     "data from the simulation name file.  The error "
                     "occurred while registering exchange file "
-                    '"{package.filename}".'
+                    f'"{package.filename}".'
                 )
                 raise MFDataException(
                     mfdata_except=mfde,
@@ -1828,14 +1828,14 @@ class MFSimulation(PackageContainer):
                             ex_recarray.set_data(exchange_recarray_data)
                         except MFDataException as mfde:
                             message = (
-                                f"An error occurred while setting "
+                                "An error occurred while setting "
                                 "exchange data in the simulation name "
                                 "file.  The error occurred while "
                                 "registering the following "
                                 "values (exgtype, filename, "
-                                'exgmnamea, exgmnameb): "{exgtype} '
-                                "{package.filename} {exgmnamea}"
-                                '{exgmnameb}".'
+                                f'exgmnamea, exgmnameb): "{exgtype} '
+                                f"{package.filename} {exgmnamea}"
+                                f'{exgmnameb}".'
                             )
                             raise MFDataException(
                                 mfdata_except=mfde,
@@ -1850,11 +1850,11 @@ class MFSimulation(PackageContainer):
                 )
             except MFDataException as mfde:
                 message = (
-                    f"An error occurred while setting exchange data "
+                    "An error occurred while setting exchange data "
                     "in the simulation name file.  The error occurred "
                     "while registering the following values (exgtype, "
-                    'filename, exgmnamea, exgmnameb): "{exgtype} '
-                    '{package.filename} {exgmnamea} {exgmnameb}".'
+                    f'filename, exgmnamea, exgmnameb): "{exgtype} '
+                    f'{package.filename} {exgmnamea} {exgmnameb}".'
                 )
                 raise MFDataException(
                     mfdata_except=mfde,
@@ -1931,9 +1931,9 @@ class MFSimulation(PackageContainer):
                 >= VerbosityLevel.normal.value
             ):
                 print(
-                    f"WARNING: Package with name "
+                    "WARNING: Package with name "
                     f"{package.package_name.lower()} already exists.  "
-                    f"Replacing existing package."
+                    "Replacing existing package."
                 )
             self._remove_package(self.package_name_dict[pname])
 
