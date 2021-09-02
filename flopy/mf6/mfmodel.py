@@ -1109,9 +1109,7 @@ class MFModel(PackageContainer, ModelInterface):
                                 [item.tolist()], package_data.dtype
                             )
                         else:
-                            new_rec_array = np.hstack(
-                                (item, new_rec_array)
-                            )
+                            new_rec_array = np.hstack((item, new_rec_array))
             except:
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(
