@@ -38,10 +38,6 @@ bc_color_dict = {
 }
 
 
-class PlotException(Exception):
-    pass
-
-
 class PlotUtilities:
     """
     Class which groups a collection of plotting utilities
@@ -661,13 +657,10 @@ class PlotUtilities:
 
             try:
                 arr = arr_dict[key]
-            except:
-                err_msg = "Cannot find key to plot\n"
-                err_msg += f"  Provided key={key}\n  Available keys="
-                for name, arr in arr_dict.items():
-                    err_msg += f"{name}, "
-                err_msg += "\n"
-                raise PlotException(err_msg)
+            except KeyError:
+                err_msg = f'Cannot find key "{key}" to plot\n  Available keys='
+                err_msg += ", ".join(str(k) for k in arr_dict.keys())
+                raise KeyError(err_msg)
 
             axes = PlotUtilities._plot_array_helper(
                 arr,
@@ -1118,7 +1111,7 @@ class PlotUtilities:
 
         # check that matplotlib is installed
         if plt is None:
-            raise PlotException(
+            raise ImportError(
                 "Could not import matplotlib.  Must install matplotlib "
                 "in order to plot LayerFile data."
             )
@@ -1269,7 +1262,7 @@ class PlotUtilities:
         from .map import PlotMapView
 
         if plt is None:
-            raise PlotException(
+            raise ImportError(
                 "Could not import matplotlib.  Must install matplotlib "
                 "in order to plot boundary condition data."
             )
@@ -2030,8 +2023,10 @@ def shapefile_extents(shp):
 
     """
     if shapefile is None:
-        s = "Could not import shapefile.  Must install pyshp in order to plot shapefiles."
-        raise PlotException(s)
+        raise ImportError(
+            "Could not import shapefile.  "
+            "Must install pyshp in order to plot shapefiles."
+        )
 
     sf = shapefile.Reader(shp)
     shapes = sf.shapes()
@@ -2072,8 +2067,10 @@ def shapefile_get_vertices(shp):
 
     """
     if shapefile is None:
-        s = "Could not import shapefile.  Must install pyshp in order to plot shapefiles."
-        raise PlotException(s)
+        raise ImportError(
+            "Could not import shapefile.  "
+            "Must install pyshp in order to plot shapefiles."
+        )
 
     sf = shapefile.Reader(shp)
     shapes = sf.shapes()
@@ -2123,9 +2120,9 @@ def shapefile_to_patch_collection(shp, radius=500.0, idx=None):
 
     """
     if shapefile is None:
-        raise PlotException(
-            "Could not import shapefile.  Must install pyshp "
-            "in order to plot shapefiles."
+        raise ImportError(
+            "Could not import shapefile.  "
+            "Must install pyshp in order to plot shapefiles."
         )
     if plt is None:
         raise ImportError(
@@ -2271,11 +2268,10 @@ def plot_shapefile(
     """
 
     if shapefile is None:
-        s = (
-            "Could not import shapefile.  Must install pyshp in "
-            "order to plot shapefiles."
+        raise ImportError(
+            "Could not import shapefile.  "
+            "Must install pyshp in order to plot shapefiles."
         )
-        raise PlotException(s)
 
     vmin = kwargs.pop("vmin", None)
     vmax = kwargs.pop("vmax", None)
