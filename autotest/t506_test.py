@@ -471,6 +471,24 @@ def test_mfusg():
             and "NOCVCORRECTION" in lpf2.options.upper()
         ), msg
 
+    # test disu, bas6, lpf shapefile export for mfusg unstructured models
+    try:
+        m.disu.export(os.path.join(ws, f"{name}_disu.shp"))
+    except:
+        raise AssertionError("Error exporting mfusg disu to shapefile.")
+    try:
+        m.bas6.export(os.path.join(ws, f"{name}_bas6.shp"))
+    except:
+        raise AssertionError("Error exporting mfusg bas6 to shapefile.")
+    try:
+        m.lpf.export(os.path.join(ws, f"{name}_lpf.shp"))
+    except:
+        raise AssertionError("Error exporting mfusg lpf to shapefile.")
+    try:
+        m.export(os.path.join(ws, f"{name}.shp"))
+    except:
+        raise AssertionError("Error exporting mfusg model to shapefile.")
+
     return
 
 
