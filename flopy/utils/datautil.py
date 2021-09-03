@@ -260,6 +260,13 @@ class PyListUtil:
             return False
         return True
 
+    def riv_array_comp(self, first_array, second_array):
+        for line_first, line_second in zip(first_array, second_array):
+            diff = np.abs(line_first[0][2] - line_second[0][2])
+            if diff > self.max_error:
+                return False
+        return True
+
     @staticmethod
     def reset_delimiter_used():
         PyListUtil.delimiter_used = None

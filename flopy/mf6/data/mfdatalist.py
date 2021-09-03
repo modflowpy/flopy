@@ -797,6 +797,8 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             self._crnt_line_num = 1
             for mflist_line in range(0, data_lines):
                 text_line = []
+
+                # data
                 index = 0
                 self._get_file_entry_record(
                     data_complete,
@@ -808,12 +810,12 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                     indent,
                 )
 
-                # include comments
+                # comments
                 if (
-                    mflist_line in storage.comments
-                    and storage.comments[mflist_line].text
+                    mflist_line + 1 in storage.comments
+                    and storage.comments[mflist_line + 1].text
                 ):
-                    text_line.append(storage.comments[mflist_line].text)
+                    text_line.append(storage.comments[mflist_line + 1].text)
 
                 file_entry.append(f"{indent}{indent.join(text_line)}\n")
                 self._crnt_line_num += 1

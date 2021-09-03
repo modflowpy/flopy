@@ -62,7 +62,7 @@ if not os.path.isdir(cpth):
     os.makedirs(cpth)
 
 
-def np001():
+def test_np001():
     # init paths
     test_ex_name = "np001"
     model_name = "np001_mod"
@@ -405,7 +405,7 @@ def np001():
         budget_file = os.path.join(os.getcwd(), expected_cbc_file)
         budget_obj = bf.CellBudgetFile(budget_file, precision="double")
         budget_frf_valid = np.array(
-            budget_obj.get_data(text="FLOW-JA-FACE", full3D=True)
+            budget_obj.get_data(text="RIV", full3D=False)
         )
 
         # compare output to expected results
@@ -415,11 +415,8 @@ def np001():
         assert pymake.compare_heads(
             None, None, files1=head_file, files2=head_new, outfile=outfile
         )
-
-        budget_frf = sim.simulation_data.mfdata[
-            (model_name, "CBC", "FLOW-JA-FACE")
-        ]
-        assert array_util.array_comp(budget_frf_valid, budget_frf)
+        budget_frf = sim.simulation_data.mfdata[(model_name, "CBC", "RIV")]
+        assert array_util.riv_array_comp(budget_frf_valid, budget_frf)
 
         # clean up
         sim.delete_output_files()
@@ -443,7 +440,7 @@ def np001():
         budget_file = os.path.join(os.getcwd(), expected_cbc_file)
         budget_obj = bf.CellBudgetFile(budget_file, precision="double")
         budget_frf_valid = np.array(
-            budget_obj.get_data(text="FLOW-JA-FACE", full3D=True)
+            budget_obj.get_data(text="RIV", full3D=False)
         )
 
         # compare output to expected results
@@ -454,12 +451,19 @@ def np001():
             None, None, files1=head_file, files2=head_new, outfile=outfile
         )
 
-        budget_frf = sim.simulation_data.mfdata[
-            (model_name, "CBC", "FLOW-JA-FACE")
-        ]
-        assert array_util.array_comp(budget_frf_valid, budget_frf)
+        budget_frf = sim.simulation_data.mfdata[(model_name, "CBC", "RIV")]
+        assert array_util.riv_array_comp(budget_frf_valid, budget_frf)
 
         # clean up
+        sim.delete_output_files()
+
+    # test rename all packages
+    rename_folder = os.path.join(run_folder, "rename")
+    sim.rename_all_packages("file_rename")
+    sim.set_sim_path(rename_folder)
+    sim.write_simulation()
+    if run:
+        sim.run_simulation()
         sim.delete_output_files()
 
     try:
@@ -543,6 +547,7 @@ def np001():
     )
     wel_package.write()
     mpath = sim.simulation_data.mfpath.get_model_path(model.name)
+    spath = sim.simulation_data.mfpath.get_sim_path()
     found_cellid = False
     with open(os.path.join(mpath, "np001_mod.wel"), "r") as fd:
         for line in fd:
@@ -560,6 +565,7 @@ def np001():
     well_spd = {0: [(-1, -1, -1, -2000.0), (0, 0, 7, -2.0)], 1: []}
     wel_package = ModflowGwfwel(
         model,
+        filename="file_rename.wel",
         print_input=True,
         print_flows=True,
         save_flows=True,
@@ -570,7 +576,7 @@ def np001():
     found_begin = False
     found_end = False
     text_between_begin_and_end = False
-    with open(os.path.join(mpath, "np001_mod.wel"), "r") as fd:
+    with open(os.path.join(mpath, "file_rename.wel"), "r") as fd:
         for line in fd:
             if line.strip().lower() == "begin period  2":
                 found_begin = True
@@ -587,7 +593,7 @@ def np001():
         test_ex_name,
         "mf6",
         exe_name,
-        run_folder,
+        spath,
         write_headers=False,
     )
     wel = test_sim.get_model().wel
@@ -611,7 +617,7 @@ def np001():
     return
 
 
-def np002():
+def test_np002():
     # init paths
     test_ex_name = "np002"
     model_name = "np002_mod"
@@ -780,13 +786,6 @@ def np002():
         npf_package = model_.get_package("npf")
         k = npf_package.k.array
 
-        # get expected results
-        budget_file = os.path.join(os.getcwd(), expected_cbc_file)
-        budget_obj = bf.CellBudgetFile(budget_file, precision="double")
-        budget_frf_valid = np.array(
-            budget_obj.get_data(text="FLOW JA FACE    ", full3D=True)
-        )
-
         # compare output to expected results
         head_file = os.path.join(os.getcwd(), expected_head_file)
         head_new = os.path.join(run_folder, "np002_mod.hds")
@@ -794,12 +793,6 @@ def np002():
         assert pymake.compare_heads(
             None, None, files1=head_file, files2=head_new, outfile=outfile
         )
-
-        array_util = PyListUtil()
-        budget_frf = sim.simulation_data.mfdata[
-            (model_name, "CBC", "FLOW-JA-FACE")
-        ]
-        assert array_util.array_comp(budget_frf_valid, budget_frf)
 
         # verify external text file was written correctly
         ext_file_path = os.path.join(run_folder, "initial_heads.txt")
@@ -2505,28 +2498,6 @@ def test006_2models_gnc():
         stress_period_data=stress_period_data,
     )
 
-    gncrecarray = testutils.read_gncrecarray(os.path.join(pth, "gnc.txt"))
-    # test gnc delete
-    new_gncrecarray = gncrecarray[10:]
-    gnc_package = ModflowGwfgnc(
-        sim,
-        print_input=True,
-        print_flows=True,
-        numgnc=26,
-        numalphaj=1,
-        gncdata=new_gncrecarray,
-    )
-    sim.remove_package(gnc_package.package_type)
-
-    gnc_package = ModflowGwfgnc(
-        sim,
-        print_input=True,
-        print_flows=True,
-        numgnc=36,
-        numalphaj=1,
-        gncdata=gncrecarray,
-    )
-
     exgrecarray = testutils.read_exchangedata(os.path.join(pth, "exg.txt"))
 
     # build obs dictionary
@@ -2567,6 +2538,28 @@ def test006_2models_gnc():
         exgmnamea=model_name_1,
         exgmnameb=model_name_2,
         observations=gwf_obs,
+    )
+
+    gncrecarray = testutils.read_gncrecarray(os.path.join(pth, "gnc.txt"))
+    # test gnc delete
+    new_gncrecarray = gncrecarray[10:]
+    gnc_package = ModflowGwfgnc(
+        sim,
+        print_input=True,
+        print_flows=True,
+        numgnc=26,
+        numalphaj=1,
+        gncdata=new_gncrecarray,
+    )
+    sim.remove_package(gnc_package.package_type)
+
+    gnc_package = ModflowGwfgnc(
+        sim,
+        print_input=True,
+        print_flows=True,
+        numgnc=36,
+        numalphaj=1,
+        gncdata=gncrecarray,
     )
 
     # change folder to save simulation
@@ -2614,6 +2607,15 @@ def test006_2models_gnc():
         sim.run_simulation()
 
         # clean up
+        sim.delete_output_files()
+
+    # test rename all packages
+    rename_folder = os.path.join(run_folder, "rename")
+    sim.rename_all_packages("file_rename")
+    sim.set_sim_path(rename_folder)
+    sim.write_simulation()
+    if run:
+        sim.run_simulation()
         sim.delete_output_files()
 
     return
@@ -3228,8 +3230,8 @@ def test_transport():
 
 
 if __name__ == "__main__":
-    np001()
-    np002()
+    test_np001()
+    test_np002()
     test004_bcfss()
     test005_advgw_tidal()
     test006_2models_gnc()
