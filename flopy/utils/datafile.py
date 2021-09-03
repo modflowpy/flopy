@@ -164,7 +164,7 @@ class LayerFile:
         self.file.seek(0, 0)  # reset to beginning
         assert self.file.tell() == 0
         if totalbytes == 0:
-            raise IOError(f"datafile error: file is empty: {filename}")
+            raise ValueError(f"datafile error: file is empty: {filename}")
         self.nrow = 0
         self.ncol = 0
         self.nlay = 0

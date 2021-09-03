@@ -716,7 +716,7 @@ class Modflow(BaseModel):
         ):
             namefile_path += ".nam"
         if not os.path.isfile(namefile_path):
-            raise IOError(f"cannot find name file: {namefile_path}")
+            raise OSError(f"cannot find name file: {namefile_path}")
 
         # Determine model name from 'f', without any extension or path
         modelname = os.path.splitext(os.path.basename(f))[0]
@@ -950,7 +950,7 @@ class Modflow(BaseModel):
                 print(f"      {os.path.basename(fname)}")
             if len(files_not_loaded) > 0:
                 print(
-                    "   The following {len(files_not_loaded)} packages "
+                    f"   The following {len(files_not_loaded)} packages "
                     "were not loaded."
                 )
                 for fname in files_not_loaded:

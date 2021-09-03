@@ -350,11 +350,10 @@ class OptionBlock:
         if openfile:
             try:
                 options = open(options, "r")
-            except IOError:
-                err_msg = (
+            except OSError:
+                raise TypeError(
                     f"Unrecognized type for options variable: {type(options)}"
                 )
-                raise TypeError(err_msg)
 
         option_line = ""
         while True:

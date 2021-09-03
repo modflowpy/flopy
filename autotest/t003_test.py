@@ -71,7 +71,7 @@ def test_loadoc():
     return
 
 
-@raises(IOError)
+@raises(OSError)
 def test_loadoc_lenfail():
     ws = os.path.join("temp", "t003")
     ml = flopy.modflow.Modflow(model_ws=ws)
@@ -111,12 +111,12 @@ def test_loadoc_nstpfail():
     return
 
 
-@raises(IOError)
+@raises(OSError)
 def test_load_nam_mf_nonexistant_file():
     ml = flopy.modflow.Modflow.load("nonexistant.nam")
 
 
-@raises(IOError)
+@raises(OSError)
 def test_load_nam_mt_nonexistant_file():
     ml = flopy.mt3d.Mt3dms.load("nonexistant.nam")
 

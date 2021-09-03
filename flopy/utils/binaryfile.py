@@ -218,7 +218,7 @@ def get_headfile_precision(filename):
     f.seek(0, 0)  # reset to beginning
     assert f.tell() == 0
     if totalbytes == 0:
-        raise IOError(f"datafile error: file is empty: {filename}")
+        raise ValueError(f"datafile error: file is empty: {filename}")
 
     # first try single
     vartype = [
@@ -260,7 +260,7 @@ def get_headfile_precision(filename):
             result = "double"
         except:
             f.close()
-            raise IOError(
+            raise ValueError(
                 f"Could not determine the precision of the headfile {filename}"
             )
 
@@ -610,7 +610,7 @@ class CellBudgetFile:
         self.file.seek(0, 0)  # reset to beginning
         assert self.file.tell() == 0
         if totalbytes == 0:
-            raise IOError(f"datafile error: file is empty: {filename}")
+            raise ValueError(f"datafile error: file is empty: {filename}")
         self.nrow = 0
         self.ncol = 0
         self.nlay = 0

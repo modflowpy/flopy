@@ -795,7 +795,7 @@ class ModflowOc(Package):
 
         # validate the size of nstp
         if len(nstp) != nper:
-            raise IOError(
+            raise OSError(
                 f"nstp must be a list with {nper} entries, "
                 f"provided nstp list has {len(nstp)} entries."
             )

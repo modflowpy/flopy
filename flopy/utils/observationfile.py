@@ -294,7 +294,7 @@ class Mf6Obs(ObsFiles):
                     isBinary = True
                 else:
                     err = "Could not determine if file is binary or ascii"
-                    raise IOError(err)
+                    raise ValueError(err)
         if isBinary:
             # --open binary head file
             self.file = open(filename, "rb")

@@ -516,7 +516,7 @@ class Mt3dms(BaseModel):
         # read name file
         namefile_path = os.path.join(mt.model_ws, f)
         if not os.path.isfile(namefile_path):
-            raise IOError(f"cannot find name file: {namefile_path}")
+            raise FileNotFoundError(f"cannot find name file: {namefile_path}")
         try:
             ext_unit_dict = mfreadnam.parsenamefile(
                 namefile_path, mt.mfnam_packages, verbose=verbose

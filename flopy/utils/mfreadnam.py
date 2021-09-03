@@ -112,9 +112,9 @@ def parsenamefile(namfilename, packages, verbose=True):
 
     Raises
     ------
-    IOError:
+    FileNotFoundError
         If namfilename does not exist in the directory.
-    ValueError:
+    ValueError
         For lines that cannot be parsed.
     """
     # initiate the ext_unit_dict dictionary
@@ -125,7 +125,7 @@ def parsenamefile(namfilename, packages, verbose=True):
 
     if not os.path.isfile(namfilename):
         # help diagnose the namfile and directory
-        raise IOError(
+        raise FileNotFoundError(
             f"Could not find {namfilename} "
             f"in directory {os.path.dirname(namfilename)}"
         )
@@ -179,7 +179,7 @@ def parsenamefile(namfilename, packages, verbose=True):
             kwargs["errors"] = "replace"
         try:
             filehandle = open(fname, openmode, **kwargs)
-        except IOError:
+        except OSError:
             if verbose:
                 print(f"could not set filehandle to {fpath}")
             filehandle = None
