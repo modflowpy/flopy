@@ -378,8 +378,10 @@ def test_export():
 
     # netDF4 tests
     if netCDF4 is not None:
-        m.wel.export(os.path.join(cpth, "MNW2-Fig28_well.nc"))
-        m.mnw2.export(os.path.join(cpth, "MNW2-Fig28.nc"))
+        fcw = m.wel.export(os.path.join(cpth, "MNW2-Fig28_well.nc"))
+        fcw.write()
+        fcm = m.mnw2.export(os.path.join(cpth, "MNW2-Fig28.nc"))
+        fcm.write()
         fpth = os.path.join(cpth, "MNW2-Fig28.nc")
         nc = netCDF4.Dataset(fpth)
         assert np.array_equal(
@@ -509,7 +511,7 @@ if __name__ == "__main__":
     test_make_well()
     test_blank_lines()
     test_make_package()
-    # test_export()
+    test_export()
     # test_checks()
     test_mnw1_load_write()
     test_mnw2_create_file()

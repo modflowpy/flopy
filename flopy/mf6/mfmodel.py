@@ -1071,14 +1071,15 @@ class MFModel(PackageContainer, ModelInterface):
             packages = [package_name]
         else:
             packages = self.get_package(package_name)
-            if not isinstance(packages, list):
+            if not isinstance(packages, list) and packages is not None:
                 packages = [packages]
+        if packages is None:
+            return
         for package in packages:
             if package.model_or_sim.name != self.name:
                 except_text = (
-                    "Package can not be removed from model {} "
-                    "since it is "
-                    "not part of "
+                    "Package can not be removed from model "
+                    "{self.model_name} since it is not part of it."
                 )
                 raise mfstructure.FlopyException(except_text)
 
@@ -1091,7 +1092,7 @@ class MFModel(PackageContainer, ModelInterface):
                 message = (
                     "Error occurred while reading package names "
                     "from name file in model "
-                    '"{}".'.format(self.name)
+                    f'"{self.name}"'
                 )
                 raise MFDataException(
                     mfdata_except=mfde,
@@ -1129,8 +1130,8 @@ class MFModel(PackageContainer, ModelInterface):
             except MFDataException as mfde:
                 message = (
                     "Error occurred while setting package names "
-                    'from name file in model "{}".  Package name '
-                    "data:\n{}".format(self.name, new_rec_array)
+                    f'from name file in model "{self.name}".  Package name '
+                    f"data:\n{new_rec_array}"
                 )
                 raise MFDataException(
                     mfdata_except=mfde,
@@ -1151,6 +1152,76 @@ class MFModel(PackageContainer, ModelInterface):
             for child_package in child_package_list:
                 self._remove_package_from_dictionaries(child_package)
 
+    def update_package_filename(self, package, new_name):
+        """
+        Updates the filename for a package.  For internal flopy use only.
+
+        Parameters
+        ----------
+        package : MFPackage
+            Package object
+        new_name : str
+            New package name
+        """
+        try:
+            # get namefile package data
+            package_data = self.name_file.packages.get_data()
+        except MFDataException as mfde:
+            message = (
+                "Error occurred while updating package names "
+                "from name file in model "
+                f'"{self.name}".'
+            )
+            raise MFDataException(
+                mfdata_except=mfde,
+                model=self.model_name,
+                package=self.name_file._get_pname(),
+                message=message,
+            )
+        try:
+            # update namefile package data with new name
+            new_rec_array = None
+            for item in package_data:
+                base, leaf = os.path.split(item[1])
+                if leaf == package.filename:
+                    item[1] = os.path.join(base, new_name)
+
+                if new_rec_array is None:
+                    new_rec_array = np.rec.array(
+                        [item.tolist()], package_data.dtype
+                    )
+                else:
+                    new_rec_array = np.hstack((item, new_rec_array))
+        except:
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self._path,
+                "updating package filename",
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                None,
+                self._simulation_data.debug,
+            )
+        try:
+            self.name_file.packages.set_data(new_rec_array)
+        except MFDataException as mfde:
+            message = (
+                "Error occurred while updating package names "
+                f'from name file in model "{self.name}".  Package name '
+                f"data:\n{new_rec_array}"
+            )
+            raise MFDataException(
+                mfdata_except=mfde,
+                model=self.model_name,
+                package=self.name_file._get_pname(),
+                message=message,
+            )
+
     def rename_all_packages(self, name):
         """Renames all package files in the model.
 
@@ -1161,8 +1232,11 @@ class MFModel(PackageContainer, ModelInterface):
                 <name>.<package ext>.
 
         """
+        nam_filename = f"{name}.nam"
+        self.simulation.rename_model_namefile(self, nam_filename)
+        self.name_file.filename = nam_filename
+        self.model_nam_file = nam_filename
         package_type_count = {}
-        self.name_file.filename = f"{name}.nam"
         for package in self.packagelist:
             if package.package_type not in package_type_count:
                 package.filename = f"{name}.{package.package_type}"

@@ -647,6 +647,37 @@ class PackageContainer:
         for key in items_to_remove:
             del self.simulation_data.mfdata[key]
 
+    def _rename_package(self, package, new_name):
+        # fix package_name_dict key
+        if (
+            package.package_name is not None
+            and package.package_name.lower() in self.package_name_dict
+        ):
+            del self.package_name_dict[package.package_name.lower()]
+        self.package_name_dict[new_name.lower()] = package
+        # fix package_key_dict key
+        new_package_path = package.path[:-1] + (new_name,)
+        del self.package_key_dict[package.path[-1].lower()]
+        self.package_key_dict[new_package_path.lower()] = package
+        # get keys to fix in main dictionary
+        main_dict = self.simulation_data.mfdata
+        items_to_fix = []
+        for key in main_dict:
+            is_subkey = True
+            for pitem, ditem in zip(package.path, key):
+                if pitem != ditem:
+                    is_subkey = False
+                    break
+            if is_subkey:
+                items_to_fix.append(key)
+
+        # fix keys in main dictionary
+        for key in items_to_fix:
+            new_key = (
+                package.path[:-1] + (new_name,) + key[len(package.path) - 1 :]
+            )
+            main_dict[new_key] = main_dict.pop(key)
+
     def get_package(self, name=None):
         """
         Finds a package by package name, package key, package type, or partial
