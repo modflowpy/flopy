@@ -5,7 +5,6 @@ mbase module
 
 """
 import abc
-import sys
 import os
 import shutil
 import threading
@@ -1203,8 +1202,8 @@ class BaseModel(ModelInterface):
         # --reset the model workspace
         old_pth = self._model_ws
         self._model_ws = new_pth
-        line = f"\nchanging model workspace...\n   {new_pth}\n"
-        sys.stdout.write(line)
+        if self.verbose:
+            print(f"\nchanging model workspace...\n   {new_pth}")
         # reset the paths for each package
         for pp in self.packagelist:
             pp.fn_path = os.path.join(self.model_ws, pp.file_name[0])

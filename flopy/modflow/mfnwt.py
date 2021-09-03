@@ -7,8 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/nwt_newton_solver.htm>`_.
 
 """
-
-import sys
 from ..pakbase import Package
 
 
@@ -405,7 +403,7 @@ class ModflowNwt(Package):
 
         """
         if model.verbose:
-            sys.stdout.write("loading nwt package file...\n")
+            print("loading nwt package file...")
 
         if model.version != "mfnwt":
             print(

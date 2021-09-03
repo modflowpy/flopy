@@ -7,7 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/zone.htm>`_.
 
 """
-import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d
@@ -165,7 +164,7 @@ class ModflowZon(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading zone package file...\n")
+            print("loading zone package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:
@@ -195,7 +194,7 @@ class ModflowZon(Package):
             else:
                 zonnam = t[0].lower()
             if model.verbose:
-                sys.stdout.write(f'   reading data for "{zonnam:<10s}" zone\n')
+                print(f'   reading data for "{zonnam:<10s}" zone')
             # load data
             t = Util2d.load(
                 f, model, (nrow, ncol), np.int32, zonnam, ext_unit_dict

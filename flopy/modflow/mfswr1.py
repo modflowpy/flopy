@@ -7,7 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/swr.htm>`_.
 
 """
-import sys
 from ..pakbase import Package
 
 
@@ -156,7 +155,7 @@ class ModflowSwr1(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading swr1 process file...\n")
+            print("loading swr1 process file...")
 
         # todo: everything
 

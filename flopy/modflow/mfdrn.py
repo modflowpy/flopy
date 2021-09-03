@@ -7,7 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?drn.htm>`_.
 
 """
-import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils.util_list import MfList
@@ -323,7 +322,7 @@ class ModflowDrn(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading drn package file...\n")
+            print("loading drn package file...")
 
         return Package.load(
             f,

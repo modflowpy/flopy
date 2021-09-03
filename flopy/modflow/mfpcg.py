@@ -7,8 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/pcg.htm>`_.
 
 """
-import sys
-
 from ..pakbase import Package
 from ..utils.flopy_io import line_parse
 
@@ -248,7 +246,7 @@ class ModflowPcg(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading pcg package file...\n")
+            print("loading pcg package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:

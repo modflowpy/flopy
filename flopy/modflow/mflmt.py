@@ -8,7 +8,7 @@ MODFLOW Guide
 
 """
 import os
-import sys
+
 from ..pakbase import Package
 
 
@@ -191,7 +191,7 @@ class ModflowLmt(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading lmt package file...\n")
+            print("loading lmt package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:

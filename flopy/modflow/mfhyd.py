@@ -7,8 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/hyd.htm>`_.
 
 """
-import sys
-
 import numpy as np
 
 from ..pakbase import Package
@@ -311,7 +309,7 @@ class ModflowHyd(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading hydmod package file...\n")
+            print("loading hydmod package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:
@@ -321,7 +319,7 @@ class ModflowHyd(Package):
         # --read dataset 1
         # NHYD IHYDUN HYDNOH
         if model.verbose:
-            sys.stdout.write("  loading hydmod dataset 1\n")
+            print("  loading hydmod dataset 1")
         line = f.readline()
         t = line.strip().split()
         nhyd = int(t[0])

@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 
 from ..utils.utils_def import FlopyBinaryData
@@ -409,7 +408,7 @@ class SwrFile(FlopyBinaryData):
                 self.nitems = nitems
             except:
                 if self.verbose:
-                    sys.stdout.write("\nCould not read itemlist")
+                    print("Could not read itemlist")
                 return 0.0, 0.0, 0, 0, 0, False
         try:
             totim = self.read_real()
@@ -596,7 +595,7 @@ class SwrFile(FlopyBinaryData):
         """
         self.file.seek(self.datastart)
         if self.verbose:
-            sys.stdout.write("Generating SWR binary data time list\n")
+            print("Generating SWR binary data time list")
         self._ntimes = 0
         self._times = []
         self._kswrkstpkper = []
@@ -610,7 +609,7 @@ class SwrFile(FlopyBinaryData):
             if self.verbose:
                 v = divmod(float(idx), 72.0)
                 if v[1] == 0.0:
-                    sys.stdout.write(".")
+                    print(".", end="")
             # read header
             totim, dt, kper, kstp, kswr, success = self._read_header()
             if success:
@@ -633,7 +632,7 @@ class SwrFile(FlopyBinaryData):
                 self._recordarray.append(header)
             else:
                 if self.verbose:
-                    sys.stdout.write("\n")
+                    print()
                 self._recordarray = np.array(
                     self._recordarray, dtype=self.header_dtype
                 )

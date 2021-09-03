@@ -7,7 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?riv.htm>`_.
 
 """
-import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils import MfList
@@ -386,7 +385,7 @@ class ModflowRiv(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading riv package file...\n")
+            print("loading riv package file...")
 
         return Package.load(
             f,

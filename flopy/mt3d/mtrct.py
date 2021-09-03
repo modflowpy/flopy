@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util3d
@@ -532,7 +531,7 @@ class Mt3dRct(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading rct package file...\n")
+            print("loading rct package file...")
 
         # Open file, if necessary
         openfile = not hasattr(f, "read")

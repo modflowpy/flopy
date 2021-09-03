@@ -5,9 +5,6 @@ the ModflowSms class as `flopy.modflow.ModflowSms`.
 
 
 """
-
-import sys
-
 from ..pakbase import Package
 from ..utils.flopy_io import line_parse
 
@@ -441,7 +438,7 @@ class ModflowSms(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading sms package file...\n")
+            print("loading sms package file...")
 
         if model.version != "mfusg":
             print(

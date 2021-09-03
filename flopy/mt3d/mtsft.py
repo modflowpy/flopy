@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 
 from ..pakbase import Package
@@ -532,7 +531,7 @@ class Mt3dSft(Package):
 
         """
         if model.verbose:
-            sys.stdout.write("loading sft package file...\n")
+            print("loading sft package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:

@@ -7,8 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?wel.htm>`_.
 
 """
-
-import sys
 import numpy as np
 from ..utils import MfList
 from ..pakbase import Package
@@ -410,7 +408,7 @@ class ModflowWel(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading wel package file...\n")
+            print("loading wel package file...")
 
         return Package.load(
             f,

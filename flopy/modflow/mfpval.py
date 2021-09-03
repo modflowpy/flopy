@@ -7,7 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/parameter_value_file.htm>`_.
 
 """
-import sys
 from ..pakbase import Package
 
 
@@ -168,7 +167,7 @@ class ModflowPval(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading pval package file...\n")
+            print("loading pval package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:
@@ -187,9 +186,7 @@ class ModflowPval(Package):
         npval = int(t[0])
 
         if model.verbose:
-            sys.stdout.write(
-                f'   reading parameter values from "{filename:<10s}"\n'
-            )
+            print(f'   reading parameter values from "{filename}"')
 
         # read PVAL data
         pval_dict = dict()

@@ -5,8 +5,6 @@ Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/swi2_seawater_intrusion_pack.htm>`_.
 """
-import sys
-
 import numpy as np
 
 from ..pakbase import Package
@@ -547,7 +545,7 @@ class ModflowSwi2(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading swi2 package file...\n")
+            print("loading swi2 package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:
@@ -564,7 +562,7 @@ class ModflowSwi2(Package):
 
         # --read dataset 1
         if model.verbose:
-            sys.stdout.write("  loading swi2 dataset 1\n")
+            print("  loading swi2 dataset 1")
         t = line.strip().split()
         nsrf = int(t[0])
         istrat = int(t[1])
@@ -592,7 +590,7 @@ class ModflowSwi2(Package):
 
         # read dataset 2a
         if model.verbose:
-            sys.stdout.write("  loading swi2 dataset 2a\n")
+            print("  loading swi2 dataset 2a")
         while True:
             line = f.readline()
             if line[0] != "#":
@@ -606,7 +604,7 @@ class ModflowSwi2(Package):
         solver2params = {}
         if nsolver == 2:
             if model.verbose:
-                sys.stdout.write("  loading swi2 dataset 2b\n")
+                print("  loading swi2 dataset 2b")
             while True:
                 line = f.readline()
                 if line[0] != "#":
@@ -624,7 +622,7 @@ class ModflowSwi2(Package):
 
         # read dataset 3a
         if model.verbose:
-            sys.stdout.write("  loading swi2 dataset 3a\n")
+            print("  loading swi2 dataset 3a")
         while True:
             line = f.readline()
             if line[0] != "#":
@@ -646,7 +644,7 @@ class ModflowSwi2(Package):
         nadptmx, nadptmn, adptfct = None, None, None
         if adaptive:
             if model.verbose:
-                sys.stdout.write("  loading swi2 dataset 3b\n")
+                print("  loading swi2 dataset 3b")
             while True:
                 line = f.readline()
                 if line[0] != "#":

@@ -7,7 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?hfb6.htm>`_.
 
 """
-import sys
 import numpy as np
 from ..pakbase import Package
 from .mfparbc import ModflowParBc as mfparbc
@@ -285,7 +284,7 @@ class ModflowHfb(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading hfb6 package file...\n")
+            print("loading hfb6 package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:

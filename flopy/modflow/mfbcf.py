@@ -1,5 +1,3 @@
-import sys
-
 import numpy as np
 
 from ..pakbase import Package
@@ -349,7 +347,7 @@ class ModflowBcf(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading bcf package file...\n")
+            print("loading bcf package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:

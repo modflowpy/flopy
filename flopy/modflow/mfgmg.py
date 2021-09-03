@@ -7,7 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/gmg.htm>`_.
 
 """
-import sys
 from ..pakbase import Package
 
 
@@ -343,7 +342,7 @@ class ModflowGmg(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading gmg package file...\n")
+            print("loading gmg package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:

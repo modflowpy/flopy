@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 import warnings
 from ..pakbase import Package
@@ -560,7 +559,7 @@ class Mt3dSsm(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading ssm package file...\n")
+            print("loading ssm package file...")
 
         # Open file, if necessary
         openfile = not hasattr(f, "read")

@@ -7,8 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/sub.htm>`_.
 
 """
-import sys
-
 import numpy as np
 
 from ..pakbase import Package
@@ -607,7 +605,7 @@ class ModflowSub(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading sub package file...\n")
+            print("loading sub package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:
@@ -624,7 +622,7 @@ class ModflowSub(Package):
 
         # read dataset 1
         if model.verbose:
-            sys.stdout.write("  loading sub dataset 1\n")
+            print("  loading sub dataset 1")
         t = line.strip().split()
         ipakcb, isuboc, nndb, ndb, nmz, nn = (
             int(t[0]),
@@ -648,19 +646,19 @@ class ModflowSub(Package):
         ln = None
         if nndb > 0:
             if model.verbose:
-                sys.stdout.write("  loading sub dataset 2\n")
+                print("  loading sub dataset 2")
             ln = np.empty((nndb), dtype=np.int32)
             ln = read1d(f, ln) - 1
         ldn = None
         if ndb > 0:
             if model.verbose:
-                sys.stdout.write("  loading sub dataset 3\n")
+                print("  loading sub dataset 3")
             ldn = np.empty((ndb), dtype=np.int32)
             ldn = read1d(f, ldn) - 1
         rnb = None
         if ndb > 0:
             if model.verbose:
-                sys.stdout.write("  loading sub dataset 4\n")
+                print("  loading sub dataset 4")
             rnb = [0] * ndb
             for k in range(ndb):
                 t = Util2d.load(
@@ -685,9 +683,7 @@ class ModflowSub(Package):
                 kk = ln[k] + 1
                 # hc
                 if model.verbose:
-                    sys.stdout.write(
-                        f"  loading sub dataset 5 for layer {kk}\n"
-                    )
+                    print(f"  loading sub dataset 5 for layer {kk}")
                 t = Util2d.load(
                     f,
                     model,
@@ -699,9 +695,7 @@ class ModflowSub(Package):
                 hc[k] = t
                 # sfe
                 if model.verbose:
-                    sys.stdout.write(
-                        f"  loading sub dataset 6 for layer {kk}\n"
-                    )
+                    print(f"  loading sub dataset 6 for layer {kk}")
                 t = Util2d.load(
                     f,
                     model,
@@ -713,9 +707,7 @@ class ModflowSub(Package):
                 sfe[k] = t
                 # sfv
                 if model.verbose:
-                    sys.stdout.write(
-                        f"  loading sub dataset 7 for layer {kk}\n"
-                    )
+                    print(f"  loading sub dataset 7 for layer {kk}")
                 t = Util2d.load(
                     f,
                     model,
@@ -727,9 +719,7 @@ class ModflowSub(Package):
                 sfv[k] = t
                 # com
                 if model.verbose:
-                    sys.stdout.write(
-                        f"  loading sub dataset 8 for layer {kk}\n"
-                    )
+                    print(f"  loading sub dataset 8 for layer {kk}")
                 t = Util2d.load(
                     f,
                     model,
@@ -746,9 +736,7 @@ class ModflowSub(Package):
             dp = np.zeros((nmz, 3), dtype=np.float32)
             for k in range(nmz):
                 if model.verbose:
-                    sys.stdout.write(
-                        f"  loading sub dataset 9 for material zone {k + 1}\n"
-                    )
+                    print(f"  loading sub dataset 9 for material zone {k + 1}")
                 line = f.readline()
                 t = line.strip().split()
                 dp[k, :] = float(t[0]), float(t[1]), float(t[2])
@@ -768,9 +756,7 @@ class ModflowSub(Package):
                 kk = ldn[k] + 1
                 # dstart
                 if model.verbose:
-                    sys.stdout.write(
-                        f"  loading sub dataset 10 for layer {kk}\n"
-                    )
+                    print(f"  loading sub dataset 10 for layer {kk}")
                 t = Util2d.load(
                     f,
                     model,
@@ -782,9 +768,7 @@ class ModflowSub(Package):
                 dstart[k] = t
                 # dhc
                 if model.verbose:
-                    sys.stdout.write(
-                        f"  loading sub dataset 11 for layer {kk}\n"
-                    )
+                    print(f"  loading sub dataset 11 for layer {kk}")
                 t = Util2d.load(
                     f,
                     model,
@@ -796,9 +780,7 @@ class ModflowSub(Package):
                 dhc[k] = t
                 # dcom
                 if model.verbose:
-                    sys.stdout.write(
-                        f"  loading sub dataset 12 for layer {kk}\n"
-                    )
+                    print(f"  loading sub dataset 12 for layer {kk}")
                 t = Util2d.load(
                     f,
                     model,
@@ -810,9 +792,7 @@ class ModflowSub(Package):
                 dcom[k] = t
                 # dz
                 if model.verbose:
-                    sys.stdout.write(
-                        f"  loading sub dataset 13 for layer {kk}\n"
-                    )
+                    print(f"  loading sub dataset 13 for layer {kk}")
                 t = Util2d.load(
                     f,
                     model,
@@ -824,9 +804,7 @@ class ModflowSub(Package):
                 dz[k] = t
                 # nz
                 if model.verbose:
-                    sys.stdout.write(
-                        f"  loading sub dataset 14 for layer {kk}\n"
-                    )
+                    print(f"  loading sub dataset 14 for layer {kk}")
                 t = Util2d.load(
                     f,
                     model,
@@ -842,16 +820,14 @@ class ModflowSub(Package):
         if isuboc > 0:
             # dataset 15
             if model.verbose:
-                sys.stdout.write(f"  loading sub dataset 15 for layer {kk}\n")
+                print(f"  loading sub dataset 15 for layer {kk}")
             ids15 = np.empty(12, dtype=np.int32)
             ids15 = read1d(f, ids15)
             # dataset 16
             ids16 = [0] * isuboc
             for k in range(isuboc):
                 if model.verbose:
-                    sys.stdout.write(
-                        f"  loading sub dataset 16 for isuboc {k + 1}\n"
-                    )
+                    print(f"  loading sub dataset 16 for isuboc {k + 1}")
                 t = np.empty(17, dtype=np.int32)
                 t = read1d(f, t)
                 t[0:4] -= 1

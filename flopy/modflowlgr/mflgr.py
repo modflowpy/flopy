@@ -5,7 +5,6 @@ mflgr module.
 """
 
 import os
-import sys
 
 from ..mbase import BaseModel
 from ..modflow import Modflow
@@ -425,9 +424,7 @@ class ModflowLgr(BaseModel):
             new_pth = os.getcwd()
         if not os.path.exists(new_pth):
             try:
-                sys.stdout.write(
-                    f"\ncreating model workspace...\n   {new_pth}\n"
-                )
+                print(f"\ncreating model workspace...\n   {new_pth}")
                 os.makedirs(new_pth)
             except:
                 not_valid = new_pth
@@ -439,8 +436,8 @@ class ModflowLgr(BaseModel):
         # --reset the model workspace
         old_pth = self._model_ws
         self._model_ws = new_pth
-        line = f"\nchanging model workspace...\n   {new_pth}\n"
-        sys.stdout.write(line)
+        if self.verbose:
+            print(f"\nchanging model workspace...\n   {new_pth}")
 
         # reset model_ws for the parent
         lpth = os.path.abspath(old_pth)

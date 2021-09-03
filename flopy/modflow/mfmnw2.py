@@ -1,5 +1,4 @@
 import os
-import sys
 import warnings
 
 import numpy as np
@@ -1346,7 +1345,7 @@ class ModflowMnw2(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading mnw2 package file...\n")
+            print("loading mnw2 package file...")
 
         structured = model.structured
         if nper is None:

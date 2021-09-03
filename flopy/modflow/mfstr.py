@@ -7,8 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/str.htm>`_.
 
 """
-import sys
-
 import numpy as np
 from ..utils import MfList
 from ..pakbase import Package
@@ -713,7 +711,7 @@ class ModflowStr(Package):
         fmt9 = [5]
 
         if model.verbose:
-            sys.stdout.write("loading str package file...\n")
+            print("loading str package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:
@@ -731,7 +729,7 @@ class ModflowStr(Package):
         t = line.strip().split()
         if t[0].lower() == "parameter":
             if model.verbose:
-                sys.stdout.write("  loading str dataset 1\n")
+                print("  loading str dataset 1")
             npstr = np.int32(t[1])
             mxl = np.int32(t[2])
 
@@ -740,7 +738,7 @@ class ModflowStr(Package):
 
         # data set 2
         if model.verbose:
-            sys.stdout.write("  loading str dataset 2\n")
+            print("  loading str dataset 2")
         t = read_fixed_var(line, ipos=fmt2, free=free)
         mxacts = np.int32(t[0])
         nss = np.int32(t[1])

@@ -7,9 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?sip.htm>`_.
 
 """
-
-import sys
-
 from ..pakbase import Package
 
 
@@ -213,7 +210,7 @@ class ModflowSip(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading sip package file...\n")
+            print("loading sip package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:

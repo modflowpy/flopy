@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
@@ -305,7 +304,7 @@ class Mt3dDsp(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading dsp package file...\n")
+            print("loading dsp package file...")
 
         # Set dimensions if necessary
         if nlay is None:

@@ -7,8 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?evt.htm>`_.
 
 """
-import sys
-
 import numpy as np
 from .mfparbc import ModflowParBc as mfparbc
 from ..utils import Transient2d, Util2d
@@ -267,7 +265,7 @@ class ModflowEvt(Package):
 
         """
         if model.verbose:
-            sys.stdout.write("loading evt package file...\n")
+            print("loading evt package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:

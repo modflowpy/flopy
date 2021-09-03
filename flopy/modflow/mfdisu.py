@@ -3,9 +3,6 @@ mfdisu module.  Contains the ModflowDisU class. Note that the user can access
 the ModflowDisU class as `flopy.modflow.ModflowDisU`.
 
 """
-
-import sys
-import warnings
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, read1d
@@ -552,7 +549,7 @@ class ModflowDisU(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading disu package file...\n")
+            print("loading disu package file...")
 
         if model.version != "mfusg":
             print(

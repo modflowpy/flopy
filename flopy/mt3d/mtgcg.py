@@ -1,4 +1,3 @@
-import sys
 from ..pakbase import Package
 
 
@@ -183,7 +182,7 @@ class Mt3dGcg(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading gcg package file...\n")
+            print("loading gcg package file...")
 
         # Open file, if necessary
         openfile = not hasattr(f, "read")
