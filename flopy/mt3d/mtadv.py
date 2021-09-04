@@ -1,4 +1,3 @@
-import sys
 from ..pakbase import Package
 
 
@@ -308,7 +307,7 @@ class Mt3dAdv(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading adv package file...\n")
+            print("loading adv package file...")
 
         # Open file, if necessary
         openfile = not hasattr(f, "read")

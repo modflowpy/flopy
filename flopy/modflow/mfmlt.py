@@ -7,8 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/mult.htm>`_.
 
 """
-import sys
-
 import numpy as np
 
 from ..pakbase import Package
@@ -162,7 +160,7 @@ class ModflowMlt(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading mult package file...\n")
+            print("loading mult package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:
@@ -192,7 +190,7 @@ class ModflowMlt(Package):
             else:
                 mltnam = t[0].lower()
             if model.verbose:
-                sys.stdout.write(f'   reading data for "{mltnam:<10s}" mult\n')
+                print(f'   reading data for "{mltnam:<10s}" mult')
             readArray = True
             kwrd = None
             if len(t) > 1:

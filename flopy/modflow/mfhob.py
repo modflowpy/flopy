@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils.recarray_utils import create_empty_recarray
@@ -337,7 +336,7 @@ class ModflowHob(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading hob package file...\n")
+            print("loading hob package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:

@@ -1,5 +1,4 @@
 import os
-import sys
 import numpy as np
 from ..mbase import BaseModel
 from ..pakbase import Package
@@ -498,9 +497,7 @@ class Mt3dms(BaseModel):
         modelname_extension = ext[1:]  # without '.'
 
         if verbose:
-            sys.stdout.write(
-                f"\nCreating new model with name: {modelname}\n{50 * '-'}\n\n"
-            )
+            print(f"\nCreating new model with name: {modelname}\n{50 * '-'}\n")
         mt = cls(
             modelname=modelname,
             namefile_ext=modelname_extension,
@@ -580,7 +577,7 @@ class Mt3dms(BaseModel):
             raise Exception(f"error loading BTN: {e!s}")
         files_successfully_loaded.append(btn.filename)
         if mt.verbose:
-            sys.stdout.write(f"   {pck.name[0]:4s} package load...success\n")
+            print(f"   {pck.name[0]:4s} package load...success")
         ext_unit_dict.pop(btn_key).filehandle.close()
         ncomp = mt.btn.ncomp
         # reserved unit numbers for .ucn, s.ucn, .obs, .mas, .cnf
@@ -629,15 +626,14 @@ class Mt3dms(BaseModel):
                             )
                             files_successfully_loaded.append(item.filename)
                             if mt.verbose:
-                                sys.stdout.write(
-                                    f"   {pck.name[0]:4s} package load...success\n"
+                                print(
+                                    f"   {pck.name[0]:4s} package load...success"
                                 )
                         except BaseException as o:
                             if mt.verbose:
-                                sys.stdout.write(
-                                    "   {:4s} package load...failed\n   {!s}\n".format(
-                                        item.filetype, o
-                                    )
+                                print(
+                                    f"   {item.filetype:4s} package load"
+                                    f"...failed\n   {o!s}"
                                 )
                             files_not_loaded.append(item.filename)
                     else:
@@ -646,25 +642,21 @@ class Mt3dms(BaseModel):
                         )
                         files_successfully_loaded.append(item.filename)
                         if mt.verbose:
-                            sys.stdout.write(
-                                f"   {pck.name[0]:4s} package load...success\n"
+                            print(
+                                f"   {pck.name[0]:4s} package load...success"
                             )
                 else:
                     if mt.verbose:
-                        sys.stdout.write(
-                            f"   {item.filetype:4s} package load...skipped\n"
-                        )
+                        print(f"   {item.filetype:4s} package load...skipped")
                     files_not_loaded.append(item.filename)
             elif "data" not in item.filetype.lower():
                 files_not_loaded.append(item.filename)
                 if mt.verbose:
-                    sys.stdout.write(
-                        f"   {item.filetype:4s} package load...skipped\n"
-                    )
+                    print(f"   {item.filetype:4s} package load...skipped")
             elif "data" in item.filetype.lower():
                 if mt.verbose:
-                    sys.stdout.write(
-                        "   {} file load...skipped\n      {}\n".format(
+                    print(
+                        "   {} file load...skipped\n      {}".format(
                             item.filetype, os.path.basename(item.filename)
                         )
                     )
@@ -692,9 +684,9 @@ class Mt3dms(BaseModel):
                     item.filehandle.close()
             except KeyError:
                 if mt.verbose:
-                    sys.stdout.write(
+                    print(
                         "\nWARNING:\n    External file unit "
-                        "{} does not exist in ext_unit_dict.\n".format(key)
+                        f"{key} does not exist in ext_unit_dict."
                     )
 
         # write message indicating packages that were successfully loaded

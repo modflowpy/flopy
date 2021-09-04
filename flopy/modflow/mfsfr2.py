@@ -1,6 +1,5 @@
 __author__ = "aleaf"
 
-import sys
 import os
 import numpy as np
 import warnings
@@ -817,7 +816,7 @@ class ModflowSfr2(Package):
     def load(cls, f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
 
         if model.verbose:
-            sys.stdout.write("loading sfr2 package file...\n")
+            print("loading sfr2 package file...")
 
         tabfiles = False
         tabfiles_dict = {}

@@ -5,8 +5,6 @@ shapefiles are also included.
 
 """
 import os
-import sys
-import math
 import numpy as np
 import warnings
 from ..utils import Util3d
@@ -1944,7 +1942,7 @@ class SwiConcentration:
             try:
                 dis = model.get_package("DIS")
             except:
-                sys.stdout.write("Error: DIS package not available.\n")
+                print("Error: DIS package not available.")
             self.__botm = np.zeros((dis.nlay + 1, dis.nrow, dis.ncol), float)
             self.__botm[0, :, :] = dis.top.array
             self.__botm[1:, :, :] = dis.botm.array
@@ -1954,7 +1952,7 @@ class SwiConcentration:
                 self.__istrat = swi.istrat
                 self.__nsrf = swi.nsrf
             except (AttributeError, ValueError):
-                sys.stdout.write("Error: SWI2 package not available...\n")
+                print("Error: SWI2 package not available...")
         self.__nlay = self.__botm.shape[0] - 1
         self.__nrow = self.__botm[0, :, :].shape[0]
         self.__ncol = self.__botm[0, :, :].shape[1]

@@ -7,8 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?rch.htm>`_.
 
 """
-
-import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d, Transient2d
@@ -423,7 +421,7 @@ class ModflowRch(Package):
 
         """
         if model.verbose:
-            sys.stdout.write("loading rch package file...\n")
+            print("loading rch package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:

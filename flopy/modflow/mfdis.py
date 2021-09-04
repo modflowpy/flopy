@@ -7,8 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?dis.htm>`_.
 
 """
-
-import sys
 import warnings
 
 import numpy as np
@@ -763,7 +761,7 @@ class ModflowDis(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading dis package file...\n")
+            print("loading dis package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:

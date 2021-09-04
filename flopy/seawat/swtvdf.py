@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
@@ -381,7 +380,7 @@ class SeawatVdf(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading vdf package file...\n")
+            print("loading vdf package file...")
 
         # Open file, if necessary
         openfile = not hasattr(f, "read")

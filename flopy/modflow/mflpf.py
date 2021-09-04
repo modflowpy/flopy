@@ -7,9 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?lpf.htm>`_.
 
 """
-
-import sys
-
 import numpy as np
 from .mfpar import ModflowPar as mfpar
 
@@ -475,7 +472,7 @@ class ModflowLpf(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading lpf package file...\n")
+            print("loading lpf package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:

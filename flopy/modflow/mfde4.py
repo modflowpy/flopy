@@ -7,7 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/de4.htm>`_.
 
 """
-import sys
 from ..pakbase import Package
 
 
@@ -256,7 +255,7 @@ class ModflowDe4(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading de4 package file...\n")
+            print("loading de4 package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:

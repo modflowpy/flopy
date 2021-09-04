@@ -7,8 +7,6 @@ MODFLOW Guide
 <https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?uzf_unsaturated_zone_flow_pack.htm>`_.
 
 """
-
-import sys
 import numpy as np
 from ..utils.flopy_io import pop_item, line_parse
 from ..pakbase import Package
@@ -919,7 +917,7 @@ class ModflowUzf1(Package):
 
         """
         if model.verbose:
-            sys.stdout.write("loading uzf package file...\n")
+            print("loading uzf package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:

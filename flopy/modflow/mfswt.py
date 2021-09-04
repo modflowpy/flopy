@@ -7,8 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/swt.htm>`_.
 
 """
-import sys
-
 import numpy as np
 
 from ..pakbase import Package
@@ -628,7 +626,7 @@ class ModflowSwt(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading swt package file...\n")
+            print("loading swt package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:
@@ -645,7 +643,7 @@ class ModflowSwt(Package):
 
         # read dataset 1
         if model.verbose:
-            sys.stdout.write("  loading swt dataset 1\n")
+            print("  loading swt dataset 1")
         t = line.strip().split()
         ipakcb, iswtoc, nsystm, ithk, ivoid, istpcs, icrcc = (
             int(t[0]),
@@ -664,13 +662,13 @@ class ModflowSwt(Package):
         lnwt = None
         if nsystm > 0:
             if model.verbose:
-                sys.stdout.write("  loading swt dataset 2\n")
+                print("  loading swt dataset 2")
             lnwt = np.empty((nsystm), dtype=np.int32)
             lnwt = read1d(f, lnwt) - 1
 
         # read dataset 3
         if model.verbose:
-            sys.stdout.write("  loading swt dataset 3\n")
+            print("  loading swt dataset 3")
         line = f.readline()
         t = line.strip().split()
         (
@@ -699,21 +697,21 @@ class ModflowSwt(Package):
 
         # read dataset 4
         if model.verbose:
-            sys.stdout.write("  loading swt dataset 4")
+            print("  loading swt dataset 4")
         gl0 = Util2d.load(
             f, model, (nrow, ncol), np.float32, "gl0", ext_unit_dict
         )
 
         # read dataset 5
         if model.verbose:
-            sys.stdout.write("  loading swt dataset 5")
+            print("  loading swt dataset 5")
         sgm = Util2d.load(
             f, model, (nrow, ncol), np.float32, "sgm", ext_unit_dict
         )
 
         # read dataset 6
         if model.verbose:
-            sys.stdout.write("  loading swt dataset 6")
+            print("  loading swt dataset 6")
         sgs = Util2d.load(
             f, model, (nrow, ncol), np.float32, "sgs", ext_unit_dict
         )
@@ -737,7 +735,7 @@ class ModflowSwt(Package):
             kk = lnwt[k] + 1
             # thick
             if model.verbose:
-                sys.stdout.write(f"  loading swt dataset 7 for layer {kk}\n")
+                print(f"  loading swt dataset 7 for layer {kk}")
             t = Util2d.load(
                 f,
                 model,
@@ -750,9 +748,7 @@ class ModflowSwt(Package):
             if icrcc != 0:
                 # sse
                 if model.verbose:
-                    sys.stdout.write(
-                        f"  loading swt dataset 8 for layer {kk}\n"
-                    )
+                    print(f"  loading swt dataset 8 for layer {kk}")
                 t = Util2d.load(
                     f,
                     model,
@@ -764,9 +760,7 @@ class ModflowSwt(Package):
                 sse[k] = t
                 # ssv
                 if model.verbose:
-                    sys.stdout.write(
-                        f"  loading swt dataset 9 for layer {kk}\n"
-                    )
+                    print(f"  loading swt dataset 9 for layer {kk}")
                 t = Util2d.load(
                     f,
                     model,
@@ -779,9 +773,7 @@ class ModflowSwt(Package):
             else:
                 # cr
                 if model.verbose:
-                    sys.stdout.write(
-                        f"  loading swt dataset 10 for layer {kk}\n"
-                    )
+                    print(f"  loading swt dataset 10 for layer {kk}")
                 t = Util2d.load(
                     f,
                     model,
@@ -793,9 +785,7 @@ class ModflowSwt(Package):
                 cr[k] = t
                 # cc
                 if model.verbose:
-                    sys.stdout.write(
-                        f"  loading swt dataset 11 for layer {kk}\n"
-                    )
+                    print(f"  loading swt dataset 11 for layer {kk}")
                 t = Util2d.load(
                     f,
                     model,
@@ -807,7 +797,7 @@ class ModflowSwt(Package):
                 cc[k] = t
             # void
             if model.verbose:
-                sys.stdout.write(f"  loading swt dataset 12 for layer {kk}\n")
+                print(f"  loading swt dataset 12 for layer {kk}")
             t = Util2d.load(
                 f,
                 model,
@@ -819,7 +809,7 @@ class ModflowSwt(Package):
             void[k] = t
             # sub
             if model.verbose:
-                sys.stdout.write(f"  loading swt dataset 13 for layer {kk}\n")
+                print(f"  loading swt dataset 13 for layer {kk}")
             t = Util2d.load(
                 f,
                 model,
@@ -840,9 +830,7 @@ class ModflowSwt(Package):
         for k in range(nlay):
             if istpcs != 0:
                 if model.verbose:
-                    sys.stdout.write(
-                        f"  loading swt dataset 14 for layer {kk}\n"
-                    )
+                    print(f"  loading swt dataset 14 for layer {kk}")
                 t = Util2d.load(
                     f,
                     model,
@@ -854,9 +842,7 @@ class ModflowSwt(Package):
                 pcsoff[k] = t
             else:
                 if model.verbose:
-                    sys.stdout.write(
-                        f"  loading swt dataset 15 for layer {kk}\n"
-                    )
+                    print(f"  loading swt dataset 15 for layer {kk}")
                 t = Util2d.load(
                     f,
                     model,
@@ -872,7 +858,7 @@ class ModflowSwt(Package):
         if iswtoc > 0:
             # dataset 16
             if model.verbose:
-                sys.stdout.write(f"  loading swt dataset 15 for layer {kk}\n")
+                print(f"  loading swt dataset 15 for layer {kk}")
             ids16 = np.empty(26, dtype=np.int32)
             ids16 = read1d(f, ids16)
             # for k in range(1, 26, 2):
@@ -882,9 +868,7 @@ class ModflowSwt(Package):
             ids17 = [0] * iswtoc
             for k in range(iswtoc):
                 if model.verbose:
-                    sys.stdout.write(
-                        f"  loading swt dataset 17 for iswtoc {k + 1}\n"
-                    )
+                    print(f"  loading swt dataset 17 for iswtoc {k + 1}")
                 t = np.empty(30, dtype=np.int32)
                 t = read1d(f, t)
                 t[0:4] -= 1

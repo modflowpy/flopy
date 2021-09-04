@@ -7,7 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?ghb.htm>`_.
 
 """
-import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils import MfList
@@ -301,7 +300,7 @@ class ModflowGhb(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading ghb package file...\n")
+            print("loading ghb package file...")
 
         return Package.load(
             f,

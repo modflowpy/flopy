@@ -9,7 +9,6 @@ MODFLOW Guide
 """
 
 import re
-import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util3d
@@ -324,7 +323,7 @@ class ModflowBas(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading bas6 package file...\n")
+            print("loading bas6 package file...")
 
         # parse keywords
         if "nlay" in kwargs:

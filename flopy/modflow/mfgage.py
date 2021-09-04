@@ -8,7 +8,6 @@ MODFLOW Guide
 
 """
 import os
-import sys
 
 import numpy as np
 
@@ -318,7 +317,7 @@ class ModflowGage(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading gage package file...\n")
+            print("loading gage package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:

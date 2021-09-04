@@ -1,4 +1,3 @@
-import sys
 import re
 import numpy as np
 from ..pakbase import Package
@@ -209,7 +208,7 @@ class ModflowMnw1(Package):
     def load(cls, f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
 
         if model.verbose:
-            sys.stdout.write("loading mnw1 package file...\n")
+            print("loading mnw1 package file...")
 
         structured = model.structured
         if nper is None:

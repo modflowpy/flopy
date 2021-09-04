@@ -1,5 +1,4 @@
 import os
-import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils import parsenamefile
@@ -414,7 +413,7 @@ class ModflowFlwob(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading flwob package file...\n")
+            print("loading flwob package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:

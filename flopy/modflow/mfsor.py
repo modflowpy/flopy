@@ -7,9 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/sor.htm>`_.
 
 """
-
-import sys
-
 from ..pakbase import Package
 
 
@@ -179,7 +176,7 @@ class ModflowSor(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading sor package file...\n")
+            print("loading sor package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:

@@ -8,7 +8,6 @@ MODFLOW Guide
 
 """
 
-import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils import MfList
@@ -266,7 +265,7 @@ class ModflowChd(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading chd package file...\n")
+            print("loading chd package file...")
 
         return Package.load(
             f,

@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util3d, Transient3d
@@ -324,7 +323,7 @@ class SeawatVsc(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading vsc package file...\n")
+            print("loading vsc package file...")
 
         # Open file, if necessary
         openfile = not hasattr(f, "read")

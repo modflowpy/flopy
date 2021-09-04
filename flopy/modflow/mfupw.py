@@ -7,8 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/upw_upstream_weighting_package.htm>`_.
 
 """
-
-import sys
 import numpy as np
 from .mfpar import ModflowPar as mfpar
 from ..pakbase import Package
@@ -386,7 +384,7 @@ class ModflowUpw(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading upw package file...\n")
+            print("loading upw package file...")
 
         if model.version != "mfnwt":
             print(

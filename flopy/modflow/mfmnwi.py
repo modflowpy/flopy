@@ -1,5 +1,3 @@
-import sys
-
 from ..utils.flopy_io import line_parse, pop_item
 from ..pakbase import Package
 
@@ -202,7 +200,7 @@ class ModflowMnwi(Package):
     def load(cls, f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
 
         if model.verbose:
-            sys.stdout.write("loading mnw2 package file...\n")
+            print("loading mnw2 package file...")
 
         structured = model.structured
         if nper is None:

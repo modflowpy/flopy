@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 
 from ..pakbase import Package
@@ -340,7 +339,7 @@ class Mt3dLkt(Package):
 
         """
         if model.verbose:
-            sys.stdout.write("loading lkt package file...\n")
+            print("loading lkt package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:

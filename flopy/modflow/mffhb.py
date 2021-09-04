@@ -7,8 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?fhb.htm>`_.
 
 """
-import sys
-
 import numpy as np
 
 from ..pakbase import Package
@@ -455,7 +453,7 @@ class ModflowFhb(Package):
 
         """
         if model.verbose:
-            sys.stdout.write("loading fhb package file...\n")
+            print("loading fhb package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:
@@ -477,7 +475,7 @@ class ModflowFhb(Package):
 
         # dataset 1
         if model.verbose:
-            sys.stdout.write("loading fhb dataset 1\n")
+            print("loading fhb dataset 1")
         raw = line.strip().split()
         nbdtim = int(raw[0])
         nflw = int(raw[1])
@@ -493,10 +491,8 @@ class ModflowFhb(Package):
         flow_aux = []
         if nfhbx1 > 0:
             if model.verbose:
-                sys.stdout.write("loading fhb dataset 2\n")
-            sys.stdout.write(
-                "dataset 2 will not be preserved in the created hfb object.\n"
-            )
+                print("loading fhb dataset 2")
+            print("dataset 2 will not be preserved in the created hfb object.")
             for idx in range(nfhbx1):
                 line = f.readline()
                 raw = line.strip().split()
@@ -510,10 +506,8 @@ class ModflowFhb(Package):
         head_aux = []
         if nfhbx2 > 0:
             if model.verbose:
-                sys.stdout.write("loading fhb dataset 3\n")
-            sys.stdout.write(
-                "dataset 3 will not be preserved in the created hfb object.\n"
-            )
+                print("loading fhb dataset 3")
+            print("dataset 3 will not be preserved in the created hfb object.")
             for idx in range(nfhbx2):
                 line = f.readline()
                 raw = line.strip().split()
@@ -525,7 +519,7 @@ class ModflowFhb(Package):
 
         # Dataset 4a IFHBUN CNSTM IFHBPT
         if model.verbose:
-            sys.stdout.write("loading fhb dataset 4a\n")
+            print("loading fhb dataset 4a")
         line = f.readline()
         raw = line.strip().split()
         ifhbun = int(raw[0])
@@ -539,7 +533,7 @@ class ModflowFhb(Package):
 
         # Dataset 4b
         if model.verbose:
-            sys.stdout.write("loading fhb dataset 4b\n")
+            print("loading fhb dataset 4b")
         line = f.readline()
         raw = line.strip().split()
         bdtime = []
@@ -553,7 +547,7 @@ class ModflowFhb(Package):
         ds6 = None
         if nflw > 0:
             if model.verbose:
-                sys.stdout.write("loading fhb dataset 5a\n")
+                print("loading fhb dataset 5a")
             # Dataset 5a IFHBUN CNSTM IFHBPT
             line = f.readline()
             raw = line.strip().split()
@@ -567,7 +561,7 @@ class ModflowFhb(Package):
             ifhbpt = max(ifhbpt, int(raw[2]))
 
             if model.verbose:
-                sys.stdout.write("loading fhb dataset 5b\n")
+                print("loading fhb dataset 5b")
             dtype = ModflowFhb.get_default_dtype(
                 nbdtim=nbdtim, head=False, structured=model.structured
             )
@@ -598,12 +592,10 @@ class ModflowFhb(Package):
                     dtype.append((name, np.float32))
                 for naux in range(nfhbx1):
                     if model.verbose:
-                        sys.stdout.write(
-                            f"loading fhb dataset 6a - aux {naux + 1}\n"
-                        )
-                    sys.stdout.write(
+                        print(f"loading fhb dataset 6a - aux {naux + 1}")
+                    print(
                         "dataset 6a will not be preserved in "
-                        "the created hfb object.\n"
+                        "the created hfb object."
                     )
                     # Dataset 6a IFHBUN CNSTM IFHBPT
                     line = f.readline()
@@ -619,12 +611,10 @@ class ModflowFhb(Package):
                     ifhbpt = max(ifhbpt, int(raw[2]))
 
                     if model.verbose:
-                        sys.stdout.write(
-                            f"loading fhb dataset 6b - aux {naux + 1}\n"
-                        )
-                    sys.stdout.write(
+                        print(f"loading fhb dataset 6b - aux {naux + 1}")
+                    print(
                         "dataset 6b will not be preserved in "
-                        "the created hfb object.\n"
+                        "the created hfb object."
                     )
                     current = np.recarray(nflw, dtype=dtype)
                     for n in range(nflw):
@@ -640,7 +630,7 @@ class ModflowFhb(Package):
         ds8 = None
         if nhed > 0:
             if model.verbose:
-                sys.stdout.write("loading fhb dataset 7a\n")
+                print("loading fhb dataset 7a")
             # Dataset 7a IFHBUN CNSTM IFHBPT
             line = f.readline()
             raw = line.strip().split()
@@ -654,7 +644,7 @@ class ModflowFhb(Package):
             ifhbpt = max(ifhbpt, int(raw[2]))
 
             if model.verbose:
-                sys.stdout.write("loading fhb dataset 7b\n")
+                print("loading fhb dataset 7b")
             dtype = ModflowFhb.get_default_dtype(
                 nbdtim=nbdtim, head=True, structured=model.structured
             )
@@ -685,12 +675,10 @@ class ModflowFhb(Package):
                     dtype.append((name, np.float32))
                 for naux in range(nfhbx1):
                     if model.verbose:
-                        sys.stdout.write(
-                            f"loading fhb dataset 8a - aux {naux + 1}\n"
-                        )
-                    sys.stdout.write(
+                        print(f"loading fhb dataset 8a - aux {naux + 1}")
+                    print(
                         "dataset 8a will not be preserved in "
-                        "the created hfb object.\n"
+                        "the created hfb object."
                     )
                     # Dataset 6a IFHBUN CNSTM IFHBPT
                     line = f.readline()
@@ -707,10 +695,8 @@ class ModflowFhb(Package):
                     ifhbpt = max(ifhbpt, ifhbpt6)
 
                     if model.verbose:
-                        sys.stdout.write(
-                            f"loading fhb dataset 8b - aux {naux + 1}\n"
-                        )
-                    sys.stdout.write(
+                        print(f"loading fhb dataset 8b - aux {naux + 1}")
+                    print(
                         "dataset 8b will not be preserved in "
                         "the created hfb object."
                     )

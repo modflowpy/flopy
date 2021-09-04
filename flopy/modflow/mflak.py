@@ -7,7 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/lak.htm>`_.
 
 """
-import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils.util_array import Transient3d
@@ -665,7 +664,7 @@ class ModflowLak(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading lak package file...\n")
+            print("loading lak package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:

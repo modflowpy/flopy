@@ -8,7 +8,6 @@ MODFLOW Guide
 
 """
 import os
-import sys
 
 from ..pakbase import Package
 
@@ -766,7 +765,7 @@ class ModflowOc(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading oc package file...\n")
+            print("loading oc package file...")
 
         # set nper
         if nper is None or nlay is None:
