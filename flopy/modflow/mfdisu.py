@@ -509,7 +509,7 @@ class ModflowDisU(Package):
 
         """
         z = np.empty((self.nodes))
-        z[:] = (self.top[:] - self.bot[:]) / 2.0
+        z[:] = (self.top.array - self.bot.array) / 2.0
         return z
 
     @property

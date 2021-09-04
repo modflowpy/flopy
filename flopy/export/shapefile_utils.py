@@ -179,15 +179,35 @@ def write_grid_shapefile(
         names = enforce_10ch_limit(names)
 
     elif mg.grid_type == "unstructured":
-        names = ["node"] + list(array_dict.keys())
-        dtypes = [("node", np.dtype("int"))] + [
-            (enforce_10ch_limit([name])[0], array_dict[name].dtype)
-            for name in names[1:]
-        ]
-        node = list(range(1, mg.nnodes + 1))
-        at = np.vstack(
-            [node] + [array_dict[name].ravel() for name in names[1:]]
-        ).transpose()
+        if mg.nlay is None:
+            names = ["node"] + list(array_dict.keys())
+            dtypes = [("node", np.dtype("int"))] + [
+                (enforce_10ch_limit([name])[0], array_dict[name].dtype)
+                for name in names[1:]
+            ]
+            node = list(range(1, mg.nnodes + 1))
+            at = np.vstack(
+                [node] + [array_dict[name].ravel() for name in names[1:]]
+            ).transpose()
+        else:
+            names = ["node", "layer"] + list(array_dict.keys())
+            dtypes = [
+                ("node", np.dtype("int")),
+                ("layer", np.dtype("int")),
+            ] + [
+                (enforce_10ch_limit([name])[0], array_dict[name].dtype)
+                for name in names[2:]
+            ]
+            node = list(range(1, mg.nnodes + 1))
+            layer = np.zeros(mg.nnodes)
+            for ilay in range(mg.nlay):
+                istart, istop = mg.get_layer_node_range(ilay)
+                layer[istart:istop] = ilay + 1
+            at = np.vstack(
+                [node]
+                + [layer]
+                + [array_dict[name].ravel() for name in names[2:]]
+            ).transpose()
 
         names = enforce_10ch_limit(names)
 
@@ -274,11 +294,6 @@ def model_attributes_to_shapefile(
     else:
         grid = ml.modelgrid
 
-    if grid.grid_type == "USG-Unstructured":
-        raise Exception(
-            "Flopy does not support exporting to shapefile from "
-            "and MODFLOW-USG unstructured grid."
-        )
     horz_shape = grid.get_plottable_layer_shape()
     for pname in package_names:
         pak = ml.get_package(pname)
@@ -317,7 +332,14 @@ def model_attributes_to_shapefile(
                         continue
 
                     if a.array.shape == horz_shape:
-                        array_dict[a.name] = a.array
+                        if hasattr(a, "shape"):
+                            if a.shape[1] is None:  # usg unstructured Util3d
+                                # return a flattened array, with a.name[0] (a per-layer list)
+                                array_dict[a.name[0]] = a.array
+                            else:
+                                array_dict[a.name] = a.array
+                        else:
+                            array_dict[a.name] = a.array
                     else:
                         # array is not the same shape as the layer shape
                         for ilay in range(a.array.shape[0]):
