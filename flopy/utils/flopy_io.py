@@ -433,9 +433,9 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
                 namdata = ext_unit_dict[inunit]
                 file_handle = namdata.filehandle
             else:
-                raise IOError(errmsg)
+                raise OSError(errmsg)
         else:
-            raise IOError(errmsg)
+            raise OSError(errmsg)
         if namdata.filetype == "DATA(BINARY)":
             binary = True
         if not binary:

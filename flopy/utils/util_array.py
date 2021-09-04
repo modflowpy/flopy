@@ -2911,10 +2911,9 @@ class Util2d(DataInterface):
         elif cr_dict["type"] == "external":
             ext_unit = ext_unit_dict[cr_dict["nunit"]]
             if ext_unit.filehandle is None:
-                raise IOError(
-                    "cannot read unit {0}, filename: {1}".format(
-                        cr_dict["nunit"], ext_unit.filename
-                    )
+                raise OSError(
+                    f"cannot read unit {cr_dict['nunit']}, "
+                    f"filename: {ext_unit.filename}"
                 )
             elif "binary" not in str(cr_dict["fmtin"].lower()):
                 assert cr_dict["nunit"] in list(ext_unit_dict.keys())

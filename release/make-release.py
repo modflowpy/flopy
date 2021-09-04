@@ -176,8 +176,7 @@ def update_version():
                 name_pos = idx + 1
 
     except:
-        msg = "There was a problem updating the version file"
-        raise IOError(msg)
+        raise OSError("There was a problem updating the version file")
 
     try:
         # write new version file
@@ -204,8 +203,7 @@ def update_version():
         f.close()
         print("Successfully updated version.py")
     except:
-        msg = "There was a problem updating the version file"
-        raise IOError(msg)
+        raise OSError("There was a problem updating the version file")
 
     # update README.md with new version information
     update_readme_markdown(vmajor, vminor, vmicro)

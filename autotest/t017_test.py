@@ -46,7 +46,7 @@ def test_formattedfile_read():
     fname = os.path.join(cpth, "empty.githds")
     with open(fname, "w"):
         pass
-    with assert_raises(IOError):
+    with assert_raises(ValueError):
         flopy.utils.FormattedHeadFile(fname)
 
     return
@@ -86,9 +86,9 @@ def test_binaryfile_read():
     fname = os.path.join(cpth, "empty.githds")
     with open(fname, "w"):
         pass
-    with assert_raises(IOError):
+    with assert_raises(ValueError):
         flopy.utils.HeadFile(fname)
-    with assert_raises(IOError):
+    with assert_raises(ValueError):
         flopy.utils.HeadFile(fname, "head", "single")
 
     return
@@ -210,7 +210,7 @@ def test_cellbudgetfile_position():
     fname = os.path.join(cpth, "empty.gitcbc")
     with open(fname, "w"):
         pass
-    with assert_raises(IOError):
+    with assert_raises(ValueError):
         flopy.utils.CellBudgetFile(fname)
 
     return

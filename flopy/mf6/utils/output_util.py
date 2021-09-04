@@ -183,7 +183,7 @@ class MF6Output:
                         try:
                             f = os.path.join(self._sim_ws, f)
                             return HeadFile(f, text=text)
-                        except (IOError, FileNotFoundError):
+                        except OSError:
                             return
 
                 setattr(self.__class__, rectype, get_layerfile_data)
@@ -270,7 +270,7 @@ class MF6Output:
             try:
                 budget_file = os.path.join(self._sim_ws, self._budget[0])
                 return CellBudgetFile(budget_file, precision=precision)
-            except (IOError, FileNotFoundError):
+            except OSError:
                 return None
 
     def __obs(self, f=None):
@@ -290,7 +290,7 @@ class MF6Output:
             try:
                 obs_file = os.path.join(self._sim_ws, obs_file)
                 return Mf6Obs(obs_file)
-            except (IOError, FileNotFoundError):
+            except OSError:
                 return None
 
     def __csv(self, f=None):
@@ -310,7 +310,7 @@ class MF6Output:
             try:
                 csv_file = os.path.join(self._sim_ws, csv_file)
                 return CsvFile(csv_file)
-            except (IOError, FileNotFoundError):
+            except OSError:
                 return None
 
     def __list(self):
@@ -325,7 +325,7 @@ class MF6Output:
             try:
                 list_file = os.path.join(self._sim_ws, self._lst)
                 return Mf6ListBudget(list_file)
-            except (AssertionError, IOError, FileNotFoundError):
+            except (AssertionError, OSError):
                 return None
 
     def __mulitfile_handler(self, f, flist):
