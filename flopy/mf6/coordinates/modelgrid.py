@@ -8,9 +8,6 @@ class MFGridException(Exception):
     Model grid related exception
     """
 
-    def __init__(self, error):
-        Exception.__init__(self, f"MFGridException: {error}")
-
 
 class ModelCell:
     """
