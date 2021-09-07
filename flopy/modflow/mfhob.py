@@ -543,6 +543,9 @@ class HeadObservation:
         observations. itt = 1 specified for heads and itt = 2 specified
         if initial value is head and subsequent changes in head. Only
         specified if irefsp is < 0. Default is 1.
+    tmax : float
+        Maximum simulation time calculated using get_final_totim function of 
+        ModflowDis. Added to avoid repetitive calls. 
     mlay : dictionary of length (abs(irefsp))
         Key represents zero-based layer numbers for multilayer observations and
         value represents the fractional value for each layer of multilayer
