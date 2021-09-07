@@ -370,7 +370,8 @@ class ModflowHob(Package):
         nobs = 0
 
         # set to False for 1st call to ensure that totim cache is updated
-        use_cached_totim = False
+        tmax = model.dis.get_final_totim()
+        use_cached_totim = True
 
         while True:
             # read dataset 3
@@ -430,7 +431,6 @@ class ModflowHob(Package):
                 names = [obsnam]
                 tsd = [totim, hob]
                 nobs += 1
-                use_cached_totim = True
             else:
                 names = []
                 tsd = []
@@ -451,7 +451,6 @@ class ModflowHob(Package):
                     hob = float(t[3])
                     tsd.append([totim, hob])
                     nobs += 1
-                    use_cached_totim = True
 
             obs_data.append(
                 HeadObservation(
@@ -465,6 +464,7 @@ class ModflowHob(Package):
                     obsname=obsnam,
                     mlay=mlay,
                     itt=itt,
+                    tmax=tmax,
                     time_series_data=tsd,
                     names=names,
                 )
@@ -542,6 +542,9 @@ class HeadObservation:
         observations. itt = 1 specified for heads and itt = 2 specified
         if initial value is head and subsequent changes in head. Only
         specified if irefsp is < 0. Default is 1.
+    tmax : float
+        Maximum simulation time calculated using get_final_totim function of 
+        ModflowDis. Added to avoid repetitive calls. 
     mlay : dictionary of length (abs(irefsp))
         Key represents zero-based layer numbers for multilayer observations and
         value represents the fractional value for each layer of multilayer
@@ -587,6 +590,7 @@ class HeadObservation:
         roff=0.0,
         coff=0.0,
         itt=1,
+        tmax=None,
         mlay=None,
         time_series_data=None,
         names=None,
@@ -644,7 +648,8 @@ class HeadObservation:
             time_series_data = np.reshape(time_series_data, (1, 2))
 
         # find indices of time series data that are valid
-        tmax = model.dis.get_final_totim()
+        if tmax is None:
+            tmax = model.dis.get_final_totim()
         keep_idx = time_series_data[:, 0] <= tmax
         time_series_data = time_series_data[keep_idx, :]
 
@@ -676,22 +681,18 @@ class HeadObservation:
                     "{} names are required.".format(len(names), self.nobs)
                 )
 
-        # set use_cached_totim to False first to ensure totim is updated
-        use_cached_totim = False
-
         # create time_series_data
         self.time_series_data = self._get_empty(ncells=shape[0])
         for idx in range(self.nobs):
             t = time_series_data[idx, 0]
             kstp, kper, toffset = model.dis.get_kstp_kper_toffset(
-                t, use_cached_totim
+                t, use_cached_totim=True
             )
             self.time_series_data[idx]["totim"] = t
             self.time_series_data[idx]["irefsp"] = kper
             self.time_series_data[idx]["toffset"] = toffset / tomulth
             self.time_series_data[idx]["hobs"] = time_series_data[idx, 1]
             self.time_series_data[idx]["obsname"] = names[idx]
-            use_cached_totim = True
 
         if self.nobs > 1:
             self.irefsp = -self.nobs
