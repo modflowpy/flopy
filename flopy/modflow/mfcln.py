@@ -468,7 +468,7 @@ class ModflowCln(Package):
 
     @staticmethod
     def get_clnnode_dtype():
-    """Returns the dtype of CLN node properties """
+        """Returns the dtype of CLN node properties"""
         dtype = np.dtype(
             [
                 ("ifno", int),  ## node number
@@ -491,7 +491,7 @@ class ModflowCln(Package):
 
     @staticmethod
     def get_gwconn_dtype(structured=True):
-    """Returns the dtype of CLN node - GW node connection properties """
+        """Returns the dtype of CLN node - GW node connection properties"""
         if structured:
             dtype = np.dtype(
                 [
@@ -528,7 +528,7 @@ class ModflowCln(Package):
 
     @staticmethod
     def get_clncirc_dtype(BHE=False):  # borehole heat exchanger (BHE)
-    """Returns the dtype of CLN node circular conduit type properties """
+        """Returns the dtype of CLN node circular conduit type properties"""
         if BHE:
             dtype = np.dtype(
                 [
@@ -562,7 +562,7 @@ class ModflowCln(Package):
 
     @staticmethod
     def get_clnrect_dtype(BHE=False):
-    """Returns the dtype of CLN node rectangular conduit type properties """
+        """Returns the dtype of CLN node rectangular conduit type properties"""
         if BHE:
             dtype = np.dtype(
                 [
@@ -595,7 +595,7 @@ class ModflowCln(Package):
 
     @staticmethod
     def _cln_nodes(self):
-    """Returns the total number of CLN nodes"""
+        """Returns the total number of CLN nodes"""
         return self.nclnnds
 
     def write_file(self, f=None):
@@ -1035,7 +1035,7 @@ def make_recarray(array, dtype):
 
 def read_prop(f, nrec):
     """Read the property tables (node_prop, cln_gwc, cln_circ, cln_rect)
-	from file f. nrec = number of rows in the table"""
+    from file f. nrec = number of rows in the table"""
     ptemp = []
 
     for i in range(nrec):
