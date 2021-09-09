@@ -173,7 +173,7 @@ class ModflowCln(Package):
         nclngwc=None,  # number of CLN-GW connections
         cln_gwc=None,  # CLN-GW connections
         nconduityp=1,  # number of circular conduit types
-        cln_circ=[[1, 10.0, 3.23e10]],  # circular conduit properties
+        cln_circ=None,  # circular conduit properties
         ibound=1,  # boundary condition types
         strt=1.0,  # initial head in CLN cells
         transient=False,  # OPTIONS: transient IBOUND for each stress period
@@ -634,8 +634,8 @@ class ModflowCln(Package):
             )
         return dtype
 
-    @staticmethod
-    def _cln_nodes(self):
+    @property
+    def cln_nodes(self):
         """
         Returns the total number of CLN nodes.
 
