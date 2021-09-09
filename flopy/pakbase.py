@@ -916,6 +916,7 @@ class Package(PackageInterface):
         t = line.strip().split()
         imax = 2
         ipakcb = 0
+        iunitafr = 0
         try:
             ipakcb = int(t[1])
         except:
@@ -944,6 +945,11 @@ class Package(PackageInterface):
                 toption = t[it]
                 if toption.lower() == "noprint":
                     options.append(toption.lower())
+                elif toption.lower() == "autoflowreduce":
+                    options.append(toption.lower())
+                elif toption.lower() == "iunitafr":
+                    options.append(" ".join(t[it : it + 2]))
+                    iunitafr = int(t[it + 1])
                 elif "aux" in toption.lower():
                     options.append(" ".join(t[it : it + 2]))
                     aux_names.append(t[it + 1].lower())
@@ -1011,6 +1017,8 @@ class Package(PackageInterface):
         bnd_output = None
         stress_period_data = {}
         current = None
+        clnitmp = [0] * nper
+        clnwel = False
         for iper in range(nper):
             if model.verbose:
                 msg = f"   loading {pak_type} for kper {iper + 1:5d}"
@@ -1027,19 +1035,32 @@ class Package(PackageInterface):
                 if model.verbose:
                     print(f"   implicit itmpp in {filename}")
 
+            # read number of wells simulated as MF-USG CLN  cells
+            structured = model.structured
+            try:
+                itmpcln = int(t[2])
+            except:
+                itmpcln = -1
+
+            if itmpcln >= 0:
+                itmp = itmp + itmpcln
+                clnitmp[iper] = itmpcln
+                clnwel = True
+                structured = False
+
             if itmp == 0:
                 bnd_output = None
                 current = pak_type.get_empty(
-                    itmp, aux_names=aux_names, structured=model.structured
+                    itmp, aux_names=aux_names, structured=structured
                 )
             elif itmp > 0:
                 current = pak_type.get_empty(
-                    itmp, aux_names=aux_names, structured=model.structured
+                    itmp, aux_names=aux_names, structured=structured
                 )
                 current = ulstrd(
                     f, itmp, current, model, sfac_columns, ext_unit_dict
                 )
-                if model.structured:
+                if structured:
                     current["k"] -= 1
                     current["i"] -= 1
                     current["j"] -= 1
@@ -1119,14 +1140,17 @@ class Package(PackageInterface):
                 stress_period_data[iper] = bnd_output
 
         dtype = pak_type.get_empty(
-            0, aux_names=aux_names, structured=model.structured
+            0, aux_names=aux_names, structured=structured
         ).dtype
 
         if openfile:
             f.close()
 
+        if clnwel:
+            options.append("clnwel " + " ".join([str(s) for s in clnitmp]))
+
         # set package unit number
-        filenames = [None, None]
+        filenames = [None, None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
                 ext_unit_dict, filetype=pak_type._ftype()
@@ -1136,6 +1160,11 @@ class Package(PackageInterface):
                     ext_unit_dict, unit=ipakcb
                 )
                 model.add_pop_key_list(ipakcb)
+            if iunitafr > 0:
+                iu, filenames[2] = model.get_ext_dict_attr(
+                    ext_unit_dict, unit=iunitafr
+                )
+                model.add_pop_key_list(iunitafr)
 
         pak = pak_type(
             model,

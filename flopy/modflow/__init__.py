@@ -51,3 +51,4 @@ from .mfaddoutsidefile import mfaddoutsidefile
 
 # unstructured
 from .mfdisu import ModflowDisU
+from .mfcln import ModflowCln

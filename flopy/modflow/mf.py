@@ -222,6 +222,7 @@ class Modflow(BaseModel):
             "gbob": flopy.modflow.ModflowFlwob,
             "drob": flopy.modflow.ModflowFlwob,
             "rvob": flopy.modflow.ModflowFlwob,
+            "cln": flopy.modflow.ModflowCln,
             "vdf": flopy.seawat.SeawatVdf,
             "vsc": flopy.seawat.SeawatVsc,
         }
