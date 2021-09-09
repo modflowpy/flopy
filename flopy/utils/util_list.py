@@ -699,7 +699,7 @@ class MfList(DataInterface, DataListInterface):
                 )
             else:
                 f.write(f" {itmp:9d} {0:9d} # stress period {kper + 1}\n")
-            
+
             isExternal = False
             if (
                 self._model.array_free_format

@@ -20,7 +20,7 @@ Methods, book 6, chap. A45, 66 p.
 import sys
 import numpy as np
 from ..pakbase import Package
-from ..utils import Util2d, read1d
+from ..utils import Util2d
 
 
 class ModflowCln(Package):
@@ -468,6 +468,7 @@ class ModflowCln(Package):
 
     @staticmethod
     def get_clnnode_dtype():
+    """Returns the dtype of CLN node properties """
         dtype = np.dtype(
             [
                 ("ifno", int),  ## node number
@@ -490,6 +491,7 @@ class ModflowCln(Package):
 
     @staticmethod
     def get_gwconn_dtype(structured=True):
+    """Returns the dtype of CLN node - GW node connection properties """
         if structured:
             dtype = np.dtype(
                 [
@@ -526,6 +528,7 @@ class ModflowCln(Package):
 
     @staticmethod
     def get_clncirc_dtype(BHE=False):  # borehole heat exchanger (BHE)
+    """Returns the dtype of CLN node circular conduit type properties """
         if BHE:
             dtype = np.dtype(
                 [
@@ -559,6 +562,7 @@ class ModflowCln(Package):
 
     @staticmethod
     def get_clnrect_dtype(BHE=False):
+    """Returns the dtype of CLN node rectangular conduit type properties """
         if BHE:
             dtype = np.dtype(
                 [
@@ -590,7 +594,8 @@ class ModflowCln(Package):
         return dtype
 
     @staticmethod
-    def _cln_nodes():
+    def _cln_nodes(self):
+    """Returns the total number of CLN nodes"""
         return self.nclnnds
 
     def write_file(self, f=None):
@@ -686,10 +691,9 @@ class ModflowCln(Package):
         f_cln.write(self.strt.get_file_entry())
 
         f_cln.close()
-        return
 
     @classmethod
-    def load(cls, f, model, ext_unit_dict=None, check=True):
+    def load(cls, f, model, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -869,7 +873,6 @@ class ModflowCln(Package):
         if model.verbose:
             print("   node_prop {}".format(node_prop))
 
-        structured = model.structured
         cln_gwc = read_prop(f, nclngwc)
         if model.verbose:
             print("   cln_gwc {}".format(cln_gwc))
@@ -878,9 +881,7 @@ class ModflowCln(Package):
             print("   cln_circ {}".format(cln_circ))
 
         if nrectyp > 0:
-            cln_rect = read_prop(
-                f, nrectyp, dtype=ModflowCln.get_clnrect_dtype(BHE)
-            )
+            cln_rect = read_prop(f, nrectyp)
             if model.verbose:
                 print("   cln_rect {}".format(cln_circ))
         else:
@@ -1005,11 +1006,11 @@ def fmt_string(array):
                 "mfcln.fmt_string error: unknown vtype in "
                 "field: {}".format(field)
             )
-    fmt_string = "".join(fmts)
-    return fmt_string
+    return "".join(fmts)
 
 
 def is_float(s):
+    """Test whether the string is a float number"""
     try:
         float(s)
     except ValueError:
@@ -1019,6 +1020,7 @@ def is_float(s):
 
 
 def make_recarray(array, dtype):
+    """Returns a empty recarray based on dtype"""
     nprop = len(dtype.names)
     ptemp = []
     for t in array:
@@ -1032,6 +1034,8 @@ def make_recarray(array, dtype):
 
 
 def read_prop(f, nrec):
+    """Read the property tables (node_prop, cln_gwc, cln_circ, cln_rect)
+	from file f. nrec = number of rows in the table"""
     ptemp = []
 
     for i in range(nrec):
