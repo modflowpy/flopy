@@ -468,7 +468,15 @@ class ModflowCln(Package):
 
     @staticmethod
     def get_clnnode_dtype():
-        """Returns the dtype of CLN node properties"""
+        """
+        dtype of CLN node properties.
+
+        Returns
+        -------
+        dtype
+
+
+        """
         dtype = np.dtype(
             [
                 ("ifno", int),  ## node number
@@ -491,7 +499,18 @@ class ModflowCln(Package):
 
     @staticmethod
     def get_gwconn_dtype(structured=True):
-        """Returns the dtype of CLN node - GW node connection properties"""
+        """
+        dtype of CLN node - GW node connection properties.
+
+        Parameters
+        ----------
+        structured : True = structured grid
+
+        Returns
+        -------
+        dtype
+
+        """
         if structured:
             dtype = np.dtype(
                 [
@@ -527,8 +546,19 @@ class ModflowCln(Package):
         return dtype
 
     @staticmethod
-    def get_clncirc_dtype(BHE=False):  # borehole heat exchanger (BHE)
-        """Returns the dtype of CLN node circular conduit type properties"""
+    def get_clncirc_dtype(BHE=False):
+        """
+        dtype of CLN node circular conduit type properties.
+
+        Parameters
+        ----------
+        BHE : borehole heat exchanger (BHE)
+
+        Returns
+        -------
+        dtype
+
+        """
         if BHE:
             dtype = np.dtype(
                 [
@@ -562,7 +592,18 @@ class ModflowCln(Package):
 
     @staticmethod
     def get_clnrect_dtype(BHE=False):
-        """Returns the dtype of CLN node rectangular conduit type properties"""
+        """
+        Returns the dtype of CLN node rectangular conduit type properties.
+
+        Parameters
+        ----------
+        BHE : borehole heat exchanger (BHE)
+
+        Returns
+        -------
+        dtype
+
+        """
         if BHE:
             dtype = np.dtype(
                 [
@@ -595,7 +636,10 @@ class ModflowCln(Package):
 
     @staticmethod
     def _cln_nodes(self):
-        """Returns the total number of CLN nodes"""
+        """
+        Returns the total number of CLN nodes.
+
+        """
         return self.nclnnds
 
     def write_file(self, f=None):
@@ -983,8 +1027,11 @@ class ModflowCln(Package):
 
 
 def fmt_string(array):
-    """Returns a C-style fmt string for numpy savetxt that corresponds to
-    the dtype"""
+    """
+    Returns a C-style fmt string for numpy savetxt that corresponds to
+    the dtype.
+
+    """
     fmts = []
     for field in array.dtype.descr:
         vtype = field[1][1].lower()
@@ -1010,7 +1057,10 @@ def fmt_string(array):
 
 
 def is_float(s):
-    """Test whether the string is a float number"""
+    """
+    Test whether the string is a float number.
+
+    """
     try:
         float(s)
     except ValueError:
@@ -1020,7 +1070,11 @@ def is_float(s):
 
 
 def make_recarray(array, dtype):
-    """Returns a empty recarray based on dtype"""
+    """
+
+    Returns a empty recarray based on dtype.
+
+    """
     nprop = len(dtype.names)
     ptemp = []
     for t in array:
@@ -1034,11 +1088,23 @@ def make_recarray(array, dtype):
 
 
 def read_prop(f, nrec):
-    """Read the property tables (node_prop, cln_gwc, cln_circ, cln_rect)
-    from file f. nrec = number of rows in the table"""
+    """
+
+    Read the property tables (node_prop, cln_gwc, cln_circ, cln_rect).
+
+    Parameters
+    ----------
+    f : package file handle
+    nrec : number of rows in the table
+
+    Returns
+    -------
+    A list of lists with length of nrec
+
+    """
     ptemp = []
 
-    for i in range(nrec):
+    for _ in range(nrec):
         line = f.readline()
         t = line.strip().split()
         ra = [float(s) for s in t if is_float(s)]

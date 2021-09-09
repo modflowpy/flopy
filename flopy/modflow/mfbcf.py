@@ -459,13 +459,17 @@ class ModflowBcf(Package):
 
         try:
             ikvflag = int(t[6])
-        except:
+        except IndexError:
+            ikvflag = 0
+        except ValueError:
             ikvflag = 0
 
         try:
             ikcflag = int(t[7])
-        except:
+        except IndexError:
             ikcflag = 0
+        except ValueError:
+            ikvflag = 0
 
         # LAYCON array
         ifrefm = model.get_ifrefm()
