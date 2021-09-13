@@ -1679,7 +1679,10 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                         self.empty_keys[key] = True
                     else:
                         self.empty_keys[key] = False
-                        if "check" in list_item:
+                        if (
+                            isinstance(list_item, dict)
+                            and "check" in list_item
+                        ):
                             check = list_item["check"]
                         else:
                             check = True
