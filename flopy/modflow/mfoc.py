@@ -157,10 +157,6 @@ class ModflowOc(Package):
         **kwargs,
     ):
 
-        """
-        Package constructor.
-
-        """
         if unitnumber is None:
             unitnumber = ModflowOc._defaultunit()
         elif isinstance(unitnumber, list):
@@ -168,15 +164,9 @@ class ModflowOc(Package):
                 for idx in range(len(unitnumber), 6):
                     unitnumber.append(0)
         self.label = label
+
         # set filenames
-        if filenames is None:
-            filenames = [None, None, None, None, None]
-        elif isinstance(filenames, str):
-            filenames = [filenames, None, None, None, None]
-        elif isinstance(filenames, list):
-            if len(filenames) < 5:
-                for idx in range(len(filenames), 5):
-                    filenames.append(None)
+        filenames = self._prepare_filenames(filenames, 5)
 
         # support structured and unstructured dis
         dis = model.get_package("DIS")
@@ -217,28 +207,26 @@ class ModflowOc(Package):
                     icnt += 1
 
         # set output unit numbers based on oc settings
-        self.savehead, self.saveddn, self.savebud, self.saveibnd = (
-            False,
-            False,
-            False,
-            False,
-        )
+        self.savehead = False
+        self.saveddn = False
+        self.savebud = False
+        self.saveibnd = False
         for key, value in stress_period_data.items():
-            tlist = list(value)
-            for t in tlist:
-                if "save head" in t.lower():
+            for t in list(value):
+                tlwr = t.lower()
+                if "save head" in tlwr:
                     self.savehead = True
                     if unitnumber[1] == 0:
                         unitnumber[1] = 51
-                if "save drawdown" in t.lower():
+                if "save drawdown" in tlwr:
                     self.saveddn = True
                     if unitnumber[2] == 0:
                         unitnumber[2] = 52
-                if "save budget" in t.lower():
+                if "save budget" in tlwr:
                     self.savebud = True
                     if unitnumber[3] == 0 and filenames is None:
                         unitnumber[3] = 53
-                if "save ibound" in t.lower():
+                if "save ibound" in tlwr:
                     self.saveibnd = True
                     if unitnumber[4] == 0:
                         unitnumber[4] = 54
@@ -262,23 +250,19 @@ class ModflowOc(Package):
         # add output files
         # head file
         if self.savehead:
-            iu = unitnumber[1]
-            binflag = True
-            if chedfm is not None:
-                binflag = False
-            fname = filenames[1]
             model.add_output_file(
-                iu, fname=fname, extension=extension[1], binflag=binflag
+                unitnumber[1],
+                fname=filenames[1],
+                extension=extension[1],
+                binflag=chedfm is None,
             )
         # drawdown file
         if self.saveddn:
-            iu = unitnumber[2]
-            binflag = True
-            if cddnfm is not None:
-                binflag = False
-            fname = filenames[2]
             model.add_output_file(
-                iu, fname=fname, extension=extension[2], binflag=binflag
+                unitnumber[2],
+                fname=filenames[2],
+                extension=extension[2],
+                binflag=cddnfm is None,
             )
         # budget file
         # Nothing is needed for the budget file
@@ -286,32 +270,20 @@ class ModflowOc(Package):
         # ibound file
         ibouun = unitnumber[4]
         if self.saveibnd:
-            iu = unitnumber[4]
-            binflag = True
-            if cboufm is not None:
-                binflag = False
-            fname = filenames[4]
             model.add_output_file(
-                iu, fname=fname, extension=extension[4], binflag=binflag
+                unitnumber[4],
+                fname=filenames[4],
+                extension=extension[4],
+                binflag=cboufm is None,
             )
 
-        name = [ModflowOc._ftype()]
-        extra = [""]
-        extension = [extension[0]]
-        unitnumber = unitnumber[0]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
-            extension=extension,
-            name=name,
-            unit_number=unitnumber,
-            extra=extra,
-            filenames=fname,
+            extension=extension[0],
+            name=self._ftype(),
+            unit_number=unitnumber[0],
+            filenames=filenames[0],
         )
 
         self._generate_heading()

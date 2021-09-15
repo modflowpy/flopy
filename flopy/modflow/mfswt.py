@@ -361,29 +361,17 @@ class ModflowSwt(Package):
         unitnumber=None,
         filenames=None,
     ):
-        """
-        Package constructor.
-
-        """
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowSwt._defaultunit()
 
         # set filenames
-        if filenames is None:
-            filenames = [None for x in range(15)]
-        elif isinstance(filenames, str):
-            filenames = [filenames] + [None for x in range(14)]
-        elif isinstance(filenames, list):
-            if len(filenames) < 15:
-                n = 15 - len(filenames) + 1
-                filenames = filenames + [None for x in range(n)]
+        filenames = self._prepare_filenames(filenames, 15)
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowSwt._ftype()
+                ipakcb, fname=filenames[1], package=self._ftype()
             )
         else:
             ipakcb = 0
@@ -406,37 +394,25 @@ class ModflowSwt(Package):
         item16_units = [2052 + i for i in range(len(item16_extensions))]
 
         if iswtoc > 0:
-            idx = 0
-            for k in range(1, 26, 2):
-                ext = item16_extensions[idx]
+            for idx, k in enumerate(range(1, 26, 2)):
                 if ids16 is None:
                     iu = item16_units[idx]
                 else:
                     iu = ids16[k]
-                fname = filenames[idx + 2]
                 model.add_output_file(
-                    iu, fname=fname, extension=ext, package=ModflowSwt._ftype()
+                    iu,
+                    fname=filenames[idx + 2],
+                    extension=item16_extensions[idx],
+                    package=self._ftype(),
                 )
-                idx += 1
 
-        extensions = [extension]
-        name = [ModflowSwt._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and
-        # unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
-            extension=extensions,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            extension=extension,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=filenames[0],
         )
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
@@ -471,50 +447,45 @@ class ModflowSwt(Package):
         self.sgs = Util2d(model, (nrow, ncol), np.float32, sgs, name="sgs")
 
         # interbed data
-        names = ["thick system " for n in range(nsystm)]
         self.thick = Util3d(
             model,
             (nsystm, nrow, ncol),
             np.float32,
             thick,
-            name=names,
+            name=["thick system " for n in range(nsystm)],
             locat=self.unit_number[0],
         )
-        names = ["void system " for n in range(nsystm)]
         self.void = Util3d(
             model,
             (nsystm, nrow, ncol),
             np.float32,
             void,
-            name=names,
+            name=["void system " for n in range(nsystm)],
             locat=self.unit_number[0],
         )
-        names = ["sub system " for n in range(nsystm)]
         self.sub = Util3d(
             model,
             (nsystm, nrow, ncol),
             np.float32,
             sub,
-            name=names,
+            name=["sub system " for n in range(nsystm)],
             locat=self.unit_number[0],
         )
         if icrcc != 0:
-            names = ["sse system " for n in range(nsystm)]
             self.sse = Util3d(
                 model,
                 (nsystm, nrow, ncol),
                 np.float32,
                 sse,
-                name=names,
+                name=["sse system " for n in range(nsystm)],
                 locat=self.unit_number[0],
             )
-            names = ["ssc system " for n in range(nsystm)]
             self.ssv = Util3d(
                 model,
                 (nsystm, nrow, ncol),
                 np.float32,
                 ssv,
-                name=names,
+                name=["ssc system " for n in range(nsystm)],
                 locat=self.unit_number[0],
             )
             self.cr = None
@@ -522,22 +493,20 @@ class ModflowSwt(Package):
         else:
             self.sse = None
             self.ssv = None
-            names = ["cr system " for n in range(nsystm)]
             self.cr = Util3d(
                 model,
                 (nsystm, nrow, ncol),
                 np.float32,
                 cr,
-                name=names,
+                name=["cr system " for n in range(nsystm)],
                 locat=self.unit_number[0],
             )
-            names = ["cc system " for n in range(nsystm)]
             self.cc = Util3d(
                 model,
                 (nsystm, nrow, ncol),
                 np.float32,
                 cc,
-                name=names,
+                name=["cc system " for n in range(nsystm)],
                 locat=self.unit_number[0],
             )
 

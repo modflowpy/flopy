@@ -93,21 +93,12 @@ class ModflowHob(Package):
         unitnumber=None,
         filenames=None,
     ):
-        """
-        Package constructor
-        """
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowHob._defaultunit()
 
         # set filenames
-        if filenames is None:
-            filenames = [None, None]
-        elif isinstance(filenames, str):
-            filenames = [filenames, None]
-        elif isinstance(filenames, list):
-            if len(filenames) < 2:
-                filenames.append(None)
+        filenames = self._prepare_filenames(filenames, 2)
 
         # set filenames[1] to hobname if filenames[1] is not None
         if filenames[1] is None:
@@ -115,35 +106,23 @@ class ModflowHob(Package):
                 filenames[1] = hobname
 
         if iuhobsv is not None:
-            fname = filenames[1]
             model.add_output_file(
                 iuhobsv,
-                fname=fname,
+                fname=filenames[1],
                 extension="hob.out",
                 binflag=False,
-                package=ModflowHob._ftype(),
+                package=self._ftype(),
             )
         else:
             iuhobsv = 0
 
-        # Fill namefile items
-        name = [ModflowHob._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent,
-        # extension, name and unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=filenames[0],
         )
 
         self.url = "hob.htm"

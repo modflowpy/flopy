@@ -214,26 +214,16 @@ class Mt3dSft(Package):
             unitnumber = Mt3dSft._reservedunit()
 
         # set filenames
-        if filenames is None:  # if filename not passed
-            filenames = [None, None]  # setup filenames
-            if abs(ioutobs) > 0:
-                filenames[1] = model.name
-        elif isinstance(filenames, str):
-            filenames = [filenames, None, None]
-        elif isinstance(filenames, list):
-            if len(filenames) < 2:
-                for idx in range(len(filenames), 2):
-                    filenames.append(None)
+        filenames = self._prepare_filenames(filenames, 2)
+        if filenames[1] is None and abs(ioutobs) > 0:
+            filenames[1] = model.name
 
         if ioutobs is not None:
             ext = "sftcobs.out"
             if filenames[1] is not None:
-                if (
-                    len(filenames[1].split(".", 1)) > 1
-                ):  # already has extension
-                    fname = "{}.{}".format(*filenames[1].split(".", 1))
-                else:
-                    fname = f"{filenames[1]}.{ext}"
+                fname = filenames[1]
+                if "." not in fname:  # add extension
+                    fname += f".{ext}"
             else:
                 fname = f"{model.name}.{ext}"
             model.add_output_file(
@@ -241,28 +231,18 @@ class Mt3dSft(Package):
                 fname=fname,
                 extension=None,
                 binflag=False,
-                package=Mt3dSft._ftype(),
+                package=self._ftype(),
             )
         else:
             ioutobs = 0
 
-        # Fill namefile items
-        name = [Mt3dSft._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=filenames[0],
         )
 
         # Set dimensions

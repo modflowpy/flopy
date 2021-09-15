@@ -24,7 +24,7 @@ class ModflowGlobal(Package):
     """
 
     def __init__(self, model, extension="glo"):
-        Package.__init__(self, model, extension, "GLOBAL", 1)
+        super().__init__(model, extension, "GLOBAL", 1)
         return
 
     def __repr__(self):
@@ -42,7 +42,7 @@ class ModflowList(Package):
     """
 
     def __init__(self, model, extension="list", unitnumber=2):
-        Package.__init__(self, model, extension, "LIST", unitnumber)
+        super().__init__(model, extension, "LIST", unitnumber)
         return
 
     def __repr__(self):
