@@ -92,6 +92,8 @@ class Dfn:
             "utlobs": 0,
             "utlts": 0,
             "utltas": 0,
+            "utlspc": 0,
+            "utlspca": 0,
         }
 
     def get_file_list(self):
