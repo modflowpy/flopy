@@ -765,12 +765,22 @@ def test_np002():
         stress_period_data=[((0, 0, 9), 125.0, 60.0)],
     )
 
-    rch_package = ModflowGwfrch(
+    rch_package = ModflowGwfrcha(
         model,
         print_input=True,
         print_flows=True,
-        maxbound=2,
-        stress_period_data=[((0, 0, 3), 0.02), ((0, 0, 6), 0.1)],
+        recharge="TIMEARRAYSERIES rcharray",
+    )
+
+    rch_array = np.zeros((1, 10))
+    rch_array[0, 3] = 0.02
+    rch_array[0, 6] = 0.1
+
+    rch_package.tas.initialize(
+        filename="np002_mod.rch.tas",
+        tas_array={0.0: rch_array, 6.0: rch_array},
+        time_series_namerecord="rcharray",
+        interpolation_methodrecord="linear",
     )
 
     # write simulation to new location
@@ -1019,9 +1029,18 @@ def test021_twri():
         model,
         readasarrays=True,
         fixed_cell=True,
-        recharge={0: 0.00000003},
+        recharge="TIMEARRAYSERIES rcharray",
         auxiliary=[("iface", "conc")],
         aux=auxdata,
+    )
+    rch_package.tas.initialize(
+        filename="twri.rch.tas",
+        tas_array={
+            0.0: 0.00000003 * np.ones((15, 15)),
+            86400.0: 0.00000003 * np.ones((15, 15)),
+        },
+        time_series_namerecord="rcharray",
+        interpolation_methodrecord="linear",
     )
 
     aux = rch_package.aux.get_data()
