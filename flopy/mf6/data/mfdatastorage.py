@@ -2234,7 +2234,9 @@ class DataStorage:
             return self.layer_storage.first_item().internal_data
         dimensions = self.get_data_dimensions(None)
         if dimensions[0] < 0:
-            return None
+            # dimensions can not be determined from dfn file, use
+            # the size of the data provided as the dimensions
+            dimensions = [self.layer_storage.get_total_size()]
         all_none = True
         np_data_type = self.data_dimensions.structure.get_datum_type()
         full_data = np.full(
@@ -2375,7 +2377,7 @@ class DataStorage:
         else:
             ls = self.layer_storage[layer]
         if data_dimensions[0] < 0:
-            return ls.data_const_value
+            return ls.data_const_value[0]
         else:
             data_type = self.data_dimensions.structure.get_datum_type(
                 numpy_type=True
