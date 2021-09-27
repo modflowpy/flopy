@@ -8,6 +8,7 @@ the ModflowUsgSms class as `flopy.modflowusg.ModflowUsgSms`.
 from ..pakbase import Package
 from ..utils.flopy_io import line_parse
 
+
 class ModflowUsgSms(Package):
     """
     MODFLOW Sms Package Class.

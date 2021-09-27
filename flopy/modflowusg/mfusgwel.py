@@ -8,6 +8,7 @@ MODFLOW Guide
 
 """
 import numpy as np
+from copy import deepcopy
 from ..utils import MfList
 from ..pakbase import Package
 from ..utils.recarray_utils import create_empty_recarray
@@ -335,7 +336,7 @@ class ModflowUsgWel(Package):
             if kper < first:
                 itmp = 0
             elif kper in kpers:
-                kper_data = self.stress_period_data.data[kper]
+                kper_data = deepcopy(self.stress_period_data.data[kper])
                 kper_vtype = self.stress_period_data.vtype[kper]
                 if kper_vtype == np.recarray:
                     itmp = kper_data.shape[0]
@@ -353,7 +354,9 @@ class ModflowUsgWel(Package):
             if kper < cln_first:
                 itmpcln = 0
             elif kper in cln_kpers:
-                cln_kper_data = self.cln_stress_period_data.data[kper]
+                cln_kper_data = deepcopy(
+                    self.cln_stress_period_data.data[kper]
+                )
                 cln_kper_vtype = self.cln_stress_period_data.vtype[kper]
                 if cln_kper_vtype == np.recarray:
                     itmpcln = cln_kper_data.shape[0]
@@ -506,7 +509,7 @@ class ModflowUsgWel(Package):
                     options.append(toption.lower())
                 elif toption.lower() == "iunitafr":
                     options.append(" ".join(t[it : it + 2]))
-                    iunitafr = t[it + 1]
+                    iunitafr = int(t[it + 1])
                     it += 1
                 elif "aux" in toption.lower():
                     options.append(" ".join(t[it : it + 2]))
@@ -685,6 +688,7 @@ class ModflowUsgWel(Package):
 
         # set package unit number
         filenames = [None, None, None]
+        unitnumber = ModflowUsgWel._defaultunit()
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
                 ext_unit_dict, filetype=ModflowUsgWel._ftype()

@@ -396,7 +396,7 @@ class ModflowUsgLpf(Package):
                 (njag,),
                 np.float32,
                 ksat,
-                "saturated conductivity or transmissivity",
+                "ksat",
                 locat=self.unit_number[0],
             )
 

@@ -11,6 +11,7 @@ from ..utils import mfreadnam
 
 from ..modflow import Modflow
 
+
 class ModflowUsg(Modflow):
     """
     MODFLOW-USG Model Class.
@@ -65,6 +66,7 @@ class ModflowUsg(Modflow):
         model_ws=".",
         external_path=None,
         verbose=False,
+        version="mfusg",
         **kwargs,
     ):
         super().__init__(
@@ -87,7 +89,6 @@ class ModflowUsg(Modflow):
             "pval": flopy.modflow.ModflowPval,
             "bas6": flopy.modflow.ModflowBas,
             "dis": flopy.modflow.ModflowDis,
-            "lpf": flopy.modflow.ModflowLpf,
             "hfb6": flopy.modflow.ModflowHfb,
             "chd": flopy.modflow.ModflowChd,
             "fhb": flopy.modflow.ModflowFhb,
@@ -104,15 +105,39 @@ class ModflowUsg(Modflow):
             "oc": flopy.modflow.ModflowOc,
             "sub": flopy.modflow.ModflowSub,
             "swt": flopy.modflow.ModflowSwt,
-            "disu": flopy.modflow.ModflowDisU,
+            "disu": flopy.modflowusg.ModflowUsgDisU,
             "sms": flopy.modflowusg.ModflowUsgSms,
             "wel": flopy.modflowusg.ModflowUsgWel,
             "bcf6": flopy.modflowusg.ModflowUsgBcf,
+            "lpf": flopy.modflowusg.ModflowUsgLpf,
             "cln": flopy.modflowusg.ModflowUsgCln,
             "gnc": flopy.modflowusg.ModflowUsgGnc,
             "bct": flopy.modflowusg.ModflowUsgBct,
         }
         return
+
+    def __repr__(self):
+        nrow, ncol, nlay, nper = self.get_nrow_ncol_nlay_nper()
+        if nrow is not None:
+            # structured case
+            s = (
+                "MODFLOW {} layer(s) {} row(s) {} column(s) "
+                "{} stress period(s)".format(nlay, nrow, ncol, nper)
+            )
+        else:
+            # unstructured case
+            nodes = ncol.sum()
+            nodelay = " ".join(str(i) for i in ncol)
+            print(nodelay, nlay, nper)
+            s = (
+                "MODFLOW unstructured\n"
+                "  nodes = {}\n"
+                "  layers = {}\n"
+                "  periods = {}\n"
+                "  nodelay = {}\n".format(nodes, nlay, nper, ncol)
+            )
+        return s
+
     @classmethod
     def load(
         cls,
@@ -384,6 +409,7 @@ class ModflowUsg(Modflow):
 
         # return model object
         return ml
+
 
 def fmt_string(array):
     """
