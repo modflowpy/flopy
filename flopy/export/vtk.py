@@ -1493,7 +1493,7 @@ def export_model(
         os.mkdir(otfolder)
 
     name = model.name
-    vtk.write(os.path.join(otfolder, name))
+    vtk.write(os.path.join(otfolder, name), kper=kpers)
 
 
 def export_package(
@@ -1577,7 +1577,7 @@ def export_package(
     p = pak_model.get_package(pak_name)
     vtk.add_package(p)
 
-    vtk.write(os.path.join(otfolder, pak_name))
+    vtk.write(os.path.join(otfolder, pak_name), kper=kpers)
 
 
 def export_transient(
@@ -1674,6 +1674,8 @@ def export_transient(
 
     else:
         raise TypeError(f"type {type(array)} not valid for export_transient")
+
+    vtk.write(os.path.join(output_folder, name), kper=kpers)
 
 
 def export_array(
