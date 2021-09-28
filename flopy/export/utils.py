@@ -622,25 +622,30 @@ def model_export(f, ml, fmt=None, **kwargs):
 
     elif fmt == "vtk":
         # call vtk model export
-        nanval = kwargs.get("nanval", -1e20)
+        name = kwargs.get("name", ml.name)
+        xml = kwargs.get("xml", False)
+        masked_values = kwargs.get("masked_values", None)
+        pvd = kwargs.get("pvd", False)
         smooth = kwargs.get("smooth", False)
         point_scalars = kwargs.get("point_scalars", False)
-        vtk_grid_type = kwargs.get("vtk_grid_type", "auto")
-        true2d = kwargs.get("true2d", False)
-        binary = kwargs.get("binary", False)
+        binary = kwargs.get("binary", True)
+        vertical_exageration = kwargs.get("vertical_exageration", 1)
         kpers = kwargs.get("kpers", None)
-        vtk.export_model(
+        package_names = kwargs.get("package_names", None)
+
+        vtkobj = vtk.Vtk(
             ml,
-            f,
-            package_names=package_names,
-            nanval=nanval,
+            vertical_exageration=vertical_exageration,
+            binary=binary,
+            xml=xml,
+            pvd=pvd,
             smooth=smooth,
             point_scalars=point_scalars,
-            vtk_grid_type=vtk_grid_type,
-            true2d=true2d,
-            binary=binary,
-            kpers=kpers,
         )
+        vtkobj.add_model(
+            ml, masked_values=masked_values, selpaklist=package_names
+        )
+        vtkobj.write(os.path.join(f, name), kpers)
 
     else:
         raise NotImplementedError(f"unrecognized export argument:{f}")
@@ -714,13 +719,30 @@ def package_export(f, pak, fmt=None, **kwargs):
 
     elif fmt == "vtk":
         # call vtk array export to folder
-        nanval = kwargs.get("nanval", -1e20)
+        name = kwargs.get("name", pak.name[0])
+        xml = kwargs.get("xml", False)
+        masked_values = kwargs.get("masked_values", None)
+        pvd = kwargs.get("pvd", False)
         smooth = kwargs.get("smooth", False)
         point_scalars = kwargs.get("point_scalars", False)
-        vtk_grid_type = kwargs.get("vtk_grid_type", "auto")
-        true2d = kwargs.get("true2d", False)
-        binary = kwargs.get("binary", False)
+        binary = kwargs.get("binary", True)
+        vertical_exageration = kwargs.get("vertical_exageration", 1)
         kpers = kwargs.get("kpers", None)
+
+        vtkobj = vtk.Vtk(
+            pak.parent,
+            vertical_exageration=vertical_exageration,
+            binary=binary,
+            xml=xml,
+            pvd=pvd,
+            smooth=smooth,
+            point_scalars=point_scalars,
+        )
+
+        vtkobj.add_package(pak, masked_values=masked_values)
+        vtkobj.write(os.path.join(f, name), kper=kpers)
+
+        """
         vtk.export_package(
             pak.parent,
             pak.name,
@@ -733,6 +755,7 @@ def package_export(f, pak, fmt=None, **kwargs):
             binary=binary,
             kpers=kpers,
         )
+        """
 
     else:
         raise NotImplementedError(f"unrecognized export argument:{f}")
@@ -1083,27 +1106,35 @@ def transient2d_export(f, t2d, fmt=None, **kwargs):
 
     elif fmt == "vtk":
         name = kwargs.get("name", t2d.name)
-        nanval = kwargs.get("nanval", -1e20)
+        xml = kwargs.get("xml", False)
+        masked_values = kwargs.get("masked_values", None)
+        pvd = kwargs.get("pvd", False)
         smooth = kwargs.get("smooth", False)
         point_scalars = kwargs.get("point_scalars", False)
-        vtk_grid_type = kwargs.get("vtk_grid_type", "auto")
-        true2d = kwargs.get("true2d", False)
-        binary = kwargs.get("binary", False)
+        binary = kwargs.get("binary", True)
+        vertical_exageration = kwargs.get("vertical_exageration", 1)
         kpers = kwargs.get("kpers", None)
-        vtk.export_transient(
+
+        if t2d.array is not None:
+            if hasattr(t2d, "transient_2ds"):
+                d = t2d.transient_2ds
+            else:
+                d = {ix: i for ix, i in enumerate(t2d.array)}
+        else:
+            raise AssertionError("No data available to export")
+
+        vtkobj = vtk.Vtk(
             t2d.model,
-            t2d.array,
-            f,
-            name,
-            nanval=nanval,
+            vertical_exageration=vertical_exageration,
+            binary=binary,
+            xml=xml,
+            pvd=pvd,
             smooth=smooth,
             point_scalars=point_scalars,
-            array2d=True,
-            vtk_grid_type=vtk_grid_type,
-            true2d=true2d,
-            binary=binary,
-            kpers=kpers,
         )
+        vtkobj.add_transient_array(d, name=name, masked_values=masked_values)
+        vtkobj.write(os.path.join(f, name), kper=kpers)
+
     else:
         raise NotImplementedError(f"unrecognized export argument:{f}")
 
@@ -1253,27 +1284,26 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
     elif fmt == "vtk":
         # call vtk array export to folder
         name = kwargs.get("name", u3d.name)
-        nanval = kwargs.get("nanval", -1e20)
+        xml = kwargs.get("xml", False)
+        masked_values = kwargs.get("masked_values", None)
         smooth = kwargs.get("smooth", False)
         point_scalars = kwargs.get("point_scalars", False)
-        vtk_grid_type = kwargs.get("vtk_grid_type", "auto")
-        true2d = kwargs.get("true2d", False)
-        binary = kwargs.get("binary", False)
+        binary = kwargs.get("binary", True)
+        vertical_exageration = kwargs.get("vertical_exageration", 1)
+
         if isinstance(name, list) or isinstance(name, tuple):
             name = name[0]
 
-        vtk.export_array(
+        vtkobj = vtk.Vtk(
             u3d.model,
-            u3d.array,
-            f,
-            name,
-            nanval=nanval,
             smooth=smooth,
             point_scalars=point_scalars,
-            vtk_grid_type=vtk_grid_type,
-            true2d=true2d,
             binary=binary,
+            xml=xml,
+            vertical_exageration=vertical_exageration,
         )
+        vtkobj.add_array(u3d.array, name, masked_values=masked_values)
+        vtkobj.write(os.path.join(f, name))
 
     else:
         raise NotImplementedError(f"unrecognized export argument:{f}")
@@ -1395,28 +1425,29 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
 
     elif fmt == "vtk":
 
-        # call vtk array export to folder
         name = kwargs.get("name", u2d.name)
-        nanval = kwargs.get("nanval", -1e20)
+        xml = kwargs.get("xml", False)
+        masked_values = kwargs.get("masked_values", None)
         smooth = kwargs.get("smooth", False)
         point_scalars = kwargs.get("point_scalars", False)
-        vtk_grid_type = kwargs.get("vtk_grid_type", "auto")
-        true2d = kwargs.get("true2d", False)
-        binary = kwargs.get("binary", False)
-        vtk.export_array(
+        binary = kwargs.get("binary", True)
+        vertical_exageration = kwargs.get("vertical_exageration", 1)
+
+        if isinstance(name, list) or isinstance(name, tuple):
+            name = name[0]
+
+        vtkobj = vtk.Vtk(
             u2d.model,
-            u2d.array,
-            f,
-            name,
-            nanval=nanval,
             smooth=smooth,
             point_scalars=point_scalars,
-            array2d=True,
-            vtk_grid_type=vtk_grid_type,
-            true2d=true2d,
             binary=binary,
+            xml=xml,
+            vertical_exageration=vertical_exageration,
         )
-
+        array = np.ones((modelgrid.nnodes,)) * np.nan
+        array[0 : u2d.array.size] = np.ravel(u2d.array)
+        vtkobj.add_array(array, name, masked_values=masked_values)
+        vtkobj.write(os.path.join(f, name))
     else:
         raise NotImplementedError(f"unrecognized export argument:{f}")
 

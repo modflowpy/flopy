@@ -2,13 +2,9 @@ import shutil
 import numpy as np
 import os
 import flopy
-from flopy.export import vtk
+from flopy.export.vtk import Vtk
 
 # Test vtk export
-# Note: initially thought about asserting that exported file size in bytes is
-# unchanged, but this seems to be sensitive to the running environment.
-# Thus, only asserting that the number of lines is unchanged.
-# Still keeping the file size check commented for development purposes.
 
 # create output directory
 cpth = os.path.join("temp", "t050")
@@ -29,6 +25,10 @@ def count_lines_in_file(filepath, binary=False):
 
 
 def test_vtk_export_array2d():
+    try:
+        import vtk
+    except ImportError:
+        return
     # test mf 2005 freyberg
     mpath = os.path.join(
         "..", "examples", "data", "freyberg_multilayer_transient"
@@ -40,25 +40,24 @@ def test_vtk_export_array2d():
     output_dir = os.path.join(cpth, "array_2d_test")
 
     # export and check
-    m.dis.top.export(output_dir, name="top", fmt="vtk")
-    filetocheck = os.path.join(output_dir, "top.vtu")
-    # totalbytes = os.path.getsize(filetocheck)
-    # assert(totalbytes==351846)
+    m.dis.top.export(output_dir, name="top", fmt="vtk", binary=False)
+    filetocheck = os.path.join(output_dir, "top.vtk")
     nlines = count_lines_in_file(filetocheck)
-    assert nlines == 2846
+    assert nlines == 17615
 
     # with smoothing
-    m.dis.top.export(output_dir, fmt="vtk", name="top_smooth", smooth=True)
-    filetocheck = os.path.join(output_dir, "top_smooth.vtu")
-    # totalbytes1 = os.path.getsize(filetocheck)
-    # assert(totalbytes1==351715)
+    m.dis.top.export(output_dir, fmt="vtk", name="top_smooth",
+                     binary=False, smooth=True)
+    filetocheck = os.path.join(output_dir, "top_smooth.vtk")
     nlines1 = count_lines_in_file(filetocheck)
-    assert nlines1 == 2846
-
-    return
+    assert nlines1 == 17615
 
 
 def test_vtk_export_array3d():
+    try:
+        import vtk
+    except ImportError:
+        return
     # test mf 2005 freyberg
     mpath = os.path.join(
         "..", "examples", "data", "freyberg_multilayer_transient"
@@ -73,22 +72,18 @@ def test_vtk_export_array3d():
     output_dir = os.path.join(cpth, "array_3d_test")
 
     # export and check
-    m.upw.hk.export(output_dir, fmt="vtk", name="hk")
-    filetocheck = os.path.join(output_dir, "hk.vtu")
-    # totalbytes = os.path.getsize(filetocheck)
-    # assert(totalbytes==992036)
+    m.upw.hk.export(output_dir, fmt="vtk", name="hk", binary=False)
+    filetocheck = os.path.join(output_dir, "hk.vtk")
     nlines = count_lines_in_file(filetocheck)
-    assert nlines == 8486
+    assert nlines == 17615
 
     # with point scalars
     m.upw.hk.export(
-        output_dir, fmt="vtk", name="hk_points", point_scalars=True
+        output_dir, fmt="vtk", name="hk_points", point_scalars=True, binary=False
     )
-    filetocheck = os.path.join(output_dir, "hk_points.vtu")
-    # totalbytes1 = os.path.getsize(filetocheck)
-    # assert(totalbytes1==1320666)
+    filetocheck = os.path.join(output_dir, "hk_points.vtk")
     nlines1 = count_lines_in_file(filetocheck)
-    assert nlines1 == 10605
+    assert nlines1 == 19482
 
     # with point scalars and binary
     m.upw.hk.export(
@@ -96,19 +91,16 @@ def test_vtk_export_array3d():
         fmt="vtk",
         name="hk_points_bin",
         point_scalars=True,
-        binary=True,
     )
-    filetocheck = os.path.join(output_dir, "hk_points_bin.vtu")
-    # totalbytes2 = os.path.getsize(filetocheck)
-    # assert(totalbytes2==629401)
-    # nlines2 = count_lines_in_file(filetocheck, binary=True)
-    # assert(nlines2==2105)
+    filetocheck = os.path.join(output_dir, "hk_points_bin.vtk")
     assert os.path.exists(filetocheck)
-
-    return
 
 
 def test_vtk_transient_array_2d():
+    try:
+        import vtk
+    except ImportError:
+        return
     # test mf 2005 freyberg
     mpath = os.path.join(
         "..", "examples", "data", "freyberg_multilayer_transient"
@@ -125,37 +117,27 @@ def test_vtk_transient_array_2d():
     kpers = [0, 1, 1096]
 
     # export and check
-    m.rch.rech.export(output_dir, fmt="vtk", kpers=kpers)
-    filetocheck = os.path.join(output_dir, "rech_01.vtu")
-    # totalbytes = os.path.getsize(filetocheck)
-    # assert(totalbytes==355144)
+    m.rch.rech.export(output_dir, fmt="vtk", kpers=kpers, binary=False, xml=True)
+    filetocheck = os.path.join(output_dir, "rech_000001.vtk")
     nlines = count_lines_in_file(filetocheck)
-    assert nlines == 2851
-    filetocheck = os.path.join(output_dir, "rech_01097.vtu")
-    # totalbytes1 = os.path.getsize(filetocheck)
-    # assert(totalbytes1==354442)
+    assert nlines == 26837
+    filetocheck = os.path.join(output_dir, "rech_001096.vtk")
     nlines1 = count_lines_in_file(filetocheck)
-    assert nlines1 == 2851
+    assert nlines1 == 26837
 
     # with binary
     m.rch.rech.export(output_dir_bin, fmt="vtk", binary=True, kpers=kpers)
-    filetocheck = os.path.join(output_dir_bin, "rech_01.vtu")
-    # totalbytes2 = os.path.getsize(filetocheck)
-    # assert(totalbytes2==168339)
-    # nlines2 = count_lines_in_file(filetocheck, binary=True)
-    # assert(nlines2==846)
+    filetocheck = os.path.join(output_dir_bin, "rech_000001.vtk")
     assert os.path.exists(filetocheck)
-    filetocheck = os.path.join(output_dir_bin, "rech_01097.vtu")
-    # totalbytes3 = os.path.getsize(filetocheck)
-    # assert(totalbytes3==168339)
-    # nlines3 = count_lines_in_file(filetocheck, binary=True)
-    # assert(nlines3==846)
+    filetocheck = os.path.join(output_dir_bin, "rech_001096.vtk")
     assert os.path.exists(filetocheck)
-
-    return
 
 
 def test_vtk_export_packages():
+    try:
+        import vtk
+    except ImportError:
+        return
     # test mf 2005 freyberg
     mpath = os.path.join(
         "..", "examples", "data", "freyberg_multilayer_transient"
@@ -170,70 +152,59 @@ def test_vtk_export_packages():
 
     # dis export and check
     output_dir = os.path.join(cpth, "DIS")
-    m.dis.export(output_dir, fmt="vtk")
-    filetocheck = os.path.join(output_dir, "DIS.vtu")
+    # todo: pakbase.export() for vtk!!!!
+    m.dis.export(output_dir, fmt="vtk", xml=True, binary=False)
+    filetocheck = os.path.join(output_dir, "DIS.vtk")
     # totalbytes = os.path.getsize(filetocheck)
     # assert(totalbytes==1019857)
     nlines = count_lines_in_file(filetocheck)
-    assert nlines == 8491, f"nlines ({nlines}) not equal to 8491"
+    assert nlines == 27239, f"nlines ({nlines}) not equal to 27239"
 
     # upw with point scalar output
     output_dir = os.path.join(cpth, "UPW")
-    m.upw.export(output_dir, fmt="vtk", point_scalars=True)
-    filetocheck = os.path.join(output_dir, "UPW.vtu")
-    # totalbytes1 = os.path.getsize(filetocheck)
-    # assert(totalbytes1==2559173)
+    m.upw.export(
+        output_dir, fmt="vtk", xml=True, binary=False, point_scalars=True
+    )
+    filetocheck = os.path.join(output_dir, "UPW.vtk")
     nlines1 = count_lines_in_file(filetocheck)
-    assert nlines1 == 21215, f"nlines ({nlines}) not equal to 21215"
+    assert nlines1 == 42445, f"nlines ({nlines}) not equal to 42445"
 
     # bas with smoothing on
     output_dir = os.path.join(cpth, "BAS")
-    m.bas6.export(output_dir, fmt="vtk", smooth=True)
-    filetocheck = os.path.join(output_dir, "BAS6.vtu")
-    # totalbytes2 = os.path.getsize(filetocheck)
-    # assert(totalbytes2==1001580)
+    m.bas6.export(output_dir, fmt="vtk", binary=False, smooth=True)
+    filetocheck = os.path.join(output_dir, "BAS6.vtk")
     nlines2 = count_lines_in_file(filetocheck)
-    assert nlines2 == 8491
+    assert nlines2 == 17883
 
     # transient package drain
     kpers = [0, 1, 1096]
     output_dir = os.path.join(cpth, "DRN")
-    m.drn.export(output_dir, fmt="vtk", kpers=kpers)
-    filetocheck = os.path.join(output_dir, "DRN_01.vtu")
-    # totalbytes3 = os.path.getsize(filetocheck)
-    # assert(totalbytes3==20670)
+    m.drn.export(output_dir, fmt="vtk", binary=False, xml=True, kpers=kpers, pvd=True)
+    filetocheck = os.path.join(output_dir, "DRN_000001.vtu")
     nlines3 = count_lines_in_file(filetocheck)
-    assert nlines3 == 191
-    filetocheck = os.path.join(output_dir, "DRN_01097.vtu")
-    # totalbytes4 = os.path.getsize(filetocheck)
-    # assert(totalbytes4==20670)
+    assert nlines3 == 27239
+    filetocheck = os.path.join(output_dir, "DRN_001096.vtu")
     nlines4 = count_lines_in_file(filetocheck)
-    assert nlines4 == 191
+    assert nlines4 == 27239
 
     # dis with binary
     output_dir = os.path.join(cpth, "DIS_bin")
     m.dis.export(output_dir, fmt="vtk", binary=True)
-    filetocheck = os.path.join(output_dir, "DIS.vtu")
-    # totalbytes5 = os.path.getsize(filetocheck)
-    # assert(totalbytes5==519516)
-    # nlines5 = count_lines_in_file(filetocheck, binary=True)
-    # assert(nlines5==1797)
+    filetocheck = os.path.join(output_dir, "DIS.vtk")
     assert os.path.exists(filetocheck)
 
     # upw with point scalars and binary
     output_dir = os.path.join(cpth, "UPW_bin")
     m.upw.export(output_dir, fmt="vtk", point_scalars=True, binary=True)
-    filetocheck = os.path.join(output_dir, "UPW.vtu")
-    # totalbytes6 = os.path.getsize(filetocheck)
-    # assert(totalbytes6==1349801)
-    # nlines6 = count_lines_in_file(filetocheck, binary=True)
-    # assert(nlines6==4240)
+    filetocheck = os.path.join(output_dir, "UPW.vtk")
     assert os.path.exists(filetocheck)
-
-    return
 
 
 def test_vtk_mf6():
+    try:
+        import vtk
+    except ImportError:
+        return
     # test mf6
     mf6expth = os.path.join("..", "examples", "data", "mf6")
     mf6sims = [
@@ -252,183 +223,117 @@ def test_vtk_mf6():
         for mname in sim_models:
             print(mname)
             m = loaded_sim.get_model(mname)
-            m.export(os.path.join(cpth, m.name), fmt="vtk")
+            m.export(os.path.join(cpth, m.name), fmt="vtk", binary=False)
 
     # check one
-    filetocheck = os.path.join(cpth, "twrihfb2015", "npf.vtr")
+    filetocheck = os.path.join(cpth, "twrihfb2015", "twrihfb2015_000000.vtk")
     # totalbytes = os.path.getsize(filetocheck)
     # assert(totalbytes==21609)
     nlines = count_lines_in_file(filetocheck)
-    assert nlines == 76
-
-    return
+    assert nlines == 9537
 
 
 def test_vtk_binary_head_export():
+    try:
+        import vtk
+    except ImportError:
+        return
     # test mf 2005 freyberg
+    from flopy.utils import HeadFile
+
     mpth = os.path.join(
         "..", "examples", "data", "freyberg_multilayer_transient"
     )
     namfile = "freyberg.nam"
     hdsfile = os.path.join(mpth, "freyberg.hds")
+    heads = HeadFile(hdsfile)
     m = flopy.modflow.Modflow.load(
         namfile, model_ws=mpth, verbose=False, load_only=["dis", "bas6"]
     )
-    filenametocheck = "freyberg_head_KPER455_KSTP1.vtu"
+    filenametocheck = "freyberg_head_000003.vtu"
 
     # export and check
     otfolder = os.path.join(cpth, "heads_test")
-    vtk.export_heads(
-        m,
-        hdsfile,
-        otfolder,
-        nanval=-999.99,
-        kstpkper=[(0, 0), (0, 199), (0, 354), (0, 454), (0, 1089)],
+    vtkobj = Vtk(m, pvd=True, xml=True)
+    vtkobj.add_heads(
+        heads, kstpkper=[(0, 0), (0, 199), (0, 354), (0, 454), (0, 1089)]
     )
+    vtkobj.write(os.path.join(otfolder, "freyberg_head"))
+
     filetocheck = os.path.join(otfolder, filenametocheck)
-    # totalbytes = os.path.getsize(filetocheck)
-    # assert(totalbytes==993215)
     nlines = count_lines_in_file(filetocheck)
-    assert nlines == 8486
+    assert nlines == 34
 
     # with point scalars
     otfolder = os.path.join(cpth, "heads_test_1")
-    vtk.export_heads(
-        m,
-        hdsfile,
-        otfolder,
-        kstpkper=[(0, 0), (0, 199), (0, 354), (0, 454), (0, 1089)],
-        point_scalars=True,
-        nanval=-999.99,
+    vtkobj = Vtk(m, pvd=True, xml=True, point_scalars=True)
+    vtkobj.add_heads(
+        heads, kstpkper=[(0, 0), (0, 199), (0, 354), (0, 454), (0, 1089)]
     )
+    vtkobj.write(os.path.join(otfolder, "freyberg_head"))
+
     filetocheck = os.path.join(otfolder, filenametocheck)
-    # totalbytes1 = os.path.getsize(filetocheck)
-    # assert(totalbytes1==1331858)
     nlines1 = count_lines_in_file(filetocheck)
-    assert nlines1 == 10605
+    assert nlines1 == 34
 
     # with smoothing
     otfolder = os.path.join(cpth, "heads_test_2")
-    vtk.export_heads(
-        m,
-        hdsfile,
-        otfolder,
-        kstpkper=[(0, 0), (0, 199), (0, 354), (0, 454), (0, 1089)],
-        smooth=True,
-        nanval=-999.99,
+    vtkobj = Vtk(m, pvd=True, xml=True, smooth=True)
+    vtkobj.add_heads(
+        heads, kstpkper=[(0, 0), (0, 199), (0, 354), (0, 454), (0, 1089)]
     )
+    vtkobj.write(os.path.join(otfolder, "freyberg_head"))
+
     filetocheck = os.path.join(otfolder, filenametocheck)
-    # totalbytes2 = os.path.getsize(filetocheck)
-    # assert(totalbytes2==993077)
     nlines2 = count_lines_in_file(filetocheck)
-    assert nlines2 == 8486
-
-    # with smoothing and binary
-    otfolder = os.path.join(cpth, "heads_test_3")
-    vtk.export_heads(
-        m,
-        hdsfile,
-        otfolder,
-        kstpkper=[(0, 0), (0, 199), (0, 354), (0, 454), (0, 1089)],
-        smooth=True,
-        binary=True,
-        nanval=-999.99,
-    )
-    filetocheck = os.path.join(otfolder, filenametocheck)
-    # totalbytes3 = os.path.getsize(filetocheck)
-    # assert(totalbytes3==493853)
-    # nlines3 = count_lines_in_file(filetocheck, binary=True)
-    # assert(nlines3==1781)
-    assert os.path.exists(filetocheck)
-
-    # with smoothing and binary, single time
-    otfolder = os.path.join(cpth, "heads_test_4")
-    vtk.export_heads(
-        m,
-        hdsfile,
-        otfolder,
-        kstpkper=(0, 0),
-        point_scalars=False,
-        smooth=True,
-        binary=True,
-        nanval=-999.99,
-    )
-    filetocheck = os.path.join(otfolder, "freyberg_head_KPER1_KSTP1.vtu")
-    # totalbytes4 = os.path.getsize(filetocheck)
-    # assert(totalbytes4==493853)
-    # nlines4 = count_lines_in_file(filetocheck, binary=True)
-    # assert(nlines4==1787)
-    assert os.path.exists(filetocheck)
-
-    return
+    assert nlines2 == 34
 
 
 def test_vtk_cbc():
+    try:
+        import vtk
+    except ImportError:
+        return
     # test mf 2005 freyberg
+    from flopy.utils import CellBudgetFile
+
     mpth = os.path.join(
         "..", "examples", "data", "freyberg_multilayer_transient"
     )
     namfile = "freyberg.nam"
     cbcfile = os.path.join(mpth, "freyberg.cbc")
+    cbc = CellBudgetFile(cbcfile)
     m = flopy.modflow.Modflow.load(
         namfile, model_ws=mpth, verbose=False, load_only=["dis", "bas6"]
     )
-    filenametocheck = "freyberg_CBC_KPER1_KSTP1.vtu"
+    filenametocheck = "freyberg_CBC_000000.vtu"
 
     # export and check with point scalar
     otfolder = os.path.join(cpth, "freyberg_CBCTEST")
-    vtk.export_cbc(
-        m,
-        cbcfile,
-        otfolder,
-        kstpkper=[(0, 0), (0, 1), (0, 2)],
-        point_scalars=True,
-    )
+
+    vtkobj = Vtk(m, binary=False, xml=True, pvd=True, point_scalars=True)
+    vtkobj.add_cell_budget(cbc, kstpkper=[(0, 0), (0, 1), (0, 2)])
+    vtkobj.write(os.path.join(otfolder, "freyberg_CBC"))
+
     filetocheck = os.path.join(otfolder, filenametocheck)
-    # totalbytes = os.path.getsize(filetocheck)
-    # assert(totalbytes==2630875)
     nlines = count_lines_in_file(filetocheck)
-    assert nlines == 19093
+    assert nlines == 39243
 
     # with point scalars and binary
     otfolder = os.path.join(cpth, "freyberg_CBCTEST_bin")
-    vtk.export_cbc(
-        m,
-        cbcfile,
-        otfolder,
-        kstpkper=[(0, 0), (0, 1), (0, 2)],
-        point_scalars=True,
-        binary=True,
-    )
+    vtkobj = Vtk(m, xml=True, pvd=True, point_scalars=True)
+    vtkobj.add_cell_budget(cbc, kstpkper=[(0, 0), (0, 1), (0, 2)])
+    vtkobj.write(os.path.join(otfolder, "freyberg_CBC"))
     filetocheck = os.path.join(otfolder, filenametocheck)
-    # totalbytes1 = os.path.getsize(filetocheck)
-    # assert(totalbytes1==1205818)
-    # nlines1 = count_lines_in_file(filetocheck, binary=True)
-    # assert(nlines1==3088)
     assert os.path.exists(filetocheck)
-
-    # with point scalars and binary, only one budget component
-    otfolder = os.path.join(cpth, "freyberg_CBCTEST_bin2")
-    vtk.export_cbc(
-        m,
-        cbcfile,
-        otfolder,
-        kstpkper=(0, 0),
-        text="CONSTANT HEAD",
-        point_scalars=True,
-        binary=True,
-    )
-    filetocheck = os.path.join(otfolder, filenametocheck)
-    # totalbytes2 = os.path.getsize(filetocheck)
-    # assert(totalbytes2==10142)
-    # nlines2 = count_lines_in_file(filetocheck, binary=True)
-    # assert(nlines2==66)
-    assert os.path.exists(filetocheck)
-
-    return
 
 
 def test_vtk_vector():
+    try:
+        import vtk
+    except ImportError:
+        return
+
     from flopy.utils import postprocessing as pp
     from flopy.utils import HeadFile, CellBudgetFile
 
@@ -452,519 +357,261 @@ def test_vtk_vector():
     filenametocheck = "discharge.vtu"
 
     # export and check with point scalar
-    vtk.export_vector(m, q, output_dir, "discharge", point_scalars=True)
+    vtkobj = Vtk(m, xml=True, binary=False, point_scalars=True)
+    vtkobj.add_vector(q, "discharge")
+    vtkobj.write(os.path.join(output_dir, filenametocheck))
+
     filetocheck = os.path.join(output_dir, filenametocheck)
-    # totalbytes = os.path.getsize(filetocheck)
-    # assert(totalbytes==2247857)
     nlines = count_lines_in_file(filetocheck)
-    assert nlines == 10605
+    assert nlines == 36045
 
     # with point scalars and binary
-    vtk.export_vector(
-        m, q, f"{output_dir}_bin", "discharge", point_scalars=True, binary=True
-    )
+    vtkobj = Vtk(m, point_scalars=True)
+    vtkobj.add_vector(q, "discharge")
+    vtkobj.write(os.path.join(f"{output_dir}_bin", filenametocheck))
     filetocheck = os.path.join(f"{output_dir}_bin", filenametocheck)
-    # totalbytes1 = os.path.getsize(filetocheck)
-    # assert(totalbytes1==942413)
-    # nlines1 = count_lines_in_file(filetocheck, binary=True)
-    # assert(nlines1==3824)
     assert os.path.exists(
         filetocheck
     ), f"file (0) does not exist: {filetocheck}"
 
-    # with values directly given at vertices
-    q = pp.get_specific_discharge(vectors, m, head, position="vertices")
-    nancount = np.count_nonzero(np.isnan(q[0]))
-    assert nancount == 472, f"nancount != 472 ({nancount})"
-    overall = np.nansum(q[0]) + np.nansum(q[1]) + np.nansum(q[2])
-    assert np.allclose(
-        overall, -15.849639024891047
-    ), f"vertices overall = {overall}"
+    # test at cell centers
+    q = pp.get_specific_discharge(vectors, m, head)
+
     output_dir = os.path.join(cpth, "freyberg_vector")
     filenametocheck = "discharge_verts.vtu"
-    vtk.export_vector(m, q, output_dir, "discharge_verts")
+    vtkobj = Vtk(m, xml=True, binary=False)
+    vtkobj.add_vector(q, "discharge")
+    vtkobj.write(os.path.join(output_dir, filenametocheck))
+
     filetocheck = os.path.join(output_dir, filenametocheck)
-    # totalbytes2 = os.path.getsize(filetocheck)
-    # assert(totalbytes2==1990047)
     nlines2 = count_lines_in_file(filetocheck)
-    assert nlines2 == 10598, f"nlines != 10598 ({nlines2})"
+    assert nlines2 == 27645, f"nlines != 10598 ({nlines2})"
 
     # with values directly given at vertices and binary
-    vtk.export_vector(
-        m, q, f"{output_dir}_bin", "discharge_verts", binary=True
-    )
+    vtkobj = Vtk(m, xml=True, binary=False)
+    vtkobj.add_vector(q, "discharge")
+    vtkobj.write(os.path.join(f"{output_dir}_bin", filenametocheck))
+
     filetocheck = os.path.join(f"{output_dir}_bin", filenametocheck)
-    # totalbytes3 = os.path.getsize(filetocheck)
-    # assert(totalbytes3==891486)
-    # nlines3 = count_lines_in_file(filetocheck, binary=True)
-    # assert(nlines3==3012)
     assert os.path.exists(
         filetocheck
     ), f"file (1) does not exist: {filetocheck}"
 
-    return
 
+def test_vtk_unstructured():
+    try:
+        import vtk
+        from vtk.util import numpy_support
+    except ImportError:
+        return
 
-def test_vtk_vti():
-    # create model with regular and equal grid spacing in x, y and z directions
-    name = "test_vti"
-    m = flopy.modflow.Modflow(name)
-    nlay, nrow, ncol = 2, 3, 4
-    delr = np.ones(ncol)
-    delc = np.ones(nrow)
-    top = 2.0 * np.ones((nrow, ncol))
-    botm1 = np.ones((1, nrow, ncol))
-    botm2 = np.zeros((1, nrow, ncol))
-    botm = np.concatenate((botm1, botm2))
-    dis = flopy.modflow.ModflowDis(
-        m, nlay, nrow, ncol, delr=delr, delc=delc, top=top, botm=botm
+    def load_verts(fname):
+        verts = np.genfromtxt(
+            fname, dtype=[int, float, float], names=["iv", "x", "y"]
+        )
+        verts["iv"] -= 1  # zero based
+        return verts
+
+    def load_iverts(fname):
+        f = open(fname, "r")
+        iverts = []
+        xc = []
+        yc = []
+        for line in f:
+            ll = line.strip().split()
+            iverts.append([int(i) - 1 for i in ll[4:]])
+            xc.append(float(ll[1]))
+            yc.append(float(ll[2]))
+        return iverts, np.array(xc), np.array(yc)
+
+    u_data_ws = os.path.join("..", "examples", "data", "unstructured")
+    outfile = os.path.join("temp", "t050", "vtk_disu_model", "disu_grid.vtu")
+
+    # load vertices
+    fname = os.path.join(u_data_ws, "ugrid_verts.dat")
+    verts = load_verts(fname)
+
+    # load the index list into iverts, xc, and yc
+    fname = os.path.join(u_data_ws, "ugrid_iverts.dat")
+    iverts, xc, yc = load_iverts(fname)
+
+    # create a 3 layer model grid
+    ncpl = np.array(3 * [len(iverts)])
+    nnodes = np.sum(ncpl)
+
+    top = np.ones(
+        (nnodes),
     )
-    output_dir = os.path.join(cpth, m.name)
-    filenametocheck = "DIS.vti"
-
-    # export and check
-    dis.export(output_dir, fmt="vtk")
-    filetocheck = os.path.join(output_dir, filenametocheck)
-    # totalbytes = os.path.getsize(filetocheck)
-    # assert(totalbytes==1075)
-    nlines = count_lines_in_file(filetocheck)
-    assert nlines == 17, f"nlines ({nlines}) not equal to 17"
-
-    # with point scalar
-    dis.export(f"{output_dir}_points", fmt="vtk", point_scalars=True)
-    filetocheck = os.path.join(f"{output_dir}_points", filenametocheck)
-    # totalbytes1 = os.path.getsize(filetocheck)
-    # assert(totalbytes1==2474)
-    nlines1 = count_lines_in_file(filetocheck)
-    assert nlines1 == 29, f"nlines1 ({nlines1}) not equal to 29"
-
-    # with binary
-    dis.export(f"{output_dir}_bin", fmt="vtk", binary=True)
-    filetocheck = os.path.join(f"{output_dir}_bin", filenametocheck)
-    # totalbytes2 = os.path.getsize(filetocheck)
-    # assert(totalbytes2==1144)
-    # nlines2 = count_lines_in_file(filetocheck, binary=True)
-    # assert(nlines2==18)
-    assert os.path.exists(filetocheck)
-
-    # force .vtr
-    filenametocheck = "DIS.vtr"
-    dis.export(output_dir, fmt="vtk", vtk_grid_type="RectilinearGrid")
-    filetocheck = os.path.join(output_dir, filenametocheck)
-    # totalbytes3 = os.path.getsize(filetocheck)
-    # assert(totalbytes3==1606)
-    nlines3 = count_lines_in_file(filetocheck)
-    assert nlines3 == 37, f"nlines3 ({nlines3}) not equal to 37"
-
-    # force .vtu
-    filenametocheck = "DIS.vtu"
-    dis.export(output_dir, fmt="vtk", vtk_grid_type="UnstructuredGrid")
-    filetocheck = os.path.join(output_dir, filenametocheck)
-    # totalbytes4 = os.path.getsize(filetocheck)
-    # assert(totalbytes4==5723)
-    nlines4 = count_lines_in_file(filetocheck)
-    assert nlines4 == 125, f"nlines4 ({nlines4}) not equal to 125"
-
-    # vector
-    filenametocheck = "vect.vti"
-    ones_array = np.ones(m.modelgrid.shape)
-    v = (ones_array, 2.0 * ones_array, 3.0 * ones_array)
-    vtk.export_vector(m, v, output_dir, "vect", point_scalars=True)
-    filetocheck = os.path.join(output_dir, filenametocheck)
-    # totalbytes5 = os.path.getsize(filetocheck)
-    # assert(totalbytes5==1578)
-    nlines5 = count_lines_in_file(filetocheck)
-    assert nlines5 == 20
-
-    # vector with point scalars and binary
-    vtk.export_vector(
-        m, v, f"{output_dir}_bin", "vect", point_scalars=True, binary=True
-    )
-    filetocheck = os.path.join(f"{output_dir}_bin", filenametocheck)
-    # totalbytes6 = os.path.getsize(filetocheck)
-    # assert(totalbytes6==2666)
-    # nlines6 = count_lines_in_file(filetocheck, binary=True)
-    # assert(nlines6==18)
-    assert os.path.exists(filetocheck)
-
-    return
-
-
-def test_vtk_vtr():
-    # test mf 2005 l1a2k
-    mpth = os.path.join("..", "examples", "data", "mf2005_test")
-    namfile = "l1a2k.nam"
-    m = flopy.modflow.Modflow.load(namfile, model_ws=mpth, verbose=False)
-    output_dir = os.path.join(cpth, m.name)
-    filenametocheck = "EVT_01.vtr"
-
-    # export and check
-    m.export(output_dir, fmt="vtk")
-    filetocheck = os.path.join(output_dir, filenametocheck)
-    # totalbytes = os.path.getsize(filetocheck)
-    # assert(totalbytes==79953)
-    nlines = count_lines_in_file(filetocheck)
-    assert nlines == 87
-
-    # with point scalar
-    m.export(f"{output_dir}_points", fmt="vtk", point_scalars=True)
-    filetocheck = os.path.join(f"{output_dir}_points", filenametocheck)
-    # totalbytes1 = os.path.getsize(filetocheck)
-    # assert(totalbytes1==182168)
-    nlines1 = count_lines_in_file(filetocheck)
-    assert nlines1 == 121
-
-    # with binary
-    m.export(f"{output_dir}_bin", fmt="vtk", binary=True)
-    filetocheck = os.path.join(f"{output_dir}_bin", filenametocheck)
-    # totalbytes2 = os.path.getsize(filetocheck)
-    # assert(totalbytes2==47874)
-    # nlines2 = count_lines_in_file(filetocheck, binary=True)
-    # assert(nlines2==28)
-    assert os.path.exists(filetocheck)
-
-    # force .vtu
-    filenametocheck = "EVT_01.vtu"
-    m.export(output_dir, fmt="vtk", vtk_grid_type="UnstructuredGrid")
-    filetocheck = os.path.join(output_dir, filenametocheck)
-    # totalbytes3 = os.path.getsize(filetocheck)
-    # assert(totalbytes3==78762)
-    nlines3 = count_lines_in_file(filetocheck)
-    assert nlines3 == 1105
-
-    return
-
-
-def test_vtk_export_true2d_regular():
-    mpath = os.path.join("..", "examples", "data", "mf2005_test")
-    output_dir = os.path.join(cpth, "true2d_regular")
-
-    # test mf 2005 test1ss, which has one layer with non-constant elevations
-    namfile = "test1ss.nam"
-    m = flopy.modflow.Modflow.load(
-        namfile, model_ws=mpath, verbose=False, load_only=["dis", "bas6"]
+    botm = np.ones(
+        (nnodes),
     )
 
-    # export and check (.vti, with point scalars)
-    m.dis.botm.export(
-        output_dir,
-        name="test1ss_botm",
-        fmt="vtk",
-        point_scalars=True,
-        true2d=True,
-    )
-    filetocheck = os.path.join(output_dir, "test1ss_botm.vti")
-    # totalbytes = os.path.getsize(filetocheck)
-    # assert(totalbytes==3371)
-    nlines = count_lines_in_file(filetocheck)
-    assert nlines == 32
+    # set top and botm elevations
+    i0 = 0
+    i1 = ncpl[0]
+    elevs = [100, 0, -100, -200]
+    for ix, cpl in enumerate(ncpl):
+        top[i0:i1] *= elevs[ix]
+        botm[i0:i1] *= elevs[ix + 1]
+        i0 += cpl
+        i1 += cpl
 
-    # vector (.vti, with point scalars)
-    vect = (m.dis.botm.array, m.dis.botm.array)
-    vtk.export_vector(
-        m,
-        vect,
-        output_dir,
-        "test1ss_botm_vect",
-        point_scalars=True,
-        true2d=True,
-    )
-    filetocheck = os.path.join(output_dir, "test1ss_botm_vect.vti")
-    # totalbytes1 = os.path.getsize(filetocheck)
-    # assert(totalbytes1==6022)
-    nlines1 = count_lines_in_file(filetocheck)
-    assert nlines1 == 32
-
-    # vector directly at vertices (.vti)
-    vect = [m.dis.botm.array, m.dis.botm.array]
-    for i, vcomp in enumerate(vect):
-        vect[i] = m.modelgrid.array_at_verts(vcomp)
-    vtk.export_vector(m, vect, output_dir, "test1ss_botm_vectv", true2d=True)
-    filetocheck = os.path.join(output_dir, "test1ss_botm_vectv.vti")
-    # totalbytes2 = os.path.getsize(filetocheck)
-    # assert(totalbytes2==3496)
-    nlines2 = count_lines_in_file(filetocheck)
-    assert nlines2 == 27
-
-    # export and check (force .vtu, with point scalars)
-    m.dis.botm.export(
-        output_dir,
-        name="test1ss_botm",
-        fmt="vtk",
-        point_scalars=True,
-        vtk_grid_type="UnstructuredGrid",
-        true2d=True,
-    )
-    filetocheck = os.path.join(output_dir, "test1ss_botm.vtu")
-    # totalbytes3 = os.path.getsize(filetocheck)
-    # assert(totalbytes3==23827)
-    nlines3 = count_lines_in_file(filetocheck)
-    assert nlines3 == 608
-
-    # test mf 2005 swiex3, which has one row
-    namfile = "swiex3.nam"
-    m = flopy.modflow.Modflow.load(
-        namfile, model_ws=mpath, verbose=False, load_only=["dis", "bas6"]
+    # create the modelgrid
+    modelgrid = flopy.discretization.UnstructuredGrid(
+        vertices=verts,
+        iverts=iverts,
+        xcenters=xc,
+        ycenters=yc,
+        top=top,
+        botm=botm,
+        ncpl=ncpl,
     )
 
-    # export and check (.vtr)
-    m.dis.botm.export(output_dir, name="swiex3_botm", fmt="vtk", true2d=True)
-    filetocheck = os.path.join(output_dir, "swiex3_botm.vtr")
-    # totalbytes4 = os.path.getsize(filetocheck)
-    # assert(totalbytes4==8022)
-    nlines4 = count_lines_in_file(filetocheck)
-    assert nlines4 == 229
-
-    # export and check (force .vtu)
-    m.dis.botm.export(
-        output_dir,
-        name="swiex3_botm",
-        fmt="vtk",
-        vtk_grid_type="UnstructuredGrid",
-        true2d=True,
+    vtkobj = Vtk(
+        modelgrid=modelgrid, vertical_exageration=2, binary=True, smooth=False
     )
-    filetocheck = os.path.join(output_dir, "swiex3_botm.vtu")
-    # totalbytes5 = os.path.getsize(filetocheck)
-    # assert(totalbytes5==85446)
-    nlines5 = count_lines_in_file(filetocheck)
-    assert nlines5 == 2426
+    vtkobj.add_array(modelgrid.top, "top")
+    vtkobj.add_array(modelgrid.botm, "botm")
+    vtkobj.write(outfile)
 
-    return
+    if not os.path.exists(outfile):
+        raise FileNotFoundError("VTK DISU test file not written")
+
+    reader = vtk.vtkUnstructuredGridReader()
+    reader.SetFileName(outfile)
+    reader.ReadAllFieldsOn()
+    reader.Update()
+
+    data = reader.GetOutput()
+
+    top2 = numpy_support.vtk_to_numpy(data.GetCellData().GetArray("top"))
+
+    if not np.allclose(np.ravel(top), top2):
+        raise AssertionError("Field data not properly written")
 
 
-def test_vtk_export_true2d_nonregxy():
-    import flopy.utils.binaryfile as bf
-    from flopy.utils import postprocessing as pp
+def test_vtk_vertex():
+    try:
+        import vtk
+        from vtk.util import numpy_support
+    except ImportError:
+        return
 
-    output_dir = os.path.join(cpth, "true2d_nonregxy")
-    cbc_unit_nb = 53
+    # disv test
+    workspace = os.path.join("..", "examples", "data", "mf6",
+                             "test003_gwfs_disv")
+    # outfile = os.path.join("vtk_transient_test", "vtk_pacakages")
+    outfile = os.path.join("temp", "t050", "vtk_disv", "disv.vtk")
+    sim = flopy.mf6.MFSimulation.load(sim_ws=workspace)
+    gwf = sim.get_model("gwf_1")
+    sim.run_simulation()
 
-    # model with one layer, non-regular grid in x and y
-    name = "nonregxy"
-    m = flopy.modflow.Modflow(name, model_ws=output_dir, exe_name="mf2005")
-    nlay, nrow, ncol = 1, 10, 10
-    delr = np.concatenate((np.ones((5,)), 2.0 * np.ones((5,))))
-    delc = delr
-    top = 50.0
-    botm = 0.0
-    dis = flopy.modflow.ModflowDis(
-        m, nlay, nrow, ncol, delr=delr, delc=delc, top=top, botm=botm
+    vtkobj = Vtk(model=gwf, binary=True, smooth=False)
+    vtkobj.add_model(gwf)
+    vtkobj.write(outfile)
+
+    outfile = outfile.split(".")[0] + "_000000.vtk"
+    if not os.path.exists(outfile):
+        raise FileNotFoundError("Vertex VTK File was not written")
+
+    reader = vtk.vtkUnstructuredGridReader()
+    reader.SetFileName(outfile)
+    reader.ReadAllFieldsOn()
+    reader.Update()
+
+    data = reader.GetOutput()
+
+    hk2 = numpy_support.vtk_to_numpy(data.GetCellData().GetArray("k"))
+    hk = gwf.npf.k.array
+    hk[gwf.modelgrid.idomain == 0] = np.nan
+
+    if not np.allclose(np.ravel(hk), hk2, equal_nan=True):
+        raise AssertionError("Field data not properly written")
+
+
+def test_vtk_pathline():
+    try:
+        import vtk
+        from vtk.util import numpy_support
+    except ImportError:
+        return
+    # pathline test for vtk
+    ws = os.path.join("..", "examples", "data", "freyberg")
+    modelpth = os.path.join("temp", "t050")
+    outfile = os.path.join(modelpth, "pathline_test", "pathline.vtk")
+    ml = flopy.modflow.Modflow.load("freyberg.nam", model_ws=ws,
+                                    exe_name="mf2005")
+    ml.change_model_ws(new_pth=modelpth)
+    ml.write_input()
+    ml.run_model()
+
+    mpp = flopy.modpath.Modpath6(
+        "freybergmpp", modflowmodel=ml, model_ws=modelpth, exe_name="mp6"
     )
-    ibound = np.ones((nlay, nrow, ncol), dtype=np.int32)
-    ibound[:, :, 0] = -1
-    ibound[:, :, -1] = -1
-    strt = np.linspace(1.0, 0.0, ncol).reshape(1, 1, ncol)
-    strt = strt * np.ones((nlay, nrow, ncol))
-    bas = flopy.modflow.ModflowBas(m, ibound=ibound, strt=strt)
-    lpf = flopy.modflow.ModflowLpf(m, hk=1.0, vka=1.0, ipakcb=cbc_unit_nb)
-    spd = {(0, 0): ["print head", "print budget", "save head", "save budget"]}
-    oc = flopy.modflow.ModflowOc(m, stress_period_data=spd, compact=True)
-    pcg = flopy.modflow.ModflowPcg(m)
-    m.write_input()
-    m.run_model(silent=True)
-
-    # export and check head with point scalar
-    hdsfile = os.path.join(output_dir, f"{name}.hds")
-    hds = bf.HeadFile(hdsfile)
-    head = hds.get_data()
-    vtk.export_array(
-        m, head, output_dir, f"{name}_head", point_scalars=True, true2d=True
+    mpbas = flopy.modpath.Modpath6Bas(
+        mpp,
+        hnoflo=ml.bas6.hnoflo,
+        hdry=ml.lpf.hdry,
+        ibound=ml.bas6.ibound.array,
+        prsity=0.2,
+        prsityCB=0.2,
     )
-    filetocheck = os.path.join(output_dir, f"{name}_head.vtr")
-    # totalbytes = os.path.getsize(filetocheck)
-    # assert(totalbytes==4997)
-    nlines = count_lines_in_file(filetocheck)
-    assert nlines == 59
-
-    # export and check specific discharge given at vertices
-    cbcfile = os.path.join(output_dir, f"{name}.cbc")
-    cbc = bf.CellBudgetFile(cbcfile)
-    keys = ["FLOW RIGHT FACE", "FLOW FRONT FACE"]
-    vectors = [cbc.get_data(text=t)[0] for t in keys]
-    q = pp.get_specific_discharge(vectors, m, position="vertices")
-    vtk.export_vector(
-        m, q, output_dir, f"{name}_q", point_scalars=True, true2d=True
+    sim = mpp.create_mpsim(
+        trackdir="backward", simtype="pathline", packages="WEL"
     )
-    filetocheck = os.path.join(output_dir, f"{name}_q.vtr")
-    # totalbytes1 = os.path.getsize(filetocheck)
-    # assert(totalbytes1==5772)
-    nlines1 = count_lines_in_file(filetocheck)
-    assert nlines1 == 54
-    return
+    mpp.write_input()
+    mpp.run_model()
 
+    pthfile = os.path.join(modelpth, mpp.sim.pathline_file)
+    pthobj = flopy.utils.PathlineFile(pthfile)
+    travel_time_max = 200.0 * 365.25 * 24.0 * 60.0 * 60.0
+    plines = pthobj.get_alldata(totim=travel_time_max, ge=False)
 
-def test_vtk_export_true2d_nonregxz():
-    import flopy.utils.binaryfile as bf
-    from flopy.utils import postprocessing as pp
+    vtkobj = Vtk(model=ml, binary=True, vertical_exageration=50, smooth=False)
+    vtkobj.add_model(ml)
+    vtkobj.add_pathline_points(plines)
+    vtkobj.write(outfile)
 
-    output_dir = os.path.join(cpth, "true2d_nonregxz")
-    cbc_unit_nb = 53
+    outfile = outfile.split(".")[0] + "_pathline.vtk"
+    if not os.path.exists(outfile):
+        raise FileNotFoundError("Pathline VTK file not properly written")
 
-    # model with one row, non-regular grid in x and stepwise z
-    name = "nonregxz"
-    m = flopy.modflow.Modflow(name, model_ws=output_dir, exe_name="mf2005")
-    nlay, nrow, ncol = 2, 1, 10
-    delr = np.concatenate((np.ones((5,)), 2.0 * np.ones((5,))))
-    delc = 1.0
-    top = np.linspace(2.0, 3.0, ncol).reshape((1, 1, ncol))
-    botm1 = np.linspace(1.0, 2.5, ncol).reshape((1, 1, ncol))
-    botm2 = np.linspace(0.0, 0.5, ncol).reshape((1, 1, ncol))
-    botm = np.concatenate((botm1, botm2))
-    dis = flopy.modflow.ModflowDis(
-        m, nlay, nrow, ncol, delr=delr, delc=delc, top=top, botm=botm
-    )
-    ibound = np.ones((nlay, nrow, ncol), dtype=np.int32)
-    ibound[:, :, 0] = -1
-    ibound[:, :, -1] = -1
-    strt = np.linspace(0.0, 1.0, ncol).reshape(1, 1, ncol)
-    strt = strt * np.ones((nlay, nrow, ncol))
-    bas = flopy.modflow.ModflowBas(m, ibound=ibound, strt=strt)
-    lpf = flopy.modflow.ModflowLpf(m, hk=1.0, vka=1.0, ipakcb=cbc_unit_nb)
-    spd = {(0, 0): ["print head", "print budget", "save head", "save budget"]}
-    oc = flopy.modflow.ModflowOc(m, stress_period_data=spd, compact=True)
-    pcg = flopy.modflow.ModflowPcg(m)
-    m.write_input()
-    m.run_model(silent=True)
+    reader = vtk.vtkUnstructuredGridReader()
+    reader.SetFileName(outfile)
+    reader.ReadAllFieldsOn()
+    reader.Update()
 
-    # export and check head
-    hdsfile = os.path.join(output_dir, f"{name}.hds")
-    hds = bf.HeadFile(hdsfile)
-    head = hds.get_data()
-    vtk.export_array(m, head, output_dir, f"{name}_head", true2d=True)
-    filetocheck = os.path.join(output_dir, f"{name}_head.vtu")
-    # totalbytes = os.path.getsize(filetocheck)
-    # assert(totalbytes==4217)
-    nlines = count_lines_in_file(filetocheck)
-    assert nlines == 105
+    data = reader.GetOutput()
 
-    # export and check head with point scalar
-    hdsfile = os.path.join(output_dir, f"{name}.hds")
-    hds = bf.HeadFile(hdsfile)
-    head = hds.get_data()
-    vtk.export_array(
-        m,
-        head,
-        output_dir,
-        f"{name}_head_points",
-        point_scalars=True,
-        true2d=True,
-    )
-    filetocheck = os.path.join(output_dir, f"{name}_head_points.vtu")
-    # totalbytes1 = os.path.getsize(filetocheck)
-    # assert(totalbytes1==6155)
-    nlines1 = count_lines_in_file(filetocheck)
-    assert nlines1 == 129
+    totim = numpy_support.vtk_to_numpy(data.GetCellData().GetArray("time"))
+    pid = numpy_support.vtk_to_numpy(data.GetCellData().GetArray("particleid"))
 
-    # export and check specific discharge given at vertices
-    cbcfile = os.path.join(output_dir, f"{name}.cbc")
-    cbc = bf.CellBudgetFile(cbcfile)
-    keys = ["FLOW RIGHT FACE", "FLOW LOWER FACE"]
-    vectors = [cbc.get_data(text=t)[0] for t in keys]
-    vectors.insert(1, None)
-    q = pp.get_specific_discharge(vectors, m, position="vertices")
-    vtk.export_vector(
-        m, q, output_dir, f"{name}_q", point_scalars=True, true2d=True
-    )
-    filetocheck = os.path.join(output_dir, f"{name}_q.vtu")
-    # totalbytes2 = os.path.getsize(filetocheck)
-    # assert(totalbytes2==7036)
-    nlines2 = count_lines_in_file(filetocheck)
-    assert nlines2 == 123
-    return
+    maxtime = 0
+    for p in plines:
+        if np.max(p['time']) > maxtime:
+            maxtime = np.max(p['time'])
 
+    if not len(totim) == 12054:
+        raise AssertionError("Array size is incorrect for modpath VTK")
 
-def test_vtk_export_true2d_nonregyz():
-    import flopy.utils.binaryfile as bf
-    from flopy.utils import postprocessing as pp
+    if not np.abs(np.max(totim) - maxtime) < 100:
+        raise AssertionError("time values are incorrect for modpath VTK")
 
-    output_dir = os.path.join(cpth, "true2d_nonregyz")
-    cbc_unit_nb = 53
-
-    # model with one col, non-regular grid in y and stepwise z
-    name = "nonregyz"
-    m = flopy.modflow.Modflow(name, model_ws=output_dir, exe_name="mf2005")
-    nlay, nrow, ncol = 2, 10, 1
-    delr = 1.0
-    delc = np.concatenate((2.0 * np.ones((5,)), np.ones((5,))))
-    top = np.linspace(3.0, 2.0, nrow).reshape((1, nrow, 1))
-    botm1 = np.linspace(2.5, 1.0, nrow).reshape((1, nrow, 1))
-    botm2 = np.linspace(0.5, 0.0, nrow).reshape((1, nrow, 1))
-    botm = np.concatenate((botm1, botm2))
-    dis = flopy.modflow.ModflowDis(
-        m, nlay, nrow, ncol, delr=delr, delc=delc, top=top, botm=botm
-    )
-    ibound = np.ones((nlay, nrow, ncol), dtype=np.int32)
-    ibound[:, 0, :] = -1
-    ibound[:, -1, :] = -1
-    strt = np.linspace(1.0, 0.0, nrow).reshape(1, nrow, 1)
-    strt = strt * np.ones((nlay, nrow, ncol))
-    bas = flopy.modflow.ModflowBas(m, ibound=ibound, strt=strt)
-    lpf = flopy.modflow.ModflowLpf(m, hk=1.0, vka=1.0, ipakcb=cbc_unit_nb)
-    spd = {(0, 0): ["print head", "print budget", "save head", "save budget"]}
-    oc = flopy.modflow.ModflowOc(m, stress_period_data=spd, compact=True)
-    pcg = flopy.modflow.ModflowPcg(m)
-    m.write_input()
-    m.run_model(silent=True)
-
-    # export and check head
-    hdsfile = os.path.join(output_dir, f"{name}.hds")
-    hds = bf.HeadFile(hdsfile)
-    head = hds.get_data()
-    vtk.export_array(m, head, output_dir, f"{name}_head", true2d=True)
-    filetocheck = os.path.join(output_dir, f"{name}_head.vtu")
-    # totalbytes = os.path.getsize(filetocheck)
-    # assert(totalbytes==4217)
-    nlines = count_lines_in_file(filetocheck)
-    assert nlines == 105
-
-    # export and check head with point scalar
-    hdsfile = os.path.join(output_dir, f"{name}.hds")
-    hds = bf.HeadFile(hdsfile)
-    head = hds.get_data()
-    vtk.export_array(
-        m,
-        head,
-        output_dir,
-        f"{name}_head_points",
-        point_scalars=True,
-        true2d=True,
-    )
-    filetocheck = os.path.join(output_dir, f"{name}_head_points.vtu")
-    # totalbytes1 = os.path.getsize(filetocheck)
-    # assert(totalbytes1==6155)
-    nlines1 = count_lines_in_file(filetocheck)
-    assert nlines1 == 129
-
-    # export and check specific discharge given at vertices
-    cbcfile = os.path.join(output_dir, f"{name}.cbc")
-    cbc = bf.CellBudgetFile(cbcfile)
-    keys = ["FLOW FRONT FACE", "FLOW LOWER FACE"]
-    vectors = [cbc.get_data(text=t)[0] for t in keys]
-    vectors.insert(0, None)
-    q = pp.get_specific_discharge(vectors, m, position="vertices")
-    vtk.export_vector(
-        m, q, output_dir, f"{name}_q", point_scalars=True, true2d=True
-    )
-    filetocheck = os.path.join(output_dir, f"{name}_q.vtu")
-    # totalbytes2 = os.path.getsize(filetocheck)
-    # assert(totalbytes2==7032)
-    nlines2 = count_lines_in_file(filetocheck)
-    assert nlines2 == 123
-    return
+    if not np.max(pid) == len(plines):
+        raise AssertionError(
+            "number of particles are incorrect for modpath VTK"
+        )
 
 
 if __name__ == "__main__":
-    # test_vtk_export_array2d()
-    # test_vtk_export_array3d()
-    # test_vtk_transient_array_2d()
+    test_vtk_export_array2d()
+    test_vtk_export_array3d()
+    test_vtk_transient_array_2d()
     test_vtk_export_packages()
-    # test_vtk_mf6()
-    # test_vtk_binary_head_export()
-    # test_vtk_cbc()
-    # test_vtk_vector()
-    test_vtk_vti()
-    # test_vtk_vtr()
-    # test_vtk_export_true2d_regular()
-    # test_vtk_export_true2d_nonregxy()
-    # test_vtk_export_true2d_nonregxz()
-    # test_vtk_export_true2d_nonregyz()
+    test_vtk_mf6()
+    test_vtk_binary_head_export()
+    test_vtk_cbc()
+    test_vtk_vector()
+    test_vtk_unstructured()
+    test_vtk_vertex()
+    test_vtk_pathline()
