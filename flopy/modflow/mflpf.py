@@ -262,7 +262,6 @@ class ModflowLpf(Package):
             hdry  # Head in cells that are converted to dry during a simulation
         )
         self.nplpf = 0  # number of LPF parameters
-        self.ikcflag = 0  # 1 and -1 are not supported.
         self.laytyp = Util2d(model, (nlay,), np.int32, laytyp, name="laytyp")
         self.layavg = Util2d(model, (nlay,), np.int32, layavg, name="layavg")
         self.chani = Util2d(model, (nlay,), np.float32, chani, name="chani")
@@ -390,21 +389,10 @@ class ModflowLpf(Package):
         # Item 0: text
         f.write(f"{self.heading}\n")
 
-        # Item 1: IBCFCB, HDRY, NPLPF, <IKCFLAG>, OPTIONS
-        if self.parent.version == "mfusg" and self.parent.structured == False:
-            f.write(
-                "{0:10d}{1:10.6G}{2:10d}{3:10d} {4:s}\n".format(
-                    self.ipakcb,
-                    self.hdry,
-                    self.nplpf,
-                    self.ikcflag,
-                    self.options,
-                )
-            )
-        else:
-            f.write(
-                f"{self.ipakcb:10d}{self.hdry:10.6G}{self.nplpf:10d} {self.options}\n"
-            )
+        # Item 1: IBCFCB, HDRY, NPLPF, OPTIONS
+        f.write(
+            f"{self.ipakcb:10d}{self.hdry:10.6G}{self.nplpf:10d} {self.options}\n"
+        )
         # LAYTYP array
         f.write(self.laytyp.string)
         # LAYAVG array
@@ -497,9 +485,6 @@ class ModflowLpf(Package):
         t = line_parse(line)
         ipakcb, hdry, nplpf = int(t[0]), float(t[1]), int(t[2])
         item1_len = 3
-        if model.version == "mfusg" and model.structured == False:
-            ikcflag = int(t[3])
-            item1_len = 4
         # if ipakcb != 0:
         #    model.add_pop_key_list(ipakcb)
         #    ipakcb = 53

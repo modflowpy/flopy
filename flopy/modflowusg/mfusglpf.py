@@ -9,20 +9,20 @@ MODFLOW Guide
 """
 import numpy as np
 from ..modflow.mfpar import ModflowPar as mfpar
+from ..modflow.mflpf import ModflowLpf
 
-from ..pakbase import Package
 from ..utils import Util2d, Util3d, read1d
 from ..utils.flopy_io import line_parse
 
 
-class ModflowUsgLpf(Package):
+class ModflowUsgLpf(ModflowLpf):
     """
     MODFLOW Layer Property Flow Package Class.
 
     Parameters
     ----------
     model : model object
-        The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
+        The model object (of type :class:`flopy.modflowusg.mfusg.ModflowUsg`) to which
         this package will be added.
     ipakcb : int
         A flag that is used to determine if cell-by-cell budget data should be
@@ -188,6 +188,7 @@ class ModflowUsgLpf(Package):
 
     >>> import flopy
     >>> m = flopy.modflowusg.ModflowUsg()
+    >>> disu = flopy.modflowusg.ModflowUsgDisU(model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
     >>> lpf = flopy.modflowusg.ModflowUsgLpf(m)
 
     """
@@ -228,78 +229,44 @@ class ModflowUsgLpf(Package):
         filenames=None,
     ):
 
-        # set default unit number of one is not specified
-        if unitnumber is None:
-            unitnumber = ModflowUsgLpf._defaultunit()
-
-        # set filenames
-        if filenames is None:
-            filenames = [None, None]
-        elif isinstance(filenames, str):
-            filenames = [filenames, None]
-        elif isinstance(filenames, list):
-            if len(filenames) < 2:
-                filenames.append(None)
-
-        # update external file information with cbc output, if necessary
-        if ipakcb is not None:
-            fname = filenames[1]
-            model.add_output_file(
-                ipakcb, fname=fname, package=ModflowUsgLpf._ftype()
-            )
-        else:
-            ipakcb = 0
-
-        # Fill namefile items
-        name = [ModflowUsgLpf._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        super().__init__(
             model,
+            laytyp=laytyp,
+            layavg=layavg,
+            chani=chani,
+            layvka=layvka,
+            laywet=laywet,
+            ipakcb=ipakcb,
+            hdry=hdry,
+            iwdflg=iwdflg,
+            wetfct=wetfct,
+            iwetit=iwetit,
+            ihdwet=ihdwet,
+            hk=hk,
+            hani=hani,
+            vka=vka,
+            ss=ss,
+            sy=sy,
+            vkcb=vkcb,
+            wetdry=wetdry,
+            storagecoefficient=storagecoefficient,
+            constantcv=constantcv,
+            thickstrt=thickstrt,
+            nocvcorrection=nocvcorrection,
+            novfc=novfc,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            unitnumber=unitnumber,
+            filenames=filenames,
         )
-
-        self._generate_heading()
-        self.url = "lpf.htm"
-        nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
 
         dis = model.get_package("DIS")
         if dis is None:
             dis = model.get_package("DISU")
         structured = self.parent.structured
 
-        # item 1
-        self.ipakcb = ipakcb
-        self.hdry = (
-            hdry  # Head in cells that are converted to dry during a simulation
-        )
-        self.nplpf = 0  # number of LPF parameters
-        self.ikcflag = ikcflag  # unstructured grid
+        self.ikcflag = ikcflag
         if structured:
             self.ikcflag = 0
-        self.laytyp = Util2d(model, (nlay,), np.int32, laytyp, name="laytyp")
-        self.layavg = Util2d(model, (nlay,), np.int32, layavg, name="layavg")
-        self.chani = Util2d(model, (nlay,), np.float32, chani, name="chani")
-        self.layvka = Util2d(model, (nlay,), np.int32, layvka, name="layvka")
-        self.laywet = Util2d(model, (nlay,), np.int32, laywet, name="laywet")
-        # Factor that is included in the calculation of the head when a cell is
-        # converted from dry to wet
-        self.wetfct = wetfct
-        # Iteration interval for attempting to wet cells
-        self.iwetit = iwetit
-        # Flag that determines which equation is used to define the initial
-        # head at cells that become wet
-        self.ihdwet = ihdwet
         self.options = " "
         if storagecoefficient:
             self.options = self.options + "STORAGECOEFFICIENT "
@@ -319,75 +286,9 @@ class ModflowUsgLpf(Package):
                 (njag,),
                 np.float32,
                 anglex,
-                "Transmissivity",
+                "anglex",
                 locat=self.unit_number[0],
             )
-
-        self.hk = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            hk,
-            name="hk",
-            locat=self.unit_number[0],
-        )
-        self.hani = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            hani,
-            name="hani",
-            locat=self.unit_number[0],
-        )
-        keys = []
-        for k in range(nlay):
-            key = "vka"
-            if self.layvka[k] != 0:
-                key = "vani"
-            keys.append(key)
-        self.vka = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            vka,
-            name=keys,
-            locat=self.unit_number[0],
-        )
-        tag = "ss"
-        if storagecoefficient:
-            tag = "storage"
-        self.ss = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            ss,
-            name=tag,
-            locat=self.unit_number[0],
-        )
-        self.sy = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            sy,
-            name="sy",
-            locat=self.unit_number[0],
-        )
-        self.vkcb = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            vkcb,
-            name="vkcb",
-            locat=self.unit_number[0],
-        )
-        self.wetdry = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            wetdry,
-            name="wetdry",
-            locat=self.unit_number[0],
-        )
 
         if not structured:
             njag = dis.njag
@@ -492,7 +393,7 @@ class ModflowUsgLpf(Package):
                     f.write(self.wetdry[k].get_file_entry())
 
             if self.ikcflag == 1 or self.ikcflag == -1:
-                f_bcf.write(self.ksat[k].get_file_entry())
+                f.write(self.ksat[k].get_file_entry())
 
         f.close()
         return
@@ -788,9 +689,9 @@ class ModflowUsgLpf(Package):
                 wetdry[k] = t
 
         # Ksat  mfusg
-        if ikcflag == 1 or ikcflag == -1:
+        if abs(ikcflag) == 1:
             if model.verbose:
-                print(f"   loading ksat layer {k + 1:3d}...")
+                print(f"   loading ksat...")
             t = Util2d.load(
                 f, model, (njag,), np.float32, "ksat", ext_unit_dict
             )
@@ -853,11 +754,3 @@ class ModflowUsgLpf(Package):
                 level=0,
             )
         return lpf
-
-    @staticmethod
-    def _ftype():
-        return "LPF"
-
-    @staticmethod
-    def _defaultunit():
-        return 15

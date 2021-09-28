@@ -1,6 +1,6 @@
 """
 mfdisu module.  Contains the ModflowUsgDisU class. Note that the user can access
-the ModflowUsgDisU class as `flopy.modflow.ModflowUsgDisU`.
+the ModflowUsgDisU class as `flopy.modflowusg.ModflowUsgDisU`.
 
 """
 import numpy as np
@@ -20,7 +20,7 @@ class ModflowUsgDisU(Package):
     Parameters
     ----------
     model : model object
-        The model object (of type :class:`flopy.modflow.Modflow`) to which
+        The model object (of type :class:`flopy.modflowusg.ModflowUsg`) to which
         this package will be added.
     nodes : int
         Number of nodes in the model grid (default is 2).
@@ -191,8 +191,8 @@ class ModflowUsgDisU(Package):
     --------
 
     >>> import flopy
-    >>> m = flopy.modflow.Modflow()
-    >>> disu = flopy.modflow.ModflowUsgDisU(m)
+    >>> m = flopy.modflowusg.ModflowUsg()
+    >>> disu = flopy.modflowusg.ModflowUsgDisU(m)
 
     """
 
@@ -523,7 +523,7 @@ class ModflowUsgDisU(Package):
         f : filename or file handle
             File to load.
         model : model object
-            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            The model object (of type :class:`flopy.modflowusg.ModflowUsg`) to
             which this package will be added.
         ext_unit_dict : dictionary, optional
             If the arrays in the file are specified using EXTERNAL,
@@ -543,8 +543,8 @@ class ModflowUsgDisU(Package):
         --------
 
         >>> import flopy
-        >>> m = flopy.modflow.Modflow()
-        >>> disu = flopy.modflow.ModflowUsgDisU.load('test.disu', m)
+        >>> m = flopy.modflowusg.ModflowUsg()
+        >>> disu = flopy.modflowusg.ModflowUsgDisU.load('test.disu', m)
 
         """
 
