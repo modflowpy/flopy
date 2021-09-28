@@ -504,7 +504,6 @@ def test_vtk_vertex():
     outfile = os.path.join("temp", "t050", "vtk_disv", "disv.vtk")
     sim = flopy.mf6.MFSimulation.load(sim_ws=workspace)
     gwf = sim.get_model("gwf_1")
-    sim.run_simulation()
 
     vtkobj = Vtk(model=gwf, binary=True, smooth=False)
     vtkobj.add_model(gwf)
@@ -597,7 +596,7 @@ def test_vtk_pathline():
     if not np.abs(np.max(totim) - maxtime) < 100:
         raise AssertionError("time values are incorrect for modpath VTK")
 
-    if not np.max(pid) == len(plines):
+    if not len(np.unique(pid)) == len(plines):
         raise AssertionError(
             "number of particles are incorrect for modpath VTK"
         )
