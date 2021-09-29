@@ -1,8 +1,13 @@
-import numpy as np
+"""
+The vtk module provides functionality for exporting model inputs and
+outputs to VTK.
+"""
+
 import os
+import warnings
+import numpy as np
 from flopy.datbase import DataType, DataInterface
 from flopy.utils import Util3d
-import warnings
 
 warnings.simplefilter("always", DeprecationWarning)
 
@@ -13,6 +18,7 @@ VTKIGNORE = ("vkcb", "perlen", "steady", "tsmult", "nstp")
 class Pvd:
     """
     Simple class to build a Paraview Data File (PVD)
+
     """
 
     def __init__(self):
@@ -331,7 +337,7 @@ class Vtk:
         xvert = np.ones((max_shared, num_points)) * np.nan
         yvert = np.ones((max_shared, num_points)) * np.nan
         for k, d in graph.items():
-            for ix, pt in enumerate(d["vtk_points"]):
+            for _, pt in enumerate(d["vtk_points"]):
                 for ixx, value in enumerate(d["idx"]):
                     numpy_graph[ixx, pt] = value
                     xvert[ixx, pt] = d["xv"][ixx]
