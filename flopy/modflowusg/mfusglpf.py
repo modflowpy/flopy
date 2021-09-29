@@ -392,8 +392,8 @@ class ModflowUsgLpf(ModflowLpf):
                 if self.laywet[k] != 0 and self.laytyp[k] != 0:
                     f.write(self.wetdry[k].get_file_entry())
 
-            if self.ikcflag == 1 or self.ikcflag == -1:
-                f.write(self.ksat[k].get_file_entry())
+        if abs(self.ikcflag == 1):
+            f.write(self.ksat.get_file_entry())
 
         f.close()
         return
@@ -429,6 +429,7 @@ class ModflowUsgLpf(ModflowLpf):
 
         >>> import flopy
         >>> m = flopy.modflowusg.ModflowUsg()
+        >>> disu = flopy.modflowusg.ModflowUsgDisU(model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
         >>> lpf = flopy.modflowusg.ModflowUsgLpf.load('test.lpf', m)
 
         """

@@ -161,7 +161,7 @@ class ModflowBcf(Package):
             (nlay,),
             np.int32,
             intercellt,
-            name="laycon",
+            name="intercellt",
             locat=self.unit_number[0],
         )
         self.laycon = Util2d(
@@ -239,7 +239,8 @@ class ModflowBcf(Package):
             "WETDRY",
             locat=self.unit_number[0],
         )
-        self.parent.add_package(self)
+        if self.parent.version != "mfusg":
+            self.parent.add_package(self)
         return
 
     def write_file(self, f=None):

@@ -351,7 +351,8 @@ class ModflowLpf(Package):
             name="wetdry",
             locat=self.unit_number[0],
         )
-        self.parent.add_package(self)
+        if self.parent.version != "mfusg":
+            self.parent.add_package(self)
         return
 
     def write_file(self, check=True, f=None):

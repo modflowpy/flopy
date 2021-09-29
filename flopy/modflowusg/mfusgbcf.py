@@ -5,12 +5,12 @@ access the ModflowUsgBcf class as `flopy.modflowusg.ModflowUsgBcf`.
 """
 import numpy as np
 
-from ..pakbase import Package
+from ..modflow import ModflowBcf
 from ..utils import Util2d, Util3d
 from ..utils.flopy_io import line_parse
 
 
-class ModflowUsgBcf(Package):
+class ModflowUsgBcf(ModflowBcf):
     """
     Block Centered Flow (BCF) Package Class for MODFLOW-USG.
 
@@ -109,7 +109,8 @@ class ModflowUsgBcf(Package):
     --------
 
     >>> import flopy
-    >>> ml = flopy.modflow.Modflow()
+    >>> ml = flopy.modflowusg.ModflowUsg()
+    >>> disu = flopy.modflowusg.ModflowUsgDisU(model=ml, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
     >>> bcf = flopy.modflowusg.ModflowUsgBcf(ml)
 
     """
@@ -142,78 +143,35 @@ class ModflowUsgBcf(Package):
         filenames=None,
     ):
 
-        if unitnumber is None:
-            unitnumber = ModflowUsgBcf._defaultunit()
-
-        # set filenames
-        if filenames is None:
-            filenames = [None, None]
-        elif isinstance(filenames, str):
-            filenames = [filenames, None]
-        elif isinstance(filenames, list):
-            if len(filenames) < 2:
-                filenames.append(None)
-
-        # update external file information with cbc output, if necessary
-        if ipakcb is not None:
-            fname = filenames[1]
-            model.add_output_file(
-                ipakcb, fname=fname, package=ModflowUsgBcf._ftype()
-            )
-        else:
-            ipakcb = 0
-
-        # Fill namefile items
-        name = [ModflowUsgBcf._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        super().__init__(
             model,
+            ipakcb=ipakcb,
+            intercellt=intercellt,
+            laycon=laycon,
+            trpy=trpy,
+            hdry=hdry,
+            iwdflg=iwdflg,
+            wetfct=wetfct,
+            iwetit=iwetit,
+            ihdwet=ihdwet,
+            tran=tran,
+            hy=hy,
+            vcont=vcont,
+            sf1=sf1,
+            sf2=sf2,
+            wetdry=wetdry,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            unitnumber=unitnumber,
+            filenames=filenames,
         )
 
-        self.url = "bcf.htm"
-
-        nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         dis = model.get_package("DIS")
         if dis is None:
             dis = model.get_package("DISU")
         structured = self.parent.structured
-        # Set values of all parameters
-        self.intercellt = Util2d(
-            model,
-            (nlay,),
-            np.int32,
-            intercellt,
-            name="laycon",
-            locat=self.unit_number[0],
-        )
-        self.laycon = Util2d(
-            model,
-            (nlay,),
-            np.int32,
-            laycon,
-            name="laycon",
-            locat=self.unit_number[0],
-        )
-        self.trpy = Util2d(
-            model,
-            (nlay,),
-            np.float32,
-            trpy,
-            name="Anisotropy factor",
-            locat=self.unit_number[0],
-        )
+
+        nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
+
         if not structured:
             njag = dis.njag
             self.anglex = Util2d(
@@ -221,46 +179,13 @@ class ModflowUsgBcf(Package):
                 (njag,),
                 np.float32,
                 anglex,
-                "Transmissivity",
+                "anglex",
                 locat=self.unit_number[0],
             )
 
         # item 1
-        self.ipakcb = ipakcb
-        self.hdry = hdry
-        self.iwdflg = iwdflg
-        self.wetfct = wetfct
-        self.iwetit = iwetit
-        self.ihdwet = ihdwet
         self.ikvflag = ikvflag
         self.ikcflag = ikcflag
-        self.tran = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            tran,
-            "Transmissivity",
-            locat=self.unit_number[0],
-        )
-        self.hy = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            hy,
-            "Horizontal Hydraulic Conductivity",
-            locat=self.unit_number[0],
-        )
-        if model.nlay > 1:
-            self.vcont = Util3d(
-                model,
-                (nlay - 1, nrow, ncol),
-                np.float32,
-                vcont,
-                "Vertical Conductance",
-                locat=self.unit_number[0],
-            )
-        else:
-            self.vcont = None
         self.kv = Util3d(
             model,
             (nlay, nrow, ncol),
@@ -269,38 +194,15 @@ class ModflowUsgBcf(Package):
             "Vertical Hydraulic Conductivity",
             locat=self.unit_number[0],
         )
-        self.sf1 = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            sf1,
-            "Primary Storage Coefficient",
-            locat=self.unit_number[0],
-        )
-        self.sf2 = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            sf2,
-            "Secondary Storage Coefficient",
-            locat=self.unit_number[0],
-        )
-        self.wetdry = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            wetdry,
-            "WETDRY",
-            locat=self.unit_number[0],
-        )
-        self.ksat = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            ksat,
-            "saturated conductivity or transmissivity",
-            locat=self.unit_number[0],
-        )
+        if not structured:
+            self.ksat = Util3d(
+                model,
+                (njag,),
+                np.float32,
+                ksat,
+                "ksat",
+                locat=self.unit_number[0],
+            )
         self.parent.add_package(self)
         return
 
@@ -384,8 +286,8 @@ class ModflowUsgBcf(Package):
                 (self.laycon[k] == 1) or (self.laycon[k] == 3)
             ):
                 f_bcf.write(self.wetdry[k].get_file_entry())
-            if (self.ikcflag == 1) or (self.ikcflag == -1):
-                f_bcf.write(self.ksat[k].get_file_entry())
+        if abs(self.ikcflag == 1):
+            f_bcf.write(self.ksat.get_file_entry())
 
         f_bcf.close()
 
@@ -417,7 +319,8 @@ class ModflowUsgBcf(Package):
         --------
 
         >>> import flopy
-        >>> m = flopy.modflow.Modflow()
+        >>> m = flopy.modflowusg.ModflowUsg()
+        >>> disu = flopy.modflowusg.ModflowUsgDisU(model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
         >>> bcf = flopy.modflowusg.ModflowUsgBcf.load('test.bcf', m)
 
         """
@@ -441,6 +344,7 @@ class ModflowUsgBcf(Package):
         dis = model.get_package("DIS")
         if dis is None:
             dis = model.get_package("DISU")
+            njag = dis.njag
 
         structured = model.structured
 
@@ -529,7 +433,6 @@ class ModflowUsgBcf(Package):
                 anis = True
                 break
         if (not structured) and anis:
-            njag = dis.njag
             if model.verbose:
                 print("mfusg:   loading ANGLEX...")
             t = Util2d.load(
@@ -549,7 +452,6 @@ class ModflowUsgBcf(Package):
         sf2 = [0] * nlay
         wetdry = [0] * nlay
         kv = [0] * nlay  # mfusg
-        ksat = [0] * nlay  # mfusg
 
         for k in range(nlay):
 
@@ -633,14 +535,16 @@ class ModflowUsgBcf(Package):
                 )
                 wetdry[k] = t
 
-            # Ksat  mfusg
-            if (ikcflag == 1) or (ikcflag == -1):
-                if model.verbose:
-                    print(f"   loading ksat layer {k + 1:3d}...")
-                t = Util2d.load(
-                    f, model, (nrow, ncol), np.float32, "ksat", ext_unit_dict
-                )
-                ksat[k] = t
+        # Ksat  mfusg
+        if (not structured) and abs(ikcflag == 1):
+            if model.verbose:
+                print(f"   loading ksat layer {k + 1:3d}...")
+            t = Util2d.load(
+                f, model, (njag,), np.float32, "ksat", ext_unit_dict
+            )
+            ksat = t
+        else:
+            ksat = 0
 
         if openfile:
             f.close()
@@ -687,11 +591,3 @@ class ModflowUsgBcf(Package):
 
         # return bcf object
         return bcf
-
-    @staticmethod
-    def _ftype():
-        return "BCF6"
-
-    @staticmethod
-    def _defaultunit():
-        return 15

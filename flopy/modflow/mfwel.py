@@ -156,6 +156,7 @@ class ModflowWel(Package):
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowWel._defaultunit()
+            self.unitnumber = unitnumber
 
         # set filenames
         if filenames is None:
@@ -165,6 +166,7 @@ class ModflowWel(Package):
         elif isinstance(filenames, list):
             if len(filenames) < 2:
                 filenames.append(None)
+        self.filenames = filenames
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
@@ -257,8 +259,8 @@ class ModflowWel(Package):
         self.stress_period_data = MfList(
             self, stress_period_data, binary=binary
         )
-
-        self.parent.add_package(self)
+        if self.parent.version != "mfusg":
+            self.parent.add_package(self)
 
     def _ncells(self):
         """Maximum number of cells that have wells (developed for

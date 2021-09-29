@@ -11,6 +11,7 @@ import numpy as np
 from copy import deepcopy
 from ..utils import MfList
 from ..pakbase import Package
+from ..modflow.mfwel import ModflowWel
 from ..utils.recarray_utils import create_empty_recarray
 from ..utils.flopy_io import ulstrd
 import warnings
@@ -18,7 +19,7 @@ import warnings
 from ..modflow.mfparbc import ModflowParBc as mfparbc
 
 
-class ModflowUsgWel(Package):
+class ModflowUsgWel(ModflowWel):
     """
     MODFLOW Well Package Class.
 
@@ -110,6 +111,8 @@ class ModflowUsgWel(Package):
                 [iclnnode, flux]
                 ]
             }
+    dtype : custom datatype of stress_period_data.
+        If None the default well datatype will be applied (default is None).
     extension : string
         Filename extension (default is 'wel')
     options : list of strings
@@ -149,7 +152,7 @@ class ModflowUsgWel(Package):
     --------
 
     >>> import flopy
-    >>> m = flopy.modflow.Modflow()
+    >>> m = flopy.modflowusg.ModflowUsg()
     >>> lrcq = {0:[[2, 3, 4, -100.]], 1:[[2, 3, 4, -100.]]}
     >>> wel = flopy.modflowusg.ModflowUsgWel(m, stress_period_data=lrcq)
 
@@ -161,6 +164,7 @@ class ModflowUsgWel(Package):
         ipakcb=None,
         stress_period_data=None,
         cln_stress_period_data=None,
+        dtype=None,
         extension="wel",
         options=None,
         binary=False,
@@ -171,70 +175,31 @@ class ModflowUsgWel(Package):
         Package constructor.
 
         """
-        # set default unit number of one is not specified
-        if unitnumber is None:
-            unitnumber = ModflowUsgWel._defaultunit()
 
-        # set filenames
-        if filenames is None:
-            filenames = [None, None, None]
-        elif isinstance(filenames, str):
-            filenames = [filenames, None, None]
-        elif isinstance(filenames, list):
-            if len(filenames) < 3:
-                for idx in range(len(filenames), 3):
-                    filenames.append(None)
-
-        # update external file information with cbc output, if necessary
-        if ipakcb is not None:
-            fname = filenames[1]
-            model.add_output_file(
-                ipakcb, fname=fname, package=ModflowUsgWel._ftype()
-            )
-        else:
-            ipakcb = 0
-
-        # Fill namefile items
-        name = [ModflowUsgWel._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and
-        # unit number
-        Package.__init__(
-            self,
+        super().__init__(
             model,
+            ipakcb=ipakcb,
+            stress_period_data=stress_period_data,
+            dtype=dtype,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            options=options,
+            binary=binary,
+            unitnumber=unitnumber,
+            filenames=filenames,
         )
-
-        self._generate_heading()
-        self.url = "wel.htm"
-
-        self.ipakcb = ipakcb
-
-        if options is None:
-            options = []
 
         self.autoflowreduce = False
         self.iunitafr = 0
 
-        self.options = options
-        for idx, opt in enumerate(options):
-            if "autoflowreduce" in opt:
+        for idx, opt in enumerate(self.options):
+            if "autoflowreduce" in opt.lower():
                 self.autoflowreduce = True
-            if "iunitafr" in opt:
+            if "iunitafr" in opt.lower():
                 t = opt.strip().split()
                 self.iunitafr = int(t[1])
 
         if self.iunitafr > 0:
-            fname = filenames[2]
+            fname = self.filenames[1]
             model.add_output_file(
                 self.iunitafr,
                 fname=fname,
@@ -243,30 +208,20 @@ class ModflowUsgWel(Package):
                 package=ModflowUsgWel._ftype(),
             )
 
-        # initialize MfList
-        self.dtype = ModflowUsgWel.get_default_dtype(model.structured)
-        self.stress_period_data = MfList(
-            self, stress_period_data, binary=binary
-        )
-
-        self.dtype = ModflowUsgWel.get_default_dtype(structured=False)
+        # initialize CLN MfList
+        # CLN WELs are always read as CLNNODE Q, so dtype must be of unstructured form
+        dtype_model = self.dtype
+        dtype_cln = ModflowUsgWel.get_default_dtype(structured=False)
+        self.dtype = dtype_cln
         self.cln_stress_period_data = MfList(
             self, cln_stress_period_data, binary=binary
         )
+        # reset self.dtype for cases where the model is structured but CLN WELs are used
+        self.dtype = ModflowUsgWel.get_default_dtype(
+            structured=model.structured
+        )
 
         self.parent.add_package(self)
-
-    def _ncells(self):
-        """Maximum number of cells that have wells (developed for
-        MT3DMS SSM package).
-
-        Returns
-        -------
-        ncells: int
-            maximum number of wel cells
-
-        """
-        return self.stress_period_data.mxact
 
     def write_file(self, f=None):
         """
@@ -384,39 +339,6 @@ class ModflowUsgWel(Package):
                 )
 
         f_wel.close()
-
-    def add_record(self, kper, index, values):
-        try:
-            self.stress_period_data.add_record(kper, index, values)
-        except Exception as e:
-            raise Exception(f"mfwel error adding record to list: {e!s}")
-
-    @staticmethod
-    def get_default_dtype(structured=True):
-        if structured:
-            dtype = np.dtype(
-                [
-                    ("k", int),
-                    ("i", int),
-                    ("j", int),
-                    ("flux", np.float32),
-                ]
-            )
-        else:
-            dtype = np.dtype([("node", int), ("flux", np.float32)])
-        return dtype
-
-    @staticmethod
-    def get_empty(ncells=0, aux_names=None, structured=True):
-        # get an empty recarray that corresponds to dtype
-        dtype = ModflowUsgWel.get_default_dtype(structured=structured)
-        if aux_names is not None:
-            dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        return create_empty_recarray(ncells, dtype, default_value=-1.0e10)
-
-    @staticmethod
-    def _get_sfac_columns():
-        return ["flux"]
 
     @classmethod
     def load(cls, f, model, nper=None, ext_unit_dict=None):
@@ -709,17 +631,10 @@ class ModflowUsgWel(Package):
             ipakcb=ipakcb,
             stress_period_data=stress_period_data,
             cln_stress_period_data=cln_stress_period_data,
+            dtype=ModflowUsgWel.get_default_dtype(structured=model.structured),
             options=options,
             unitnumber=unitnumber,
             filenames=filenames,
         )
 
         return wel
-
-    @staticmethod
-    def _ftype():
-        return "WEL"
-
-    @staticmethod
-    def _defaultunit():
-        return 20
