@@ -1,6 +1,6 @@
 """
-mflpf module.  Contains the ModflowLpf class. Note that the user can access
-the ModflowLpf class as `flopy.modflow.ModflowLpf`.
+mfusglpf module.  Contains the ModflowUsgLpf class. Note that the user can access
+the ModflowUsgLpf class as `flopy.modflowusg.ModflowUsgLpf`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
@@ -8,21 +8,21 @@ MODFLOW Guide
 
 """
 import numpy as np
-from .mfpar import ModflowPar as mfpar
+from ..modflow.mfpar import ModflowPar as mfpar
+from ..modflow.mflpf import ModflowLpf
 
-from ..pakbase import Package
 from ..utils import Util2d, Util3d, read1d
 from ..utils.flopy_io import line_parse
 
 
-class ModflowLpf(Package):
+class ModflowUsgLpf(ModflowLpf):
     """
     MODFLOW Layer Property Flow Package Class.
 
     Parameters
     ----------
     model : model object
-        The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
+        The model object (of type :class:`flopy.modflowusg.mfusg.ModflowUsg`) to which
         this package will be added.
     ipakcb : int
         A flag that is used to determine if cell-by-cell budget data should be
@@ -87,6 +87,16 @@ class ModflowLpf(Package):
         is a flag that determines which equation is used to define the
         initial head at cells that become wet.
         (default is 0)
+    ikcflag : int
+        flag indicating if hydraulic conductivity or transmissivity
+        information is input for each of the nodes or whether this information
+        is directly input for the nodal connections. The easiest input format
+        is to provide the hydraulic conductivity or transmissivity values to
+        the cells using a zero value for IKCFLAG.
+    anglex : float or array of floats (njag)
+        is the angle (in radians) between the horizontal x-axis and the outward
+        normal to the face between a node and its connecting nodes. The angle
+        varies between zero and 6.283185 (two pi being 360 degrees).
     hk : float or array of floats (nlay, nrow, ncol)
         is the hydraulic conductivity along rows. HK is multiplied by
         horizontal anisotropy (see CHANI and HANI) to obtain hydraulic
@@ -118,6 +128,10 @@ class ModflowLpf(Package):
         is a combination of the wetting threshold and a flag to indicate
         which neighboring cells can cause a cell to become wet.
         (default is -0.01).
+    ksat : float or array of floats (nrow, ncol)
+        inter-block saturated hydraulic conductivity or transmissivity
+        (if IKCFLAG = 1) or the inter-block conductance (if IKCFLAG = - 1)
+        of the connection between nodes n and m.
     storagecoefficient : boolean
         indicates that variable Ss and SS parameters are read as storage
         coefficient rather than specific storage.
@@ -173,8 +187,9 @@ class ModflowLpf(Package):
     --------
 
     >>> import flopy
-    >>> m = flopy.modflow.Modflow()
-    >>> lpf = flopy.modflow.ModflowLpf(m)
+    >>> m = flopy.modflowusg.ModflowUsg()
+    >>> disu = flopy.modflowusg.ModflowUsgDisU(model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
+    >>> lpf = flopy.modflowusg.ModflowUsgLpf(m)
 
     """
 
@@ -194,6 +209,8 @@ class ModflowLpf(Package):
         wetfct=0.1,
         iwetit=1,
         ihdwet=0,
+        ikcflag=0,
+        anglex=0,
         hk=1.0,
         hani=1.0,
         vka=1.0,
@@ -201,6 +218,7 @@ class ModflowLpf(Package):
         sy=0.15,
         vkcb=0.0,
         wetdry=-0.01,
+        ksat=1.0,
         storagecoefficient=False,
         constantcv=False,
         thickstrt=False,
@@ -211,70 +229,44 @@ class ModflowLpf(Package):
         filenames=None,
     ):
 
-        # set default unit number of one is not specified
-        if unitnumber is None:
-            unitnumber = ModflowLpf._defaultunit()
-
-        # set filenames
-        if filenames is None:
-            filenames = [None, None]
-        elif isinstance(filenames, str):
-            filenames = [filenames, None]
-        elif isinstance(filenames, list):
-            if len(filenames) < 2:
-                filenames.append(None)
-
-        # update external file information with cbc output, if necessary
-        if ipakcb is not None:
-            fname = filenames[1]
-            model.add_output_file(
-                ipakcb, fname=fname, package=ModflowLpf._ftype()
-            )
-        else:
-            ipakcb = 0
-
-        # Fill namefile items
-        name = [ModflowLpf._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        super().__init__(
             model,
+            laytyp=laytyp,
+            layavg=layavg,
+            chani=chani,
+            layvka=layvka,
+            laywet=laywet,
+            ipakcb=ipakcb,
+            hdry=hdry,
+            iwdflg=iwdflg,
+            wetfct=wetfct,
+            iwetit=iwetit,
+            ihdwet=ihdwet,
+            hk=hk,
+            hani=hani,
+            vka=vka,
+            ss=ss,
+            sy=sy,
+            vkcb=vkcb,
+            wetdry=wetdry,
+            storagecoefficient=storagecoefficient,
+            constantcv=constantcv,
+            thickstrt=thickstrt,
+            nocvcorrection=nocvcorrection,
+            novfc=novfc,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            unitnumber=unitnumber,
+            filenames=filenames,
         )
 
-        self._generate_heading()
-        self.url = "lpf.htm"
-        nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
+        dis = model.get_package("DIS")
+        if dis is None:
+            dis = model.get_package("DISU")
+        structured = self.parent.structured
 
-        # item 1
-        self.ipakcb = ipakcb
-        self.hdry = (
-            hdry  # Head in cells that are converted to dry during a simulation
-        )
-        self.nplpf = 0  # number of LPF parameters
-        self.laytyp = Util2d(model, (nlay,), np.int32, laytyp, name="laytyp")
-        self.layavg = Util2d(model, (nlay,), np.int32, layavg, name="layavg")
-        self.chani = Util2d(model, (nlay,), np.float32, chani, name="chani")
-        self.layvka = Util2d(model, (nlay,), np.int32, layvka, name="layvka")
-        self.laywet = Util2d(model, (nlay,), np.int32, laywet, name="laywet")
-        # Factor that is included in the calculation of the head when a cell is
-        # converted from dry to wet
-        self.wetfct = wetfct
-        # Iteration interval for attempting to wet cells
-        self.iwetit = iwetit
-        # Flag that determines which equation is used to define the initial
-        # head at cells that become wet
-        self.ihdwet = ihdwet
+        self.ikcflag = ikcflag
+        if structured:
+            self.ikcflag = 0
         self.options = " "
         if storagecoefficient:
             self.options = self.options + "STORAGECOEFFICIENT "
@@ -286,73 +278,30 @@ class ModflowLpf(Package):
             self.options = self.options + "NOCVCORRECTION "
         if novfc:
             self.options = self.options + "NOVFC "
-        self.hk = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            hk,
-            name="hk",
-            locat=self.unit_number[0],
-        )
-        self.hani = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            hani,
-            name="hani",
-            locat=self.unit_number[0],
-        )
-        keys = []
-        for k in range(nlay):
-            key = "vka"
-            if self.layvka[k] != 0:
-                key = "vani"
-            keys.append(key)
-        self.vka = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            vka,
-            name=keys,
-            locat=self.unit_number[0],
-        )
-        tag = "ss"
-        if storagecoefficient:
-            tag = "storage"
-        self.ss = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            ss,
-            name=tag,
-            locat=self.unit_number[0],
-        )
-        self.sy = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            sy,
-            name="sy",
-            locat=self.unit_number[0],
-        )
-        self.vkcb = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            vkcb,
-            name="vkcb",
-            locat=self.unit_number[0],
-        )
-        self.wetdry = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            wetdry,
-            name="wetdry",
-            locat=self.unit_number[0],
-        )
-        if self.parent.version != "mfusg":
-            self.parent.add_package(self)
+
+        if not structured:
+            njag = dis.njag
+            self.anglex = Util2d(
+                model,
+                (njag,),
+                np.float32,
+                anglex,
+                "anglex",
+                locat=self.unit_number[0],
+            )
+
+        if not structured:
+            njag = dis.njag
+            self.ksat = Util2d(
+                model,
+                (njag,),
+                np.float32,
+                ksat,
+                "ksat",
+                locat=self.unit_number[0],
+            )
+
+        self.parent.add_package(self)
         return
 
     def write_file(self, check=True, f=None):
@@ -390,10 +339,18 @@ class ModflowLpf(Package):
         # Item 0: text
         f.write(f"{self.heading}\n")
 
-        # Item 1: IBCFCB, HDRY, NPLPF, OPTIONS
-        f.write(
-            f"{self.ipakcb:10d}{self.hdry:10.6G}{self.nplpf:10d} {self.options}\n"
-        )
+        # Item 1: IBCFCB, HDRY, NPLPF, <IKCFLAG>, OPTIONS
+        if self.parent.version == "mfusg" and self.parent.structured == False:
+            f.write(
+                (
+                    f" {self.ipakcb:9d} {self.hdry:9.5G} {self.nplpf:9d}"
+                    f" {self.ikcflag:9d} {self.options:s}\n"
+                )
+            )
+        else:
+            f.write(
+                f" {self.ipakcb:9d} {self.hdry:9.5G} {self.nplpf:9d} {self.options}\n"
+            )
         # LAYTYP array
         f.write(self.laytyp.string)
         # LAYAVG array
@@ -408,20 +365,36 @@ class ModflowLpf(Package):
         iwetdry = self.laywet.sum()
         if iwetdry > 0:
             f.write(f"{self.wetfct:10f}{self.iwetit:10d}{self.ihdwet:10d}\n")
+
         transient = not dis.steady.all()
+        structured = self.parent.structured
+        anis = False
         for k in range(nlay):
-            f.write(self.hk[k].get_file_entry())
-            if self.chani[k] <= 0.0:
-                f.write(self.hani[k].get_file_entry())
-            f.write(self.vka[k].get_file_entry())
+            if self.chani[k] != 1:
+                anis = True
+                break
+        if (not structured) and anis:
+            f.write(self.anglex.get_file_entry())
+
+        for k in range(nlay):
+            if self.ikcflag == 0:  ## mfusg
+                f.write(self.hk[k].get_file_entry())
+                if self.chani[k] <= 0.0:
+                    f.write(self.hani[k].get_file_entry())
+                f.write(self.vka[k].get_file_entry())
+
             if transient == True:
                 f.write(self.ss[k].get_file_entry())
                 if self.laytyp[k] != 0:
                     f.write(self.sy[k].get_file_entry())
-            if dis.laycbd[k] > 0:
-                f.write(self.vkcb[k].get_file_entry())
-            if self.laywet[k] != 0 and self.laytyp[k] != 0:
-                f.write(self.wetdry[k].get_file_entry())
+                if self.ikcflag == 0 and dis.laycbd[k] > 0:
+                    f.write(self.vkcb[k].get_file_entry())
+                if self.laywet[k] != 0 and self.laytyp[k] != 0:
+                    f.write(self.wetdry[k].get_file_entry())
+
+        if abs(self.ikcflag == 1):
+            f.write(self.ksat.get_file_entry())
+
         f.close()
         return
 
@@ -435,7 +408,7 @@ class ModflowLpf(Package):
         f : filename or file handle
             File to load.
         model : model object
-            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            The model object (of type :class:`flopy.modflowusg.ModflowUsg`) to
             which this package will be added.
         ext_unit_dict : dictionary, optional
             If the arrays in the file are specified using EXTERNAL,
@@ -448,15 +421,16 @@ class ModflowLpf(Package):
 
         Returns
         -------
-        lpf : ModflowLpf object
-            ModflowLpf object.
+        lpf : ModflowUsgLpf object
+            ModflowUsgLpf object.
 
         Examples
         --------
 
         >>> import flopy
-        >>> m = flopy.modflow.Modflow()
-        >>> lpf = flopy.modflow.ModflowLpf.load('test.lpf', m)
+        >>> m = flopy.modflowusg.ModflowUsg()
+        >>> disu = flopy.modflowusg.ModflowUsgDisU(model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
+        >>> lpf = flopy.modflowusg.ModflowUsgLpf.load('test.lpf', m)
 
         """
 
@@ -479,6 +453,7 @@ class ModflowLpf(Package):
         dis = model.get_package("DIS")
         if dis is None:
             dis = model.get_package("DISU")
+            njag = dis.njag
 
         # Item 1: IBCFCB, HDRY, NPLPF - line already read above
         if model.verbose:
@@ -486,10 +461,12 @@ class ModflowLpf(Package):
         t = line_parse(line)
         ipakcb, hdry, nplpf = int(t[0]), float(t[1]), int(t[2])
         item1_len = 3
-        # if ipakcb != 0:
-        #    model.add_pop_key_list(ipakcb)
-        #    ipakcb = 53
-        # options
+        if model.structured == False:
+            ikcflag = int(t[3])
+            item1_len = 4
+        else:
+            ikcflag = 0
+
         storagecoefficient = False
         constantcv = False
         thickstrt = False
@@ -554,6 +531,22 @@ class ModflowLpf(Package):
             par_types, parm_dict = mfpar.load(f, nplpf, model.verbose)
             # print parm_dict
 
+        # ANGLEX for unstructured grid with anisotropy
+        anis = False
+        for k in range(nlay):
+            if chani[k] != 1:
+                anis = True
+                break
+        if (not model.structured) and anis:
+            if model.verbose:
+                print("mfusg:   loading ANGLEX...")
+            t = Util2d.load(
+                f, model, (njag,), np.float32, "anglex", ext_unit_dict
+            )
+            anglex = t
+        else:
+            anglex = 0
+
         # non-parameter data
         transient = not dis.steady.all()
         hk = [0] * nlay
@@ -575,59 +568,60 @@ class ModflowLpf(Package):
                 nrow = nr
                 ncol = nc
 
-            # hk
-            if model.verbose:
-                print(f"   loading hk layer {k + 1:3d}...")
-            if "hk" not in par_types:
-                t = Util2d.load(
-                    f, model, (nrow, ncol), np.float32, "hk", ext_unit_dict
-                )
-            else:
-                line = f.readline()
-                t = mfpar.parameter_fill(
-                    model, (nrow, ncol), "hk", parm_dict, findlayer=k
-                )
-            hk[k] = t
-
-            # hani
-            if chani[k] <= 0.0:
+            if ikcflag == 0:
+                # hk
                 if model.verbose:
-                    print(f"   loading hani layer {k + 1:3d}...")
-                if "hani" not in par_types:
+                    print(f"   loading hk layer {k + 1:3d}...")
+                if "hk" not in par_types:
                     t = Util2d.load(
-                        f,
-                        model,
-                        (nrow, ncol),
-                        np.float32,
-                        "hani",
-                        ext_unit_dict,
+                        f, model, (nrow, ncol), np.float32, "hk", ext_unit_dict
                     )
                 else:
                     line = f.readline()
                     t = mfpar.parameter_fill(
-                        model, (nrow, ncol), "hani", parm_dict, findlayer=k
+                        model, (nrow, ncol), "hk", parm_dict, findlayer=k
                     )
-                hani[k] = t
+                hk[k] = t
 
-            # vka
-            if model.verbose:
-                print(f"   loading vka layer {k + 1:3d}...")
-            key = "vk"
-            if layvka[k] != 0:
-                key = "vani"
-            if "vk" not in par_types and "vani" not in par_types:
-                t = Util2d.load(
-                    f, model, (nrow, ncol), np.float32, key, ext_unit_dict
-                )
-            else:
-                line = f.readline()
+                # hani
+                if chani[k] <= 0.0:
+                    if model.verbose:
+                        print(f"   loading hani layer {k + 1:3d}...")
+                    if "hani" not in par_types:
+                        t = Util2d.load(
+                            f,
+                            model,
+                            (nrow, ncol),
+                            np.float32,
+                            "hani",
+                            ext_unit_dict,
+                        )
+                    else:
+                        line = f.readline()
+                        t = mfpar.parameter_fill(
+                            model, (nrow, ncol), "hani", parm_dict, findlayer=k
+                        )
+                    hani[k] = t
+
+                # vka
+                if model.verbose:
+                    print(f"   loading vka layer {k + 1:3d}...")
                 key = "vk"
-                if "vani" in par_types:
+                if layvka[k] != 0:
                     key = "vani"
-                t = mfpar.parameter_fill(
-                    model, (nrow, ncol), key, parm_dict, findlayer=k
-                )
-            vka[k] = t
+                if "vk" not in par_types and "vani" not in par_types:
+                    t = Util2d.load(
+                        f, model, (nrow, ncol), np.float32, key, ext_unit_dict
+                    )
+                else:
+                    line = f.readline()
+                    key = "vk"
+                    if "vani" in par_types:
+                        key = "vani"
+                    t = mfpar.parameter_fill(
+                        model, (nrow, ncol), key, parm_dict, findlayer=k
+                    )
+                vka[k] = t
 
             # storage properties
             if transient:
@@ -667,7 +661,7 @@ class ModflowLpf(Package):
                     sy[k] = t
 
             # vkcb
-            if dis.laycbd[k] > 0:
+            if ikcflag == 0 and dis.laycbd[k] != 0:
                 if model.verbose:
                     print(f"   loading vkcb layer {k + 1:3d}...")
                 if "vkcb" not in par_types:
@@ -687,13 +681,24 @@ class ModflowLpf(Package):
                 vkcb[k] = t
 
             # wetdry
-            if laywet[k] != 0 and laytyp[k] != 0:
+            if laywet[k] != 0 and laytyp[k] != 0 and laytyp[k] != 4:
                 if model.verbose:
                     print(f"   loading wetdry layer {k + 1:3d}...")
                 t = Util2d.load(
                     f, model, (nrow, ncol), np.float32, "wetdry", ext_unit_dict
                 )
                 wetdry[k] = t
+
+        # Ksat  mfusg
+        if abs(ikcflag) == 1:
+            if model.verbose:
+                print(f"   loading ksat...")
+            t = Util2d.load(
+                f, model, (njag,), np.float32, "ksat", ext_unit_dict
+            )
+            ksat = t
+        else:
+            ksat = 1.0
 
         if openfile:
             f.close()
@@ -703,7 +708,7 @@ class ModflowLpf(Package):
         filenames = [None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowLpf._ftype()
+                ext_unit_dict, filetype=ModflowUsgLpf._ftype()
             )
             if ipakcb > 0:
                 iu, filenames[1] = model.get_ext_dict_attr(
@@ -725,6 +730,8 @@ class ModflowLpf(Package):
             wetfct=wetfct,
             iwetit=iwetit,
             ihdwet=ihdwet,
+            ikcflag=ikcflag,
+            anglex=anglex,
             hk=hk,
             hani=hani,
             vka=vka,
@@ -732,6 +739,7 @@ class ModflowLpf(Package):
             sy=sy,
             vkcb=vkcb,
             wetdry=wetdry,
+            ksat=ksat,
             storagecoefficient=storagecoefficient,
             constantcv=constantcv,
             thickstrt=thickstrt,
@@ -747,11 +755,3 @@ class ModflowLpf(Package):
                 level=0,
             )
         return lpf
-
-    @staticmethod
-    def _ftype():
-        return "LPF"
-
-    @staticmethod
-    def _defaultunit():
-        return 15

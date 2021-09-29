@@ -1,13 +1,18 @@
+"""
+mfusgbcf module.  Contains the ModflowUsgBcf class. Note that the user can 
+access the ModflowUsgBcf class as `flopy.modflowusg.ModflowUsgBcf`.
+
+"""
 import numpy as np
 
-from ..pakbase import Package
+from ..modflow import ModflowBcf
 from ..utils import Util2d, Util3d
 from ..utils.flopy_io import line_parse
 
 
-class ModflowBcf(Package):
+class ModflowUsgBcf(ModflowBcf):
     """
-    MODFLOW Block Centered Flow Package Class.
+    Block Centered Flow (BCF) Package Class for MODFLOW-USG.
 
     Parameters
     ----------
@@ -38,6 +43,19 @@ class ModflowBcf(Package):
     ihdwet : int
         flag to indicate how initial head is computed for cells that become
         wet (default is 0)
+    ikvflag : int
+        flag indicating if vertical hydraulic conductivity is input
+        instead of leakance between two layers.
+    ikcflag : int
+        flag indicating if hydraulic conductivity or transmissivity
+        information is input for each of the nodes or whether this information
+        is directly input for the nodal connections. The easiest input format
+        is to provide the hydraulic conductivity or transmissivity values to
+        the cells using a zero value for IKCFLAG.
+    anglex : float or array of floats (njag)
+        is the angle (in radians) between the horizontal x-axis and the outward
+        normal to the face between a node and its connecting nodes. The angle
+        varies between zero and 6.283185 (two pi being 360 degrees).
     tran : float or array of floats (nlay, nrow, ncol), optional
         transmissivity (only read if laycon is 0 or 2) (default is 1.0)
     hy : float or array of floats (nlay, nrow, ncol)
@@ -45,6 +63,9 @@ class ModflowBcf(Package):
         (default is 1.0)
     vcont : float or array of floats (nlay-1, nrow, ncol)
         vertical leakance between layers (default is 1.0)
+    kv : float or array of floats (nlay-1, nrow, ncol)
+        is the vertical hydraulic conductivity of the cell and the leakance is
+        computed for each vertical connection.
     sf1 : float or array of floats (nlay, nrow, ncol)
         specific storage (confined) or storage coefficient (unconfined),
         read when there is at least one transient stress period.
@@ -55,6 +76,10 @@ class ModflowBcf(Package):
     wetdry : float
         a combination of the wetting threshold and a flag to indicate which
         neighboring cells can cause a cell to become wet (default is -0.01)
+    ksat : float or array of floats (nrow, ncol)
+        inter-block saturated hydraulic conductivity or transmissivity
+        (if IKCFLAG = 1) or the inter-block conductance (if IKCFLAG = - 1)
+        of the connection between nodes n and m.
     extension : string
         Filename extension (default is 'bcf')
     unitnumber : int
@@ -84,8 +109,9 @@ class ModflowBcf(Package):
     --------
 
     >>> import flopy
-    >>> ml = flopy.modflow.Modflow()
-    >>> bcf = flopy.modflow.ModflowBcf(ml)
+    >>> ml = flopy.modflowusg.ModflowUsg()
+    >>> disu = flopy.modflowusg.ModflowUsgDisU(model=ml, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
+    >>> bcf = flopy.modflowusg.ModflowUsgBcf(ml)
 
     """
 
@@ -101,9 +127,14 @@ class ModflowBcf(Package):
         wetfct=0.1,
         iwetit=1,
         ihdwet=0,
+        ikvflag=0,
+        ikcflag=0,
         tran=1.0,
         hy=1.0,
         vcont=1.0,
+        kv=1.0,
+        anglex=0.0,
+        ksat=1.0,
         sf1=1e-5,
         sf2=0.15,
         wetdry=-0.01,
@@ -112,135 +143,67 @@ class ModflowBcf(Package):
         filenames=None,
     ):
 
-        if unitnumber is None:
-            unitnumber = ModflowBcf._defaultunit()
-
-        # set filenames
-        if filenames is None:
-            filenames = [None, None]
-        elif isinstance(filenames, str):
-            filenames = [filenames, None]
-        elif isinstance(filenames, list):
-            if len(filenames) < 2:
-                filenames.append(None)
-
-        # update external file information with cbc output, if necessary
-        if ipakcb is not None:
-            fname = filenames[1]
-            model.add_output_file(
-                ipakcb, fname=fname, package=ModflowBcf._ftype()
-            )
-        else:
-            ipakcb = 0
-
-        # Fill namefile items
-        name = [ModflowBcf._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        super().__init__(
             model,
+            ipakcb=ipakcb,
+            intercellt=intercellt,
+            laycon=laycon,
+            trpy=trpy,
+            hdry=hdry,
+            iwdflg=iwdflg,
+            wetfct=wetfct,
+            iwetit=iwetit,
+            ihdwet=ihdwet,
+            tran=tran,
+            hy=hy,
+            vcont=vcont,
+            sf1=sf1,
+            sf2=sf2,
+            wetdry=wetdry,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            unitnumber=unitnumber,
+            filenames=filenames,
         )
 
-        self.url = "bcf.htm"
+        dis = model.get_package("DIS")
+        if dis is None:
+            dis = model.get_package("DISU")
+        structured = self.parent.structured
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
-        # Set values of all parameters
-        self.intercellt = Util2d(
-            model,
-            (nlay,),
-            np.int32,
-            intercellt,
-            name="intercellt",
-            locat=self.unit_number[0],
-        )
-        self.laycon = Util2d(
-            model,
-            (nlay,),
-            np.int32,
-            laycon,
-            name="laycon",
-            locat=self.unit_number[0],
-        )
-        self.trpy = Util2d(
-            model,
-            (nlay,),
-            np.float32,
-            trpy,
-            name="Anisotropy factor",
-            locat=self.unit_number[0],
-        )
 
-        # item 1
-        self.ipakcb = ipakcb
-        self.hdry = hdry
-        self.iwdflg = iwdflg
-        self.wetfct = wetfct
-        self.iwetit = iwetit
-        self.ihdwet = ihdwet
-        self.tran = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            tran,
-            "Transmissivity",
-            locat=self.unit_number[0],
-        )
-        self.hy = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            hy,
-            "Horizontal Hydraulic Conductivity",
-            locat=self.unit_number[0],
-        )
-        if model.nlay > 1:
-            self.vcont = Util3d(
+        if not structured:
+            njag = dis.njag
+            self.anglex = Util2d(
                 model,
-                (nlay - 1, nrow, ncol),
+                (njag,),
                 np.float32,
-                vcont,
-                "Vertical Conductance",
+                anglex,
+                "anglex",
                 locat=self.unit_number[0],
             )
-        else:
-            self.vcont = None
-        self.sf1 = Util3d(
+
+        # item 1
+        self.ikvflag = ikvflag
+        self.ikcflag = ikcflag
+        self.kv = Util3d(
             model,
             (nlay, nrow, ncol),
             np.float32,
-            sf1,
-            "Primary Storage Coefficient",
+            kv,
+            "Vertical Hydraulic Conductivity",
             locat=self.unit_number[0],
         )
-        self.sf2 = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            sf2,
-            "Secondary Storage Coefficient",
-            locat=self.unit_number[0],
-        )
-        self.wetdry = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            wetdry,
-            "WETDRY",
-            locat=self.unit_number[0],
-        )
-        if self.parent.version != "mfusg":
-            self.parent.add_package(self)
+        if not structured:
+            self.ksat = Util3d(
+                model,
+                (njag,),
+                np.float32,
+                ksat,
+                "ksat",
+                locat=self.unit_number[0],
+            )
+        self.parent.add_package(self)
         return
 
     def write_file(self, f=None):
@@ -265,15 +228,12 @@ class ModflowBcf(Package):
             f_bcf = f
         else:
             f_bcf = open(self.fn_path, "w")
-        # Item 1: ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET
+        # Item 1: ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET, IKVFLAG, IKCFLAG
         f_bcf.write(
-            "{:10d}{:10.6G}{:10d}{:10.3f}{:10d}{:10d}\n".format(
-                self.ipakcb,
-                self.hdry,
-                self.iwdflg,
-                self.wetfct,
-                self.iwetit,
-                self.ihdwet,
+            (
+                f" {self.ipakcb:9d} {self.hdry:9.3G} {self.iwdflg:9d}"
+                f" {self.wetfct:9.3G} {self.iwetit:9d} {self.ihdwet:9d}"
+                f" {self.ikvflag:9d} {self.ikcflag:9d}\n"
             )
         )
 
@@ -281,34 +241,54 @@ class ModflowBcf(Package):
         for k in range(nlay):
             if ifrefm:
                 if self.intercellt[k] > 0:
-                    f_bcf.write(f"{self.intercellt[k]:1d}{self.laycon[k]:1d} ")
+                    f_bcf.write(
+                        f"{self.intercellt[k]:1d} {self.laycon[k]:1d} "
+                    )
                 else:
                     f_bcf.write(f"0{self.laycon[k]:1d} ")
             else:
                 if self.intercellt[k] > 0:
-                    f_bcf.write(f"{self.intercellt[k]:1d}{self.laycon[k]:1d}")
+                    f_bcf.write(
+                        f"{self.intercellt[k]:1d} {self.laycon[k]:1d} "
+                    )
                 else:
-                    f_bcf.write(f"0{self.laycon[k]:1d}")
+                    f_bcf.write(f"0{self.laycon[k]:1d} ")
         f_bcf.write("\n")
         f_bcf.write(self.trpy.get_file_entry())
         transient = not dis.steady.all()
+        structured = self.parent.structured
+        anis = False
+        for k in range(nlay):
+            if self.trpy[k] != 1:
+                anis = True
+                break
+        if (not structured) and anis:
+            f_bcf.write(self.anglex.get_file_entry())
         for k in range(nlay):
             if transient == True:
                 f_bcf.write(self.sf1[k].get_file_entry())
-            if (self.laycon[k] == 0) or (self.laycon[k] == 2):
-                f_bcf.write(self.tran[k].get_file_entry())
-            else:
-                f_bcf.write(self.hy[k].get_file_entry())
-            if k < nlay - 1:
-                f_bcf.write(self.vcont[k].get_file_entry())
+            if self.ikcflag == 0:  ## mfusg
+                if (self.laycon[k] == 0) or (self.laycon[k] == 2):
+                    f_bcf.write(self.tran[k].get_file_entry())
+                else:
+                    f_bcf.write(self.hy[k].get_file_entry())
+                if (self.ikvflag == 0) and k < (nlay - 1):
+                    f_bcf.write(self.vcont[k].get_file_entry())
+                elif (self.ikvflag == 1) and (nlay > 1):  # mfusg
+                    f_bcf.write(self.kv[k].get_file_entry())
             if (transient == True) and (
-                (self.laycon[k] == 2) or (self.laycon[k] == 3)
+                (self.laycon[k] == 2)
+                or (self.laycon[k] == 3)
+                or (self.laycon[k] == 4)
             ):
                 f_bcf.write(self.sf2[k].get_file_entry())
             if (self.iwdflg != 0) and (
                 (self.laycon[k] == 1) or (self.laycon[k] == 3)
             ):
                 f_bcf.write(self.wetdry[k].get_file_entry())
+        if abs(self.ikcflag == 1):
+            f_bcf.write(self.ksat.get_file_entry())
+
         f_bcf.close()
 
     @classmethod
@@ -323,9 +303,6 @@ class ModflowBcf(Package):
         model : model object
             The model object (of type :class:`flopy.modflow.mf.Modflow`) to
             which this package will be added.
-        nper : int
-            The number of stress periods.  If nper is None, then nper will be
-            obtained from the model object. (default is None).
         ext_unit_dict : dictionary, optional
             If the arrays in the file are specified using EXTERNAL,
             or older style array control records, then `f` should be a file
@@ -335,15 +312,16 @@ class ModflowBcf(Package):
 
         Returns
         -------
-        wel : ModflowBcf object
-            ModflowBcf object.
+        bcf : ModflowUsgBcf object
+            ModflowUsgBcf object.
 
         Examples
         --------
 
         >>> import flopy
-        >>> m = flopy.modflow.Modflow()
-        >>> wel = flopy.modflow.ModflowBcf.load('test.bcf', m)
+        >>> m = flopy.modflowusg.ModflowUsg()
+        >>> disu = flopy.modflowusg.ModflowUsgDisU(model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
+        >>> bcf = flopy.modflowusg.ModflowUsgBcf.load('test.bcf', m)
 
         """
 
@@ -366,6 +344,9 @@ class ModflowBcf(Package):
         dis = model.get_package("DIS")
         if dis is None:
             dis = model.get_package("DISU")
+            njag = dis.njag
+
+        structured = model.structured
 
         # Item 1: ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET - line already read above
         if model.verbose:
@@ -379,6 +360,20 @@ class ModflowBcf(Package):
             int(t[4]),
             int(t[5]),
         )
+
+        try:
+            ikvflag = int(t[6])
+        except IndexError:
+            ikvflag = 0
+        except ValueError:
+            ikvflag = 0
+
+        try:
+            ikcflag = int(t[7])
+        except IndexError:
+            ikcflag = 0
+        except ValueError:
+            ikvflag = 0
 
         # LAYCON array
         ifrefm = model.get_ifrefm()
@@ -431,6 +426,22 @@ class ModflowBcf(Package):
 
         # property data for each layer based on options
         transient = not dis.steady.all()
+        structured = model.structured
+        anis = False
+        for k in range(nlay):
+            if trpy[k] != 1:
+                anis = True
+                break
+        if (not structured) and anis:
+            if model.verbose:
+                print("mfusg:   loading ANGLEX...")
+            t = Util2d.load(
+                f, model, (njag,), np.float32, "anglex", ext_unit_dict
+            )
+            anglex = t
+        else:
+            anglex = 0
+
         sf1 = [0] * nlay
         tran = [0] * nlay
         hy = [0] * nlay
@@ -440,6 +451,7 @@ class ModflowBcf(Package):
             vcont = [0] * nlay
         sf2 = [0] * nlay
         wetdry = [0] * nlay
+        kv = [0] * nlay  # mfusg
 
         for k in range(nlay):
 
@@ -460,33 +472,53 @@ class ModflowBcf(Package):
                 )
                 sf1[k] = t
 
-            # tran or hy
-            if (laycon[k] == 0) or (laycon[k] == 2):
-                if model.verbose:
-                    print(f"   loading tran layer {k + 1:3d}...")
-                t = Util2d.load(
-                    f, model, (nrow, ncol), np.float32, "tran", ext_unit_dict
-                )
-                tran[k] = t
-            else:
-                if model.verbose:
-                    print(f"   loading hy layer {k + 1:3d}...")
-                t = Util2d.load(
-                    f, model, (nrow, ncol), np.float32, "hy", ext_unit_dict
-                )
-                hy[k] = t
+            if ikcflag == 0:
+                # tran or hy
+                if (laycon[k] == 0) or (laycon[k] == 2):
+                    if model.verbose:
+                        print(f"   loading tran layer {k + 1:3d}...")
+                    t = Util2d.load(
+                        f,
+                        model,
+                        (nrow, ncol),
+                        np.float32,
+                        "tran",
+                        ext_unit_dict,
+                    )
+                    tran[k] = t
+                else:
+                    if model.verbose:
+                        print(f"   loading hy layer {k + 1:3d}...")
+                    t = Util2d.load(
+                        f, model, (nrow, ncol), np.float32, "hy", ext_unit_dict
+                    )
+                    hy[k] = t
 
-            # vcont
-            if k < (nlay - 1):
-                if model.verbose:
-                    print(f"   loading vcont layer {k + 1:3d}...")
-                t = Util2d.load(
-                    f, model, (nrow, ncol), np.float32, "vcont", ext_unit_dict
-                )
-                vcont[k] = t
+                # vcont
+                if k < (nlay - 1):
+                    if model.verbose:
+                        print(f"   loading vcont layer {k + 1:3d}...")
+                    t = Util2d.load(
+                        f,
+                        model,
+                        (nrow, ncol),
+                        np.float32,
+                        "vcont",
+                        ext_unit_dict,
+                    )
+                    vcont[k] = t
+                elif (ikvflag == 1) and (nlay > 1):  # mfusg
+                    if model.verbose:
+                        print(f"   loading kv layer {k + 1:3d}...")
+                    t = Util2d.load(
+                        f, model, (nrow, ncol), np.float32, "kv", ext_unit_dict
+                    )
+                    kv[k] = t
 
             # sf2
-            if transient and ((laycon[k] == 2) or (laycon[k] == 3)):
+            if transient and (
+                (laycon[k] == 2) or (laycon[k] == 3) or (laycon[k] == 4)
+            ):
                 if model.verbose:
                     print(f"   loading sf2 layer {k + 1:3d}...")
                 t = Util2d.load(
@@ -503,6 +535,17 @@ class ModflowBcf(Package):
                 )
                 wetdry[k] = t
 
+        # Ksat  mfusg
+        if (not structured) and abs(ikcflag == 1):
+            if model.verbose:
+                print(f"   loading ksat layer {k + 1:3d}...")
+            t = Util2d.load(
+                f, model, (njag,), np.float32, "ksat", ext_unit_dict
+            )
+            ksat = t
+        else:
+            ksat = 0
+
         if openfile:
             f.close()
 
@@ -511,7 +554,7 @@ class ModflowBcf(Package):
         filenames = [None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowBcf._ftype()
+                ext_unit_dict, filetype=ModflowUsgBcf._ftype()
             )
             if ipakcb > 0:
                 iu, filenames[1] = model.get_ext_dict_attr(
@@ -531,9 +574,14 @@ class ModflowBcf(Package):
             wetfct=wetfct,
             iwetit=iwetit,
             ihdwet=ihdwet,
+            ikvflag=ikvflag,
+            ikcflag=ikcflag,
             tran=tran,
             hy=hy,
             vcont=vcont,
+            kv=kv,
+            anglex=anglex,
+            ksat=ksat,
             sf1=sf1,
             sf2=sf2,
             wetdry=wetdry,
@@ -543,11 +591,3 @@ class ModflowBcf(Package):
 
         # return bcf object
         return bcf
-
-    @staticmethod
-    def _ftype():
-        return "BCF6"
-
-    @staticmethod
-    def _defaultunit():
-        return 15

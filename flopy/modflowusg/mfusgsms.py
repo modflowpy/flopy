@@ -1,7 +1,7 @@
 """
-mfsms module.  This is the solver for MODFLOW-USG.
-Contains the ModflowSms class. Note that the user can access
-the ModflowSms class as `flopy.modflow.ModflowSms`.
+mfusgsms module.  This is the solver for MODFLOW-USG.
+Contains the ModflowUsgSms class. Note that the user can access
+the ModflowUsgSms class as `flopy.modflowusg.ModflowUsgSms`.
 
 
 """
@@ -9,7 +9,7 @@ from ..pakbase import Package
 from ..utils.flopy_io import line_parse
 
 
-class ModflowSms(Package):
+class ModflowUsgSms(Package):
     """
     MODFLOW Sms Package Class.
 
@@ -229,7 +229,7 @@ class ModflowSms(Package):
 
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
-    >>> sms = flopy.modflow.ModflowSms(m)
+    >>> sms = flopy.modflowusg.ModflowUsgSms(m)
 
     """
 
@@ -272,7 +272,7 @@ class ModflowSms(Package):
     ):
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowSms._defaultunit()
+            unitnumber = ModflowUsgSms._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -281,7 +281,7 @@ class ModflowSms(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [ModflowSms._ftype()]
+        name = [ModflowUsgSms._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -426,7 +426,7 @@ class ModflowSms(Package):
 
         Returns
         -------
-        sms : ModflowSms object
+        sms : ModflowUsgSms object
 
         Examples
         --------
@@ -605,7 +605,7 @@ class ModflowSms(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowSms._ftype()
+                ext_unit_dict, filetype=ModflowUsgSms._ftype()
             )
 
         return cls(

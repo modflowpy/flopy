@@ -643,6 +643,14 @@ class BaseModel(ModelInterface):
             else:
                 return None
 
+        if item == "nper":
+            if self.dis is not None:
+                return self.dis.nper
+            elif self.disu is not None:
+                return self.disu.nper
+            else:
+                return 0
+
         if item == "start_datetime":
             if self.dis is not None:
                 return self.dis.start_datetime

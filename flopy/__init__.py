@@ -28,6 +28,7 @@ from . import mt3d
 from . import seawat
 from . import modpath
 from . import modflowlgr
+from . import modflowusg
 from . import utils
 from . import plot
 from . import export

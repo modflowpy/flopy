@@ -1,0 +1,351 @@
+"""
+mfusggnc module.  This is for the Ghost Node Correction (GNC) Package for MODFLOW-USG.
+Contains the ModflowUsgGnc class. Note that the user can access
+the ModflowUsgGnc class as `flopy.modflowusg.ModflowUsgGnc`.
+
+
+"""
+import numpy as np
+from ..pakbase import Package
+from ..utils.recarray_utils import create_empty_recarray
+from ..utils.flopy_io import ulstrd
+from ..modflow.mfparbc import ModflowParBc as mfparbc
+
+from .mfusg import fmt_string
+
+
+class ModflowUsgGnc(Package):
+    """
+    MODFLOW USG Ghost Node Correction (GNC) Package Class.
+
+    Parameters
+    ----------
+    numgnc : integer
+        numgnc (integer) is the number of GNC entries.
+    numalphaj : integer
+        numalphaj (integer) is the number of contributing factors.
+    i2kn : integer
+        0 : second-order correction not applied to unconfined transmissivity.
+        1 : second-order correction applied to unconfined transmissivity.
+    isymgncn : integer
+        0 : implicit update on left-hand side matrix for asymmetric systems.
+        1 : explicit update on right-hand side vector for symmetric systems.
+    iflalphan : integer
+        0 : AlphaJ is contributing factors from all adjacent contributing nodes.
+        1 : AlphaJ represent the saturated conductances between the ghost node
+            location and node j, and the contributing factors are computed
+            internally using the equations for the unconfined conductances.
+    gncdata : [cellidn, cellidm, cellidsj, alphasj]
+        * cellidn ((integer, ...)) is the cellid of the cell in which the ghost
+          node is located.
+        * cellidm ((integer, ...)) is the cellid of the connecting cell
+        * cellidsj ((integer, ...)) is the array of CELLIDS for the
+          contributing j cells. This Item is repeated for each of the numalphaj
+          adjacent contributing cells of the ghost node.
+        * alphasj (double) is the contributing factors for each contributing
+          node in CELLIDSJ. This Item is repeated for each of the numalphaj
+          adjacent contributing cells of the ghost node.
+    model : model object
+        The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
+        this package will be added.
+    extension : str, optional
+        File extension (default is 'gnc'.
+    unitnumber : int, optional
+        FORTRAN unit number for this package (default is None).
+    filenames : str or list of str
+        Filenames to use for the package. If filenames=None the package name
+        will be created using the model name and package extension. If a
+        single string is passed the package will be set to the string.
+        Default is None.
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> m = flopy.modflow.Modflow()
+    >>> gnc = flopy.modflowusg.ModflowUsgGnc(m)
+
+    """
+
+    def __init__(
+        self,
+        model,
+        numgnc=0,
+        numalphaj=1,
+        i2kn=0,
+        isymgncn=0,
+        iflalphan=0,
+        gncdata=None,
+        extension="gnc",
+        options=None,
+        unitnumber=None,
+        filenames=None,
+    ):
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowUsgGnc._defaultunit()
+
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+
+        # Fill namefile items
+        name = [ModflowUsgGnc._ftype()]
+        units = [unitnumber]
+        extra = [""]
+
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and
+        # unit number
+        Package.__init__(
+            self,
+            model,
+            extension=extension,
+            name=name,
+            unit_number=units,
+            extra=extra,
+            filenames=fname,
+        )
+
+        self._generate_heading()
+        self.url = " "
+
+        if options is None:
+            options = []
+
+        self.options = options
+
+        if numgnc > 0:
+            self.numgnc = numgnc
+        else:
+            raise Exception("mfgnc: number of GNC cell must be larger than 0")
+
+        if numalphaj > 0 and numalphaj < 6:
+            self.numalphaj = numalphaj
+        else:
+            raise Exception(
+                "mfgnc: incorrect number of adjacent contributing nodes"
+            )
+
+        self.i2kn = i2kn
+        self.isymgncn = isymgncn
+        self.iflalphan = iflalphan
+
+        if gncdata is None:
+            raise Exception("mfgnc: GNC data must be provided")
+
+        if len(gncdata) != self.numgnc:
+            raise Exception(
+                "mfgnc: Length of GNC data must equal number of GNC nodes"
+            )
+
+        self.dtype = ModflowUsgGnc.get_default_dtype(
+            self.numalphaj, self.iflalphan
+        )
+
+        self.gncdata = np.array(gncdata, self.dtype)
+
+        self.parent.add_package(self)
+
+        return
+
+    def write_file(self, f=None):
+        """
+        Write the package file.
+
+        Returns
+        -------
+        None
+
+        """
+        if f is not None:
+            if isinstance(f, str):
+                f_gnc = open(f, "w")
+            else:
+                f_gnc = f
+        else:
+            f_gnc = open(self.fn_path, "w")
+
+        f_gnc.write(f"{self.heading}\n")
+
+        f_gnc.write(
+            (
+                f" {0:9d} {0:9d} {self.numgnc:9d} {self.numalphaj:9d}"
+                f" {self.i2kn:9d} {self.isymgncn:9d} {self.iflalphan:9d}"
+                f" {self.options}\n"
+            )
+        )
+
+        gdata = self.gncdata.copy()
+
+        gdata["NodeN"] += 1
+        gdata["NodeM"] += 1
+        for i in range(self.numalphaj):
+            gdata[f"Node{i:d}"] += 1
+
+        np.savetxt(f_gnc, gdata, fmt=fmt_string(gdata), delimiter="")
+
+        f_gnc.write("\n")
+        f_gnc.close()
+
+    @staticmethod
+    def get_default_dtype(numalphaj, iflalphan):
+        dtype = np.dtype(
+            [
+                ("NodeN", int),
+                ("NodeM", int),
+            ]
+        ).descr
+
+        for i in range(numalphaj):
+            dtype.append((f"Node{i:d}", "<i4"))
+        for i in range(numalphaj):
+            dtype.append((f"Alpha{i:d}", "<f4"))
+
+        if iflalphan == 1:
+            dtype.append(("AlphaN", "<f4"))
+
+        return np.dtype(dtype)
+
+    @staticmethod
+    def get_empty(numgnc=0, numalphaj=1, iflalphan=0):
+        # get an empty recarray that corresponds to dtype
+        dtype = ModflowUsgGnc.get_default_dtype(numalphaj, iflalphan)
+        return create_empty_recarray(numgnc, dtype, default_value=-1.0e10)
+
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None):
+        """
+        Load an existing package.
+
+        Parameters
+        ----------
+        f : filename or file handle
+            File to load.
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
+
+        Returns
+        -------
+        gnc : ModflowUsgGnc object
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow()
+        >>> gnc = flopy.modflow.ModflowGnc.load('test.gnc', m)
+
+        """
+
+        if model.verbose:
+            print("loading gnc package file...")
+
+        if model.version != "mfusg":
+            print(
+                "Warning: model version was reset from '{}' to 'mfusg' "
+                "in order to load a GNC file".format(model.version)
+            )
+            model.version = "mfusg"
+
+        openfile = not hasattr(f, "read")
+        if openfile:
+            filename = f
+            f = open(filename, "r")
+
+        # Item 0 -- header
+        while True:
+            line = f.readline()
+            if line[0] != "#":
+                break
+
+        # Item 1 --NPGNCn MXGNn NGNCNPn MXADJn I2Kn ISYMGNCn IFLALPHAn [NOPRINT]
+        t = line.strip().split()
+        imax = 7
+        npgncn, mxgnn, numgnc, numalphaj, i2kn, isymgncn, iflalphan = (
+            int(t[0]),
+            int(t[1]),
+            int(t[2]),
+            int(t[3]),
+            int(t[4]),
+            int(t[5]),
+            int(t[6]),
+        )
+
+        options = []
+        if len(t) > imax:
+            if t[7].lower() == "noprint":
+                options.append("noprint")
+
+        # Item 2 -- read parameter data
+        if npgncn > 0:
+            dt = ModflowUsgGnc.get_empty(npgncn, mxgnn, iflalphan).dtype
+            # Item 3 --
+            pak_parms = mfparbc.load(
+                f, npgncn, dt, model, ext_unit_dict, model.verbose
+            )
+
+        # Item 4 -- read GNC data
+        gncdata = ModflowUsgGnc.get_empty(numgnc, numalphaj, iflalphan)
+
+        gncdata = ulstrd(f, numgnc, gncdata, model, [], ext_unit_dict)
+
+        gncdata["NodeN"] -= 1
+        gncdata["NodeM"] -= 1
+        for i in range(numalphaj):
+            gncdata[f"Node{i:d}"] -= 1
+
+        if openfile:
+            f.close()
+
+        # set package unit number
+        unitnumber = None
+        filenames = [None]
+        if ext_unit_dict is not None:
+            unitnumber, filenames[0] = model.get_ext_dict_attr(
+                ext_unit_dict, filetype=ModflowUsgGnc._ftype()
+            )
+
+        return cls(
+            model,
+            numgnc=numgnc,
+            numalphaj=numalphaj,
+            i2kn=i2kn,
+            isymgncn=isymgncn,
+            iflalphan=iflalphan,
+            gncdata=gncdata,
+            options=options,
+            unitnumber=unitnumber,
+            filenames=filenames,
+        )
+
+    @staticmethod
+    def _ftype():
+        return "GNC"
+
+    @staticmethod
+    def _defaultunit():
+        return 72

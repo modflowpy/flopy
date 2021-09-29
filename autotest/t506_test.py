@@ -376,18 +376,17 @@ def test_mfusg():
     # create the mfusg modoel
     ws = os.path.join(tpth, "gridgen_mfusg")
     name = "mymodel"
-    m = flopy.modflow.Modflow(
+    m = flopy.modflowusg.ModflowUsg(
         modelname=name,
         model_ws=ws,
-        version="mfusg",
         exe_name=mfusg_exe,
         structured=False,
     )
-    disu = flopy.modflow.ModflowDisU(m, **gridprops)
+    disu = flopy.modflowusg.ModflowUsgDisU(m, **gridprops)
     bas = flopy.modflow.ModflowBas(m)
-    lpf = flopy.modflow.ModflowLpf(m)
+    lpf = flopy.modflowusg.ModflowUsgLpf(m)
     chd = flopy.modflow.ModflowChd(m, stress_period_data=chdspd)
-    sms = flopy.modflow.ModflowSms(m)
+    sms = flopy.modflowusg.ModflowUsgSms(m)
     oc = flopy.modflow.ModflowOc(m, stress_period_data={(0, 0): ["save head"]})
     m.write_input()
 
@@ -457,12 +456,14 @@ def test_mfusg():
 
         # re-run with an LPF keyword specified. This would have thrown an error
         # before the addition of ikcflag to mflpf.py (flopy 3.3.3 and earlier).
-        lpf = flopy.modflow.ModflowLpf(m, novfc=True, nocvcorrection=True)
+        lpf = flopy.modflowusg.ModflowUsgLpf(
+            m, novfc=True, nocvcorrection=True
+        )
         m.write_input()
         m.run_model()
 
         # also test load of unstructured LPF with keywords
-        lpf2 = flopy.modflow.ModflowLpf.load(
+        lpf2 = flopy.modflowusg.ModflowUsgLpf.load(
             os.path.join(ws, f"{name}.lpf"), m, check=False
         )
         msg = "NOCVCORRECTION and NOVFC should be in lpf options but at least one is not."

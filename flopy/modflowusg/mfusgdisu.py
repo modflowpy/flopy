@@ -1,6 +1,6 @@
 """
-mfdisu module.  Contains the ModflowDisU class. Note that the user can access
-the ModflowDisU class as `flopy.modflow.ModflowDisU`.
+mfdisu module.  Contains the ModflowUsgDisU class. Note that the user can access
+the ModflowUsgDisU class as `flopy.modflowusg.ModflowUsgDisU`.
 
 """
 import numpy as np
@@ -13,14 +13,14 @@ ITMUNI = {"u": 0, "s": 1, "m": 2, "h": 3, "d": 4, "y": 5}
 LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}
 
 
-class ModflowDisU(Package):
+class ModflowUsgDisU(Package):
     """
     MODFLOW Unstructured Discretization Package Class.
 
     Parameters
     ----------
     model : model object
-        The model object (of type :class:`flopy.modflow.Modflow`) to which
+        The model object (of type :class:`flopy.modflowusg.ModflowUsg`) to which
         this package will be added.
     nodes : int
         Number of nodes in the model grid (default is 2).
@@ -191,8 +191,8 @@ class ModflowDisU(Package):
     --------
 
     >>> import flopy
-    >>> m = flopy.modflow.Modflow()
-    >>> disu = flopy.modflow.ModflowDisU(m)
+    >>> m = flopy.modflowusg.ModflowUsg()
+    >>> disu = flopy.modflowusg.ModflowUsgDisU(m)
 
     """
 
@@ -231,7 +231,7 @@ class ModflowDisU(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowDisU._defaultunit()
+            unitnumber = ModflowUsgDisU._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -240,7 +240,7 @@ class ModflowDisU(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [ModflowDisU._ftype()]
+        name = [ModflowUsgDisU._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -523,7 +523,7 @@ class ModflowDisU(Package):
         f : filename or file handle
             File to load.
         model : model object
-            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            The model object (of type :class:`flopy.modflowusg.ModflowUsg`) to
             which this package will be added.
         ext_unit_dict : dictionary, optional
             If the arrays in the file are specified using EXTERNAL,
@@ -536,15 +536,15 @@ class ModflowDisU(Package):
 
         Returns
         -------
-        dis : ModflowDisU object
-            ModflowDisU object.
+        dis : ModflowUsgDisU object
+            ModflowUsgDisU object.
 
         Examples
         --------
 
         >>> import flopy
-        >>> m = flopy.modflow.Modflow()
-        >>> disu = flopy.modflow.ModflowDisU.load('test.disu', m)
+        >>> m = flopy.modflowusg.ModflowUsg()
+        >>> disu = flopy.modflowusg.ModflowUsgDisU.load('test.disu', m)
 
         """
 
@@ -775,7 +775,7 @@ class ModflowDisU(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowDisU._ftype()
+                ext_unit_dict, filetype=ModflowUsgDisU._ftype()
             )
 
         # create dis object instance

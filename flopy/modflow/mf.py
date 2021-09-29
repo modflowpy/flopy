@@ -179,7 +179,6 @@ class Modflow(BaseModel):
             "pval": flopy.modflow.ModflowPval,
             "bas6": flopy.modflow.ModflowBas,
             "dis": flopy.modflow.ModflowDis,
-            "disu": flopy.modflow.ModflowDisU,
             "bcf6": flopy.modflow.ModflowBcf,
             "lpf": flopy.modflow.ModflowLpf,
             "hfb6": flopy.modflow.ModflowHfb,
@@ -204,7 +203,6 @@ class Modflow(BaseModel):
             "pcgn": flopy.modflow.ModflowPcgn,
             "nwt": flopy.modflow.ModflowNwt,
             "pks": flopy.modflow.ModflowPks,
-            "sms": flopy.modflow.ModflowSms,
             "sfr": flopy.modflow.ModflowSfr2,
             "lak": flopy.modflow.ModflowLak,
             "gage": flopy.modflow.ModflowGage,
@@ -229,24 +227,11 @@ class Modflow(BaseModel):
 
     def __repr__(self):
         nrow, ncol, nlay, nper = self.get_nrow_ncol_nlay_nper()
-        if nrow is not None:
-            # structured case
-            s = (
-                "MODFLOW {} layer(s) {} row(s) {} column(s) "
-                "{} stress period(s)".format(nlay, nrow, ncol, nper)
-            )
-        else:
-            # unstructured case
-            nodes = ncol.sum()
-            nodelay = " ".join(str(i) for i in ncol)
-            print(nodelay, nlay, nper)
-            s = (
-                "MODFLOW unstructured\n"
-                "  nodes = {}\n"
-                "  layers = {}\n"
-                "  periods = {}\n"
-                "  nodelay = {}\n".format(nodes, nlay, nper, ncol)
-            )
+        # structured case
+        s = (
+            "MODFLOW {} layer(s) {} row(s) {} column(s) "
+            "{} stress period(s)".format(nlay, nrow, ncol, nper)
+        )
         return s
 
     #
@@ -678,8 +663,8 @@ class Modflow(BaseModel):
         f : str
             Path to MODFLOW name file to load.
         version : str, default "mf2005"
-            MODFLOW version. Choose one of: "mf2k", "mf2005" (default),
-            "mfnwt", or "mfusg". Note that this can be modified on loading
+            MODFLOW version. Choose one of: "mf2k", "mf2005" (default), or
+            "mfnwt". Note that this can be modified on loading
             packages unique to different MODFLOW versions.
         exe_name : str, default "mf2005.exe"
             MODFLOW executable name.
@@ -691,8 +676,8 @@ class Modflow(BaseModel):
             List of case insensitive packages to load, e.g. ["bas6", "lpf"].
             One package can also be specified, e.g. "rch". Default is None,
             which attempts to load all files. An empty list [] will not load
-            any additional packages than is necessary. At a minimum, "dis" or
-            "disu" is always loaded.
+            any additional packages than is necessary. At a minimum, "dis" is
+            always loaded.
         forgive : bool, optional
             Option to raise exceptions on package load failure, which can be
             useful for debugging. Default False.
@@ -770,6 +755,16 @@ class Modflow(BaseModel):
             ml.structured = False
         # update the modflow version
         ml.set_version(version)
+
+        # Impending deprecation warning to switch to using
+        # flopy.modflowusg.ModflowUsg() instead of flopy.modflow.Modflow()
+        if ml.version == "mfusg":
+            warnings.warn(
+                "flopy.modflow.Modflow() for mfusg models has been deprecated, "
+                " and will be removed in the next release. Please switch to using"
+                " flopy.modflowusg.ModflowUsg() instead.",
+                DeprecationWarning,
+            )
 
         # reset unit number for glo file
         if version == "mf2k":
