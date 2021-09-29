@@ -130,6 +130,9 @@ class ModflowUsgWel(ModflowWel):
         number greater than zero. To define the names for all package files
         (input and output) the length of the list of strings should be 2.
         Default is None.
+    add_package : bool
+        Flag to add the initialised package object to the parent model object.
+        Default is True.
 
     Attributes
     ----------
@@ -170,6 +173,7 @@ class ModflowUsgWel(ModflowWel):
         binary=False,
         unitnumber=None,
         filenames=None,
+        add_package=True,
     ):
         """
         Package constructor.
@@ -186,6 +190,7 @@ class ModflowUsgWel(ModflowWel):
             binary=binary,
             unitnumber=unitnumber,
             filenames=filenames,
+            add_package=False,
         )
 
         self.autoflowreduce = False
@@ -221,7 +226,10 @@ class ModflowUsgWel(ModflowWel):
             structured=model.structured
         )
 
-        self.parent.add_package(self)
+        if add_package:
+            self.parent.add_package(self)
+
+        return
 
     def write_file(self, f=None):
         """

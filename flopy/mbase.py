@@ -646,8 +646,6 @@ class BaseModel(ModelInterface):
         if item == "nper":
             if self.dis is not None:
                 return self.dis.nper
-            elif self.disu is not None:
-                return self.disu.nper
             else:
                 return 0
 

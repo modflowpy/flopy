@@ -95,6 +95,9 @@ class ModflowUsgBcf(ModflowBcf):
         number greater than zero. To define the names for all package files
         (input and output) the length of the list of strings should be 2.
         Default is None.
+    add_package : bool
+        Flag to add the initialised package object to the parent model object.
+        Default is True.
 
     Methods
     -------
@@ -141,6 +144,7 @@ class ModflowUsgBcf(ModflowBcf):
         extension="bcf",
         unitnumber=None,
         filenames=None,
+        add_package=True,
     ):
 
         super().__init__(
@@ -163,6 +167,7 @@ class ModflowUsgBcf(ModflowBcf):
             extension=extension,
             unitnumber=unitnumber,
             filenames=filenames,
+            add_package=False,
         )
 
         dis = model.get_package("DIS")
@@ -203,7 +208,10 @@ class ModflowUsgBcf(ModflowBcf):
                 "ksat",
                 locat=self.unit_number[0],
             )
-        self.parent.add_package(self)
+
+        if add_package:
+            self.parent.add_package(self)
+
         return
 
     def write_file(self, f=None):
