@@ -87,9 +87,6 @@ def tri2vor(tri, **kwargs):
     npoints = tri_verts.shape[0]
     ntriangles = len(tri_iverts)
     nedges = tri_edge.shape[0]
-    print(f"Number of triangular points {npoints}")
-    print(f"Number of triangles {ntriangles}")
-    print(f"Number of edges {nedges}")
 
     # test the voronoi vertices, and mark those outside of the domain
     nvertices = vor.vertices.shape[0]
@@ -183,9 +180,6 @@ def tri2vor(tri, **kwargs):
             vor_iverts[icell] = get_sorted_vertices(
                 vor_iverts[icell], vor_verts
             )
-
-    print(f"Number of voronoi vertices {vor_verts.shape[0]}")
-    print(f"Number of voronoi cells {len(vor_iverts)}")
 
     return vor_verts, vor_iverts
 
