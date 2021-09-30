@@ -74,15 +74,10 @@ def tri2vor(tri, **kwargs):
     verts, iverts : ndarray, list of lists
 
     """
+    # assign local variables
     tri_verts = tri.verts
     tri_iverts = tri.iverts
     tri_edge = tri.edge
-
-    # set domain bounds
-    xmin = tri_verts[:, 0].min()
-    xmax = tri_verts[:, 0].max()
-    ymin = tri_verts[:, 1].min()
-    ymax = tri_verts[:, 1].max()
 
     # construct the voronoi grid
     vor = Voronoi(tri_verts, **kwargs)
@@ -159,7 +154,7 @@ def tri2vor(tri, **kwargs):
             tri_edge["boundary_marker"] <= nexterior_boundary_markers
         )
         inewvert = len(vor_verts)
-        for iedge, ip0, ip1, ibm in tri_edge[idx]:
+        for _, ip0, ip1, ibm in tri_edge[idx]:
             midpoint = tri_verts[[ip0, ip1]].mean(axis=0)
             px, py = midpoint
             vor_verts.append((px, py))
