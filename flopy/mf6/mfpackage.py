@@ -1572,7 +1572,7 @@ class MFPackage(PackageContainer, PackageInterface):
                 )
             # only store the file name.  model relative path handled
             # internally
-            if model_or_sim.type == "model":
+            if model_or_sim.type.lower() == "model":
                 filename = os.path.split(filename)[-1]
             self._filename = MFFileMgmt.string_to_file_path(filename)
         self.path, self.structure = model_or_sim.register_package(
