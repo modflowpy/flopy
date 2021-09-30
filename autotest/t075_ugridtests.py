@@ -248,26 +248,271 @@ def test_voronoi_vertex_grid():
     tri.build(verbose=False)
 
     # create vor object and VertexGrid
-    vor = VoronoiGrid(tri.verts)
+    vor = VoronoiGrid(tri)
     gridprops = vor.get_gridprops_vertexgrid()
     vgrid = VertexGrid(**gridprops, nlay=1)
     assert vgrid.is_valid
 
     # arguments for creating a mf6 disv package
     gridprops = vor.get_disv_gridprops()
+    print(gridprops)
     assert gridprops["ncpl"] == 43
-    assert gridprops["nvert"] == 83
-    assert len(gridprops["vertices"]) == 83
+    assert gridprops["nvert"] == 127
+    assert len(gridprops["vertices"]) == 127
     assert len(gridprops["cell2d"]) == 43
     return
 
 
+def test_voronoi_grid0(plot=False):
+
+    name = "vor0"
+    answer_ncpl = 3804
+    domain = [
+        [1831.381546,6335.543757],
+        [4337.733475,6851.136153],
+        [6428.747084,6707.916043],
+        [8662.980804,6493.085878],
+        [9350.437333,5891.561415],
+        [9235.861245,4717.156511],
+        [8963.743036,3685.971717],
+        [8691.624826,2783.685023],
+        [8047.13433,2038.94045  ],
+        [7416.965845,578.0953252],
+        [6414.425073,105.4689614],
+        [5354.596258,205.7230386],
+        [4624.173696,363.2651598],
+        [3363.836725,563.7733141],
+        [1330.11116,1809.788273 ],
+        [399.1804436,2998.515188],
+        [914.7728404,5132.494831],
+        [1831.381546,6335.543757],
+    ]
+    area_max = 100. ** 2
+    tri = Triangle(maximum_area=area_max, angle=30, model_ws=tpth)
+    poly = np.array(domain)
+    tri.add_polygon(poly)
+    tri.build(verbose=False)
+
+    vor = VoronoiGrid(tri)
+    gridprops = vor.get_gridprops_vertexgrid()
+    assert gridprops["ncpl"] == answer_ncpl, "Number of cells should be {answer_ncpl}"
+
+    voronoi_grid = VertexGrid(**gridprops, nlay=1)
+
+    if plot:
+        import matplotlib.pyplot as plt
+        fig = plt.figure(figsize=(10, 10))
+        ax = fig.add_subplot()
+        ax.set_aspect('equal')
+        voronoi_grid.plot(ax=ax)
+        plt.savefig(os.path.join(tpth, f"{name}.png"))
+
+    return
+
+
+def test_voronoi_grid1(plot=False):
+
+    name = "vor1"
+    answer_ncpl = 1679
+    xmin = 0.0
+    xmax = 2.0
+    ymin = 0.0
+    ymax = 1.0
+    area_max = 0.001
+    tri = Triangle(maximum_area=area_max, angle=30, model_ws=tpth)
+    poly = np.array(((xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)))
+    tri.add_polygon(poly)
+    tri.build(verbose=False)
+
+    vor = VoronoiGrid(tri)
+    gridprops = vor.get_gridprops_vertexgrid()
+    voronoi_grid = VertexGrid(**gridprops, nlay=1)
+    assert gridprops["ncpl"] == answer_ncpl, "Number of cells should be {answer_ncpl}"
+
+    if plot:
+        import matplotlib.pyplot as plt
+        fig = plt.figure(figsize=(10, 10))
+        ax = fig.add_subplot()
+        ax.set_aspect('equal')
+        voronoi_grid.plot(ax=ax)
+        plt.savefig(os.path.join(tpth, f"{name}.png"))
+
+    return
+
+
+def test_voronoi_grid2(plot=False):
+
+    name = "vor2"
+    answer_ncpl = 5058
+    theta = np.arange(0., 2*np.pi, 0.2)
+    radius = 100.
+    x = radius * np.cos(theta)
+    y = radius * np.sin(theta)
+    circle_poly = [(x, y) for x, y in zip(x, y)]
+    tri = Triangle(maximum_area=5, angle=30, model_ws=tpth)
+    tri.add_polygon(circle_poly)
+    tri.build(verbose=False)
+
+    vor = VoronoiGrid(tri)
+    gridprops = vor.get_gridprops_vertexgrid()
+    voronoi_grid = VertexGrid(**gridprops, nlay=1)
+    assert gridprops["ncpl"] == answer_ncpl, "Number of cells should be {answer_ncpl}"
+
+    if plot:
+        import matplotlib.pyplot as plt
+        fig = plt.figure(figsize=(10, 10))
+        ax = fig.add_subplot()
+        ax.set_aspect('equal')
+        voronoi_grid.plot(ax=ax)
+        plt.savefig(os.path.join(tpth, f"{name}.png"))
+
+    return
+
+
+def test_voronoi_grid3(plot=False):
+
+    name = "vor3"
+    answer_ncpl = 2375
+
+    theta = np.arange(0., 2*np.pi, 0.2)
+    radius = 100.
+    x = radius * np.cos(theta)
+    y = radius * np.sin(theta)
+    circle_poly = [(x, y) for x, y in zip(x, y)]
+
+    theta = np.arange(0., 2*np.pi, .2)
+    radius = 30.
+    x = radius * np.cos(theta) + 25.
+    y = radius * np.sin(theta) + 25.
+    inner_circle_poly = [(x, y) for x, y in zip(x, y)]
+
+    tri = Triangle(maximum_area=10, angle=30, model_ws=tpth)
+    tri.add_polygon(circle_poly)
+    tri.add_polygon(inner_circle_poly)
+    tri.add_hole((25, 25))
+    tri.build(verbose=False)
+
+    vor = VoronoiGrid(tri)
+    gridprops = vor.get_gridprops_vertexgrid()
+    voronoi_grid = VertexGrid(**gridprops, nlay=1)
+    assert gridprops["ncpl"] == answer_ncpl, "Number of cells should be {answer_ncpl}"
+
+    if plot:
+        import matplotlib.pyplot as plt
+        fig = plt.figure(figsize=(10, 10))
+        ax = fig.add_subplot()
+        ax.set_aspect('equal')
+        voronoi_grid.plot(ax=ax)
+        plt.savefig(os.path.join(tpth, f"{name}.png"))
+
+    return
+
+
+def test_voronoi_grid4(plot=False):
+
+    name = "vor4"
+    answer_ncpl = 410
+    active_domain = [(0, 0), (100, 0), (100, 100), (0, 100)]
+    area1 = [(10, 10), (40, 10), (40, 40), (10, 40)]
+    area2 = [(60, 60), (80, 60), (80, 80), (60, 80)]
+    tri = Triangle(angle=30, model_ws=tpth)
+    tri.add_polygon(active_domain)
+    tri.add_polygon(area1)
+    tri.add_polygon(area2)
+    tri.add_region((1, 1), 0, maximum_area=100) # point inside active domain
+    tri.add_region((11, 11), 1, maximum_area=10) # point inside area1
+    tri.add_region((61, 61), 2, maximum_area=3) # point inside area2
+    tri.build(verbose=False)
+
+    vor = VoronoiGrid(tri)
+    gridprops = vor.get_gridprops_vertexgrid()
+    voronoi_grid = VertexGrid(**gridprops, nlay=1)
+    assert gridprops["ncpl"] == answer_ncpl, "Number of cells should be {answer_ncpl}"
+
+    if plot:
+        import matplotlib.pyplot as plt
+        fig = plt.figure(figsize=(10, 10))
+        ax = fig.add_subplot()
+        ax.set_aspect('equal')
+        voronoi_grid.plot(ax=ax)
+        plt.savefig(os.path.join(tpth, f"{name}.png"))
+
+    return
+
+
+def test_voronoi_grid5(plot=False):
+
+    name = "vor5"
+    answer_ncpl = 1067
+    active_domain = [(0, 0), (100, 0), (100, 100), (0, 100)]
+    area1 = [(10, 10), (40, 10), (40, 40), (10, 40)]
+    area2 = [(50, 50), (90, 50), (90, 90), (50, 90)]
+
+    tri = Triangle(angle=30, model_ws=tpth)
+
+    # requirement that active_domain is first polygon to be added
+    tri.add_polygon(active_domain)
+
+    # requirement that any holes be added next
+    theta = np.arange(0., 2*np.pi, .2)
+    radius = 10.
+    x = radius * np.cos(theta) + 50.
+    y = radius * np.sin(theta) + 70.
+    circle_poly0 = [(x, y) for x, y in zip(x, y)]
+    tri.add_polygon(circle_poly0)
+    tri.add_hole((50, 70))
+
+    # Add a polygon to force cells to conform to it
+    theta = np.arange(0., 2*np.pi, .2)
+    radius = 10.
+    x = radius * np.cos(theta) + 70.
+    y = radius * np.sin(theta) + 20.
+    circle_poly1 = [(x, y) for x, y in zip(x, y)]
+    tri.add_polygon(circle_poly1)
+    #tri.add_hole((70, 20))
+
+    # add line through domain to force conforming cells
+    line = [(x, x) for x in np.linspace(10, 90, 100)]
+    tri.add_polygon(line)
+
+
+    # then regions and other polygons should follow
+    tri.add_polygon(area1)
+    tri.add_polygon(area2)
+    tri.add_region((1, 1), 0, maximum_area=100) # point inside active domain
+    tri.add_region((11, 11), 1, maximum_area=10) # point inside area1
+    tri.add_region((70, 70), 2, maximum_area=3) # point inside area2
+
+    tri.build(verbose=False)
+
+    vor = VoronoiGrid(tri)
+    gridprops = vor.get_gridprops_vertexgrid()
+    voronoi_grid = VertexGrid(**gridprops, nlay=1)
+    assert gridprops["ncpl"] == answer_ncpl, "Number of cells should be {answer_ncpl}"
+
+    if plot:
+        import matplotlib.pyplot as plt
+        fig = plt.figure(figsize=(10, 10))
+        ax = fig.add_subplot()
+        ax.set_aspect('equal')
+        voronoi_grid.plot(ax=ax)
+        plt.savefig(os.path.join(tpth, f"{name}.png"))
+
+    return
+
+
 if __name__ == "__main__":
-    test_unstructured_grid_shell()
-    test_unstructured_grid_dimensions()
-    test_unstructured_minimal_grid()
-    test_unstructured_complete_grid()
-    test_loading_argus_meshes()
-    test_create_unstructured_grid_from_verts()
-    test_triangle_unstructured_grid()
-    test_voronoi_vertex_grid()
+    #test_unstructured_grid_shell()
+    #test_unstructured_grid_dimensions()
+    #test_unstructured_minimal_grid()
+    #test_unstructured_complete_grid()
+    #test_loading_argus_meshes()
+    #test_create_unstructured_grid_from_verts()
+    #test_triangle_unstructured_grid()
+    #test_voronoi_vertex_grid()
+    test_voronoi_grid0(plot=True)
+    test_voronoi_grid1(plot=True)
+    test_voronoi_grid2(plot=True)
+    test_voronoi_grid3(plot=True)
+    test_voronoi_grid4(plot=True)
+    test_voronoi_grid5(plot=True)
