@@ -120,7 +120,7 @@ def tri2vor(tri, **kwargs):
     idx_vertindex[idx_filtered] = np.arange(nvalid_vertices)
 
     vor_verts = [(x, y) for x, y in vor.vertices[idx_filtered]]
-    vor_iverts = [ [] for i in range(npoints)]
+    vor_iverts = [[] for i in range(npoints)]
 
     # step 1 -- go through voronoi ridge vertices
     # and add valid vertices to vor_verts and to the
@@ -155,7 +155,9 @@ def tri2vor(tri, **kwargs):
         for ihole in range(nholes):
             polygon = tri._polygons[ihole + 1]
             nexterior_boundary_markers += len(polygon)
-        idx = (tri_edge["boundary_marker"] > 0) & (tri_edge["boundary_marker"] <= nexterior_boundary_markers)
+        idx = (tri_edge["boundary_marker"] > 0) & (
+            tri_edge["boundary_marker"] <= nexterior_boundary_markers
+        )
         inewvert = len(vor_verts)
         for iedge, ip0, ip1, ibm in tri_edge[idx]:
             midpoint = tri_verts[[ip0, ip1]].mean(axis=0)
@@ -183,7 +185,9 @@ def tri2vor(tri, **kwargs):
     if True:
         vor_verts = np.array(vor_verts)
         for icell in range(len(vor_iverts)):
-            vor_iverts[icell] = get_sorted_vertices(vor_iverts[icell], vor_verts)
+            vor_iverts[icell] = get_sorted_vertices(
+                vor_iverts[icell], vor_verts
+            )
 
     print(f"Number of voronoi vertices {vor_verts.shape[0]}")
     print(f"Number of voronoi cells {len(vor_iverts)}")
@@ -220,11 +224,14 @@ class VoronoiGrid:
 
     def __init__(self, tri, **kwargs):
         from .triangle import Triangle
+
         if isinstance(tri, Triangle):
             points = tri.verts
             verts, iverts = tri2vor(tri, **kwargs)
         else:
-            raise TypeError("The tri argument must be of type flopy.utils.Triangle")
+            raise TypeError(
+                "The tri argument must be of type flopy.utils.Triangle"
+            )
         self.points = points
         self.verts = verts
         self.iverts = iverts
