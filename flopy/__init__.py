@@ -17,7 +17,6 @@ packages. A variety of flexible and readable ways have been implemented to
 specify these boundary conditions. FloPy is an open-source project and any
 assistance is welcomed. Please email the development team if you want to
 contribute.
-
 """
 
 from .version import __version__, __author__, __author_email__
@@ -37,3 +36,21 @@ from . import mf6
 from . import discretization
 
 from .mbase import run_model, which
+
+__all__ = [
+    " __version__",
+    "__author__",
+    "__author_email__" "modflow",
+    "mt3d",
+    "seawat",
+    "modpath",
+    "modflowlgr" "modflowusg",
+    "utils",
+    "plot",
+    "export",
+    "pest",
+    "mf6",
+    "discretization",
+    "run_model",
+    "which",
+]

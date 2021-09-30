@@ -6,6 +6,7 @@ mf module.  Contains the ModflowGlobal, ModflowList, and Modflow classes.
 
 import os
 import flopy
+import warnings
 from inspect import getfullargspec
 from ..mbase import BaseModel
 from ..pakbase import Package
