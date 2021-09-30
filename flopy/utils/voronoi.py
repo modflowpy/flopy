@@ -154,7 +154,7 @@ def tri2vor(tri, **kwargs):
             tri_edge["boundary_marker"] <= nexterior_boundary_markers
         )
         inewvert = len(vor_verts)
-        for _, ip0, ip1, ibm in tri_edge[idx]:
+        for _, ip0, ip1, _ in tri_edge[idx]:
             midpoint = tri_verts[[ip0, ip1]].mean(axis=0)
             px, py = midpoint
             vor_verts.append((px, py))
