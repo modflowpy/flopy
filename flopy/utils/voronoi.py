@@ -349,3 +349,4 @@ class VoronoiGrid:
         if plot_title:
             ax.set_title(f"ncells: {self.ncpl}; nverts: {self.nverts}")
         return ax
+    
