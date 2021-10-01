@@ -115,6 +115,7 @@ def cbc_eval(cbcobj, nnodes, shape3d, modelgrid):
     cbc_pth = cbcobj.filename
     cbc_eval_size(cbcobj, nnodes, shape3d)
     cbc_eval_data(cbcobj, shape3d)
+    cbcobj.close()
 
     cobj_mg = flopy.utils.CellBudgetFile(
         cbc_pth,
@@ -123,6 +124,7 @@ def cbc_eval(cbcobj, nnodes, shape3d, modelgrid):
     )
     cbc_eval_size(cobj_mg, nnodes, shape3d)
     cbc_eval_data(cobj_mg, shape3d)
+    cobj_mg.close()
 
     return
 
@@ -194,7 +196,6 @@ def test_cbc_full3D():
 def main():
     for (name, ismf6, ws_in) in zip(names, ismf6_lst, ex_pths):
         if ismf6:
-            continue
             mf6_eval(name, ws_in)
         else:
             mf2005_eval(name, ws_in)
