@@ -135,5 +135,38 @@ def test_mf6():
     return
 
 
+def test_mf6_string_to_file_path():
+    from flopy.mf6.mfbase import MFFileMgmt
+    import platform
+
+    if platform.system().lower() == "windows":
+        unc_path = r"\\server\path\path"
+        new_path = MFFileMgmt.string_to_file_path(unc_path)
+        if not unc_path == new_path:
+            raise AssertionError("UNC path error")
+
+        abs_path = r"C:\Users\some_user\path"
+        new_path = MFFileMgmt.string_to_file_path(abs_path)
+        if not abs_path == new_path:
+            raise AssertionError("Absolute path error")
+
+        rel_path = r"..\path\some_path"
+        new_path = MFFileMgmt.string_to_file_path(rel_path)
+        if not rel_path == new_path:
+            raise AssertionError("Relative path error")
+
+    else:
+        abs_path = "/mnt/c/some_user/path"
+        new_path = MFFileMgmt.string_to_file_path(abs_path)
+        if not abs_path == new_path:
+            raise AssertionError("Absolute path error")
+
+        rel_path = "../path/some_path"
+        new_path = MFFileMgmt.string_to_file_path(rel_path)
+        if not rel_path == new_path:
+            raise AssertionError("Relative path error")
+
+
 if __name__ == "__main__":
     test_mf6()
+    test_mf6_string_to_file_path()

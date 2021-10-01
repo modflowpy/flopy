@@ -310,7 +310,12 @@ class MFFileMgmt:
             arr_string = new_string.split(delimiter)
             if len(arr_string) > 1:
                 if os.path.isabs(fp_string):
-                    new_string = f"{arr_string[0]}{delimiter}{arr_string[1]}"
+                    if not arr_string[0] and not arr_string[1]:
+                        new_string = f"{delimiter}{delimiter}"
+                    else:
+                        new_string = (
+                            f"{arr_string[0]}{delimiter}{arr_string[1]}"
+                        )
                 else:
                     new_string = os.path.join(arr_string[0], arr_string[1])
                 if len(arr_string) > 2:
