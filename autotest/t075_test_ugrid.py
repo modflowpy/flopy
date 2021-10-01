@@ -291,9 +291,10 @@ def test_voronoi_grid0(plot=False):
 
     vor = VoronoiGrid(tri)
     gridprops = vor.get_gridprops_vertexgrid()
+    ncpl = gridprops["ncpl"]
     assert (
-        gridprops["ncpl"] == answer_ncpl
-    ), "Number of cells should be {answer_ncpl}"
+            ncpl == answer_ncpl
+    ), f"Number of cells should be {answer_ncpl}. Found {ncpl}"
 
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
 
@@ -326,9 +327,10 @@ def test_voronoi_grid1(plot=False):
     vor = VoronoiGrid(tri)
     gridprops = vor.get_gridprops_vertexgrid()
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
+    ncpl = gridprops["ncpl"]
     assert (
-        gridprops["ncpl"] == answer_ncpl
-    ), "Number of cells should be {answer_ncpl}"
+            ncpl == answer_ncpl
+    ), f"Number of cells should be {answer_ncpl}. Found {ncpl}"
 
     if plot:
         import matplotlib.pyplot as plt
@@ -358,9 +360,10 @@ def test_voronoi_grid2(plot=False):
     vor = VoronoiGrid(tri)
     gridprops = vor.get_gridprops_vertexgrid()
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
+    ncpl = gridprops["ncpl"]
     assert (
-        gridprops["ncpl"] == answer_ncpl
-    ), "Number of cells should be {answer_ncpl}"
+            ncpl == answer_ncpl
+    ), f"Number of cells should be {answer_ncpl}. Found {ncpl}"
 
     if plot:
         import matplotlib.pyplot as plt
@@ -400,9 +403,10 @@ def test_voronoi_grid3(plot=False):
     vor = VoronoiGrid(tri)
     gridprops = vor.get_gridprops_vertexgrid()
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
+    ncpl = gridprops["ncpl"]
     assert (
-        gridprops["ncpl"] == answer_ncpl
-    ), "Number of cells should be {answer_ncpl}"
+            ncpl == answer_ncpl
+    ), f"Number of cells should be {answer_ncpl}. Found {ncpl}"
 
     if plot:
         import matplotlib.pyplot as plt
@@ -435,9 +439,10 @@ def test_voronoi_grid4(plot=False):
     vor = VoronoiGrid(tri)
     gridprops = vor.get_gridprops_vertexgrid()
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
+    ncpl = gridprops["ncpl"]
     assert (
-        gridprops["ncpl"] == answer_ncpl
-    ), "Number of cells should be {answer_ncpl}"
+            ncpl == answer_ncpl
+    ), f"Number of cells should be {answer_ncpl}. Found {ncpl}"
 
     if plot:
         import matplotlib.pyplot as plt
@@ -498,9 +503,10 @@ def test_voronoi_grid5(plot=False):
     vor = VoronoiGrid(tri)
     gridprops = vor.get_gridprops_vertexgrid()
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
+    ncpl = gridprops["ncpl"]
     assert (
-        gridprops["ncpl"] == answer_ncpl
-    ), "Number of cells should be {answer_ncpl}"
+        ncpl == answer_ncpl
+    ), f"Number of cells should be {answer_ncpl}. Found {ncpl}"
 
     if plot:
         import matplotlib.pyplot as plt
