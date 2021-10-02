@@ -1,9 +1,9 @@
+# pylint: disable=too-many-instance-attributes
 """
 mfusgsms module.  This is the solver for MODFLOW-USG.
+
 Contains the ModflowUsgSms class. Note that the user can access
 the ModflowUsgSms class as `flopy.modflowusg.ModflowUsgSms`.
-
-
 """
 from ..pakbase import Package
 from ..utils.flopy_io import line_parse
@@ -230,7 +230,6 @@ class ModflowUsgSms(Package):
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
     >>> sms = flopy.modflowusg.ModflowUsgSms(m)
-
     """
 
     def __init__(
@@ -270,6 +269,7 @@ class ModflowUsgSms(Package):
         unitnumber=None,
         filenames=None,
     ):
+        """Package constructor"""
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowUsgSms._defaultunit()
@@ -434,9 +434,7 @@ class ModflowUsgSms(Package):
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
         >>> sms = flopy.modflow.ModflowPcg.load('test.sms', m)
-
         """
-
         if model.verbose:
             print("loading sms package file...")
 

@@ -844,7 +844,7 @@ class Package(PackageInterface):
         if wa is not None:
             wb.open(wa)
 
-    def write_file(self, check=False):
+    def write_file(self, f=None, check=False):
         """
         Every Package needs its own write_file function
 
@@ -853,11 +853,12 @@ class Package(PackageInterface):
         return
 
     @staticmethod
-    def load(f, model, pak_type, ext_unit_dict=None, **kwargs):
+    def load(f, model, pak_type=None, ext_unit_dict=None, **kwargs):
         """
         Default load method for standard boundary packages.
-
         """
+        if pak_type is None:
+            return
 
         # parse keywords
         if "nper" in kwargs:

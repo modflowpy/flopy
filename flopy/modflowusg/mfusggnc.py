@@ -1,9 +1,9 @@
 """
-mfusggnc module.  This is for the Ghost Node Correction (GNC) Package for MODFLOW-USG.
+mfusggnc module.
+
+This is for the Ghost Node Correction (GNC) Package for MODFLOW-USG.
 Contains the ModflowUsgGnc class. Note that the user can access
 the ModflowUsgGnc class as `flopy.modflowusg.ModflowUsgGnc`.
-
-
 """
 import numpy as np
 from ..pakbase import Package
@@ -76,7 +76,6 @@ class ModflowUsgGnc(Package):
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
     >>> gnc = flopy.modflowusg.ModflowUsgGnc(m)
-
     """
 
     def __init__(
@@ -93,6 +92,7 @@ class ModflowUsgGnc(Package):
         unitnumber=None,
         filenames=None,
     ):
+        """Package constructor"""
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowUsgGnc._defaultunit()
@@ -283,30 +283,28 @@ class ModflowUsgGnc(Package):
                 break
 
         # Item 1 --NPGNCn MXGNn NGNCNPn MXADJn I2Kn ISYMGNCn IFLALPHAn [NOPRINT]
-        t = line.strip().split()
+        line_text = line.strip().split()
         imax = 7
         npgncn, mxgnn, numgnc, numalphaj, i2kn, isymgncn, iflalphan = (
-            int(t[0]),
-            int(t[1]),
-            int(t[2]),
-            int(t[3]),
-            int(t[4]),
-            int(t[5]),
-            int(t[6]),
+            int(line_text[0]),
+            int(line_text[1]),
+            int(line_text[2]),
+            int(line_text[3]),
+            int(line_text[4]),
+            int(line_text[5]),
+            int(line_text[6]),
         )
 
         options = []
-        if len(t) > imax:
-            if t[7].lower() == "noprint":
+        if len(line_text) > imax:
+            if line_text[7].lower() == "noprint":
                 options.append("noprint")
 
         # Item 2 -- read parameter data
         if npgncn > 0:
             dt = ModflowUsgGnc.get_empty(npgncn, mxgnn, iflalphan).dtype
             # Item 3 --
-            pak_parms = mfparbc.load(
-                f, npgncn, dt, model, ext_unit_dict, model.verbose
-            )
+            mfparbc.load(f, npgncn, dt, model, ext_unit_dict, model.verbose)
 
         # Item 4 -- read GNC data
         gncdata = ModflowUsgGnc.get_empty(numgnc, numalphaj, iflalphan)
