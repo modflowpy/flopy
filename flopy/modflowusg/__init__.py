@@ -1,5 +1,4 @@
 """Initialize modflowusg"""
-
 from .mfusg import ModflowUsg
 from .mfusgdisu import ModflowUsgDisU
 from .mfusgbcf import ModflowUsgBcf

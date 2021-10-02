@@ -1,7 +1,5 @@
 """
-mf module.  Contains the ModflowGlobal, ModflowList, and Modflow classes.
-
-
+mf module. Contains the ModflowGlobal, ModflowList, and Modflow classes.
 """
 
 import os

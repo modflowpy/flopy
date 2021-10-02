@@ -128,7 +128,7 @@ class ModflowUsgLpf(ModflowLpf):
         is a combination of the wetting threshold and a flag to indicate
         which neighboring cells can cause a cell to become wet.
         (default is -0.01).
-    ksat : float or array of floats (nrow, ncol)
+    ksat : float or array of floats (njag)
         inter-block saturated hydraulic conductivity or transmissivity
         (if IKCFLAG = 1) or the inter-block conductance (if IKCFLAG = - 1)
         of the connection between nodes n and m.

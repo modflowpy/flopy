@@ -1,5 +1,5 @@
-"""
-mbase module
+"""mbase module
+
   This module contains the base model class from which
   all of the other models inherit from.
 """
@@ -16,10 +16,10 @@ from shutil import which
 from subprocess import Popen, PIPE, STDOUT
 import copy
 import numpy as np
+
 from flopy import utils, discretization
 from .version import __version__
 from .discretization.grid import Grid
-
 
 ## Global variables
 # Multiplier for individual array elements in integer and real arrays read by
@@ -28,11 +28,10 @@ iconst = 1
 # Printout flag. If >= 0 then array values read are printed in listing file.
 iprn = -1
 
+
 # external exceptions for users
 class PackageLoadException(Exception):
-    """
-    FloPy package load exception
-    """
+    """FloPy package load exception"""
 
     def __init__(self, error, location=""):
         self.message = error

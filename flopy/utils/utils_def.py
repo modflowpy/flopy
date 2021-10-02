@@ -2,6 +2,7 @@
 Generic classes and utility functions
 """
 
+import warnings
 from datetime import timedelta
 import numpy as np
 
@@ -54,6 +55,17 @@ class FlopyBinaryData:
 
     def _read_values(self, dtype, count):
         return np.fromfile(self.file, dtype, count)
+
+    def __getattr__(self, name):
+        """
+        Gets class attributes to avoid pylint E1101 false positives.
+
+        Will only get called for undefined attributes.
+        """
+        warnings.warn(
+            f"No member '{name}' contained in {type(self).__name__})"
+        )
+        return ""
 
 
 def totim_to_datetime(totim, start="1-1-1970", timeunit="D"):
@@ -136,3 +148,31 @@ def get_pak_vals_shape(model, vals):
             return np.array(vals, ndmin=2).shape
     else:
         return (nrow, ncol)  # structured
+
+
+def get_util2d_shape_for_layer(model, layer=0):
+    """
+    Define nrow and ncol for array (Util2d) shape of a given layer in
+    structured and/or unstructured models.
+
+    Parameters
+    ----------
+    model : model object
+        model for which Util2d shape is sought.
+    layer : int
+        layer (base 0) for which Util2d shape is sought.
+
+    Returns
+    ---------
+    (nrow,ncol) : tuple of ints
+        util2d shape for the given layer
+    """
+    nr, nc, nlay, nper = model.get_nrow_ncol_nlay_nper()
+    if nr is None:  # unstructured
+        nrow = 1
+        ncol = nc[layer]
+    else:  # structured
+        nrow = nr
+        ncol = nc
+
+    return (nrow, ncol)

@@ -1,10 +1,10 @@
 """mfusg module"""
-
 import os
 import flopy
+import warnings
 from inspect import getfullargspec
-from ..utils import mfreadnam
 
+from ..utils import mfreadnam
 from ..modflow import Modflow
 from ..mbase import PackageLoadException
 
@@ -51,7 +51,6 @@ class ModflowUsg(Modflow):
     --------
     >>> import flopy
     >>> usg = flopy.modflowusg.ModflowUsg()
-
     """
 
     def __init__(
@@ -61,17 +60,20 @@ class ModflowUsg(Modflow):
         model_ws=".",
         **kwargs,
     ):
-        """Constructs the ModflowUsg object. Overrides the parent Modflow object."""
+        """
+        Constructs the ModflowUsg object.
 
-        valid_keys_defaults = {
+        Overrides the parent Modflow object.
+        """
+        valid_args_defaults = {
             "namefile_ext": "nam",
             "exe_name": "mfusg.exe",
             "listunit": 2,
             "external_path": None,
             "verbose": False,
         }
-        for key, default_value in valid_keys_defaults.items():
-            setattr(self, key, kwargs.pop(key, default_value))
+        for arg, default_value in valid_args_defaults.items():
+            setattr(self, arg, kwargs.pop(arg, default_value))
 
         setattr(self, "version", "mfusg")
 
@@ -190,7 +192,6 @@ class ModflowUsg(Modflow):
         >>> import flopy
         >>> ml = flopy.modflowusg.ModflowUsg.load('model.nam')
         """
-
         # similar to modflow command: if file does not exist , try file.nam
         namefile_path = os.path.join(model_ws, f)
         if not os.path.isfile(namefile_path) and os.path.isfile(
@@ -325,7 +326,6 @@ class ModflowUsg(Modflow):
         ext_unit_d_item : :class:`flopy.utils.mfreadnam.NamData` instance.
             Must be an item of ext_unit_dict.
         """
-
         package_load_args = getfullargspec(ext_unit_d_item.package.load)[0]
         if "check" in package_load_args:
             ext_unit_d_item.package.load(
@@ -370,7 +370,6 @@ class ModflowUsg(Modflow):
         files_successfully_loaded :
         files_not_loaded :
         """
-
         files_successfully_loaded = []
         files_not_loaded = []
 
@@ -424,7 +423,7 @@ class ModflowUsg(Modflow):
                             ml.load_fail = True
                             if ml.verbose:
                                 raise PackageLoadException(
-                                    message=f"   {item.filetype:4s} package \
+                                    error=f"   {item.filetype:4s} package \
                                     load...failed\n   {e!s}"
                                 )
                             files_not_loaded.append(item.filename)
@@ -467,6 +466,9 @@ def fmt_string(array):
     Returns a C-style fmt string for numpy savetxt that corresponds to
     the dtype.
 
+    Parameters
+    ----------
+    array : numpy array
     """
     fmts = []
     for field in array.dtype.descr:
@@ -479,14 +481,14 @@ def fmt_string(array):
             fmts.append("%10s")
         elif vtype == "s":
             msg = (
-                "mfcln.fmt_string error: 'str' type found in dtype. "
+                "mfusg.fmt_string error: 'str' type found in dtype. "
                 "This gives unpredictable results when "
                 "recarray to file - change to 'object' type"
             )
             raise TypeError(msg)
         else:
             raise TypeError(
-                "mfcln.fmt_string error: unknown vtype in "
+                "mfusg.fmt_string error: unknown vtype in "
                 "field: {}".format(field)
             )
     return "".join(fmts)
