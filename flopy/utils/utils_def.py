@@ -176,3 +176,43 @@ def get_util2d_shape_for_layer(model, layer=0):
         ncol = nc
 
     return (nrow, ncol)
+
+
+def get_unitnumber_from_ext_unit_dict(
+    model, pak_class, ext_unit_dict=None, ipakcb=0
+):
+    """
+    For a given modflow package, defines input file unit number,
+    plus package input and (optionally) output (budget) save file names.
+
+    Parameters
+    ----------
+    model : model object
+        model for which the unit number is sought.
+    pak_class : modflow package class for which the unit number is sought.
+    ext_unit_dict : external unit dictionary, optional.
+        If not provided, unitnumber and filenames will be returned as None.
+    ipakcb : int, optional
+        Modflow package unit number on which budget is saved.
+        Default is 0, in which case the returned output file is None.
+
+    Returns
+    ---------
+    unitnumber : int
+        file unit number for the given modflow package (or None)
+    filenames : list
+        list of [package input file name, budget file name],
+    """
+    unitnumber = None
+    filenames = [None, None]
+    if ext_unit_dict is not None:
+        unitnumber, filenames[0] = model.get_ext_dict_attr(
+            ext_unit_dict, filetype=pak_class._ftype()
+        )
+        if ipakcb > 0:
+            iu, filenames[1] = model.get_ext_dict_attr(
+                ext_unit_dict, unit=ipakcb
+            )
+            model.add_pop_key_list(ipakcb)
+
+    return unitnumber, filenames

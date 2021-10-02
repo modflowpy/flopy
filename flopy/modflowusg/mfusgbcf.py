@@ -9,7 +9,10 @@ import numpy as np
 from ..modflow import ModflowBcf
 from ..utils import Util2d, Util3d
 from ..utils.flopy_io import line_parse
-from ..utils.utils_def import get_util2d_shape_for_layer
+from ..utils.utils_def import (
+    get_util2d_shape_for_layer,
+    get_unitnumber_from_ext_unit_dict,
+)
 
 
 class ModflowUsgBcf(ModflowBcf):
@@ -624,17 +627,9 @@ class ModflowUsgBcf(ModflowBcf):
             f.close()
 
         # set package unit number
-        unitnumber = None
-        filenames = [None, None]
-        if ext_unit_dict is not None:
-            unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowUsgBcf._ftype()
-            )
-            if ipakcb > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=ipakcb
-                )
-                model.add_pop_key_list(ipakcb)
+        unitnumber, filenames = get_unitnumber_from_ext_unit_dict(
+            model, cls, ext_unit_dict, ipakcb
+        )
 
         # create instance of bcf object
         bcf = cls(
