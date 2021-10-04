@@ -5,7 +5,6 @@ from .mfusgbcf import ModflowUsgBcf
 from .mfusglpf import ModflowUsgLpf
 from .mfusgwel import ModflowUsgWel
 from .mfusgcln import ModflowUsgCln
-from .mfusgbct import ModflowUsgBct
 from .mfusgsms import ModflowUsgSms
 from .mfusggnc import ModflowUsgGnc
 
@@ -16,7 +15,6 @@ __all__ = [
     "ModflowUsgLpf",
     "ModflowUsgWel",
     "ModflowUsgCln",
-    "ModflowUsgBct",
     "ModflowUsgSms",
     "ModflowUsgGnc",
 ]

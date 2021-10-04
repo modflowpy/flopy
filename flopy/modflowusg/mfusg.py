@@ -125,7 +125,6 @@ class ModflowUsg(Modflow):
             "lpf": flopy.modflowusg.ModflowUsgLpf,
             "cln": flopy.modflowusg.ModflowUsgCln,
             "gnc": flopy.modflowusg.ModflowUsgGnc,
-            "bct": flopy.modflowusg.ModflowUsgBct,
         }
         return
 
