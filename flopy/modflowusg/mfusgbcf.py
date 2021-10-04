@@ -7,6 +7,7 @@ import warnings
 import numpy as np
 
 from ..modflow import ModflowBcf
+from .mfusg import ModflowUsg
 from ..utils import Util2d, Util3d
 from ..utils.flopy_io import line_parse
 from ..utils.utils_def import (
@@ -131,6 +132,12 @@ class ModflowUsgBcf(ModflowBcf):
         Constructs the ModflowUsgBcf object.
 
         Overrides the parent ModflowBcf object."""
+        msg = (
+            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            + "but received type: {type(model)}."
+        )
+        assert isinstance(model, ModflowUsg), msg
+
         valid_args_defaults = {
             "ipakcb": None,
             "intercellt": 0,
@@ -494,6 +501,12 @@ class ModflowUsgBcf(ModflowBcf):
         >>> disu = flopy.modflowusg.ModflowUsgDisU(model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
         >>> bcf = flopy.modflowusg.ModflowUsgBcf.load('test.bcf', m)
         """
+        msg = (
+            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            + "but received type: {type(model)}."
+        )
+        assert isinstance(model, ModflowUsg), msg
+
         if model.verbose:
             print("loading bcf package file...")
 

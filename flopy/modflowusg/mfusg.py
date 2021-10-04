@@ -72,10 +72,15 @@ class ModflowUsg(Modflow):
             "external_path": None,
             "verbose": False,
         }
+
         for arg, default_value in valid_args_defaults.items():
             setattr(self, arg, kwargs.pop(arg, default_value))
 
-        setattr(self, "version", "mfusg")
+        # remove "version" from kwarg if inadvertently provided
+        try:
+            kwargs.pop("version")
+        except KeyError:
+            pass
 
         super().__init__(
             modelname,

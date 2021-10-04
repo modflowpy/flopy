@@ -8,9 +8,10 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?lpf.htm>`_.
 """
 import numpy as np
+
 from ..modflow.mfpar import ModflowPar as mfpar
 from ..modflow.mflpf import ModflowLpf
-
+from .mfusg import ModflowUsg
 from ..utils import Util2d, read1d
 from ..utils.flopy_io import line_parse
 from ..utils.utils_def import (
@@ -233,6 +234,11 @@ class ModflowUsgLpf(ModflowLpf):
         add_package=True,
     ):
         """mfusglpf object constructor"""
+        msg = (
+            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            + "but received type: {type(model)}."
+        )
+        assert isinstance(model, ModflowUsg), msg
 
         super().__init__(
             model,
@@ -584,6 +590,12 @@ class ModflowUsgLpf(ModflowLpf):
         >>> disu = flopy.modflowusg.ModflowUsgDisU(model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
         >>> lpf = flopy.modflowusg.ModflowUsgLpf.load('test.lpf', m)
         """
+        msg = (
+            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            + "but received type: {type(model)}."
+        )
+        assert isinstance(model, ModflowUsg), msg
+
         if model.verbose:
             print("loading lpf package file...")
 

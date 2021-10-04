@@ -10,7 +10,7 @@ from ..pakbase import Package
 from ..utils.recarray_utils import create_empty_recarray
 from ..utils.flopy_io import ulstrd
 from ..modflow.mfparbc import ModflowParBc as mfparbc
-
+from .mfusg import ModflowUsg
 from .mfusg import fmt_string
 
 
@@ -93,6 +93,12 @@ class ModflowUsgGnc(Package):
         filenames=None,
     ):
         """Package constructor"""
+        msg = (
+            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            + "but received type: {type(model)}."
+        )
+        assert isinstance(model, ModflowUsg), msg
+
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowUsgGnc._defaultunit()
@@ -258,8 +264,12 @@ class ModflowUsgGnc(Package):
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
         >>> gnc = flopy.modflow.ModflowGnc.load('test.gnc', m)
-
         """
+        msg = (
+            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            + "but received type: {type(model)}."
+        )
+        assert isinstance(model, ModflowUsg), msg
 
         if model.verbose:
             print("loading gnc package file...")

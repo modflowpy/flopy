@@ -12,6 +12,7 @@ from copy import deepcopy
 import numpy as np
 from numpy.lib.recfunctions import stack_arrays
 
+from .mfusg import ModflowUsg
 from ..modflow.mfwel import ModflowWel
 from ..modflow.mfparbc import ModflowParBc as mfparbc
 from ..utils.flopy_io import ulstrd
@@ -177,6 +178,11 @@ class ModflowUsgWel(ModflowWel):
         """
         Package constructor.
         """
+        msg = (
+            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            + "but received type: {type(model)}."
+        )
+        assert isinstance(model, ModflowUsg), msg
 
         super().__init__(
             model,
@@ -588,8 +594,12 @@ class ModflowUsgWel(ModflowWel):
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
         >>> wel = flopy.modflowusg.ModflowUsgWel.load('test.wel', m)
-
         """
+        msg = (
+            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            + "but received type: {type(model)}."
+        )
+        assert isinstance(model, ModflowUsg), msg
 
         if model.verbose:
             print("loading wel package file...")
