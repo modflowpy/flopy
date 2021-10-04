@@ -1,9 +1,10 @@
 """
 mfdisu module.  Contains the ModflowUsgDisU class. Note that the user can access
 the ModflowUsgDisU class as `flopy.modflowusg.ModflowUsgDisU`.
-
 """
 import numpy as np
+
+from .mfusg import ModflowUsg
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, read1d
 from ..utils.reference import TemporalReference
@@ -193,7 +194,6 @@ class ModflowUsgDisU(Package):
     >>> import flopy
     >>> m = flopy.modflowusg.ModflowUsg()
     >>> disu = flopy.modflowusg.ModflowUsgDisU(m)
-
     """
 
     def __init__(
@@ -228,6 +228,12 @@ class ModflowUsgDisU(Package):
         filenames=None,
         start_datetime=None,
     ):
+        """disu constructor"""
+        msg = (
+            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            + "but received type: {type(model)}."
+        )
+        assert isinstance(model, ModflowUsg), msg
 
         # set default unit number of one is not specified
         if unitnumber is None:
@@ -545,8 +551,12 @@ class ModflowUsgDisU(Package):
         >>> import flopy
         >>> m = flopy.modflowusg.ModflowUsg()
         >>> disu = flopy.modflowusg.ModflowUsgDisU.load('test.disu', m)
-
         """
+        msg = (
+            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            + "but received type: {type(model)}."
+        )
+        assert isinstance(model, ModflowUsg), msg
 
         if model.verbose:
             print("loading disu package file...")

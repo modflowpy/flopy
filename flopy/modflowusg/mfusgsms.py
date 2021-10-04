@@ -1,12 +1,13 @@
+# pylint: disable=too-many-instance-attributes
 """
 mfusgsms module.  This is the solver for MODFLOW-USG.
+
 Contains the ModflowUsgSms class. Note that the user can access
 the ModflowUsgSms class as `flopy.modflowusg.ModflowUsgSms`.
-
-
 """
 from ..pakbase import Package
 from ..utils.flopy_io import line_parse
+from .mfusg import ModflowUsg
 
 
 class ModflowUsgSms(Package):
@@ -230,70 +231,83 @@ class ModflowUsgSms(Package):
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
     >>> sms = flopy.modflowusg.ModflowUsgSms(m)
-
     """
 
     def __init__(
         self,
         model,
-        hclose=1e-4,
-        hiclose=1e-4,
-        mxiter=100,
-        iter1=20,
-        iprsms=2,
-        nonlinmeth=0,
-        linmeth=2,
-        theta=0.7,
-        akappa=0.1,
-        gamma=0.2,
-        amomentum=0.001,
-        numtrack=20,
-        btol=1e4,
-        breduc=0.2,
-        reslim=100.0,
-        iacl=2,
-        norder=0,
-        level=7,
-        north=2,
-        iredsys=0,
-        rrctol=0.0,
-        idroptol=0,
-        epsrn=1.0e-3,
-        clin="bcgs",
-        ipc=3,
-        iscl=0,
-        iord=0,
-        rclosepcgu=0.1,
-        relaxpcgu=1.0,
-        extension="sms",
-        options=None,
-        unitnumber=None,
-        filenames=None,
+        **kwargs,
     ):
+        """Package constructor"""
+        msg = (
+            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            + "but received type: {type(model)}."
+        )
+        assert isinstance(model, ModflowUsg), msg
+
+        valid_args_defaults = {
+            "hclose": 1e-4,
+            "hiclose": 1e-4,
+            "mxiter": 100,
+            "iter1": 20,
+            "iprsms": 2,
+            "nonlinmeth": 0,
+            "linmeth": 2,
+            "theta": 0.7,
+            "akappa": 0.1,
+            "gamma": 0.2,
+            "amomentum": 0.001,
+            "numtrack": 20,
+            "btol": 1e4,
+            "breduc": 0.2,
+            "reslim": 100.0,
+            "iacl": 2,
+            "norder": 0,
+            "level": 7,
+            "north": 2,
+            "iredsys": 0,
+            "rrctol": 0.0,
+            "idroptol": 0,
+            "epsrn": 1.0e-3,
+            "clin": "bcgs",
+            "ipc": 3,
+            "iscl": 0,
+            "iord": 0,
+            "rclosepcgu": 0.1,
+            "relaxpcgu": 1.0,
+            "extension": "sms",
+            "options": None,
+            "unitnumber": None,
+            "filenames": None,
+        }
+
+        for arg, default_value in valid_args_defaults.items():
+            setattr(self, arg, kwargs.pop(arg, default_value))
+
         # set default unit number of one is not specified
-        if unitnumber is None:
-            unitnumber = ModflowUsgSms._defaultunit()
+        if self.unitnumber is None:
+            self.unitnumber = ModflowUsgSms._defaultunit()
 
         # set filenames
-        if filenames is None:
-            filenames = [None]
-        elif isinstance(filenames, str):
-            filenames = [filenames]
+        if self.filenames is None:
+            self.filenames = [None]
+        elif isinstance(self.filenames, str):
+            self.filenames = [self.filenames]
 
         # Fill namefile items
         name = [ModflowUsgSms._ftype()]
-        units = [unitnumber]
+        units = [self.unitnumber]
         extra = [""]
 
         # set package name
-        fname = [filenames[0]]
+        fname = [self.filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and
         # unit number
         Package.__init__(
             self,
             model,
-            extension=extension,
+            extension=self.extension,
             name=name,
             unit_number=units,
             extra=extra,
@@ -302,41 +316,11 @@ class ModflowUsgSms(Package):
 
         self._generate_heading()
         self.url = " "
-        self.hclose = hclose
-        self.hiclose = hiclose
-        self.mxiter = mxiter
-        self.iter1 = iter1
-        self.iprsms = iprsms
-        self.nonlinmeth = nonlinmeth
-        self.linmeth = linmeth
-        self.theta = theta
-        self.akappa = akappa
-        self.gamma = gamma
-        self.amomentum = amomentum
-        self.numtrack = numtrack
-        self.btol = btol
-        self.breduc = breduc
-        self.reslim = reslim
-        self.iacl = iacl
-        self.norder = norder
-        self.level = level
-        self.north = north
-        self.iredsys = iredsys
-        self.rrctol = rrctol
-        self.idroptol = idroptol
-        self.epsrn = epsrn
-        self.clin = clin
-        self.ipc = ipc
-        self.iscl = iscl
-        self.iord = iord
-        self.rclosepcgu = rclosepcgu
-        self.relaxpcgu = relaxpcgu
-        if options is None:
+        if self.options is None:
             self.options = []
         else:
-            if not isinstance(options, list):
-                options = [options]
-            self.options = options
+            if not isinstance(self.options, list):
+                self.options = [self.options]
         self.parent.add_package(self)
         return
 
@@ -434,8 +418,12 @@ class ModflowUsgSms(Package):
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
         >>> sms = flopy.modflow.ModflowPcg.load('test.sms', m)
-
         """
+        msg = (
+            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            + "but received type: {type(model)}."
+        )
+        assert isinstance(model, ModflowUsg), msg
 
         if model.verbose:
             print("loading sms package file...")
