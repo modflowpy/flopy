@@ -404,31 +404,22 @@ class ModflowUzf1(Package):
         nlen = 3
         if uzgag is not None:
             nlen += len(uzgag)
-        if filenames is None:
-            filenames = [None for x in range(nlen)]
-        elif isinstance(filenames, str):
-            filenames = [filenames] + [None for x in range(nlen)]
-        elif isinstance(filenames, list):
-            if len(filenames) < nlen:
-                for idx in range(len(filenames), nlen + 1):
-                    filenames.append(None)
+        filenames = self._prepare_filenames(filenames, nlen)
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            fname = filenames[1]
             model.add_output_file(
-                abs(ipakcb), fname=fname, package=ModflowUzf1._ftype()
+                abs(ipakcb), fname=filenames[1], package=self._ftype()
             )
         else:
             ipakcb = 0
 
         if iuzfcb2 is not None:
-            fname = filenames[2]
             model.add_output_file(
                 abs(iuzfcb2),
-                fname=fname,
+                fname=filenames[2],
                 extension="uzfcb2.bin",
-                package=ModflowUzf1._ftype(),
+                package=self._ftype(),
             )
         else:
             iuzfcb2 = 0
@@ -445,15 +436,13 @@ class ModflowUzf1(Package):
                         d[-np.abs(l[0])] = []
                 uzgag = d
             for key, value in uzgag.items():
-                fname = filenames[ipos]
                 iu = abs(key)
-                uzgagext = f"uzf{iu}.out"
                 model.add_output_file(
                     iu,
-                    fname=fname,
+                    fname=filenames[ipos],
                     binflag=False,
-                    extension=uzgagext,
-                    package=ModflowUzf1._ftype(),
+                    extension=f"uzf{iu}.out",
+                    package=self._ftype(),
                 )
                 ipos += 1
                 # handle case where iftunit is listed in the values
@@ -463,29 +452,18 @@ class ModflowUzf1(Package):
                 elif len(value) == 1:
                     uzgag[-np.abs(key)] = []
 
-        # Fill namefile items
-        name = [ModflowUzf1._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and
-        # unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=filenames[0],
         )
 
         if (
-            self.parent.get_package("RCH") != None
-            or self.parent.get_package("EVT") != None
+            self.parent.get_package("RCH") is not None
+            or self.parent.get_package("EVT") is not None
         ):
             print(
                 "WARNING!\n The RCH and EVT packages should not be "

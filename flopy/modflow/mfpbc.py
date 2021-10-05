@@ -21,11 +21,8 @@ class ModflowPbc(Package):
         if unitnumber is None:
             unitnumber = ModflowPbc._defaultunit()
 
-        # Call ancestor's init to set self.parent, extension, name and
-        # unit number
-        Package.__init__(
-            self, model, extension, ModflowPbc._ftype(), unitnumber
-        )
+        # call base package constructor
+        super().__init__(model, extension, self._ftype(), unitnumber)
         self._generate_heading()
         self.mxactp = 0
         if layer_row_column_data is None:

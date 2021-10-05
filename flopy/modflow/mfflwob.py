@@ -130,9 +130,6 @@ class ModflowFlwob(Package):
         unitnumber=None,
     ):
 
-        """
-        Package constructor
-        """
         if nqobfb is None:
             nqobfb = []
         if nqclfb is None:
@@ -216,24 +213,14 @@ class ModflowFlwob(Package):
                 unitnumber = [unitnumber[0], outunits[name[0].lower()]]
         iufbobsv = unitnumber[1]
 
-        # set filenames
-        if filenames is None:
-            filenames = [None, None]
-        elif isinstance(filenames, str):
-            filenames = [filenames, None]
-        elif isinstance(filenames, list):
-            if len(filenames) < 2:
-                filenames.append(None)
-
         # call base package constructor
-        Package.__init__(
-            self,
+        super().__init__(
             model,
             extension=extension,
             name=name,
             unit_number=unitnumber,
             allowDuplicates=True,
-            filenames=filenames,
+            filenames=self._prepare_filenames(filenames, 2),
         )
 
         self.nqfb = nqfb

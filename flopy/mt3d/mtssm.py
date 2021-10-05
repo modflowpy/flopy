@@ -172,29 +172,13 @@ class Mt3dSsm(Package):
         elif unitnumber == 0:
             unitnumber = Mt3dSsm._reservedunit()
 
-        # set filenames
-        if filenames is None:
-            filenames = [None]
-        elif isinstance(filenames, str):
-            filenames = [filenames]
-
-        # Fill namefile items
-        name = [Mt3dSsm._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=self._prepare_filenames(filenames),
         )
 
         deprecated_kwargs = ["criv", "cghb", "cibd", "cchd", "cpbc", "cwel"]

@@ -1062,7 +1062,6 @@ class BaseModel(ModelInterface):
 
         fake_package = Obj()
         fake_package.write_file = lambda: None
-        fake_package.extra = [""]
         fake_package.name = [ptype]
         fake_package.extension = [filename.split(".")[-1]]
         fake_package.unit_number = [self.next_ext_unit()]
@@ -1089,8 +1088,6 @@ class BaseModel(ModelInterface):
                 if p.unit_number[i] == 0:
                     continue
                 s = f"{p.name[i]:14s} {p.unit_number[i]:5d}  {p.file_name[i]}"
-                if p.extra[i]:
-                    s += " " + p.extra[i]
                 lines.append(s)
         return "\n".join(lines) + "\n"
 

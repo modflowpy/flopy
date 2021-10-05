@@ -268,15 +268,11 @@ class Modpath7Sim(Package):
         particlegroups=None,
         extension="mpsim",
     ):
-        """
-        Package constructor.
-
-        """
 
         unitnumber = model.next_unit()
 
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, "MPSIM", unitnumber)
+        # call base package constructor
+        super().__init__(model, extension, "MPSIM", unitnumber)
 
         self._generate_heading()
 

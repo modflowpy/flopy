@@ -120,54 +120,33 @@ class ModflowHyd(Package):
         unitnumber=None,
         filenames=None,
     ):
-        """
-        Package constructor.
-
-        """
 
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowHyd._defaultunit()
 
         # set filenames
-        if filenames is None:
-            filenames = [None, None]
-        elif isinstance(filenames, str):
-            filenames = [filenames, None]
-        elif isinstance(filenames, list):
-            if len(filenames) < 2:
-                filenames.append(None)
+        filenames = self._prepare_filenames(filenames, 2)
 
         # set ihydun to a default unit number if it isn't specified
         if ihydun is None:
             ihydun = 536
 
         # update external file information with hydmod output
-        fname = filenames[1]
         model.add_output_file(
             ihydun,
-            fname=fname,
+            fname=filenames[1],
             extension="hyd.bin",
-            package=ModflowHyd._ftype(),
+            package=self._ftype(),
         )
 
-        # Fill namefile items
-        name = [ModflowHyd._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=filenames[0],
         )
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper

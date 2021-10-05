@@ -344,28 +344,17 @@ class ModflowSfr2(Package):
         options=None,
     ):
 
-        """
-        Package constructor
-        """
         # set default unit number of one is not specified
         if unit_number is None:
             unit_number = ModflowSfr2._defaultunit()
 
         # set filenames
-        if filenames is None:
-            filenames = [None, None, None]
-        elif isinstance(filenames, str):
-            filenames = [filenames, None, None]
-        elif isinstance(filenames, list):
-            if len(filenames) < 3:
-                for _ in range(len(filenames), 3):
-                    filenames.append(None)
+        filenames = self._prepare_filenames(filenames, 3)
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowSfr2._ftype()
+                ipakcb, fname=filenames[1], package=self._ftype()
             )
         else:
             ipakcb = 0
@@ -385,28 +374,18 @@ class ModflowSfr2(Package):
                     abs(istcb2),
                     fname=fname,
                     binflag=binflag,
-                    package=ModflowSfr2._ftype(),
+                    package=self._ftype(),
                 )
         else:
             istcb2 = 0
 
-        # Fill namefile items
-        name = [ModflowSfr2._ftype()]
-        units = [unit_number]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unit_number,
+            filenames=filenames[0],
         )
 
         self.url = "sfr2.htm"

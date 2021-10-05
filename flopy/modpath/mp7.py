@@ -23,16 +23,11 @@ class Modpath7List(Package):
     """
 
     def __init__(self, model, extension="list", unitnumber=None):
-        """
-        Package constructor.
-
-        """
         if unitnumber is None:
             unitnumber = model.next_unit()
 
-        # Call ancestor's init to set self.parent, extension, name and
-        # unit number
-        Package.__init__(self, model, extension, "LIST", unitnumber)
+        # call base package constructor
+        super().__init__(model, extension, "LIST", unitnumber)
         # self.parent.add_package(self) This package is not added to the base
         # model so that it is not included in get_name_file_entries()
         return

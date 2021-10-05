@@ -88,26 +88,16 @@ class ModflowGage(Package):
         filenames=None,
         **kwargs,
     ):
-        """
-        Package constructor.
 
-        """
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowGage._defaultunit()
 
         # set filenames
-        if filenames is None:
-            filenames = [None for x in range(numgage + 1)]
-        elif isinstance(filenames, str):
-            filenames = [filenames] + [None for x in range(numgage)]
-        elif isinstance(filenames, list):
-            if len(filenames) < numgage + 1:
-                for idx in range(len(filenames), numgage + 2):
-                    filenames.append(None)
+        filenames = self._prepare_filenames(filenames, numgage + 1)
 
         # process gage output files
-        dtype = ModflowGage.get_default_dtype()
+        dtype = self.get_default_dtype()
         if numgage > 0:
             # check the provided file entries
             if filenames[1] is None:
@@ -172,32 +162,20 @@ class ModflowGage(Package):
 
             # add gage output files to model
             for n in range(numgage):
-                iu = abs(gage_data["unit"][n])
-                fname = files[n]
                 model.add_output_file(
-                    iu,
-                    fname=fname,
+                    abs(gage_data["unit"][n]),
+                    fname=files[n],
                     binflag=False,
-                    package=ModflowGage._ftype(),
+                    package=self._ftype(),
                 )
 
-        # Fill namefile items
-        name = [ModflowGage._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=filenames[0],
         )
 
         # no heading for this format

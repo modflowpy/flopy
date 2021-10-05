@@ -191,29 +191,13 @@ class Mt3dAdv(Package):
         elif unitnumber == 0:
             unitnumber = Mt3dAdv._reservedunit()
 
-        # set filenames
-        if filenames is None:
-            filenames = [None]
-        elif isinstance(filenames, str):
-            filenames = [filenames]
-
-        # Fill namefile items
-        name = [Mt3dAdv._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=self._prepare_filenames(filenames),
         )
 
         self.mixelm = mixelm
@@ -229,7 +213,9 @@ class Mt3dAdv(Package):
         self.nph = nph
         self.npmin = npmin
         self.npmax = npmax
-        self.interp = 1  # Command-line 'interp' might once be needed if MT3DMS is updated to include other interpolation method
+        # Command-line 'interp' might once be needed if MT3DMS is updated to
+        # include other interpolation method
+        self.interp = 1
         self.nlsink = nlsink
         self.npsink = npsink
         self.dchmoc = dchmoc

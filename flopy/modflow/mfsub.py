@@ -247,40 +247,27 @@ class ModflowSub(Package):
         unitnumber=None,
         filenames=None,
     ):
-        """
-        Package constructor.
-
-        """
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowSub._defaultunit()
 
         # set filenames
-        if filenames is None:
-            filenames = [None for x in range(9)]
-        elif isinstance(filenames, str):
-            filenames = [filenames] + [None for x in range(8)]
-        elif isinstance(filenames, list):
-            if len(filenames) < 9:
-                n = 9 - len(filenames) + 1
-                filenames = filenames + [None for x in range(n)]
+        filenames = self._prepare_filenames(filenames, 9)
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowSub._ftype()
+                ipakcb, fname=filenames[1], package=self._ftype()
             )
         else:
             ipakcb = 0
 
         if idsave is not None:
-            fname = filenames[2]
             model.add_output_file(
                 idsave,
-                fname=fname,
+                fname=filenames[2],
                 extension="rst",
-                package=ModflowSub._ftype(),
+                package=self._ftype(),
             )
         else:
             idsave = 0
@@ -299,37 +286,25 @@ class ModflowSub(Package):
         item15_units = [2052 + i for i in range(len(item15_extensions))]
 
         if isuboc > 0:
-            idx = 0
-            for k in range(1, 12, 2):
-                ext = item15_extensions[idx]
+            for idx, k in enumerate(range(1, 12, 2)):
                 if ids15 is None:
                     iu = item15_units[idx]
                 else:
                     iu = ids15[k]
-                fname = filenames[idx + 3]
                 model.add_output_file(
-                    iu, fname=fname, extension=ext, package=ModflowSub._ftype()
+                    iu,
+                    fname=filenames[idx + 3],
+                    extension=item15_extensions[idx],
+                    package=self._ftype(),
                 )
-                idx += 1
 
-        extensions = [extension]
-        name = [ModflowSub._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and
-        # unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
-            extension=extensions,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            extension=extension,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=filenames[0],
         )
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
