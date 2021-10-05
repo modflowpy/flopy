@@ -1,4 +1,5 @@
-"""mbase module
+"""
+  mbase module.
 
   This module contains the base model class from which
   all of the other models inherit from.
@@ -31,9 +32,11 @@ iprn = -1
 
 # external exceptions for users
 class PackageLoadException(Exception):
+
     """FloPy package load exception"""
 
     def __init__(self, error, location=""):
+        """Initialize exception."""
         self.message = error
         super().__init__(f"{error} ({location})")
 

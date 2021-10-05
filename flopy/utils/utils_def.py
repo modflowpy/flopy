@@ -167,7 +167,7 @@ def get_util2d_shape_for_layer(model, layer=0):
     (nrow,ncol) : tuple of ints
         util2d shape for the given layer
     """
-    nr, nc, nlay, nper = model.get_nrow_ncol_nlay_nper()
+    nr, nc, _, _ = model.get_nrow_ncol_nlay_nper()
     if nr is None:  # unstructured
         nrow = 1
         ncol = nc[layer]
@@ -210,7 +210,7 @@ def get_unitnumber_from_ext_unit_dict(
             ext_unit_dict, filetype=pak_class._ftype()
         )
         if ipakcb > 0:
-            iu, filenames[1] = model.get_ext_dict_attr(
+            _, filenames[1] = model.get_ext_dict_attr(
                 ext_unit_dict, unit=ipakcb
             )
             model.add_pop_key_list(ipakcb)

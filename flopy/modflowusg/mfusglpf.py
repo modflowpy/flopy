@@ -1,6 +1,8 @@
 # pylint: disable=W0223
 """
-mfusglpf module.  Contains the ModflowUsgLpf class. Note that the user can access
+mfusglpf module.
+
+Contains the ModflowUsgLpf class. Note that the user can access
 the ModflowUsgLpf class as `flopy.modflowusg.ModflowUsgLpf`.
 
 Additional information for this MODFLOW package can be found at the `Online
@@ -233,7 +235,7 @@ class ModflowUsgLpf(ModflowLpf):
         filenames=None,
         add_package=True,
     ):
-        """mfusglpf object constructor"""
+        """mfusglpf object constructor."""
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
             + "but received type: {type(model)}."
@@ -339,7 +341,7 @@ class ModflowUsgLpf(ModflowLpf):
             )
 
         # get model information
-        nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
+        nrow, ncol, nlay, _ = self.parent.nrow_ncol_nlay_nper
         dis = self.parent.get_package("DIS")
         if dis is None:
             dis = self.parent.get_package("DISU")
@@ -611,7 +613,7 @@ class ModflowUsgLpf(ModflowLpf):
                 break
 
         # determine problem dimensions
-        nr, nc, nlay, _ = model.get_nrow_ncol_nlay_nper()
+        _, nc, nlay, _ = model.get_nrow_ncol_nlay_nper()
         dis = model.get_package("DIS")
         if dis is None:
             dis = model.get_package("DISU")

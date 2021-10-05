@@ -228,7 +228,7 @@ class ModflowUsgDisU(Package):
         filenames=None,
         start_datetime=None,
     ):
-        """disu constructor"""
+        """disu constructor."""
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
             + "but received type: {type(model)}."

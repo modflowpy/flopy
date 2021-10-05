@@ -92,7 +92,7 @@ class ModflowUsgGnc(Package):
         unitnumber=None,
         filenames=None,
     ):
-        """Package constructor"""
+        """Package constructor."""
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
             + "but received type: {type(model)}."
@@ -174,6 +174,11 @@ class ModflowUsgGnc(Package):
     def write_file(self, f=None):
         """
         Write the package file.
+
+        Parameters
+        ----------
+        f : filename or file handle
+            File to write to.
 
         Returns
         -------

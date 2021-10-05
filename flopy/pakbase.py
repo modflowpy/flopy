@@ -853,12 +853,10 @@ class Package(PackageInterface):
         return
 
     @staticmethod
-    def load(f, model, pak_type=None, ext_unit_dict=None, **kwargs):
+    def load(f, model, pak_type, ext_unit_dict=None, **kwargs):
         """
         Default load method for standard boundary packages.
         """
-        if pak_type is None:
-            return
 
         # parse keywords
         if "nper" in kwargs:

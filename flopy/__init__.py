@@ -38,13 +38,15 @@ from . import discretization
 from .mbase import run_model, which
 
 __all__ = [
-    " __version__",
+    "__version__",
     "__author__",
-    "__author_email__" "modflow",
+    "__author_email__",
+    "modflow",
     "mt3d",
     "seawat",
     "modpath",
-    "modflowlgr" "modflowusg",
+    "modflowlgr",
+    "modflowusg",
     "utils",
     "plot",
     "export",

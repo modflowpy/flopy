@@ -1,7 +1,6 @@
-"""mfusg module"""
+"""mfusg module."""
 import os
 import flopy
-import warnings
 from inspect import getfullargspec
 
 from ..utils import mfreadnam
@@ -10,8 +9,7 @@ from ..mbase import PackageLoadException
 
 
 class ModflowUsg(Modflow):
-    """
-    MODFLOW-USG Model Class.
+    """MODFLOW-USG Model Class
 
     Parameters
     ----------
@@ -155,6 +153,7 @@ class ModflowUsg(Modflow):
     def load(
         cls,
         f,
+        version="mfusg",
         exe_name="mfusg.exe",
         verbose=False,
         model_ws=".",
@@ -169,6 +168,8 @@ class ModflowUsg(Modflow):
         ----------
         f : str
             Path to MODFLOW name file to load.
+        version : str, default "mfusg"
+            MODFLOW version. Must be "mfusg".
         exe_name : str, default "mfusg.exe"
             MODFLOW executable name.
         verbose : bool, default False
@@ -196,6 +197,9 @@ class ModflowUsg(Modflow):
         >>> import flopy
         >>> ml = flopy.modflowusg.ModflowUsg.load('model.nam')
         """
+        if version != "mfusg":
+            version = "mfusg"
+
         # similar to modflow command: if file does not exist , try file.nam
         namefile_path = os.path.join(model_ws, f)
         if not os.path.isfile(namefile_path) and os.path.isfile(
@@ -314,37 +318,6 @@ class ModflowUsg(Modflow):
         # return model object
         return ml
 
-    @staticmethod
-    def _ext_unit_d_load(ml, ext_unit_dict, ext_unit_d_item):
-        """
-        Method to load a package from an ext_unit_dict item into model
-
-        Parameters
-        ----------
-        ml : ModflowUsg model object for which package in ext_unit_d_item will
-            be loaded
-        ext_unit_dict : dict
-            For each file listed in the name file, a
-            :class:`flopy.utils.mfreadnam.NamData` instance.
-            Keyed by unit number.
-        ext_unit_d_item : :class:`flopy.utils.mfreadnam.NamData` instance.
-            Must be an item of ext_unit_dict.
-        """
-        package_load_args = getfullargspec(ext_unit_d_item.package.load)[0]
-        if "check" in package_load_args:
-            ext_unit_d_item.package.load(
-                ext_unit_d_item.filehandle,
-                ml,
-                ext_unit_dict=ext_unit_dict,
-                check=False,
-            )
-        else:
-            ext_unit_d_item.package.load(
-                ext_unit_d_item.filehandle,
-                ml,
-                ext_unit_dict=ext_unit_dict,
-            )
-
     @classmethod
     def _load_packages(cls, ml, ext_unit_dict, ext_pkg_d, load_only, forgive):
         """
@@ -413,35 +386,18 @@ class ModflowUsg(Modflow):
         # try loading packages in ext_unit_dict
         for key, item in ext_unit_dict.items():
             if item.package is not None:
-                if item.filetype in load_only:
-                    if forgive:
-                        try:
-                            cls._ext_unit_d_load(ml, ext_unit_dict, item)
-                            files_successfully_loaded.append(item.filename)
-                            if ml.verbose:
-                                print(
-                                    f"   {item.filetype:4s} package \
-                                    load...success"
-                                )
-                        except PackageLoadException as e:
-                            ml.load_fail = True
-                            if ml.verbose:
-                                raise PackageLoadException(
-                                    error=f"   {item.filetype:4s} package \
-                                    load...failed\n   {e!s}"
-                                )
-                            files_not_loaded.append(item.filename)
-                    else:
-                        cls._ext_unit_d_load(ml, ext_unit_dict, item)
-                        files_successfully_loaded.append(item.filename)
-                        if ml.verbose:
-                            print(
-                                f"   {item.filetype:4s} package load...success"
-                            )
-                else:
-                    if ml.verbose:
-                        print(f"   {item.filetype:4s} package load...skipped")
-                    files_not_loaded.append(item.filename)
+                (
+                    files_successfully_loaded,
+                    files_not_loaded,
+                ) = cls._load_ext_unit_dict_paks(
+                    ml,
+                    ext_unit_dict,
+                    load_only,
+                    item,
+                    forgive,
+                    files_successfully_loaded,
+                    files_not_loaded,
+                )
             elif "data" not in item.filetype.lower():
                 files_not_loaded.append(item.filename)
                 if ml.verbose:
@@ -463,6 +419,79 @@ class ModflowUsg(Modflow):
                 raise KeyError(f"unhandled case: {key}, {item}")
 
         return files_successfully_loaded, files_not_loaded
+
+    @classmethod
+    def _load_ext_unit_dict_paks(
+        cls,
+        ml,
+        ext_unit_dict,
+        load_only,
+        item,
+        forgive,
+        files_successfully_loaded,
+        files_not_loaded,
+    ):
+        """Load packages from ext_unit_dict."""
+        if item.filetype in load_only:
+            if forgive:
+                try:
+                    cls._ext_unit_d_load(ml, ext_unit_dict, item)
+                    files_successfully_loaded.append(item.filename)
+                    if ml.verbose:
+                        print(
+                            f"   {item.filetype:4s} package \
+                            load...success"
+                        )
+                except PackageLoadException as e:
+                    ml.load_fail = True
+                    if ml.verbose:
+                        raise PackageLoadException(
+                            error=f"   {item.filetype:4s} package \
+                            load...failed\n   {e!s}"
+                        )
+                    files_not_loaded.append(item.filename)
+            else:
+                cls._ext_unit_d_load(ml, ext_unit_dict, item)
+                files_successfully_loaded.append(item.filename)
+                if ml.verbose:
+                    print(f"   {item.filetype:4s} package load...success")
+        else:
+            if ml.verbose:
+                print(f"   {item.filetype:4s} package load...skipped")
+            files_not_loaded.append(item.filename)
+
+        return files_successfully_loaded, files_not_loaded
+
+    @staticmethod
+    def _ext_unit_d_load(ml, ext_unit_dict, ext_unit_d_item):
+        """
+        Method to load a package from an ext_unit_dict item into model
+
+        Parameters
+        ----------
+        ml : ModflowUsg model object for which package in ext_unit_d_item will
+            be loaded
+        ext_unit_dict : dict
+            For each file listed in the name file, a
+            :class:`flopy.utils.mfreadnam.NamData` instance.
+            Keyed by unit number.
+        ext_unit_d_item : :class:`flopy.utils.mfreadnam.NamData` instance.
+            Must be an item of ext_unit_dict.
+        """
+        package_load_args = getfullargspec(ext_unit_d_item.package.load)[0]
+        if "check" in package_load_args:
+            ext_unit_d_item.package.load(
+                ext_unit_d_item.filehandle,
+                ml,
+                ext_unit_dict=ext_unit_dict,
+                check=False,
+            )
+        else:
+            ext_unit_d_item.package.load(
+                ext_unit_d_item.filehandle,
+                ml,
+                ext_unit_dict=ext_unit_dict,
+            )
 
 
 def fmt_string(array):
