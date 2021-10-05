@@ -225,11 +225,7 @@ def test_triangle_unstructured_grid():
     xc, yc = tri.get_xcyc().T
     ncpl = np.array([len(iverts)])
     g = UnstructuredGrid(
-        vertices=verts,
-        iverts=iverts,
-        ncpl=ncpl,
-        xcenters=xc,
-        ycenters=yc,
+        vertices=verts, iverts=iverts, ncpl=ncpl, xcenters=xc, ycenters=yc,
     )
     assert len(g.grid_lines) == 8190
     assert g.nnodes == g.ncpl == 2730
