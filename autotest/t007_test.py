@@ -426,7 +426,7 @@ def test_export_array():
             if "yllcorner" in line.lower():
                 val = float(line.strip().split()[-1])
                 if rotate:
-                    assert np.abs(val - m.modelgrid.extent[1]) < 1e-6
+                    assert np.abs(val - m.modelgrid.extent[2]) < 1e-6
                 else:
                     assert np.abs(val - m.modelgrid.yoffset) < 1e-6
             if "cellsize" in line.lower():
