@@ -17,7 +17,7 @@ os.mkdir(out_dir)
 
 def test_load_txt_free():
     a = np.ones((10,), dtype=np.float32) * 250.0
-    fp = StringIO(u"10*250.0")
+    fp = StringIO("10*250.0")
     fa = Util2d.load_txt(a.shape, fp, a.dtype, "(FREE)")
     np.testing.assert_equal(fa, a)
     assert fa.dtype == a.dtype
@@ -25,7 +25,7 @@ def test_load_txt_free():
     a = np.arange(10, dtype=np.int32).reshape((2, 5))
     fp = StringIO(
         dedent(
-            u"""\
+            """\
         0 1,2,3, 4
         5 6, 7,  8 9
     """
@@ -39,7 +39,7 @@ def test_load_txt_free():
     a[1, 0] = 2.2
     fp = StringIO(
         dedent(
-            u"""\
+            """\
         5*1.0
         2.2 2*1.0, +1E-00 1.0
     """
@@ -54,7 +54,7 @@ def test_load_txt_fixed():
     a = np.arange(10, dtype=np.int32).reshape((2, 5))
     fp = StringIO(
         dedent(
-            u"""\
+            """\
         01234X
         56789
     """
@@ -66,7 +66,7 @@ def test_load_txt_fixed():
 
     fp = StringIO(
         dedent(
-            u"""\
+            """\
         0123X
         4
         5678
@@ -81,7 +81,7 @@ def test_load_txt_fixed():
     a = np.array([[-1, 1, -2, 2, -3], [3, -4, 4, -5, 5]], np.int32)
     fp = StringIO(
         dedent(
-            u"""\
+            """\
         -1 1-2 2-3
         3 -44 -55
     """
@@ -96,7 +96,7 @@ def test_load_block():
     a = np.ones((2, 5), dtype=np.int32) * 4
     fp = StringIO(
         dedent(
-            u"""\
+            """\
         1
         1 2 1 5 4
     """
@@ -111,7 +111,7 @@ def test_load_block():
     a[0, 2:4] = 6.0
     fp = StringIO(
         dedent(
-            u"""\
+            """\
         3
         1 2 1 5 4.0
         1 2 2 2 9.0
@@ -127,7 +127,7 @@ def test_load_block():
     a[0, 2:4] = 8
     fp = StringIO(
         dedent(
-            u"""\
+            """\
         1
         1 1 3 4 8
     """

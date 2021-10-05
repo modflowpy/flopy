@@ -46,8 +46,9 @@ def test_vtk_export_array2d():
     assert nlines == 17615
 
     # with smoothing
-    m.dis.top.export(output_dir, fmt="vtk", name="top_smooth",
-                     binary=False, smooth=True)
+    m.dis.top.export(
+        output_dir, fmt="vtk", name="top_smooth", binary=False, smooth=True
+    )
     filetocheck = os.path.join(output_dir, "top_smooth.vtk")
     nlines1 = count_lines_in_file(filetocheck)
     assert nlines1 == 17615
@@ -79,7 +80,11 @@ def test_vtk_export_array3d():
 
     # with point scalars
     m.upw.hk.export(
-        output_dir, fmt="vtk", name="hk_points", point_scalars=True, binary=False
+        output_dir,
+        fmt="vtk",
+        name="hk_points",
+        point_scalars=True,
+        binary=False,
     )
     filetocheck = os.path.join(output_dir, "hk_points.vtk")
     nlines1 = count_lines_in_file(filetocheck)
@@ -117,7 +122,9 @@ def test_vtk_transient_array_2d():
     kpers = [0, 1, 1096]
 
     # export and check
-    m.rch.rech.export(output_dir, fmt="vtk", kpers=kpers, binary=False, xml=True)
+    m.rch.rech.export(
+        output_dir, fmt="vtk", kpers=kpers, binary=False, xml=True
+    )
     filetocheck = os.path.join(output_dir, "rech_000001.vtk")
     nlines = count_lines_in_file(filetocheck)
     assert nlines == 26837
@@ -179,7 +186,9 @@ def test_vtk_export_packages():
     # transient package drain
     kpers = [0, 1, 1096]
     output_dir = os.path.join(cpth, "DRN")
-    m.drn.export(output_dir, fmt="vtk", binary=False, xml=True, kpers=kpers, pvd=True)
+    m.drn.export(
+        output_dir, fmt="vtk", binary=False, xml=True, kpers=kpers, pvd=True
+    )
     filetocheck = os.path.join(output_dir, "DRN_000001.vtu")
     nlines3 = count_lines_in_file(filetocheck)
     assert nlines3 == 27239
@@ -498,8 +507,9 @@ def test_vtk_vertex():
         return
 
     # disv test
-    workspace = os.path.join("..", "examples", "data", "mf6",
-                             "test003_gwfs_disv")
+    workspace = os.path.join(
+        "..", "examples", "data", "mf6", "test003_gwfs_disv"
+    )
     # outfile = os.path.join("vtk_transient_test", "vtk_pacakages")
     outfile = os.path.join("temp", "t050", "vtk_disv", "disv.vtk")
     sim = flopy.mf6.MFSimulation.load(sim_ws=workspace)
@@ -538,8 +548,9 @@ def test_vtk_pathline():
     ws = os.path.join("..", "examples", "data", "freyberg")
     modelpth = os.path.join("temp", "t050")
     outfile = os.path.join(modelpth, "pathline_test", "pathline.vtk")
-    ml = flopy.modflow.Modflow.load("freyberg.nam", model_ws=ws,
-                                    exe_name="mf2005")
+    ml = flopy.modflow.Modflow.load(
+        "freyberg.nam", model_ws=ws, exe_name="mf2005"
+    )
     ml.change_model_ws(new_pth=modelpth)
     ml.write_input()
     ml.run_model()
@@ -587,8 +598,8 @@ def test_vtk_pathline():
 
     maxtime = 0
     for p in plines:
-        if np.max(p['time']) > maxtime:
-            maxtime = np.max(p['time'])
+        if np.max(p["time"]) > maxtime:
+            maxtime = np.max(p["time"])
 
     if not len(totim) == 12054:
         raise AssertionError("Array size is incorrect for modpath VTK")

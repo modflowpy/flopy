@@ -139,11 +139,11 @@ def test_np001():
         filename="old_name.ims",
         print_option="ALL",
         complexity="SIMPLE",
-        outer_hclose=0.00001,
+        outer_dvclose=0.00001,
         outer_maximum=10,
         under_relaxation="NONE",
         inner_maximum=10,
-        inner_hclose=0.001,
+        inner_dvclose=0.001,
         linear_acceleration="CG",
         preconditioner_levels=2,
         preconditioner_drop_tolerance=0.00001,
@@ -156,11 +156,11 @@ def test_np001():
         filename=f"{test_ex_name}.ims",
         print_option="ALL",
         complexity="SIMPLE",
-        outer_hclose=0.00001,
+        outer_dvclose=0.00001,
         outer_maximum=50,
         under_relaxation="NONE",
         inner_maximum=30,
-        inner_hclose=0.00001,
+        inner_dvclose=0.00001,
         linear_acceleration="CG",
         preconditioner_levels=7,
         preconditioner_drop_tolerance=0.01,
@@ -415,7 +415,8 @@ def test_np001():
         assert pymake.compare_heads(
             None, None, files1=head_file, files2=head_new, outfile=outfile
         )
-        budget_frf = sim.simulation_data.mfdata[(model_name, "CBC", "RIV")]
+        # budget_frf = sim.simulation_data.mfdata[(model_name, "CBC", "RIV")]
+        budget_frf = model.output.budget().get_data(text="RIV", full3D=False)
         assert array_util.riv_array_comp(budget_frf_valid, budget_frf)
 
         # clean up
@@ -451,7 +452,8 @@ def test_np001():
             None, None, files1=head_file, files2=head_new, outfile=outfile
         )
 
-        budget_frf = sim.simulation_data.mfdata[(model_name, "CBC", "RIV")]
+        # budget_frf = sim.simulation_data.mfdata[(model_name, "CBC", "RIV")]
+        budget_frf = model.output.budget().get_data(text="RIV", full3D=False)
         assert array_util.riv_array_comp(budget_frf_valid, budget_frf)
 
         # clean up
@@ -660,11 +662,11 @@ def test_np002():
         sim,
         print_option="ALL",
         complexity="SIMPLE",
-        outer_hclose=0.00001,
+        outer_dvclose=0.00001,
         outer_maximum=50,
         under_relaxation="NONE",
         inner_maximum=30,
-        inner_hclose=0.00001,
+        inner_dvclose=0.00001,
         linear_acceleration="CG",
         preconditioner_levels=7,
         preconditioner_drop_tolerance=0.01,
@@ -909,11 +911,11 @@ def test021_twri():
     ims_package = ModflowIms(
         sim,
         print_option="SUMMARY",
-        outer_hclose=0.0001,
+        outer_dvclose=0.0001,
         outer_maximum=500,
         under_relaxation="NONE",
         inner_maximum=100,
-        inner_hclose=0.0001,
+        inner_dvclose=0.0001,
         rcloserecord=0.001,
         linear_acceleration="CG",
         scaling_method="NONE",
@@ -1137,11 +1139,11 @@ def test005_advgw_tidal():
         sim,
         print_option="SUMMARY",
         complexity="SIMPLE",
-        outer_hclose=0.0001,
+        outer_dvclose=0.0001,
         outer_maximum=500,
         under_relaxation="NONE",
         inner_maximum=100,
-        inner_hclose=0.0001,
+        inner_dvclose=0.0001,
         rcloserecord=0.001,
         linear_acceleration="CG",
         scaling_method="NONE",
@@ -1741,11 +1743,11 @@ def test004_bcfss():
         print_option="ALL",
         csv_output_filerecord="bcf2ss.ims.csv",
         complexity="SIMPLE",
-        outer_hclose=0.000001,
+        outer_dvclose=0.000001,
         outer_maximum=500,
         under_relaxation="NONE",
         inner_maximum=100,
-        inner_hclose=0.000001,
+        inner_dvclose=0.000001,
         rcloserecord=0.001,
         linear_acceleration="CG",
         scaling_method="NONE",
@@ -1895,11 +1897,11 @@ def test035_fhb():
         sim,
         print_option="SUMMARY",
         complexity="SIMPLE",
-        outer_hclose=0.001,
+        outer_dvclose=0.001,
         outer_maximum=120,
         under_relaxation="NONE",
         inner_maximum=100,
-        inner_hclose=0.0001,
+        inner_dvclose=0.0001,
         rcloserecord=0.1,
         linear_acceleration="CG",
         preconditioner_levels=7,
@@ -2037,11 +2039,11 @@ def test006_gwf3_disv():
     ims_package = ModflowIms(
         sim,
         print_option="SUMMARY",
-        outer_hclose=0.00000001,
+        outer_dvclose=0.00000001,
         outer_maximum=1000,
         under_relaxation="NONE",
         inner_maximum=1000,
-        inner_hclose=0.00000001,
+        inner_dvclose=0.00000001,
         rcloserecord=0.01,
         linear_acceleration="BICGSTAB",
         scaling_method="NONE",
@@ -2333,11 +2335,11 @@ def test006_2models_gnc():
     ims_package = ModflowIms(
         sim,
         print_option="SUMMARY",
-        outer_hclose=0.00000001,
+        outer_dvclose=0.00000001,
         outer_maximum=1000,
         under_relaxation="NONE",
         inner_maximum=1000,
-        inner_hclose=0.00000001,
+        inner_dvclose=0.00000001,
         rcloserecord=0.01,
         linear_acceleration="BICGSTAB",
         scaling_method="NONE",
@@ -2669,11 +2671,11 @@ def test050_circle_island():
     ims_package = ModflowIms(
         sim,
         print_option="SUMMARY",
-        outer_hclose=0.000001,
+        outer_dvclose=0.000001,
         outer_maximum=500,
         under_relaxation="NONE",
         inner_maximum=1000,
-        inner_hclose=0.000001,
+        inner_dvclose=0.000001,
         rcloserecord=0.000001,
         linear_acceleration="BICGSTAB",
         relaxation_factor=0.0,
@@ -2777,7 +2779,7 @@ def test028_sfr():
     ims_package = ModflowIms(
         sim,
         print_option="SUMMARY",
-        outer_hclose=0.00001,
+        outer_dvclose=0.00001,
         outer_maximum=100,
         under_relaxation="DBD",
         under_relaxation_theta=0.85,
@@ -2788,7 +2790,7 @@ def test028_sfr():
         backtracking_tolerance=1.1,
         backtracking_reduction_factor=0.7,
         backtracking_residual_limit=1.0,
-        inner_hclose=0.00001,
+        inner_dvclose=0.00001,
         rcloserecord=0.1,
         inner_maximum=100,
         linear_acceleration="CG",
