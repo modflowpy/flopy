@@ -59,7 +59,7 @@ class Logger:
         elif filename:
             self.f = open(filename, "w", 0)  # unbuffered
             self.t = datetime.now()
-            self.log("opening " + str(filename) + " for logging")
+            self.log(f"opening {filename} for logging")
         else:
             self.filename = None
 
@@ -73,21 +73,18 @@ class Logger:
             the thing that happened
 
         """
-        pass
         t = datetime.now()
         if phrase in self.items.keys():
-            s = f"{t} finished: {phrase}, took: {t - self.items[phrase]}\n"
+            t0 = self.items.pop(phrase)
+            s = f"{t} finished: {phrase}, took: {t - t0}\n"
             if self.echo:
-                print(s)
+                print(s, end="")
             if self.filename:
                 self.f.write(s)
-            self.items.pop(phrase)
         else:
-            s = str(t) + " starting: " + str(phrase) + "\n"
+            s = f"{t} starting: {phrase}\n"
             if self.echo:
-                print(
-                    s,
-                )
+                print(s, end="")
             if self.filename:
                 self.f.write(s)
             self.items[phrase] = copy.deepcopy(t)
@@ -102,11 +99,9 @@ class Logger:
             the warning text
 
         """
-        s = str(datetime.now()) + " WARNING: " + message + "\n"
+        s = f"{datetime.now()} WARNING: {message}\n"
         if self.echo:
-            print(
-                s,
-            )
+            print(s, end="")
         if self.filename:
             self.f.write(s)
         return
@@ -195,23 +190,21 @@ class NetCdf:
 
         try:
             import dateutil.parser
-        except:
-            print(
+        except ImportError:
+            raise ImportError(
                 "python-dateutil is not installed\n"
                 "try pip install python-dateutil"
             )
-            return
 
-        self.start_datetime = self._dt_str(
-            dateutil.parser.parse(self.model_time.start_datetime)
-        )
-        self.logger.warn(f"start datetime:{self.start_datetime!s}")
+        dt = dateutil.parser.parse(self.model_time.start_datetime)
+        self.start_datetime = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+        self.logger.log(f"start datetime:{self.start_datetime}")
 
         proj4_str = self.model_grid.proj4
         if proj4_str is None:
             proj4_str = "epsg:4326"
-            self.log(
-                "Warning: model has no coordinate reference system specified. "
+            self.logger.warn(
+                "model has no coordinate reference system specified. "
                 f"Using default proj4 string: {proj4_str}"
             )
         self.proj4_str = proj4_str
@@ -237,6 +230,14 @@ class NetCdf:
         self.initialize_file(time_values=self.time_values_arg)
         self.log("initializing file")
 
+    def __enter__(self):
+        """Enter context with statement, returning with an open dataset."""
+        return self
+
+    def __exit__(self, *exc):
+        """Exit context with statement, write and close dataset."""
+        self.write()
+
     def __add__(self, other):
         new_net = NetCdf.zeros_like(self)
         if np.isscalar(other) or isinstance(other, np.ndarray):
@@ -253,6 +254,7 @@ class NetCdf:
             raise Exception(
                 f"NetCdf.__add__(): unrecognized other:{type(other)}"
             )
+        new_net.nc.sync()
         return new_net
 
     def __sub__(self, other):
@@ -271,6 +273,7 @@ class NetCdf:
             raise Exception(
                 f"NetCdf.__sub__(): unrecognized other:{type(other)}"
             )
+        new_net.nc.sync()
         return new_net
 
     def __mul__(self, other):
@@ -289,6 +292,7 @@ class NetCdf:
             raise Exception(
                 f"NetCdf.__mul__(): unrecognized other:{type(other)}"
             )
+        new_net.nc.sync()
         return new_net
 
     def __div__(self, other):
@@ -312,7 +316,8 @@ class NetCdf:
                 raise Exception(
                     f"NetCdf.__sub__(): unrecognized other:{type(other)}"
                 )
-            return new_net
+        new_net.nc.sync()
+        return new_net
 
     def append(self, other, suffix="_1"):
         assert isinstance(other, NetCdf) or isinstance(other, dict)
@@ -367,13 +372,14 @@ class NetCdf:
                     new_var[:] = array
                 except:
                     new_var[:, 0] = array
-
+        self.nc.sync()
         return
 
     def copy(self, output_filename):
         new_net = NetCdf.zeros_like(self, output_filename=output_filename)
         for vname in self.var_attr_dict.keys():
             new_net.nc.variables[vname][:] = self.nc.variables[vname][:]
+        new_net.nc.sync()
         return new_net
 
     @classmethod
@@ -416,6 +422,7 @@ class NetCdf:
             if attr not in new_net.nc.ncattrs():
                 global_attrs[attr] = other.nc[attr]
         new_net.add_global_attributes(global_attrs)
+        new_net.nc.sync()
         return new_net
 
     @classmethod
@@ -483,10 +490,9 @@ class NetCdf:
         ), "can't call difference() if nc hasn't been populated"
         try:
             import netCDF4
-        except Exception as e:
-            mess = f"error import netCDF4: {e!s}"
-            self.logger.warn(mess)
-            raise Exception(mess)
+        except ImportError as e:
+            self.logger.warn("error importing netCDF module")
+            raise ImportError("NetCdf error importing netCDF4 module") from e
 
         if isinstance(other, str):
             assert os.path.exists(other), f"filename 'other' not found:{other}"
@@ -600,14 +606,7 @@ class NetCdf:
 
             var[:] = d_data
             self.log(f"processing variable {vname}")
-
-    def _dt_str(self, dt):
-        """for datetime to string for year < 1900"""
-        dt_str = (
-            f"{dt.year:04d}-{dt.month:02d}-{dt.day:02d}T"
-            f"{dt.hour:02d}:{dt.minute:02d}:{dt.second:02}Z"
-        )
-        return dt_str
+        new_net.nc.sync()
 
     def write(self):
         """write the nc object to disk"""
@@ -622,8 +621,8 @@ class NetCdf:
             try:
                 if self.nc.attributes.get(k) is not None:
                     self.nc.setncattr(k, v)
-            except Exception:
-                self.logger.warn(f"error setting global attribute {k}")
+            except Exception as e:
+                self.logger.warn(f"error setting global attribute {k}: {e!s}")
 
         self.nc.sync()
         self.nc.close()
@@ -687,9 +686,7 @@ class NetCdf:
         try:
             import pyproj
         except ImportError as e:
-            raise ImportError(
-                "NetCdf error importing pyproj module:\n" + str(e)
-            )
+            raise ImportError("NetCdf error importing pyproj module") from e
         from distutils.version import LooseVersion
 
         # Check if using newer pyproj version conventions
@@ -775,17 +772,15 @@ class NetCdf:
             self.log("initializing geometry")
         try:
             import netCDF4
-        except Exception as e:
+        except ImportError as e:
             self.logger.warn("error importing netCDF module")
-            msg = "NetCdf error importing netCDF4 module:\n" + str(e)
-            raise Exception(msg)
+            raise ImportError("NetCdf error importing netCDF4 module") from e
 
         # open the file for writing
         try:
             self.nc = netCDF4.Dataset(self.output_filename, "w")
         except Exception as e:
-            msg = f"error creating netcdf dataset:\n{e!s}"
-            raise Exception(msg)
+            raise Exception("error creating netcdf dataset") from e
 
         # write some attributes
         self.log("setting standard attributes")
@@ -795,7 +790,7 @@ class NetCdf:
             f"CF-1.6, ACDD-1.3, flopy {flopy.__version__}",
         )
         self.nc.setncattr(
-            "date_created", datetime.utcnow().strftime("%Y-%m-%dT%H:%M:00Z")
+            "date_created", datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
         )
         self.nc.setncattr("geospatial_vertical_positive", str(self.z_positive))
         min_vertical = np.min(self.zs)
@@ -807,8 +802,8 @@ class NetCdf:
         for k, v in self.global_attributes.items():
             try:
                 self.nc.setncattr(k, v)
-            except:
-                self.logger.warn(f"error setting global attribute {k}")
+            except Exception as e:
+                self.logger.warn(f"error setting global attribute {k}: {e!s}")
         self.global_attributes = {}
         self.log("setting standard attributes")
 
@@ -1002,6 +997,7 @@ class NetCdf:
         exp.existingDataField = "elevation"
         exp._CoordinateTransformType = "vertical"
         exp._CoordinateAxes = "layer"
+        self.nc.sync()
         return
 
     def initialize_group(
@@ -1129,6 +1125,7 @@ class NetCdf:
                     dimensions=dim_names,
                 )
                 var[:] = np.asarray(dimension_data[dim])
+        self.nc.sync()
 
     @staticmethod
     def normalize_name(name):
@@ -1212,11 +1209,13 @@ class NetCdf:
         for k, v in attributes.items():
             try:
                 var.setncattr(k, v)
-            except:
+            except Exception as e:
                 self.logger.warn(
-                    f"error setting attribute{k} for group {group} variable {name}"
+                    "error setting attribute "
+                    f"{k} for group {group} variable {name}: {e!s}"
                 )
         self.log(f"creating group {group} variable: {name}")
+        self.nc.sync()
 
         return var
 
@@ -1275,7 +1274,7 @@ class NetCdf:
         if name in self.nc.variables.keys():
             raise Exception(f"duplicate variable name: {name}")
 
-        self.log("creating variable: " + str(name))
+        self.log(f"creating variable: {name}")
         assert (
             precision_str in PRECISION_STRS
         ), "netcdf.create_variable() error: precision string {0} not in {1}".format(
@@ -1310,11 +1309,12 @@ class NetCdf:
         for k, v in attributes.items():
             try:
                 var.setncattr(k, v)
-            except:
+            except Exception as e:
                 self.logger.warn(
-                    f"error setting attribute{k} for variable {name}"
+                    f"error setting attribute{k} for variable {name}: {e!s}"
                 )
-        self.log("creating variable: " + str(name))
+        self.log(f"creating variable: {name}")
+        self.nc.sync()
         return var
 
     def add_global_attributes(self, attr_dict):
@@ -1346,6 +1346,7 @@ class NetCdf:
         self.log("setting global attributes")
         self.nc.setncatts(attr_dict)
         self.log("setting global attributes")
+        self.nc.sync()
 
     def add_sciencebase_metadata(self, id, check=True):
         """Add metadata from ScienceBase using the

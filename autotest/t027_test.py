@@ -380,8 +380,10 @@ def test_export():
     if netCDF4 is not None:
         fcw = m.wel.export(os.path.join(cpth, "MNW2-Fig28_well.nc"))
         fcw.write()
-        fcm = m.mnw2.export(os.path.join(cpth, "MNW2-Fig28.nc"))
-        fcm.write()
+        fpth = os.path.join(cpth, "MNW2-Fig28.nc")
+        # test context statement
+        with m.mnw2.export(fpth):
+            pass
         fpth = os.path.join(cpth, "MNW2-Fig28.nc")
         nc = netCDF4.Dataset(fpth)
         assert np.array_equal(
