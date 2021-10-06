@@ -132,10 +132,11 @@ class ModflowUsgBcf(ModflowBcf):
         """
         Constructs the ModflowUsgBcf object.
 
-        Overrides the parent ModflowBcf object."""
+        Overrides the parent ModflowBcf object.
+        """
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
-            + "but received type: {type(model)}."
+            f"but received type: {type(model)}."
         )
         assert isinstance(model, ModflowUsg), msg
 
@@ -368,7 +369,7 @@ class ModflowUsgBcf(ModflowBcf):
         """
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
-            + "but received type: {type(model)}."
+            f"but received type: {type(model)}."
         )
         assert isinstance(model, ModflowUsg), msg
 

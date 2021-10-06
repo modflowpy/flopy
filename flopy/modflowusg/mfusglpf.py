@@ -235,10 +235,14 @@ class ModflowUsgLpf(ModflowLpf):
         filenames=None,
         add_package=True,
     ):
-        """mfusglpf object constructor."""
+        """
+        Constructs the ModflowUsgBcf object.
+
+        Overrides the parent ModflowBcf object.
+        """
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
-            + "but received type: {type(model)}."
+            f"but received type: {type(model)}."
         )
         assert isinstance(model, ModflowUsg), msg
 
@@ -269,7 +273,7 @@ class ModflowUsgLpf(ModflowLpf):
             novfc=novfc,
             extension=extension,
             unitnumber=unitnumber,
-            filenames=filenames,
+            filenames=self._prepare_filenames(filenames),
             add_package=False,
         )
 
@@ -594,7 +598,7 @@ class ModflowUsgLpf(ModflowLpf):
         """
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
-            + "but received type: {type(model)}."
+            f"but received type: {type(model)}."
         )
         assert isinstance(model, ModflowUsg), msg
 

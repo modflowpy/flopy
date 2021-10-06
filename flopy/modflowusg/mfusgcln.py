@@ -197,51 +197,29 @@ class ModflowUsgCln(Package):
         unitnumber=None,
         filenames=None,
     ):
-        """Package constructor."""
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
-            + "but received type: {type(model)}."
+            f"but received type: {type(model)}."
         )
         assert isinstance(model, ModflowUsg), msg
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            self.unitnumber = ModflowUsgCln._defaultunit()
+            self.unitnumber = self._defaultunit()
         elif isinstance(unitnumber, list):
             if len(unitnumber) < 7:
                 for idx in range(len(unitnumber), 7):
                     unitnumber.append(0)
 
         # set filenames
-        if filenames is None:
-            filenames = [None, None, None, None, None, None, None]
-        elif isinstance(filenames, str):
-            filenames = [
-                filenames,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-            ]
-        elif isinstance(filenames, list):
-            if len(filenames) < 7:
-                for idx in range(len(filenames), 7):
-                    filenames.append(None)
-
-        # Fill namefile items
-        name = [ModflowUsgCln._ftype()]
-        extra = [""]
+        filenames = self._prepare_filenames(filenames, num=7)
 
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        super().__init__(
             model,
             extension=extension,
-            name=name,
+            name=self._ftype(),
             unit_number=unitnumber,
-            extra=extra,
             filenames=filenames,
         )
 
@@ -261,7 +239,7 @@ class ModflowUsgCln(Package):
                     fname=filenames[idx + 1],
                     extension=attr,
                     binflag=True,
-                    package=ModflowUsgCln._ftype(),
+                    package=self._ftype(),
                 )
 
         # Define CLN networks and connections
@@ -414,7 +392,7 @@ class ModflowUsgCln(Package):
                 raise Exception("mfcln: ja_cln must be provided")
             if abs(self.ja_cln[0]) != 1:
                 raise Exception(
-                    "mfcln: first ja_cln entry (node 1) is " "not 1 or -1."
+                    "mfcln: first ja_cln entry (node 1) is not 1 or -1."
                 )
             self.ja_cln = Util2d(
                 model,
@@ -757,7 +735,7 @@ class ModflowUsgCln(Package):
         """
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
-            + "but received type: {type(model)}."
+            f"but received type: {type(model)}."
         )
         assert isinstance(model, ModflowUsg), msg
 
@@ -838,7 +816,7 @@ class ModflowUsgCln(Package):
         extension = cls._get_default_extension()
         if ext_unit_dict is not None:
             unitnumber[0], filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowUsgCln._ftype()
+                ext_unit_dict, filetype=cls._ftype()
             )
             file_unit_items = [iclncb, iclnhd, iclndd, iclnib, iclncn, iclnmb]
             funcs = [abs] + [int] * 3 + [abs] * 2

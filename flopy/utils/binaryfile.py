@@ -674,6 +674,14 @@ class CellBudgetFile:
         else:
             raise Exception(f"Unknown precision specified: {precision}")
 
+        # set shape for full3D option
+        if self.modelgrid is None:
+            self.shape = (self.nlay, self.nrow, self.ncol)
+            self.nnodes = self.nlay * self.nrow * self.ncol
+        else:
+            self.shape = self.modelgrid.shape
+            self.nnodes = self.modelgrid.nnodes
+
         if not success:
             raise Exception(
                 f"Budget file could not be read using {precision} precision"
@@ -788,19 +796,24 @@ class CellBudgetFile:
         for i in range(33, 127):
             asciiset += chr(i)
 
+        # read first record
         header = self._get_header()
-        self.nrow = header["nrow"]
-        self.ncol = header["ncol"]
-        self.nlay = np.abs(header["nlay"])
+        nrow = header["nrow"]
+        ncol = header["ncol"]
         text = header["text"]
         if isinstance(text, bytes):
             text = text.decode()
-        if self.nrow < 0 or self.ncol < 0:
+        if nrow < 0 or ncol < 0:
             raise Exception("negative nrow, ncol")
+        if not text.endswith("FLOW-JA-FACE"):
+            self.nrow = nrow
+            self.ncol = ncol
+            self.nlay = np.abs(header["nlay"])
         self.file.seek(0, 2)
         self.totalbytes = self.file.tell()
         self.file.seek(0, 0)
         self.recorddict = {}
+        # read the remaining records
         ipos = 0
         while ipos < self.totalbytes:
             self.iposheader.append(ipos)
@@ -864,6 +877,16 @@ class CellBudgetFile:
                     and int(header["imeth"]) != 7
                 ):
                     print("")
+
+            # set the nrow, ncol, and nlay if they have not been set
+            if self.nrow == 0:
+                text = header["text"]
+                if isinstance(text, bytes):
+                    text = text.decode()
+                if not text.endswith("FLOW-JA-FACE"):
+                    self.nrow = header["nrow"]
+                    self.ncol = header["ncol"]
+                    self.nlay = np.abs(header["nlay"])
 
             # store record and byte position mapping
             self.recorddict[
@@ -1548,13 +1571,16 @@ class CellBudgetFile:
             dtype = np.dtype([("node", np.int32), ("q", self.realtype)])
             if self.verbose:
                 if full3D:
-                    s += f"a numpy masked array of size ({nlay}, {nrow}, {ncol})"
+                    s += (
+                        f"a numpy masked array of "
+                        f"size ({nlay}, {nrow}, {ncol})"
+                    )
                 else:
                     s += f"a numpy recarray of size ({nlist}, 2)"
                 print(s)
             data = binaryread(self.file, dtype, shape=(nlist,))
             if full3D:
-                return self.create3D(data, nlay, nrow, ncol)
+                return self.__create3D(data)
             else:
                 return data.view(np.recarray)
 
@@ -1564,23 +1590,27 @@ class CellBudgetFile:
             data = binaryread(self.file, self.realtype(1), shape=(nrow, ncol))
             if self.verbose:
                 if full3D:
-                    s += f"a numpy masked array of size ({nlay}, {nrow}, {ncol})"
+                    s += (
+                        "a numpy masked array of size "
+                        f"({nlay}, {nrow}, {ncol})"
+                    )
                 else:
                     s += (
-                        "a list of two 2D numpy arrays.  "
-                        "The first is an integer layer array of shape {}.  "
-                        "The second is real data array of shape {}".format(
-                            (nrow, ncol),
-                            (nrow, ncol),
-                        )
+                        "a list of two 2D numpy arrays. The first is an "
+                        f"integer layer array of shape ({nrow}, {ncol}). The "
+                        f"second is real data array of shape ({nrow}, {ncol})"
                     )
                 print(s)
             if full3D:
-                out = np.ma.zeros((nlay, nrow, ncol), dtype=np.float32)
+                out = np.ma.zeros(self.nnodes, dtype=np.float32)
                 out.mask = True
-                vertical_layer = ilayer[0] - 1  # This is always the top layer
-                out[vertical_layer, :, :] = data
-                return out
+                vertical_layer = ilayer.flatten() - 1
+                # create the 2D cell index and then move it to
+                # the correct vertical location
+                idx = np.arange(0, vertical_layer.shape[0])
+                idx += vertical_layer * nrow * ncol
+                out[idx] = data.flatten()
+                return out.reshape(self.shape)
             else:
                 return [ilayer, data]
 
@@ -1608,7 +1638,7 @@ class CellBudgetFile:
                 if self.verbose:
                     s += f"a list array of shape ({nlay}, {nrow}, {ncol})"
                     print(s)
-                return self.create3D(data, nlay, nrow, ncol)
+                return self.__create3D(data)
             else:
                 if self.verbose:
                     s += f"a numpy recarray of size ({nlist}, {2 + naux})"
@@ -1631,13 +1661,12 @@ class CellBudgetFile:
             data = binaryread(self.file, dtype, shape=(nlist,))
             if self.verbose:
                 if full3D:
-                    s += f"full 3D arrays not supported for imeth = {imeth}"
+                    s += f"a list array of shape ({nlay}, {nrow}, {ncol})"
                 else:
                     s += f"a numpy recarray of size ({nlist}, 2)"
                 print(s)
             if full3D:
-                s += f"full 3D arrays not supported for imeth = {imeth}"
-                raise ValueError(s)
+                return self.__create3D(data)
             else:
                 return data.view(np.recarray)
         else:
@@ -1646,20 +1675,16 @@ class CellBudgetFile:
         # should not reach this point
         return
 
-    def create3D(self, data, nlay, nrow, ncol):
+    def __create3D(self, data):
         """
         Convert a dictionary of {node: q, ...} into a numpy masked array.
-        In most cases this should not be called directly by the user unless
-        you know what you're doing.  Instead, it is used as part of the
-        full3D keyword for get_data.
+        Used to create full grid arrays when the full3D keyword is set
+        to True in get_data.
 
         Parameters
         ----------
         data : dictionary
             Dictionary with node keywords and flows (q) items.
-
-        nlay, nrow, ncol : int
-            Number of layers, rows, and columns of the model grid.
 
         Returns
         ----------
@@ -1667,13 +1692,13 @@ class CellBudgetFile:
             List contains unique simulation times (totim) in binary file.
 
         """
-        out = np.ma.zeros((nlay * nrow * ncol), dtype=np.float32)
+        out = np.ma.zeros(self.nnodes, dtype=np.float32)
         out.mask = True
         for [node, q] in zip(data["node"], data["q"]):
             idx = node - 1
             out.data[idx] += q
             out.mask[idx] = False
-        return np.ma.reshape(out, (nlay, nrow, ncol))
+        return np.ma.reshape(out, self.shape)
 
     def get_times(self):
         """

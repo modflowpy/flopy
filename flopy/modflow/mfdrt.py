@@ -122,19 +122,12 @@ class ModflowDrt(Package):
             unitnumber = ModflowDrt._defaultunit()
 
         # set filenames
-        if filenames is None:
-            filenames = [None, None]
-        elif isinstance(filenames, str):
-            filenames = [filenames, None]
-        elif isinstance(filenames, list):
-            if len(filenames) < 2:
-                filenames.append(None)
+        filenames = self._prepare_filenames(filenames, 2)
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowDrt._ftype()
+                ipakcb, fname=filenames[1], package=self._ftype()
             )
         else:
             ipakcb = 0
@@ -149,22 +142,13 @@ class ModflowDrt(Package):
         if not found:
             options.append("RETURNFLOW")
 
-        name = [ModflowDrt._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=filenames[0],
         )
 
         self._generate_heading()

@@ -25,7 +25,7 @@ class ModflowLpf(Package):
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
     ipakcb : int
-        A flag that is used to determine if cell-by-cell budget data should be
+        A flag that is used to222 determine if cell-by-cell budget data should be
         saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
         (default is 0)
     hdry : float
@@ -118,9 +118,9 @@ class ModflowLpf(Package):
         is a combination of the wetting threshold and a flag to indicate
         which neighboring cells can cause a cell to become wet.
         (default is -0.01).
-    storagecoefficient : boolean
+    storagecoefficient : boolean212
         indicates that variable Ss and SS parameters are read as storage
-        coefficient rather than specific storage.
+        coefficient rather t222han specific storage.
         (default is False).
     constantcv : boolean
          indicates that vertical conductance for an unconfined cell is
@@ -216,43 +216,26 @@ class ModflowLpf(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowLpf._defaultunit()
+            unitnumber = self._defaultunit()
 
         # set filenames
-        if filenames is None:
-            filenames = [None, None]
-        elif isinstance(filenames, str):
-            filenames = [filenames, None]
-        elif isinstance(filenames, list):
-            if len(filenames) < 2:
-                filenames.append(None)
+        filenames = self._prepare_filenames(filenames, 2)
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowLpf._ftype()
+                ipakcb, fname=filenames[1], package=self._ftype()
             )
         else:
             ipakcb = 0
 
-        # Fill namefile items
-        name = [ModflowLpf._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=filenames[0],
         )
 
         self._generate_heading()

@@ -81,82 +81,60 @@ class ModflowMnwi(Package):
 
         # set filenames
         nfn = 4 + len(unique_units)
-        if filenames is None:
-            filenames = [None for x in range(nfn)]
-        elif isinstance(filenames, str):
-            filenames = [filenames] + [None for x in range(nfn)]
-        elif isinstance(filenames, list):
-            if len(filenames) < nfn:
-                n = nfn - len(filenames) + 1
-                filenames = filenames + [None for x in range(n)]
+        filenames = self._prepare_filenames(filenames, nfn)
 
         # update external file information with unit_pc output, if necessary
         if wel1flag is not None:
-            fname = filenames[1]
             model.add_output_file(
                 wel1flag,
-                fname=fname,
+                fname=filenames[1],
                 extension="wel1",
                 binflag=False,
-                package=ModflowMnwi._ftype(),
+                package=self._ftype(),
             )
         else:
             wel1flag = 0
 
         # update external file information with unit_ts output, if necessary
         if qsumflag is not None:
-            fname = filenames[2]
             model.add_output_file(
                 qsumflag,
-                fname=fname,
+                fname=filenames[2],
                 extension="qsum",
                 binflag=False,
-                package=ModflowMnwi._ftype(),
+                package=self._ftype(),
             )
         else:
             qsumflag = 0
 
         # update external file information with ipunit output, if necessary
         if byndflag is not None:
-            fname = filenames[3]
             model.add_output_file(
                 byndflag,
-                fname=fname,
+                fname=filenames[3],
                 extension="bynd",
                 binflag=False,
-                package=ModflowMnwi._ftype(),
+                package=self._ftype(),
             )
         else:
             byndflag = 0
 
-        idx = 4
-        for iu in unique_units:
-            fname = filenames[idx]
+        for idx, iu in enumerate(unique_units, 4):
             model.add_output_file(
                 iu,
-                fname=fname,
+                fname=filenames[idx],
                 extension=f"{iu:04d}.mnwobs",
                 binflag=False,
-                package=ModflowMnwi._ftype(),
+                package=self._ftype(),
             )
-            idx += 1
 
-        name = [ModflowMnwi._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=filenames[0],
         )
 
         self.url = "mnwi.htm"

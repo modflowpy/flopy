@@ -1519,7 +1519,7 @@ def export_array(
             if rotate is not None:
                 a = rotate(a, modelgrid.angrot, cval=nodata)
                 height_rot, width_rot = a.shape
-                xmin, ymin, xmax, ymax = modelgrid.extent
+                xmin, xmax, ymin, ymax = modelgrid.extent
                 dx = (xmax - xmin) / width_rot
                 dy = (ymax - ymin) / height_rot
                 cellsize = np.max((dx, dy))

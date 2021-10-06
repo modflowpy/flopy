@@ -175,14 +175,14 @@ class ModflowUsgWel(ModflowWel):
         filenames=None,
         add_package=True,
     ):
-        """
-        Package constructor.
-        """
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
-            + "but received type: {type(model)}."
+            f"but received type: {type(model)}."
         )
         assert isinstance(model, ModflowUsg), msg
+
+        # set filenames
+        filenames = self._prepare_filenames(filenames)
 
         super().__init__(
             model,
@@ -208,13 +208,12 @@ class ModflowUsgWel(ModflowWel):
                 self.iunitafr = int(line_text[1])
 
         if self.iunitafr > 0:
-            fname = self.filenames[1]
             model.add_output_file(
                 self.iunitafr,
-                fname=fname,
+                fname=filenames[1],
                 extension="afr",
                 binflag=False,
-                package=ModflowUsgWel._ftype(),
+                package=self._ftype(),
             )
 
         # initialize CLN MfList
@@ -597,7 +596,7 @@ class ModflowUsgWel(ModflowWel):
         """
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
-            + "but received type: {type(model)}."
+            f"but received type: {type(model)}."
         )
         assert isinstance(model, ModflowUsg), msg
 
@@ -696,7 +695,7 @@ class ModflowUsgWel(ModflowWel):
         unitnumber = ModflowUsgWel._defaultunit()
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowUsgWel._ftype()
+                ext_unit_dict, filetype=cls._ftype()
             )
             if ipakcb > 0:
                 _, filenames[1] = model.get_ext_dict_attr(
