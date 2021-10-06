@@ -1614,6 +1614,14 @@ class MFPackage(PackageContainer, PackageInterface):
                         package=self._get_pname(),
                     )
                 return
+
+        if all(
+            hasattr(self, attr) for attr in ["model_or_sim", "_package_type"]
+        ):
+            if hasattr(self.model_or_sim, "_mg_resync"):
+                if not self.model_or_sim._mg_resync:
+                    self.model_or_sim._mg_resync = self._mg_resync
+
         super().__setattr__(name, value)
 
     def __repr__(self):

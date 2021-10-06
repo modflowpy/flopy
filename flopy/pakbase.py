@@ -78,6 +78,12 @@ class PackageInterface:
     def has_stress_period_data(self):
         return self.__dict__.get("stress_period_data", None) is not None
 
+    @property
+    def _mg_resync(self):
+        if self.package_type.lower()[:4] in ("dis", "bas"):
+            return True
+        return False
+
     @staticmethod
     def _check_thresholds(chk, array, active, thresholds, name):
         """Checks array against min and max threshold values."""
@@ -604,6 +610,10 @@ class Package(PackageInterface):
                                 )
                             )
                         value = new_list
+
+        if all(hasattr(self, attr) for attr in ["parent", "_name"]):
+            if not self.parent._mg_resync:
+                self.parent._mg_resync = self._mg_resync
 
         super().__setattr__(key, value)
 

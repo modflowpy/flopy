@@ -650,6 +650,11 @@ def test_sr():
     if mm.modelgrid.proj4 != "test test test":
         raise AssertionError()
 
+    mm.dis.top = 5000
+
+    if not np.allclose(mm.dis.top.array, mm.modelgrid.top):
+        raise AssertionError("modelgrid failed dynamic update test")
+
 
 def test_dis_sr():
 
@@ -681,6 +686,42 @@ def test_dis_sr():
     x, y = bg.modelgrid.get_coords(0, delc * nrow)
     np.testing.assert_almost_equal(x, xul)
     np.testing.assert_almost_equal(y, yul)
+
+
+def test_mf6_modelgrid_update():
+    base_dir = os.path.join("..", "examples", "data", "mf6")
+    # dis
+    model_ws = os.path.join(base_dir, "test001a_Tharmonic")
+    sim = flopy.mf6.MFSimulation.load(sim_ws=model_ws)
+    gwf = sim.get_model("flow15")
+
+    mg = gwf.modelgrid
+    gwf.dis.top = 12
+
+    if not np.allclose(gwf.dis.top.array, gwf.modelgrid.top):
+        raise AssertionError("StructuredGrid failed dynamic update test")
+
+    # disv
+    model_ws = os.path.join(base_dir, "test003_gwfs_disv")
+    sim = flopy.mf6.MFSimulation.load(sim_ws=model_ws)
+    gwf = sim.get_model("gwf_1")
+
+    mg = gwf.modelgrid
+    gwf.disv.top = 6.12
+
+    if not np.allclose(gwf.disv.top.array, gwf.modelgrid.top):
+        raise AssertionError("VertexGrid failed dynamic update test")
+
+    # disu
+    model_ws = os.path.join(base_dir, "test006_gwf3")
+    sim = flopy.mf6.MFSimulation.load(sim_ws=model_ws)
+    gwf = sim.get_model("gwf_1")
+
+    mg = gwf.modelgrid
+    gwf.disu.top = 101
+
+    if not np.allclose(gwf.disu.top.array, gwf.modelgrid.top):
+        raise AssertionError("UnstructuredGrid failed dynamic update test")
 
 
 def test_twri_mg():
@@ -1666,6 +1707,7 @@ def main():
     # test_tricontour_NaN()
     # test_export_contourf()
     test_sr()
+    # test_mf6_modelgrid_update()
     # test_shapefile_polygon_closed()
     # test_mapview_plot_bc()
     # test_crosssection_plot_bc()
