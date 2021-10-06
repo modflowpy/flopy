@@ -1615,7 +1615,9 @@ class MFPackage(PackageContainer, PackageInterface):
                     )
                 return
 
-        if all(hasattr(self, attr) for attr in ["model_or_sim", "_package_type"]):
+        if all(
+            hasattr(self, attr) for attr in ["model_or_sim", "_package_type"]
+        ):
             if hasattr(self.model_or_sim, "_mg_resync"):
                 if not self.model_or_sim._mg_resync:
                     self.model_or_sim._mg_resync = self._mg_resync
