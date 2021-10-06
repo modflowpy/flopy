@@ -228,40 +228,23 @@ class ModflowUsgDisU(Package):
         filenames=None,
         start_datetime=None,
     ):
-        """disu constructor"""
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
-            + "but received type: {type(model)}."
+            f"but received type: {type(model)}."
         )
         assert isinstance(model, ModflowUsg), msg
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowUsgDisU._defaultunit()
+            unitnumber = self._defaultunit()
 
-        # set filenames
-        if filenames is None:
-            filenames = [None]
-        elif isinstance(filenames, str):
-            filenames = [filenames]
-
-        # Fill namefile items
-        name = [ModflowUsgDisU._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=self._prepare_filenames(filenames),
         )
 
         # Set values of all parameters
@@ -554,7 +537,7 @@ class ModflowUsgDisU(Package):
         """
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
-            + "but received type: {type(model)}."
+            f"but received type: {type(model)}."
         )
         assert isinstance(model, ModflowUsg), msg
 
@@ -785,7 +768,7 @@ class ModflowUsgDisU(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowUsgDisU._ftype()
+                ext_unit_dict, filetype=cls._ftype()
             )
 
         # create dis object instance

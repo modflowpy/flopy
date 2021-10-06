@@ -236,91 +236,96 @@ class ModflowUsgSms(Package):
     def __init__(
         self,
         model,
-        **kwargs,
+        hclose=1e-4,
+        hiclose=1e-4,
+        mxiter=100,
+        iter1=20,
+        iprsms=2,
+        nonlinmeth=0,
+        linmeth=2,
+        theta=0.7,
+        akappa=0.1,
+        gamma=0.2,
+        amomentum=0.001,
+        numtrack=20,
+        btol=1e4,
+        breduc=0.2,
+        reslim=100.0,
+        iacl=2,
+        norder=0,
+        level=7,
+        north=2,
+        iredsys=0,
+        rrctol=0.0,
+        idroptol=0,
+        epsrn=1.0e-3,
+        clin="bcgs",
+        ipc=3,
+        iscl=0,
+        iord=0,
+        rclosepcgu=0.1,
+        relaxpcgu=1.0,
+        extension="sms",
+        options=None,
+        unitnumber=None,
+        filenames=None,
     ):
-        """Package constructor"""
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
-            + "but received type: {type(model)}."
+            f"but received type: {type(model)}."
         )
         assert isinstance(model, ModflowUsg), msg
 
-        valid_args_defaults = {
-            "hclose": 1e-4,
-            "hiclose": 1e-4,
-            "mxiter": 100,
-            "iter1": 20,
-            "iprsms": 2,
-            "nonlinmeth": 0,
-            "linmeth": 2,
-            "theta": 0.7,
-            "akappa": 0.1,
-            "gamma": 0.2,
-            "amomentum": 0.001,
-            "numtrack": 20,
-            "btol": 1e4,
-            "breduc": 0.2,
-            "reslim": 100.0,
-            "iacl": 2,
-            "norder": 0,
-            "level": 7,
-            "north": 2,
-            "iredsys": 0,
-            "rrctol": 0.0,
-            "idroptol": 0,
-            "epsrn": 1.0e-3,
-            "clin": "bcgs",
-            "ipc": 3,
-            "iscl": 0,
-            "iord": 0,
-            "rclosepcgu": 0.1,
-            "relaxpcgu": 1.0,
-            "extension": "sms",
-            "options": None,
-            "unitnumber": None,
-            "filenames": None,
-        }
-
-        for arg, default_value in valid_args_defaults.items():
-            setattr(self, arg, kwargs.pop(arg, default_value))
-
         # set default unit number of one is not specified
-        if self.unitnumber is None:
-            self.unitnumber = ModflowUsgSms._defaultunit()
+        if unitnumber is None:
+            unitnumber = self._defaultunit()
 
-        # set filenames
-        if self.filenames is None:
-            self.filenames = [None]
-        elif isinstance(self.filenames, str):
-            self.filenames = [self.filenames]
-
-        # Fill namefile items
-        name = [ModflowUsgSms._ftype()]
-        units = [self.unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [self.filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and
-        # unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
-            extension=self.extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            extension=extension,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=self._prepare_filenames(filenames),
         )
 
         self._generate_heading()
         self.url = " "
-        if self.options is None:
+        self.hclose = hclose
+        self.hiclose = hiclose
+        self.mxiter = mxiter
+        self.iter1 = iter1
+        self.iprsms = iprsms
+        self.nonlinmeth = nonlinmeth
+        self.linmeth = linmeth
+        self.theta = theta
+        self.akappa = akappa
+        self.gamma = gamma
+        self.amomentum = amomentum
+        self.numtrack = numtrack
+        self.btol = btol
+        self.breduc = breduc
+        self.reslim = reslim
+        self.iacl = iacl
+        self.norder = norder
+        self.level = level
+        self.north = north
+        self.iredsys = iredsys
+        self.rrctol = rrctol
+        self.idroptol = idroptol
+        self.epsrn = epsrn
+        self.clin = clin
+        self.ipc = ipc
+        self.iscl = iscl
+        self.iord = iord
+        self.rclosepcgu = rclosepcgu
+        self.relaxpcgu = relaxpcgu
+        if options is None:
             self.options = []
         else:
-            if not isinstance(self.options, list):
-                self.options = [self.options]
+            if not isinstance(options, list):
+                options = [options]
+            self.options = options
         self.parent.add_package(self)
         return
 
@@ -421,7 +426,7 @@ class ModflowUsgSms(Package):
         """
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
-            + "but received type: {type(model)}."
+            f"but received type: {type(model)}."
         )
         assert isinstance(model, ModflowUsg), msg
 
@@ -593,7 +598,7 @@ class ModflowUsgSms(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowUsgSms._ftype()
+                ext_unit_dict, filetype=cls._ftype()
             )
 
         return cls(

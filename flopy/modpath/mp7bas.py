@@ -39,14 +39,10 @@ class Modpath7Bas(Package):
     def __init__(
         self, model, porosity=0.30, defaultiface=None, extension="mpbas"
     ):
-        """
-        Package constructor.
-
-        """
 
         unitnumber = model.next_unit()
 
-        Package.__init__(self, model, extension, "MPBAS", unitnumber)
+        super().__init__(model, extension, "MPBAS", unitnumber)
 
         shape = model.shape
         if len(shape) == 3:

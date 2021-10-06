@@ -175,14 +175,14 @@ class ModflowUsgWel(ModflowWel):
         filenames=None,
         add_package=True,
     ):
-        """
-        Package constructor.
-        """
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
-            + "but received type: {type(model)}."
+            f"but received type: {type(model)}."
         )
         assert isinstance(model, ModflowUsg), msg
+
+        # set filenames
+        filenames = self._prepare_filenames(filenames)
 
         super().__init__(
             model,
@@ -208,13 +208,12 @@ class ModflowUsgWel(ModflowWel):
                 self.iunitafr = int(line_text[1])
 
         if self.iunitafr > 0:
-            fname = self.filenames[1]
             model.add_output_file(
                 self.iunitafr,
-                fname=fname,
+                fname=filenames[1],
                 extension="afr",
                 binflag=False,
-                package=ModflowUsgWel._ftype(),
+                package=self._ftype(),
             )
 
         # initialize CLN MfList
@@ -308,7 +307,7 @@ class ModflowUsgWel(ModflowWel):
         line += "\n"
         f_wel.write(line)
 
-        _, ncol, nlay, nper = self.parent.get_nrow_ncol_nlay_nper()
+        _, _, _, nper = self.parent.get_nrow_ncol_nlay_nper()
 
         kpers = list(self.stress_period_data.data.keys())
         if len(kpers) > 0:
@@ -365,7 +364,7 @@ class ModflowUsgWel(ModflowWel):
 
     @staticmethod
     def _load_dataset2(line):
-        """load mfusgwel dataset 2 from line"""
+        """load mfusgwel dataset 2 from line."""
         # dataset 2 -- MXACTW IWELCB [Option]
         line_text = line.strip().split()
         n_items = 2
@@ -597,7 +596,7 @@ class ModflowUsgWel(ModflowWel):
         """
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
-            + "but received type: {type(model)}."
+            f"but received type: {type(model)}."
         )
         assert isinstance(model, ModflowUsg), msg
 
@@ -644,7 +643,7 @@ class ModflowUsgWel(ModflowWel):
             )
 
         if nper is None:
-            nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
+            _, _, _, nper = model.get_nrow_ncol_nlay_nper()
 
         # dataset 5 -- read data for every stress period
         bnd_output = None
@@ -696,15 +695,15 @@ class ModflowUsgWel(ModflowWel):
         unitnumber = ModflowUsgWel._defaultunit()
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowUsgWel._ftype()
+                ext_unit_dict, filetype=cls._ftype()
             )
             if ipakcb > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
+                _, filenames[1] = model.get_ext_dict_attr(
                     ext_unit_dict, unit=ipakcb
                 )
                 model.add_pop_key_list(ipakcb)
             if iunitafr > 0:
-                iu, filenames[2] = model.get_ext_dict_attr(
+                _, filenames[2] = model.get_ext_dict_attr(
                     ext_unit_dict, unit=iunitafr
                 )
                 model.add_pop_key_list(iunitafr)

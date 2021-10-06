@@ -198,46 +198,33 @@ class ModflowPcgn(Package):
         unitnumber=None,
         filenames=None,
     ):
-        """
-        Package constructor.
-
-        """
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowPcgn._defaultunit()
 
         # set filenames
-        if filenames is None:
-            filenames = [None, None, None, None]
-        elif isinstance(filenames, str):
-            filenames = [filenames, None, None, None]
-        elif isinstance(filenames, list):
-            if len(filenames) < 4:
-                for idx in range(len(filenames), 4):
-                    filenames.append(None)
+        filenames = self._prepare_filenames(filenames, 4)
 
         # update external file information with unit_pc output, if necessary
         if unit_pc is not None:
-            fname = filenames[1]
             model.add_output_file(
                 unit_pc,
-                fname=fname,
+                fname=filenames[1],
                 extension="pcgni",
                 binflag=False,
-                package=ModflowPcgn._ftype(),
+                package=self._ftype(),
             )
         else:
             unit_pc = 0
 
         # update external file information with unit_ts output, if necessary
         if unit_ts is not None:
-            fname = filenames[2]
             model.add_output_file(
                 unit_ts,
-                fname=fname,
+                fname=filenames[2],
                 extension="pcgnt",
                 binflag=False,
-                package=ModflowPcgn._ftype(),
+                package=self._ftype(),
             )
         else:
             unit_ts = 0
@@ -245,34 +232,23 @@ class ModflowPcgn(Package):
         # update external file information with ipunit output, if necessary
         if ipunit is not None:
             if ipunit > 0:
-                fname = filenames[3]
                 model.add_output_file(
                     ipunit,
-                    fname=fname,
+                    fname=filenames[3],
                     extension="pcgno",
                     binflag=False,
-                    package=ModflowPcgn._ftype(),
+                    package=self._ftype(),
                 )
         else:
             ipunit = -1
 
-        name = [ModflowPcgn._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and
-        # unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=filenames[0],
         )
 
         # check if a valid model version has been specified

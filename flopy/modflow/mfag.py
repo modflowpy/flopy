@@ -203,25 +203,13 @@ class ModflowAg(Package):
         if unitnumber is None:
             unitnumber = ModflowAg._defaultunit()
 
-        if filenames is None:
-            filenames = [None]
-        elif isinstance(filenames, str):
-            filenames = [filenames]
-
-        name = [ModflowAg._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
+        # call base package constructor
         super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=self._prepare_filenames(filenames),
         )
 
         # set up class

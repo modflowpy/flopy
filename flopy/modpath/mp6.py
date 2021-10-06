@@ -11,13 +11,8 @@ class Modpath6List(Package):
     """
 
     def __init__(self, model, extension="list", listunit=7):
-        """
-        Package constructor.
-
-        """
-        # Call ancestor's init to set self.parent, extension, name and
-        # unit number
-        Package.__init__(self, model, extension, "LIST", listunit)
+        # call base package constructor
+        super().__init__(model, extension, "LIST", listunit)
         # self.parent.add_package(self) This package is not added to the base
         # model so that it is not included in get_name_file_entries()
         return

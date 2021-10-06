@@ -15,7 +15,7 @@ class SeawatList(Package):
     """
 
     def __init__(self, model, extension="list", listunit=7):
-        Package.__init__(self, model, extension, "LIST", listunit)
+        super().__init__(model, extension, "LIST", listunit)
         return
 
     def __repr__(self):

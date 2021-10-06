@@ -1,7 +1,7 @@
 """
 mfusgcln module.
 
-Contains the ModflowUsgCln class. Note that the user can 
+Contains the ModflowUsgCln class. Note that the user can
 access the ModflowUsgCln class as `flopy.modflowusg.ModflowUsgCln`.
 
 Compatible with USG-Transport Version 1.7.0. which can be downloade from
@@ -9,16 +9,15 @@ https://www.gsi-net.com/en/software/free-software/modflow-usg.html
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-Panday, S., 2021; USG-Transport Version 1.7.0: The Block-Centered Transport 
+Panday, S., 2021; USG-Transport Version 1.7.0: The Block-Centered Transport
 Process for MODFLOW-USG, GSI Environmental, March, 2021
 
-Panday, Sorab, Langevin, C.D., Niswonger, R.G., Ibaraki, Motomu, and Hughes, 
-J.D., 2013, MODFLOW–USG version 1: An unstructured grid version of MODFLOW 
-for simulating groundwater flow and tightly coupled processes using a control 
-volume finite-difference formulation: U.S. Geological Survey Techniques and 
+Panday, Sorab, Langevin, C.D., Niswonger, R.G., Ibaraki, Motomu, and Hughes,
+J.D., 2013, MODFLOW–USG version 1: An unstructured grid version of MODFLOW
+for simulating groundwater flow and tightly coupled processes using a control
+volume finite-difference formulation: U.S. Geological Survey Techniques and
 Methods, book 6, chap. A45, 66 p.
 """
-import warnings
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d
@@ -165,150 +164,115 @@ class ModflowUsgCln(Package):
     def __init__(
         self,
         model,
-        **kwargs,
+        ncln=None,  # number of CLNs
+        iclnnds=None,  # number of nodes
+        nndcln=None,  # number of nodes in each CLN segments
+        clncon=None,  # node IDs in each CLN segments
+        nja_cln=None,  # total number of node-node connections (NJAG)
+        iac_cln=None,  # number of connections for each node (sum(IAC)=NJAG
+        ja_cln=None,  # node connections
+        node_prop=None,  # node properties
+        nclngwc=None,  # number of CLN-GW connections
+        cln_gwc=None,  # CLN-GW connections
+        nconduityp=1,  # number of circular conduit types
+        cln_circ=None,  # circular conduit properties
+        ibound=1,  # boundary condition types
+        strt=1.0,  # initial head in CLN cells
+        transient=False,  # OPTIONS: transient IBOUND for each stress period
+        printiaja=False,  # OPTIONS: print IA_CLN and JA_CLN to listing file
+        nrectyp=0,  # OPTIONS2: number of rectangular fracture types
+        cln_rect=None,  # rectangular fracture properties
+        bhe=False,  # OPTIONS2: borehole heat exchanger (BHE)
+        grav=None,  # OPTIONS2: gravitational acceleration constant
+        visk=None,  # OPTIONS2: kinematic viscosity of water
+        extension=[
+            "cln",
+            "clncb",
+            "clnhd",
+            "clndd",
+            "clnib",
+            "clncn",
+            "clnmb",
+        ],
+        unitnumber=None,
+        filenames=None,
     ):
-        """Package constructor"""
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
-            + "but received type: {type(model)}."
+            f"but received type: {type(model)}."
         )
         assert isinstance(model, ModflowUsg), msg
 
-        valid_args_defaults = {
-            "ncln": None,  # number of CLNs
-            "iclnnds": None,  # number of nodes
-            "nndcln": None,  # number of nodes in each CLN segments
-            "clncon": None,  # node IDs in each CLN segments
-            "nja_cln": None,  # total number of node-node connections (NJAG)
-            "iac_cln": None,  # number of connections for each node (sum(IAC)": NJAG
-            "ja_cln": None,  # node connections
-            "node_prop": None,  # node properties
-            "nclngwc": None,  # number of CLN-GW connections
-            "cln_gwc": None,  # CLN-GW connections
-            "nconduityp": 1,  # number of circular conduit types
-            "cln_circ": None,  # circular conduit properties
-            "ibound": 1,  # boundary condition types
-            "strt": 1.0,  # initial head in CLN cells
-            "transient": False,  # OPTIONS: transient IBOUND for each stress period
-            "printiaja": False,  # OPTIONS: print IA_CLN and JA_CLN to listing file
-            "nrectyp": 0,  # OPTIONS2: number of rectangular fracture types
-            "cln_rect": None,  # rectangular fracture properties
-            "bhe": False,  # OPTIONS2: borehole heat exchanger (bhe)
-            "grav": None,  # OPTIONS2: gravitational acceleration constant
-            "visk": None,  # OPTIONS2: kinematic viscosity of water
-            "extension": [
-                "cln",
-                "clncb",
-                "clnhd",
-                "clndd",
-                "clnib",
-                "clncn",
-                "clnmb",
-            ],
-            "unitnumber": None,
-            "filenames": None,
-        }
-
-        for arg, default_value in valid_args_defaults.items():
-            setattr(self, arg, kwargs.pop(arg, default_value))
-
         # set default unit number of one is not specified
-        if self.unitnumber is None:
-            self.unitnumber = ModflowUsgCln._defaultunit()
-        elif isinstance(self.unitnumber, list):
-            if len(self.unitnumber) < 7:
-                for idx in range(len(self.unitnumber), 7):
-                    self.unitnumber.append(0)
+        if unitnumber is None:
+            self.unitnumber = self._defaultunit()
+        elif isinstance(unitnumber, list):
+            if len(unitnumber) < 7:
+                for idx in range(len(unitnumber), 7):
+                    unitnumber.append(0)
 
         # set filenames
-        if self.filenames is None:
-            self.filenames = [None, None, None, None, None, None, None]
-        elif isinstance(self.filenames, str):
-            self.filenames = [
-                self.filenames,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-            ]
-        elif isinstance(self.filenames, list):
-            if len(self.filenames) < 7:
-                for idx in range(len(self.filenames), 7):
-                    self.filenames.append(None)
+        filenames = self._prepare_filenames(filenames, num=7)
 
-        # Fill namefile items
-        name = [ModflowUsgCln._ftype()]
-        extra = [""]
-        exten = [self.extension[0]]
-        units = self.unitnumber[0]
-
-        # set package name
-        fname = [self.filenames[0]]
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        super().__init__(
             model,
-            extension=exten,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            extension=extension,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=filenames,
         )
 
         self.url = "Connected_Linear_Network.htm"
 
         self._generate_heading()
 
-        # CLN output files
-        # reset extension (overwritten by package init?)
-        if "extension" not in kwargs.keys():
-            self.extension = [
-                "cln",
-                "clncb",
-                "clnhd",
-                "clndd",
-                "clnib",
-                "clncn",
-                "clnmb",
-            ]
+        # Options
+        self.transient = transient
+        self.printiaja = printiaja
 
-        for idx, attr in enumerate(self.extension[1:]):
-            setattr(self, f"i{attr}", self.unitnumber[idx + 1])
+        for idx, attr in enumerate(extension[1:]):
+            setattr(self, f"i{attr}", int(unitnumber[idx + 1]))
             if getattr(self, f"i{attr}") > 0:
                 model.add_output_file(
                     getattr(self, f"i{attr}"),
-                    fname=self.filenames[idx + 1],
+                    fname=filenames[idx + 1],
                     extension=attr,
                     binflag=True,
-                    package=ModflowUsgCln._ftype(),
+                    package=self._ftype(),
                 )
 
         # Define CLN networks and connections
+        self.ncln = ncln
+        self.iclnnds = iclnnds
+        self.nndcln = nndcln
+        self.clncon = clncon
+        self.iac_cln = iac_cln
+        self.nja_cln = nja_cln
         self._define_cln_networks(model)
 
         # Define CLN node properties
-        if self.node_prop is None:
+        if node_prop is None:
             raise Exception("mfcln: Node properties must be provided")
 
-        if len(self.node_prop) != self.nclnnds:
+        if len(node_prop) != self.nclnnds:
             raise Exception(
                 "mfcln: Length of Node properties must equal number of nodes"
             )
 
         self.node_prop = self._make_recarray(
-            self.node_prop, dtype=ModflowUsgCln.get_clnnode_dtype()
+            node_prop, dtype=ModflowUsgCln.get_clnnode_dtype()
         )
 
         # Define CLN groundwater connections
-        if self.nclngwc is None:
+        if nclngwc is None:
             raise Exception("mfcln: Number of CLN-GW connections not defined")
+        self.nclngwc = nclngwc
 
-        if self.cln_gwc is None:
+        if cln_gwc is None:
             raise Exception("mfcln: CLN-GW connections not provided")
 
-        if len(self.cln_gwc) != self.nclngwc:
+        if len(cln_gwc) != nclngwc:
             raise Exception(
                 "mfcln: Number of CLN-GW connections not equal to nclngwc"
             )
@@ -316,10 +280,18 @@ class ModflowUsgCln(Package):
         structured = self.parent.structured
 
         self.cln_gwc = self._make_recarray(
-            self.cln_gwc, dtype=ModflowUsgCln.get_gwconn_dtype(structured)
+            cln_gwc, dtype=ModflowUsgCln.get_gwconn_dtype(structured)
         )
 
         # Define CLN geometry types
+        self.nconduityp = nconduityp
+        self.cln_circ = cln_circ
+        self.nrectyp = nrectyp
+        self.cln_rect = cln_rect
+        self.bhe = bhe
+        self.grav = grav
+        self.visk = visk
+
         self._define_cln_geometries()
 
         # Define CLN ibound and initial heads properties
@@ -327,7 +299,7 @@ class ModflowUsgCln(Package):
             model,
             (self.nclnnds,),
             np.int32,
-            self.ibound,
+            ibound,
             name="ibound",
             locat=self.unit_number[0],
         )
@@ -336,26 +308,28 @@ class ModflowUsgCln(Package):
             model,
             (self.nclnnds,),
             np.float32,
-            self.strt,
+            strt,
             name="strt",
             locat=self.unit_number[0],
         )
 
         self.parent.add_package(self)
 
-    def __getattr__(self, name):
-        """
-        Get class attributes to avoid pylint E1101 false positives
-
-        Will only get called for undefined attributes, given dynamic variable definitions.
-        """
-        warnings.warn(
-            f"No member '{name}' contained in {type(self).__name__})"
-        )
-        return ""
+    @staticmethod
+    def _get_default_extension():
+        """Gets default package file extensions"""
+        return [
+            "cln",
+            "clncb",
+            "clnhd",
+            "clndd",
+            "clnib",
+            "clncn",
+            "clnmb",
+        ]
 
     def _define_cln_networks(self, model):
-        """Initialises CLN netoworks"""
+        """Initialises CLN networks."""
         if self.ncln is None:
             raise Exception("mfcln: CLN network not defined")
 
@@ -418,7 +392,7 @@ class ModflowUsgCln(Package):
                 raise Exception("mfcln: ja_cln must be provided")
             if abs(self.ja_cln[0]) != 1:
                 raise Exception(
-                    "mfcln: first ja_cln entry (node 1) is " "not 1 or -1."
+                    "mfcln: first ja_cln entry (node 1) is not 1 or -1."
                 )
             self.ja_cln = Util2d(
                 model,
@@ -635,6 +609,11 @@ class ModflowUsgCln(Package):
         """
         Write the package file.
 
+        Parameters
+        ----------
+        f : filename or file handle
+            File to write to.
+
         Returns
         -------
         None
@@ -693,7 +672,7 @@ class ModflowUsgCln(Package):
         f_cln.close()
 
     def _write_items_0_1(self, f_cln):
-        """writes cln items 0 and 1"""
+        """writes cln items 0 and 1."""
         if self.transient or self.printiaja:
             f_cln.write("OPTIONS   ")
             if self.transient:
@@ -756,7 +735,7 @@ class ModflowUsgCln(Package):
         """
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
-            + "but received type: {type(model)}."
+            f"but received type: {type(model)}."
         )
         assert isinstance(model, ModflowUsg), msg
 
@@ -834,23 +813,20 @@ class ModflowUsgCln(Package):
         # reset unit numbers
         unitnumber = ModflowUsgCln._defaultunit()
         filenames = [None] * 7
+        extension = cls._get_default_extension()
         if ext_unit_dict is not None:
             unitnumber[0], filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowUsgCln._ftype()
+                ext_unit_dict, filetype=cls._ftype()
             )
             file_unit_items = [iclncb, iclnhd, iclndd, iclnib, iclncn, iclnmb]
-            funcs = (
-                [lambda clni: abs(clni)]
-                + [lambda clni: clni] * 3
-                + [lambda clni: abs(clni)] * 2
-            )
+            funcs = [abs] + [int] * 3 + [abs] * 2
             for idx, (item, func) in enumerate(zip(file_unit_items, funcs)):
                 if item > 0:
                     (
                         unitnumber[idx + 1],
                         filenames[idx + 1],
                     ) = model.get_ext_dict_attr(ext_unit_dict, unit=func(item))
-                    model.add_pop_key_list(func(iclncb))
+                    model.add_pop_key_list(func(item))
 
         # create dis object instance
         cln = cls(
@@ -885,7 +861,7 @@ class ModflowUsgCln(Package):
 
     @staticmethod
     def _load_items_0_1(f, model):
-        """Loads items 0 and 1 from filehandle f"""
+        """Loads items 0 and 1 from filehandle f."""
         # Options
         transient = False
         printiaja = False

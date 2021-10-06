@@ -92,41 +92,24 @@ class ModflowUsgGnc(Package):
         unitnumber=None,
         filenames=None,
     ):
-        """Package constructor"""
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
-            + "but received type: {type(model)}."
+            f"but received type: {type(model)}."
         )
         assert isinstance(model, ModflowUsg), msg
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowUsgGnc._defaultunit()
-
-        # set filenames
-        if filenames is None:
-            filenames = [None]
-        elif isinstance(filenames, str):
-            filenames = [filenames]
-
-        # Fill namefile items
-        name = [ModflowUsgGnc._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
+            unitnumber = self._defaultunit()
 
         # Call ancestor's init to set self.parent, extension, name and
         # unit number
-        Package.__init__(
-            self,
+        super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=self._prepare_filenames(filenames),
         )
 
         self._generate_heading()
@@ -174,6 +157,11 @@ class ModflowUsgGnc(Package):
     def write_file(self, f=None):
         """
         Write the package file.
+
+        Parameters
+        ----------
+        f : filename or file handle
+            File to write to.
 
         Returns
         -------
@@ -267,7 +255,7 @@ class ModflowUsgGnc(Package):
         """
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
-            + "but received type: {type(model)}."
+            f"but received type: {type(model)}."
         )
         assert isinstance(model, ModflowUsg), msg
 
@@ -334,7 +322,7 @@ class ModflowUsgGnc(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowUsgGnc._ftype()
+                ext_unit_dict, filetype=cls._ftype()
             )
 
         return cls(

@@ -6,6 +6,7 @@ pakbase module
 """
 import abc
 import os
+import inspect
 import webbrowser as wb
 
 import numpy as np
@@ -433,6 +434,19 @@ class Package(PackageInterface):
     """
     Base package class from which most other packages are derived.
 
+    Parameters
+    ----------
+    parent : object
+        Parent model object.
+    extension : str or list, default "glo"
+        File extension, without ".", use list to describe more than one.
+    name : str or list, default "GLOBAL"
+        Package name, use list to describe more than one.
+    unit_number : int or list, default 1
+        Unit number, use list to describe more than one.
+    filenames : str or list, default None
+    allowDuplicates : bool, default False
+        Allow more than one instance of package in parent.
     """
 
     def __init__(
@@ -441,20 +455,17 @@ class Package(PackageInterface):
         extension="glo",
         name="GLOBAL",
         unit_number=1,
-        extra="",
         filenames=None,
         allowDuplicates=False,
     ):
-        """
-        Package init
-
-        """
         # To be able to access the parent model object's attributes
         self.parent = parent
         if not isinstance(extension, list):
             extension = [extension]
         self.extension = []
         self.file_name = []
+        if isinstance(filenames, str):
+            filenames = [filenames]
         for idx, e in enumerate(extension):
             self.extension.append(e)
             file_name = f"{self.parent.name}.{e}"
@@ -471,10 +482,6 @@ class Package(PackageInterface):
         if not isinstance(unit_number, list):
             unit_number = [unit_number]
         self.unit_number = unit_number
-        if not isinstance(extra, list):
-            self.extra = len(self.unit_number) * [extra]
-        else:
-            self.extra = extra
         self.url = "index.html"
         self.allowDuplicates = allowDuplicates
 
@@ -676,6 +683,21 @@ class Package(PackageInterface):
         )
 
     @staticmethod
+    def _prepare_filenames(filenames, num=1):
+        """Prepare filenames parameter."""
+        if filenames is None:
+            return [None] * num
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+        if isinstance(filenames, list):
+            if len(filenames) < num:
+                filenames += [None] * (num - len(filenames))
+            elif len(filenames) > num:
+                filenames = filenames[:num]
+            return filenames
+        raise ValueError(f"unexpected filenames: {filenames}")
+
+    @staticmethod
     def add_to_dtype(dtype, field_names, field_types):
         """
         Add one or more fields to a structured array data type
@@ -853,12 +875,10 @@ class Package(PackageInterface):
         return
 
     @staticmethod
-    def load(f, model, pak_type=None, ext_unit_dict=None, **kwargs):
+    def load(f, model, pak_type, ext_unit_dict=None, **kwargs):
         """
         Default load method for standard boundary packages.
         """
-        if pak_type is None:
-            return
 
         # parse keywords
         if "nper" in kwargs:
