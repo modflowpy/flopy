@@ -1,23 +1,25 @@
 """
-mfusgwel module.  Contains the ModflowUsgWel class. Note that the user can access
+mfusgwel module.
+
+Contains the ModflowUsgWel class. Note that the user can access
 the ModflowUsgWel class as `flopy.modflowusg.ModflowUsgWel`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?wel.htm>`_.
-
 """
+from copy import deepcopy
 import numpy as np
-from ..utils import MfList
-from ..pakbase import Package
-from ..utils.recarray_utils import create_empty_recarray
-from ..utils.flopy_io import ulstrd
-import warnings
+from numpy.lib.recfunctions import stack_arrays
 
+from .mfusg import ModflowUsg
+from ..modflow.mfwel import ModflowWel
 from ..modflow.mfparbc import ModflowParBc as mfparbc
+from ..utils.flopy_io import ulstrd
+from ..utils import MfList
 
 
-class ModflowUsgWel(Package):
+class ModflowUsgWel(ModflowWel):
     """
     MODFLOW Well Package Class.
 
@@ -109,6 +111,8 @@ class ModflowUsgWel(Package):
                 [iclnnode, flux]
                 ]
             }
+    dtype : custom datatype of stress_period_data.
+        If None the default well datatype will be applied (default is None).
     extension : string
         Filename extension (default is 'wel')
     options : list of strings
@@ -126,6 +130,9 @@ class ModflowUsgWel(Package):
         number greater than zero. To define the names for all package files
         (input and output) the length of the list of strings should be 2.
         Default is None.
+    add_package : bool
+        Flag to add the initialised package object to the parent model object.
+        Default is True.
 
     Attributes
     ----------
@@ -148,7 +155,7 @@ class ModflowUsgWel(Package):
     --------
 
     >>> import flopy
-    >>> m = flopy.modflow.Modflow()
+    >>> m = flopy.modflowusg.ModflowUsg()
     >>> lrcq = {0:[[2, 3, 4, -100.]], 1:[[2, 3, 4, -100.]]}
     >>> wel = flopy.modflowusg.ModflowUsgWel(m, stress_period_data=lrcq)
 
@@ -160,132 +167,133 @@ class ModflowUsgWel(Package):
         ipakcb=None,
         stress_period_data=None,
         cln_stress_period_data=None,
+        dtype=None,
         extension="wel",
         options=None,
         binary=False,
         unitnumber=None,
         filenames=None,
+        add_package=True,
     ):
-        """
-        Package constructor.
-
-        """
-        # set default unit number of one is not specified
-        if unitnumber is None:
-            unitnumber = ModflowUsgWel._defaultunit()
+        msg = (
+            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            f"but received type: {type(model)}."
+        )
+        assert isinstance(model, ModflowUsg), msg
 
         # set filenames
-        if filenames is None:
-            filenames = [None, None, None]
-        elif isinstance(filenames, str):
-            filenames = [filenames, None, None]
-        elif isinstance(filenames, list):
-            if len(filenames) < 3:
-                for idx in range(len(filenames), 3):
-                    filenames.append(None)
+        filenames = self._prepare_filenames(filenames)
 
-        # update external file information with cbc output, if necessary
-        if ipakcb is not None:
-            fname = filenames[1]
-            model.add_output_file(
-                ipakcb, fname=fname, package=ModflowUsgWel._ftype()
-            )
-        else:
-            ipakcb = 0
-
-        # Fill namefile items
-        name = [ModflowUsgWel._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and
-        # unit number
-        Package.__init__(
-            self,
+        super().__init__(
             model,
+            ipakcb=ipakcb,
+            stress_period_data=stress_period_data,
+            dtype=dtype,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            options=options,
+            binary=binary,
+            unitnumber=unitnumber,
+            filenames=filenames,
+            add_package=False,
         )
-
-        self._generate_heading()
-        self.url = "wel.htm"
-
-        self.ipakcb = ipakcb
-
-        if options is None:
-            options = []
 
         self.autoflowreduce = False
         self.iunitafr = 0
 
-        self.options = options
-        for idx, opt in enumerate(options):
-            if "autoflowreduce" in opt:
+        for opt in self.options:
+            if "autoflowreduce" in opt.lower():
                 self.autoflowreduce = True
-            if "iunitafr" in opt:
-                t = opt.strip().split()
-                self.iunitafr = int(t[1])
+            if "iunitafr" in opt.lower():
+                line_text = opt.strip().split()
+                self.iunitafr = int(line_text[1])
 
         if self.iunitafr > 0:
-            fname = filenames[2]
             model.add_output_file(
                 self.iunitafr,
-                fname=fname,
+                fname=filenames[1],
                 extension="afr",
                 binflag=False,
-                package=ModflowUsgWel._ftype(),
+                package=self._ftype(),
             )
 
-        # initialize MfList
-        self.dtype = ModflowUsgWel.get_default_dtype(model.structured)
-        self.stress_period_data = MfList(
-            self, stress_period_data, binary=binary
-        )
-
-        self.dtype = ModflowUsgWel.get_default_dtype(structured=False)
+        # initialize CLN MfList
+        # CLN WELs are always read as CLNNODE Q, so dtype must be of unstructured form
+        dtype_cln = ModflowUsgWel.get_default_dtype(structured=False)
+        self.dtype = dtype_cln
         self.cln_stress_period_data = MfList(
             self, cln_stress_period_data, binary=binary
         )
+        # reset self.dtype for cases where the model is structured but CLN WELs are used
+        self.dtype = ModflowUsgWel.get_default_dtype(
+            structured=model.structured
+        )
 
-        self.parent.add_package(self)
+        if add_package:
+            self.parent.add_package(self)
 
-    def _ncells(self):
-        """Maximum number of cells that have wells (developed for
-        MT3DMS SSM package).
+        return
 
+    @staticmethod
+    def _get_kper_data(kper, first, stress_period_data):
+        """
+        Gets boundary condition stress period data for a given stress period.
+
+        Parameters:
+        ----------
+            kper: int
+                stress period (base 0)
+            first : int
+                First stress period for which stress period data is defined
+            stress_period_data : Numpy recarray or int or None
+                Flopy boundary condition stress_period_data object
+                (with a "data" attribute that is keyed on kper)
         Returns
         -------
-        ncells: int
-            maximum number of wel cells
-
+        itmp : int
+            Number of boundary conditions for stress period kper
+        kper_data : Numpy recarray
+            Boundary condition data for stress period kper
         """
-        return self.stress_period_data.mxact
+        kpers = list(stress_period_data.data.keys())
+        # Fill missing early kpers with 0
+        kper_data = None
+        if kper < first:
+            itmp = 0
+        elif kper in kpers:
+            kper_data = deepcopy(stress_period_data.data[kper])
+            kper_vtype = stress_period_data.vtype[kper]
+            if kper_vtype == np.recarray:
+                itmp = kper_data.shape[0]
+                lnames = [name.lower() for name in kper_data.dtype.names]
+                for idx in ["k", "i", "j", "node"]:
+                    if idx in lnames:
+                        kper_data[idx] += 1
+            elif (kper_vtype == int) or (kper_vtype is None):
+                itmp = kper_data
+        # Fill late missing kpers with -1
+        else:
+            itmp = -1
+
+        return itmp, kper_data
 
     def write_file(self, f=None):
         """
         Write the package file.
 
         Parameters:
+        ----------
             f: (str) optional file name
 
         Returns
         -------
         None
-
         """
-        if f is not None:
-            if isinstance(f, str):
-                f_wel = open(f, "w")
-            else:
-                f_wel = f
-        else:
+        if f is None:
             f_wel = open(self.fn_path, "w")
+        elif isinstance(f, str):
+            f_wel = open(f, "w")
+        else:
+            f_wel = f
 
         f_wel.write(f"{self.heading}\n")
 
@@ -299,7 +307,7 @@ class ModflowUsgWel(Package):
         line += "\n"
         f_wel.write(line)
 
-        nrow, ncol, nlay, nper = self.parent.get_nrow_ncol_nlay_nper()
+        _, _, _, nper = self.parent.get_nrow_ncol_nlay_nper()
 
         kpers = list(self.stress_period_data.data.keys())
         if len(kpers) > 0:
@@ -320,7 +328,6 @@ class ModflowUsgWel(Package):
             cln_last = -1
 
         maxper = max(nper, last, cln_last)
-        loop_over_kpers = list(range(0, maxper))
 
         if first < 0:
             first = maxper
@@ -330,44 +337,17 @@ class ModflowUsgWel(Package):
         fmt_string = self.stress_period_data.fmt_string
         cln_fmt_string = self.cln_stress_period_data.fmt_string
 
-        for kper in loop_over_kpers:
-            # Fill missing early kpers with 0
-            if kper < first:
-                itmp = 0
-            elif kper in kpers:
-                kper_data = self.stress_period_data.data[kper]
-                kper_vtype = self.stress_period_data.vtype[kper]
-                if kper_vtype == np.recarray:
-                    itmp = kper_data.shape[0]
-                    lnames = [name.lower() for name in kper_data.dtype.names]
-                    for idx in ["k", "i", "j", "node"]:
-                        if idx in lnames:
-                            kper_data[idx] += 1
-                elif (kper_vtype == int) or (kper_vtype is None):
-                    itmp = kper_data
-            # Fill late missing kpers with -1
-            else:
-                itmp = -1
+        for kper in range(maxper):
 
-            # Fill missing early kpers with 0
-            if kper < cln_first:
-                itmpcln = 0
-            elif kper in cln_kpers:
-                cln_kper_data = self.cln_stress_period_data.data[kper]
-                cln_kper_vtype = self.cln_stress_period_data.vtype[kper]
-                if cln_kper_vtype == np.recarray:
-                    itmpcln = cln_kper_data.shape[0]
-                    lnames = [
-                        name.lower() for name in cln_kper_data.dtype.names
-                    ]
-                    for idx in ["k", "i", "j", "node"]:
-                        if idx in lnames:
-                            cln_kper_data[idx] += 1
-                elif (cln_kper_vtype == int) or (cln_kper_vtype is None):
-                    itmpcln = cln_kper_data
-            # Fill late missing kpers with -1
-            else:
-                itmpcln = -1
+            # gw cell wells
+            itmp, kper_data = self._get_kper_data(
+                kper, first, self.stress_period_data
+            )
+
+            # cln wells
+            itmpcln, cln_kper_data = self._get_kper_data(
+                kper, cln_first, self.cln_stress_period_data
+            )
 
             f_wel.write(
                 f" {itmp:9d} {0:9d} {itmpcln:9d} # stress period {kper + 1}\n"
@@ -382,38 +362,204 @@ class ModflowUsgWel(Package):
 
         f_wel.close()
 
-    def add_record(self, kper, index, values):
-        try:
-            self.stress_period_data.add_record(kper, index, values)
-        except Exception as e:
-            raise Exception(f"mfwel error adding record to list: {e!s}")
+    @staticmethod
+    def _load_dataset2(line):
+        """load mfusgwel dataset 2 from line."""
+        # dataset 2 -- MXACTW IWELCB [Option]
+        line_text = line.strip().split()
+        n_items = 2
+        ipakcb = 0
+        if len(line_text) > 1:
+            ipakcb = int(line_text[1])
+
+        options = []
+        aux_names = []
+        iunitafr = 0
+        if len(line_text) > n_items:
+            item_n = n_items
+            while item_n < len(line_text):
+                toption = line_text[item_n]
+                if toption.lower() == "noprint":
+                    options.append(toption.lower())
+                elif toption.lower() == "autoflowreduce":
+                    options.append(toption.lower())
+                elif toption.lower() == "iunitafr":
+                    options.append(" ".join(line_text[item_n : item_n + 2]))
+                    iunitafr = int(line_text[item_n + 1])
+                    item_n += 1
+                elif "aux" in toption.lower():
+                    options.append(" ".join(line_text[item_n : item_n + 2]))
+                    aux_names.append(line_text[item_n + 1].lower())
+                    item_n += 1
+                item_n += 1
+
+        return ipakcb, options, aux_names, iunitafr
 
     @staticmethod
-    def get_default_dtype(structured=True):
-        if structured:
-            dtype = np.dtype(
-                [
-                    ("k", int),
-                    ("i", int),
-                    ("j", int),
-                    ("flux", np.float32),
-                ]
+    def _load_itmp_itmpp_itmpcln(line):
+        """Reads itmp, itmpp and itmpcln from line. Returns None for blank line."""
+        # strip comments from line
+        line = line[: line.find("#")]
+
+        if line == "":
+            return None, None, None
+        line_text = line.strip().split()
+        # strip non-numerics from line items
+        line_text = [item for item in line_text if item.isdigit()]
+
+        itmp = int(line_text[0])
+        itmpp = 0
+        if len(line_text) > 1:
+            itmpp = int(line_text[1])
+        itmpcln = 0
+        if len(line_text) > 2:
+            itmpcln = int(line_text[2])
+
+        return itmp, itmpp, itmpcln
+
+    @staticmethod
+    def _load_dataset6(
+        f, itmp, model, aux_names, ext_unit_dict, structured=False
+    ):
+        """
+        Reads dataset 6(a, b or c) from open file
+
+        Parameters
+        ----------
+        f : open file handle
+        itmp : int
+            Number of items to read from dataset6a
+        model : Flopy model object
+        aux_names : list of auxillary variable names
+        ext_unit_dict : dictionary, optional
+            External unit dictionary.
+        structured : bool, default if False.
+            model.structured, or if loading CLNs from dataset6a
+            even for a structured model, False.
+
+        Returns
+        -------
+        bnd_output : Numpy recarray
+            Wel Dataset 6a for itmp values
+        """
+
+        # get the list columns that should be scaled with sfac
+        sfac_columns = ModflowUsgWel._get_sfac_columns()
+
+        if itmp == 0:
+            bnd_output = None
+            current = ModflowUsgWel.get_empty(
+                itmp, aux_names=aux_names, structured=structured
             )
+        elif itmp > 0:
+            current = ModflowUsgWel.get_empty(
+                itmp, aux_names=aux_names, structured=structured
+            )
+            current = ulstrd(
+                f, itmp, current, model, sfac_columns, ext_unit_dict
+            )
+            if structured:
+                current["k"] -= 1
+                current["i"] -= 1
+                current["j"] -= 1
+            else:
+                current["node"] -= 1
+            bnd_output = np.recarray.copy(current)
         else:
-            dtype = np.dtype([("node", int), ("flux", np.float32)])
-        return dtype
+            if current is None:
+                bnd_output = None
+            else:
+                bnd_output = np.recarray.copy(current)
+
+        return bnd_output
 
     @staticmethod
-    def get_empty(ncells=0, aux_names=None, structured=True):
-        # get an empty recarray that corresponds to dtype
-        dtype = ModflowUsgWel.get_default_dtype(structured=structured)
-        if aux_names is not None:
-            dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        return create_empty_recarray(ncells, dtype, default_value=-1.0e10)
+    def _load_dataset7(f, itmpp, model, aux_names, pak_parms, bnd_output=None):
+        """
+        Reads named parameters from wel file
 
-    @staticmethod
-    def _get_sfac_columns():
-        return ["flux"]
+        Parameters
+        ----------
+        f : open file handle
+        itmpp : int, must be > 0
+            Number of named parameters to read from dataset7
+        model : Flopy model object
+        aux_names : list of auxillary variable names
+        pak_parms : named package parameters
+            read using mfparbc.load()
+        bnd_output : Numpy recarray of non-Named Parameter stress period data
+            Named parameters will be stacked on top of this.
+
+        Returns
+        -------
+        bnd_output : Numpy recarray
+            Wel Dataset 7 for itmpp values
+        """
+
+        if itmpp <= 0:
+            return bnd_output
+
+        iparm = 0
+        while iparm < itmpp:
+            line = f.readline()
+            line_text = line.strip().split()
+            pname = line_text[0].lower()
+            iname = "static"
+            try:
+                kper_iname = line_text[1].lower()
+                instance_dict = pak_parms.bc_parms[pname][1]
+                if kper_iname in instance_dict:
+                    iname = kper_iname
+                else:
+                    iname = "static"
+            except ValueError:
+                if model.verbose:
+                    print(f"  implicit static instance for parameter {pname}")
+
+            par_dict, current_dict = pak_parms.get(pname)
+            data_dict = current_dict[iname]
+
+            par_current = ModflowUsgWel.get_empty(
+                par_dict["nlst"],
+                aux_names=aux_names,
+                structured=model.structured,
+            )
+
+            #  get appropriate parval
+            if model.mfpar.pval is None:
+                parval = float(par_dict["parval"])
+            else:
+                try:
+                    parval = float(model.mfpar.pval.pval_dict[pname])
+                except ValueError:
+                    parval = float(par_dict["parval"])
+
+            # fill current parameter data (par_current)
+            for ibnd, vals in enumerate(data_dict):
+                vals = tuple(vals)
+                par_current[ibnd] = tuple(vals[: len(par_current.dtype.names)])
+
+            if model.structured:
+                par_current["k"] -= 1
+                par_current["i"] -= 1
+                par_current["j"] -= 1
+            else:
+                par_current["node"] -= 1
+
+            par_current["flux"] *= parval
+
+            if bnd_output is None:
+                bnd_output = np.recarray.copy(par_current)
+            else:
+                bnd_output = stack_arrays(
+                    (bnd_output, par_current),
+                    asrecarray=True,
+                    usemask=False,
+                )
+
+            iparm += 1
+
+        return bnd_output
 
     @classmethod
     def load(cls, f, model, nper=None, ext_unit_dict=None):
@@ -447,21 +593,23 @@ class ModflowUsgWel(Package):
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
         >>> wel = flopy.modflowusg.ModflowUsgWel.load('test.wel', m)
-
         """
+        msg = (
+            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            f"but received type: {type(model)}."
+        )
+        assert isinstance(model, ModflowUsg), msg
 
         if model.verbose:
             print("loading wel package file...")
 
         # open the file if not already open
-        openfile = not hasattr(f, "read")
-        if openfile:
+        if not hasattr(f, "read"):
             filename = f
             f = open(filename, "r")
         elif hasattr(f, "name"):
             filename = f.name
-        else:
-            filename = "?"
+            f = open(filename, "r")
 
         # dataset 0 -- header
         while True:
@@ -472,11 +620,9 @@ class ModflowUsgWel(Package):
         # dataset 1a -- check for parameters
         npwel = 0
         if "parameter" in line.lower():
-            t = line.strip().split()
-            npwel = int(t[1])
-            mxl = 0
+            line_text = line.strip().split()
+            npwel = int(line_text[1])
             if npwel > 0:
-                mxl = int(t[2])
                 if model.verbose:
                     print(
                         f"   Parameters detected. Number of parameters = {npwel}"
@@ -484,191 +630,52 @@ class ModflowUsgWel(Package):
             line = f.readline()
 
         # dataset 2 -- MXACTW IWELCB [Option]
-        t = line.strip().split()
-        imax = 2
-        ipakcb = 0
-        try:
-            ipakcb = int(t[1])
-        except:
-            if model.verbose:
-                print(f"   implicit ipakcb in {filename}")
+        ipakcb, options, aux_names, iunitafr = cls._load_dataset2(line)
 
-        options = []
-        aux_names = []
-        iunitafr = 0
-        if len(t) > imax:
-            it = imax
-            while it < len(t):
-                toption = t[it]
-                if toption.lower() == "noprint":
-                    options.append(toption.lower())
-                elif toption.lower() == "autoflowreduce":
-                    options.append(toption.lower())
-                elif toption.lower() == "iunitafr":
-                    options.append(" ".join(t[it : it + 2]))
-                    iunitafr = t[it + 1]
-                    it += 1
-                elif "aux" in toption.lower():
-                    options.append(" ".join(t[it : it + 2]))
-                    aux_names.append(t[it + 1].lower())
-                    it += 1
-                it += 1
-
-        # get the list columns that should be scaled with sfac
-        sfac_columns = ModflowUsgWel._get_sfac_columns()
-
-        # dataset 3 -- read parameter data
+        # dataset 3 and 4 -- read parameter data
         if npwel > 0:
-            dt = ModflowUsgWel.get_empty(
+            par_dt = ModflowUsgWel.get_empty(
                 1, aux_names=aux_names, structured=model.structured
             ).dtype
             # dataset 4 --
             pak_parms = mfparbc.load(
-                f, npwel, dt, model, ext_unit_dict, model.verbose
+                f, npwel, par_dt, model, ext_unit_dict, model.verbose
             )
 
         if nper is None:
-            nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
+            _, _, _, nper = model.get_nrow_ncol_nlay_nper()
 
         # dataset 5 -- read data for every stress period
         bnd_output = None
         stress_period_data = {}
-        current = None
 
         cln_bnd_output = None
         cln_stress_period_data = {}
-        cln_current = None
 
         for iper in range(nper):
             if model.verbose:
                 msg = f"   loading well data for kper {iper + 1:5d}"
                 print(msg)
             line = f.readline()
-            if line == "":
+            itmp, itmpp, itmpcln = cls._load_itmp_itmpp_itmpcln(line)
+            if itmp is None:
                 break
-            t = line.strip().split()
-            itmp = int(t[0])
-            itmpp = 0
-            try:
-                itmpp = int(t[1])
-            except:
-                if model.verbose:
-                    print(f"   implicit itmpp in {filename}")
-
-            try:
-                itmpcln = int(t[2])
-            except:
-                itmpcln = 0
 
             # dataset 6a -- read well data
-            if itmp == 0:
-                bnd_output = None
-                current = ModflowUsgWel.get_empty(
-                    itmp, aux_names=aux_names, structured=model.structured
-                )
-            elif itmp > 0:
-                current = ModflowUsgWel.get_empty(
-                    itmp, aux_names=aux_names, structured=model.structured
-                )
-                current = ulstrd(
-                    f, itmp, current, model, sfac_columns, ext_unit_dict
-                )
-                if model.structured:
-                    current["k"] -= 1
-                    current["i"] -= 1
-                    current["j"] -= 1
-                else:
-                    current["node"] -= 1
-                bnd_output = np.recarray.copy(current)
-            else:
-                if current is None:
-                    bnd_output = None
-                else:
-                    bnd_output = np.recarray.copy(current)
+            bnd_output = cls._load_dataset6(
+                f, itmp, model, aux_names, ext_unit_dict, model.structured
+            )
 
             # dataset 6c -- read CLN well data
-            if itmpcln == 0:
-                cln_bnd_output = None
-                cln_current = ModflowUsgWel.get_empty(
-                    itmp, aux_names=aux_names, structured=False
-                )
-            elif itmpcln > 0:
-                cln_current = ModflowUsgWel.get_empty(
-                    itmpcln, aux_names=aux_names, structured=False
-                )
-                cln_current = ulstrd(
-                    f, itmpcln, cln_current, model, sfac_columns, ext_unit_dict
-                )
-                cln_current["node"] -= 1
-                cln_bnd_output = np.recarray.copy(cln_current)
-            else:
-                if cln_current is None:
-                    cln_bnd_output = None
-                else:
-                    cln_bnd_output = np.recarray.copy(cln_current)
+            cln_bnd_output = cls._load_dataset6(
+                f, itmpcln, model, aux_names, ext_unit_dict, False
+            )
 
             # dataset 7 -- parameter data
-            for iparm in range(itmpp):
-                line = f.readline()
-                t = line.strip().split()
-                pname = t[0].lower()
-                iname = "static"
-                try:
-                    tn = t[1]
-                    c = tn.lower()
-                    instance_dict = pak_parms.bc_parms[pname][1]
-                    if c in instance_dict:
-                        iname = c
-                    else:
-                        iname = "static"
-                except:
-                    if model.verbose:
-                        print(
-                            f"  implicit static instance for parameter {pname}"
-                        )
-
-                par_dict, current_dict = pak_parms.get(pname)
-                data_dict = current_dict[iname]
-
-                par_current = ModflowUsgWel.get_empty(
-                    par_dict["nlst"],
-                    aux_names=aux_names,
-                    structured=model.structured,
+            if itmpp > 0:
+                bnd_output = cls._load_dataset7(
+                    f, itmpp, model, aux_names, pak_parms, bnd_output
                 )
-
-                #  get appropriate parval
-                if model.mfpar.pval is None:
-                    parval = float(par_dict["parval"])
-                else:
-                    try:
-                        parval = float(model.mfpar.pval.pval_dict[pname])
-                    except:
-                        parval = float(par_dict["parval"])
-
-                # fill current parameter data (par_current)
-                for ibnd, t in enumerate(data_dict):
-                    t = tuple(t)
-                    par_current[ibnd] = tuple(
-                        t[: len(par_current.dtype.names)]
-                    )
-
-                if model.structured:
-                    par_current["k"] -= 1
-                    par_current["i"] -= 1
-                    par_current["j"] -= 1
-                else:
-                    par_current["node"] -= 1
-
-                par_current["flux"] *= parval
-
-                if bnd_output is None:
-                    bnd_output = np.recarray.copy(par_current)
-                else:
-                    bnd_output = stack_arrays(
-                        (bnd_output, par_current),
-                        asrecarray=True,
-                        usemask=False,
-                    )
 
             if bnd_output is None:
                 stress_period_data[iper] = itmp
@@ -680,22 +687,23 @@ class ModflowUsgWel(Package):
             else:
                 cln_stress_period_data[iper] = cln_bnd_output
 
-        if openfile:
+        if hasattr(f, "read"):
             f.close()
 
         # set package unit number
         filenames = [None, None, None]
+        unitnumber = ModflowUsgWel._defaultunit()
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowUsgWel._ftype()
+                ext_unit_dict, filetype=cls._ftype()
             )
             if ipakcb > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
+                _, filenames[1] = model.get_ext_dict_attr(
                     ext_unit_dict, unit=ipakcb
                 )
                 model.add_pop_key_list(ipakcb)
             if iunitafr > 0:
-                iu, filenames[2] = model.get_ext_dict_attr(
+                _, filenames[2] = model.get_ext_dict_attr(
                     ext_unit_dict, unit=iunitafr
                 )
                 model.add_pop_key_list(iunitafr)
@@ -705,17 +713,10 @@ class ModflowUsgWel(Package):
             ipakcb=ipakcb,
             stress_period_data=stress_period_data,
             cln_stress_period_data=cln_stress_period_data,
+            dtype=ModflowUsgWel.get_default_dtype(structured=model.structured),
             options=options,
             unitnumber=unitnumber,
             filenames=filenames,
         )
 
         return wel
-
-    @staticmethod
-    def _ftype():
-        return "WEL"
-
-    @staticmethod
-    def _defaultunit():
-        return 20

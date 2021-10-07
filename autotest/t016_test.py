@@ -25,11 +25,11 @@ def test_usg_disu_load():
     assert os.path.isfile(fname), f"disu file not found {fname}"
 
     # Create the model
-    m = flopy.modflow.Modflow(modelname="usgload", verbose=True)
+    m = flopy.modflowusg.ModflowUsg(modelname="usgload", verbose=True)
 
     # Load the disu file
-    disu = flopy.modflow.ModflowDisU.load(fname, m)
-    assert isinstance(disu, flopy.modflow.ModflowDisU)
+    disu = flopy.modflowusg.ModflowUsgDisU.load(fname, m)
+    assert isinstance(disu, flopy.modflowusg.ModflowUsgDisU)
 
     # Change where model files are written
     model_ws = tpth
@@ -42,7 +42,7 @@ def test_usg_disu_load():
     )
 
     # Load disu file
-    disu2 = flopy.modflow.ModflowDisU.load(fname, m)
+    disu2 = flopy.modflowusg.ModflowUsgDisU.load(fname, m)
     for (key1, value1), (key2, value2) in zip(
         disu2.__dict__.items(), disu.__dict__.items()
     ):
@@ -67,11 +67,11 @@ def test_usg_sms_load():
     assert os.path.isfile(fname), f"sms file not found {fname}"
 
     # Create the model
-    m = flopy.modflow.Modflow(modelname="usgload", verbose=True)
+    m = flopy.modflowusg.ModflowUsg(modelname="usgload", verbose=True)
 
     # Load the sms file
-    sms = flopy.modflow.ModflowSms.load(fname, m)
-    assert isinstance(sms, flopy.modflow.ModflowSms)
+    sms = flopy.modflowusg.ModflowUsgSms.load(fname, m)
+    assert isinstance(sms, flopy.modflowusg.ModflowUsgSms)
 
     # Change where model files are written
     model_ws = tpth
@@ -84,7 +84,7 @@ def test_usg_sms_load():
     )
 
     # Load sms file
-    sms2 = flopy.modflow.ModflowSms.load(fname, m)
+    sms2 = flopy.modflowusg.ModflowUsgSms.load(fname, m)
     for (key1, value1), (key2, value2) in zip(
         sms2.__dict__.items(), sms.__dict__.items()
     ):
@@ -96,7 +96,7 @@ def test_usg_sms_load():
 
 
 def test_usg_model():
-    mf = flopy.modflow.Modflow(
+    mf = flopy.modflowusg.ModflowUsg(
         version="mfusg",
         structured=True,
         model_ws=tpth,
@@ -105,8 +105,8 @@ def test_usg_model():
     )
     dis = flopy.modflow.ModflowDis(mf, nlay=1, nrow=11, ncol=11)
     bas = flopy.modflow.ModflowBas(mf)
-    lpf = flopy.modflow.ModflowLpf(mf)
-    wel = flopy.modflow.ModflowWel(
+    lpf = flopy.modflowusg.ModflowUsgLpf(mf)
+    wel = flopy.modflowusg.ModflowUsgWel(
         mf, stress_period_data={0: [[0, 5, 5, -1.0]]}
     )
     ghb = flopy.modflow.ModflowGhb(
@@ -119,7 +119,7 @@ def test_usg_model():
         },
     )
     oc = flopy.modflow.ModflowOc(mf)
-    sms = flopy.modflow.ModflowSms(mf, options="complex")
+    sms = flopy.modflowusg.ModflowUsgSms(mf, options="complex")
 
     # run with defaults
     mf.write_input()
@@ -130,7 +130,7 @@ def test_usg_model():
     # try different complexity options; all should run successfully
     for complexity in ["simple", "moderate", "complex"]:
         print(f"testing MFUSG with sms complexity: {complexity}")
-        sms = flopy.modflow.ModflowSms(mf, options=complexity)
+        sms = flopy.modflowusg.ModflowUsgSms(mf, options=complexity)
         sms.write_file()
         if run:
             success, buff = mf.run_model()
@@ -148,22 +148,22 @@ def test_usg_load_01B():
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
-    m = flopy.modflow.Modflow(modelname="usgload_1b", verbose=True)
+    m = flopy.modflowusg.ModflowUsg(modelname="usgload_1b", verbose=True)
 
     # Load the model, with checking
     m = m.load(fname, check=True)
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
-    assert isinstance(m.disu, flopy.modflow.mfdisu.ModflowDisU), msg
+    assert isinstance(m.disu, flopy.modflowusg.mfusgdisu.ModflowUsgDisU), msg
     msg = "flopy failed on loading mfusg lpf package"
-    assert isinstance(m.lpf, flopy.modflow.mflpf.ModflowLpf), msg
+    assert isinstance(m.lpf, flopy.modflowusg.mfusglpf.ModflowUsgLpf), msg
     msg = "flopy failed on loading mfusg bas package"
     assert isinstance(m.bas6, flopy.modflow.mfbas.ModflowBas), msg
     msg = "flopy failed on loading mfusg oc package"
     assert isinstance(m.oc, flopy.modflow.mfoc.ModflowOc), msg
     msg = "flopy failed on loading mfusg sms package"
-    assert isinstance(m.sms, flopy.modflow.mfsms.ModflowSms), msg
+    assert isinstance(m.sms, flopy.modflowusg.mfusgsms.ModflowUsgSms), msg
 
 
 def test_usg_load_45usg():
@@ -173,26 +173,26 @@ def test_usg_load_45usg():
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
-    m = flopy.modflow.Modflow(modelname="45usg", verbose=True)
+    m = flopy.modflowusg.ModflowUsg(modelname="45usg", verbose=True)
 
     # Load the model, with checking.
     m = m.load(fname, check=True)
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
-    assert isinstance(m.disu, flopy.modflow.mfdisu.ModflowDisU), msg
+    assert isinstance(m.disu, flopy.modflowusg.mfusgdisu.ModflowUsgDisU), msg
     msg = "flopy failed on loading mfusg lpf package"
-    assert isinstance(m.lpf, flopy.modflow.mflpf.ModflowLpf), msg
+    assert isinstance(m.lpf, flopy.modflowusg.mfusglpf.ModflowUsgLpf), msg
     msg = "flopy failed on loading mfusg bas package"
     assert isinstance(m.bas6, flopy.modflow.mfbas.ModflowBas), msg
     msg = "flopy failed on loading mfusg oc package"
     assert isinstance(m.oc, flopy.modflow.mfoc.ModflowOc), msg
     msg = "flopy failed on loading mfusg sms package"
-    assert isinstance(m.sms, flopy.modflow.mfsms.ModflowSms), msg
+    assert isinstance(m.sms, flopy.modflowusg.mfusgsms.ModflowUsgSms), msg
     msg = "flopy failed on loading mfusg drn package"
     assert isinstance(m.drn, flopy.modflow.mfdrn.ModflowDrn), msg
     msg = "flopy failed on loading mfusg wel package"
-    assert isinstance(m.wel, flopy.modflow.mfwel.ModflowWel), msg
+    assert isinstance(m.wel, flopy.modflowusg.mfusgwel.ModflowUsgWel), msg
 
 
 def test_usg_rch_evt_models01():
@@ -205,9 +205,7 @@ usg_rch_evt.nam"
         "..", "examples", "data", "mfusg_test", "rch_evt_tests"
     )
     nam = "usg_rch_evt.nam"
-    m = flopy.modflow.Modflow.load(
-        nam, model_ws=model_ws, version="mfusg", exe_name=v
-    )
+    m = flopy.modflowusg.ModflowUsg.load(nam, model_ws=model_ws, exe_name=v)
     m.riv.check()
     m.model_ws = tpth
     m.write_input()
@@ -226,9 +224,7 @@ usg_rch_evt_nrchop2.nam"
         "..", "examples", "data", "mfusg_test", "rch_evt_tests"
     )
     nam = "usg_rch_evt_nrchop2.nam"
-    m = flopy.modflow.Modflow.load(
-        nam, model_ws=model_ws, version="mfusg", exe_name=v
-    )
+    m = flopy.modflowusg.ModflowUsg.load(nam, model_ws=model_ws, exe_name=v)
     m.model_ws = tpth
     m.write_input()
     if run:
@@ -246,9 +242,7 @@ def test_usg_rch_evt_models02a():
         "..", "examples", "data", "mfusg_test", "rch_evt_tests"
     )
     nam = "usg_rch_evt_nrchop2a.nam"
-    m = flopy.modflow.Modflow.load(
-        nam, model_ws=model_ws, version="mfusg", exe_name=v
-    )
+    m = flopy.modflowusg.ModflowUsg.load(nam, model_ws=model_ws, exe_name=v)
     m.model_ws = tpth
     m.write_input()
     if run:
@@ -263,9 +257,7 @@ def test_usg_ss_to_tr():
         "..", "examples", "data", "mfusg_test", "01A_nestedgrid_nognc"
     )
     nam = "flow.nam"
-    m = flopy.modflow.Modflow.load(
-        nam, model_ws=model_ws, version="mfusg", exe_name=v
-    )
+    m = flopy.modflowusg.ModflowUsg.load(nam, model_ws=model_ws, exe_name=v)
     m.model_ws = tpth
     m.disu.steady = [False]
     m.write_input()
@@ -273,9 +265,7 @@ def test_usg_ss_to_tr():
         success, buff = m.run_model()
         assert success
 
-    m = flopy.modflow.Modflow.load(
-        nam, model_ws=tpth, version="mfusg", exe_name=v
-    )
+    m = flopy.modflowusg.ModflowUsg.load(nam, model_ws=tpth, exe_name=v)
     if run:
         success, buff = m.run_model()
         assert success

@@ -1,16 +1,16 @@
 """
-mfusggnc module.  This is for the Ghost Node Correction (GNC) Package for MODFLOW-USG.
+mfusggnc module.
+
+This is for the Ghost Node Correction (GNC) Package for MODFLOW-USG.
 Contains the ModflowUsgGnc class. Note that the user can access
 the ModflowUsgGnc class as `flopy.modflowusg.ModflowUsgGnc`.
-
-
 """
 import numpy as np
 from ..pakbase import Package
 from ..utils.recarray_utils import create_empty_recarray
 from ..utils.flopy_io import ulstrd
 from ..modflow.mfparbc import ModflowParBc as mfparbc
-
+from .mfusg import ModflowUsg
 from .mfusg import fmt_string
 
 
@@ -76,7 +76,6 @@ class ModflowUsgGnc(Package):
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
     >>> gnc = flopy.modflowusg.ModflowUsgGnc(m)
-
     """
 
     def __init__(
@@ -93,34 +92,24 @@ class ModflowUsgGnc(Package):
         unitnumber=None,
         filenames=None,
     ):
+        msg = (
+            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            f"but received type: {type(model)}."
+        )
+        assert isinstance(model, ModflowUsg), msg
+
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowUsgGnc._defaultunit()
-
-        # set filenames
-        if filenames is None:
-            filenames = [None]
-        elif isinstance(filenames, str):
-            filenames = [filenames]
-
-        # Fill namefile items
-        name = [ModflowUsgGnc._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
+            unitnumber = self._defaultunit()
 
         # Call ancestor's init to set self.parent, extension, name and
         # unit number
-        Package.__init__(
-            self,
+        super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=self._prepare_filenames(filenames),
         )
 
         self._generate_heading()
@@ -168,6 +157,11 @@ class ModflowUsgGnc(Package):
     def write_file(self, f=None):
         """
         Write the package file.
+
+        Parameters
+        ----------
+        f : filename or file handle
+            File to write to.
 
         Returns
         -------
@@ -258,8 +252,12 @@ class ModflowUsgGnc(Package):
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
         >>> gnc = flopy.modflow.ModflowGnc.load('test.gnc', m)
-
         """
+        msg = (
+            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            f"but received type: {type(model)}."
+        )
+        assert isinstance(model, ModflowUsg), msg
 
         if model.verbose:
             print("loading gnc package file...")
@@ -283,30 +281,28 @@ class ModflowUsgGnc(Package):
                 break
 
         # Item 1 --NPGNCn MXGNn NGNCNPn MXADJn I2Kn ISYMGNCn IFLALPHAn [NOPRINT]
-        t = line.strip().split()
+        line_text = line.strip().split()
         imax = 7
         npgncn, mxgnn, numgnc, numalphaj, i2kn, isymgncn, iflalphan = (
-            int(t[0]),
-            int(t[1]),
-            int(t[2]),
-            int(t[3]),
-            int(t[4]),
-            int(t[5]),
-            int(t[6]),
+            int(line_text[0]),
+            int(line_text[1]),
+            int(line_text[2]),
+            int(line_text[3]),
+            int(line_text[4]),
+            int(line_text[5]),
+            int(line_text[6]),
         )
 
         options = []
-        if len(t) > imax:
-            if t[7].lower() == "noprint":
+        if len(line_text) > imax:
+            if line_text[7].lower() == "noprint":
                 options.append("noprint")
 
         # Item 2 -- read parameter data
         if npgncn > 0:
             dt = ModflowUsgGnc.get_empty(npgncn, mxgnn, iflalphan).dtype
             # Item 3 --
-            pak_parms = mfparbc.load(
-                f, npgncn, dt, model, ext_unit_dict, model.verbose
-            )
+            mfparbc.load(f, npgncn, dt, model, ext_unit_dict, model.verbose)
 
         # Item 4 -- read GNC data
         gncdata = ModflowUsgGnc.get_empty(numgnc, numalphaj, iflalphan)
@@ -326,7 +322,7 @@ class ModflowUsgGnc(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowUsgGnc._ftype()
+                ext_unit_dict, filetype=cls._ftype()
             )
 
         return cls(

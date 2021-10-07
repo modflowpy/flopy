@@ -28,6 +28,17 @@ iconst = 1
 iprn = -1
 
 
+# external exceptions for users
+class PackageLoadException(Exception):
+
+    """FloPy package load exception"""
+
+    def __init__(self, error, location=""):
+        """Initialize exception."""
+        self.message = error
+        super().__init__(f"{error} ({location})")
+
+
 class FileDataEntry:
     def __init__(self, fname, unit, binflag=False, output=False, package=None):
         self.fname = fname
@@ -642,6 +653,14 @@ class BaseModel(ModelInterface):
                 return self.dis.tr
             else:
                 return None
+
+        if item == "nper":
+            if self.dis is not None:
+                return self.dis.nper
+            elif self.disu is not None:
+                return self.disu.nper
+            else:
+                return 0
 
         if item == "start_datetime":
             if self.dis is not None:

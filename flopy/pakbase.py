@@ -605,7 +605,7 @@ class Package(PackageInterface):
                                     vo.dtype,
                                     v,
                                     name=vo.name,
-                                    fmtin=vo.fmtin,
+                                    fmtin=vo.format.fortran,
                                     locat=vo.locat,
                                 )
                             )

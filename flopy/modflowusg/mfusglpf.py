@@ -1,28 +1,35 @@
+# pylint: disable=W0223
 """
-mfusglpf module.  Contains the ModflowUsgLpf class. Note that the user can access
+mfusglpf module.
+
+Contains the ModflowUsgLpf class. Note that the user can access
 the ModflowUsgLpf class as `flopy.modflowusg.ModflowUsgLpf`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?lpf.htm>`_.
-
 """
 import numpy as np
+
 from ..modflow.mfpar import ModflowPar as mfpar
-
-from ..pakbase import Package
-from ..utils import Util2d, Util3d, read1d
+from ..modflow.mflpf import ModflowLpf
+from .mfusg import ModflowUsg
+from ..utils import Util2d, read1d
 from ..utils.flopy_io import line_parse
+from ..utils.utils_def import (
+    get_util2d_shape_for_layer,
+    get_unitnumber_from_ext_unit_dict,
+)
 
 
-class ModflowUsgLpf(Package):
+class ModflowUsgLpf(ModflowLpf):
     """
     MODFLOW Layer Property Flow Package Class.
 
     Parameters
     ----------
     model : model object
-        The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
+        The model object (of type :class:`flopy.modflowusg.mfusg.ModflowUsg`) to which
         this package will be added.
     ipakcb : int
         A flag that is used to determine if cell-by-cell budget data should be
@@ -128,7 +135,7 @@ class ModflowUsgLpf(Package):
         is a combination of the wetting threshold and a flag to indicate
         which neighboring cells can cause a cell to become wet.
         (default is -0.01).
-    ksat : float or array of floats (nrow, ncol)
+    ksat : float or array of floats (njag)
         inter-block saturated hydraulic conductivity or transmissivity
         (if IKCFLAG = 1) or the inter-block conductance (if IKCFLAG = - 1)
         of the connection between nodes n and m.
@@ -169,7 +176,9 @@ class ModflowUsgLpf(Package):
         number greater than zero. To define the names for all package files
         (input and output) the length of the list of strings should be 2.
         Default is None.
-
+    add_package : bool
+        Flag to add the initialised package object to the parent model object.
+        Default is True.
 
     Attributes
     ----------
@@ -188,11 +197,9 @@ class ModflowUsgLpf(Package):
 
     >>> import flopy
     >>> m = flopy.modflowusg.ModflowUsg()
+    >>> disu = flopy.modflowusg.ModflowUsgDisU(model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
     >>> lpf = flopy.modflowusg.ModflowUsgLpf(m)
-
     """
-
-    "Layer-property flow package class\n"
 
     def __init__(
         self,
@@ -226,80 +233,58 @@ class ModflowUsgLpf(Package):
         extension="lpf",
         unitnumber=None,
         filenames=None,
+        add_package=True,
     ):
+        """
+        Constructs the ModflowUsgBcf object.
 
-        # set default unit number of one is not specified
-        if unitnumber is None:
-            unitnumber = ModflowUsgLpf._defaultunit()
-
-        # set filenames
-        if filenames is None:
-            filenames = [None, None]
-        elif isinstance(filenames, str):
-            filenames = [filenames, None]
-        elif isinstance(filenames, list):
-            if len(filenames) < 2:
-                filenames.append(None)
-
-        # update external file information with cbc output, if necessary
-        if ipakcb is not None:
-            fname = filenames[1]
-            model.add_output_file(
-                ipakcb, fname=fname, package=ModflowUsgLpf._ftype()
-            )
-        else:
-            ipakcb = 0
-
-        # Fill namefile items
-        name = [ModflowUsgLpf._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
-            model,
-            extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+        Overrides the parent ModflowBcf object.
+        """
+        msg = (
+            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            f"but received type: {type(model)}."
         )
+        assert isinstance(model, ModflowUsg), msg
 
-        self._generate_heading()
-        self.url = "lpf.htm"
-        nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
+        super().__init__(
+            model,
+            laytyp=laytyp,
+            layavg=layavg,
+            chani=chani,
+            layvka=layvka,
+            laywet=laywet,
+            ipakcb=ipakcb,
+            hdry=hdry,
+            iwdflg=iwdflg,
+            wetfct=wetfct,
+            iwetit=iwetit,
+            ihdwet=ihdwet,
+            hk=hk,
+            hani=hani,
+            vka=vka,
+            ss=ss,
+            sy=sy,
+            vkcb=vkcb,
+            wetdry=wetdry,
+            storagecoefficient=storagecoefficient,
+            constantcv=constantcv,
+            thickstrt=thickstrt,
+            nocvcorrection=nocvcorrection,
+            novfc=novfc,
+            extension=extension,
+            unitnumber=unitnumber,
+            filenames=self._prepare_filenames(filenames),
+            add_package=False,
+        )
 
         dis = model.get_package("DIS")
         if dis is None:
             dis = model.get_package("DISU")
         structured = self.parent.structured
 
-        # item 1
-        self.ipakcb = ipakcb
-        self.hdry = (
-            hdry  # Head in cells that are converted to dry during a simulation
-        )
-        self.nplpf = 0  # number of LPF parameters
-        self.ikcflag = ikcflag  # unstructured grid
+        self.ikcflag = ikcflag
         if structured:
             self.ikcflag = 0
-        self.laytyp = Util2d(model, (nlay,), np.int32, laytyp, name="laytyp")
-        self.layavg = Util2d(model, (nlay,), np.int32, layavg, name="layavg")
-        self.chani = Util2d(model, (nlay,), np.float32, chani, name="chani")
-        self.layvka = Util2d(model, (nlay,), np.int32, layvka, name="layvka")
-        self.laywet = Util2d(model, (nlay,), np.int32, laywet, name="laywet")
-        # Factor that is included in the calculation of the head when a cell is
-        # converted from dry to wet
-        self.wetfct = wetfct
-        # Iteration interval for attempting to wet cells
-        self.iwetit = iwetit
-        # Flag that determines which equation is used to define the initial
-        # head at cells that become wet
-        self.ihdwet = ihdwet
         self.options = " "
         if storagecoefficient:
             self.options = self.options + "STORAGECOEFFICIENT "
@@ -319,75 +304,9 @@ class ModflowUsgLpf(Package):
                 (njag,),
                 np.float32,
                 anglex,
-                "Transmissivity",
+                "anglex",
                 locat=self.unit_number[0],
             )
-
-        self.hk = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            hk,
-            name="hk",
-            locat=self.unit_number[0],
-        )
-        self.hani = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            hani,
-            name="hani",
-            locat=self.unit_number[0],
-        )
-        keys = []
-        for k in range(nlay):
-            key = "vka"
-            if self.layvka[k] != 0:
-                key = "vani"
-            keys.append(key)
-        self.vka = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            vka,
-            name=keys,
-            locat=self.unit_number[0],
-        )
-        tag = "ss"
-        if storagecoefficient:
-            tag = "storage"
-        self.ss = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            ss,
-            name=tag,
-            locat=self.unit_number[0],
-        )
-        self.sy = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            sy,
-            name="sy",
-            locat=self.unit_number[0],
-        )
-        self.vkcb = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            vkcb,
-            name="vkcb",
-            locat=self.unit_number[0],
-        )
-        self.wetdry = Util3d(
-            model,
-            (nlay, nrow, ncol),
-            np.float32,
-            wetdry,
-            name="wetdry",
-            locat=self.unit_number[0],
-        )
 
         if not structured:
             njag = dis.njag
@@ -396,12 +315,12 @@ class ModflowUsgLpf(Package):
                 (njag,),
                 np.float32,
                 ksat,
-                "saturated conductivity or transmissivity",
+                "ksat",
                 locat=self.unit_number[0],
             )
 
-        self.parent.add_package(self)
-        return
+        if add_package:
+            self.parent.add_package(self)
 
     def write_file(self, check=True, f=None):
         """
@@ -426,7 +345,7 @@ class ModflowUsgLpf(Package):
             )
 
         # get model information
-        nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
+        nrow, ncol, nlay, _ = self.parent.nrow_ncol_nlay_nper
         dis = self.parent.get_package("DIS")
         if dis is None:
             dis = self.parent.get_package("DISU")
@@ -439,7 +358,7 @@ class ModflowUsgLpf(Package):
         f.write(f"{self.heading}\n")
 
         # Item 1: IBCFCB, HDRY, NPLPF, <IKCFLAG>, OPTIONS
-        if self.parent.version == "mfusg" and self.parent.structured == False:
+        if self.parent.version == "mfusg" and not self.parent.structured:
             f.write(
                 (
                     f" {self.ipakcb:9d} {self.hdry:9.5G} {self.nplpf:9d}"
@@ -467,22 +386,18 @@ class ModflowUsgLpf(Package):
 
         transient = not dis.steady.all()
         structured = self.parent.structured
-        anis = False
-        for k in range(nlay):
-            if self.chani[k] != 1:
-                anis = True
-                break
+        anis = any([ch != 1 for ch in self.chani])
         if (not structured) and anis:
             f.write(self.anglex.get_file_entry())
 
         for k in range(nlay):
-            if self.ikcflag == 0:  ## mfusg
+            if self.ikcflag == 0:  # mfusg
                 f.write(self.hk[k].get_file_entry())
                 if self.chani[k] <= 0.0:
                     f.write(self.hani[k].get_file_entry())
                 f.write(self.vka[k].get_file_entry())
 
-            if transient == True:
+            if transient:
                 f.write(self.ss[k].get_file_entry())
                 if self.laytyp[k] != 0:
                     f.write(self.sy[k].get_file_entry())
@@ -491,11 +406,161 @@ class ModflowUsgLpf(Package):
                 if self.laywet[k] != 0 and self.laytyp[k] != 0:
                     f.write(self.wetdry[k].get_file_entry())
 
-            if self.ikcflag == 1 or self.ikcflag == -1:
-                f_bcf.write(self.ksat[k].get_file_entry())
+        if abs(self.ikcflag == 1):
+            f.write(self.ksat.get_file_entry())
 
         f.close()
         return
+
+    @staticmethod
+    def _load_hy_tran_kv_vcont(
+        f, model, layer_vars, ext_unit_dict, par_types_parm_dict
+    ):
+        """
+        Loads hy/tran and kv/vcont file entries.
+
+        Parameters
+        ----------
+        f : open file object.
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+        layer_vars : dict. Key/value pairs must be:
+            "layer": layer number k (base 0),
+            "layvka": layvka for layer k,
+            "chani": chani for layer k
+        ext_unit_dict : external unit dictionary
+        par_types_parm_dict : tuple of (par_types, parm_dict)
+
+        Returns
+        -------
+        hk_k : Numpy array of hk values for layer k (or 0)
+        hani_k : Numpy array of hani values for layer k (or 0)
+        vka_k : Numpy array of vka values for layer k (or 0)
+        """
+        par_types, parm_dict = par_types_parm_dict
+        k = layer_vars["layer"]
+        layvka_k = layer_vars["layvka"]
+        chani_k = layer_vars["chani"]
+        util2d_shape = get_util2d_shape_for_layer(model, layer=k)
+
+        # hk
+        if model.verbose:
+            print(f"   loading hk layer {k + 1:3d}...")
+        if "hk" not in par_types:
+            hk_k = Util2d.load(
+                f, model, util2d_shape, np.float32, "hk", ext_unit_dict
+            )
+        else:
+            f.readline()
+            hk_k = mfpar.parameter_fill(
+                model, util2d_shape, "hk", parm_dict, findlayer=k
+            )
+
+        # hani
+        hani_k = 1.0
+        if chani_k <= 0.0:
+            if model.verbose:
+                print(f"   loading hani layer {k + 1:3d}...")
+            if "hani" not in par_types:
+                hani_k = Util2d.load(
+                    f,
+                    model,
+                    util2d_shape,
+                    np.float32,
+                    "hani",
+                    ext_unit_dict,
+                )
+            else:
+                f.readline()
+                hani_k = mfpar.parameter_fill(
+                    model, util2d_shape, "hani", parm_dict, findlayer=k
+                )
+
+        # vka
+        if model.verbose:
+            print(f"   loading vka layer {k + 1:3d}...")
+        key = "vk"
+        if layvka_k != 0:
+            key = "vani"
+        if "vk" not in par_types and "vani" not in par_types:
+            vka_k = Util2d.load(
+                f, model, util2d_shape, np.float32, key, ext_unit_dict
+            )
+        else:
+            f.readline()
+            key = "vk"
+            if "vani" in par_types:
+                key = "vani"
+            vka_k = mfpar.parameter_fill(
+                model, util2d_shape, key, parm_dict, findlayer=k
+            )
+
+        return hk_k, hani_k, vka_k
+
+    @staticmethod
+    def _load_storage(
+        f, model, layer_vars, ext_unit_dict, par_types_parm_dict
+    ):
+        """
+        Loads ss, sy file entries.
+
+        Parameters
+        ----------
+        f : open file object.
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+        layer_vars : dict. Key/value pairs must be:
+            "layer": layer number k (base 0),
+            "laytyp": laytyp for layer k
+        ext_unit_dict : external unit dictionary
+        par_types_parm_dict : tuple of (par_types, parm_dict)
+
+        Returns
+        -------
+        ss_k : Numpy array of ss values for layer k (or 0)
+        sy_k : Numpy array of sy values for layer k (or 0)
+        """
+        par_types, parm_dict = par_types_parm_dict
+        k = layer_vars["layer"]
+        laytyp_k = layer_vars["laytyp"]
+        util2d_shape = get_util2d_shape_for_layer(model, layer=k)
+
+        # ss
+        if model.verbose:
+            print(f"   loading ss layer {k + 1:3d}...")
+        if "ss" not in par_types:
+            ss_k = Util2d.load(
+                f, model, util2d_shape, np.float32, "ss", ext_unit_dict
+            )
+        else:
+            f.readline()
+            ss_k = mfpar.parameter_fill(
+                model, util2d_shape, "ss", parm_dict, findlayer=k
+            )
+
+        # sy
+        sy_k = 0.1
+        if laytyp_k != 0:
+            if model.verbose:
+                print(f"   loading sy layer {k + 1:3d}...")
+            if "sy" not in par_types:
+                sy_k = Util2d.load(
+                    f,
+                    model,
+                    util2d_shape,
+                    np.float32,
+                    "sy",
+                    ext_unit_dict,
+                )
+            else:
+                f.readline()
+                sy_k = mfpar.parameter_fill(
+                    model, util2d_shape, "sy", parm_dict, findlayer=k
+                )
+
+        return ss_k, sy_k
 
     @classmethod
     def load(cls, f, model, ext_unit_dict=None, check=True):
@@ -528,9 +593,14 @@ class ModflowUsgLpf(Package):
 
         >>> import flopy
         >>> m = flopy.modflowusg.ModflowUsg()
+        >>> disu = flopy.modflowusg.ModflowUsgDisU(model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
         >>> lpf = flopy.modflowusg.ModflowUsgLpf.load('test.lpf', m)
-
         """
+        msg = (
+            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            f"but received type: {type(model)}."
+        )
+        assert isinstance(model, ModflowUsg), msg
 
         if model.verbose:
             print("loading lpf package file...")
@@ -547,7 +617,7 @@ class ModflowUsgLpf(Package):
                 break
 
         # determine problem dimensions
-        nr, nc, nlay, nper = model.get_nrow_ncol_nlay_nper()
+        _, nc, nlay, _ = model.get_nrow_ncol_nlay_nper()
         dis = model.get_package("DIS")
         if dis is None:
             dis = model.get_package("DISU")
@@ -556,31 +626,34 @@ class ModflowUsgLpf(Package):
         # Item 1: IBCFCB, HDRY, NPLPF - line already read above
         if model.verbose:
             print("   loading IBCFCB, HDRY, NPLPF...")
-        t = line_parse(line)
-        ipakcb, hdry, nplpf = int(t[0]), float(t[1]), int(t[2])
+        text_list = line_parse(line)
+        ipakcb, hdry, nplpf = (
+            int(text_list[0]),
+            float(text_list[1]),
+            int(text_list[2]),
+        )
         item1_len = 3
-        if model.structured == False:
-            ikcflag = int(t[3])
+        ikcflag = 0
+        if not model.structured:
+            ikcflag = int(text_list[3])
             item1_len = 4
-        else:
-            ikcflag = 0
 
         storagecoefficient = False
         constantcv = False
         thickstrt = False
         nocvcorrection = False
         novfc = False
-        if len(t) > item1_len:
-            for k in range(item1_len, len(t)):
-                if "STORAGECOEFFICIENT" in t[k].upper():
+        if len(text_list) > item1_len:
+            for k in range(item1_len, len(text_list)):
+                if "STORAGECOEFFICIENT" in text_list[k].upper():
                     storagecoefficient = True
-                if "CONSTANTCV" in t[k].upper():
+                if "CONSTANTCV" in text_list[k].upper():
                     constantcv = True
-                if "THICKSTRT" in t[k].upper():
+                if "THICKSTRT" in text_list[k].upper():
                     thickstrt = True
-                if "NOCVCORRECTION" in t[k].upper():
+                if "NOCVCORRECTION" in text_list[k].upper():
                     nocvcorrection = True
-                if "NOVFC" in t[k].upper():
+                if "NOVFC" in text_list[k].upper():
                     novfc = True
 
         # LAYTYP array
@@ -620,30 +693,29 @@ class ModflowUsgLpf(Package):
             if model.verbose:
                 print("   loading WETFCT, IWETIT, IHDWET...")
             line = f.readline()
-            t = line.strip().split()
-            wetfct, iwetit, ihdwet = float(t[0]), int(t[1]), int(t[2])
+            text_list = line.strip().split()
+            wetfct, iwetit, ihdwet = (
+                float(text_list[0]),
+                int(text_list[1]),
+                int(text_list[2]),
+            )
 
         # parameters data
         par_types = []
+        parm_dict = {}
         if nplpf > 0:
             par_types, parm_dict = mfpar.load(f, nplpf, model.verbose)
             # print parm_dict
 
         # ANGLEX for unstructured grid with anisotropy
-        anis = False
-        for k in range(nlay):
-            if chani[k] != 1:
-                anis = True
-                break
+        anis = any([ch != 1 for ch in chani])
+        anglex = 0
         if (not model.structured) and anis:
             if model.verbose:
                 print("mfusg:   loading ANGLEX...")
-            t = Util2d.load(
+            anglex = Util2d.load(
                 f, model, (njag,), np.float32, "anglex", ext_unit_dict
             )
-            anglex = t
-        else:
-            anglex = 0
 
         # non-parameter data
         transient = not dis.steady.all()
@@ -658,161 +730,70 @@ class ModflowUsgLpf(Package):
         # load by layer
         for k in range(nlay):
 
-            # allow for unstructured changing nodes per layer
-            if nr is None:
-                nrow = 1
-                ncol = nc[k]
-            else:
-                nrow = nr
-                ncol = nc
+            util2d_shape = get_util2d_shape_for_layer(model, layer=k)
 
             if ikcflag == 0:
-                # hk
-                if model.verbose:
-                    print(f"   loading hk layer {k + 1:3d}...")
-                if "hk" not in par_types:
-                    t = Util2d.load(
-                        f, model, (nrow, ncol), np.float32, "hk", ext_unit_dict
-                    )
-                else:
-                    line = f.readline()
-                    t = mfpar.parameter_fill(
-                        model, (nrow, ncol), "hk", parm_dict, findlayer=k
-                    )
-                hk[k] = t
-
-                # hani
-                if chani[k] <= 0.0:
-                    if model.verbose:
-                        print(f"   loading hani layer {k + 1:3d}...")
-                    if "hani" not in par_types:
-                        t = Util2d.load(
-                            f,
-                            model,
-                            (nrow, ncol),
-                            np.float32,
-                            "hani",
-                            ext_unit_dict,
-                        )
-                    else:
-                        line = f.readline()
-                        t = mfpar.parameter_fill(
-                            model, (nrow, ncol), "hani", parm_dict, findlayer=k
-                        )
-                    hani[k] = t
-
-                # vka
-                if model.verbose:
-                    print(f"   loading vka layer {k + 1:3d}...")
-                key = "vk"
-                if layvka[k] != 0:
-                    key = "vani"
-                if "vk" not in par_types and "vani" not in par_types:
-                    t = Util2d.load(
-                        f, model, (nrow, ncol), np.float32, key, ext_unit_dict
-                    )
-                else:
-                    line = f.readline()
-                    key = "vk"
-                    if "vani" in par_types:
-                        key = "vani"
-                    t = mfpar.parameter_fill(
-                        model, (nrow, ncol), key, parm_dict, findlayer=k
-                    )
-                vka[k] = t
+                hk[k], hani[k], vka[k] = cls._load_hy_tran_kv_vcont(
+                    f,
+                    model,
+                    {"layer": k, "layvka": layvka[k], "chani": chani[k]},
+                    ext_unit_dict,
+                    (par_types, parm_dict),
+                )
 
             # storage properties
             if transient:
-
-                # ss
-                if model.verbose:
-                    print(f"   loading ss layer {k + 1:3d}...")
-                if "ss" not in par_types:
-                    t = Util2d.load(
-                        f, model, (nrow, ncol), np.float32, "ss", ext_unit_dict
-                    )
-                else:
-                    line = f.readline()
-                    t = mfpar.parameter_fill(
-                        model, (nrow, ncol), "ss", parm_dict, findlayer=k
-                    )
-                ss[k] = t
-
-                # sy
-                if laytyp[k] != 0:
-                    if model.verbose:
-                        print(f"   loading sy layer {k + 1:3d}...")
-                    if "sy" not in par_types:
-                        t = Util2d.load(
-                            f,
-                            model,
-                            (nrow, ncol),
-                            np.float32,
-                            "sy",
-                            ext_unit_dict,
-                        )
-                    else:
-                        line = f.readline()
-                        t = mfpar.parameter_fill(
-                            model, (nrow, ncol), "sy", parm_dict, findlayer=k
-                        )
-                    sy[k] = t
+                ss[k], sy[k] = cls._load_storage(
+                    f,
+                    model,
+                    {"layer": k, "laytyp": laytyp[k]},
+                    ext_unit_dict,
+                    (par_types, parm_dict),
+                )
 
             # vkcb
             if ikcflag == 0 and dis.laycbd[k] != 0:
                 if model.verbose:
                     print(f"   loading vkcb layer {k + 1:3d}...")
                 if "vkcb" not in par_types:
-                    t = Util2d.load(
+                    vkcb[k] = Util2d.load(
                         f,
                         model,
-                        (nrow, ncol),
+                        util2d_shape,
                         np.float32,
                         "vkcb",
                         ext_unit_dict,
                     )
                 else:
                     line = f.readline()
-                    t = mfpar.parameter_fill(
-                        model, (nrow, ncol), "vkcb", parm_dict, findlayer=k
+                    vkcb[k] = mfpar.parameter_fill(
+                        model, util2d_shape, "vkcb", parm_dict, findlayer=k
                     )
-                vkcb[k] = t
 
             # wetdry
             if laywet[k] != 0 and laytyp[k] != 0 and laytyp[k] != 4:
                 if model.verbose:
                     print(f"   loading wetdry layer {k + 1:3d}...")
-                t = Util2d.load(
-                    f, model, (nrow, ncol), np.float32, "wetdry", ext_unit_dict
+                wetdry[k] = Util2d.load(
+                    f, model, util2d_shape, np.float32, "wetdry", ext_unit_dict
                 )
-                wetdry[k] = t
 
         # Ksat  mfusg
-        if ikcflag == 1 or ikcflag == -1:
+        ksat = 1.0
+        if abs(ikcflag) == 1:
             if model.verbose:
-                print(f"   loading ksat layer {k + 1:3d}...")
-            t = Util2d.load(
+                print("   loading ksat...")
+            ksat = Util2d.load(
                 f, model, (njag,), np.float32, "ksat", ext_unit_dict
             )
-            ksat = t
-        else:
-            ksat = 1.0
 
         if openfile:
             f.close()
 
-        # set package unit number
-        unitnumber = None
-        filenames = [None, None]
-        if ext_unit_dict is not None:
-            unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowUsgLpf._ftype()
-            )
-            if ipakcb > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=ipakcb
-                )
-                model.add_pop_key_list(ipakcb)
+        # set package unit number and io file names
+        unitnumber, filenames = get_unitnumber_from_ext_unit_dict(
+            model, cls, ext_unit_dict, ipakcb
+        )
 
         # create instance of lpf class
         lpf = cls(
@@ -853,11 +834,3 @@ class ModflowUsgLpf(Package):
                 level=0,
             )
         return lpf
-
-    @staticmethod
-    def _ftype():
-        return "LPF"
-
-    @staticmethod
-    def _defaultunit():
-        return 15

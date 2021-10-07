@@ -2,6 +2,7 @@
 Generic classes and utility functions
 """
 
+import warnings
 from datetime import timedelta
 import numpy as np
 
@@ -54,6 +55,17 @@ class FlopyBinaryData:
 
     def _read_values(self, dtype, count):
         return np.fromfile(self.file, dtype, count)
+
+    def __getattr__(self, name):
+        """
+        Gets class attributes to avoid pylint E1101 false positives.
+
+        Will only get called for undefined attributes.
+        """
+        warnings.warn(
+            f"No member '{name}' contained in {type(self).__name__})"
+        )
+        return ""
 
 
 def totim_to_datetime(totim, start="1-1-1970", timeunit="D"):
@@ -136,3 +148,71 @@ def get_pak_vals_shape(model, vals):
             return np.array(vals, ndmin=2).shape
     else:
         return (nrow, ncol)  # structured
+
+
+def get_util2d_shape_for_layer(model, layer=0):
+    """
+    Define nrow and ncol for array (Util2d) shape of a given layer in
+    structured and/or unstructured models.
+
+    Parameters
+    ----------
+    model : model object
+        model for which Util2d shape is sought.
+    layer : int
+        layer (base 0) for which Util2d shape is sought.
+
+    Returns
+    ---------
+    (nrow,ncol) : tuple of ints
+        util2d shape for the given layer
+    """
+    nr, nc, _, _ = model.get_nrow_ncol_nlay_nper()
+    if nr is None:  # unstructured
+        nrow = 1
+        ncol = nc[layer]
+    else:  # structured
+        nrow = nr
+        ncol = nc
+
+    return (nrow, ncol)
+
+
+def get_unitnumber_from_ext_unit_dict(
+    model, pak_class, ext_unit_dict=None, ipakcb=0
+):
+    """
+    For a given modflow package, defines input file unit number,
+    plus package input and (optionally) output (budget) save file names.
+
+    Parameters
+    ----------
+    model : model object
+        model for which the unit number is sought.
+    pak_class : modflow package class for which the unit number is sought.
+    ext_unit_dict : external unit dictionary, optional.
+        If not provided, unitnumber and filenames will be returned as None.
+    ipakcb : int, optional
+        Modflow package unit number on which budget is saved.
+        Default is 0, in which case the returned output file is None.
+
+    Returns
+    ---------
+    unitnumber : int
+        file unit number for the given modflow package (or None)
+    filenames : list
+        list of [package input file name, budget file name],
+    """
+    unitnumber = None
+    filenames = [None, None]
+    if ext_unit_dict is not None:
+        unitnumber, filenames[0] = model.get_ext_dict_attr(
+            ext_unit_dict, filetype=pak_class._ftype()
+        )
+        if ipakcb > 0:
+            _, filenames[1] = model.get_ext_dict_attr(
+                ext_unit_dict, unit=ipakcb
+            )
+            model.add_pop_key_list(ipakcb)
+
+    return unitnumber, filenames
