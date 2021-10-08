@@ -54,17 +54,13 @@ class BinaryHeader(Header):
                 try:
                     self.header[0][k] = int(kwargs[k])
                 except:
-                    print(
-                        f"{k} key not available in {self.header_type} " "header dtype"
-                    )
+                    print(f"{k} key not available in {self.header_type} " "header dtype")
         for k in fkey:
             if k in kwargs.keys():
                 try:
                     self.header[0][k] = float(kwargs[k])
                 except:
-                    print(
-                        f"{k} key not available " f"in {self.header_type} header dtype"
-                    )
+                    print(f"{k} key not available " f"in {self.header_type} header dtype")
         for k in ckey:
             if k in kwargs.keys():
                 # Convert to upper case to be consistent case used by MODFLOW
@@ -258,9 +254,7 @@ def get_headfile_precision(filename):
             result = "double"
         except:
             f.close()
-            raise ValueError(
-                f"Could not determine the precision of the headfile {filename}"
-            )
+            raise ValueError(f"Could not determine the precision of the headfile {filename}")
 
     # close and return result
     f.close()
@@ -347,11 +341,7 @@ class BinaryLayerFile(LayerFile):
             size of the data array, in bytes, following the header
 
         """
-        return (
-            np.int64(header["ncol"])
-            * np.int64(header["nrow"])
-            * np.int64(self.realtype(1).nbytes)
-        )
+        return np.int64(header["ncol"]) * np.int64(header["nrow"]) * np.int64(self.realtype(1).nbytes)
 
     def _read_data(self, shp):
         return binaryread(self.file, self.realtype, shape=shp)
@@ -471,9 +461,7 @@ class HeadFile(BinaryLayerFile):
 
     """
 
-    def __init__(
-        self, filename, text="head", precision="auto", verbose=False, **kwargs
-    ):
+    def __init__(self, filename, text="head", precision="auto", verbose=False, **kwargs):
         self.text = text.encode()
         if precision == "auto":
             precision = get_headfile_precision(filename)
@@ -675,9 +663,7 @@ class CellBudgetFile:
             self.nnodes = self.modelgrid.nnodes
 
         if not success:
-            raise Exception(
-                f"Budget file could not be read using {precision} precision"
-            )
+            raise Exception(f"Budget file could not be read using {precision} precision")
 
         return
 
@@ -813,9 +799,7 @@ class CellBudgetFile:
             self.nrecords += 1
             totim = header["totim"]
             if totim == 0:
-                totim = self._totim_from_kstpkper(
-                    (header["kstp"] - 1, header["kper"] - 1)
-                )
+                totim = self._totim_from_kstpkper((header["kstp"] - 1, header["kper"] - 1))
                 header["totim"] = totim
             if totim >= 0 and totim not in self.times:
                 self.times.append(totim)
@@ -863,11 +847,7 @@ class CellBudgetFile:
                         s = s.decode()
                     print(f"{itxt}: {s}")
                 print("file position: ", ipos)
-                if (
-                    int(header["imeth"]) != 5
-                    and int(header["imeth"]) != 6
-                    and int(header["imeth"]) != 7
-                ):
+                if int(header["imeth"]) != 5 and int(header["imeth"]) != 6 and int(header["imeth"]) != 7:
                     print("")
 
             # set the nrow, ncol, and nlay if they have not been set
@@ -881,9 +861,7 @@ class CellBudgetFile:
                     self.nlay = np.abs(header["nlay"])
 
             # store record and byte position mapping
-            self.recorddict[
-                tuple(header)
-            ] = ipos  # store the position right after header2
+            self.recorddict[tuple(header)] = ipos  # store the position right after header2
             self.recordarray.append(header)
             self.iposarray.append(ipos)  # store the position right after header2
 
@@ -930,11 +908,7 @@ class CellBudgetFile:
                 print("naux: ", naux)
                 print("nlist: ", nlist)
                 print("")
-            nbytes = nlist * (
-                np.int32(1).nbytes
-                + self.realtype(1).nbytes
-                + naux * self.realtype(1).nbytes
-            )
+            nbytes = nlist * (np.int32(1).nbytes + self.realtype(1).nbytes + naux * self.realtype(1).nbytes)
         elif imeth == 6:
             # read rest of list data
             nauxp1 = binaryread(self.file, np.int32)[0]
@@ -947,11 +921,7 @@ class CellBudgetFile:
                 print("naux: ", naux)
                 print("nlist: ", nlist)
                 print("")
-            nbytes = nlist * (
-                np.int32(1).nbytes * 2
-                + self.realtype(1).nbytes
-                + naux * self.realtype(1).nbytes
-            )
+            nbytes = nlist * (np.int32(1).nbytes * 2 + self.realtype(1).nbytes + naux * self.realtype(1).nbytes)
         else:
             raise Exception(f"invalid method code {imeth}")
         if nbytes != 0:
@@ -969,9 +939,7 @@ class CellBudgetFile:
             # fill header2 by first reading imeth, delt, pertim and totim
             # and then adding modelnames and paknames if imeth = 6
             temp = binaryread(self.file, self.header2_dtype0, (1,))
-            header2 = np.array(
-                [(0, 0.0, 0.0, 0.0, "", "", "", "")], dtype=self.header2_dtype
-            )
+            header2 = np.array([(0, 0.0, 0.0, 0.0, "", "", "", "")], dtype=self.header2_dtype)
             for name in temp.dtype.names:
                 header2[name] = temp[name]
             if int(header2["imeth"]) == 6:
@@ -980,9 +948,7 @@ class CellBudgetFile:
                 header2["modelnam2"] = binaryread(self.file, str, charlen=16)
                 header2["paknam2"] = binaryread(self.file, str, charlen=16)
         else:
-            header2 = np.array(
-                [(0, 0.0, 0.0, 0.0, "", "", "", "")], dtype=self.header2_dtype
-            )
+            header2 = np.array([(0, 0.0, 0.0, 0.0, "", "", "", "")], dtype=self.header2_dtype)
         fullheader = join_struct_arrays([header1, header2])
         return fullheader[0]
 
@@ -1024,9 +990,7 @@ class CellBudgetFile:
                     paknam16 = t
                     break
             if paknam16 is None:
-                raise Exception(
-                    "The specified package name string is not " "in the budget file."
-                )
+                raise Exception("The specified package name string is not " "in the budget file.")
         return paknam16
 
     def list_records(self):
@@ -1263,51 +1227,25 @@ class CellBudgetFile:
             kstp1 = kstpkper[0] + 1
             kper1 = kstpkper[1] + 1
             if text is None and paknam is None:
-                select_indices = np.where(
-                    (self.recordarray["kstp"] == kstp1)
-                    & (self.recordarray["kper"] == kper1)
-                )
+                select_indices = np.where((self.recordarray["kstp"] == kstp1) & (self.recordarray["kper"] == kper1))
             else:
                 if paknam is None and text is not None:
-                    select_indices = np.where(
-                        (self.recordarray["kstp"] == kstp1)
-                        & (self.recordarray["kper"] == kper1)
-                        & (self.recordarray["text"] == text16)
-                    )
+                    select_indices = np.where((self.recordarray["kstp"] == kstp1) & (self.recordarray["kper"] == kper1) & (self.recordarray["text"] == text16))
                 elif text is None and paknam is not None:
-                    select_indices = np.where(
-                        (self.recordarray["kstp"] == kstp1)
-                        & (self.recordarray["kper"] == kper1)
-                        & (self.recordarray["paknam"] == paknam16)
-                    )
+                    select_indices = np.where((self.recordarray["kstp"] == kstp1) & (self.recordarray["kper"] == kper1) & (self.recordarray["paknam"] == paknam16))
                 else:
-                    select_indices = np.where(
-                        (self.recordarray["kstp"] == kstp1)
-                        & (self.recordarray["kper"] == kper1)
-                        & (self.recordarray["text"] == text16)
-                        & (self.recordarray["paknam"] == paknam16)
-                    )
+                    select_indices = np.where((self.recordarray["kstp"] == kstp1) & (self.recordarray["kper"] == kper1) & (self.recordarray["text"] == text16) & (self.recordarray["paknam"] == paknam16))
 
         elif totim is not None:
             if text is None and paknam is None:
                 select_indices = np.where((self.recordarray["totim"] == totim))
             else:
                 if paknam is None and text is not None:
-                    select_indices = np.where(
-                        (self.recordarray["totim"] == totim)
-                        & (self.recordarray["text"] == text16)
-                    )
+                    select_indices = np.where((self.recordarray["totim"] == totim) & (self.recordarray["text"] == text16))
                 elif text is None and paknam is not None:
-                    select_indices = np.where(
-                        (self.recordarray["totim"] == totim)
-                        & (self.recordarray["paknam"] == paknam16)
-                    )
+                    select_indices = np.where((self.recordarray["totim"] == totim) & (self.recordarray["paknam"] == paknam16))
                 else:
-                    select_indices = np.where(
-                        (self.recordarray["totim"] == totim)
-                        & (self.recordarray["text"] == text16)
-                        & (self.recordarray["paknam"] == paknam16)
-                    )
+                    select_indices = np.where((self.recordarray["totim"] == totim) & (self.recordarray["text"] == text16) & (self.recordarray["paknam"] == paknam16))
 
         # allow for idx to be a list or a scalar
         elif idx is not None:
@@ -1321,10 +1259,7 @@ class CellBudgetFile:
             select_indices = np.where((self.recordarray["text"] == text16))
 
         else:
-            raise TypeError(
-                "get_data() missing 1 required argument: 'kstpkper', 'totim', "
-                "'idx', or 'text'"
-            )
+            raise TypeError("get_data() missing 1 required argument: 'kstpkper', 'totim', " "'idx', or 'text'")
 
         # build and return the record list
         if isinstance(select_indices, tuple):
@@ -1373,9 +1308,7 @@ class CellBudgetFile:
         """
         # issue exception if text not provided
         if text is None:
-            raise Exception(
-                "text keyword must be provided to CellBudgetFile " "get_ts() method."
-            )
+            raise Exception("text keyword must be provided to CellBudgetFile " "get_ts() method.")
 
         kijlist = self._build_kijlist(idx)
         nstation = self._get_nstation(idx, kijlist)
@@ -1392,11 +1325,7 @@ class CellBudgetFile:
                 if isinstance(times, np.ndarray):
                     times = times.tolist()
                 if len(times) != len(kk):
-                    raise Exception(
-                        "times passed to CellBudgetFile get_ts() "
-                        "method must be equal to {} "
-                        "not {}".format(len(kk), len(times))
-                    )
+                    raise Exception("times passed to CellBudgetFile get_ts() " "method must be equal to {} " "not {}".format(len(kk), len(times)))
                 timesint = times
         for idx, t in enumerate(timesint):
             result[idx, 0] = t
@@ -1416,24 +1345,13 @@ class CellBudgetFile:
                 # skip missing data - required for storage
                 if len(v) > 0:
                     if self.modelgrid is None:
-                        s = (
-                            "A modelgrid instance must be provided during "
-                            "instantiation to get IMETH=6 timeseries data"
-                        )
+                        s = "A modelgrid instance must be provided during " "instantiation to get IMETH=6 timeseries data"
                         raise AssertionError(s)
 
                     if self.modelgrid.grid_type == "structured":
-                        ndx = [
-                            lrc[0] * (self.modelgrid.nrow * self.modelgrid.ncol)
-                            + lrc[1] * self.modelgrid.ncol
-                            + (lrc[2] + 1)
-                            for lrc in kijlist
-                        ]
+                        ndx = [lrc[0] * (self.modelgrid.nrow * self.modelgrid.ncol) + lrc[1] * self.modelgrid.ncol + (lrc[2] + 1) for lrc in kijlist]
                     else:
-                        ndx = [
-                            lrc[0] * self.modelgrid.ncpl + (lrc[-1] + 1)
-                            for lrc in kijlist
-                        ]
+                        ndx = [lrc[0] * self.modelgrid.ncpl + (lrc[-1] + 1) for lrc in kijlist]
 
                     for vv in v:
                         field = vv.dtype.names[2]
@@ -1462,10 +1380,7 @@ class CellBudgetFile:
             if j < 0 or j > self.ncol - 1:
                 fail = True
             if fail:
-                raise Exception(
-                    "Invalid cell index. Cell {} not within model grid: "
-                    "{}".format((k, i, j), (self.nlay, self.nrow, self.ncol))
-                )
+                raise Exception("Invalid cell index. Cell {} not within model grid: " "{}".format((k, i, j), (self.nlay, self.nrow, self.ncol)))
         return kijlist
 
     def _get_nstation(self, idx, kijlist):
@@ -1570,11 +1485,7 @@ class CellBudgetFile:
                 if full3D:
                     s += "a numpy masked array of size " f"({nlay}, {nrow}, {ncol})"
                 else:
-                    s += (
-                        "a list of two 2D numpy arrays. The first is an "
-                        f"integer layer array of shape ({nrow}, {ncol}). The "
-                        f"second is real data array of shape ({nrow}, {ncol})"
-                    )
+                    s += "a list of two 2D numpy arrays. The first is an " f"integer layer array of shape ({nrow}, {ncol}). The " f"second is real data array of shape ({nrow}, {ncol})"
                 print(s)
             if full3D:
                 out = np.ma.zeros(self.nnodes, dtype=np.float32)
@@ -1843,9 +1754,7 @@ class HeadUFile(BinaryLayerFile):
 
     """
 
-    def __init__(
-        self, filename, text="headu", precision="auto", verbose=False, **kwargs
-    ):
+    def __init__(self, filename, text="headu", precision="auto", verbose=False, **kwargs):
         """
         Class constructor
         """
@@ -1926,15 +1835,6 @@ class HeadUFile(BinaryLayerFile):
         out : numpy array
             Array has size (ntimes, ncells + 1).  The first column in the
             data array will contain time (totim).
-
-        See Also
-        --------
-
-        Notes
-        -----
-
-        Examples
-        --------
 
         """
         times = self.get_times()
