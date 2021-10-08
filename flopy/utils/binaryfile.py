@@ -55,8 +55,7 @@ class BinaryHeader(Header):
                     self.header[0][k] = int(kwargs[k])
                 except:
                     print(
-                        f"{k} key not available in {self.header_type} "
-                        "header dtype"
+                        f"{k} key not available in {self.header_type} " "header dtype"
                     )
         for k in fkey:
             if k in kwargs.keys():
@@ -64,8 +63,7 @@ class BinaryHeader(Header):
                     self.header[0][k] = float(kwargs[k])
                 except:
                     print(
-                        f"{k} key not available "
-                        f"in {self.header_type} header dtype"
+                        f"{k} key not available " f"in {self.header_type} header dtype"
                     )
         for k in ckey:
             if k in kwargs.keys():
@@ -406,9 +404,7 @@ class BinaryLayerFile(LayerFile):
         for k, i, j in kijlist:
             ioffset = (i * self.ncol + j) * self.realtype(1).nbytes
             for irec, header in enumerate(self.recordarray):
-                ilay = (
-                    header["ilay"] - 1
-                )  # change ilay from header to zero-based
+                ilay = header["ilay"] - 1  # change ilay from header to zero-based
                 if ilay != k:
                     continue
                 ipos = int(self.iposarray[irec])
@@ -485,9 +481,7 @@ class HeadFile(BinaryLayerFile):
                 s = f"Error. Precision could not be determined for {filename}"
                 print(s)
                 raise Exception()
-        self.header_dtype = BinaryHeader.set_dtype(
-            bintype="Head", precision=precision
-        )
+        self.header_dtype = BinaryHeader.set_dtype(bintype="Head", precision=precision)
         super().__init__(filename, precision, verbose, kwargs)
         return
 
@@ -553,9 +547,7 @@ class UcnFile(BinaryLayerFile):
             s = f"Error. Precision could not be determined for {filename}"
             print(s)
             raise Exception()
-        self.header_dtype = BinaryHeader.set_dtype(
-            bintype="Ucn", precision=precision
-        )
+        self.header_dtype = BinaryHeader.set_dtype(bintype="Ucn", precision=precision)
         super().__init__(filename, precision, verbose, kwargs)
         return
 
@@ -893,9 +885,7 @@ class CellBudgetFile:
                 tuple(header)
             ] = ipos  # store the position right after header2
             self.recordarray.append(header)
-            self.iposarray.append(
-                ipos
-            )  # store the position right after header2
+            self.iposarray.append(ipos)  # store the position right after header2
 
             # skip over the data to the next record and set ipos
             self._skip_record(header)
@@ -1035,8 +1025,7 @@ class CellBudgetFile:
                     break
             if paknam16 is None:
                 raise Exception(
-                    "The specified package name string is not "
-                    "in the budget file."
+                    "The specified package name string is not " "in the budget file."
                 )
         return paknam16
 
@@ -1385,8 +1374,7 @@ class CellBudgetFile:
         # issue exception if text not provided
         if text is None:
             raise Exception(
-                "text keyword must be provided to CellBudgetFile "
-                "get_ts() method."
+                "text keyword must be provided to CellBudgetFile " "get_ts() method."
             )
 
         kijlist = self._build_kijlist(idx)
@@ -1436,8 +1424,7 @@ class CellBudgetFile:
 
                     if self.modelgrid.grid_type == "structured":
                         ndx = [
-                            lrc[0]
-                            * (self.modelgrid.nrow * self.modelgrid.ncol)
+                            lrc[0] * (self.modelgrid.nrow * self.modelgrid.ncol)
                             + lrc[1] * self.modelgrid.ncol
                             + (lrc[2] + 1)
                             for lrc in kijlist
@@ -1489,9 +1476,7 @@ class CellBudgetFile:
 
     def _init_result(self, nstation):
         # Initialize result array and put times in first column
-        result = np.empty(
-            (len(self.kstpkper), nstation + 1), dtype=self.realtype
-        )
+        result = np.empty((len(self.kstpkper), nstation + 1), dtype=self.realtype)
         result[:, :] = np.nan
         if len(self.times) == result.shape[0]:
             result[:, 0] = np.array(self.times)
@@ -1553,17 +1538,13 @@ class CellBudgetFile:
             if self.verbose:
                 s += f"an array of shape {(nlay, nrow, ncol)}"
                 print(s)
-            return binaryread(
-                self.file, self.realtype(1), shape=(nlay, nrow, ncol)
-            )
+            return binaryread(self.file, self.realtype(1), shape=(nlay, nrow, ncol))
         # imeth 1
         elif imeth == 1:
             if self.verbose:
                 s += f"an array of shape {(nlay, nrow, ncol)}"
                 print(s)
-            return binaryread(
-                self.file, self.realtype(1), shape=(nlay, nrow, ncol)
-            )
+            return binaryread(self.file, self.realtype(1), shape=(nlay, nrow, ncol))
 
         # imeth 2
         elif imeth == 2:
@@ -1571,10 +1552,7 @@ class CellBudgetFile:
             dtype = np.dtype([("node", np.int32), ("q", self.realtype)])
             if self.verbose:
                 if full3D:
-                    s += (
-                        f"a numpy masked array of "
-                        f"size ({nlay}, {nrow}, {ncol})"
-                    )
+                    s += f"a numpy masked array of " f"size ({nlay}, {nrow}, {ncol})"
                 else:
                     s += f"a numpy recarray of size ({nlist}, 2)"
                 print(s)
@@ -1590,10 +1568,7 @@ class CellBudgetFile:
             data = binaryread(self.file, self.realtype(1), shape=(nrow, ncol))
             if self.verbose:
                 if full3D:
-                    s += (
-                        "a numpy masked array of size "
-                        f"({nlay}, {nrow}, {ncol})"
-                    )
+                    s += "a numpy masked array of size " f"({nlay}, {nrow}, {ncol})"
                 else:
                     s += (
                         "a list of two 2D numpy arrays. The first is an "
@@ -1881,9 +1856,7 @@ class HeadUFile(BinaryLayerFile):
                 s = f"Error. Precision could not be determined for {filename}"
                 print(s)
                 raise Exception()
-        self.header_dtype = BinaryHeader.set_dtype(
-            bintype="Head", precision=precision
-        )
+        self.header_dtype = BinaryHeader.set_dtype(bintype="Head", precision=precision)
         super().__init__(filename, precision, verbose, kwargs)
         return
 
@@ -1939,31 +1912,31 @@ class HeadUFile(BinaryLayerFile):
 
     def get_ts(self, idx):
         """
-                Get a time series from the binary HeadUFile
+        Get a time series from the binary HeadUFile
 
-                Parameters
-                ----------
-                idx : int or list of ints
-                    idx can be nodenumber or it can be a list in the form
-                    [nodenumber, nodenumber, ...].  The nodenumber,
-                    values must be zero based.
+        Parameters
+        ----------
+        idx : int or list of ints
+            idx can be nodenumber or it can be a list in the form
+            [nodenumber, nodenumber, ...].  The nodenumber,
+            values must be zero based.
 
-                Returns
-                ----------
-                out : numpy array
-                    Array has size (ntimes, ncells + 1).  The first column in the
-                    data array will contain time (totim).
+        Returns
+        ----------
+        out : numpy array
+            Array has size (ntimes, ncells + 1).  The first column in the
+            data array will contain time (totim).
 
-                See Also
-                --------
+        See Also
+        --------
 
-                Notes
-                -----
+        Notes
+        -----
 
-                Examples
-                --------
+        Examples
+        --------
 
-                """
+        """
         times = self.get_times()
 
         # find node number in layer that node is in
@@ -1971,7 +1944,7 @@ class HeadUFile(BinaryLayerFile):
         nodelay = [len(data[lay]) for lay in range(len(data))]
         nodelay_cumsum = np.cumsum([0] + nodelay)
 
-        if isinstance(idx,int):
+        if isinstance(idx, int):
             layer = np.searchsorted(nodelay_cumsum, idx)
             nnode = idx - nodelay_cumsum[layer - 1]
 
@@ -1980,7 +1953,7 @@ class HeadUFile(BinaryLayerFile):
                 data = self.get_data(totim=time)
                 result.append([time, data[layer - 1][nnode]])
 
-        elif isinstance(idx,list):
+        elif isinstance(idx, list):
 
             result = []
             for i, time in enumerate(times):
@@ -2002,6 +1975,4 @@ class HeadUFile(BinaryLayerFile):
             errmsg = "idx must be an integer or a list of integers"
             raise Exception(errmsg)
 
-
         return np.array(result)
-
