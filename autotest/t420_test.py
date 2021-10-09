@@ -83,17 +83,17 @@ def test_mfusg():
     # create the mfusg modoel
     ws = os.path.join(tpth, "gridgen_mfusg")
     name = "mymodel"
-    m = flopy.modflowusg.ModflowUsg(
+    m = flopy.mfusg.MfUsg(
         modelname=name,
         model_ws=ws,
         exe_name=mfusg_exe,
         structured=False,
     )
-    disu = flopy.modflowusg.ModflowUsgDisU(m, **gridprops)
+    disu = flopy.mfusg.MfUsgDisU(m, **gridprops)
     bas = flopy.modflow.ModflowBas(m)
-    lpf = flopy.modflowusg.ModflowUsgLpf(m)
+    lpf = flopy.mfusg.MfUsgLpf(m)
     chd = flopy.modflow.ModflowChd(m, stress_period_data=chdspd)
-    sms = flopy.modflowusg.ModflowUsgSms(m)
+    sms = flopy.mfusg.MfUsgSms(m)
     oc = flopy.modflow.ModflowOc(m, stress_period_data={(0, 0): ["save head"]})
     m.write_input()
 

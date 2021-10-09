@@ -67,7 +67,7 @@ def test_gridgen():
         botm=botm,
     )
 
-    ms_u = flopy.modflowusg.ModflowUsg(modelname="mymfusgmodel", model_ws=cpth)
+    ms_u = flopy.mfusg.MfUsg(modelname="mymfusgmodel", model_ws=cpth)
     dis_usg = flopy.modflow.ModflowDis(
         ms_u,
         nlay=nlay,
@@ -226,7 +226,7 @@ def test_gridgen():
         assert nlist == nlist2, msg
 
         # test getting a modflow-usg disu package
-        mu = flopy.modflowusg.ModflowUsg(structured=False)
+        mu = flopy.mfusg.MfUsg(structured=False)
         disu = g.get_disu(mu)
 
         # test mfusg with vertical pass-through (True above at instantiation)

@@ -2,19 +2,19 @@
 Mfusggnc module.
 
 This is for the Ghost Node Correction (GNC) Package for MODFLOW-USG.
-Contains the ModflowUsgGnc class. Note that the user can access
-the ModflowUsgGnc class as `flopy.modflowusg.ModflowUsgGnc`.
+Contains the MfUsgGnc class. Note that the user can access
+the MfUsgGnc class as `flopy.mfusg.MfUsgGnc`.
 """
 import numpy as np
 from ..pakbase import Package
 from ..utils.recarray_utils import create_empty_recarray
 from ..utils.flopy_io import ulstrd
 from ..modflow.mfparbc import ModflowParBc as mfparbc
-from .mfusg import ModflowUsg
+from .mfusg import MfUsg
 from .mfusg import fmt_string
 
 
-class ModflowUsgGnc(Package):
+class MfUsgGnc(Package):
     """MODFLOW USG Ghost Node Correction (GNC) Package Class.
 
     Parameters
@@ -74,7 +74,7 @@ class ModflowUsgGnc(Package):
 
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
-    >>> gnc = flopy.modflowusg.ModflowUsgGnc(m)
+    >>> gnc = flopy.mfusg.MfUsgGnc(m)
     """
 
     def __init__(
@@ -93,10 +93,10 @@ class ModflowUsgGnc(Package):
     ):
         """Package constructor."""
         msg = (
-            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            "Model object must be of type flopy.mfusg.MfUsg\n"
             f"but received type: {type(model)}."
         )
-        assert isinstance(model, ModflowUsg), msg
+        assert isinstance(model, MfUsg), msg
 
         # set default unit number of one is not specified
         if unitnumber is None:
@@ -144,9 +144,7 @@ class ModflowUsgGnc(Package):
                 "mfgnc: Length of GNC data must equal number of GNC nodes"
             )
 
-        self.dtype = ModflowUsgGnc.get_default_dtype(
-            self.numalphaj, self.iflalphan
-        )
+        self.dtype = MfUsgGnc.get_default_dtype(self.numalphaj, self.iflalphan)
 
         self.gncdata = np.array(gncdata, self.dtype)
 
@@ -224,7 +222,7 @@ class ModflowUsgGnc(Package):
     def get_empty(numgnc=0, numalphaj=1, iflalphan=0):
         """Returns empty GNC recarray of defualt dtype."""
         # get an empty recarray that corresponds to dtype
-        dtype = ModflowUsgGnc.get_default_dtype(numalphaj, iflalphan)
+        dtype = MfUsgGnc.get_default_dtype(numalphaj, iflalphan)
         return create_empty_recarray(numgnc, dtype, default_value=-1.0e10)
 
     @classmethod
@@ -248,7 +246,7 @@ class ModflowUsgGnc(Package):
 
         Returns
         -------
-        gnc : ModflowUsgGnc object
+        gnc : MfUsgGnc object
 
         Examples
         --------
@@ -258,10 +256,10 @@ class ModflowUsgGnc(Package):
         >>> gnc = flopy.modflow.ModflowGnc.load('test.gnc', m)
         """
         msg = (
-            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            "Model object must be of type flopy.mfusg.MfUsg\n"
             f"but received type: {type(model)}."
         )
-        assert isinstance(model, ModflowUsg), msg
+        assert isinstance(model, MfUsg), msg
 
         if model.verbose:
             print("loading gnc package file...")
@@ -304,12 +302,12 @@ class ModflowUsgGnc(Package):
 
         # Item 2 -- read parameter data
         if npgncn > 0:
-            dtype = ModflowUsgGnc.get_empty(npgncn, mxgnn, iflalphan).dtype
+            dtype = MfUsgGnc.get_empty(npgncn, mxgnn, iflalphan).dtype
             # Item 3 --
             mfparbc.load(f, npgncn, dtype, model, ext_unit_dict, model.verbose)
 
         # Item 4 -- read GNC data
-        gncdata = ModflowUsgGnc.get_empty(numgnc, numalphaj, iflalphan)
+        gncdata = MfUsgGnc.get_empty(numgnc, numalphaj, iflalphan)
 
         gncdata = ulstrd(f, numgnc, gncdata, model, [], ext_unit_dict)
 

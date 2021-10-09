@@ -758,12 +758,12 @@ class Modflow(BaseModel):
         ml.set_version(version)
 
         # Impending deprecation warning to switch to using
-        # flopy.modflowusg.ModflowUsg() instead of flopy.modflow.Modflow()
+        # flopy.mfusg.MfUsg() instead of flopy.modflow.Modflow()
         if ml.version == "mfusg":
             warnings.warn(
                 "flopy.modflow.Modflow() for mfusg models has been deprecated, "
                 " and will be removed in the next release. Please switch to using"
-                " flopy.modflowusg.ModflowUsg() instead.",
+                " flopy.mfusg.MfUsg() instead.",
                 DeprecationWarning,
             )
 

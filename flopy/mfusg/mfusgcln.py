@@ -2,8 +2,8 @@
 """
 Mfusgcln module.
 
-Contains the ModflowUsgCln class. Note that the user can
-access the ModflowUsgCln class as `flopy.modflowusg.ModflowUsgCln`.
+Contains the MfUsgCln class. Note that the user can
+access the MfUsgCln class as `flopy.mfusg.MfUsgCln`.
 
 Compatible with USG-Transport Version 1.7.0. which can be downloade from
 https://www.gsi-net.com/en/software/free-software/modflow-usg.html
@@ -22,13 +22,13 @@ Methods, book 6, chap. A45, 66 p.
 import numpy as np
 
 from .cln_dtypes import MfUsgClnDtypes
-from .mfusg import fmt_string, ModflowUsg
+from .mfusg import fmt_string, MfUsg
 from ..pakbase import Package
 from ..utils import Util2d
 from ..utils.utils_def import get_open_file_object
 
 
-class ModflowUsgCln(Package):
+class MfUsgCln(Package):
     """Connected Linear Network (CLN) Package class for MODFLOW-USG.
 
     Parameters
@@ -155,10 +155,10 @@ class ModflowUsgCln(Package):
     --------
 
     >>> import flopy
-    >>> ml = flopy.modflow.Modflow(version='mfusg', exe_name='mfusg.exe')
+    >>> ml = flopy.mfusg.MfUsg()
     >>> node_prop = [[1,1,0,10.0,-110.0,1.57,0,0],[2,1,0,10.0,-130.0,1.57,0,0]]
     >>> cln_gwc = [[1,1,50,50,0,0,10.0,1.0,0],[2,2,50,50,0,0,10.0,1.0,0]]
-    >>> cln = flopy.modflowusg.ModflowUsgCln(ml, ncln=1, iclnnds=-1, nndcln=2,
+    >>> cln = flopy.mfusg.MfUsgCln(ml, ncln=1, iclnnds=-1, nndcln=2,
             nclngwc = 2, node_prop =node_prop, cln_gwc =cln_gwc)"""
 
     def __init__(
@@ -199,10 +199,10 @@ class ModflowUsgCln(Package):
     ):
         """Package constructor."""
         msg = (
-            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            "Model object must be of type flopy.mfusg.MfUsg\n"
             f"but received type: {type(model)}."
         )
-        assert isinstance(model, ModflowUsg), msg
+        assert isinstance(model, MfUsg), msg
 
         # set default unit number of one is not specified
         if unitnumber is None:
@@ -556,20 +556,20 @@ class ModflowUsgCln(Package):
 
         Returns
         -------
-        cln : ModflowUsgCln object
+        cln : MfUsgCln object
 
         Examples
         --------
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> cln = flopy.modflowusg.ModflowUsgCln.load('test.cln', m)
+        >>> cln = flopy.mfusg.MfUsgCln.load('test.cln', m)
         """
         msg = (
-            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            "Model object must be of type flopy.mfusg.MfUsg\n"
             f"but received type: {type(model)}."
         )
-        assert isinstance(model, ModflowUsg), msg
+        assert isinstance(model, MfUsg), msg
 
         if model.verbose:
             print("loading CLN package file...\n")
@@ -643,7 +643,7 @@ class ModflowUsgCln(Package):
 
         # set package unit number
         # reset unit numbers
-        unitnumber = ModflowUsgCln._defaultunit()
+        unitnumber = MfUsgCln._defaultunit()
         filenames = [None] * 7
         if ext_unit_dict is not None:
             unitnumber[0], filenames[0] = model.get_ext_dict_attr(

@@ -2,15 +2,15 @@
 """
 mfusgsms module.  This is the solver for MODFLOW-USG.
 
-Contains the ModflowUsgSms class. Note that the user can access
-the ModflowUsgSms class as `flopy.modflowusg.ModflowUsgSms`.
+Contains the MfUsgSms class. Note that the user can access
+the MfUsgSms class as `flopy.mfusg.MfUsgSms`.
 """
 from ..pakbase import Package
 from ..utils.flopy_io import line_parse
-from .mfusg import ModflowUsg
+from .mfusg import MfUsg
 
 
-class ModflowUsgSms(Package):
+class MfUsgSms(Package):
     """
     MODFLOW Sms Package Class.
 
@@ -230,7 +230,7 @@ class ModflowUsgSms(Package):
 
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
-    >>> sms = flopy.modflowusg.ModflowUsgSms(m)
+    >>> sms = flopy.mfusg.MfUsgSms(m)
     """
 
     def __init__(
@@ -271,10 +271,10 @@ class ModflowUsgSms(Package):
         filenames=None,
     ):
         msg = (
-            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            "Model object must be of type flopy.mfusg.MfUsg\n"
             f"but received type: {type(model)}."
         )
-        assert isinstance(model, ModflowUsg), msg
+        assert isinstance(model, MfUsg), msg
 
         # set default unit number of one is not specified
         if unitnumber is None:
@@ -415,7 +415,7 @@ class ModflowUsgSms(Package):
 
         Returns
         -------
-        sms : ModflowUsgSms object
+        sms : MfUsgSms object
 
         Examples
         --------
@@ -425,10 +425,10 @@ class ModflowUsgSms(Package):
         >>> sms = flopy.modflow.ModflowPcg.load('test.sms', m)
         """
         msg = (
-            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            "Model object must be of type flopy.mfusg.MfUsg\n"
             f"but received type: {type(model)}."
         )
-        assert isinstance(model, ModflowUsg), msg
+        assert isinstance(model, MfUsg), msg
 
         if model.verbose:
             print("loading sms package file...")

@@ -1,8 +1,8 @@
 """
 Mfusglpf module.
 
-Contains the ModflowUsgLpf class. Note that the user can access
-the ModflowUsgLpf class as `flopy.modflowusg.ModflowUsgLpf`.
+Contains the MfUsgLpf class. Note that the user can access
+the MfUsgLpf class as `flopy.mfusg.MfUsgLpf`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
@@ -12,7 +12,7 @@ import numpy as np
 
 from ..modflow.mfpar import ModflowPar as mfpar
 from ..modflow.mflpf import ModflowLpf
-from .mfusg import ModflowUsg
+from .mfusg import MfUsg
 from ..utils import Util2d, read1d
 from ..utils.flopy_io import line_parse
 from ..utils.utils_def import (
@@ -22,13 +22,13 @@ from ..utils.utils_def import (
 )
 
 
-class ModflowUsgLpf(ModflowLpf):
+class MfUsgLpf(ModflowLpf):
     """MODFLOW Layer Property Flow Package Class.
 
     Parameters
     ----------
     model : model object
-        The model object (of type :class:`flopy.modflowusg.mfusg.ModflowUsg`) to which
+        The model object (of type :class:`flopy.modflowusg.mfusg.MfUsg`) to which
         this package will be added.
     ipakcb : int
         A flag that is used to determine if cell-by-cell budget data should be
@@ -195,10 +195,10 @@ class ModflowUsgLpf(ModflowLpf):
     --------
 
     >>> import flopy
-    >>> m = flopy.modflowusg.ModflowUsg()
-    >>> disu = flopy.modflowusg.ModflowUsgDisU(
+    >>> m = flopy.mfusg.MfUsg()
+    >>> disu = flopy.mfusg.MfUsgDisU(
         model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
-    >>> lpf = flopy.modflowusg.ModflowUsgLpf(m)
+    >>> lpf = flopy.mfusg.MfUsgLpf(m)
     """
 
     def __init__(
@@ -235,15 +235,15 @@ class ModflowUsgLpf(ModflowLpf):
         filenames=None,
         add_package=True,
     ):
-        """Constructs the ModflowUsgBcf object.
+        """Constructs the MfUsgBcf object.
 
         Overrides the parent ModflowBcf object."""
 
         msg = (
-            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            "Model object must be of type flopy.mfusg.MfUsg\n"
             f"but received type: {type(model)}."
         )
-        assert isinstance(model, ModflowUsg), msg
+        assert isinstance(model, MfUsg), msg
 
         super().__init__(
             model,
@@ -422,7 +422,7 @@ class ModflowUsgLpf(ModflowLpf):
         f : filename or file handle
             File to load.
         model : model object
-            The model object (of type :class:`flopy.modflowusg.ModflowUsg`) to
+            The model object (of type :class:`flopy.mfusg.MfUsg`) to
             which this package will be added.
         ext_unit_dict : dictionary, optional
             If the arrays in the file are specified using EXTERNAL,
@@ -435,23 +435,23 @@ class ModflowUsgLpf(ModflowLpf):
 
         Returns
         -------
-        lpf : ModflowUsgLpf object
-            ModflowUsgLpf object.
+        lpf : MfUsgLpf object
+            MfUsgLpf object.
 
         Examples
         --------
 
         >>> import flopy
-        >>> m = flopy.modflowusg.ModflowUsg()
-        >>> disu = flopy.modflowusg.ModflowUsgDisU(
+        >>> m = flopy.mfusg.MfUsg()
+        >>> disu = flopy.mfusg.MfUsgDisU(
             model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
-        >>> lpf = flopy.modflowusg.ModflowUsgLpf.load('test.lpf', m)
+        >>> lpf = flopy.mfusg.MfUsgLpf.load('test.lpf', m)
         """
         msg = (
-            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            "Model object must be of type flopy.mfusg.MfUsg\n"
             f"but received type: {type(model)}."
         )
-        assert isinstance(model, ModflowUsg), msg
+        assert isinstance(model, MfUsg), msg
 
         if model.verbose:
             print("loading lpf package file...")

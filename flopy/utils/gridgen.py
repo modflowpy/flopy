@@ -3,7 +3,7 @@ import numpy as np
 import subprocess
 
 # flopy imports
-from ..modflowusg.mfusgdisu import ModflowUsgDisU
+from ..mfusg.mfusgdisu import MfUsgDisU
 from ..mf6.modflow import ModflowGwfdis
 from .util_array import Util2d  # read1d,
 from ..export.shapefile_utils import import_shapefile, shp2recarray
@@ -912,7 +912,7 @@ class Gridgen:
         f.close()
 
         # create dis object instance
-        disu = ModflowUsgDisU(
+        disu = MfUsgDisU(
             model,
             nodes=nodes,
             nlay=nlay,

@@ -1,8 +1,8 @@
 """
 Mfusgwel module.
 
-Contains the ModflowUsgWel class. Note that the user can access
-the ModflowUsgWel class as `flopy.modflowusg.ModflowUsgWel`.
+Contains the MfUsgWel class. Note that the user can access
+the MfUsgWel class as `flopy.mfusg.MfUsgWel`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
@@ -12,7 +12,7 @@ from copy import deepcopy
 import numpy as np
 from numpy.lib.recfunctions import stack_arrays
 
-from .mfusg import ModflowUsg
+from .mfusg import MfUsg
 from ..modflow.mfwel import ModflowWel
 from ..modflow.mfparbc import ModflowParBc as mfparbc
 from ..utils.flopy_io import ulstrd
@@ -20,7 +20,7 @@ from ..utils import MfList
 from ..utils.utils_def import get_open_file_object
 
 
-class ModflowUsgWel(ModflowWel):
+class MfUsgWel(ModflowWel):
     """MODFLOW Well Package Class.
 
     Parameters
@@ -155,9 +155,9 @@ class ModflowUsgWel(ModflowWel):
     --------
 
     >>> import flopy
-    >>> m = flopy.modflowusg.ModflowUsg()
+    >>> m = flopy.mfusg.MfUsg()
     >>> lrcq = {0:[[2, 3, 4, -100.]], 1:[[2, 3, 4, -100.]]}
-    >>> wel = flopy.modflowusg.ModflowUsgWel(m, stress_period_data=lrcq)
+    >>> wel = flopy.mfusg.MfUsgWel(m, stress_period_data=lrcq)
 
     """
 
@@ -177,10 +177,10 @@ class ModflowUsgWel(ModflowWel):
     ):
         """Package constructor."""
         msg = (
-            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            "Model object must be of type flopy.mfusg.MfUsg\n"
             f"but received type: {type(model)}."
         )
-        assert isinstance(model, ModflowUsg), msg
+        assert isinstance(model, MfUsg), msg
 
         # set filenames
         filenames = self._prepare_filenames(filenames)
@@ -219,15 +219,13 @@ class ModflowUsgWel(ModflowWel):
 
         # initialize CLN MfList
         # CLN WELs are always read as CLNNODE Q, so dtype must be of unstructured form
-        dtype_cln = ModflowUsgWel.get_default_dtype(structured=False)
+        dtype_cln = MfUsgWel.get_default_dtype(structured=False)
         self.dtype = dtype_cln
         self.cln_stress_period_data = MfList(
             self, cln_stress_period_data, binary=binary
         )
         # reset self.dtype for cases where the model is structured but CLN WELs are used
-        self.dtype = ModflowUsgWel.get_default_dtype(
-            structured=model.structured
-        )
+        self.dtype = MfUsgWel.get_default_dtype(structured=model.structured)
 
         if add_package:
             self.parent.add_package(self)
@@ -384,20 +382,20 @@ class ModflowUsgWel(ModflowWel):
 
         Returns
         -------
-        wel : ModflowUsgWel object
+        wel : MfUsgWel object
 
         Examples
         --------
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> wel = flopy.modflowusg.ModflowUsgWel.load('test.wel', m)
+        >>> wel = flopy.mfusg.MfUsgWel.load('test.wel', m)
         """
         msg = (
-            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            "Model object must be of type flopy.mfusg.MfUsg\n"
             f"but received type: {type(model)}."
         )
-        assert isinstance(model, ModflowUsg), msg
+        assert isinstance(model, MfUsg), msg
 
         if model.verbose:
             print("loading wel package file...")
@@ -427,7 +425,7 @@ class ModflowUsgWel(ModflowWel):
         # dataset 3 and 4 -- read parameter data
         pak_parms = None
         if npwel > 0:
-            par_dt = ModflowUsgWel.get_empty(
+            par_dt = MfUsgWel.get_empty(
                 1, aux_names=aux_names, structured=model.structured
             ).dtype
             # dataset 4 --
@@ -447,7 +445,7 @@ class ModflowUsgWel(ModflowWel):
 
         # set package unit number
         filenames = [None, None, None]
-        unitnumber = ModflowUsgWel._defaultunit()
+        unitnumber = MfUsgWel._defaultunit()
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
                 ext_unit_dict, filetype=cls._ftype()
@@ -613,15 +611,15 @@ class ModflowUsgWel(ModflowWel):
         """
 
         # get the list columns that should be scaled with sfac
-        sfac_columns = ModflowUsgWel._get_sfac_columns()
+        sfac_columns = MfUsgWel._get_sfac_columns()
 
         if itmp == 0:
             bnd_output = None
-            current = ModflowUsgWel.get_empty(
+            current = MfUsgWel.get_empty(
                 itmp, aux_names=aux_names, structured=structured
             )
         elif itmp > 0:
-            current = ModflowUsgWel.get_empty(
+            current = MfUsgWel.get_empty(
                 itmp, aux_names=aux_names, structured=structured
             )
             current = ulstrd(
@@ -690,7 +688,7 @@ class ModflowUsgWel(ModflowWel):
             par_dict, current_dict = pak_parms.get(pname)
             data_dict = current_dict[iname]
 
-            par_current = ModflowUsgWel.get_empty(
+            par_current = MfUsgWel.get_empty(
                 par_dict["nlst"],
                 aux_names=aux_names,
                 structured=model.structured,

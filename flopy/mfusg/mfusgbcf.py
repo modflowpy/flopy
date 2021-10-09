@@ -1,13 +1,13 @@
 """
 Mfusgbcf module.
 
-Contains the ModflowUsgBcf class. Note that the user can
-access the ModflowUsgBcf class as `flopy.modflowusg.ModflowUsgBcf`.
+Contains the MfUsgBcf class. Note that the user can
+access the MfUsgBcf class as `flopy.mfusg.MfUsgBcf`.
 """
 import numpy as np
 
 from ..modflow import ModflowBcf
-from .mfusg import ModflowUsg
+from .mfusg import MfUsg
 from ..utils import Util2d, Util3d
 from ..utils.flopy_io import line_parse
 from ..utils.utils_def import (
@@ -18,7 +18,7 @@ from ..utils.utils_def import (
 )
 
 
-class ModflowUsgBcf(ModflowBcf):
+class MfUsgBcf(ModflowBcf):
     """Block Centered Flow (BCF) Package Class for MODFLOW-USG.
 
     Parameters
@@ -119,10 +119,10 @@ class ModflowUsgBcf(ModflowBcf):
     --------
 
     >>> import flopy
-    >>> ml = flopy.modflowusg.ModflowUsg()
-    >>> disu = flopy.modflowusg.ModflowUsgDisU(model=ml, nlay=1, nodes=1,
+    >>> ml = flopy.mfusg.MfUsg()
+    >>> disu = flopy.mfusg.MfUsgDisU(model=ml, nlay=1, nodes=1,
                  iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
-    >>> bcf = flopy.modflowusg.ModflowUsgBcf(ml)"""
+    >>> bcf = flopy.mfusg.MfUsgBcf(ml)"""
 
     def __init__(
         self,
@@ -152,15 +152,15 @@ class ModflowUsgBcf(ModflowBcf):
         filenames=None,
         add_package=True,
     ):
-        """Constructs the ModflowUsgBcf object.
+        """Constructs the MfUsgBcf object.
 
         Overrides the parent ModflowBcf object.
         """
         msg = (
-            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            "Model object must be of type flopy.mfusg.MfUsg\n"
             f"but received type: {type(model)}."
         )
-        assert isinstance(model, ModflowUsg), msg
+        assert isinstance(model, MfUsg), msg
 
         super().__init__(
             model,
@@ -238,7 +238,7 @@ class ModflowUsgBcf(ModflowBcf):
         Parameters
         ----------
         f : open file object.
-            Default is None, which will result in ModflowUsg.fn_path being
+            Default is None, which will result in MfUsg.fn_path being
             opened for writing.
         """
         # get model information
@@ -338,22 +338,22 @@ class ModflowUsgBcf(ModflowBcf):
 
         Returns
         -------
-        bcf : ModflowUsgBcf object
+        bcf : MfUsgBcf object
 
         Examples
         --------
 
         >>> import flopy
-        >>> m = flopy.modflowusg.ModflowUsg()
-        >>> disu = flopy.modflowusg.ModflowUsgDisU(
+        >>> m = flopy.mfusg.MfUsg()
+        >>> disu = flopy.mfusg.MfUsgDisU(
             model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
-        >>> bcf = flopy.modflowusg.ModflowUsgBcf.load('test.bcf', m)
+        >>> bcf = flopy.mfusg.MfUsgBcf.load('test.bcf', m)
         """
         msg = (
-            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            "Model object must be of type flopy.mfusg.MfUsg\n"
             f"but received type: {type(model)}."
         )
-        assert isinstance(model, ModflowUsg), msg
+        assert isinstance(model, MfUsg), msg
 
         if model.verbose:
             print("loading bcf package file...")

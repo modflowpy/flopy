@@ -3,7 +3,7 @@ import numpy as np
 
 
 class MfUsgClnDtypes:
-    """Defines ModflowUsgCln dtypes for various CLN geometries."""
+    """Defines MfUsgCln dtypes for various CLN geometries."""
 
     @staticmethod
     def get_clnnode_dtype():

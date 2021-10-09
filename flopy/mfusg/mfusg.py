@@ -8,7 +8,7 @@ from ..modflow import Modflow
 from ..mbase import PackageLoadException
 
 
-class ModflowUsg(Modflow):
+class MfUsg(Modflow):
     """MODFLOW-USG Model Class.
 
     Parameters
@@ -48,7 +48,7 @@ class ModflowUsg(Modflow):
     Examples
     --------
     >>> import flopy
-    >>> usg = flopy.modflowusg.ModflowUsg()
+    >>> usg = flopy.mfusg.MfUsg()
     """
 
     def __init__(
@@ -58,7 +58,7 @@ class ModflowUsg(Modflow):
         model_ws=".",
         **kwargs,
     ):
-        """Constructs the ModflowUsg object. Overrides the parent Modflow object."""
+        """Constructs the MfUsg object. Overrides the parent Modflow object."""
         valid_args_defaults = {
             "namefile_ext": "nam",
             "exe_name": "mfusg",
@@ -112,17 +112,17 @@ class ModflowUsg(Modflow):
             "oc": flopy.modflow.ModflowOc,
             "sub": flopy.modflow.ModflowSub,
             "swt": flopy.modflow.ModflowSwt,
-            "disu": flopy.modflowusg.ModflowUsgDisU,
-            "sms": flopy.modflowusg.ModflowUsgSms,
-            "wel": flopy.modflowusg.ModflowUsgWel,
-            "bcf6": flopy.modflowusg.ModflowUsgBcf,
-            "lpf": flopy.modflowusg.ModflowUsgLpf,
-            "cln": flopy.modflowusg.ModflowUsgCln,
-            "gnc": flopy.modflowusg.ModflowUsgGnc,
+            "disu": flopy.mfusg.MfUsgDisU,
+            "sms": flopy.mfusg.MfUsgSms,
+            "wel": flopy.mfusg.MfUsgWel,
+            "bcf6": flopy.mfusg.MfUsgBcf,
+            "lpf": flopy.mfusg.MfUsgLpf,
+            "cln": flopy.mfusg.MfUsgCln,
+            "gnc": flopy.mfusg.MfUsgGnc,
         }
 
     def __repr__(self):
-        """Returns a representation of the ModflowUsg object."""
+        """Returns a representation of the MfUsg object."""
         nrow, ncol, nlay, nper = self.get_nrow_ncol_nlay_nper()
         if nrow is not None:
             # structured case
@@ -181,12 +181,12 @@ class ModflowUsg(Modflow):
 
         Returns
         -------
-        flopy.modflowusg.ModflowUsg
+        flopy.mfusg.MfUsg
 
         Examples
         --------
         >>> import flopy
-        >>> ml = flopy.modflowusg.ModflowUsg.load('model.nam')
+        >>> ml = flopy.mfusg.MfUsg.load('model.nam')
         """
         if version != "mfusg":
             version = "mfusg"
@@ -287,7 +287,7 @@ class ModflowUsg(Modflow):
 
         Parameters
         ----------
-        model : ModflowUsg model object
+        model : MfUsg model object
         ext_unit_dict : dict
             For each file listed in the name file, a
             :class:`flopy.utils.mfreadnam.NamData` instance.
@@ -444,7 +444,7 @@ class ModflowUsg(Modflow):
 
         Parameters
         ----------
-        model : ModflowUsg model object for which package in ext_unit_d_item will
+        model : MfUsg model object for which package in ext_unit_d_item will
             be loaded
         ext_unit_dict : dict
             For each file listed in the name file, a

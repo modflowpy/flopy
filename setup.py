@@ -35,7 +35,7 @@ setup(
         "flopy",
         "flopy.modflow",
         "flopy.modflowlgr",
-        "flopy.modflowusg",
+        "flopy.mfusg",
         "flopy.modpath",
         "flopy.mt3d",
         "flopy.seawat",
