@@ -50,11 +50,7 @@ __all__ = [
     "export",
     "pest",
     "mf6",
-    "mf6",
     "discretization",
     "run_model",
     "which",
-    "__version__",
-    "__author__",
-    "__author_email__",
 ]
