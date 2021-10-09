@@ -1939,14 +1939,14 @@ class HeadUFile(BinaryLayerFile):
 
     def get_ts(self, idx):
         """
-        Get a time series from the binary HeadUFile (not implemented).
+        Get a time series from the binary HeadUFile
 
         Parameters
         ----------
-        idx : tuple of ints, or a list of a tuple of ints
-            idx can be (layer, row, column) or it can be a list in the form
-            [(layer, row, column), (layer, row, column), ...].  The layer,
-            row, and column values must be zero based.
+        idx : int or list of ints
+            idx can be nodenumber or it can be a list in the form
+            [nodenumber, nodenumber, ...].  The nodenumber,
+            values must be zero based.
 
         Returns
         ----------
@@ -1954,15 +1954,43 @@ class HeadUFile(BinaryLayerFile):
             Array has size (ntimes, ncells + 1).  The first column in the
             data array will contain time (totim).
 
-        See Also
-        --------
-
-        Notes
-        -----
-
-        Examples
-        --------
-
         """
-        msg = "HeadUFile: get_ts() is not implemented"
-        raise NotImplementedError(msg)
+        times = self.get_times()
+
+        # find node number in layer that node is in
+        data = self.get_data(totim=times[0])
+        nodelay = [len(data[lay]) for lay in range(len(data))]
+        nodelay_cumsum = np.cumsum([0] + nodelay)
+
+        if isinstance(idx, int):
+            layer = np.searchsorted(nodelay_cumsum, idx)
+            nnode = idx - nodelay_cumsum[layer - 1]
+
+            result = []
+            for i, time in enumerate(times):
+                data = self.get_data(totim=time)
+                result.append([time, data[layer - 1][nnode]])
+
+        elif isinstance(idx, list):
+
+            result = []
+            for i, time in enumerate(times):
+                data = self.get_data(totim=time)
+                row = [time]
+
+                for node in idx:
+                    if isinstance(node, int):
+                        layer = np.searchsorted(nodelay_cumsum, node)
+                        nnode = node - nodelay_cumsum[layer - 1]
+                        row += [data[layer - 1][nnode]]
+                    else:
+                        errmsg = "idx must be an integer or a list of integers"
+                        raise Exception(errmsg)
+
+                result.append(row)
+
+        else:
+            errmsg = "idx must be an integer or a list of integers"
+            raise Exception(errmsg)
+
+        return np.array(result)
