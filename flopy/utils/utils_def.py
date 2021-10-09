@@ -1,8 +1,8 @@
+# pylint: disable=E1101
 """
 Generic classes and utility functions
 """
 
-import warnings
 from datetime import timedelta
 import numpy as np
 
@@ -55,17 +55,6 @@ class FlopyBinaryData:
 
     def _read_values(self, dtype, count):
         return np.fromfile(self.file, dtype, count)
-
-    def __getattr__(self, name):
-        """
-        Gets class attributes to avoid pylint E1101 false positives.
-
-        Will only get called for undefined attributes.
-        """
-        warnings.warn(
-            f"No member '{name}' contained in {type(self).__name__})"
-        )
-        return ""
 
 
 def totim_to_datetime(totim, start="1-1-1970", timeunit="D"):
@@ -216,3 +205,42 @@ def get_unitnumber_from_ext_unit_dict(
             model.add_pop_key_list(ipakcb)
 
     return unitnumber, filenames
+
+
+def type_from_iterable(_iter, index=0, _type=int, default_val=0):
+    """Returns value of specified type from iterable.
+
+    Parameters
+    ----------
+    _iter : iterable
+    index : int
+        Iterable index to try to convert
+    _type : Python type
+    default_val : default value (0)
+
+    Returns
+    ----------
+    val : value of type _type, or default_val
+    """
+    try:
+        val = _type(_iter[index])
+    except ValueError:
+        val = default_val
+    except IndexError:
+        val = default_val
+
+    return val
+
+
+def get_open_file_object(fname_or_fobj, read_write="rw"):
+    """Returns an open file object for either a file name or open file object."""
+    openfile = not (
+        hasattr(fname_or_fobj, "read") or hasattr(fname_or_fobj, "write")
+    )
+    if openfile:
+        filename = fname_or_fobj
+        f_obj = open(filename, read_write)
+    else:
+        f_obj = fname_or_fobj
+
+    return f_obj

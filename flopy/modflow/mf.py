@@ -765,7 +765,7 @@ class Modflow(BaseModel):
                 " and will be removed in the next release. Please switch to using"
                 " flopy.modflowusg.ModflowUsg() instead.",
                 DeprecationWarning,
-            )        
+            )
 
         # reset unit number for glo file
         if version == "mf2k":

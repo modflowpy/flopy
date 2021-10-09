@@ -1,5 +1,5 @@
 """
-mfusgwel module.
+Mfusgwel module.
 
 Contains the ModflowUsgWel class. Note that the user can access
 the ModflowUsgWel class as `flopy.modflowusg.ModflowUsgWel`.
@@ -17,11 +17,11 @@ from ..modflow.mfwel import ModflowWel
 from ..modflow.mfparbc import ModflowParBc as mfparbc
 from ..utils.flopy_io import ulstrd
 from ..utils import MfList
+from ..utils.utils_def import get_open_file_object
 
 
 class ModflowUsgWel(ModflowWel):
-    """
-    MODFLOW Well Package Class.
+    """MODFLOW Well Package Class.
 
     Parameters
     ----------
@@ -175,6 +175,7 @@ class ModflowUsgWel(ModflowWel):
         filenames=None,
         add_package=True,
     ):
+        """Package constructor."""
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
             f"but received type: {type(model)}."
@@ -231,54 +232,8 @@ class ModflowUsgWel(ModflowWel):
         if add_package:
             self.parent.add_package(self)
 
-        return
-
-    @staticmethod
-    def _get_kper_data(kper, first, stress_period_data):
-        """
-        Gets boundary condition stress period data for a given stress period.
-
-        Parameters:
-        ----------
-            kper: int
-                stress period (base 0)
-            first : int
-                First stress period for which stress period data is defined
-            stress_period_data : Numpy recarray or int or None
-                Flopy boundary condition stress_period_data object
-                (with a "data" attribute that is keyed on kper)
-        Returns
-        -------
-        itmp : int
-            Number of boundary conditions for stress period kper
-        kper_data : Numpy recarray
-            Boundary condition data for stress period kper
-        """
-        kpers = list(stress_period_data.data.keys())
-        # Fill missing early kpers with 0
-        kper_data = None
-        if kper < first:
-            itmp = 0
-        elif kper in kpers:
-            kper_data = deepcopy(stress_period_data.data[kper])
-            kper_vtype = stress_period_data.vtype[kper]
-            if kper_vtype == np.recarray:
-                itmp = kper_data.shape[0]
-                lnames = [name.lower() for name in kper_data.dtype.names]
-                for idx in ["k", "i", "j", "node"]:
-                    if idx in lnames:
-                        kper_data[idx] += 1
-            elif (kper_vtype == int) or (kper_vtype is None):
-                itmp = kper_data
-        # Fill late missing kpers with -1
-        else:
-            itmp = -1
-
-        return itmp, kper_data
-
     def write_file(self, f=None):
-        """
-        Write the package file.
+        """Write the package file.
 
         Parameters:
         ----------
@@ -363,8 +318,174 @@ class ModflowUsgWel(ModflowWel):
         f_wel.close()
 
     @staticmethod
+    def _get_kper_data(kper, first, stress_period_data):
+        """
+        Gets boundary condition stress period data for a given stress period.
+
+        Parameters:
+        ----------
+            kper: int
+                stress period (base 0)
+            first : int
+                First stress period for which stress period data is defined
+            stress_period_data : Numpy recarray or int or None
+                Flopy boundary condition stress_period_data object
+                (with a "data" attribute that is keyed on kper)
+        Returns
+        -------
+        itmp : int
+            Number of boundary conditions for stress period kper
+        kper_data : Numpy recarray
+            Boundary condition data for stress period kper
+        """
+        kpers = list(stress_period_data.data.keys())
+        # Fill missing early kpers with 0
+        kper_data = None
+        if kper < first:
+            itmp = 0
+        elif kper in kpers:
+            kper_data = deepcopy(stress_period_data.data[kper])
+            kper_vtype = stress_period_data.vtype[kper]
+            if kper_vtype == np.recarray:
+                itmp = kper_data.shape[0]
+                lnames = [name.lower() for name in kper_data.dtype.names]
+                for idx in ["k", "i", "j", "node"]:
+                    if idx in lnames:
+                        kper_data[idx] += 1
+            elif (kper_vtype == int) or (kper_vtype is None):
+                itmp = kper_data
+        # Fill late missing kpers with -1
+        else:
+            itmp = -1
+
+        return itmp, kper_data
+
+    @classmethod
+    def load(cls, f, model, nper=None, ext_unit_dict=None, check=True):
+        """
+        Load an existing package.
+
+        Parameters
+        ----------
+        f : filename or file handle
+            File to load.
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+        nper : int
+            The number of stress periods.  If nper is None, then nper will be
+            obtained from the model object. (default is None).
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
+
+        Returns
+        -------
+        wel : ModflowUsgWel object
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow()
+        >>> wel = flopy.modflowusg.ModflowUsgWel.load('test.wel', m)
+        """
+        msg = (
+            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
+            f"but received type: {type(model)}."
+        )
+        assert isinstance(model, ModflowUsg), msg
+
+        if model.verbose:
+            print("loading wel package file...")
+        f_obj = get_open_file_object(f, "r")
+
+        # dataset 0 -- header
+        while True:
+            line = f_obj.readline()
+            if line[0] != "#":
+                break
+
+        # dataset 1a -- check for parameters
+        npwel = 0
+        if "parameter" in line.lower():
+            line_text = line.strip().split()
+            npwel = int(line_text[1])
+            if npwel > 0:
+                if model.verbose:
+                    print(
+                        f"   Parameters detected. Number of parameters = {npwel}"
+                    )
+            line = f_obj.readline()
+
+        # dataset 2 -- MXACTW IWELCB [Option]
+        ipakcb, options, aux_names, iunitafr = cls._load_dataset2(line)
+
+        # dataset 3 and 4 -- read parameter data
+        pak_parms = None
+        if npwel > 0:
+            par_dt = ModflowUsgWel.get_empty(
+                1, aux_names=aux_names, structured=model.structured
+            ).dtype
+            # dataset 4 --
+            pak_parms = mfparbc.load(
+                f_obj, npwel, par_dt, model, ext_unit_dict, model.verbose
+            )
+
+        if nper is None:
+            _, _, _, nper = model.get_nrow_ncol_nlay_nper()
+
+        # dataset 5 -- read data for every stress period
+        stress_period_data, cln_stress_period_data = cls._load_item5(
+            f_obj, model, nper, aux_names, ext_unit_dict, pak_parms
+        )
+
+        f_obj.close()
+
+        # set package unit number
+        filenames = [None, None, None]
+        unitnumber = ModflowUsgWel._defaultunit()
+        if ext_unit_dict is not None:
+            unitnumber, filenames[0] = model.get_ext_dict_attr(
+                ext_unit_dict, filetype=cls._ftype()
+            )
+            if ipakcb > 0:
+                _, filenames[1] = model.get_ext_dict_attr(
+                    ext_unit_dict, unit=ipakcb
+                )
+                model.add_pop_key_list(ipakcb)
+            if iunitafr > 0:
+                _, filenames[2] = model.get_ext_dict_attr(
+                    ext_unit_dict, unit=iunitafr
+                )
+                model.add_pop_key_list(iunitafr)
+
+        wel = cls(
+            model,
+            ipakcb=ipakcb,
+            stress_period_data=stress_period_data,
+            cln_stress_period_data=cln_stress_period_data,
+            dtype=cls.get_default_dtype(structured=model.structured),
+            options=options,
+            unitnumber=unitnumber,
+            filenames=filenames,
+        )
+
+        if check:
+            wel.check(
+                f=f"{wel.name[0]}.chk",
+                verbose=model.verbose,
+                level=0,
+            )
+
+        return wel
+
+    @staticmethod
     def _load_dataset2(line):
-        """load mfusgwel dataset 2 from line."""
+        """Load mfusgwel dataset 2 from line."""
         # dataset 2 -- MXACTW IWELCB [Option]
         line_text = line.strip().split()
         n_items = 2
@@ -417,16 +538,64 @@ class ModflowUsgWel(ModflowWel):
 
         return itmp, itmpp, itmpcln
 
+    @classmethod
+    def _load_item5(
+        cls, f_obj, model, nper, aux_names, ext_unit_dict=None, pak_parms=None
+    ):
+        """Loads Wel item 5."""
+        bnd_output = None
+        stress_period_data = {}
+
+        cln_bnd_output = None
+        cln_stress_period_data = {}
+
+        for iper in range(nper):
+            if model.verbose:
+                msg = f"   loading well data for kper {iper + 1:5d}"
+                print(msg)
+            line = f_obj.readline()
+            itmp, itmpp, itmpcln = cls._load_itmp_itmpp_itmpcln(line)
+            if itmp is None:
+                break
+
+            # dataset 6a -- read well data
+            bnd_output = cls._load_dataset6(
+                f_obj, itmp, model, aux_names, ext_unit_dict, model.structured
+            )
+
+            # dataset 6c -- read CLN well data
+            cln_bnd_output = cls._load_dataset6(
+                f_obj, itmpcln, model, aux_names, ext_unit_dict, False
+            )
+
+            # dataset 7 -- parameter data
+            if itmpp > 0:
+                bnd_output = cls._load_dataset7(
+                    f_obj, itmpp, model, aux_names, pak_parms, bnd_output
+                )
+
+            if bnd_output is None:
+                stress_period_data[iper] = itmp
+            else:
+                stress_period_data[iper] = bnd_output
+
+            if cln_bnd_output is None:
+                cln_stress_period_data[iper] = itmpcln
+            else:
+                cln_stress_period_data[iper] = cln_bnd_output
+
+        return stress_period_data, cln_stress_period_data
+
     @staticmethod
     def _load_dataset6(
-        f, itmp, model, aux_names, ext_unit_dict, structured=False
+        f_obj, itmp, model, aux_names, ext_unit_dict, structured=False
     ):
         """
         Reads dataset 6(a, b or c) from open file
 
         Parameters
         ----------
-        f : open file handle
+        f_obj : open file handle
         itmp : int
             Number of items to read from dataset6a
         model : Flopy model object
@@ -456,7 +625,7 @@ class ModflowUsgWel(ModflowWel):
                 itmp, aux_names=aux_names, structured=structured
             )
             current = ulstrd(
-                f, itmp, current, model, sfac_columns, ext_unit_dict
+                f_obj, itmp, current, model, sfac_columns, ext_unit_dict
             )
             if structured:
                 current["k"] -= 1
@@ -474,13 +643,15 @@ class ModflowUsgWel(ModflowWel):
         return bnd_output
 
     @staticmethod
-    def _load_dataset7(f, itmpp, model, aux_names, pak_parms, bnd_output=None):
+    def _load_dataset7(
+        f_obj, itmpp, model, aux_names, pak_parms, bnd_output=None
+    ):
         """
         Reads named parameters from wel file
 
         Parameters
         ----------
-        f : open file handle
+        f_obj : open file handle
         itmpp : int, must be > 0
             Number of named parameters to read from dataset7
         model : Flopy model object
@@ -501,7 +672,7 @@ class ModflowUsgWel(ModflowWel):
 
         iparm = 0
         while iparm < itmpp:
-            line = f.readline()
+            line = f_obj.readline()
             line_text = line.strip().split()
             pname = line_text[0].lower()
             iname = "static"
@@ -560,163 +731,3 @@ class ModflowUsgWel(ModflowWel):
             iparm += 1
 
         return bnd_output
-
-    @classmethod
-    def load(cls, f, model, nper=None, ext_unit_dict=None):
-        """
-        Load an existing package.
-
-        Parameters
-        ----------
-        f : filename or file handle
-            File to load.
-        model : model object
-            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
-            which this package will be added.
-        nper : int
-            The number of stress periods.  If nper is None, then nper will be
-            obtained from the model object. (default is None).
-        ext_unit_dict : dictionary, optional
-            If the arrays in the file are specified using EXTERNAL,
-            or older style array control records, then `f` should be a file
-            handle.  In this case ext_unit_dict is required, which can be
-            constructed using the function
-            :class:`flopy.utils.mfreadnam.parsenamefile`.
-
-        Returns
-        -------
-        wel : ModflowUsgWel object
-
-        Examples
-        --------
-
-        >>> import flopy
-        >>> m = flopy.modflow.Modflow()
-        >>> wel = flopy.modflowusg.ModflowUsgWel.load('test.wel', m)
-        """
-        msg = (
-            "Model object must be of type flopy.modflowusg.ModflowUsg\n"
-            f"but received type: {type(model)}."
-        )
-        assert isinstance(model, ModflowUsg), msg
-
-        if model.verbose:
-            print("loading wel package file...")
-
-        # open the file if not already open
-        if not hasattr(f, "read"):
-            filename = f
-            f = open(filename, "r")
-        elif hasattr(f, "name"):
-            filename = f.name
-            f = open(filename, "r")
-
-        # dataset 0 -- header
-        while True:
-            line = f.readline()
-            if line[0] != "#":
-                break
-
-        # dataset 1a -- check for parameters
-        npwel = 0
-        if "parameter" in line.lower():
-            line_text = line.strip().split()
-            npwel = int(line_text[1])
-            if npwel > 0:
-                if model.verbose:
-                    print(
-                        f"   Parameters detected. Number of parameters = {npwel}"
-                    )
-            line = f.readline()
-
-        # dataset 2 -- MXACTW IWELCB [Option]
-        ipakcb, options, aux_names, iunitafr = cls._load_dataset2(line)
-
-        # dataset 3 and 4 -- read parameter data
-        if npwel > 0:
-            par_dt = ModflowUsgWel.get_empty(
-                1, aux_names=aux_names, structured=model.structured
-            ).dtype
-            # dataset 4 --
-            pak_parms = mfparbc.load(
-                f, npwel, par_dt, model, ext_unit_dict, model.verbose
-            )
-
-        if nper is None:
-            _, _, _, nper = model.get_nrow_ncol_nlay_nper()
-
-        # dataset 5 -- read data for every stress period
-        bnd_output = None
-        stress_period_data = {}
-
-        cln_bnd_output = None
-        cln_stress_period_data = {}
-
-        for iper in range(nper):
-            if model.verbose:
-                msg = f"   loading well data for kper {iper + 1:5d}"
-                print(msg)
-            line = f.readline()
-            itmp, itmpp, itmpcln = cls._load_itmp_itmpp_itmpcln(line)
-            if itmp is None:
-                break
-
-            # dataset 6a -- read well data
-            bnd_output = cls._load_dataset6(
-                f, itmp, model, aux_names, ext_unit_dict, model.structured
-            )
-
-            # dataset 6c -- read CLN well data
-            cln_bnd_output = cls._load_dataset6(
-                f, itmpcln, model, aux_names, ext_unit_dict, False
-            )
-
-            # dataset 7 -- parameter data
-            if itmpp > 0:
-                bnd_output = cls._load_dataset7(
-                    f, itmpp, model, aux_names, pak_parms, bnd_output
-                )
-
-            if bnd_output is None:
-                stress_period_data[iper] = itmp
-            else:
-                stress_period_data[iper] = bnd_output
-
-            if cln_bnd_output is None:
-                cln_stress_period_data[iper] = itmpcln
-            else:
-                cln_stress_period_data[iper] = cln_bnd_output
-
-        if hasattr(f, "read"):
-            f.close()
-
-        # set package unit number
-        filenames = [None, None, None]
-        unitnumber = ModflowUsgWel._defaultunit()
-        if ext_unit_dict is not None:
-            unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=cls._ftype()
-            )
-            if ipakcb > 0:
-                _, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=ipakcb
-                )
-                model.add_pop_key_list(ipakcb)
-            if iunitafr > 0:
-                _, filenames[2] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=iunitafr
-                )
-                model.add_pop_key_list(iunitafr)
-
-        wel = cls(
-            model,
-            ipakcb=ipakcb,
-            stress_period_data=stress_period_data,
-            cln_stress_period_data=cln_stress_period_data,
-            dtype=ModflowUsgWel.get_default_dtype(structured=model.structured),
-            options=options,
-            unitnumber=unitnumber,
-            filenames=filenames,
-        )
-
-        return wel

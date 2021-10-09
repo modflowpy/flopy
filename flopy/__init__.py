@@ -37,3 +37,24 @@ from . import mf6
 from . import discretization
 
 from .mbase import run_model, which
+
+__all__ = [
+    "modflow",
+    "mt3d",
+    "seawat",
+    "modpath",
+    "modflowlgr",
+    "modflowusg",
+    "utils",
+    "plot",
+    "export",
+    "pest",
+    "mf6",
+    "mf6",
+    "discretization",
+    "run_model",
+    "which",
+    "__version__",
+    "__author__",
+    "__author_email__",
+]

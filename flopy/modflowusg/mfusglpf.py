@@ -1,6 +1,5 @@
-# pylint: disable=W0223
 """
-mfusglpf module.
+Mfusglpf module.
 
 Contains the ModflowUsgLpf class. Note that the user can access
 the ModflowUsgLpf class as `flopy.modflowusg.ModflowUsgLpf`.
@@ -19,12 +18,12 @@ from ..utils.flopy_io import line_parse
 from ..utils.utils_def import (
     get_util2d_shape_for_layer,
     get_unitnumber_from_ext_unit_dict,
+    get_open_file_object,
 )
 
 
 class ModflowUsgLpf(ModflowLpf):
-    """
-    MODFLOW Layer Property Flow Package Class.
+    """MODFLOW Layer Property Flow Package Class.
 
     Parameters
     ----------
@@ -197,7 +196,8 @@ class ModflowUsgLpf(ModflowLpf):
 
     >>> import flopy
     >>> m = flopy.modflowusg.ModflowUsg()
-    >>> disu = flopy.modflowusg.ModflowUsgDisU(model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
+    >>> disu = flopy.modflowusg.ModflowUsgDisU(
+        model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
     >>> lpf = flopy.modflowusg.ModflowUsgLpf(m)
     """
 
@@ -235,11 +235,10 @@ class ModflowUsgLpf(ModflowLpf):
         filenames=None,
         add_package=True,
     ):
-        """
-        Constructs the ModflowUsgBcf object.
+        """Constructs the ModflowUsgBcf object.
 
-        Overrides the parent ModflowBcf object.
-        """
+        Overrides the parent ModflowBcf object."""
+
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
             f"but received type: {type(model)}."
@@ -345,222 +344,73 @@ class ModflowUsgLpf(ModflowLpf):
             )
 
         # get model information
-        nrow, ncol, nlay, _ = self.parent.nrow_ncol_nlay_nper
+        nlay = self.parent.nlay
         dis = self.parent.get_package("DIS")
         if dis is None:
             dis = self.parent.get_package("DISU")
 
         # Open file for writing
         if f is None:
-            f = open(self.fn_path, "w")
+            f_obj = open(self.fn_path, "w")
 
         # Item 0: text
-        f.write(f"{self.heading}\n")
+        f_obj.write(f"{self.heading}\n")
 
         # Item 1: IBCFCB, HDRY, NPLPF, <IKCFLAG>, OPTIONS
         if self.parent.version == "mfusg" and not self.parent.structured:
-            f.write(
+            f_obj.write(
                 (
                     f" {self.ipakcb:9d} {self.hdry:9.5G} {self.nplpf:9d}"
                     f" {self.ikcflag:9d} {self.options:s}\n"
                 )
             )
         else:
-            f.write(
+            f_obj.write(
                 f" {self.ipakcb:9d} {self.hdry:9.5G} {self.nplpf:9d} {self.options}\n"
             )
         # LAYTYP array
-        f.write(self.laytyp.string)
+        f_obj.write(self.laytyp.string)
         # LAYAVG array
-        f.write(self.layavg.string)
+        f_obj.write(self.layavg.string)
         # CHANI array
-        f.write(self.chani.string)
+        f_obj.write(self.chani.string)
         # LAYVKA array
-        f.write(self.layvka.string)
+        f_obj.write(self.layvka.string)
         # LAYWET array
-        f.write(self.laywet.string)
+        f_obj.write(self.laywet.string)
         # Item 7: WETFCT, IWETIT, IHDWET
         iwetdry = self.laywet.sum()
         if iwetdry > 0:
-            f.write(f"{self.wetfct:10f}{self.iwetit:10d}{self.ihdwet:10d}\n")
+            f_obj.write(
+                f"{self.wetfct:10f}{self.iwetit:10d}{self.ihdwet:10d}\n"
+            )
 
         transient = not dis.steady.all()
         structured = self.parent.structured
-        anis = any([ch != 1 for ch in self.chani])
+        anis = any(ch != 1 for ch in self.chani)
         if (not structured) and anis:
-            f.write(self.anglex.get_file_entry())
+            f_obj.write(self.anglex.get_file_entry())
 
-        for k in range(nlay):
+        for layer in range(nlay):
             if self.ikcflag == 0:  # mfusg
-                f.write(self.hk[k].get_file_entry())
-                if self.chani[k] <= 0.0:
-                    f.write(self.hani[k].get_file_entry())
-                f.write(self.vka[k].get_file_entry())
+                f_obj.write(self.hk[layer].get_file_entry())
+                if self.chani[layer] <= 0.0:
+                    f_obj.write(self.hani[layer].get_file_entry())
+                f_obj.write(self.vka[layer].get_file_entry())
 
             if transient:
-                f.write(self.ss[k].get_file_entry())
-                if self.laytyp[k] != 0:
-                    f.write(self.sy[k].get_file_entry())
-                if self.ikcflag == 0 and dis.laycbd[k] > 0:
-                    f.write(self.vkcb[k].get_file_entry())
-                if self.laywet[k] != 0 and self.laytyp[k] != 0:
-                    f.write(self.wetdry[k].get_file_entry())
+                f_obj.write(self.ss[layer].get_file_entry())
+                if self.laytyp[layer] != 0:
+                    f_obj.write(self.sy[layer].get_file_entry())
+                if self.ikcflag == 0 and dis.laycbd[layer] > 0:
+                    f_obj.write(self.vkcb[layer].get_file_entry())
+                if self.laywet[layer] != 0 and self.laytyp[layer] != 0:
+                    f_obj.write(self.wetdry[layer].get_file_entry())
 
         if abs(self.ikcflag == 1):
-            f.write(self.ksat.get_file_entry())
+            f_obj.write(self.ksat.get_file_entry())
 
-        f.close()
-        return
-
-    @staticmethod
-    def _load_hy_tran_kv_vcont(
-        f, model, layer_vars, ext_unit_dict, par_types_parm_dict
-    ):
-        """
-        Loads hy/tran and kv/vcont file entries.
-
-        Parameters
-        ----------
-        f : open file object.
-        model : model object
-            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
-            which this package will be added.
-        layer_vars : dict. Key/value pairs must be:
-            "layer": layer number k (base 0),
-            "layvka": layvka for layer k,
-            "chani": chani for layer k
-        ext_unit_dict : external unit dictionary
-        par_types_parm_dict : tuple of (par_types, parm_dict)
-
-        Returns
-        -------
-        hk_k : Numpy array of hk values for layer k (or 0)
-        hani_k : Numpy array of hani values for layer k (or 0)
-        vka_k : Numpy array of vka values for layer k (or 0)
-        """
-        par_types, parm_dict = par_types_parm_dict
-        k = layer_vars["layer"]
-        layvka_k = layer_vars["layvka"]
-        chani_k = layer_vars["chani"]
-        util2d_shape = get_util2d_shape_for_layer(model, layer=k)
-
-        # hk
-        if model.verbose:
-            print(f"   loading hk layer {k + 1:3d}...")
-        if "hk" not in par_types:
-            hk_k = Util2d.load(
-                f, model, util2d_shape, np.float32, "hk", ext_unit_dict
-            )
-        else:
-            f.readline()
-            hk_k = mfpar.parameter_fill(
-                model, util2d_shape, "hk", parm_dict, findlayer=k
-            )
-
-        # hani
-        hani_k = 1.0
-        if chani_k <= 0.0:
-            if model.verbose:
-                print(f"   loading hani layer {k + 1:3d}...")
-            if "hani" not in par_types:
-                hani_k = Util2d.load(
-                    f,
-                    model,
-                    util2d_shape,
-                    np.float32,
-                    "hani",
-                    ext_unit_dict,
-                )
-            else:
-                f.readline()
-                hani_k = mfpar.parameter_fill(
-                    model, util2d_shape, "hani", parm_dict, findlayer=k
-                )
-
-        # vka
-        if model.verbose:
-            print(f"   loading vka layer {k + 1:3d}...")
-        key = "vk"
-        if layvka_k != 0:
-            key = "vani"
-        if "vk" not in par_types and "vani" not in par_types:
-            vka_k = Util2d.load(
-                f, model, util2d_shape, np.float32, key, ext_unit_dict
-            )
-        else:
-            f.readline()
-            key = "vk"
-            if "vani" in par_types:
-                key = "vani"
-            vka_k = mfpar.parameter_fill(
-                model, util2d_shape, key, parm_dict, findlayer=k
-            )
-
-        return hk_k, hani_k, vka_k
-
-    @staticmethod
-    def _load_storage(
-        f, model, layer_vars, ext_unit_dict, par_types_parm_dict
-    ):
-        """
-        Loads ss, sy file entries.
-
-        Parameters
-        ----------
-        f : open file object.
-        model : model object
-            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
-            which this package will be added.
-        layer_vars : dict. Key/value pairs must be:
-            "layer": layer number k (base 0),
-            "laytyp": laytyp for layer k
-        ext_unit_dict : external unit dictionary
-        par_types_parm_dict : tuple of (par_types, parm_dict)
-
-        Returns
-        -------
-        ss_k : Numpy array of ss values for layer k (or 0)
-        sy_k : Numpy array of sy values for layer k (or 0)
-        """
-        par_types, parm_dict = par_types_parm_dict
-        k = layer_vars["layer"]
-        laytyp_k = layer_vars["laytyp"]
-        util2d_shape = get_util2d_shape_for_layer(model, layer=k)
-
-        # ss
-        if model.verbose:
-            print(f"   loading ss layer {k + 1:3d}...")
-        if "ss" not in par_types:
-            ss_k = Util2d.load(
-                f, model, util2d_shape, np.float32, "ss", ext_unit_dict
-            )
-        else:
-            f.readline()
-            ss_k = mfpar.parameter_fill(
-                model, util2d_shape, "ss", parm_dict, findlayer=k
-            )
-
-        # sy
-        sy_k = 0.1
-        if laytyp_k != 0:
-            if model.verbose:
-                print(f"   loading sy layer {k + 1:3d}...")
-            if "sy" not in par_types:
-                sy_k = Util2d.load(
-                    f,
-                    model,
-                    util2d_shape,
-                    np.float32,
-                    "sy",
-                    ext_unit_dict,
-                )
-            else:
-                f.readline()
-                sy_k = mfpar.parameter_fill(
-                    model, util2d_shape, "sy", parm_dict, findlayer=k
-                )
-
-        return ss_k, sy_k
+        f_obj.close()
 
     @classmethod
     def load(cls, f, model, ext_unit_dict=None, check=True):
@@ -593,7 +443,8 @@ class ModflowUsgLpf(ModflowLpf):
 
         >>> import flopy
         >>> m = flopy.modflowusg.ModflowUsg()
-        >>> disu = flopy.modflowusg.ModflowUsgDisU(model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
+        >>> disu = flopy.modflowusg.ModflowUsgDisU(
+            model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
         >>> lpf = flopy.modflowusg.ModflowUsgLpf.load('test.lpf', m)
         """
         msg = (
@@ -605,178 +456,68 @@ class ModflowUsgLpf(ModflowLpf):
         if model.verbose:
             print("loading lpf package file...")
 
-        openfile = not hasattr(f, "read")
-        if openfile:
-            filename = f
-            f = open(filename, "r")
+        f_obj = get_open_file_object(f, "r")
 
         # dataset 0 -- header
         while True:
-            line = f.readline()
+            line = f_obj.readline()
             if line[0] != "#":
                 break
 
         # determine problem dimensions
-        _, nc, nlay, _ = model.get_nrow_ncol_nlay_nper()
         dis = model.get_package("DIS")
         if dis is None:
             dis = model.get_package("DISU")
             njag = dis.njag
 
-        # Item 1: IBCFCB, HDRY, NPLPF - line already read above
-        if model.verbose:
-            print("   loading IBCFCB, HDRY, NPLPF...")
-        text_list = line_parse(line)
-        ipakcb, hdry, nplpf = (
-            int(text_list[0]),
-            float(text_list[1]),
-            int(text_list[2]),
-        )
-        item1_len = 3
-        ikcflag = 0
-        if not model.structured:
-            ikcflag = int(text_list[3])
-            item1_len = 4
+        (
+            ipakcb,
+            hdry,
+            nplpf,
+            ikcflag,
+            storagecoefficient,
+            constantcv,
+            thickstrt,
+            nocvcorrection,
+            novfc,
+        ) = cls._load_item1(line, model)
 
-        storagecoefficient = False
-        constantcv = False
-        thickstrt = False
-        nocvcorrection = False
-        novfc = False
-        if len(text_list) > item1_len:
-            for k in range(item1_len, len(text_list)):
-                if "STORAGECOEFFICIENT" in text_list[k].upper():
-                    storagecoefficient = True
-                if "CONSTANTCV" in text_list[k].upper():
-                    constantcv = True
-                if "THICKSTRT" in text_list[k].upper():
-                    thickstrt = True
-                if "NOCVCORRECTION" in text_list[k].upper():
-                    nocvcorrection = True
-                if "NOVFC" in text_list[k].upper():
-                    novfc = True
-
-        # LAYTYP array
-        if model.verbose:
-            print("   loading LAYTYP...")
-        laytyp = np.empty((nlay), dtype=np.int32)
-        laytyp = read1d(f, laytyp)
-
-        # LAYAVG array
-        if model.verbose:
-            print("   loading LAYAVG...")
-        layavg = np.empty((nlay), dtype=np.int32)
-        layavg = read1d(f, layavg)
-
-        # CHANI array
-        if model.verbose:
-            print("   loading CHANI...")
-        chani = np.empty((nlay), dtype=np.float32)
-        chani = read1d(f, chani)
-
-        # LAYVKA array
-        if model.verbose:
-            print("   loading LAYVKA...")
-        layvka = np.empty((nlay,), dtype=np.int32)
-        layvka = read1d(f, layvka)
-
-        # LAYWET array
-        if model.verbose:
-            print("   loading LAYWET...")
-        laywet = np.empty((nlay), dtype=np.int32)
-        laywet = read1d(f, laywet)
-
-        # Item 7: WETFCT, IWETIT, IHDWET
-        wetfct, iwetit, ihdwet = None, None, None
-        iwetdry = laywet.sum()
-        if iwetdry > 0:
-            if model.verbose:
-                print("   loading WETFCT, IWETIT, IHDWET...")
-            line = f.readline()
-            text_list = line.strip().split()
-            wetfct, iwetit, ihdwet = (
-                float(text_list[0]),
-                int(text_list[1]),
-                int(text_list[2]),
-            )
-
-        # parameters data
-        par_types = []
-        parm_dict = {}
-        if nplpf > 0:
-            par_types, parm_dict = mfpar.load(f, nplpf, model.verbose)
-            # print parm_dict
+        (
+            laytyp,
+            layavg,
+            chani,
+            layvka,
+            laywet,
+            wetfct,
+            iwetit,
+            ihdwet,
+            iwetdry,
+        ) = cls._load_items_2_to_7(f_obj, model)
 
         # ANGLEX for unstructured grid with anisotropy
-        anis = any([ch != 1 for ch in chani])
+        anis = any(ch != 1 for ch in chani)
         anglex = 0
         if (not model.structured) and anis:
             if model.verbose:
                 print("mfusg:   loading ANGLEX...")
             anglex = Util2d.load(
-                f, model, (njag,), np.float32, "anglex", ext_unit_dict
+                f_obj, model, (njag,), np.float32, "anglex", ext_unit_dict
             )
 
-        # non-parameter data
-        transient = not dis.steady.all()
-        hk = [0] * nlay
-        hani = [0] * nlay
-        vka = [0] * nlay
-        ss = [0] * nlay
-        sy = [0] * nlay
-        vkcb = [0] * nlay
-        wetdry = [0] * nlay
-
-        # load by layer
-        for k in range(nlay):
-
-            util2d_shape = get_util2d_shape_for_layer(model, layer=k)
-
-            if ikcflag == 0:
-                hk[k], hani[k], vka[k] = cls._load_hy_tran_kv_vcont(
-                    f,
-                    model,
-                    {"layer": k, "layvka": layvka[k], "chani": chani[k]},
-                    ext_unit_dict,
-                    (par_types, parm_dict),
-                )
-
-            # storage properties
-            if transient:
-                ss[k], sy[k] = cls._load_storage(
-                    f,
-                    model,
-                    {"layer": k, "laytyp": laytyp[k]},
-                    ext_unit_dict,
-                    (par_types, parm_dict),
-                )
-
-            # vkcb
-            if ikcflag == 0 and dis.laycbd[k] != 0:
-                if model.verbose:
-                    print(f"   loading vkcb layer {k + 1:3d}...")
-                if "vkcb" not in par_types:
-                    vkcb[k] = Util2d.load(
-                        f,
-                        model,
-                        util2d_shape,
-                        np.float32,
-                        "vkcb",
-                        ext_unit_dict,
-                    )
-                else:
-                    line = f.readline()
-                    vkcb[k] = mfpar.parameter_fill(
-                        model, util2d_shape, "vkcb", parm_dict, findlayer=k
-                    )
-
-            # wetdry
-            if laywet[k] != 0 and laytyp[k] != 0 and laytyp[k] != 4:
-                if model.verbose:
-                    print(f"   loading wetdry layer {k + 1:3d}...")
-                wetdry[k] = Util2d.load(
-                    f, model, util2d_shape, np.float32, "wetdry", ext_unit_dict
-                )
+        # load layer properties
+        (hk, hani, vka, ss, sy, vkcb, wetdry) = cls._load_layer_properties(
+            cls,
+            f_obj,
+            model,
+            dis,
+            ikcflag,
+            layvka,
+            chani,
+            laytyp,
+            laywet,
+            nplpf,
+            ext_unit_dict,
+        )
 
         # Ksat  mfusg
         ksat = 1.0
@@ -784,11 +525,10 @@ class ModflowUsgLpf(ModflowLpf):
             if model.verbose:
                 print("   loading ksat...")
             ksat = Util2d.load(
-                f, model, (njag,), np.float32, "ksat", ext_unit_dict
+                f_obj, model, (njag,), np.float32, "ksat", ext_unit_dict
             )
 
-        if openfile:
-            f.close()
+        f_obj.close()
 
         # set package unit number and io file names
         unitnumber, filenames = get_unitnumber_from_ext_unit_dict(
@@ -834,3 +574,349 @@ class ModflowUsgLpf(ModflowLpf):
                 level=0,
             )
         return lpf
+
+    @staticmethod
+    def _load_item1(line, model):
+        """Loads LPF item 1 and options."""
+        # Item 1: IBCFCB, HDRY, NPLPF - line already read above
+        if model.verbose:
+            print("   loading IBCFCB, HDRY, NPLPF...")
+        text_list = line_parse(line)
+        ipakcb, hdry, nplpf = (
+            int(text_list[0]),
+            float(text_list[1]),
+            int(text_list[2]),
+        )
+        ikcflag = 0
+        if not model.structured:
+            ikcflag = int(text_list[3])
+        storagecoefficient = "STORAGECOEFFICIENT" in [
+            item.upper() for item in text_list
+        ]
+        constantcv = "CONSTANTCV" in [item.upper() for item in text_list]
+        thickstrt = "THICKSTRT" in [item.upper() for item in text_list]
+        nocvcorrection = "NOCVCORRECTION" in [
+            item.upper() for item in text_list
+        ]
+        novfc = "NOVFC" in [item.upper() for item in text_list]
+
+        return (
+            ipakcb,
+            hdry,
+            nplpf,
+            ikcflag,
+            storagecoefficient,
+            constantcv,
+            thickstrt,
+            nocvcorrection,
+            novfc,
+        )
+
+    @staticmethod
+    def _load_items_2_to_7(f_obj, model):
+        """Loads LPF items 2 through 7."""
+        nlay = model.nlay
+
+        # LAYTYP array
+        if model.verbose:
+            print("   loading LAYTYP...")
+        laytyp = np.empty((nlay), dtype=np.int32)
+        laytyp = read1d(f_obj, laytyp)
+
+        # LAYAVG array
+        if model.verbose:
+            print("   loading LAYAVG...")
+        layavg = np.empty((nlay), dtype=np.int32)
+        layavg = read1d(f_obj, layavg)
+
+        # CHANI array
+        if model.verbose:
+            print("   loading CHANI...")
+        chani = np.empty((nlay), dtype=np.float32)
+        chani = read1d(f_obj, chani)
+
+        # LAYVKA array
+        if model.verbose:
+            print("   loading LAYVKA...")
+        layvka = np.empty((nlay,), dtype=np.int32)
+        layvka = read1d(f_obj, layvka)
+
+        # LAYWET array
+        if model.verbose:
+            print("   loading LAYWET...")
+        laywet = np.empty((nlay), dtype=np.int32)
+        laywet = read1d(f_obj, laywet)
+
+        # Item 7: WETFCT, IWETIT, IHDWET
+        wetfct, iwetit, ihdwet = None, None, None
+        iwetdry = laywet.sum()
+        if iwetdry > 0:
+            if model.verbose:
+                print("   loading WETFCT, IWETIT, IHDWET...")
+            line = f_obj.readline()
+            text_list = line.strip().split()
+            wetfct, iwetit, ihdwet = (
+                float(text_list[0]),
+                int(text_list[1]),
+                int(text_list[2]),
+            )
+
+        return (
+            laytyp,
+            layavg,
+            chani,
+            layvka,
+            laywet,
+            wetfct,
+            iwetit,
+            ihdwet,
+            iwetdry,
+        )
+
+    @staticmethod
+    def _load_hy_tran_kv_vcont(
+        f_obj, model, layer_vars, ext_unit_dict, par_types_parm_dict
+    ):
+        """
+        Loads hy/tran and kv/vcont file entries.
+
+        Parameters
+        ----------
+        f_obj : open file object.
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+        layer_vars : dict. Key/value pairs must be:
+            "layer": layer number k (base 0),
+            "layvka": layvka for layer k,
+            "chani": chani for layer k
+        ext_unit_dict : external unit dictionary
+        par_types_parm_dict : tuple of (par_types, parm_dict)
+
+        Returns
+        -------
+        hk_k : Numpy array of hk values for layer k (or 0)
+        hani_k : Numpy array of hani values for layer k (or 0)
+        vka_k : Numpy array of vka values for layer k (or 0)
+        """
+        par_types, parm_dict = par_types_parm_dict
+        layer = layer_vars["layer"]
+        layvka_k = layer_vars["layvka"]
+        chani_k = layer_vars["chani"]
+        util2d_shape = get_util2d_shape_for_layer(model, layer=layer)
+
+        # hk
+        if model.verbose:
+            print(f"   loading hk layer {layer + 1:3d}...")
+        if "hk" not in par_types:
+            hk_k = Util2d.load(
+                f_obj, model, util2d_shape, np.float32, "hk", ext_unit_dict
+            )
+        else:
+            f_obj.readline()
+            hk_k = mfpar.parameter_fill(
+                model, util2d_shape, "hk", parm_dict, findlayer=layer
+            )
+
+        # hani
+        hani_k = 1.0
+        if chani_k <= 0.0:
+            if model.verbose:
+                print(f"   loading hani layer {layer + 1:3d}...")
+            if "hani" not in par_types:
+                hani_k = Util2d.load(
+                    f_obj,
+                    model,
+                    util2d_shape,
+                    np.float32,
+                    "hani",
+                    ext_unit_dict,
+                )
+            else:
+                f_obj.readline()
+                hani_k = mfpar.parameter_fill(
+                    model, util2d_shape, "hani", parm_dict, findlayer=layer
+                )
+
+        # vka
+        if model.verbose:
+            print(f"   loading vka layer {layer + 1:3d}...")
+        key = "vk"
+        if layvka_k != 0:
+            key = "vani"
+        if "vk" not in par_types and "vani" not in par_types:
+            vka_k = Util2d.load(
+                f_obj, model, util2d_shape, np.float32, key, ext_unit_dict
+            )
+        else:
+            f_obj.readline()
+            key = "vk"
+            if "vani" in par_types:
+                key = "vani"
+            vka_k = mfpar.parameter_fill(
+                model, util2d_shape, key, parm_dict, findlayer=layer
+            )
+
+        return hk_k, hani_k, vka_k
+
+    def _load_layer_properties(
+        self,
+        f_obj,
+        model,
+        dis,
+        ikcflag,
+        layvka,
+        chani,
+        laytyp,
+        laywet,
+        nplpf,
+        ext_unit_dict,
+    ):
+        """Loads layer properties."""
+        # parameters data
+        par_types = []
+        parm_dict = {}
+        if nplpf > 0:
+            par_types, parm_dict = mfpar.load(f_obj, nplpf, model.verbose)
+            # print parm_dict
+
+        # non-parameter data
+        transient = not dis.steady.all()
+        nlay = model.nlay
+        hk = [0] * nlay
+        hani = [0] * nlay
+        vka = [0] * nlay
+        ss = [0] * nlay
+        sy = [0] * nlay
+        vkcb = [0] * nlay
+        wetdry = [0] * nlay
+
+        # load by layer
+        for layer in range(nlay):
+
+            util2d_shape = get_util2d_shape_for_layer(model, layer=layer)
+
+            if ikcflag == 0:
+                (
+                    hk[layer],
+                    hani[layer],
+                    vka[layer],
+                ) = self._load_hy_tran_kv_vcont(
+                    f_obj,
+                    model,
+                    {
+                        "layer": layer,
+                        "layvka": layvka[layer],
+                        "chani": chani[layer],
+                    },
+                    ext_unit_dict,
+                    (par_types, parm_dict),
+                )
+
+            # storage properties
+            if transient:
+                ss[layer], sy[layer] = self._load_storage(
+                    f_obj,
+                    model,
+                    {"layer": layer, "laytyp": laytyp[layer]},
+                    ext_unit_dict,
+                    (par_types, parm_dict),
+                )
+
+            # vkcb
+            if ikcflag == 0 and dis.laycbd[layer] != 0:
+                if model.verbose:
+                    print(f"   loading vkcb layer {layer + 1:3d}...")
+                if "vkcb" not in par_types:
+                    vkcb[layer] = Util2d.load(
+                        f_obj,
+                        model,
+                        util2d_shape,
+                        np.float32,
+                        "vkcb",
+                        ext_unit_dict,
+                    )
+                else:
+                    _ = f_obj.readline()
+                    vkcb[layer] = mfpar.parameter_fill(
+                        model, util2d_shape, "vkcb", parm_dict, findlayer=layer
+                    )
+
+            # wetdry
+            if laywet[layer] != 0 and not (laytyp[layer] not in [0, 4]):
+                if model.verbose:
+                    print(f"   loading wetdry layer {layer + 1:3d}...")
+                wetdry[layer] = Util2d.load(
+                    f_obj,
+                    model,
+                    util2d_shape,
+                    np.float32,
+                    "wetdry",
+                    ext_unit_dict,
+                )
+
+        return hk, hani, vka, ss, sy, vkcb, wetdry
+
+    @staticmethod
+    def _load_storage(
+        f_obj, model, layer_vars, ext_unit_dict, par_types_parm_dict
+    ):
+        """
+        Loads ss, sy file entries.
+
+        Parameters
+        ----------
+        f_obj : open file object.
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+        layer_vars : dict. Key/value pairs must be:
+            "layer": layer number k (base 0),
+            "laytyp": laytyp for layer k
+        ext_unit_dict : external unit dictionary
+        par_types_parm_dict : tuple of (par_types, parm_dict)
+
+        Returns
+        -------
+        ss_k : Numpy array of ss values for layer k (or 0)
+        sy_k : Numpy array of sy values for layer k (or 0)
+        """
+        par_types, parm_dict = par_types_parm_dict
+        layer = layer_vars["layer"]
+        laytyp_k = layer_vars["laytyp"]
+        util2d_shape = get_util2d_shape_for_layer(model, layer=layer)
+
+        # ss
+        if model.verbose:
+            print(f"   loading ss layer {layer + 1:3d}...")
+        if "ss" not in par_types:
+            ss_k = Util2d.load(
+                f_obj, model, util2d_shape, np.float32, "ss", ext_unit_dict
+            )
+        else:
+            f_obj.readline()
+            ss_k = mfpar.parameter_fill(
+                model, util2d_shape, "ss", parm_dict, findlayer=layer
+            )
+
+        # sy
+        sy_k = 0.1
+        if laytyp_k != 0:
+            if model.verbose:
+                print(f"   loading sy layer {layer + 1:3d}...")
+            if "sy" not in par_types:
+                sy_k = Util2d.load(
+                    f_obj,
+                    model,
+                    util2d_shape,
+                    np.float32,
+                    "sy",
+                    ext_unit_dict,
+                )
+            else:
+                f_obj.readline()
+                sy_k = mfpar.parameter_fill(
+                    model, util2d_shape, "sy", parm_dict, findlayer=layer
+                )
+
+        return ss_k, sy_k

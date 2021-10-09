@@ -1,5 +1,6 @@
+# pylint: disable=E1101
 """
-mfusgcln module.
+Mfusgcln module.
 
 Contains the ModflowUsgCln class. Note that the user can
 access the ModflowUsgCln class as `flopy.modflowusg.ModflowUsgCln`.
@@ -19,15 +20,16 @@ volume finite-difference formulation: U.S. Geological Survey Techniques and
 Methods, book 6, chap. A45, 66 p.
 """
 import numpy as np
+
+from .cln_dtypes import MfUsgClnDtypes
+from .mfusg import fmt_string, ModflowUsg
 from ..pakbase import Package
 from ..utils import Util2d
-
-from .mfusg import fmt_string, ModflowUsg
+from ..utils.utils_def import get_open_file_object
 
 
 class ModflowUsgCln(Package):
-    """
-    Connected Linear Network (CLN) Package class for MODFLOW-USG.
+    """Connected Linear Network (CLN) Package class for MODFLOW-USG.
 
     Parameters
     ----------
@@ -157,9 +159,7 @@ class ModflowUsgCln(Package):
     >>> node_prop = [[1,1,0,10.0,-110.0,1.57,0,0],[2,1,0,10.0,-130.0,1.57,0,0]]
     >>> cln_gwc = [[1,1,50,50,0,0,10.0,1.0,0],[2,2,50,50,0,0,10.0,1.0,0]]
     >>> cln = flopy.modflowusg.ModflowUsgCln(ml, ncln=1, iclnnds=-1, nndcln=2,
-            nclngwc = 2, node_prop =node_prop, cln_gwc =cln_gwc)
-
-    """
+            nclngwc = 2, node_prop =node_prop, cln_gwc =cln_gwc)"""
 
     def __init__(
         self,
@@ -185,7 +185,7 @@ class ModflowUsgCln(Package):
         bhe=False,  # OPTIONS2: borehole heat exchanger (BHE)
         grav=None,  # OPTIONS2: gravitational acceleration constant
         visk=None,  # OPTIONS2: kinematic viscosity of water
-        extension=[
+        extension=(
             "cln",
             "clncb",
             "clnhd",
@@ -193,10 +193,11 @@ class ModflowUsgCln(Package):
             "clnib",
             "clncn",
             "clnmb",
-        ],
+        ),
         unitnumber=None,
         filenames=None,
     ):
+        """Package constructor."""
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
             f"but received type: {type(model)}."
@@ -217,7 +218,7 @@ class ModflowUsgCln(Package):
         # Call ancestor's init to set self.parent, extension, name and unit number
         super().__init__(
             model,
-            extension=extension,
+            extension=list(extension),
             name=self._ftype(),
             unit_number=unitnumber,
             filenames=filenames,
@@ -249,6 +250,7 @@ class ModflowUsgCln(Package):
         self.clncon = clncon
         self.iac_cln = iac_cln
         self.nja_cln = nja_cln
+        self.ja_cln = ja_cln
         self._define_cln_networks(model)
 
         # Define CLN node properties
@@ -261,7 +263,7 @@ class ModflowUsgCln(Package):
             )
 
         self.node_prop = self._make_recarray(
-            node_prop, dtype=ModflowUsgCln.get_clnnode_dtype()
+            node_prop, dtype=MfUsgClnDtypes.get_clnnode_dtype()
         )
 
         # Define CLN groundwater connections
@@ -280,7 +282,7 @@ class ModflowUsgCln(Package):
         structured = self.parent.structured
 
         self.cln_gwc = self._make_recarray(
-            cln_gwc, dtype=ModflowUsgCln.get_gwconn_dtype(structured)
+            cln_gwc, dtype=MfUsgClnDtypes.get_gwconn_dtype(structured)
         )
 
         # Define CLN geometry types
@@ -317,7 +319,7 @@ class ModflowUsgCln(Package):
 
     @staticmethod
     def _get_default_extension():
-        """Gets default package file extensions"""
+        """Gets default package file extensions."""
         return [
             "cln",
             "clncb",
@@ -404,7 +406,7 @@ class ModflowUsgCln(Package):
             )
 
     def _define_cln_geometries(self):
-        """Initialises CLN geometry types"""
+        """Initialises CLN geometry types."""
         # Circular conduit geometry types
         if self.nconduityp <= 0 or self.cln_circ is None:
             raise Exception(
@@ -417,7 +419,7 @@ class ModflowUsgCln(Package):
             )
 
         self.cln_circ = self._make_recarray(
-            self.cln_circ, dtype=ModflowUsgCln.get_clncirc_dtype(self.bhe)
+            self.cln_circ, dtype=MfUsgClnDtypes.get_clncirc_dtype(self.bhe)
         )
 
         # Rectangular conduit geometry types
@@ -427,185 +429,16 @@ class ModflowUsgCln(Package):
                     "mfcln: Number of rectangular properties not equal nrectyp"
                 )
             self.cln_rect = self._make_recarray(
-                self.cln_rect, dtype=ModflowUsgCln.get_clnrect_dtype(self.bhe)
+                self.cln_rect, dtype=MfUsgClnDtypes.get_clnrect_dtype(self.bhe)
             )
-
-    @staticmethod
-    def get_clnnode_dtype():
-        """
-        dtype of CLN node properties.
-
-        Returns
-        -------
-        dtype
-
-        """
-        dtype = np.dtype(
-            [
-                ("ifno", int),  # node number
-                ("iftyp", int),  # type-index
-                ("ifdir", int),  # directional index
-                ("fleng", np.float32),  # length
-                ("felev", np.float32),  # elevation of the bottom
-                ("fangle", np.float32),  # angle
-                ("iflin", int),  # flag of flow conditions
-                ("iccwadi", int),  # flag of vertical flow correction
-                ("x1", np.float32),  # coordinates
-                ("y1", np.float32),  # coordinates
-                ("z1", np.float32),  # coordinates
-                ("x2", np.float32),  # coordinates
-                ("y2", np.float32),  # coordinates
-                ("z2", np.float32),  # coordinates
-            ]
-        )
-        return dtype
-
-    @staticmethod
-    def get_gwconn_dtype(structured=True):
-        """
-        dtype of CLN node - GW node connection properties.
-
-        Parameters
-        ----------
-        structured : True = structured grid
-
-        Returns
-        -------
-        dtype
-
-        """
-        if structured:
-            dtype = np.dtype(
-                [
-                    ("ifnod", int),  # CLN node number
-                    ("igwlay", int),  # layer number of connecting gw node
-                    ("igwrow", int),  # row number of connecting gw node
-                    ("igwfcol", int),  # col number of connecting gw node
-                    ("ifcon", int),  # index of connectivity equation
-                    ("fskin", np.float32),  # leakance across a skin
-                    ("flengw", np.float32),  # length of connection
-                    (
-                        "faniso",
-                        np.float32,
-                    ),  # anisotropy or thickness of sediments
-                    ("icgwadi", int),  # flag of vertical flow correction
-                ]
-            )
-        else:
-            dtype = np.dtype(
-                [
-                    ("ifnod", int),  # CLN node number
-                    ("igwnod", int),  # node number of connecting gw node
-                    ("ifcon", int),  # index of connectivity equation
-                    ("fskin", np.float32),  # leakance across a skin
-                    ("flengw", np.float32),  # length of connection
-                    (
-                        "faniso",
-                        np.float32,
-                    ),  # anisotropy or thickness of sediments
-                    ("icgwadi", int),  # flag of vertical flow correction
-                ]
-            )
-        return dtype
-
-    @staticmethod
-    def get_clncirc_dtype(bhe=False):
-        """
-        dtype of CLN node circular conduit type properties.
-
-        Parameters
-        ----------
-        bhe : borehole heat exchanger (bhe)
-
-        Returns
-        -------
-        dtype
-
-        """
-        if bhe:
-            dtype = np.dtype(
-                [
-                    ("iconduityp", int),  # index of circular conduit type
-                    ("frad", np.float32),  # radius
-                    (
-                        "conduitk",
-                        np.float32,
-                    ),  # conductivity or resistance factor
-                    ("tcond", np.float32),  # thermal conductivity of bhe tube
-                    ("tthk", np.float32),  # thickness
-                    (
-                        "tcfluid",
-                        np.float32,
-                    ),  # thermal conductivity of the fluid
-                    ("tconv", np.float32),  # thermal convective coefficient
-                ]
-            )
-        else:
-            dtype = np.dtype(
-                [
-                    ("iconduityp", int),  # index of circular conduit type
-                    ("frad", np.float32),  # radius
-                    (
-                        "conduitk",
-                        np.float32,
-                    ),  # conductivity or resistance factor
-                ]
-            )
-        return dtype
-
-    @staticmethod
-    def get_clnrect_dtype(bhe=False):
-        """
-        Returns the dtype of CLN node rectangular conduit type properties.
-
-        Parameters
-        ----------
-        bhe : borehole heat exchanger (bhe)
-
-        Returns
-        -------
-        dtype
-
-        """
-        if bhe:
-            dtype = np.dtype(
-                [
-                    ("irectyp", int),  # index of rectangular conduit type
-                    ("flength", np.float32),  # width
-                    ("fheight", np.float32),  # height
-                    (
-                        "conduitk",
-                        np.float32,
-                    ),  # conductivity or resistance factor
-                    ("tcond", np.float32),  # thermal conductivity of bhe tube
-                    ("tthk", np.float32),  # thickness of bhe tube
-                    ("tcfluid", np.float32),  # thermal conductivity of fluid
-                    ("tconv", np.float32),  # thermal convective
-                ]
-            )
-        else:
-            dtype = np.dtype(
-                [
-                    ("irectyp", int),  # index of rectangular conduit type
-                    ("flength", np.float32),  # width
-                    ("fheight", np.float32),  # height
-                    (
-                        "conduitk",
-                        np.float32,
-                    ),  # conductivity or resistance factor
-                ]
-            )
-        return dtype
 
     @property
     def cln_nodes(self):
-        """
-        Returns the total number of CLN nodes.
+        """Returns the total number of CLN nodes."""
 
-        """
         return self.nclnnds
 
-    def write_file(self, f=None):
+    def write_file(self, f=None, check=False):
         """
         Write the package file.
 
@@ -619,13 +452,12 @@ class ModflowUsgCln(Package):
         None
 
         """
-        if f is not None:
-            if isinstance(f, str):
-                f_cln = open(f, "w")
-            else:
-                f_cln = f
-        else:
-            f_cln = open(self.fn_path, "w")
+        if f is None:
+            f = self.fn_path
+        f_cln = get_open_file_object(f, "w")
+
+        if check:
+            print("Warning: mfcln package check not yet implemented.")
 
         f_cln.write(f"{self.heading}\n")
 
@@ -672,7 +504,7 @@ class ModflowUsgCln(Package):
         f_cln.close()
 
     def _write_items_0_1(self, f_cln):
-        """writes cln items 0 and 1."""
+        """Writes cln items 0 and 1."""
         if self.transient or self.printiaja:
             f_cln.write("OPTIONS   ")
             if self.transient:
@@ -704,7 +536,7 @@ class ModflowUsgCln(Package):
         f_cln.write("\n")
 
     @classmethod
-    def load(cls, f, model, ext_unit_dict=None):
+    def load(cls, f, model, pak_type="cln", ext_unit_dict=None, **kwargs):
         """
         Load an existing package.
 
@@ -813,7 +645,6 @@ class ModflowUsgCln(Package):
         # reset unit numbers
         unitnumber = ModflowUsgCln._defaultunit()
         filenames = [None] * 7
-        extension = cls._get_default_extension()
         if ext_unit_dict is not None:
             unitnumber[0], filenames[0] = model.get_ext_dict_attr(
                 ext_unit_dict, filetype=cls._ftype()
@@ -860,17 +691,17 @@ class ModflowUsgCln(Package):
         return cln
 
     @staticmethod
-    def _load_items_0_1(f, model):
+    def _load_items_0_1(f_obj, model):
         """Loads items 0 and 1 from filehandle f."""
         # Options
         transient = False
         printiaja = False
-        line = f.readline().upper()
+        line = f_obj.readline().upper()
         if line.startswith("OPTIONS"):
             line_text = line.strip().split()
             transient = bool("TRANSIENT" in line_text)
             printiaja = bool("PRINTIAJA" in line_text)
-            line = f.readline().upper()
+            line = f_obj.readline().upper()
 
         line_text = line.strip().split()
 
@@ -917,20 +748,13 @@ class ModflowUsgCln(Package):
 
         if model.verbose:
             print(
-                f"   ncln {ncln}\n",
-                f"   iclnnds {iclnnds}\n",
-                f"   iclncb {iclncb}\n",
-                f"   iclnhd {iclnhd}\n",
-                f"   iclndd {iclndd}\n",
-                f"   iclnib {iclnib}\n",
-                f"   nclngwc {nclngwc}\n",
-                f"   TRANSIENT {transient}\n",
-                f"   PRINTIAJA {printiaja}\n",
-                f"   RECTANGULAR {nrectyp}\n",
-                f"   BHEDETAIL {bhe}\n",
-                f"   SAVECLNCON {iclncn}\n",
-                f"   SAVECLNMAS {iclnmb}\n",
-                f"   GRAVITY {grav}\n",
+                f"   ncln {ncln}\n   iclnnds {iclnnds}\n",
+                f"   iclncb {iclncb}\n   iclnhd {iclnhd}\n",
+                f"   iclndd {iclndd}\n   iclnib {iclnib}\n",
+                f"   nclngwc {nclngwc}\n   TRANSIENT {transient}\n",
+                f"   PRINTIAJA {printiaja}\n   RECTANGULAR {nrectyp}\n",
+                f"   BHEDETAIL {bhe}\n   SAVECLNCON {iclncn}\n",
+                f"   SAVECLNMAS {iclnmb}\n   GRAVITY {grav}\n",
                 f"   VISCOSITY {visk}",
             )
 
@@ -955,24 +779,8 @@ class ModflowUsgCln(Package):
         )
 
     @staticmethod
-    def _load_items_3to6(f, model, ncln, iclnnds, ext_unit_dict):
-        """
-        Loads cln items 3, or 4,5,6 from filehandle f
-
-        Parameters
-        ----------
-        f : file handle
-            File to read from.
-        model : model object
-        ncln : int, number of cln segments
-        iclnnds : int, number of cln nodes in model
-        ext_unit_dict : dictionary
-            External unit dictionary.
-
-        Returns
-        -------
-        nndcln, clncon, nja_cln, iac_cln, ja_cln
-        """
+    def _load_items_3to6(f_obj, model, ncln, iclnnds, ext_unit_dict):
+        """Loads cln items 3, or 4,5,6 from filehandle f."""
         nndcln = None
         clncon = None
         nja_cln = None
@@ -982,7 +790,7 @@ class ModflowUsgCln(Package):
             if model.verbose:
                 print("   Reading nndcln...")
             nndcln = Util2d.load(
-                f, model, (ncln,), np.int32, "nndcln", ext_unit_dict
+                f_obj, model, (ncln,), np.int32, "nndcln", ext_unit_dict
             )
             nclnnds = nndcln.array.sum()
             if iclnnds > 0:
@@ -991,16 +799,16 @@ class ModflowUsgCln(Package):
                 nclnnds = iclnnds
                 clncon = []
                 for icln in range(ncln):
-                    line = f.readline()
+                    line = f_obj.readline()
                     line_text = line.strip().split()
                     iclncon = []
-                    for i in range(nndcln[icln]):
-                        iclncon.append(line_text[i])
+                    for idx in range(nndcln[icln]):
+                        iclncon.append(line_text[idx])
                     clncon.append(iclncon)
         elif ncln == 0:
             if model.verbose:
                 print("   Reading nja_cln...")
-            line = f.readline()
+            line = f_obj.readline()
             line_text = line.strip().split()
             nja_cln = int(line_text[0])
 
@@ -1008,13 +816,13 @@ class ModflowUsgCln(Package):
                 print("   Reading iac_cln...")
             nclnnds = abs(iclnnds)
             iac_cln = Util2d.load(
-                f, model, (nclnnds,), np.int32, "iac_cln", ext_unit_dict
+                f_obj, model, (nclnnds,), np.int32, "iac_cln", ext_unit_dict
             )
 
             if model.verbose:
                 print("   Reading ja_cln...")
             ja_cln = Util2d.load(
-                f, model, (nja_cln,), np.int32, "ja_cln", ext_unit_dict
+                f_obj, model, (nja_cln,), np.int32, "ja_cln", ext_unit_dict
             )
         else:
             raise Exception("mfcln: negative number of CLN segments")
@@ -1030,12 +838,12 @@ class ModflowUsgCln(Package):
         return [71, 0, 0, 0, 0, 0, 0]
 
     @staticmethod
-    def _is_float(s):
+    def _is_float(string):
         """
         Test whether the string is a float number.
         """
         try:
-            float(s)
+            float(string)
         except ValueError:
             return False
         else:
@@ -1048,23 +856,23 @@ class ModflowUsgCln(Package):
         """
         nprop = len(dtype.names)
         ptemp = []
-        for t in array:
-            if len(t) < nprop:
-                t = t + (nprop - len(t)) * [0.0]
+        for item in array:
+            if len(item) < nprop:
+                item = item + (nprop - len(item)) * [0.0]
             else:
-                t = t[:nprop]
-            ptemp.append(tuple(t))
+                item = item[:nprop]
+            ptemp.append(tuple(item))
 
         return np.array(ptemp, dtype)
 
     @classmethod
-    def _read_prop(cls, f, nrec):
+    def _read_prop(cls, f_obj, nrec):
         """
         Read the property tables (node_prop, cln_gwc, cln_circ, cln_rect).
 
         Parameters
         ----------
-        f : package file handle
+        f_obj : package file handle
         nrec : number of rows in the table
 
         Returns
@@ -1074,7 +882,7 @@ class ModflowUsgCln(Package):
         ptemp = []
 
         for _ in range(nrec):
-            line = f.readline()
+            line = f_obj.readline()
             line_text = line.strip().split()
             prop = [float(item) for item in line_text if cls._is_float(item)]
             ptemp.append(prop)

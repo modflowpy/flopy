@@ -72,7 +72,7 @@ class ModflowBcf(Package):
         Default is None.
     add_package : bool
         Flag to add the initialised package object to the parent model object.
-        Default is True.        
+        Default is True.
 
     Methods
     -------

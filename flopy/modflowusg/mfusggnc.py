@@ -1,5 +1,5 @@
 """
-mfusggnc module.
+Mfusggnc module.
 
 This is for the Ghost Node Correction (GNC) Package for MODFLOW-USG.
 Contains the ModflowUsgGnc class. Note that the user can access
@@ -15,8 +15,7 @@ from .mfusg import fmt_string
 
 
 class ModflowUsgGnc(Package):
-    """
-    MODFLOW USG Ghost Node Correction (GNC) Package Class.
+    """MODFLOW USG Ghost Node Correction (GNC) Package Class.
 
     Parameters
     ----------
@@ -92,6 +91,7 @@ class ModflowUsgGnc(Package):
         unitnumber=None,
         filenames=None,
     ):
+        """Package constructor."""
         msg = (
             "Model object must be of type flopy.modflowusg.ModflowUsg\n"
             f"but received type: {type(model)}."
@@ -125,7 +125,7 @@ class ModflowUsgGnc(Package):
         else:
             raise Exception("mfgnc: number of GNC cell must be larger than 0")
 
-        if numalphaj > 0 and numalphaj < 6:
+        if 0 < numalphaj < 6:
             self.numalphaj = numalphaj
         else:
             raise Exception(
@@ -152,11 +152,8 @@ class ModflowUsgGnc(Package):
 
         self.parent.add_package(self)
 
-        return
-
-    def write_file(self, f=None):
-        """
-        Write the package file.
+    def write_file(self, f=None, check=False):
+        """Write the package file.
 
         Parameters
         ----------
@@ -176,6 +173,11 @@ class ModflowUsgGnc(Package):
         else:
             f_gnc = open(self.fn_path, "w")
 
+        if check:
+            raise NotImplementedError(
+                "Warning: mfgnc package check not yet implemented."
+            )
+
         f_gnc.write(f"{self.heading}\n")
 
         f_gnc.write(
@@ -190,8 +192,8 @@ class ModflowUsgGnc(Package):
 
         gdata["NodeN"] += 1
         gdata["NodeM"] += 1
-        for i in range(self.numalphaj):
-            gdata[f"Node{i:d}"] += 1
+        for idx in range(self.numalphaj):
+            gdata[f"Node{idx:d}"] += 1
 
         np.savetxt(f_gnc, gdata, fmt=fmt_string(gdata), delimiter="")
 
@@ -200,6 +202,7 @@ class ModflowUsgGnc(Package):
 
     @staticmethod
     def get_default_dtype(numalphaj, iflalphan):
+        """Returns default GNC dtypes."""
         dtype = np.dtype(
             [
                 ("NodeN", int),
@@ -207,10 +210,10 @@ class ModflowUsgGnc(Package):
             ]
         ).descr
 
-        for i in range(numalphaj):
-            dtype.append((f"Node{i:d}", "<i4"))
-        for i in range(numalphaj):
-            dtype.append((f"Alpha{i:d}", "<f4"))
+        for idx in range(numalphaj):
+            dtype.append((f"Node{idx:d}", "<i4"))
+        for idx in range(numalphaj):
+            dtype.append((f"Alpha{idx:d}", "<f4"))
 
         if iflalphan == 1:
             dtype.append(("AlphaN", "<f4"))
@@ -219,12 +222,13 @@ class ModflowUsgGnc(Package):
 
     @staticmethod
     def get_empty(numgnc=0, numalphaj=1, iflalphan=0):
+        """Returns empty GNC recarray of defualt dtype."""
         # get an empty recarray that corresponds to dtype
         dtype = ModflowUsgGnc.get_default_dtype(numalphaj, iflalphan)
         return create_empty_recarray(numgnc, dtype, default_value=-1.0e10)
 
     @classmethod
-    def load(cls, f, model, ext_unit_dict=None):
+    def load(cls, f, model, pak_type="gnc", ext_unit_dict=None, **kwargs):
         """
         Load an existing package.
 
@@ -264,8 +268,8 @@ class ModflowUsgGnc(Package):
 
         if model.version != "mfusg":
             print(
-                "Warning: model version was reset from '{}' to 'mfusg' "
-                "in order to load a GNC file".format(model.version)
+                "Warning: model version was reset from"
+                f"'{model.version}' to 'mfusg' to load a GNC file"
             )
             model.version = "mfusg"
 
@@ -300,9 +304,9 @@ class ModflowUsgGnc(Package):
 
         # Item 2 -- read parameter data
         if npgncn > 0:
-            dt = ModflowUsgGnc.get_empty(npgncn, mxgnn, iflalphan).dtype
+            dtype = ModflowUsgGnc.get_empty(npgncn, mxgnn, iflalphan).dtype
             # Item 3 --
-            mfparbc.load(f, npgncn, dt, model, ext_unit_dict, model.verbose)
+            mfparbc.load(f, npgncn, dtype, model, ext_unit_dict, model.verbose)
 
         # Item 4 -- read GNC data
         gncdata = ModflowUsgGnc.get_empty(numgnc, numalphaj, iflalphan)
@@ -311,8 +315,8 @@ class ModflowUsgGnc(Package):
 
         gncdata["NodeN"] -= 1
         gncdata["NodeM"] -= 1
-        for i in range(numalphaj):
-            gncdata[f"Node{i:d}"] -= 1
+        for idx in range(numalphaj):
+            gncdata[f"Node{idx:d}"] -= 1
 
         if openfile:
             f.close()

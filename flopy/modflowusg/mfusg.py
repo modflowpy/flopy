@@ -1,7 +1,7 @@
-"""mfusg module."""
+"""Mfusg module."""
 import os
-import flopy
 from inspect import getfullargspec
+import flopy
 
 from ..utils import mfreadnam
 from ..modflow import Modflow
@@ -9,7 +9,7 @@ from ..mbase import PackageLoadException
 
 
 class ModflowUsg(Modflow):
-    """MODFLOW-USG Model Class
+    """MODFLOW-USG Model Class.
 
     Parameters
     ----------
@@ -18,7 +18,7 @@ class ModflowUsg(Modflow):
         that are created with write_model.
     namefile_ext : str, default "nam"
         Extension for the namefile.
-    exe_name : str, default "mfusg.exe"
+    exe_name : str, default "mfusg"
         The name of the executable to use.
     structured : bool, default True
         Specify if model grid is structured (default) or unstructured.
@@ -58,14 +58,10 @@ class ModflowUsg(Modflow):
         model_ws=".",
         **kwargs,
     ):
-        """
-        Constructs the ModflowUsg object.
-
-        Overrides the parent Modflow object.
-        """
+        """Constructs the ModflowUsg object. Overrides the parent Modflow object."""
         valid_args_defaults = {
             "namefile_ext": "nam",
-            "exe_name": "mfusg.exe",
+            "exe_name": "mfusg",
             "listunit": 2,
             "external_path": None,
             "verbose": False,
@@ -124,45 +120,40 @@ class ModflowUsg(Modflow):
             "cln": flopy.modflowusg.ModflowUsgCln,
             "gnc": flopy.modflowusg.ModflowUsgGnc,
         }
-        return
 
     def __repr__(self):
         """Returns a representation of the ModflowUsg object."""
         nrow, ncol, nlay, nper = self.get_nrow_ncol_nlay_nper()
         if nrow is not None:
             # structured case
-            s = (
-                "MODFLOW {} layer(s) {} row(s) {} column(s) "
-                "{} stress period(s)".format(nlay, nrow, ncol, nper)
+            msg = (
+                f"MODFLOW {nlay} layer(s) {nrow} row(s) {ncol} column(s) "
+                f"{nper} stress period(s)"
             )
         else:
             # unstructured case
-            nodes = ncol.sum()
-            nodelay = " ".join(str(i) for i in ncol)
-            print(nodelay, nlay, nper)
-            s = (
+            msg = (
                 "MODFLOW unstructured\n"
-                "  nodes = {}\n"
-                "  layers = {}\n"
-                "  periods = {}\n"
-                "  nodelay = {}\n".format(nodes, nlay, nper, ncol)
+                f"  nodes = {ncol.sum()}\n"
+                f"  layers = {nlay}\n"
+                f"  stress periods = {nper}\n"
+                f"  nodelay = {ncol}\n"
             )
-        return s
+        return msg
 
     @classmethod
     def load(
         cls,
         f,
         version="mfusg",
-        exe_name="mfusg.exe",
+        exe_name="mfusg",
         verbose=False,
         model_ws=".",
         load_only=None,
         forgive=False,
         check=True,
     ):
-        """
-        Load an existing MODFLOW-USG model.
+        """Load an existing MODFLOW-USG model.
 
         Parameters
         ----------
@@ -219,7 +210,7 @@ class ModflowUsg(Modflow):
             os.path.join(model_ws, f)
         )
 
-        ml = cls(
+        model = cls(
             modelname,
             exe_name=exe_name,
             verbose=verbose,
@@ -229,13 +220,12 @@ class ModflowUsg(Modflow):
 
         # read name file
         ext_unit_dict = mfreadnam.parsenamefile(
-            namefile_path, ml.mfnam_packages, verbose=verbose
+            namefile_path, model.mfnam_packages, verbose=verbose
         )
-        if ml.verbose:
+        if model.verbose:
             print(
-                "\n{}\nExternal unit dictionary:\n{}\n{}\n".format(
-                    50 * "-", ext_unit_dict, 50 * "-"
-                )
+                f"\n{50 * '-'}\nExternal unit dictionary:\n"
+                f"{ext_unit_dict}\n{50 * '-'}\n"
             )
 
         # create a dict where key is the package name, value is unitnumber
@@ -243,14 +233,14 @@ class ModflowUsg(Modflow):
 
         # reset version based on packages in the name file
         if "DISU" in ext_pkg_d:
-            ml.structured = False
+            model.structured = False
 
         # reset unit number for list file
         if "LIST" in ext_pkg_d:
             unitnumber = ext_pkg_d["LIST"]
             filepth = os.path.basename(ext_unit_dict[unitnumber].filename)
-            ml.lst.unit_number = [unitnumber]
-            ml.lst.file_name = [filepth]
+            model.lst.unit_number = [unitnumber]
+            model.lst.file_name = [filepth]
 
         # look for the free format flag in bas6
         bas_key = ext_pkg_d.get("BAS6")
@@ -261,72 +251,43 @@ class ModflowUsg(Modflow):
             while line.startswith("#"):
                 line = bas.filehandle.readline()
             if "FREE" in line.upper():
-                ml.free_format_input = True
+                model.free_format_input = True
             bas.filehandle.seek(start)
         if verbose:
-            print(f"ModflowBas6 free format:{ml.free_format_input}\n")
+            print(f"ModflowBas6 free format:{model.free_format_input}\n")
 
-        # zone, mult, pval
-        if "PVAL" in ext_pkg_d:
-            ml.mfpar.set_pval(ml, ext_unit_dict)
-            assert ml.pop_key_list.pop() == ext_pkg_d.get("PVAL")
-        if "ZONE" in ext_pkg_d:
-            ml.mfpar.set_zone(ml, ext_unit_dict)
-            assert ml.pop_key_list.pop() == ext_pkg_d.get("ZONE")
-        if "MULT" in ext_pkg_d:
-            ml.mfpar.set_mult(ml, ext_unit_dict)
-            assert ml.pop_key_list.pop() == ext_pkg_d.get("MULT")
+        # set mfpar / pval
+        cls._set_mfpar_pval(model, ext_unit_dict, ext_pkg_d)
 
         files_successfully_loaded, files_not_loaded = cls._load_packages(
-            ml, ext_unit_dict, ext_pkg_d, load_only, forgive
+            model, ext_unit_dict, ext_pkg_d, load_only, forgive
         )
 
-        # pop binary output keys and any external file units that are now
-        # internal
-        for key in ml.pop_key_list:
-            try:
-                ml.remove_external(unit=key)
-                item = ext_unit_dict.pop(key)
-                if hasattr(item.filehandle, "close"):
-                    item.filehandle.close()
-            except KeyError:
-                if ml.verbose:
-                    print(
-                        f"\nWARNING:\n    External file unit {key} does not "
-                        "exist in ext_unit_dict."
-                    )
+        # set up binary output / external file units
+        cls._set_output_external(model, ext_unit_dict)
 
-        # write message indicating packages that were successfully loaded
-        if ml.verbose:
-            print("")
-            print(
-                f"   The following {len(files_successfully_loaded)} packages "
-                "were successfully loaded."
-            )
-            for fname in files_successfully_loaded:
-                print(f"      {os.path.basename(fname)}")
-            if len(files_not_loaded) > 0:
-                print(
-                    f"   The following {len(files_not_loaded)} packages "
-                    "were not loaded."
-                )
-                for fname in files_not_loaded:
-                    print(f"      {os.path.basename(fname)}")
+        # send messages re: success/failure of loading
+        cls._send_load_messages(
+            model, files_successfully_loaded, files_not_loaded
+        )
+
         if check:
-            ml.check(f=f"{ml.name}.chk", verbose=ml.verbose, level=0)
+            model.check(f=f"{model.name}.chk", verbose=model.verbose, level=0)
 
         # return model object
-        return ml
+        return model
 
     @classmethod
-    def _load_packages(cls, ml, ext_unit_dict, ext_pkg_d, load_only, forgive):
+    def _load_packages(
+        cls, model, ext_unit_dict, ext_pkg_d, load_only, forgive
+    ):
         """
         Method to load packages into the MODFLOW-USG Model Class.
         For internal class use - should not be called by the user.
 
         Parameters
         ----------
-        ml : ModflowUsg model object
+        model : ModflowUsg model object
         ext_unit_dict : dict
             For each file listed in the name file, a
             :class:`flopy.utils.mfreadnam.NamData` instance.
@@ -356,32 +317,20 @@ class ModflowUsg(Modflow):
             raise KeyError("discretization entry not found in nam file")
         disnamdata = ext_unit_dict[dis_key]
         dis = disnamdata.package.load(
-            disnamdata.filehandle, ml, ext_unit_dict=ext_unit_dict, check=False
+            disnamdata.filehandle,
+            model,
+            ext_unit_dict=ext_unit_dict,
+            check=False,
         )
         files_successfully_loaded.append(disnamdata.filename)
-        if ml.verbose:
+        if model.verbose:
             print(f"   {dis.name[0]:4s} package load...success")
-        assert ml.pop_key_list.pop() == dis_key
+        assert model.pop_key_list.pop() == dis_key
         ext_unit_dict.pop(dis_key).filehandle.close()
 
-        dis.start_datetime = ml._start_datetime
+        dis.start_datetime = model.start_datetime
 
-        if load_only is None:
-            # load all packages/files
-            load_only = ext_pkg_d.keys()
-        else:  # check items in list
-            if not isinstance(load_only, list):
-                load_only = [load_only]
-            not_found = []
-            for i, filetype in enumerate(load_only):
-                load_only[i] = filetype = filetype.upper()
-                if filetype not in ext_pkg_d:
-                    not_found.append(filetype)
-            if not_found:
-                raise KeyError(
-                    "the following load_only entries were not found "
-                    "in the ext_unit_dict: " + str(not_found)
-                )
+        load_only = cls._prepare_load_only(load_only, ext_pkg_d)
 
         # try loading packages in ext_unit_dict
         for key, item in ext_unit_dict.items():
@@ -390,7 +339,7 @@ class ModflowUsg(Modflow):
                     files_successfully_loaded,
                     files_not_loaded,
                 ) = cls._load_ext_unit_dict_paks(
-                    ml,
+                    model,
                     ext_unit_dict,
                     load_only,
                     item,
@@ -400,30 +349,40 @@ class ModflowUsg(Modflow):
                 )
             elif "data" not in item.filetype.lower():
                 files_not_loaded.append(item.filename)
-                if ml.verbose:
+                if model.verbose:
                     print(f"   {item.filetype:4s} package load...skipped")
             elif "data" in item.filetype.lower():
-                if ml.verbose:
-                    print(f"   {item.filetype} package load...skipped")
-                    print(f"      {os.path.basename(item.filename)}")
-                if key not in ml.pop_key_list:
-                    # do not add unit number (key) if it already exists
-                    if key not in ml.external_units:
-                        ml.external_fnames.append(item.filename)
-                        ml.external_units.append(key)
-                        ml.external_binflag.append(
-                            "binary" in item.filetype.lower()
-                        )
-                        ml.external_output.append(False)
+                cls._prepare_external_files(model, key, item)
             else:
                 raise KeyError(f"unhandled case: {key}, {item}")
 
         return files_successfully_loaded, files_not_loaded
 
+    @staticmethod
+    def _prepare_load_only(load_only, ext_pkg_d):
+        """Prepare load_only list."""
+        if load_only is None:
+            # load all packages/files
+            load_only = ext_pkg_d.keys()
+        else:  # check items in list
+            if not isinstance(load_only, list):
+                load_only = [load_only]
+            not_found = []
+            for idx, filetype in enumerate(load_only):
+                load_only[idx] = filetype = filetype.upper()
+                if filetype not in ext_pkg_d:
+                    not_found.append(filetype)
+            if not_found:
+                raise KeyError(
+                    "the following load_only entries were not found "
+                    "in the ext_unit_dict: " + str(not_found)
+                )
+        return load_only
+
     @classmethod
     def _load_ext_unit_dict_paks(
         cls,
-        ml,
+        model,
         ext_unit_dict,
         load_only,
         item,
@@ -435,41 +394,57 @@ class ModflowUsg(Modflow):
         if item.filetype in load_only:
             if forgive:
                 try:
-                    cls._ext_unit_d_load(ml, ext_unit_dict, item)
+                    cls._ext_unit_d_load(model, ext_unit_dict, item)
                     files_successfully_loaded.append(item.filename)
-                    if ml.verbose:
+                    if model.verbose:
                         print(
                             f"   {item.filetype:4s} package \
                             load...success"
                         )
-                except PackageLoadException as e:
-                    ml.load_fail = True
-                    if ml.verbose:
+                except PackageLoadException as err:
+                    model.load_fail = True
+                    if model.verbose:
                         raise PackageLoadException(
                             error=f"   {item.filetype:4s} package \
-                            load...failed\n   {e!s}"
-                        )
+                            load...failed"
+                        ) from err
                     files_not_loaded.append(item.filename)
             else:
-                cls._ext_unit_d_load(ml, ext_unit_dict, item)
+                cls._ext_unit_d_load(model, ext_unit_dict, item)
                 files_successfully_loaded.append(item.filename)
-                if ml.verbose:
+                if model.verbose:
                     print(f"   {item.filetype:4s} package load...success")
         else:
-            if ml.verbose:
+            if model.verbose:
                 print(f"   {item.filetype:4s} package load...skipped")
             files_not_loaded.append(item.filename)
 
         return files_successfully_loaded, files_not_loaded
 
     @staticmethod
-    def _ext_unit_d_load(ml, ext_unit_dict, ext_unit_d_item):
+    def _prepare_external_files(model, key, item):
+        """Prepare external files for ext_unit_dict item."""
+        if model.verbose:
+            print(f"   {item.filetype} package load...skipped")
+            print(f"      {os.path.basename(item.filename)}")
+        if key not in model.pop_key_list:
+            # do not add unit number (key) if it already exists
+            if key not in model.external_units:
+                model.external_fnames.append(item.filename)
+                model.external_units.append(key)
+                model.external_binflag.append(
+                    "binary" in item.filetype.lower()
+                )
+                model.external_output.append(False)
+
+    @staticmethod
+    def _ext_unit_d_load(model, ext_unit_dict, ext_unit_d_item):
         """
         Method to load a package from an ext_unit_dict item into model
 
         Parameters
         ----------
-        ml : ModflowUsg model object for which package in ext_unit_d_item will
+        model : ModflowUsg model object for which package in ext_unit_d_item will
             be loaded
         ext_unit_dict : dict
             For each file listed in the name file, a
@@ -482,16 +457,70 @@ class ModflowUsg(Modflow):
         if "check" in package_load_args:
             ext_unit_d_item.package.load(
                 ext_unit_d_item.filehandle,
-                ml,
+                model,
                 ext_unit_dict=ext_unit_dict,
                 check=False,
             )
         else:
             ext_unit_d_item.package.load(
                 ext_unit_d_item.filehandle,
-                ml,
+                model,
                 ext_unit_dict=ext_unit_dict,
             )
+
+    @staticmethod
+    def _set_mfpar_pval(model, ext_unit_dict, ext_pkg_d):
+        """Set mfpar/pval items."""
+        # zone, mult, pval
+        if "PVAL" in ext_pkg_d:
+            model.mfpar.set_pval(model, ext_unit_dict)
+            assert model.pop_key_list.pop() == ext_pkg_d.get("PVAL")
+        if "ZONE" in ext_pkg_d:
+            model.mfpar.set_zone(model, ext_unit_dict)
+            assert model.pop_key_list.pop() == ext_pkg_d.get("ZONE")
+        if "MULT" in ext_pkg_d:
+            model.mfpar.set_mult(model, ext_unit_dict)
+            assert model.pop_key_list.pop() == ext_pkg_d.get("MULT")
+
+    @staticmethod
+    def _set_output_external(model, ext_unit_dict):
+        """Set up binary output / external file units."""
+        # pop binary output keys and any external file units that are now
+        # internal
+        for key in model.pop_key_list:
+            try:
+                model.remove_external(unit=key)
+                item = ext_unit_dict.pop(key)
+                if hasattr(item.filehandle, "close"):
+                    item.filehandle.close()
+            except KeyError:
+                if model.verbose:
+                    print(
+                        f"\nWARNING:\n    External file unit {key} does not "
+                        "exist in ext_unit_dict."
+                    )
+
+    @staticmethod
+    def _send_load_messages(
+        model, files_successfully_loaded, files_not_loaded
+    ):
+        """Send messages re: success/failure of loading."""
+        # write message indicating packages that were successfully loaded
+        if model.verbose:
+            print("")
+            print(
+                f"   The following {len(files_successfully_loaded)} packages "
+                "were successfully loaded."
+            )
+            for fname in files_successfully_loaded:
+                print(f"      {os.path.basename(fname)}")
+            if len(files_not_loaded) > 0:
+                print(
+                    f"   The following {len(files_not_loaded)} packages "
+                    "were not loaded."
+                )
+                for fname in files_not_loaded:
+                    print(f"      {os.path.basename(fname)}")
 
 
 def fmt_string(array):
@@ -514,14 +543,13 @@ def fmt_string(array):
             fmts.append("%10s")
         elif vtype == "s":
             msg = (
-                "mfusg.fmt_string error: 'str' type found in dtype. "
-                "This gives unpredictable results when "
+                "mfusg.fmt_string error: 'str' type found in dtype."
+                "This gives unpredictable results when"
                 "recarray to file - change to 'object' type"
             )
             raise TypeError(msg)
         else:
             raise TypeError(
-                "mfusg.fmt_string error: unknown vtype in "
-                "field: {}".format(field)
+                "mfusg.fmt_string error: unknown vtype in" f"field: {field}"
             )
     return "".join(fmts)

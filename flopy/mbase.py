@@ -30,8 +30,9 @@ iprn = -1
 
 # external exceptions for users
 class PackageLoadException(Exception):
-
-    """FloPy package load exception"""
+    """
+    FloPy package load exception.
+    """
 
     def __init__(self, error, location=""):
         """Initialize exception."""
@@ -657,8 +658,6 @@ class BaseModel(ModelInterface):
         if item == "nper":
             if self.dis is not None:
                 return self.dis.nper
-            elif self.disu is not None:
-                return self.disu.nper
             else:
                 return 0
 
@@ -1691,6 +1690,8 @@ def run_model(
         if platform.system() in "Windows":
             if not exe_name.lower().endswith(".exe"):
                 exe = which(exe_name + ".exe")
+        elif exe_name.lower().endswith(".exe"):
+            exe = which(exe_name[:-4])
     if exe is None:
         raise Exception(
             f"The program {exe_name} does not exist or is not executable."
