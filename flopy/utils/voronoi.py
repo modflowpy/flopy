@@ -1,7 +1,8 @@
 import numpy as np
-from scipy.spatial import Voronoi
 from .cvfdutil import get_disv_gridprops
 from .geometry import point_in_polygon
+
+from .utl_import import import_optional_dependency
 
 
 def get_sorted_vertices(icell_vertices, vertices):
@@ -74,6 +75,10 @@ def tri2vor(tri, **kwargs):
     verts, iverts : ndarray, list of lists
 
     """
+    extra = "Voronoi requires SciPy."
+    import_optional_dependency("scipy.spatial", extra=extra)
+    from scipy.spatial import Voronoi
+
     # assign local variables
     tri_verts = tri.verts
     tri_iverts = tri.iverts
@@ -341,7 +346,7 @@ class VoronoiGrid:
             axes that contains the voronoi model grid
 
         """
-        import matplotlib.pyplot as plt
+        plt = import_optional_dependency("matplotlib.pyplot")
 
         if ax is None:
             ax = plt.subplot(1, 1, 1, aspect="equal")
