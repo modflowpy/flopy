@@ -5,7 +5,7 @@ from .utl_import import import_optional_dependency
 from .geometry import transform
 from .geospatial_utils import GeoSpatialUtil
 
-shapely = import_optional_dependency("shapely", errors="ignore")
+shapely = import_optional_dependency("shapely", errors="silent")
 if shapely is not None:
     from shapely.geometry import (
         MultiPoint,

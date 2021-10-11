@@ -3,7 +3,7 @@ import numpy as np
 from ..utils.geometry import Shape, Collection
 from ..utils import import_optional_dependency
 
-shapely = import_optional_dependency("shapely", errors="ignore")
+shapely = import_optional_dependency("shapely", errors="silent")
 if shapely is not None:
     from shapely.geometry import (
         MultiPolygon,
@@ -14,7 +14,7 @@ if shapely is not None:
         MultiLineString,
     )
 
-geojson = import_optional_dependency("geojson", errors="ignore")
+geojson = import_optional_dependency("geojson", errors="silent")
 geojson_classes = {}
 if geojson is not None:
     geojson_classes = {
@@ -58,7 +58,7 @@ class GeoSpatialUtil:
 
     def __init__(self, obj, shapetype=None):
         self.__shapefile = import_optional_dependency(
-            "shapefile", errors="ignore"
+            "shapefile", errors="silent"
         )
         self.__obj = obj
         self.__geo_interface = {}
@@ -262,7 +262,7 @@ class GeoSpatialCollection:
     def __init__(self, obj, shapetype=None):
 
         self.__shapefile = import_optional_dependency(
-            "shapefile", errors="ignore"
+            "shapefile", errors="silent"
         )
         self.__obj = obj
         self.__collection = []

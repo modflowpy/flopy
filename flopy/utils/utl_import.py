@@ -86,6 +86,8 @@ def import_optional_dependency(
           return the module, even if the version is too old.
           It's expected that users validate the version locally when
           using ``errors="ignore"`` (see. ``io/html.py``)
+        * silent: Same as "ignore" except warning message is not written to
+          the screen.
     min_version : str, default None
         Specify a minimum version that is different from the global pandas
         minimum version required.
@@ -98,7 +100,7 @@ def import_optional_dependency(
         is ``'warn'``.
     """
 
-    assert errors in {"warn", "raise", "ignore"}
+    assert errors in {"warn", "raise", "ignore", "silent"}
 
     package_name = INSTALL_MAPPING.get(name)
     install_name = package_name if package_name is not None else name
@@ -130,7 +132,8 @@ def import_optional_dependency(
         version = get_version(module_to_get)
         if Version(version) < Version(minimum_version):
             msg = (
-                f"Pandas requires version '{minimum_version}' or newer of '{parent}' "
+                f"FloPy requires version '{minimum_version}' "
+                f"or newer of '{parent}' "
                 f"(version '{version}' currently installed)."
             )
             if errors == "warn":
