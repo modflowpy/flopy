@@ -106,9 +106,7 @@ def test_usg_model():
     dis = flopy.modflow.ModflowDis(mf, nlay=1, nrow=11, ncol=11)
     bas = flopy.modflow.ModflowBas(mf)
     lpf = flopy.mfusg.MfUsgLpf(mf)
-    wel = flopy.mfusg.MfUsgWel(
-        mf, stress_period_data={0: [[0, 5, 5, -1.0]]}
-    )
+    wel = flopy.mfusg.MfUsgWel(mf, stress_period_data={0: [[0, 5, 5, -1.0]]})
     ghb = flopy.modflow.ModflowGhb(
         mf,
         stress_period_data={
