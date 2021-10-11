@@ -115,7 +115,8 @@ def import_optional_dependency(
         if errors == "raise":
             raise ImportError(msg)
         else:
-            print(msg)
+            if errors != "silent":
+                print(msg)
             return None
 
     # Handle submodules: if we have submodule, grab parent module from sys.modules
