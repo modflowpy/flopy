@@ -3,14 +3,10 @@ This is a class for reading the mass budget from a (multi-component)
 mt3d(usgs) run. Also includes support for SFT budget.
 
 """
-import os
-import sys
 import warnings
-from datetime import timedelta
 import numpy as np
 
-from ..utils.utils_def import totim_to_datetime
-
+from ..utils import import_optional_dependency
 
 class MtListBudget:
     """
@@ -78,10 +74,8 @@ class MtListBudget:
             (optionally) surface-water mass budget.
             If the SFT process is not used, df_sw is None.
         """
-        try:
-            import pandas as pd
-        except:
-            raise ImportError("MtListBudget.parse: pandas not available")
+        extra = "MtListBudget.parse() requires pandas."
+        pd = import_optional_dependency("pandas", extra=extra)
 
         self.gw_data = {}
         self.sw_data = {}
@@ -188,10 +182,8 @@ class MtListBudget:
         return df_gw, df_sw
 
     def _diff(self, df):
-        try:
-            import pandas as pd
-        except:
-            raise ImportError("MtListBudget._diff: pandas not available")
+        extra = "MtListBudget._diff() requires pandas."
+        pd = import_optional_dependency("pandas", extra=extra)
 
         out_cols = [
             c for c in df.columns if "_out" in c and not c.startswith("net_")

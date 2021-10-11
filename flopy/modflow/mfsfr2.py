@@ -10,11 +10,7 @@ from ..utils import MfList
 from ..utils.flopy_io import line_parse
 from ..utils.recarray_utils import create_empty_recarray
 from ..utils.optionblock import OptionBlock
-
-try:
-    import pandas as pd
-except:
-    pd = False
+from ..utils import import_optional_dependency
 
 
 class ModflowSfr2(Package):
@@ -650,11 +646,8 @@ class ModflowSfr2(Package):
 
     @property
     def df(self):
-        if pd:
-            return pd.DataFrame(self.reach_data)
-        else:
-            msg = "ModflowSfr2.df: pandas not available"
-            raise ImportError(msg)
+        pd = import_optional_dependency("pandas")
+        return pd.DataFrame(self.reach_data)
 
     def _make_graph(self):
         # get all segments and their outseg
@@ -1581,15 +1574,9 @@ class ModflowSfr2(Package):
         -------
         ax : matplotlib.axes._subplots.AxesSubplot object
         """
-        try:
-            import matplotlib.pyplot as plt
-        except:
-            raise ImportError(
-                "matplotlib must be installed to use ModflowSfr2.plot_path()"
-            )
-        if not pd:
-            err_msg = "ModflowSfr2.plot_path: pandas not available"
-            raise ImportError(err_msg)
+        import matplotlib.pyplot as plt
+
+        pd = import_optional_dependency("pandas")
 
         df = self.df
         m = self.parent

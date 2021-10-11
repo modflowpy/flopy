@@ -11,46 +11,11 @@ import os
 import warnings
 
 from ..datbase import DataType, DataInterface
-from ..utils import Util3d
+from ..utils import Util3d, import_optional_dependency
+
 
 # web address of spatial reference dot org
 srefhttp = "https://spatialreference.org"
-
-
-def import_shapefile(check_version=True):
-    """Import shapefile module from pyshp.
-
-    Parameters
-    ----------
-    check_version : bool
-        Checks to ensure that pyshp is at least version 2. Default True,
-        which is usually required for Writer (which has a different API), but
-        can be False if only using Reader.
-
-    Returns
-    -------
-    module
-
-    Raises
-    ------
-    ImportError
-        If shapefile module is not found, or major version is less than 2.
-    """
-    try:
-        import shapefile
-    except ImportError:
-        raise ImportError(
-            inspect.getouterframes(inspect.currentframe())[1][3]
-            + ": error importing shapefile; try pip install pyshp"
-        )
-    if check_version:
-        if int(shapefile.__version__.split(".")[0]) < 2:
-            raise ImportError(
-                inspect.getouterframes(inspect.currentframe())[1][3]
-                + ": shapefile version 2 or later required; try "
-                "pip install --upgrade pyshp"
-            )
-    return shapefile
 
 
 def write_gridlines_shapefile(filename, mg):
@@ -69,7 +34,7 @@ def write_gridlines_shapefile(filename, mg):
     None
 
     """
-    shapefile = import_shapefile()
+    shapefile = import_optional_dependency("shapefile")
     wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
     wr.field("number", "N", 18, 0)
     if mg.__class__.__name__ == "SpatialReference":
@@ -120,7 +85,7 @@ def write_grid_shapefile(
     None
 
     """
-    shapefile = import_shapefile()
+    shapefile = import_optional_dependency("shapefile")
     w = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
     w.autoBalance = 1
 
@@ -532,7 +497,7 @@ def shp2recarray(shpname):
     """
     from ..utils.geospatial_utils import GeoSpatialCollection
 
-    sf = import_shapefile(check_version=False)
+    sf = import_optional_dependency("shapefile")
 
     sfobj = sf.Reader(shpname)
     dtype = [
@@ -611,7 +576,7 @@ def recarray2shp(
             continue
 
     # set up for pyshp 2
-    shapefile = import_shapefile()
+    shapefile = import_optional_dependency("shapefile")
     w = shapefile.Writer(shpname, shapeType=geomtype)
     w.autoBalance = 1
 

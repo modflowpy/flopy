@@ -59,7 +59,9 @@ class Raster:
     ):
         from .geometry import point_in_polygon
 
-        self._rasterio = import_optional_dependency("rasterio")
+        rasterio = import_optional_dependency("rasterio")
+        from rasterio.crs import CRS
+
         self._affine = import_optional_dependency("affine")
 
         self._point_in_polygon = point_in_polygon
@@ -86,12 +88,12 @@ class Raster:
 
         meta["dtype"] = dtype
 
-        if isinstance(crs, self._rasterio.crs.CRS):
+        if isinstance(crs, CRS):
             pass
         elif isinstance(crs, int):
-            crs = self._rasterio.crs.CRS.from_epsg(crs)
+            crs = CRS.from_epsg(crs)
         elif isinstance(crs, str):
-            crs = self._rasterio.crs.CRS.from_string(crs)
+            crs = CRS.from_string(crs)
         else:
             TypeError("crs type not understood, provide an epsg or proj4")
 
@@ -116,7 +118,7 @@ class Raster:
         self.__xcenters = None
         self.__ycenters = None
 
-        if isinstance(rio_ds, self._rasterio.io.DatasetReader):
+        if isinstance(rio_ds, rasterio.io.DatasetReader):
             self._dataset = rio_ds
 
     @property
@@ -662,6 +664,9 @@ class Raster:
             tuple : (arr_dict, raster_crp_meta)
 
         """
+        import_optional_dependency("rasterio")
+        from rasterio.mask import mask
+
         from .geospatial_utils import GeoSpatialUtil
 
         if isinstance(polygon, (list, tuple, np.ndarray)):
@@ -670,7 +675,7 @@ class Raster:
         geom = GeoSpatialUtil(polygon, shapetype="Polygon")
         shapes = [geom]
 
-        rstr_crp, rstr_crp_affine = self._rasterio.mask.mask(
+        rstr_crp, rstr_crp_affine = mask(
             self._dataset, shapes, crop=True, invert=invert
         )
 
@@ -778,11 +783,12 @@ class Raster:
             output raster .tif file name
 
         """
+        rasterio = import_optional_dependency("rasterio")
 
         if not name.endswith(".tif"):
             name += ".tif"
 
-        with self._rasterio.open(name, "w", **self._meta) as foo:
+        with rasterio.open(name, "w", **self._meta) as foo:
             for band, arr in self.__arr_dict.items():
                 foo.write(arr, band)
 
@@ -838,8 +844,11 @@ class Raster:
             ax : matplotlib.pyplot.axes
 
         """
+        import_optional_dependency("rasterio")
+        from rasterio.plot import show
+
         if self._dataset is not None:
-            ax = self._rasterio.plot.show(
+            ax = show(
                 self._dataset,
                 ax=ax,
                 contour=contour,
@@ -862,7 +871,7 @@ class Raster:
                 i += 1
 
             data = np.ma.masked_where(data == self.nodatavals, data)
-            ax = self._rasterio.plot.show(
+            ax = show(
                 data,
                 ax=ax,
                 contour=contour,
@@ -891,12 +900,14 @@ class Raster:
             ax : matplotlib.pyplot.axes
 
         """
+        import_optional_dependency("rasterio")
+        from rasterio.plot import show_hist
 
         if "alpha" not in kwargs:
             kwargs["alpha"] = 0.3
 
         if self._dataset is not None:
-            ax = self._rasterio.plot.show_hist(self._dataset, ax=ax, **kwargs)
+            ax = show_hist(self._dataset, ax=ax, **kwargs)
 
         else:
             d0 = len(self.__arr_dict)
@@ -914,6 +925,6 @@ class Raster:
                 i += 1
 
             data = np.ma.masked_where(data == self.nodatavals, data)
-            ax = self._rasterio.plot.show_hist(data, ax=ax, **kwargs)
+            ax = show_hist(data, ax=ax, **kwargs)
 
         return ax

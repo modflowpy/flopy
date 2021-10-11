@@ -5,9 +5,12 @@ import sys
 import types
 import warnings
 
+from .parse_version import Version
+
 # Update install.rst when updating versions!
 
 VERSIONS = {
+    "shapefile": "2.0.0",
     # "bs4": "4.8.2",
     # "bottleneck": "1.3.1",
     # "fsspec": "0.7.4",
@@ -39,6 +42,7 @@ VERSIONS = {
 
 INSTALL_MAPPING = {
     "shapefile": "pyshp",
+    "dateutil": "python-dateutil",
 }
 
 

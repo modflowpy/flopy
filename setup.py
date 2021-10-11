@@ -30,6 +30,7 @@ setup(
     platforms="Windows, Mac OS-X, Linux",
     install_requires=[
         "numpy >=1.15",
+        "matplotlib",
     ],
     packages=[
         "flopy",

@@ -14,6 +14,7 @@ from ..datbase import DataType, DataInterface, DataListInterface
 from . import NetCdf, netcdf
 from . import shapefile_utils
 from . import vtk
+from ..utils import import_optional_dependency
 
 
 NC_PRECISION_TYPE = {
@@ -1510,6 +1511,9 @@ def export_array(
         a = a.copy()
         a[np.isnan(a)] = nodata
         if modelgrid.angrot != 0:
+            ndimage = import_optional_dependency("scipy.ndimage")
+            from ndimage import rotate
+
             try:
                 from scipy.ndimage import rotate
             except ImportError:
@@ -1808,11 +1812,8 @@ def export_array_contours(
     **kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
     """
-    try:
-        import matplotlib.pyplot as plt
-    except:
-        err_msg = "matplotlib must be installed to use export_array_contours()"
-        raise ImportError(err_msg)
+    import matplotlib.pyplot as plt
+    from ..utils import import_optional_dependency
 
     if epsg is None:
         epsg = modelgrid.epsg

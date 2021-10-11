@@ -1,14 +1,12 @@
 import numpy as np
 
-try:
-    import matplotlib.pyplot as plt
-    import matplotlib.colors
-    from matplotlib.patches import Polygon
-except (ImportError, ModuleNotFoundError, RuntimeError):
-    plt = None
+import matplotlib.pyplot as plt
+import matplotlib.colors
+from matplotlib.patches import Polygon
 
-from flopy.plot import plotutil
-from flopy.utils import geometry
+from . import plotutil
+from ..utils import geometry, import_optional_dependency
+
 import copy
 import warnings
 

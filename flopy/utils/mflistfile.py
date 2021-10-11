@@ -12,6 +12,7 @@ import errno
 
 from ..utils.utils_def import totim_to_datetime
 from ..utils.flopy_io import get_ts_sp
+from ..utils import import_optional_dependency
 
 
 class ListBudget:
@@ -474,11 +475,8 @@ class ListBudget:
 
         """
 
-        try:
-            import pandas as pd
-        except Exception as e:
-            msg = f"ListBudget.get_dataframe(): requires pandas: {e!s}"
-            raise ImportError(msg)
+        extra = "ListBudget.get_dataframes() requires pandas."
+        pd = import_optional_dependency("pandas", extra=extra)
 
         if not self._isvalid:
             return None

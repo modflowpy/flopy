@@ -1,14 +1,12 @@
 import numpy as np
 
-try:
-    import matplotlib.pyplot as plt
-except (ImportError, RuntimeError):
-    plt = None
+from .utl_import import import_optional_dependency
 
 from .geometry import transform
 from .geospatial_utils import GeoSpatialUtil
 
-try:
+shapely = import_optional_dependency("shapely", errors="ignore")
+if shapely is not None:
     from shapely.geometry import (
         MultiPoint,
         Point,
@@ -21,30 +19,24 @@ try:
     from shapely.affinity import translate, rotate
     from shapely.prepared import prep
 
-    shply = True
-except:
-    shply = False
-
 import contextlib
 import warnings
 from distutils.version import LooseVersion
 
 NUMPY_GE_121 = str(np.__version__) >= LooseVersion("1.21")
 
-try:
-    import shapely
-
+if shapely is not None:
     SHAPELY_GE_20 = str(shapely.__version__) >= LooseVersion("2.0")
     SHAPELY_LT_18 = str(shapely.__version__) < LooseVersion("1.8")
-except ImportError:
-    shapely = None
+else:
     SHAPELY_GE_20 = False
     SHAPELY_LT_18 = False
 
-try:
-    from shapely.errors import ShapelyDeprecationWarning as shapely_warning
-except ImportError:
-    shapely_warning = None
+if shapely is not None:
+    try:
+        from shapely.errors import ShapelyDeprecationWarning as shapely_warning
+    except ImportError:
+        shapely_warning = None
 
 if shapely_warning is not None and not SHAPELY_GE_20:
 
@@ -173,13 +165,7 @@ class GridIntersect:
             loop through all model gridcells (which is generally slower).
             Only read when `method='vertex'`.
         """
-        if not shply:
-            msg = (
-                "Shapely is needed for grid intersect operations! "
-                "Please install shapely if you need to use grid intersect "
-                "functionality."
-            )
-            raise ModuleNotFoundError(msg)
+        import_optional_dependency("shapely")
 
         self.mfgrid = mfgrid
         if method is None:
@@ -1481,20 +1467,11 @@ class GridIntersect:
         ax: matplotlib.pyplot.axes
             returns the axes handle
         """
-        try:
-            from descartes import PolygonPatch
-        except ImportError:
-            msg = "descartes package needed for plotting polygons"
-            if plt is None:
-                msg = (
-                    "matplotlib and descartes packages needed for "
-                    "plotting polygons"
-                )
-            raise ImportError(msg)
 
-        if plt is None:
-            msg = "matplotlib package needed for plotting polygons"
-            raise ImportError(msg)
+        import matplotlib.pyplot as plt
+
+        import_optional_dependency("descartes")
+        from descartes import PolygonPatch
 
         if ax is None:
             _, ax = plt.subplots()
@@ -1533,9 +1510,7 @@ class GridIntersect:
         ax: matplotlib.pyplot.axes
             returns the axes handle
         """
-        if plt is None:
-            msg = "matplotlib package needed for plotting polygons"
-            raise ImportError(msg)
+        import matplotlib.pyplot as plt
 
         if ax is None:
             _, ax = plt.subplots()
@@ -1587,9 +1562,7 @@ class GridIntersect:
         ax: matplotlib.pyplot.axes
             returns the axes handle
         """
-        if plt is None:
-            msg = "matplotlib package needed for plotting polygons"
-            raise ImportError(msg)
+        import matplotlib.pyplot as plt
 
         if ax is None:
             _, ax = plt.subplots()

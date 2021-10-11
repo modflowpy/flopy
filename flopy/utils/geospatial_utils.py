@@ -1,5 +1,10 @@
-try:
-    import shapely
+import numpy as np
+
+from ..utils.geometry import Shape, Collection
+from ..utils import import_optional_dependency
+
+shapely = import_optional_dependency("shapely", errors="ignore")
+if shapely is not None:
     from shapely.geometry import (
         MultiPolygon,
         Polygon,
@@ -8,18 +13,8 @@ try:
         LineString,
         MultiLineString,
     )
-except:
-    shapely = None
 
-try:
-    import geojson
-except:
-    geojson = None
-
-import numpy as np
-from flopy.utils.geometry import Shape, Collection
-
-
+geojson = import_optional_dependency("geojson", errors="ignore")
 geojson_classes = {}
 if geojson is not None:
     geojson_classes = {
@@ -62,9 +57,9 @@ class GeoSpatialUtil:
     """
 
     def __init__(self, obj, shapetype=None):
-        from ..export.shapefile_utils import import_shapefile
-
-        self.__shapefile = import_shapefile()
+        self.__shapefile = import_optional_dependency(
+            "shapefile", errors="ignore"
+        )
         self.__obj = obj
         self.__geo_interface = {}
         self._geojson = None
@@ -265,9 +260,10 @@ class GeoSpatialCollection:
     """
 
     def __init__(self, obj, shapetype=None):
-        from ..export.shapefile_utils import import_shapefile
 
-        self.__shapefile = import_shapefile()
+        self.__shapefile = import_optional_dependency(
+            "shapefile", errors="ignore"
+        )
         self.__obj = obj
         self.__collection = []
         self._geojson = None

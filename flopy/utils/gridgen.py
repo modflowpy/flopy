@@ -6,7 +6,8 @@ import subprocess
 from ..modflow.mfdisu import ModflowDisU
 from ..mf6.modflow import ModflowGwfdis
 from .util_array import Util2d  # read1d,
-from ..export.shapefile_utils import import_shapefile, shp2recarray
+from ..utils import import_optional_dependency
+from ..export.shapefile_utils import shp2recarray
 from ..mbase import which
 
 
@@ -59,7 +60,7 @@ def features_to_shapefile(features, featuretype, filename):
     """
     from .geospatial_utils import GeoSpatialCollection
 
-    shapefile = import_shapefile(check_version=True)
+    shapefile = import_optional_dependency("shapefile")
 
     if featuretype.lower() == "line":
         featuretype = "LineString"
@@ -680,12 +681,7 @@ class Gridgen:
         pc : matplotlib.collections.PatchCollection
 
         """
-        try:
-            import matplotlib.pyplot as plt
-        except:
-            err_msg = "matplotlib must be installed to use gridgen.plot()"
-            raise ImportError(err_msg)
-
+        import matplotlib.pyplot as plt
         from ..plot import plot_shapefile, shapefile_extents
 
         if ax is None:
@@ -1920,7 +1916,8 @@ class Gridgen:
         None
 
         """
-        shapefile = import_shapefile(check_version=False)
+        shapefile = import_optional_dependency("shapefile")
+
         # ensure there are active leaf cells from gridgen
         fname = os.path.join(self.model_ws, "qtg.nod")
         if not os.path.isfile(fname):

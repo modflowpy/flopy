@@ -1,14 +1,10 @@
 import numpy as np
-from ..discretization import StructuredGrid, UnstructuredGrid
 from ..utils import geometry
 
-try:
-    import matplotlib.pyplot as plt
-    import matplotlib.colors
-    from matplotlib.collections import PathCollection, LineCollection
-    from matplotlib.path import Path
-except (ImportError, ModuleNotFoundError, RuntimeError):
-    plt = None
+import matplotlib.pyplot as plt
+import matplotlib.colors
+from matplotlib.collections import PathCollection, LineCollection
+from matplotlib.path import Path
 
 from . import plotutil
 import warnings

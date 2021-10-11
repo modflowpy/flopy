@@ -9,6 +9,8 @@ import numpy as np
 from flopy.datbase import DataType, DataInterface
 from flopy.utils import Util3d
 
+from ..utils import import_optional_dependency
+
 warnings.simplefilter("always", DeprecationWarning)
 
 
@@ -121,11 +123,7 @@ class Vtk:
         point_scalars=False,
     ):
 
-        try:
-            import vtk
-        except ImportError:
-            err = "vtk not installed, use pip install vtk"
-            raise ImportError(err)
+        vtk = import_optional_dependency("vtk")
 
         if model is None and modelgrid is None:
             raise AssertionError(

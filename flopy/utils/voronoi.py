@@ -346,7 +346,7 @@ class VoronoiGrid:
             axes that contains the voronoi model grid
 
         """
-        plt = import_optional_dependency("matplotlib.pyplot")
+        import matplotlib.pyplot as plt
 
         if ax is None:
             ax = plt.subplot(1, 1, 1, aspect="equal")

@@ -7,7 +7,8 @@ import numpy as np
 from datetime import datetime
 import time
 from .metadata import acdd
-import flopy
+
+from ..utils import import_optional_dependency
 
 # globals
 FILLVALUE = -99999.9
@@ -188,15 +189,9 @@ class NetCdf:
             )
         self.shape = self.model_grid.shape
 
-        try:
-            import dateutil.parser
-        except ImportError:
-            raise ImportError(
-                "python-dateutil is not installed\n"
-                "try pip install python-dateutil"
-            )
+        parser = import_optional_dependency("dateutil.parser")
 
-        dt = dateutil.parser.parse(self.model_time.start_datetime)
+        dt = parser.parse(self.model_time.start_datetime)
         self.start_datetime = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
         self.logger.log(f"start datetime:{self.start_datetime}")
 
@@ -488,11 +483,8 @@ class NetCdf:
         assert (
             self.nc is not None
         ), "can't call difference() if nc hasn't been populated"
-        try:
-            import netCDF4
-        except ImportError as e:
-            self.logger.warn("error importing netCDF module")
-            raise ImportError("NetCdf error importing netCDF4 module") from e
+
+        netCDF4 = import_optional_dependency("netCFD4")
 
         if isinstance(other, str):
             assert os.path.exists(other), f"filename 'other' not found:{other}"
@@ -683,10 +675,7 @@ class NetCdf:
         """initialize the geometric information
         needed for the netcdf file
         """
-        try:
-            import pyproj
-        except ImportError as e:
-            raise ImportError("NetCdf error importing pyproj module") from e
+        pyproj = import_optional_dependency("pyproj")
         from distutils.version import LooseVersion
 
         # Check if using newer pyproj version conventions
@@ -763,6 +752,9 @@ class NetCdf:
                 self.model.dis.perlen and self.start_datetime
 
         """
+        from ..version import __version__ as version
+        from ..export.shapefile_utils import CRS
+
         if self.nc is not None:
             raise Exception("nc file already initialized")
 
@@ -770,11 +762,8 @@ class NetCdf:
             self.log("initializing geometry")
             self.initialize_geometry()
             self.log("initializing geometry")
-        try:
-            import netCDF4
-        except ImportError as e:
-            self.logger.warn("error importing netCDF module")
-            raise ImportError("NetCdf error importing netCDF4 module") from e
+
+        netCDF4 = import_optional_dependency("netCDF4")
 
         # open the file for writing
         try:
@@ -787,7 +776,7 @@ class NetCdf:
 
         self.nc.setncattr(
             "Conventions",
-            f"CF-1.6, ACDD-1.3, flopy {flopy.__version__}",
+            f"CF-1.6, ACDD-1.3, flopy {version}",
         )
         self.nc.setncattr(
             "date_created", datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -924,8 +913,9 @@ class NetCdf:
         y[:] = self.model_grid.xyzcellcenters[1]
 
         # grid mapping variable
-        crs = flopy.export.shapefile_utils.CRS(
-            prj=self.model_grid.prj, epsg=self.model_grid.epsg
+        crs = CRS(
+            prj=self.model_grid.prj,
+            epsg=self.model_grid.epsg,
         )
         attribs = crs.grid_mapping_attribs
         if attribs is not None:

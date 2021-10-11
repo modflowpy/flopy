@@ -12,6 +12,7 @@ import warnings
 import numpy as np
 from ..datbase import DataInterface, DataListInterface, DataType
 from ..utils.recarray_utils import create_empty_recarray
+from ..utils import import_optional_dependency
 
 
 class MfList(DataInterface, DataListInterface):
@@ -441,11 +442,8 @@ class MfList(DataInterface, DataListInterface):
         Requires pandas.
 
         """
-        try:
-            import pandas as pd
-        except Exception as e:
-            msg = "MfList.get_dataframe() requires pandas"
-            raise ImportError(msg)
+        extra = "MfList.get_dataframe() requires pandas."
+        pd = import_optional_dependency("pandas", extra=extra)
 
         # make a dataframe of all data for all stress periods
         names = ["per", "k", "i", "j"]

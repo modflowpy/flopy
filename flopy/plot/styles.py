@@ -1,11 +1,7 @@
-try:
-    import matplotlib.pyplot as plt
-    import matplotlib as mpl
-except (ImportError, ModuleNotFoundError, RuntimeError):
-    plt = None
-
 import os
 import platform
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 
 class styles:
@@ -53,6 +49,7 @@ class styles:
         -------
             None
         """
+        mpl = import_optional_dependency("matplotlib")
         mpl.rcParams["font.family"] = family
         mpl.rcParams[f"font.{family}"] = fontname
         return mpl.rcParams
@@ -435,6 +432,8 @@ class styles:
         -------
             dict
         """
+        mpl = import_optional_dependency("matplotlib")
+
         family = mpl.rcParams["font.family"][0]
         font = mpl.rcParams[f"font.{family}"][0]
 
