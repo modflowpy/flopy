@@ -8,6 +8,7 @@ import numpy as np
 
 from ..utils import import_optional_dependency
 
+
 class MtListBudget:
     """
     MT3D mass budget reader

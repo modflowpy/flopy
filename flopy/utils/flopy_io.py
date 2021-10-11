@@ -6,6 +6,7 @@ import sys
 import numpy as np
 from ..utils import import_optional_dependency
 
+
 def _fmt_string(array, float_format="{}"):
     """
     makes a formatting string for a rec-array;
