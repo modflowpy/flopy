@@ -1511,23 +1511,16 @@ def export_array(
         a = a.copy()
         a[np.isnan(a)] = nodata
         if modelgrid.angrot != 0:
-            ndimage = import_optional_dependency("scipy.ndimage")
-            from ndimage import rotate
+            extra = "exporting rotated grids requires SciPy."
+            ndimage = import_optional_dependency("scipy.ndimage", extra=extra)
 
-            try:
-                from scipy.ndimage import rotate
-            except ImportError:
-                rotate = None
-                print("scipy package required to export rotated grid.")
-
-            if rotate is not None:
-                a = rotate(a, modelgrid.angrot, cval=nodata)
-                height_rot, width_rot = a.shape
-                xmin, xmax, ymin, ymax = modelgrid.extent
-                dx = (xmax - xmin) / width_rot
-                dy = (ymax - ymin) / height_rot
-                cellsize = np.max((dx, dy))
-                xoffset, yoffset = xmin, ymin
+            a = ndimage.rotate(a, modelgrid.angrot, cval=nodata)
+            height_rot, width_rot = a.shape
+            xmin, xmax, ymin, ymax = modelgrid.extent
+            dx = (xmax - xmin) / width_rot
+            dy = (ymax - ymin) / height_rot
+            cellsize = np.max((dx, dy))
+            xoffset, yoffset = xmin, ymin
 
         filename = (
             ".".join(filename.split(".")[:-1]) + ".asc"

@@ -725,10 +725,6 @@ class StructuredGrid(Grid):
         -------
             list of Polygon objects
         """
-        try:
-            import matplotlib.path as mpath
-        except ImportError:
-            raise ImportError("matplotlib required to use this method")
         cache_index = "xyzgrid"
         if (
             cache_index not in self._cache_dict

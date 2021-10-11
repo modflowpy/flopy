@@ -471,10 +471,7 @@ class UnstructuredGrid(Grid):
         -------
             list or dict of matplotlib.collections.Polygon
         """
-        try:
-            from matplotlib.path import Path
-        except ImportError:
-            raise ImportError("matplotlib required to use this method")
+        from matplotlib.path import Path
 
         cache_index = "xyzgrid"
         if (
