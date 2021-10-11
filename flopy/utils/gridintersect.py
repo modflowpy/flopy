@@ -32,11 +32,12 @@ else:
     SHAPELY_GE_20 = False
     SHAPELY_LT_18 = False
 
+shapely_warning = None
 if shapely is not None:
     try:
         from shapely.errors import ShapelyDeprecationWarning as shapely_warning
     except ImportError:
-        shapely_warning = None
+        pass
 
 if shapely_warning is not None and not SHAPELY_GE_20:
 
