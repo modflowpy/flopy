@@ -232,8 +232,7 @@ class VertexGrid(Grid):
             self._polygons = None
         if self._polygons is None:
             self._polygons = [
-                Path(self.get_cell_vertices(nn))
-                for nn in range(self.ncpl)
+                Path(self.get_cell_vertices(nn)) for nn in range(self.ncpl)
             ]
 
         return copy.copy(self._polygons)
