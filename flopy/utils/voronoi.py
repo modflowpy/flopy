@@ -30,13 +30,10 @@ def get_valid_faces(vor):
 
 # todo: send this to point in polygon method defined in Rasters
 def point_in_cell(point, vertices):
-    try:
-        from shapely.geometry import Point, Polygon
-    except:
-        raise ModuleNotFoundError("shapely is not installed")
+    shapely_geo = import_optional_dependency("shapely.geometry")
 
-    p = Point(point)
-    poly = Polygon(vertices)
+    p = shapely_geo.Point(point)
+    poly = shapely_geo.Polygon(vertices)
     if p.intersects(poly):
         return True
     else:

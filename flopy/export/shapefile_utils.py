@@ -4,7 +4,6 @@ Module for exporting and importing flopy model attributes
 """
 import copy
 import shutil
-import inspect
 import json
 import numpy as np
 import os
@@ -953,12 +952,9 @@ class EpsgReference:
     """
 
     def __init__(self):
-        try:
-            from appdirs import user_data_dir
-        except ImportError:
-            user_data_dir = None
-        if user_data_dir:
-            datadir = user_data_dir("flopy")
+        appdirs = import_optional_dependency("appdirs", errors="silent")
+        if appdirs is not None:
+            datadir = appdirs.user_data_dir("flopy")
         else:
             # if appdirs is not installed, use user's home directory
             datadir = os.path.join(os.path.expanduser("~"), ".flopy")

@@ -1548,21 +1548,17 @@ def export_array(
             or modelgrid.delr[0] != modelgrid.delc[0]
         ):
             raise ValueError("GeoTIFF export require a uniform grid.")
-        try:
-            import rasterio
-            from rasterio import Affine
-        except ImportError:
-            print("GeoTIFF export requires the rasterio package.")
-            return
+        extra = "GeoTIFF export requires the rasterio."
+        rasterio = import_optional_dependency("rasterio", extra=extra)
         dxdy = modelgrid.delc[0]
         # because this is only implemented for a structured grid,
         # we can get the xul and yul coordinate from modelgrid.xvertices(0, 0)
         verts = modelgrid.get_cell_vertices(0, 0)
         xul, yul = verts[0]
         trans = (
-            Affine.translation(xul, yul)
-            * Affine.rotation(modelgrid.angrot)
-            * Affine.scale(dxdy, -dxdy)
+            rasterio.Affine.translation(xul, yul)
+            * rasterio.Affine.rotation(modelgrid.angrot)
+            * rasterio.Affine.scale(dxdy, -dxdy)
         )
 
         # third dimension is the number of bands
@@ -1713,10 +1709,9 @@ def export_contourf(
 
     """
 
-    try:
-        from shapely import geometry
-    except ImportError:
-        raise ImportError("export_contourf requires python shapely package")
+    extra = "export_contourf requires shapely."
+    shapely = import_optional_dependency("shapely", extra=extra)
+    from shapely import geometry
 
     from ..utils.geometry import Polygon
     from .shapefile_utils import recarray2shp

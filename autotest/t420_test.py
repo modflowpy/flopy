@@ -49,6 +49,7 @@ gridgen_ws = os.path.join(tpth, "gridgen_t420")
 if not os.path.exists(gridgen_ws):
     os.makedirs(gridgen_ws)
 
+
 def test_mfusg():
 
     name = "dummy"
@@ -123,18 +124,23 @@ def test_mfusg():
 
         # test if single node idx works
         one_hds = flopy.utils.HeadUFile(head_file).get_ts(idx=300)
-        if one_hds[0,1] != head[0][300]:
-            raise AssertionError("Error head from 'get_ts' != head from 'get_data'")
+        if one_hds[0, 1] != head[0][300]:
+            raise AssertionError(
+                "Error head from 'get_ts' != head from 'get_data'"
+            )
 
         # test if list of nodes for idx works
-        nodes = [300,182,65]
+        nodes = [300, 182, 65]
 
         multi_hds = flopy.utils.HeadUFile(head_file).get_ts(idx=nodes)
         for i, node in enumerate(nodes):
-            if multi_hds[0, i+1] != head[0][node]:
-                raise AssertionError("Error head from 'get_ts' != head from 'get_data'")
+            if multi_hds[0, i + 1] != head[0][node]:
+                raise AssertionError(
+                    "Error head from 'get_ts' != head from 'get_data'"
+                )
 
     return
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test_mfusg()

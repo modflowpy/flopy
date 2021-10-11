@@ -43,12 +43,6 @@ class PlotMapView:
         self, model=None, modelgrid=None, ax=None, layer=0, extent=None
     ):
 
-        if plt is None:
-            raise ImportError(
-                "Could not import matplotlib.  Must install matplotlib "
-                "in order to use ModelMap method"
-            )
-
         self.model = model
         self.layer = layer
         self.mg = None
@@ -169,11 +163,7 @@ class PlotMapView:
         contour_set : matplotlib.pyplot.contour
 
         """
-        try:
-            import matplotlib.tri as tri
-        except ImportError:
-            err_msg = "matplotlib must be installed to use contour_array()"
-            raise ImportError(err_msg)
+        import matplotlib.tri as tri
 
         a = np.copy(a)
         if not isinstance(a, np.ndarray):

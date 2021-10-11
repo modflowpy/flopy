@@ -117,21 +117,19 @@ class GeoSpatialUtil:
                     "coordinates": obj.coordinates,
                 }
 
-        if shapely is not None:
-            if isinstance(
-                obj,
-                (
-                    Point,
-                    MultiPoint,
-                    Polygon,
-                    MultiPolygon,
-                    LineString,
-                    MultiLineString,
-                ),
-            ):
-                self.__geo_interface = obj.__geo_interface__
-        else:
-            raise ModuleNotFoundError("shapely is not installed")
+        shapely_geo = import_optional_dependency("shapely.geometry")
+        if isinstance(
+            obj,
+            (
+                shapely_geo.Point,
+                shapely_geo.MultiPoint,
+                shapely_geo.Polygon,
+                shapely_geo.MultiPolygon,
+                shapely_geo.LineString,
+                shapely_geo.MultiLineString,
+            ),
+        ):
+            self.__geo_interface = obj.__geo_interface__
 
     @property
     def __geo_interface__(self):
@@ -179,12 +177,9 @@ class GeoSpatialUtil:
         -------
             shapely.geometry.<shape>
         """
-        if shapely is not None:
-            if self._shapely is None:
-                self._shapely = shapely.geometry.shape(self.__geo_interface)
-            return self._shapely
-        else:
-            raise ModuleNotFoundError("shapely is not installed")
+        shapely_geo = import_optional_dependency("shapely.geometry")
+        self._shapely = shapely_geo.shape(self.__geo_interface)
+        return self._shapely
 
     @property
     def geojson(self):
@@ -195,13 +190,10 @@ class GeoSpatialUtil:
         -------
             geojson.<shape>
         """
-        if geojson is not None:
-            if self._geojson is None:
-                cls = geojson_classes[self.__geo_interface["type"].lower()]
-                self._geojson = cls(self.__geo_interface["coordinates"])
-            return self._geojson
-        else:
-            raise ModuleNotFoundError("geojson is not installed")
+        import_optional_dependency("geojson")
+        cls = geojson_classes[self.__geo_interface["type"].lower()]
+        self._geojson = cls(self.__geo_interface["coordinates"])
+        return self._geojson
 
     @property
     def shape(self):
@@ -322,20 +314,18 @@ class GeoSpatialCollection:
                 for geom in obj.geometries:
                     self.__collection.append(GeoSpatialUtil(geom))
 
-        if shapely is not None:
-            if isinstance(
-                obj,
-                (
-                    shapely.geometry.collection.GeometryCollection,
-                    MultiPoint,
-                    MultiLineString,
-                    MultiPolygon,
-                ),
-            ):
-                for geom in obj.geoms:
-                    self.__collection.append(GeoSpatialUtil(geom))
-        else:
-            raise ModuleNotFoundError("shapely is no installed")
+        shapely_loc = import_optional_dependency("shapely.geometry")
+        if isinstance(
+            obj,
+            (
+                shapely_loc.collection.GeometryCollection,
+                shapely_loc.MultiPoint,
+                shapely_loc.MultiLineString,
+                shapely_loc.MultiPolygon,
+            ),
+        ):
+            for geom in obj.geoms:
+                self.__collection.append(GeoSpatialUtil(geom))
 
     def __iter__(self):
         """
@@ -384,14 +374,10 @@ class GeoSpatialCollection:
         -------
             shapely.geometry.collection.GeometryCollection object
         """
-        if shapely is not None:
-            if self._shapely is None:
-                self._shapely = shapely.geometry.collection.GeometryCollection(
-                    [i.shapely for i in self.__collection]
-                )
-        else:
-            raise ModuleNotFoundError("shapely is not installed")
-
+        shapely_loc = import_optional_dependency("shapely.geometry")
+        self._shapely = shapely_loc.collection.GeometryCollection(
+            [i.shapely for i in self.__collection]
+        )
         return self._shapely
 
     @property
@@ -403,13 +389,10 @@ class GeoSpatialCollection:
         -------
             geojson.GeometryCollection
         """
-        if geojson is not None:
-            if self._geojson is None:
-                self._geojson = geojson.GeometryCollection(
-                    [i.geojson for i in self.__collection]
-                )
-        else:
-            raise ModuleNotFoundError("geojson is not installed")
+        geojson_loc = import_optional_dependency("geojson")
+        self._geojson = geojson_loc.GeometryCollection(
+            [i.geojson for i in self.__collection]
+        )
         return self._geojson
 
     @property

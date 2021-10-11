@@ -2277,13 +2277,8 @@ def cvfd_to_patch_collection(verts, iverts):
         DeprecationWarning,
     )
 
-    if plt is None:
-        raise ImportError(
-            "matplotlib must be installed to use cvfd_to_patch_collection()"
-        )
-    else:
-        from matplotlib.patches import Polygon
-        from matplotlib.collections import PatchCollection
+    from matplotlib.patches import Polygon
+    from matplotlib.collections import PatchCollection
 
     ptchs = []
     for ivertlist in iverts:
