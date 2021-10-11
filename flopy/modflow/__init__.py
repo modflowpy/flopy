@@ -36,8 +36,6 @@ from .mfzon import ModflowZon
 from .mfmlt import ModflowMlt
 from .mfparbc import ModflowParBc
 from .mfgmg import ModflowGmg
-from .mfsms import ModflowSms
-from .mfbct import ModflowBct
 from .mfhfb import ModflowHfb
 from .mfsfr2 import ModflowSfr2
 from .mflak import ModflowLak
@@ -48,6 +46,3 @@ from .mfhyd import ModflowHyd
 from .mfhob import ModflowHob, HeadObservation
 from .mfflwob import ModflowFlwob
 from .mfaddoutsidefile import mfaddoutsidefile
-
-# unstructured
-from .mfdisu import ModflowDisU

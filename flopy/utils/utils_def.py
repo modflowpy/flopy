@@ -1,3 +1,4 @@
+# pylint: disable=E1101
 """
 Generic classes and utility functions
 """
@@ -136,3 +137,110 @@ def get_pak_vals_shape(model, vals):
             return np.array(vals, ndmin=2).shape
     else:
         return (nrow, ncol)  # structured
+
+
+def get_util2d_shape_for_layer(model, layer=0):
+    """
+    Define nrow and ncol for array (Util2d) shape of a given layer in
+    structured and/or unstructured models.
+
+    Parameters
+    ----------
+    model : model object
+        model for which Util2d shape is sought.
+    layer : int
+        layer (base 0) for which Util2d shape is sought.
+
+    Returns
+    ---------
+    (nrow,ncol) : tuple of ints
+        util2d shape for the given layer
+    """
+    nr, nc, _, _ = model.get_nrow_ncol_nlay_nper()
+    if nr is None:  # unstructured
+        nrow = 1
+        ncol = nc[layer]
+    else:  # structured
+        nrow = nr
+        ncol = nc
+
+    return (nrow, ncol)
+
+
+def get_unitnumber_from_ext_unit_dict(
+    model, pak_class, ext_unit_dict=None, ipakcb=0
+):
+    """
+    For a given modflow package, defines input file unit number,
+    plus package input and (optionally) output (budget) save file names.
+
+    Parameters
+    ----------
+    model : model object
+        model for which the unit number is sought.
+    pak_class : modflow package class for which the unit number is sought.
+    ext_unit_dict : external unit dictionary, optional.
+        If not provided, unitnumber and filenames will be returned as None.
+    ipakcb : int, optional
+        Modflow package unit number on which budget is saved.
+        Default is 0, in which case the returned output file is None.
+
+    Returns
+    ---------
+    unitnumber : int
+        file unit number for the given modflow package (or None)
+    filenames : list
+        list of [package input file name, budget file name],
+    """
+    unitnumber = None
+    filenames = [None, None]
+    if ext_unit_dict is not None:
+        unitnumber, filenames[0] = model.get_ext_dict_attr(
+            ext_unit_dict, filetype=pak_class._ftype()
+        )
+        if ipakcb > 0:
+            _, filenames[1] = model.get_ext_dict_attr(
+                ext_unit_dict, unit=ipakcb
+            )
+            model.add_pop_key_list(ipakcb)
+
+    return unitnumber, filenames
+
+
+def type_from_iterable(_iter, index=0, _type=int, default_val=0):
+    """Returns value of specified type from iterable.
+
+    Parameters
+    ----------
+    _iter : iterable
+    index : int
+        Iterable index to try to convert
+    _type : Python type
+    default_val : default value (0)
+
+    Returns
+    ----------
+    val : value of type _type, or default_val
+    """
+    try:
+        val = _type(_iter[index])
+    except ValueError:
+        val = default_val
+    except IndexError:
+        val = default_val
+
+    return val
+
+
+def get_open_file_object(fname_or_fobj, read_write="rw"):
+    """Returns an open file object for either a file name or open file object."""
+    openfile = not (
+        hasattr(fname_or_fobj, "read") or hasattr(fname_or_fobj, "write")
+    )
+    if openfile:
+        filename = fname_or_fobj
+        f_obj = open(filename, read_write)
+    else:
+        f_obj = fname_or_fobj
+
+    return f_obj

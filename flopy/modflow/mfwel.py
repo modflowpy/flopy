@@ -80,6 +80,9 @@ class ModflowWel(Package):
         number greater than zero. To define the names for all package files
         (input and output) the length of the list of strings should be 2.
         Default is None.
+    add_package : bool
+        Flag to add the initialised package object to the parent model object.
+        Default is True.
 
     Attributes
     ----------
@@ -148,6 +151,7 @@ class ModflowWel(Package):
         binary=False,
         unitnumber=None,
         filenames=None,
+        add_package=True,
     ):
         # set default unit number of one is not specified
         if unitnumber is None:
@@ -236,7 +240,8 @@ class ModflowWel(Package):
             self, stress_period_data, binary=binary
         )
 
-        self.parent.add_package(self)
+        if add_package:
+            self.parent.add_package(self)
 
     def _ncells(self):
         """Maximum number of cells that have wells (developed for

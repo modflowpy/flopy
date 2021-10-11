@@ -88,3 +88,4 @@ autotest/.noseids
 .docs/_temp
 .docs/_notebooks
 
+*.bak
