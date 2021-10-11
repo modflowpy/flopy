@@ -1,15 +1,16 @@
+# pylint: disable=too-many-instance-attributes
 """
-mfsms module.  This is the solver for MODFLOW-USG.
-Contains the ModflowSms class. Note that the user can access
-the ModflowSms class as `flopy.modflow.ModflowSms`.
+mfusgsms module.  This is the solver for MODFLOW-USG.
 
-
+Contains the MfUsgSms class. Note that the user can access
+the MfUsgSms class as `flopy.mfusg.MfUsgSms`.
 """
 from ..pakbase import Package
 from ..utils.flopy_io import line_parse
+from .mfusg import MfUsg
 
 
-class ModflowSms(Package):
+class MfUsgSms(Package):
     """
     MODFLOW Sms Package Class.
 
@@ -229,8 +230,7 @@ class ModflowSms(Package):
 
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
-    >>> sms = flopy.modflow.ModflowSms(m)
-
+    >>> sms = flopy.mfusg.MfUsgSms(m)
     """
 
     def __init__(
@@ -270,9 +270,15 @@ class ModflowSms(Package):
         unitnumber=None,
         filenames=None,
     ):
+        msg = (
+            "Model object must be of type flopy.mfusg.MfUsg\n"
+            f"but received type: {type(model)}."
+        )
+        assert isinstance(model, MfUsg), msg
+
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowSms._defaultunit()
+            unitnumber = self._defaultunit()
 
         # call base package constructor
         super().__init__(
@@ -409,7 +415,7 @@ class ModflowSms(Package):
 
         Returns
         -------
-        sms : ModflowSms object
+        sms : MfUsgSms object
 
         Examples
         --------
@@ -417,8 +423,12 @@ class ModflowSms(Package):
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
         >>> sms = flopy.modflow.ModflowPcg.load('test.sms', m)
-
         """
+        msg = (
+            "Model object must be of type flopy.mfusg.MfUsg\n"
+            f"but received type: {type(model)}."
+        )
+        assert isinstance(model, MfUsg), msg
 
         if model.verbose:
             print("loading sms package file...")
@@ -588,7 +598,7 @@ class ModflowSms(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowSms._ftype()
+                ext_unit_dict, filetype=cls._ftype()
             )
 
         return cls(

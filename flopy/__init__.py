@@ -28,6 +28,7 @@ from . import mt3d
 from . import seawat
 from . import modpath
 from . import modflowlgr
+from . import mfusg
 from . import utils
 from . import plot
 from . import export
@@ -36,3 +37,20 @@ from . import mf6
 from . import discretization
 
 from .mbase import run_model, which
+
+__all__ = [
+    "modflow",
+    "mt3d",
+    "seawat",
+    "modpath",
+    "modflowlgr",
+    "modflowusg",
+    "utils",
+    "plot",
+    "export",
+    "pest",
+    "mf6",
+    "discretization",
+    "run_model",
+    "which",
+]

@@ -18,15 +18,6 @@ except ImportWarning as e:
 import flopy
 from flopy.utils.gridgen import Gridgen
 
-try:
-    import matplotlib
-    import matplotlib.pyplot as plt
-    from matplotlib.collections import QuadMesh, PathCollection, LineCollection
-except:
-    print("Matplotlib not installed, tests cannot be run.")
-    matplotlib = None
-    plt = None
-
 # Set gridgen executable
 gridgen_exe = "gridgen"
 if platform.system() in "Windows":
@@ -92,18 +83,17 @@ def test_mfusg():
     # create the mfusg modoel
     ws = os.path.join(tpth, "gridgen_mfusg")
     name = "mymodel"
-    m = flopy.modflow.Modflow(
+    m = flopy.mfusg.MfUsg(
         modelname=name,
         model_ws=ws,
-        version="mfusg",
         exe_name=mfusg_exe,
         structured=False,
     )
-    disu = flopy.modflow.ModflowDisU(m, **gridprops)
+    disu = flopy.mfusg.MfUsgDisU(m, **gridprops)
     bas = flopy.modflow.ModflowBas(m)
-    lpf = flopy.modflow.ModflowLpf(m)
+    lpf = flopy.mfusg.MfUsgLpf(m)
     chd = flopy.modflow.ModflowChd(m, stress_period_data=chdspd)
-    sms = flopy.modflow.ModflowSms(m)
+    sms = flopy.mfusg.MfUsgSms(m)
     oc = flopy.modflow.ModflowOc(m, stress_period_data={(0, 0): ["save head"]})
     m.write_input()
 

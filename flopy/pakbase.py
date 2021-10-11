@@ -605,7 +605,7 @@ class Package(PackageInterface):
                                     vo.dtype,
                                     v,
                                     name=vo.name,
-                                    fmtin=vo.fmtin,
+                                    fmtin=vo.format.fortran,
                                     locat=vo.locat,
                                 )
                             )
@@ -875,7 +875,7 @@ class Package(PackageInterface):
         if wa is not None:
             wb.open(wa)
 
-    def write_file(self, check=False):
+    def write_file(self, f=None, check=False):
         """
         Every Package needs its own write_file function
 
