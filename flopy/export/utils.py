@@ -1511,8 +1511,10 @@ def export_array(
         a = a.copy()
         a[np.isnan(a)] = nodata
         if modelgrid.angrot != 0:
-            extra = "exporting rotated grids requires SciPy."
-            ndimage = import_optional_dependency("scipy.ndimage", extra=extra)
+            ndimage = import_optional_dependency(
+                "scipy.ndimage",
+                error_message="exporting rotated grids requires SciPy.",
+            )
 
             a = ndimage.rotate(a, modelgrid.angrot, cval=nodata)
             height_rot, width_rot = a.shape
@@ -1548,8 +1550,10 @@ def export_array(
             or modelgrid.delr[0] != modelgrid.delc[0]
         ):
             raise ValueError("GeoTIFF export require a uniform grid.")
-        extra = "GeoTIFF export requires the rasterio."
-        rasterio = import_optional_dependency("rasterio", extra=extra)
+        rasterio = import_optional_dependency(
+            "rasterio",
+            error_message="GeoTIFF export requires the rasterio.",
+        )
         dxdy = modelgrid.delc[0]
         # because this is only implemented for a structured grid,
         # we can get the xul and yul coordinate from modelgrid.xvertices(0, 0)
@@ -1709,8 +1713,9 @@ def export_contourf(
 
     """
 
-    extra = "export_contourf requires shapely."
-    shapely = import_optional_dependency("shapely", extra=extra)
+    shapely = import_optional_dependency(
+        "shapely", error_message="export_contourf requires shapely."
+    )
     from shapely import geometry
 
     from ..utils.geometry import Polygon

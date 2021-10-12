@@ -75,8 +75,10 @@ class MtListBudget:
             (optionally) surface-water mass budget.
             If the SFT process is not used, df_sw is None.
         """
-        extra = "MtListBudget.parse() requires pandas."
-        pd = import_optional_dependency("pandas", extra=extra)
+        pd = import_optional_dependency(
+            "pandas",
+            error_message="MtListBudget.parse() requires pandas.",
+        )
 
         self.gw_data = {}
         self.sw_data = {}
@@ -183,8 +185,10 @@ class MtListBudget:
         return df_gw, df_sw
 
     def _diff(self, df):
-        extra = "MtListBudget._diff() requires pandas."
-        pd = import_optional_dependency("pandas", extra=extra)
+        pd = import_optional_dependency(
+            "pandas",
+            error_message="MtListBudget._diff() requires pandas.",
+        )
 
         out_cols = [
             c for c in df.columns if "_out" in c and not c.startswith("net_")

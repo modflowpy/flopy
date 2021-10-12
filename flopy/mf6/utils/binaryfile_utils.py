@@ -229,8 +229,10 @@ class MFOutputRequester:
         elevations corresponding to a row column location
         """
 
-        extra = "MFOutputRequester._get_vertices() requires pandas."
-        pd = import_optional_dependency("pandas", extra=extra)
+        pd = import_optional_dependency(
+            "pandas",
+            error_message="MFOutputRequester._get_vertices() requires pandas.",
+        )
 
         mname = key[0]
         cellid = mfdict[(mname, "DISV8", "CELL2D", "cell2d_num")]

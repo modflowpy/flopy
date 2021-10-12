@@ -475,8 +475,10 @@ class ListBudget:
 
         """
 
-        extra = "ListBudget.get_dataframes() requires pandas."
-        pd = import_optional_dependency("pandas", extra=extra)
+        pd = import_optional_dependency(
+            "pandas",
+            error_message="ListBudget.get_dataframes() requires pandas.",
+        )
 
         if not self._isvalid:
             return None

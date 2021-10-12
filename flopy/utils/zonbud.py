@@ -2369,8 +2369,10 @@ def _recarray_to_dataframe(
 
     pd.DataFrame
     """
-    extra = "ZoneBudget.get_dataframes() requires pandas."
-    pd = import_optional_dependency("pandas", extra=extra)
+    pd = import_optional_dependency(
+        "pandas",
+        error_message="ZoneBudget.get_dataframes() requires pandas.",
+    )
 
     valid_index_keys = ["totim", "kstpkper"]
     s = f'index_key "{index_key}" is not valid.'
@@ -2991,8 +2993,10 @@ def _volumetric_flux(recarray, modeltime, extrapolate_kper=False):
         pd.DataFrame
 
     """
-    extra = "ZoneBudget._volumetric_flux() requires pandas."
-    pd = import_optional_dependency("pandas", extra=extra)
+    pd = import_optional_dependency(
+        "pandas",
+        error_message="ZoneBudget._volumetric_flux() requires pandas.",
+    )
 
     nper = len(modeltime.nstp)
     volumetric_data = {}

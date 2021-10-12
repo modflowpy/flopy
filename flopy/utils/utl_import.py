@@ -74,7 +74,7 @@ def get_version(module: types.ModuleType) -> str:
 
 def import_optional_dependency(
     name: str,
-    extra: str = "",
+    error_message: str = "",
     errors: str = "raise",
     min_version: str | None = None,
 ):
@@ -89,7 +89,7 @@ def import_optional_dependency(
     ----------
     name : str
         The module name.
-    extra : str
+    error_message : str
         Additional text to include in the ImportError message.
     errors : str {'raise', 'warn', 'ignore'}
         What to do when a dependency is not found or its version is too old.
@@ -121,7 +121,7 @@ def import_optional_dependency(
     install_name = package_name if package_name is not None else name
 
     msg = (
-        f"Missing optional dependency '{install_name}'. {extra} "
+        f"Missing optional dependency '{install_name}'. {error_message} "
         f"Use pip or conda to install {install_name}."
     )
     try:

@@ -177,8 +177,10 @@ class ObsFiles(FlopyBinaryData):
 
         from ..utils.utils_def import totim_to_datetime
 
-        extra = "ObsFiles.get_dataframe() requires pandas."
-        pd = import_optional_dependency("pandas", extra=extra)
+        pd = import_optional_dependency(
+            "pandas",
+            error_message="ObsFiles.get_dataframe() requires pandas.",
+        )
 
         i0 = 0
         i1 = self.data.shape[0]

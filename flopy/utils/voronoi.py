@@ -72,8 +72,10 @@ def tri2vor(tri, **kwargs):
     verts, iverts : ndarray, list of lists
 
     """
-    extra = "Voronoi requires SciPy."
-    import_optional_dependency("scipy.spatial", extra=extra)
+    import_optional_dependency(
+        "scipy.spatial",
+        error_message="Voronoi requires SciPy.",
+    )
     from scipy.spatial import Voronoi
 
     # assign local variables

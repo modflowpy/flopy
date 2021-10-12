@@ -209,8 +209,10 @@ class Observations:
         pd.DataFrame
 
         """
-        extra = "get_dataframe() requires pandas."
-        pd = import_optional_dependency("pandas", extra=extra)
+        pd = import_optional_dependency(
+            "pandas",
+            error_message="get_dataframe() requires pandas.",
+        )
 
         data_str = self._reader(self.Obsname)
         data = self._array_to_dict(data_str)
