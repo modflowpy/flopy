@@ -1801,7 +1801,6 @@ def export_array_contours(
 
     """
     import matplotlib.pyplot as plt
-    from ..utils import import_optional_dependency
 
     if epsg is None:
         epsg = modelgrid.epsg
