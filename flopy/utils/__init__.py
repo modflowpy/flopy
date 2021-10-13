@@ -21,6 +21,7 @@
 
     """
 from .mfreadnam import parsenamefile
+from .utl_import import import_optional_dependency
 from .util_array import Util3d, Util2d, Transient2d, Transient3d, read1d
 from .util_list import MfList
 from .binaryfile import (

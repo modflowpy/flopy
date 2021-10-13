@@ -1,5 +1,5 @@
 """
-Test vtk export_model function without packages_names definition 
+Test vtk export_model function without packages_names definition
 """
 
 import os

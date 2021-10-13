@@ -456,9 +456,7 @@ def test_mfusg():
 
         # re-run with an LPF keyword specified. This would have thrown an error
         # before the addition of ikcflag to mflpf.py (flopy 3.3.3 and earlier).
-        lpf = flopy.mfusg.MfUsgLpf(
-            m, novfc=True, nocvcorrection=True
-        )
+        lpf = flopy.mfusg.MfUsgLpf(m, novfc=True, nocvcorrection=True)
         m.write_input()
         m.run_model()
 

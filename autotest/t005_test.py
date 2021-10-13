@@ -25,9 +25,7 @@ def test_modflow_unstructured():
     lpf = flopy.mfusg.MfUsgLpf(mf)
     assert isinstance(lpf, flopy.mfusg.MfUsgLpf)
 
-    wel = flopy.mfusg.MfUsgWel(
-        mf, stress_period_data={0: [[0, -100]]}
-    )
+    wel = flopy.mfusg.MfUsgWel(mf, stress_period_data={0: [[0, -100]]})
     assert isinstance(wel, flopy.mfusg.MfUsgWel)
 
     ghb = flopy.modflow.ModflowGhb(
@@ -44,9 +42,7 @@ def test_modflow_unstructured():
     # write well file
     wel.write_file()
     assert os.path.isfile(os.path.join(cpth, f"{mf.name}.wel")) is True
-    wel2 = flopy.mfusg.MfUsgWel.load(
-        os.path.join(cpth, f"{mf.name}.wel"), mf
-    )
+    wel2 = flopy.mfusg.MfUsgWel.load(os.path.join(cpth, f"{mf.name}.wel"), mf)
     assert wel2.stress_period_data[0] == wel.stress_period_data[0]
 
     # write ghb file

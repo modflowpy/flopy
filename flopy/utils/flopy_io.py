@@ -4,11 +4,7 @@ Module for input/output utilities
 import os
 import sys
 import numpy as np
-
-try:
-    import pandas as pd
-except:
-    pd = False
+from ..utils import import_optional_dependency
 
 
 def _fmt_string(array, float_format="{}"):
@@ -353,14 +349,14 @@ def loadtxt(
     """
     # test if pandas should be used, if available
     if use_pandas:
-        if pd:
-            if delimiter.isspace():
-                kwargs["delim_whitespace"] = True
-            if isinstance(dtype, np.dtype) and "names" not in kwargs:
-                kwargs["names"] = dtype.names
+        pd = import_optional_dependency("pandas")
+        if delimiter.isspace():
+            kwargs["delim_whitespace"] = True
+        if isinstance(dtype, np.dtype) and "names" not in kwargs:
+            kwargs["names"] = dtype.names
 
     # if use_pandas and pd then use pandas
-    if use_pandas and pd:
+    if use_pandas:
         df = pd.read_csv(file, dtype=dtype, skiprows=skiprows, **kwargs)
         return df.to_records(index=False)
     # default use of numpy

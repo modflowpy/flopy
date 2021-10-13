@@ -2,10 +2,7 @@ import os
 import copy
 import numpy as np
 
-try:
-    from matplotlib.path import Path
-except (ImportError, RuntimeError):
-    Path = None
+from matplotlib.path import Path
 
 from .grid import Grid, CachedData
 from ..utils.geometry import is_clockwise
@@ -226,10 +223,6 @@ class VertexGrid(Grid):
         -------
             list of Polygon objects
         """
-        try:
-            import matplotlib.path as mpath
-        except ImportError:
-            raise ImportError("matplotlib required to use this method")
         cache_index = "xyzgrid"
         if (
             cache_index not in self._cache_dict
@@ -239,8 +232,7 @@ class VertexGrid(Grid):
             self._polygons = None
         if self._polygons is None:
             self._polygons = [
-                mpath.Path(self.get_cell_vertices(nn))
-                for nn in range(self.ncpl)
+                Path(self.get_cell_vertices(nn)) for nn in range(self.ncpl)
             ]
 
         return copy.copy(self._polygons)
@@ -270,12 +262,6 @@ class VertexGrid(Grid):
             The CELL2D number
 
         """
-        if Path is None:
-            s = (
-                "Could not import matplotlib.  Must install matplotlib "
-                "in order to use VertexGrid.intersect() method"
-            )
-            raise ImportError(s)
 
         if local:
             # transform x and y to real-world coordinates

@@ -2,23 +2,27 @@ name: flopy
 channels:
   - conda-forge
 dependencies:
+  # required
   - python>=3.7
+  - numpy>=1.15.0
+  - matplotlib>=1.4.0
+
+  # testing
   - pylint
   - flake8
   - black
   - nose
   - nose-timer
   - coverage
+
+  # optional
   - appdirs
-  - requests
-  - numpy>=1.15
-  - matplotlib
-  - bmipy
+  - python-dateutil>=2.4.0
   - affine
   - scipy
   - pandas
   - netcdf4
-  - pyshp
+  - pyshp>=2.0.0
   - rasterio
   - fiona
   - descartes
@@ -27,3 +31,9 @@ dependencies:
   - geos
   - geojson
   - vtk
+
+  # external dependencies
+  - requests
+
+  # MODFLOW API dependencies
+  - bmipy

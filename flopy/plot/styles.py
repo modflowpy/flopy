@@ -1,11 +1,7 @@
-try:
-    import matplotlib.pyplot as plt
-    import matplotlib as mpl
-except (ImportError, ModuleNotFoundError, RuntimeError):
-    plt = None
-
 import os
 import platform
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 
 class styles:

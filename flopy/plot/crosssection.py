@@ -1,14 +1,12 @@
 import numpy as np
 
-try:
-    import matplotlib.pyplot as plt
-    import matplotlib.colors
-    from matplotlib.patches import Polygon
-except (ImportError, ModuleNotFoundError, RuntimeError):
-    plt = None
+import matplotlib.pyplot as plt
+import matplotlib.colors
+from matplotlib.patches import Polygon
 
-from flopy.plot import plotutil
-from flopy.utils import geometry
+from . import plotutil
+from ..utils import geometry
+
 import copy
 import warnings
 
@@ -56,12 +54,6 @@ class PlotCrossSection:
 
         self.ax = ax
         self.geographic_coords = geographic_coords
-        if plt is None:
-            raise ImportError(
-                "Could not import matplotlib.  Must install matplotlib "
-                "in order to use ModelCrossSection method"
-            )
-
         self.model = model
 
         if modelgrid is not None:
@@ -504,11 +496,7 @@ class PlotCrossSection:
         contour_set : matplotlib.pyplot.contour
 
         """
-        if plt is None:
-            err_msg = "matplotlib must be installed to use contour_array()"
-            raise ImportError(err_msg)
-        else:
-            import matplotlib.tri as tri
+        import matplotlib.tri as tri
 
         if not isinstance(a, np.ndarray):
             a = np.array(a)

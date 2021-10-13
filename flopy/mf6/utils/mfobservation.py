@@ -1,6 +1,8 @@
 import numpy as np
 import csv
 
+from ...utils import import_optional_dependency
+
 
 def try_float(data):
     try:
@@ -207,11 +209,10 @@ class Observations:
         pd.DataFrame
 
         """
-        try:
-            import pandas as pd
-        except Exception as e:
-            print("this feature requires pandas")
-            return None
+        pd = import_optional_dependency(
+            "pandas",
+            error_message="get_dataframe() requires pandas.",
+        )
 
         data_str = self._reader(self.Obsname)
         data = self._array_to_dict(data_str)

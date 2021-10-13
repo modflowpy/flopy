@@ -3,6 +3,8 @@ Container objects for working with geometric information
 """
 import numpy as np
 
+from ..utils import import_optional_dependency
+
 
 class Shape:
     """
@@ -382,12 +384,10 @@ class Polygon(Shape):
 
     @property
     def pyshp_parts(self):
-        from ..export.shapefile_utils import import_shapefile
-
         # exterior ring must be clockwise (negative area)
         # interiors rings must be counter-clockwise (positive area)
 
-        shapefile = import_shapefile()
+        shapefile = import_optional_dependency("shapefile")
 
         exterior = list(self.exterior)
         if shapefile.signed_area(exterior) > 0:
@@ -410,12 +410,9 @@ class Polygon(Shape):
         return self.get_patch()
 
     def get_patch(self, **kwargs):
-        try:
-            from descartes import PolygonPatch
-        except ImportError:
-            print(
-                'This feature requires descartes.\nTry "pip install descartes"'
-            )
+        descartes = import_optional_dependency("descartes")
+        from descartes import PolygonPatch
+
         return PolygonPatch(self.geojson, **kwargs)
 
     def plot(self, ax=None, **kwargs):
@@ -427,10 +424,7 @@ class Polygon(Shape):
         Accepts keyword arguments to descartes.PolygonPatch. Requires the
         descartes package (pip install descartes).
         """
-        try:
-            import matplotlib.pyplot as plt
-        except ImportError:
-            print("This feature requires matplotlib.")
+        import matplotlib.pyplot as plt
 
         if ax is None:
             ax = plt.gca()
@@ -522,10 +516,7 @@ class LineString(Shape):
         return [self.coords]
 
     def plot(self, ax=None, **kwargs):
-        try:
-            import matplotlib.pyplot as plt
-        except ImportError:
-            print("This feature requires matplotlib.")
+        import matplotlib.pyplot as plt
 
         if ax is None:
             ax = plt.gca()
@@ -621,10 +612,7 @@ class Point(Shape):
         return self.coords
 
     def plot(self, ax=None, **kwargs):
-        try:
-            import matplotlib.pyplot as plt
-        except ImportError:
-            print("This feature requires matplotlib.")
+        import matplotlib.pyplot as plt
 
         if ax is None:
             ax = plt.gca()

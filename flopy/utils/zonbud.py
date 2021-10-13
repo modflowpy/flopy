@@ -3,6 +3,7 @@ import copy
 import numpy as np
 from itertools import groupby
 from .utils_def import totim_to_datetime
+from . import import_optional_dependency
 
 
 class ZoneBudget:
@@ -2368,11 +2369,10 @@ def _recarray_to_dataframe(
 
     pd.DataFrame
     """
-    try:
-        import pandas as pd
-    except Exception as e:
-        msg = f"ZoneBudget.get_dataframes() error import pandas: {e!s}"
-        raise ImportError(msg)
+    pd = import_optional_dependency(
+        "pandas",
+        error_message="ZoneBudget.get_dataframes() requires pandas.",
+    )
 
     valid_index_keys = ["totim", "kstpkper"]
     s = f'index_key "{index_key}" is not valid.'
@@ -2993,7 +2993,10 @@ def _volumetric_flux(recarray, modeltime, extrapolate_kper=False):
         pd.DataFrame
 
     """
-    import pandas as pd
+    pd = import_optional_dependency(
+        "pandas",
+        error_message="ZoneBudget._volumetric_flux() requires pandas.",
+    )
 
     nper = len(modeltime.nstp)
     volumetric_data = {}

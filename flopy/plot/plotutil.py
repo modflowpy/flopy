@@ -7,18 +7,9 @@ shapefiles are also included.
 import os
 import numpy as np
 import warnings
-from ..utils import Util3d
+import matplotlib.pyplot as plt
+from ..utils import Util3d, import_optional_dependency
 from ..datbase import DataType, DataInterface
-
-try:
-    import shapefile
-except ImportError:
-    shapefile = None
-
-try:
-    import matplotlib.pyplot as plt
-except (ImportError, RuntimeError):
-    plt = None
 
 warnings.simplefilter("ignore", RuntimeWarning)
 
@@ -1107,13 +1098,6 @@ class PlotUtilities:
             "modelgrid": None,
         }
 
-        # check that matplotlib is installed
-        if plt is None:
-            raise ImportError(
-                "Could not import matplotlib.  Must install matplotlib "
-                "in order to plot LayerFile data."
-            )
-
         for key in defaults:
             if key in kwargs:
                 defaults[key] = kwargs.pop(key)
@@ -1258,12 +1242,6 @@ class PlotUtilities:
         """
 
         from .map import PlotMapView
-
-        if plt is None:
-            raise ImportError(
-                "Could not import matplotlib.  Must install matplotlib "
-                "in order to plot boundary condition data."
-            )
 
         defaults = {
             "figsize": None,
@@ -2020,11 +1998,7 @@ def shapefile_extents(shp):
     >>> extent = flopy.plot.plotutil.shapefile_extents(fshp)
 
     """
-    if shapefile is None:
-        raise ImportError(
-            "Could not import shapefile.  "
-            "Must install pyshp in order to plot shapefiles."
-        )
+    shapefile = import_optional_dependency("shapefile")
 
     sf = shapefile.Reader(shp)
     shapes = sf.shapes()
@@ -2064,11 +2038,7 @@ def shapefile_get_vertices(shp):
     >>> lines = flopy.plot.plotutil.shapefile_get_vertices(fshp)
 
     """
-    if shapefile is None:
-        raise ImportError(
-            "Could not import shapefile.  "
-            "Must install pyshp in order to plot shapefiles."
-        )
+    shapefile = import_optional_dependency("shapefile")
 
     sf = shapefile.Reader(shp)
     shapes = sf.shapes()
@@ -2117,22 +2087,12 @@ def shapefile_to_patch_collection(shp, radius=500.0, idx=None):
             Patch collection of shapes in the shapefile
 
     """
-    if shapefile is None:
-        raise ImportError(
-            "Could not import shapefile.  "
-            "Must install pyshp in order to plot shapefiles."
-        )
-    if plt is None:
-        raise ImportError(
-            "matplotlib must be installed to "
-            "use shapefile_to_patch_collection()"
-        )
-    else:
-        from matplotlib.patches import Polygon, Circle, PathPatch
-        import matplotlib.path as MPath
-        from matplotlib.collections import PatchCollection
-        from ..utils.geospatial_utils import GeoSpatialCollection
-        from ..utils.geometry import point_in_polygon
+    from matplotlib.patches import Polygon, Circle, PathPatch
+    import matplotlib.path as MPath
+    from matplotlib.collections import PatchCollection
+
+    from ..utils.geospatial_utils import GeoSpatialCollection
+    from ..utils.geometry import point_in_polygon
 
     geofeats = GeoSpatialCollection(shp)
     shapes = geofeats.shape
@@ -2264,13 +2224,6 @@ def plot_shapefile(
     --------
 
     """
-
-    if shapefile is None:
-        raise ImportError(
-            "Could not import shapefile.  "
-            "Must install pyshp in order to plot shapefiles."
-        )
-
     vmin = kwargs.pop("vmin", None)
     vmax = kwargs.pop("vmax", None)
 
@@ -2324,13 +2277,8 @@ def cvfd_to_patch_collection(verts, iverts):
         DeprecationWarning,
     )
 
-    if plt is None:
-        raise ImportError(
-            "matplotlib must be installed to use cvfd_to_patch_collection()"
-        )
-    else:
-        from matplotlib.patches import Polygon
-        from matplotlib.collections import PatchCollection
+    from matplotlib.patches import Polygon
+    from matplotlib.collections import PatchCollection
 
     ptchs = []
     for ivertlist in iverts:
@@ -2400,9 +2348,6 @@ def plot_cvfd(
         "Use PlotMapView for plotting",
         DeprecationWarning,
     )
-    if plt is None:
-        err_msg = "matplotlib must be installed to use plot_cvfd()"
-        raise ImportError(err_msg)
 
     if "vmin" in kwargs:
         vmin = kwargs.pop("vmin")

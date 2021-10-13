@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 import subprocess
 from ..mbase import which
 from ..utils.cvfdutil import centroid_of_polygon
@@ -307,12 +308,6 @@ class Triangle:
         None
 
         """
-        try:
-            import matplotlib.pyplot as plt
-        except:
-            raise ImportError(
-                "matplotlib must be installed to use triangle.plot_boundary()"
-            )
         if ax is None:
             ax = plt.gca()
         idx = np.where(self.edge["boundary_marker"] == ibm)[0]
@@ -343,12 +338,6 @@ class Triangle:
         None
 
         """
-        try:
-            import matplotlib.pyplot as plt
-        except:
-            raise ImportError(
-                "matplotlib must be installed to use triangle.plot_vertices()"
-            )
         if ax is None:
             ax = plt.gca()
         ax.plot(self.node["x"], self.node["y"], lw=0, **kwargs)
@@ -375,12 +364,6 @@ class Triangle:
         None
 
         """
-        try:
-            import matplotlib.pyplot as plt
-        except:
-            raise ImportError(
-                "matplotlib must be installed to use triangle.label_vertices()"
-            )
         if ax is None:
             ax = plt.gca()
         for i in range(self.verts.shape[0]):
@@ -409,13 +392,6 @@ class Triangle:
         None
 
         """
-        try:
-            import matplotlib.pyplot as plt
-        except:
-            raise ImportError(
-                "matplotlib must be installed to use triangle.plot_centroids()"
-            )
-
         if ax is None:
             ax = plt.gca()
         xcyc = self.get_xcyc()
@@ -443,12 +419,6 @@ class Triangle:
         None
 
         """
-        try:
-            import matplotlib.pyplot as plt
-        except:
-            raise ImportError(
-                "matplotlib must be installed to use triangle.lavel_cells()"
-            )
         if ax is None:
             ax = plt.gca()
         xcyc = self.get_xcyc()

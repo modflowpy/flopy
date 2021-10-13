@@ -1,10 +1,7 @@
-from flopy.utils.flopy_io import get_url_text
 import numpy as np
 
-try:
-    import pandas as pd
-except:
-    pd = False
+from ..utils.flopy_io import get_url_text
+from ..utils import import_optional_dependency
 
 
 class acdd:
@@ -194,13 +191,15 @@ class acdd:
         -------
 
         """
+        pd = import_optional_dependency("pandas", errors="ignore")
+
         l = self.sb["dates"]
         tc = {}
         for t in ["start", "end"]:
             tc[t] = [d.get("dateString") for d in l if t in d["type"].lower()][
                 0
             ]
-        if not np.all(self.model_time.steady_state) and pd:
+        if not np.all(self.model_time.steady_state) and pd is not None:
             # replace with times from model reference
             tc["start"] = self.model_time.start_datetime
             strt = pd.Timestamp(self.model_time.start_datetime)
@@ -260,7 +259,6 @@ class acdd:
         url = urlbase.format(id)
 
         import json
-        from flopy.utils.flopy_io import get_url_text
 
         msg = "Need an internet connection to get metadata from ScienceBase."
         text = get_url_text(url, error_msg=msg)
@@ -283,11 +281,8 @@ class acdd:
         metadata : dict
             Dictionary of metadata
         """
-        try:
-            # use defusedxml to removed XML security vulnerabilities
-            import defusedxml.ElementTree as ET
-        except ImportError:
-            raise ImportError("DefusedXML must be installed to query metadata")
+        # use defusedxml to removed XML security vulnerabilities
+        ET = import_optional_dependency("defusedxml.ElementTree")
 
         url = self.xmlfile
         msg = "Need an internet connection to get metadata from ScienceBase."

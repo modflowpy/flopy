@@ -14,6 +14,7 @@ from ..datbase import DataType, DataInterface, DataListInterface
 from . import NetCdf, netcdf
 from . import shapefile_utils
 from . import vtk
+from ..utils import import_optional_dependency
 
 
 NC_PRECISION_TYPE = {
@@ -1510,20 +1511,18 @@ def export_array(
         a = a.copy()
         a[np.isnan(a)] = nodata
         if modelgrid.angrot != 0:
-            try:
-                from scipy.ndimage import rotate
-            except ImportError:
-                rotate = None
-                print("scipy package required to export rotated grid.")
+            ndimage = import_optional_dependency(
+                "scipy.ndimage",
+                error_message="exporting rotated grids requires SciPy.",
+            )
 
-            if rotate is not None:
-                a = rotate(a, modelgrid.angrot, cval=nodata)
-                height_rot, width_rot = a.shape
-                xmin, xmax, ymin, ymax = modelgrid.extent
-                dx = (xmax - xmin) / width_rot
-                dy = (ymax - ymin) / height_rot
-                cellsize = np.max((dx, dy))
-                xoffset, yoffset = xmin, ymin
+            a = ndimage.rotate(a, modelgrid.angrot, cval=nodata)
+            height_rot, width_rot = a.shape
+            xmin, xmax, ymin, ymax = modelgrid.extent
+            dx = (xmax - xmin) / width_rot
+            dy = (ymax - ymin) / height_rot
+            cellsize = np.max((dx, dy))
+            xoffset, yoffset = xmin, ymin
 
         filename = (
             ".".join(filename.split(".")[:-1]) + ".asc"
@@ -1551,21 +1550,19 @@ def export_array(
             or modelgrid.delr[0] != modelgrid.delc[0]
         ):
             raise ValueError("GeoTIFF export require a uniform grid.")
-        try:
-            import rasterio
-            from rasterio import Affine
-        except ImportError:
-            print("GeoTIFF export requires the rasterio package.")
-            return
+        rasterio = import_optional_dependency(
+            "rasterio",
+            error_message="GeoTIFF export requires the rasterio.",
+        )
         dxdy = modelgrid.delc[0]
         # because this is only implemented for a structured grid,
         # we can get the xul and yul coordinate from modelgrid.xvertices(0, 0)
         verts = modelgrid.get_cell_vertices(0, 0)
         xul, yul = verts[0]
         trans = (
-            Affine.translation(xul, yul)
-            * Affine.rotation(modelgrid.angrot)
-            * Affine.scale(dxdy, -dxdy)
+            rasterio.Affine.translation(xul, yul)
+            * rasterio.Affine.rotation(modelgrid.angrot)
+            * rasterio.Affine.scale(dxdy, -dxdy)
         )
 
         # third dimension is the number of bands
@@ -1716,10 +1713,10 @@ def export_contourf(
 
     """
 
-    try:
-        from shapely import geometry
-    except ImportError:
-        raise ImportError("export_contourf requires python shapely package")
+    shapely = import_optional_dependency(
+        "shapely", error_message="export_contourf requires shapely."
+    )
+    from shapely import geometry
 
     from ..utils.geometry import Polygon
     from .shapefile_utils import recarray2shp
@@ -1808,11 +1805,7 @@ def export_array_contours(
     **kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
     """
-    try:
-        import matplotlib.pyplot as plt
-    except:
-        err_msg = "matplotlib must be installed to use export_array_contours()"
-        raise ImportError(err_msg)
+    import matplotlib.pyplot as plt
 
     if epsg is None:
         epsg = modelgrid.epsg

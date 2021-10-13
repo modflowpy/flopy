@@ -1,4 +1,5 @@
 import numpy as np
+from ..utils import import_optional_dependency
 
 
 class SfrFile:
@@ -49,14 +50,8 @@ class SfrFile:
         """
         Class constructor.
         """
-        try:
-            import pandas as pd
 
-            self.pd = pd
-        except ImportError:
-            print("This method requires pandas")
-            self.pd = None
-            return
+        self.pd = import_optional_dependency("pandas")
 
         # get the number of rows to skip at top, and the number of data columns
         self.filename = filename

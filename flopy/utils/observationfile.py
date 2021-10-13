@@ -2,6 +2,7 @@ import numpy as np
 import io
 from ..utils.utils_def import FlopyBinaryData
 from ..utils.flopy_io import get_ts_sp
+from ..utils import import_optional_dependency
 
 
 class ObsFiles(FlopyBinaryData):
@@ -174,12 +175,12 @@ class ObsFiles(FlopyBinaryData):
 
         """
 
-        try:
-            import pandas as pd
-            from ..utils.utils_def import totim_to_datetime
-        except Exception as e:
-            msg = f"ObsFiles.get_dataframe() error import pandas: {e!s}"
-            raise ImportError(msg)
+        from ..utils.utils_def import totim_to_datetime
+
+        pd = import_optional_dependency(
+            "pandas",
+            error_message="ObsFiles.get_dataframe() requires pandas.",
+        )
 
         i0 = 0
         i1 = self.data.shape[0]

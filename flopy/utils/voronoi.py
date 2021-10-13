@@ -1,7 +1,8 @@
 import numpy as np
-from scipy.spatial import Voronoi
 from .cvfdutil import get_disv_gridprops
 from .geometry import point_in_polygon
+
+from .utl_import import import_optional_dependency
 
 
 def get_sorted_vertices(icell_vertices, vertices):
@@ -29,13 +30,10 @@ def get_valid_faces(vor):
 
 # todo: send this to point in polygon method defined in Rasters
 def point_in_cell(point, vertices):
-    try:
-        from shapely.geometry import Point, Polygon
-    except:
-        raise ModuleNotFoundError("shapely is not installed")
+    shapely_geo = import_optional_dependency("shapely.geometry")
 
-    p = Point(point)
-    poly = Polygon(vertices)
+    p = shapely_geo.Point(point)
+    poly = shapely_geo.Polygon(vertices)
     if p.intersects(poly):
         return True
     else:
@@ -74,6 +72,12 @@ def tri2vor(tri, **kwargs):
     verts, iverts : ndarray, list of lists
 
     """
+    import_optional_dependency(
+        "scipy.spatial",
+        error_message="Voronoi requires SciPy.",
+    )
+    from scipy.spatial import Voronoi
+
     # assign local variables
     tri_verts = tri.verts
     tri_iverts = tri.iverts

@@ -1,14 +1,10 @@
 import numpy as np
-from ..discretization import StructuredGrid, UnstructuredGrid
 from ..utils import geometry
 
-try:
-    import matplotlib.pyplot as plt
-    import matplotlib.colors
-    from matplotlib.collections import PathCollection, LineCollection
-    from matplotlib.path import Path
-except (ImportError, ModuleNotFoundError, RuntimeError):
-    plt = None
+import matplotlib.pyplot as plt
+import matplotlib.colors
+from matplotlib.collections import PathCollection, LineCollection
+from matplotlib.path import Path
 
 from . import plotutil
 import warnings
@@ -46,12 +42,6 @@ class PlotMapView:
     def __init__(
         self, model=None, modelgrid=None, ax=None, layer=0, extent=None
     ):
-
-        if plt is None:
-            raise ImportError(
-                "Could not import matplotlib.  Must install matplotlib "
-                "in order to use ModelMap method"
-            )
 
         self.model = model
         self.layer = layer
@@ -173,11 +163,7 @@ class PlotMapView:
         contour_set : matplotlib.pyplot.contour
 
         """
-        try:
-            import matplotlib.tri as tri
-        except ImportError:
-            err_msg = "matplotlib must be installed to use contour_array()"
-            raise ImportError(err_msg)
+        import matplotlib.tri as tri
 
         a = np.copy(a)
         if not isinstance(a, np.ndarray):

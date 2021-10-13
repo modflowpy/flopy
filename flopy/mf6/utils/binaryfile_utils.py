@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from ...utils import binaryfile as bf
+from ...utils import import_optional_dependency
 
 
 class MFOutput:
@@ -228,11 +229,10 @@ class MFOutputRequester:
         elevations corresponding to a row column location
         """
 
-        try:
-            import pandas as pd
-        except Exception as e:
-            msg = "MFOutputRequester._get_vertices(): requires pandas"
-            raise ImportError(msg)
+        pd = import_optional_dependency(
+            "pandas",
+            error_message="MFOutputRequester._get_vertices() requires pandas.",
+        )
 
         mname = key[0]
         cellid = mfdict[(mname, "DISV8", "CELL2D", "cell2d_num")]

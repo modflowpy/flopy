@@ -225,7 +225,11 @@ def test_triangle_unstructured_grid():
     xc, yc = tri.get_xcyc().T
     ncpl = np.array([len(iverts)])
     g = UnstructuredGrid(
-        vertices=verts, iverts=iverts, ncpl=ncpl, xcenters=xc, ycenters=yc,
+        vertices=verts,
+        iverts=iverts,
+        ncpl=ncpl,
+        xcenters=xc,
+        ycenters=yc,
     )
     assert len(g.grid_lines) == 8190
     assert g.nnodes == g.ncpl == 2730
@@ -293,7 +297,7 @@ def test_voronoi_grid0(plot=False):
     gridprops = vor.get_gridprops_vertexgrid()
     ncpl = gridprops["ncpl"]
     assert (
-            ncpl == answer_ncpl
+        ncpl == answer_ncpl
     ), f"Number of cells should be {answer_ncpl}. Found {ncpl}"
 
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
@@ -329,7 +333,7 @@ def test_voronoi_grid1(plot=False):
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
     ncpl = gridprops["ncpl"]
     assert (
-            ncpl == answer_ncpl
+        ncpl == answer_ncpl
     ), f"Number of cells should be {answer_ncpl}. Found {ncpl}"
 
     if plot:
@@ -362,7 +366,7 @@ def test_voronoi_grid2(plot=False):
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
     ncpl = gridprops["ncpl"]
     assert (
-            ncpl == answer_ncpl
+        ncpl == answer_ncpl
     ), f"Number of cells should be {answer_ncpl}. Found {ncpl}"
 
     if plot:
@@ -405,7 +409,7 @@ def test_voronoi_grid3(plot=False):
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
     ncpl = gridprops["ncpl"]
     assert (
-            ncpl == answer_ncpl
+        ncpl == answer_ncpl
     ), f"Number of cells should be {answer_ncpl}. Found {ncpl}"
 
     if plot:
@@ -441,7 +445,7 @@ def test_voronoi_grid4(plot=False):
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
     ncpl = gridprops["ncpl"]
     assert (
-            ncpl == answer_ncpl
+        ncpl == answer_ncpl
     ), f"Number of cells should be {answer_ncpl}. Found {ncpl}"
 
     if plot:
