@@ -170,7 +170,7 @@ class GridIntersect:
             if self.rtree:
                 strtree = import_optional_dependency(
                     "shapely.strtree",
-                    extra="STRTree requires shapely",
+                    error_message="STRTree requires shapely",
                 )
                 self.strtree = strtree.STRtree(self._get_gridshapes())
 

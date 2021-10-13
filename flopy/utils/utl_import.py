@@ -44,7 +44,7 @@ import warnings
 
 from .parse_version import Version
 
-# Update install.rst when updating versions!
+# Update docs/flopy_method_dependencies.md when updating versions!
 
 VERSIONS = {
     "shapefile": "2.0.0",
@@ -104,7 +104,7 @@ def import_optional_dependency(
         * silent: Same as "ignore" except warning message is not written to
           the screen.
     min_version : str, default None
-        Specify a minimum version that is different from the global pandas
+        Specify a minimum version that is different from the global FloPy
         minimum version required.
     Returns
     -------

@@ -29,3 +29,7 @@ Additional dependencies to use optional FloPy helper methods are listed below.
 | `Raster().sample_polygon()` in `flopy.utils.Raster`                                  | **shapely**                                                        |
 | `Raster().crop()` in `flopy.utils.Raster`                                            | **shapely**                                                        |
 | `.array_at_verts()` in `flopy.discretization.structuredgrid` `StructuredGrid` class  | **scipy.interpolate**                                              |
+| `get_sciencebase_xml_metadata()` in `flopy.export.metadata` `acdd` class             | **defusedxml**                                                     |
+| `flopy.utils.geospatial_utils` `GeoSpatialUtil` class                                | **geojson**                                                        |
+| `flopy.utils.geospatial_utils` `GeoSpatialCollection` class                          | **geojson**                                                        |
+| `flopy.export.vtk` `Vtk` class                                                       | **vtk**                                                            |
