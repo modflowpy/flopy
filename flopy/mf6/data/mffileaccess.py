@@ -1733,7 +1733,9 @@ class MFFileAccessList(MFFileAccess):
                                         data_item_ks, MFDataStructure
                                     ):
                                         dis = data_item_ks.data_item_structures
-                                        for ks_data_item in dis:
+                                        for idx, ks_data_item in enumerate(
+                                            dis
+                                        ):
                                             if (
                                                 ks_data_item.type
                                                 != DatumType.keyword
@@ -1758,6 +1760,12 @@ class MFFileAccessList(MFFileAccess):
                                                     data_line,
                                                     zero_based=zero_based,
                                                 )
+                                            elif (
+                                                idx > 0
+                                                and ks_data_item.type
+                                                == DatumType.keyword
+                                            ):
+                                                data_index += 1
                                         while data_index < arr_line_len:
                                             try:
                                                 # append remaining data
@@ -1777,7 +1785,7 @@ class MFFileAccessList(MFFileAccess):
                                                     repeat_count,
                                                     current_key,
                                                     data_line,
-                                                    zero_base=zero_based,
+                                                    zero_based=zero_based,
                                                 )
                                             except MFDataException:
                                                 break
