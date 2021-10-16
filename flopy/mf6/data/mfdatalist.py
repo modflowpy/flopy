@@ -1045,26 +1045,38 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                     ks_structs = [keystr_struct]
                                 ks_struct_index = 0
                                 max_index = len(ks_structs) - 1
-                                for data_index in range(
-                                    index, data_complete_len
-                                ):
+                                data_index = index
+                                while data_index != data_complete_len:
                                     if data_line[data_index] is not None:
                                         try:
                                             k_data_item = ks_structs[
                                                 ks_struct_index
                                             ]
-                                            text_line.append(
-                                                to_string(
-                                                    data_line[data_index],
-                                                    k_data_item.type,
-                                                    self._simulation_data,
-                                                    self._data_dimensions,
-                                                    k_data_item.is_cellid,
-                                                    k_data_item.possible_cellid,
-                                                    k_data_item,
-                                                    self._simulation_data.verify_data,
+                                            if (
+                                                k_data_item.type
+                                                == DatumType.keyword
+                                            ):
+                                                if (
+                                                    data_line[data_index]
+                                                    is not None
+                                                ):
+                                                    text_line.append(
+                                                        k_data_item.display_name
+                                                    )
+                                            else:
+                                                text_line.append(
+                                                    to_string(
+                                                        data_line[data_index],
+                                                        k_data_item.type,
+                                                        self._simulation_data,
+                                                        self._data_dimensions,
+                                                        k_data_item.is_cellid,
+                                                        k_data_item.possible_cellid,
+                                                        k_data_item,
+                                                        self._simulation_data.verify_data,
+                                                    )
                                                 )
-                                            )
+                                                data_index += 1
                                         except Exception as ex:
                                             message = (
                                                 "An error occurred "
@@ -1105,6 +1117,8 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                             # increment until last record
                                             # entry then repeat last entry
                                             ks_struct_index += 1
+                                    else:
+                                        data_index += 1
                                 index = data_index
                             elif data_val is not None and (
                                 not isinstance(data_val, float)
