@@ -1,5 +1,3 @@
-import json
-import os
 import numpy as np
 from ..utils import (
     HeadFile,
@@ -15,7 +13,8 @@ from . import NetCdf, netcdf
 from . import shapefile_utils
 from . import vtk
 from ..utils import import_optional_dependency
-
+from .longnames import NC_LONG_NAMES
+from .unitsformat import NC_UNITS_FORMAT
 
 NC_PRECISION_TYPE = {
     np.float64: "f8",
@@ -24,12 +23,6 @@ NC_PRECISION_TYPE = {
     np.int64: "i4",
     np.int32: "i4",
 }
-
-path = os.path.split(netcdf.__file__)[0]
-with open(f"{path}/longnames.json") as f:
-    NC_LONG_NAMES = json.load(f)
-with open(f"{path}/unitsformat.json") as f:
-    NC_UNITS_FORMAT = json.load(f)
 
 
 def ensemble_helper(

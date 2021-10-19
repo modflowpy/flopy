@@ -1598,6 +1598,12 @@ class MFPackage(PackageContainer, PackageInterface):
         self.__inattr = False
         self._child_package_groups = {}
 
+    def __init_subclass__(cls):
+        """Register package type"""
+        super().__init_subclass__()
+        PackageContainer.modflow_packages.append(cls)
+        PackageContainer.packages_by_abbr[cls.package_abbr] = cls
+
     def __setattr__(self, name, value):
         if hasattr(self, name) and getattr(self, name) is not None:
             attribute = object.__getattribute__(self, name)
@@ -2633,6 +2639,12 @@ class MFChildPackages:
         self._cpparent = parent
         self._pkg_type = pkg_type
         self._package_class = package_class
+
+    def __init_subclass__(cls):
+        """Register package"""
+        super().__init_subclass__()
+        PackageContainer.modflow_packages.append(cls)
+        PackageContainer.packages_by_abbr[cls.package_abbr] = cls
 
     def __getattr__(self, attr):
         if (

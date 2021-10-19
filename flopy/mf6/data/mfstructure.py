@@ -2455,7 +2455,7 @@ class MFStructure:
                 self.sim_struct.process_dfn(DfnFile(file))
             self.sim_struct.tag_read_as_arrays()
         else:
-            package_list = PackageContainer.package_factory(None, None)
+            package_list = PackageContainer.package_list()
             for package in package_list:
                 self.sim_struct.process_dfn(DfnPackage(package))
             self.sim_struct.tag_read_as_arrays()
