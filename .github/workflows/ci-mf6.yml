@@ -21,7 +21,7 @@ jobs:
       fail-fast: false
     defaults:
       run:
-        shell: bash
+        shell: bash -l {0}
 
     steps:
     # check out repo
