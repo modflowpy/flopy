@@ -54,16 +54,15 @@ jobs:
 
     - name: Add packages to flopy environment using mamba or conda
       run: |
-        if [ "$RUNNER_OS" == "Windows" ]; then
-          conda env update --name flopy --file etc/environment.yml
-        else
-          mamba env update --name flopy --file etc/environment.yml
-        fi
+        mamba env update --name flopy --file etc/environment.yml
 
-    - name: Install pymake, xmipy, and flopy
+    - name: Install pymake, xmipy, modflowapi, and flopy
       run: |
+        python -m pip install --upgrade pip
+        pip install https://github.com/modflowpy/flopy/zipball/develop
         pip install https://github.com/modflowpy/pymake/zipball/master
-        pip install xmipy
+        pip install https://github.com/Deltares/xmipy/zipball/develop
+        pip install https://github.com/MODFLOW-USGS/modflowapi/zipball/develop
         pip install . --use-feature=in-tree-build
 
     - name: Setup symbolic links on Linux
@@ -71,6 +70,12 @@ jobs:
         sudo ln -fs /usr/bin/gfortran-10 /usr/local/bin/gfortran
         sudo ln -fs /usr/bin/gcc-10 /usr/local/bin/gcc
         sudo ln -fs /usr/bin/g++-10 /usr/local/bin/g++
+
+    - name: Print GNU compiler versions
+      run: |
+        gfortran --version
+        gcc --version
+        g++ --version
 
     - name: Clone MODFLOW 6 repo
       run: |
