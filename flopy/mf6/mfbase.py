@@ -1,5 +1,4 @@
-import glob
-import importlib
+""" Base classes for Modflow 6 """
 import inspect, sys, traceback
 import os, copy
 from collections.abc import Iterable
@@ -459,6 +458,11 @@ class PackageContainer:
 
     """
 
+    modflow_packages = []
+    packages_by_abbr = {}
+    modflow_models = []
+    models_by_type = {}
+
     def __init__(self, simulation_data, name):
         self.type = "PackageContainer"
         self.simulation_data = simulation_data
@@ -469,7 +473,22 @@ class PackageContainer:
         self.package_key_dict = {}
 
     @staticmethod
-    def package_factory(package_type, model_type):
+    def package_list():
+        """Static method that returns the list of available packages.
+        For internal FloPy use only, not intended for end users.
+
+        Returns a list of MFPackage subclasses
+        """
+        # all packages except "group" classes
+        package_list = []
+        for abbr, package in sorted(PackageContainer.packages_by_abbr.items()):
+            # don't store packages "group" classes
+            if not abbr.endswith("packages"):
+                package_list.append(package)
+        return package_list
+
+    @staticmethod
+    def package_factory(package_type: str, model_type: str):
         """Static method that returns the appropriate package type object based
         on the package_type and model_type strings.  For internal FloPy use
         only, not intended for end users.
@@ -487,35 +506,11 @@ class PackageContainer:
 
         """
         package_abbr = f"{model_type}{package_type}"
-        package_utl_abbr = f"utl{package_type}"
-        package_list = []
-        # iterate through python files
-        package_file_paths = PackageContainer.get_package_file_paths()
-        for package_file_path in package_file_paths:
-            module = PackageContainer.get_module(package_file_path)
-            if module is not None:
-                # iterate imported items
-                for item in dir(module):
-                    value = PackageContainer.get_module_val(
-                        module, item, "package_abbr"
-                    )
-                    if value is not None:
-                        abbr = value.package_abbr
-                        if package_type is None:
-                            # don't store packages "group" classes
-                            if len(abbr) <= 8 or abbr[-8:] != "packages":
-                                package_list.append(value)
-                        else:
-                            # check package type
-                            if (
-                                value.package_abbr == package_abbr
-                                or value.package_abbr == package_utl_abbr
-                            ):
-                                return value
-        if package_type is None:
-            return package_list
-        else:
-            return None
+        factory = PackageContainer.packages_by_abbr.get(package_abbr)
+        if factory is None:
+            package_utl_abbr = "utl{}".format(package_type)
+            factory = PackageContainer.packages_by_abbr.get(package_utl_abbr)
+        return factory
 
     @staticmethod
     def model_factory(model_type):
@@ -533,18 +528,7 @@ class PackageContainer:
             model : MFModel subclass
 
         """
-        package_file_paths = PackageContainer.get_package_file_paths()
-        for package_file_path in package_file_paths:
-            module = PackageContainer.get_module(package_file_path)
-            if module is not None:
-                # iterate imported items
-                for item in dir(module):
-                    value = PackageContainer.get_module_val(
-                        module, item, "model_type"
-                    )
-                    if value is not None and value.model_type == model_type:
-                        return value
-        return None
+        return PackageContainer.models_by_type.get(model_type)
 
     @staticmethod
     def get_module_val(module, item, attrb):
@@ -559,28 +543,6 @@ class PackageContainer:
         ):
             return None
         return value
-
-    @staticmethod
-    def get_module(package_file_path):
-        """Static method that returns the python module library.  For
-        internal FloPy use only, not intended for end users."""
-        package_file_name = os.path.basename(package_file_path)
-        module_path = os.path.splitext(package_file_name)[0]
-        module_name = f"Modflow{module_path[2].upper()}{module_path[3:]}"
-        if module_name.startswith("__"):
-            return None
-
-        # import
-        return importlib.import_module(f"flopy.mf6.modflow.{module_path}")
-
-    @staticmethod
-    def get_package_file_paths():
-        """Static method that gets the paths of all the FloPy python package
-        files.  For internal FloPy use only, not intended for end users.
-        """
-        base_path = os.path.split(os.path.realpath(__file__))[0]
-        package_path = os.path.join(base_path, "modflow")
-        return glob.glob(os.path.join(package_path, "*.py"))
 
     @property
     def package_dict(self):

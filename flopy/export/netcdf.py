@@ -9,6 +9,7 @@ import time
 from .metadata import acdd
 
 from ..utils import import_optional_dependency
+from .longnames import NC_LONG_NAMES
 
 # globals
 FILLVALUE = -99999.9
@@ -23,10 +24,6 @@ ITMUNI = {
 PRECISION_STRS = ["f4", "f8", "i4"]
 
 STANDARD_VARS = ["longitude", "latitude", "layer", "elevation", "time"]
-
-path = os.path.split(__file__)[0]
-with open(path + "/longnames.json") as f:
-    NC_LONG_NAMES = json.load(f)
 
 
 class Logger:
@@ -1388,7 +1385,7 @@ class NetCdf:
         assert md.geospatial_vertical_min - self.vbounds[0] < tol
         assert md.geospatial_vertical_max - self.vbounds[1] < tol
 
-    def get_longnames_from_docstrings(self, outfile="longnames.json"):
+    def get_longnames_from_docstrings(self, outfile="longnames.py"):
         """
         This is experimental.
 
@@ -1440,7 +1437,7 @@ class NetCdf:
         attr = [v.split("_")[-1] for v in self.nc.variables]
 
         # parse docstrings to get long names
-        longnames = {}
+        longnames = dict.fromkeys(attr, "")
         for pkg in packages:
             # parse the docstring
             obj = pkg[-1]
@@ -1453,10 +1450,8 @@ class NetCdf:
                     if k in attr:
                         longnames[k] = v.split(". ")[0]
 
-        # add in any variables that weren't found
-        for var in attr:
-            if var not in longnames.keys():
-                longnames[var] = ""
+        longnames_dict = json.dumps(longnames, sort_keys=True, indent=4)
         with open(outfile, "w") as output:
-            json.dump(longnames, output, sort_keys=True, indent=2)
+            output.write("NC_LONG_NAMES = ")
+            output.write(longnames_dict)
         return longnames

@@ -143,6 +143,12 @@ class MFModel(PackageContainer, ModelInterface):
             self, filename=self.model_nam_file, pname=self.name
         )
 
+    def __init_subclass__(cls):
+        """Register model type"""
+        super().__init_subclass__()
+        PackageContainer.modflow_models.append(cls)
+        PackageContainer.models_by_type[cls.model_type] = cls
+
     def __getattr__(self, item):
         """
         __getattr__ - used to allow for getting packages as if they are
