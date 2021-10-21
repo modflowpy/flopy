@@ -91,7 +91,7 @@ class ModflowGwf(mfmodel.MFModel):
         save_flows=None,
         newtonoptions=None,
         packages=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             simulation,
@@ -101,7 +101,7 @@ class ModflowGwf(mfmodel.MFModel):
             version=version,
             exe_name=exe_name,
             model_rel_path=model_rel_path,
-            **kwargs
+            **kwargs,
         )
 
         self.name_file.list.set_data(list)

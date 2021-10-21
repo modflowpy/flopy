@@ -82,9 +82,9 @@ jobs:
     - name: Run black
       run: |
         echo "if black check fails run"
-        echo "  black --line-length 79 ./flopy"
+        echo "  black ./flopy"
         echo "and then commit the changes."
-        black --check --line-length 79 ./flopy
+        black --check ./flopy
 
     - name: Run flake8
       run: |
