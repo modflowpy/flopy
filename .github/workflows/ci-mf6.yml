@@ -90,19 +90,18 @@ jobs:
       run: |
         meson install -C builddir
 
-
     - name: Get executables
       working-directory: ./modflow6/autotest
       run: |
         pytest -v --durations=0 get_exes.py
 
     - name: Run pytest
-      working-directory: ./modflow6
+      working-directory: ./modflow6/autotest
       run: |
-        pytest -v -n auto -k "test_gw" -m requests --durations=0 --cov=flopy --cov-report=xml autotest/
+        pytest -v -n auto -k "test_gw" -m requests --durations=0 --cov=flopy --cov-report=xml
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v2.1.0
       with:
-        directory: ./modflow6
+        directory: ./modflow6/autotest
         file: coverage.xml
