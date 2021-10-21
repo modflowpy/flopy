@@ -21,7 +21,7 @@ jobs:
       fail-fast: false
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash
 
     steps:
     # check out repo
@@ -31,30 +31,15 @@ jobs:
     - name: Get branch name
       uses: nelonoel/branch-name@v1.0.1
 
-    - name: Cache Miniconda
-      uses: actions/cache@v2.1.0
-      env:
-        # Increase this value to reset cache if environment.yml has changed
-        CACHE_NUMBER: 1
+    - name: Setup Python 3.9
+      uses: actions/setup-python@v2.2.2
       with:
-        path: ~/conda_pkgs_dir
-        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.run-type }}-${{ env.CACHE_NUMBER }}-${{ hashFiles('etc/environment.yml') }}
+        python-version: 3.9
 
-    # Standard python fails on windows without GDAL installation
-    # Using custom bash shell ("shell: bash -l {0}") with Miniconda
-    - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v2.1.1
-      with:
-        python-version: ${{ matrix.python-version }}
-        mamba-version: "*"
-        channels: conda-forge
-        auto-update-conda: true
-        activate-environment: flopy
-        use-only-tar-bz2: true
-
-    - name: Add packages to flopy environment using mamba or conda
+    - name: Install Python 3.9 packages
       run: |
-        mamba env update --name flopy --file etc/environment.yml
+        python -m pip install --upgrade pip
+        pip install -r etc/requirements.pip.txt
 
     - name: Install pymake, xmipy, modflowapi, and flopy
       run: |
@@ -104,6 +89,12 @@ jobs:
       working-directory: ./modflow6
       run: |
         meson install -C builddir
+
+
+    - name: Get executables
+      working-directory: ./modflow6/autotest
+      run: |
+        pytest -v --durations=0 get_exes.py
 
     - name: Run pytest
       working-directory: ./modflow6

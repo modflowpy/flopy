@@ -14,10 +14,6 @@ dependencies:
   - nose
   - nose-timer
   - coverage
-  - pytest
-  - pytest-xdist
-  - pytest-cov
-  - coverage
 
   # optional
   - appdirs
