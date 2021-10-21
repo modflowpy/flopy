@@ -1,4 +1,4 @@
-name: flopy continuous integration
+name: flopy mf6 CI
 
 on:
   schedule:
