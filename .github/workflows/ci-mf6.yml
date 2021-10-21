@@ -98,7 +98,9 @@ jobs:
     - name: Run pytest
       working-directory: ./modflow6/autotest
       run: |
-        pytest -v -n auto -k "test_gw" -m requests --durations=0 --cov=flopy --cov-report=xml
+        pwd
+        ls -lh
+        pytest -v -k "test_gw" -m requests --durations=0 --cov=flopy --cov-report=xml
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v2.1.0
