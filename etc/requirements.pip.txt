@@ -8,3 +8,6 @@ requests
 appdirs
 numpy
 matplotlib
+pytest
+pytest-xdist
+pytest-cov

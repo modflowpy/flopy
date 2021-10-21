@@ -183,6 +183,6 @@ jobs:
         --cover-xml-file=../coverage.xml -w ./autotest ${{ matrix.test-path }}
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1.0.15
+      uses: codecov/codecov-action@v2.1.0
       with:
         file: ./coverage.xml
