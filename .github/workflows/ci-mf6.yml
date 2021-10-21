@@ -8,7 +8,6 @@ on:
       - master
       - develop
       - 'release*'
-      - 'ci-mf6-workflow'
   pull_request:
     branches: [master, develop]
 
@@ -98,8 +97,6 @@ jobs:
     - name: Run pytest
       working-directory: ./modflow6/autotest
       run: |
-        pwd
-        ls -lh
         pytest -v -n auto -k "test_gw" --durations=0 --cov=flopy --cov-report=xml
 
     - name: Upload coverage to Codecov
