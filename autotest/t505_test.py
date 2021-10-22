@@ -62,6 +62,300 @@ if not os.path.isdir(cpth):
     os.makedirs(cpth)
 
 
+def get_gwf_model(sim, gwfname, gwfpath, modelshape, chdspd=None, welspd=None):
+    nlay, nrow, ncol = modelshape
+    delr = 1.0
+    delc = 1.0
+    top = 1.0
+    botm = [0.0]
+    strt = 1.0
+    hk = 1.0
+    laytyp = 0
+
+    gwf = flopy.mf6.ModflowGwf(
+        sim,
+        modelname=gwfname,
+        save_flows=True,
+    )
+    gwf.set_model_relative_path(gwfpath)
+
+    dis = flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=delr,
+        delc=delc,
+        top=top,
+        botm=botm,
+    )
+
+    # initial conditions
+    ic = flopy.mf6.ModflowGwfic(gwf, strt=strt)
+
+    # node property flow
+    npf = flopy.mf6.ModflowGwfnpf(
+        gwf,
+        icelltype=laytyp,
+        k=hk,
+        save_specific_discharge=True,
+    )
+
+    # chd files
+    if chdspd is not None:
+        chd = flopy.mf6.modflow.mfgwfchd.ModflowGwfchd(
+            gwf,
+            stress_period_data=chdspd,
+            save_flows=False,
+            pname="CHD-1",
+        )
+
+    # wel files
+    if welspd is not None:
+        wel = flopy.mf6.ModflowGwfwel(
+            gwf,
+            print_input=True,
+            print_flows=True,
+            stress_period_data=welspd,
+            save_flows=False,
+            auxiliary="CONCENTRATION",
+            pname="WEL-1",
+        )
+
+    # output control
+    oc = flopy.mf6.ModflowGwfoc(
+        gwf,
+        budget_filerecord="{}.cbc".format(gwfname),
+        head_filerecord="{}.hds".format(gwfname),
+        headprintrecord=[("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "GENERAL")],
+        saverecord=[("HEAD", "LAST"), ("BUDGET", "LAST")],
+        printrecord=[("HEAD", "LAST"), ("BUDGET", "LAST")],
+    )
+    return gwf
+
+
+def get_gwt_model(sim, gwtname, gwtpath, modelshape, sourcerecarray=None):
+    nlay, nrow, ncol = modelshape
+    delr = 1.0
+    delc = 1.0
+    top = 1.0
+    botm = [0.0]
+    strt = 1.0
+    hk = 1.0
+    laytyp = 0
+
+    gwt = flopy.mf6.MFModel(
+        sim,
+        model_type="gwt6",
+        modelname=gwtname,
+        model_rel_path=gwtpath,
+    )
+    gwt.name_file.save_flows = True
+
+    dis = flopy.mf6.ModflowGwtdis(
+        gwt,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=delr,
+        delc=delc,
+        top=top,
+        botm=botm,
+    )
+
+    # initial conditions
+    ic = flopy.mf6.ModflowGwtic(gwt, strt=0.0)
+
+    # advection
+    adv = flopy.mf6.ModflowGwtadv(gwt, scheme="upstream")
+
+    # mass storage and transfer
+    mst = flopy.mf6.ModflowGwtmst(gwt, porosity=0.1)
+
+    # sources
+    ssm = flopy.mf6.ModflowGwtssm(gwt, sources=sourcerecarray)
+
+    # output control
+    oc = flopy.mf6.ModflowGwtoc(
+        gwt,
+        budget_filerecord="{}.cbc".format(gwtname),
+        concentration_filerecord="{}.ucn".format(gwtname),
+        concentrationprintrecord=[
+            ("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "GENERAL")
+        ],
+        saverecord=[("CONCENTRATION", "LAST"), ("BUDGET", "LAST")],
+        printrecord=[("CONCENTRATION", "LAST"), ("BUDGET", "LAST")],
+    )
+    return gwt
+
+
+def test_multi_model():
+    # init paths
+    test_ex_name = "test_multi_model"
+    model_names = ["gwf_model_1", "gwf_model_2", "gwt_model_1", "gwt_model_2"]
+
+    run_folder = os.path.join(cpth, test_ex_name)
+    if not os.path.isdir(run_folder):
+        os.makedirs(run_folder)
+
+    # temporal discretization
+    nper = 1
+    perlen = [5.0]
+    nstp = [200]
+    tsmult = [1.0]
+    tdis_rc = []
+    for i in range(nper):
+        tdis_rc.append((perlen[i], nstp[i], tsmult[i]))
+
+    # build MODFLOW 6 files
+    ws = dir
+    sim = flopy.mf6.MFSimulation(
+        sim_name=test_ex_name, version="mf6", exe_name="mf6", sim_ws=run_folder
+    )
+    # create tdis package
+    tdis = flopy.mf6.ModflowTdis(
+        sim, time_units="DAYS", nper=nper, perioddata=tdis_rc, pname="sim.tdis"
+    )
+
+    # grid information
+    nlay, nrow, ncol = 1, 1, 50
+
+    # Create gwf1 model
+    welspd = {0: [[(0, 0, 0), 1.0, 1.0]]}
+    chdspd = None
+    gwf1 = get_gwf_model(
+        sim,
+        model_names[0],
+        model_names[0],
+        (nlay, nrow, ncol),
+        chdspd=chdspd,
+        welspd=welspd,
+    )
+
+    # Create gwf2 model
+    welspd = {0: [[(0, 0, 1), 0.5, 0.5]]}
+    chdspd = {0: [[(0, 0, ncol - 1), 0.0000000]]}
+    gwf2 = get_gwf_model(
+        sim,
+        model_names[1],
+        model_names[1],
+        (nlay, nrow, ncol),
+        chdspd=chdspd,
+        welspd=welspd,
+    )
+
+    # gwf-gwf
+    gwfgwf_data = [[(0, 0, ncol - 1), (0, 0, 0), 1, 0.5, 0.5, 1.0, 0.0, 1.0]]
+    gwfgwf = flopy.mf6.ModflowGwfgwf(
+        sim,
+        exgtype="GWF6-GWF6",
+        nexg=len(gwfgwf_data),
+        exgmnamea=gwf1.name,
+        exgmnameb=gwf2.name,
+        exchangedata=gwfgwf_data,
+        auxiliary=["ANGLDEGX", "CDIST"],
+        filename="flow1_flow2.gwfgwf",
+    )
+
+    # Create gwt model
+    sourcerecarray = [("WEL-1", "AUX", "CONCENTRATION")]
+    gwt = get_gwt_model(
+        sim,
+        model_names[2],
+        model_names[2],
+        (nlay, nrow, ncol),
+        sourcerecarray=sourcerecarray,
+    )
+
+    # GWF GWT exchange
+    gwfgwt = flopy.mf6.ModflowGwfgwt(
+        sim,
+        exgtype="GWF6-GWT6",
+        exgmnamea=model_names[0],
+        exgmnameb=model_names[2],
+        filename="flow1_transport1.gwfgwt",
+    )
+
+    # solver settings
+    nouter, ninner = 100, 300
+    hclose, rclose, relax = 1e-6, 1e-6, 1.0
+
+    # create iterative model solution and register the gwf model with it
+    imsgwf = flopy.mf6.ModflowIms(
+        sim,
+        print_option="SUMMARY",
+        outer_dvclose=hclose,
+        outer_maximum=nouter,
+        under_relaxation="NONE",
+        inner_maximum=ninner,
+        inner_dvclose=hclose,
+        rcloserecord=rclose,
+        linear_acceleration="CG",
+        scaling_method="NONE",
+        reordering_method="NONE",
+        relaxation_factor=relax,
+        filename="flow.ims",
+    )
+
+    # create iterative model solution and register the gwt model with it
+    imsgwt = flopy.mf6.ModflowIms(
+        sim,
+        print_option="SUMMARY",
+        outer_dvclose=hclose,
+        outer_maximum=nouter,
+        under_relaxation="NONE",
+        inner_maximum=ninner,
+        inner_dvclose=hclose,
+        rcloserecord=rclose,
+        linear_acceleration="BICGSTAB",
+        scaling_method="NONE",
+        reordering_method="NONE",
+        relaxation_factor=relax,
+        filename="transport.ims",
+    )
+    sim.register_ims_package(imsgwt, [gwt.name])
+
+    sim.write_simulation()
+    if run:
+        sim.run_simulation()
+
+    # reload simulation
+    sim2 = MFSimulation.load(sim_ws=run_folder)
+
+    # check ims registration
+    solution_recarray = sim2.name_file.solutiongroup
+    for solution_group_num in solution_recarray.get_active_key_list():
+        rec_array = solution_recarray.get_data(solution_group_num[0])
+        assert rec_array[0][1] == "flow.ims"
+        assert rec_array[0][2] == model_names[0]
+        assert rec_array[0][3] == model_names[1]
+        assert rec_array[1][1] == "transport.ims"
+        assert rec_array[1][2] == model_names[2]
+
+    # create a new gwt model
+    sourcerecarray = [("WEL-1", "AUX", "CONCENTRATION")]
+    gwt_2 = get_gwt_model(
+        sim,
+        model_names[3],
+        model_names[3],
+        (nlay, nrow, ncol),
+        sourcerecarray=sourcerecarray,
+    )
+    # register gwt model with transport.ims
+    sim.register_ims_package(imsgwt, gwt_2.name)
+    # flow and transport exchange
+    gwfgwt = flopy.mf6.ModflowGwfgwt(
+        sim,
+        exgtype="GWF6-GWT6",
+        exgmnamea=model_names[1],
+        exgmnameb=model_names[3],
+        filename="flow2_transport2.gwfgwt",
+    )
+    # save and run updated model
+    sim.write_simulation()
+    sim.run_simulation()
+
+
 def test_np001():
     # init paths
     test_ex_name = "np001"
@@ -3251,6 +3545,7 @@ def test_transport():
 
 
 if __name__ == "__main__":
+    test_multi_model()
     test_np001()
     test_np002()
     test004_bcfss()
