@@ -1721,12 +1721,21 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             if isinstance(data, list) and len(data) == 0:
                 self.empty_keys[key] = True
             else:
+                check = True
+                if (
+                    isinstance(data, list)
+                    and len(data) > 0
+                    and data[0] == "no_check"
+                ):
+                    # not checking data
+                    check = False
+                    data = data[1:]
                 self.empty_keys[key] = False
                 if data is None:
                     self.remove_transient_key(key)
                 else:
                     self._set_data_prep(data, key)
-                    super().set_data(data, autofill)
+                    super().set_data(data, autofill, check_data=check)
         self._cache_model_grid = False
 
     def get_file_entry(

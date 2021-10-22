@@ -1065,6 +1065,12 @@ class MFSimulation(PackageContainer):
                 self.simulation_data.debug,
             )
 
+        # remove models from existing solution groups
+        if model_list is not None:
+            for model in model_list:
+                self._remove_from_all_ims_solution_groups(model)
+
+        # register ims package with model list
         in_simulation = False
         pkg_with_same_name = None
         for file in self._ims_files.values():
@@ -2010,7 +2016,7 @@ class MFSimulation(PackageContainer):
             # unregistered model
             unregistered_models = []
             for model in self._models:
-                model_registered = self._is_in_solution_group(model, 2)
+                model_registered = self._is_in_solution_group(model, 2, True)
                 if not model_registered:
                     unregistered_models.append(model)
             if unregistered_models:
@@ -2125,7 +2131,7 @@ class MFSimulation(PackageContainer):
         Parameters
         ----------
             key : str
-                ims package key
+                ims package file name
 
         Returns
         --------
@@ -2244,7 +2250,38 @@ class MFSimulation(PackageContainer):
 
             solution_recarray.set_data(new_array, solution_group_num[0])
 
+    def _remove_from_all_ims_solution_groups(self, modelname):
+        solution_recarray = self.name_file.solutiongroup
+        for solution_group_num in solution_recarray.get_active_key_list():
+            try:
+                rec_array = solution_recarray.get_data(solution_group_num[0])
+            except MFDataException as mfde:
+                message = (
+                    "An error occurred while getting solution group"
+                    '"{}" from the simulation name file'
+                    ".".format(solution_group_num[0])
+                )
+                raise MFDataException(
+                    mfdata_except=mfde, package="nam", message=message
+                )
+            new_array = ["no_check"]
+            for index, record in enumerate(rec_array):
+                new_record = []
+                new_record.append(record[0])
+                new_record.append(record[1])
+                for item in list(record)[2:]:
+                    if item is not None and item.lower() != modelname.lower():
+                        new_record.append(item)
+                new_array.append(tuple(new_record))
+            solution_recarray.set_data(new_array, solution_group_num[0])
+
     def _append_to_ims_solution_group(self, ims_file, new_models):
+        # clear models out of solution groups
+        if new_models is not None:
+            for model in new_models:
+                self._remove_from_all_ims_solution_groups(model)
+
+        # append models to ims_file
         solution_recarray = self.name_file.solutiongroup
         for solution_group_num in solution_recarray.get_active_key_list():
             try:
@@ -2263,7 +2300,9 @@ class MFSimulation(PackageContainer):
                 new_record = []
                 rec_model_dict = {}
                 for index, item in enumerate(record):
-                    if record[1] == ims_file or item not in new_models:
+                    if (
+                        record[1] == ims_file or item not in new_models
+                    ) and item is not None:
                         new_record.append(item)
                         if index > 1 and item is not None:
                             rec_model_dict[item.lower()] = 1
@@ -2298,7 +2337,7 @@ class MFSimulation(PackageContainer):
                     if rec_item[index] == item:
                         rec_item[index] = new_item
 
-    def _is_in_solution_group(self, item, index):
+    def _is_in_solution_group(self, item, index, any_idx_after=False):
         solution_recarray = self.name_file.solutiongroup
         for solution_group_num in solution_recarray.get_active_key_list():
             try:
@@ -2317,8 +2356,13 @@ class MFSimulation(PackageContainer):
 
             if rec_array is not None:
                 for rec_item in rec_array:
-                    if rec_item[index] == item:
-                        return True
+                    if any_idx_after:
+                        for idx in range(index, len(rec_item)):
+                            if rec_item[idx] == item:
+                                return True
+                    else:
+                        if rec_item[index] == item:
+                            return True
         return False
 
     def plot(self, model_list=None, SelPackList=None, **kwargs):

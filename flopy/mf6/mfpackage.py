@@ -1546,9 +1546,17 @@ class MFPackage(PackageContainer, PackageInterface):
             self.package_name = None
 
         if filename is None:
-            self._filename = MFFileMgmt.string_to_file_path(
-                f"{self.model_or_sim.name}.{package_type}"
-            )
+            if model_or_sim.type == "Simulation":
+                # filename uses simulation base name
+                base_name = os.path.basename(
+                    os.path.normpath(self.model_or_sim.name)
+                )
+                self._filename = f"{base_name}.{package_type}"
+            else:
+                # filename uses model base name
+                self._filename = MFFileMgmt.string_to_file_path(
+                    f"{self.model_or_sim.name}.{package_type}"
+                )
         else:
             if not isinstance(filename, str):
                 message = (

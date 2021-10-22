@@ -1043,13 +1043,13 @@ class MFModel(PackageContainer, ModelInterface):
                 # update package file locations in model name file
                 packages = self.name_file.packages
                 packages_data = packages.get_data()
-                for index, entry in enumerate(packages_data):
-                    old_package_name = os.path.split(entry[1])[1]
-                    packages_data[index][1] = os.path.join(
-                        path, old_package_name
-                    )
-                packages.set_data(packages_data)
-
+                if packages_data is not None:
+                    for index, entry in enumerate(packages_data):
+                        old_package_name = os.path.split(entry[1])[1]
+                        packages_data[index][1] = os.path.join(
+                            path, old_package_name
+                        )
+                    packages.set_data(packages_data)
                 # update files referenced from within packages
                 for package in self.packagelist:
                     package.set_model_relative_path(model_ws)
@@ -1109,7 +1109,8 @@ class MFModel(PackageContainer, ModelInterface):
             try:
                 new_rec_array = None
                 for item in package_data:
-                    if item[1] != package._filename:
+                    filename = os.path.basename(item[1])
+                    if filename != package.filename:
                         if new_rec_array is None:
                             new_rec_array = np.rec.array(
                                 [item.tolist()], package_data.dtype
@@ -1397,10 +1398,15 @@ class MFModel(PackageContainer, ModelInterface):
                     pkg_type = pkg_type[0:-1]
                 # Model Assumption - assuming all name files have a package
                 # recarray
+                file_mgr = self.simulation_data.mfpath
+                model_rel_path = file_mgr.model_relative_path[self.name]
+                package_rel_path = os.path.join(
+                    model_rel_path, package.filename
+                )
                 self.name_file.packages.update_record(
                     [
                         f"{pkg_type}6",
-                        package._filename,
+                        package_rel_path,
                         package.package_name,
                     ],
                     0,
