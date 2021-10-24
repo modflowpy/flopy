@@ -2,6 +2,7 @@
 Some basic tests for SWR2 load.
 """
 
+import pytest
 import os
 import flopy
 
@@ -82,9 +83,12 @@ def load_swi(mfnam, pth):
     return
 
 
-def test_mf2005swi2load():
-    for namfile, pth in zip(mf_items, pths):
-        yield load_swi, namfile, pth
+@pytest.mark.parametrize(
+    "namfile, pth",
+    zip(mf_items, pths),
+)
+def test_mf2005swi2load(namfile, pth):
+    load_swi(namfile, pth)
     return
 
 

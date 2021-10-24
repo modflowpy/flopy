@@ -1,6 +1,7 @@
 """
 Test the gmg load and write with an external summary file
 """
+import pytest
 import os
 import shutil
 import flopy
@@ -94,9 +95,12 @@ def load_and_write_gmg(mfnam, pth):
     return
 
 
-def test_mf2005gmgload():
-    for namfile, pth in zip(mf_items, pths):
-        yield load_and_write_gmg, namfile, pth
+@pytest.mark.parametrize(
+    "namfile, pth",
+    zip(mf_items, pths),
+)
+def test_mf2005gmgload(namfile, pth):
+    load_and_write_gmg(namfile, pth)
     return
 
 

@@ -1,9 +1,9 @@
 """
 Test the observation process load and write
 """
+import pytest
 import os
 import shutil
-import filecmp
 import flopy
 
 try:
@@ -99,9 +99,12 @@ def load_and_write_pcgn(mfnam, pth):
     return
 
 
-def test_mf2005pcgnload():
-    for namfile, pth in zip(mf_items, pths):
-        yield load_and_write_pcgn, namfile, pth
+@pytest.mark.parametrize(
+    "namfile, pth",
+    zip(mf_items, pths),
+)
+def test_mf2005pcgnload(namfile, pth):
+    load_and_write_pcgn(namfile, pth)
     return
 
 

@@ -3,6 +3,8 @@ Try to load all of the MODFLOW examples in ../examples/data/mf2005_test.
 These are the examples that are distributed with MODFLOW-2005.
 """
 
+import pytest
+
 import os
 import flopy
 
@@ -63,32 +65,47 @@ def load_only_bas6_model(namfile):
     assert m.load_fail is False
 
 
-def test_modflow_load():
-    for namfile in namfiles:
-        yield load_model, namfile
+@pytest.mark.parametrize(
+    "namfile",
+    list(namfiles),
+)
+def test_modflow_load(namfile):
+    load_model(namfile)
     return
 
 
-def test_parameter_load():
-    for namfile in pnamfiles:
-        yield load_parameter_model, namfile
+@pytest.mark.parametrize(
+    "namfile",
+    pnamfiles,
+)
+def test_parameter_load(namfile):
+    load_parameter_model(namfile)
     return
 
 
-def test_modflow_loadonly():
-    for namfile in namfiles:
-        yield load_only_bas6_model, namfile
+@pytest.mark.parametrize(
+    "namfile",
+    namfiles,
+)
+def test_modflow_loadonly(namfile):
+    load_only_bas6_model(namfile)
     return
 
 
-def test_nwt_load():
-    for nwt_file in nwt_files:
-        yield load_nwt, nwt_file
+@pytest.mark.parametrize(
+    "namfile",
+    nwt_files,
+)
+def test_nwt_load(namfile):
+    load_nwt(namfile)
 
 
-def test_nwt_model_load():
-    for f in nwt_nam:
-        yield load_nwt_model, f
+@pytest.mark.parametrize(
+    "namfile",
+    nwt_nam,
+)
+def test_nwt_model_load(namfile):
+    load_nwt_model(namfile)
 
 
 def load_nwt(nwtfile):
@@ -132,7 +149,8 @@ def load_nwt_model(nfile):
     assert isinstance(ml, flopy.modflow.Modflow), msg
 
     # change the model work space and rewrite the files
-    ml.change_model_ws(tpth)
+    new_ws = os.path.join(tpth, nfile.replace(".nam", ""))
+    ml.change_model_ws(new_ws)
     ml.write_input()
 
     # reload the model that was just written

@@ -1,4 +1,5 @@
 # Remove the temp directory and then create a fresh one
+import pytest
 import os
 import sys
 import shutil
@@ -16,85 +17,60 @@ else:
 sdir = os.path.join("..", "examples", "scripts")
 tdir = os.path.join("..", "examples", "Tutorials")
 
+scripts = []
+for exdir in [sdir, tdir]:
+    for dirName, subdirList, fileList in os.walk(exdir):
+        for file_name in fileList:
+            if file_name not in exclude:
+                if file_name.endswith(".py"):
+                    print(f"Found file: {file_name}")
+                    scripts.append(
+                        os.path.abspath(os.path.join(dirName, file_name))
+                    )
+
+scripts = sorted(scripts)
+
+print("Scripts found:")
+for script in scripts:
+    print(f"  {script}")
+
+
 # make working directories
-tempdir = os.path.join(".", "temp")
-if os.path.isdir(tempdir):
-    shutil.rmtree(tempdir)
-os.mkdir(tempdir)
-
-testdirs = (
-    os.path.join(".", "temp", "scripts"),
-    os.path.join(".", "temp", "tutorials"),
-)
-for testdir in testdirs:
-    if os.path.isdir(testdir):
-        shutil.rmtree(testdir)
-    os.mkdir(testdir)
-
-    # add testdir to python path
-    sys.path.append(testdir)
+out_dir = os.path.join("temp", "scripts")
+if os.path.exists(out_dir):
+    shutil.rmtree(out_dir)
+os.mkdir(out_dir)
 
 
-def copy_scripts(src_dir, dst_dir, include_subdir=False):
-    if include_subdir:
-        files = []
-        for dirpath, _, filenames in os.walk(src_dir):
-            files += [
-                os.path.join(dirpath, filename)
-                for filename in sorted(filenames)
-                if filename.endswith(".py") and filename not in exclude
-            ]
-    else:
-        files = [
-            os.path.join(src_dir, f)
-            for f in sorted(os.listdir(src_dir))
-            if f.endswith(".py") and f not in exclude
-        ]
-
+def copy_script(src):
     # copy files
-    for src in files:
-        filename = os.path.basename(src)
-        filedir = os.path.dirname(src)
-        dst = os.path.join(dst_dir, os.path.basename(src))
+    filedir = os.path.dirname(src)
+    filename = os.path.basename(src)
 
-        # copy script
-        print(f"copying {filename} from {filedir} to {testdir}")
-        shutil.copyfile(src, dst)
+    # set dstpth and clean if it exists
+    dstpth = os.path.abspath(
+        os.path.join(out_dir, filename.replace(".py", ""))
+    )
+    if os.path.isdir(dstpth):
+        shutil.rmtree(dstpth)
+    os.makedirs(dstpth)
 
-    return [os.path.basename(filepath) for filepath in files]
+    # set destination path
+    dst = os.path.join(out_dir, dstpth, filename)
 
+    # copy script
+    print(f"copying {filename} from {filedir} to {dstpth}")
+    shutil.copyfile(src, dst)
 
-def import_from(mod, name):
-    mod = __import__(mod)
-    main = getattr(mod, name)
-    return main
-
-
-def run_scripts(fn, testdir):
-    # import run function from scripts
-    s = os.path.splitext(fn)[0]
-    run = import_from(s, "run")
-
-    # change to working directory
-    opth = os.getcwd()
-    print(f'changing to working directory "{testdir}"')
-    os.chdir(testdir)
-
-    # run the script
-    ival = run()
-
-    # change back to starting directory
-    print(f'changing back to starting directory "{opth}"')
-    os.chdir(opth)
-
-    # make sure script ran successfully
-    assert ival == 0, f"could not run {fn}"
+    return dst
 
 
-def run_tutorial_scripts(fn, testdir):
-    args = ("python", fn)
+def run_script(script):
+    ws = os.path.dirname(script)
+    file_name = os.path.basename(script)
+    args = ("python", file_name)
     print(f"running...'{' '.join(args)}'")
-    proc = Popen(args, stdout=PIPE, stderr=PIPE, cwd=testdir)
+    proc = Popen(args, stdout=PIPE, stderr=PIPE, cwd=ws)
     stdout, stderr = proc.communicate()
     if stdout:
         print(stdout.decode("utf-8"))
@@ -104,29 +80,19 @@ def run_tutorial_scripts(fn, testdir):
     return
 
 
-def test_scripts():
-    # get list of scripts to run
-    files = copy_scripts(sdir, testdirs[0])
+@pytest.mark.parametrize(
+    "script",
+    scripts,
+)
+def test_scripts(script):
+    # copy script
+    dst = copy_script(script)
 
-    for fn in files:
-        yield run_scripts, fn, testdirs[0]
-
-
-def test_tutorial_scripts():
-    # get list of scripts to run
-    files = copy_scripts(tdir, testdirs[1], include_subdir=True)
-
-    for fn in files:
-        yield run_tutorial_scripts, fn, testdirs[1]
+    # run script
+    run_script(dst)
 
 
 if __name__ == "__main__":
-    # get list of scripts to run
-    files = copy_scripts(sdir, testdirs[0])
-    for fn in files:
-        run_scripts(fn, testdirs[0])
-
-    # get list of tutorial scripts to run
-    files = copy_scripts(tdir, testdirs[1], include_subdir=True)
-    for fn in files:
-        run_tutorial_scripts(fn, testdirs[1])
+    for script in scripts:
+        dst = copy_script(script)
+        run_script(dst)

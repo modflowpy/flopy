@@ -1,3 +1,4 @@
+import pytest
 import os
 import numpy as np
 import flopy
@@ -12,11 +13,14 @@ testmodels = [
 mpth = os.path.join("temp", "t024")
 
 
-def test_checker_on_load():
+@pytest.mark.parametrize(
+    "namfile",
+    testmodels,
+)
+def test_checker_on_load(namfile):
     # load all of the models in the mf2005_test folder
     # model level checks are performed by default on load()
-    for mfnam in testmodels:
-        yield checker_on_load, mfnam
+    checker_on_load(namfile)
 
 
 def checker_on_load(mfnam):

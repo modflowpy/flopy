@@ -11,9 +11,10 @@ dependencies:
   - pylint
   - flake8
   - black
-  - nose
-  - nose-timer
   - coverage
+  - pytest
+  - pytest-xdist
+  - pytest-cov
 
   # optional
   - appdirs

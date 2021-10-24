@@ -3,8 +3,8 @@ Test the observation process load and write
 """
 import os
 import shutil
-import filecmp
 import flopy
+import pytest
 
 try:
     import pymake
@@ -101,9 +101,12 @@ def load_and_write_fhb(mfnam, pth):
     return
 
 
-def test_mf2005fhbload():
-    for namfile, pth in zip(mf_items, pths):
-        yield load_and_write_fhb, namfile, pth
+@pytest.mark.parametrize(
+    "namfile, pth",
+    zip(mf_items, pths),
+)
+def test_mf2005fhbload(namfile, pth):
+    load_and_write_fhb(namfile, pth)
     return
 
 

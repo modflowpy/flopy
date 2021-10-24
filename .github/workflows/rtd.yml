@@ -6,6 +6,7 @@ on:
       - master
       - develop
       - 'release*'
+      - 'ci-pytest'
   pull_request:
     branches: [master, develop]
 
@@ -58,18 +59,18 @@ jobs:
           pip install .
 
       - name: Download executables needed for tests
+        working-directory: ./autotest
         run: |
-          python ./autotest/get_exes.py
+          python get_exes.py
 
       - name: Add executables directory to path
         run: |
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Run jupytext on tutorials
+        working-directory: ./.docs
         run: |
-          cd .docs/
           python create_tutorials.py
-          cd ../
 
       - name: Upload completed jupyter notebooks as an artifact for ReadtheDocs
         if:

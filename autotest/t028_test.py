@@ -1,3 +1,4 @@
+import pytest
 import os
 import shutil
 import flopy
@@ -83,9 +84,12 @@ def test_seawat_array_format():
     return
 
 
-def test_swtv4():
-    for d, subd in zip(swtdir, subds):
-        yield run_swtv4, d, subd
+@pytest.mark.parametrize(
+    "d, subd",
+    zip(swtdir, subds),
+)
+def test_swtv4(d, subd):
+    run_swtv4(d, subd)
     return
 
 

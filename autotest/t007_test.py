@@ -1,8 +1,8 @@
 # Test export module
 import sys
+import pytest
 
 sys.path.append("..")
-import copy
 import glob
 import os
 import shutil
@@ -1535,21 +1535,30 @@ def test_shapefile_ibound():
     assert type(shp.record(0)[ib_idx]) == int, txt
 
 
-def test_shapefile():
-    for namfile in namfiles:
-        yield export_shapefile, namfile
+@pytest.mark.parametrize(
+    "namfile",
+    list(namfiles),
+)
+def test_shapefile(namfile):
+    export_shapefile(namfile)
     return
 
 
-def test_shapefile_export_modelgrid_override():
-    for namfile in namfiles[0:2]:
-        yield export_shapefile_modelgrid_override, namfile
+@pytest.mark.parametrize(
+    "namfile",
+    namfiles[0:2],
+)
+def test_shapefile_export_modelgrid_override(namfile):
+    export_shapefile_modelgrid_override(namfile)
     return
 
 
-def test_netcdf():
-    for namfile in namfiles:
-        yield export_mf2005_netcdf, namfile
+@pytest.mark.parametrize(
+    "namfile",
+    list(namfiles),
+)
+def test_netcdf(namfile):
+    export_mf2005_netcdf(namfile)
     return
 
 

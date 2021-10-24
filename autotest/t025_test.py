@@ -2,6 +2,7 @@
 Some basic tests for LAKE load.
 """
 
+import pytest
 import os
 import flopy
 
@@ -104,9 +105,12 @@ def load_lak(mfnam, pth, run):
     return
 
 
-def test_mf2005load():
-    for namfile, pth in zip(mf_items, pths):
-        yield load_lak, namfile, pth, run
+@pytest.mark.parametrize(
+    "namfile, pth",
+    zip(mf_items, pths),
+)
+def test_mf2005load(namfile, pth):
+    load_lak(namfile, pth, run)
     return
 
 

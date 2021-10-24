@@ -8,6 +8,7 @@ on:
       - master
       - develop
       - 'release*'
+      - 'ci-pytest'
   pull_request:
     branches: [master, develop]
 
@@ -167,22 +168,31 @@ jobs:
         pip install . --use-feature=in-tree-build
 
     - name: Download executables needed for tests
+      working-directory: ./autotest
       run: |
-        cd autotest
         python get_exes.py
-        cd ..
+
+    - name: Download all files needed before pytest runs
+      if: matrix.run-type == 'std'
+      working-directory: ./autotest
+      run: |
+        python prepare_tests.py
 
     - name: Add executables directory to path
       run: |
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-    - name: Run nosetests
+    - name: Run pytest
+      working-directory: ./autotest
       run: |
-        coverage run -m nose -v --with-id --with-timer \
-        --with-coverage --cover-package=flopy --cover-xml \
-        --cover-xml-file=../coverage.xml -w ./autotest ${{ matrix.test-path }}
+        if [ matrix.run-type == "std" ]; then
+          pytest -v -n auto -k "test_gw" --durations=0 --cov=flopy --cov-report=xml
+        else
+          pytest -v -n auto -k ${{ matrix.test-path }} --durations=0 --cov=flopy --cov-report=xml
+        fi
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v2.1.0
       with:
-        file: ./coverage.xml
+        directory: ./autotest
+        file: coverage.xml

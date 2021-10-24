@@ -1,6 +1,7 @@
 import os
 import sys
 import shutil
+import pytest
 
 import numpy as np
 import flopy
@@ -185,12 +186,15 @@ def mf2005_eval(name, ws_in):
     clean_run(name)
 
 
-def test_cbc_full3D():
-    for (name, ismf6, ws_in) in zip(names, ismf6_lst, ex_pths):
-        if ismf6:
-            yield mf6_eval, name, ws_in
-        else:
-            yield mf2005_eval, name, ws_in
+@pytest.mark.parametrize(
+    "name, ismf6, ws_in",
+    zip(names, ismf6_lst, ex_pths),
+)
+def test_cbc_full3D(name, ismf6, ws_in):
+    if ismf6:
+        mf6_eval(name, ws_in)
+    else:
+        mf2005_eval(name, ws_in)
 
 
 def main():

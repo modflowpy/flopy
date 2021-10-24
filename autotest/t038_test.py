@@ -3,6 +3,7 @@ Try to load all of the MODFLOW-USG examples in ../examples/data/mfusg_test.
 These are the examples that are distributed with MODFLOW-USG.
 """
 
+import pytest
 import os
 import flopy
 
@@ -20,10 +21,13 @@ for path, subdirs, files in os.walk(usgpth):
             usg_files.append(os.path.join(path, name))
 
 #
-def test_load_usg():
-    for fusg in usg_files:
-        d, f = os.path.split(fusg)
-        yield load_model, f, d
+@pytest.mark.parametrize(
+    "fpth",
+    usg_files,
+)
+def test_load_usg(fpth):
+    exdir, namfile = os.path.split(fpth)
+    load_model(namfile, exdir)
 
 
 # function to load a MODFLOW-USG model and then write it back out

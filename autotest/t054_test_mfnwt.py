@@ -7,6 +7,7 @@ import os
 import sys
 import flopy
 import pymake
+import pytest
 
 # make the working directory
 tpth = os.path.join("temp", "t054")
@@ -45,10 +46,13 @@ else:
 
 
 #
-def test_mfnwt_model():
-    for fnwt in nwt_files:
-        d, f = os.path.split(fnwt)
-        yield mfnwt_model, f, d
+@pytest.mark.parametrize(
+    "fnwt",
+    list(nwt_files),
+)
+def test_mfnwt_model(fnwt):
+    d, f = os.path.split(fnwt)
+    mfnwt_model(f, d)
 
 
 # function to load a MODFLOW-2005 model, convert to a MFNWT model,

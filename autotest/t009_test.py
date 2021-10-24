@@ -521,7 +521,7 @@ def test_no_ds_6bc():
     (e.g., see table at https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/sfr.htm)
     """
     sfrfiletxt = (
-        u"REACHINPUT\n"
+        "REACHINPUT\n"
         "2 2 0 0 128390 0.0001 119 0 3 10 1 30 0 4 0.75 91.54\n"
         "1 1 1 1 1 1.0 1.0 0.001 1 1 .3 0.02 3.5 0.7\n"
         "1 2 2 2 1 1.0 0.5 0.001 1 1 .3 0.02 3.5 0.7\n"

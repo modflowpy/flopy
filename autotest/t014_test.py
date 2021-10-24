@@ -2,6 +2,8 @@
 Some basic tests for STR load.
 """
 
+import pytest
+
 import os
 import flopy
 import numpy as np
@@ -26,12 +28,18 @@ if v is None:
 
 def load_str(mfnam, pth):
     m = flopy.modflow.Modflow.load(
-        mfnam, exe_name=exe_name, forgive=False, model_ws=pth, verbose=True
+        mfnam,
+        exe_name=exe_name,
+        forgive=False,
+        model_ws=pth,
+        verbose=True,
+        check=False,
     )
     assert m.load_fail is False
 
     # rewrite files
-    m.model_ws = cpth
+    ws = os.path.join(cpth, mfnam.replace(".nam", ""))
+    m.model_ws = ws
     m.write_input()
 
     # attempt to run the model
@@ -43,7 +51,7 @@ def load_str(mfnam, pth):
         assert success, "base model run did not terminate successfully"
 
     # load files
-    pth = os.path.join(cpth, f"{m.name}.str")
+    pth = os.path.join(ws, f"{m.name}.str")
     str2 = flopy.modflow.ModflowStr.load(pth, m)
     for name in str2.dtype.names:
         assert (
@@ -64,9 +72,12 @@ def load_str(mfnam, pth):
     return
 
 
-def test_mf2005load():
-    for namfile, pth in zip(mf_items, pths):
-        yield load_str, namfile, pth
+@pytest.mark.parametrize(
+    "namfile, pth",
+    zip(mf_items, pths),
+)
+def test_mf2005load(namfile, pth):
+    load_str(namfile, pth)
     return
 
 
