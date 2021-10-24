@@ -37,9 +37,8 @@ for script in scripts:
 
 # make working directories
 out_dir = os.path.join("temp", "scripts")
-if os.path.exists(out_dir):
-    shutil.rmtree(out_dir)
-os.mkdir(out_dir)
+if not os.path.exists(out_dir):
+    os.mkdir(out_dir)
 
 
 def copy_script(src):

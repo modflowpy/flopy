@@ -1,7 +1,6 @@
 import pytest
 import os
 import shutil
-import numpy as np
 import flopy
 import pymake
 
@@ -51,9 +50,8 @@ if v is None:
     run = False
 
 out_dir = os.path.join("temp", "t503")
-if os.path.exists(out_dir):
-    shutil.rmtree(out_dir)
-os.mkdir(out_dir)
+if not os.path.exists(out_dir):
+    os.makedirs(out_dir)
 
 mf6path = download_mf6_examples()
 distpth = os.path.join(mf6path)
