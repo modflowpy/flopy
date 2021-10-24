@@ -9,7 +9,6 @@ import os
 import flopy
 
 tpth = os.path.join("temp", "t008")
-
 # make the directory if it does not exist
 if not os.path.isdir(tpth):
     os.makedirs(tpth)
@@ -23,7 +22,7 @@ pnamfiles = [
 ]
 
 test_nwt_pth = os.path.join("..", "examples", "data", "nwt_test")
-nwt_files = [
+nwt_pak_files = [
     os.path.join(test_nwt_pth, f)
     for f in os.listdir(test_nwt_pth)
     if f.endswith(".nwt")
@@ -93,11 +92,11 @@ def test_modflow_loadonly(namfile):
 
 
 @pytest.mark.parametrize(
-    "namfile",
-    nwt_files,
+    "fname",
+    nwt_pak_files,
 )
-def test_nwt_load(namfile):
-    load_nwt(namfile)
+def test_nwt_pack_load(fname):
+    load_nwt_pack(fname)
 
 
 @pytest.mark.parametrize(
@@ -108,11 +107,9 @@ def test_nwt_model_load(namfile):
     load_nwt_model(namfile)
 
 
-def load_nwt(nwtfile):
-    ml = flopy.modflow.Modflow(model_ws=tpth, version="mfnwt")
-    fn = os.path.join(tpth, f"{ml.name}.nwt")
-    if os.path.isfile(fn):
-        os.remove(fn)
+def load_nwt_pack(nwtfile):
+    ws = os.path.dirname(nwtfile)
+    ml = flopy.modflow.Modflow(model_ws=ws, version="mfnwt")
     if "fmt." in nwtfile.lower():
         ml.array_free_format = False
     else:
@@ -122,7 +119,11 @@ def load_nwt(nwtfile):
     msg = f"{os.path.basename(nwtfile)} load unsuccessful"
     assert isinstance(nwt, flopy.modflow.ModflowNwt), msg
 
+    # write the new file in the working directory
+    ml.change_model_ws(tpth)
     nwt.write_file()
+
+    fn = os.path.join(tpth, ml.name + ".nwt")
     msg = f"{os.path.basename(nwtfile)} write unsuccessful"
     assert os.path.isfile(fn), msg
 
@@ -154,7 +155,7 @@ def load_nwt_model(nfile):
     ml.write_input()
 
     # reload the model that was just written
-    ml2 = flopy.modflow.Modflow.load(f, model_ws=tpth)
+    ml2 = flopy.modflow.Modflow.load(f, model_ws=new_ws)
 
     # check that the data are the same
     for pn in ml.get_package_list():
@@ -180,5 +181,5 @@ if __name__ == "__main__":
         load_only_bas6_model(namfile)
     for fnwt in nwt_nam:
         load_nwt_model(fnwt)
-    for fnwt in nwt_files:
-        load_nwt(fnwt)
+    for fnwt in nwt_pak_files:
+        load_nwt_pack(fnwt)

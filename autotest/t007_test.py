@@ -20,11 +20,9 @@ if not os.path.isdir(tpth):
     os.makedirs(tpth)
 
 npth = os.path.join("temp", "t007", "netcdf")
-# delete the directory if it exists
-if os.path.isdir(npth):
-    shutil.rmtree(npth)
-# make the directory
-os.makedirs(npth)
+# make the directory if it does not exist
+if not os.path.isdir(npth):
+    os.makedirs(npth)
 
 spth = os.path.join("temp", "t007", "shapefile")
 # make the directory if it does not exist

@@ -1,6 +1,5 @@
 # Test loading of MODFLOW and MT3D models that come with MT3D distribution
 import os
-import shutil
 import flopy
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,11 +11,9 @@ except ImportError:
     pymake = False
 
 cpth = os.path.join("temp", "t049")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-# make the directory
-os.makedirs(cpth)
+# make the directory if it does not exist
+if not os.path.isdir(cpth):
+    os.makedirs(cpth)
 
 mf2005_exe = "mf2005"
 v = flopy.which(mf2005_exe)

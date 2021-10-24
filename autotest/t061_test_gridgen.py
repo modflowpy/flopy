@@ -1,4 +1,3 @@
-import shutil
 import os
 import numpy as np
 import flopy
@@ -13,11 +12,9 @@ except ImportError:
     shapefile = None
 
 cpth = os.path.join("temp", "t061")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-# make the directory
-os.makedirs(cpth)
+# make the directory if it does not exist
+if not os.path.isdir(cpth):
+    os.makedirs(cpth)
 
 exe_name = "gridgen"
 v = flopy.which(exe_name)

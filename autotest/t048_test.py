@@ -1,10 +1,9 @@
 """
 Test the observation process load and write
 """
-import os
-import shutil
-import flopy
 import pytest
+import os
+import flopy
 
 try:
     import pymake
@@ -14,11 +13,10 @@ except ImportError:
 
 path = os.path.join("..", "examples", "data", "mf2005_test")
 cpth = os.path.join("temp", "t048")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-# make the directory
-os.makedirs(cpth)
+
+# make the directory if it does not exist
+if not os.path.isdir(cpth):
+    os.makedirs(cpth)
 
 mf_items = [
     "fhb.nam",

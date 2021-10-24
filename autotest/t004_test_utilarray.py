@@ -10,9 +10,8 @@ from textwrap import dedent
 from flopy.utils.util_array import Util2d, Util3d, Transient2d, Transient3d
 
 out_dir = os.path.join("temp", "t004")
-if os.path.exists(out_dir):
-    shutil.rmtree(out_dir)
-os.mkdir(out_dir)
+if not os.path.exists(out_dir):
+    os.makedirs(out_dir)
 
 
 def test_load_txt_free():
@@ -443,7 +442,7 @@ def test_util2d_external_free():
     model_ws = os.path.join(out_dir, "extra_temp")
     if os.path.exists(model_ws):
         shutil.rmtree(model_ws)
-    os.mkdir(model_ws)
+    os.makedirs(model_ws)
     ml = flopy.modflow.Modflow(model_ws=model_ws)
     stress_util2d(ml, 1, 1, 1)
     stress_util2d(ml, 10, 1, 1)
@@ -459,7 +458,7 @@ def test_util2d_external_free_nomodelws():
     model_ws = os.path.join(out_dir)
     if os.path.exists(model_ws):
         shutil.rmtree(model_ws)
-    os.mkdir(model_ws)
+    os.makedirs(model_ws)
     base_dir = os.getcwd()
     os.chdir(out_dir)
     ml = flopy.modflow.Modflow()
@@ -478,7 +477,7 @@ def test_util2d_external_free_path():
     model_ws = os.path.join(out_dir, "extra_temp")
     if os.path.exists(model_ws):
         shutil.rmtree(model_ws)
-    os.mkdir(model_ws)
+    os.makedirs(model_ws)
     ext_path = "ref"
     if os.path.exists(ext_path):
         shutil.rmtree(ext_path)
@@ -498,7 +497,7 @@ def test_util2d_external_free_path_nomodelws():
     model_ws = os.path.join(out_dir)
     if os.path.exists(model_ws):
         shutil.rmtree(model_ws)
-    os.mkdir(model_ws)
+    os.makedirs(model_ws)
     ext_path = "ref"
     base_dir = os.getcwd()
     os.chdir(out_dir)
@@ -521,7 +520,7 @@ def test_util2d_external_fixed():
     model_ws = os.path.join(out_dir, "extra_temp")
     if os.path.exists(model_ws):
         shutil.rmtree(model_ws)
-    os.mkdir(model_ws)
+    os.makedirs(model_ws)
     ml = flopy.modflow.Modflow(model_ws=model_ws)
     ml.array_free_format = False
 
@@ -539,7 +538,7 @@ def test_util2d_external_fixed_nomodelws():
     model_ws = os.path.join(out_dir)
     if os.path.exists(model_ws):
         shutil.rmtree(model_ws)
-    os.mkdir(model_ws)
+    os.makedirs(model_ws)
 
     base_dir = os.getcwd()
     os.chdir(out_dir)
@@ -560,7 +559,7 @@ def test_util2d_external_fixed_path():
     model_ws = os.path.join(out_dir, "extra_temp")
     if os.path.exists(model_ws):
         shutil.rmtree(model_ws)
-    os.mkdir(model_ws)
+    os.makedirs(model_ws)
     ext_path = "ref"
     if os.path.exists(ext_path):
         shutil.rmtree(ext_path)
@@ -581,7 +580,7 @@ def test_util2d_external_fixed_path_nomodelws():
     model_ws = os.path.join(out_dir)
     if os.path.exists(model_ws):
         shutil.rmtree(model_ws)
-    os.mkdir(model_ws)
+    os.makedirs(model_ws)
     ext_path = "ref"
     if os.path.exists(ext_path):
         shutil.rmtree(ext_path)

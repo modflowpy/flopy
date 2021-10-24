@@ -175,11 +175,10 @@ jobs:
       run: |
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-    - name: Download all files needed before pytest runs
-      if: matrix.run-type == 'std'
+    - name: Prepare for pytest runs
       working-directory: ./autotest
       run: |
-        python prepare_tests.py
+        pytest -v prepare_tests.py
 
     - name: Run pytest on autotest scripts
       if: matrix.run-type == 'std'
@@ -192,6 +191,11 @@ jobs:
       working-directory: ./autotest
       run: |
         pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml ${{ matrix.test-path }}
+
+    - name: Print coverage report before upload
+      working-directory: ./autotest
+      run: |
+        coverage report
 
     - name: Upload coverage to Codecov
       if:

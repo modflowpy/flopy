@@ -3,7 +3,6 @@ Test the observation process load and write
 """
 import pytest
 import os
-import shutil
 import flopy
 
 try:
@@ -14,11 +13,9 @@ except ImportError:
 
 path = os.path.join("..", "examples", "data", "pcgn_test")
 cpth = os.path.join("temp", "t044")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-# make the directory
-os.makedirs(cpth)
+# make the directory if it does not exist
+if not os.path.isdir(cpth):
+    os.makedirs(cpth)
 
 mf_items = ["twri.nam", "MNW2.nam"]
 pths = []

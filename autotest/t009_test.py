@@ -29,9 +29,8 @@ path = os.path.join("..", "examples", "data", "mf2005_test")
 path2 = os.path.join("..", "examples", "data", "sfr_test")
 outpath = os.path.join("temp", "t009")
 # make the directory if it does not exist
-if os.path.isdir(outpath):
-    shutil.rmtree(outpath)
-os.makedirs(outpath)
+if not os.path.isdir(outpath):
+    os.makedirs(outpath)
 
 sfr_items = {
     0: {"mfnam": "test1ss.nam", "sfrfile": "test1ss.sfr"},
@@ -586,7 +585,7 @@ def test_ds_6d_6e_disordered():
 
 def test_disordered_reachdata_fields():
     path = os.path.join("..", "examples", "data", "hydmod_test")
-    wpath = os.path.join(".", "temp", "t009_disorderfields")
+    wpath = os.path.join(".", "temp", "t009", "disorderfields")
     m = flopy.modflow.Modflow.load("test1tr2.nam", model_ws=path)
     sfr = m.get_package("SFR")
     orig_reach_data = sfr.reach_data

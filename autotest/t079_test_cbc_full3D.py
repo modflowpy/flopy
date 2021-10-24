@@ -16,11 +16,9 @@ ismf6_lst = ["mf6" in pth for pth in ex_pths]
 names = [os.path.basename(pth) for pth in ex_pths]
 
 tpth = os.path.join("temp", "t079")
-# delete the directory if it exists
-if os.path.isdir(tpth):
-    shutil.rmtree(tpth)
-# make the directory
-os.makedirs(tpth)
+# make the directory if it does not exist
+if not os.path.isdir(tpth):
+    os.makedirs(tpth)
 
 mf6_exe = "mf6"
 mf2005_exe = "mf2005"

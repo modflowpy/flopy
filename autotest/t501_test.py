@@ -1,15 +1,13 @@
 # Test instantiation of mf6 classes
 import os
-import shutil
 import flopy
 
 
 def test_mf6():
 
     out_dir = os.path.join("temp", "t501")
-    if os.path.exists(out_dir):
-        shutil.rmtree(out_dir)
-    os.mkdir(out_dir)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
 
     sim = flopy.mf6.MFSimulation(sim_ws=out_dir)
     assert isinstance(sim, flopy.mf6.MFSimulation)

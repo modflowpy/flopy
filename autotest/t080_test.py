@@ -31,12 +31,13 @@ if platform.system() in "Windows":
 mfusg_exe = flopy.which(mfusg_exe)
 
 # set up the example folder
-tpth = os.path.join("temp", "t420")
+test_number = "t080"
+tpth = os.path.join("temp", test_number)
 if not os.path.isdir(tpth):
     os.makedirs(tpth)
 
 # set up a gridgen workspace
-gridgen_ws = os.path.join(tpth, "gridgen_t420")
+gridgen_ws = os.path.join(tpth, f"gridgen_{test_number}")
 if not os.path.exists(gridgen_ws):
     os.makedirs(gridgen_ws)
 

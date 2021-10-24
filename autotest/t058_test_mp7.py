@@ -1,12 +1,11 @@
 import os
-import shutil
 import numpy as np
 import flopy
 
 model_ws = os.path.join("temp", "t058")
-# delete the directory if it exists
-if os.path.isdir(model_ws):
-    shutil.rmtree(model_ws)
+# make the directory if it does not exist
+if not os.path.isdir(model_ws):
+    os.makedirs(model_ws)
 
 exe_names = {"mf6": "mf6", "mp7": "mp7"}
 run = True

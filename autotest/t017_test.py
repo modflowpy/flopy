@@ -1,15 +1,13 @@
 # Test binary and formatted data readers
 import pytest
 import os
-import shutil
 import numpy as np
 import flopy
 
 cpth = os.path.join("temp", "t017")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-os.makedirs(cpth)
+# make the directory if it does not exists
+if not os.path.isdir(cpth):
+    os.makedirs(cpth)
 
 
 def test_formattedfile_read():
@@ -140,9 +138,7 @@ def test_cellbudgetfile_read():
         for record in records:
             t0 = v.get_data(kstpkper=t, text=record, full3D=True)[0]
             t1 = v.get_data(idx=idx, text=record, full3D=True)[0]
-            assert np.array_equal(
-                t0, t1
-            ), (
+            assert np.array_equal(t0, t1), (
                 f"binary budget item {record} read using kstpkper != binary "
                 f"budget item {record} read using idx"
             )

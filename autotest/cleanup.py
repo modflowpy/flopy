@@ -3,7 +3,7 @@ import os
 import shutil
 
 
-def test_cleanup():
+def cleanup_autotests():
     tempdir = os.path.join(".", "temp")
     if os.path.isdir(tempdir):
         shutil.rmtree(tempdir)
@@ -11,4 +11,4 @@ def test_cleanup():
 
 
 if __name__ == "__main__":
-    test_cleanup()
+    cleanup_autotests()

@@ -68,7 +68,7 @@ def test_seawat_array_format():
         testpth = os.path.join(newpth, f"{d}-{subd}")
         if os.path.isdir(testpth):
             shutil.rmtree(testpth)
-        os.mkdir(testpth)
+        os.makedirs(testpth)
         namfile = "seawat.nam"
         if subd == "6_age_simulation":
             namfile = "henry_mod.nam"
@@ -99,7 +99,7 @@ def run_swtv4(d, subd):
     testpth = os.path.join(newpth, f"{d}-{subd}")
     if os.path.isdir(testpth):
         shutil.rmtree(testpth)
-    os.mkdir(testpth)
+    os.makedirs(testpth)
 
     namfile = "seawat.nam"
     if subd == "6_age_simulation":

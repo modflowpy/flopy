@@ -1,6 +1,5 @@
 import pytest
 import os
-import shutil
 
 import numpy as np
 import matplotlib
@@ -12,11 +11,8 @@ pthtest = os.path.join("..", "examples", "data", "mfgrd_test")
 flowpth = os.path.join("..", "examples", "data", "mf6-freyberg")
 
 tpth = os.path.join("temp", "t029")
-# remove the directory if it exists
-if os.path.isdir(tpth):
-    shutil.rmtree(tpth)
-# make the directory
-os.makedirs(tpth)
+if not os.path.isdir(tpth):
+    os.makedirs(tpth)
 
 
 def test_mfgrddis_MfGrdFile():

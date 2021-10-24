@@ -1,14 +1,11 @@
-import shutil
 import os
 import numpy as np
 import flopy
 
 cpth = os.path.join("temp", "t051")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-# make the directory
-os.makedirs(cpth)
+# make the directory if it does not exist
+if not os.path.isdir(cpth):
+    os.makedirs(cpth)
 
 
 def test_default_oc_stress_period_data():

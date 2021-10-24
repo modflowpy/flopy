@@ -3,7 +3,6 @@ Test the gmg load and write with an external summary file
 """
 import pytest
 import os
-import shutil
 import flopy
 
 try:
@@ -14,11 +13,9 @@ except ImportError:
 
 path = os.path.join("..", "examples", "data", "secp")
 cpth = os.path.join("temp", "t045")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-# make the directory
-os.makedirs(cpth)
+# make the directory if is does not exist
+if not os.path.isdir(cpth):
+    os.makedirs(cpth)
 
 mf_items = ["secp.nam"]
 pths = []

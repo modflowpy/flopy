@@ -8,9 +8,9 @@ from flopy.export.vtk import Vtk
 
 # create output directory
 cpth = os.path.join("temp", "t050")
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-os.makedirs(cpth)
+# make the directory if it does not exist
+if not os.path.isdir(cpth):
+    os.makedirs(cpth)
 
 
 def count_lines_in_file(filepath, binary=False):

@@ -38,7 +38,7 @@ for script in scripts:
 # make working directories
 out_dir = os.path.join("temp", "scripts")
 if not os.path.exists(out_dir):
-    os.mkdir(out_dir)
+    os.makedirs(out_dir)
 
 
 def copy_script(src):

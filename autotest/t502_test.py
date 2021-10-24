@@ -1,5 +1,4 @@
 import os
-import shutil
 
 import flopy
 from flopy.mf6.modflow import mfgwfriv, mfgwfsto, mfgwfoc, mfgwfwel, mfgwfdrn
@@ -7,9 +6,8 @@ from flopy.mf6.modflow import mfims, mftdis, mfgwfic, mfgwfnpf, mfgwfdis, mfgwf
 from flopy.mf6.modflow.mfsimulation import MFSimulation
 
 out_dir = os.path.join("temp", "t502")
-if os.path.exists(out_dir):
-    shutil.rmtree(out_dir)
-os.mkdir(out_dir)
+if not os.path.exists(out_dir):
+    os.makedirs(out_dir)
 
 
 def test_create_and_run_model():

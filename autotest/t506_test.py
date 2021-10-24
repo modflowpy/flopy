@@ -5,9 +5,7 @@ flopy.discretization grid classes
 """
 
 import os
-import sys
 import platform
-import shutil
 import numpy as np
 
 try:
@@ -52,11 +50,6 @@ tpth = os.path.join("temp", "t506")
 if not os.path.isdir(tpth):
     os.makedirs(tpth)
 
-# set up a gridgen workspace
-gridgen_ws = os.path.join(tpth, "gridgen")
-if not os.path.exists(gridgen_ws):
-    os.makedirs(gridgen_ws)
-
 VERBOSITY_LEVEL = 0
 
 
@@ -71,6 +64,11 @@ def test_mf6disv():
     if Polygon is None:
         print("Unable to run test_mf6disv(). shapely is not available.")
         return
+
+    # set up a gridgen workspace
+    gridgen_ws = os.path.join(tpth, "gridgen")
+    if not os.path.exists(gridgen_ws):
+        os.makedirs(gridgen_ws)
 
     name = "dummy"
     nlay = 3
