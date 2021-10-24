@@ -23,7 +23,6 @@ jobs:
       run:
         shell: bash
 
-    if: github.repository_owner == 'modflowpy'
     steps:
 
     # check out repo
@@ -57,7 +56,7 @@ jobs:
       run:
         shell: bash
 
-    if: github.repository_owner == 'modflowpy' && github.event_name != 'schedule'
+    if: github.event_name != 'schedule'
     steps:
     # check out repo
     - name: Checkout flopy repo
@@ -192,6 +191,8 @@ jobs:
         fi
 
     - name: Upload coverage to Codecov
+      if:
+        github.repository_owner == 'modflowpy' && github.event_name == 'push'
       uses: codecov/codecov-action@v2.1.0
       with:
         directory: ./autotest

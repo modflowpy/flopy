@@ -21,7 +21,6 @@ jobs:
       run:
         shell: bash -l {0}
 
-    if: github.repository_owner == 'modflowpy'
     steps:
       - name: Checkout flopy repo
         uses: actions/checkout@v2.3.4
