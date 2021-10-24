@@ -185,13 +185,13 @@ jobs:
       if: matrix.run-type == 'std'
       working-directory: ./autotest
       run: |
-        pytest -v -n auto -k "test_gw" --durations=0 --cov=flopy --cov-report=xml
+        pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
 
     - name: Run pytest on scripts and notebooks
       if: matrix.run-type != 'std'
       working-directory: ./autotest
       run: |
-        pytest -v -n auto -k ${{ matrix.test-path }} --durations=0 --cov=flopy --cov-report=xml
+        pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml ${{ matrix.test-path }}
 
     - name: Upload coverage to Codecov
       if:
