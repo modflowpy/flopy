@@ -171,24 +171,27 @@ jobs:
       run: |
         python get_exes.py
 
+    - name: Add executables directory to path
+      run: |
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
     - name: Download all files needed before pytest runs
       if: matrix.run-type == 'std'
       working-directory: ./autotest
       run: |
         python prepare_tests.py
 
-    - name: Add executables directory to path
-      run: |
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-    - name: Run pytest
+    - name: Run pytest on autotest scripts
+      if: matrix.run-type == 'std'
       working-directory: ./autotest
       run: |
-        if [ matrix.run-type == "std" ]; then
-          pytest -v -n auto -k "test_gw" --durations=0 --cov=flopy --cov-report=xml
-        else
-          pytest -v -n auto -k ${{ matrix.test-path }} --durations=0 --cov=flopy --cov-report=xml
-        fi
+        pytest -v -n auto -k "test_gw" --durations=0 --cov=flopy --cov-report=xml
+
+    - name: Run pytest on scripts and notebooks
+      if: matrix.run-type != 'std'
+      working-directory: ./autotest
+      run: |
+        pytest -v -n auto -k ${{ matrix.test-path }} --durations=0 --cov=flopy --cov-report=xml
 
     - name: Upload coverage to Codecov
       if:

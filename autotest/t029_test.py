@@ -1,4 +1,4 @@
-from nose.tools import raises
+import pytest
 import os
 import shutil
 
@@ -161,12 +161,12 @@ def test_mfgrddisu_MfGrdFile():
     ), f"invalid grid type ({type(mg)})"
 
 
-@raises(TypeError)
 def test_mfgrddisu_modelgrid_fail():
     fn = os.path.join(pthtest, "flow.disu.grb")
-    mg = flopy.discretization.UnstructuredGrid.from_binary_grid_file(
-        fn, verbose=True
-    )
+    with pytest.raises(TypeError):
+        mg = flopy.discretization.UnstructuredGrid.from_binary_grid_file(
+            fn, verbose=True
+        )
 
 
 def test_mfgrddisu_modelgrid():
@@ -315,46 +315,46 @@ def test_flowja_residuals():
     return
 
 
-@raises(ValueError)
 def test_faceflows_empty():
     flowja = np.zeros(10, dtype=np.float64)
-    frf, fff, flf = flopy.mf6.utils.get_structured_faceflows(flowja)
+    with pytest.raises(ValueError):
+        frf, fff, flf = flopy.mf6.utils.get_structured_faceflows(flowja)
 
 
-@raises(ValueError)
 def test_faceflows_jaempty():
     flowja = np.zeros(10, dtype=np.float64)
     ia = np.zeros(10, dtype=np.int32)
-    frf, fff, flf = flopy.mf6.utils.get_structured_faceflows(flowja, ia=ia)
+    with pytest.raises(ValueError):
+        frf, fff, flf = flopy.mf6.utils.get_structured_faceflows(flowja, ia=ia)
 
 
-@raises(ValueError)
 def test_faceflows_iaempty():
     flowja = np.zeros(10, dtype=np.float64)
     ja = np.zeros(10, dtype=np.int32)
-    _v = flopy.mf6.utils.get_structured_faceflows(flowja, ja=ja)
+    with pytest.raises(ValueError):
+        _v = flopy.mf6.utils.get_structured_faceflows(flowja, ja=ja)
 
 
-@raises(ValueError)
 def test_faceflows_flowja_size():
     flowja = np.zeros(10, dtype=np.float64)
     ia = np.zeros(5, dtype=np.int32)
     ja = np.zeros(5, dtype=np.int32)
-    _v = flopy.mf6.utils.get_structured_faceflows(flowja, ia=ia, ja=ja)
+    with pytest.raises(ValueError):
+        _v = flopy.mf6.utils.get_structured_faceflows(flowja, ia=ia, ja=ja)
 
 
-@raises(ValueError)
 def test_residuals_jaempty():
     flowja = np.zeros(10, dtype=np.float64)
     ia = np.zeros(10, dtype=np.int32)
-    _v = flopy.mf6.utils.get_residuals(flowja, ia=ia)
+    with pytest.raises(ValueError):
+        _v = flopy.mf6.utils.get_residuals(flowja, ia=ia)
 
 
-@raises(ValueError)
 def test_residuals_iaempty():
     flowja = np.zeros(10, dtype=np.float64)
     ja = np.zeros(10, dtype=np.int32)
-    _v = flopy.mf6.utils.get_residuals(flowja, ja=ja)
+    with pytest.raises(ValueError):
+        _v = flopy.mf6.utils.get_residuals(flowja, ja=ja)
 
 
 if __name__ == "__main__":
