@@ -10,7 +10,7 @@ import flopy
 workspace = os.path.join("temp", "t026")
 # make the directory if it does not exist
 if not os.path.isdir(workspace):
-    os.makedirs(workspace)
+    os.makedirs(workspace, exist_ok=True)
 
 seawat_exe = "swtv4"
 isseawat = flopy.which(seawat_exe)

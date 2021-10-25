@@ -4,7 +4,7 @@ import flopy
 model_ws = os.path.join("temp", "t059")
 # make the directory if it does not exist
 if not os.path.isdir(model_ws):
-    os.makedirs(model_ws)
+    os.makedirs(model_ws, exist_ok=True)
 
 exe_names = {"mf6": "mf6", "mp7": "mp7"}
 run = True

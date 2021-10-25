@@ -25,8 +25,8 @@ def download_mf6_examples(delete_existing=False):
     # download the MODFLOW 6 distribution does not exist
     if not os.path.isdir(dstpth):
         print(f"create...{dstpth}")
-        if not os.path.exists(dstpth):
-            os.makedirs(dstpth)
+        if not os.path.isdir(dstpth):
+            os.makedirs(dstpth, exist_ok=True)
         os.chdir(dstpth)
 
         # Download the distribution
@@ -50,8 +50,8 @@ if v is None:
     run = False
 
 out_dir = os.path.join("temp", "t503")
-if not os.path.exists(out_dir):
-    os.makedirs(out_dir)
+if not os.path.isdir(out_dir):
+    os.makedirs(out_dir, exist_ok=True)
 
 mf6path = download_mf6_examples()
 distpth = os.path.join(mf6path)

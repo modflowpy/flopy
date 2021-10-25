@@ -59,7 +59,7 @@ if v is None:
 cpth = os.path.join("temp", "t505")
 # make the directory if it does not exist
 if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+    os.makedirs(cpth, exist_ok=True)
 
 
 def get_gwf_model(sim, gwfname, gwfpath, modelshape, chdspd=None, welspd=None):
@@ -196,7 +196,7 @@ def test_multi_model():
 
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
 
     # temporal discretization
     nper = 1
@@ -366,7 +366,7 @@ def test_np001():
     )
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file = os.path.join(expected_output_folder, "np001_mod.hds")
@@ -924,7 +924,7 @@ def test_np002():
     pth_for_mf = os.path.join("..", "..", "..", pth)
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file = os.path.join(expected_output_folder, "np002_mod.hds")
@@ -1186,7 +1186,7 @@ def test021_twri():
     )
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file = os.path.join(expected_output_folder, "twri.hds")
@@ -1400,7 +1400,7 @@ def test005_advgw_tidal():
     )
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file = os.path.join(
@@ -2016,7 +2016,7 @@ def test004_bcfss():
     )
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file = os.path.join(expected_output_folder, "bcf2ss.hds")
@@ -2169,7 +2169,7 @@ def test035_fhb():
     )
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file = os.path.join(
@@ -2314,7 +2314,7 @@ def test006_gwf3_disv():
     )
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file = os.path.join(expected_output_folder, "flow.hds")
@@ -2602,7 +2602,7 @@ def test006_2models_gnc():
     )
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_1 = os.path.join(expected_output_folder, "model1.hds")
@@ -2946,7 +2946,7 @@ def test050_circle_island():
     )
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file = os.path.join(expected_output_folder, "ci.output.hds")
@@ -3048,7 +3048,7 @@ def test028_sfr():
     )
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file = os.path.join(expected_output_folder, "test1tr.hds")
@@ -3320,7 +3320,7 @@ def test_transport():
     )
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file = os.path.join(expected_output_folder, "gwf_mst03.hds")

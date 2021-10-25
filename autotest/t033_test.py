@@ -6,7 +6,7 @@ from flopy.utils.util_array import Util2d
 newpth = os.path.join(".", "temp", "t033")
 # make the directory if it does not exist
 if not os.path.isdir(newpth):
-    os.makedirs(newpth)
+    os.makedirs(newpth, exist_ok=True)
 startpth = os.getcwd()
 
 

@@ -14,7 +14,7 @@ except ImportError:
 cpth = os.path.join("temp", "t061")
 # make the directory if it does not exist
 if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+    os.makedirs(cpth, exist_ok=True)
 
 exe_name = "gridgen"
 v = flopy.which(exe_name)

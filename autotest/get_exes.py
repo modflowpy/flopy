@@ -22,7 +22,7 @@ except:
 exe_pth = "exe_download"
 # make the directory if it does not exist
 if not os.path.isdir(exe_pth):
-    os.makedirs(exe_pth)
+    os.makedirs(exe_pth, exist_ok=True)
 
 # determine if running on Travis
 is_CI = "CI" in os.environ
@@ -42,7 +42,7 @@ if dotlocal:
     bindir = os.path.abspath(bindir)
     print(f"bindir: {bindir}")
     if not os.path.isdir(bindir):
-        os.makedirs(bindir)
+        os.makedirs(bindir, exist_ok=True)
 
 # write where the executables will be downloaded
 print(f'modflow executables will be downloaded to:\n\n    "{bindir}"')

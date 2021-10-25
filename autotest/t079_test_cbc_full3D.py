@@ -18,7 +18,7 @@ names = [os.path.basename(pth) for pth in ex_pths]
 tpth = os.path.join("temp", "t079")
 # make the directory if it does not exist
 if not os.path.isdir(tpth):
-    os.makedirs(tpth)
+    os.makedirs(tpth, exist_ok=True)
 
 mf6_exe = "mf6"
 mf2005_exe = "mf2005"

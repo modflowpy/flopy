@@ -6,8 +6,8 @@ from flopy.mf6.modflow import mfims, mftdis, mfgwfic, mfgwfnpf, mfgwfdis, mfgwf
 from flopy.mf6.modflow.mfsimulation import MFSimulation
 
 out_dir = os.path.join("temp", "t502")
-if not os.path.exists(out_dir):
-    os.makedirs(out_dir)
+if not os.path.isdir(out_dir):
+    os.makedirs(out_dir, exist_ok=True)
 
 
 def test_create_and_run_model():

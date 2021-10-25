@@ -8,7 +8,7 @@ from flopy.utils.recarray_utils import recarray
 cpth = os.path.join("temp", "t047")
 # make the directory if it does not exist
 if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+    os.makedirs(cpth, exist_ok=True)
 
 
 def get_namefile_entries(fpth):

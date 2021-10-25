@@ -4,7 +4,7 @@ import flopy
 
 tpth = os.path.join("temp", "t067")
 if not os.path.isdir(tpth):
-    os.makedirs(tpth)
+    os.makedirs(tpth, exist_ok=True)
 
 
 def test_ulstrd():

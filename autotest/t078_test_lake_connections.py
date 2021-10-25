@@ -8,7 +8,7 @@ name = "freyberg"
 tpth = os.path.join("temp", "t078")
 # make the directory if it does not exist
 if not os.path.isdir(tpth):
-    os.makedirs(tpth)
+    os.makedirs(tpth, exist_ok=True)
 
 
 def __export_ascii_grid(modelgrid, file_path, v, nodata=0.0):

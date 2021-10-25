@@ -17,17 +17,17 @@ skip = []
 tpth = os.path.join("temp", "t007")
 # make the directory if it does not exist
 if not os.path.isdir(tpth):
-    os.makedirs(tpth)
+    os.makedirs(tpth, exist_ok=True)
 
 npth = os.path.join("temp", "t007", "netcdf")
 # make the directory if it does not exist
 if not os.path.isdir(npth):
-    os.makedirs(npth)
+    os.makedirs(npth, exist_ok=True)
 
 spth = os.path.join("temp", "t007", "shapefile")
 # make the directory if it does not exist
 if not os.path.isdir(spth):
-    os.makedirs(spth)
+    os.makedirs(spth, exist_ok=True)
 
 
 def import_shapefile():

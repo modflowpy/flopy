@@ -26,7 +26,7 @@ mffiles = glob.glob("../examples/data/mp6/EXAMPLE*")
 path = os.path.join("temp", "t031")
 
 if not os.path.isdir(path):
-    os.makedirs(path)
+    os.makedirs(path, exist_ok=True)
 for f in mffiles:
     shutil.copy(f, os.path.join(path, os.path.split(f)[1]))
 

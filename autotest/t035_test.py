@@ -15,7 +15,7 @@ except:
 cpth = os.path.join("temp", "t035")
 # delete the directory if it exists
 if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+    os.makedirs(cpth, exist_ok=True)
 
 exe_name = "mflgr"
 v = flopy.which(exe_name)

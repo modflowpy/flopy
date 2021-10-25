@@ -24,9 +24,8 @@ notebook_files += [
 
 # -- make working directories
 ddir = os.path.join(nbdir, "data")
-if os.path.isdir(ddir):
-    shutil.rmtree(ddir)
-os.makedirs(ddir)
+if not os.path.isdir(ddir):
+    os.makedirs(ddir, exist_ok=True)
 
 
 def run_notebook(src):

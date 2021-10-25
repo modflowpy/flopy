@@ -30,10 +30,11 @@ if v is None:
 
 cpth = os.path.join("temp", "t504")
 
+
 def make_test_dir(testDir):
     # make the directory if it does not exist
-    if not os.path.exists(testDir):
-        os.makedirs(testDir)
+    if not os.path.isdir(testDir):
+        os.makedirs(testDir, exist_ok=True)
 
 
 def test001a_tharmonic():
@@ -47,10 +48,10 @@ def test001a_tharmonic():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
     save_folder = os.path.join(run_folder, "temp")
     if not os.path.isdir(save_folder):
-        os.makedirs(save_folder)
+        os.makedirs(save_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -189,10 +190,10 @@ def test003_gwfs_disv():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
     save_folder = os.path.join(run_folder, "temp")
     if not os.path.isdir(save_folder):
-        os.makedirs(save_folder)
+        os.makedirs(save_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -300,10 +301,10 @@ def test005_advgw_tidal():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
     save_folder = os.path.join(run_folder, "temp")
     if not os.path.isdir(save_folder):
-        os.makedirs(save_folder)
+        os.makedirs(save_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -370,10 +371,10 @@ def test006_gwf3():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
     save_folder = os.path.join(run_folder, "temp")
     if not os.path.isdir(save_folder):
-        os.makedirs(save_folder)
+        os.makedirs(save_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -561,10 +562,10 @@ def test045_lake1ss_table():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
     save_folder = os.path.join(run_folder, "temp")
     if not os.path.isdir(save_folder):
-        os.makedirs(save_folder)
+        os.makedirs(save_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -638,10 +639,10 @@ def test006_2models_mvr():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
     save_folder = os.path.join(run_folder, "temp")
     if not os.path.isdir(save_folder):
-        os.makedirs(save_folder)
+        os.makedirs(save_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -824,10 +825,10 @@ def test001e_uzf_3lay():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
     save_folder = os.path.join(run_folder, "temp")
     if not os.path.isdir(save_folder):
-        os.makedirs(save_folder)
+        os.makedirs(save_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -912,7 +913,6 @@ def test001e_uzf_3lay():
         )
         assert sim.run_simulation()[0]
 
-
     if run:
         cbc_precision()
 
@@ -928,10 +928,10 @@ def test045_lake2tr():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
     save_folder = os.path.join(run_folder, "temp")
     if not os.path.isdir(save_folder):
-        os.makedirs(save_folder)
+        os.makedirs(save_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -1005,10 +1005,10 @@ def test036_twrihfb():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
     save_folder = os.path.join(run_folder, "temp")
     if not os.path.isdir(save_folder):
-        os.makedirs(save_folder)
+        os.makedirs(save_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -1089,10 +1089,10 @@ def test027_timeseriestest():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
-        os.makedirs(run_folder)
+        os.makedirs(run_folder, exist_ok=True)
     save_folder = os.path.join(run_folder, "temp")
     if not os.path.isdir(save_folder):
-        os.makedirs(save_folder)
+        os.makedirs(save_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(

@@ -65,12 +65,12 @@ def test_mf6disv():
 
     # set up example directory
     if not os.path.isdir(tpth):
-        os.makedirs(tpth)
+        os.makedirs(tpth, exist_ok=True)
 
     # set up a gridgen workspace
     gridgen_ws = os.path.join(tpth, "mf6disv")
-    if not os.path.exists(gridgen_ws):
-        os.makedirs(gridgen_ws)
+    if not os.path.isdir(gridgen_ws):
+        os.makedirs(gridgen_ws, exist_ok=True)
 
     name = "dummy"
     nlay = 3
@@ -189,12 +189,12 @@ def test_mf6disv():
 def test_mf6disu():
     # set up example directory
     if not os.path.isdir(tpth):
-        os.makedirs(tpth)
+        os.makedirs(tpth, exist_ok=True)
 
     # set up a gridgen workspace
     gridgen_ws = os.path.join(tpth, "mf6disu")
-    if not os.path.exists(gridgen_ws):
-        os.makedirs(gridgen_ws)
+    if not os.path.isdir(gridgen_ws):
+        os.makedirs(gridgen_ws, exist_ok=True)
 
     name = "dummy"
     nlay = 3
@@ -348,12 +348,12 @@ def test_mf6disu():
 def test_mfusg():
     # set up example directory
     if not os.path.isdir(tpth):
-        os.makedirs(tpth)
+        os.makedirs(tpth, exist_ok=True)
 
     # set up a gridgen workspace
     gridgen_ws = os.path.join(tpth, "mfusg")
-    if not os.path.exists(gridgen_ws):
-        os.makedirs(gridgen_ws)
+    if not os.path.isdir(gridgen_ws):
+        os.makedirs(gridgen_ws, exist_ok=True)
 
     name = "dummy"
     nlay = 3

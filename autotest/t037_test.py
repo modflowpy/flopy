@@ -10,7 +10,7 @@ path = os.path.join("..", "examples", "data", "mf2005_test")
 cpth = os.path.join("temp", "t037")
 # make the directory if it does not exist
 if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+    os.makedirs(cpth, exist_ok=True)
 
 mf_items = ["swiex1.nam", "swiex2_strat.nam", "swiex3.nam"]
 pths = []

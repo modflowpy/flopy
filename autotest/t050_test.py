@@ -10,7 +10,7 @@ from flopy.export.vtk import Vtk
 cpth = os.path.join("temp", "t050")
 # make the directory if it does not exist
 if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+    os.makedirs(cpth, exist_ok=True)
 
 
 def count_lines_in_file(filepath, binary=False):

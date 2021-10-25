@@ -37,8 +37,8 @@ for script in scripts:
 
 # make working directories
 out_dir = os.path.join("temp", "scripts")
-if not os.path.exists(out_dir):
-    os.makedirs(out_dir)
+if not os.path.isdir(out_dir):
+    os.makedirs(out_dir, exist_ok=True)
 
 
 def copy_script(src):
@@ -50,9 +50,8 @@ def copy_script(src):
     dstpth = os.path.abspath(
         os.path.join(out_dir, filename.replace(".py", ""))
     )
-    if os.path.isdir(dstpth):
-        shutil.rmtree(dstpth)
-    os.makedirs(dstpth)
+    if not os.path.isdir(dstpth):
+        os.makedirs(dstpth, exist_ok=True)
 
     # set destination path
     dst = os.path.join(out_dir, dstpth, filename)

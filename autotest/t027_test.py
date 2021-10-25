@@ -13,7 +13,7 @@ from flopy.utils.flopy_io import line_parse
 cpth = os.path.join("temp", "t027")
 # make the directory if it does not exist
 if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+    os.makedirs(cpth, exist_ok=True)
 mf2005pth = os.path.join("..", "examples", "data", "mnw2_examples")
 mnw1_path = os.path.join("..", "examples", "data", "mf2005_test")
 

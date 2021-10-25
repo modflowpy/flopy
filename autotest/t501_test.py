@@ -6,8 +6,8 @@ import flopy
 def test_mf6():
 
     out_dir = os.path.join("temp", "t501")
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+    if not os.path.isdir(out_dir):
+        os.makedirs(out_dir, exist_ok=True)
 
     sim = flopy.mf6.MFSimulation(sim_ws=out_dir)
     assert isinstance(sim, flopy.mf6.MFSimulation)

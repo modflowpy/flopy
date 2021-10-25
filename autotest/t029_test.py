@@ -12,7 +12,7 @@ flowpth = os.path.join("..", "examples", "data", "mf6-freyberg")
 
 tpth = os.path.join("temp", "t029")
 if not os.path.isdir(tpth):
-    os.makedirs(tpth)
+    os.makedirs(tpth, exist_ok=True)
 
 
 def test_mfgrddis_MfGrdFile():

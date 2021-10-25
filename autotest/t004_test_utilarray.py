@@ -10,8 +10,8 @@ from textwrap import dedent
 from flopy.utils.util_array import Util2d, Util3d, Transient2d, Transient3d
 
 out_dir = os.path.join("temp", "t004")
-if not os.path.exists(out_dir):
-    os.makedirs(out_dir)
+if not os.path.isdir(out_dir):
+    os.makedirs(out_dir, exist_ok=True)
 
 
 def test_load_txt_free():

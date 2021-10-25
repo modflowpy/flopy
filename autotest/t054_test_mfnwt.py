@@ -12,7 +12,7 @@ import pytest
 # make the working directory
 tpth = os.path.join("temp", "t054")
 if not os.path.isdir(tpth):
-    os.makedirs(tpth)
+    os.makedirs(tpth, exist_ok=True)
 
 # build list of name files to try and load
 nwtpth = os.path.join("..", "examples", "data", "mf2005_test")

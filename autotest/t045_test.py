@@ -15,7 +15,7 @@ path = os.path.join("..", "examples", "data", "secp")
 cpth = os.path.join("temp", "t045")
 # make the directory if is does not exist
 if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+    os.makedirs(cpth, exist_ok=True)
 
 mf_items = ["secp.nam"]
 pths = []

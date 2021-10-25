@@ -14,7 +14,7 @@ except:
 cpth = os.path.join("temp", "t043")
 # make the directory if it does not exist
 if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+    os.makedirs(cpth, exist_ok=True)
 
 exe_name = "mf2005"
 v = flopy.which(exe_name)

@@ -12,7 +12,7 @@ from flopy.modflow.mfsfr2 import check
 tpth = os.path.abspath(os.path.join("temp", "t010"))
 # make the directory if it does not exist
 if not os.path.isdir(tpth):
-    os.makedirs(tpth)
+    os.makedirs(tpth, exist_ok=True)
 
 if os.path.split(os.getcwd())[-1] == "flopy3":
     path = os.path.join("examples", "data", "mf2005_test")

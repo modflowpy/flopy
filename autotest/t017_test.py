@@ -7,7 +7,7 @@ import flopy
 cpth = os.path.join("temp", "t017")
 # make the directory if it does not exists
 if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+    os.makedirs(cpth, exist_ok=True)
 
 
 def test_formattedfile_read():

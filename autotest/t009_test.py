@@ -30,7 +30,7 @@ path2 = os.path.join("..", "examples", "data", "sfr_test")
 outpath = os.path.join("temp", "t009")
 # make the directory if it does not exist
 if not os.path.isdir(outpath):
-    os.makedirs(outpath)
+    os.makedirs(outpath, exist_ok=True)
 
 sfr_items = {
     0: {"mfnam": "test1ss.nam", "sfrfile": "test1ss.sfr"},
@@ -121,8 +121,8 @@ def sfr_process(mfnam, sfrfile, model_ws, outfolder=outpath):
     m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws, verbose=False)
     sfr = m.get_package("SFR")
 
-    if not os.path.exists(outfolder):
-        os.makedirs(outfolder)
+    if not os.path.isdir(outfolder):
+        os.makedirs(outfolder, exist_ok=True)
     outpath = os.path.join(outfolder, sfrfile)
     sfr.write_file(outpath)
 

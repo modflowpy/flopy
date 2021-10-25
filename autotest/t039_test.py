@@ -17,7 +17,7 @@ zon_f = os.path.join(loadpth, "zonef_mlt.zbr")
 zbud_f = os.path.join(loadpth, "freyberg_mlt.csv")
 
 if not os.path.isdir(outpth):
-    os.makedirs(outpth)
+    os.makedirs(outpth, exist_ok=True)
 
 
 def read_zonebudget_file(fname):

@@ -5,7 +5,7 @@ import flopy
 cpth = os.path.join("temp", "t051")
 # make the directory if it does not exist
 if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+    os.makedirs(cpth, exist_ok=True)
 
 
 def test_default_oc_stress_period_data():

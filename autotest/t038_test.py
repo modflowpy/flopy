@@ -10,7 +10,7 @@ import flopy
 # make the working directory
 tpth = os.path.join("temp", "t038")
 if not os.path.isdir(tpth):
-    os.makedirs(tpth)
+    os.makedirs(tpth, exist_ok=True)
 
 # build list of name files to try and load
 usgpth = os.path.join("..", "examples", "data", "mfusg_test")

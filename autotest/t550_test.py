@@ -17,7 +17,7 @@ except ImportError:
 
 tmpdir = "temp/t550/"
 if not os.path.isdir(tmpdir):
-    os.makedirs(tmpdir)
+    os.makedirs(tmpdir, exist_ok=True)
 
 
 def test_mf6_grid_shp_export():

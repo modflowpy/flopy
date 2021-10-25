@@ -14,7 +14,7 @@ import sys
 
 cpth = os.path.join("temp", "t034")
 if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+    os.makedirs(cpth, exist_ok=True)
 
 
 def test_create():
