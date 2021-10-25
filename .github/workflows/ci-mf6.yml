@@ -101,7 +101,7 @@ jobs:
         pytest -v -n auto -k "test_gw" --durations=0 --cov=flopy --cov-report=xml
 
     - name: Print coverage report before upload
-      working-directory: ./autotest
+      working-directory: ./modflow6/autotest
       run: |
         coverage report
 
