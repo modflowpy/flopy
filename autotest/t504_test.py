@@ -79,7 +79,7 @@ def test001a_tharmonic():
         verify_data=True,
         write_headers=False,
     )
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.set_sim_path(run_folder)
 
     # write simulation to new location
     sim.set_all_data_external(external_data_folder="data")
@@ -147,7 +147,7 @@ def test001a_tharmonic():
     )
 
     # write simulation again
-    sim.simulation_data.mfpath.set_sim_path(save_folder)
+    sim.set_sim_path(save_folder)
     sim.write_simulation()
 
     if run:
@@ -213,7 +213,7 @@ def test003_gwfs_disv():
     sim = MFSimulation.load(model_name, "mf6", exe_name, pth, verify_data=True)
 
     # make temp folder to save simulation
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.set_sim_path(run_folder)
 
     # write simulation to new location
     sim.simulation_data.max_columns_of_data = 10
@@ -258,7 +258,7 @@ def test003_gwfs_disv():
     chd_right_period.set_data(chd_right_data_slice, 0)
 
     # write simulation again
-    sim.simulation_data.mfpath.set_sim_path(save_folder)
+    sim.set_sim_path(save_folder)
     sim.write_simulation()
 
     if run:
@@ -341,7 +341,7 @@ def test005_advgw_tidal():
     ghb.stress_period_data.set_data(spd)
 
     # make temp folder to save simulation
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.set_sim_path(run_folder)
 
     # write simulation to new location
     sim.set_all_data_external()
@@ -406,7 +406,7 @@ def test006_gwf3():
     }
 
     # make temp folder to save simulation
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.set_sim_path(run_folder)
     # write simulation to new location
     sim.set_all_data_external()
     sim.write_simulation()
@@ -451,7 +451,7 @@ def test006_gwf3():
     assert ex_happened
 
     # write simulation again
-    sim.simulation_data.mfpath.set_sim_path(save_folder)
+    sim.set_sim_path(save_folder)
     sim.write_simulation()
 
     if run:
@@ -483,7 +483,7 @@ def test006_gwf3():
 
     # confirm that files did move
     save_folder = os.path.join(run_folder, "temp_two")
-    sim.simulation_data.mfpath.set_sim_path(save_folder)
+    sim.set_sim_path(save_folder)
 
     # write with "copy_external_files" turned off so external files do not get copied to new location
     sim.write_simulation(
@@ -579,7 +579,7 @@ def test045_lake1ss_table():
     sim = MFSimulation.load(model_name, "mf6", exe_name, pth, verify_data=True)
 
     # make temp folder to save simulation
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.set_sim_path(run_folder)
 
     # write simulation to new location
     sim.write_simulation()
@@ -605,7 +605,7 @@ def test045_lake1ss_table():
     laktbl.set_data(laktbl_data)
 
     # write simulation again
-    sim.simulation_data.mfpath.set_sim_path(save_folder)
+    sim.set_sim_path(save_folder)
     sim.write_simulation()
 
     if run:
@@ -620,9 +620,6 @@ def test045_lake1ss_table():
             None, None, files1=head_file, files2=head_new, outfile=outfile
         )
         assert success
-
-        # clean up
-        sim.delete_output_files()
 
     return
 
@@ -666,7 +663,7 @@ def test006_2models_mvr():
     sim = MFSimulation.load(sim_name, "mf6", exe_name, pth, verify_data=True)
 
     # make temp folder to save simulation
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.set_sim_path(run_folder)
 
     # write simulation to new location
     sim.set_all_data_external()
@@ -744,7 +741,7 @@ def test006_2models_mvr():
     pkg_dict["dis"].nlay = old_val
 
     # write simulation again
-    sim.simulation_data.mfpath.set_sim_path(save_folder)
+    sim.set_sim_path(save_folder)
     sim.write_simulation()
 
     if run:
@@ -763,9 +760,6 @@ def test006_2models_mvr():
         assert pymake.compare_heads(
             None, None, files1=head_file, files2=head_new
         )
-
-        # clean up
-        sim.delete_output_files()
 
     # test load_only
     model_package_check = ["ic", "maw", "npf", "oc"]
@@ -830,33 +824,17 @@ def test001e_uzf_3lay():
     if not os.path.isdir(save_folder):
         os.makedirs(save_folder, exist_ok=True)
 
-    expected_output_folder = os.path.join(pth, "expected_output")
-    expected_head_file_a = os.path.join(
-        expected_output_folder, "test001e_UZF_3lay_unch.hds"
-    )
-    expected_head_file_b = os.path.join(
-        expected_output_folder, "test001e_UZF_3lay_adj.hds"
-    )
-
     # load simulation
     sim = MFSimulation.load(model_name, "mf6", exe_name, pth, verify_data=True)
 
     # make temp folder to save simulation
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.set_sim_path(run_folder)
 
     # write simulation to new location
     sim.write_simulation()
 
     if run:
-        # run simulation
         sim.run_simulation()
-
-        # # compare output to expected results
-        # head_file = os.path.join(os.getcwd(), expected_head_file_a)
-        # head_new = os.path.join(run_folder, "test001e_UZF_3lay.hds")
-        # assert pymake.compare_heads(
-        #     None, None, files1=head_file, files2=head_new, verbose=True
-        # )
 
     # change some settings
     model = sim.get_model(model_name)
@@ -869,25 +847,12 @@ def test001e_uzf_3lay():
     uzf_data.set_data(uzf_array)
 
     # write simulation again
-    sim.simulation_data.mfpath.set_sim_path(save_folder)
+    sim.set_sim_path(save_folder)
     sim.write_simulation()
 
     if run:
         # run simulation
         sim.run_simulation()
-
-        # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_b)
-        head_new = os.path.join(save_folder, "test001e_UZF_3lay.hds")
-        outfile = os.path.join(save_folder, "head_compare.dat")
-        # assert pymake.compare_heads(
-        #     None,
-        #     None,
-        #     files1=head_file,
-        #     files2=head_new,
-        #     outfile=outfile,
-        #     verbose=True,
-        # )
 
     # test load_only
     model_package_check = ["chd", "ic", "npf", "oc", "sto", "uzf"]
@@ -914,7 +879,9 @@ def test001e_uzf_3lay():
         assert sim.run_simulation()[0]
 
     if run:
-        cbc_precision()
+        eval_mf6_output()
+        eval_cbc_precision()
+        eval_replace_ims_package()
 
 
 def test045_lake2tr():
@@ -945,7 +912,7 @@ def test045_lake2tr():
     sim = MFSimulation.load(model_name, "mf6", exe_name, pth, verify_data=True)
 
     # write simulation to new location
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.set_sim_path(run_folder)
     sim.write_simulation()
 
     if run:
@@ -975,7 +942,7 @@ def test045_lake2tr():
     lak_period.set_data(lak_period_data[0], 0)
 
     # write simulation again
-    sim.simulation_data.mfpath.set_sim_path(save_folder)
+    sim.set_sim_path(save_folder)
     sim.write_simulation()
 
     if run:
@@ -1022,7 +989,7 @@ def test036_twrihfb():
     sim = MFSimulation.load(model_name, "mf6", exe_name, pth, verify_data=True)
 
     # make temp folder to save simulation
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.set_sim_path(run_folder)
 
     # write simulation to new location
     sim.set_all_data_external()
@@ -1063,7 +1030,7 @@ def test036_twrihfb():
     assert rch_data[0][5, 1] == 0.00000003
 
     # write simulation again
-    sim.simulation_data.mfpath.set_sim_path(save_folder)
+    sim.set_sim_path(save_folder)
     sim.write_simulation()
 
     if run:
@@ -1106,7 +1073,7 @@ def test027_timeseriestest():
     sim = MFSimulation.load(model_name, "mf6", exe_name, pth, verify_data=True)
 
     # make temp folder to save simulation
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.set_sim_path(run_folder)
 
     # write simulation to new location
     sim.set_all_data_external()
@@ -1144,7 +1111,7 @@ def test027_timeseriestest():
     tas_rch.tas_array.set_data(tas_array_data, key=12.0)
 
     # write simulation again
-    sim.simulation_data.mfpath.set_sim_path(save_folder)
+    sim.set_sim_path(save_folder)
     sim.write_simulation()
 
     if run:
@@ -1163,10 +1130,7 @@ def test027_timeseriestest():
         )
 
 
-def cbc_precision():
-    # make example directory
-    make_test_dir(cpth)
-
+def eval_cbc_precision():
     pth = os.path.join(cpth, "test001e_UZF_3lay", "test001e_UZF_3lay.uzf.cbc")
     cbc = flopy.utils.CellBudgetFile(pth, precision="auto")
     data = cbc.get_data(text="GWF", full3D=False)
@@ -1174,10 +1138,7 @@ def cbc_precision():
         raise AssertionError("Budget precision error for imeth 6")
 
 
-def test_replace_ims_package():
-    # make example directory
-    make_test_dir(cpth)
-
+def eval_replace_ims_package():
     pth = os.path.join(cpth, "test001e_UZF_3lay")
     sim = flopy.mf6.MFSimulation.load("mfsim", sim_ws=pth, exe_name=exe_name)
 
@@ -1200,13 +1161,10 @@ def test_replace_ims_package():
         raise AssertionError()
 
 
-def test_mf6_output():
-    # make example directory
-    make_test_dir(cpth)
-
+def eval_mf6_output():
     sim_ws = os.path.join("..", "examples", "data", "mf6", "test001e_UZF_3lay")
     sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws, exe_name=exe_name)
-    sim.simulation_data.mfpath.set_sim_path(cpth)
+    sim.set_sim_path(os.path.join(cpth, "test001e_UZF_3lay", "output"))
     sim.write_simulation()
     sim.run_simulation()
 
@@ -1304,7 +1262,7 @@ def test_mf6_output_add_observation():
         filename=obs_file, digits=10, print_input=True, continuous=obs_dict
     )
 
-    sim.simulation_data.mfpath.set_sim_path(cpth)
+    sim.set_sim_path(os.path.join(cpth, "test045_lake2tr", "obs"))
     sim.write_simulation()
     sim.run_simulation()
 

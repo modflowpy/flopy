@@ -682,7 +682,7 @@ def test_np001():
     )
 
     # make folder to save simulation
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.set_sim_path(run_folder)
 
     # write simulation to new location
     sim.set_all_data_external()
@@ -1357,7 +1357,7 @@ def test021_twri():
     )
 
     # change folder to save simulation
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.set_sim_path(run_folder)
 
     # write simulation to new location
     sim.write_simulation()
@@ -1918,7 +1918,7 @@ def test005_advgw_tidal():
     )
 
     # change folder to save simulation
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.set_sim_path(run_folder)
 
     # write simulation to new location
     sim.set_all_data_external()
@@ -2135,7 +2135,7 @@ def test004_bcfss():
     )
 
     # change folder to save simulation
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.set_sim_path(run_folder)
 
     # write simulation to new location
     sim.set_all_data_external()
@@ -2280,7 +2280,7 @@ def test035_fhb():
     )
 
     # change folder to save simulation
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.set_sim_path(run_folder)
 
     # write simulation to new location
     sim.set_all_data_external()
@@ -2562,7 +2562,7 @@ def test006_gwf3_disv():
     )
 
     # change folder to save simulation
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.set_sim_path(run_folder)
 
     # write simulation to new location
     sim.write_simulation()
@@ -2878,7 +2878,7 @@ def test006_2models_gnc():
     )
 
     # change folder to save simulation
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.set_sim_path(run_folder)
 
     # write simulation to new location
     sim.write_simulation()
@@ -2905,7 +2905,7 @@ def test006_2models_gnc():
 
     # test external file paths
     sim_path = os.path.join(run_folder, "path_test")
-    sim.simulation_data.mfpath.set_sim_path(sim_path)
+    sim.set_sim_path(sim_path)
     model_1.set_model_relative_path("model1")
     model_2.set_model_relative_path("model2")
     sim.set_all_data_external(external_data_folder="data")
@@ -3014,7 +3014,7 @@ def test050_circle_island():
     )
 
     # change folder to save simulation
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.set_sim_path(run_folder)
 
     # write simulation to new location
     sim.set_all_data_external()
@@ -3222,7 +3222,7 @@ def test028_sfr():
     assert sfr_package.connectiondata.get_data()[2][1] == 1.0
     assert sfr_package.packagedata.get_data()[1][1].lower() == "none"
 
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.set_sim_path(run_folder)
     sim.write_simulation()
     sim.load(
         sim_name=test_ex_name,

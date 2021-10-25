@@ -141,7 +141,8 @@ def load_sfr_isfropt_icalc(isfropt, icalc):
     if sfr is None:
         raise AssertionError()
 
-    ml.change_model_ws(tpth)
+    ws = os.path.join(tpth, f"sfrtest{isfropt}{icalc}")
+    ml.change_model_ws(ws)
     ml.write_input()
     success = ml.run_model()[0]
     if not success:
