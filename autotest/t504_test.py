@@ -563,7 +563,7 @@ def test045_lake1ss_table():
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
         os.makedirs(run_folder, exist_ok=True)
-    save_folder = os.path.join(run_folder, "temp")
+    save_folder = os.path.join(cpth, f"{test_ex_name}_save")
     if not os.path.isdir(save_folder):
         os.makedirs(save_folder, exist_ok=True)
 
@@ -1161,9 +1161,10 @@ def eval_replace_ims_package():
 
 
 def test_mf6_output():
-    sim_ws = os.path.join("..", "examples", "data", "mf6", "test001e_UZF_3lay")
+    ex_name = "test001e_UZF_3lay"
+    sim_ws = os.path.join("..", "examples", "data", "mf6", ex_name)
     sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws, exe_name=exe_name)
-    sim.set_sim_path(os.path.join(cpth, "test001e_UZF_3lay", "output"))
+    sim.set_sim_path(os.path.join(cpth, f"{ex_name}_mf6_output"))
     sim.write_simulation()
     sim.run_simulation()
 
@@ -1224,13 +1225,6 @@ def test_mf6_output():
     if not isinstance(uzf_zonbud, flopy.utils.ZoneBudget6):
         raise TypeError()
 
-    if len(uzf.output.methods()) != 4:
-        print(uzf.output.__dict__)
-        raise AssertionError(", ".join(uzf.output.methods()))
-
-    if len(ml.output.methods()) != 4:
-        raise AssertionError()
-
     if ml.dis.output.methods() is not None:
         raise AssertionError()
 
@@ -1283,7 +1277,5 @@ if __name__ == "__main__":
     test036_twrihfb()
     test045_lake1ss_table()
     test045_lake2tr()
-    test_cbc_precision()
-    test_replace_ims_package()
     test_mf6_output()
     test_mf6_output_add_observation()
