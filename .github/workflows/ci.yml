@@ -190,7 +190,7 @@ jobs:
       if: matrix.run-type != 'std'
       working-directory: ./autotest
       run: |
-        pytest -v --durations=0 --cov=flopy --cov-report=xml ${{ matrix.test-path }}
+        pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml ${{ matrix.test-path }}
 
     - name: Print coverage report before upload
       working-directory: ./autotest

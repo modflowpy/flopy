@@ -48,7 +48,7 @@ def test001a_tharmonic():
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
         os.makedirs(run_folder, exist_ok=True)
-    save_folder = os.path.join(run_folder, "temp")
+    save_folder = os.path.join(cpth, f"{test_ex_name}_save")
     if not os.path.isdir(save_folder):
         os.makedirs(save_folder, exist_ok=True)
 
@@ -189,7 +189,7 @@ def test003_gwfs_disv():
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
         os.makedirs(run_folder, exist_ok=True)
-    save_folder = os.path.join(run_folder, "temp")
+    save_folder = os.path.join(cpth, f"{test_ex_name}_save")
     if not os.path.isdir(save_folder):
         os.makedirs(save_folder, exist_ok=True)
 
@@ -298,7 +298,7 @@ def test005_advgw_tidal():
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
         os.makedirs(run_folder, exist_ok=True)
-    save_folder = os.path.join(run_folder, "temp")
+    save_folder = os.path.join(cpth, f"{test_ex_name}_save")
     if not os.path.isdir(save_folder):
         os.makedirs(save_folder, exist_ok=True)
 
@@ -372,7 +372,7 @@ def test006_gwf3():
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
         os.makedirs(run_folder, exist_ok=True)
-    save_folder = os.path.join(run_folder, "temp")
+    save_folder = os.path.join(cpth, f"{test_ex_name}_save")
     if not os.path.isdir(save_folder):
         os.makedirs(save_folder, exist_ok=True)
 
@@ -486,7 +486,7 @@ def test006_gwf3():
         )
 
     # confirm that files did move
-    save_folder = os.path.join(run_folder, "temp_two")
+    save_folder = os.path.join(cpth, f"{test_ex_name}_save02")
     sim.set_sim_path(save_folder)
 
     # write with "copy_external_files" turned off so external files do not get copied to new location
@@ -659,7 +659,7 @@ def test006_2models_mvr():
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
         os.makedirs(run_folder, exist_ok=True)
-    save_folder = os.path.join(run_folder, "temp")
+    save_folder = os.path.join(cpth, f"{test_ex_name}_save")
     if not os.path.isdir(save_folder):
         os.makedirs(save_folder, exist_ok=True)
 
@@ -855,7 +855,7 @@ def test001e_uzf_3lay():
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
         os.makedirs(run_folder, exist_ok=True)
-    save_folder = os.path.join(run_folder, "temp")
+    save_folder = os.path.join(cpth, f"{test_ex_name}_save")
     if not os.path.isdir(save_folder):
         os.makedirs(save_folder, exist_ok=True)
 
@@ -933,7 +933,7 @@ def test045_lake2tr():
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
         os.makedirs(run_folder, exist_ok=True)
-    save_folder = os.path.join(run_folder, "temp")
+    save_folder = os.path.join(cpth, f"{test_ex_name}_save")
     if not os.path.isdir(save_folder):
         os.makedirs(save_folder, exist_ok=True)
 
@@ -1010,7 +1010,7 @@ def test036_twrihfb():
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
         os.makedirs(run_folder, exist_ok=True)
-    save_folder = os.path.join(run_folder, "temp")
+    save_folder = os.path.join(cpth, f"{test_ex_name}_save")
     if not os.path.isdir(save_folder):
         os.makedirs(save_folder, exist_ok=True)
 
@@ -1100,7 +1100,7 @@ def test027_timeseriestest():
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
         os.makedirs(run_folder, exist_ok=True)
-    save_folder = os.path.join(run_folder, "temp")
+    save_folder = os.path.join(cpth, f"{test_ex_name}_save")
     if not os.path.isdir(save_folder):
         os.makedirs(save_folder, exist_ok=True)
 
@@ -1298,7 +1298,7 @@ def test_mf6_output_add_observation():
         filename=obs_file, digits=10, print_input=True, continuous=obs_dict
     )
 
-    sim.set_sim_path(os.path.join(cpth, "test045_lake2tr", "obs"))
+    sim.set_sim_path(os.path.join(cpth, "test045_lake2tr_obs"))
     sim.write_simulation()
 
     success, buff = sim.run_simulation()
