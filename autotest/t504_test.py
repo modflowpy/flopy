@@ -352,7 +352,11 @@ def test005_advgw_tidal():
         head_new = os.path.join(run_folder, "advgw_tidal.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
         assert pymake.compare_heads(
-            None, None, files1=expected_head_file_a, files2=head_new, outfile=outfile,
+            None,
+            None,
+            files1=expected_head_file_a,
+            files2=head_new,
+            outfile=outfile,
         )
 
 
@@ -422,7 +426,10 @@ def test006_gwf3():
         # compare output to expected results
         head_new = os.path.join(run_folder, "flow.hds")
         assert pymake.compare_heads(
-            None, None, files1=expected_head_file_a, files2=head_new,
+            None,
+            None,
+            files1=expected_head_file_a,
+            files2=head_new,
         )
 
         budget_fjf = np.array(
@@ -465,7 +472,10 @@ def test006_gwf3():
         # compare output to expected results
         head_new = os.path.join(save_folder, "flow.hds")
         assert pymake.compare_heads(
-            None, None, files1=expected_head_file_b, files2=head_new,
+            None,
+            None,
+            files1=expected_head_file_b,
+            files2=head_new,
         )
 
         budget_fjf = np.array(
@@ -512,7 +522,10 @@ def test006_gwf3():
         # compare output to expected results
         head_new = os.path.join(save_folder, "flow.hds")
         assert pymake.compare_heads(
-            None, None, files1=expected_head_file_b, files2=head_new,
+            None,
+            None,
+            files1=expected_head_file_b,
+            files2=head_new,
         )
 
         budget_fjf = np.array(
@@ -572,7 +585,12 @@ def test045_lake1ss_table():
     )
 
     # load simulation
-    sim = MFSimulation.load(model_name, "mf6", exe_name, pth, verify_data=True)
+    sim = MFSimulation.load(
+        sim_name=model_name,
+        exe_name=exe_name,
+        sim_ws=pth,
+        verify_data=True,
+    )
 
     # make temp folder to save simulation
     sim.set_sim_path(run_folder)
@@ -589,7 +607,11 @@ def test045_lake1ss_table():
         head_new = os.path.join(run_folder, "lakeex1b.hds")
         outfile = os.path.join(run_folder, "headcompare_a.txt")
         success = pymake.compare_heads(
-            None, None, files1=expected_head_file_a, files2=head_new, outfile=outfile,
+            None,
+            None,
+            files1=expected_head_file_a,
+            files2=head_new,
+            outfile=outfile,
         )
         assert success
 
@@ -613,7 +635,11 @@ def test045_lake1ss_table():
         head_new = os.path.join(save_folder, "lakeex1b.hds")
         outfile = os.path.join(run_folder, "headcompare_b.txt")
         success = pymake.compare_heads(
-            None, None, files1=expected_head_file_b, files2=head_new, outfile=outfile,
+            None,
+            None,
+            files1=expected_head_file_b,
+            files2=head_new,
+            outfile=outfile,
         )
         assert success
 
@@ -673,12 +699,18 @@ def test006_2models_mvr():
         # compare output to expected results
         head_new = os.path.join(run_folder, "model1.hds")
         assert pymake.compare_heads(
-            None, None, files1=expected_head_file_a, files2=head_new,
+            None,
+            None,
+            files1=expected_head_file_a,
+            files2=head_new,
         )
 
         head_new = os.path.join(run_folder, "model2.hds")
         assert pymake.compare_heads(
-            None, None, files1=expected_head_file_aa, files2=head_new,
+            None,
+            None,
+            files1=expected_head_file_aa,
+            files2=head_new,
         )
 
         budget_obj = bf.CellBudgetFile(
@@ -749,12 +781,18 @@ def test006_2models_mvr():
         # compare output to expected results
         head_new = os.path.join(save_folder, "model1.hds")
         assert pymake.compare_heads(
-            None, None, files1=expected_head_file_b, files2=head_new,
+            None,
+            None,
+            files1=expected_head_file_b,
+            files2=head_new,
         )
 
         head_new = os.path.join(save_folder, "model2.hds")
         assert pymake.compare_heads(
-            None, None, files1=expected_head_file_bb, files2=head_new,
+            None,
+            None,
+            files1=expected_head_file_bb,
+            files2=head_new,
         )
 
     # test load_only
@@ -1002,7 +1040,10 @@ def test036_twrihfb():
         # compare output to expected results
         head_new = os.path.join(run_folder, "twrihfb2015_output.hds")
         assert pymake.compare_heads(
-            None, None, files1=expected_head_file_a, files2=head_new,
+            None,
+            None,
+            files1=expected_head_file_a,
+            files2=head_new,
         )
 
     # change some settings
@@ -1040,7 +1081,10 @@ def test036_twrihfb():
         # compare output to expected results
         head_new = os.path.join(save_folder, "twrihfb2015_output.hds")
         assert pymake.compare_heads(
-            None, None, files1=expected_head_file_b, files2=head_new,
+            None,
+            None,
+            files1=expected_head_file_b,
+            files2=head_new,
         )
 
 
