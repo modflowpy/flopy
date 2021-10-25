@@ -589,7 +589,7 @@ def test045_lake1ss_table():
         sim.run_simulation()
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_a)
+        head_file = expected_head_file_a
         head_new = os.path.join(run_folder, "lakeex1b.hds")
         outfile = os.path.join(run_folder, "headcompare_a.txt")
         success = pymake.compare_heads(
@@ -613,7 +613,7 @@ def test045_lake1ss_table():
         sim.run_simulation()
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_b)
+        head_file = expected_head_file_b
         head_new = os.path.join(save_folder, "lakeex1b.hds")
         outfile = os.path.join(run_folder, "headcompare_b.txt")
         success = pymake.compare_heads(
@@ -879,7 +879,6 @@ def test001e_uzf_3lay():
         assert sim.run_simulation()[0]
 
     if run:
-        eval_mf6_output()
         eval_cbc_precision()
         eval_replace_ims_package()
 
@@ -1161,7 +1160,7 @@ def eval_replace_ims_package():
         raise AssertionError()
 
 
-def eval_mf6_output():
+def test_mf6_output():
     sim_ws = os.path.join("..", "examples", "data", "mf6", "test001e_UZF_3lay")
     sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws, exe_name=exe_name)
     sim.set_sim_path(os.path.join(cpth, "test001e_UZF_3lay", "output"))
