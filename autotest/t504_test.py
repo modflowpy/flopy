@@ -29,12 +29,17 @@ if v is None:
     run = False
 
 cpth = os.path.join("temp", "t504")
-# make the directory if it does not exist
-if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+
+def make_test_dir(testDir):
+    # make the directory if it does not exist
+    if not os.path.exists(testDir):
+        os.makedirs(testDir)
 
 
 def test001a_tharmonic():
+    # make example directory
+    make_test_dir(cpth)
+
     # init paths
     test_ex_name = "test001a_Tharmonic"
     model_name = "flow15"
@@ -174,6 +179,9 @@ def test001a_tharmonic():
 
 
 def test003_gwfs_disv():
+    # make example directory
+    make_test_dir(cpth)
+
     # init paths
     test_ex_name = "test003_gwfs_disv"
     model_name = "gwf_1"
@@ -282,6 +290,9 @@ def test003_gwfs_disv():
 
 
 def test005_advgw_tidal():
+    # make example directory
+    make_test_dir(cpth)
+
     # init paths
     test_ex_name = "test005_advgw_tidal"
     model_name = "gwf_1"
@@ -349,6 +360,9 @@ def test005_advgw_tidal():
 
 
 def test006_gwf3():
+    # make example directory
+    make_test_dir(cpth)
+
     # init paths
     test_ex_name = "test006_gwf3"
     model_name = "gwf_1"
@@ -537,6 +551,9 @@ def test006_gwf3():
 
 
 def test045_lake1ss_table():
+    # make example directory
+    make_test_dir(cpth)
+
     # init paths
     test_ex_name = "test045_lake1ss_table"
     model_name = "lakeex1b"
@@ -610,6 +627,9 @@ def test045_lake1ss_table():
 
 
 def test006_2models_mvr():
+    # make example directory
+    make_test_dir(cpth)
+
     # init paths
     test_ex_name = "test006_2models_mvr"
     sim_name = "test006_2models_mvr"
@@ -794,6 +814,9 @@ def test006_2models_mvr():
 
 
 def test001e_uzf_3lay():
+    # make example directory
+    make_test_dir(cpth)
+
     # init paths
     test_ex_name = "test001e_UZF_3lay"
     model_name = "gwf_1"
@@ -890,7 +913,14 @@ def test001e_uzf_3lay():
         assert sim.run_simulation()[0]
 
 
+    if run:
+        cbc_precision()
+
+
 def test045_lake2tr():
+    # make example directory
+    make_test_dir(cpth)
+
     # init paths
     test_ex_name = "test045_lake2tr"
     model_name = "lakeex2a"
@@ -965,6 +995,9 @@ def test045_lake2tr():
 
 
 def test036_twrihfb():
+    # make example directory
+    make_test_dir(cpth)
+
     # init paths
     test_ex_name = "test036_twrihfb"
     model_name = "twrihfb2015"
@@ -1046,6 +1079,9 @@ def test036_twrihfb():
 
 
 def test027_timeseriestest():
+    # make example directory
+    make_test_dir(cpth)
+
     # init paths
     test_ex_name = "test027_TimeseriesTest"
     model_name = "gwf_1"
@@ -1127,7 +1163,10 @@ def test027_timeseriestest():
         )
 
 
-def test_cbc_precision():
+def cbc_precision():
+    # make example directory
+    make_test_dir(cpth)
+
     pth = os.path.join(cpth, "test001e_UZF_3lay", "test001e_UZF_3lay.uzf.cbc")
     cbc = flopy.utils.CellBudgetFile(pth, precision="auto")
     data = cbc.get_data(text="GWF", full3D=False)
@@ -1136,6 +1175,9 @@ def test_cbc_precision():
 
 
 def test_replace_ims_package():
+    # make example directory
+    make_test_dir(cpth)
+
     pth = os.path.join(cpth, "test001e_UZF_3lay")
     sim = flopy.mf6.MFSimulation.load("mfsim", sim_ws=pth, exe_name=exe_name)
 
@@ -1159,6 +1201,9 @@ def test_replace_ims_package():
 
 
 def test_mf6_output():
+    # make example directory
+    make_test_dir(cpth)
+
     sim_ws = os.path.join("..", "examples", "data", "mf6", "test001e_UZF_3lay")
     sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws, exe_name=exe_name)
     sim.simulation_data.mfpath.set_sim_path(cpth)
@@ -1234,6 +1279,9 @@ def test_mf6_output():
 
 
 def test_mf6_output_add_observation():
+    # make example directory
+    make_test_dir(cpth)
+
     model_name = "lakeex2a"
     sim_ws = os.path.join("..", "examples", "data", "mf6", "test045_lake2tr")
     sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws, exe_name=exe_name)
