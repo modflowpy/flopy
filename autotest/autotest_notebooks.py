@@ -38,7 +38,7 @@ def run_notebook(src):
     )
     print(" ".join(arg))
     ival = os.system(" ".join(arg))
-    assert ival == 0, f"could not run {fn}"
+    assert ival == 0, f"could not run {src}"
 
 
 @pytest.mark.parametrize(

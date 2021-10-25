@@ -6,7 +6,6 @@ import flopy
 import flopy.utils.binaryfile as bf
 from flopy.utils.datautil import PyListUtil
 from flopy.mf6.modflow.mfsimulation import MFSimulation
-from flopy.mf6.mfbase import VerbosityLevel
 
 try:
     import shapefile
@@ -97,21 +96,21 @@ def test001a_tharmonic():
 
     if run:
         # run simulation
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        print(sim.name)
+        assert success, f"simulation {sim.name} did not run"
 
         # get expected results
-        budget_file = os.path.join(os.getcwd(), expected_cbc_file_a)
-        budget_obj = bf.CellBudgetFile(budget_file, precision="auto")
+        budget_obj = bf.CellBudgetFile(expected_cbc_file_a, precision="auto")
         budget_obj.list_records()
         budget_frf_valid = np.array(
             budget_obj.get_data(text="    FLOW JA FACE", full3D=True)
         )
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_a)
         head_new = os.path.join(run_folder, "flow15_flow.hds")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new
+            None, None, files1=expected_head_file_a, files2=head_new
         )
 
         budget_frf = sim.simulation_data.mfdata[
@@ -152,20 +151,19 @@ def test001a_tharmonic():
 
     if run:
         # run simulation
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} rerun did not run"
 
         # get expected results
-        budget_file = os.path.join(os.getcwd(), expected_cbc_file_b)
-        budget_obj = bf.CellBudgetFile(budget_file, precision="auto")
+        budget_obj = bf.CellBudgetFile(expected_cbc_file_b, precision="auto")
         budget_frf_valid = np.array(
             budget_obj.get_data(text="    FLOW JA FACE", full3D=True)
         )
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_b)
         head_new = os.path.join(save_folder, "flow15_flow.hds")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new
+            None, None, files1=expected_head_file_b, files2=head_new
         )
 
         budget_frf = sim.simulation_data.mfdata[
@@ -221,19 +219,18 @@ def test003_gwfs_disv():
 
     if run:
         # run simulation
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} did not run"
 
         # get expected results
-        budget_file = os.path.join(os.getcwd(), expected_cbc_file_a)
-        budget_obj = bf.CellBudgetFile(budget_file, precision="auto")
+        budget_obj = bf.CellBudgetFile(expected_cbc_file_a, precision="auto")
         budget_fjf_valid = np.array(
             budget_obj.get_data(text="    FLOW JA FACE", full3D=True)
         )
 
-        head_file = os.path.join(os.getcwd(), expected_head_file_a)
         head_new = os.path.join(run_folder, "model.hds")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new
+            None, None, files1=expected_head_file_a, files2=head_new
         )
 
         budget_frf = sim.simulation_data.mfdata[
@@ -263,20 +260,19 @@ def test003_gwfs_disv():
 
     if run:
         # run simulation
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} rerun did not run"
 
         # get expected results
-        budget_file = os.path.join(os.getcwd(), expected_cbc_file_b)
-        budget_obj = bf.CellBudgetFile(budget_file, precision="double")
+        budget_obj = bf.CellBudgetFile(expected_cbc_file_b, precision="double")
         budget_fjf_valid = np.array(
             budget_obj.get_data(text="FLOW JA FACE", full3D=True)
         )
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_b)
         head_new = os.path.join(save_folder, "model.hds")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new
+            None, None, files1=expected_head_file_b, files2=head_new
         )
 
         budget_frf = sim.simulation_data.mfdata[
@@ -349,14 +345,14 @@ def test005_advgw_tidal():
 
     if run:
         # run simulation
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} did not run"
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_a)
         head_new = os.path.join(run_folder, "advgw_tidal.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new, outfile=outfile
+            None, None, files1=expected_head_file_a, files2=head_new, outfile=outfile,
         )
 
 
@@ -413,10 +409,10 @@ def test006_gwf3():
 
     if run:
         # run simulation
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} rerun did not run"
 
-        budget_file = os.path.join(os.getcwd(), expected_cbc_file_a)
-        budget_obj = bf.CellBudgetFile(budget_file, precision="double")
+        budget_obj = bf.CellBudgetFile(expected_cbc_file_a, precision="double")
         budget_fjf_valid = np.array(
             budget_obj.get_data(text="    FLOW JA FACE", full3D=True)
         )
@@ -424,10 +420,9 @@ def test006_gwf3():
         budget_fjf_valid.shape = (-1, jaentries)
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_a)
         head_new = os.path.join(run_folder, "flow.hds")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new
+            None, None, files1=expected_head_file_a, files2=head_new,
         )
 
         budget_fjf = np.array(
@@ -456,11 +451,11 @@ def test006_gwf3():
 
     if run:
         # run simulation
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} rerun(2) did not run"
 
         # get expected results
-        budget_file = os.path.join(os.getcwd(), expected_cbc_file_b)
-        budget_obj = bf.CellBudgetFile(budget_file, precision="auto")
+        budget_obj = bf.CellBudgetFile(expected_cbc_file_b, precision="auto")
         budget_fjf_valid = np.array(
             budget_obj.get_data(text="    FLOW JA FACE", full3D=True)
         )
@@ -468,10 +463,9 @@ def test006_gwf3():
         budget_fjf_valid.shape = (-1, jaentries)
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_b)
         head_new = os.path.join(save_folder, "flow.hds")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new
+            None, None, files1=expected_head_file_b, files2=head_new,
         )
 
         budget_fjf = np.array(
@@ -501,11 +495,14 @@ def test006_gwf3():
 
     if run:
         # run simulation
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} rerun(3) did not run"
 
         # get expected results
-        budget_file = os.path.join(os.getcwd(), expected_cbc_file_b)
-        budget_obj = bf.CellBudgetFile(budget_file, precision="double")
+        budget_obj = bf.CellBudgetFile(
+            expected_cbc_file_b,
+            precision="double",
+        )
         budget_fjf_valid = np.array(
             budget_obj.get_data(text="    FLOW JA FACE", full3D=True)
         )
@@ -513,10 +510,9 @@ def test006_gwf3():
         budget_fjf_valid.shape = (-1, jaentries)
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_b)
         head_new = os.path.join(save_folder, "flow.hds")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new
+            None, None, files1=expected_head_file_b, files2=head_new,
         )
 
         budget_fjf = np.array(
@@ -586,14 +582,14 @@ def test045_lake1ss_table():
 
     if run:
         # run simulation
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} did not run"
 
         # compare output to expected results
-        head_file = expected_head_file_a
         head_new = os.path.join(run_folder, "lakeex1b.hds")
         outfile = os.path.join(run_folder, "headcompare_a.txt")
         success = pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new, outfile=outfile
+            None, None, files1=expected_head_file_a, files2=head_new, outfile=outfile,
         )
         assert success
 
@@ -610,14 +606,14 @@ def test045_lake1ss_table():
 
     if run:
         # run simulation
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} rerun did not run"
 
         # compare output to expected results
-        head_file = expected_head_file_b
         head_new = os.path.join(save_folder, "lakeex1b.hds")
         outfile = os.path.join(run_folder, "headcompare_b.txt")
         success = pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new, outfile=outfile
+            None, None, files1=expected_head_file_b, files2=head_new, outfile=outfile,
         )
         assert success
 
@@ -671,23 +667,24 @@ def test006_2models_mvr():
 
     if run:
         # run simulation
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} did not run"
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_a)
         head_new = os.path.join(run_folder, "model1.hds")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new
+            None, None, files1=expected_head_file_a, files2=head_new,
         )
 
-        head_file = os.path.join(os.getcwd(), expected_head_file_aa)
         head_new = os.path.join(run_folder, "model2.hds")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new
+            None, None, files1=expected_head_file_aa, files2=head_new,
         )
 
-        budget_file = os.path.join(os.getcwd(), expected_cbc_file_a)
-        budget_obj = bf.CellBudgetFile(budget_file, precision="double")
+        budget_obj = bf.CellBudgetFile(
+            expected_cbc_file_a,
+            precision="double",
+        )
         budget_obj.list_records()
 
     # test getting models
@@ -746,19 +743,18 @@ def test006_2models_mvr():
 
     if run:
         # run simulation
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} rerun did not run"
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_b)
         head_new = os.path.join(save_folder, "model1.hds")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new
+            None, None, files1=expected_head_file_b, files2=head_new,
         )
 
-        head_file = os.path.join(os.getcwd(), expected_head_file_bb)
         head_new = os.path.join(save_folder, "model2.hds")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new
+            None, None, files1=expected_head_file_bb, files2=head_new,
         )
 
     # test load_only
@@ -803,7 +799,8 @@ def test006_2models_mvr():
         sim = MFSimulation.load(
             sim_name, "mf6", exe_name, pth, load_only=load_only_lists[0]
         )
-        assert sim.run_simulation()[0]
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} did not run"
 
     return
 
@@ -834,7 +831,8 @@ def test001e_uzf_3lay():
     sim.write_simulation()
 
     if run:
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} did not run"
 
     # change some settings
     model = sim.get_model(model_name)
@@ -852,7 +850,8 @@ def test001e_uzf_3lay():
 
     if run:
         # run simulation
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} rerun did not run"
 
     # test load_only
     model_package_check = ["chd", "ic", "npf", "oc", "sto", "uzf"]
@@ -876,7 +875,8 @@ def test001e_uzf_3lay():
         sim = MFSimulation.load(
             model_name, "mf6", exe_name, pth, load_only=load_only_lists[0]
         )
-        assert sim.run_simulation()[0]
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} from load did not run"
 
     if run:
         eval_cbc_precision()
@@ -916,15 +916,15 @@ def test045_lake2tr():
 
     if run:
         # run simulation
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} did not run"
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_a)
         head_new = os.path.join(run_folder, "lakeex2a.hds")
         assert pymake.compare_heads(
             None,
             None,
-            files1=head_file,
+            files1=expected_head_file_a,
             files2=head_new,
             htol=10.0,
         )
@@ -946,15 +946,15 @@ def test045_lake2tr():
 
     if run:
         # run simulation
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} rerun did not run"
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_b)
         head_new = os.path.join(save_folder, "lakeex2a.hds")
         assert pymake.compare_heads(
             None,
             None,
-            files1=head_file,
+            files1=expected_head_file_b,
             files2=head_new,
             htol=10.0,
         )
@@ -996,13 +996,13 @@ def test036_twrihfb():
 
     if run:
         # run simulation
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} did not run"
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_a)
         head_new = os.path.join(run_folder, "twrihfb2015_output.hds")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new
+            None, None, files1=expected_head_file_a, files2=head_new,
         )
 
     # change some settings
@@ -1034,13 +1034,13 @@ def test036_twrihfb():
 
     if run:
         # run simulation
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} rerun did not run"
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_b)
         head_new = os.path.join(save_folder, "twrihfb2015_output.hds")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new
+            None, None, files1=expected_head_file_b, files2=head_new,
         )
 
 
@@ -1086,16 +1086,16 @@ def test027_timeseriestest():
 
     if run:
         # run simulation
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} did not run"
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_a)
         head_new = os.path.join(run_folder, "timeseriestest.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
         assert pymake.compare_heads(
             None,
             None,
-            files1=head_file,
+            files1=expected_head_file_a,
             files2=head_new,
             outfile=outfile,
             htol=10.0,
@@ -1115,15 +1115,15 @@ def test027_timeseriestest():
 
     if run:
         # run simulation
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} rerun did not run"
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_b)
         head_new = os.path.join(save_folder, "timeseriestest.hds")
         assert pymake.compare_heads(
             None,
             None,
-            files1=head_file,
+            files1=expected_head_file_b,
             files2=head_new,
             htol=10.0,
         )
@@ -1155,9 +1155,7 @@ def eval_replace_ims_package():
     )
     sim.write_simulation()
     success, buff = sim.run_simulation()
-
-    if not success:
-        raise AssertionError()
+    assert success, f"simulation {sim.name} did not run"
 
 
 def test_mf6_output():
@@ -1166,7 +1164,8 @@ def test_mf6_output():
     sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws, exe_name=exe_name)
     sim.set_sim_path(os.path.join(cpth, f"{ex_name}_mf6_output"))
     sim.write_simulation()
-    sim.run_simulation()
+    success, buff = sim.run_simulation()
+    assert success, f"simulation {sim.name} did not run"
 
     ml = sim.get_model("gwf_1")
 
@@ -1257,7 +1256,9 @@ def test_mf6_output_add_observation():
 
     sim.set_sim_path(os.path.join(cpth, "test045_lake2tr", "obs"))
     sim.write_simulation()
-    sim.run_simulation()
+
+    success, buff = sim.run_simulation()
+    assert success, f"simulation {sim.name} did not run"
 
     # check that .output finds the newly added OBS package
     sfr_obs = gwf.sfr.output.obs()
