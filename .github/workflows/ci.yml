@@ -180,13 +180,13 @@ jobs:
       run: |
         pytest -v prepare_tests.py
 
-    - name: Run pytest on autotest scripts on Linux and MacOs
+    - name: Run pytest on autotest scripts on Linux and MacOS
       if: matrix.run-type == 'std' && runner.os != 'Windows'
       working-directory: ./autotest
       run: |
         pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
 
-    - name: Run pytest on autotest scripts on Linux and MacOs
+    - name: Run pytest on autotest scripts on Windows
       if: matrix.run-type == 'std' && runner.os == 'Windows'
       working-directory: ./autotest
       run: |

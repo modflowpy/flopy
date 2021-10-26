@@ -132,6 +132,8 @@ def test_obs_load_and_write():
         except:
             raise ValueError("could not load new HOB output file")
 
+    eval_flwob_load()
+
 
 def test_obs_create_and_write():
     """
@@ -324,7 +326,7 @@ def test_multilayerhob_pr_multiline():
         raise AssertionError("pr, mlay... load error")
 
 
-def test_flwob_load():
+def eval_flwob_load():
     """
     test041 create, write, and load ModflowFlwob package.
     """
@@ -479,5 +481,4 @@ if __name__ == "__main__":
     test_hob_simple()
     test_obs_create_and_write()
     test_obs_load_and_write()
-    test_flwob_load()
     test_multilayerhob_pr_multiline()
