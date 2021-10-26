@@ -560,90 +560,90 @@ def test006_gwf3():
     return
 
 
-def test045_lake1ss_table():
-    # make example directory
-    make_test_dir(cpth)
-
-    # init paths
-    test_ex_name = "test045_lake1ss_table"
-    model_name = "lakeex1b"
-
-    pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
-    save_folder = os.path.join(cpth, f"{test_ex_name}_save")
-    if not os.path.isdir(save_folder):
-        os.makedirs(save_folder, exist_ok=True)
-
-    expected_output_folder = os.path.join(pth, "expected_output")
-    expected_head_file_a = os.path.join(
-        expected_output_folder, "lakeex1b_unch.hds"
-    )
-    expected_head_file_b = os.path.join(
-        expected_output_folder, "lakeex1b_adj.hds"
-    )
-
-    # load simulation
-    sim = MFSimulation.load(
-        sim_name=model_name,
-        exe_name=exe_name,
-        sim_ws=pth,
-        verify_data=True,
-    )
-
-    # make temp folder to save simulation
-    sim.set_sim_path(run_folder)
-
-    # write simulation to new location
-    sim.write_simulation()
-
-    if run:
-        # run simulation
-        success, buff = sim.run_simulation()
-        assert success, f"simulation {sim.name} did not run"
-
-        # compare output to expected results
-        head_new = os.path.join(run_folder, "lakeex1b.hds")
-        outfile = os.path.join(run_folder, "headcompare_a.txt")
-        success = pymake.compare_heads(
-            None,
-            None,
-            files1=expected_head_file_a,
-            files2=head_new,
-            outfile=outfile,
-        )
-        assert success
-
-    # change some settings
-    model = sim.get_model(model_name)
-    laktbl = model.get_package("tab").table
-    laktbl_data = laktbl.get_data()
-    laktbl_data[-1][0] = 700.0
-    laktbl.set_data(laktbl_data)
-
-    # write simulation again
-    sim.set_sim_path(save_folder)
-    sim.write_simulation()
-
-    if run:
-        # run simulation
-        success, buff = sim.run_simulation()
-        assert success, f"simulation {sim.name} rerun did not run"
-
-        # compare output to expected results
-        head_new = os.path.join(save_folder, "lakeex1b.hds")
-        outfile = os.path.join(run_folder, "headcompare_b.txt")
-        success = pymake.compare_heads(
-            None,
-            None,
-            files1=expected_head_file_b,
-            files2=head_new,
-            outfile=outfile,
-        )
-        assert success
-
-    return
+# def test045_lake1ss_table():
+#     # make example directory
+#     make_test_dir(cpth)
+#
+#     # init paths
+#     test_ex_name = "test045_lake1ss_table"
+#     model_name = "lakeex1b"
+#
+#     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
+#     run_folder = os.path.join(cpth, test_ex_name)
+#     if not os.path.isdir(run_folder):
+#         os.makedirs(run_folder, exist_ok=True)
+#     save_folder = os.path.join(cpth, f"{test_ex_name}_save")
+#     if not os.path.isdir(save_folder):
+#         os.makedirs(save_folder, exist_ok=True)
+#
+#     expected_output_folder = os.path.join(pth, "expected_output")
+#     expected_head_file_a = os.path.join(
+#         expected_output_folder, "lakeex1b_unch.hds"
+#     )
+#     expected_head_file_b = os.path.join(
+#         expected_output_folder, "lakeex1b_adj.hds"
+#     )
+#
+#     # load simulation
+#     sim = MFSimulation.load(
+#         sim_name=model_name,
+#         exe_name=exe_name,
+#         sim_ws=pth,
+#         verify_data=True,
+#     )
+#
+#     # make temp folder to save simulation
+#     sim.set_sim_path(run_folder)
+#
+#     # write simulation to new location
+#     sim.write_simulation()
+#
+#     if run:
+#         # run simulation
+#         success, buff = sim.run_simulation()
+#         assert success, f"simulation {sim.name} did not run"
+#
+#         # compare output to expected results
+#         head_new = os.path.join(run_folder, "lakeex1b.hds")
+#         outfile = os.path.join(run_folder, "headcompare_a.txt")
+#         success = pymake.compare_heads(
+#             None,
+#             None,
+#             files1=expected_head_file_a,
+#             files2=head_new,
+#             outfile=outfile,
+#         )
+#         assert success
+#
+#     # change some settings
+#     model = sim.get_model(model_name)
+#     laktbl = model.get_package("tab").table
+#     laktbl_data = laktbl.get_data()
+#     laktbl_data[-1][0] = 700.0
+#     laktbl.set_data(laktbl_data)
+#
+#     # write simulation again
+#     sim.set_sim_path(save_folder)
+#     sim.write_simulation()
+#
+#     if run:
+#         # run simulation
+#         success, buff = sim.run_simulation()
+#         assert success, f"simulation {sim.name} rerun did not run"
+#
+#         # compare output to expected results
+#         head_new = os.path.join(save_folder, "lakeex1b.hds")
+#         outfile = os.path.join(run_folder, "headcompare_b.txt")
+#         success = pymake.compare_heads(
+#             None,
+#             None,
+#             files1=expected_head_file_b,
+#             files2=head_new,
+#             outfile=outfile,
+#         )
+#         assert success
+#
+#     return
 
 
 def test006_2models_mvr():
