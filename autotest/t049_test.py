@@ -21,33 +21,27 @@ v = flopy.which(mf2005_exe)
 mpth_exe = "mp6"
 v2 = flopy.which(mpth_exe)
 
-rung = True
+run = True
 if v is None or v2 is None:
-    rung = False
+    run = False
 
 
 def test_modpath():
     pth = os.path.join("..", "examples", "data", "freyberg")
     mfnam = "freyberg.nam"
 
-    if pymake:
-        run = rung
-        lpth = os.path.join(cpth, os.path.splitext(mfnam)[0])
-        pymake.setup(os.path.join(pth, mfnam), lpth)
-    else:
-        run = False
-        lpth = pth
+    lpth = os.path.join(cpth, "test_mp")
 
     m = flopy.modflow.Modflow.load(
-        mfnam, model_ws=lpth, verbose=True, exe_name=mf2005_exe
+        mfnam, model_ws=pth, verbose=True, exe_name=mf2005_exe
     )
     assert m.load_fail is False
 
+    m.change_model_ws(lpth)
+    m.write_input()
+
     if run:
-        try:
-            success, buff = m.run_model(silent=False)
-        except:
-            success = False
+        success, buff = m.run_model(silent=False)
         assert success, "modflow model run did not terminate successfully"
 
     # create the forward modpath file
@@ -70,11 +64,8 @@ def test_modpath():
     # write forward particle track files
     mp.write_input()
 
-    if run:
-        try:
-            success, buff = mp.run_model(silent=False)
-        except:
-            success = False
+    if success and run:
+        success, buff = mp.run_model(silent=False)
         assert (
             success
         ), "forward modpath model run did not terminate successfully"
@@ -98,77 +89,56 @@ def test_modpath():
     # write backward particle track files
     mpp.write_input()
 
-    if run:
-        try:
-            success, buff = mpp.run_model(silent=False)
-        except:
-            success = False
+    if run and success:
+        success, buff = mpp.run_model(silent=False)
         assert (
             success
         ), "backward modpath model run did not terminate successfully"
 
     # load modpath output files
-    if run:
+    if run and success:
         endfile = os.path.join(lpth, mp.sim.endpoint_file)
         pthfile = os.path.join(lpth, mpp.sim.pathline_file)
-    else:
-        endfile = os.path.join(
-            "..", "examples", "data", "mp6_examples", "freybergmp.gitmpend"
-        )
-        pthfile = os.path.join(
-            "..", "examples", "data", "mp6_examples", "freybergmpp.gitmppth"
-        )
 
-    # load the endpoint data
-    try:
-        endobj = flopy.utils.EndpointFile(endfile)
-    except:
-        assert False, "could not load endpoint file"
-    ept = endobj.get_alldata()
-    assert ept.shape == (695,), "shape of endpoint file is not (695,)"
+        # load the endpoint data
+        try:
+            endobj = flopy.utils.EndpointFile(endfile)
+        except:
+            assert False, "could not load endpoint file"
+        ept = endobj.get_alldata()
+        assert ept.shape == (695,), "shape of endpoint file is not (695,)"
 
-    # load the pathline data
-    try:
-        pthobj = flopy.utils.PathlineFile(pthfile)
-    except:
-        assert False, "could not load pathline file"
-    plines = pthobj.get_alldata()
-    assert len(plines) == 576, "there are not 576 particle pathlines in file"
+        # load the pathline data
+        try:
+            pthobj = flopy.utils.PathlineFile(pthfile)
+        except:
+            assert False, "could not load pathline file"
+        plines = pthobj.get_alldata()
+        assert (
+            len(plines) == 576
+        ), "there are not 576 particle pathlines in file"
+
+        eval_pathline_plot(lpth)
 
     return
 
 
-def test_pathline_plot():
-    pth = os.path.join("..", "examples", "data", "freyberg")
-    mfnam = "freyberg.nam"
-
-    run = rung
-    try:
-        lpth = os.path.join(cpth, os.path.splitext(mfnam)[0])
-    except:
-        run = False
-        lpth = pth
-
-    nampath = os.path.join(lpth, mfnam)
-    assert os.path.exists(nampath), f"namefile {nampath} doesn't exist."
+def eval_pathline_plot(lpth):
     # load the modflow files for model map
+    mfnam = "freyberg.nam"
     m = flopy.modflow.Modflow.load(
-        mfnam, model_ws=lpth, verbose=True, forgive=False, exe_name=mf2005_exe
+        mfnam,
+        model_ws=lpth,
+        verbose=True,
+        forgive=False,
+        exe_name=mf2005_exe,
     )
 
     # load modpath output files
-    if run:
-        pthfile = os.path.join(lpth, "freybergmpp.mppth")
-    else:
-        pthfile = os.path.join(
-            "..", "examples", "data", "mp6_examples", "freybergmpp.gitmppth"
-        )
+    pthfile = os.path.join(lpth, "freybergmpp.mppth")
 
     # load the pathline data
-    try:
-        pthobj = flopy.utils.PathlineFile(pthfile)
-    except:
-        assert False, "could not load pathline file"
+    pthobj = flopy.utils.PathlineFile(pthfile)
 
     # determine version
     ver = pthobj.version
@@ -178,64 +148,36 @@ def test_pathline_plot():
     plines = pthobj.get_alldata()
 
     mm = flopy.plot.PlotMapView(model=m)
-    try:
-        mm.plot_pathline(plines, colors="blue", layer="all")
-    except:
-        assert False, 'could not plot pathline with layer="all"'
+    mm.plot_pathline(plines, colors="blue", layer="all")
 
     # plot the grid and ibound array
-    try:
-        mm.plot_grid()
-        mm.plot_ibound()
-    except:
-        assert False, "could not plot grid and ibound"
-
-    try:
-        fpth = os.path.join(lpth, "pathline.png")
-        plt.savefig(fpth)
-        plt.close()
-    except:
-        assert False, f"could not save plot as {fpth}"
+    mm.plot_grid()
+    mm.plot_ibound()
+    fpth = os.path.join(lpth, "pathline.png")
+    plt.savefig(fpth)
+    plt.close()
 
     mm = flopy.plot.PlotMapView(model=m)
-    try:
-        mm.plot_pathline(plines, colors="green", layer=0)
-    except:
-        assert False, "could not plot pathline with layer=0"
+    mm.plot_pathline(plines, colors="green", layer=0)
 
     # plot the grid and ibound array
-    try:
-        mm.plot_grid()
-        mm.plot_ibound()
-    except:
-        assert False, "could not plot grid and ibound"
+    mm.plot_grid()
+    mm.plot_ibound()
 
-    try:
-        fpth = os.path.join(lpth, "pathline2.png")
-        plt.savefig(fpth)
-        plt.close()
-    except:
-        assert False, f"could not save plot as {fpth}"
+    fpth = os.path.join(lpth, "pathline2.png")
+    plt.savefig(fpth)
+    plt.close()
 
     mm = flopy.plot.PlotMapView(model=m)
-    try:
-        mm.plot_pathline(plines, colors="red")
-    except:
-        assert False, "could not plot pathline"
+    mm.plot_pathline(plines, colors="red")
 
     # plot the grid and ibound array
-    try:
-        mm.plot_grid()
-        mm.plot_ibound()
-    except:
-        assert False, "could not plot grid and ibound"
+    mm.plot_grid()
+    mm.plot_ibound()
 
-    try:
-        fpth = os.path.join(lpth, "pathline3.png")
-        plt.savefig(fpth)
-        plt.close()
-    except:
-        assert False, f"could not save plot as {fpth}"
+    fpth = os.path.join(lpth, "pathline3.png")
+    plt.savefig(fpth)
+    plt.close()
 
     return
 
@@ -474,7 +416,6 @@ def eval_timeseries(file):
 
 if __name__ == "__main__":
     test_modpath()
-    test_pathline_plot()
     test_pathline_plot_xc()
     test_mp5_load()
     test_mp5_timeseries_load()
