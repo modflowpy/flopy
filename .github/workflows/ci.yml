@@ -109,11 +109,11 @@ jobs:
           - os: ubuntu-latest
             python-version: 3.9
             run-type: nb
-            test-path: autotest_notebooks.py
+            test-path: run_notebooks.py
           - os: ubuntu-latest
             python-version: 3.9
             run-type: script
-            test-path: autotest_scripts.py
+            test-path: run_scripts.py
     defaults:
       run:
         shell: bash -l {0}
