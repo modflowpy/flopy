@@ -1,25 +1,21 @@
-# Build the executables that are used in the flopy autotests
+"""
+Script to be used to download any required data prior to autotests
+"""
 import os
 import sys
 import shutil
 import subprocess
 
-try:
-    import pymake
-except:
-    print("pymake is not installed...will not download executables")
-    pymake = None
+import pymake
+import flopy
 
-try:
-    import flopy
-except:
-    print("flopy is not installed...will not update flopy")
-    flopy = None
+from ci_framework import get_parent_path, createTestDir, download_mf6_examples
 
 # os.environ["CI"] = "1"
 
 # path where downloaded executables will be extracted
-exe_pth = "exe_download"
+parent_path = get_parent_path()
+exe_pth = os.path.join(parent_path, "temp", "exe_download")
 # make the directory if it does not exist
 if not os.path.isdir(exe_pth):
     os.makedirs(exe_pth, exist_ok=True)
@@ -46,6 +42,12 @@ if dotlocal:
 
 # write where the executables will be downloaded
 print(f'modflow executables will be downloaded to:\n\n    "{bindir}"')
+
+run_type = "std"
+for idx, arg in enumerate(sys.argv):
+    if "--other" in arg.lower():
+        run_type = "other"
+        break
 
 
 def get_branch():
@@ -120,9 +122,6 @@ def test_download_and_unzip():
 
 
 def test_download_nightly_build():
-    error_msg = "pymake not installed - cannot download executables"
-    assert pymake is not None, error_msg
-
     # get the current branch
     branch = get_branch()
     print(f"current branch: {branch}")
@@ -141,9 +140,6 @@ def test_download_nightly_build():
 
 
 def test_update_flopy():
-    error_msg = "flopy not installed - cannot update flopy"
-    assert flopy is not None, error_msg
-
     branch = get_branch()
     if branch == "master":
         print("No need to update flopy MODFLOW 6 classes")
@@ -160,9 +156,33 @@ def test_list_download():
     list_exes()
 
 
+def test_build_dirs():
+    parent_path = get_parent_path()
+    if parent_path is None:
+        print("cannot build test directories")
+    else:
+        dirPath = os.path.join(parent_path, "temp")
+        createTestDir(dirPath, verbose=True)
+
+        tests = ["scripts"]
+        for test in tests:
+            testDir = os.path.join(dirPath, test)
+            createTestDir(testDir, verbose=True)
+
+
+def test_download_mf6_examples(delete_existing=True):
+    if run_type == "std":
+        downloadDir = download_mf6_examples(delete_existing=delete_existing)
+    else:
+        downloadDir = None
+    return downloadDir
+
+
 if __name__ == "__main__":
     test_download_and_unzip()
     test_download_nightly_build()
     test_update_flopy()
     cleanup()
     list_exes()
+    test_build_dirs()
+    test_download_mf6_examples()

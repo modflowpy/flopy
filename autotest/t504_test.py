@@ -6,6 +6,7 @@ import flopy
 import flopy.utils.binaryfile as bf
 from flopy.utils.datautil import PyListUtil
 from flopy.mf6.modflow.mfsimulation import MFSimulation
+from ci_framework import baseTestDir, flopyTest
 
 try:
     import shapefile
@@ -27,30 +28,20 @@ run = True
 if v is None:
     run = False
 
-cpth = os.path.join("temp", "t504")
-
-
-def make_test_dir(testDir):
-    # make the directory if it does not exist
-    if not os.path.isdir(testDir):
-        os.makedirs(testDir, exist_ok=True)
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 
 def test001a_tharmonic():
-    # make example directory
-    make_test_dir(cpth)
 
     # init paths
     test_ex_name = "test001a_Tharmonic"
     model_name = "flow15"
 
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
-    save_folder = os.path.join(cpth, f"{test_ex_name}_save")
-    if not os.path.isdir(save_folder):
-        os.makedirs(save_folder, exist_ok=True)
+    run_folder = f"{baseDir}_{test_ex_name}"
+    save_folder = f"{run_folder}_save"
+    fpTest = flopyTest(verbose=True)
+    fpTest.addTestDir([run_folder, save_folder], create=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -171,27 +162,21 @@ def test001a_tharmonic():
         ]
         assert array_util.array_comp(budget_frf_valid, budget_frf)
 
-        # clean up
-        sim.delete_output_files()
+    fpTest.teardown()
 
     return
 
 
 def test003_gwfs_disv():
-    # make example directory
-    make_test_dir(cpth)
-
     # init paths
     test_ex_name = "test003_gwfs_disv"
     model_name = "gwf_1"
 
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
-    save_folder = os.path.join(cpth, f"{test_ex_name}_save")
-    if not os.path.isdir(save_folder):
-        os.makedirs(save_folder, exist_ok=True)
+    run_folder = f"{baseDir}_{test_ex_name}"
+    save_folder = f"{run_folder}_save"
+    fpTest = flopyTest(verbose=True)
+    fpTest.addTestDir([run_folder, save_folder], create=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -280,27 +265,21 @@ def test003_gwfs_disv():
         ]
         assert array_util.array_comp(budget_fjf_valid, budget_frf)
 
-        # clean up
-        sim.delete_output_files()
+    fpTest.teardown()
 
     return
 
 
 def test005_advgw_tidal():
-    # make example directory
-    make_test_dir(cpth)
-
     # init paths
     test_ex_name = "test005_advgw_tidal"
     model_name = "gwf_1"
 
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
-    save_folder = os.path.join(cpth, f"{test_ex_name}_save")
-    if not os.path.isdir(save_folder):
-        os.makedirs(save_folder, exist_ok=True)
+    run_folder = f"{baseDir}_{test_ex_name}"
+    save_folder = f"{run_folder}_save"
+    fpTest = flopyTest(verbose=True)
+    fpTest.addTestDir([run_folder, save_folder], create=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -359,22 +338,19 @@ def test005_advgw_tidal():
             outfile=outfile,
         )
 
+    fpTest.teardown()
+
 
 def test006_gwf3():
-    # make example directory
-    make_test_dir(cpth)
-
     # init paths
     test_ex_name = "test006_gwf3"
     model_name = "gwf_1"
 
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
-    save_folder = os.path.join(cpth, f"{test_ex_name}_save")
-    if not os.path.isdir(save_folder):
-        os.makedirs(save_folder, exist_ok=True)
+    run_folder = f"{baseDir}_{test_ex_name}"
+    save_folder = f"{run_folder}_save"
+    fpTest = flopyTest(verbose=True)
+    fpTest.addTestDir([run_folder, save_folder], create=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -486,7 +462,9 @@ def test006_gwf3():
         )
 
     # confirm that files did move
-    save_folder = os.path.join(cpth, f"{test_ex_name}_save02")
+    save_folder = f"{run_folder}_save02"
+    fpTest.addTestDir(save_folder, create=True)
+
     sim.set_sim_path(save_folder)
 
     # write with "copy_external_files" turned off so external files do not get copied to new location
@@ -557,24 +535,21 @@ def test006_gwf3():
         # clean up
         sim.delete_output_files()
 
+    fpTest.teardown()
+
     return
 
 
 # def test045_lake1ss_table():
-#     # make example directory
-#     make_test_dir(cpth)
-#
 #     # init paths
 #     test_ex_name = "test045_lake1ss_table"
 #     model_name = "lakeex1b"
 #
 #     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-#     run_folder = os.path.join(cpth, test_ex_name)
-#     if not os.path.isdir(run_folder):
-#         os.makedirs(run_folder, exist_ok=True)
-#     save_folder = os.path.join(cpth, f"{test_ex_name}_save")
-#     if not os.path.isdir(save_folder):
-#         os.makedirs(save_folder, exist_ok=True)
+#     run_folder = f"{baseDir}_{test_ex_name}"
+#     save_folder = f"{run_folder}_save"
+#     fpTest = flopyTest(verbose=True)
+#     fpTest.addTestDir([run_folder, save_folder], create=True)
 #
 #     expected_output_folder = os.path.join(pth, "expected_output")
 #     expected_head_file_a = os.path.join(
@@ -643,25 +618,22 @@ def test006_gwf3():
 #         )
 #         assert success
 #
+#     fpTest.teardown()
+#
 #     return
 
 
 def test006_2models_mvr():
-    # make example directory
-    make_test_dir(cpth)
-
     # init paths
     test_ex_name = "test006_2models_mvr"
     sim_name = "test006_2models_mvr"
     model_names = ["parent", "child"]
 
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
-    save_folder = os.path.join(cpth, f"{test_ex_name}_save")
-    if not os.path.isdir(save_folder):
-        os.makedirs(save_folder, exist_ok=True)
+    run_folder = f"{baseDir}_{test_ex_name}"
+    save_folder = f"{run_folder}_save"
+    fpTest = flopyTest(verbose=True)
+    fpTest.addTestDir([run_folder, save_folder], create=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -840,24 +812,21 @@ def test006_2models_mvr():
         success, buff = sim.run_simulation()
         assert success, f"simulation {sim.name} did not run"
 
+    fpTest.teardown()
+
     return
 
 
 def test001e_uzf_3lay():
-    # make example directory
-    make_test_dir(cpth)
-
     # init paths
     test_ex_name = "test001e_UZF_3lay"
     model_name = "gwf_1"
 
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
-    save_folder = os.path.join(cpth, f"{test_ex_name}_save")
-    if not os.path.isdir(save_folder):
-        os.makedirs(save_folder, exist_ok=True)
+    run_folder = f"{baseDir}_{test_ex_name}"
+    save_folder = f"{run_folder}_save"
+    fpTest = flopyTest(verbose=True)
+    fpTest.addTestDir([run_folder, save_folder], create=True)
 
     # load simulation
     sim = MFSimulation.load(model_name, "mf6", exe_name, pth, verify_data=True)
@@ -920,22 +889,19 @@ def test001e_uzf_3lay():
         eval_cbc_precision()
         eval_replace_ims_package()
 
+    fpTest.teardown()
+
 
 def test045_lake2tr():
-    # make example directory
-    make_test_dir(cpth)
-
     # init paths
     test_ex_name = "test045_lake2tr"
     model_name = "lakeex2a"
 
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
-    save_folder = os.path.join(cpth, f"{test_ex_name}_save")
-    if not os.path.isdir(save_folder):
-        os.makedirs(save_folder, exist_ok=True)
+    run_folder = f"{baseDir}_{test_ex_name}"
+    save_folder = f"{run_folder}_save"
+    fpTest = flopyTest(verbose=True)
+    fpTest.addTestDir([run_folder, save_folder], create=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -997,22 +963,19 @@ def test045_lake2tr():
             htol=10.0,
         )
 
+    fpTest.teardown()
+
 
 def test036_twrihfb():
-    # make example directory
-    make_test_dir(cpth)
-
     # init paths
     test_ex_name = "test036_twrihfb"
     model_name = "twrihfb2015"
 
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
-    save_folder = os.path.join(cpth, f"{test_ex_name}_save")
-    if not os.path.isdir(save_folder):
-        os.makedirs(save_folder, exist_ok=True)
+    run_folder = f"{baseDir}_{test_ex_name}"
+    save_folder = f"{run_folder}_save"
+    fpTest = flopyTest(verbose=True)
+    fpTest.addTestDir([run_folder, save_folder], create=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -1087,22 +1050,19 @@ def test036_twrihfb():
             files2=head_new,
         )
 
+    fpTest.teardown()
+
 
 def test027_timeseriestest():
-    # make example directory
-    make_test_dir(cpth)
-
     # init paths
     test_ex_name = "test027_TimeseriesTest"
     model_name = "gwf_1"
 
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
-    save_folder = os.path.join(cpth, f"{test_ex_name}_save")
-    if not os.path.isdir(save_folder):
-        os.makedirs(save_folder, exist_ok=True)
+    run_folder = f"{baseDir}_{test_ex_name}"
+    save_folder = f"{run_folder}_save"
+    fpTest = flopyTest(verbose=True)
+    fpTest.addTestDir([run_folder, save_folder], create=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -1172,9 +1132,13 @@ def test027_timeseriestest():
             htol=10.0,
         )
 
+    fpTest.teardown()
+
 
 def eval_cbc_precision():
-    pth = os.path.join(cpth, "test001e_UZF_3lay", "test001e_UZF_3lay.uzf.cbc")
+    pth = os.path.join(
+        f"{baseDir}_test001e_UZF_3lay", "test001e_UZF_3lay.uzf.cbc"
+    )
     cbc = flopy.utils.CellBudgetFile(pth, precision="auto")
     data = cbc.get_data(text="GWF", full3D=False)
     if data[2].node[0] != 1:
@@ -1182,7 +1146,7 @@ def eval_cbc_precision():
 
 
 def eval_replace_ims_package():
-    pth = os.path.join(cpth, "test001e_UZF_3lay")
+    pth = f"{baseDir}_test001e_UZF_3lay"
     sim = flopy.mf6.MFSimulation.load("mfsim", sim_ws=pth, exe_name=exe_name)
 
     ims = sim.ims
@@ -1206,7 +1170,11 @@ def test_mf6_output():
     ex_name = "test001e_UZF_3lay"
     sim_ws = os.path.join("..", "examples", "data", "mf6", ex_name)
     sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws, exe_name=exe_name)
-    sim.set_sim_path(os.path.join(cpth, f"{ex_name}_mf6_output"))
+
+    ws = f"{baseDir}_{ex_name}_mf6_output"
+    fpTest = flopyTest(verbose=True, testDirs=ws, create=True)
+
+    sim.set_sim_path(ws)
     sim.write_simulation()
     success, buff = sim.run_simulation()
     assert success, f"simulation {sim.name} did not run"
@@ -1271,11 +1239,10 @@ def test_mf6_output():
     if ml.dis.output.methods() is not None:
         raise AssertionError()
 
+    fpTest.teardown()
+
 
 def test_mf6_output_add_observation():
-    # make example directory
-    make_test_dir(cpth)
-
     model_name = "lakeex2a"
     sim_ws = os.path.join("..", "examples", "data", "mf6", "test045_lake2tr")
     sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws, exe_name=exe_name)
@@ -1298,7 +1265,10 @@ def test_mf6_output_add_observation():
         filename=obs_file, digits=10, print_input=True, continuous=obs_dict
     )
 
-    sim.set_sim_path(os.path.join(cpth, "test045_lake2tr_obs"))
+    ws = f"{baseDir}_test045_lake2tr_obs"
+    fpTest = flopyTest(verbose=True, testDirs=ws, create=True)
+
+    sim.set_sim_path(ws)
     sim.write_simulation()
 
     success, buff = sim.run_simulation()
@@ -1309,6 +1279,8 @@ def test_mf6_output_add_observation():
 
     if not isinstance(sfr_obs, flopy.utils.Mf6Obs):
         raise TypeError("remove and add observation test (Mf6Output) failed")
+
+    fpTest.teardown()
 
 
 if __name__ == "__main__":

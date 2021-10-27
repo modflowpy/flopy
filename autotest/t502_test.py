@@ -5,12 +5,14 @@ from flopy.mf6.modflow import mfgwfriv, mfgwfsto, mfgwfoc, mfgwfwel, mfgwfdrn
 from flopy.mf6.modflow import mfims, mftdis, mfgwfic, mfgwfnpf, mfgwfdis, mfgwf
 from flopy.mf6.modflow.mfsimulation import MFSimulation
 
-out_dir = os.path.join("temp", "t502")
-if not os.path.isdir(out_dir):
-    os.makedirs(out_dir, exist_ok=True)
+from ci_framework import baseTestDir, flopyTest
+
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 
 def test_create_and_run_model():
+
+    fpTest = flopyTest(verbose=True, testDirs=baseDir)
 
     # names
     sim_name = "testsim"
@@ -20,7 +22,7 @@ def test_create_and_run_model():
     # set up simulation
     tdis_name = f"{sim_name}.tdis"
     sim = MFSimulation(
-        sim_name=sim_name, version="mf6", exe_name=exe_name, sim_ws=out_dir
+        sim_name=sim_name, version="mf6", exe_name=exe_name, sim_ws=baseDir
     )
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis = mftdis.ModflowTdis(
@@ -37,11 +39,11 @@ def test_create_and_run_model():
         sim,
         print_option="ALL",
         complexity="SIMPLE",
-        outer_hclose=0.00001,
+        outer_dvclose=0.00001,
         outer_maximum=50,
         under_relaxation="NONE",
         inner_maximum=30,
-        inner_hclose=0.00001,
+        inner_dvclose=0.00001,
         linear_acceleration="CG",
         preconditioner_levels=7,
         preconditioner_drop_tolerance=0.01,
@@ -137,9 +139,12 @@ def test_create_and_run_model():
 
     # run the simulation and look for output
     if run:
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"{baseDir} did not run" f""
         # head = sim.simulation_data.mfdata[(model_name, 'HDS', 'HEAD')]
         # print('HEAD: ', head)
+
+    fpTest.teardown()
 
     return
 

@@ -9,15 +9,16 @@ import shutil
 import numpy as np
 import flopy
 
+from ci_framework import baseTestDir, flopyTest
+
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True, create=True)
+
 pth = os.path.join("..", "examples", "data", "mf2005_test")
 namfiles = [namfile for namfile in os.listdir(pth) if namfile.endswith(".nam")]
 # skip = ["MNW2-Fig28.nam", "testsfr2.nam", "testsfr2_tab.nam"]
 skip = []
 
-tpth = os.path.join("temp", "t007")
-# make the directory if it does not exist
-if not os.path.isdir(tpth):
-    os.makedirs(tpth, exist_ok=True)
+tpth = baseDir
 
 npth = os.path.join("temp", "t007", "netcdf")
 # make the directory if it does not exist
@@ -48,17 +49,23 @@ def remove_shp(shpname):
             os.remove(fname)
 
 
-def export_mf6_netcdf(path):
+def export_mf6_netcdf(ws, path):
     print(f"in export_mf6_netcdf: {path}")
+
+    fpTest = flopyTest(create=True, testDirs=ws)
+
     sim = flopy.mf6.modflow.mfsimulation.MFSimulation.load(sim_ws=path)
     for name, model in sim.get_model_itr():
-        export_netcdf(model)
+        export_netcdf(ws, model)
+
+    fpTest.teardown()
 
 
-def export_mf2005_netcdf(namfile):
+def export_mf2005_netcdf(ws, namfile):
     print(f"in export_mf2005_netcdf: {namfile}")
     if namfile in skip:
         return
+
     m = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=False)
     if m.dis.lenuni == 0:
         m.dis.lenuni = 1
@@ -71,19 +78,22 @@ def export_mf2005_netcdf(namfile):
     assert m, f"Could not load namefile {namfile}"
     msg = f"Could not load {namfile} model"
     assert isinstance(m, flopy.modflow.Modflow), msg
-    export_netcdf(m)
+
+    fpTest = flopyTest(create=True, testDirs=ws)
+    export_netcdf(ws, m)
+    fpTest.teardown()
 
 
-def export_netcdf(m):
+def export_netcdf(ws, m):
     # Do not fail if netCDF4 not installed
     try:
         import netCDF4
         import pyproj
     except:
         return
-    fnc = m.export(os.path.join(npth, f"{m.name}.nc"))
+    fnc = m.export(os.path.join(ws, f"{m.name}.nc"))
     fnc.write()
-    fnc_name = os.path.join(npth, f"{m.name}.nc")
+    fnc_name = os.path.join(ws, f"{m.name}.nc")
     try:
         fnc = m.export(fnc_name)
         fnc.write()
@@ -176,22 +186,28 @@ def export_shapefile_modelgrid_override(namfile):
 def test_output_helper_shapefile_export():
     if import_shapefile() is None:
         return
+
     ws = os.path.join(
         "..", "examples", "data", "freyberg_multilayer_transient"
     )
     name = "freyberg.nam"
 
     ml = flopy.modflow.Modflow.load(name, model_ws=ws)
-
     head = flopy.utils.HeadFile(os.path.join(ws, "freyberg.hds"))
     cbc = flopy.utils.CellBudgetFile(os.path.join(ws, "freyberg.cbc"))
+
+    ws_out = f"{baseDir}_helper_shapefile"
+    fpTest = flopyTest(verbose=True, create=True, testDirs=ws_out)
+
     flopy.export.utils.output_helper(
-        os.path.join("temp", "test.shp"),
+        os.path.join(ws_out, "test.shp"),
         ml,
         {"HDS": head, "cbc": cbc},
         mflay=1,
         kper=10,
     )
+
+    fpTest.teardown()
 
 
 def test_freyberg_export():
@@ -1556,13 +1572,17 @@ def test_shapefile_export_modelgrid_override(namfile):
     list(namfiles),
 )
 def test_netcdf(namfile):
-    export_mf2005_netcdf(namfile)
+    name = namfile.replace(".nam", "")
+    ws = f"{baseDir}_{name}_netcdf"
+    export_mf2005_netcdf(ws, namfile)
     return
 
 
 def build_netcdf():
     for namfile in namfiles:
-        export_mf2005_netcdf(namfile)
+        name = namfile.replace(".nam", "")
+        ws = f"{baseDir}_{name}_netcdf"
+        export_mf2005_netcdf(ws, namfile)
     return
 
 

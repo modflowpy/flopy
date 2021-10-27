@@ -1,47 +1,14 @@
 import pytest
+import sys
 import os
 import shutil
 import flopy
 import pymake
-
-
-def download_mf6_examples(delete_existing=False):
-    """
-    Download mf6 examples and return location of folder
-
-    """
-    # save current directory
-    cpth = os.getcwd()
-
-    # create folder for mf6 distribution download
-    dirname = "mf6examples"
-    dstpth = os.path.join("temp", dirname)
-
-    # delete the existing examples
-    if delete_existing:
-        if os.path.isdir(dstpth):
-            shutil.rmtree(dstpth)
-
-    # download the MODFLOW 6 distribution does not exist
-    if not os.path.isdir(dstpth):
-        print(f"create...{dstpth}")
-        if not os.path.isdir(dstpth):
-            os.makedirs(dstpth, exist_ok=True)
-        os.chdir(dstpth)
-
-        # Download the distribution
-        url = (
-            "https://github.com/MODFLOW-USGS/modflow6-examples/releases/"
-            "download/current/modflow6-examples.zip"
-        )
-        pymake.download_and_unzip(url, verify=True)
-
-        # change back to original path
-        os.chdir(cpth)
-
-    # return the absolute path to the distribution
-    return os.path.abspath(dstpth)
-
+from ci_framework import (
+    baseTestDir,
+    flopyTest,
+    download_mf6_examples,
+)
 
 exe_name = "mf6"
 v = flopy.which(exe_name)
@@ -49,12 +16,7 @@ run = True
 if v is None:
     run = False
 
-out_dir = os.path.join("temp", "t503")
-if not os.path.isdir(out_dir):
-    os.makedirs(out_dir, exist_ok=True)
-
 mf6path = download_mf6_examples()
-distpth = os.path.join(mf6path)
 
 exclude_models = ("lnf",)
 exclude_examples = (
@@ -75,9 +37,12 @@ for exdir in exdirs:
     print(f"  {exdir}")
 
 
-def copy_folder(src):
-    dirBase = src.partition("{0}mf6examples{0}".format(os.path.sep))[2]
-    dst = os.path.join(out_dir, dirBase)
+def copy_folder(baseDir, src):
+    subDir = src.partition("{0}mf6examples{0}".format(os.path.sep))[2]
+    if os.path.basename(subDir) in os.path.basename(baseDir):
+        dst = baseDir
+    else:
+        dst = os.path.join(baseDir, subDir)
 
     # clean the destination directory if it exists
     if os.path.isdir(dst):
@@ -86,6 +51,9 @@ def copy_folder(src):
     # copy the files
     print(f"copying {src} -> {dst}")
     shutil.copytree(src, dst)
+
+    # remove the src directory
+    shutil.rmtree(src)
 
     return dst
 
@@ -101,9 +69,17 @@ def simulation_subdirs(baseDir):
 
 
 def runmodel(exdir):
+    baseDir = (
+        baseTestDir(__file__, relPath="temp", verbose=True)
+        + "_"
+        + os.path.basename(exdir)
+    )
+    fpTest = flopyTest(verbose=True)
+
     simulations = simulation_subdirs(exdir)
     for src in simulations:
-        ws = copy_folder(src)
+        ws = copy_folder(baseDir, src)
+        fpTest.addTestDir(ws)
         f = os.path.basename(os.path.normpath(ws))
         print("\n\n")
         print(f"**** RUNNING TEST: {f} ****")
@@ -125,6 +101,7 @@ def runmodel(exdir):
 
             # set the comparison directory
             ws2 = f"{ws}-RERUN"
+            fpTest.addTestDir(ws2)
             sim.simulation_data.mfpath.set_sim_path(ws2)
 
             # remove the comparison directory if it exists
@@ -152,6 +129,10 @@ def runmodel(exdir):
             )
             assert success, f"comparision for {ws} failed"
 
+    fpTest.addTestDir(baseDir)
+
+    fpTest.teardown()
+
 
 # for running tests with pytest
 @pytest.mark.parametrize(
@@ -171,5 +152,4 @@ def runmodels():
 
 
 if __name__ == "__main__":
-    # to run them all with python
     runmodels()

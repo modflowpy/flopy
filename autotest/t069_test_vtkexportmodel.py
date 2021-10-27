@@ -5,15 +5,20 @@ Test vtk export_model function without packages_names definition
 import os
 import flopy
 from flopy.export import vtk
+from ci_framework import (
+    baseTestDir,
+    flopyTest,
+)
 
 mf_exe_name = "mf6"
 
 
 def test_vtk_export_model_without_packages_names():
+    baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+    fpTest = flopyTest(verbose=True, testDirs=baseDir)
 
-    ws = os.path.join(".", "temp", "t069")
     name = "mymodel"
-    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=ws, exe_name="mf6")
+    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=baseDir, exe_name="mf6")
     tdis = flopy.mf6.ModflowTdis(sim)
     ims = flopy.mf6.ModflowIms(sim)
     gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
@@ -25,10 +30,12 @@ def test_vtk_export_model_without_packages_names():
     )
 
     # Export model without specifying packages_names parameter
-    vtk.export_model(sim.get_model(), ws)
+    vtk.export_model(sim.get_model(), baseDir)
 
     # If the function executes without error then test was successful
     assert True
+
+    fpTest.teardown()
 
 
 if __name__ == "__main__":

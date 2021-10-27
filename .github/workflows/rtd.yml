@@ -57,10 +57,10 @@ jobs:
           pip install xmipy
           pip install .
 
-      - name: Download executables needed for tests
+      - name: Prepare for the autotests
         working-directory: ./autotest
         run: |
-          python get_exes.py
+          pytest -v ci_prepare.py
 
       - name: Add executables directory to path
         run: |
