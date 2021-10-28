@@ -1694,7 +1694,8 @@ def main():
     # test_shapefile_ibound()
     # test_netcdf_classmethods()
 
-    # for namfile in namfiles:
+    for namfile in namfiles:
+        test_netcdf(namfile)
     #    export_mf2005_netcdf(namfile)
     #    export_shapefile(namfile)
 
@@ -1715,7 +1716,7 @@ def main():
     # test_vertex_model_dot_plot()
     # test_sr_with_Map()
     # test_modelgrid_with_PlotMapView()
-    test_epsgs()
+    # test_epsgs()
     # test_sr_scaling()
     # test_read_usgs_model_reference()
     # test_dynamic_xll_yll()
@@ -1724,7 +1725,7 @@ def main():
     # test_get_vertices()
     # test_export_output()
     # for namfile in namfiles:
-    test_freyberg_export()
+    # test_freyberg_export()
     # test_export_array()
     # test_write_shapefile()
     # test_wkt_parse()
@@ -1733,7 +1734,7 @@ def main():
     # test_export_array_contours()
     # test_tricontour_NaN()
     # test_export_contourf()
-    test_sr()
+    # test_sr()
     # test_mf6_modelgrid_update()
     # test_shapefile_polygon_closed()
     # test_mapview_plot_bc()

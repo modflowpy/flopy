@@ -1,6 +1,7 @@
 import os
 import sys
 import shutil
+import time
 import pymake
 
 for idx, arg in enumerate(sys.argv):
@@ -119,9 +120,21 @@ def _cleanDir(testDir, verbose=False):
     """
 
     if os.path.isdir(testDir):
-        shutil.rmtree(testDir)
+
         if verbose:
             print(f"removing test directory...'{testDir}'")
+
+        # wait to delete on windows
+        if sys.platform.lower() == "win32":
+            time.sleep(3)
+
+        try:
+            shutil.rmtree(testDir)
+            success = True
+        except:
+            print()
+            success = False
+        assert success, f"Could not remove test...'{testDir}'"
 
 
 class flopyTest(object):
@@ -159,6 +172,8 @@ class flopyTest(object):
         if not keep:
             for testDir in self.testDirs:
                 _cleanDir(testDir, verbose=self.verbose)
+        else:
+            print("Retaining test files")
 
 
 def _get_mf6path():
