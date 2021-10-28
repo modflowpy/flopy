@@ -103,40 +103,6 @@ def createTestDir(testDir, clean=False, verbose=False):
             print(f"creating test directory...'{testDir}'")
 
 
-def _cleanDir(testDir, verbose=False):
-    """
-    Delete a test directory
-
-    Parameters
-    ----------
-    testDir : str
-        path of directory to create
-    clean : bool
-        boolean indicating if an existing directory should be cleaned
-
-    Returns
-    -------
-
-    """
-
-    if os.path.isdir(testDir):
-
-        if verbose:
-            print(f"removing test directory...'{testDir}'")
-
-        # wait to delete on windows
-        if sys.platform.lower() == "win32":
-            time.sleep(3)
-
-        try:
-            shutil.rmtree(testDir)
-            success = True
-        except:
-            print()
-            success = False
-        assert success, f"Could not remove test...'{testDir}'"
-
-
 class flopyTest(object):
     def __init__(
         self,
@@ -222,3 +188,30 @@ def download_mf6_examples(delete_existing=False):
 
     # return the absolute path to the distribution
     return dstpth
+
+
+# private functions
+
+
+def _cleanDir(testDir, verbose=False):
+    """
+    Delete a test directory
+
+    Parameters
+    ----------
+    testDir : str
+        path of directory to create
+    clean : bool
+        boolean indicating if an existing directory should be cleaned
+
+    Returns
+    -------
+
+    """
+
+    if os.path.isdir(testDir):
+        if verbose:
+            print(f"removing test directory...'{testDir}'")
+
+        # remove the tree
+        shutil.rmtree(testDir, ignore_errors=True)
