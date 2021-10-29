@@ -131,8 +131,6 @@ def runmodel(exdir):
 
     testFramework.addTestDir(baseDir)
 
-    testFramework.teardown()
-
 
 # for running tests with pytest
 @pytest.mark.parametrize(

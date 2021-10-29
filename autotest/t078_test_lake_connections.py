@@ -164,9 +164,6 @@ def test_base_run():
         k11,
     )
 
-    # teardown test
-    testFramework.teardown()
-
     return
 
 
@@ -292,9 +289,6 @@ def test_lake():
     success = sim.run_simulation(silent=False)
 
     assert success, f"could not run {sim.name} with lake"
-
-    # teardown test
-    testFramework.teardown()
 
     return
 
@@ -503,9 +497,6 @@ def test_embedded_lak_ex01():
     success = sim.run_simulation(silent=False)
 
     assert success, f"could not run {sim.name}"
-
-    # teardown test
-    testFramework.teardown()
 
     return
 

@@ -144,8 +144,6 @@ def test_create_and_run_model():
         # head = sim.simulation_data.mfdata[(model_name, 'HDS', 'HEAD')]
         # print('HEAD: ', head)
 
-    testFramework.teardown()
-
     return
 
 

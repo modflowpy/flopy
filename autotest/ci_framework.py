@@ -131,13 +131,13 @@ class flopyTest(object):
     verbose : bool
         boolean indicating if diagnostic information should be written
         to the screen
+    retain : bool
+        boolean indicating if the test files should be retained
 
     Methods
     -------
     addTestDir(testDirs, clean=False, create=False)
         Add a testDir or a list of testDirs to the object
-    teardown()
-        Deletr all testDirs in the object
 
     Example
     -------
@@ -146,7 +146,6 @@ class flopyTest(object):
     >>> def test_function():
     ...     testFramework = flopyTest(verbose=True, testDirs="temp/t091_01")
     ...     testFramework.addTestDir("temp/t091_02", create=True)
-    ...     testFramework.teardown()
 
     """
 
@@ -156,13 +155,24 @@ class flopyTest(object):
         create=False,
         testDirs=None,
         verbose=False,
+        retain=None,
     ):
-        self.clean = clean
-        self.verbose = verbose
-        self.createDirs = create
-        self.testDirs = []
+        if retain is None:
+            retain = keep
+        self._clean = clean
+        self._verbose = verbose
+        self._createDirs = create
+        self._retain = retain
+        self._testDirs = []
         if testDirs is not None:
             self.addTestDir(testDirs, clean=clean, create=create)
+
+    def __del__(self):
+        if not self._retain:
+            for testDir in self._testDirs:
+                _cleanDir(testDir, verbose=self._verbose)
+        else:
+            print("Retaining test files")
 
     def addTestDir(self, testDirs, clean=False, create=False):
         """
@@ -186,23 +196,12 @@ class flopyTest(object):
                 "list of strings, or tuple of strings."
             )
         for testDir in testDirs:
-            if testDir not in self.testDirs:
-                self.testDirs.append(testDir)
-                if self.verbose:
+            if testDir not in self._testDirs:
+                self._testDirs.append(testDir)
+                if self._verbose:
                     print(f"adding test directory...{testDir}")
                 if create:
-                    createTestDir(testDir, clean=clean, verbose=self.verbose)
-
-    def teardown(self):
-        """
-        Teardown the test directories in testDirs object.
-
-        """
-        if not keep:
-            for testDir in self.testDirs:
-                _cleanDir(testDir, verbose=self.verbose)
-        else:
-            print("Retaining test files")
+                    createTestDir(testDir, clean=clean, verbose=self._verbose)
 
 
 def _get_mf6path():

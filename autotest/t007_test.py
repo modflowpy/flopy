@@ -50,8 +50,6 @@ def export_mf6_netcdf(ws, path):
     for name, model in sim.get_model_itr():
         export_netcdf(ws, model)
 
-    testFramework.teardown()
-
 
 def export_mf2005_netcdf(ws, namfile):
     print(f"in export_mf2005_netcdf: {namfile}")
@@ -100,8 +98,6 @@ def export_netcdf(ws, m):
         raise Exception(msg)
 
     nc.close()
-
-    testFramework.teardown()
 
     return
 
@@ -185,8 +181,6 @@ def export_shapefile_modelgrid_override(namfile):
         msg = f"shapefile import fail for {fnc_name}:{e!s}"
         raise Exception(msg)
 
-    testFramework.teardown()
-
 
 def test_output_helper_shapefile_export():
     if import_shapefile() is None:
@@ -211,8 +205,6 @@ def test_output_helper_shapefile_export():
         mflay=1,
         kper=10,
     )
-
-    testFramework.teardown()
 
 
 def test_freyberg_export():
@@ -306,8 +298,6 @@ def test_freyberg_export():
         assert prjtxt == wkt
         remove_shp(outshp)
 
-        testFramework.teardown()
-
 
 def test_export_output():
 
@@ -338,8 +328,6 @@ def test_export_output():
 
     # close the netcdf file
     nc.nc.close()
-
-    testFramework.teardown()
 
 
 def test_write_shapefile():
@@ -392,8 +380,6 @@ def test_write_shapefile():
     except:
         pass
 
-    testFramework.teardown()
-
 
 def test_shapefile_polygon_closed():
     shapefile = import_shapefile()
@@ -429,8 +415,6 @@ def test_shapefile_polygon_closed():
             raise AssertionError("Shapefile polygon is not closed!")
 
     shp.close()
-
-    testFramework.teardown()
 
 
 def test_export_array():
@@ -513,8 +497,6 @@ def test_export_array():
             # assert np.abs(src.bounds[0] - m.modelgrid.extent[0]) < 1e-6
             # assert np.abs(src.bounds[1] - m.modelgrid.extent[1]) < 1e-6
 
-    testFramework.teardown()
-
 
 def test_mbase_modelgrid():
 
@@ -543,8 +525,6 @@ def test_mbase_modelgrid():
     assert str(ml1.modelgrid) == str(ml.modelgrid)
     assert ml1.start_datetime == ml.start_datetime
     assert ml1.modelgrid.proj4 is None
-
-    testFramework.teardown()
 
 
 def test_mt_modelgrid():
@@ -644,8 +624,6 @@ def test_mt_modelgrid():
     assert np.array_equal(mt.modelgrid.idomain, ml.modelgrid.idomain)
     assert np.array_equal(swt.modelgrid.idomain, ml.modelgrid.idomain)
 
-    testFramework.teardown()
-
 
 def test_free_format_flag():
 
@@ -694,8 +672,6 @@ def test_free_format_flag():
     bas.ifrefm = True
     assert ms1.free_format_input == ms1.bas6.ifrefm
 
-    testFramework.teardown()
-
 
 def test_sr():
     ws = f"{baseDir}_test_sr"
@@ -723,8 +699,6 @@ def test_sr():
 
     if not np.allclose(mm.dis.top.array, mm.modelgrid.top):
         raise AssertionError("modelgrid failed dynamic update test")
-
-    testFramework.teardown()
 
 
 def test_dis_sr():
@@ -900,8 +874,6 @@ def test_mg():
     assert ms1.start_datetime == ms.start_datetime
     assert ms1.modelgrid.lenuni == ms.modelgrid.lenuni
 
-    testFramework.teardown()
-
 
 def test_epsgs():
     import flopy.export.shapefile_utils as shp
@@ -1018,8 +990,6 @@ def test_namfile_readwrite():
     assert ml.modelgrid.yoffset == ml.modelgrid._yul_to_yll(3353277)
     assert ml.modelgrid.angrot == 15.0
 
-    testFramework.teardown()
-
 
 def test_read_usgs_model_reference():
     model_ws = f"{baseDir}_usgs_model_reference"
@@ -1094,8 +1064,6 @@ def test_read_usgs_model_reference():
         if os.path.exists(f):
             os.remove(os.path.join(f))
     assert True
-
-    testFramework.teardown()
 
 
 def test_rotation():
@@ -1568,8 +1536,6 @@ def test_netcdf_classmethods():
     f.nc.close()
     new_f.nc.close()
 
-    testFramework.teardown()
-
 
 def test_wkt_parse():
     """Test parsing of Coordinate Reference System parameters
@@ -1635,8 +1601,6 @@ def test_shapefile_ibound():
     assert type(shp.record(0)[ib_idx]) == int, txt
     shp.close()
 
-    testFramework.teardown()
-
 
 @pytest.mark.parametrize(
     "namfile",
@@ -1647,7 +1611,7 @@ def test_shapefile(namfile):
     ws = f"{baseDir}_{name}_shapefile"
     testFramework = flopyTest(create=True, testDirs=ws)
     export_shapefile(ws, namfile)
-    testFramework.teardown()
+
     return
 
 
@@ -1727,8 +1691,6 @@ def test_export_array2():
     export_array(modelgrid, filename, a, epsg=epsg)
     assert os.path.isfile(filename), "did not create array shapefile"
 
-    testFramework.teardown()
-
 
 def test_export_array_contours():
     if import_shapefile() is None:
@@ -1770,8 +1732,6 @@ def test_export_array_contours():
     export_array_contours(modelgrid, filename, a, epsg=epsg)
     assert os.path.isfile(filename), "did not create contour shapefile"
 
-    testFramework.teardown()
-
 
 def test_export_contourf():
     try:
@@ -1792,8 +1752,6 @@ def test_export_contourf():
     export_contourf(filename, cs)
     assert os.path.isfile(filename), "did not create contourf shapefile"
     plt.close()
-
-    testFramework.teardown()
 
 
 def main():

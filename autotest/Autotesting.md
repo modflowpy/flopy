@@ -82,19 +82,9 @@ def test_mytest():
     
     assert something_else is True, "oops"
     
-    # teardown if the test(s) were successful
-    #   teardown deletes all of the directories that were
-    #   added to testFramework 
-    testFramework.teardown(0)
-    
     return
 
 ```
-
-When the autotests were converted from nosetest scripts to pytest scripts we
-encountered some issues with running out of hard drive space on GitHub Actions
-virtual machines. Therefore it is important to clean up after a successful 
-test using the `teardown()` method in the `flopyTest` class.
 
 Pull requests with new autotests will not be accepted if tests do not follow
 the example provided above.

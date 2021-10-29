@@ -122,8 +122,8 @@ def test_mfusg():
                     "Error head from 'get_ts' != head from 'get_data'"
                 )
 
-    # teardown test
-    testFramework.teardown()
+    #
+    #
 
     return
 

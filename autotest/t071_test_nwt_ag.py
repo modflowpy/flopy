@@ -50,9 +50,6 @@ def test_load_write_agwater():
     if repr(ag1) != repr(ag2):
         raise AssertionError("Ag package comparison failed")
 
-    # teardown test
-    testFramework.teardown()
-
 
 def test_load_write_agwater_uzf():
     model_ws = f"{baseDir}_test_load_write_agwater_uzf"
@@ -91,9 +88,6 @@ def test_load_write_agwater_uzf():
 
     if not np.allclose(uzf1.rootact.array, uzf2.rootact.array):
         raise AssertionError("root activity array comparison failed")
-
-    # teardown tests
-    testFramework.teardown()
 
 
 if __name__ == "__main__":

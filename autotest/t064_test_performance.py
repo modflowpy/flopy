@@ -131,5 +131,5 @@ class TestModflowPerformance:
 
     @classmethod
     def teardown_class(cls):
-        # teardown test
+
         shutil.rmtree(cls.model_ws)

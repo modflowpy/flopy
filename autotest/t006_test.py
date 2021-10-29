@@ -110,8 +110,6 @@ def test_mflist_reference():
         shp = shapefile.Reader(test)
         assert shp.numRecords == nrow * ncol
 
-    testFramework.teardown()
-
 
 def test_cbc_ts():
     fpth = os.path.join(

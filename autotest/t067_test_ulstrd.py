@@ -140,9 +140,6 @@ def test_ulstrd():
     originalwelra = m.wel.stress_period_data[0].copy()
     assert np.array_equal(originalwelra, m2.wel.stress_period_data[0])
 
-    # teardown test
-    testFramework.teardown()
-
     return
 
 

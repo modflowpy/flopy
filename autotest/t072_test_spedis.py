@@ -373,9 +373,6 @@ def test_extended_budget_default():
     specific_discharge_default()
     specific_discharge_comprehensive()
 
-    # teardown test
-    testFramework.teardown()
-
     return
 
 
@@ -579,9 +576,6 @@ def test_specific_discharge_mf6():
 
     # close figure
     plt.close()
-
-    # teardown test
-    testFramework.teardown()
 
     return
 

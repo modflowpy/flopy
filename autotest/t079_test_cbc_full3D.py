@@ -148,9 +148,6 @@ def mf6_eval(name, ws_in):
     # evaluate the full3D option
     cbc_eval(cbc, nnodes, shape3d, gwf.modelgrid)
 
-    # teardown test
-    testFramework.teardown()
-
     return
 
 
@@ -175,9 +172,6 @@ def mf2005_eval(name, ws_in):
 
     # evaluate the full3D option
     cbc_eval(cbc, nnodes, shape3d, ml.modelgrid)
-
-    # teardown test
-    testFramework.teardown()
 
     return
 

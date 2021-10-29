@@ -1743,7 +1743,7 @@ class UnstructuredPlotUtilities:
             numb = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)
             denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
             ua = np.zeros(denom.shape, dtype=denom.dtype)
-            idx = np.where(denom != 0.)
+            idx = np.where(denom != 0.0)
             ua[idx] = numa[idx] / denom[idx]
             # ub = numb / denom
             del numa

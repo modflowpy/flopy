@@ -130,9 +130,6 @@ def test_plotting_with_quasi3d_layers():
         plt.savefig(os.path.join(model_ws, "plt02.png"))
         plt.close()
 
-        # teardown test
-        testFramework.teardown()
-
 
 if __name__ == "__main__":
     test_plotting_with_quasi3d_layers()

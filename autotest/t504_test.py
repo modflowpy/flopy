@@ -162,8 +162,6 @@ def test001a_tharmonic():
         ]
         assert array_util.array_comp(budget_frf_valid, budget_frf)
 
-    testFramework.teardown()
-
     return
 
 
@@ -265,8 +263,6 @@ def test003_gwfs_disv():
         ]
         assert array_util.array_comp(budget_fjf_valid, budget_frf)
 
-    testFramework.teardown()
-
     return
 
 
@@ -337,8 +333,6 @@ def test005_advgw_tidal():
             files2=head_new,
             outfile=outfile,
         )
-
-    testFramework.teardown()
 
 
 def test006_gwf3():
@@ -535,8 +529,6 @@ def test006_gwf3():
         # clean up
         sim.delete_output_files()
 
-    testFramework.teardown()
-
     return
 
 
@@ -618,7 +610,7 @@ def test006_gwf3():
 #         )
 #         assert success
 #
-#     testFramework.teardown()
+#
 #
 #     return
 
@@ -812,8 +804,6 @@ def test006_2models_mvr():
         success, buff = sim.run_simulation()
         assert success, f"simulation {sim.name} did not run"
 
-    testFramework.teardown()
-
     return
 
 
@@ -889,8 +879,6 @@ def test001e_uzf_3lay():
         eval_cbc_precision()
         eval_replace_ims_package()
 
-    testFramework.teardown()
-
 
 def test045_lake2tr():
     # init paths
@@ -962,8 +950,6 @@ def test045_lake2tr():
             files2=head_new,
             htol=10.0,
         )
-
-    testFramework.teardown()
 
 
 def test036_twrihfb():
@@ -1050,8 +1036,6 @@ def test036_twrihfb():
             files2=head_new,
         )
 
-    testFramework.teardown()
-
 
 def test027_timeseriestest():
     # init paths
@@ -1131,8 +1115,6 @@ def test027_timeseriestest():
             files2=head_new,
             htol=10.0,
         )
-
-    testFramework.teardown()
 
 
 def eval_cbc_precision():
@@ -1239,8 +1221,6 @@ def test_mf6_output():
     if ml.dis.output.methods() is not None:
         raise AssertionError()
 
-    testFramework.teardown()
-
 
 def test_mf6_output_add_observation():
     model_name = "lakeex2a"
@@ -1279,8 +1259,6 @@ def test_mf6_output_add_observation():
 
     if not isinstance(sfr_obs, flopy.utils.Mf6Obs):
         raise TypeError("remove and add observation test (Mf6Output) failed")
-
-    testFramework.teardown()
 
 
 if __name__ == "__main__":

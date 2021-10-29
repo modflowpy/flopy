@@ -53,8 +53,6 @@ def test_vtk_export_array2d():
     nlines1 = count_lines_in_file(filetocheck)
     assert nlines1 == 17615
 
-    testFramework.teardown()
-
 
 def test_vtk_export_array3d():
     try:
@@ -105,8 +103,6 @@ def test_vtk_export_array3d():
     filetocheck = os.path.join(ws, "hk_points_bin.vtk")
     assert os.path.exists(filetocheck)
 
-    testFramework.teardown()
-
 
 def test_vtk_transient_array_2d():
     try:
@@ -150,8 +146,6 @@ def test_vtk_transient_array_2d():
     assert os.path.exists(filetocheck)
     filetocheck = os.path.join(ws, "rech_001096.vtk")
     assert os.path.exists(filetocheck)
-
-    testFramework.teardown()
 
 
 def test_vtk_export_packages():
@@ -227,8 +221,6 @@ def test_vtk_export_packages():
     filetocheck = os.path.join(ws, "UPW.vtk")
     assert os.path.exists(filetocheck)
 
-    testFramework.teardown()
-
 
 def test_vtk_mf6():
     try:
@@ -268,8 +260,6 @@ def test_vtk_mf6():
     # assert(totalbytes==21609)
     nlines = count_lines_in_file(filetocheck)
     assert nlines == 9537
-
-    testFramework.teardown()
 
 
 def test_vtk_binary_head_export():
@@ -335,8 +325,6 @@ def test_vtk_binary_head_export():
     nlines2 = count_lines_in_file(filetocheck)
     assert nlines2 == 34
 
-    testFramework.teardown()
-
 
 def test_vtk_cbc():
     try:
@@ -381,8 +369,6 @@ def test_vtk_cbc():
     vtkobj.write(os.path.join(ws, "freyberg_CBC"))
     filetocheck = os.path.join(ws, filenametocheck)
     assert os.path.exists(filetocheck)
-
-    testFramework.teardown()
 
 
 def test_vtk_vector():
@@ -466,8 +452,6 @@ def test_vtk_vector():
     assert os.path.exists(
         filetocheck
     ), f"file (1) does not exist: {filetocheck}"
-
-    testFramework.teardown()
 
 
 def test_vtk_unstructured():
@@ -566,8 +550,6 @@ def test_vtk_unstructured():
     if not np.allclose(np.ravel(top), top2):
         raise AssertionError("Field data not properly written")
 
-    testFramework.teardown()
-
 
 def test_vtk_vertex():
     try:
@@ -611,8 +593,6 @@ def test_vtk_vertex():
 
     if not np.allclose(np.ravel(hk), hk2, equal_nan=True):
         raise AssertionError("Field data not properly written")
-
-    testFramework.teardown()
 
 
 def test_vtk_pathline():
@@ -695,8 +675,6 @@ def test_vtk_pathline():
         raise AssertionError(
             "number of particles are incorrect for modpath VTK"
         )
-
-    testFramework.teardown()
 
 
 if __name__ == "__main__":

@@ -152,8 +152,6 @@ def test_mf6_grid_shp_export():
                 assert np.abs(it - it6) < 1e-6
         pass
 
-    testFramework.teardown()
-
 
 def test_huge_shapefile():
     model_ws = f"{baseDir}_test_huge_shapefile"
@@ -185,8 +183,6 @@ def test_huge_shapefile():
     )
     if shapefile:
         m.export(f"{model_ws}/huge.shp")
-
-    testFramework.teardown()
 
 
 if __name__ == "__main__":

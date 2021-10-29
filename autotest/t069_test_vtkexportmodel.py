@@ -34,8 +34,6 @@ def test_vtk_export_model_without_packages_names():
     # If the function executes without error then test was successful
     assert True
 
-    testFramework.teardown()
-
 
 if __name__ == "__main__":
     test_vtk_export_model_without_packages_names()

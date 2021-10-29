@@ -351,8 +351,6 @@ def test_multi_model():
     sim.write_simulation()
     sim.run_simulation()
 
-    testFramework.teardown()
-
 
 def test_np001():
     # init paths
@@ -912,8 +910,6 @@ def test_np001():
                         text_between_begin_and_end = True
     assert found_begin and found_end and not text_between_begin_and_end
 
-    testFramework.teardown()
-
     return
 
 
@@ -1181,8 +1177,6 @@ def test_np002():
         os.path.join(ext_full_path, "np002_mod.dis_botm.txt")
     )
 
-    testFramework.teardown()
-
     return
 
 
@@ -1399,8 +1393,6 @@ def test021_twri():
 
     # clean up
     sim.delete_output_files()
-
-    testFramework.teardown()
 
     return
 
@@ -2021,8 +2013,6 @@ def test005_advgw_tidal():
     summary = ".".join(chk[0].summary_array.desc)
     assert summary == ""
 
-    testFramework.teardown()
-
     return
 
 
@@ -2179,7 +2169,6 @@ def test004_bcfss():
         # clean up
         sim.delete_output_files()
 
-    testFramework.teardown()
     return
 
 
@@ -2327,8 +2316,6 @@ def test035_fhb():
 
         # clean up
         sim.delete_output_files()
-
-    testFramework.teardown()
 
     return
 
@@ -2619,8 +2606,6 @@ def test006_gwf3_disv():
 
         # clean up
         sim.delete_output_files()
-
-    testFramework.teardown()
 
     return
 
@@ -2973,8 +2958,6 @@ def test006_2models_gnc():
         sim.run_simulation()
         sim.delete_output_files()
 
-    testFramework.teardown()
-
     return
 
 
@@ -3079,8 +3062,6 @@ def test050_circle_island():
 
         # clean up
         sim.delete_output_files()
-
-    testFramework.teardown()
 
     return
 
@@ -3353,8 +3334,6 @@ def test028_sfr():
         # clean up
         sim.delete_output_files()
 
-    testFramework.teardown()
-
     return
 
 
@@ -3598,8 +3577,6 @@ def test_transport():
 
         # clean up
         sim.delete_output_files()
-
-    testFramework.teardown()
 
 
 if __name__ == "__main__":

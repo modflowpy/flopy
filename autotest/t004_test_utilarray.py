@@ -199,8 +199,6 @@ def test_load_bin():
     np.testing.assert_equal(a.astype(np.float64), fa)
     assert fa.dtype == np.float64
 
-    testFramework.teardown()
-
 
 def test_transient2d():
     ml = flopy.modflow.Modflow()
@@ -334,8 +332,6 @@ def test_util2d():
     a7 = u2d.load_txt((10, 10), fname, u2d.dtype, "(FREE)")
     assert np.array_equal(u2d.array, a7)
 
-    testFramework.teardown()
-
 
 def stress_util2d(model_ws, ml, nlay, nrow, ncol):
     dis = flopy.modflow.ModflowDis(ml, nlay=nlay, nrow=nrow, ncol=ncol)
@@ -461,8 +457,6 @@ def test_util2d_external_free():
     stress_util2d(model_ws, ml, 10, 1, 10)
     stress_util2d(model_ws, ml, 10, 10, 10)
 
-    testFramework.teardown()
-
 
 def test_util2d_external_free_path():
     model_ws = f"{baseDir}_test_util2d_external_free_path"
@@ -479,8 +473,6 @@ def test_util2d_external_free_path():
     stress_util2d(model_ws, ml, 1, 10, 10)
     stress_util2d(model_ws, ml, 10, 1, 10)
     stress_util2d(model_ws, ml, 10, 10, 10)
-
-    testFramework.teardown()
 
 
 def test_util2d_external_free_path_a():
@@ -499,8 +491,6 @@ def test_util2d_external_free_path_a():
     stress_util2d_for_joe_the_file_king(ml, 10, 1, 10)
     stress_util2d_for_joe_the_file_king(ml, 10, 10, 10)
 
-    testFramework.teardown()
-
 
 def test_util2d_external_fixed():
     model_ws = f"{baseDir}_test_util2d_external_fixed"
@@ -517,8 +507,6 @@ def test_util2d_external_fixed():
     stress_util2d(model_ws, ml, 1, 10, 10)
     stress_util2d(model_ws, ml, 10, 1, 10)
     stress_util2d(model_ws, ml, 10, 10, 10)
-
-    testFramework.teardown()
 
 
 def test_util2d_external_fixed_path():
@@ -537,8 +525,6 @@ def test_util2d_external_fixed_path():
     stress_util2d(model_ws, ml, 1, 10, 10)
     stress_util2d(model_ws, ml, 10, 1, 10)
     stress_util2d(model_ws, ml, 10, 10, 10)
-
-    testFramework.teardown()
 
 
 def test_util3d():
@@ -560,8 +546,6 @@ def test_util3d():
     assert np.array_equal(mult_array, np.zeros((10, 10, 10)) + 20.0)
     u3d.cnstnt = 2.0
     assert not np.array_equal(a1, u3d.array)
-
-    testFramework.teardown()
 
     return
 
@@ -623,8 +607,6 @@ def test_arrayformat():
     print(fmt_fort, parsed["fmtin"])
     assert fmt_fort.upper() == parsed["fmtin"].upper()
 
-    testFramework.teardown()
-
 
 def test_new_get_file_entry():
     model_ws = f"{baseDir}_test_new_get_file_entry"
@@ -650,8 +632,6 @@ def test_new_get_file_entry():
     u2d.format.binary = True
     print(u2d.get_file_entry(how="external"))
 
-    testFramework.teardown()
-
 
 def test_append_mflist():
     ws = f"{baseDir}_test_append_mflist"
@@ -670,8 +650,6 @@ def test_append_mflist():
         ),
     )
     ml.write_input()
-
-    testFramework.teardown()
 
 
 def test_mflist():
@@ -822,8 +800,6 @@ def test_mflist():
     assert df.groupby("per")["stage"].mean().loc[0] == 2.0
     assert df.groupby(["k", "i", "j"])["rbot"].count()[(1, 2, 4)] == 10
 
-    testFramework.teardown()
-
 
 def test_how():
     import numpy as np
@@ -843,8 +819,6 @@ def test_how():
     print(u2d.get_file_entry())
     u2d.fmtin = "(binary)"
     print(u2d.get_file_entry())
-
-    testFramework.teardown()
 
 
 def test_util3d_reset():
@@ -896,8 +870,6 @@ def test_mflist_fromfile():
     flx_array = wel.stress_period_data.array["flux"][0]
     for k, i, j, flx in zip(wel_data.k, wel_data.i, wel_data.j, wel_data.flux):
         assert flx_array[k, i, j] == flx
-
-    testFramework.teardown()
 
 
 if __name__ == "__main__":

@@ -179,8 +179,6 @@ def test_mf6disv():
         # test plotting
         disv_dot_plot(gridgen_ws)
 
-    testFramework.teardown()
-
     return
 
 
@@ -334,8 +332,6 @@ def test_mf6disu():
 
             # test plotting
             disu_dot_plot(gridgen_ws)
-
-    testFramework.teardown()
 
     return
 
@@ -496,8 +492,6 @@ def test_mfusg():
         m.export(os.path.join(gridgen_ws, f"{name}.shp"))
     except:
         raise AssertionError("Error exporting mfusg model to shapefile.")
-
-    testFramework.teardown()
 
     return
 

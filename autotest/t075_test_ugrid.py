@@ -240,9 +240,6 @@ def test_triangle_unstructured_grid():
     assert len(g.grid_lines) == 8190
     assert g.nnodes == g.ncpl == 2730
 
-    # teardown test
-    testFramework.teardown()
-
     return
 
 
@@ -273,9 +270,6 @@ def test_voronoi_vertex_grid():
     assert gridprops["nvert"] == 127
     assert len(gridprops["vertices"]) == 127
     assert len(gridprops["cell2d"]) == 43
-
-    # teardown test
-    testFramework.teardown()
 
     return
 
@@ -330,9 +324,6 @@ def test_voronoi_grid0(plot=False):
         voronoi_grid.plot(ax=ax)
         plt.savefig(os.path.join(model_ws, f"{name}.png"))
 
-    # teardown test
-    testFramework.teardown()
-
     return
 
 
@@ -369,9 +360,6 @@ def test_voronoi_grid1(plot=False):
         voronoi_grid.plot(ax=ax)
         plt.savefig(os.path.join(model_ws, f"{name}.png"))
 
-    # teardown test
-    testFramework.teardown()
-
     return
 
 
@@ -406,9 +394,6 @@ def test_voronoi_grid2(plot=False):
         ax.set_aspect("equal")
         voronoi_grid.plot(ax=ax)
         plt.savefig(os.path.join(model_ws, f"{name}.png"))
-
-    # teardown test
-    testFramework.teardown()
 
     return
 
@@ -455,9 +440,6 @@ def test_voronoi_grid3(plot=False):
         voronoi_grid.plot(ax=ax)
         plt.savefig(os.path.join(model_ws, f"{name}.png"))
 
-    # teardown test
-    testFramework.teardown()
-
     return
 
 
@@ -495,9 +477,6 @@ def test_voronoi_grid4(plot=False):
         ax.set_aspect("equal")
         voronoi_grid.plot(ax=ax)
         plt.savefig(os.path.join(model_ws, f"{name}.png"))
-
-    # teardown test
-    testFramework.teardown()
 
     return
 
@@ -564,9 +543,6 @@ def test_voronoi_grid5(plot=False):
         ax.set_aspect("equal")
         voronoi_grid.plot(ax=ax)
         plt.savefig(os.path.join(model_ws, f"{name}.png"))
-
-    # teardown test
-    testFramework.teardown()
 
     return
 

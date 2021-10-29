@@ -145,9 +145,6 @@ def test_mt3d_ssm_with_nodata_in_1st_sp():
 
         assert np.allclose(conca, concb)
 
-    # teardown test
-    testFramework.teardown()
-
     return
 
 
@@ -172,9 +169,6 @@ def test_none_spdtype():
     if run:
         success, buff = mf.run_model(report=True)
         assert success
-
-    # teardown test
-    testFramework.teardown()
 
 
 def test_ssm_readwrite():
@@ -208,9 +202,6 @@ def test_ssm_readwrite():
 
     # Ensure file is writeable
     ssm.write_file()
-
-    # teardown test
-    testFramework.teardown()
 
 
 if __name__ == "__main__":

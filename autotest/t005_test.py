@@ -54,8 +54,6 @@ def test_modflow_unstructured():
     )
     assert ghb2.stress_period_data[0] == ghb.stress_period_data[0]
 
-    testFramework.teardown()
-
     return
 
 

@@ -130,8 +130,6 @@ def test_mf6():
         fname = os.path.join(baseDir, f"sim.{ext}")
         assert os.path.isfile(fname), f"{fname} not found"
 
-    testFramework.teardown()
-
     return
 
 

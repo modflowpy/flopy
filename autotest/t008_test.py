@@ -144,8 +144,6 @@ def load_nwt_pack(nwtfile):
         )
         assert nwt2[l] == nwt[l], msg
 
-    testFramework.teardown()
-
 
 def load_nwt_model(nfile):
     new_ws = (
@@ -183,8 +181,6 @@ def load_nwt_model(nfile):
                 "written to {}".format(pn, l, model_ws, new_ws)
             )
             assert p[l] == p2[l], msg
-
-    testFramework.teardown()
 
 
 if __name__ == "__main__":

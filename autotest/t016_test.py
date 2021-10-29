@@ -54,8 +54,6 @@ def test_usg_disu_load():
         elif not isinstance(value1, flopy.utils.reference.TemporalReference):
             assert value1 == value2
 
-    testFramework.teardown()
-
     return
 
 
@@ -93,8 +91,6 @@ def test_usg_sms_load():
         assert (
             value1 == value2
         ), f"key1 {key1}, value 1 {value1} != key2 {key2} value 2 {value2}"
-
-    testFramework.teardown()
 
     return
 
@@ -141,8 +137,6 @@ def test_usg_model():
             success, buff = mf.run_model()
             assert success, f"{mf.name} did not run"
 
-    testFramework.teardown()
-
     return
 
 
@@ -152,17 +146,24 @@ def test_usg_load_01B():
         "loading: 01A_nestedgrid_nognc.nam"
     )
 
+    model_ws = f"{baseDir}_test_usg_load_01B"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
     pthusgtest = os.path.join(
         "..", "examples", "data", "mfusg_test", "01A_nestedgrid_nognc"
     )
-    fname = os.path.join(pthusgtest, "flow.nam")
+    fname = os.path.abspath(os.path.join(pthusgtest, "flow.nam"))
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
-    m = flopy.mfusg.MfUsg(modelname="usgload_1b", verbose=True)
+    m = flopy.mfusg.MfUsg(
+        modelname="usgload_1b",
+        verbose=True,
+        model_ws=model_ws,
+    )
 
     # Load the model, with checking
-    m = m.load(fname, check=True)
+    m = m.load(fname, check=True, model_ws=model_ws)
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
@@ -180,15 +181,18 @@ def test_usg_load_01B():
 def test_usg_load_45usg():
     print("testing 3-layer unstructured mfusg model loading: 45usg.nam")
 
+    model_ws = f"{baseDir}_test_usg_load_45usg"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
     pthusgtest = os.path.join("..", "examples", "data", "mfusg_test", "45usg")
-    fname = os.path.join(pthusgtest, "45usg.nam")
+    fname = os.path.abspath(os.path.join(pthusgtest, "45usg.nam"))
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
-    m = flopy.mfusg.MfUsg(modelname="45usg", verbose=True)
+    m = flopy.mfusg.MfUsg(modelname="45usg", verbose=True, model_ws=model_ws)
 
     # Load the model, with checking.
-    m = m.load(fname, check=True)
+    m = m.load(fname, check=True, model_ws=model_ws)
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
@@ -230,8 +234,6 @@ def test_usg_rch_evt_models01():
         success, buff = m.run_model()
         assert success
 
-    testFramework.teardown()
-
     return
 
 
@@ -256,8 +258,6 @@ def test_usg_rch_evt_models02():
     if run:
         success, buff = m.run_model()
         assert success
-
-    testFramework.teardown()
 
     return
 
@@ -284,8 +284,6 @@ def test_usg_rch_evt_models02a():
     if run:
         success, buff = m.run_model()
         assert success
-
-    testFramework.teardown()
 
     return
 
@@ -314,8 +312,6 @@ def test_usg_ss_to_tr():
     if run:
         success, buff = m.run_model()
         assert success
-
-    testFramework.teardown()
 
     return
 
