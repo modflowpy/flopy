@@ -2,6 +2,10 @@ import pytest
 import flopy
 import os
 
+from ci_framework import baseTestDir, flopyTest
+
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+
 
 def test_loadfreyberg():
     cwd = os.getcwd()
@@ -19,13 +23,11 @@ def test_loadfreyberg():
 
 
 def test_loadoahu():
-    cwd = os.getcwd()
     pth = os.path.join("..", "examples", "data", "parameters")
-    assert os.path.isdir(pth)
-    os.chdir(pth)
+    assert os.path.isdir(pth), f"'{pth}' does not exist"
+
     namefile = "Oahu_01.nam"
-    ml = flopy.modflow.Modflow.load(namefile, verbose=True)
-    os.chdir(cwd)
+    ml = flopy.modflow.Modflow.load(namefile, verbose=True, model_ws=pth)
     assert isinstance(ml, flopy.modflow.Modflow)
     assert ml.load_fail is False
 
@@ -33,27 +35,25 @@ def test_loadoahu():
 
 
 def test_loadtwrip():
-    cwd = os.getcwd()
     pth = os.path.join("..", "examples", "data", "parameters")
-    assert os.path.isdir(pth)
-    os.chdir(pth)
+    assert os.path.isdir(pth), f"'{pth}' does not exist"
+
     namefile = "twrip.nam"
-    ml = flopy.modflow.Modflow.load(namefile, verbose=True)
-    os.chdir(cwd)
+    ml = flopy.modflow.Modflow.load(namefile, verbose=True, model_ws=pth)
+
     assert isinstance(ml, flopy.modflow.Modflow)
-    assert ml.load_fail is False
+    assert not ml.load_fail
 
     return
 
 
 def test_loadtwrip_upw():
-    cwd = os.getcwd()
     pth = os.path.join("..", "examples", "data", "parameters")
-    assert os.path.isdir(pth)
-    os.chdir(pth)
+    assert os.path.isdir(pth), f"'{pth}' does not exist"
+
     namefile = "twrip_upw.nam"
-    ml = flopy.modflow.Modflow.load(namefile, verbose=True)
-    os.chdir(cwd)
+    ml = flopy.modflow.Modflow.load(namefile, verbose=True, model_ws=pth)
+
     assert isinstance(ml, flopy.modflow.Modflow)
     assert ml.load_fail is False
 
@@ -61,10 +61,11 @@ def test_loadtwrip_upw():
 
 
 def test_loadoc():
-    ws = os.path.join("temp", "t003")
-    ml = flopy.modflow.Modflow(model_ws=ws)
+    ml = flopy.modflow.Modflow()
+
     fpth = os.path.join("..", "examples", "data", "mf2005_test", "fhb.dis")
     dis = flopy.modflow.ModflowDis.load(fpth, ml, check=False)
+
     fpth = os.path.join("..", "examples", "data", "mf2005_test", "fhb.oc")
     oc = flopy.modflow.ModflowOc.load(fpth, ml, ext_unit_dict=None)
 
@@ -72,8 +73,8 @@ def test_loadoc():
 
 
 def test_loadoc_lenfail():
-    ws = os.path.join("temp", "t003")
-    ml = flopy.modflow.Modflow(model_ws=ws)
+    ml = flopy.modflow.Modflow()
+
     fpth = os.path.join("..", "examples", "data", "mf2005_test", "fhb.oc")
     with pytest.raises(OSError):
         oc = flopy.modflow.ModflowOc.load(fpth, ml, nper=3, nstp=1, nlay=1)
@@ -82,8 +83,8 @@ def test_loadoc_lenfail():
 
 
 def test_loadoc_nperfail():
-    ws = os.path.join("temp", "t003")
-    ml = flopy.modflow.Modflow(model_ws=ws)
+    ml = flopy.modflow.Modflow()
+
     fpth = os.path.join("..", "examples", "data", "mf2005_test", "fhb.oc")
     with pytest.raises(ValueError):
         oc = flopy.modflow.ModflowOc.load(fpth, ml, nper=0, nlay=1)
@@ -92,8 +93,8 @@ def test_loadoc_nperfail():
 
 
 def test_loadoc_nlayfail():
-    ws = os.path.join("temp", "t003")
-    ml = flopy.modflow.Modflow(model_ws=ws)
+    ml = flopy.modflow.Modflow()
+
     fpth = os.path.join("..", "examples", "data", "mf2005_test", "fhb.oc")
     with pytest.raises(ValueError):
         oc = flopy.modflow.ModflowOc.load(fpth, ml, nper=3, nlay=0)
@@ -102,8 +103,8 @@ def test_loadoc_nlayfail():
 
 
 def test_loadoc_nstpfail():
-    ws = os.path.join("temp", "t003")
-    ml = flopy.modflow.Modflow(model_ws=ws)
+    ml = flopy.modflow.Modflow()
+
     fpth = os.path.join("..", "examples", "data", "mf2005_test", "fhb.oc")
     with pytest.raises(ValueError):
         oc = flopy.modflow.ModflowOc.load(fpth, ml, nper=3, nlay=1)

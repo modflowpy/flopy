@@ -1,4 +1,4 @@
-import os, math
+import math
 import numpy as np
 import flopy
 
@@ -35,7 +35,11 @@ def test_mf6_grid_shp_export():
     perioddata = [[perlen, nstp, tsmult]] * 2
     botm = np.zeros((2, 10, 10))
 
-    m = fm.Modflow("junk", version="mfnwt", model_ws=model_ws,)
+    m = fm.Modflow(
+        "junk",
+        version="mfnwt",
+        model_ws=model_ws,
+    )
     dis = fm.ModflowDis(
         m,
         nlay=nlay,
@@ -75,7 +79,10 @@ def test_mf6_grid_shp_export():
     # mf6 version of same model
     mf6name = "junk6"
     sim = fp6.MFSimulation(
-        sim_name=mf6name, version="mf6", exe_name="mf6", sim_ws=model_ws,
+        sim_name=mf6name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=model_ws,
     )
     tdis = flopy.mf6.modflow.mftdis.ModflowTdis(
         sim, pname="tdis", time_units="DAYS", nper=nper, perioddata=perioddata
@@ -147,6 +154,7 @@ def test_mf6_grid_shp_export():
 
     testFramework.teardown()
 
+
 def test_huge_shapefile():
     model_ws = f"{baseDir}_test_huge_shapefile"
     testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
@@ -179,6 +187,7 @@ def test_huge_shapefile():
         m.export(f"{model_ws}/huge.shp")
 
     testFramework.teardown()
+
 
 if __name__ == "__main__":
     test_mf6_grid_shp_export()
