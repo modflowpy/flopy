@@ -10,7 +10,7 @@ def test_modflow_unstructured():
     import flopy
     import numpy as np
 
-    fpTest = flopyTest(testDirs=cpth)
+    testFramework = flopyTest(testDirs=cpth)
 
     mf = flopy.mfusg.MfUsg(structured=False, model_ws=cpth)
     assert isinstance(mf, flopy.mfusg.MfUsg)
@@ -54,7 +54,7 @@ def test_modflow_unstructured():
     )
     assert ghb2.stress_period_data[0] == ghb.stress_period_data[0]
 
-    fpTest.teardown()
+    testFramework.teardown()
 
     return
 

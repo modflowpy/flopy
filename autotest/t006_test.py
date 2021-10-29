@@ -52,7 +52,7 @@ def test_formattedfile_reference():
 
 def test_mflist_reference():
 
-    fpTest = flopyTest(testDirs=cpth)
+    testFramework = flopyTest(testDirs=cpth)
 
     # make the model
     ml = flopy.modflow.Modflow()
@@ -110,7 +110,7 @@ def test_mflist_reference():
         shp = shapefile.Reader(test)
         assert shp.numRecords == nrow * ncol
 
-    fpTest.teardown()
+    testFramework.teardown()
 
 
 def test_cbc_ts():

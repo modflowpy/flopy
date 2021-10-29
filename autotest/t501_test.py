@@ -7,7 +7,7 @@ from ci_framework import baseTestDir, flopyTest
 
 def test_mf6():
     baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
-    fpTest = flopyTest(verbose=True, testDirs=baseDir)
+    testFramework = flopyTest(verbose=True, testDirs=baseDir)
 
     sim = flopy.mf6.MFSimulation(sim_ws=baseDir)
     assert isinstance(sim, flopy.mf6.MFSimulation)
@@ -130,7 +130,7 @@ def test_mf6():
         fname = os.path.join(baseDir, f"sim.{ext}")
         assert os.path.isfile(fname), f"{fname} not found"
 
-    fpTest.teardown()
+    testFramework.teardown()
 
     return
 

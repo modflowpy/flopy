@@ -15,7 +15,7 @@ mf_exe_name = "mf6"
 
 def test_vtk_export_model_without_packages_names():
     baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
-    fpTest = flopyTest(verbose=True, testDirs=baseDir)
+    testFramework = flopyTest(verbose=True, testDirs=baseDir)
 
     name = "mymodel"
     sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=baseDir, exe_name="mf6")
@@ -35,7 +35,7 @@ def test_vtk_export_model_without_packages_names():
     # If the function executes without error then test was successful
     assert True
 
-    fpTest.teardown()
+    testFramework.teardown()
 
 
 if __name__ == "__main__":

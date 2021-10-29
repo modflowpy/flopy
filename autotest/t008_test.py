@@ -109,7 +109,7 @@ def load_nwt_pack(nwtfile):
         + "_"
         + os.path.basename(nwtfile).replace(".nam", "_nwtpack")
     )
-    fpTest = flopyTest(testDirs=new_ws, verbose=True)
+    testFramework = flopyTest(testDirs=new_ws, verbose=True)
 
     ws = os.path.dirname(nwtfile)
     ml = flopy.modflow.Modflow(model_ws=ws, version="mfnwt")
@@ -144,7 +144,7 @@ def load_nwt_pack(nwtfile):
         )
         assert nwt2[l] == nwt[l], msg
 
-    fpTest.teardown()
+    testFramework.teardown()
 
 
 def load_nwt_model(nfile):
@@ -153,7 +153,7 @@ def load_nwt_model(nfile):
         + "_"
         + os.path.basename(nfile).replace(".nam", "")
     )
-    fpTest = flopyTest(testDirs=new_ws, verbose=True)
+    testFramework = flopyTest(testDirs=new_ws, verbose=True)
 
     f = os.path.basename(nfile)
     model_ws = os.path.dirname(nfile)
@@ -184,7 +184,7 @@ def load_nwt_model(nfile):
             )
             assert p[l] == p2[l], msg
 
-    fpTest.teardown()
+    testFramework.teardown()
 
 
 if __name__ == "__main__":
