@@ -11,6 +11,9 @@ import sys
 import numpy as np
 import flopy
 import matplotlib.pyplot as plt
+from ci_framework import baseTestDir, flopyTest
+
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 
 def test_plotting_with_quasi3d_layers():
@@ -21,9 +24,12 @@ def test_plotting_with_quasi3d_layers():
             runTest = False
 
     if runTest:
+        model_ws = f"{baseDir}_test_mfusg"
+        testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
         modelname = "model_mf"
-        model_ws = os.path.join(".", "temp", "t070")
         exe_name = "mf2005"
+
         mf = flopy.modflow.Modflow(
             modelname, model_ws=model_ws, exe_name=exe_name
         )
@@ -107,6 +113,7 @@ def test_plotting_with_quasi3d_layers():
         mv.plot_ibound()
         mv.plot_bc("wel")
         mv.plot_vector(frf, fff)
+        plt.savefig(os.path.join(model_ws, "plt01.png"))
         plt.close()
 
         # plot a cross-section
@@ -120,7 +127,11 @@ def test_plotting_with_quasi3d_layers():
         cs.plot_ibound()
         cs.plot_bc("wel")
         cs.plot_vector(frf, fff, flf, head=head)
+        plt.savefig(os.path.join(model_ws, "plt02.png"))
         plt.close()
+
+        # teardown test
+        testFramework.teardown()
 
 
 if __name__ == "__main__":

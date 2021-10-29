@@ -2,7 +2,6 @@
 Test vtk export_model function without packages_names definition
 """
 
-import os
 import flopy
 from flopy.export import vtk
 from ci_framework import (

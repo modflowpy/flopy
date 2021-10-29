@@ -8,10 +8,9 @@ import numpy as np
 from flopy.discretization import UnstructuredGrid, VertexGrid
 from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
+from ci_framework import baseTestDir, flopyTest
 
-tpth = os.path.join("temp", "t075")
-if not os.path.isdir(tpth):
-    os.makedirs(tpth, exist_ok=True)
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 
 def test_unstructured_grid_shell():
@@ -209,6 +208,9 @@ def test_create_unstructured_grid_from_verts():
 
 
 def test_triangle_unstructured_grid():
+    model_ws = f"{baseDir}_test_triangle_unstructured_grid"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+
     maximum_area = 30000.0
     extent = (214270.0, 221720.0, 4366610.0, 4373510.0)
     domainpoly = [
@@ -217,7 +219,11 @@ def test_triangle_unstructured_grid():
         (extent[1], extent[3]),
         (extent[0], extent[3]),
     ]
-    tri = Triangle(maximum_area=maximum_area, angle=30, model_ws=tpth)
+    tri = Triangle(
+        maximum_area=maximum_area,
+        angle=30,
+        model_ws=model_ws,
+    )
     tri.add_polygon(domainpoly)
     tri.build(verbose=False)
     verts = [[iv, x, y] for iv, (x, y) in enumerate(tri.verts)]
@@ -233,16 +239,23 @@ def test_triangle_unstructured_grid():
     )
     assert len(g.grid_lines) == 8190
     assert g.nnodes == g.ncpl == 2730
+
+    # teardown test
+    testFramework.teardown()
+
     return
 
 
 def test_voronoi_vertex_grid():
+    model_ws = f"{baseDir}_test_voronoi_vertex_grid"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+
     xmin = 0.0
     xmax = 2.0
     ymin = 0.0
     ymax = 1.0
     area_max = 0.05
-    tri = Triangle(maximum_area=area_max, angle=30, model_ws=tpth)
+    tri = Triangle(maximum_area=area_max, angle=30, model_ws=model_ws)
     poly = np.array(((xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)))
     tri.add_polygon(poly)
     tri.build(verbose=False)
@@ -260,10 +273,16 @@ def test_voronoi_vertex_grid():
     assert gridprops["nvert"] == 127
     assert len(gridprops["vertices"]) == 127
     assert len(gridprops["cell2d"]) == 43
+
+    # teardown test
+    testFramework.teardown()
+
     return
 
 
 def test_voronoi_grid0(plot=False):
+    model_ws = f"{baseDir}_test_voronoi_grid0"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
 
     name = "vor0"
     answer_ncpl = 3804
@@ -288,7 +307,7 @@ def test_voronoi_grid0(plot=False):
         [1831.381546, 6335.543757],
     ]
     area_max = 100.0 ** 2
-    tri = Triangle(maximum_area=area_max, angle=30, model_ws=tpth)
+    tri = Triangle(maximum_area=area_max, angle=30, model_ws=model_ws)
     poly = np.array(domain)
     tri.add_polygon(poly)
     tri.build(verbose=False)
@@ -309,12 +328,17 @@ def test_voronoi_grid0(plot=False):
         ax = fig.add_subplot()
         ax.set_aspect("equal")
         voronoi_grid.plot(ax=ax)
-        plt.savefig(os.path.join(tpth, f"{name}.png"))
+        plt.savefig(os.path.join(model_ws, f"{name}.png"))
+
+    # teardown test
+    testFramework.teardown()
 
     return
 
 
 def test_voronoi_grid1(plot=False):
+    model_ws = f"{baseDir}_test_voronoi_grid1"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
 
     name = "vor1"
     answer_ncpl = 1679
@@ -323,7 +347,7 @@ def test_voronoi_grid1(plot=False):
     ymin = 0.0
     ymax = 1.0
     area_max = 0.001
-    tri = Triangle(maximum_area=area_max, angle=30, model_ws=tpth)
+    tri = Triangle(maximum_area=area_max, angle=30, model_ws=model_ws)
     poly = np.array(((xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)))
     tri.add_polygon(poly)
     tri.build(verbose=False)
@@ -343,12 +367,17 @@ def test_voronoi_grid1(plot=False):
         ax = fig.add_subplot()
         ax.set_aspect("equal")
         voronoi_grid.plot(ax=ax)
-        plt.savefig(os.path.join(tpth, f"{name}.png"))
+        plt.savefig(os.path.join(model_ws, f"{name}.png"))
+
+    # teardown test
+    testFramework.teardown()
 
     return
 
 
 def test_voronoi_grid2(plot=False):
+    model_ws = f"{baseDir}_test_voronoi_grid2"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
 
     name = "vor2"
     answer_ncpl = 538
@@ -357,7 +386,7 @@ def test_voronoi_grid2(plot=False):
     x = radius * np.cos(theta)
     y = radius * np.sin(theta)
     circle_poly = [(x, y) for x, y in zip(x, y)]
-    tri = Triangle(maximum_area=50, angle=30, model_ws=tpth)
+    tri = Triangle(maximum_area=50, angle=30, model_ws=model_ws)
     tri.add_polygon(circle_poly)
     tri.build(verbose=False)
 
@@ -376,12 +405,17 @@ def test_voronoi_grid2(plot=False):
         ax = fig.add_subplot()
         ax.set_aspect("equal")
         voronoi_grid.plot(ax=ax)
-        plt.savefig(os.path.join(tpth, f"{name}.png"))
+        plt.savefig(os.path.join(model_ws, f"{name}.png"))
+
+    # teardown test
+    testFramework.teardown()
 
     return
 
 
 def test_voronoi_grid3(plot=False):
+    model_ws = f"{baseDir}_test_voronoi_grid3"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
 
     name = "vor3"
     answer_ncpl = 300
@@ -398,7 +432,7 @@ def test_voronoi_grid3(plot=False):
     y = radius * np.sin(theta) + 25.0
     inner_circle_poly = [(x, y) for x, y in zip(x, y)]
 
-    tri = Triangle(maximum_area=100, angle=30, model_ws=tpth)
+    tri = Triangle(maximum_area=100, angle=30, model_ws=model_ws)
     tri.add_polygon(circle_poly)
     tri.add_polygon(inner_circle_poly)
     tri.add_hole((25, 25))
@@ -419,19 +453,24 @@ def test_voronoi_grid3(plot=False):
         ax = fig.add_subplot()
         ax.set_aspect("equal")
         voronoi_grid.plot(ax=ax)
-        plt.savefig(os.path.join(tpth, f"{name}.png"))
+        plt.savefig(os.path.join(model_ws, f"{name}.png"))
+
+    # teardown test
+    testFramework.teardown()
 
     return
 
 
 def test_voronoi_grid4(plot=False):
+    model_ws = f"{baseDir}_test_voronoi_grid4"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
 
     name = "vor4"
     answer_ncpl = 410
     active_domain = [(0, 0), (100, 0), (100, 100), (0, 100)]
     area1 = [(10, 10), (40, 10), (40, 40), (10, 40)]
     area2 = [(60, 60), (80, 60), (80, 80), (60, 80)]
-    tri = Triangle(angle=30, model_ws=tpth)
+    tri = Triangle(angle=30, model_ws=model_ws)
     tri.add_polygon(active_domain)
     tri.add_polygon(area1)
     tri.add_polygon(area2)
@@ -455,12 +494,17 @@ def test_voronoi_grid4(plot=False):
         ax = fig.add_subplot()
         ax.set_aspect("equal")
         voronoi_grid.plot(ax=ax)
-        plt.savefig(os.path.join(tpth, f"{name}.png"))
+        plt.savefig(os.path.join(model_ws, f"{name}.png"))
+
+    # teardown test
+    testFramework.teardown()
 
     return
 
 
 def test_voronoi_grid5(plot=False):
+    model_ws = f"{baseDir}_test_voronoi_grid5"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
 
     name = "vor5"
     answer_ncpl = 1067
@@ -468,7 +512,7 @@ def test_voronoi_grid5(plot=False):
     area1 = [(10, 10), (40, 10), (40, 40), (10, 40)]
     area2 = [(50, 50), (90, 50), (90, 90), (50, 90)]
 
-    tri = Triangle(angle=30, model_ws=tpth)
+    tri = Triangle(angle=30, model_ws=model_ws)
 
     # requirement that active_domain is first polygon to be added
     tri.add_polygon(active_domain)
@@ -519,7 +563,10 @@ def test_voronoi_grid5(plot=False):
         ax = fig.add_subplot()
         ax.set_aspect("equal")
         voronoi_grid.plot(ax=ax)
-        plt.savefig(os.path.join(tpth, f"{name}.png"))
+        plt.savefig(os.path.join(model_ws, f"{name}.png"))
+
+    # teardown test
+    testFramework.teardown()
 
     return
 
