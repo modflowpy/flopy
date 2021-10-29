@@ -7,11 +7,12 @@ import os
 import sys
 import flopy
 import pymake
+import pytest
 
 # make the working directory
 tpth = os.path.join("temp", "t054")
 if not os.path.isdir(tpth):
-    os.makedirs(tpth)
+    os.makedirs(tpth, exist_ok=True)
 
 # build list of name files to try and load
 nwtpth = os.path.join("..", "examples", "data", "mf2005_test")
@@ -45,10 +46,13 @@ else:
 
 
 #
-def test_mfnwt_model():
-    for fnwt in nwt_files:
-        d, f = os.path.split(fnwt)
-        yield mfnwt_model, f, d
+@pytest.mark.parametrize(
+    "fnwt",
+    list(nwt_files),
+)
+def test_mfnwt_model(fnwt):
+    d, f = os.path.split(fnwt)
+    mfnwt_model(f, d)
 
 
 # function to load a MODFLOW-2005 model, convert to a MFNWT model,

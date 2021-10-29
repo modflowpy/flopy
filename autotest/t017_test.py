@@ -1,15 +1,13 @@
 # Test binary and formatted data readers
+import pytest
 import os
-import shutil
 import numpy as np
 import flopy
-from nose.tools import assert_raises
 
 cpth = os.path.join("temp", "t017")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-os.makedirs(cpth)
+# make the directory if it does not exists
+if not os.path.isdir(cpth):
+    os.makedirs(cpth, exist_ok=True)
 
 
 def test_formattedfile_read():
@@ -46,7 +44,7 @@ def test_formattedfile_read():
     fname = os.path.join(cpth, "empty.githds")
     with open(fname, "w"):
         pass
-    with assert_raises(ValueError):
+    with pytest.raises(ValueError):
         flopy.utils.FormattedHeadFile(fname)
 
     return
@@ -86,9 +84,9 @@ def test_binaryfile_read():
     fname = os.path.join(cpth, "empty.githds")
     with open(fname, "w"):
         pass
-    with assert_raises(ValueError):
+    with pytest.raises(ValueError):
         flopy.utils.HeadFile(fname)
-    with assert_raises(ValueError):
+    with pytest.raises(ValueError):
         flopy.utils.HeadFile(fname, "head", "single")
 
     return
@@ -104,9 +102,9 @@ def test_binaryfile_read_context():
         assert not h.file.closed
     assert h.file.closed
 
-    with assert_raises(ValueError) as e:
+    with pytest.raises(ValueError) as e:
         h.get_data()
-    assert str(e.exception) == "seek of closed file", str(e.exception)
+    assert str(e.value) == "seek of closed file", str(e.value)
 
 
 def test_cellbudgetfile_read_context():
@@ -119,9 +117,9 @@ def test_cellbudgetfile_read_context():
         assert not v.file.closed
     assert v.file.closed
 
-    with assert_raises(ValueError) as e:
+    with pytest.raises(ValueError) as e:
         v.get_data(text="DRAINS")
-    assert str(e.exception) == "seek of closed file", str(e.exception)
+    assert str(e.value) == "seek of closed file", str(e.value)
 
 
 def test_cellbudgetfile_read():
@@ -140,10 +138,9 @@ def test_cellbudgetfile_read():
         for record in records:
             t0 = v.get_data(kstpkper=t, text=record, full3D=True)[0]
             t1 = v.get_data(idx=idx, text=record, full3D=True)[0]
-            assert np.array_equal(
-                t0, t1
-            ), "binary budget item {0} read using kstpkper != binary budget item {0} read using idx".format(
-                record
+            assert np.array_equal(t0, t1), (
+                f"binary budget item {record} read using kstpkper != binary "
+                f"budget item {record} read using idx"
             )
             idx += 1
     v.close()
@@ -210,7 +207,7 @@ def test_cellbudgetfile_position():
     fname = os.path.join(cpth, "empty.gitcbc")
     with open(fname, "w"):
         pass
-    with assert_raises(ValueError):
+    with pytest.raises(ValueError):
         flopy.utils.CellBudgetFile(fname)
 
     return
@@ -227,9 +224,9 @@ def test_cellbudgetfile_readrecord():
     kstpkper = v.get_kstpkper()
     assert len(kstpkper) == 30, "length of kstpkper != 30"
 
-    with assert_raises(TypeError) as e:
+    with pytest.raises(TypeError) as e:
         v.get_data()
-    assert str(e.exception).startswith(
+    assert str(e.value).startswith(
         "get_data() missing 1 required argument"
     ), str(e.exception)
 

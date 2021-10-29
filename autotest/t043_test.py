@@ -12,9 +12,9 @@ except:
     print("could not import pymake")
 
 cpth = os.path.join("temp", "t043")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
+# make the directory if it does not exist
+if not os.path.isdir(cpth):
+    os.makedirs(cpth, exist_ok=True)
 
 exe_name = "mf2005"
 v = flopy.which(exe_name)

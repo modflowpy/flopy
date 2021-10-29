@@ -11,7 +11,7 @@ cpth = os.path.join("temp", "t036")
 
 # make the directory if it does not exist
 if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+    os.makedirs(cpth, exist_ok=True)
 
 
 def test_uzf_unit_numbers():

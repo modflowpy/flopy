@@ -1,49 +1,22 @@
+import pytest
+import sys
 import os
 import shutil
 import flopy
 import pymake
+from ci_framework import (
+    baseTestDir,
+    flopyTest,
+    download_mf6_examples,
+)
 
-
-def download_mf6_examples():
-    """
-    Download mf6 examples and return location of folder
-
-    """
-
-    # set url
-    dirname = "mf6examples"
-    url = (
-        "https://github.com/MODFLOW-USGS/modflow6-examples/releases/"
-        + "download/current/modflow6-examples.zip"
-    )
-
-    # create folder for mf6 distribution download
-    cpth = os.getcwd()
-    dstpth = os.path.join("temp", dirname)
-    print(f"create...{dstpth}")
-    if not os.path.exists(dstpth):
-        os.makedirs(dstpth)
-    os.chdir(dstpth)
-
-    # Download the distribution
-    pymake.download_and_unzip(url, verify=True)
-
-    # change back to original path
-    os.chdir(cpth)
-
-    # return the absolute path to the distribution
-    mf6path = os.path.abspath(dstpth)
-
-    return mf6path
-
-
-out_dir = os.path.join("temp", "t503")
-if os.path.exists(out_dir):
-    shutil.rmtree(out_dir)
-os.mkdir(out_dir)
+exe_name = "mf6"
+v = flopy.which(exe_name)
+run = True
+if v is None:
+    run = False
 
 mf6path = download_mf6_examples()
-distpth = os.path.join(mf6path)
 
 exclude_models = ("lnf",)
 exclude_examples = (
@@ -54,106 +27,129 @@ exclude_examples = (
     # "ex-gwt-mt3dsupp632",
     # "ex-gwt-prudic2004t2",
 )
-src_folders = []
 
-for dirName, subdirList, fileList in os.walk(mf6path):
-    dirBase = os.path.basename(os.path.normpath(dirName))
-    useModel = True
-    for exclude in exclude_models:
-        if exclude in dirName:
-            useModel = False
-            break
-    if useModel:
-        for exclude in exclude_examples:
-            if exclude in dirName:
-                useModel = False
-                break
-    if useModel:
+exdirs = sorted(
+    [os.path.join(mf6path, exdir) for exdir in list(os.listdir(mf6path))]
+)
+
+print("example simulations")
+for exdir in exdirs:
+    print(f"  {exdir}")
+
+
+def copy_folder(baseDir, src):
+    subDir = src.partition("{0}mf6examples{0}".format(os.path.sep))[2]
+    if os.path.basename(subDir) in os.path.basename(baseDir):
+        dst = baseDir
+    else:
+        dst = os.path.join(baseDir, subDir)
+
+    # clean the destination directory if it exists
+    if os.path.isdir(dst):
+        shutil.rmtree(dst)
+
+    # copy the files
+    print(f"copying {src} -> {dst}")
+    shutil.copytree(src, dst)
+
+    # remove the src directory
+    shutil.rmtree(src)
+
+    return dst
+
+
+def simulation_subdirs(baseDir):
+    exsubdirs = []
+    for dirName, subdirList, fileList in os.walk(baseDir):
         for file_name in fileList:
             if file_name.lower() == "mfsim.nam":
                 print(f"Found directory: {dirName}")
-                src_folders.append(dirName)
-src_folders = sorted(src_folders)
-
-folders = []
-for src in src_folders:
-    dirBase = src.partition("{0}mf6examples{0}".format(os.path.sep))[2]
-    dst = os.path.join(out_dir, dirBase)
-
-    print(f"copying {src} -> {dst}")
-    folders.append(dst)
-    shutil.copytree(src, dst)
-folders = sorted(folders)
-
-exe_name = "mf6"
-v = flopy.which(exe_name)
-run = True
-if v is None:
-    run = False
+                exsubdirs.append(dirName)
+    return sorted(exsubdirs)
 
 
-def runmodel(folder):
-    f = os.path.basename(os.path.normpath(folder))
-    print("\n\n")
-    print(f"**** RUNNING TEST: {f} ****")
-    print("\n")
+def runmodel(exdir):
+    baseDir = (
+        baseTestDir(__file__, relPath="temp", verbose=True)
+        + "_"
+        + os.path.basename(exdir)
+    )
+    fpTest = flopyTest(verbose=True)
 
-    # load the model into a flopy simulation
-    print(f"loading {f}")
-    sim = flopy.mf6.MFSimulation.load(f, "mf6", exe_name, folder)
-    assert isinstance(sim, flopy.mf6.MFSimulation)
+    simulations = simulation_subdirs(exdir)
+    for src in simulations:
+        ws = copy_folder(baseDir, src)
+        fpTest.addTestDir(ws)
+        f = os.path.basename(os.path.normpath(ws))
+        print("\n\n")
+        print(f"**** RUNNING TEST: {f} ****")
+        print("\n")
 
-    # run the simulation in folder if executable is available
-    if run:
-        success, buff = sim.run_simulation()
-        assert success
+        # load the model into a flopy simulation
+        print(f"loading {f}")
+        sim = flopy.mf6.MFSimulation.load(f, "mf6", exe_name, ws)
+        assert isinstance(sim, flopy.mf6.MFSimulation)
 
-        headfiles = [
-            f for f in os.listdir(folder) if f.lower().endswith(".hds")
-        ]
+        # run the simulation in folder if executable is available
+        if run:
+            success, buff = sim.run_simulation()
+            assert success
 
-        folder2 = f"{folder}-RERUN"
-        sim.simulation_data.mfpath.set_sim_path(folder2)
-        sim.write_simulation()
-        success, buff = sim.run_simulation()
-        assert success
+            headfiles = [
+                f for f in os.listdir(ws) if f.lower().endswith(".hds")
+            ]
 
-        headfiles1 = []
-        headfiles2 = []
-        for hf in headfiles:
-            headfiles1.append(os.path.join(folder, hf))
-            headfiles2.append(os.path.join(folder2, hf))
+            # set the comparison directory
+            ws2 = f"{ws}-RERUN"
+            fpTest.addTestDir(ws2)
+            sim.simulation_data.mfpath.set_sim_path(ws2)
 
-        outfile = os.path.join(folder, "head_compare.dat")
-        success = pymake.compare_heads(
-            None,
-            None,
-            precision="double",
-            text="head",
-            files1=headfiles1,
-            files2=headfiles2,
-            outfile=outfile,
-        )
-        assert success
+            # remove the comparison directory if it exists
+            if os.path.isdir(ws2):
+                shutil.rmtree(ws2)
+
+            sim.write_simulation()
+            success, buff = sim.run_simulation()
+            assert success
+
+            headfiles1 = []
+            headfiles2 = []
+            for hf in headfiles:
+                headfiles1.append(os.path.join(ws, hf))
+                headfiles2.append(os.path.join(ws2, hf))
+
+            success = pymake.compare_heads(
+                None,
+                None,
+                precision="double",
+                text="head",
+                files1=headfiles1,
+                files2=headfiles2,
+                outfile=os.path.join(ws, "head_compare.dat"),
+            )
+            assert success, f"comparision for {ws} failed"
+
+    fpTest.addTestDir(baseDir)
+
+    fpTest.teardown()
 
 
-# for running tests with nosetests
-def test_load_mf6_distribution_models():
-    for f in folders:
-        yield runmodel, f
+# for running tests with pytest
+@pytest.mark.parametrize(
+    "exdir",
+    exdirs,
+)
+def test_load_mf6_distribution_models(exdir):
+    runmodel(exdir)
     return
 
 
-# for running outside of nosetests
+# for running outside of pytest
 def runmodels():
-    for f in folders:
-        runmodel(f)
+    for exdir in exdirs:
+        runmodel(exdir)
     return
 
 
 if __name__ == "__main__":
-    # to run them all with python
     runmodels()
-
-    # or to run just test, pass the example name into runmodel
-    # runmodel('ex30-vilhelmsen-gf')

@@ -11,7 +11,7 @@ from flopy.utils.voronoi import VoronoiGrid
 
 tpth = os.path.join("temp", "t075")
 if not os.path.isdir(tpth):
-    os.mkdir(tpth)
+    os.makedirs(tpth, exist_ok=True)
 
 
 def test_unstructured_grid_shell():

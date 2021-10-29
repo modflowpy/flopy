@@ -1,6 +1,7 @@
 import os
 import sys
 import shutil
+import pytest
 
 import numpy as np
 import flopy
@@ -15,11 +16,9 @@ ismf6_lst = ["mf6" in pth for pth in ex_pths]
 names = [os.path.basename(pth) for pth in ex_pths]
 
 tpth = os.path.join("temp", "t079")
-# delete the directory if it exists
-if os.path.isdir(tpth):
-    shutil.rmtree(tpth)
-# make the directory
-os.makedirs(tpth)
+# make the directory if it does not exist
+if not os.path.isdir(tpth):
+    os.makedirs(tpth, exist_ok=True)
 
 mf6_exe = "mf6"
 mf2005_exe = "mf2005"
@@ -185,12 +184,15 @@ def mf2005_eval(name, ws_in):
     clean_run(name)
 
 
-def test_cbc_full3D():
-    for (name, ismf6, ws_in) in zip(names, ismf6_lst, ex_pths):
-        if ismf6:
-            yield mf6_eval, name, ws_in
-        else:
-            yield mf2005_eval, name, ws_in
+@pytest.mark.parametrize(
+    "name, ismf6, ws_in",
+    zip(names, ismf6_lst, ex_pths),
+)
+def test_cbc_full3D(name, ismf6, ws_in):
+    if ismf6:
+        mf6_eval(name, ws_in)
+    else:
+        mf2005_eval(name, ws_in)
 
 
 def main():

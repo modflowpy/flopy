@@ -2,17 +2,13 @@
 Test the gmg load and write with an external summary file
 """
 import os
-import shutil
-import numpy as np
 import flopy
 from flopy.utils.recarray_utils import recarray
 
 cpth = os.path.join("temp", "t047")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-# make the directory
-os.makedirs(cpth)
+# make the directory if it does not exist
+if not os.path.isdir(cpth):
+    os.makedirs(cpth, exist_ok=True)
 
 
 def get_namefile_entries(fpth):

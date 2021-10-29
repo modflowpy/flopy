@@ -8,6 +8,7 @@ on:
       - master
       - develop
       - 'release*'
+      - 'ci-pytest'
   pull_request:
     branches: [master, develop]
 
@@ -22,7 +23,6 @@ jobs:
       run:
         shell: bash
 
-    if: github.repository_owner == 'modflowpy'
     steps:
 
     # check out repo
@@ -56,7 +56,7 @@ jobs:
       run:
         shell: bash
 
-    if: github.repository_owner == 'modflowpy' && github.event_name != 'schedule'
+    if: github.event_name != 'schedule'
     steps:
     # check out repo
     - name: Checkout flopy repo
@@ -109,11 +109,11 @@ jobs:
           - os: ubuntu-latest
             python-version: 3.9
             run-type: nb
-            test-path: autotest_notebooks.py
+            test-path: run_notebooks.py
           - os: ubuntu-latest
             python-version: 3.9
             run-type: script
-            test-path: autotest_scripts.py
+            test-path: run_scripts.py
     defaults:
       run:
         shell: bash -l {0}
@@ -166,23 +166,42 @@ jobs:
         pip install xmipy
         pip install . --use-feature=in-tree-build
 
-    - name: Download executables needed for tests
+    - name: Prepare for the autotests
+      working-directory: ./autotest
       run: |
-        cd autotest
-        python get_exes.py
-        cd ..
+        pytest -v ci_prepare.py
 
     - name: Add executables directory to path
       run: |
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-    - name: Run nosetests
+    - name: Run pytest on autotest scripts on Linux and MacOS
+      if: matrix.run-type == 'std' && runner.os != 'Windows'
+      working-directory: ./autotest
       run: |
-        coverage run -m nose -v --with-id --with-timer \
-        --with-coverage --cover-package=flopy --cover-xml \
-        --cover-xml-file=../coverage.xml -w ./autotest ${{ matrix.test-path }}
+        pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
+
+    - name: Run pytest on autotest scripts on Windows
+      if: matrix.run-type == 'std' && runner.os == 'Windows'
+      working-directory: ./autotest
+      run: |
+        pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
+
+    - name: Run pytest on scripts and notebooks
+      if: matrix.run-type != 'std'
+      working-directory: ./autotest
+      run: |
+        pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml ${{ matrix.test-path }}
+
+    - name: Print coverage report before upload
+      working-directory: ./autotest
+      run: |
+        coverage report
 
     - name: Upload coverage to Codecov
+      if:
+        github.repository_owner == 'modflowpy' && github.event_name == 'push'
       uses: codecov/codecov-action@v2.1.0
       with:
-        file: ./coverage.xml
+        directory: ./autotest
+        file: coverage.xml

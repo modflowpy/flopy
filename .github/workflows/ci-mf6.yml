@@ -8,6 +8,7 @@ on:
       - master
       - develop
       - 'release*'
+      - 'ci-pytest'
   pull_request:
     branches: [master, develop]
 
@@ -98,6 +99,11 @@ jobs:
       working-directory: ./modflow6/autotest
       run: |
         pytest -v -n auto -k "test_gw" --durations=0 --cov=flopy --cov-report=xml
+
+    - name: Print coverage report before upload
+      working-directory: ./modflow6/autotest
+      run: |
+        coverage report
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v2.1.0

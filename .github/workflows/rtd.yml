@@ -6,6 +6,7 @@ on:
       - master
       - develop
       - 'release*'
+      - 'ci-pytest'
   pull_request:
     branches: [master, develop]
 
@@ -20,7 +21,6 @@ jobs:
       run:
         shell: bash -l {0}
 
-    if: github.repository_owner == 'modflowpy'
     steps:
       - name: Checkout flopy repo
         uses: actions/checkout@v2.3.4
@@ -57,19 +57,19 @@ jobs:
           pip install xmipy
           pip install .
 
-      - name: Download executables needed for tests
+      - name: Prepare for the autotests
+        working-directory: ./autotest
         run: |
-          python ./autotest/get_exes.py
+          pytest -v ci_prepare.py
 
       - name: Add executables directory to path
         run: |
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Run jupytext on tutorials
+        working-directory: ./.docs
         run: |
-          cd .docs/
           python create_tutorials.py
-          cd ../
 
       - name: Upload completed jupyter notebooks as an artifact for ReadtheDocs
         if:

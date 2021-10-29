@@ -191,8 +191,8 @@ def test_ssm_readwrite():
 
     # Change to dedicated work directory
     cwd = os.getcwd()
-    if not os.path.exists(os.path.join("temp", "t068_ssm_write")):
-        os.makedirs(os.path.join("temp", "t068_ssm_write"))
+    if not os.path.isdir(os.path.join("temp", "t068_ssm_write")):
+        os.makedirs(os.path.join("temp", "t068_ssm_write"), exist_ok=True)
 
     os.chdir(os.path.join("temp", "t068_ssm_write"))
 

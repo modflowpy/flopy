@@ -7,8 +7,8 @@ import numpy as np
 
 mpth = os.path.join("..", "examples", "data", "ag_test")
 opth = os.path.join("temp", "t071")
-if not os.path.exists(opth):
-    os.makedirs(opth)
+if not os.path.isdir(opth):
+    os.makedirs(opth, exist_ok=True)
 
 
 def test_empty_ag_package():

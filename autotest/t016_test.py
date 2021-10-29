@@ -5,7 +5,7 @@ import numpy as np
 
 tpth = os.path.abspath(os.path.join("temp", "t016"))
 if not os.path.isdir(tpth):
-    os.makedirs(tpth)
+    os.makedirs(tpth, exist_ok=True)
 
 
 exe_name = "mfusg"

@@ -2,6 +2,7 @@
 Some basic tests for SWR2 load.
 """
 
+import pytest
 import os
 import flopy
 
@@ -9,7 +10,7 @@ path = os.path.join("..", "examples", "data", "mf2005_test")
 cpth = os.path.join("temp", "t037")
 # make the directory if it does not exist
 if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+    os.makedirs(cpth, exist_ok=True)
 
 mf_items = ["swiex1.nam", "swiex2_strat.nam", "swiex3.nam"]
 pths = []
@@ -82,9 +83,12 @@ def load_swi(mfnam, pth):
     return
 
 
-def test_mf2005swi2load():
-    for namfile, pth in zip(mf_items, pths):
-        yield load_swi, namfile, pth
+@pytest.mark.parametrize(
+    "namfile, pth",
+    zip(mf_items, pths),
+)
+def test_mf2005swi2load(namfile, pth):
+    load_swi(namfile, pth)
     return
 
 

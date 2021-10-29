@@ -1,6 +1,6 @@
+import pytest
 import flopy
 import os
-from nose.tools import raises
 
 
 def test_loadfreyberg():
@@ -71,54 +71,54 @@ def test_loadoc():
     return
 
 
-@raises(OSError)
 def test_loadoc_lenfail():
     ws = os.path.join("temp", "t003")
     ml = flopy.modflow.Modflow(model_ws=ws)
     fpth = os.path.join("..", "examples", "data", "mf2005_test", "fhb.oc")
-    oc = flopy.modflow.ModflowOc.load(fpth, ml, nper=3, nstp=1, nlay=1)
+    with pytest.raises(OSError):
+        oc = flopy.modflow.ModflowOc.load(fpth, ml, nper=3, nstp=1, nlay=1)
 
     return
 
 
-@raises(ValueError)
 def test_loadoc_nperfail():
     ws = os.path.join("temp", "t003")
     ml = flopy.modflow.Modflow(model_ws=ws)
     fpth = os.path.join("..", "examples", "data", "mf2005_test", "fhb.oc")
-    oc = flopy.modflow.ModflowOc.load(fpth, ml, nper=0, nlay=1)
+    with pytest.raises(ValueError):
+        oc = flopy.modflow.ModflowOc.load(fpth, ml, nper=0, nlay=1)
 
     return
 
 
-@raises(ValueError)
 def test_loadoc_nlayfail():
     ws = os.path.join("temp", "t003")
     ml = flopy.modflow.Modflow(model_ws=ws)
     fpth = os.path.join("..", "examples", "data", "mf2005_test", "fhb.oc")
-    oc = flopy.modflow.ModflowOc.load(fpth, ml, nper=3, nlay=0)
+    with pytest.raises(ValueError):
+        oc = flopy.modflow.ModflowOc.load(fpth, ml, nper=3, nlay=0)
 
     return
 
 
-@raises(ValueError)
 def test_loadoc_nstpfail():
     ws = os.path.join("temp", "t003")
     ml = flopy.modflow.Modflow(model_ws=ws)
     fpth = os.path.join("..", "examples", "data", "mf2005_test", "fhb.oc")
-    oc = flopy.modflow.ModflowOc.load(fpth, ml, nper=3, nlay=1)
+    with pytest.raises(ValueError):
+        oc = flopy.modflow.ModflowOc.load(fpth, ml, nper=3, nlay=1)
 
     return
 
 
-@raises(OSError)
 def test_load_nam_mf_nonexistant_file():
-    ml = flopy.modflow.Modflow.load("nonexistant.nam")
+    with pytest.raises(OSError):
+        ml = flopy.modflow.Modflow.load("nonexistant.nam")
 
 
-@raises(OSError)
 def test_load_nam_mt_nonexistant_file():
-    ml = flopy.mt3d.Mt3dms.load("nonexistant.nam")
+    with pytest.raises(OSError):
+        ml = flopy.mt3d.Mt3dms.load("nonexistant.nam")
 
 
 if __name__ == "__main__":

@@ -1,17 +1,15 @@
 # Test instantiation of mf6 classes
 import os
-import shutil
 import flopy
+
+from ci_framework import baseTestDir, flopyTest
 
 
 def test_mf6():
+    baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+    fpTest = flopyTest(verbose=True, testDirs=baseDir)
 
-    out_dir = os.path.join("temp", "t501")
-    if os.path.exists(out_dir):
-        shutil.rmtree(out_dir)
-    os.mkdir(out_dir)
-
-    sim = flopy.mf6.MFSimulation(sim_ws=out_dir)
+    sim = flopy.mf6.MFSimulation(sim_ws=baseDir)
     assert isinstance(sim, flopy.mf6.MFSimulation)
 
     tdis = flopy.mf6.modflow.mftdis.ModflowTdis(sim)
@@ -99,7 +97,7 @@ def test_mf6():
     sim.write_simulation()
 
     # Verify files were written
-    assert os.path.isfile(os.path.join(out_dir, "mfsim.nam"))
+    assert os.path.isfile(os.path.join(baseDir, "mfsim.nam"))
     exts_model = [
         "nam",
         "dis",
@@ -126,11 +124,13 @@ def test_mf6():
     ]
     exts_sim = ["gwfgwf", "ims", "tdis"]
     for ext in exts_model:
-        fname = os.path.join(out_dir, f"model.{ext}")
+        fname = os.path.join(baseDir, f"model.{ext}")
         assert os.path.isfile(fname), f"{fname} not found"
     for ext in exts_sim:
-        fname = os.path.join(out_dir, f"sim.{ext}")
+        fname = os.path.join(baseDir, f"sim.{ext}")
         assert os.path.isfile(fname), f"{fname} not found"
+
+    fpTest.teardown()
 
     return
 

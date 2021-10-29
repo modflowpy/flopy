@@ -1,15 +1,16 @@
 # Test instantiation of flopy classes
 import os
 
-cpth = os.path.join("temp", "t005")
-# make the directory if it does not exist
-if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+from ci_framework import baseTestDir, flopyTest
+
+cpth = baseTestDir(__file__, create=True, relPath="temp", verbose=True)
 
 
 def test_modflow_unstructured():
     import flopy
     import numpy as np
+
+    fpTest = flopyTest(testDirs=cpth)
 
     mf = flopy.mfusg.MfUsg(structured=False, model_ws=cpth)
     assert isinstance(mf, flopy.mfusg.MfUsg)
@@ -52,6 +53,8 @@ def test_modflow_unstructured():
         os.path.join(cpth, f"{mf.name}.ghb"), mf
     )
     assert ghb2.stress_period_data[0] == ghb.stress_period_data[0]
+
+    fpTest.teardown()
 
     return
 

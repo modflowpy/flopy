@@ -9,7 +9,7 @@ import flopy
 mpth = os.path.join("temp", "t018")
 # make the directory if it does not exist
 if not os.path.isdir(mpth):
-    os.makedirs(mpth)
+    os.makedirs(mpth, exist_ok=True)
 
 
 def test_tpl_constant():

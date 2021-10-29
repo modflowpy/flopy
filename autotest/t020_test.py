@@ -36,8 +36,8 @@ def test_mfnwt_run():
 
     modelname = "watertable"
     model_ws = os.path.join("temp", "t020")
-    if not os.path.exists(model_ws):
-        os.makedirs(model_ws)
+    if not os.path.isdir(model_ws):
+        os.makedirs(model_ws, exist_ok=True)
 
     # model dimensions
     nlay, nrow, ncol = 1, 1, 100

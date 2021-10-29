@@ -17,7 +17,7 @@ except:
 tpth = os.path.abspath(os.path.join("temp", "t015"))
 # make the directory if it does not exist
 if not os.path.isdir(tpth):
-    os.makedirs(tpth)
+    os.makedirs(tpth, exist_ok=True)
 
 mfexe = "mf2005"
 v = flopy.which(mfexe)

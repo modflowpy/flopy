@@ -11,7 +11,7 @@ import flopy
 # make the working directory
 tpth = os.path.join("temp", "t060")
 if not os.path.isdir(tpth):
-    os.makedirs(tpth)
+    os.makedirs(tpth, exist_ok=True)
 
 mfnwt_exe = "mfnwt"
 mt3d_usgs_exe = "mt3dusgs"

@@ -6,7 +6,7 @@ import flopy
 mpth = os.path.join("temp", "t021")
 # make the directory if it does not exist
 if not os.path.isdir(mpth):
-    os.makedirs(mpth)
+    os.makedirs(mpth, exist_ok=True)
 
 
 def test_mflist_external():

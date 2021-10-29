@@ -105,7 +105,7 @@ def build_model_mf2005():
 
     # create folders
     if not os.path.isdir(modelws_mf2005):
-        os.makedirs(modelws_mf2005)
+        os.makedirs(modelws_mf2005, exist_ok=True)
 
     # create modflow model
     mf = flopy.modflow.Modflow(
@@ -182,7 +182,7 @@ def build_model_mf2005():
 def build_model_mf6():
 
     if not os.path.isdir(modelws_mf6):
-        os.makedirs(modelws_mf6)
+        os.makedirs(modelws_mf6, exist_ok=True)
 
     # create simulation
     simname = modelname_mf6

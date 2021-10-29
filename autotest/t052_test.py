@@ -1,4 +1,3 @@
-import shutil
 import os
 import numpy as np
 import flopy
@@ -10,11 +9,9 @@ except:
 
 
 cpth = os.path.join("temp", "t052")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-# make the directory
-os.makedirs(cpth)
+# make the directory if it does not exist
+if not os.path.isdir(cpth):
+    os.makedirs(cpth, exist_ok=True)
 
 exe_name = "mf2005"
 v = flopy.which(exe_name)
@@ -123,9 +120,6 @@ def test_binary_well():
             print("could not perform budget comparison")
 
         assert success, "budget comparison failure"
-
-    # clean up
-    shutil.rmtree(cpth)
 
 
 if __name__ == "__main__":

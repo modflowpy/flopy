@@ -1,11 +1,10 @@
 import os
-import shutil
 import flopy
 
 model_ws = os.path.join("temp", "t040")
 # delete the directory if it exists
-if os.path.isdir(model_ws):
-    shutil.rmtree(model_ws)
+if not os.path.isdir(model_ws):
+    os.makedirs(model_ws, exist_ok=True)
 
 ibound_path = os.path.join(
     "..", "examples", "data", "subwt_example", "ibound.ref"

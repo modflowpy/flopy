@@ -4,7 +4,7 @@ import flopy
 newpth = os.path.join(".", "temp", "t030")
 # make the directory if it does not exist
 if not os.path.isdir(newpth):
-    os.makedirs(newpth)
+    os.makedirs(newpth, exist_ok=True)
 
 
 def test_vdf_vsc():

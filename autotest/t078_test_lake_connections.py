@@ -1,7 +1,4 @@
 import os
-import shutil
-
-import matplotlib.pyplot as plt
 import numpy as np
 import flopy
 
@@ -9,11 +6,9 @@ pth = os.path.join("..", "examples", "data", "mf6-freyberg")
 
 name = "freyberg"
 tpth = os.path.join("temp", "t078")
-# delete the directory if it exists
-if os.path.isdir(tpth):
-    shutil.rmtree(tpth)
-# make the directory
-os.makedirs(tpth)
+# make the directory if it does not exist
+if not os.path.isdir(tpth):
+    os.makedirs(tpth, exist_ok=True)
 
 
 def __export_ascii_grid(modelgrid, file_path, v, nodata=0.0):

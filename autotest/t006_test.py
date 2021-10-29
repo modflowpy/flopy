@@ -17,11 +17,9 @@ try:
 except ImportError:
     shapefile = None
 
+from ci_framework import baseTestDir, flopyTest
 
-cpth = os.path.join("temp", "t006")
-# make the directory if it does not exist
-if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+cpth = baseTestDir(__file__, create=True, relPath="temp", verbose=True)
 
 
 def test_binaryfile_reference():
@@ -53,6 +51,9 @@ def test_formattedfile_reference():
 
 
 def test_mflist_reference():
+
+    fpTest = flopyTest(testDirs=cpth)
+
     # make the model
     ml = flopy.modflow.Modflow()
     assert isinstance(ml, flopy.modflow.Modflow)
@@ -108,6 +109,8 @@ def test_mflist_reference():
         ml.export(test, kper=0)
         shp = shapefile.Reader(test)
         assert shp.numRecords == nrow * ncol
+
+    fpTest.teardown()
 
 
 def test_cbc_ts():

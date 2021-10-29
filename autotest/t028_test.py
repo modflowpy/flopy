@@ -1,3 +1,4 @@
+import pytest
 import os
 import shutil
 import flopy
@@ -6,7 +7,7 @@ pthtest = os.path.join("..", "examples", "data", "swtv4_test")
 newpth = os.path.join(".", "temp", "t028")
 # make the directory if it does not exist
 if not os.path.isdir(newpth):
-    os.makedirs(newpth)
+    os.makedirs(newpth, exist_ok=True)
 swtv4_exe = "swtv4"
 isswtv4 = flopy.which(swtv4_exe)
 runmodel = False
@@ -67,7 +68,7 @@ def test_seawat_array_format():
         testpth = os.path.join(newpth, f"{d}-{subd}")
         if os.path.isdir(testpth):
             shutil.rmtree(testpth)
-        os.mkdir(testpth)
+        os.makedirs(testpth)
         namfile = "seawat.nam"
         if subd == "6_age_simulation":
             namfile = "henry_mod.nam"
@@ -83,9 +84,12 @@ def test_seawat_array_format():
     return
 
 
-def test_swtv4():
-    for d, subd in zip(swtdir, subds):
-        yield run_swtv4, d, subd
+@pytest.mark.parametrize(
+    "d, subd",
+    zip(swtdir, subds),
+)
+def test_swtv4(d, subd):
+    run_swtv4(d, subd)
     return
 
 
@@ -95,7 +99,7 @@ def run_swtv4(d, subd):
     testpth = os.path.join(newpth, f"{d}-{subd}")
     if os.path.isdir(testpth):
         shutil.rmtree(testpth)
-    os.mkdir(testpth)
+    os.makedirs(testpth)
 
     namfile = "seawat.nam"
     if subd == "6_age_simulation":

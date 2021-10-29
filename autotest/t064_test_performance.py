@@ -29,9 +29,11 @@ class TestModflowPerformance:
         external_path = "external/"
 
         if not os.path.isdir(cls.model_ws):
-            os.makedirs(cls.model_ws)
+            os.makedirs(cls.model_ws, exist_ok=True)
         if not os.path.isdir(os.path.join(cls.model_ws, external_path)):
-            os.makedirs(os.path.join(cls.model_ws, external_path))
+            os.makedirs(
+                os.path.join(cls.model_ws, external_path), exist_ok=True
+            )
 
         m = fm.Modflow(
             cls.modelname, model_ws=cls.model_ws, external_path=external_path

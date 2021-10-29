@@ -1,9 +1,8 @@
 """
 Test the observation process load and write
 """
+import pytest
 import os
-import shutil
-import filecmp
 import flopy
 
 try:
@@ -14,11 +13,10 @@ except ImportError:
 
 path = os.path.join("..", "examples", "data", "mf2005_test")
 cpth = os.path.join("temp", "t048")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-# make the directory
-os.makedirs(cpth)
+
+# make the directory if it does not exist
+if not os.path.isdir(cpth):
+    os.makedirs(cpth, exist_ok=True)
 
 mf_items = [
     "fhb.nam",
@@ -101,9 +99,12 @@ def load_and_write_fhb(mfnam, pth):
     return
 
 
-def test_mf2005fhbload():
-    for namfile, pth in zip(mf_items, pths):
-        yield load_and_write_fhb, namfile, pth
+@pytest.mark.parametrize(
+    "namfile, pth",
+    zip(mf_items, pths),
+)
+def test_mf2005fhbload(namfile, pth):
+    load_and_write_fhb(namfile, pth)
     return
 
 

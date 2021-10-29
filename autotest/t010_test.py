@@ -3,6 +3,8 @@ Some basic tests for SFR checker (not super rigorous)
 need to add a test case that has elevation input by reach
 """
 
+import pytest
+
 import os
 import flopy
 from flopy.modflow.mfsfr2 import check
@@ -10,7 +12,7 @@ from flopy.modflow.mfsfr2 import check
 tpth = os.path.abspath(os.path.join("temp", "t010"))
 # make the directory if it does not exist
 if not os.path.isdir(tpth):
-    os.makedirs(tpth)
+    os.makedirs(tpth, exist_ok=True)
 
 if os.path.split(os.getcwd())[-1] == "flopy3":
     path = os.path.join("examples", "data", "mf2005_test")
@@ -27,6 +29,11 @@ sfr_items = {
     4: {"mfnam": "testsfr2.nam", "sfrfile": "testsfr2.sfr"},
     5: {"mfnam": "UZFtest2.nam", "sfrfile": "UZFtest2.sfr"},
 }
+
+test_matrix = []
+for isfropt in range(6):
+    for icalc in range(5):
+        test_matrix.append((isfropt, icalc))
 
 
 def load_check_sfr(i, mfnam, model_ws, checker_output_path):
@@ -116,9 +123,12 @@ def test_sfrcheck():
     assert True
 
 
-def test_sfrloadcheck():
-    for i, case in sfr_items.items():
-        yield load_check_sfr, i, case["mfnam"], path, cpth
+@pytest.mark.parametrize(
+    "i, case",
+    sfr_items.items(),
+)
+def test_sfrloadcheck(i, case):
+    load_check_sfr(i, case["mfnam"], path, cpth)
 
 
 def load_sfr_isfropt_icalc(isfropt, icalc):
@@ -131,7 +141,8 @@ def load_sfr_isfropt_icalc(isfropt, icalc):
     if sfr is None:
         raise AssertionError()
 
-    ml.change_model_ws(tpth)
+    ws = os.path.join(tpth, f"sfrtest{isfropt}{icalc}")
+    ml.change_model_ws(ws)
     ml.write_input()
     success = ml.run_model()[0]
     if not success:
@@ -141,11 +152,12 @@ def load_sfr_isfropt_icalc(isfropt, icalc):
         )
 
 
-def test_isfropt_icalc():
-    # test all valid combinations of isfropt and icalc
-    for isfropt in range(6):
-        for icalc in range(5):
-            yield load_sfr_isfropt_icalc, isfropt, icalc
+@pytest.mark.parametrize(
+    "isfropt, icalc",
+    test_matrix,
+)
+def test_isfropt_icalc(isfropt, icalc):
+    load_sfr_isfropt_icalc(isfropt, icalc)
 
 
 if __name__ == "__main__":
