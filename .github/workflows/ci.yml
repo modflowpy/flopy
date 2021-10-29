@@ -175,14 +175,8 @@ jobs:
       run: |
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-    - name: Run pytest on autotest scripts on Linux and MacOS
-      if: matrix.run-type == 'std' && runner.os != 'Windows'
-      working-directory: ./autotest
-      run: |
-        pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
-
-    - name: Run pytest on autotest scripts on Windows
-      if: matrix.run-type == 'std' && runner.os == 'Windows'
+    - name: Run pytest on autotest scripts
+      if: matrix.run-type == 'std'
       working-directory: ./autotest
       run: |
         pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml

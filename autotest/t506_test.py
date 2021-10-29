@@ -27,6 +27,8 @@ except:
     matplotlib = None
     plt = None
 
+from ci_framework import baseTestDir, flopyTest
+
 # Set gridgen executable
 gridgen_exe = "gridgen"
 if platform.system() in "Windows":
@@ -45,8 +47,7 @@ if platform.system() in "Windows":
     mfusg_exe += ".exe"
 mfusg_exe = flopy.which(mfusg_exe)
 
-# set up the example folder
-tpth = os.path.join("temp", "t506")
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 VERBOSITY_LEVEL = 0
 
@@ -63,14 +64,9 @@ def test_mf6disv():
         print("Unable to run test_mf6disv(). shapely is not available.")
         return
 
-    # set up example directory
-    if not os.path.isdir(tpth):
-        os.makedirs(tpth, exist_ok=True)
-
     # set up a gridgen workspace
-    gridgen_ws = os.path.join(tpth, "mf6disv")
-    if not os.path.isdir(gridgen_ws):
-        os.makedirs(gridgen_ws, exist_ok=True)
+    gridgen_ws = f"{baseDir}_mf6disv"
+    testFramework = flopyTest(verbose=True, testDirs=gridgen_ws, create=True)
 
     name = "dummy"
     nlay = 3
@@ -183,18 +179,15 @@ def test_mf6disv():
         # test plotting
         disv_dot_plot(gridgen_ws)
 
+    testFramework.teardown()
+
     return
 
 
 def test_mf6disu():
-    # set up example directory
-    if not os.path.isdir(tpth):
-        os.makedirs(tpth, exist_ok=True)
-
     # set up a gridgen workspace
-    gridgen_ws = os.path.join(tpth, "mf6disu")
-    if not os.path.isdir(gridgen_ws):
-        os.makedirs(gridgen_ws, exist_ok=True)
+    gridgen_ws = f"{baseDir}_mf6disu"
+    testFramework = flopyTest(verbose=True, testDirs=gridgen_ws, create=True)
 
     name = "dummy"
     nlay = 3
@@ -342,18 +335,15 @@ def test_mf6disu():
             # test plotting
             disu_dot_plot(gridgen_ws)
 
+    testFramework.teardown()
+
     return
 
 
 def test_mfusg():
-    # set up example directory
-    if not os.path.isdir(tpth):
-        os.makedirs(tpth, exist_ok=True)
-
     # set up a gridgen workspace
-    gridgen_ws = os.path.join(tpth, "mfusg")
-    if not os.path.isdir(gridgen_ws):
-        os.makedirs(gridgen_ws, exist_ok=True)
+    gridgen_ws = f"{baseDir}_mfusg"
+    testFramework = flopyTest(verbose=True, testDirs=gridgen_ws, create=True)
 
     name = "dummy"
     nlay = 3
@@ -506,6 +496,8 @@ def test_mfusg():
         m.export(os.path.join(gridgen_ws, f"{name}.shp"))
     except:
         raise AssertionError("Error exporting mfusg model to shapefile.")
+
+    testFramework.teardown()
 
     return
 

@@ -3400,7 +3400,10 @@ def test_transport():
 
     # build MODFLOW 6 files
     sim = flopy.mf6.MFSimulation(
-        sim_name=name, version="mf6", exe_name="mf6", sim_ws=run_folder,
+        sim_name=name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=run_folder,
     )
     # create tdis package
     tdis = flopy.mf6.ModflowTdis(

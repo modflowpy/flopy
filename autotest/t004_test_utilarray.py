@@ -10,7 +10,7 @@ from flopy.utils.util_array import Util2d, Util3d, Transient2d, Transient3d
 
 from ci_framework import baseTestDir, flopyTest
 
-baseDir = baseTestDir(__file__, create=True, relPath="temp", verbose=True)
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 
 def test_load_txt_free():
@@ -141,9 +141,12 @@ def test_load_block():
 
 
 def test_load_bin():
+    model_ws = f"{baseDir}_test_load_bin"
+    testFramework = flopyTest(testDirs=model_ws, create=True)
+
     def temp_file(data):
         # writable file that is destroyed as soon as it is closed
-        f = TemporaryFile()
+        f = TemporaryFile(dir=model_ws)
         f.write(data)
         f.seek(0)
         return f
@@ -195,6 +198,8 @@ def test_load_bin():
         assert h1 == h2
     np.testing.assert_equal(a.astype(np.float64), fa)
     assert fa.dtype == np.float64
+
+    testFramework.teardown()
 
 
 def test_transient2d():
@@ -257,7 +262,7 @@ def test_transient3d():
 
 
 def test_util2d():
-    model_ws = os.path.join(baseDir, f"{baseDir}_util2d")
+    model_ws = f"{baseDir}_test_util2d"
     testFramework = flopyTest(testDirs=model_ws)
 
     ml = flopy.modflow.Modflow(model_ws=model_ws)
@@ -332,7 +337,7 @@ def test_util2d():
     testFramework.teardown()
 
 
-def stress_util2d(ml, nlay, nrow, ncol):
+def stress_util2d(model_ws, ml, nlay, nrow, ncol):
     dis = flopy.modflow.ModflowDis(ml, nlay=nlay, nrow=nrow, ncol=ncol)
     hk = np.ones((nlay, nrow, ncol))
     vk = np.ones((nlay, nrow, ncol)) + 1.0
@@ -368,7 +373,7 @@ def stress_util2d(ml, nlay, nrow, ncol):
         ml.namefile, model_ws=ml.model_ws, verbose=True, forgive=False
     )
     print("testing load")
-    assert ml1.load_fail == False
+    assert not ml1.load_fail
     # check that both binary and cnstnt are being respected through
     # out the write and load process.
     assert np.array_equal(ml1.lpf.vka.array, vk * 2.0)
@@ -377,7 +382,7 @@ def stress_util2d(ml, nlay, nrow, ncol):
     assert np.array_equal(ml1.lpf.hk.array, ml.lpf.hk.array)
 
     print("change model_ws")
-    ml.model_ws = f"{ml._model_ws}_new_model_ws"
+    ml.model_ws = os.path.join(model_ws, "new")
     ml.write_input()
     if ml.external_path is not None:
         files = os.listdir(os.path.join(ml.model_ws, ml.external_path))
@@ -409,7 +414,7 @@ def stress_util2d_for_joe_the_file_king(ml, nlay, nrow, ncol):
     # save hk up one dir from model_ws
     fnames = []
     for i, h in enumerate(hk):
-        fname = os.path.join(f"test_{i}.ref")
+        fname = os.path.join(ml._model_ws, f"test_{i}.ref")
         fnames.append(fname)
         np.savetxt(fname, h, fmt="%15.6e", delimiter="")
         vk[i] = i + 1.0
@@ -426,7 +431,7 @@ def stress_util2d_for_joe_the_file_king(ml, nlay, nrow, ncol):
         ml.namefile, model_ws=ml.model_ws, verbose=True, forgive=False
     )
     print("testing load")
-    assert ml1.load_fail == False
+    assert not ml1.load_fail
     assert np.array_equal(ml1.lpf.vka.array, vk * 2.0)
     assert np.array_equal(ml1.lpf.hk.array, hk)
     assert np.array_equal(ml1.lpf.vka.array, ml.lpf.vka.array)
@@ -443,43 +448,43 @@ def stress_util2d_for_joe_the_file_king(ml, nlay, nrow, ncol):
 
 
 def test_util2d_external_free():
-    model_ws = os.path.join(baseDir, f"{baseDir}_ext_free_a")
+    model_ws = f"{baseDir}_test_util2d_external_free"
     testFramework = flopyTest(testDirs=model_ws)
 
     ml = flopy.modflow.Modflow(model_ws=model_ws)
-    stress_util2d(ml, 1, 1, 1)
-    stress_util2d(ml, 10, 1, 1)
-    stress_util2d(ml, 1, 10, 1)
-    stress_util2d(ml, 1, 1, 10)
-    stress_util2d(ml, 10, 10, 1)
-    stress_util2d(ml, 1, 10, 10)
-    stress_util2d(ml, 10, 1, 10)
-    stress_util2d(ml, 10, 10, 10)
+    stress_util2d(model_ws, ml, 1, 1, 1)
+    stress_util2d(model_ws, ml, 10, 1, 1)
+    stress_util2d(model_ws, ml, 1, 10, 1)
+    stress_util2d(model_ws, ml, 1, 1, 10)
+    stress_util2d(model_ws, ml, 10, 10, 1)
+    stress_util2d(model_ws, ml, 1, 10, 10)
+    stress_util2d(model_ws, ml, 10, 1, 10)
+    stress_util2d(model_ws, ml, 10, 10, 10)
 
     testFramework.teardown()
 
 
 def test_util2d_external_free_path():
-    model_ws = os.path.join(baseDir, f"{baseDir}_ext_free")
+    model_ws = f"{baseDir}_test_util2d_external_free_path"
     testFramework = flopyTest(testDirs=model_ws)
 
     ext_path = "ref"
     ml = flopy.modflow.Modflow(model_ws=model_ws, external_path=ext_path)
 
-    stress_util2d(ml, 1, 1, 1)
-    stress_util2d(ml, 10, 1, 1)
-    stress_util2d(ml, 1, 10, 1)
-    stress_util2d(ml, 1, 1, 10)
-    stress_util2d(ml, 10, 10, 1)
-    stress_util2d(ml, 1, 10, 10)
-    stress_util2d(ml, 10, 1, 10)
-    stress_util2d(ml, 10, 10, 10)
+    stress_util2d(model_ws, ml, 1, 1, 1)
+    stress_util2d(model_ws, ml, 10, 1, 1)
+    stress_util2d(model_ws, ml, 1, 10, 1)
+    stress_util2d(model_ws, ml, 1, 1, 10)
+    stress_util2d(model_ws, ml, 10, 10, 1)
+    stress_util2d(model_ws, ml, 1, 10, 10)
+    stress_util2d(model_ws, ml, 10, 1, 10)
+    stress_util2d(model_ws, ml, 10, 10, 10)
 
     testFramework.teardown()
 
 
 def test_util2d_external_free_path_a():
-    model_ws = os.path.join(baseDir, f"{baseDir}_ext_free_a")
+    model_ws = f"{baseDir}_test_util2d_external_free_path_a"
     testFramework = flopyTest(testDirs=model_ws)
 
     ext_path = "ref"
@@ -498,46 +503,49 @@ def test_util2d_external_free_path_a():
 
 
 def test_util2d_external_fixed():
-    model_ws = os.path.join(baseDir, f"{baseDir}_ext_fixed")
+    model_ws = f"{baseDir}_test_util2d_external_fixed"
     testFramework = flopyTest(testDirs=model_ws)
 
     ml = flopy.modflow.Modflow(model_ws=model_ws)
     ml.array_free_format = False
 
-    stress_util2d(ml, 1, 1, 1)
-    stress_util2d(ml, 10, 1, 1)
-    stress_util2d(ml, 1, 10, 1)
-    stress_util2d(ml, 1, 1, 10)
-    stress_util2d(ml, 10, 10, 1)
-    stress_util2d(ml, 1, 10, 10)
-    stress_util2d(ml, 10, 1, 10)
-    stress_util2d(ml, 10, 10, 10)
+    stress_util2d(model_ws, ml, 1, 1, 1)
+    stress_util2d(model_ws, ml, 10, 1, 1)
+    stress_util2d(model_ws, ml, 1, 10, 1)
+    stress_util2d(model_ws, ml, 1, 1, 10)
+    stress_util2d(model_ws, ml, 10, 10, 1)
+    stress_util2d(model_ws, ml, 1, 10, 10)
+    stress_util2d(model_ws, ml, 10, 1, 10)
+    stress_util2d(model_ws, ml, 10, 10, 10)
 
     testFramework.teardown()
 
 
 def test_util2d_external_fixed_path():
-    model_ws = os.path.join(baseDir, f"{baseDir}_ext_fixed_path")
+    model_ws = f"{baseDir}_test_util2d_external_fixed_path"
     testFramework = flopyTest(testDirs=model_ws)
 
     ext_path = "ref"
     ml = flopy.modflow.Modflow(model_ws=model_ws, external_path=ext_path)
     ml.array_free_format = False
 
-    stress_util2d(ml, 1, 1, 1)
-    stress_util2d(ml, 10, 1, 1)
-    stress_util2d(ml, 1, 10, 1)
-    stress_util2d(ml, 1, 1, 10)
-    stress_util2d(ml, 10, 10, 1)
-    stress_util2d(ml, 1, 10, 10)
-    stress_util2d(ml, 10, 1, 10)
-    stress_util2d(ml, 10, 10, 10)
+    stress_util2d(model_ws, ml, 1, 1, 1)
+    stress_util2d(model_ws, ml, 10, 1, 1)
+    stress_util2d(model_ws, ml, 1, 10, 1)
+    stress_util2d(model_ws, ml, 1, 1, 10)
+    stress_util2d(model_ws, ml, 10, 10, 1)
+    stress_util2d(model_ws, ml, 1, 10, 10)
+    stress_util2d(model_ws, ml, 10, 1, 10)
+    stress_util2d(model_ws, ml, 10, 10, 10)
 
     testFramework.teardown()
 
 
 def test_util3d():
-    ml = flopy.modflow.Modflow()
+    model_ws = f"{baseDir}_test_util3d"
+    testFramework = flopyTest(testDirs=model_ws)
+
+    ml = flopy.modflow.Modflow(model_ws=model_ws)
     u3d = Util3d(ml, (10, 10, 10), np.float32, 10.0, "test")
     a1 = u3d.array
     a2 = np.ones((10, 10, 10), dtype=np.float32) * 10.0
@@ -553,11 +561,16 @@ def test_util3d():
     u3d.cnstnt = 2.0
     assert not np.array_equal(a1, u3d.array)
 
+    testFramework.teardown()
+
     return
 
 
 def test_arrayformat():
-    ml = flopy.modflow.Modflow(model_ws=baseDir)
+    model_ws = f"{baseDir}_test_arrayformat"
+    testFramework = flopyTest(testDirs=model_ws)
+
+    ml = flopy.modflow.Modflow(model_ws=model_ws)
     u2d = Util2d(ml, (15, 2), np.float32, np.ones((15, 2)), "test")
 
     fmt_fort = u2d.format.fortran
@@ -610,9 +623,14 @@ def test_arrayformat():
     print(fmt_fort, parsed["fmtin"])
     assert fmt_fort.upper() == parsed["fmtin"].upper()
 
+    testFramework.teardown()
+
 
 def test_new_get_file_entry():
-    ml = flopy.modflow.Modflow(model_ws=baseDir)
+    model_ws = f"{baseDir}_test_new_get_file_entry"
+    testFramework = flopyTest(testDirs=model_ws)
+
+    ml = flopy.modflow.Modflow(model_ws=model_ws)
     u2d = Util2d(ml, (5, 2), np.float32, np.ones((5, 2)), "test", locat=99)
     print(u2d.get_file_entry(how="internal"))
     print(u2d.get_file_entry(how="constant"))
@@ -632,9 +650,11 @@ def test_new_get_file_entry():
     u2d.format.binary = True
     print(u2d.get_file_entry(how="external"))
 
+    testFramework.teardown()
+
 
 def test_append_mflist():
-    ws = f"{baseDir}_mflist_append"
+    ws = f"{baseDir}_test_append_mflist"
     testFramework = flopyTest(verbose=True, testDirs=ws)
 
     ml = flopy.modflow.Modflow(model_ws=ws)
@@ -655,7 +675,10 @@ def test_append_mflist():
 
 
 def test_mflist():
-    ml = flopy.modflow.Modflow(model_ws=baseDir)
+    model_ws = f"{baseDir}_test_mflist"
+    testFramework = flopyTest(testDirs=model_ws, create=True)
+
+    ml = flopy.modflow.Modflow(model_ws=model_ws)
     dis = flopy.modflow.ModflowDis(ml, 10, 10, 10, 10)
     sp_data = {
         0: [[1, 1, 1, 1.0], [1, 1, 2, 2.0], [1, 1, 3, 3.0]],
@@ -799,12 +822,17 @@ def test_mflist():
     assert df.groupby("per")["stage"].mean().loc[0] == 2.0
     assert df.groupby(["k", "i", "j"])["rbot"].count()[(1, 2, 4)] == 10
 
+    testFramework.teardown()
+
 
 def test_how():
     import numpy as np
     import flopy
 
-    ml = flopy.modflow.Modflow(model_ws=baseDir)
+    model_ws = f"{baseDir}_test_how"
+    testFramework = flopyTest(testDirs=model_ws)
+
+    ml = flopy.modflow.Modflow(model_ws=model_ws)
     ml.array_free_format = False
     dis = flopy.modflow.ModflowDis(ml, nlay=2, nrow=10, ncol=10)
 
@@ -815,6 +843,8 @@ def test_how():
     print(u2d.get_file_entry())
     u2d.fmtin = "(binary)"
     print(u2d.get_file_entry())
+
+    testFramework.teardown()
 
 
 def test_util3d_reset():
@@ -833,12 +863,25 @@ def test_mflist_fromfile():
     import pandas as pd
     import flopy
 
+    model_ws = f"{baseDir}_test_mflist_fromfile"
+    testFramework = flopyTest(testDirs=model_ws, create=True)
+
     wel_data = pd.DataFrame(
         [(0, 1, 2, -50.0), (0, 5, 5, -50.0)], columns=["k", "i", "j", "flux"]
     )
-    wel_data.to_csv("wel_000.dat", index=False, sep=" ", header=False)
+    wpth = os.path.join(model_ws, "wel_000.dat")
+    wel_data.to_csv(
+        wpth,
+        index=False,
+        sep=" ",
+        header=False,
+    )
 
-    nwt_model = flopy.modflow.Modflow("nwt_testmodel", verbose=True)
+    nwt_model = flopy.modflow.Modflow(
+        "nwt_testmodel",
+        verbose=True,
+        model_ws=model_ws,
+    )
     dis = flopy.modflow.ModflowDis(
         nwt_model,
         nlay=1,
@@ -849,12 +892,12 @@ def test_mflist_fromfile():
         top=100.0,
         botm=50.0,
     )
-    wel = flopy.modflow.ModflowWel(
-        nwt_model, stress_period_data={0: "wel_000.dat"}
-    )
+    wel = flopy.modflow.ModflowWel(nwt_model, stress_period_data={0: wpth})
     flx_array = wel.stress_period_data.array["flux"][0]
     for k, i, j, flx in zip(wel_data.k, wel_data.i, wel_data.j, wel_data.flux):
         assert flx_array[k, i, j] == flx
+
+    testFramework.teardown()
 
 
 if __name__ == "__main__":

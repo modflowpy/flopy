@@ -15,12 +15,15 @@ try:
 except ImportError:
     shapefile = None
 
-tmpdir = "temp/t550/"
-if not os.path.isdir(tmpdir):
-    os.makedirs(tmpdir, exist_ok=True)
+from ci_framework import baseTestDir, flopyTest
+
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 
 def test_mf6_grid_shp_export():
+    model_ws = f"{baseDir}_test_mf6_grid_shp_export"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+
     nlay = 2
     nrow = 10
     ncol = 10
@@ -32,7 +35,7 @@ def test_mf6_grid_shp_export():
     perioddata = [[perlen, nstp, tsmult]] * 2
     botm = np.zeros((2, 10, 10))
 
-    m = fm.Modflow("junk", version="mfnwt", model_ws=tmpdir)
+    m = fm.Modflow("junk", version="mfnwt", model_ws=model_ws,)
     dis = fm.ModflowDis(
         m,
         nlay=nlay,
@@ -72,7 +75,7 @@ def test_mf6_grid_shp_export():
     # mf6 version of same model
     mf6name = "junk6"
     sim = fp6.MFSimulation(
-        sim_name=mf6name, version="mf6", exe_name="mf6", sim_ws=tmpdir
+        sim_name=mf6name, version="mf6", exe_name="mf6", sim_ws=model_ws,
     )
     tdis = flopy.mf6.modflow.mftdis.ModflowTdis(
         sim, pname="tdis", time_units="DAYS", nper=nper, perioddata=perioddata
@@ -101,9 +104,9 @@ def test_mf6_grid_shp_export():
     riv6 = fp6.ModflowGwfriv(gwf, stress_period_data=spd6)
     rch6 = fp6.ModflowGwfrcha(gwf, recharge=rech)
     if shapefile:
-        # rch6.export('{}/mf6.shp'.format(tmpdir))
-        m.export(f"{tmpdir}/mfnwt.shp")
-        gwf.export(f"{tmpdir}/mf6.shp")
+        # rch6.export('{}/mf6.shp'.format(baseDir))
+        m.export(f"{model_ws}/mfnwt.shp")
+        gwf.export(f"{model_ws}/mf6.shp")
 
     riv6spdarrays = dict(riv6.stress_period_data.masked_4D_arrays_itr())
     rivspdarrays = dict(riv.stress_period_data.masked_4D_arrays_itr())
@@ -117,8 +120,8 @@ def test_mf6_grid_shp_export():
         return  # skip remainder
 
     # check that the two shapefiles are the same
-    ra = shp2recarray(f"{tmpdir}/mfnwt.shp")
-    ra6 = shp2recarray(f"{tmpdir}/mf6.shp")
+    ra = shp2recarray(f"{model_ws}/mfnwt.shp")
+    ra6 = shp2recarray(f"{model_ws}/mf6.shp")
 
     # check first and last exported cells
     assert ra.geometry[0] == ra6.geometry[0]
@@ -142,8 +145,12 @@ def test_mf6_grid_shp_export():
                 assert np.abs(it - it6) < 1e-6
         pass
 
+    testFramework.teardown()
 
 def test_huge_shapefile():
+    model_ws = f"{baseDir}_test_huge_shapefile"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+
     nlay = 2
     nrow = 200
     ncol = 200
@@ -155,7 +162,7 @@ def test_huge_shapefile():
     perioddata = [[perlen, nstp, tsmult]] * 2
     botm = np.zeros((nlay, nrow, ncol))
 
-    m = fm.Modflow("junk", version="mfnwt", model_ws=tmpdir)
+    m = fm.Modflow("junk", version="mfnwt", model_ws=model_ws)
     dis = fm.ModflowDis(
         m,
         nlay=nlay,
@@ -169,8 +176,9 @@ def test_huge_shapefile():
         botm=botm,
     )
     if shapefile:
-        m.export(f"{tmpdir}/huge.shp")
+        m.export(f"{model_ws}/huge.shp")
 
+    testFramework.teardown()
 
 if __name__ == "__main__":
     test_mf6_grid_shp_export()
