@@ -8,7 +8,7 @@ MODFLOW Guide
 
 """
 import numpy as np
-from ..utils.flopy_io import pop_item, line_parse
+from ..utils.flopy_io import pop_item, line_parse, multi_line_strip, line_strip
 from ..pakbase import Package
 from ..utils import Util2d, Transient2d
 from ..utils.optionblock import OptionBlock
@@ -923,7 +923,7 @@ class ModflowUzf1(Package):
         options = None
         if model.version == "mfnwt" and "options" in line.lower():
             options = OptionBlock.load_options(f, ModflowUzf1)
-            line = f.readline()
+            line = multi_line_strip(f)
 
         else:
             query = (
@@ -942,7 +942,7 @@ class ModflowUzf1(Package):
                     options = OptionBlock(
                         line.lower().strip(), ModflowUzf1, block=False
                     )
-                    line = f.readline()
+                    line = multi_line_strip(f)
                     break
 
         if options is not None:

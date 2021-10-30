@@ -76,6 +76,14 @@ longname keyword to activate Newton-Raphson
 description keyword that activates the Newton-Raphson formulation for groundwater flow between connected, convertible groundwater cells. Cells will not dry when this option is used.
 
 block options
+name xt3d
+type keyword
+reader urword
+optional true
+longname keyword to activate XT3D
+description keyword that activates the XT3D formulation between the cells connected with this GWF-GWF Exchange.
+
+block options
 name gnc_filerecord
 type record gnc6 filein gnc6_filename
 shape

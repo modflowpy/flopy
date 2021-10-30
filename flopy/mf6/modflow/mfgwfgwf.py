@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on August 06, 2021 20:56:59 UTC
+# FILE created on October 29, 2021 21:09:57 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -71,6 +71,9 @@ class ModflowGwfgwf(mfpackage.MFPackage):
         * newton (boolean) keyword that activates the Newton-Raphson
           formulation for groundwater flow between connected, convertible
           groundwater cells. Cells will not dry when this option is used.
+    xt3d : boolean
+        * xt3d (boolean) keyword that activates the XT3D formulation between
+          the cells connected with this GWF-GWF Exchange.
     gnc_filerecord : [gnc6_filename]
         * gnc6_filename (string) is the file name for ghost node correction
           input file. Information for the ghost nodes are provided in the file
@@ -229,6 +232,13 @@ class ModflowGwfgwf(mfpackage.MFPackage):
         [
             "block options",
             "name newton",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name xt3d",
             "type keyword",
             "reader urword",
             "optional true",
@@ -429,6 +439,7 @@ class ModflowGwfgwf(mfpackage.MFPackage):
         cell_averaging=None,
         cvoptions=None,
         newton=None,
+        xt3d=None,
         gnc_filerecord=None,
         mvr_filerecord=None,
         observations=None,
@@ -460,6 +471,7 @@ class ModflowGwfgwf(mfpackage.MFPackage):
         )
         self.cvoptions = self.build_mfdata("cvoptions", cvoptions)
         self.newton = self.build_mfdata("newton", newton)
+        self.xt3d = self.build_mfdata("xt3d", xt3d)
         self.gnc_filerecord = self.build_mfdata(
             "gnc_filerecord", gnc_filerecord
         )

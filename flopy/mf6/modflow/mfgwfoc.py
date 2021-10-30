@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on August 06, 2021 20:57:00 UTC
+# FILE created on October 29, 2021 21:09:57 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -20,6 +20,10 @@ class ModflowGwfoc(mfpackage.MFPackage):
     budget_filerecord : [budgetfile]
         * budgetfile (string) name of the output file to write budget
           information.
+    budgetcsv_filerecord : [budgetcsvfile]
+        * budgetcsvfile (string) name of the comma-separated value (CSV) output
+          file to write budget summary information. A budget summary record
+          will be written to this file for each time step of the simulation.
     head_filerecord : [headfile]
         * headfile (string) name of the output file to write head information.
     headprintrecord : [columns, width, digits, format]
@@ -90,6 +94,9 @@ class ModflowGwfoc(mfpackage.MFPackage):
     budget_filerecord = ListTemplateGenerator(
         ("gwf6", "oc", "options", "budget_filerecord")
     )
+    budgetcsv_filerecord = ListTemplateGenerator(
+        ("gwf6", "oc", "options", "budgetcsv_filerecord")
+    )
     head_filerecord = ListTemplateGenerator(
         ("gwf6", "oc", "options", "head_filerecord")
     )
@@ -137,6 +144,36 @@ class ModflowGwfoc(mfpackage.MFPackage):
         [
             "block options",
             "name budgetfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsv_filerecord",
+            "type record budgetcsv fileout budgetcsvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budgetcsv",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsvfile",
             "type string",
             "preserve_case true",
             "shape",
@@ -361,6 +398,7 @@ class ModflowGwfoc(mfpackage.MFPackage):
         model,
         loading_package=False,
         budget_filerecord=None,
+        budgetcsv_filerecord=None,
         head_filerecord=None,
         headprintrecord=None,
         saverecord=None,
@@ -376,6 +414,9 @@ class ModflowGwfoc(mfpackage.MFPackage):
         # set up variables
         self.budget_filerecord = self.build_mfdata(
             "budget_filerecord", budget_filerecord
+        )
+        self.budgetcsv_filerecord = self.build_mfdata(
+            "budgetcsv_filerecord", budgetcsv_filerecord
         )
         self.head_filerecord = self.build_mfdata(
             "head_filerecord", head_filerecord
