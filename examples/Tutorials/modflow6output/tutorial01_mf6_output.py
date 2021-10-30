@@ -126,7 +126,7 @@ uzf_bud = uzf.output.budget()
 uzf_bud.get_data(idx=0)
 
 uzf_budcsv = uzf.output.budgetcsv()
-uzf_budcv.data
+uzf_budcsv.data
 
 uzf_conv = uzf.output.package_convergence()
 if uzf_conv is not None:
