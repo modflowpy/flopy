@@ -2,12 +2,12 @@ import pytest
 import os
 import shutil
 import flopy
+from ci_framework import baseTestDir, flopyTest
+
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 pthtest = os.path.join("..", "examples", "data", "swtv4_test")
-newpth = os.path.join(".", "temp", "t028")
-# make the directory if it does not exist
-if not os.path.isdir(newpth):
-    os.makedirs(newpth, exist_ok=True)
+
 swtv4_exe = "swtv4"
 isswtv4 = flopy.which(swtv4_exe)
 runmodel = False
@@ -61,19 +61,23 @@ subds = [
 
 
 def test_seawat_array_format():
+    testFramework = flopyTest(verbose=True)
+
     d = "2_henry"
     subds = ["1_classic_case1"]
     for subd in subds:
         pth = os.path.join(pthtest, d, subd)
-        testpth = os.path.join(newpth, f"{d}-{subd}")
-        if os.path.isdir(testpth):
-            shutil.rmtree(testpth)
-        os.makedirs(testpth)
+
+        model_ws = os.path.join(
+            f"{baseDir}_test_seawat_array_format_{d}-{subd}"
+        )
+        testFramework.addTestDir(model_ws)
+
         namfile = "seawat.nam"
         if subd == "6_age_simulation":
             namfile = "henry_mod.nam"
         m = flopy.seawat.Seawat.load(namfile, model_ws=pth, verbose=verbose)
-        m.change_model_ws(testpth, reset_external=True)
+        m.change_model_ws(model_ws, reset_external=True)
 
         m.bcf6.hy[0].fmtin = "(BINARY)"
         m.btn.prsity[0].fmtin = "(BINARY)"
@@ -94,12 +98,12 @@ def test_swtv4(d, subd):
 
 
 def run_swtv4(d, subd):
+    testFramework = flopyTest(verbose=True)
+    model_ws = os.path.join(f"{baseDir}_test_swtv4_{d}-{subd}")
+    testFramework.addTestDir(model_ws)
+
     # set up paths
     pth = os.path.join(pthtest, d, subd)
-    testpth = os.path.join(newpth, f"{d}-{subd}")
-    if os.path.isdir(testpth):
-        shutil.rmtree(testpth)
-    os.makedirs(testpth)
 
     namfile = "seawat.nam"
     if subd == "6_age_simulation":
@@ -109,7 +113,7 @@ def run_swtv4(d, subd):
     m = flopy.seawat.swt.Seawat.load(namfile, model_ws=pth, verbose=verbose)
 
     # change working directory
-    m.change_model_ws(testpth)
+    m.change_model_ws(model_ws)
 
     # write input files
     m.write_input()

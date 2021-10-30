@@ -1,18 +1,19 @@
 import os
 import flopy
+from ci_framework import baseTestDir, flopyTest
 
-newpth = os.path.join(".", "temp", "t030")
-# make the directory if it does not exist
-if not os.path.isdir(newpth):
-    os.makedirs(newpth, exist_ok=True)
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 
 def test_vdf_vsc():
+    model_ws = f"{baseDir}_test_vdf_vsc"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
     nlay = 3
     nrow = 4
     ncol = 5
     nper = 3
-    m = flopy.seawat.Seawat(modelname="vdftest", model_ws=newpth)
+    m = flopy.seawat.Seawat(modelname="vdftest", model_ws=model_ws)
     dis = flopy.modflow.ModflowDis(
         m, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper
     )

@@ -7,12 +7,12 @@ import matplotlib.pyplot as plt
 
 import flopy
 
+from ci_framework import baseTestDir, flopyTest
+
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+
 pthtest = os.path.join("..", "examples", "data", "mfgrd_test")
 flowpth = os.path.join("..", "examples", "data", "mf6-freyberg")
-
-tpth = os.path.join("temp", "t029")
-if not os.path.isdir(tpth):
-    os.makedirs(tpth, exist_ok=True)
 
 
 def test_mfgrddis_MfGrdFile():
@@ -201,6 +201,9 @@ def test_mfgrddisu_modelgrid():
 
 
 def test_faceflows():
+    model_ws = f"{baseDir}_test_faceflows"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
     sim = flopy.mf6.MFSimulation.load(
         sim_name="freyberg",
         exe_name="mf6",
@@ -208,7 +211,7 @@ def test_faceflows():
     )
 
     # change the simulation workspace
-    sim.set_sim_path(tpth)
+    sim.set_sim_path(model_ws)
 
     # write the model simulation files
     sim.write_simulation()
@@ -226,7 +229,7 @@ def test_faceflows():
 
     frf, fff, flf = flopy.mf6.utils.get_structured_faceflows(
         flowja,
-        grb_file=os.path.join(tpth, "freyberg.dis.grb"),
+        grb_file=os.path.join(model_ws, "freyberg.dis.grb"),
     )
     Qx, Qy, Qz = flopy.utils.postprocessing.get_specific_discharge(
         (frf, fff, flf),
@@ -274,15 +277,27 @@ def test_faceflows():
 
 
 def test_flowja_residuals():
+    model_ws = f"{baseDir}_test_flowja_residuals"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
     sim = flopy.mf6.MFSimulation.load(
         sim_name="freyberg",
         exe_name="mf6",
-        sim_ws=tpth,
+        sim_ws=flowpth,
     )
+
+    # change the simulation workspace
+    sim.set_sim_path(model_ws)
+
+    # write the model simulation files
+    sim.write_simulation()
+
+    # run the simulation
+    sim.run_simulation()
 
     # get output
     gwf = sim.get_model("freyberg")
-    grb_file = os.path.join(tpth, "freyberg.dis.grb")
+    grb_file = os.path.join(model_ws, "freyberg.dis.grb")
     cbc = gwf.output.budget()
 
     spdis = cbc.get_data(text="DATA-SPDIS")[0]

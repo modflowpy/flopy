@@ -6,11 +6,9 @@ Some basic tests for SEAWAT Henry create and run.
 import os
 import numpy as np
 import flopy
+from ci_framework import baseTestDir, flopyTest
 
-workspace = os.path.join("temp", "t026")
-# make the directory if it does not exist
-if not os.path.isdir(workspace):
-    os.makedirs(workspace, exist_ok=True)
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 seawat_exe = "swtv4"
 isseawat = flopy.which(seawat_exe)
@@ -47,8 +45,11 @@ ssm_data[0] = ssm_sp1
 
 def test_seawat_henry():
     # SEAWAT model from a modflow model and an mt3d model
+    model_ws = f"{baseDir}_test_seawat_henry"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
     modelname = "henry"
-    mf = flopy.modflow.Modflow(modelname, exe_name="swtv4", model_ws=workspace)
+    mf = flopy.modflow.Modflow(modelname, exe_name="swtv4", model_ws=model_ws)
     # shortened perlen to 0.1 to make this run faster -- should be about 0.5
     dis = flopy.modflow.ModflowDis(
         mf,
@@ -75,7 +76,7 @@ def test_seawat_henry():
     )
 
     # Create the basic MT3DMS model structure
-    mt = flopy.mt3d.Mt3dms(modelname, "nam_mt3dms", mf, model_ws=workspace)
+    mt = flopy.mt3d.Mt3dms(modelname, "nam_mt3dms", mf, model_ws=model_ws)
     btn = flopy.mt3d.Mt3dBtn(
         mt,
         nprs=-5,
@@ -94,7 +95,12 @@ def test_seawat_henry():
 
     # Create the SEAWAT model structure
     mswt = flopy.seawat.Seawat(
-        modelname, "nam_swt", mf, mt, model_ws=workspace, exe_name="swtv4"
+        modelname,
+        "nam_swt",
+        mf,
+        mt,
+        model_ws=model_ws,
+        exe_name="swtv4",
     )
     vdf = flopy.seawat.SeawatVdf(
         mswt,
@@ -120,9 +126,15 @@ def test_seawat_henry():
 
 def test_seawat2_henry():
     # SEAWAT model directly by adding packages
+    model_ws = f"{baseDir}_test_seawat2_henry"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
     modelname = "henry2"
     m = flopy.seawat.swt.Seawat(
-        modelname, "nam", model_ws=workspace, exe_name="swtv4"
+        modelname,
+        "nam",
+        model_ws=model_ws,
+        exe_name="swtv4",
     )
     dis = flopy.modflow.ModflowDis(
         m,
