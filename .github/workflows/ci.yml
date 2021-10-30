@@ -154,11 +154,7 @@ jobs:
 
     - name: Add packages to flopy environment using mamba or conda
       run: |
-        if [ "$RUNNER_OS" == "Windows" ]; then
-          conda env update --name flopy --file etc/environment.yml
-        else
-          mamba env update --name flopy --file etc/environment.yml
-        fi
+        mamba env update --name flopy --file etc/environment.yml
 
     - name: Install pymake, xmipy, and flopy
       run: |

@@ -156,20 +156,6 @@ def test_list_download():
     list_exes()
 
 
-def test_build_dirs():
-    parent_path = get_parent_path()
-    if parent_path is None:
-        print("cannot build test directories")
-    else:
-        dirPath = os.path.join(parent_path, "temp")
-        createTestDir(dirPath, verbose=True)
-
-        tests = ["scripts"]
-        for test in tests:
-            testDir = os.path.join(dirPath, test)
-            createTestDir(testDir, verbose=True)
-
-
 def test_download_mf6_examples(delete_existing=True):
     if run_type == "std":
         downloadDir = download_mf6_examples(delete_existing=delete_existing)
@@ -184,5 +170,4 @@ if __name__ == "__main__":
     test_update_flopy()
     cleanup()
     list_exes()
-    test_build_dirs()
     test_download_mf6_examples()
