@@ -12,7 +12,7 @@ baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 def test_create_and_run_model():
 
-    fpTest = flopyTest(verbose=True, testDirs=baseDir)
+    testFramework = flopyTest(verbose=True, testDirs=baseDir)
 
     # names
     sim_name = "testsim"
@@ -143,8 +143,6 @@ def test_create_and_run_model():
         assert success, f"{baseDir} did not run" f""
         # head = sim.simulation_data.mfdata[(model_name, 'HDS', 'HEAD')]
         # print('HEAD: ', head)
-
-    fpTest.teardown()
 
     return
 

@@ -35,6 +35,7 @@ from flopy.mf6.modflow.mfutlts import ModflowUtlts
 from flopy.mf6.utils import testutils
 from flopy.mf6.mfbase import MFDataException
 from flopy.mf6.mfbase import ExtFileAction
+from ci_framework import baseTestDir, flopyTest
 
 try:
     import shapefile
@@ -56,10 +57,7 @@ run = True
 if v is None:
     run = False
 
-cpth = os.path.join("temp", "t505")
-# make the directory if it does not exist
-if not os.path.isdir(cpth):
-    os.makedirs(cpth, exist_ok=True)
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 
 def get_gwf_model(sim, gwfname, gwfpath, modelshape, chdspd=None, welspd=None):
@@ -194,9 +192,8 @@ def test_multi_model():
     test_ex_name = "test_multi_model"
     model_names = ["gwf_model_1", "gwf_model_2", "gwt_model_1", "gwt_model_2"]
 
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
+    run_folder = f"{baseDir}_{test_ex_name}"
+    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
 
     # temporal discretization
     nper = 1
@@ -208,7 +205,6 @@ def test_multi_model():
         tdis_rc.append((perlen[i], nstp[i], tsmult[i]))
 
     # build MODFLOW 6 files
-    ws = dir
     sim = flopy.mf6.MFSimulation(
         sim_name=test_ex_name, version="mf6", exe_name="mf6", sim_ws=run_folder
     )
@@ -361,12 +357,12 @@ def test_np001():
     test_ex_name = "np001"
     model_name = "np001_mod"
 
+    run_folder = f"{baseDir}_{test_ex_name}"
+    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
     )
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file = os.path.join(expected_output_folder, "np001_mod.hds")
@@ -696,18 +692,20 @@ def test_np001():
         sim.run_simulation()
 
         # get expected results
-        budget_file = os.path.join(os.getcwd(), expected_cbc_file)
-        budget_obj = bf.CellBudgetFile(budget_file, precision="double")
+        budget_obj = bf.CellBudgetFile(expected_cbc_file, precision="double")
         budget_frf_valid = np.array(
             budget_obj.get_data(text="RIV", full3D=False)
         )
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file)
         head_new = os.path.join(run_folder, "np001_mod.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new, outfile=outfile
+            None,
+            None,
+            files1=expected_head_file,
+            files2=head_new,
+            outfile=outfile,
         )
         # budget_frf = sim.simulation_data.mfdata[(model_name, "CBC", "RIV")]
         budget_frf = model.output.budget().get_data(text="RIV", full3D=False)
@@ -732,18 +730,20 @@ def test_np001():
         sim.run_simulation()
 
         # get expected results
-        budget_file = os.path.join(os.getcwd(), expected_cbc_file)
-        budget_obj = bf.CellBudgetFile(budget_file, precision="double")
+        budget_obj = bf.CellBudgetFile(expected_cbc_file, precision="double")
         budget_frf_valid = np.array(
             budget_obj.get_data(text="RIV", full3D=False)
         )
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file)
         head_new = os.path.join(run_folder_new, "np001_mod.hds")
         outfile = os.path.join(run_folder_new, "head_compare.dat")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new, outfile=outfile
+            None,
+            None,
+            files1=expected_head_file,
+            files2=head_new,
+            outfile=outfile,
         )
 
         # budget_frf = sim.simulation_data.mfdata[(model_name, "CBC", "RIV")]
@@ -918,13 +918,14 @@ def test_np002():
     test_ex_name = "np002"
     model_name = "np002_mod"
 
+    run_folder = f"{baseDir}_{test_ex_name}"
+    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
     )
-    pth_for_mf = os.path.join("..", "..", "..", pth)
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
+    # pth_for_mf = os.path.join("..", "..", "..", pth)
+    pth_for_mf = os.path.join("..", "..", pth)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file = os.path.join(expected_output_folder, "np002_mod.hds")
@@ -1093,11 +1094,14 @@ def test_np002():
         k = npf_package.k.array
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file)
         head_new = os.path.join(run_folder, "np002_mod.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new, outfile=outfile
+            None,
+            None,
+            files1=expected_head_file,
+            files2=head_new,
+            outfile=outfile,
         )
 
         # verify external text file was written correctly
@@ -1181,12 +1185,12 @@ def test021_twri():
     test_ex_name = "test021_twri"
     model_name = "twri"
 
+    run_folder = f"{baseDir}_{test_ex_name}"
+    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
     )
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file = os.path.join(expected_output_folder, "twri.hds")
@@ -1377,11 +1381,14 @@ def test021_twri():
     assert drn_spd[0][1][3] == "name_2"
 
     # compare output to expected results
-    head_file = os.path.join(os.getcwd(), expected_head_file)
     head_new = os.path.join(run_folder, "twri.hds")
     outfile = os.path.join(run_folder, "head_compare.dat")
     assert pymake.compare_heads(
-        None, None, files1=head_file, files2=head_new, outfile=outfile
+        None,
+        None,
+        files1=expected_head_file,
+        files2=head_new,
+        outfile=outfile,
     )
 
     # clean up
@@ -1395,12 +1402,12 @@ def test005_advgw_tidal():
     test_ex_name = "test005_advgw_tidal"
     model_name = "AdvGW_tidal"
 
+    run_folder = f"{baseDir}_{test_ex_name}"
+    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
     )
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file = os.path.join(
@@ -1928,11 +1935,14 @@ def test005_advgw_tidal():
     sim.run_simulation()
 
     # compare output to expected results
-    head_file = os.path.join(os.getcwd(), expected_head_file)
     head_new = os.path.join(run_folder, "AdvGW_tidal.hds")
     outfile = os.path.join(run_folder, "head_compare.dat")
     assert pymake.compare_heads(
-        None, None, files1=head_file, files2=head_new, outfile=outfile
+        None,
+        None,
+        files1=expected_head_file,
+        files2=head_new,
+        outfile=outfile,
     )
 
     # test rename all
@@ -2011,12 +2021,12 @@ def test004_bcfss():
     test_ex_name = "test004_bcfss"
     model_name = "bcf2ss"
 
+    run_folder = f"{baseDir}_{test_ex_name}"
+    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
     )
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file = os.path.join(expected_output_folder, "bcf2ss.hds")
@@ -2146,11 +2156,14 @@ def test004_bcfss():
         sim.run_simulation()
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file)
         head_new = os.path.join(run_folder, "bcf2ss.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new, outfile=outfile
+            None,
+            None,
+            files1=expected_head_file,
+            files2=head_new,
+            outfile=outfile,
         )
 
         # clean up
@@ -2164,12 +2177,12 @@ def test035_fhb():
     test_ex_name = "test035_fhb"
     model_name = "fhb2015"
 
+    run_folder = f"{baseDir}_{test_ex_name}"
+    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
     )
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file = os.path.join(
@@ -2291,11 +2304,14 @@ def test035_fhb():
         sim.run_simulation()
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file)
         head_new = os.path.join(run_folder, "fhb2015_fhb.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new, outfile=outfile
+            None,
+            None,
+            files1=expected_head_file,
+            files2=head_new,
+            outfile=outfile,
         )
 
         # clean up
@@ -2309,12 +2325,12 @@ def test006_gwf3_disv():
     test_ex_name = "test006_gwf3_disv"
     model_name = "flow"
 
+    run_folder = f"{baseDir}_{test_ex_name}"
+    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
     )
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file = os.path.join(expected_output_folder, "flow.hds")
@@ -2572,11 +2588,14 @@ def test006_gwf3_disv():
         sim.run_simulation()
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file)
         head_new = os.path.join(run_folder, "flow.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new, outfile=outfile
+            None,
+            None,
+            files1=expected_head_file,
+            files2=head_new,
+            outfile=outfile,
         )
 
         # export to netcdf - temporarily disabled
@@ -2597,12 +2616,12 @@ def test006_2models_gnc():
     model_name_1 = "model1"
     model_name_2 = "model2"
 
+    run_folder = f"{baseDir}_{test_ex_name}"
+    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
     )
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_1 = os.path.join(expected_output_folder, "model1.hds")
@@ -2888,19 +2907,25 @@ def test006_2models_gnc():
         sim.run_simulation()
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_1)
         head_new = os.path.join(run_folder, "model1.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new, outfile=outfile
+            None,
+            None,
+            files1=expected_head_file_1,
+            files2=head_new,
+            outfile=outfile,
         )
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_2)
         head_new = os.path.join(run_folder, "model2.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new, outfile=outfile
+            None,
+            None,
+            files1=expected_head_file_2,
+            files2=head_new,
+            outfile=outfile,
         )
 
     # test external file paths
@@ -2941,12 +2966,12 @@ def test050_circle_island():
     test_ex_name = "test050_circle_island"
     model_name = "ci"
 
+    run_folder = f"{baseDir}_{test_ex_name}"
+    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
     )
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file = os.path.join(expected_output_folder, "ci.output.hds")
@@ -3025,11 +3050,14 @@ def test050_circle_island():
         sim.run_simulation()
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file)
         head_new = os.path.join(run_folder, "ci.output.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new, outfile=outfile
+            None,
+            None,
+            files1=expected_head_file,
+            files2=head_new,
+            outfile=outfile,
         )
 
         # clean up
@@ -3043,12 +3071,12 @@ def test028_sfr():
     test_ex_name = "test028_sfr"
     model_name = "test1tr"
 
+    run_folder = f"{baseDir}_{test_ex_name}"
+    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
     )
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file = os.path.join(expected_output_folder, "test1tr.hds")
@@ -3292,13 +3320,12 @@ def test028_sfr():
         sim.run_simulation()
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file)
         head_new = os.path.join(run_folder, "test1tr.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
         assert pymake.compare_heads(
             None,
             None,
-            files1=head_file,
+            files1=expected_head_file,
             files2=head_new,
             outfile=outfile,
             htol=10.0,
@@ -3315,18 +3342,17 @@ def test_transport():
     test_ex_name = "test_transport"
     name = "mst03"
 
+    run_folder = f"{baseDir}_{test_ex_name}"
+    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
     )
-    run_folder = os.path.join(cpth, test_ex_name)
-    if not os.path.isdir(run_folder):
-        os.makedirs(run_folder, exist_ok=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file = os.path.join(expected_output_folder, "gwf_mst03.hds")
     expected_conc_file = os.path.join(expected_output_folder, "gwt_mst03.unc")
 
-    ws = os.path.join("temp", "t505", test_ex_name)
     laytyp = [1]
     ss = [1.0e-10]
     sy = [0.1]
@@ -3353,7 +3379,10 @@ def test_transport():
 
     # build MODFLOW 6 files
     sim = flopy.mf6.MFSimulation(
-        sim_name=name, version="mf6", exe_name="mf6", sim_ws=ws
+        sim_name=name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=run_folder,
     )
     # create tdis package
     tdis = flopy.mf6.ModflowTdis(
@@ -3528,16 +3557,22 @@ def test_transport():
         sim.run_simulation()
 
         # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file)
         head_new = os.path.join(run_folder, "gwf_mst03.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
         assert pymake.compare_heads(
-            None, None, files1=head_file, files2=head_new, outfile=outfile
+            None,
+            None,
+            files1=expected_head_file,
+            files2=head_new,
+            outfile=outfile,
         )
-        conc_file = os.path.join(os.getcwd(), expected_conc_file)
         conc_new = os.path.join(run_folder, "gwt_mst03.ucn")
         assert pymake.compare_concs(
-            None, None, files1=conc_file, files2=conc_new, outfile=outfile
+            None,
+            None,
+            files1=expected_conc_file,
+            files2=conc_new,
+            outfile=outfile,
         )
 
         # clean up

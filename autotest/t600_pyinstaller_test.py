@@ -10,7 +10,10 @@ rename_path = flopy_folder / "mf6" / "data" / "no-dfn"
 
 
 def test_flopy_runs_without_dfn_folder():
-    """Test to ensure that flopy can load a modflow 6 simulation without dfn files being present."""
+    """
+    Test to ensure that flopy can load a modflow 6 simulation without dfn
+    files being present.
+    """
     exists = dfn_path.exists()
     if exists:
         if rename_path.exists():

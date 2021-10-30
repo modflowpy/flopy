@@ -3,10 +3,7 @@ HeadUFile get_ts tests using t505_test.py
 """
 
 import os
-import sys
 import platform
-import shutil
-import numpy as np
 
 try:
     from shapely.geometry import Polygon
@@ -17,6 +14,7 @@ except ImportWarning as e:
 
 import flopy
 from flopy.utils.gridgen import Gridgen
+from ci_framework import baseTestDir, flopyTest
 
 # Set gridgen executable
 gridgen_exe = "gridgen"
@@ -31,18 +29,13 @@ if platform.system() in "Windows":
 mfusg_exe = flopy.which(mfusg_exe)
 
 # set up the example folder
-test_number = "t080"
-tpth = os.path.join("temp", test_number)
-if not os.path.isdir(tpth):
-    os.makedirs(tpth, exist_ok=True)
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 
 def test_mfusg():
-
     # set up a gridgen workspace
-    gridgen_ws = os.path.join(tpth, f"gridgen_{test_number}")
-    if not os.path.isdir(gridgen_ws):
-        os.makedirs(gridgen_ws, exist_ok=True)
+    gridgen_ws = f"{baseDir}_test_mfusg"
+    testFramework = flopyTest(verbose=True, testDirs=gridgen_ws)
 
     name = "dummy"
     nlay = 3
@@ -83,11 +76,10 @@ def test_mfusg():
     gridprops = g.get_gridprops_disu5()
 
     # create the mfusg modoel
-    ws = os.path.join(tpth, "gridgen_mfusg")
     name = "mymodel"
     m = flopy.mfusg.MfUsg(
         modelname=name,
-        model_ws=ws,
+        model_ws=gridgen_ws,
         exe_name=mfusg_exe,
         structured=False,
     )
@@ -110,7 +102,7 @@ def test_mfusg():
         m.run_model()
 
         # head is returned as a list of head arrays for each layer
-        head_file = os.path.join(ws, f"{name}.hds")
+        head_file = os.path.join(gridgen_ws, f"{name}.hds")
         head = flopy.utils.HeadUFile(head_file).get_data()
 
         # test if single node idx works
@@ -129,6 +121,9 @@ def test_mfusg():
                 raise AssertionError(
                     "Error head from 'get_ts' != head from 'get_data'"
                 )
+
+    #
+    #
 
     return
 

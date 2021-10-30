@@ -1,17 +1,17 @@
 import os
 import numpy as np
 import flopy
+from ci_framework import baseTestDir, flopyTest
 
-tpth = os.path.join("temp", "t067")
-if not os.path.isdir(tpth):
-    os.makedirs(tpth, exist_ok=True)
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 
 def test_ulstrd():
+    model_ws = f"{baseDir}_test_ulstrd"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
 
     # Create an original model and then manually modify to use
     # advanced list reader capabilities
-    ws = tpth
     nlay = 1
     nrow = 10
     ncol = 10
@@ -40,7 +40,9 @@ def test_ulstrd():
     welspd = {0: welra}
 
     m = flopy.modflow.Modflow(
-        modelname="original", model_ws=ws, exe_name="mf2005"
+        modelname="original",
+        model_ws=model_ws,
+        exe_name="mf2005",
     )
     dis = flopy.modflow.ModflowDis(
         m, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper
@@ -57,7 +59,7 @@ def test_ulstrd():
     m.write_input()
 
     # rewrite ghb
-    fname = os.path.join(ws, "original.ghb")
+    fname = os.path.join(model_ws, "original.ghb")
     with open(fname, "w") as f:
         f.write(f"{ghbra.shape[0]} 0\n")
         for kper in range(nper):
@@ -66,14 +68,14 @@ def test_ulstrd():
 
     # write ghb list
     sfacghb = 5
-    fname = os.path.join(ws, "original.ghb.dat")
+    fname = os.path.join(model_ws, "original.ghb.dat")
     with open(fname, "w") as f:
         f.write(f"sfac {sfacghb}\n")
         for k, i, j, stage, cond in ghbra:
             f.write(f"{k + 1} {i + 1} {j + 1} {stage} {cond}\n")
 
     # rewrite drn
-    fname = os.path.join(ws, "original.drn")
+    fname = os.path.join(model_ws, "original.drn")
     with open(fname, "w") as f:
         f.write(f"{drnra.shape[0]} 0\n")
         for kper in range(nper):
@@ -82,7 +84,7 @@ def test_ulstrd():
 
     # write drn list
     sfacdrn = 1.5
-    fname = os.path.join(ws, "original.drn.dat")
+    fname = os.path.join(model_ws, "original.drn.dat")
     with open(fname, "w") as f:
         for kper in range(nper):
             f.write(f"sfac {sfacdrn}\n")
@@ -90,7 +92,7 @@ def test_ulstrd():
                 f.write(f"{k + 1} {i + 1} {j + 1} {stage} {cond}\n")
 
     # rewrite wel
-    fname = os.path.join(ws, "original.wel")
+    fname = os.path.join(model_ws, "original.wel")
     with open(fname, "w") as f:
         f.write(f"{drnra.shape[0]} 0\n")
         for kper in range(nper):
@@ -110,7 +112,7 @@ def test_ulstrd():
     welra = np.recarray(2, dtype=weldt)
     welra[0] = (1, 2, 2, -5.0)
     welra[1] = (1, nrow - 2, ncol - 2, -10.0)
-    fname = os.path.join(ws, "original.wel.bin")
+    fname = os.path.join(model_ws, "original.wel.bin")
     with open(fname, "wb") as f:
         welra.tofile(f)
         welra.tofile(f)
@@ -123,7 +125,7 @@ def test_ulstrd():
     # the m2 model will load all of these external files, possibly using sfac
     # and just create regular list input files for wel, drn, and ghb
     fname = "original.nam"
-    m2 = flopy.modflow.Modflow.load(fname, model_ws=ws, verbose=False)
+    m2 = flopy.modflow.Modflow.load(fname, model_ws=model_ws, verbose=False)
     m2.name = "new"
     m2.write_input()
 

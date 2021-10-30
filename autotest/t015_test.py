@@ -14,10 +14,9 @@ try:
 except:
     pymake = None
 
-tpth = os.path.abspath(os.path.join("temp", "t015"))
-# make the directory if it does not exist
-if not os.path.isdir(tpth):
-    os.makedirs(tpth, exist_ok=True)
+from ci_framework import baseTestDir, flopyTest
+
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 mfexe = "mf2005"
 v = flopy.which(mfexe)
@@ -42,6 +41,9 @@ str_items = {
 
 
 def test_str_issue1164():
+    model_ws = f"{baseDir}_test_str_issue1164"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
     m = flopy.modflow.Modflow.load(
         str_items[0]["mfnam"],
         exe_name=mfexe,
@@ -50,8 +52,7 @@ def test_str_issue1164():
         check=False,
     )
 
-    ws = os.path.join(tpth, "issue-1164")
-    m.change_model_ws(ws)
+    m.change_model_ws(model_ws)
 
     # adjust stress period data
     spd0 = m.str.stress_period_data[0]
@@ -64,7 +65,7 @@ def test_str_issue1164():
     assert success, "could not run base model"
 
     # get the budget
-    lst_pth = os.path.join(ws, str_items[0]["lstfile"])
+    lst_pth = os.path.join(model_ws, str_items[0]["lstfile"])
     base_wb = flopy.utils.MfListBudget(lst_pth).get_dataframes()[0]
 
     # set the model to free format
@@ -82,7 +83,10 @@ def test_str_issue1164():
     assert revised_wb.equals(base_wb), "water budgets do not match"
 
 
-def test_str_free():
+def test_str_fixed_free():
+    model_ws = f"{baseDir}_test_str_fixed"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
     m = flopy.modflow.Modflow.load(
         str_items[0]["mfnam"],
         exe_name=mfexe,
@@ -90,8 +94,7 @@ def test_str_free():
         verbose=False,
         check=False,
     )
-    ws = os.path.join(tpth, "fixed")
-    m.change_model_ws(ws)
+    m.change_model_ws(model_ws)
 
     # get pointer to str package
     str = m.str
@@ -153,7 +156,7 @@ def test_str_free():
         m2 = flopy.modflow.Modflow.load(
             str_items[0]["mfnam"],
             exe_name=mfexe,
-            model_ws=ws,
+            model_ws=model_ws,
             verbose=False,
             check=False,
         )
@@ -163,8 +166,10 @@ def test_str_free():
     msg = "could not load the fixed format model with aux variables"
     assert m2 is not None, msg
 
-    ws = os.path.join(tpth, "free")
-    m.change_model_ws(ws)
+    model_ws2 = f"{baseDir}_test_str_free"
+    testFramework.addTestDir(model_ws2)
+
+    m.change_model_ws(model_ws2)
     m.set_ifrefm()
     m.write_input()
     if run:
@@ -179,7 +184,7 @@ def test_str_free():
         m2 = flopy.modflow.Modflow.load(
             str_items[0]["mfnam"],
             exe_name=mfexe,
-            model_ws=ws,
+            model_ws=model_ws2,
             verbose=False,
             check=False,
         )
@@ -192,8 +197,8 @@ def test_str_free():
     # compare the fixed and free format head files
     if run:
         if pymake is not None:
-            fn1 = os.path.join(tpth, "fixed", "str.nam")
-            fn2 = os.path.join(ws, "str.nam")
+            fn1 = os.path.join(model_ws, "str.nam")
+            fn2 = os.path.join(model_ws2, "str.nam")
             success = pymake.compare_heads(fn1, fn2, verbose=True)
             msg = "fixed and free format input output head files are different"
             assert success, msg
@@ -210,5 +215,5 @@ def test_str_plot():
 
 if __name__ == "__main__":
     test_str_issue1164()
-    test_str_free()
+    test_str_fixed_free()
     test_str_plot()

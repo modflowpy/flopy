@@ -2,11 +2,9 @@ import os
 import flopy
 import numpy as np
 
+from ci_framework import baseTestDir, flopyTest
 
-tpth = os.path.abspath(os.path.join("temp", "t016"))
-if not os.path.isdir(tpth):
-    os.makedirs(tpth, exist_ok=True)
-
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 exe_name = "mfusg"
 v = flopy.which(exe_name)
@@ -17,6 +15,8 @@ if v is None:
 
 
 def test_usg_disu_load():
+    model_ws = f"{baseDir}_test_usg_disu_load"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
 
     pthusgtest = os.path.join(
         "..", "examples", "data", "mfusg_test", "01A_nestedgrid_nognc"
@@ -32,7 +32,6 @@ def test_usg_disu_load():
     assert isinstance(disu, flopy.mfusg.MfUsgDisU)
 
     # Change where model files are written
-    model_ws = tpth
     m.model_ws = model_ws
 
     # Write the disu file
@@ -59,6 +58,8 @@ def test_usg_disu_load():
 
 
 def test_usg_sms_load():
+    model_ws = f"{baseDir}_test_usg_sms_load"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
 
     pthusgtest = os.path.join(
         "..", "examples", "data", "mfusg_test", "01A_nestedgrid_nognc"
@@ -74,7 +75,6 @@ def test_usg_sms_load():
     assert isinstance(sms, flopy.mfusg.MfUsgSms)
 
     # Change where model files are written
-    model_ws = tpth
     m.model_ws = model_ws
 
     # Write the sms file
@@ -96,10 +96,13 @@ def test_usg_sms_load():
 
 
 def test_usg_model():
+    model_ws = f"{baseDir}_test_usg_model"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
     mf = flopy.mfusg.MfUsg(
         version="mfusg",
         structured=True,
-        model_ws=tpth,
+        model_ws=model_ws,
         modelname="simple",
         exe_name=v,
     )
@@ -132,24 +135,35 @@ def test_usg_model():
         sms.write_file()
         if run:
             success, buff = mf.run_model()
-            assert success
+            assert success, f"{mf.name} did not run"
+
+    return
 
 
 def test_usg_load_01B():
     print(
-        "testing 1-layer unstructured mfusg model loading: 01A_nestedgrid_nognc.nam"
+        "testing 1-layer unstructured mfusg model "
+        "loading: 01A_nestedgrid_nognc.nam"
     )
+
+    model_ws = f"{baseDir}_test_usg_load_01B"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
     pthusgtest = os.path.join(
         "..", "examples", "data", "mfusg_test", "01A_nestedgrid_nognc"
     )
-    fname = os.path.join(pthusgtest, "flow.nam")
+    fname = os.path.abspath(os.path.join(pthusgtest, "flow.nam"))
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
-    m = flopy.mfusg.MfUsg(modelname="usgload_1b", verbose=True)
+    m = flopy.mfusg.MfUsg(
+        modelname="usgload_1b",
+        verbose=True,
+        model_ws=model_ws,
+    )
 
     # Load the model, with checking
-    m = m.load(fname, check=True)
+    m = m.load(fname, check=True, model_ws=model_ws)
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
@@ -166,15 +180,19 @@ def test_usg_load_01B():
 
 def test_usg_load_45usg():
     print("testing 3-layer unstructured mfusg model loading: 45usg.nam")
+
+    model_ws = f"{baseDir}_test_usg_load_45usg"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
     pthusgtest = os.path.join("..", "examples", "data", "mfusg_test", "45usg")
-    fname = os.path.join(pthusgtest, "45usg.nam")
+    fname = os.path.abspath(os.path.join(pthusgtest, "45usg.nam"))
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
-    m = flopy.mfusg.MfUsg(modelname="45usg", verbose=True)
+    m = flopy.mfusg.MfUsg(modelname="45usg", verbose=True, model_ws=model_ws)
 
     # Load the model, with checking.
-    m = m.load(fname, check=True)
+    m = m.load(fname, check=True, model_ws=model_ws)
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
@@ -196,77 +214,106 @@ def test_usg_load_45usg():
 def test_usg_rch_evt_models01():
     # this test has RCH nrchop == 1, and EVT nevtop == 1
     print(
-        "testing unstructured mfusg RCH nrchop == 1, and EVT nevtop == 1: \
-usg_rch_evt.nam"
+        "testing unstructured mfusg RCH nrchop == 1, and "
+        "EVT nevtop == 1: usg_rch_evt.nam"
     )
+
+    new_ws = f"{baseDir}_test_usg_rch_evt_models01"
+    testFramework = flopyTest(verbose=True, testDirs=new_ws)
+
     model_ws = os.path.join(
         "..", "examples", "data", "mfusg_test", "rch_evt_tests"
     )
     nam = "usg_rch_evt.nam"
     m = flopy.mfusg.MfUsg.load(nam, model_ws=model_ws, exe_name=v)
     m.riv.check()
-    m.model_ws = tpth
+
+    m.model_ws = new_ws
     m.write_input()
     if run:
         success, buff = m.run_model()
         assert success
+
+    return
 
 
 def test_usg_rch_evt_models02():
     # this test has RCH nrchop == 2, and EVT nevtop == 2
     print(
-        "testing unstructured mfusg RCH nrchop == 2, and EVT nevtop == 2: \
-usg_rch_evt_nrchop2.nam"
+        "testing unstructured mfusg RCH nrchop == 2, "
+        "and EVT nevtop == 2: usg_rch_evt_nrchop2.nam"
     )
+
+    new_ws = f"{baseDir}_test_usg_rch_evt_models02"
+    testFramework = flopyTest(verbose=True, testDirs=new_ws)
+
     model_ws = os.path.join(
         "..", "examples", "data", "mfusg_test", "rch_evt_tests"
     )
     nam = "usg_rch_evt_nrchop2.nam"
     m = flopy.mfusg.MfUsg.load(nam, model_ws=model_ws, exe_name=v)
-    m.model_ws = tpth
+
+    m.model_ws = new_ws
     m.write_input()
     if run:
         success, buff = m.run_model()
         assert success
+
+    return
 
 
 def test_usg_rch_evt_models02a():
     # this test has RCH nrchop == 2, and EVT nevtop == 2
     print(
-        "testing unstructured mfusg RCH nrchop == 2, and EVT nevtop == 2,\
- but with fewer irch nodes: than in nodelay[0] usg_rch_evt_nrchop2.nam"
+        "testing unstructured mfusg RCH nrchop == 2, "
+        "and EVT nevtop == 2, but with fewer irch nodes: "
+        "than in nodelay[0] usg_rch_evt_nrchop2.nam"
     )
+
+    new_ws = f"{baseDir}_test_usg_rch_evt_models02a"
+    testFramework = flopyTest(verbose=True, testDirs=new_ws)
+
     model_ws = os.path.join(
         "..", "examples", "data", "mfusg_test", "rch_evt_tests"
     )
     nam = "usg_rch_evt_nrchop2a.nam"
     m = flopy.mfusg.MfUsg.load(nam, model_ws=model_ws, exe_name=v)
-    m.model_ws = tpth
+
+    m.model_ws = new_ws
     m.write_input()
     if run:
         success, buff = m.run_model()
         assert success
 
+    return
+
 
 def test_usg_ss_to_tr():
     # Test switching steady model to transient
     # https://github.com/modflowpy/flopy/issues/1187
+
+    new_ws = f"{baseDir}_test_usg_ss_to_tr"
+    testFramework = flopyTest(verbose=True, testDirs=new_ws)
+
     model_ws = os.path.join(
         "..", "examples", "data", "mfusg_test", "01A_nestedgrid_nognc"
     )
     nam = "flow.nam"
     m = flopy.mfusg.MfUsg.load(nam, model_ws=model_ws, exe_name=v)
-    m.model_ws = tpth
+
+    m.model_ws = new_ws
     m.disu.steady = [False]
     m.write_input()
     if run:
         success, buff = m.run_model()
         assert success
 
-    m = flopy.mfusg.MfUsg.load(nam, model_ws=tpth, exe_name=v)
+    m = flopy.mfusg.MfUsg.load(nam, model_ws=new_ws, exe_name=v)
     if run:
         success, buff = m.run_model()
         assert success
+
+    return
 
 
 if __name__ == "__main__":

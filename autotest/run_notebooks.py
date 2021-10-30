@@ -1,6 +1,5 @@
 # Remove the temp directory and then create a fresh one
 import os
-import shutil
 import pytest
 
 
@@ -21,11 +20,6 @@ dpth = gwdir
 notebook_files += [
     os.path.join(dpth, f) for f in os.listdir(dpth) if f.endswith(".ipynb")
 ]
-
-# -- make working directories
-ddir = os.path.join(nbdir, "data")
-if not os.path.isdir(ddir):
-    os.makedirs(ddir, exist_ok=True)
 
 
 def run_notebook(src):

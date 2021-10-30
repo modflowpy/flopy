@@ -4,9 +4,14 @@ Tests to prevent performance regressions
 import os
 import sys
 import shutil
+import random
+import string
 import time
 import numpy as np
 import flopy.modflow as fm
+from ci_framework import baseTestDir
+
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 
 class TestModflowPerformance:
@@ -24,8 +29,11 @@ class TestModflowPerformance:
         nper = 10
         nsfr = int((size ** 2) / 5)
 
+        letters = string.ascii_lowercase
+        prepend = "".join(random.choice(letters) for i in range(10))
+
         cls.modelname = "junk"
-        cls.model_ws = "temp/t064"
+        cls.model_ws = f"{baseDir}_{prepend}"
         external_path = "external/"
 
         if not os.path.isdir(cls.model_ws):
@@ -109,6 +117,7 @@ class TestModflowPerformance:
         """test model load time"""
         print("loading model...")
         mfp = TestModflowPerformance()
+        mfp.m.write_input()
         target = 3
         t0 = time.time()
         m = fm.Modflow.load(
@@ -122,5 +131,5 @@ class TestModflowPerformance:
 
     @classmethod
     def teardown_class(cls):
-        # cleanup
+
         shutil.rmtree(cls.model_ws)

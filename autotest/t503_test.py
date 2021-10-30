@@ -74,12 +74,12 @@ def runmodel(exdir):
         + "_"
         + os.path.basename(exdir)
     )
-    fpTest = flopyTest(verbose=True)
+    testFramework = flopyTest(verbose=True)
 
     simulations = simulation_subdirs(exdir)
     for src in simulations:
         ws = copy_folder(baseDir, src)
-        fpTest.addTestDir(ws)
+        testFramework.addTestDir(ws)
         f = os.path.basename(os.path.normpath(ws))
         print("\n\n")
         print(f"**** RUNNING TEST: {f} ****")
@@ -101,7 +101,7 @@ def runmodel(exdir):
 
             # set the comparison directory
             ws2 = f"{ws}-RERUN"
-            fpTest.addTestDir(ws2)
+            testFramework.addTestDir(ws2)
             sim.simulation_data.mfpath.set_sim_path(ws2)
 
             # remove the comparison directory if it exists
@@ -129,9 +129,7 @@ def runmodel(exdir):
             )
             assert success, f"comparision for {ws} failed"
 
-    fpTest.addTestDir(baseDir)
-
-    fpTest.teardown()
+    testFramework.addTestDir(baseDir)
 
 
 # for running tests with pytest

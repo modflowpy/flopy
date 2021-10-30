@@ -5,6 +5,11 @@ import sys
 import shutil
 from subprocess import Popen, PIPE
 
+from ci_framework import get_parent_path, flopyTest
+
+parentPath = get_parent_path()
+baseDir = os.path.join(parentPath, "temp")
+
 # exclude files that take time on locanachine
 exclude = ["flopy_swi2_ex2.py", "flopy_swi2_ex5.py"]
 if "CI" in os.environ:
@@ -35,29 +40,15 @@ for script in scripts:
     print(f"  {script}")
 
 
-# make working directories
-out_dir = os.path.join("temp", "scripts")
-if not os.path.isdir(out_dir):
-    os.makedirs(out_dir, exist_ok=True)
+def copy_script(dstDir, src):
+    fileDir = os.path.dirname(src)
+    fileName = os.path.basename(src)
 
-
-def copy_script(src):
-    # copy files
-    filedir = os.path.dirname(src)
-    filename = os.path.basename(src)
-
-    # set dstpth and clean if it exists
-    dstpth = os.path.abspath(
-        os.path.join(out_dir, filename.replace(".py", ""))
-    )
-    if not os.path.isdir(dstpth):
-        os.makedirs(dstpth, exist_ok=True)
-
-    # set destination path
-    dst = os.path.join(out_dir, dstpth, filename)
+    # set destination path with the file name
+    dst = os.path.join(dstDir, fileName)
 
     # copy script
-    print(f"copying {filename} from {filedir} to {dstpth}")
+    print(f"copying {fileName} from {fileDir} to {dstDir}")
     shutil.copyfile(src, dst)
 
     return dst
@@ -65,8 +56,8 @@ def copy_script(src):
 
 def run_script(script):
     ws = os.path.dirname(script)
-    file_name = os.path.basename(script)
-    args = ("python", file_name)
+    filename = os.path.basename(script)
+    args = ("python", filename)
     print(f"running...'{' '.join(args)}'")
     proc = Popen(args, stdout=PIPE, stderr=PIPE, cwd=ws)
     stdout, stderr = proc.communicate()
@@ -83,8 +74,12 @@ def run_script(script):
     scripts,
 )
 def test_scripts(script):
+    script_name = os.path.basename(script).replace(".py", "")
+    dstDir = os.path.join(f"{baseDir}", f"scripts_{script_name}")
+    testFramework = flopyTest(verbose=True, create=True, testDirs=dstDir)
+
     # copy script
-    dst = copy_script(script)
+    dst = copy_script(dstDir, script)
 
     # run script
     run_script(dst)
@@ -92,5 +87,4 @@ def test_scripts(script):
 
 if __name__ == "__main__":
     for script in scripts:
-        dst = copy_script(script)
-        run_script(dst)
+        test_scripts(script)

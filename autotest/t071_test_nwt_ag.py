@@ -1,14 +1,11 @@
 import os
 import flopy
-import platform
-import shutil
 import numpy as np
-
+from ci_framework import baseTestDir, flopyTest
 
 mpth = os.path.join("..", "examples", "data", "ag_test")
-opth = os.path.join("temp", "t071")
-if not os.path.isdir(opth):
-    os.makedirs(opth, exist_ok=True)
+
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 
 def test_empty_ag_package():
@@ -20,6 +17,9 @@ def test_empty_ag_package():
 
 
 def test_load_write_agwater():
+    model_ws = f"{baseDir}_test_load_write_agwater"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
     agfile = "Agwater1.ag"
     ml = flopy.modflow.Modflow("Agwater1", version="mfnwt")
     ag1 = flopy.modflow.ModflowAg.load(
@@ -35,12 +35,16 @@ def test_load_write_agwater():
     if not loaded:
         raise AssertionError("ModflowAg package not loaded")
 
-    ml.change_model_ws(opth)
+    ml.change_model_ws(model_ws)
     ag1.write_file()
 
-    ml2 = flopy.modflow.Modflow("Agwater1", version="mfnwt", model_ws=opth)
+    ml2 = flopy.modflow.Modflow(
+        "Agwater1",
+        version="mfnwt",
+        model_ws=model_ws,
+    )
     ag2 = flopy.modflow.ModflowAg.load(
-        os.path.join(opth, agfile), ml2, nper=49
+        os.path.join(model_ws, agfile), ml2, nper=49
     )
 
     if repr(ag1) != repr(ag2):
@@ -48,6 +52,9 @@ def test_load_write_agwater():
 
 
 def test_load_write_agwater_uzf():
+    model_ws = f"{baseDir}_test_load_write_agwater_uzf"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
     uzffile = "Agwater1.uzf"
     ml = flopy.modflow.Modflow("Agwater1", version="mfnwt")
     dis = flopy.modflow.ModflowDis(ml, nlay=1, nrow=15, ncol=10, nper=49)
@@ -62,12 +69,16 @@ def test_load_write_agwater_uzf():
     if not loaded:
         raise AssertionError("ModflowUzf1 package not loaded")
 
-    ml.change_model_ws(opth)
+    ml.change_model_ws(model_ws)
     uzf1.write_file()
 
-    ml2 = flopy.modflow.Modflow("Agwater1", version="mfnwt", model_ws=opth)
+    ml2 = flopy.modflow.Modflow(
+        "Agwater1",
+        version="mfnwt",
+        model_ws=model_ws,
+    )
     dis2 = flopy.modflow.ModflowDis(ml2, nlay=1, nrow=15, ncol=10, nper=49)
-    uzf2 = flopy.modflow.ModflowUzf1.load(os.path.join(opth, uzffile), ml2)
+    uzf2 = flopy.modflow.ModflowUzf1.load(os.path.join(model_ws, uzffile), ml2)
 
     if not np.allclose(uzf1.air_entry.array, uzf2.air_entry.array):
         raise AssertionError("Air entry pressure array comparison failed")

@@ -5,6 +5,9 @@ Test MT3D model creation and file writing
 import os
 import flopy
 import numpy as np
+from ci_framework import baseTestDir, flopyTest
+
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 mf_exe_name = "mf2005"
 mt_exe_name = "mt3dms"
@@ -16,6 +19,8 @@ if v1 is None or v2 is None:
 
 
 def test_mt3d_ssm_with_nodata_in_1st_sp():
+    model_ws = f"{baseDir}_test_mt3d_ssm_with_nodata_in_1st_sp"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
 
     nlay, nrow, ncol = 3, 5, 5
     perlen = np.zeros((10), dtype=float) + 10
@@ -27,10 +32,7 @@ def test_mt3d_ssm_with_nodata_in_1st_sp():
     top = 0.0
 
     # creating MODFLOW model
-
-    model_ws = os.path.join(".", "temp", "t068a")
     modelname = "model_mf"
-
     mf = flopy.modflow.Modflow(
         modelname, model_ws=model_ws, exe_name=mf_exe_name
     )
@@ -113,7 +115,9 @@ def test_mt3d_ssm_with_nodata_in_1st_sp():
         )
         assert success, "MT3D did not run"
 
-        model_ws2 = os.path.join(".", "temp", "t068b")
+        model_ws2 = f"{baseDir}_test_mt3d_ssm_with_nodata_in_1st_sp_b"
+        testFramework.addTestDir(model_ws2)
+
         mf2 = flopy.modflow.Modflow.load(
             "model_mf.nam", model_ws=model_ws, exe_name="mf2005"
         )
@@ -147,7 +151,10 @@ def test_mt3d_ssm_with_nodata_in_1st_sp():
 def test_none_spdtype():
     # ensure that -1 and None work as valid list entries in the
     # stress period dictionary
-    model_ws = os.path.join(".", "temp", "t068c")
+
+    model_ws = f"{baseDir}_test_none_spdtyp"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
     mf = flopy.modflow.Modflow(model_ws=model_ws, exe_name=mf_exe_name)
     dis = flopy.modflow.ModflowDis(mf, nper=2)
     bas = flopy.modflow.ModflowBas(mf)
@@ -165,6 +172,8 @@ def test_none_spdtype():
 
 
 def test_ssm_readwrite():
+    model_ws = f"{baseDir}_test_ssm_readwrite"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
 
     # Instantiate MODFLOW model
     mf = flopy.modflow.Modflow()
@@ -189,18 +198,10 @@ def test_ssm_readwrite():
     # (file comes from: https://github.com/modflowpy/flopy/issues/743)
     ssm = flopy.mt3d.Mt3dSsm.load(fl, mt)
 
-    # Change to dedicated work directory
-    cwd = os.getcwd()
-    if not os.path.isdir(os.path.join("temp", "t068_ssm_write")):
-        os.makedirs(os.path.join("temp", "t068_ssm_write"), exist_ok=True)
-
-    os.chdir(os.path.join("temp", "t068_ssm_write"))
+    mt.change_model_ws(model_ws)
 
     # Ensure file is writeable
     ssm.write_file()
-
-    # Return to starting directory
-    os.chdir(cwd)
 
 
 if __name__ == "__main__":

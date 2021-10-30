@@ -40,8 +40,8 @@ def test001a_tharmonic():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = f"{baseDir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    fpTest = flopyTest(verbose=True)
-    fpTest.addTestDir([run_folder, save_folder], create=True)
+    testFramework = flopyTest(verbose=True)
+    testFramework.addTestDir([run_folder, save_folder], create=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -162,8 +162,6 @@ def test001a_tharmonic():
         ]
         assert array_util.array_comp(budget_frf_valid, budget_frf)
 
-    fpTest.teardown()
-
     return
 
 
@@ -175,8 +173,8 @@ def test003_gwfs_disv():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = f"{baseDir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    fpTest = flopyTest(verbose=True)
-    fpTest.addTestDir([run_folder, save_folder], create=True)
+    testFramework = flopyTest(verbose=True)
+    testFramework.addTestDir([run_folder, save_folder], create=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -265,8 +263,6 @@ def test003_gwfs_disv():
         ]
         assert array_util.array_comp(budget_fjf_valid, budget_frf)
 
-    fpTest.teardown()
-
     return
 
 
@@ -278,8 +274,8 @@ def test005_advgw_tidal():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = f"{baseDir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    fpTest = flopyTest(verbose=True)
-    fpTest.addTestDir([run_folder, save_folder], create=True)
+    testFramework = flopyTest(verbose=True)
+    testFramework.addTestDir([run_folder, save_folder], create=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -338,8 +334,6 @@ def test005_advgw_tidal():
             outfile=outfile,
         )
 
-    fpTest.teardown()
-
 
 def test006_gwf3():
     # init paths
@@ -349,8 +343,8 @@ def test006_gwf3():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = f"{baseDir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    fpTest = flopyTest(verbose=True)
-    fpTest.addTestDir([run_folder, save_folder], create=True)
+    testFramework = flopyTest(verbose=True)
+    testFramework.addTestDir([run_folder, save_folder], create=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -463,7 +457,7 @@ def test006_gwf3():
 
     # confirm that files did move
     save_folder = f"{run_folder}_save02"
-    fpTest.addTestDir(save_folder, create=True)
+    testFramework.addTestDir(save_folder, create=True)
 
     sim.set_sim_path(save_folder)
 
@@ -535,8 +529,6 @@ def test006_gwf3():
         # clean up
         sim.delete_output_files()
 
-    fpTest.teardown()
-
     return
 
 
@@ -548,8 +540,8 @@ def test006_gwf3():
 #     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
 #     run_folder = f"{baseDir}_{test_ex_name}"
 #     save_folder = f"{run_folder}_save"
-#     fpTest = flopyTest(verbose=True)
-#     fpTest.addTestDir([run_folder, save_folder], create=True)
+#     testFramework = flopyTest(verbose=True)
+#     testFramework.addTestDir([run_folder, save_folder], create=True)
 #
 #     expected_output_folder = os.path.join(pth, "expected_output")
 #     expected_head_file_a = os.path.join(
@@ -618,7 +610,7 @@ def test006_gwf3():
 #         )
 #         assert success
 #
-#     fpTest.teardown()
+#
 #
 #     return
 
@@ -632,8 +624,8 @@ def test006_2models_mvr():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = f"{baseDir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    fpTest = flopyTest(verbose=True)
-    fpTest.addTestDir([run_folder, save_folder], create=True)
+    testFramework = flopyTest(verbose=True)
+    testFramework.addTestDir([run_folder, save_folder], create=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -812,8 +804,6 @@ def test006_2models_mvr():
         success, buff = sim.run_simulation()
         assert success, f"simulation {sim.name} did not run"
 
-    fpTest.teardown()
-
     return
 
 
@@ -825,8 +815,8 @@ def test001e_uzf_3lay():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = f"{baseDir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    fpTest = flopyTest(verbose=True)
-    fpTest.addTestDir([run_folder, save_folder], create=True)
+    testFramework = flopyTest(verbose=True)
+    testFramework.addTestDir([run_folder, save_folder], create=True)
 
     # load simulation
     sim = MFSimulation.load(model_name, "mf6", exe_name, pth, verify_data=True)
@@ -889,8 +879,6 @@ def test001e_uzf_3lay():
         eval_cbc_precision()
         eval_replace_ims_package()
 
-    fpTest.teardown()
-
 
 def test045_lake2tr():
     # init paths
@@ -900,8 +888,8 @@ def test045_lake2tr():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = f"{baseDir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    fpTest = flopyTest(verbose=True)
-    fpTest.addTestDir([run_folder, save_folder], create=True)
+    testFramework = flopyTest(verbose=True)
+    testFramework.addTestDir([run_folder, save_folder], create=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -963,8 +951,6 @@ def test045_lake2tr():
             htol=10.0,
         )
 
-    fpTest.teardown()
-
 
 def test036_twrihfb():
     # init paths
@@ -974,8 +960,8 @@ def test036_twrihfb():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = f"{baseDir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    fpTest = flopyTest(verbose=True)
-    fpTest.addTestDir([run_folder, save_folder], create=True)
+    testFramework = flopyTest(verbose=True)
+    testFramework.addTestDir([run_folder, save_folder], create=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -1050,8 +1036,6 @@ def test036_twrihfb():
             files2=head_new,
         )
 
-    fpTest.teardown()
-
 
 def test027_timeseriestest():
     # init paths
@@ -1061,8 +1045,8 @@ def test027_timeseriestest():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = f"{baseDir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    fpTest = flopyTest(verbose=True)
-    fpTest.addTestDir([run_folder, save_folder], create=True)
+    testFramework = flopyTest(verbose=True)
+    testFramework.addTestDir([run_folder, save_folder], create=True)
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -1132,8 +1116,6 @@ def test027_timeseriestest():
             htol=10.0,
         )
 
-    fpTest.teardown()
-
 
 def eval_cbc_precision():
     pth = os.path.join(
@@ -1172,7 +1154,7 @@ def test_mf6_output():
     sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws, exe_name=exe_name)
 
     ws = f"{baseDir}_{ex_name}_mf6_output"
-    fpTest = flopyTest(verbose=True, testDirs=ws, create=True)
+    testFramework = flopyTest(verbose=True, testDirs=ws, create=True)
 
     sim.set_sim_path(ws)
     sim.write_simulation()
@@ -1239,8 +1221,6 @@ def test_mf6_output():
     if ml.dis.output.methods() is not None:
         raise AssertionError()
 
-    fpTest.teardown()
-
 
 def test_mf6_output_add_observation():
     model_name = "lakeex2a"
@@ -1266,7 +1246,7 @@ def test_mf6_output_add_observation():
     )
 
     ws = f"{baseDir}_test045_lake2tr_obs"
-    fpTest = flopyTest(verbose=True, testDirs=ws, create=True)
+    testFramework = flopyTest(verbose=True, testDirs=ws, create=True)
 
     sim.set_sim_path(ws)
     sim.write_simulation()
@@ -1279,8 +1259,6 @@ def test_mf6_output_add_observation():
 
     if not isinstance(sfr_obs, flopy.utils.Mf6Obs):
         raise TypeError("remove and add observation test (Mf6Output) failed")
-
-    fpTest.teardown()
 
 
 if __name__ == "__main__":

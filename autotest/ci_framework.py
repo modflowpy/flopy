@@ -1,9 +1,11 @@
 import os
 import sys
 import shutil
-import time
 import pymake
 
+# command line arguments to:
+#   1. keep (--keep) test files
+#
 for idx, arg in enumerate(sys.argv):
     if "--keep" in arg.lower():
         keep = True
@@ -56,6 +58,13 @@ def baseTestDir(
     baseDir : str
         base test directory to create for the autotest
 
+    Example
+    -------
+
+    >>> from ci_framework import baseTestDir
+    >>> baseDir = baseTestDir(__file__, relPath="temp", create=True)
+    >>> print(f"baseDir: {baseDir}")
+
     """
     fileName = os.path.basename(filePath)
     if not fileName.startswith("t"):
@@ -91,8 +100,11 @@ def createTestDir(testDir, clean=False, verbose=False):
         boolean indicating if diagnostic information should be written
         to the screen
 
-    Returns
+    Example
     -------
+
+    >>> from ci_framework import createTestDir
+    >>> createTestDir("temp/mydir", clean=True, verbose=True)
 
     """
     if clean:
@@ -104,21 +116,78 @@ def createTestDir(testDir, clean=False, verbose=False):
 
 
 class flopyTest(object):
+    """
+    The flopyTest class is used to setup test directories for flopy
+    autotests.
+
+    Attributes
+    ----------
+    clean : bool
+        boolean indicating if an existing directory should be cleaned
+    create : bool
+        boolean indicating if the directory should be created
+    testDirs : str or list/tuple of strings
+        path to where the test directory should be located
+    verbose : bool
+        boolean indicating if diagnostic information should be written
+        to the screen
+    retain : bool
+        boolean indicating if the test files should be retained
+
+    Methods
+    -------
+    addTestDir(testDirs, clean=False, create=False)
+        Add a testDir or a list of testDirs to the object
+
+    Example
+    -------
+
+    >>> from ci_framework import flopyTest
+    >>> def test_function():
+    ...     testFramework = flopyTest(verbose=True, testDirs="temp/t091_01")
+    ...     testFramework.addTestDir("temp/t091_02", create=True)
+
+    """
+
     def __init__(
         self,
         clean=False,
         create=False,
         testDirs=None,
         verbose=False,
+        retain=None,
     ):
-        self.clean = clean
-        self.verbose = verbose
-        self.createDirs = create
-        self.testDirs = []
+        if retain is None:
+            retain = keep
+        self._clean = clean
+        self._verbose = verbose
+        self._createDirs = create
+        self._retain = retain
+        self._testDirs = []
         if testDirs is not None:
             self.addTestDir(testDirs, clean=clean, create=create)
 
+    def __del__(self):
+        if not self._retain:
+            for testDir in self._testDirs:
+                _cleanDir(testDir, verbose=self._verbose)
+        else:
+            print("Retaining test files")
+
     def addTestDir(self, testDirs, clean=False, create=False):
+        """
+        Add a test directory to the flopyTest object.
+
+        Parameters
+        ----------
+        testDirs : str or list/tuple of strings
+            path to where the test directory should be located
+        clean : bool
+            boolean indicating if an existing directory should be cleaned
+        create : bool
+            boolean indicating if the directory should be created
+
+        """
         if isinstance(testDirs, str):
             testDirs = [testDirs]
         elif isinstance(testDirs, (int, float, bool)):
@@ -127,22 +196,24 @@ class flopyTest(object):
                 "list of strings, or tuple of strings."
             )
         for testDir in testDirs:
-            if testDir not in self.testDirs:
-                self.testDirs.append(testDir)
-                if self.verbose:
+            if testDir not in self._testDirs:
+                self._testDirs.append(testDir)
+                if self._verbose:
                     print(f"adding test directory...{testDir}")
                 if create:
-                    createTestDir(testDir, clean=clean, verbose=self.verbose)
-
-    def teardown(self):
-        if not keep:
-            for testDir in self.testDirs:
-                _cleanDir(testDir, verbose=self.verbose)
-        else:
-            print("Retaining test files")
+                    createTestDir(testDir, clean=clean, verbose=self._verbose)
 
 
 def _get_mf6path():
+    """
+    Get the path for the MODFLOW 6 example problems
+
+    Returns
+    -------
+    mf6pth : str
+        path to the directory containing the MODFLOW 6 example problems.
+
+    """
     parentPath = get_parent_path()
     if parentPath is None:
         parentPath = "."
@@ -154,6 +225,17 @@ def _get_mf6path():
 def download_mf6_examples(delete_existing=False):
     """
     Download mf6 examples and return location of folder
+
+    Parameters
+    ----------
+    delete_existing : bool
+        boolean flag indicating to delete the existing MODFLOW 6 example
+        directory (temp/mf6examples), if it exists.
+
+    Returns
+    -------
+    mf6pth : str
+        path to the directory containing the MODFLOW 6 example problems.
 
     """
     # save current directory

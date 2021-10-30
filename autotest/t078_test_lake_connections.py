@@ -1,14 +1,12 @@
 import os
 import numpy as np
 import flopy
+from ci_framework import baseTestDir, flopyTest
 
 pth = os.path.join("..", "examples", "data", "mf6-freyberg")
 
 name = "freyberg"
-tpth = os.path.join("temp", "t078")
-# make the directory if it does not exist
-if not os.path.isdir(tpth):
-    os.makedirs(tpth, exist_ok=True)
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 
 def __export_ascii_grid(modelgrid, file_path, v, nodata=0.0):
@@ -125,14 +123,16 @@ def __get_lake_connection_data(
 
 
 def test_base_run():
+    model_ws = f"{baseDir}_test_base_run"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+
     sim = flopy.mf6.MFSimulation().load(
         sim_name=name,
         sim_ws=pth,
         exe_name="mf6",
         verbosity_level=0,
     )
-    ws = os.path.join(tpth, "freyberg")
-    sim.set_sim_path(ws)
+    sim.set_sim_path(model_ws)
 
     # remove the well package
     gwf = sim.get_model("freyberg")
@@ -147,20 +147,20 @@ def test_base_run():
     bot = gwf.dis.botm.array.squeeze()
     __export_ascii_grid(
         gwf.modelgrid,
-        os.path.join(ws, "bot.asc"),
+        os.path.join(pth, "bot.asc"),
         bot,
     )
     top = gwf.output.head().get_data().squeeze() + 2.0
     top = np.where(gwf.dis.idomain.array.squeeze() < 1.0, 0.0, top)
     __export_ascii_grid(
         gwf.modelgrid,
-        os.path.join(ws, "top.asc"),
+        os.path.join(pth, "top.asc"),
         top,
     )
     k11 = gwf.npf.k.array.squeeze()
     __export_ascii_grid(
         gwf.modelgrid,
-        os.path.join(ws, "k11.asc"),
+        os.path.join(pth, "k11.asc"),
         k11,
     )
 
@@ -168,17 +168,22 @@ def test_base_run():
 
 
 def test_lake():
-    ws = os.path.join(tpth, "freyberg")
-    top = flopy.utils.Raster.load(os.path.join(ws, "top.asc"))
-    bot = flopy.utils.Raster.load(os.path.join(ws, "bot.asc"))
-    k11 = flopy.utils.Raster.load(os.path.join(ws, "k11.asc"))
+    model_ws = f"{baseDir}_test_lake"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+
+    top = flopy.utils.Raster.load(os.path.join(pth, "top.asc"))
+    bot = flopy.utils.Raster.load(os.path.join(pth, "bot.asc"))
+    k11 = flopy.utils.Raster.load(os.path.join(pth, "k11.asc"))
 
     sim = flopy.mf6.MFSimulation().load(
         sim_name=name,
-        sim_ws=ws,
+        sim_ws=pth,
         exe_name="mf6",
         verbosity_level=0,
     )
+
+    # change the workspace
+    sim.set_sim_path(model_ws)
 
     # get groundwater flow model
     gwf = sim.get_model("freyberg")
@@ -289,6 +294,9 @@ def test_lake():
 
 
 def test_embedded_lak_ex01():
+    model_ws = f"{baseDir}_test_embedded_lak_ex01"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+
     nper = 1
     nlay, nrow, ncol = 5, 17, 17
     shape3d = (nlay, nrow, ncol)
@@ -379,11 +387,10 @@ def test_embedded_lak_ex01():
     chd_spd = {0: chd_spd}
 
     name = "lak_ex01"
-    ws = os.path.join(tpth, "lak_ex01")
     sim = flopy.mf6.MFSimulation(
         sim_name=name,
         exe_name="mf6",
-        sim_ws=ws,
+        sim_ws=model_ws,
     )
     tdis = flopy.mf6.ModflowTdis(
         sim,
@@ -490,6 +497,8 @@ def test_embedded_lak_ex01():
     success = sim.run_simulation(silent=False)
 
     assert success, f"could not run {sim.name}"
+
+    return
 
 
 def test_embedded_lak_prudic():

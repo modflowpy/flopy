@@ -130,7 +130,7 @@ jobs:
       uses: actions/cache@v2.1.0
       env:
         # Increase this value to reset cache if environment.yml has changed
-        CACHE_NUMBER: 1
+        CACHE_NUMBER: 2
       with:
         path: ~/conda_pkgs_dir
         key: ${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.run-type }}-${{ env.CACHE_NUMBER }}-${{ hashFiles('etc/environment.yml') }}
@@ -154,11 +154,7 @@ jobs:
 
     - name: Add packages to flopy environment using mamba or conda
       run: |
-        if [ "$RUNNER_OS" == "Windows" ]; then
-          conda env update --name flopy --file etc/environment.yml
-        else
-          mamba env update --name flopy --file etc/environment.yml
-        fi
+        mamba env update --name flopy --file etc/environment.yml
 
     - name: Install pymake, xmipy, and flopy
       run: |
@@ -175,14 +171,8 @@ jobs:
       run: |
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-    - name: Run pytest on autotest scripts on Linux and MacOS
-      if: matrix.run-type == 'std' && runner.os != 'Windows'
-      working-directory: ./autotest
-      run: |
-        pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
-
-    - name: Run pytest on autotest scripts on Windows
-      if: matrix.run-type == 'std' && runner.os == 'Windows'
+    - name: Run pytest on autotest scripts
+      if: matrix.run-type == 'std'
       working-directory: ./autotest
       run: |
         pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml

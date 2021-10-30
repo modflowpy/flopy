@@ -1,10 +1,11 @@
 import os
 import sys
-import shutil
 import pytest
 
 import numpy as np
 import flopy
+
+from ci_framework import baseTestDir, flopyTest
 
 ex_pths = (
     os.path.join("..", "examples", "data", "freyberg"),
@@ -15,19 +16,16 @@ ex_pths = (
 ismf6_lst = ["mf6" in pth for pth in ex_pths]
 names = [os.path.basename(pth) for pth in ex_pths]
 
-tpth = os.path.join("temp", "t079")
-# make the directory if it does not exist
-if not os.path.isdir(tpth):
-    os.makedirs(tpth, exist_ok=True)
-
 mf6_exe = "mf6"
 mf2005_exe = "mf2005"
 if sys.platform == "win32":
     mf6_exe += ".exe"
     mf2005_exe += ".exe"
 
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
-def load_mf2005(name, ws_in):
+
+def load_mf2005(name, ws_in, ws_out):
     name_file = f"{name}.nam"
     ml = flopy.modflow.Modflow.load(
         name_file,
@@ -37,7 +35,7 @@ def load_mf2005(name, ws_in):
     )
 
     # change work space
-    ws_out = os.path.join(tpth, name)
+    # ws_out = os.path.join(baseDir, name)
     ml.change_model_ws(ws_out)
 
     # save all budget data to a cell-by cell file
@@ -48,7 +46,7 @@ def load_mf2005(name, ws_in):
     return ml
 
 
-def load_mf6(name, ws_in):
+def load_mf6(name, ws_in, ws_out):
     sim = flopy.mf6.MFSimulation.load(
         sim_name=name,
         exe_name=mf6_exe,
@@ -56,7 +54,6 @@ def load_mf6(name, ws_in):
     )
 
     # change work space
-    ws_out = os.path.join(tpth, name)
     sim.set_sim_path(ws_out)
 
     # get the groundwater flow model(s) and redefine the output control
@@ -128,15 +125,11 @@ def cbc_eval(cbcobj, nnodes, shape3d, modelgrid):
     return
 
 
-def clean_run(name):
-    ws = os.path.join(tpth, name)
-    if os.path.isdir(ws):
-        shutil.rmtree(ws)
-
-
 def mf6_eval(name, ws_in):
+    ws_out = f"{baseDir}_{name}"
+    testFramework = flopyTest(verbose=True, testDirs=ws_out, create=True)
 
-    sim = load_mf6(name, ws_in)
+    sim = load_mf6(name, ws_in, ws_out)
 
     # write the simulation
     sim.write_simulation()
@@ -155,14 +148,14 @@ def mf6_eval(name, ws_in):
     # evaluate the full3D option
     cbc_eval(cbc, nnodes, shape3d, gwf.modelgrid)
 
-    # clean the run
-    clean_run(name)
-
     return
 
 
 def mf2005_eval(name, ws_in):
-    ml = load_mf2005(name, ws_in)
+    ws_out = f"{baseDir}_{name}"
+    testFramework = flopyTest(verbose=True, testDirs=ws_out, create=True)
+
+    ml = load_mf2005(name, ws_in, ws_out)
 
     # write the model
     ml.write_input()
@@ -174,14 +167,13 @@ def mf2005_eval(name, ws_in):
     nnodes, shape3d = ml.modelgrid.nnodes, ml.modelgrid.shape
 
     # get the cell by cell object
-    fpth = os.path.join(tpth, name, f"{name}.cbc")
+    fpth = os.path.join(ws_out, f"{name}.cbc")
     cbc = flopy.utils.CellBudgetFile(fpth)
 
     # evaluate the full3D option
     cbc_eval(cbc, nnodes, shape3d, ml.modelgrid)
 
-    # clean the run
-    clean_run(name)
+    return
 
 
 @pytest.mark.parametrize(
