@@ -1,13 +1,9 @@
-# Test modflow write adn run
+# Test modflow write and run
 import numpy as np
+import matplotlib.pyplot as plt
+from ci_framework import baseTestDir, flopyTest
 
-try:
-    import matplotlib.pyplot as plt
-
-    # if os.getenv('TRAVIS'):  # are we running https://travis-ci.org/ automated tests ?
-    #     matplotlib.use('Agg')  # Force matplotlib  not to use any Xwindows backend
-except:
-    plt = None
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 
 def analyticalWaterTableSolution(h1, h2, z, R, K, L, x):
@@ -34,10 +30,10 @@ def test_mfnwt_run():
         print(f"Specified executable {exe_name} does not exist in path")
         return
 
+    model_ws = f"{baseDir}_test_mfnwt_run"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
     modelname = "watertable"
-    model_ws = os.path.join("temp", "t020")
-    if not os.path.isdir(model_ws):
-        os.makedirs(model_ws, exist_ok=True)
 
     # model dimensions
     nlay, nrow, ncol = 1, 1, 100
@@ -172,6 +168,9 @@ def test_irch():
     import os
     import flopy
 
+    model_ws = f"{baseDir}_test_tpl_constant"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
     org_model_ws = os.path.join(
         "..", "examples", "data", "freyberg_multilayer_transient"
     )
@@ -197,11 +196,11 @@ def test_irch():
         d = arr - aarr
         assert np.abs(d).sum() == 0
 
-    new_model_ws = "temp"
-    m.change_model_ws(new_model_ws)
+    m.change_model_ws(model_ws)
     m.write_input()
+
     mm = flopy.modflow.Modflow.load(
-        nam_file, model_ws="temp", forgive=False, verbose=True, check=False
+        nam_file, model_ws=model_ws, forgive=False, verbose=True, check=False
     )
     for kper in range(m.nper):
         arr = irch[kper]
