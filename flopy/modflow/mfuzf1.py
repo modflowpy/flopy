@@ -8,7 +8,7 @@ MODFLOW Guide
 
 """
 import numpy as np
-from ..utils.flopy_io import pop_item, line_parse, multi_line_strip, line_strip
+from ..utils.flopy_io import pop_item, line_parse, multi_line_strip
 from ..pakbase import Package
 from ..utils import Util2d, Transient2d
 from ..utils.optionblock import OptionBlock
