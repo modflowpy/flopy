@@ -2,22 +2,22 @@ import os
 import numpy as np
 import flopy
 from flopy.utils.util_array import Util2d
+from ci_framework import baseTestDir, flopyTest
 
-newpth = os.path.join(".", "temp", "t033")
-# make the directory if it does not exist
-if not os.path.isdir(newpth):
-    os.makedirs(newpth, exist_ok=True)
-startpth = os.getcwd()
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 
 def test_rchload():
+    model_ws = f"{baseDir}_test_rchload"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
     nlay = 2
     nrow = 3
     ncol = 4
     nper = 2
 
     # create model 1
-    m1 = flopy.modflow.Modflow("rchload1", model_ws=newpth)
+    m1 = flopy.modflow.Modflow("rchload1", model_ws=model_ws)
     dis1 = flopy.modflow.ModflowDis(
         m1, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper
     )
@@ -29,16 +29,14 @@ def test_rchload():
     m1.write_input()
 
     # load model 1
-    os.chdir(newpth)
-    m1l = flopy.modflow.Modflow.load("rchload1.nam")
+    m1l = flopy.modflow.Modflow.load("rchload1.nam", model_ws=model_ws)
     a1 = rech1.array
     a2 = m1l.rch.rech[0].array
     assert np.allclose(a1, a2)
     a2 = m1l.rch.rech[1].array
     assert np.allclose(a1, a2)
-    os.chdir(startpth)
 
-    m2 = flopy.modflow.Modflow("rchload2", model_ws=newpth)
+    m2 = flopy.modflow.Modflow("rchload2", model_ws=model_ws)
     dis2 = flopy.modflow.ModflowDis(
         m2, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper
     )
@@ -50,14 +48,12 @@ def test_rchload():
     m2.write_input()
 
     # load model 2
-    os.chdir(newpth)
-    m2l = flopy.modflow.Modflow.load("rchload2.nam")
+    m2l = flopy.modflow.Modflow.load("rchload2.nam", model_ws=model_ws)
     a1 = rech2.array
     a2 = m2l.rch.rech[0].array
     assert np.allclose(a1, a2)
     a2 = m2l.rch.rech[1].array
     assert np.allclose(a1, a2)
-    os.chdir(startpth)
 
 
 if __name__ == "__main__":

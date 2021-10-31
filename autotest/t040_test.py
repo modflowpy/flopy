@@ -1,10 +1,11 @@
 import os
+import copy
+import numpy as np
+import matplotlib.pyplot as plt
 import flopy
+from ci_framework import baseTestDir, flopyTest
 
-model_ws = os.path.join("temp", "t040")
-# delete the directory if it exists
-if not os.path.isdir(model_ws):
-    os.makedirs(model_ws, exist_ok=True)
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 ibound_path = os.path.join(
     "..", "examples", "data", "subwt_example", "ibound.ref"
@@ -18,76 +19,10 @@ if v is None:
     run = False
 
 
-def build_model():
-    import matplotlib.pyplot as plt
-
-    ml = test_subwt()
-    ml.write_input()
-    if run:
-        ml.run_model()
-
-        hds_geo = flopy.utils.HeadFile(
-            os.path.join(model_ws, f"{ml.name}.swt_geostatic_stress.hds"),
-            text="stress",
-        ).get_alldata()
-        hds_eff = flopy.utils.HeadFile(
-            os.path.join(model_ws, f"{ml.name}.swt_eff_stress.hds"),
-            text="effective stress",
-        ).get_alldata()
-
-        hds_sub = flopy.utils.HeadFile(
-            os.path.join(model_ws, f"{ml.name}.swt_subsidence.hds"),
-            text="subsidence",
-        ).get_alldata()
-
-        hds_comp = flopy.utils.HeadFile(
-            os.path.join(model_ws, f"{ml.name}.swt_total_comp.hds"),
-            text="layer compaction",
-        ).get_alldata()
-
-        hds_precon = flopy.utils.HeadFile(
-            os.path.join(model_ws, f"{ml.name}.swt_precon_stress.hds"),
-            text="preconsol stress",
-        ).get_alldata()
-
-        # make 6 from subwt manual
-        i, j = 8, 9
-        fig1 = plt.figure(figsize=(10, 10))
-        ax1 = plt.subplot(4, 1, 1)
-        ax1.plot(hds_precon[:, 0, i, j], color="0.5", dashes=(1, 1))
-        ax1.plot(hds_eff[:, 0, i, j], color="r")
-
-        ax2 = plt.subplot(4, 1, 2)
-        ax2.plot(hds_geo[:, 0, i, j], color="b")
-
-        ax3 = plt.subplot(4, 1, 3)
-        ax3.plot(hds_precon[:, 1, i, j], color="0.5", dashes=(1, 1))
-        ax3.plot(hds_eff[:, 1, i, j], color="r")
-
-        ax4 = plt.subplot(4, 1, 4)
-        ax4.plot(hds_geo[:, 1, i, j], color="b")
-        plt.savefig(os.path.join(model_ws, "fig6.pdf"))
-
-        fig2 = plt.figure(figsize=(10, 10))
-        ax1 = plt.subplot(2, 1, 1)
-        ax2 = plt.subplot(2, 1, 2)
-        i1, j1 = 8, 9
-        i2, j2 = 11, 6
-        for k in range(hds_comp.shape[1]):
-            hds_comp_sum = hds_comp[:, k:, :, :].sum(axis=1)
-            print(hds_comp_sum.shape)
-            ax1.plot(hds_comp_sum[:, i1, j1])
-            ax2.plot(hds_comp_sum[:, i2, j2])
-        # plt.show()
-        plt.savefig(os.path.join(model_ws, "subwt.pdf"))
-
-
-def test_subwt():
+def build_subwt(model_ws):
     """
     test040 subwt example problem test
     """
-    import copy
-    import numpy as np
 
     ml = flopy.modflow.Modflow(
         "subwt_mf2005", model_ws=model_ws, exe_name=exe_name
@@ -177,5 +112,70 @@ def test_subwt():
     return ml
 
 
+def test_subwt():
+    model_ws = f"{baseDir}_test_subwt"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
+    ml = build_subwt(model_ws)
+    ml.write_input()
+    if run:
+        ml.run_model()
+
+        hds_geo = flopy.utils.HeadFile(
+            os.path.join(model_ws, f"{ml.name}.swt_geostatic_stress.hds"),
+            text="stress",
+        ).get_alldata()
+        hds_eff = flopy.utils.HeadFile(
+            os.path.join(model_ws, f"{ml.name}.swt_eff_stress.hds"),
+            text="effective stress",
+        ).get_alldata()
+
+        hds_sub = flopy.utils.HeadFile(
+            os.path.join(model_ws, f"{ml.name}.swt_subsidence.hds"),
+            text="subsidence",
+        ).get_alldata()
+
+        hds_comp = flopy.utils.HeadFile(
+            os.path.join(model_ws, f"{ml.name}.swt_total_comp.hds"),
+            text="layer compaction",
+        ).get_alldata()
+
+        hds_precon = flopy.utils.HeadFile(
+            os.path.join(model_ws, f"{ml.name}.swt_precon_stress.hds"),
+            text="preconsol stress",
+        ).get_alldata()
+
+        # make 6 from subwt manual
+        i, j = 8, 9
+        fig1 = plt.figure(figsize=(10, 10))
+        ax1 = plt.subplot(4, 1, 1)
+        ax1.plot(hds_precon[:, 0, i, j], color="0.5", dashes=(1, 1))
+        ax1.plot(hds_eff[:, 0, i, j], color="r")
+
+        ax2 = plt.subplot(4, 1, 2)
+        ax2.plot(hds_geo[:, 0, i, j], color="b")
+
+        ax3 = plt.subplot(4, 1, 3)
+        ax3.plot(hds_precon[:, 1, i, j], color="0.5", dashes=(1, 1))
+        ax3.plot(hds_eff[:, 1, i, j], color="r")
+
+        ax4 = plt.subplot(4, 1, 4)
+        ax4.plot(hds_geo[:, 1, i, j], color="b")
+        plt.savefig(os.path.join(model_ws, "fig6.pdf"))
+
+        fig2 = plt.figure(figsize=(10, 10))
+        ax1 = plt.subplot(2, 1, 1)
+        ax2 = plt.subplot(2, 1, 2)
+        i1, j1 = 8, 9
+        i2, j2 = 11, 6
+        for k in range(hds_comp.shape[1]):
+            hds_comp_sum = hds_comp[:, k:, :, :].sum(axis=1)
+            print(hds_comp_sum.shape)
+            ax1.plot(hds_comp_sum[:, i1, j1])
+            ax2.plot(hds_comp_sum[:, i2, j2])
+        # plt.show()
+        plt.savefig(os.path.join(model_ws, "subwt.pdf"))
+
+
 if __name__ == "__main__":
-    build_model()
+    test_subwt()
