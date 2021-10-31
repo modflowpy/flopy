@@ -5,16 +5,10 @@ import os
 import shutil
 import filecmp
 import flopy
+import pymake
+from ci_framework import baseTestDir, flopyTest
 
-try:
-    import pymake
-except:
-    print("could not import pymake")
-
-cpth = os.path.join("temp", "t043")
-# make the directory if it does not exist
-if not os.path.isdir(cpth):
-    os.makedirs(cpth, exist_ok=True)
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 exe_name = "mf2005"
 v = flopy.which(exe_name)
@@ -28,22 +22,18 @@ def test_gage_load_and_write():
     """
     test043 load and write of MODFLOW-2005 GAGE example problem
     """
+    model_ws = f"{baseDir}_test_gage_load_and_write"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+
     pth = os.path.join("..", "examples", "data", "mf2005_test")
-    opth = os.path.join(cpth, "testsfr2_tab", "orig")
-    # delete the directory if it exists
-    if os.path.isdir(opth):
-        shutil.rmtree(opth)
-    os.makedirs(opth)
+
     # copy the original files
     fpth = os.path.join(pth, "testsfr2_tab.nam")
-    try:
-        pymake.setup(fpth, opth)
-    except:
-        opth = pth
+    pymake.setup(fpth, model_ws)
 
     # load the modflow model
     mf = flopy.modflow.Modflow.load(
-        "testsfr2_tab.nam", verbose=True, model_ws=opth, exe_name=exe_name
+        "testsfr2_tab.nam", verbose=True, model_ws=model_ws, exe_name=exe_name
     )
 
     # run the modflow-2005 model
@@ -56,8 +46,8 @@ def test_gage_load_and_write():
         except:
             raise ValueError("could not load original GAGE output files")
 
-    npth = os.path.join(cpth, "testsfr2_tab", "new")
-    mf.change_model_ws(new_pth=npth, reset_external=True)
+    model_ws2 = os.path.join(model_ws, "flopy")
+    mf.change_model_ws(new_pth=model_ws2, reset_external=True)
 
     # write the modflow model in to the new path
     mf.write_input()
@@ -70,8 +60,8 @@ def test_gage_load_and_write():
         # compare the two results
         try:
             for f in files:
-                pth0 = os.path.join(opth, f)
-                pth1 = os.path.join(npth, f)
+                pth0 = os.path.join(model_ws, f)
+                pth1 = os.path.join(model_ws2, f)
                 msg = f'new and original gage file "{f}" are not binary equal.'
                 assert filecmp.cmp(pth0, pth1), msg
         except:

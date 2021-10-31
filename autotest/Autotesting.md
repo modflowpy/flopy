@@ -45,6 +45,13 @@ The space between `-n` and the number of processors can be replaced with a
 
     pytest -v -n=auto t001_test.py
 
+### Debugging failed tests
+
+To debug a failed autotest rerun the failed test by running the following command from the autotest directory
+
+    python mffailedtest.py --keep
+
+The `--keep` will retain the test directories created by the test, which will allow the input or output files to be evaluated for errors.
 
 ## Creating an autotest
 

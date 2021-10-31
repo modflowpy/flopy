@@ -2,9 +2,6 @@
 Test postprocessing utilities
 """
 
-import sys
-
-sys.path.append("/Users/aleaf/Documents/GitHub/flopy3")
 import numpy as np
 import flopy
 from flopy.utils.postprocessing import (
