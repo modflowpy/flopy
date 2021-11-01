@@ -47,18 +47,26 @@ class MF6Output:
         # capture the list file for Models and for OC packages
         if isinstance(obj, (ModelInterface, ModflowGwfoc, ModflowGwtoc)):
             if isinstance(obj, ModelInterface):
-                ml = obj
+                self._model = obj
             else:
-                ml = obj.parent
-            self._mtype = ml.model_type
-            nam_file = ml.model_nam_file[:-4]
-            self._lst = ml.name_file.blocks["options"].datasets["list"].array
+                self._model = obj.parent
+            self._mtype = self._model.model_type
+            nam_file = self._model.model_nam_file[:-4]
+            self._lst = (
+                self._model.name_file.blocks["options"].datasets["list"].array
+            )
             if self._lst is None:
                 self._lst = f"{nam_file}.lst"
             setattr(self, "list", self.__list)
             self._methods.append("list()")
             if isinstance(obj, ModelInterface):
                 return
+
+        else:
+            if obj.model_or_sim.type == "Model":
+                self._model = obj.model_or_sim
+            else:
+                self._model = None
 
         obspkg = False
         if isinstance(obj, ModflowUtlobs):
@@ -283,7 +291,11 @@ class MF6Output:
         if self._budget is not None:
             try:
                 budget_file = os.path.join(self._sim_ws, self._budget[0])
-                return CellBudgetFile(budget_file, precision=precision)
+                return CellBudgetFile(
+                    budget_file,
+                    precision=precision,
+                    modelgrid=self._model.modelgrid,
+                )
             except OSError:
                 return None
 
