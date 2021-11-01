@@ -2,12 +2,12 @@
 import os
 import flopy
 
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
 
 def test_mf6():
-    baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
-    testFramework = flopyTest(verbose=True, testDirs=baseDir)
+    base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=baseDir)
 
     sim = flopy.mf6.MFSimulation(sim_ws=baseDir)
     assert isinstance(sim, flopy.mf6.MFSimulation)

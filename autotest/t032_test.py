@@ -13,15 +13,15 @@ from flopy.export.shapefile_utils import (
     CRS,
 )
 from flopy.export.netcdf import NetCdf
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def test_polygon_from_ij():
     """test creation of a polygon from an i, j location using get_vertices()."""
-    model_ws = f"{baseDir}_test_polygon_from_ij"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_polygon_from_ij"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     m = flopy.modflow.Modflow("toy_model", model_ws=model_ws)
 

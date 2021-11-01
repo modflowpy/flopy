@@ -5,10 +5,10 @@ import sys
 import shutil
 from subprocess import Popen, PIPE
 
-from ci_framework import get_parent_path, flopyTest
+from ci_framework import get_parent_path, FlopyTestSetup
 
-parentPath = get_parent_path()
-baseDir = os.path.join(parentPath, "temp")
+parent_path = get_parent_path()
+base_dir = os.path.join(parent_path, "temp")
 
 # exclude files that take time on locanachine
 exclude = ["flopy_swi2_ex2.py", "flopy_swi2_ex5.py"]
@@ -75,8 +75,8 @@ def run_script(script):
 )
 def test_scripts(script):
     script_name = os.path.basename(script).replace(".py", "")
-    dstDir = os.path.join(f"{baseDir}", f"scripts_{script_name}")
-    testFramework = flopyTest(verbose=True, create=True, testDirs=dstDir)
+    dstDir = os.path.join(f"{base_dir}", f"scripts_{script_name}")
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=dstDir)
 
     # copy script
     dst = copy_script(dstDir, script)

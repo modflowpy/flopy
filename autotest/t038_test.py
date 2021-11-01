@@ -6,9 +6,9 @@ These are the examples that are distributed with MODFLOW-USG.
 import pytest
 import os
 import flopy
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 # build list of name files to try and load
 usgpth = os.path.join("..", "examples", "data", "mfusg_test")
@@ -26,8 +26,8 @@ for path, subdirs, files in os.walk(usgpth):
 def test_load_usg(fpth):
     exdir, namfile = os.path.split(fpth)
     name = namfile.replace(".nam", "")
-    model_ws = f"{baseDir}_test_load_usg_{name}"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_load_usg_{name}"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     load_model(namfile, exdir, model_ws)
 

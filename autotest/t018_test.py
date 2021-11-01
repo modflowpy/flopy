@@ -1,14 +1,14 @@
 import os
 import numpy as np
 import flopy
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def test_tpl_constant():
-    model_ws = f"{baseDir}_test_tpl_constant"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_tpl_constant"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     # Define the model dimensions
     nlay = 3
@@ -50,8 +50,8 @@ def test_tpl_constant():
 
 
 def test_tpl_layered():
-    model_ws = f"{baseDir}_test_tpl_layered"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_tpl_layered"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     nlay = 3
     nrow = 20
@@ -88,8 +88,8 @@ def test_tpl_layered():
 
 
 def test_tpl_zoned():
-    model_ws = f"{baseDir}_test_tpl_zoned"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_tpl_zoned"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     nlay = 3
     nrow = 20

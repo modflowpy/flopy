@@ -1,16 +1,16 @@
 # Test instantiation of flopy classes
 import os
 
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-cpth = baseTestDir(__file__, create=True, relPath="temp", verbose=True)
+cpth = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def test_modflow_unstructured():
     import flopy
     import numpy as np
 
-    testFramework = flopyTest(testDirs=cpth)
+    test_setup = FlopyTestSetup(test_dirs=cpth)
 
     mf = flopy.mfusg.MfUsg(structured=False, model_ws=cpth)
     assert isinstance(mf, flopy.mfusg.MfUsg)

@@ -7,14 +7,14 @@ import glob
 import flopy
 from flopy.utils.util_array import Util2d
 import numpy as np
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def test_create_uzf():
-    model_ws = f"{baseDir}_test_create_uzf"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_create_uzf"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     # copy the test files
     gpth = os.path.join("..", "examples", "data", "mf2005_test", "UZFtest2.*")
@@ -237,8 +237,8 @@ def load_and_write(model_ws):
 
 
 def test_uzf_surfk():
-    model_ws = f"{baseDir}_test_uzf_surfk"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_uzf_surfk"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     ws = os.path.join("..", "examples", "data", "uzf_examples")
     uzf_name = "UZFtest4.uzf"
@@ -276,8 +276,8 @@ def test_read_write_nwt_options():
     from flopy.modflow import ModflowWel, ModflowUzf1, ModflowSfr2
     from flopy.utils.optionblock import OptionBlock
 
-    model_ws = f"{baseDir}_test_read_write_nwt_options"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_read_write_nwt_options"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     welstr = "OPTIONS\nSPECIFY 0.5 10\nTABFILES 2 28\nEND\n"
     welstr2 = "OPTIONS\nSPECIFY 0.3\nTABFILES 2 28\nEND\n"
@@ -326,8 +326,8 @@ def test_read_write_nwt_options():
 
 
 def test_load_write_sfr_option_block():
-    model_ws = f"{baseDir}_test_write_sfr_option_block"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_write_sfr_option_block"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     ws = os.path.join("..", "examples", "data", "options")
     sfr_name = "sagehen_ob.sfr"
@@ -378,8 +378,8 @@ def test_load_write_sfr_option_block():
 
 
 def test_load_write_sfr_option_line():
-    model_ws = f"{baseDir}_test_load_write_sfr_option_line"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_load_write_sfr_option_line"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     ws = os.path.join("..", "examples", "data", "options")
     sfr_name = "sagehen.sfr"
@@ -439,8 +439,8 @@ def test_load_write_sfr_option_line():
 
 
 def test_load_write_uzf_option_block():
-    model_ws = f"{baseDir}_test_load_write_uzf_option_block"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_load_write_uzf_option_block"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     ws = os.path.join("..", "examples", "data", "options")
     uzf_name = "sagehen_ob.uzf"
@@ -488,8 +488,8 @@ def test_load_write_uzf_option_block():
 
 
 def test_load_write_uzf_option_line():
-    model_ws = f"{baseDir}_test_load_write_uzf_option_line"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_load_write_uzf_option_line"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     ws = os.path.join("..", "examples", "data", "options")
     uzf_name = "sagehen.uzf"
@@ -531,8 +531,8 @@ def test_load_write_uzf_option_line():
 
 
 def test_load_write_wel_option_block():
-    model_ws = f"{baseDir}_test_load_write_wel_option_block"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_load_write_wel_option_block"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     ws = os.path.join("..", "examples", "data", "options")
     wel_name = "sagehen_ob.wel"
@@ -581,8 +581,8 @@ def test_load_write_wel_option_block():
 
 
 def test_load_write_wel_option_line():
-    model_ws = f"{baseDir}_test_load_write_wel_option_line"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_load_write_wel_option_line"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     ws = os.path.join("..", "examples", "data", "options")
     wel_name = "sagehen.wel"

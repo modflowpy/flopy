@@ -1,13 +1,12 @@
-import shutil
+# Test vtk export
+
 import numpy as np
 import os
 import flopy
 from flopy.export.vtk import Vtk
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
-
-# Test vtk export
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def count_lines_in_file(filepath, binary=False):
@@ -27,8 +26,8 @@ def test_vtk_export_array2d():
     except ImportError:
         return
 
-    ws = f"{baseDir}_array_2d_test"
-    testFramework = flopyTest(verbose=True, testDirs=ws)
+    ws = f"{base_dir}_array_2d_test"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
 
     # test mf 2005 freyberg
     mpath = os.path.join(
@@ -60,8 +59,8 @@ def test_vtk_export_array3d():
     except ImportError:
         return
 
-    ws = f"{baseDir}_array_3d_test"
-    testFramework = flopyTest(verbose=True, testDirs=ws)
+    ws = f"{base_dir}_array_3d_test"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
 
     # test mf 2005 freyberg
     mpath = os.path.join(
@@ -110,7 +109,7 @@ def test_vtk_transient_array_2d():
     except ImportError:
         return
 
-    testFramework = flopyTest(verbose=True)
+    test_setup = FlopyTestSetup(verbose=True)
 
     # test mf 2005 freyberg
     mpath = os.path.join(
@@ -123,8 +122,8 @@ def test_vtk_transient_array_2d():
         verbose=False,
         load_only=["dis", "bas6", "rch"],
     )
-    ws = f"{baseDir}_transient_2d_test"
-    testFramework.addTestDir(ws)
+    ws = f"{base_dir}_transient_2d_test"
+    test_setup.add_test_dir(ws)
 
     kpers = [0, 1, 1096]
 
@@ -138,8 +137,8 @@ def test_vtk_transient_array_2d():
     assert nlines1 == 26837
 
     # with binary
-    ws = f"{baseDir}_transient_2d_test_bin"
-    testFramework.addTestDir(ws)
+    ws = f"{base_dir}_transient_2d_test_bin"
+    test_setup.add_test_dir(ws)
 
     m.rch.rech.export(ws, fmt="vtk", binary=True, kpers=kpers)
     filetocheck = os.path.join(ws, "rech_000001.vtk")
@@ -154,7 +153,7 @@ def test_vtk_export_packages():
     except ImportError:
         return
 
-    testFramework = flopyTest(verbose=True)
+    test_setup = FlopyTestSetup(verbose=True)
 
     # test mf 2005 freyberg
     mpath = os.path.join(
@@ -169,8 +168,8 @@ def test_vtk_export_packages():
     )
 
     # dis export and check
-    ws = f"{baseDir}_DIS"
-    testFramework.addTestDir(ws, create=True)
+    ws = f"{base_dir}_DIS"
+    test_setup.add_test_dir(ws)
     # todo: pakbase.export() for vtk!!!!
     m.dis.export(ws, fmt="vtk", xml=True, binary=False)
     filetocheck = os.path.join(ws, "DIS.vtk")
@@ -180,24 +179,24 @@ def test_vtk_export_packages():
     assert nlines == 27239, f"nlines ({nlines}) not equal to 27239"
 
     # upw with point scalar output
-    ws = f"{baseDir}_UPW"
-    testFramework.addTestDir(ws, create=True)
+    ws = f"{base_dir}_UPW"
+    test_setup.add_test_dir(ws)
     m.upw.export(ws, fmt="vtk", xml=True, binary=False, point_scalars=True)
     filetocheck = os.path.join(ws, "UPW.vtk")
     nlines1 = count_lines_in_file(filetocheck)
     assert nlines1 == 42445, f"nlines ({nlines}) not equal to 42445"
 
     # bas with smoothing on
-    ws = f"{baseDir}_BAS_SMOOTH"
-    testFramework.addTestDir(ws)
+    ws = f"{base_dir}_BAS_SMOOTH"
+    test_setup.add_test_dir(ws)
     m.bas6.export(ws, fmt="vtk", binary=False, smooth=True)
     filetocheck = os.path.join(ws, "BAS6.vtk")
     nlines2 = count_lines_in_file(filetocheck)
     assert nlines2 == 17883
 
     # transient package drain
-    ws = f"{baseDir}_DRN"
-    testFramework.addTestDir(ws)
+    ws = f"{base_dir}_DRN"
+    test_setup.add_test_dir(ws)
     kpers = [0, 1, 1096]
     m.drn.export(ws, fmt="vtk", binary=False, xml=True, kpers=kpers, pvd=True)
     filetocheck = os.path.join(ws, "DRN_000001.vtu")
@@ -208,15 +207,15 @@ def test_vtk_export_packages():
     assert nlines4 == 27239
 
     # dis with binary
-    ws = f"{baseDir}_DIS_BINARY"
-    testFramework.addTestDir(ws)
+    ws = f"{base_dir}_DIS_BINARY"
+    test_setup.add_test_dir(ws)
     m.dis.export(ws, fmt="vtk", binary=True)
     filetocheck = os.path.join(ws, "DIS.vtk")
     assert os.path.exists(filetocheck)
 
     # upw with point scalars and binary
-    ws = f"{baseDir}_UPW_BINARY"
-    testFramework.addTestDir(ws)
+    ws = f"{base_dir}_UPW_BINARY"
+    test_setup.add_test_dir(ws)
     m.upw.export(ws, fmt="vtk", point_scalars=True, binary=True)
     filetocheck = os.path.join(ws, "UPW.vtk")
     assert os.path.exists(filetocheck)
@@ -228,7 +227,7 @@ def test_vtk_mf6():
     except ImportError:
         return
 
-    testFramework = flopyTest(verbose=True)
+    test_setup = FlopyTestSetup(verbose=True)
 
     # test mf6
     mf6expth = os.path.join("..", "examples", "data", "mf6")
@@ -248,13 +247,13 @@ def test_vtk_mf6():
         for mname in sim_models:
             print(mname)
             m = loaded_sim.get_model(mname)
-            ws = f"{baseDir}_{m.name}"
-            testFramework.addTestDir(ws)
+            ws = f"{base_dir}_{m.name}"
+            test_setup.add_test_dir(ws)
             m.export(ws, fmt="vtk", binary=False)
 
     # check one
     filetocheck = os.path.join(
-        f"{baseDir}_twrihfb2015", "twrihfb2015_000000.vtk"
+        f"{base_dir}_twrihfb2015", "twrihfb2015_000000.vtk"
     )
     # totalbytes = os.path.getsize(filetocheck)
     # assert(totalbytes==21609)
@@ -270,7 +269,7 @@ def test_vtk_binary_head_export():
     # test mf 2005 freyberg
     from flopy.utils import HeadFile
 
-    testFramework = flopyTest(verbose=True)
+    test_setup = FlopyTestSetup(verbose=True)
 
     mpth = os.path.join(
         "..", "examples", "data", "freyberg_multilayer_transient"
@@ -284,8 +283,8 @@ def test_vtk_binary_head_export():
     filenametocheck = "freyberg_head_000003.vtu"
 
     # export and check
-    ws = f"{baseDir}_heads_test"
-    testFramework.addTestDir(ws)
+    ws = f"{base_dir}_heads_test"
+    test_setup.add_test_dir(ws)
 
     vtkobj = Vtk(m, pvd=True, xml=True)
     vtkobj.add_heads(
@@ -298,8 +297,8 @@ def test_vtk_binary_head_export():
     assert nlines == 34
 
     # with point scalars
-    ws = f"{baseDir}_heads_test_1"
-    testFramework.addTestDir(ws)
+    ws = f"{base_dir}_heads_test_1"
+    test_setup.add_test_dir(ws)
 
     vtkobj = Vtk(m, pvd=True, xml=True, point_scalars=True)
     vtkobj.add_heads(
@@ -312,8 +311,8 @@ def test_vtk_binary_head_export():
     assert nlines1 == 34
 
     # with smoothing
-    ws = f"{baseDir}_heads_test_2"
-    testFramework.addTestDir(ws)
+    ws = f"{base_dir}_heads_test_2"
+    test_setup.add_test_dir(ws)
 
     vtkobj = Vtk(m, pvd=True, xml=True, smooth=True)
     vtkobj.add_heads(
@@ -332,7 +331,7 @@ def test_vtk_cbc():
     except ImportError:
         return
 
-    testFramework = flopyTest(verbose=True)
+    test_setup = FlopyTestSetup(verbose=True)
 
     # test mf 2005 freyberg
     from flopy.utils import CellBudgetFile
@@ -349,8 +348,8 @@ def test_vtk_cbc():
     filenametocheck = "freyberg_CBC_000000.vtu"
 
     # export and check with point scalar
-    ws = f"{baseDir}_freyberg_CBC"
-    testFramework.addTestDir(ws, create=True)
+    ws = f"{base_dir}_freyberg_CBC"
+    test_setup.add_test_dir(ws)
 
     vtkobj = Vtk(m, binary=False, xml=True, pvd=True, point_scalars=True)
     vtkobj.add_cell_budget(cbc, kstpkper=[(0, 0), (0, 1), (0, 2)])
@@ -361,8 +360,8 @@ def test_vtk_cbc():
     assert nlines == 39243
 
     # with point scalars and binary
-    ws = f"{baseDir}_freyberg_CBC_binary"
-    testFramework.addTestDir(ws, create=True)
+    ws = f"{base_dir}_freyberg_CBC_binary"
+    test_setup.add_test_dir(ws)
 
     vtkobj = Vtk(m, xml=True, pvd=True, point_scalars=True)
     vtkobj.add_cell_budget(cbc, kstpkper=[(0, 0), (0, 1), (0, 2)])
@@ -380,7 +379,7 @@ def test_vtk_vector():
     from flopy.utils import postprocessing as pp
     from flopy.utils import HeadFile, CellBudgetFile
 
-    testFramework = flopyTest(verbose=True)
+    test_setup = FlopyTestSetup(verbose=True)
 
     # test mf 2005 freyberg
     mpth = os.path.join(
@@ -402,8 +401,8 @@ def test_vtk_vector():
     filenametocheck = "discharge.vtu"
 
     # export and check with point scalar
-    ws = f"{baseDir}_vector_0"
-    testFramework.addTestDir(ws, create=True)
+    ws = f"{base_dir}_vector_0"
+    test_setup.add_test_dir(ws)
 
     vtkobj = Vtk(m, xml=True, binary=False, point_scalars=True)
     vtkobj.add_vector(q, "discharge")
@@ -414,8 +413,8 @@ def test_vtk_vector():
     assert nlines == 36045
 
     # with point scalars and binary
-    ws = f"{baseDir}_vector_0_binary"
-    testFramework.addTestDir(ws, create=True)
+    ws = f"{base_dir}_vector_0_binary"
+    test_setup.add_test_dir(ws)
 
     vtkobj = Vtk(m, point_scalars=True)
     vtkobj.add_vector(q, "discharge")
@@ -428,8 +427,8 @@ def test_vtk_vector():
     # test at cell centers
     q = pp.get_specific_discharge(vectors, m, head)
 
-    ws = f"{baseDir}_vector_1"
-    testFramework.addTestDir(ws, create=True)
+    ws = f"{base_dir}_vector_1"
+    test_setup.add_test_dir(ws)
 
     filenametocheck = "discharge_verts.vtu"
     vtkobj = Vtk(m, xml=True, binary=False)
@@ -440,8 +439,8 @@ def test_vtk_vector():
     nlines2 = count_lines_in_file(filetocheck)
     assert nlines2 == 27645, f"nlines != 10598 ({nlines2})"
 
-    ws = f"{baseDir}_vector_1_binary"
-    testFramework.addTestDir(ws, create=True)
+    ws = f"{base_dir}_vector_1_binary"
+    test_setup.add_test_dir(ws)
 
     # with values directly given at vertices and binary
     vtkobj = Vtk(m, xml=True, binary=False)
@@ -461,7 +460,7 @@ def test_vtk_unstructured():
     except ImportError:
         return
 
-    testFramework = flopyTest(verbose=True)
+    test_setup = FlopyTestSetup(verbose=True)
 
     def load_verts(fname):
         verts = np.genfromtxt(
@@ -524,8 +523,8 @@ def test_vtk_unstructured():
         ncpl=ncpl,
     )
 
-    ws = f"{baseDir}_unstructured"
-    testFramework.addTestDir(ws)
+    ws = f"{base_dir}_unstructured"
+    test_setup.add_test_dir(ws)
 
     outfile = os.path.join(ws, "disu_grid.vtu")
     vtkobj = Vtk(
@@ -558,7 +557,7 @@ def test_vtk_vertex():
     except ImportError:
         return
 
-    testFramework = flopyTest(verbose=True)
+    test_setup = FlopyTestSetup(verbose=True)
 
     # disv test
     workspace = os.path.join(
@@ -568,8 +567,8 @@ def test_vtk_vertex():
     sim = flopy.mf6.MFSimulation.load(sim_ws=workspace)
     gwf = sim.get_model("gwf_1")
 
-    ws = f"{baseDir}_vertex"
-    testFramework.addTestDir(ws)
+    ws = f"{base_dir}_vertex"
+    test_setup.add_test_dir(ws)
 
     outfile = os.path.join(ws, "disv.vtk")
     vtkobj = Vtk(model=gwf, binary=True, smooth=False)
@@ -602,7 +601,7 @@ def test_vtk_pathline():
     except ImportError:
         return
 
-    testFramework = flopyTest(verbose=True)
+    test_setup = FlopyTestSetup(verbose=True)
 
     # pathline test for vtk
     ws = os.path.join("..", "examples", "data", "freyberg")
@@ -610,8 +609,8 @@ def test_vtk_pathline():
         "freyberg.nam", model_ws=ws, exe_name="mf2005"
     )
 
-    ws = f"{baseDir}_pathline"
-    testFramework.addTestDir(ws)
+    ws = f"{base_dir}_pathline"
+    test_setup.add_test_dir(ws)
 
     ml.change_model_ws(new_pth=ws)
     ml.write_input()

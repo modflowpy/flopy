@@ -1,12 +1,12 @@
 import os
 import numpy as np
 import flopy
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
 pth = os.path.join("..", "examples", "data", "mf6-freyberg")
 
 name = "freyberg"
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def __export_ascii_grid(modelgrid, file_path, v, nodata=0.0):
@@ -123,8 +123,8 @@ def __get_lake_connection_data(
 
 
 def test_base_run():
-    model_ws = f"{baseDir}_test_base_run"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_base_run"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     sim = flopy.mf6.MFSimulation().load(
         sim_name=name,
@@ -168,8 +168,8 @@ def test_base_run():
 
 
 def test_lake():
-    model_ws = f"{baseDir}_test_lake"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_lake"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     top = flopy.utils.Raster.load(os.path.join(pth, "top.asc"))
     bot = flopy.utils.Raster.load(os.path.join(pth, "bot.asc"))
@@ -294,8 +294,8 @@ def test_lake():
 
 
 def test_embedded_lak_ex01():
-    model_ws = f"{baseDir}_test_embedded_lak_ex01"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_embedded_lak_ex01"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     nper = 1
     nlay, nrow, ncol = 5, 17, 17

@@ -13,7 +13,7 @@ from flopy.discretization import StructuredGrid
 from flopy.utils.modpathfile import EndpointFile, PathlineFile
 from flopy.utils.recarray_utils import ra_slice
 from flopy.modpath.mp6sim import StartingLocationsFile
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
 try:
     import shapefile
@@ -25,7 +25,7 @@ except ImportError:
 
 ex_pth = "../examples/data/mp6/"
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def copy_modpath_files(model_ws, baseName):
@@ -43,8 +43,8 @@ def copy_modpath_files(model_ws, baseName):
 
 
 def test_mpsim():
-    model_ws = f"{baseDir}_test_mpsim"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_mpsim"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     copy_modpath_files(model_ws, "EXAMPLE.")
 
@@ -132,8 +132,8 @@ def test_mpsim():
 
 
 def test_get_destination_data():
-    model_ws = f"{baseDir}_test_get_destination_data"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_get_destination_data"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     copy_modpath_files(model_ws, "EXAMPLE.")
     copy_modpath_files(model_ws, "EXAMPLE-3.")
@@ -318,8 +318,8 @@ def test_get_destination_data():
 def test_loadtxt():
     from flopy.utils.flopy_io import loadtxt
 
-    model_ws = f"{baseDir}_test_loadtxt"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_loadtxt"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     copy_modpath_files(model_ws, "EXAMPLE-3.")
 

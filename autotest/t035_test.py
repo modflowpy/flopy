@@ -7,9 +7,9 @@ import shutil
 import numpy as np
 import flopy
 import pymake
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 exe_name = "mflgr"
 v = flopy.which(exe_name)
@@ -25,11 +25,10 @@ else:
 
 def test_simplelgr_load_and_write(silent=True):
     # Test load and write of distributed MODFLOW-LGR example problem
-    model_ws = f"{baseDir}_test_simplelgr_load_and_write"
-    testFramework = flopyTest(
+    model_ws = f"{base_dir}_test_simplelgr_load_and_write"
+    test_setup = FlopyTestSetup(
         verbose=True,
-        testDirs=model_ws,
-        create=True,
+        test_dirs=model_ws,
     )
 
     pth = os.path.join("..", "examples", "data", "mflgr_v2", "ex3")
@@ -251,11 +250,10 @@ def singleModel(
 
 
 def test_simple_lgrmodel_from_scratch(silent=True):
-    model_ws = f"{baseDir}_test_simple_lgrmodel_from_scratch"
-    testFramework = flopyTest(
+    model_ws = f"{base_dir}_test_simple_lgrmodel_from_scratch"
+    test_setup = FlopyTestSetup(
         verbose=True,
-        testDirs=model_ws,
-        create=True,
+        test_dirs=model_ws,
     )
 
     # coordinates and extend Mother

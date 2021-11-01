@@ -2,9 +2,9 @@ import pytest
 import os
 import numpy as np
 import flopy
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 ex_pth = os.path.join("..", "examples", "data", "mf2005_test")
 testmodels = [
@@ -32,8 +32,8 @@ def checker_on_load(mfnam):
 
 
 def test_bcs_check():
-    model_ws = f"{baseDir}_test_bcs_check"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_bcs_check"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     mf = flopy.modflow.Modflow(version="mf2005", model_ws=model_ws)
 
@@ -79,8 +79,8 @@ def test_bcs_check():
 
 def test_properties_check():
     # test that storage values ignored for steady state
-    model_ws = f"{baseDir}_test_properties_check"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_properties_check"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     mf = flopy.modflow.Modflow(
         version="mf2005",

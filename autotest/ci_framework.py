@@ -31,8 +31,8 @@ def get_parent_path():
     return parent_path
 
 
-def baseTestDir(
-    filePath, clean=False, create=False, relPath=".", verbose=False
+def base_test_dir(
+    file_path, clean=False, create=False, rel_path=".", verbose=False
 ):
     """
     Create test directory name from script name. The assumption is the
@@ -41,13 +41,13 @@ def baseTestDir(
 
     Parameters
     ----------
-    filePath : file path
+    file_path : file path
         autotest file path
     clean : bool
         boolean indicating if an existing directory should be cleaned
     create : bool
         boolean indicating if the directory should be created
-    relPath : str
+    rel_path : str
         path to where the test directory should be located
     verbose : bool
         boolean indicating if diagnostic information should be written
@@ -55,44 +55,44 @@ def baseTestDir(
 
     Returns
     -------
-    baseDir : str
+    base_dir : str
         base test directory to create for the autotest
 
     Example
     -------
 
-    >>> from ci_framework import baseTestDir
-    >>> baseDir = baseTestDir(__file__, relPath="temp", create=True)
-    >>> print(f"baseDir: {baseDir}")
+    >>> from ci_framework import base_test_dir
+    >>> base_dir = basetest_dir(__file__, rel_path="temp")
+    >>> print(f"base_dir: {base_dir}")
 
     """
-    fileName = os.path.basename(filePath)
+    fileName = os.path.basename(file_path)
     if not fileName.startswith("t"):
         raise ValueError(
             f"fileName '{fileName}', which is derived from "
-            f"'{filePath}', must start with a 't'"
+            f"'{file_path}', must start with a 't'"
         )
     # parse the file name
     index1 = fileName.index("_")
     if index1 == 0:
         index1 = len(fileName)
     # construct the base directory with the relative path
-    baseDir = os.path.join(relPath, fileName[:index1])
+    base_dir = os.path.join(rel_path, fileName[:index1])
 
-    # create the TestDir, if necessary
+    # create the test_dir, if necessary
     if create:
-        createTestDir(baseDir, clean=clean, verbose=verbose)
+        create_test_dir(base_dir, clean=clean, verbose=verbose)
 
-    return baseDir
+    return base_dir
 
 
-def createTestDir(testDir, clean=False, verbose=False):
+def create_test_dir(test_dir, clean=False, verbose=False):
     """
     Create a test directory with the option to remove it first
 
     Parameters
     ----------
-    testDir : str
+    test_dir : str
         path of directory to create
     clean : bool
         boolean indicating if an existing directory should be cleaned
@@ -103,19 +103,19 @@ def createTestDir(testDir, clean=False, verbose=False):
     Example
     -------
 
-    >>> from ci_framework import createTestDir
-    >>> createTestDir("temp/mydir", clean=True, verbose=True)
+    >>> from ci_framework import createtest_dir
+    >>> createtest_dir("temp/mydir", clean=True, verbose=True)
 
     """
     if clean:
-        _cleanDir(testDir, verbose=verbose)
-    if not os.path.isdir(testDir):
-        os.makedirs(testDir, exist_ok=True)
+        _clean_dir(test_dir, verbose=verbose)
+    if not os.path.isdir(test_dir):
+        os.makedirs(test_dir, exist_ok=True)
         if verbose:
-            print(f"creating test directory...'{testDir}'")
+            print(f"creating test directory...'{test_dir}'")
 
 
-class flopyTest(object):
+class FlopyTestSetup(object):
     """
     The flopyTest class is used to setup test directories for flopy
     autotests.
@@ -124,9 +124,7 @@ class flopyTest(object):
     ----------
     clean : bool
         boolean indicating if an existing directory should be cleaned
-    create : bool
-        boolean indicating if the directory should be created
-    testDirs : str or list/tuple of strings
+    test_dirs : str or list/tuple of strings
         path to where the test directory should be located
     verbose : bool
         boolean indicating if diagnostic information should be written
@@ -136,24 +134,23 @@ class flopyTest(object):
 
     Methods
     -------
-    addTestDir(testDirs, clean=False, create=False)
-        Add a testDir or a list of testDirs to the object
+    addtest_dir(test_dirs, clean=False, create=False)
+        Add a test_dir or a list of test_dirs to the object
 
     Example
     -------
 
-    >>> from ci_framework import flopyTest
+    >>> from ci_framework import FlopyTestSetup
     >>> def test_function():
-    ...     testFramework = flopyTest(verbose=True, testDirs="temp/t091_01")
-    ...     testFramework.addTestDir("temp/t091_02", create=True)
+    ...     test_setup = flopyTest(verbose=True, test_dirs="temp/t091_01")
+    ...     test_setup.add_test_dir("temp/t091_02")
 
     """
 
     def __init__(
         self,
         clean=False,
-        create=False,
-        testDirs=None,
+        test_dirs=None,
         verbose=False,
         retain=None,
     ):
@@ -161,47 +158,43 @@ class flopyTest(object):
             retain = keep
         self._clean = clean
         self._verbose = verbose
-        self._createDirs = create
         self._retain = retain
-        self._testDirs = []
-        if testDirs is not None:
-            self.addTestDir(testDirs, clean=clean, create=create)
+        self._test_dirs = []
+        if test_dirs is not None:
+            self.add_test_dir(test_dirs, clean=clean)
 
     def __del__(self):
         if not self._retain:
-            for testDir in self._testDirs:
-                _cleanDir(testDir, verbose=self._verbose)
+            for test_dir in self._test_dirs:
+                _clean_dir(test_dir, verbose=self._verbose)
         else:
             print("Retaining test files")
 
-    def addTestDir(self, testDirs, clean=False, create=False):
+    def add_test_dir(self, test_dirs, clean=False):
         """
         Add a test directory to the flopyTest object.
 
         Parameters
         ----------
-        testDirs : str or list/tuple of strings
+        test_dirs : str or list/tuple of strings
             path to where the test directory should be located
         clean : bool
             boolean indicating if an existing directory should be cleaned
-        create : bool
-            boolean indicating if the directory should be created
 
         """
-        if isinstance(testDirs, str):
-            testDirs = [testDirs]
-        elif isinstance(testDirs, (int, float, bool)):
+        if isinstance(test_dirs, str):
+            test_dirs = [test_dirs]
+        elif isinstance(test_dirs, (int, float, bool)):
             raise ValueError(
-                f"testDir '{testDirs}' must be a string, "
+                f"test_dir '{test_dirs}' must be a string, "
                 "list of strings, or tuple of strings."
             )
-        for testDir in testDirs:
-            if testDir not in self._testDirs:
-                self._testDirs.append(testDir)
+        for test_dir in test_dirs:
+            if test_dir not in self._test_dirs:
+                self._test_dirs.append(test_dir)
                 if self._verbose:
-                    print(f"adding test directory...{testDir}")
-                if create:
-                    createTestDir(testDir, clean=clean, verbose=self._verbose)
+                    print(f"adding test directory...{test_dir}")
+                create_test_dir(test_dir, clean=clean, verbose=self._verbose)
 
 
 def _get_mf6path():
@@ -214,11 +207,11 @@ def _get_mf6path():
         path to the directory containing the MODFLOW 6 example problems.
 
     """
-    parentPath = get_parent_path()
-    if parentPath is None:
-        parentPath = "."
+    parent_path = get_parent_path()
+    if parent_path is None:
+        parent_path = "."
     dirName = "mf6examples"
-    dstpth = os.path.join(parentPath, "temp", dirName)
+    dstpth = os.path.join(parent_path, "temp", dirName)
     return os.path.abspath(dstpth)
 
 
@@ -252,7 +245,7 @@ def download_mf6_examples(delete_existing=False):
     # download the MODFLOW 6 distribution does not exist
     if clean or not os.path.isdir(dstpth):
         print(f"create...{dstpth}")
-        createTestDir(dstpth, clean=clean, verbose=True)
+        create_test_dir(dstpth, clean=clean, verbose=True)
 
         # Download the distribution
         url = (
@@ -275,13 +268,13 @@ def download_mf6_examples(delete_existing=False):
 # private functions
 
 
-def _cleanDir(testDir, verbose=False):
+def _clean_dir(test_dir, verbose=False):
     """
     Delete a test directory
 
     Parameters
     ----------
-    testDir : str
+    test_dir : str
         path of directory to create
     clean : bool
         boolean indicating if an existing directory should be cleaned
@@ -291,9 +284,9 @@ def _cleanDir(testDir, verbose=False):
 
     """
 
-    if os.path.isdir(testDir):
+    if os.path.isdir(test_dir):
         if verbose:
-            print(f"removing test directory...'{testDir}'")
+            print(f"removing test directory...'{test_dir}'")
 
         # remove the tree
-        shutil.rmtree(testDir, ignore_errors=True)
+        shutil.rmtree(test_dir, ignore_errors=True)

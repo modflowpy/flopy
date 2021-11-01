@@ -69,21 +69,21 @@ programatically using functions and classes in `ci_framework` script. An
 example of how to construct an autotest is given below
 
 ```python
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
 # set the baseDir variable using the script name
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 def test_mytest():
-    ws = f"{baseDir}_test_mytest"
-    testFramework = flopyTest(verbose=True, testDirs=ws, create=True)
+    ws = f"{base_dir}_test_mytest"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
     
     ...test something
     
     assert something is True, "oops"
     
-    ws = f"{baseDir}_test_mytest_another_directory"
-    testFramework.addTestDir(ws, create=True)
+    ws = f"{base_dir}_test_mytest_another_directory"
+    test_setup.add_test_dir(ws)
     
     ...test something_else
     

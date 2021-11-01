@@ -6,9 +6,9 @@ Some basic tests for SEAWAT Henry create and run.
 import os
 import numpy as np
 import flopy
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 seawat_exe = "swtv4"
 isseawat = flopy.which(seawat_exe)
@@ -45,8 +45,8 @@ ssm_data[0] = ssm_sp1
 
 def test_seawat_henry():
     # SEAWAT model from a modflow model and an mt3d model
-    model_ws = f"{baseDir}_test_seawat_henry"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_seawat_henry"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     modelname = "henry"
     mf = flopy.modflow.Modflow(modelname, exe_name="swtv4", model_ws=model_ws)
@@ -126,8 +126,8 @@ def test_seawat_henry():
 
 def test_seawat2_henry():
     # SEAWAT model directly by adding packages
-    model_ws = f"{baseDir}_test_seawat2_henry"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_seawat2_henry"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     modelname = "henry2"
     m = flopy.seawat.swt.Seawat(

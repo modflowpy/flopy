@@ -9,11 +9,11 @@ import shutil
 import numpy as np
 import flopy
 
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(
+base_dir = base_test_dir(
     __file__,
-    relPath="temp",
+    rel_path="temp",
     verbose=True,
 )
 
@@ -44,7 +44,7 @@ def remove_shp(shpname):
 def export_mf6_netcdf(ws, path):
     print(f"in export_mf6_netcdf: {path}")
 
-    testFramework = flopyTest(create=True, testDirs=ws)
+    test_setup = FlopyTestSetup(test_dirs=ws)
 
     sim = flopy.mf6.modflow.mfsimulation.MFSimulation.load(sim_ws=path)
     for name, model in sim.get_model_itr():
@@ -79,7 +79,7 @@ def export_netcdf(ws, m):
         import pyproj
     except:
         return
-    testFramework = flopyTest(create=True, testDirs=ws)
+    test_setup = FlopyTestSetup(test_dirs=ws)
 
     fnc = m.export(os.path.join(ws, f"{m.name}.nc"))
     fnc.write()
@@ -161,8 +161,8 @@ def export_shapefile_modelgrid_override(namfile):
     assert isinstance(m, flopy.modflow.Modflow)
 
     name = namfile.replace(".nam", "")
-    ws_out = f"{baseDir}_{name}_shapefile_modelgrid_override"
-    testFramework = flopyTest(verbose=True, testDirs=ws_out, create=True)
+    ws_out = f"{base_dir}_{name}_shapefile_modelgrid_override"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
 
     fnc_name = os.path.join(ws_out, f"{m.name}.shp")
 
@@ -195,8 +195,8 @@ def test_output_helper_shapefile_export():
     head = flopy.utils.HeadFile(os.path.join(ws, "freyberg.hds"))
     cbc = flopy.utils.CellBudgetFile(os.path.join(ws, "freyberg.cbc"))
 
-    ws_out = f"{baseDir}_helper_shapefile"
-    testFramework = flopyTest(verbose=True, create=True, testDirs=ws_out)
+    ws_out = f"{base_dir}_helper_shapefile"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
 
     flopy.export.utils.output_helper(
         os.path.join(ws_out, "test.shp"),
@@ -222,8 +222,8 @@ def test_freyberg_export():
     )
 
     name = namfile.replace(".nam", "")
-    ws_out = f"{baseDir}_{name}_shapefile_freyberg"
-    testFramework = flopyTest(verbose=True, testDirs=ws_out, create=True)
+    ws_out = f"{base_dir}_{name}_shapefile_freyberg"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
 
     # test export at model, package and object levels
     m.export(f"{ws_out}/model.shp")
@@ -313,8 +313,8 @@ def test_export_output():
     hds_pth = os.path.join(model_ws, "freyberg.githds")
     hds = flopy.utils.HeadFile(hds_pth)
 
-    ws = f"{baseDir}_freyberg_export_output_netcdf"
-    testFramework = flopyTest(verbose=True, testDirs=ws, create=True)
+    ws = f"{base_dir}_freyberg_export_output_netcdf"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
     out_pth = os.path.join(ws, "freyberg.out.nc")
 
     nc = flopy.export.utils.output_helper(
@@ -339,8 +339,8 @@ def test_write_shapefile():
     from flopy.export.shapefile_utils import shp2recarray
     from flopy.export.shapefile_utils import write_grid_shapefile
 
-    ws_out = f"{baseDir}_shapefile_write"
-    testFramework = flopyTest(verbose=True, testDirs=ws_out, create=True)
+    ws_out = f"{base_dir}_shapefile_write"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
 
     sg = StructuredGrid(
         delr=np.ones(10) * 1.1,
@@ -403,8 +403,8 @@ def test_shapefile_polygon_closed():
         m, delr=spacing, delc=spacing, nrow=nrow, ncol=ncol
     )
 
-    ws_out = f"{baseDir}_shapefile_polygon_closed"
-    testFramework = flopyTest(verbose=True, testDirs=ws_out, create=True)
+    ws_out = f"{base_dir}_shapefile_polygon_closed"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
 
     shp_file = os.path.join(ws_out, "test_polygon.shp")
     m.dis.export(shp_file)
@@ -426,8 +426,8 @@ def test_export_array():
         rotate = False
         pass
 
-    ws_out = f"{baseDir}_export_array"
-    testFramework = flopyTest(verbose=True, testDirs=ws_out, create=True)
+    ws_out = f"{base_dir}_export_array"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
 
     namfile = "freyberg.nam"
     model_ws = "../examples/data/freyberg_multilayer_transient/"
@@ -500,8 +500,8 @@ def test_export_array():
 
 def test_mbase_modelgrid():
 
-    ws = f"{baseDir}_mbase_modelgrid"
-    testFramework = flopyTest(verbose=True, testDirs=ws, create=True)
+    ws = f"{base_dir}_mbase_modelgrid"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
 
     ml = flopy.modflow.Modflow(
         modelname="test", xll=500.0, rotation=12.5, start_datetime="1/1/2016"
@@ -529,8 +529,8 @@ def test_mbase_modelgrid():
 
 def test_mt_modelgrid():
 
-    ws = f"{baseDir}_mt_modelgrid"
-    testFramework = flopyTest(verbose=True, testDirs=ws, create=True)
+    ws = f"{base_dir}_mt_modelgrid"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
 
     ml = flopy.modflow.Modflow(
         modelname="test",
@@ -627,8 +627,8 @@ def test_mt_modelgrid():
 
 def test_free_format_flag():
 
-    ws_out = f"{baseDir}_free_format_flag"
-    testFramework = flopyTest(verbose=True, testDirs=ws_out, create=True)
+    ws_out = f"{base_dir}_free_format_flag"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
 
     Lx = 100.0
     Ly = 100.0
@@ -674,8 +674,8 @@ def test_free_format_flag():
 
 
 def test_sr():
-    ws = f"{baseDir}_test_sr"
-    testFramework = flopyTest(verbose=True, testDirs=ws, create=True)
+    ws = f"{base_dir}_test_sr"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
 
     m = flopy.modflow.Modflow(
         "test",
@@ -791,8 +791,8 @@ def test_twri_mg():
 def test_mg():
     from flopy.utils import geometry
 
-    ws = f"{baseDir}_test_modelgrid"
-    testFramework = flopyTest(verbose=True, testDirs=ws, create=True)
+    ws = f"{base_dir}_test_modelgrid"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
 
     Lx = 100.0
     Ly = 100.0
@@ -937,8 +937,8 @@ def test_dynamic_xll_yll():
 
 def test_namfile_readwrite():
 
-    ws = f"{baseDir}__namfile_readwrite"
-    testFramework = flopyTest(verbose=True, testDirs=ws, create=True)
+    ws = f"{base_dir}__namfile_readwrite"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
 
     nlay, nrow, ncol = 1, 30, 5
     delr, delc = 250, 500
@@ -992,8 +992,8 @@ def test_namfile_readwrite():
 
 
 def test_read_usgs_model_reference():
-    model_ws = f"{baseDir}_usgs_model_reference"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_usgs_model_reference"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     nlay, nrow, ncol = 1, 30, 5
     delr, delc = 250, 500
@@ -1514,8 +1514,8 @@ def test_netcdf_classmethods():
 
     namfile = "freyberg.nam"
     name = namfile.replace(".nam", "")
-    ws = f"{baseDir}_{name}_netcdf_classmethods"
-    testFramework = flopyTest(verbose=True, testDirs=ws, create=True)
+    ws = f"{base_dir}_{name}_netcdf_classmethods"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
 
     model_ws = os.path.join(
         "..", "examples", "data", "freyberg_multilayer_transient"
@@ -1578,8 +1578,8 @@ def test_shapefile_ibound():
     if not shapefile:
         return
 
-    ws_out = f"{baseDir}_shapefile_ibound"
-    testFramework = flopyTest(verbose=True, testDirs=ws_out, create=True)
+    ws_out = f"{base_dir}_shapefile_ibound"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
 
     shape_name = os.path.join(ws_out, "test.shp")
     namfile = "freyberg.nam"
@@ -1608,8 +1608,8 @@ def test_shapefile_ibound():
 )
 def test_shapefile(namfile):
     name = namfile.replace(".nam", "")
-    ws = f"{baseDir}_{name}_shapefile"
-    testFramework = flopyTest(create=True, testDirs=ws)
+    ws = f"{base_dir}_{name}_shapefile"
+    test_setup = FlopyTestSetup(test_dirs=ws)
     export_shapefile(ws, namfile)
 
     return
@@ -1630,7 +1630,7 @@ def test_shapefile_export_modelgrid_override(namfile):
 )
 def test_netcdf(namfile):
     name = namfile.replace(".nam", "")
-    ws = f"{baseDir}_{name}_netcdf"
+    ws = f"{base_dir}_{name}_netcdf"
     export_mf2005_netcdf(ws, namfile)
     return
 
@@ -1638,7 +1638,7 @@ def test_netcdf(namfile):
 def build_netcdf():
     for namfile in namfiles:
         name = namfile.replace(".nam", "")
-        ws = f"{baseDir}_{name}_netcdf"
+        ws = f"{base_dir}_{name}_netcdf"
         export_mf2005_netcdf(ws, namfile)
     return
 
@@ -1646,7 +1646,7 @@ def build_netcdf():
 def build_sfr_netcdf():
     namfile = "testsfr2.nam"
     name = namfile.replace(".nam", "")
-    ws = f"{baseDir}_{name}_netcdf"
+    ws = f"{base_dir}_{name}_netcdf"
     export_mf2005_netcdf(ws, namfile)
     return
 
@@ -1657,8 +1657,8 @@ def test_export_array2():
     from flopy.discretization import StructuredGrid
     from flopy.export.utils import export_array
 
-    ws_out = f"{baseDir}_shapefile_export_array2"
-    testFramework = flopyTest(verbose=True, testDirs=ws_out, create=True)
+    ws_out = f"{base_dir}_shapefile_export_array2"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
 
     nrow = 7
     ncol = 11
@@ -1698,8 +1698,8 @@ def test_export_array_contours():
     from flopy.discretization import StructuredGrid
     from flopy.export.utils import export_array_contours
 
-    ws_out = f"{baseDir}_shapefile_array_contours"
-    testFramework = flopyTest(verbose=True, testDirs=ws_out, create=True)
+    ws_out = f"{base_dir}_shapefile_array_contours"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
 
     nrow = 7
     ncol = 11
@@ -1743,8 +1743,8 @@ def test_export_contourf():
     import matplotlib.pyplot as plt
     from flopy.export.utils import export_contourf
 
-    ws_out = f"{baseDir}_shapefile_export_contourf"
-    testFramework = flopyTest(verbose=True, testDirs=ws_out, create=True)
+    ws_out = f"{base_dir}_shapefile_export_contourf"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
 
     filename = os.path.join(ws_out, "myfilledcontours.shp")
     a = np.random.random((10, 10))

@@ -9,7 +9,11 @@ import subprocess
 import pymake
 import flopy
 
-from ci_framework import get_parent_path, createTestDir, download_mf6_examples
+from ci_framework import (
+    get_parent_path,
+    create_test_dir,
+    download_mf6_examples,
+)
 
 # os.environ["CI"] = "1"
 

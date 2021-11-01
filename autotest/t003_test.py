@@ -2,10 +2,6 @@ import pytest
 import flopy
 import os
 
-from ci_framework import baseTestDir, flopyTest
-
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
-
 
 def test_loadfreyberg():
     cwd = os.getcwd()
@@ -14,7 +10,11 @@ def test_loadfreyberg():
     assert os.path.isdir(pth)
     os.chdir(pth)
     namefile = "freyberg.nam"
-    ml = flopy.modflow.Modflow.load(namefile, verbose=True)
+    ml = flopy.modflow.Modflow.load(
+        namefile,
+        verbose=True,
+        check=False,
+    )
     os.chdir(cwd)
     assert isinstance(ml, flopy.modflow.Modflow)
     assert ml.load_fail is False
@@ -27,7 +27,12 @@ def test_loadoahu():
     assert os.path.isdir(pth), f"'{pth}' does not exist"
 
     namefile = "Oahu_01.nam"
-    ml = flopy.modflow.Modflow.load(namefile, verbose=True, model_ws=pth)
+    ml = flopy.modflow.Modflow.load(
+        namefile,
+        verbose=True,
+        model_ws=pth,
+        check=False,
+    )
     assert isinstance(ml, flopy.modflow.Modflow)
     assert ml.load_fail is False
 
@@ -39,7 +44,12 @@ def test_loadtwrip():
     assert os.path.isdir(pth), f"'{pth}' does not exist"
 
     namefile = "twrip.nam"
-    ml = flopy.modflow.Modflow.load(namefile, verbose=True, model_ws=pth)
+    ml = flopy.modflow.Modflow.load(
+        namefile,
+        verbose=True,
+        model_ws=pth,
+        check=False,
+    )
 
     assert isinstance(ml, flopy.modflow.Modflow)
     assert not ml.load_fail
@@ -52,7 +62,12 @@ def test_loadtwrip_upw():
     assert os.path.isdir(pth), f"'{pth}' does not exist"
 
     namefile = "twrip_upw.nam"
-    ml = flopy.modflow.Modflow.load(namefile, verbose=True, model_ws=pth)
+    ml = flopy.modflow.Modflow.load(
+        namefile,
+        verbose=True,
+        model_ws=pth,
+        check=False,
+    )
 
     assert isinstance(ml, flopy.modflow.Modflow)
     assert ml.load_fail is False
@@ -64,7 +79,11 @@ def test_loadoc():
     ml = flopy.modflow.Modflow()
 
     fpth = os.path.join("..", "examples", "data", "mf2005_test", "fhb.dis")
-    dis = flopy.modflow.ModflowDis.load(fpth, ml, check=False)
+    dis = flopy.modflow.ModflowDis.load(
+        fpth,
+        ml,
+        check=False,
+    )
 
     fpth = os.path.join("..", "examples", "data", "mf2005_test", "fhb.oc")
     oc = flopy.modflow.ModflowOc.load(fpth, ml, ext_unit_dict=None)
@@ -114,7 +133,10 @@ def test_loadoc_nstpfail():
 
 def test_load_nam_mf_nonexistant_file():
     with pytest.raises(OSError):
-        ml = flopy.modflow.Modflow.load("nonexistant.nam")
+        ml = flopy.modflow.Modflow.load(
+            "nonexistant.nam",
+            check=False,
+        )
 
 
 def test_load_nam_mt_nonexistant_file():
