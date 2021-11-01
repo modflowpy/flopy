@@ -12,7 +12,7 @@ base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 def test_create_and_run_model():
 
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=baseDir)
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=base_dir)
 
     # names
     sim_name = "testsim"
@@ -22,7 +22,7 @@ def test_create_and_run_model():
     # set up simulation
     tdis_name = f"{sim_name}.tdis"
     sim = MFSimulation(
-        sim_name=sim_name, version="mf6", exe_name=exe_name, sim_ws=baseDir
+        sim_name=sim_name, version="mf6", exe_name=exe_name, sim_ws=base_dir
     )
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis = mftdis.ModflowTdis(
