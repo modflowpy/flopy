@@ -5,9 +5,9 @@ from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
 
-class ModflowUtllaktab(mfpackage.MFPackage):
+class ModflowUtlsfrtab(mfpackage.MFPackage):
     """
-    ModflowUtllaktab defines a laktab package within a utl model.
+    ModflowUtlsfrtab defines a sfrtab package within a utl model.
 
     Parameters
     ----------
@@ -19,23 +19,18 @@ class ModflowUtllaktab(mfpackage.MFPackage):
         processing purposes only.
     nrow : integer
         * nrow (integer) integer value specifying the number of rows in the
-          lake table. There must be NROW rows of data in the TABLE block.
+          reach cross-section table. There must be NROW rows of data in the
+          TABLE block.
     ncol : integer
         * ncol (integer) integer value specifying the number of columns in the
-          lake table. There must be NCOL columns of data in the TABLE block.
-          For lakes with HORIZONTAL and/or VERTICAL CTYPE connections, NCOL
-          must be equal to 3. For lakes with EMBEDDEDH or EMBEDDEDV CTYPE
-          connections, NCOL must be equal to 4.
-    table : [stage, volume, sarea, barea]
-        * stage (double) real value that defines the stage corresponding to the
-          remaining data on the line.
-        * volume (double) real value that defines the lake volume corresponding
-          to the stage specified on the line.
-        * sarea (double) real value that defines the lake surface area
-          corresponding to the stage specified on the line.
-        * barea (double) real value that defines the lake-GWF exchange area
-          corresponding to the stage specified on the line. BAREA is only
-          specified if the CLAKTYPE for the lake is EMBEDDEDH or EMBEDDEDV.
+          reach cross-section table. There must be NCOL columns of data in the
+          TABLE block. Currently, NCOL must be equal to 2.
+    table : [xfraction, depth]
+        * xfraction (double) real value that defines the station (x) data for
+          the cross-section as a fraction of the width (RWID) of the reach.
+        * depth (double) real value that defines the elevation (z) data for the
+          cross-section as a depth relative to the top elevation of the reach
+          (RTP) and corresponding to the station data on the same line.
     filename : String
         File name for this package.
     pname : String
@@ -47,10 +42,10 @@ class ModflowUtllaktab(mfpackage.MFPackage):
 
     """
 
-    table = ListTemplateGenerator(("laktab", "table", "table"))
-    package_abbr = "utllaktab"
-    _package_type = "laktab"
-    dfn_file_name = "utl-laktab.dfn"
+    table = ListTemplateGenerator(("sfrtab", "table", "table"))
+    package_abbr = "utlsfrtab"
+    _package_type = "sfrtab"
+    dfn_file_name = "utl-sfrtab.dfn"
 
     dfn = [
         [
@@ -70,13 +65,13 @@ class ModflowUtllaktab(mfpackage.MFPackage):
         [
             "block table",
             "name table",
-            "type recarray stage volume sarea barea",
+            "type recarray xfraction depth",
             "shape (nrow)",
             "reader urword",
         ],
         [
             "block table",
-            "name stage",
+            "name xfraction",
             "type double precision",
             "shape",
             "tagged false",
@@ -85,31 +80,12 @@ class ModflowUtllaktab(mfpackage.MFPackage):
         ],
         [
             "block table",
-            "name volume",
+            "name depth",
             "type double precision",
             "shape",
             "tagged false",
             "in_record true",
             "reader urword",
-        ],
-        [
-            "block table",
-            "name sarea",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block table",
-            "name barea",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "optional true",
         ],
     ]
 
@@ -125,7 +101,7 @@ class ModflowUtllaktab(mfpackage.MFPackage):
         parent_file=None,
     ):
         super().__init__(
-            model, "laktab", filename, pname, loading_package, parent_file
+            model, "sfrtab", filename, pname, loading_package, parent_file
         )
 
         # set up variables
@@ -135,27 +111,27 @@ class ModflowUtllaktab(mfpackage.MFPackage):
         self._init_complete = True
 
 
-class UtllaktabPackages(mfpackage.MFChildPackages):
+class UtlsfrtabPackages(mfpackage.MFChildPackages):
     """
-    UtllaktabPackages is a container class for the ModflowUtllaktab class.
+    UtlsfrtabPackages is a container class for the ModflowUtlsfrtab class.
 
     Methods
     ----------
     initialize
-        Initializes a new ModflowUtllaktab package removing any sibling child
-        packages attached to the same parent package. See ModflowUtllaktab init
+        Initializes a new ModflowUtlsfrtab package removing any sibling child
+        packages attached to the same parent package. See ModflowUtlsfrtab init
         documentation for definition of parameters.
     append_package
-        Adds a new ModflowUtllaktab package to the container. See ModflowUtllaktab
+        Adds a new ModflowUtlsfrtab package to the container. See ModflowUtlsfrtab
         init documentation for definition of parameters.
     """
 
-    package_abbr = "utllaktabpackages"
+    package_abbr = "utlsfrtabpackages"
 
     def initialize(
         self, nrow=None, ncol=None, table=None, filename=None, pname=None
     ):
-        new_package = ModflowUtllaktab(
+        new_package = ModflowUtlsfrtab(
             self._model,
             nrow=nrow,
             ncol=ncol,
@@ -169,7 +145,7 @@ class UtllaktabPackages(mfpackage.MFChildPackages):
     def append_package(
         self, nrow=None, ncol=None, table=None, filename=None, pname=None
     ):
-        new_package = ModflowUtllaktab(
+        new_package = ModflowUtlsfrtab(
             self._model,
             nrow=nrow,
             ncol=ncol,

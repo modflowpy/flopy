@@ -59,6 +59,10 @@ sim.run_simulation(silent=True)
 # |                       | the model. Accessed from the model object or   |
 # |                       | the OC package object                          |
 # +-----------------------+------------------------------------------------+
+# | budgetcsv()           | Method to get the MODFLOW-6 budget csv as a    |
+# |                       | `CsvFile` object. Valid for model, oc, and     |
+# |                       | advanced packages such as MAW, UZF, LAK        |
+# +-----------------------+------------------------------------------------+
 # | zonebudget()          | Method to get the `ZoneBudget6` object for     |
 # |                       | the model. Accessed from the model object or   |
 # |                       | the OC package object                          |
@@ -99,6 +103,9 @@ ml = sim.get_model("gwf_1")
 bud = ml.output.budget()
 bud.get_data(idx=0, full3D=True)
 
+budcsv = ml.output.budgetcsv()
+budcsv.data
+
 hds = ml.output.head()
 hds.get_data()
 
@@ -111,12 +118,15 @@ hds.get_data()
 # ## Get output associated with a specific package
 # The `.output` attribute is tied to the package object and allows the user
 # to get the output types specified in the MODFLOW 6 package. Here is an
-# example with a UZF package that has UZF budget file output,
-# package convergence output, and observation data.
+# example with a UZF package that has UZF budget file output, budgetcsv
+# file output, package convergence output, and observation data.
 
 uzf = ml.uzf
 uzf_bud = uzf.output.budget()
 uzf_bud.get_data(idx=0)
+
+uzf_budcsv = uzf.output.budgetcsv()
+uzf_budcsv.data
 
 uzf_conv = uzf.output.package_convergence()
 if uzf_conv is not None:

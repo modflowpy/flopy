@@ -115,7 +115,21 @@ class ModflowAg(Package):
             ),
             ("tabfiles", OptionBlock.simple_tabfile),
             ("phiramp", OptionBlock.simple_flag),
-            ("etdemand", OptionBlock.simple_flag),
+            (
+                "etdemand",
+                {
+                    OptionBlock.dtype: np.bool_,
+                    OptionBlock.nested: True,
+                    OptionBlock.n_nested: 1,
+                    OptionBlock.vars: {
+                        "accel": {
+                            OptionBlock.dtype: float,
+                            OptionBlock.nested: False,
+                            OptionBlock.optional: True,
+                        }
+                    },
+                },
+            ),
             ("trigger", OptionBlock.simple_flag),
             ("timeseries_diversion", OptionBlock.simple_flag),
             ("timeseries_well", OptionBlock.simple_flag),

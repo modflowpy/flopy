@@ -1164,6 +1164,7 @@ def test_mf6_output():
     ml = sim.get_model("gwf_1")
 
     bud = ml.oc.output.budget()
+    budcsv = ml.oc.output.budgetcsv()
     hds = ml.oc.output.head()
     lst = ml.oc.output.list()
 
@@ -1171,6 +1172,9 @@ def test_mf6_output():
     zonbud = ml.oc.output.zonebudget(idomain)
 
     if not isinstance(bud, flopy.utils.CellBudgetFile):
+        raise TypeError()
+
+    if not isinstance(budcsv, flopy.utils.observationfile.CsvFile):
         raise TypeError()
 
     if not isinstance(hds, flopy.utils.HeadFile):
@@ -1183,11 +1187,15 @@ def test_mf6_output():
         raise AssertionError()
 
     bud = ml.output.budget()
+    budcsv = ml.output.budgetcsv()
     hds = ml.output.head()
     zonbud = ml.output.zonebudget(idomain)
     lst = ml.output.list()
 
     if not isinstance(bud, flopy.utils.CellBudgetFile):
+        raise TypeError()
+
+    if not isinstance(budcsv, flopy.utils.observationfile.CsvFile):
         raise TypeError()
 
     if not isinstance(hds, flopy.utils.HeadFile):
@@ -1201,11 +1209,15 @@ def test_mf6_output():
 
     uzf = ml.uzf
     uzf_bud = uzf.output.budget()
+    uzf_budcsv = uzf.output.budgetcsv()
     conv = uzf.output.package_convergence()
     uzf_obs = uzf.output.obs()
     uzf_zonbud = uzf.output.zonebudget(idomain)
 
     if not isinstance(uzf_bud, flopy.utils.CellBudgetFile):
+        raise TypeError()
+
+    if not isinstance(uzf_budcsv, flopy.utils.observationfile.CsvFile):
         raise TypeError()
 
     if conv is not None:
@@ -1270,7 +1282,6 @@ if __name__ == "__main__":
     test006_gwf3()
     test027_timeseriestest()
     test036_twrihfb()
-    test045_lake1ss_table()
     test045_lake2tr()
     test_mf6_output()
     test_mf6_output_add_observation()

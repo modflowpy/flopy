@@ -29,6 +29,7 @@ class MF6Output:
         # set initial observation definitions
         methods = {
             "budget": self.__budget,
+            "budgetcsv": self.__budgetcsv,
             "zonebudget": self.__zonebudget,
             "obs": self.__obs,
             "csv": self.__csv,
@@ -38,6 +39,7 @@ class MF6Output:
         self._obj = obj
         self._methods = []
         self._sim_ws = obj.simulation_data.mfpath.get_sim_path()
+        self.__budgetcsv = False
 
         if not isinstance(obj, (PackageInterface, ModelInterface)):
             raise TypeError("Only mf6 PackageInterface types can be used")
@@ -92,6 +94,8 @@ class MF6Output:
                                     self, "zonebudget", methods["zonebudget"]
                                 )
                                 self._methods.append("zonebudget()")
+                            elif rectype == "budgetcsv":
+                                self.__budgetcsv = True
                             self._methods.append(f"{rectype}()")
                             if rectype == "obs":
                                 data = None
@@ -258,6 +262,16 @@ class MF6Output:
             zonbud.grb = grb
             return zonbud
 
+    def __budgetcsv(self):
+        """
+        Convience method to open and return a budget csv object
+
+        Returns
+        -------
+            flopy.utils.CsvFile object
+        """
+        return self.__csv(budget=True)
+
     def __budget(self, precision="double"):
         """
         Convenience method to open and return a budget object
@@ -275,13 +289,17 @@ class MF6Output:
 
     def __obs(self, f=None):
         """
+        Method to read and return obs files
 
         Parameters
         ----------
-        f
+        f : str, None
+            observation file name, if None the first observation file
+            will be returned
 
         Returns
         -------
+        flopy.utils.Mf6Obs file object
 
         """
         if self._obs is not None:
@@ -293,25 +311,34 @@ class MF6Output:
             except OSError:
                 return None
 
-    def __csv(self, f=None):
+    def __csv(self, f=None, budget=False):
         """
+        Method to get csv file outputs
 
         Parameters
         ----------
-        f
+        f : str
+            csv file name path
+        budget : bool
+            boolean flag to indicate budgetcsv file
 
         Returns
         -------
+        flopy.utils.CsvFile object
 
         """
-        if self._csv is not None:
+        if budget and self._budgetcsv is not None:
+            csv_file = self.__mulitfile_handler(f, self._budgetcsv)
+        elif self._csv is not None:
             csv_file = self.__mulitfile_handler(f, self._csv)
+        else:
+            return
 
-            try:
-                csv_file = os.path.join(self._sim_ws, csv_file)
-                return CsvFile(csv_file)
-            except OSError:
-                return None
+        try:
+            csv_file = os.path.join(self._sim_ws, csv_file)
+            return CsvFile(csv_file)
+        except OSError:
+            return None
 
     def __list(self):
         """
@@ -330,15 +357,18 @@ class MF6Output:
 
     def __mulitfile_handler(self, f, flist):
         """
+        Method to parse multiple output files of the same type
 
         Parameters
         ----------
-        f
-        flist
+        f : str
+            file name
+        flist : list
+            list of output file names
 
         Returns
         -------
-
+            file name string of valid file or first file is f is None
         """
         if len(flist) > 1 and f is None:
             print("Multiple csv files exist, selecting first")

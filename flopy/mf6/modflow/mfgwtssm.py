@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on August 06, 2021 20:57:00 UTC
+# FILE created on October 29, 2021 21:09:57 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -59,6 +59,18 @@ class ModflowGwtssm(mfpackage.MFPackage):
           that package. The values in this auxiliary variable will be used to
           set the concentration associated with the flows for that boundary
           package.
+    fileinput : [pname, spc6_filename]
+        * pname (string) name of the flow package for which an SPC6 input file
+          contains a source concentration. If this flow package is represented
+          using an advanced transport package (SFT, LKT, MWT, or UZT), then the
+          advanced transport package will override SSM terms specified here.
+        * spc6_filename (string) character string that defines the path and
+          filename for the file containing source and sink input data for the
+          flow package. The SPC6_FILENAME file is a flexible input file that
+          allows concentrations to be specified by stress period and with time
+          series. Instructions for creating the SPC6_FILENAME input file are
+          provided in the next section on file input for boundary
+          concentrations.
     filename : String
         File name for this package.
     pname : String
@@ -71,6 +83,9 @@ class ModflowGwtssm(mfpackage.MFPackage):
     """
 
     sources = ListTemplateGenerator(("gwt6", "ssm", "sources", "sources"))
+    fileinput = ListTemplateGenerator(
+        ("gwt6", "ssm", "fileinput", "fileinput")
+    )
     package_abbr = "gwtssm"
     _package_type = "ssm"
     dfn_file_name = "gwt-ssm.dfn"
@@ -123,6 +138,60 @@ class ModflowGwtssm(mfpackage.MFPackage):
             "reader urword",
             "optional false",
         ],
+        [
+            "block fileinput",
+            "name fileinput",
+            "type recarray pname spc6 filein spc6_filename mixed",
+            "reader urword",
+        ],
+        [
+            "block fileinput",
+            "name pname",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block fileinput",
+            "name spc6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block fileinput",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block fileinput",
+            "name spc6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
+        ],
+        [
+            "block fileinput",
+            "name mixed",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
     ]
 
     def __init__(
@@ -132,6 +201,7 @@ class ModflowGwtssm(mfpackage.MFPackage):
         print_flows=None,
         save_flows=None,
         sources=None,
+        fileinput=None,
         filename=None,
         pname=None,
         parent_file=None,
@@ -144,4 +214,5 @@ class ModflowGwtssm(mfpackage.MFPackage):
         self.print_flows = self.build_mfdata("print_flows", print_flows)
         self.save_flows = self.build_mfdata("save_flows", save_flows)
         self.sources = self.build_mfdata("sources", sources)
+        self.fileinput = self.build_mfdata("fileinput", fileinput)
         self._init_complete = True

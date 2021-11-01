@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on August 06, 2021 20:57:00 UTC
+# FILE created on October 29, 2021 21:09:57 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -35,6 +35,10 @@ class ModflowGwtmvt(mfpackage.MFPackage):
     budget_filerecord : [budgetfile]
         * budgetfile (string) name of the binary output file to write budget
           information.
+    budgetcsv_filerecord : [budgetcsvfile]
+        * budgetcsvfile (string) name of the comma-separated value (CSV) output
+          file to write budget summary information. A budget summary record
+          will be written to this file for each time step of the simulation.
     filename : String
         File name for this package.
     pname : String
@@ -48,6 +52,9 @@ class ModflowGwtmvt(mfpackage.MFPackage):
 
     budget_filerecord = ListTemplateGenerator(
         ("gwt6", "mvt", "options", "budget_filerecord")
+    )
+    budgetcsv_filerecord = ListTemplateGenerator(
+        ("gwt6", "mvt", "options", "budgetcsv_filerecord")
     )
     package_abbr = "gwtmvt"
     _package_type = "mvt"
@@ -115,6 +122,36 @@ class ModflowGwtmvt(mfpackage.MFPackage):
             "tagged false",
             "optional false",
         ],
+        [
+            "block options",
+            "name budgetcsv_filerecord",
+            "type record budgetcsv fileout budgetcsvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budgetcsv",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsvfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
     ]
 
     def __init__(
@@ -125,6 +162,7 @@ class ModflowGwtmvt(mfpackage.MFPackage):
         print_flows=None,
         save_flows=None,
         budget_filerecord=None,
+        budgetcsv_filerecord=None,
         filename=None,
         pname=None,
         parent_file=None,
@@ -139,5 +177,8 @@ class ModflowGwtmvt(mfpackage.MFPackage):
         self.save_flows = self.build_mfdata("save_flows", save_flows)
         self.budget_filerecord = self.build_mfdata(
             "budget_filerecord", budget_filerecord
+        )
+        self.budgetcsv_filerecord = self.build_mfdata(
+            "budgetcsv_filerecord", budgetcsv_filerecord
         )
         self._init_complete = True

@@ -1,0 +1,48 @@
+# --------------------- gwf sfrtab dimensions ---------------------
+
+block dimensions
+name nrow
+type integer
+reader urword
+optional false
+longname number of table rows
+description integer value specifying the number of rows in the reach cross-section table. There must be NROW rows of data in the TABLE block.
+
+block dimensions
+name ncol
+type integer
+reader urword
+optional false
+longname number of table columns
+description integer value specifying the number of columns in the reach cross-section table. There must be NCOL columns of data in the TABLE block. Currently, NCOL must be equal to 2.
+
+
+# --------------------- gwf sfrtab table ---------------------
+
+block table
+name table
+type recarray xfraction depth
+shape (nrow)
+reader urword
+longname
+description
+
+block table
+name xfraction
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+longname fractional width
+description real value that defines the station (x) data for the cross-section as a fraction of the width (RWID) of the reach.
+
+block table
+name depth
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+longname depth
+description real value that defines the elevation (z) data for the cross-section as a depth relative to the top elevation of the reach (RTP) and corresponding to the station data on the same line.

@@ -5,6 +5,7 @@ Begin options
   PRINT_FLOWS
   OBS6 FILEIN test001e_UZF_3lay.obs
   BUDGET FILEOUT test001e_UZF_3lay.uzf.cbc
+  BUDGETCSV FILEOUT test001e_UZF_3lay.uzf.cbc.csv
   PACKAGE_CONVERGENCE FILEOUT test001e_UZF_3lay.uzf_convergence.csv
   SIMULATE_GWSEEP
   SIMULATE_ET   
