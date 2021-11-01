@@ -3,14 +3,14 @@ import pytest
 import os
 import numpy as np
 import flopy
+from ci_framework import baseTestDir, flopyTest
 
-cpth = os.path.join("temp", "t017")
-# make the directory if it does not exists
-if not os.path.isdir(cpth):
-    os.makedirs(cpth, exist_ok=True)
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 
 def test_formattedfile_read():
+    model_ws = f"{baseDir}_test_formattedfile_read"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
 
     h = flopy.utils.FormattedHeadFile(
         os.path.join("..", "examples", "data", "mf2005_test", "test1tr.githds")
@@ -41,7 +41,7 @@ def test_formattedfile_read():
     h.close()
 
     # Check error when reading empty file
-    fname = os.path.join(cpth, "empty.githds")
+    fname = os.path.join(model_ws, "empty.githds")
     with open(fname, "w"):
         pass
     with pytest.raises(ValueError):
@@ -51,6 +51,8 @@ def test_formattedfile_read():
 
 
 def test_binaryfile_read():
+    model_ws = f"{baseDir}_test_binaryfile_read"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
 
     h = flopy.utils.HeadFile(
         os.path.join("..", "examples", "data", "freyberg", "freyberg.githds")
@@ -81,7 +83,7 @@ def test_binaryfile_read():
     h.close()
 
     # Check error when reading empty file
-    fname = os.path.join(cpth, "empty.githds")
+    fname = os.path.join(model_ws, "empty.githds")
     with open(fname, "w"):
         pass
     with pytest.raises(ValueError):
@@ -148,6 +150,8 @@ def test_cellbudgetfile_read():
 
 
 def test_cellbudgetfile_position():
+    model_ws = f"{baseDir}_test_cellbudgetfile_position"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
 
     fpth = os.path.join(
         "..", "examples", "data", "zonbud_examples", "freyberg.gitcbc"
@@ -176,7 +180,7 @@ def test_cellbudgetfile_position():
     length = os.path.getsize(fpth) - ipos
 
     buffsize = 32
-    opth = os.path.join(cpth, "end.cbc")
+    opth = os.path.join(model_ws, "end.cbc")
     with open(opth, "wb") as fout:
         while length:
             chunk = min(buffsize, length)
@@ -204,7 +208,7 @@ def test_cellbudgetfile_position():
         assert np.array_equal(d1, d2), msg
 
     # Check error when reading empty file
-    fname = os.path.join(cpth, "empty.gitcbc")
+    fname = os.path.join(model_ws, "empty.gitcbc")
     with open(fname, "w"):
         pass
     with pytest.raises(ValueError):
@@ -324,12 +328,14 @@ def test_cellbudgetfile_readrecord_waux():
 
 
 def test_binaryfile_writeread():
+    model_ws = f"{baseDir}_test_binaryfile_writeread"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
 
     pth = os.path.join("..", "examples", "data", "nwt_test")
     model = "Pr3_MFNWT_lower.nam"
     ml = flopy.modflow.Modflow.load(model, version="mfnwt", model_ws=pth)
     # change the model work space
-    ml.change_model_ws(os.path.join("temp", "t017"))
+    ml.change_model_ws(model_ws)
     #
     ncol = ml.dis.ncol
     nrow = ml.dis.nrow
@@ -350,7 +356,7 @@ def test_binaryfile_writeread():
         kper=1,
     )
     b = ml.dis.botm.array[0, :, :].astype(np.float64)
-    pth = os.path.join("temp", "t017", "bottom.hds")
+    pth = os.path.join(model_ws, "bottom.hds")
     flopy.utils.Util2d.write_bin(b.shape, pth, b, header_data=header)
 
     bo = flopy.utils.HeadFile(pth, precision=precision)
@@ -380,7 +386,7 @@ def test_binaryfile_writeread():
         kper=1,
     )
     b = ml.dis.botm.array[0, :, :].astype(np.float32)
-    pth = os.path.join("temp", "t017", "bottom_single.hds")
+    pth = os.path.join(model_ws, "bottom_single.hds")
     flopy.utils.Util2d.write_bin(b.shape, pth, b, header_data=header)
 
     bo = flopy.utils.HeadFile(pth, precision=precision)

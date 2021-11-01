@@ -2,21 +2,28 @@
 import os
 import numpy as np
 import flopy
+from ci_framework import baseTestDir, flopyTest
 
-testpth = os.path.join(".", "temp", "t023")
-# make the directory if it does not exist
-if not os.path.isdir(testpth):
-    os.makedirs(testpth, exist_ok=True)
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 
 def test_mt3d_multispecies():
+    model_ws = f"{baseDir}_test_mt3d_multispecies"
+    testFramework = flopyTest(
+        verbose=True,
+        testDirs=model_ws,
+    )
+
     # modflow model
     modelname = "multispecies"
     nlay = 1
     nrow = 20
     ncol = 20
     nper = 10
-    mf = flopy.modflow.Modflow(modelname=modelname, model_ws=testpth)
+    mf = flopy.modflow.Modflow(
+        modelname=modelname,
+        model_ws=model_ws,
+    )
     dis = flopy.modflow.ModflowDis(
         mf, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper
     )
@@ -28,7 +35,10 @@ def test_mt3d_multispecies():
     # Create a 5-component mt3d model and write the files
     ncomp = 5
     mt = flopy.mt3d.Mt3dms(
-        modelname=modelname, modflowmodel=mf, model_ws=testpth, verbose=True
+        modelname=modelname,
+        modflowmodel=mf,
+        model_ws=model_ws,
+        verbose=True,
     )
     sconc3 = np.random.random((nrow, ncol))
     btn = flopy.mt3d.Mt3dBtn(
@@ -57,14 +67,21 @@ def test_mt3d_multispecies():
 
     # Create a second MODFLOW model
     modelname2 = "multispecies2"
-    mf2 = flopy.modflow.Modflow(modelname=modelname2, model_ws=testpth)
+    mf2 = flopy.modflow.Modflow(
+        modelname=modelname2,
+        model_ws=model_ws,
+    )
     dis2 = flopy.modflow.ModflowDis(
         mf2, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper
     )
 
     # Load the MT3D model into mt2 and then write it out
     fname = f"{modelname}.nam"
-    mt2 = flopy.mt3d.Mt3dms.load(fname, model_ws=testpth, verbose=True)
+    mt2 = flopy.mt3d.Mt3dms.load(
+        fname,
+        model_ws=model_ws,
+        verbose=True,
+    )
     # check obs I/O
     assert np.all(mt.btn.obs == mt2.btn.obs)
     mt2.name = modelname2

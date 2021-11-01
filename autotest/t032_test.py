@@ -4,7 +4,6 @@ Test shapefile stuff
 import os
 import shutil
 import numpy as np
-import sys
 import flopy
 from flopy.utils.geometry import Polygon
 from flopy.export.shapefile_utils import (
@@ -14,16 +13,18 @@ from flopy.export.shapefile_utils import (
     CRS,
 )
 from flopy.export.netcdf import NetCdf
+from ci_framework import baseTestDir, flopyTest
 
-mpth = os.path.join("temp", "t032")
-# make the directory if it does not exist
-if not os.path.isdir(mpth):
-    os.makedirs(mpth, exist_ok=True)
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 
 def test_polygon_from_ij():
     """test creation of a polygon from an i, j location using get_vertices()."""
-    m = flopy.modflow.Modflow("toy_model", model_ws=mpth)
+    model_ws = f"{baseDir}_test_polygon_from_ij"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
+    m = flopy.modflow.Modflow("toy_model", model_ws=model_ws)
+
     botm = np.zeros((2, 10, 10))
     botm[0, :, :] = 1.5
     botm[1, 5, 5] = 4  # negative layer thickness!
@@ -32,14 +33,14 @@ def test_polygon_from_ij():
         nrow=10, ncol=10, nlay=2, delr=100, delc=100, top=3, botm=botm, model=m
     )
 
-    fname = os.path.join(mpth, "toy.model.nc")
+    fname = os.path.join(model_ws, "toy.model.nc")
     ncdf = NetCdf(fname, m)
     ncdf.write()
 
-    fname = os.path.join(mpth, "toy_model_two.nc")
+    fname = os.path.join(model_ws, "toy_model_two.nc")
     m.export(fname)
 
-    fname = os.path.join(mpth, "toy_model_dis.nc")
+    fname = os.path.join(model_ws, "toy_model_dis.nc")
     dis.export(fname)
 
     mg = m.modelgrid
@@ -74,19 +75,19 @@ def test_polygon_from_ij():
 
     assert geoms[0].type == "Polygon"
     assert np.abs(geoms[0].bounds[-1] - 5169292.893203464) < 1e-4
-    fpth = os.path.join(mpth, "test.shp")
+    fpth = os.path.join(model_ws, "test.shp")
     recarray2shp(recarray, geoms, fpth, epsg=26715)
     ep = EpsgReference()
     prj = ep.to_dict()
     assert 26715 in prj
-    fpth = os.path.join(mpth, "test.prj")
-    fpth2 = os.path.join(mpth, "26715.prj")
+    fpth = os.path.join(model_ws, "test.prj")
+    fpth2 = os.path.join(model_ws, "26715.prj")
     shutil.copy(fpth, fpth2)
-    fpth = os.path.join(mpth, "test.shp")
+    fpth = os.path.join(model_ws, "test.shp")
     recarray2shp(recarray, geoms, fpth, prj=fpth2)
 
     # test_dtypes
-    fpth = os.path.join(mpth, "test.shp")
+    fpth = os.path.join(model_ws, "test.shp")
     ra = shp2recarray(fpth)
     assert "int" in ra.dtype["k"].name
     assert "float" in ra.dtype["stuff"].name

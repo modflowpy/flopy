@@ -1,7 +1,6 @@
 import os
 import flopy
 import numpy as np
-
 from ci_framework import baseTestDir, flopyTest
 
 baseDir = baseTestDir(__file__, relPath="temp", verbose=True)

@@ -1,18 +1,16 @@
 import os
 import numpy as np
 import flopy
+from ci_framework import baseTestDir, flopyTest
 
-mpth = os.path.join("temp", "t019")
-# make the directory if it does not exist
-if not os.path.isdir(mpth):
-    os.makedirs(mpth, exist_ok=True)
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 
 # Test hydmod data readers
 def test_hydmodfile_create():
-    model_ws = os.path.join(mpth)
-    if not os.path.isdir(model_ws):
-        os.makedirs(model_ws, exist_ok=True)
+    model_ws = f"{baseDir}_test_hydmodfile_create"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
     m = flopy.modflow.Modflow("test", model_ws=model_ws)
     hyd = flopy.modflow.ModflowHyd(m)
     m.hyd.write_file()
@@ -48,6 +46,9 @@ def test_hydmodfile_create():
 
 
 def test_hydmodfile_load():
+    model_ws = f"{baseDir}_test_hydmodfile_load"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
     model = "test1tr.nam"
     pth = os.path.join("..", "examples", "data", "hydmod_test")
     m = flopy.modflow.Modflow.load(
@@ -57,10 +58,6 @@ def test_hydmodfile_load():
     assert isinstance(
         hydref, flopy.modflow.ModflowHyd
     ), "Did not load hydmod package...test1tr.hyd"
-
-    model_ws = os.path.join(mpth)
-    if not os.path.isdir(model_ws):
-        os.makedirs(model_ws, exist_ok=True)
 
     m.change_model_ws(model_ws)
     m.hyd.write_file()
@@ -75,8 +72,6 @@ def test_hydmodfile_load():
 
 
 def test_hydmodfile_read():
-    import os
-    import flopy
 
     pth = os.path.join(
         "..", "examples", "data", "hydmod_test", "test1tr.hyd.gitbin"
@@ -149,8 +144,6 @@ def test_hydmodfile_read():
 
 
 def test_mf6obsfile_read():
-    import os
-    import flopy
 
     try:
         import pandas as pd

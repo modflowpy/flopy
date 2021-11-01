@@ -2,15 +2,14 @@ import pytest
 import os
 import numpy as np
 import flopy
+from ci_framework import baseTestDir, flopyTest
 
-model_ws = os.path.join("..", "examples", "data", "mf2005_test")
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+
+ex_pth = os.path.join("..", "examples", "data", "mf2005_test")
 testmodels = [
-    os.path.join(model_ws, f)
-    for f in os.listdir(model_ws)
-    if f.endswith(".nam")
+    os.path.join(ex_pth, f) for f in os.listdir(ex_pth) if f.endswith(".nam")
 ]
-
-mpth = os.path.join("temp", "t024")
 
 
 @pytest.mark.parametrize(
@@ -33,7 +32,10 @@ def checker_on_load(mfnam):
 
 
 def test_bcs_check():
-    mf = flopy.modflow.Modflow(version="mf2005", model_ws=mpth)
+    model_ws = f"{baseDir}_test_bcs_check"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
+    mf = flopy.modflow.Modflow(version="mf2005", model_ws=model_ws)
 
     # test check for isolated cells
     dis = flopy.modflow.ModflowDis(
@@ -77,7 +79,13 @@ def test_bcs_check():
 
 def test_properties_check():
     # test that storage values ignored for steady state
-    mf = flopy.modflow.Modflow(version="mf2005", model_ws=mpth)
+    model_ws = f"{baseDir}_test_properties_check"
+    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+
+    mf = flopy.modflow.Modflow(
+        version="mf2005",
+        model_ws=model_ws,
+    )
     dis = flopy.modflow.ModflowDis(
         mf,
         nrow=2,

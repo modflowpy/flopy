@@ -6,16 +6,10 @@ import sys
 import shutil
 import numpy as np
 import flopy
+import pymake
+from ci_framework import baseTestDir, flopyTest
 
-try:
-    import pymake
-except:
-    print("could not import pymake")
-
-cpth = os.path.join("temp", "t035")
-# delete the directory if it exists
-if not os.path.isdir(cpth):
-    os.makedirs(cpth, exist_ok=True)
+baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
 
 exe_name = "mflgr"
 v = flopy.which(exe_name)
@@ -31,31 +25,34 @@ else:
 
 def test_simplelgr_load_and_write(silent=True):
     # Test load and write of distributed MODFLOW-LGR example problem
+    model_ws = f"{baseDir}_test_simplelgr_load_and_write"
+    testFramework = flopyTest(
+        verbose=True,
+        testDirs=model_ws,
+        create=True,
+    )
+
     pth = os.path.join("..", "examples", "data", "mflgr_v2", "ex3")
-    opth = os.path.join(cpth, "ex3", "orig")
-    # delete the directory if it exists
-    if os.path.isdir(opth):
-        shutil.rmtree(opth)
-    os.makedirs(opth)
+
     # copy the original files
     files = os.listdir(pth)
     for file in files:
         src = os.path.join(pth, file)
-        dst = os.path.join(opth, file)
+        dst = os.path.join(model_ws, file)
         shutil.copyfile(src, dst)
 
     # load the lgr model
     lgr = flopy.modflowlgr.ModflowLgr.load(
-        "ex3.lgr", verbose=True, model_ws=opth, exe_name=exe_name
+        "ex3.lgr", verbose=True, model_ws=model_ws, exe_name=exe_name
     )
 
     # get the namefiles of the parent and child
     namefiles = lgr.get_namefiles()
     msg = f"get_namefiles returned {len(namefiles)} items instead of 2"
     assert len(namefiles) == 2, msg
+
     tpth = os.path.dirname(namefiles[0])
-    msg = f"dir path is {tpth} not {opth}"
-    assert tpth == opth, msg
+    assert tpth == model_ws, f"dir path is {tpth} not {model_ws}"
 
     # run the lgr model
     if run:
@@ -66,16 +63,17 @@ def test_simplelgr_load_and_write(silent=True):
     msg = "modflow-lgr ex3 does not have 2 grids"
     assert lgr.ngrids == 2, msg
 
-    npth = os.path.join(cpth, "ex3", "new")
-    lgr.change_model_ws(new_pth=npth, reset_external=True)
+    model_ws2 = os.path.join(model_ws, "new")
+    lgr.change_model_ws(new_pth=model_ws2, reset_external=True)
 
     # get the namefiles of the parent and child
     namefiles = lgr.get_namefiles()
-    msg = f"get_namefiles returned {len(namefiles)} items instead of 2"
-    assert len(namefiles) == 2, msg
+    assert (
+        len(namefiles) == 2
+    ), f"get_namefiles returned {len(namefiles)} items instead of 2"
+
     tpth = os.path.dirname(namefiles[0])
-    msg = f"dir path is {tpth} not {npth}"
-    assert tpth == npth, msg
+    assert tpth == model_ws2, f"dir path is {tpth} not {model_ws2}"
 
     # write the lgr model in to the new path
     lgr.write_input()
@@ -87,24 +85,17 @@ def test_simplelgr_load_and_write(silent=True):
 
         # compare parent results
         print("compare parent results")
-        pth0 = os.path.join(opth, "ex3_parent.nam")
-        pth1 = os.path.join(npth, "ex3_parent.nam")
-
-        msg = "parent heads do not match"
+        pth0 = os.path.join(model_ws, "ex3_parent.nam")
+        pth1 = os.path.join(model_ws2, "ex3_parent.nam")
         success = pymake.compare_heads(pth0, pth1)
-        assert success, msg
+        assert success, "parent heads do not match"
 
         # compare child results
         print("compare child results")
-        pth0 = os.path.join(opth, "ex3_child.nam")
-        pth1 = os.path.join(npth, "ex3_child.nam")
-
-        msg = "child heads do not match"
+        pth0 = os.path.join(model_ws, "ex3_child.nam")
+        pth1 = os.path.join(model_ws2, "ex3_child.nam")
         success = pymake.compare_heads(pth0, pth1)
-        assert success, msg
-
-    # clean up
-    shutil.rmtree(cpth)
+        assert success, "child heads do not match"
 
 
 def singleModel(
@@ -136,6 +127,7 @@ def singleModel(
     startingHead=0.0,
     lRunSingle=False,
 ):
+
     if iChild > 0:
         print(f"child model {modelname}")
         iLUoffset = 100 * int(iChild)
@@ -259,6 +251,13 @@ def singleModel(
 
 
 def test_simple_lgrmodel_from_scratch(silent=True):
+    model_ws = f"{baseDir}_test_simple_lgrmodel_from_scratch"
+    testFramework = flopyTest(
+        verbose=True,
+        testDirs=model_ws,
+        create=True,
+    )
+
     # coordinates and extend Mother
     Lx_m = 1500.0
     Ly_m = 2500.0
@@ -294,7 +293,7 @@ def test_simple_lgrmodel_from_scratch(silent=True):
     nstp = [ats]
     tsmult = 1.07
     steady = True
-    rundir = f"{cpth}b"
+    rundir = model_ws
     lgrExe = exe_name
 
     # wel data
@@ -332,7 +331,7 @@ def test_simple_lgrmodel_from_scratch(silent=True):
         yul_c,
         proj4_str,
         exe_name,
-        rundir=rundir,
+        rundir=model_ws,
         welInfo=welInfo,
         startingHead=-2.0,
     )
@@ -362,7 +361,7 @@ def test_simple_lgrmodel_from_scratch(silent=True):
         yul_m,
         proj4_str,
         exe_name,
-        rundir=rundir,
+        rundir=model_ws,
         welInfo=welInfo,
         startingHead=-2.0,
     )
@@ -404,7 +403,7 @@ def test_simple_lgrmodel_from_scratch(silent=True):
         parent=mother,
         children=[child],
         children_data=childData,
-        model_ws=rundir,
+        model_ws=model_ws,
         external_path=None,
         verbose=False,
     )
@@ -416,9 +415,6 @@ def test_simple_lgrmodel_from_scratch(silent=True):
     if run:
         success, buff = lgrModel.run_model(silent=silent)
         assert success
-
-    # clean up
-    shutil.rmtree(rundir)
 
     return
 
