@@ -229,7 +229,7 @@ def read_fixed_var(line, ncol=1, length=10, ipos=None, free=False):
 
     """
     if free:
-        out = line.rstrip().split()
+        out = line_parse(line)
     else:
         # construct ipos if it was not passed
         if ipos is None:
@@ -415,7 +415,7 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
     sfac = 1.0
     binary = False
     ncol = len(ra.dtype.names)
-    line_list = line.strip().split()
+    line_list = line_parse(line)
     close_the_file = False
     file_handle = f
     mode = "r"
@@ -461,7 +461,6 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
 
     # check for scaling factor
     if not binary:
-        line_list = line.strip().split()
         if line.strip().lower().startswith("sfac"):
             sfac = float(line_list[1])
             line = file_handle.readline()
@@ -487,7 +486,7 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
 
             if model.free_format_input:
                 # whitespace separated
-                t = line.strip().split()
+                t = line_parse(line)
                 if len(t) < ncol:
                     t = t + (ncol - len(t)) * [0.0]
                 else:
@@ -532,12 +531,12 @@ def get_ts_sp(line):
 
     searchstring = "TIME STEP"
     idx = line.index(searchstring) + len(searchstring)
-    ll = line[idx:].strip().split()
+    ll = line_parse(line[idx:])
     ts = int(ll[0])
 
     searchstring = "STRESS PERIOD"
     idx = line.index(searchstring) + len(searchstring)
-    ll = line[idx:].strip().split()
+    ll = line_parse(line[idx:])
     sp = int(ll[0])
 
     return ts, sp
