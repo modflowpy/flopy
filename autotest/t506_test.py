@@ -27,7 +27,7 @@ except:
     matplotlib = None
     plt = None
 
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
 # Set gridgen executable
 gridgen_exe = "gridgen"
@@ -47,7 +47,7 @@ if platform.system() in "Windows":
     mfusg_exe += ".exe"
 mfusg_exe = flopy.which(mfusg_exe)
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 VERBOSITY_LEVEL = 0
 
@@ -65,8 +65,8 @@ def test_mf6disv():
         return
 
     # set up a gridgen workspace
-    gridgen_ws = f"{baseDir}_mf6disv"
-    testFramework = flopyTest(verbose=True, testDirs=gridgen_ws, create=True)
+    gridgen_ws = f"{base_dir}_mf6disv"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=gridgen_ws)
 
     name = "dummy"
     nlay = 3
@@ -184,8 +184,8 @@ def test_mf6disv():
 
 def test_mf6disu():
     # set up a gridgen workspace
-    gridgen_ws = f"{baseDir}_mf6disu"
-    testFramework = flopyTest(verbose=True, testDirs=gridgen_ws, create=True)
+    gridgen_ws = f"{base_dir}_mf6disu"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=gridgen_ws)
 
     name = "dummy"
     nlay = 3
@@ -338,8 +338,8 @@ def test_mf6disu():
 
 def test_mfusg():
     # set up a gridgen workspace
-    gridgen_ws = f"{baseDir}_mfusg"
-    testFramework = flopyTest(verbose=True, testDirs=gridgen_ws, create=True)
+    gridgen_ws = f"{base_dir}_mfusg"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=gridgen_ws)
 
     name = "dummy"
     nlay = 3

@@ -3,14 +3,14 @@ import pytest
 import os
 import numpy as np
 import flopy
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def test_formattedfile_read():
-    model_ws = f"{baseDir}_test_formattedfile_read"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_formattedfile_read"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     h = flopy.utils.FormattedHeadFile(
         os.path.join("..", "examples", "data", "mf2005_test", "test1tr.githds")
@@ -51,8 +51,8 @@ def test_formattedfile_read():
 
 
 def test_binaryfile_read():
-    model_ws = f"{baseDir}_test_binaryfile_read"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_binaryfile_read"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     h = flopy.utils.HeadFile(
         os.path.join("..", "examples", "data", "freyberg", "freyberg.githds")
@@ -150,8 +150,8 @@ def test_cellbudgetfile_read():
 
 
 def test_cellbudgetfile_position():
-    model_ws = f"{baseDir}_test_cellbudgetfile_position"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_cellbudgetfile_position"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     fpth = os.path.join(
         "..", "examples", "data", "zonbud_examples", "freyberg.gitcbc"
@@ -328,8 +328,8 @@ def test_cellbudgetfile_readrecord_waux():
 
 
 def test_binaryfile_writeread():
-    model_ws = f"{baseDir}_test_binaryfile_writeread"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_binaryfile_writeread"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     pth = os.path.join("..", "examples", "data", "nwt_test")
     model = "Pr3_MFNWT_lower.nam"

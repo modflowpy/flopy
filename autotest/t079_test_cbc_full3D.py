@@ -5,7 +5,7 @@ import pytest
 import numpy as np
 import flopy
 
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
 ex_pths = (
     os.path.join("..", "examples", "data", "freyberg"),
@@ -22,7 +22,7 @@ if sys.platform == "win32":
     mf6_exe += ".exe"
     mf2005_exe += ".exe"
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def load_mf2005(name, ws_in, ws_out):
@@ -126,8 +126,8 @@ def cbc_eval(cbcobj, nnodes, shape3d, modelgrid):
 
 
 def mf6_eval(name, ws_in):
-    ws_out = f"{baseDir}_{name}"
-    testFramework = flopyTest(verbose=True, testDirs=ws_out, create=True)
+    ws_out = f"{base_dir}_{name}"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
 
     sim = load_mf6(name, ws_in, ws_out)
 
@@ -152,8 +152,8 @@ def mf6_eval(name, ws_in):
 
 
 def mf2005_eval(name, ws_in):
-    ws_out = f"{baseDir}_{name}"
-    testFramework = flopyTest(verbose=True, testDirs=ws_out, create=True)
+    ws_out = f"{base_dir}_{name}"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
 
     ml = load_mf2005(name, ws_in, ws_out)
 

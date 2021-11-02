@@ -1,11 +1,11 @@
 import os
 import flopy
 import numpy as np
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
 mpth = os.path.join("..", "examples", "data", "ag_test")
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def test_empty_ag_package():
@@ -17,8 +17,8 @@ def test_empty_ag_package():
 
 
 def test_load_write_agwater():
-    model_ws = f"{baseDir}_test_load_write_agwater"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_load_write_agwater"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     agfile = "Agwater1.ag"
     ml = flopy.modflow.Modflow("Agwater1", version="mfnwt")
@@ -52,8 +52,8 @@ def test_load_write_agwater():
 
 
 def test_load_write_agwater_uzf():
-    model_ws = f"{baseDir}_test_load_write_agwater_uzf"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_load_write_agwater_uzf"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     uzffile = "Agwater1.uzf"
     ml = flopy.modflow.Modflow("Agwater1", version="mfnwt")

@@ -6,9 +6,9 @@ import pytest
 import os
 import flopy
 import pymake
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 swi_path = os.path.join("..", "examples", "data", "mf2005_test")
 cpth = os.path.join("temp", "t037")
@@ -26,8 +26,8 @@ if v is None:
 
 def load_swi(mfnam):
     name = mfnam.replace(".nam", "")
-    model_ws = f"{baseDir}_{name}"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_{name}"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     pymake.setup(os.path.join(swi_path, mfnam), model_ws)
 

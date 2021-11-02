@@ -9,9 +9,9 @@ import string
 import time
 import numpy as np
 import flopy.modflow as fm
-from ci_framework import baseTestDir
+from ci_framework import base_test_dir
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 class TestModflowPerformance:
@@ -33,7 +33,7 @@ class TestModflowPerformance:
         prepend = "".join(random.choice(letters) for i in range(10))
 
         cls.modelname = "junk"
-        cls.model_ws = f"{baseDir}_{prepend}"
+        cls.model_ws = f"{base_dir}_{prepend}"
         external_path = "external/"
 
         if not os.path.isdir(cls.model_ws):

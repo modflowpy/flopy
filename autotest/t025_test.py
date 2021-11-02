@@ -6,9 +6,9 @@ import pytest
 import os
 import flopy
 import pymake
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 load_path = os.path.join("..", "examples", "data", "mf2005_test")
 mf_items = [
@@ -108,9 +108,9 @@ def load_lak(mfnam, model_ws, run):
 )
 def test_mf2005load(namfile):
     dirPath = namfile.replace(".nam", "")
-    model_ws = f"{baseDir}_{dirPath}"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
-    testFramework.addTestDir(os.path.join(model_ws, "external"))
+    model_ws = f"{base_dir}_{dirPath}"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+    test_setup.add_test_dir(os.path.join(model_ws, "external"))
 
     load_lak(namfile, model_ws, run)
 

@@ -6,9 +6,9 @@ import os
 import shutil
 import numpy as np
 import flopy
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 exe_name = "mf2005"
 v = flopy.which(exe_name)
@@ -22,8 +22,8 @@ def test_hob_simple():
     """
     test041 create and run a simple MODFLOW-2005 OBS example
     """
-    model_ws = f"{baseDir}_test_hob_simple"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_hob_simple"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     modelname = "hob_simple"
     nlay, nrow, ncol = 1, 11, 11
@@ -72,11 +72,10 @@ def test_obs_load_and_write():
     """
     test041 load and write of MODFLOW-2005 OBS example problem
     """
-    model_ws = f"{baseDir}_test_obs_load_and_write"
-    testFramework = flopyTest(
+    model_ws = f"{base_dir}_test_obs_load_and_write"
+    test_setup = FlopyTestSetup(
         verbose=True,
-        testDirs=model_ws,
-        create=True,
+        test_dirs=model_ws,
     )
 
     pth = os.path.join("..", "examples", "data", "mf2005_obs")
@@ -137,11 +136,10 @@ def test_obs_create_and_write():
     """
     test041 create and write of MODFLOW-2005 OBS example problem
     """
-    model_ws = f"{baseDir}_test_obs_create_and_write"
-    testFramework = flopyTest(
+    model_ws = f"{base_dir}_test_obs_create_and_write"
+    test_setup = FlopyTestSetup(
         verbose=True,
-        testDirs=model_ws,
-        create=True,
+        test_dirs=model_ws,
     )
 
     pth = os.path.join("..", "examples", "data", "mf2005_obs")

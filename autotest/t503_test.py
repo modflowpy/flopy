@@ -5,8 +5,8 @@ import shutil
 import flopy
 import pymake
 from ci_framework import (
-    baseTestDir,
-    flopyTest,
+    base_test_dir,
+    FlopyTestSetup,
     download_mf6_examples,
 )
 
@@ -37,12 +37,12 @@ for exdir in exdirs:
     print(f"  {exdir}")
 
 
-def copy_folder(baseDir, src):
+def copy_folder(base_dir, src):
     subDir = src.partition("{0}mf6examples{0}".format(os.path.sep))[2]
-    if os.path.basename(subDir) in os.path.basename(baseDir):
-        dst = baseDir
+    if os.path.basename(subDir) in os.path.basename(base_dir):
+        dst = base_dir
     else:
-        dst = os.path.join(baseDir, subDir)
+        dst = os.path.join(base_dir, subDir)
 
     # clean the destination directory if it exists
     if os.path.isdir(dst):
@@ -58,9 +58,9 @@ def copy_folder(baseDir, src):
     return dst
 
 
-def simulation_subdirs(baseDir):
+def simulation_subdirs(base_dir):
     exsubdirs = []
-    for dirName, subdirList, fileList in os.walk(baseDir):
+    for dirName, subdirList, fileList in os.walk(base_dir):
         for file_name in fileList:
             if file_name.lower() == "mfsim.nam":
                 print(f"Found directory: {dirName}")
@@ -69,17 +69,17 @@ def simulation_subdirs(baseDir):
 
 
 def runmodel(exdir):
-    baseDir = (
-        baseTestDir(__file__, relPath="temp", verbose=True)
+    base_dir = (
+        base_test_dir(__file__, rel_path="temp", verbose=True)
         + "_"
         + os.path.basename(exdir)
     )
-    testFramework = flopyTest(verbose=True)
+    test_setup = FlopyTestSetup(verbose=True)
 
     simulations = simulation_subdirs(exdir)
     for src in simulations:
-        ws = copy_folder(baseDir, src)
-        testFramework.addTestDir(ws)
+        ws = copy_folder(base_dir, src)
+        test_setup.add_test_dir(ws)
         f = os.path.basename(os.path.normpath(ws))
         print("\n\n")
         print(f"**** RUNNING TEST: {f} ****")
@@ -101,7 +101,7 @@ def runmodel(exdir):
 
             # set the comparison directory
             ws2 = f"{ws}-RERUN"
-            testFramework.addTestDir(ws2)
+            test_setup.add_test_dir(ws2)
             sim.simulation_data.mfpath.set_sim_path(ws2)
 
             # remove the comparison directory if it exists
@@ -129,7 +129,7 @@ def runmodel(exdir):
             )
             assert success, f"comparision for {ws} failed"
 
-    testFramework.addTestDir(baseDir)
+    test_setup.add_test_dir(base_dir)
 
 
 # for running tests with pytest

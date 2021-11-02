@@ -1,9 +1,9 @@
 import os
 import flopy
 import numpy as np
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 exe_name = "mfusg"
 v = flopy.which(exe_name)
@@ -14,8 +14,8 @@ if v is None:
 
 
 def test_usg_disu_load():
-    model_ws = f"{baseDir}_test_usg_disu_load"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_usg_disu_load"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     pthusgtest = os.path.join(
         "..", "examples", "data", "mfusg_test", "01A_nestedgrid_nognc"
@@ -57,8 +57,8 @@ def test_usg_disu_load():
 
 
 def test_usg_sms_load():
-    model_ws = f"{baseDir}_test_usg_sms_load"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_usg_sms_load"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     pthusgtest = os.path.join(
         "..", "examples", "data", "mfusg_test", "01A_nestedgrid_nognc"
@@ -95,8 +95,8 @@ def test_usg_sms_load():
 
 
 def test_usg_model():
-    model_ws = f"{baseDir}_test_usg_model"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_usg_model"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     mf = flopy.mfusg.MfUsg(
         version="mfusg",
@@ -145,8 +145,8 @@ def test_usg_load_01B():
         "loading: 01A_nestedgrid_nognc.nam"
     )
 
-    model_ws = f"{baseDir}_test_usg_load_01B"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_usg_load_01B"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     pthusgtest = os.path.join(
         "..", "examples", "data", "mfusg_test", "01A_nestedgrid_nognc"
@@ -180,8 +180,8 @@ def test_usg_load_01B():
 def test_usg_load_45usg():
     print("testing 3-layer unstructured mfusg model loading: 45usg.nam")
 
-    model_ws = f"{baseDir}_test_usg_load_45usg"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_usg_load_45usg"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     pthusgtest = os.path.join("..", "examples", "data", "mfusg_test", "45usg")
     fname = os.path.abspath(os.path.join(pthusgtest, "45usg.nam"))
@@ -217,8 +217,8 @@ def test_usg_rch_evt_models01():
         "EVT nevtop == 1: usg_rch_evt.nam"
     )
 
-    new_ws = f"{baseDir}_test_usg_rch_evt_models01"
-    testFramework = flopyTest(verbose=True, testDirs=new_ws)
+    new_ws = f"{base_dir}_test_usg_rch_evt_models01"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=new_ws)
 
     model_ws = os.path.join(
         "..", "examples", "data", "mfusg_test", "rch_evt_tests"
@@ -243,8 +243,8 @@ def test_usg_rch_evt_models02():
         "and EVT nevtop == 2: usg_rch_evt_nrchop2.nam"
     )
 
-    new_ws = f"{baseDir}_test_usg_rch_evt_models02"
-    testFramework = flopyTest(verbose=True, testDirs=new_ws)
+    new_ws = f"{base_dir}_test_usg_rch_evt_models02"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=new_ws)
 
     model_ws = os.path.join(
         "..", "examples", "data", "mfusg_test", "rch_evt_tests"
@@ -269,8 +269,8 @@ def test_usg_rch_evt_models02a():
         "than in nodelay[0] usg_rch_evt_nrchop2.nam"
     )
 
-    new_ws = f"{baseDir}_test_usg_rch_evt_models02a"
-    testFramework = flopyTest(verbose=True, testDirs=new_ws)
+    new_ws = f"{base_dir}_test_usg_rch_evt_models02a"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=new_ws)
 
     model_ws = os.path.join(
         "..", "examples", "data", "mfusg_test", "rch_evt_tests"
@@ -291,8 +291,8 @@ def test_usg_ss_to_tr():
     # Test switching steady model to transient
     # https://github.com/modflowpy/flopy/issues/1187
 
-    new_ws = f"{baseDir}_test_usg_ss_to_tr"
-    testFramework = flopyTest(verbose=True, testDirs=new_ws)
+    new_ws = f"{base_dir}_test_usg_ss_to_tr"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=new_ws)
 
     model_ws = os.path.join(
         "..", "examples", "data", "mfusg_test", "01A_nestedgrid_nognc"

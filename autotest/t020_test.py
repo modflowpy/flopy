@@ -1,9 +1,9 @@
 # Test modflow write and run
 import numpy as np
 import matplotlib.pyplot as plt
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def analyticalWaterTableSolution(h1, h2, z, R, K, L, x):
@@ -30,8 +30,8 @@ def test_mfnwt_run():
         print(f"Specified executable {exe_name} does not exist in path")
         return
 
-    model_ws = f"{baseDir}_test_mfnwt_run"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_mfnwt_run"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     modelname = "watertable"
 
@@ -168,8 +168,8 @@ def test_irch():
     import os
     import flopy
 
-    model_ws = f"{baseDir}_test_tpl_constant"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_tpl_constant"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     org_model_ws = os.path.join(
         "..", "examples", "data", "freyberg_multilayer_transient"

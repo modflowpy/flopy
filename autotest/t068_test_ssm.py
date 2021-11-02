@@ -5,9 +5,9 @@ Test MT3D model creation and file writing
 import os
 import flopy
 import numpy as np
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 mf_exe_name = "mf2005"
 mt_exe_name = "mt3dms"
@@ -19,8 +19,8 @@ if v1 is None or v2 is None:
 
 
 def test_mt3d_ssm_with_nodata_in_1st_sp():
-    model_ws = f"{baseDir}_test_mt3d_ssm_with_nodata_in_1st_sp"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_mt3d_ssm_with_nodata_in_1st_sp"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     nlay, nrow, ncol = 3, 5, 5
     perlen = np.zeros((10), dtype=float) + 10
@@ -115,8 +115,8 @@ def test_mt3d_ssm_with_nodata_in_1st_sp():
         )
         assert success, "MT3D did not run"
 
-        model_ws2 = f"{baseDir}_test_mt3d_ssm_with_nodata_in_1st_sp_b"
-        testFramework.addTestDir(model_ws2)
+        model_ws2 = f"{base_dir}_test_mt3d_ssm_with_nodata_in_1st_sp_b"
+        test_setup.add_test_dir(model_ws2)
 
         mf2 = flopy.modflow.Modflow.load(
             "model_mf.nam", model_ws=model_ws, exe_name="mf2005"
@@ -152,8 +152,8 @@ def test_none_spdtype():
     # ensure that -1 and None work as valid list entries in the
     # stress period dictionary
 
-    model_ws = f"{baseDir}_test_none_spdtyp"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_none_spdtyp"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     mf = flopy.modflow.Modflow(model_ws=model_ws, exe_name=mf_exe_name)
     dis = flopy.modflow.ModflowDis(mf, nper=2)
@@ -172,8 +172,8 @@ def test_none_spdtype():
 
 
 def test_ssm_readwrite():
-    model_ws = f"{baseDir}_test_ssm_readwrite"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_ssm_readwrite"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     # Instantiate MODFLOW model
     mf = flopy.modflow.Modflow()

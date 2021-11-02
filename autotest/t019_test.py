@@ -1,15 +1,15 @@
 import os
 import numpy as np
 import flopy
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 # Test hydmod data readers
 def test_hydmodfile_create():
-    model_ws = f"{baseDir}_test_hydmodfile_create"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_hydmodfile_create"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     m = flopy.modflow.Modflow("test", model_ws=model_ws)
     hyd = flopy.modflow.ModflowHyd(m)
@@ -46,8 +46,8 @@ def test_hydmodfile_create():
 
 
 def test_hydmodfile_load():
-    model_ws = f"{baseDir}_test_hydmodfile_load"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_hydmodfile_load"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     model = "test1tr.nam"
     pth = os.path.join("..", "examples", "data", "hydmod_test")

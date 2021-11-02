@@ -5,16 +5,16 @@ Test vtk export_model function without packages_names definition
 import flopy
 from flopy.export import vtk
 from ci_framework import (
-    baseTestDir,
-    flopyTest,
+    base_test_dir,
+    FlopyTestSetup,
 )
 
 mf_exe_name = "mf6"
 
 
 def test_vtk_export_model_without_packages_names():
-    baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
-    testFramework = flopyTest(verbose=True, testDirs=baseDir)
+    base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=baseDir)
 
     name = "mymodel"
     sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=baseDir, exe_name="mf6")

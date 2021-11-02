@@ -5,14 +5,14 @@ from flopy.mf6.modflow import mfgwfriv, mfgwfsto, mfgwfoc, mfgwfwel, mfgwfdrn
 from flopy.mf6.modflow import mfims, mftdis, mfgwfic, mfgwfnpf, mfgwfdis, mfgwf
 from flopy.mf6.modflow.mfsimulation import MFSimulation
 
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def test_create_and_run_model():
 
-    testFramework = flopyTest(verbose=True, testDirs=baseDir)
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=base_dir)
 
     # names
     sim_name = "testsim"
@@ -22,7 +22,7 @@ def test_create_and_run_model():
     # set up simulation
     tdis_name = f"{sim_name}.tdis"
     sim = MFSimulation(
-        sim_name=sim_name, version="mf6", exe_name=exe_name, sim_ws=baseDir
+        sim_name=sim_name, version="mf6", exe_name=exe_name, sim_ws=base_dir
     )
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis = mftdis.ModflowTdis(
@@ -140,7 +140,7 @@ def test_create_and_run_model():
     # run the simulation and look for output
     if run:
         success, buff = sim.run_simulation()
-        assert success, f"{baseDir} did not run" f""
+        assert success, f"{base_dir} did not run" f""
         # head = sim.simulation_data.mfdata[(model_name, 'HDS', 'HEAD')]
         # print('HEAD: ', head)
 

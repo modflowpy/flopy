@@ -9,9 +9,9 @@ import os
 import flopy
 import numpy as np
 from flopy.utils.flopy_io import line_parse
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 mf2005pth = os.path.join("..", "examples", "data", "mnw2_examples")
 mnw1_path = os.path.join("..", "examples", "data", "mf2005_test")
@@ -27,8 +27,8 @@ def test_line_parse():
 
 def test_load():
     """t027 test load of MNW2 Package"""
-    model_ws = f"{baseDir}_test_load"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_load"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     # load in the test problem (1 well, 3 stress periods)
     m = flopy.modflow.Modflow.load(
@@ -62,8 +62,8 @@ def test_load():
 
 
 def test_mnw1_load_write():
-    model_ws = f"{baseDir}_test_mnw1_load_write"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_mnw1_load_write"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     m = flopy.modflow.Modflow.load(
         "mnw1.nam",
@@ -99,8 +99,8 @@ def test_mnw1_load_write():
 
 def test_make_package():
     """t027 test make MNW2 Package"""
-    model_ws = f"{baseDir}_test_make_package"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_make_package"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     m4 = flopy.modflow.Modflow("mnw2example", model_ws=model_ws)
     dis = flopy.modflow.ModflowDis(
@@ -310,8 +310,8 @@ def test_mnw2_create_file():
     """
     import pandas as pd
 
-    model_ws = f"{baseDir}_test_mnw2_create_file"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_mnw2_create_file"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     mf = flopy.modflow.Modflow("test_mfmnw2", exe_name="mf2005")
     wellids = [1, 2]
@@ -383,8 +383,8 @@ def test_export():
     except:
         netCDF4 = None
 
-    model_ws = f"{baseDir}_test_export"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_export"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     m = flopy.modflow.Modflow.load(
         "MNW2-Fig28.nam",
@@ -414,8 +414,8 @@ def test_export():
 
 
 def test_blank_lines():
-    model_ws = f"{baseDir}_test_blank_lines"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_blank_lines"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     mnw2str = """3 50 0
 EB-33 -3

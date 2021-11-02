@@ -2,9 +2,9 @@ import pytest
 import os
 import shutil
 import flopy
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 pthtest = os.path.join("..", "examples", "data", "swtv4_test")
 
@@ -61,7 +61,7 @@ subds = [
 
 
 def test_seawat_array_format():
-    testFramework = flopyTest(verbose=True)
+    test_setup = FlopyTestSetup(verbose=True)
 
     d = "2_henry"
     subds = ["1_classic_case1"]
@@ -69,9 +69,9 @@ def test_seawat_array_format():
         pth = os.path.join(pthtest, d, subd)
 
         model_ws = os.path.join(
-            f"{baseDir}_test_seawat_array_format_{d}-{subd}"
+            f"{base_dir}_test_seawat_array_format_{d}-{subd}"
         )
-        testFramework.addTestDir(model_ws)
+        test_setup.add_test_dir(model_ws)
 
         namfile = "seawat.nam"
         if subd == "6_age_simulation":
@@ -98,9 +98,9 @@ def test_swtv4(d, subd):
 
 
 def run_swtv4(d, subd):
-    testFramework = flopyTest(verbose=True)
-    model_ws = os.path.join(f"{baseDir}_test_swtv4_{d}-{subd}")
-    testFramework.addTestDir(model_ws)
+    test_setup = FlopyTestSetup(verbose=True)
+    model_ws = os.path.join(f"{base_dir}_test_swtv4_{d}-{subd}")
+    test_setup.add_test_dir(model_ws)
 
     # set up paths
     pth = os.path.join(pthtest, d, subd)

@@ -16,16 +16,16 @@ import flopy
 import os
 import numpy as np
 import flopy.utils.binaryfile as bf
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 # model names, file names and locations
 modelname_mf2005 = f"mf2005"
 modelname_mf6 = f"mf6"
 
-modelws_mf2005 = f"{baseDir}_{modelname_mf2005}"
-modelws_mf6 = f"{baseDir}_{modelname_mf6}"
+modelws_mf2005 = f"{base_dir}_{modelname_mf2005}"
+modelws_mf6 = f"{base_dir}_{modelname_mf6}"
 
 cbcfile_mf2005 = os.path.join(modelws_mf2005, f"{modelname_mf2005}.cbc")
 cbcfile_mf6 = os.path.join(modelws_mf6, f"{modelname_mf6}.cbc")
@@ -352,7 +352,7 @@ def local_balance_check(Qx_ext, Qy_ext, Qz_ext, hdsfile=None, model=None):
 
 
 def test_extended_budget_default():
-    testFramework = flopyTest(verbose=True, testDirs=modelws_mf2005)
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=modelws_mf2005)
 
     # build and run MODFLOW 2005 model
     build_model_mf2005()
@@ -503,7 +503,7 @@ def test_specific_discharge_mf6():
     import matplotlib.pyplot as plt
     from matplotlib.quiver import Quiver
 
-    testFramework = flopyTest(verbose=True, testDirs=modelws_mf6)
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=modelws_mf6)
 
     # build and run MODFLOW 6 model
     build_model_mf6()

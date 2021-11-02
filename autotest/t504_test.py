@@ -6,7 +6,7 @@ import flopy
 import flopy.utils.binaryfile as bf
 from flopy.utils.datautil import PyListUtil
 from flopy.mf6.modflow.mfsimulation import MFSimulation
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
 try:
     import shapefile
@@ -28,7 +28,7 @@ run = True
 if v is None:
     run = False
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def test001a_tharmonic():
@@ -38,10 +38,10 @@ def test001a_tharmonic():
     model_name = "flow15"
 
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-    run_folder = f"{baseDir}_{test_ex_name}"
+    run_folder = f"{base_dir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    testFramework = flopyTest(verbose=True)
-    testFramework.addTestDir([run_folder, save_folder], create=True)
+    test_setup = FlopyTestSetup(verbose=True)
+    test_setup.add_test_dir([run_folder, save_folder])
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -171,10 +171,10 @@ def test003_gwfs_disv():
     model_name = "gwf_1"
 
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-    run_folder = f"{baseDir}_{test_ex_name}"
+    run_folder = f"{base_dir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    testFramework = flopyTest(verbose=True)
-    testFramework.addTestDir([run_folder, save_folder], create=True)
+    test_setup = FlopyTestSetup(verbose=True)
+    test_setup.add_test_dir([run_folder, save_folder])
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -272,10 +272,10 @@ def test005_advgw_tidal():
     model_name = "gwf_1"
 
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-    run_folder = f"{baseDir}_{test_ex_name}"
+    run_folder = f"{base_dir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    testFramework = flopyTest(verbose=True)
-    testFramework.addTestDir([run_folder, save_folder], create=True)
+    test_setup = FlopyTestSetup(verbose=True)
+    test_setup.add_test_dir([run_folder, save_folder])
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -341,10 +341,10 @@ def test006_gwf3():
     model_name = "gwf_1"
 
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-    run_folder = f"{baseDir}_{test_ex_name}"
+    run_folder = f"{base_dir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    testFramework = flopyTest(verbose=True)
-    testFramework.addTestDir([run_folder, save_folder], create=True)
+    test_setup = FlopyTestSetup(verbose=True)
+    test_setup.add_test_dir([run_folder, save_folder])
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -457,7 +457,7 @@ def test006_gwf3():
 
     # confirm that files did move
     save_folder = f"{run_folder}_save02"
-    testFramework.addTestDir(save_folder, create=True)
+    test_setup.add_test_dir(save_folder)
 
     sim.set_sim_path(save_folder)
 
@@ -538,10 +538,10 @@ def test006_gwf3():
 #     model_name = "lakeex1b"
 #
 #     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-#     run_folder = f"{baseDir}_{test_ex_name}"
+#     run_folder = f"{base_dir}_{test_ex_name}"
 #     save_folder = f"{run_folder}_save"
-#     testFramework = flopyTest(verbose=True)
-#     testFramework.addTestDir([run_folder, save_folder], create=True)
+#     test_setup = flopyTest(verbose=True)
+#     test_setup.add_test_dir([run_folder, save_folder])
 #
 #     expected_output_folder = os.path.join(pth, "expected_output")
 #     expected_head_file_a = os.path.join(
@@ -622,10 +622,10 @@ def test006_2models_mvr():
     model_names = ["parent", "child"]
 
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-    run_folder = f"{baseDir}_{test_ex_name}"
+    run_folder = f"{base_dir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    testFramework = flopyTest(verbose=True)
-    testFramework.addTestDir([run_folder, save_folder], create=True)
+    test_setup = FlopyTestSetup(verbose=True)
+    test_setup.add_test_dir([run_folder, save_folder])
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -813,10 +813,10 @@ def test001e_uzf_3lay():
     model_name = "gwf_1"
 
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-    run_folder = f"{baseDir}_{test_ex_name}"
+    run_folder = f"{base_dir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    testFramework = flopyTest(verbose=True)
-    testFramework.addTestDir([run_folder, save_folder], create=True)
+    test_setup = FlopyTestSetup(verbose=True)
+    test_setup.add_test_dir([run_folder, save_folder])
 
     # load simulation
     sim = MFSimulation.load(model_name, "mf6", exe_name, pth, verify_data=True)
@@ -886,10 +886,10 @@ def test045_lake2tr():
     model_name = "lakeex2a"
 
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-    run_folder = f"{baseDir}_{test_ex_name}"
+    run_folder = f"{base_dir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    testFramework = flopyTest(verbose=True)
-    testFramework.addTestDir([run_folder, save_folder], create=True)
+    test_setup = FlopyTestSetup(verbose=True)
+    test_setup.add_test_dir([run_folder, save_folder])
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -958,10 +958,10 @@ def test036_twrihfb():
     model_name = "twrihfb2015"
 
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-    run_folder = f"{baseDir}_{test_ex_name}"
+    run_folder = f"{base_dir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    testFramework = flopyTest(verbose=True)
-    testFramework.addTestDir([run_folder, save_folder], create=True)
+    test_setup = FlopyTestSetup(verbose=True)
+    test_setup.add_test_dir([run_folder, save_folder])
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -1043,10 +1043,10 @@ def test027_timeseriestest():
     model_name = "gwf_1"
 
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-    run_folder = f"{baseDir}_{test_ex_name}"
+    run_folder = f"{base_dir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    testFramework = flopyTest(verbose=True)
-    testFramework.addTestDir([run_folder, save_folder], create=True)
+    test_setup = FlopyTestSetup(verbose=True)
+    test_setup.add_test_dir([run_folder, save_folder])
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -1119,7 +1119,7 @@ def test027_timeseriestest():
 
 def eval_cbc_precision():
     pth = os.path.join(
-        f"{baseDir}_test001e_UZF_3lay", "test001e_UZF_3lay.uzf.cbc"
+        f"{base_dir}_test001e_UZF_3lay", "test001e_UZF_3lay.uzf.cbc"
     )
     cbc = flopy.utils.CellBudgetFile(pth, precision="auto")
     data = cbc.get_data(text="GWF", full3D=False)
@@ -1128,7 +1128,7 @@ def eval_cbc_precision():
 
 
 def eval_replace_ims_package():
-    pth = f"{baseDir}_test001e_UZF_3lay"
+    pth = f"{base_dir}_test001e_UZF_3lay"
     sim = flopy.mf6.MFSimulation.load("mfsim", sim_ws=pth, exe_name=exe_name)
 
     ims = sim.ims
@@ -1153,8 +1153,8 @@ def test_mf6_output():
     sim_ws = os.path.join("..", "examples", "data", "mf6", ex_name)
     sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws, exe_name=exe_name)
 
-    ws = f"{baseDir}_{ex_name}_mf6_output"
-    testFramework = flopyTest(verbose=True, testDirs=ws, create=True)
+    ws = f"{base_dir}_{ex_name}_mf6_output"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
 
     sim.set_sim_path(ws)
     sim.write_simulation()
@@ -1257,8 +1257,8 @@ def test_mf6_output_add_observation():
         filename=obs_file, digits=10, print_input=True, continuous=obs_dict
     )
 
-    ws = f"{baseDir}_test045_lake2tr_obs"
-    testFramework = flopyTest(verbose=True, testDirs=ws, create=True)
+    ws = f"{base_dir}_test045_lake2tr_obs"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
 
     sim.set_sim_path(ws)
     sim.write_simulation()

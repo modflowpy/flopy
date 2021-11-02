@@ -7,7 +7,7 @@ import pytest
 import os
 import flopy
 
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
 pth = os.path.join("..", "examples", "data", "mf2005_test")
 namfiles = [namfile for namfile in os.listdir(pth) if namfile.endswith(".nam")]
@@ -105,11 +105,11 @@ def test_nwt_model_load(namfile):
 
 def load_nwt_pack(nwtfile):
     new_ws = (
-        baseTestDir(__file__, relPath="temp", verbose=True)
+        base_test_dir(__file__, rel_path="temp", verbose=True)
         + "_"
         + os.path.basename(nwtfile).replace(".nam", "_nwtpack")
     )
-    testFramework = flopyTest(testDirs=new_ws, verbose=True)
+    test_setup = FlopyTestSetup(test_dirs=new_ws, verbose=True)
 
     ws = os.path.dirname(nwtfile)
     ml = flopy.modflow.Modflow(model_ws=ws, version="mfnwt")
@@ -147,11 +147,11 @@ def load_nwt_pack(nwtfile):
 
 def load_nwt_model(nfile):
     new_ws = (
-        baseTestDir(__file__, relPath="temp", verbose=True)
+        base_test_dir(__file__, rel_path="temp", verbose=True)
         + "_"
         + os.path.basename(nfile).replace(".nam", "")
     )
-    testFramework = flopyTest(testDirs=new_ws, verbose=True)
+    test_setup = FlopyTestSetup(test_dirs=new_ws, verbose=True)
 
     f = os.path.basename(nfile)
     model_ws = os.path.dirname(nfile)

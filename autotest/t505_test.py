@@ -35,7 +35,7 @@ from flopy.mf6.modflow.mfutlts import ModflowUtlts
 from flopy.mf6.utils import testutils
 from flopy.mf6.mfbase import MFDataException
 from flopy.mf6.mfbase import ExtFileAction
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
 try:
     import shapefile
@@ -57,7 +57,7 @@ run = True
 if v is None:
     run = False
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def get_gwf_model(sim, gwfname, gwfpath, modelshape, chdspd=None, welspd=None):
@@ -192,8 +192,8 @@ def test_multi_model():
     test_ex_name = "test_multi_model"
     model_names = ["gwf_model_1", "gwf_model_2", "gwt_model_1", "gwt_model_2"]
 
-    run_folder = f"{baseDir}_{test_ex_name}"
-    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+    run_folder = f"{base_dir}_{test_ex_name}"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=run_folder)
 
     # temporal discretization
     nper = 1
@@ -357,8 +357,8 @@ def test_np001():
     test_ex_name = "np001"
     model_name = "np001_mod"
 
-    run_folder = f"{baseDir}_{test_ex_name}"
-    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+    run_folder = f"{base_dir}_{test_ex_name}"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=run_folder)
 
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
@@ -918,8 +918,8 @@ def test_np002():
     test_ex_name = "np002"
     model_name = "np002_mod"
 
-    run_folder = f"{baseDir}_{test_ex_name}"
-    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+    run_folder = f"{base_dir}_{test_ex_name}"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=run_folder)
 
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
@@ -1185,8 +1185,8 @@ def test021_twri():
     test_ex_name = "test021_twri"
     model_name = "twri"
 
-    run_folder = f"{baseDir}_{test_ex_name}"
-    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+    run_folder = f"{base_dir}_{test_ex_name}"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=run_folder)
 
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
@@ -1402,8 +1402,8 @@ def test005_advgw_tidal():
     test_ex_name = "test005_advgw_tidal"
     model_name = "AdvGW_tidal"
 
-    run_folder = f"{baseDir}_{test_ex_name}"
-    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+    run_folder = f"{base_dir}_{test_ex_name}"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=run_folder)
 
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
@@ -2021,8 +2021,8 @@ def test004_bcfss():
     test_ex_name = "test004_bcfss"
     model_name = "bcf2ss"
 
-    run_folder = f"{baseDir}_{test_ex_name}"
-    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+    run_folder = f"{base_dir}_{test_ex_name}"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=run_folder)
 
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
@@ -2177,8 +2177,8 @@ def test035_fhb():
     test_ex_name = "test035_fhb"
     model_name = "fhb2015"
 
-    run_folder = f"{baseDir}_{test_ex_name}"
-    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+    run_folder = f"{base_dir}_{test_ex_name}"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=run_folder)
 
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
@@ -2325,8 +2325,8 @@ def test006_gwf3_disv():
     test_ex_name = "test006_gwf3_disv"
     model_name = "flow"
 
-    run_folder = f"{baseDir}_{test_ex_name}"
-    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+    run_folder = f"{base_dir}_{test_ex_name}"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=run_folder)
 
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
@@ -2616,8 +2616,8 @@ def test006_2models_gnc():
     model_name_1 = "model1"
     model_name_2 = "model2"
 
-    run_folder = f"{baseDir}_{test_ex_name}"
-    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+    run_folder = f"{base_dir}_{test_ex_name}"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=run_folder)
 
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
@@ -2966,8 +2966,8 @@ def test050_circle_island():
     test_ex_name = "test050_circle_island"
     model_name = "ci"
 
-    run_folder = f"{baseDir}_{test_ex_name}"
-    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+    run_folder = f"{base_dir}_{test_ex_name}"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=run_folder)
 
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
@@ -3071,8 +3071,8 @@ def test028_sfr():
     test_ex_name = "test028_sfr"
     model_name = "test1tr"
 
-    run_folder = f"{baseDir}_{test_ex_name}"
-    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+    run_folder = f"{base_dir}_{test_ex_name}"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=run_folder)
 
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name
@@ -3342,8 +3342,8 @@ def test_transport():
     test_ex_name = "test_transport"
     name = "mst03"
 
-    run_folder = f"{baseDir}_{test_ex_name}"
-    testFramework = flopyTest(verbose=True, testDirs=run_folder, create=True)
+    run_folder = f"{base_dir}_{test_ex_name}"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=run_folder)
 
     pth = os.path.join(
         "..", "examples", "data", "mf6", "create_tests", test_ex_name

@@ -8,9 +8,9 @@ import numpy as np
 from flopy.discretization import UnstructuredGrid, VertexGrid
 from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def test_unstructured_grid_shell():
@@ -208,8 +208,8 @@ def test_create_unstructured_grid_from_verts():
 
 
 def test_triangle_unstructured_grid():
-    model_ws = f"{baseDir}_test_triangle_unstructured_grid"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_triangle_unstructured_grid"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     maximum_area = 30000.0
     extent = (214270.0, 221720.0, 4366610.0, 4373510.0)
@@ -244,8 +244,8 @@ def test_triangle_unstructured_grid():
 
 
 def test_voronoi_vertex_grid():
-    model_ws = f"{baseDir}_test_voronoi_vertex_grid"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_voronoi_vertex_grid"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     xmin = 0.0
     xmax = 2.0
@@ -275,8 +275,8 @@ def test_voronoi_vertex_grid():
 
 
 def test_voronoi_grid0(plot=False):
-    model_ws = f"{baseDir}_test_voronoi_grid0"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_voronoi_grid0"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     name = "vor0"
     answer_ncpl = 3804
@@ -328,8 +328,8 @@ def test_voronoi_grid0(plot=False):
 
 
 def test_voronoi_grid1(plot=False):
-    model_ws = f"{baseDir}_test_voronoi_grid1"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_voronoi_grid1"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     name = "vor1"
     answer_ncpl = 1679
@@ -364,8 +364,8 @@ def test_voronoi_grid1(plot=False):
 
 
 def test_voronoi_grid2(plot=False):
-    model_ws = f"{baseDir}_test_voronoi_grid2"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_voronoi_grid2"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     name = "vor2"
     answer_ncpl = 538
@@ -399,8 +399,8 @@ def test_voronoi_grid2(plot=False):
 
 
 def test_voronoi_grid3(plot=False):
-    model_ws = f"{baseDir}_test_voronoi_grid3"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_voronoi_grid3"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     name = "vor3"
     answer_ncpl = 300
@@ -444,8 +444,8 @@ def test_voronoi_grid3(plot=False):
 
 
 def test_voronoi_grid4(plot=False):
-    model_ws = f"{baseDir}_test_voronoi_grid4"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_voronoi_grid4"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     name = "vor4"
     answer_ncpl = 410
@@ -482,8 +482,8 @@ def test_voronoi_grid4(plot=False):
 
 
 def test_voronoi_grid5(plot=False):
-    model_ws = f"{baseDir}_test_voronoi_grid5"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_voronoi_grid5"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     name = "vor5"
     answer_ncpl = 1067

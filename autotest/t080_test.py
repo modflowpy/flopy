@@ -14,7 +14,7 @@ except ImportWarning as e:
 
 import flopy
 from flopy.utils.gridgen import Gridgen
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
 # Set gridgen executable
 gridgen_exe = "gridgen"
@@ -29,13 +29,13 @@ if platform.system() in "Windows":
 mfusg_exe = flopy.which(mfusg_exe)
 
 # set up the example folder
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def test_mfusg():
     # set up a gridgen workspace
-    gridgen_ws = f"{baseDir}_test_mfusg"
-    testFramework = flopyTest(verbose=True, testDirs=gridgen_ws)
+    gridgen_ws = f"{base_dir}_test_mfusg"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=gridgen_ws)
 
     name = "dummy"
     nlay = 3

@@ -3,9 +3,9 @@ import copy
 import numpy as np
 import matplotlib.pyplot as plt
 import flopy
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 ibound_path = os.path.join(
     "..", "examples", "data", "subwt_example", "ibound.ref"
@@ -113,8 +113,8 @@ def build_subwt(model_ws):
 
 
 def test_subwt():
-    model_ws = f"{baseDir}_test_subwt"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws)
+    model_ws = f"{base_dir}_test_subwt"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     ml = build_subwt(model_ws)
     ml.write_input()

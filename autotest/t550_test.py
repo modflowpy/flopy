@@ -15,14 +15,14 @@ try:
 except ImportError:
     shapefile = None
 
-from ci_framework import baseTestDir, flopyTest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-baseDir = baseTestDir(__file__, relPath="temp", verbose=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def test_mf6_grid_shp_export():
-    model_ws = f"{baseDir}_test_mf6_grid_shp_export"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_mf6_grid_shp_export"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     nlay = 2
     nrow = 10
@@ -154,8 +154,8 @@ def test_mf6_grid_shp_export():
 
 
 def test_huge_shapefile():
-    model_ws = f"{baseDir}_test_huge_shapefile"
-    testFramework = flopyTest(verbose=True, testDirs=model_ws, create=True)
+    model_ws = f"{base_dir}_test_huge_shapefile"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     nlay = 2
     nrow = 200
