@@ -1599,6 +1599,49 @@ class MFTransientArray(MFArray, MFTransient):
                     check_data,
                 )
 
+    def _get_array(self, num_sp, apply_mult, **kwargs):
+        """Returns all data up to stress period num_sp in a single array.
+        If `layer` is None, returns all data for time `layer`.
+
+        Parameters
+        ----------
+            num_sp : int
+                Zero-based stress period of data to return all data up to
+            apply_mult : bool
+                Whether to apply multiplier to data prior to returning it
+
+        """
+        data = None
+        output = None
+        for sp in range(0, num_sp):
+            if sp in self._data_storage:
+                self.get_data_prep(sp)
+                data = super().get_data(apply_mult=apply_mult, **kwargs)
+                data = np.expand_dims(data, 0)
+            else:
+                # if there is no previous data provide array of
+                # zeros, otherwise provide last array of data found
+                if data is None:
+                    # get any data
+                    data_dimensions = None
+                    for key in self._data_storage.keys():
+                        self.get_data_prep(key)
+                        data = super().get_data(
+                            apply_mult=apply_mult, **kwargs
+                        )
+                        break
+                    if data is not None:
+                        if self.structure.type == DatumType.integer:
+                            data = np.full_like(data, 0)
+                        else:
+                            data = np.full_like(data, 0.0)
+                        data = np.expand_dims(data, 0)
+            if output is None or data is None:
+                output = data
+            else:
+                output = np.concatenate((output, data))
+        return output
+
     def get_data(self, layer=None, apply_mult=True, **kwargs):
         """Returns the data associated with stress period key `layer`.
         If `layer` is None, returns all data for time `layer`.
@@ -1613,38 +1656,14 @@ class MFTransientArray(MFArray, MFTransient):
         """
         if self._data_storage is not None and len(self._data_storage) > 0:
             if layer is None:
-                output = None
                 sim_time = self._data_dimensions.package_dim.model_dim[
                     0
                 ].simulation_time
                 num_sp = sim_time.get_num_stress_periods()
                 if "array" in kwargs:
-                    data = None
-                    for sp in range(0, num_sp):
-                        if sp in self._data_storage:
-                            self.get_data_prep(sp)
-                            data = super().get_data(
-                                apply_mult=apply_mult, **kwargs
-                            )
-                            data = np.expand_dims(data, 0)
-                        else:
-                            if data is None:
-                                # get any data
-                                self.get_data_prep(self._data_storage.key()[0])
-                                data = super().get_data(
-                                    apply_mult=apply_mult, **kwargs
-                                )
-                                data = np.expand_dims(data, 0)
-                            if self.structure.type == DatumType.integer:
-                                data = np.full_like(data, 0)
-                            else:
-                                data = np.full_like(data, 0.0)
-                        if output is None:
-                            output = data
-                        else:
-                            output = np.concatenate((output, data))
-                    return output
+                    return self._get_array(num_sp, apply_mult, **kwargs)
                 else:
+                    output = None
                     for sp in range(0, num_sp):
                         data = None
                         if sp in self._data_storage:

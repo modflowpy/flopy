@@ -1641,14 +1641,12 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                         0
                     ].simulation_time
                     num_sp = sim_time.get_num_stress_periods()
+                    data = None
                     for sp in range(0, num_sp):
                         if sp in self._data_storage:
                             self.get_data_prep(sp)
-                            output.append(
-                                super().get_data(apply_mult=apply_mult)
-                            )
-                        else:
-                            output.append(None)
+                            data = super().get_data(apply_mult=apply_mult)
+                        output.append(data)
                     return output
                 else:
                     output = {}
