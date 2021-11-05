@@ -352,6 +352,67 @@ def test_multi_model():
     sim.run_simulation()
 
 
+def test_array():
+    import flopy
+
+    mf6 = flopy.mf6
+    sim_name = "testsim"
+    model_name = "testmodel"
+    out_dir = "tmp"
+
+    tdis_name = "{}.tdis".format(sim_name)
+    sim = mf6.MFSimulation(
+        sim_name=sim_name, version="mf6", exe_name=exe_name, sim_ws=out_dir
+    )
+    tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0), (6.0, 3, 1.0), (6.0, 3, 1.0)]
+    tdis = mf6.ModflowTdis(sim, time_units="DAYS", nper=4, perioddata=tdis_rc)
+
+    model = mf6.ModflowGwf(
+        sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+    )
+
+    dis = mf6.ModflowGwfdis(
+        model,
+        length_units="FEET",
+        nlay=1,
+        nrow=2,
+        ncol=2,
+        delr=500.0,
+        delc=500.0,
+        top=100.0,
+        botm=50.0,
+        filename="{}.dis".format(model_name),
+    )
+    irch = {1: [[0, 1], [2, 1]], 2: [[0, 1], [2, 3]]}
+    rcha = mf6.ModflowGwfrcha(model, irch=irch, recharge={0: 1.0, 2: 2.0})
+    val_irch = rcha.irch.array.sum(axis=(1, 2, 3))
+    assert val_irch[0] == 0
+    assert val_irch[1] == 4
+    assert val_irch[2] == 6
+    assert val_irch[3] == 6
+    val_rch = rcha.recharge.array.sum(axis=(1, 2, 3))
+    assert val_rch[0] == 4.0
+    assert val_rch[1] == 4.0
+    assert val_rch[2] == 8.0
+    assert val_rch[3] == 8.0
+
+    welspdict = {1: [[(0, 0, 0), -25.0, 0.0]], 2: [[(0, 0, 0), 25.0, 0.0]]}
+    wel = flopy.mf6.ModflowGwfwel(
+        model,
+        print_input=True,
+        print_flows=True,
+        stress_period_data=welspdict,
+        save_flows=False,
+        auxiliary="CONCENTRATION",
+        pname="WEL-1",
+    )
+    wel_array = wel.stress_period_data.array
+    assert wel_array[0] is None
+    assert wel_array[1][0][1] == -25.0
+    assert wel_array[2][0][1] == 25.0
+    assert wel_array[3][0][1] == 25.0
+
+
 def test_np001():
     # init paths
     test_ex_name = "np001"
@@ -3580,6 +3641,7 @@ def test_transport():
 
 
 if __name__ == "__main__":
+    test_array()
     test_multi_model()
     test_np001()
     test_np002()
