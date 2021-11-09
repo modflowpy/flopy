@@ -1666,7 +1666,11 @@ class CellBudgetFile:
                     s += f"a numpy recarray of size ({nlist}, 2)"
                 print(s)
             if full3D:
-                return self.__create3D(data)
+                data = self.__create3D(data)
+                if self.modelgrid is not None:
+                    return np.reshape(data, self.shape)
+                else:
+                    return data
             else:
                 return data.view(np.recarray)
         else:
