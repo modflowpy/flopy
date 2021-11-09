@@ -130,9 +130,19 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Install Python packages
+    - name: Upgrade pip
       run: |
         python -m pip install --upgrade pip
+
+    - name: Install GDAL on Windows
+      if: runner.os == 'Windows'
+      run: |
+        pip install gohlkegrabber
+        ggrab c:\temp gdal
+        pip install c:\temp\GDAL-3.3.3-cp310-cp310-win_amd64.whl
+
+    - name: Install Python packages
+      run: |
         pip install -r etc/requirements.full.pip.txt
 
     - name: Add jupyter and jupytext to notebooks run
