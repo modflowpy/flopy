@@ -139,7 +139,7 @@ jobs:
       run: |
         pip install gohlkegrabber
         ggrab -v=3.3.3 c:\\temp gdal
-        pip install c:\\temp\\GDAL-3.3.3-cp310-cp310-win_amd64.whl
+        pip install c:\\temp\\GDAL-3.3.3-cp39-cp39-win_amd64.whl
 
     - name: Install Python packages
       run: |
