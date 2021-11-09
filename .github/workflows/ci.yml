@@ -138,8 +138,8 @@ jobs:
       if: runner.os == 'Windows'
       run: |
         pip install gohlkegrabber
-        ggrab c:\\temp gdal
-        pip install --no-index --find-links=c:\\temp
+        ggrab -v=3.3.3 c:\\temp gdal
+        pip install c:\\temp\GDAL-3.3.3-cp310-cp310-win_amd64.whl
 
     - name: Install Python packages
       run: |
