@@ -6,6 +6,7 @@ mbase module
 """
 import abc
 import os
+import sys
 import shutil
 import threading
 import warnings
@@ -1683,15 +1684,16 @@ def run_model(
         normal_msg[idx] = s.lower()
 
     # Check to make sure that program and namefile exist
-    exe = which(exe_name)
+    exe_path = os.path.dirname(exe_name)
+    if exe_path == exe_name:
+        exe_path = None
+    exe = which(exe_name, path=exe_path)
     if exe is None:
-        import platform
-
-        if platform.system() in "Windows":
+        if sys.platform.lower() in "win32":
             if not exe_name.lower().endswith(".exe"):
-                exe = which(exe_name + ".exe")
+                exe = which(exe_name + ".exe", path=exe_path)
         elif exe_name.lower().endswith(".exe"):
-            exe = which(exe_name[:-4])
+            exe = which(exe_name[:-4], path=exe_path)
     if exe is None:
         raise Exception(
             f"The program {exe_name} does not exist or is not executable."
