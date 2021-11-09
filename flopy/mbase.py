@@ -1685,7 +1685,7 @@ def run_model(
 
     # Check to make sure that program and namefile exist
     exe_path = os.path.dirname(exe_name)
-    if exe_path == exe_name:
+    if exe_path == "":
         exe_path = None
     exe = which(exe_name, path=exe_path)
     if exe is None:
