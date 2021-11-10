@@ -31,12 +31,16 @@ requests
 # MODFLOW API dependencies
 bmipy
 
-# for golke installer
+# golke installer
 gohlkegrabber
-attrs
+
+# dependencies for rasterio and Fiona
+attrs>=17
 certifi
 click>=4.0
 cligj>=0.5
 snuggs>=1.4.1
-click-plugins
+click-plugins>=1.0
+six>=1.7
+munch
 setuptools
