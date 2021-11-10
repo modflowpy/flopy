@@ -100,11 +100,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
-        python-version: [3.9, 3.8, 3.7]
+        os: [ubuntu-latest]
+        python-version: [3.10, 3.9, 3.8, 3.7]
         run-type: [std]
         test-pth: [""]
         include:
+          - os: macos-latest
+            python-version: 3.9
+            run-type: std
+            test-path: ""
+          - os: windows-latest
+            python-version: 3.9
+            run-type: std
+            test-path: ""
           - os: ubuntu-latest
             python-version: 3.9
             run-type: nb
@@ -165,9 +173,6 @@ jobs:
         pip install ./wheels/GDAL*
         pip install ./wheels/rasterio*
         pip install ./wheels/Fiona*
-#        pip install --no-index --find-links=./wheels/ gdal
-#        pip install --no-index --find-links=./wheels/ rasterio
-#        pip install --no-index --find-links=./wheels/ fiona
 
     - name: Add jupyter and jupytext to notebooks run
       if: matrix.run-type == 'nb'
@@ -188,12 +193,19 @@ jobs:
     - name: Add executables directory to path
       run: |
         echo "$HOME/.local/bin" >> $GITHUB_PATH
+        echo "$PATH"
 
-    - name: Run pytest on autotest scripts
-      if: matrix.run-type == 'std'
+    - name: Run pytest on autotest scripts on MacOS and Linux
+      if: matrix.run-type == 'std' && runner.os != 'Windows'
       working-directory: ./autotest
       run: |
-        echo "$PATH"
+        pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
+
+    - name: Run pytest on autotest scripts on Windows
+      if: matrix.run-type == 'std' && runner.os == 'Windows'
+      shell: pwsh
+      working-directory: ./autotest
+      run: |
         pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
 
     - name: Run pytest on scripts and notebooks
