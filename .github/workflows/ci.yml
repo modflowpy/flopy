@@ -138,9 +138,6 @@ jobs:
       if: runner.os == 'Windows'
       run: |
         pip install -r etc/requirements.windows.pip.txt
-        ggrab c:\\temp gdal
-        ggrab c:\\temp rasterio
-        pip install c:\\temp\\GDAL-3.3.3-cp39-cp39-win_amd64.whl
 
     - name: Install Python packages on Linux and MacOS
       if: runner.os != 'Windows'
