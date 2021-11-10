@@ -115,7 +115,7 @@ jobs:
             test-path: run_scripts.py
     defaults:
       run:
-        shell: bash
+        shell: bash -l {0}
 
     steps:
     # check out repo
@@ -144,7 +144,7 @@ jobs:
       run: |
         pip install -r etc/requirements.full.pip.txt
 
-    - name: Install Python packages with GDAL dependencies on windows
+    - name: Install Python packages with GDAL dependencies on Windows
       if: runner.os == 'Windows'
       shell: python
       run: |
@@ -153,12 +153,14 @@ jobs:
         gg = GohlkeGrabber()
         wheel_path = os.path.join(".", "wheels")
         os.makedirs(wheel_path, exist_ok=True)
+        gg.retrieve(wheel_path, "gdal")
         gg.retrieve(wheel_path, "rasterio")
         gg.retrieve(wheel_path, "fiona")
-        gg.retrieve(wheel_path, "gdal")
-        glob_str = os.path.join(wheel_path, "*.whl")
-        for path in glob.glob(glob_str):
-            pip.main(["install", path])
+
+    - name: Install Python packages with GDAL dependencies on Windows
+      if: runner.os == 'Windows'
+      run: |
+        pip install --no-index --find-links=wheels/
 
     - name: Add jupyter and jupytext to notebooks run
       if: matrix.run-type == 'nb'
@@ -174,7 +176,7 @@ jobs:
     - name: Prepare for the autotests
       working-directory: ./autotest
       run: |
-        python ci_prepare.py
+        pytest -v ci_prepare.py
 
     - name: Add executables directory to path
       run: |
