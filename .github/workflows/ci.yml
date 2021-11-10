@@ -148,7 +148,7 @@ jobs:
       if: runner.os == 'Windows'
       shell: python
       run: |
-        import os, glob, pip
+        import os
         from gohlkegrabber import GohlkeGrabber
         gg = GohlkeGrabber()
         wheel_path = os.path.join(".", "wheels")
@@ -160,6 +160,7 @@ jobs:
     - name: Install Python packages with GDAL dependencies on Windows
       if: runner.os == 'Windows'
       run: |
+        ls -lh ./wheels/
         pip install --no-index --find-links=./wheels/ gdal
         pip install --no-index --find-links=./wheels/ rasterio
         pip install --no-index --find-links=./wheels/ fiona

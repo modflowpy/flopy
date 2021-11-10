@@ -34,3 +34,5 @@ bmipy
 # for golke installer
 wheel
 gohlkegrabber
+cligj>=0.5
+click-plugins
