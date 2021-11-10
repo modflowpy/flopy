@@ -152,12 +152,13 @@ jobs:
         from gohlkegrabber import GohlkeGrabber
         gg = GohlkeGrabber()
         wheel_path = os.path.join(".", "wheels")
-        gg.retrieve(wheel_path, "rasterio'")
+        os.makedirs(wheel_path, exist_ok=True)
+        gg.retrieve(wheel_path, "rasterio")
         gg.retrieve(wheel_path, "fiona")
         gg.retrieve(wheel_path, "gdal")
         glob_str = os.path.join(wheel_path, "*.whl")
         for path in glob.glob(glob_str):
-            pip.main(['install', path])
+            pip.main(["install", path])
 
     - name: Add jupyter and jupytext to notebooks run
       if: matrix.run-type == 'nb'
