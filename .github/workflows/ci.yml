@@ -160,9 +160,9 @@ jobs:
     - name: Install Python packages with GDAL dependencies on Windows
       if: runner.os == 'Windows'
       run: |
-        pip install --find-links=file:///wheels gdal
-        pip install --find-links=file:///wheels rasterio
-        pip install --find-links=file:///wheels fiona
+        pip install --no-index --find-links=./wheels/ gdal
+        pip install --no-index --find-links=./wheels/ rasterio
+        pip install --no-index --find-links=./wheels/ fiona
 
     - name: Add jupyter and jupytext to notebooks run
       if: matrix.run-type == 'nb'
