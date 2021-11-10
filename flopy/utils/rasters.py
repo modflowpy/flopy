@@ -399,8 +399,8 @@ class Raster:
                 method=method,
             )
 
-        elif method in ("median", "mean"):
-            # these methods are slow and could use a speed u
+        elif method in ("median", "mean", "min", "max"):
+            # these methods are slow and could use a speed up
             ncpl = modelgrid.ncpl
             data_shape = modelgrid.xcellcenters.shape
             if isinstance(ncpl, (list, np.ndarray)):
@@ -455,8 +455,12 @@ class Raster:
 
                     if method == "median":
                         val = np.nanmedian(rstr_data)
-                    else:
+                    elif method == "mean":
                         val = np.nanmean(rstr_data)
+                    elif method == "max":
+                        val = np.nanmax(rstr_data)
+                    else:
+                        val = np.nanmin(rstr_data)
 
                     data[node] = val
         else:
@@ -533,8 +537,12 @@ class Raster:
 
         if method == "median":
             val = np.nanmedian(rstr_data)
-        else:
+        elif method == "mean":
             val = np.nanmean(rstr_data)
+        elif method == "max":
+            val = np.nanmax(rstr_data)
+        else:
+            val = np.nanmin(rstr_data)
         q.put((node, val))
         container.release()
 
