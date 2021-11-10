@@ -130,9 +130,10 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Upgrade pip
+    - name: Upgrade pip and install wheel
       run: |
         python -m pip install --upgrade pip
+        pip install wheel
 
     - name: Install Python packages on Windows
       if: runner.os == 'Windows'
@@ -153,17 +154,17 @@ jobs:
         gg = GohlkeGrabber()
         wheel_path = os.path.join(".", "wheels")
         os.makedirs(wheel_path, exist_ok=True)
-        gg.retrieve(wheel_path, "gdal")
+        gg.retrieve(wheel_path, "GDAL")
         gg.retrieve(wheel_path, "rasterio")
-        gg.retrieve(wheel_path, "fiona")
+        gg.retrieve(wheel_path, "Fiona")
 
     - name: Install Python packages with GDAL dependencies on Windows
       if: runner.os == 'Windows'
       run: |
         ls -lh ./wheels/
-        pip install --no-index --find-links=./wheels/ gdal
+        pip install --no-index --find-links=./wheels/ GDAL
         pip install --no-index --find-links=./wheels/ rasterio
-        pip install --no-index --find-links=./wheels/ fiona
+        pip install --no-index --find-links=./wheels/ Fiona
 
     - name: Add jupyter and jupytext to notebooks run
       if: matrix.run-type == 'nb'
