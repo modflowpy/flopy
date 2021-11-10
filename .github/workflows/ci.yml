@@ -115,7 +115,7 @@ jobs:
             test-path: run_scripts.py
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash
 
     steps:
     # check out repo
@@ -181,6 +181,12 @@ jobs:
     - name: Add executables directory to path
       run: |
         echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Write PATH and list the contents of $HOME/.local/bin
+      run: |
+        $PATH
+        ls $HOME/.local/bin
+        which mf6
 
     - name: Run pytest on autotest scripts
       if: matrix.run-type == 'std'
