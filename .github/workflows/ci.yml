@@ -162,9 +162,10 @@ jobs:
       if: runner.os == 'Windows'
       run: |
         ls -lh ./wheels/
-        pip install --find-links=./wheels/ gdal
-        pip install --find-links=./wheels/ rasterio
-        pip install --find-links=./wheels/ fiona
+        for x in `ls -tr ./wheels/`; do pip install $x; done
+#        pip install --no-index --find-links=./wheels/ gdal
+#        pip install --no-index --find-links=./wheels/ rasterio
+#        pip install --no-index --find-links=./wheels/ fiona
 
     - name: Add jupyter and jupytext to notebooks run
       if: matrix.run-type == 'nb'
