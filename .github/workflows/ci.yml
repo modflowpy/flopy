@@ -145,7 +145,7 @@ jobs:
       run: |
         pip install -r etc/requirements.full.pip.txt
 
-    - name: Install Python packages with GDAL dependencies on Windows
+    - name: Download Python packages with GDAL dependencies on Windows
       if: runner.os == 'Windows'
       shell: python
       run: |
@@ -162,9 +162,9 @@ jobs:
       if: runner.os == 'Windows'
       run: |
         ls -lh ./wheels/
-        pip install --no-index --find-links=./wheels/ GDAL
-        pip install --no-index --find-links=./wheels/ rasterio
-        pip install --no-index --find-links=./wheels/ Fiona
+        pip install --find-links=./wheels/ gdal
+        pip install --find-links=./wheels/ rasterio
+        pip install --find-links=./wheels/ fiona
 
     - name: Add jupyter and jupytext to notebooks run
       if: matrix.run-type == 'nb'
@@ -190,6 +190,7 @@ jobs:
       if: matrix.run-type == 'std'
       working-directory: ./autotest
       run: |
+        echo "$PATH"
         pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
 
     - name: Run pytest on scripts and notebooks
