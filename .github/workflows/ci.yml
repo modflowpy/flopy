@@ -100,7 +100,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [windows-latest]
         python-version: [3.9, 3.8, 3.7]
         run-type: [std]
         test-pth: [""]
@@ -154,9 +154,9 @@ jobs:
         gg = GohlkeGrabber()
         wheel_path = os.path.join(".", "wheels")
         os.makedirs(wheel_path, exist_ok=True)
-        gg.retrieve(wheel_path, "GDAL")
+        gg.retrieve(wheel_path, "gdal")
         gg.retrieve(wheel_path, "rasterio")
-        gg.retrieve(wheel_path, "Fiona")
+        gg.retrieve(wheel_path, "fiona")
 
     - name: Install Python packages with GDAL dependencies on Windows
       if: runner.os == 'Windows'
