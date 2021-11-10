@@ -161,8 +161,10 @@ jobs:
     - name: Install Python packages with GDAL dependencies on Windows
       if: runner.os == 'Windows'
       run: |
-        ls -lh ./wheels/
-        for x in `ls -tr ./wheels/`; do pip install $x; done
+        ls -ltr ./wheels/
+        pip install ./wheels/GDAL*
+        pip install ./wheels/rasterio*
+        pip install ./wheels/Fiona*
 #        pip install --no-index --find-links=./wheels/ gdal
 #        pip install --no-index --find-links=./wheels/ rasterio
 #        pip install --no-index --find-links=./wheels/ fiona
