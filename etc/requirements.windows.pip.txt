@@ -31,5 +31,6 @@ requests
 # MODFLOW API dependencies
 bmipy
 
-# golke installer
+# for golke installer
+wheel
 gohlkegrabber

@@ -174,7 +174,7 @@ jobs:
     - name: Prepare for the autotests
       working-directory: ./autotest
       run: |
-        pytest -v ci_prepare.py
+        python ci_prepare.py
 
     - name: Add executables directory to path
       run: |
