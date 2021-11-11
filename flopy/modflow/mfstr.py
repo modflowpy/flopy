@@ -561,6 +561,8 @@ class ModflowStr(Package):
         # set column lengths for fixed format input files for
         # datasets 6, 8, and 9
         fmt6 = [5, 5, 5, 5, 5, 15, 10, 10, 10, 10]
+        if not self.parent.structured:
+            del fmt6[1:3]
         fmt8 = [10, 10, 10]
         fmt9 = 5
 
@@ -587,14 +589,19 @@ class ModflowStr(Package):
                 tdata = np.recarray.copy(tdata)
                 # dataset 6
                 for line in tdata:
-                    line["k"] += 1
-                    line["i"] += 1
-                    line["j"] += 1
+                    if self.parent.structured:
+                        line["k"] += 1
+                        line["i"] += 1
+                        line["j"] += 1
+                        ds8_idx_from, ds8_idx_to = 10, 12
+                    else:
+                        line["node"] += 1
+                        ds8_idx_from, ds8_idx_to = 8, 10
                     ds6 = []
                     for idx, v in enumerate(line):
-                        if idx < 10 or idx > 12:
+                        if idx < ds8_idx_from or idx > ds8_idx_to:
                             ds6.append(v)
-                        if idx > 12:
+                        if idx > ds8_idx_to:
                             fmt6 += [10]
                     f_str.write(write_fixed_var(ds6, ipos=fmt6, free=free))
 
@@ -602,7 +609,7 @@ class ModflowStr(Package):
                 if self.icalc > 0:
                     for line in tdata:
                         ds8 = []
-                        for idx in range(10, 13):
+                        for idx in range(ds8_idx_from, ds8_idx_to + 1):
                             ds8.append(line[idx])
                         f_str.write(write_fixed_var(ds8, ipos=fmt8, free=free))
 
@@ -677,6 +684,10 @@ class ModflowStr(Package):
             np.float32,
             np.float32,
         ]
+        if not model.structured:
+            del type6[1:3]
+            del fmt6[1:3]
+
         fmt8 = [10, 10, 10]
         fmt9 = [5]
 
@@ -751,7 +762,8 @@ class ModflowStr(Package):
 
         # read parameter data
         if npstr > 0:
-            dt = ModflowStr.get_empty(1, aux_names=aux_names).dtype
+            dt = ModflowStr.get_empty(
+                1, aux_names=aux_names, structured=model.structured).dtype
             pak_parms = mfparbc.load(
                 f, npstr, dt, model, ext_unit_dict, model.verbose
             )
@@ -788,7 +800,7 @@ class ModflowStr(Package):
                 bnd_output = None
                 seg_output = None
                 current, current_seg = ModflowStr.get_empty(
-                    itmp, nss, aux_names=aux_names
+                    itmp, nss, aux_names=aux_names, structured=model.structured
                 )
             elif itmp > 0:
                 if npstr > 0:
@@ -818,7 +830,7 @@ class ModflowStr(Package):
                         data_dict = current_dict[iname]
 
                         current = ModflowStr.get_empty(
-                            par_dict["nlst"], aux_names=aux_names
+                            par_dict["nlst"], aux_names=aux_names, structured=model.structured
                         )
 
                         #  get appropriate parval
@@ -842,7 +854,8 @@ class ModflowStr(Package):
                     if model.verbose:
                         print("   reading str dataset 6")
                     current, current_seg = ModflowStr.get_empty(
-                        itmp, nss, aux_names=aux_names
+                        itmp, nss, aux_names=aux_names,
+                        structured=model.structured
                     )
                     for ibnd in range(itmp):
                         line = f.readline()
@@ -863,9 +876,14 @@ class ModflowStr(Package):
                                 current[ibnd][name] = np.float32(tt[iaux])
 
                 # convert indices to zero-based
-                current["k"] -= 1
-                current["i"] -= 1
-                current["j"] -= 1
+                if model.structured:
+                    current["k"] -= 1
+                    current["i"] -= 1
+                    current["j"] -= 1
+                    ds8_idx_from, ds8_idx_to = 10, 13
+                else:
+                    current["node"] -= 1
+                    ds8_idx_from, ds8_idx_to = 8, 11
 
                 # read dataset 8
                 if icalc > 0:
@@ -875,7 +893,7 @@ class ModflowStr(Package):
                         line = f.readline()
                         t = read_fixed_var(line, ipos=fmt8, free=free)
                         ipos = 0
-                        for idx in range(10, 13):
+                        for idx in range(ds8_idx_from, ds8_idx_to):
                             current[ibnd][idx] = np.float32(t[ipos])
                             ipos += 1
 

@@ -315,6 +315,28 @@ def test_usg_ss_to_tr():
     return
 
 
+def test_usg_str():
+    # test mfusg model with str package
+    print("testing unstructured mfusg with STR: usg_rch_evt_str.nam")
+
+    new_ws = f"{base_dir}_test_usg_str"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=new_ws)
+
+    model_ws = os.path.join(
+        "..", "examples", "data", "mfusg_test", "rch_evt_tests"
+    )
+    nam = "usg_rch_evt_str.nam"
+    m = flopy.mfusg.MfUsg.load(nam, model_ws=model_ws, exe_name=v)
+
+    m.model_ws = new_ws
+    m.write_input()
+    if run:
+        success, buff = m.run_model()
+        assert success
+
+    return
+
+
 if __name__ == "__main__":
     test_usg_disu_load()
     test_usg_sms_load()
@@ -325,3 +347,4 @@ if __name__ == "__main__":
     test_usg_rch_evt_models02()
     test_usg_rch_evt_models02a()
     test_usg_ss_to_tr()
+    test_usg_str()
