@@ -189,15 +189,20 @@ jobs:
       run: |
         pytest -v ci_prepare.py
 
-    - name: Add executables directory to path
+    - name: Add executables directory to path on Linux and MacOS
+      if: runner.os != 'Windows'
       run: |
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-    - name: Run pytest on autotest scripts
+    - name: Add executables directory to path on Windows
+      if: runner.os == 'Windows'
+      run: |
+        echo "C:\Users\runneradmin\.local\bin" >> $GITHUB_PATH
+
+    - name: Run pytest on autotest scripts on Linux and MacOS
       if: matrix.run-type == 'std' && runner.os != 'Windows'
       working-directory: ./autotest
       run: |
-        echo "$GITHUB_PATH"
         pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
 
     - name: Run pytest on autotest scripts on Windows
