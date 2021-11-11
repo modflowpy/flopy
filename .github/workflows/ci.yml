@@ -192,10 +192,12 @@ jobs:
     - name: Add executables directory to path
       run: |
         echo "$HOME/.local/bin" >> $GITHUB_PATH
+        echo "$HOME/.local/bin" >> $PATH
 
     - name: Output HOME directory and path
       run: |
         echo "$HOME"
+        echo "$GITHUB_PATH"
         echo "$PATH"
 
     - name: Run pytest on autotest scripts
