@@ -192,18 +192,20 @@ jobs:
     - name: Add executables directory to path
       run: |
         echo "$HOME/.local/bin" >> $GITHUB_PATH
-        echo "$HOME/.local/bin" >> $PATH
-
-    - name: Output HOME directory and path
-      run: |
-        echo "$HOME"
-        echo "$GITHUB_PATH"
-        echo "$PATH"
 
     - name: Run pytest on autotest scripts
-      if: matrix.run-type == 'std'
+      if: matrix.run-type == 'std' && runner.os != 'Windows'
       working-directory: ./autotest
       run: |
+        echo "$GITHUB_PATH"
+        pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
+
+    - name: Run pytest on autotest scripts on Windows
+      if: matrix.run-type == 'std' && runner.os == 'Windows'
+      working-directory: ./autotest
+      shell: cmd
+      run: |
+        path
         pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
 
     - name: Run pytest on scripts and notebooks
