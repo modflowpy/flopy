@@ -55,7 +55,6 @@ jobs:
       run:
         shell: bash
 
-    if: github.event_name != 'schedule'
     steps:
     # check out repo
     - name: Checkout flopy repo
@@ -101,7 +100,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.10, 3.9, 3.8, 3.7]
+        python-version: [3.9, 3.8, 3.7]
         run-type: [std]
         test-pth: [""]
         include:
@@ -193,17 +192,14 @@ jobs:
     - name: Add executables directory to path
       run: |
         echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Output HOME directory and path
+      run: |
+        echo "$HOME"
         echo "$PATH"
 
-    - name: Run pytest on autotest scripts on MacOS and Linux
-      if: matrix.run-type == 'std' && runner.os != 'Windows'
-      working-directory: ./autotest
-      run: |
-        pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
-
-    - name: Run pytest on autotest scripts on Windows
-      if: matrix.run-type == 'std' && runner.os == 'Windows'
-      shell: pwsh
+    - name: Run pytest on autotest scripts
+      if: matrix.run-type == 'std'
       working-directory: ./autotest
       run: |
         pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
