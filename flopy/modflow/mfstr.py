@@ -763,7 +763,8 @@ class ModflowStr(Package):
         # read parameter data
         if npstr > 0:
             dt = ModflowStr.get_empty(
-                1, aux_names=aux_names, structured=model.structured).dtype
+                1, aux_names=aux_names, structured=model.structured
+            ).dtype
             pak_parms = mfparbc.load(
                 f, npstr, dt, model, ext_unit_dict, model.verbose
             )
@@ -830,7 +831,9 @@ class ModflowStr(Package):
                         data_dict = current_dict[iname]
 
                         current = ModflowStr.get_empty(
-                            par_dict["nlst"], aux_names=aux_names, structured=model.structured
+                            par_dict["nlst"],
+                            aux_names=aux_names,
+                            structured=model.structured,
                         )
 
                         #  get appropriate parval
@@ -854,8 +857,10 @@ class ModflowStr(Package):
                     if model.verbose:
                         print("   reading str dataset 6")
                     current, current_seg = ModflowStr.get_empty(
-                        itmp, nss, aux_names=aux_names,
-                        structured=model.structured
+                        itmp,
+                        nss,
+                        aux_names=aux_names,
+                        structured=model.structured,
                     )
                     for ibnd in range(itmp):
                         line = f.readline()
