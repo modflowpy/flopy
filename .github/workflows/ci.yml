@@ -104,14 +104,6 @@ jobs:
         run-type: [std]
         test-pth: [""]
         include:
-          - os: windows-latest
-            python-version: 3.9
-            run-type: std
-            test-path: ""
-          - os: windows-latest
-            python-version: 3.8
-            run-type: std
-            test-path: ""
           - os: ubuntu-latest
             python-version: 3.9
             run-type: nb
@@ -120,6 +112,14 @@ jobs:
             python-version: 3.9
             run-type: script
             test-path: run_scripts.py
+          - os: windows-latest
+            python-version: 3.9
+            run-type: std
+            test-path: ""
+          - os: windows-latest
+            python-version: 3.8
+            run-type: std
+            test-path: ""
     defaults:
       run:
         shell: bash
@@ -200,6 +200,7 @@ jobs:
         echo "C:\Users\runneradmin\.local\bin" >> $GITHUB_PATH
 
     - name: Run pytest on autotest scripts
+      if: matrix.run-type == 'std'
       working-directory: ./autotest
       run: |
         pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
