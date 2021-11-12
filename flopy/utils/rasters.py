@@ -351,6 +351,11 @@ class Raster:
             ``mean`` for mean sampling
 
             ``median`` for median sampling
+
+            ``min`` for minimum sampling
+
+            ``max`` for maximum sampling
+
         multithread : bool
             boolean flag indicating if multithreading should be used with
             the ``mean`` and ``median`` sampling methods
@@ -399,8 +404,8 @@ class Raster:
                 method=method,
             )
 
-        elif method in ("median", "mean"):
-            # these methods are slow and could use a speed u
+        elif method in ("median", "mean", "min", "max"):
+            # these methods are slow and could use a speed up
             ncpl = modelgrid.ncpl
             data_shape = modelgrid.xcellcenters.shape
             if isinstance(ncpl, (list, np.ndarray)):
@@ -453,10 +458,17 @@ class Raster:
                     msk = np.in1d(rstr_data, self.nodatavals)
                     rstr_data[msk] = np.nan
 
-                    if method == "median":
-                        val = np.nanmedian(rstr_data)
+                    if rstr_data.size == 0:
+                        val = self.nodatavals[0]
                     else:
-                        val = np.nanmean(rstr_data)
+                        if method == "median":
+                            val = np.nanmedian(rstr_data)
+                        elif method == "mean":
+                            val = np.nanmean(rstr_data)
+                        elif method == "max":
+                            val = np.nanmax(rstr_data)
+                        else:
+                            val = np.nanmin(rstr_data)
 
                     data[node] = val
         else:
@@ -531,10 +543,19 @@ class Raster:
         msk = np.in1d(rstr_data, self.nodatavals)
         rstr_data[msk] = np.nan
 
-        if method == "median":
-            val = np.nanmedian(rstr_data)
+        if rstr_data.size == 0:
+            val = self.nodatavals[0]
+
         else:
-            val = np.nanmean(rstr_data)
+            if method == "median":
+                val = np.nanmedian(rstr_data)
+            elif method == "mean":
+                val = np.nanmean(rstr_data)
+            elif method == "max":
+                val = np.nanmax(rstr_data)
+            else:
+                val = np.nanmin(rstr_data)
+
         q.put((node, val))
         container.release()
 
