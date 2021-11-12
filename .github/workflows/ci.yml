@@ -99,17 +99,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
         python-version: [3.9, 3.8, 3.7]
         run-type: [std]
         test-pth: [""]
         include:
-          - os: macos-latest
+          - os: windows-latest
             python-version: 3.9
             run-type: std
             test-path: ""
           - os: windows-latest
-            python-version: 3.9
+            python-version: 3.8
             run-type: std
             test-path: ""
           - os: ubuntu-latest
@@ -199,18 +199,9 @@ jobs:
       run: |
         echo "C:\Users\runneradmin\.local\bin" >> $GITHUB_PATH
 
-    - name: Run pytest on autotest scripts on Linux and MacOS
-      if: matrix.run-type == 'std' && runner.os != 'Windows'
+    - name: Run pytest on autotest scripts
       working-directory: ./autotest
       run: |
-        pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
-
-    - name: Run pytest on autotest scripts on Windows
-      if: matrix.run-type == 'std' && runner.os == 'Windows'
-      working-directory: ./autotest
-      shell: cmd
-      run: |
-        path
         pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
 
     - name: Run pytest on scripts and notebooks
