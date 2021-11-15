@@ -165,6 +165,31 @@ def test_mf6_string_to_file_path():
             raise AssertionError("Relative path error")
 
 
+def test_mf6_subdir():
+    base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=base_dir)
+
+    sim = flopy.mf6.MFSimulation(sim_ws=base_dir)
+    tdis = flopy.mf6.modflow.mftdis.ModflowTdis(sim)
+    gwf = flopy.mf6.ModflowGwf(sim, model_rel_path='level2')
+    ims = flopy.mf6.modflow.mfims.ModflowIms(sim)
+    sim.register_ims_package(ims, [])
+    dis = flopy.mf6.modflow.mfgwfdis.ModflowGwfdis(gwf)
+    sim.set_all_data_external(external_data_folder='dat')
+    sim.write_simulation()
+
+    sim_r = flopy.mf6.MFSimulation.load(
+        'mfsim.nam',
+        sim_ws=sim.simulation_data.mfpath.get_sim_path(),
+    )
+    gwf_r = sim_r.get_model()
+    assert gwf.dis.delc.get_file_entry() == gwf_r.dis.delc.get_file_entry(), (
+        "Something wrong with model external paths")
+
+
+
+
 if __name__ == "__main__":
-    test_mf6()
-    test_mf6_string_to_file_path()
+    # test_mf6()
+    # test_mf6_string_to_file_path()
+    test_mf6_subdir()
