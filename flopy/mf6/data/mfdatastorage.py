@@ -1516,7 +1516,7 @@ class DataStorage:
                 fp_rp_l = fp_relative.split(os.path.sep)
                 rp_l_r = rel_path.split(os.path.sep)[::-1]
                 for i, rp in enumerate(rp_l_r):
-                    if rp != fp_rp_l[len(rp_l_r)-i-1]:
+                    if rp != fp_rp_l[len(rp_l_r) - i - 1]:
                         fp_relative = os.path.join(rp, fp_relative)
         fp = self._simulation_data.mfpath.resolve_path(fp_relative, model_name)
         if data is not None:
