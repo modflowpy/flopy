@@ -171,33 +171,36 @@ def test_mf6_subdir():
 
     sim = flopy.mf6.MFSimulation(sim_ws=base_dir)
     tdis = flopy.mf6.modflow.mftdis.ModflowTdis(sim)
-    gwf = flopy.mf6.ModflowGwf(sim, model_rel_path='level2')
+    gwf = flopy.mf6.ModflowGwf(sim, model_rel_path="level2")
     ims = flopy.mf6.modflow.mfims.ModflowIms(sim)
     sim.register_ims_package(ims, [])
     dis = flopy.mf6.modflow.mfgwfdis.ModflowGwfdis(gwf)
-    sim.set_all_data_external(external_data_folder='dat')
+    sim.set_all_data_external(external_data_folder="dat")
     sim.write_simulation()
 
     sim_r = flopy.mf6.MFSimulation.load(
-        'mfsim.nam',
+        "mfsim.nam",
         sim_ws=sim.simulation_data.mfpath.get_sim_path(),
     )
     gwf_r = sim_r.get_model()
-    assert gwf.dis.delc.get_file_entry() == gwf_r.dis.delc.get_file_entry(), (
-        "Something wrong with model external paths")
+    assert (
+        gwf.dis.delc.get_file_entry() == gwf_r.dis.delc.get_file_entry()
+    ), "Something wrong with model external paths"
 
     sim_r.set_all_data_internal()
     sim_r.set_all_data_external(
-        external_data_folder=os.path.join('dat', "dat_l2"))
+        external_data_folder=os.path.join("dat", "dat_l2")
+    )
     sim_r.write_simulation()
 
     sim_r2 = flopy.mf6.MFSimulation.load(
-        'mfsim.nam',
+        "mfsim.nam",
         sim_ws=sim_r.simulation_data.mfpath.get_sim_path(),
     )
     gwf_r2 = sim_r.get_model()
-    assert gwf_r.dis.delc.get_file_entry() == gwf_r2.dis.delc.get_file_entry(), (
-        "Something wrong with model external paths")
+    assert (
+        gwf_r.dis.delc.get_file_entry() == gwf_r2.dis.delc.get_file_entry()
+    ), "Something wrong with model external paths"
 
 
 if __name__ == "__main__":
