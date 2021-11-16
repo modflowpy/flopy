@@ -1513,8 +1513,8 @@ class DataStorage:
                 # include model relative path in external file path
                 # only if model relative path is not already in external
                 #  file path i.e. when reading!
-                fp_rp_l = os.path.normpath(fp_relative).split(os.path.sep)
-                rp_l_r = os.path.normpath(rel_path).split(os.path.sep)[::-1]
+                fp_rp_l = fp_relative.split(os.path.sep)
+                rp_l_r = rel_path.split(os.path.sep)[::-1]
                 for i, rp in enumerate(rp_l_r):
                     if rp != fp_rp_l[len(rp_l_r)-i-1]:
                         fp_relative = os.path.join(rp, fp_relative)
