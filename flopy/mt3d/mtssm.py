@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 import warnings
 from ..pakbase import Package
@@ -165,7 +164,7 @@ class Mt3dSsm(Package):
         extension="ssm",
         unitnumber=None,
         filenames=None,
-        **kwargs
+        **kwargs,
     ):
 
         if unitnumber is None:
@@ -173,39 +172,21 @@ class Mt3dSsm(Package):
         elif unitnumber == 0:
             unitnumber = Mt3dSsm._reservedunit()
 
-        # set filenames
-        if filenames is None:
-            filenames = [None]
-        elif isinstance(filenames, str):
-            filenames = [filenames]
-
-        # Fill namefile items
-        name = [Mt3dSsm._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=self._prepare_filenames(filenames),
         )
 
         deprecated_kwargs = ["criv", "cghb", "cibd", "cchd", "cpbc", "cwel"]
         for key in kwargs:
             if key in deprecated_kwargs:
                 warnings.warn(
-                    "Deprecation Warning: Keyword argument '"
-                    + key
-                    + "' no longer supported. Use "
-                    + "'stress_period_data' instead.",
+                    "Deprecation Warning: Keyword argument '{}' no longer "
+                    "supported. Use 'stress_period_data' instead.".format(key),
                     category=UserWarning,
                 )
 
@@ -243,13 +224,10 @@ class Mt3dSsm(Package):
             )
 
         if mxss is None and mf is None:
-            wmsg = (
-                "SSM Package: mxss is None and modflowmodel is None. "
-                + "Cannot calculate max number of sources and sinks. "
-                + "Estimating from stress_period_data. "
-            )
             warnings.warn(
-                wmsg,
+                "SSM Package: mxss is None and modflowmodel is None. "
+                "Cannot calculate max number of sources and sinks. "
+                "Estimating from stress_period_data.",
                 category=UserWarning,
             )
 
@@ -308,15 +286,13 @@ class Mt3dSsm(Package):
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
                     val = 0.0
-                    name = "crch" + str(icomp)
+                    name = f"crch{icomp}"
                     if name in list(kwargs.keys()):
                         val = kwargs.pop(name)
                     else:
                         print(
-                            "SSM: setting crch for component "
-                            + str(icomp)
-                            + " to zero. kwarg name "
-                            + name
+                            "SSM: setting crch for component {} to zero. "
+                            "kwarg name {}".format(icomp, name)
                         )
                     t2d = Transient2d(
                         model,
@@ -370,16 +346,14 @@ class Mt3dSsm(Package):
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
                     val = 0.0
-                    name = "cevt" + str(icomp)
+                    name = f"cevt{icomp}"
                     if name in list(kwargs.keys()):
                         val = kwargs[name]
                         kwargs.pop(name)
                     else:
                         print(
-                            "SSM: setting cevt for component "
-                            + str(icomp)
-                            + " to zero, kwarg name "
-                            + name
+                            "SSM: setting cevt for component {} to zero, "
+                            "kwarg name {}".format(icomp, name)
                         )
                     t2d = Transient2d(
                         model,
@@ -453,7 +427,7 @@ class Mt3dSsm(Package):
         ]
         if ncomp > 1:
             for comp in range(1, ncomp + 1):
-                comp_name = "cssm({0:02d})".format(comp)
+                comp_name = f"cssm({comp:02d})"
                 type_list.append((comp_name, np.float32))
         dtype = np.dtype(type_list)
         return dtype
@@ -475,7 +449,7 @@ class Mt3dSsm(Package):
 
         f_ssm.write(" F F F F F F F F F F\n")
 
-        f_ssm.write("{:10d}\n".format(self.mxss))
+        f_ssm.write(f"{self.mxss:10d}\n")
 
         # Loop through each stress period and write ssm information
         nper = self.parent.nper
@@ -493,7 +467,7 @@ class Mt3dSsm(Package):
                     incrch = max(incrch, incrchicomp)
                     if incrch == 1:
                         break
-                f_ssm.write("{:10d}\n".format(incrch))
+                f_ssm.write(f"{incrch:10d}\n")
                 if incrch == 1:
                     for t2d in self.crch:
                         u2d = t2d[kper]
@@ -509,7 +483,7 @@ class Mt3dSsm(Package):
                     incevt = max(incevt, incevticomp)
                     if incevt == 1:
                         break
-                f_ssm.write("{:10d}\n".format(incevt))
+                f_ssm.write(f"{incevt:10d}\n")
                 if incevt == 1:
                     for t2d in self.cevt:
                         u2d = t2d[kper]
@@ -569,7 +543,7 @@ class Mt3dSsm(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading ssm package file...\n")
+            print("loading ssm package file...")
 
         # Open file, if necessary
         openfile = not hasattr(f, "read")
@@ -627,16 +601,16 @@ class Mt3dSsm(Package):
         else:
             fnew4 = "F"
         if model.verbose:
-            print("   FWEL {}".format(fwel))
-            print("   FDRN {}".format(fdrn))
-            print("   FRCH {}".format(frch))
-            print("   FEVT {}".format(fevt))
-            print("   FRIV {}".format(friv))
-            print("   FGHB {}".format(fghb))
-            print("   FNEW1 {}".format(fnew1))
-            print("   FNEW2 {}".format(fnew2))
-            print("   FNEW3 {}".format(fnew3))
-            print("   FNEW4 {}".format(fnew4))
+            print(f"   FWEL {fwel}")
+            print(f"   FDRN {fdrn}")
+            print(f"   FRCH {frch}")
+            print(f"   FEVT {fevt}")
+            print(f"   FRIV {friv}")
+            print(f"   FGHB {fghb}")
+            print(f"   FNEW1 {fnew1}")
+            print(f"   FNEW2 {fnew2}")
+            print(f"   FNEW3 {fnew3}")
+            print(f"   FNEW4 {fnew4}")
 
         # Override the logical settings at top of ssm file using the
         # modflowmodel, if it is attached to parent
@@ -659,8 +633,8 @@ class Mt3dSsm(Package):
         except:
             issgout = 0
         if model.verbose:
-            print("   MXSS {}".format(mxss))
-            print("   ISSGOUT {}".format(issgout))
+            print(f"   MXSS {mxss}")
+            print(f"   ISSGOUT {issgout}")
 
         # kwargs needed to construct crch2, crch3, etc. for multispecies
         kwargs = {}
@@ -671,7 +645,7 @@ class Mt3dSsm(Package):
             crch = {0: t2d}
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
-                    name = "crch" + str(icomp)
+                    name = f"crch{icomp}"
                     t2d = 0.0
                     kwargs[name] = {0: t2d}
 
@@ -681,7 +655,7 @@ class Mt3dSsm(Package):
             cevt = {0: t2d}
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
-                    name = "cevt" + str(icomp)
+                    name = f"cevt{icomp}"
                     t2d = 0.0
                     kwargs[name] = {0: t2d}
 
@@ -690,7 +664,7 @@ class Mt3dSsm(Package):
         for iper in range(nper):
 
             if model.verbose:
-                print("   loading ssm for kper {0:5d}".format(iper + 1))
+                print(f"   loading ssm for kper {iper + 1:5d}")
 
             # Item D3: INCRCH
             incrch = -1
@@ -717,9 +691,9 @@ class Mt3dSsm(Package):
                 # Load each multispecies array
                 if ncomp > 1:
                     for icomp in range(2, ncomp + 1):
-                        name = "crch" + str(icomp)
+                        name = f"crch{icomp}"
                         if model.verbose:
-                            print("   loading {}...".format(name))
+                            print(f"   loading {name}...")
                         t = Util2d.load(
                             f,
                             model,
@@ -757,9 +731,9 @@ class Mt3dSsm(Package):
                 # Load each multispecies array
                 if ncomp > 1:
                     for icomp in range(2, ncomp + 1):
-                        name = "cevt" + str(icomp)
+                        name = f"cevt{icomp}"
                         if model.verbose:
-                            print("   loading {}...".format(name))
+                            print(f"   loading {name}...")
                         t = Util2d.load(
                             f,
                             model,
@@ -778,7 +752,7 @@ class Mt3dSsm(Package):
             line = f.readline()
             nss = int(line[0:10])
             if model.verbose:
-                print("   NSS {}".format(nss))
+                print(f"   NSS {nss}")
 
             # Item D8: KSS, ISS, JSS, CSS, ITYPE, (CSSMS(n),n=1,NCOMP)
             if model.verbose:
@@ -830,7 +804,7 @@ class Mt3dSsm(Package):
             stress_period_data=stress_period_data,
             unitnumber=unitnumber,
             filenames=filenames,
-            **kwargs
+            **kwargs,
         )
 
     @staticmethod

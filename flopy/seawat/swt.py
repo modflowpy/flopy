@@ -15,7 +15,7 @@ class SeawatList(Package):
     """
 
     def __init__(self, model, extension="list", listunit=7):
-        Package.__init__(self, model, extension, "LIST", listunit)
+        super().__init__(model, extension, "LIST", listunit)
         return
 
     def __repr__(self):
@@ -140,17 +140,13 @@ class Seawat(BaseModel):
         # the starting external data unit number
         self._next_ext_unit = 3000
         if external_path is not None:
-            assert model_ws == ".", (
-                "ERROR: external cannot be used " + "with model_ws"
-            )
+            assert (
+                model_ws == "."
+            ), "ERROR: external cannot be used with model_ws"
 
             # external_path = os.path.join(model_ws, external_path)
             if os.path.exists(external_path):
-                print(
-                    "Note: external_path "
-                    + str(external_path)
-                    + " already exists"
-                )
+                print(f"Note: external_path {external_path} already exists")
             # assert os.path.exists(external_path),'external_path does not exist'
             else:
                 os.mkdir(external_path)
@@ -328,7 +324,7 @@ class Seawat(BaseModel):
         # open and write header
         fn_path = os.path.join(self.model_ws, self.namefile)
         f_nam = open(fn_path, "w")
-        f_nam.write("{}\n".format(self.heading))
+        f_nam.write(f"{self.heading}\n")
 
         # Write global file entry
         if self.glo is not None:
@@ -350,7 +346,7 @@ class Seawat(BaseModel):
         )
 
         # Write SEAWAT entries and close
-        f_nam.write("{}".format(self.get_name_file_entries()))
+        f_nam.write(str(self.get_name_file_entries()))
 
         if self._mf is not None:
             # write the external files
@@ -362,7 +358,7 @@ class Seawat(BaseModel):
                 tag = "DATA"
                 if b:
                     tag = "DATA(BINARY)"
-                f_nam.write("{0:14s} {1:5d}  {2}\n".format(tag, u, f))
+                f_nam.write(f"{tag:14s} {u:5d}  {f}\n")
 
             # write the output files
             for u, f, b in zip(
@@ -373,11 +369,9 @@ class Seawat(BaseModel):
                 if u == 0:
                     continue
                 if b:
-                    f_nam.write(
-                        "DATA(BINARY)   {0:5d}  ".format(u) + f + " REPLACE\n"
-                    )
+                    f_nam.write(f"DATA(BINARY)   {u:5d}  {f} REPLACE\n")
                 else:
-                    f_nam.write("DATA           {0:5d}  ".format(u) + f + "\n")
+                    f_nam.write(f"DATA           {u:5d}  {f}\n")
 
         if self._mt is not None:
             # write the external files
@@ -389,7 +383,7 @@ class Seawat(BaseModel):
                 tag = "DATA"
                 if b:
                     tag = "DATA(BINARY)"
-                f_nam.write("{0:14s} {1:5d}  {2}\n".format(tag, u, f))
+                f_nam.write(f"{tag:14s} {u:5d}  {f}\n")
 
             # write the output files
             for u, f, b in zip(
@@ -400,11 +394,9 @@ class Seawat(BaseModel):
                 if u == 0:
                     continue
                 if b:
-                    f_nam.write(
-                        "DATA(BINARY)   {0:5d}  ".format(u) + f + " REPLACE\n"
-                    )
+                    f_nam.write(f"DATA(BINARY)   {u:5d}  {f} REPLACE\n")
                 else:
-                    f_nam.write("DATA           {0:5d}  ".format(u) + f + "\n")
+                    f_nam.write(f"DATA           {u:5d}  {f}\n")
 
         # write the external files
         for b, u, f in zip(
@@ -413,7 +405,7 @@ class Seawat(BaseModel):
             tag = "DATA"
             if b:
                 tag = "DATA(BINARY)"
-            f_nam.write("{0:14s} {1:5d}  {2}\n".format(tag, u, f))
+            f_nam.write(f"{tag:14s} {u:5d}  {f}\n")
 
         # write the output files
         for u, f, b in zip(
@@ -422,11 +414,9 @@ class Seawat(BaseModel):
             if u == 0:
                 continue
             if b:
-                f_nam.write(
-                    "DATA(BINARY)   {0:5d}  ".format(u) + f + " REPLACE\n"
-                )
+                f_nam.write(f"DATA(BINARY)   {u:5d}  {f} REPLACE\n")
             else:
-                f_nam.write("DATA           {0:5d}  ".format(u) + f + "\n")
+                f_nam.write(f"DATA           {u:5d}  {f}\n")
 
         f_nam.close()
         return

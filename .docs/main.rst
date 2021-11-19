@@ -6,6 +6,8 @@
 FloPy Documentation
 ===================
 
+**Documentation for version 3.3.5 --- release candidate**
+
 Return to the Github `FloPy <https://github.com/modflowpy/flopy>`_ website where the code resides.
 
 Contents:

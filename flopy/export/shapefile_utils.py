@@ -4,54 +4,17 @@ Module for exporting and importing flopy model attributes
 """
 import copy
 import shutil
-import inspect
 import json
 import numpy as np
 import os
 import warnings
-from collections import OrderedDict
 
 from ..datbase import DataType, DataInterface
-from ..utils import Util3d
+from ..utils import Util3d, import_optional_dependency
+
 
 # web address of spatial reference dot org
 srefhttp = "https://spatialreference.org"
-
-
-def import_shapefile(check_version=True):
-    """Import shapefile module from pyshp.
-
-    Parameters
-    ----------
-    check_version : bool
-        Checks to ensure that pyshp is at least version 2. Default True,
-        which is usually required for Writer (which has a different API), but
-        can be False if only using Reader.
-
-    Returns
-    -------
-    module
-
-    Raises
-    ------
-    ImportError
-        If shapefile module is not found, or major version is less than 2.
-    """
-    try:
-        import shapefile
-    except ImportError:
-        raise ImportError(
-            inspect.getouterframes(inspect.currentframe())[1][3]
-            + ": error importing shapefile; try pip install pyshp"
-        )
-    if check_version:
-        if int(shapefile.__version__.split(".")[0]) < 2:
-            raise ImportError(
-                inspect.getouterframes(inspect.currentframe())[1][3]
-                + ": shapefile version 2 or later required; try "
-                "pip install --upgrade pyshp"
-            )
-    return shapefile
 
 
 def write_gridlines_shapefile(filename, mg):
@@ -70,7 +33,7 @@ def write_gridlines_shapefile(filename, mg):
     None
 
     """
-    shapefile = import_shapefile()
+    shapefile = import_optional_dependency("shapefile")
     wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
     wr.field("number", "N", 18, 0)
     if mg.__class__.__name__ == "SpatialReference":
@@ -121,7 +84,7 @@ def write_grid_shapefile(
     None
 
     """
-    shapefile = import_shapefile()
+    shapefile = import_optional_dependency("shapefile")
     w = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
     w.autoBalance = 1
 
@@ -144,7 +107,7 @@ def write_grid_shapefile(
     elif mg.grid_type == "unstructured":
         verts = [mg.get_cell_vertices(cellid) for cellid in range(mg.nnodes)]
     else:
-        raise Exception("Grid type {} not supported.".format(mg.grid_type))
+        raise Exception(f"Grid type {mg.grid_type} not supported.")
 
     # set up the attribute fields and arrays of attributes
     if mg.grid_type == "structured":
@@ -180,15 +143,35 @@ def write_grid_shapefile(
         names = enforce_10ch_limit(names)
 
     elif mg.grid_type == "unstructured":
-        names = ["node"] + list(array_dict.keys())
-        dtypes = [("node", np.dtype("int"))] + [
-            (enforce_10ch_limit([name])[0], array_dict[name].dtype)
-            for name in names[1:]
-        ]
-        node = list(range(1, mg.nnodes + 1))
-        at = np.vstack(
-            [node] + [array_dict[name].ravel() for name in names[1:]]
-        ).transpose()
+        if mg.nlay is None:
+            names = ["node"] + list(array_dict.keys())
+            dtypes = [("node", np.dtype("int"))] + [
+                (enforce_10ch_limit([name])[0], array_dict[name].dtype)
+                for name in names[1:]
+            ]
+            node = list(range(1, mg.nnodes + 1))
+            at = np.vstack(
+                [node] + [array_dict[name].ravel() for name in names[1:]]
+            ).transpose()
+        else:
+            names = ["node", "layer"] + list(array_dict.keys())
+            dtypes = [
+                ("node", np.dtype("int")),
+                ("layer", np.dtype("int")),
+            ] + [
+                (enforce_10ch_limit([name])[0], array_dict[name].dtype)
+                for name in names[2:]
+            ]
+            node = list(range(1, mg.nnodes + 1))
+            layer = np.zeros(mg.nnodes)
+            for ilay in range(mg.nlay):
+                istart, istop = mg.get_layer_node_range(ilay)
+                layer[istart:istop] = ilay + 1
+            at = np.vstack(
+                [node]
+                + [layer]
+                + [array_dict[name].ravel() for name in names[2:]]
+            ).transpose()
 
         names = enforce_10ch_limit(names)
 
@@ -213,7 +196,7 @@ def write_grid_shapefile(
 
     # close
     w.close()
-    print("wrote {}".format(filename))
+    print(f"wrote {filename}")
     # write the projection file
     write_prj(filename, mg, epsg, prj)
     return
@@ -275,11 +258,6 @@ def model_attributes_to_shapefile(
     else:
         grid = ml.modelgrid
 
-    if grid.grid_type == "USG-Unstructured":
-        raise Exception(
-            "Flopy does not support exporting to shapefile from "
-            "and MODFLOW-USG unstructured grid."
-        )
     horz_shape = grid.get_plottable_layer_shape()
     for pname in package_names:
         pak = ml.get_package(pname)
@@ -310,16 +288,22 @@ def model_attributes_to_shapefile(
                         assert a.array is not None
                     except:
                         print(
-                            "Failed to get data for {} array, {} package".format(
-                                a.name, pak.name[0]
-                            )
+                            "Failed to get data for "
+                            f"{a.name} array, {pak.name[0]} package"
                         )
                         continue
                     if isinstance(a.name, list) and a.name[0] == "thickness":
                         continue
 
                     if a.array.shape == horz_shape:
-                        array_dict[a.name] = a.array
+                        if hasattr(a, "shape"):
+                            if a.shape[1] is None:  # usg unstructured Util3d
+                                # return a flattened array, with a.name[0] (a per-layer list)
+                                array_dict[a.name[0]] = a.array
+                            else:
+                                array_dict[a.name] = a.array
+                        else:
+                            array_dict[a.name] = a.array
                     else:
                         # array is not the same shape as the layer shape
                         for ilay in range(a.array.shape[0]):
@@ -337,7 +321,7 @@ def model_attributes_to_shapefile(
                                 # fix for mf6 case
                                 arr = arr[0]
                             assert arr.shape == horz_shape
-                            name = "{}_{}".format(aname, ilay + 1)
+                            name = f"{aname}_{ilay + 1}"
                             array_dict[name] = arr
                 elif (
                     a.data_type == DataType.transient2d
@@ -347,13 +331,12 @@ def model_attributes_to_shapefile(
                         assert a.array is not None
                     except:
                         print(
-                            "Failed to get data for {} array, {} package".format(
-                                a.name, pak.name[0]
-                            )
+                            "Failed to get data for "
+                            f"{a.name} array, {pak.name[0]} package"
                         )
                         continue
                     for kper in range(a.array.shape[0]):
-                        name = "{}{}".format(shape_attr_name(a.name), kper + 1)
+                        name = f"{shape_attr_name(a.name)}{kper + 1}"
                         arr = a.array[kper][0]
                         assert arr.shape == horz_shape
                         array_dict[name] = arr
@@ -368,7 +351,7 @@ def model_attributes_to_shapefile(
                         for kper in range(array.shape[0]):
                             for k in range(array.shape[1]):
                                 n = shape_attr_name(name, length=4)
-                                aname = "{}{}{}".format(n, k + 1, kper + 1)
+                                aname = f"{n}{k + 1}{kper + 1}"
                                 arr = array[kper][k]
                                 assert arr.shape == horz_shape
                                 if np.all(np.isnan(arr)):
@@ -382,9 +365,8 @@ def model_attributes_to_shapefile(
                         ):
                             for ilay in range(a.model.modelgrid.nlay):
                                 u2d = a[ilay]
-                                name = "{}_{}".format(
-                                    shape_attr_name(u2d.name),
-                                    ilay + 1,
+                                name = (
+                                    f"{shape_attr_name(u2d.name)}_{ilay + 1}"
                                 )
                                 arr = u2d.array
                                 assert arr.shape == horz_shape
@@ -514,7 +496,7 @@ def shp2recarray(shpname):
     """
     from ..utils.geospatial_utils import GeoSpatialCollection
 
-    sf = import_shapefile(check_version=False)
+    sf = import_optional_dependency("shapefile")
 
     sfobj = sf.Reader(shpname)
     dtype = [
@@ -538,7 +520,7 @@ def recarray2shp(
     mg=None,
     epsg=None,
     prj=None,
-    **kwargs
+    **kwargs,
 ):
     """
     Write a numpy record array to a shapefile, using a corresponding
@@ -593,7 +575,7 @@ def recarray2shp(
             continue
 
     # set up for pyshp 2
-    shapefile = import_shapefile()
+    shapefile = import_optional_dependency("shapefile")
     w = shapefile.Writer(shpname, shapeType=geomtype)
     w.autoBalance = 1
 
@@ -625,7 +607,7 @@ def recarray2shp(
 
     w.close()
     write_prj(shpname, mg, epsg, prj)
-    print("wrote {}".format(shpname))
+    print(f"wrote {shpname}")
     return
 
 
@@ -850,7 +832,7 @@ class CRS:
 
     def _getgcsparam(self, txt):
         nvalues = 3 if txt.lower() == "spheroid" else 2
-        tmp = self._gettxt('{}["'.format(txt), "]")
+        tmp = self._gettxt(f'{txt}["', "]")
         if tmp is not None:
             tmp = tmp.replace('"', "").split(",")
             name = tmp[0:1]
@@ -916,29 +898,30 @@ class CRS:
         """
         from flopy.utils.flopy_io import get_url_text
 
-        epsg_categories = ["epsg", "esri"]
+        epsg_categories = (
+            "epsg",
+            "esri",
+        )
+        urls = []
         for cat in epsg_categories:
-            url = "{}/ref/".format(srefhttp) + "{}/{}/{}/".format(
-                cat, epsg, text
-            )
+            url = f"{srefhttp}/ref/{cat}/{epsg}/{text}/"
+            urls.append(url)
             result = get_url_text(url)
             if result is not None:
                 break
         if result is not None:
             return result.replace("\n", "")
         elif result is None and text != "epsg":
-            for cat in epsg_categories:
-                error_msg = (
-                    "No internet connection or "
-                    + "epsg code {} ".format(epsg)
-                    + "not found at {}/ref/".format(srefhttp)
-                    + "{}/{}/{}".format(cat, epsg, text)
-                )
-                print(error_msg)
+            error_msg = (
+                f"No internet connection or epsg code {epsg} not found at:\n"
+            )
+            for idx, url in enumerate(urls):
+                error_msg += f"  {idx + 1:>2d}: {url}\n"
+            print(error_msg)
         # epsg code not listed on spatialreference.org
         # may still work with pyproj
         elif text == "epsg":
-            return "epsg:{}".format(epsg)
+            return f"epsg:{epsg}"
 
     @staticmethod
     def getproj4(epsg):
@@ -969,12 +952,9 @@ class EpsgReference:
     """
 
     def __init__(self):
-        try:
-            from appdirs import user_data_dir
-        except ImportError:
-            user_data_dir = None
-        if user_data_dir:
-            datadir = user_data_dir("flopy")
+        appdirs = import_optional_dependency("appdirs", errors="silent")
+        if appdirs is not None:
+            datadir = appdirs.user_data_dir("flopy")
         else:
             # if appdirs is not installed, use user's home directory
             datadir = os.path.join(os.path.expanduser("~"), ".flopy")
@@ -987,10 +967,10 @@ class EpsgReference:
         """
         returns dict with EPSG code integer key, and WKT CRS text
         """
-        data = OrderedDict()
+        data = {}
         if os.path.exists(self.location):
             with open(self.location, "r") as f:
-                loaded_data = json.load(f, object_pairs_hook=OrderedDict)
+                loaded_data = json.load(f)
             # convert JSON key from str to EPSG integer
             for key, value in loaded_data.items():
                 try:
@@ -1007,10 +987,10 @@ class EpsgReference:
     def reset(self, verbose=True):
         if os.path.exists(self.location):
             if verbose:
-                print("Resetting {}".format(self.location))
+                print(f"Resetting {self.location}")
             os.remove(self.location)
         elif verbose:
-            print("{} does not exist, no reset required".format(self.location))
+            print(f"{self.location} does not exist, no reset required")
 
     def add(self, epsg, prj):
         """
@@ -1041,4 +1021,4 @@ class EpsgReference:
         ep = EpsgReference()
         prj = ep.to_dict()
         for k, v in prj.items():
-            print("{}:\n{}\n".format(k, v))
+            print(f"{k}:\n{v}\n")

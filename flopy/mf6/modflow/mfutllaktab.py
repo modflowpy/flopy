@@ -1,13 +1,13 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 19, 2021 03:08:37 UTC
+# FILE created on October 29, 2021 21:09:57 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
 
 class ModflowUtllaktab(mfpackage.MFPackage):
     """
-    ModflowUtllaktab defines a tab package within a utl model.
+    ModflowUtllaktab defines a laktab package within a utl model.
 
     Parameters
     ----------
@@ -47,10 +47,10 @@ class ModflowUtllaktab(mfpackage.MFPackage):
 
     """
 
-    table = ListTemplateGenerator(("tab", "table", "table"))
-    package_abbr = "utltab"
-    _package_type = "tab"
-    dfn_file_name = "utl-lak-tab.dfn"
+    table = ListTemplateGenerator(("laktab", "table", "table"))
+    package_abbr = "utllaktab"
+    _package_type = "laktab"
+    dfn_file_name = "utl-laktab.dfn"
 
     dfn = [
         [
@@ -125,7 +125,7 @@ class ModflowUtllaktab(mfpackage.MFPackage):
         parent_file=None,
     ):
         super().__init__(
-            model, "tab", filename, pname, loading_package, parent_file
+            model, "laktab", filename, pname, loading_package, parent_file
         )
 
         # set up variables
@@ -133,3 +133,49 @@ class ModflowUtllaktab(mfpackage.MFPackage):
         self.ncol = self.build_mfdata("ncol", ncol)
         self.table = self.build_mfdata("table", table)
         self._init_complete = True
+
+
+class UtllaktabPackages(mfpackage.MFChildPackages):
+    """
+    UtllaktabPackages is a container class for the ModflowUtllaktab class.
+
+    Methods
+    ----------
+    initialize
+        Initializes a new ModflowUtllaktab package removing any sibling child
+        packages attached to the same parent package. See ModflowUtllaktab init
+        documentation for definition of parameters.
+    append_package
+        Adds a new ModflowUtllaktab package to the container. See ModflowUtllaktab
+        init documentation for definition of parameters.
+    """
+
+    package_abbr = "utllaktabpackages"
+
+    def initialize(
+        self, nrow=None, ncol=None, table=None, filename=None, pname=None
+    ):
+        new_package = ModflowUtllaktab(
+            self._model,
+            nrow=nrow,
+            ncol=ncol,
+            table=table,
+            filename=filename,
+            pname=pname,
+            parent_file=self._cpparent,
+        )
+        self._init_package(new_package, filename)
+
+    def append_package(
+        self, nrow=None, ncol=None, table=None, filename=None, pname=None
+    ):
+        new_package = ModflowUtllaktab(
+            self._model,
+            nrow=nrow,
+            ncol=ncol,
+            table=table,
+            filename=filename,
+            pname=pname,
+            parent_file=self._cpparent,
+        )
+        self._append_package(new_package, filename)

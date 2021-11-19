@@ -1,7 +1,8 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.spatial import Voronoi
 from .cvfdutil import get_disv_gridprops
+from .geometry import point_in_polygon
+
+from .utl_import import import_optional_dependency
 
 
 def get_sorted_vertices(icell_vertices, vertices):
@@ -29,13 +30,10 @@ def get_valid_faces(vor):
 
 # todo: send this to point in polygon method defined in Rasters
 def point_in_cell(point, vertices):
-    try:
-        from shapely.geometry import Point, Polygon
-    except:
-        raise ModuleNotFoundError("shapely is not installed")
+    shapely_geo = import_optional_dependency("shapely.geometry")
 
-    p = Point(point)
-    poly = Polygon(vertices)
+    p = shapely_geo.Point(point)
+    poly = shapely_geo.Polygon(vertices)
     if p.intersects(poly):
         return True
     else:
@@ -58,77 +56,136 @@ def sort_vertices(vlist):
     return [vlist[i] for angl, i in tlist]
 
 
-def get_voronoi_grid(points, **kwargs):
+def tri2vor(tri, **kwargs):
+    """
+    This is the workhorse for the VoronoiGrid class for creating a voronoi
+    grid from a constructed and built flopy Triangle grid.
 
-    # Create the voronoi object
-    # Note for a circular region, may need to set qhull_options='Qz'
-    vor = Voronoi(points, **kwargs)
+    Parameters
+    ----------
+    tri : flopy.utils.Triangle
+    Flopy triangle object is used to construct the complementary voronoi
+    diagram.
 
-    # Go through and replace -1 values in ridge_vertices
-    # with a new point on the boundary
-    new_ridge_vertices = []
-    new_vor_vertices = [(x, y) for x, y in vor.vertices]
+    Returns
+    -------
+    verts, iverts : ndarray, list of lists
 
-    for pointidx, simplex in zip(vor.ridge_points, vor.ridge_vertices):
-        simplex = np.asarray(simplex)
-        if np.all(simplex >= 0):
-            new_ridge_vertices.append(list(simplex))
-        else:
-            # i = simplex[simplex >= 0][0]  # finite end Voronoi vertex
-            i1 = simplex[0]
-            i2 = simplex[1]
+    """
+    import_optional_dependency(
+        "scipy.spatial",
+        error_message="Voronoi requires SciPy.",
+    )
+    from scipy.spatial import Voronoi
 
-            midpoint = vor.points[pointidx].mean(axis=0)
-            x, y = midpoint
-            new_vor_vertices.append((x, y))
-            ipt = len(new_vor_vertices) - 1
-            if i1 > 0:
-                new_pair = [i1, ipt]
-            else:
-                new_pair = [ipt, i2]
-            new_ridge_vertices.append(new_pair)
+    # assign local variables
+    tri_verts = tri.verts
+    tri_iverts = tri.iverts
+    tri_edge = tri.edge
 
-    # create iverts list
-    iverts = []
-    for n in range(vor.points.shape[0]):
-        iverts.append([])
-    for pointidx, simplex in zip(vor.ridge_points, new_ridge_vertices):
-        for ipt in simplex:
-            if ipt not in iverts[pointidx[0]]:
-                iverts[pointidx[0]].append(ipt)
-            if ipt not in iverts[pointidx[1]]:
-                iverts[pointidx[1]].append(ipt)
+    # construct the voronoi grid
+    vor = Voronoi(tri_verts, **kwargs)
+    ridge_points = vor.ridge_points
+    ridge_vertices = vor.ridge_vertices
 
-    # If a cell doesn't have any valid faces, then it must be a corner,
-    # so add the cell point itself as a vertex
+    npoints = tri_verts.shape[0]
+    ntriangles = len(tri_iverts)
+    nedges = tri_edge.shape[0]
+
+    # test the voronoi vertices, and mark those outside of the domain
+    nvertices = vor.vertices.shape[0]
+    xc = vor.vertices[:, 0].reshape((nvertices, 1))
+    yc = vor.vertices[:, 1].reshape((nvertices, 1))
+    domain_polygon = [(x, y) for x, y in tri._polygons[0]]
+    vor_vert_indomain = point_in_polygon(xc, yc, domain_polygon)
+    vor_vert_indomain = vor_vert_indomain.flatten()
+    nholes = len(tri._holes)
+    if nholes > 0:
+        for ihole in range(nholes):
+            ipolygon = ihole + 1
+            polygon = [(x, y) for x, y in tri._polygons[ipolygon]]
+            vor_vert_notindomain = point_in_polygon(xc, yc, polygon)
+            vor_vert_notindomain = vor_vert_notindomain.flatten()
+            idx = np.where(vor_vert_notindomain == True)
+            vor_vert_indomain[idx] = False
+
+    idx_vertindex = -1 * np.ones((nvertices), int)
+    idx_filtered = np.where(vor_vert_indomain == True)
+    nvalid_vertices = len(idx_filtered[0])
+    # renumber valid vertices consecutively
+    idx_vertindex[idx_filtered] = np.arange(nvalid_vertices)
+
+    vor_verts = [(x, y) for x, y in vor.vertices[idx_filtered]]
+    vor_iverts = [[] for i in range(npoints)]
+
+    # step 1 -- go through voronoi ridge vertices
+    # and add valid vertices to vor_verts and to the
+    # vor_iverts incidence list
     if True:
-        nvalid_faces = get_valid_faces(vor)
-        for n in np.where(nvalid_faces == 0)[0]:
-            x, y = points[n]
-            new_vor_vertices.append((x, y))
-            iv = len(new_vor_vertices) - 1
-            iverts[n].append(iv)
+        for ips, irvs in zip(ridge_points, ridge_vertices):
+            ip0, ip1 = ips
+            irv0, irv1 = irvs
+            if irv0 >= 0:
+                point_in_domain = vor_vert_indomain[irv0]
+                if point_in_domain:
+                    ivert = idx_vertindex[irv0]
+                    if ivert not in vor_iverts[ip0]:
+                        vor_iverts[ip0].append(ivert)
+                    if ivert not in vor_iverts[ip1]:
+                        vor_iverts[ip1].append(ivert)
+            if irv1 >= 0:
+                point_in_domain = vor_vert_indomain[irv1]
+                if point_in_domain:
+                    ivert = idx_vertindex[irv1]
+                    if ivert not in vor_iverts[ip0]:
+                        vor_iverts[ip0].append(ivert)
+                    if ivert not in vor_iverts[ip1]:
+                        vor_iverts[ip1].append(ivert)
 
-    # if cell center is not inside polygon, then add cell center as vertex
+    # step 2 -- along the edge, add points
     if True:
-        for n in range(points.shape[0]):
-            poly = []
-            ivs = iverts[n]
-            for iv in ivs:
-                x, y = new_vor_vertices[iv]
-                poly.append((x, y))
-            poly = sort_vertices(poly)
-            xc, yc = points[n]
-            if not point_in_cell((xc, yc), poly):
-                new_vor_vertices.append((xc, yc))
-                iv = len(new_vor_vertices) - 1
-                iverts[n].append(iv)
+        # Count number of boundary markers that correspond to the outer
+        # polygon domain or to holes.  These segments will be used to add
+        # new vertices for edge cells.
+        nexterior_boundary_markers = len(tri._polygons[0])
+        for ihole in range(nholes):
+            polygon = tri._polygons[ihole + 1]
+            nexterior_boundary_markers += len(polygon)
+        idx = (tri_edge["boundary_marker"] > 0) & (
+            tri_edge["boundary_marker"] <= nexterior_boundary_markers
+        )
+        inewvert = len(vor_verts)
+        for _, ip0, ip1, _ in tri_edge[idx]:
+            midpoint = tri_verts[[ip0, ip1]].mean(axis=0)
+            px, py = midpoint
+            vor_verts.append((px, py))
 
-    verts = np.array(new_vor_vertices)
-    for icell in range(len(iverts)):
-        iverts[icell] = get_sorted_vertices(iverts[icell], verts)
+            # add midpoint to each voronoi cell
+            vor_iverts[ip0].append(inewvert)
+            vor_iverts[ip1].append(inewvert)
+            inewvert += 1
 
-    return verts, iverts
+            # add ip0 triangle vertex to voronoi cell
+            px, py = tri_verts[ip0]
+            vor_verts.append((px, py))
+            vor_iverts[ip0].append(inewvert)
+            inewvert += 1
+
+            # add ip1 triangle vertex to voronoi cell
+            px, py = tri_verts[ip1]
+            vor_verts.append((px, py))
+            vor_iverts[ip1].append(inewvert)
+            inewvert += 1
+
+    # Last step -- sort vertices in correct order
+    if True:
+        vor_verts = np.array(vor_verts)
+        for icell in range(len(vor_iverts)):
+            vor_iverts[icell] = get_sorted_vertices(
+                vor_iverts[icell], vor_verts
+            )
+
+    return vor_verts, vor_iverts
 
 
 class VoronoiGrid:
@@ -140,9 +197,8 @@ class VoronoiGrid:
 
     Parameters
     ----------
-    points : ndarray
-        Two dimensional array of points with x in column 0 and y in column 1.
-        These points will become cell centers in the voronoi grid.
+    input : flopy.utils.Triangle
+        Constructred and built flopy Triangle object.
     kwargs : dict
         List of additional keyword arguments that will be passed through to
         scipy.spatial.Voronoi.  For circular shaped model grids, the
@@ -150,18 +206,25 @@ class VoronoiGrid:
 
     Notes
     -----
-    The points passed into this class are marked as the cell center locations.
-    Along the edges, these cell centers do not correspond to the centroid
-    location of the cell polygon.  Instead, the cell centers are along the
-    edge.
-
-    This class does not yet support holes, which are supported by the Triangle
-    class.  This is a feature that could be added in the future.
+    When using VoronoiGrid, the construction order used for the Triangle
+    grid matters.  The first add_polygon() call must be to add the model
+    domain.  Then add_polygon() must be used to add any holes.  Lastly,
+    add_polygon() can be used to add regions.  This VoronoiGrid class uses
+    this order to find model edges that require further work for defining and
+    closing edge model cells.
 
     """
 
-    def __init__(self, points, **kwargs):
-        verts, iverts = get_voronoi_grid(points, **kwargs)
+    def __init__(self, tri, **kwargs):
+        from .triangle import Triangle
+
+        if isinstance(tri, Triangle):
+            points = tri.verts
+            verts, iverts = tri2vor(tri, **kwargs)
+        else:
+            raise TypeError(
+                "The tri argument must be of type flopy.utils.Triangle"
+            )
         self.points = points
         self.verts = verts
         self.iverts = iverts
@@ -282,11 +345,11 @@ class VoronoiGrid:
             axes that contains the voronoi model grid
 
         """
+        import matplotlib.pyplot as plt
+
         if ax is None:
             ax = plt.subplot(1, 1, 1, aspect="equal")
         pc = self.get_patch_collection(ax, **kwargs)
         if plot_title:
-            ax.set_title(
-                "ncells: {}; nverts: {}".format(self.ncpl, self.nverts)
-            )
+            ax.set_title(f"ncells: {self.ncpl}; nverts: {self.nverts}")
         return ax

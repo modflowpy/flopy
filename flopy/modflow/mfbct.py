@@ -42,11 +42,8 @@ class ModflowBct(Package):
         if unitnumber is None:
             unitnumber = ModflowBct._defaultunit()
 
-        # Call ancestor's init to set self.parent, extension, name and unit
-        # number
-        Package.__init__(
-            self, model, extension, ModflowBct._ftype(), unitnumber
-        )
+        # call base package constructor
+        super().__init__(model, extension, self._ftype(), unitnumber)
 
         self.url = "bct.htm"
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
@@ -139,7 +136,7 @@ class ModflowBct(Package):
         #
         # arad
         if self.idisp != 0:
-            f_bct.write("open/close arad.dat 1.0 (free) -1" + "\n")
+            f_bct.write("open/close arad.dat 1.0 (free) -1\n")
         #
         # dlh
         if self.idisp == 1:

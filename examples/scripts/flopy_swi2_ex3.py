@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import os
 import sys
 
@@ -44,7 +42,7 @@ def MergeData(ndim, zdata, tb):
 def LegBar(ax, x0, y0, t0, dx, dy, dt, cc):
     for c in cc:
         ax.plot([x0, x0 + dx], [y0, y0], color=c, linewidth=4)
-        ctxt = "{0:=3d} years".format(t0)
+        ctxt = f"{t0:=3d} years"
         ax.text(x0 + 2.0 * dx, y0 + dy / 2.0, ctxt, size=5)
         y0 += dy
         t0 += dt
@@ -76,7 +74,7 @@ def run():
             if os.path.isdir(fpth):
                 continue
             if ".py" != os.path.splitext(f)[1].lower():
-                print("  removing...{}".format(os.path.basename(f)))
+                print(f"  removing...{os.path.basename(f)}")
                 try:
                     os.remove(fpth)
                 except:
@@ -148,11 +146,11 @@ def run():
     # run the model
     m = ml.run_model(silent=True)
 
-    headfile = os.path.join(workspace, "{}.hds".format(modelname))
+    headfile = os.path.join(workspace, f"{modelname}.hds")
     hdobj = flopy.utils.HeadFile(headfile)
     head = hdobj.get_data(totim=3.65000e05)
 
-    zetafile = os.path.join(workspace, "{}.zta".format(modelname))
+    zetafile = os.path.join(workspace, f"{modelname}.zta")
     zobj = flopy.utils.CellBudgetFile(zetafile)
     zkstpkper = zobj.get_kstpkper()
     zeta = []
@@ -310,7 +308,7 @@ def run():
     ax.set_ylabel("Elevation, in meters")
     ax.set_xlim(-250.0, 2500.0)
 
-    outfig = os.path.join(workspace, "Figure08_swi2ex3.{0}".format(fext))
+    outfig = os.path.join(workspace, f"Figure08_swi2ex3.{fext}")
     fig.savefig(outfig, dpi=300)
     print("created...", outfig)
 

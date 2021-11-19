@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 19, 2021 03:08:37 UTC
+# FILE created on October 29, 2021 21:09:57 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator, ArrayTemplateGenerator
 
@@ -21,6 +21,13 @@ class ModflowGwtist(mfpackage.MFPackage):
         * save_flows (boolean) keyword to indicate that IST flow terms will be
           written to the file specified with "BUDGET FILEOUT" in Output
           Control.
+    budget_filerecord : [budgetfile]
+        * budgetfile (string) name of the binary output file to write budget
+          information.
+    budgetcsv_filerecord : [budgetcsvfile]
+        * budgetcsvfile (string) name of the comma-separated value (CSV) output
+          file to write budget summary information. A budget summary record
+          will be written to this file for each time step of the simulation.
     sorption : boolean
         * sorption (boolean) is a text keyword to indicate that sorption will
           be activated. Use of this keyword requires that BULK_DENSITY and
@@ -29,12 +36,12 @@ class ModflowGwtist(mfpackage.MFPackage):
     first_order_decay : boolean
         * first_order_decay (boolean) is a text keyword to indicate that first-
           order decay will occur. Use of this keyword requires that DECAY and
-          DECAY_SORBED (if sorbtion is active) are specified in the GRIDDATA
+          DECAY_SORBED (if sorption is active) are specified in the GRIDDATA
           block.
     zero_order_decay : boolean
         * zero_order_decay (boolean) is a text keyword to indicate that zero-
           order decay will occur. Use of this keyword requires that DECAY and
-          DECAY_SORBED (if sorbtion is active) are specified in the GRIDDATA
+          DECAY_SORBED (if sorption is active) are specified in the GRIDDATA
           block.
     cim_filerecord : [cimfile]
         * cimfile (string) name of the output file to write immobile
@@ -44,6 +51,9 @@ class ModflowGwtist(mfpackage.MFPackage):
           concentrations will be written to this file at the same interval as
           mobile domain concentrations are saved, as specified in the GWT Model
           Output Control file.
+    fileout : boolean
+        * fileout (boolean) keyword to specify that an output filename is
+          expected next.
     cimprintrecord : [columns, width, digits, format]
         * columns (integer) number of columns for writing data.
         * width (integer) width for writing each number.
@@ -64,7 +74,7 @@ class ModflowGwtist(mfpackage.MFPackage):
           for the aqueous phase of the immobile domain. A negative value
           indicates solute production. The dimensions of decay for first-order
           decay is one over time. The dimensions of decay for zero-order decay
-          is mass per length cubed per time. decay will have no affect on
+          is mass per length cubed per time. Decay will have no effect on
           simulation results unless either first- or zero-order decay is
           specified in the options block.
     decay_sorbed : [double]
@@ -73,20 +83,20 @@ class ModflowGwtist(mfpackage.MFPackage):
           indicates solute production. The dimensions of decay_sorbed for
           first-order decay is one over time. The dimensions of decay_sorbed
           for zero-order decay is mass of solute per mass of aquifer per time.
-          If decay_sorbed is not specified and both decay and sorbtion are
+          If decay_sorbed is not specified and both decay and sorption are
           active, then the program will terminate with an error. decay_sorbed
-          will have no affect on simulation results unless the SORPTION keyword
+          will have no effect on simulation results unless the SORPTION keyword
           and either first- or zero-order decay are specified in the options
           block.
     bulk_density : [double]
         * bulk_density (double) is the bulk density of the aquifer in mass per
-          length cubed. bulk_density will have no affect on simulation results
-          unless the SORBTION keyword is specified in the options block.
+          length cubed. bulk_density will have no effect on simulation results
+          unless the SORPTION keyword is specified in the options block.
     distcoef : [double]
         * distcoef (double) is the distribution coefficient for the
           equilibrium-controlled linear sorption isotherm in dimensions of
-          length cubed per mass. distcoef will have no affect on simulation
-          results unless the SORBTION keyword is specified in the options
+          length cubed per mass. distcoef will have no effect on simulation
+          results unless the SORPTION keyword is specified in the options
           block.
     filename : String
         File name for this package.
@@ -99,6 +109,12 @@ class ModflowGwtist(mfpackage.MFPackage):
 
     """
 
+    budget_filerecord = ListTemplateGenerator(
+        ("gwt6", "ist", "options", "budget_filerecord")
+    )
+    budgetcsv_filerecord = ListTemplateGenerator(
+        ("gwt6", "ist", "options", "budgetcsv_filerecord")
+    )
     cim_filerecord = ListTemplateGenerator(
         ("gwt6", "ist", "options", "cim_filerecord")
     )
@@ -127,6 +143,76 @@ class ModflowGwtist(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+        ],
+        [
+            "block options",
+            "name budget_filerecord",
+            "type record budget fileout budgetfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budget",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name fileout",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsv_filerecord",
+            "type record budgetcsv fileout budgetcsvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budgetcsv",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsvfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
         ],
         [
             "block options",
@@ -323,10 +409,13 @@ class ModflowGwtist(mfpackage.MFPackage):
         model,
         loading_package=False,
         save_flows=None,
+        budget_filerecord=None,
+        budgetcsv_filerecord=None,
         sorption=None,
         first_order_decay=None,
         zero_order_decay=None,
         cim_filerecord=None,
+        fileout=None,
         cimprintrecord=None,
         cim=None,
         thetaim=None,
@@ -345,6 +434,12 @@ class ModflowGwtist(mfpackage.MFPackage):
 
         # set up variables
         self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self.budget_filerecord = self.build_mfdata(
+            "budget_filerecord", budget_filerecord
+        )
+        self.budgetcsv_filerecord = self.build_mfdata(
+            "budgetcsv_filerecord", budgetcsv_filerecord
+        )
         self.sorption = self.build_mfdata("sorption", sorption)
         self.first_order_decay = self.build_mfdata(
             "first_order_decay", first_order_decay
@@ -355,6 +450,7 @@ class ModflowGwtist(mfpackage.MFPackage):
         self.cim_filerecord = self.build_mfdata(
             "cim_filerecord", cim_filerecord
         )
+        self.fileout = self.build_mfdata("fileout", fileout)
         self.cimprintrecord = self.build_mfdata(
             "cimprintrecord", cimprintrecord
         )

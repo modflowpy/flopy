@@ -1,22 +1,25 @@
+import pytest
 import os
 import numpy as np
 import flopy
+from ci_framework import base_test_dir, FlopyTestSetup
 
-model_ws = os.path.join("..", "examples", "data", "mf2005_test")
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
+
+ex_pth = os.path.join("..", "examples", "data", "mf2005_test")
 testmodels = [
-    os.path.join(model_ws, f)
-    for f in os.listdir(model_ws)
-    if f.endswith(".nam")
+    os.path.join(ex_pth, f) for f in os.listdir(ex_pth) if f.endswith(".nam")
 ]
 
-mpth = os.path.join("temp", "t024")
 
-
-def test_checker_on_load():
+@pytest.mark.parametrize(
+    "namfile",
+    testmodels,
+)
+def test_checker_on_load(namfile):
     # load all of the models in the mf2005_test folder
     # model level checks are performed by default on load()
-    for mfnam in testmodels:
-        yield checker_on_load, mfnam
+    checker_on_load(namfile)
 
 
 def checker_on_load(mfnam):
@@ -29,7 +32,10 @@ def checker_on_load(mfnam):
 
 
 def test_bcs_check():
-    mf = flopy.modflow.Modflow(version="mf2005", model_ws=mpth)
+    model_ws = f"{base_dir}_test_bcs_check"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
+    mf = flopy.modflow.Modflow(version="mf2005", model_ws=model_ws)
 
     # test check for isolated cells
     dis = flopy.modflow.ModflowDis(
@@ -73,7 +79,13 @@ def test_bcs_check():
 
 def test_properties_check():
     # test that storage values ignored for steady state
-    mf = flopy.modflow.Modflow(version="mf2005", model_ws=mpth)
+    model_ws = f"{base_dir}_test_properties_check"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
+    mf = flopy.modflow.Modflow(
+        version="mf2005",
+        model_ws=model_ws,
+    )
     dis = flopy.modflow.ModflowDis(
         mf,
         nrow=2,
@@ -180,7 +192,7 @@ def test_oc_check():
 
 
 if __name__ == "__main__":
-    print("numpy version: {}".format(np.__version__))
+    print(f"numpy version: {np.__version__}")
     for mfnam in testmodels:
         checker_on_load(mfnam)
     test_bcs_check()

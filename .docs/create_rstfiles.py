@@ -1,12 +1,14 @@
 import os
 
 
-def create_section(f, title, filenames):
-    title = "{} Tutorials".format(title.upper())
-    line = "{}\n".format(title) + len(title) * "-" + "\n\n"
+def create_section(f, title, filenames, upper_case=False):
+    if upper_case:
+        title = title.upper()
+    title = f"{title} Tutorials"
+    line = f"{title}\n" + len(title) * "-" + "\n\n"
     line += "Contents:\n\n.. toctree::\n   :maxdepth: 2\n\n"
     for filename in filenames:
-        line += "   _notebooks/{}\n".format(filename)
+        line += f"   _notebooks/{filename}\n"
     line += "\n\n"
     f.write(line)
 
@@ -32,6 +34,16 @@ def create_tutorial_rst():
         create_section(f, "MODFLOW 6", tutorial_dict[key])
         keys.remove(key)
 
+    key = "modflow6data"
+    if key in keys:
+        create_section(f, "MODFLOW 6 FloPy Use", tutorial_dict[key])
+        keys.remove(key)
+
+    key = "modflow6output"
+    if key in keys:
+        create_section(f, "MODFLOW 6 Output", tutorial_dict[key])
+        keys.remove(key)
+
     key = "modflow"
     if key in keys:
         create_section(f, "MODFLOW", tutorial_dict[key])
@@ -39,7 +51,7 @@ def create_tutorial_rst():
 
     # create the remaining tutorial sections
     for key in keys:
-        create_section(f, key, tutorial_dict[key])
+        create_section(f, key, tutorial_dict[key], upper_case=True)
 
     # close the file
     f.close()

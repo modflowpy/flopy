@@ -1,8 +1,6 @@
-import glob
-import importlib
+""" Base classes for Modflow 6 """
 import inspect, sys, traceback
 import os, copy
-from collections import OrderedDict
 from collections.abc import Iterable
 from shutil import copyfile
 from enum import Enum
@@ -14,20 +12,12 @@ class MFInvalidTransientBlockHeaderException(Exception):
     Exception occurs when parsing a transient block header
     """
 
-    def __init__(self, error):
-        Exception.__init__(
-            self, "MFInvalidTransientBlockHeaderException: {}".format(error)
-        )
-
 
 class ReadAsArraysException(Exception):
     """
     Exception occurs when loading ReadAsArrays package as non-ReadAsArrays
     package.
     """
-
-    def __init__(self, error):
-        Exception.__init__(self, "ReadAsArraysException: {}".format(error))
 
 
 # external exceptions for users
@@ -38,9 +28,7 @@ class FlopyException(Exception):
 
     def __init__(self, error, location=""):
         self.message = error
-        Exception.__init__(
-            self, "FlopyException: {} ({})".format(error, location)
-        )
+        super().__init__(f"{error} ({location})")
 
 
 class StructException(Exception):
@@ -50,9 +38,7 @@ class StructException(Exception):
 
     def __init__(self, error, location):
         self.message = error
-        Exception.__init__(
-            self, "StructException: {} ({})".format(error, location)
-        )
+        super().__init__(f"{error} ({location})")
 
 
 class MFDataException(Exception):
@@ -137,41 +123,21 @@ class MFDataException(Exception):
             self.org_type, self.org_value, self.org_traceback
         )
         # build error string
-        error_message_0 = "An error occurred in "
+        error_message = "An error occurred in "
         if self.data_element is not None and self.data_element != "":
-            error_message_1 = 'data element "{}"' " ".format(self.data_element)
-        else:
-            error_message_1 = ""
+            error_message += f'data element "{self.data_element}" '
         if self.model is not None and self.model != "":
-            error_message_2 = 'model "{}" '.format(self.model)
-        else:
-            error_message_2 = ""
-        error_message_3 = 'package "{}".'.format(self.package)
-        error_message_4 = (
-            ' The error occurred while {} in the "{}" method'
-            ".".format(self.current_process, self.method_caught_in)
+            error_message += f'model "{self.model}" '
+        error_message += (
+            f'package "{self.package}". The error occurred while '
+            f'{self.current_process} in the "{self.method_caught_in}" method.'
         )
         if len(self.messages) > 0:
-            error_message_5 = "\nAdditional Information:\n"
-            for index, message in enumerate(self.messages):
-                error_message_5 = "{}({}) {}\n".format(
-                    error_message_5, index + 1, message
-                )
-        else:
-            error_message_5 = ""
-        error_message = "{}{}{}{}{}{}".format(
-            error_message_0,
-            error_message_1,
-            error_message_2,
-            error_message_3,
-            error_message_4,
-            error_message_5,
-        )
-        # if self.debug:
-        #    tb_string = ''.join(self.org_tb_string)
-        #    error_message = '{}\nCall Stack\n{}'.format(error_message,
-        #                                                tb_string)
-        Exception.__init__(self, error_message)
+            error_message += "\nAdditional Information:\n"
+            error_message += "\n".join(
+                f"({idx}) {msg}" for (idx, msg) in enumerate(self.messages, 1)
+            )
+        super().__init__(error_message)
 
 
 class VerbosityLevel(Enum):
@@ -225,23 +191,24 @@ class MFFileMgmt:
     Attributes
     ----------
 
-    model_relative_path : OrderedDict
+    model_relative_path : dict
         Dictionary of relative paths to each model folder
 
     """
 
-    def __init__(self, path):
+    def __init__(self, path, mfsim=None):
+        self.simulation = mfsim
         self._sim_path = ""
-        self.set_sim_path(path)
+        self.set_sim_path(path, True)
 
         # keys:fully pathed filenames, vals:FilePath instances
         self.existing_file_dict = {}
         # keys:filenames,vals:instance name
 
-        self.model_relative_path = OrderedDict()
+        self.model_relative_path = {}
 
         self._last_loaded_sim_path = None
-        self._last_loaded_model_relative_path = OrderedDict()
+        self._last_loaded_model_relative_path = {}
 
     def copy_files(self, copy_relative_only=True):
         """Copy files external to updated path.
@@ -292,32 +259,8 @@ class MFFileMgmt:
     def get_updated_path(
         self, external_file_path, model_name, ext_file_action
     ):
-        """Get updated external file path information.  For internal
-        FloPy use, not intended for end user."""
-        external_file_path = self.string_to_file_path(external_file_path)
-        if ext_file_action == ExtFileAction.copy_all:
-            if os.path.isabs(external_file_path):
-                # move file path to local model or simulation path
-                file_name = os.path.split(external_file_path)[1]
-                if model_name:
-                    return os.path.join(
-                        self.get_model_path(model_name), file_name
-                    )
-                else:
-                    return os.path.join(self.get_sim_path(), file_name)
-            else:
-                return external_file_path
-        elif ext_file_action == ExtFileAction.copy_relative_paths:
-            return external_file_path
-        elif ext_file_action == ExtFileAction.copy_none:
-            if os.path.isabs(external_file_path):
-                return external_file_path
-            else:
-                return os.path.join(
-                    self._build_relative_path(model_name), external_file_path
-                )
-        else:
-            return None
+        """For internal FloPy use, not intended for end user."""
+        return external_file_path
 
     def _build_relative_path(self, model_name):
         old_abs_path = self.resolve_path("", model_name, True)
@@ -352,9 +295,9 @@ class MFFileMgmt:
     def _build_file(file_name, num):
         file, ext = os.path.splitext(file_name)
         if ext:
-            return "{}_{}{}".format(file, num, ext)
+            return f"{file}_{num}{ext}"
         else:
-            return "{}_{}".format(file, num)
+            return f"{file}_{num}"
 
     @staticmethod
     def string_to_file_path(fp_string):
@@ -366,9 +309,12 @@ class MFFileMgmt:
             arr_string = new_string.split(delimiter)
             if len(arr_string) > 1:
                 if os.path.isabs(fp_string):
-                    new_string = "{}{}{}".format(
-                        arr_string[0], delimiter, arr_string[1]
-                    )
+                    if not arr_string[0] and not arr_string[1]:
+                        new_string = f"{delimiter}{delimiter}"
+                    else:
+                        new_string = (
+                            f"{arr_string[0]}{delimiter}{arr_string[1]}"
+                        )
                 else:
                     new_string = os.path.join(arr_string[0], arr_string[1])
                 if len(arr_string) > 2:
@@ -434,9 +380,10 @@ class MFFileMgmt:
             new_file_path = MFFilePath(file_path, model_name)
             self.existing_file_dict[file_path] = new_file_path
 
-    def set_sim_path(self, path):
+    def set_sim_path(self, path, internal_use=False):
         """
-        Set the file path to the simulation files
+        Set the file path to the simulation files.  Internal use only,
+        call MFSimulation's set_sim_path method instead.
 
         Parameters
         ----------
@@ -451,7 +398,14 @@ class MFFileMgmt:
         --------
         self.simulation_data.mfdata.set_sim_path('sim_folder')
         """
-
+        if not internal_use:
+            print(
+                "WARNING: MFFileMgt's set_sim_path has been deprecated.  "
+                "Please use MFSimulation's set_sim_path in the future."
+            )
+            if self.simulation is not None:
+                self.simulation.set_sim_path(path)
+                return
         # recalculate paths for everything
         # resolve path type
         path = self.string_to_file_path(path)
@@ -474,23 +428,12 @@ class MFFileMgmt:
         if os.path.isabs(file_path):
             # path is an absolute path
             if move_abs_paths:
-                if model_name is None:
-                    return self.get_sim_path(last_loaded_path)
-                else:
-                    return self.get_model_path(model_name, last_loaded_path)
+                return self.get_sim_path(last_loaded_path)
             else:
                 return file_path
         else:
             # path is a relative path
-            if model_name is None:
-                return os.path.join(
-                    self.get_sim_path(last_loaded_path), file_path
-                )
-            else:
-                return os.path.join(
-                    self.get_model_path(model_name, last_loaded_path),
-                    file_path,
-                )
+            return os.path.join(self.get_sim_path(last_loaded_path), file_path)
 
 
 class PackageContainer:
@@ -515,6 +458,11 @@ class PackageContainer:
 
     """
 
+    modflow_packages = []
+    packages_by_abbr = {}
+    modflow_models = []
+    models_by_type = {}
+
     def __init__(self, simulation_data, name):
         self.type = "PackageContainer"
         self.simulation_data = simulation_data
@@ -525,7 +473,22 @@ class PackageContainer:
         self.package_key_dict = {}
 
     @staticmethod
-    def package_factory(package_type, model_type):
+    def package_list():
+        """Static method that returns the list of available packages.
+        For internal FloPy use only, not intended for end users.
+
+        Returns a list of MFPackage subclasses
+        """
+        # all packages except "group" classes
+        package_list = []
+        for abbr, package in sorted(PackageContainer.packages_by_abbr.items()):
+            # don't store packages "group" classes
+            if not abbr.endswith("packages"):
+                package_list.append(package)
+        return package_list
+
+    @staticmethod
+    def package_factory(package_type: str, model_type: str):
         """Static method that returns the appropriate package type object based
         on the package_type and model_type strings.  For internal FloPy use
         only, not intended for end users.
@@ -542,36 +505,12 @@ class PackageContainer:
             package : MFPackage subclass
 
         """
-        package_abbr = "{}{}".format(model_type, package_type)
-        package_utl_abbr = "utl{}".format(package_type)
-        package_list = []
-        # iterate through python files
-        package_file_paths = PackageContainer.get_package_file_paths()
-        for package_file_path in package_file_paths:
-            module = PackageContainer.get_module(package_file_path)
-            if module is not None:
-                # iterate imported items
-                for item in dir(module):
-                    value = PackageContainer.get_module_val(
-                        module, item, "package_abbr"
-                    )
-                    if value is not None:
-                        abbr = value.package_abbr
-                        if package_type is None:
-                            # don't store packages "group" classes
-                            if len(abbr) <= 8 or abbr[-8:] != "packages":
-                                package_list.append(value)
-                        else:
-                            # check package type
-                            if (
-                                value.package_abbr == package_abbr
-                                or value.package_abbr == package_utl_abbr
-                            ):
-                                return value
-        if package_type is None:
-            return package_list
-        else:
-            return None
+        package_abbr = f"{model_type}{package_type}"
+        factory = PackageContainer.packages_by_abbr.get(package_abbr)
+        if factory is None:
+            package_utl_abbr = "utl{}".format(package_type)
+            factory = PackageContainer.packages_by_abbr.get(package_utl_abbr)
+        return factory
 
     @staticmethod
     def model_factory(model_type):
@@ -589,18 +528,7 @@ class PackageContainer:
             model : MFModel subclass
 
         """
-        package_file_paths = PackageContainer.get_package_file_paths()
-        for package_file_path in package_file_paths:
-            module = PackageContainer.get_module(package_file_path)
-            if module is not None:
-                # iterate imported items
-                for item in dir(module):
-                    value = PackageContainer.get_module_val(
-                        module, item, "model_type"
-                    )
-                    if value is not None and value.model_type == model_type:
-                        return value
-        return None
+        return PackageContainer.models_by_type.get(model_type)
 
     @staticmethod
     def get_module_val(module, item, attrb):
@@ -615,32 +543,6 @@ class PackageContainer:
         ):
             return None
         return value
-
-    @staticmethod
-    def get_module(package_file_path):
-        """Static method that returns the python module library.  For
-        internal FloPy use only, not intended for end users."""
-        package_file_name = os.path.basename(package_file_path)
-        module_path = os.path.splitext(package_file_name)[0]
-        module_name = "{}{}{}".format(
-            "Modflow", module_path[2].upper(), module_path[3:]
-        )
-        if module_name.startswith("__"):
-            return None
-
-        # import
-        return importlib.import_module(
-            "flopy.mf6.modflow.{}".format(module_path)
-        )
-
-    @staticmethod
-    def get_package_file_paths():
-        """Static method that gets the paths of all the FloPy python package
-        files.  For internal FloPy use only, not intended for end users.
-        """
-        base_path = os.path.split(os.path.realpath(__file__))[0]
-        package_path = os.path.join(base_path, "modflow")
-        return glob.glob(os.path.join(package_path, "*.py"))
 
     @property
     def package_dict(self):
@@ -689,6 +591,37 @@ class PackageContainer:
         # remove items from main dictionary
         for key in items_to_remove:
             del self.simulation_data.mfdata[key]
+
+    def _rename_package(self, package, new_name):
+        # fix package_name_dict key
+        if (
+            package.package_name is not None
+            and package.package_name.lower() in self.package_name_dict
+        ):
+            del self.package_name_dict[package.package_name.lower()]
+        self.package_name_dict[new_name.lower()] = package
+        # fix package_key_dict key
+        new_package_path = package.path[:-1] + (new_name,)
+        del self.package_key_dict[package.path[-1].lower()]
+        self.package_key_dict[new_package_path.lower()] = package
+        # get keys to fix in main dictionary
+        main_dict = self.simulation_data.mfdata
+        items_to_fix = []
+        for key in main_dict:
+            is_subkey = True
+            for pitem, ditem in zip(package.path, key):
+                if pitem != ditem:
+                    is_subkey = False
+                    break
+            if is_subkey:
+                items_to_fix.append(key)
+
+        # fix keys in main dictionary
+        for key in items_to_fix:
+            new_key = (
+                package.path[:-1] + (new_name,) + key[len(package.path) - 1 :]
+            )
+            main_dict[new_key] = main_dict.pop(key)
 
     def get_package(self, name=None):
         """

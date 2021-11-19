@@ -131,7 +131,7 @@ def plot_vertex_grid(tgr):
 
 def plot_ix_polygon_result(rec, ax):
     for i, ishp in enumerate(rec.ixshapes):
-        ppi = PolygonPatch(ishp, facecolor="C{}".format(i % 10))
+        ppi = PolygonPatch(ishp, facecolor=f"C{i % 10}")
         ax.add_patch(ppi)
 
 
@@ -139,9 +139,9 @@ def plot_ix_linestring_result(rec, ax):
     for i, ishp in enumerate(rec.ixshapes):
         if ishp.type == "MultiLineString":
             for part in ishp:
-                ax.plot(part.xy[0], part.xy[1], ls="-", c="C{}".format(i % 10))
+                ax.plot(part.xy[0], part.xy[1], ls="-", c=f"C{i % 10}")
         else:
-            ax.plot(ishp.xy[0], ishp.xy[1], ls="-", c="C{}".format(i % 10))
+            ax.plot(ishp.xy[0], ishp.xy[1], ls="-", c=f"C{i % 10}")
 
 
 def plot_ix_point_result(rec, ax):
@@ -1359,3 +1359,65 @@ def test_rasters():
         raise AssertionError
 
     del rio
+
+
+# %% test raster sampling methods
+
+
+def test_raster_sampling_methods():
+    from flopy.utils import Raster
+    import os
+    import flopy as fp
+
+    ws = os.path.join("..", "examples", "data", "options")
+    raster_name = "dem.img"
+
+    try:
+        rio = Raster.load(os.path.join(ws, "dem", raster_name))
+    except:
+        return
+
+    ml = fp.modflow.Modflow.load(
+        "sagehen.nam", version="mfnwt", model_ws=os.path.join(ws, "sagehen")
+    )
+    xoff = 214110
+    yoff = 4366620
+    ml.modelgrid.set_coord_info(xoff, yoff)
+
+    x0, x1, y0, y1 = rio.bounds
+
+    x0 += 3000
+    y0 += 3000
+    x1 -= 3000
+    y1 -= 3000
+    shape = np.array([(x0, y0), (x0, y1), (x1, y1), (x1, y0), (x0, y0)])
+
+    rio.crop(shape)
+
+    methods = {
+        "min": 2088.52343,
+        "max": 2103.54882,
+        "mean": 2097.05053,
+        "median": 2097.36254,
+        "nearest": 2097.81079,
+        "linear": 2097.81079,
+        "cubic": 2097.81079
+    }
+
+    for method, value in methods.items():
+        data = rio.resample_to_grid(
+            ml.modelgrid,
+            band=rio.bands[0],
+            method=method
+        )
+
+        print(data[30, 37])
+        if np.abs(data[30, 37] - value) > 1e-05:
+            raise AssertionError(
+                f"{method} resampling returning incorrect values"
+            )
+
+
+if __name__ == "__main__":
+    test_rasters()
+    test_raster_sampling_methods()

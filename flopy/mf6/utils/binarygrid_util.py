@@ -6,7 +6,6 @@ be accessed by the user.
 """
 
 import numpy as np
-import collections
 
 from ...utils.utils_def import FlopyBinaryData
 import warnings
@@ -62,13 +61,13 @@ class MfGrdFile(FlopyBinaryData):
         self.set_float(precision=precision)
         self.verbose = verbose
         self._initial_len = 50
-        self._recorddict = collections.OrderedDict()
-        self._datadict = collections.OrderedDict()
+        self._recorddict = {}
+        self._datadict = {}
         self._recordkeys = []
         self.filename = filename
 
         if self.verbose:
-            print("\nProcessing binary grid file: {}".format(filename))
+            print(f"\nProcessing binary grid file: {filename}")
 
         # open the grb file
         self.file = open(filename, "rb")
@@ -119,21 +118,14 @@ class MfGrdFile(FlopyBinaryData):
                 s = ""
                 if nd > 0:
                     s = shp
-                msg = "  File contains data for {} ".format(
-                    key
-                ) + "with shape {}".format(s)
-                print(msg)
+                print(f"  File contains data for {key} with shape {s}")
 
         if self.verbose:
-            msg = "Attempting to read {} ".format(
-                self._ntxt
-            ) + "records from {}".format(filename)
-            print(msg)
+            print(f"Attempting to read {self._ntxt} records from {filename}")
 
         for key in self._recordkeys:
             if self.verbose:
-                msg = "  Reading {}".format(key)
-                print(msg)
+                print(f"  Reading {key}")
             dt, nd, shp = self._recorddict[key]
             # read array data
             if nd > 0:
@@ -153,13 +145,9 @@ class MfGrdFile(FlopyBinaryData):
 
             if self.verbose:
                 if nd == 0:
-                    msg = "  {} = {}".format(key, v)
-                    print(msg)
+                    print(f"  {key} = {v}")
                 else:
-                    msg = "  {}: ".format(key) + "min = {} max = {}".format(
-                        v.min(), v.max()
-                    )
-                    print(msg)
+                    print(f"  {key}: min = {v.min()} max = {v.max()}")
 
         # close the file
         self.file.close()
@@ -255,65 +243,11 @@ class MfGrdFile(FlopyBinaryData):
                 )
 
         except:
-            print("could not set model grid for {}".format(self.file.name))
+            print(f"could not set model grid for {self.file.name}")
 
         self.__modelgrid = modelgrid
 
         return
-
-    def __set_spatialreference(self):
-        """
-        Define structured or unstructured spatial reference based on
-        MODFLOW 6 discretization type.
-        Returns
-        -------
-        sr : SpatialReference
-        """
-        sr = None
-        try:
-            if self._grid_type in ("DISV", "DISU"):
-                from flopy.utils.reference import SpatialReferenceUnstructured
-
-                try:
-                    vertc = self.xycentroids()
-                    xc = vertc[:, 0]
-                    yc = vertc[:, 1]
-                    sr = SpatialReferenceUnstructured(
-                        xc,
-                        yc,
-                        self.__modelgrid.verts,
-                        self.__modelgrid.iverts,
-                        [xc.shape[0]],
-                    )
-                except:
-                    msg = (
-                        "could not set spatial reference for "
-                        + "{} discretization ".format(self._grid_type)
-                        + "defined in {}".format(self.file.name)
-                    )
-                    print(msg)
-            elif self._grid_type == "DIS":
-                from flopy.utils.reference import SpatialReference
-
-                delr, delc = self._datadict["DELR"], self._datadict["DELC"]
-                xorigin, yorigin, rot = (
-                    self._datadict["XORIGIN"],
-                    self._datadict["YORIGIN"],
-                    self._datadict["ANGROT"],
-                )
-                sr = SpatialReference(
-                    delr=delr,
-                    delc=delc,
-                    xll=xorigin,
-                    yll=yorigin,
-                    rotation=rot,
-                )
-        except:
-            print(
-                "could not set spatial reference for {}".format(self.file.name)
-            )
-
-        return sr
 
     def __build_vertices_cell2d(self):
         """
@@ -357,8 +291,7 @@ class MfGrdFile(FlopyBinaryData):
                 i1 = iavert[ivert + 1]
                 iverts.append((javert[i0:i1]).tolist())
             if self.verbose:
-                msg = "returning iverts from {}".format(self.file.name)
-                print(msg)
+                print(f"returning iverts from {self.file.name}")
         return iverts
 
     def __get_verts(self):
@@ -383,8 +316,7 @@ class MfGrdFile(FlopyBinaryData):
                     for idx in range(shpvert[0])
                 ]
             if self.verbose:
-                msg = "returning verts from {}".format(self.file.name)
-                print(msg)
+                print(f"returning verts from {self.file.name}")
         return verts
 
     def __get_cellcenters(self):
@@ -404,8 +336,7 @@ class MfGrdFile(FlopyBinaryData):
             y = self._datadict["CELLY"]
             xycellcenters = np.column_stack((x, y))
             if self.verbose:
-                msg = "returning cell centers from {}".format(self.file.name)
-                print(msg)
+                print(f"returning cell centers from {self.file.name}")
         return xycellcenters
 
     # properties
@@ -775,20 +706,3 @@ class MfGrdFile(FlopyBinaryData):
         else:
             vertices, cell2d = None, None
         return vertices, cell2d
-
-    @property
-    def spatialreference(self):
-        """
-        Spatial reference for model grid.
-
-        Returns
-        -------
-        spatialreference : SpatialReference
-        """
-        warnings.warn(
-            "SpatialReference has been deprecated and will be "
-            "removed in version 3.3.5. Use get_modelgrid instead.",
-            category=DeprecationWarning,
-        )
-
-        return self.__set_spatialreference()

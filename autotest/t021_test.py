@@ -1,17 +1,19 @@
-# Test modflow write adn run
 import os
 import numpy as np
 import flopy
+from ci_framework import base_test_dir, FlopyTestSetup
 
-mpth = os.path.join("temp", "t021")
-# make the directory if it does not exist
-if not os.path.isdir(mpth):
-    os.makedirs(mpth)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def test_mflist_external():
+    model_ws = f"{base_dir}_test_mflist_external"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     ml = flopy.modflow.Modflow(
-        "mflist_test", model_ws=mpth, external_path=os.path.join(mpth, "ref")
+        "mflist_test",
+        model_ws=model_ws,
+        external_path=os.path.join(model_ws, "ref"),
     )
     dis = flopy.modflow.ModflowDis(ml, 1, 10, 10, nper=3, perlen=1.0)
     wel_data = {
@@ -36,24 +38,24 @@ def test_mflist_external():
 
 
 def test_single_mflist_entry_load():
+    model_ws = f"{base_dir}_test_single_mflist_entry_load"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
-    import os
-    import numpy as np
-    import flopy
-
-    model_ws = os.path.join("..", "examples", "data", "freyberg")
+    pth = os.path.join("..", "examples", "data", "freyberg")
     m = flopy.modflow.Modflow.load(
-        "freyberg.nam", model_ws=model_ws, load_only=["WEL"], check=False
+        "freyberg.nam", model_ws=pth, load_only=["WEL"], check=False
     )
     w = m.wel
     spd = w.stress_period_data
     flopy.modflow.ModflowWel(m, stress_period_data={0: [0, 0, 0, 0.0]})
     m.external_path = "."
-    m.change_model_ws("temp", reset_external=True)
+    m.change_model_ws(model_ws, reset_external=True)
     m.write_input()
 
     mm = flopy.modflow.Modflow.load(
-        "freyberg.nam", model_ws="temp", forgive=False
+        "freyberg.nam",
+        model_ws=model_ws,
+        forgive=False,
     )
     assert mm.wel.stress_period_data
     mm.write_input()

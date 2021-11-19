@@ -1,17 +1,15 @@
 # Test instantiation of mf6 classes
 import os
-import shutil
 import flopy
+
+from ci_framework import base_test_dir, FlopyTestSetup
 
 
 def test_mf6():
+    base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=base_dir)
 
-    out_dir = os.path.join("temp", "t501")
-    if os.path.exists(out_dir):
-        shutil.rmtree(out_dir)
-    os.mkdir(out_dir)
-
-    sim = flopy.mf6.MFSimulation(sim_ws=out_dir)
+    sim = flopy.mf6.MFSimulation(sim_ws=base_dir)
     assert isinstance(sim, flopy.mf6.MFSimulation)
 
     tdis = flopy.mf6.modflow.mftdis.ModflowTdis(sim)
@@ -99,7 +97,7 @@ def test_mf6():
     sim.write_simulation()
 
     # Verify files were written
-    assert os.path.isfile(os.path.join(out_dir, "mfsim.nam"))
+    assert os.path.isfile(os.path.join(base_dir, "mfsim.nam"))
     exts_model = [
         "nam",
         "dis",
@@ -126,14 +124,86 @@ def test_mf6():
     ]
     exts_sim = ["gwfgwf", "ims", "tdis"]
     for ext in exts_model:
-        fname = os.path.join(out_dir, "model.{}".format(ext))
-        assert os.path.isfile(fname), fname + " not found"
+        fname = os.path.join(base_dir, f"model.{ext}")
+        assert os.path.isfile(fname), f"{fname} not found"
     for ext in exts_sim:
-        fname = os.path.join(out_dir, "sim.{}".format(ext))
-        assert os.path.isfile(fname), fname + " not found"
+        fname = os.path.join(base_dir, f"sim.{ext}")
+        assert os.path.isfile(fname), f"{fname} not found"
 
     return
 
 
+def test_mf6_string_to_file_path():
+    from flopy.mf6.mfbase import MFFileMgmt
+    import platform
+
+    if platform.system().lower() == "windows":
+        unc_path = r"\\server\path\path"
+        new_path = MFFileMgmt.string_to_file_path(unc_path)
+        if not unc_path == new_path:
+            raise AssertionError("UNC path error")
+
+        abs_path = r"C:\Users\some_user\path"
+        new_path = MFFileMgmt.string_to_file_path(abs_path)
+        if not abs_path == new_path:
+            raise AssertionError("Absolute path error")
+
+        rel_path = r"..\path\some_path"
+        new_path = MFFileMgmt.string_to_file_path(rel_path)
+        if not rel_path == new_path:
+            raise AssertionError("Relative path error")
+
+    else:
+        abs_path = "/mnt/c/some_user/path"
+        new_path = MFFileMgmt.string_to_file_path(abs_path)
+        if not abs_path == new_path:
+            raise AssertionError("Absolute path error")
+
+        rel_path = "../path/some_path"
+        new_path = MFFileMgmt.string_to_file_path(rel_path)
+        if not rel_path == new_path:
+            raise AssertionError("Relative path error")
+
+
+def test_mf6_subdir():
+    base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=base_dir)
+
+    sim = flopy.mf6.MFSimulation(sim_ws=base_dir)
+    tdis = flopy.mf6.modflow.mftdis.ModflowTdis(sim)
+    gwf = flopy.mf6.ModflowGwf(sim, model_rel_path="level2")
+    ims = flopy.mf6.modflow.mfims.ModflowIms(sim)
+    sim.register_ims_package(ims, [])
+    dis = flopy.mf6.modflow.mfgwfdis.ModflowGwfdis(gwf)
+    sim.set_all_data_external(external_data_folder="dat")
+    sim.write_simulation()
+
+    sim_r = flopy.mf6.MFSimulation.load(
+        "mfsim.nam",
+        sim_ws=sim.simulation_data.mfpath.get_sim_path(),
+    )
+    gwf_r = sim_r.get_model()
+    assert (
+        gwf.dis.delc.get_file_entry() == gwf_r.dis.delc.get_file_entry()
+    ), "Something wrong with model external paths"
+
+    sim_r.set_all_data_internal()
+    sim_r.set_all_data_external(
+        external_data_folder=os.path.join("dat", "dat_l2")
+    )
+    sim_r.write_simulation()
+
+    sim_r2 = flopy.mf6.MFSimulation.load(
+        "mfsim.nam",
+        sim_ws=sim_r.simulation_data.mfpath.get_sim_path(),
+    )
+    gwf_r2 = sim_r.get_model()
+    assert (
+        gwf_r.dis.delc.get_file_entry() == gwf_r2.dis.delc.get_file_entry()
+    ), "Something wrong with model external paths"
+
+
 if __name__ == "__main__":
-    test_mf6()
+    # test_mf6()
+    # test_mf6_string_to_file_path()
+    test_mf6_subdir()

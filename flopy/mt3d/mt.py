@@ -1,5 +1,4 @@
 import os
-import sys
 import numpy as np
 from ..mbase import BaseModel
 from ..pakbase import Package
@@ -25,9 +24,8 @@ class Mt3dList(Package):
     """
 
     def __init__(self, model, extension="list", listunit=7):
-        # Call ancestor's init to set self.parent, extension, name and
-        # unit number
-        Package.__init__(self, model, extension, "LIST", listunit)
+        # call base package constructor
+        super().__init__(model, extension, "LIST", listunit)
         # self.parent.add_package(self) This package is not added to the base
         # model so that it is not included in get_name_file_entries()
         return
@@ -149,12 +147,10 @@ class Mt3dms(BaseModel):
         # Check whether specified ftlfile exists in model directory; if not,
         # warn user
         if os.path.isfile(
-            os.path.join(self.model_ws, str(modelname + "." + namefile_ext))
+            os.path.join(self.model_ws, f"{modelname}.{namefile_ext}")
         ):
             with open(
-                os.path.join(
-                    self.model_ws, str(modelname + "." + namefile_ext)
-                )
+                os.path.join(self.model_ws, f"{modelname}.{namefile_ext}")
             ) as nm_file:
                 for line in nm_file:
                     if line[0:3] == "FTL":
@@ -183,17 +179,13 @@ class Mt3dms(BaseModel):
                 ):
                     pass
                 else:
-                    msg = (
+                    print(
                         "Specified value of ftlfree conflicts with FTL "
-                        + "file format"
+                        "file format"
                     )
-                    print(msg)
-                    msg = (
-                        "Switching ftlfree from "
-                        + "{} ".format(str(self.ftlfree))
-                        + "to {}".format(str(not self.ftlfree))
+                    print(
+                        f"Switching ftlfree from {self.ftlfree} to {not self.ftlfree}"
                     )
-                    print(msg)
                     self.ftlfree = not self.ftlfree  # Flip the bool
 
         # external option stuff
@@ -212,11 +204,7 @@ class Mt3dms(BaseModel):
 
             # external_path = os.path.join(model_ws, external_path)
             if os.path.exists(external_path):
-                print(
-                    "Note: external_path "
-                    + str(external_path)
-                    + " already exists"
-                )
+                print(f"Note: external_path {external_path} already exists")
             # assert os.path.exists(external_path),'external_path does not exist'
             else:
                 os.mkdir(external_path)
@@ -410,7 +398,7 @@ class Mt3dms(BaseModel):
         """
         fn_path = os.path.join(self.model_ws, self.namefile)
         f_nam = open(fn_path, "w")
-        f_nam.write("{}\n".format(self.heading))
+        f_nam.write(f"{self.heading}\n")
         f_nam.write(
             "{:14s} {:5d}  {}\n".format(
                 self.lst.name[0],
@@ -423,16 +411,14 @@ class Mt3dms(BaseModel):
             if self.ftlfree:
                 ftlfmt = "FREE"
             f_nam.write(
-                "{:14s} {:5d}  {} {}\n".format(
-                    "FTL", self.ftlunit, self.ftlfilename, ftlfmt
-                )
+                f"{'FTL':14s} {self.ftlunit:5d}  {self.ftlfilename} {ftlfmt}\n"
             )
         # write file entries in name file
-        f_nam.write("{}".format(self.get_name_file_entries()))
+        f_nam.write(str(self.get_name_file_entries()))
 
         # write the external files
         for u, f in zip(self.external_units, self.external_fnames):
-            f_nam.write("DATA           {0:5d}  ".format(u) + f + "\n")
+            f_nam.write(f"DATA           {u:5d}  {f}\n")
 
         # write the output files
         for u, f, b in zip(
@@ -441,11 +427,9 @@ class Mt3dms(BaseModel):
             if u == 0:
                 continue
             if b:
-                f_nam.write(
-                    "DATA(BINARY)   {0:5d}  ".format(u) + f + " REPLACE\n"
-                )
+                f_nam.write(f"DATA(BINARY)   {u:5d}  {f} REPLACE\n")
             else:
-                f_nam.write("DATA           {0:5d}  ".format(u) + f + "\n")
+                f_nam.write(f"DATA           {u:5d}  {f}\n")
 
         f_nam.close()
         return
@@ -512,11 +496,7 @@ class Mt3dms(BaseModel):
         modelname_extension = ext[1:]  # without '.'
 
         if verbose:
-            sys.stdout.write(
-                "\nCreating new model with name: {}\n{}\n\n".format(
-                    modelname, 50 * "-"
-                )
-            )
+            print(f"\nCreating new model with name: {modelname}\n{50 * '-'}\n")
         mt = cls(
             modelname=modelname,
             namefile_ext=modelname_extension,
@@ -532,7 +512,7 @@ class Mt3dms(BaseModel):
         # read name file
         namefile_path = os.path.join(mt.model_ws, f)
         if not os.path.isfile(namefile_path):
-            raise IOError("cannot find name file: " + str(namefile_path))
+            raise FileNotFoundError(f"cannot find name file: {namefile_path}")
         try:
             ext_unit_dict = mfreadnam.parsenamefile(
                 namefile_path, mt.mfnam_packages, verbose=verbose
@@ -542,7 +522,7 @@ class Mt3dms(BaseModel):
             # print(str(e))
             # return None
             raise Exception(
-                "error loading name file entries from file:\n" + str(e)
+                f"error loading name file entries from file:\n{e!s}"
             )
 
         if mt.verbose:
@@ -593,12 +573,10 @@ class Mt3dms(BaseModel):
                 btn.filename, mt, ext_unit_dict=ext_unit_dict
             )
         except Exception as e:
-            raise Exception("error loading BTN: {0}".format(str(e)))
+            raise Exception(f"error loading BTN: {e!s}")
         files_successfully_loaded.append(btn.filename)
         if mt.verbose:
-            sys.stdout.write(
-                "   {:4s} package load...success\n".format(pck.name[0])
-            )
+            print(f"   {pck.name[0]:4s} package load...success")
         ext_unit_dict.pop(btn_key).filehandle.close()
         ncomp = mt.btn.ncomp
         # reserved unit numbers for .ucn, s.ucn, .obs, .mas, .cnf
@@ -647,17 +625,14 @@ class Mt3dms(BaseModel):
                             )
                             files_successfully_loaded.append(item.filename)
                             if mt.verbose:
-                                sys.stdout.write(
-                                    "   {:4s} package load...success\n".format(
-                                        pck.name[0]
-                                    )
+                                print(
+                                    f"   {pck.name[0]:4s} package load...success"
                                 )
                         except BaseException as o:
                             if mt.verbose:
-                                sys.stdout.write(
-                                    "   {:4s} package load...failed\n   {!s}\n".format(
-                                        item.filetype, o
-                                    )
+                                print(
+                                    f"   {item.filetype:4s} package load"
+                                    f"...failed\n   {o!s}"
                                 )
                             files_not_loaded.append(item.filename)
                     else:
@@ -666,31 +641,21 @@ class Mt3dms(BaseModel):
                         )
                         files_successfully_loaded.append(item.filename)
                         if mt.verbose:
-                            sys.stdout.write(
-                                "   {:4s} package load...success\n".format(
-                                    pck.name[0]
-                                )
+                            print(
+                                f"   {pck.name[0]:4s} package load...success"
                             )
                 else:
                     if mt.verbose:
-                        sys.stdout.write(
-                            "   {:4s} package load...skipped\n".format(
-                                item.filetype
-                            )
-                        )
+                        print(f"   {item.filetype:4s} package load...skipped")
                     files_not_loaded.append(item.filename)
             elif "data" not in item.filetype.lower():
                 files_not_loaded.append(item.filename)
                 if mt.verbose:
-                    sys.stdout.write(
-                        "   {:4s} package load...skipped\n".format(
-                            item.filetype
-                        )
-                    )
+                    print(f"   {item.filetype:4s} package load...skipped")
             elif "data" in item.filetype.lower():
                 if mt.verbose:
-                    sys.stdout.write(
-                        "   {} file load...skipped\n      {}\n".format(
+                    print(
+                        "   {} file load...skipped\n      {}".format(
                             item.filetype, os.path.basename(item.filename)
                         )
                     )
@@ -718,28 +683,27 @@ class Mt3dms(BaseModel):
                     item.filehandle.close()
             except KeyError:
                 if mt.verbose:
-                    msg = (
+                    print(
                         "\nWARNING:\n    External file unit "
-                        + "{} does not exist in ext_unit_dict.\n".format(key)
+                        f"{key} does not exist in ext_unit_dict."
                     )
-                    sys.stdout.write(msg)
 
         # write message indicating packages that were successfully loaded
         if mt.verbose:
-            print(1 * "\n")
-            s = "   The following {0} packages were successfully loaded.".format(
-                len(files_successfully_loaded)
+            print(
+                "\n   The following {0} packages were "
+                "successfully loaded.".format(len(files_successfully_loaded))
             )
-            print(s)
             for fname in files_successfully_loaded:
-                print("      " + os.path.basename(fname))
+                print(f"      {os.path.basename(fname)}")
             if len(files_not_loaded) > 0:
-                s = "   The following {0} packages were not loaded.".format(
-                    len(files_not_loaded)
+                print(
+                    "   The following {0} packages were not loaded.".format(
+                        len(files_not_loaded)
+                    )
                 )
-                print(s)
                 for fname in files_not_loaded:
-                    print("      " + os.path.basename(fname))
+                    print(f"      {os.path.basename(fname)}")
                 print("\n")
 
         # return model object
@@ -761,7 +725,7 @@ class Mt3dms(BaseModel):
 
         """
         if not os.path.isfile(fname):
-            raise Exception("Could not find file: {}".format(fname))
+            raise Exception(f"Could not find file: {fname}")
         dtype = [
             ("time", float),
             ("total_in", float),
@@ -798,19 +762,16 @@ class Mt3dms(BaseModel):
         obs = []
 
         if not os.path.isfile(fname):
-            raise Exception("Could not find file: {}".format(fname))
+            raise Exception(f"Could not find file: {fname}")
         with open(fname, "r") as f:
             line = f.readline()
             if line.strip() != firstline:
-                msg = "First line in file must be \n{}\nFound {}".format(
-                    firstline, line.strip()
-                )
-                msg += (
-                    "\n{} does not appear to be a valid MT3D OBS file".format(
-                        fname
+                raise Exception(
+                    "First line in file must be \n{}\nFound {}\n"
+                    "{} does not appear to be a valid MT3D OBS file".format(
+                        firstline, line.strip(), fname
                     )
                 )
-                raise Exception(msg)
 
             # Read obs names (when break, line will have first data line)
             nlineperrec = 0
@@ -824,7 +785,7 @@ class Mt3dms(BaseModel):
                     k = int(ll.pop(0))
                     i = int(ll.pop(0))
                     j = int(ll.pop(0))
-                    obsnam = "({}, {}, {})".format(k, i, j)
+                    obsnam = f"({k}, {i}, {j})"
                     if obsnam in obs:
                         obsnam += str(len(obs) + 1)  # make obs name unique
                     obs.append(obsnam)

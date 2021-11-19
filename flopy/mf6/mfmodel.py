@@ -20,6 +20,7 @@ from flopy.discretization.modeltime import ModelTime
 from ..mbase import ModelInterface
 from .utils.mfenums import DiscretizationType
 from .data import mfstructure
+from .utils.output_util import MF6Output
 from ..utils.check import mf6check
 
 
@@ -56,7 +57,7 @@ class MFModel(PackageContainer, ModelInterface):
         Name of the model
     exe_name : str
         Model executable name
-    packages : OrderedDict(MFPackage)
+    packages : dict of MFPackage
         Dictionary of model packages
 
     """
@@ -73,7 +74,7 @@ class MFModel(PackageContainer, ModelInterface):
         structure=None,
         model_rel_path=".",
         verbose=False,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(simulation.simulation_data, modelname)
         self.simulation = simulation
@@ -85,7 +86,7 @@ class MFModel(PackageContainer, ModelInterface):
         self.type = "Model"
 
         if model_nam_file is None:
-            model_nam_file = "{}.nam".format(modelname)
+            model_nam_file = f"{modelname}.nam"
 
         if add_to_simulation:
             self.structure = simulation.register_model(
@@ -104,7 +105,7 @@ class MFModel(PackageContainer, ModelInterface):
         self._verbose = verbose
 
         if model_nam_file is None:
-            self.model_nam_file = "{}.nam".format(modelname)
+            self.model_nam_file = f"{modelname}.nam"
         else:
             self.model_nam_file = model_nam_file
 
@@ -112,17 +113,7 @@ class MFModel(PackageContainer, ModelInterface):
         xll = kwargs.pop("xll", None)
         yll = kwargs.pop("yll", None)
         self._xul = kwargs.pop("xul", None)
-        if self._xul is not None:
-            warnings.warn(
-                "xul/yul have been deprecated. Use xll/yll instead.",
-                DeprecationWarning,
-            )
         self._yul = kwargs.pop("yul", None)
-        if self._yul is not None:
-            warnings.warn(
-                "xul/yul have been deprecated. Use xll/yll instead.",
-                DeprecationWarning,
-            )
         rotation = kwargs.pop("rotation", 0.0)
         proj4 = kwargs.pop("proj4_str", None)
         # build model grid object
@@ -135,8 +126,7 @@ class MFModel(PackageContainer, ModelInterface):
         if len(kwargs) > 0:
             kwargs_str = ", ".join(kwargs.keys())
             excpt_str = (
-                'Extraneous kwargs "{}" provided to '
-                "MFModel.".format(kwargs_str)
+                f'Extraneous kwargs "{kwargs_str}" provided to MFModel.'
             )
             raise FlopyException(excpt_str)
 
@@ -144,14 +134,20 @@ class MFModel(PackageContainer, ModelInterface):
         # create name file based on model type - support different model types
         package_obj = self.package_factory("nam", model_type[0:3])
         if not package_obj:
-            excpt_str = "Name file could not be found for model" "{}.".format(
-                model_type[0:3]
+            excpt_str = (
+                f"Name file could not be found for model{model_type[0:3]}."
             )
             raise FlopyException(excpt_str)
 
         self.name_file = package_obj(
             self, filename=self.model_nam_file, pname=self.name
         )
+
+    def __init_subclass__(cls):
+        """Register model type"""
+        super().__init_subclass__()
+        PackageContainer.modflow_models.append(cls)
+        PackageContainer.models_by_type[cls.model_type] = cls
 
     def __getattr__(self, item):
         """
@@ -606,7 +602,7 @@ class MFModel(PackageContainer, ModelInterface):
         try:
             return self.oc.output
         except AttributeError:
-            return None
+            return MF6Output(self)
 
     def export(self, f, **kwargs):
         """Method to export a model to a shapefile or netcdf file
@@ -751,9 +747,9 @@ class MFModel(PackageContainer, ModelInterface):
         vnum = mfstructure.MFStructure().get_version_string()
         # FIX: Transport - Priority packages maybe should not be hard coded
         priority_packages = {
-            "dis{}".format(vnum): 1,
-            "disv{}".format(vnum): 1,
-            "disu{}".format(vnum): 1,
+            f"dis{vnum}": 1,
+            f"disv{vnum}": 1,
+            f"disu{vnum}": 1,
         }
         packages_ordered = []
         package_recarray = instance.simulation_data.mfdata[
@@ -786,7 +782,7 @@ class MFModel(PackageContainer, ModelInterface):
                         simulation.simulation_data.verbosity_level.value
                         >= VerbosityLevel.normal.value
                     ):
-                        print("    skipping package {}...".format(ftype))
+                        print(f"    skipping package {ftype}...")
                     continue
                 if model_rel_path and model_rel_path != ".":
                     # strip off model relative path from the file path
@@ -796,10 +792,17 @@ class MFModel(PackageContainer, ModelInterface):
                     simulation.simulation_data.verbosity_level.value
                     >= VerbosityLevel.normal.value
                 ):
-                    print("    loading package {}...".format(ftype))
+                    print(f"    loading package {ftype}...")
                 # load package
                 instance.load_package(ftype, fname, pname, strict, None)
-
+                sim_data = simulation.simulation_data
+                if ftype == "dis" and not sim_data.max_columns_user_set:
+                    # set column wrap to ncol
+                    dis = instance.get_package("dis")
+                    if dis is not None and hasattr(dis, "ncol"):
+                        sim_data.max_columns_of_data = dis.ncol.get_data()
+                        sim_data.max_columns_user_set = False
+                        sim_data.max_columns_auto_set = True
         # load referenced packages
         if modelname in instance.simulation_data.referenced_files:
             for ref_file in instance.simulation_data.referenced_files[
@@ -850,7 +853,7 @@ class MFModel(PackageContainer, ModelInterface):
                 self.simulation_data.verbosity_level.value
                 >= VerbosityLevel.normal.value
             ):
-                print("    writing package {}...".format(pp._get_pname()))
+                print(f"    writing package {pp._get_pname()}...")
             pp.write(ext_file_action=ext_file_action)
 
     def get_grid_type(self):
@@ -866,28 +869,28 @@ class MFModel(PackageContainer, ModelInterface):
         structure = mfstructure.MFStructure()
         if (
             package_recarray.search_data(
-                "dis{}".format(structure.get_version_string()), 0
+                f"dis{structure.get_version_string()}", 0
             )
             is not None
         ):
             return DiscretizationType.DIS
         elif (
             package_recarray.search_data(
-                "disv{}".format(structure.get_version_string()), 0
+                f"disv{structure.get_version_string()}", 0
             )
             is not None
         ):
             return DiscretizationType.DISV
         elif (
             package_recarray.search_data(
-                "disu{}".format(structure.get_version_string()), 0
+                f"disu{structure.get_version_string()}", 0
             )
             is not None
         ):
             return DiscretizationType.DISU
         elif (
             package_recarray.search_data(
-                "disl{}".format(structure.get_version_string()), 0
+                f"disl{structure.get_version_string()}", 0
             )
             is not None
         ):
@@ -980,6 +983,9 @@ class MFModel(PackageContainer, ModelInterface):
             Model working folder relative to simulation working folder
 
         """
+        # set all data internal
+        self.set_all_data_internal(False)
+
         # update path in the file manager
         file_mgr = self.simulation_data.mfpath
         file_mgr.set_last_accessed_model_path()
@@ -991,6 +997,10 @@ class MFModel(PackageContainer, ModelInterface):
             and model_ws != "."
             and self.simulation.name_file is not None
         ):
+            model_folder_path = file_mgr.get_model_path(self.name)
+            if not os.path.exists(model_folder_path):
+                # make new model folder
+                os.makedirs(model_folder_path)
             # update model name file location in simulation name file
             models = self.simulation.name_file.models
             models_data = models.get_data()
@@ -1033,13 +1043,13 @@ class MFModel(PackageContainer, ModelInterface):
                 # update package file locations in model name file
                 packages = self.name_file.packages
                 packages_data = packages.get_data()
-                for index, entry in enumerate(packages_data):
-                    old_package_name = os.path.split(entry[1])[1]
-                    packages_data[index][1] = os.path.join(
-                        path, old_package_name
-                    )
-                packages.set_data(packages_data)
-
+                if packages_data is not None:
+                    for index, entry in enumerate(packages_data):
+                        old_package_name = os.path.split(entry[1])[1]
+                        packages_data[index][1] = os.path.join(
+                            path, old_package_name
+                        )
+                    packages.set_data(packages_data)
                 # update files referenced from within packages
                 for package in self.packagelist:
                     package.set_model_relative_path(model_ws)
@@ -1067,14 +1077,15 @@ class MFModel(PackageContainer, ModelInterface):
             packages = [package_name]
         else:
             packages = self.get_package(package_name)
-            if not isinstance(packages, list):
+            if not isinstance(packages, list) and packages is not None:
                 packages = [packages]
+        if packages is None:
+            return
         for package in packages:
             if package.model_or_sim.name != self.name:
                 except_text = (
-                    "Package can not be removed from model {} "
-                    "since it is "
-                    "not part of "
+                    "Package can not be removed from model "
+                    "{self.model_name} since it is not part of it."
                 )
                 raise mfstructure.FlopyException(except_text)
 
@@ -1087,7 +1098,7 @@ class MFModel(PackageContainer, ModelInterface):
                 message = (
                     "Error occurred while reading package names "
                     "from name file in model "
-                    '"{}".'.format(self.name)
+                    f'"{self.name}"'
                 )
                 raise MFDataException(
                     mfdata_except=mfde,
@@ -1098,7 +1109,8 @@ class MFModel(PackageContainer, ModelInterface):
             try:
                 new_rec_array = None
                 for item in package_data:
-                    if item[1] != package._filename:
+                    filename = os.path.basename(item[1])
+                    if filename != package.filename:
                         if new_rec_array is None:
                             new_rec_array = np.rec.array(
                                 [item.tolist()], package_data.dtype
@@ -1125,8 +1137,8 @@ class MFModel(PackageContainer, ModelInterface):
             except MFDataException as mfde:
                 message = (
                     "Error occurred while setting package names "
-                    'from name file in model "{}".  Package name '
-                    "data:\n{}".format(self.name, new_rec_array)
+                    f'from name file in model "{self.name}".  Package name '
+                    f"data:\n{new_rec_array}"
                 )
                 raise MFDataException(
                     mfdata_except=mfde,
@@ -1147,6 +1159,76 @@ class MFModel(PackageContainer, ModelInterface):
             for child_package in child_package_list:
                 self._remove_package_from_dictionaries(child_package)
 
+    def update_package_filename(self, package, new_name):
+        """
+        Updates the filename for a package.  For internal flopy use only.
+
+        Parameters
+        ----------
+        package : MFPackage
+            Package object
+        new_name : str
+            New package name
+        """
+        try:
+            # get namefile package data
+            package_data = self.name_file.packages.get_data()
+        except MFDataException as mfde:
+            message = (
+                "Error occurred while updating package names "
+                "from name file in model "
+                f'"{self.name}".'
+            )
+            raise MFDataException(
+                mfdata_except=mfde,
+                model=self.model_name,
+                package=self.name_file._get_pname(),
+                message=message,
+            )
+        try:
+            # update namefile package data with new name
+            new_rec_array = None
+            for item in package_data:
+                base, leaf = os.path.split(item[1])
+                if leaf == package.filename:
+                    item[1] = os.path.join(base, new_name)
+
+                if new_rec_array is None:
+                    new_rec_array = np.rec.array(
+                        [item.tolist()], package_data.dtype
+                    )
+                else:
+                    new_rec_array = np.hstack((item, new_rec_array))
+        except:
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self._path,
+                "updating package filename",
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                None,
+                self._simulation_data.debug,
+            )
+        try:
+            self.name_file.packages.set_data(new_rec_array)
+        except MFDataException as mfde:
+            message = (
+                "Error occurred while updating package names "
+                f'from name file in model "{self.name}".  Package name '
+                f"data:\n{new_rec_array}"
+            )
+            raise MFDataException(
+                mfdata_except=mfde,
+                model=self.model_name,
+                package=self.name_file._get_pname(),
+                message=message,
+            )
+
     def rename_all_packages(self, name):
         """Renames all package files in the model.
 
@@ -1157,11 +1239,14 @@ class MFModel(PackageContainer, ModelInterface):
                 <name>.<package ext>.
 
         """
+        nam_filename = f"{name}.nam"
+        self.simulation.rename_model_namefile(self, nam_filename)
+        self.name_file.filename = nam_filename
+        self.model_nam_file = nam_filename
         package_type_count = {}
-        self.name_file.filename = "{}.nam".format(name)
         for package in self.packagelist:
             if package.package_type not in package_type_count:
-                package.filename = "{}.{}".format(name, package.package_type)
+                package.filename = f"{name}.{package.package_type}"
                 package_type_count[package.package_type] = 1
             else:
                 package_type_count[package.package_type] += 1
@@ -1171,7 +1256,26 @@ class MFModel(PackageContainer, ModelInterface):
                     package.package_type,
                 )
 
-    def set_all_data_external(self, check_data=True):
+    def set_all_data_external(
+        self, check_data=True, external_data_folder=None
+    ):
+        """Sets the model's list and array data to be stored externally.
+
+        Parameters
+        ----------
+            check_data : bool
+                Determines if data error checking is enabled during this
+                process.
+            external_data_folder
+                Folder, relative to the simulation path or model relative path
+                (see use_model_relative_path parameter), where external data
+                will be stored
+
+        """
+        for package in self.packagelist:
+            package.set_all_data_external(check_data, external_data_folder)
+
+    def set_all_data_internal(self, check_data=True):
         """Sets the model's list and array data to be stored externally.
 
         Parameters
@@ -1182,7 +1286,7 @@ class MFModel(PackageContainer, ModelInterface):
 
         """
         for package in self.packagelist:
-            package.set_all_data_external(check_data)
+            package.set_all_data_internal(check_data)
 
     def register_package(
         self,
@@ -1279,7 +1383,7 @@ class MFModel(PackageContainer, ModelInterface):
                 package.package_name = package.package_type
 
         if set_package_filename:
-            package._filename = "{}.{}".format(self.name, package.package_type)
+            package._filename = f"{self.name}.{package.package_type}"
 
         if add_to_package_list:
             self._add_package(package, path)
@@ -1294,10 +1398,15 @@ class MFModel(PackageContainer, ModelInterface):
                     pkg_type = pkg_type[0:-1]
                 # Model Assumption - assuming all name files have a package
                 # recarray
+                file_mgr = self.simulation_data.mfpath
+                model_rel_path = file_mgr.model_relative_path[self.name]
+                package_rel_path = os.path.join(
+                    model_rel_path, package.filename
+                )
                 self.name_file.packages.update_record(
                     [
-                        "{}6".format(pkg_type),
-                        package._filename,
+                        f"{pkg_type}6",
+                        package_rel_path,
                         package.package_name,
                     ],
                     0,
@@ -1362,9 +1471,7 @@ class MFModel(PackageContainer, ModelInterface):
             # resolve dictionary name for package
             if dict_package_name is not None:
                 if parent_package is not None:
-                    dict_package_name = "{}_{}".format(
-                        parent_package.path[-1], ftype
-                    )
+                    dict_package_name = f"{parent_package.path[-1]}_{ftype}"
                 else:
                     # use dict_package_name as the base name
                     if ftype in self._ftype_num_dict:
@@ -1384,8 +1491,8 @@ class MFModel(PackageContainer, ModelInterface):
                 if pname is not None:
                     dict_package_name = pname
                 else:
-                    dict_package_name = "{}_{}".format(
-                        ftype, self._ftype_num_dict[ftype]
+                    dict_package_name = (
+                        f"{ftype}_{self._ftype_num_dict[ftype]}"
                     )
         else:
             dict_package_name = ftype
@@ -1408,7 +1515,7 @@ class MFModel(PackageContainer, ModelInterface):
             package.load(strict)
         except ReadAsArraysException:
             #  create ReadAsArrays package and load it instead
-            package_obj = self.package_factory("{}a".format(ftype), model_type)
+            package_obj = self.package_factory(f"{ftype}a", model_type)
             package = package_obj(
                 self,
                 filename=fname,

@@ -128,14 +128,13 @@ class UnstructuredGrid(Grid):
 
         if iverts is not None:
             if self.grid_varies_by_layer:
-                msg = "Length of iverts must equal grid nodes ({} {})".format(
-                    len(iverts), self.nnodes
+                msg = (
+                    "Length of iverts must equal grid nodes "
+                    f"({len(iverts)} {self.nnodes})"
                 )
                 assert len(iverts) == self.nnodes, msg
             else:
-                msg = "Length of iverts must equal ncpl ({} {})".format(
-                    len(iverts), self.ncpl
-                )
+                msg = f"Length of iverts must equal ncpl ({len(iverts)} {self.ncpl})"
                 assert np.all([cpl == len(iverts) for cpl in self.ncpl]), msg
 
         return
@@ -208,7 +207,7 @@ class UnstructuredGrid(Grid):
         if self._vertices is None:
             return self._vertices
         else:
-            return np.array([t[1:] for t in self._vertices], dtype=float)
+            return np.array([list(t)[1:] for t in self._vertices], dtype=float)
 
     @property
     def ia(self):
@@ -327,6 +326,21 @@ class UnstructuredGrid(Grid):
         else:
             return self._cache_dict[cache_index].data_nocopy
 
+    @property
+    def cross_section_vertices(self):
+        """
+        Method to get vertices for cross-sectional plotting
+
+        Returns
+        -------
+            xvertices, yvertices
+        """
+        xv, yv = self.xyzvertices[0], self.xyzvertices[1]
+        if len(xv) == self.ncpl[0]:
+            xv *= self.nlay
+            yv *= self.nlay
+        return xv, yv
+
     def cross_section_lay_ncpl_ncb(self, ncb):
         """
         Get PlotCrossSection compatible layers, ncpl, and ncb
@@ -421,7 +435,32 @@ class UnstructuredGrid(Grid):
             plotarray, xcenter array, ycenter array, and a boolean flag
             for contouring
         """
-        return plotarray, xcenters, None, False
+        if self.ncpl[0] != self.nnodes:
+            return plotarray, xcenters, None, False
+        else:
+            zcenters = []
+            if isinstance(head, np.ndarray):
+                head = head.reshape(1, self.nnodes)
+                head = np.vstack((head, head))
+            else:
+                head = elev.reshape(2, self.nnodes)
+
+            elev = elev.reshape(2, self.nnodes)
+            for k, ev in enumerate(elev):
+                if k == 0:
+                    zc = [
+                        ev[i] if head[k][i] > ev[i] else head[k][i]
+                        for i in sorted(projpts)
+                    ]
+                else:
+                    zc = [ev[i] for i in sorted(projpts)]
+                zcenters.append(zc)
+
+            plotarray = np.vstack((plotarray, plotarray))
+            xcenters = np.vstack((xcenters, xcenters))
+            zcenters = np.array(zcenters)
+
+            return plotarray, xcenters, zcenters, True
 
     @property
     def map_polygons(self):
@@ -432,10 +471,7 @@ class UnstructuredGrid(Grid):
         -------
             list or dict of matplotlib.collections.Polygon
         """
-        try:
-            from matplotlib.path import Path
-        except ImportError:
-            raise ImportError("matplotlib required to use this method")
+        from matplotlib.path import Path
 
         cache_index = "xyzgrid"
         if (
@@ -769,11 +805,10 @@ class UnstructuredGrid(Grid):
 
         grb_obj = MfGrdFile(file_path, verbose=verbose)
         if grb_obj.grid_type != "DISU":
-            err_msg = (
-                "Binary grid file ({}) ".format(os.path.basename(file_path))
-                + "is not a vertex (DISU) grid."
+            raise ValueError(
+                f"Binary grid file ({os.path.basename(file_path)}) "
+                "is not a vertex (DISU) grid."
             )
-            raise ValueError(err_msg)
 
         iverts = grb_obj.iverts
         if iverts is not None:
@@ -802,8 +837,7 @@ class UnstructuredGrid(Grid):
                 angrot=angrot,
             )
         else:
-            err_msg = (
-                "{} binary grid file".format(os.path.basename(file_path))
-                + " does not include vertex data"
+            raise TypeError(
+                f"{os.path.basename(file_path)} binary grid file "
+                "does not include vertex data"
             )
-            raise TypeError(err_msg)

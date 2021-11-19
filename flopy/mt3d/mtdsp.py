@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
@@ -113,7 +112,7 @@ class Mt3dDsp(Package):
         multiDiff=False,
         unitnumber=None,
         filenames=None,
-        **kwargs
+        **kwargs,
     ):
 
         if unitnumber is None:
@@ -121,29 +120,13 @@ class Mt3dDsp(Package):
         elif unitnumber == 0:
             unitnumber = Mt3dDsp._reservedunit()
 
-        # set filenames
-        if filenames is None:
-            filenames = [None]
-        elif isinstance(filenames, str):
-            filenames = [filenames]
-
-        # Fill namefile items
-        name = [Mt3dDsp._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=self._prepare_filenames(filenames),
         )
 
         nrow = model.nrow
@@ -200,16 +183,14 @@ class Mt3dDsp(Package):
         )
         self.dmcoef.append(u2or3)
         for icomp in range(2, nmcomp + 1):
-            name = "dmcoef" + str(icomp)
+            name = f"dmcoef{icomp}"
             val = 0.0
             if name in list(kwargs.keys()):
                 val = kwargs.pop(name)
             else:
                 print(
-                    "DSP: setting dmcoef for component "
-                    + str(icomp)
-                    + " to zero, kwarg name "
-                    + name
+                    "DSP: setting dmcoef for component {} "
+                    "to zero, kwarg name {}".format(icomp, name)
                 )
             u2or3 = utype(
                 model,
@@ -307,7 +288,7 @@ class Mt3dDsp(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading dsp package file...\n")
+            print("loading dsp package file...")
 
         # Set dimensions if necessary
         if nlay is None:
@@ -403,7 +384,7 @@ class Mt3dDsp(Package):
             )
             if model.mcomp > 1:
                 for icomp in range(2, model.mcomp + 1):
-                    name = "dmcoef" + str(icomp)
+                    name = f"dmcoef{icomp}"
                     u3d = Util3d.load(
                         f,
                         model,
@@ -452,7 +433,7 @@ class Mt3dDsp(Package):
             multiDiff=multiDiff,
             unitnumber=unitnumber,
             filenames=filenames,
-            **kwargs
+            **kwargs,
         )
 
     @staticmethod

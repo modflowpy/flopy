@@ -7,7 +7,7 @@ import flopy
 tpth = os.path.join("temp", "t053")
 # make the directory if it does not exist
 if not os.path.isdir(tpth):
-    os.makedirs(tpth)
+    os.makedirs(tpth, exist_ok=True)
 
 
 def test_headu_file():

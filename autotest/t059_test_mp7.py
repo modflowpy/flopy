@@ -1,12 +1,10 @@
 import os
-import shutil
-import numpy as np
 import flopy
 
 model_ws = os.path.join("temp", "t059")
-# delete the directory if it exists
-if os.path.isdir(model_ws):
-    shutil.rmtree(model_ws)
+# make the directory if it does not exist
+if not os.path.isdir(model_ws):
+    os.makedirs(model_ws, exist_ok=True)
 
 exe_names = {"mf6": "mf6", "mp7": "mp7"}
 run = True
@@ -42,7 +40,7 @@ def test_mf6():
 
 
 def test_forward():
-    mpnam = nm + "_mp_forward"
+    mpnam = f"{nm}_mp_forward"
     exe_name = exe_names["mp7"]
 
     # load the MODFLOW 6 model
@@ -66,7 +64,7 @@ def test_forward():
 
 
 def test_backward():
-    mpnam = nm + "_mp_backward"
+    mpnam = f"{nm}_mp_backward"
     exe_name = exe_names["mp7"]
 
     # load the MODFLOW 6 model
@@ -108,7 +106,7 @@ def build_mf6():
     )
 
     # Create the Flopy groundwater flow (gwf) model object
-    model_nam_file = "{}.nam".format(nm)
+    model_nam_file = f"{nm}.nam"
     gwf = flopy.mf6.ModflowGwf(
         sim, modelname=nm, model_nam_file=model_nam_file, save_flows=True
     )
@@ -152,9 +150,9 @@ def build_mf6():
         rd.append([(0, i, ncol - 1), riv_h, riv_c, riv_z])
     flopy.mf6.modflow.mfgwfriv.ModflowGwfriv(gwf, stress_period_data={0: rd})
     # Create the output control package
-    headfile = "{}.hds".format(nm)
+    headfile = f"{nm}.hds"
     head_record = [headfile]
-    budgetfile = "{}.cbb".format(nm)
+    budgetfile = f"{nm}.cbb"
     budget_record = [budgetfile]
     saverecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
     oc = flopy.mf6.modflow.mfgwfoc.ModflowGwfoc(
@@ -181,7 +179,7 @@ def build_modpath(mp):
     # run modpath
     if run:
         success, buff = mp.run_model()
-        assert success, "mp7 model ({}) did not run".format(mp.name)
+        assert success, f"mp7 model ({mp.name}) did not run"
 
     return
 

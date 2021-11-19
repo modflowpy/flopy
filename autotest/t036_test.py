@@ -2,45 +2,39 @@
 Test loading and preserving existing unit numbers
 """
 import os
-import shutil
-
 import flopy
+import pymake
+from ci_framework import base_test_dir, FlopyTestSetup
+
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 pth = os.path.join("..", "examples", "data", "mf2005_test")
 cpth = os.path.join("temp", "t036")
 
-# make the directory if it does not exist
-if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+exe_name = "mf2005"
+v = flopy.which(exe_name)
+
+run = True
+if v is None:
+    run = False
 
 
 def test_uzf_unit_numbers():
-    exe_name = "mf2005"
-    v = flopy.which(exe_name)
-
-    run = True
-    if v is None:
-        run = False
+    model_ws = f"{base_dir}_test_uzf_unit_numbers"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     mfnam = "UZFtest2.nam"
-    pt = os.path.join("..", "examples", "data", "uzf_examples")
+    orig_pth = os.path.join("..", "examples", "data", "uzf_examples")
 
     # copy files
-    try:
-        import pymake
-
-        lpth = os.path.join(cpth, os.path.splitext(mfnam)[0])
-        apth = os.path.join(lpth, "flopy")
-        compth = lpth
-        pymake.setup(os.path.join(pt, mfnam), lpth)
-    except:
-        run = False
-        lpth = pth
-        apth = cpth
-        compth = cpth
+    pymake.setup(os.path.join(orig_pth, mfnam), model_ws)
 
     m = flopy.modflow.Modflow.load(
-        mfnam, verbose=True, model_ws=lpth, forgive=False, exe_name=exe_name
+        mfnam,
+        verbose=True,
+        model_ws=model_ws,
+        forgive=False,
+        exe_name=exe_name,
     )
     assert m.load_fail is False, "failed to load all packages"
 
@@ -64,14 +58,15 @@ def test_uzf_unit_numbers():
         except:
             success = False
         assert success, "base model run did not terminate successfully"
-        fn0 = os.path.join(lpth, mfnam)
+        fn0 = os.path.join(model_ws, mfnam)
 
     # change uzf iuzfcb2 and add binary uzf output file
     m.uzf.iuzfcb2 = 61
     m.add_output_file(m.uzf.iuzfcb2, extension="uzfcb2.bin", package="UZF")
 
     # change the model work space
-    m.change_model_ws(apth, reset_external=True)
+    model_ws2 = os.path.join(model_ws, "flopy")
+    m.change_model_ws(model_ws2, reset_external=True)
 
     # rewrite files
     m.write_input()
@@ -83,12 +78,12 @@ def test_uzf_unit_numbers():
         except:
             success = False
         assert success, "new model run did not terminate successfully"
-        fn1 = os.path.join(apth, mfnam)
+        fn1 = os.path.join(model_ws2, mfnam)
 
     # compare budget terms
     if run:
         fsum = os.path.join(
-            compth, "{}.budget.out".format(os.path.splitext(mfnam)[0])
+            model_ws, f"{os.path.splitext(mfnam)[0]}.budget.out"
         )
         try:
             success = pymake.compare_budget(
@@ -100,44 +95,28 @@ def test_uzf_unit_numbers():
 
         assert success, "budget comparison failure"
 
-    # clean up
-    shutil.rmtree(lpth)
-
     return
 
 
 def test_unitnums_load_and_write():
-    exe_name = "mf2005"
-    v = flopy.which(exe_name)
-
-    run = True
-    if v is None:
-        run = False
+    model_ws = f"{base_dir}_test_unitnums_load_and_write"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     mfnam = "testsfr2_tab.nam"
 
     # copy files
-    try:
-        import pymake
+    import pymake
 
-        lpth = os.path.join(cpth, os.path.splitext(mfnam)[0])
-        apth = os.path.join(lpth, "flopy")
-        compth = lpth
-        pymake.setup(os.path.join(pth, mfnam), lpth)
-    except:
-        run = False
-        lpth = pth
-        apth = cpth
-        compth = cpth
+    pymake.setup(os.path.join(pth, mfnam), model_ws)
 
     m = flopy.modflow.Modflow.load(
-        mfnam, verbose=True, model_ws=lpth, exe_name=exe_name
+        mfnam, verbose=True, model_ws=model_ws, exe_name=exe_name
     )
     assert m.load_fail is False, "failed to load all packages"
 
     msg = (
         "modflow-2005 testsfr2_tab does not have "
-        + "1 layer, 7 rows, and 100 columns"
+        "1 layer, 7 rows, and 100 columns"
     )
     v = (m.nlay, m.nrow, m.ncol, m.nper)
     assert v == (1, 7, 100, 50), msg
@@ -148,22 +127,25 @@ def test_unitnums_load_and_write():
         except:
             success = False
         assert success, "base model run did not terminate successfully"
-        fn0 = os.path.join(lpth, mfnam)
+        fn0 = os.path.join(model_ws, mfnam)
 
     # rewrite files
-    m.change_model_ws(apth, reset_external=True)
+    model_ws2 = os.path.join(model_ws, "flopy")
+    m.change_model_ws(model_ws2, reset_external=True)
+
     m.write_input()
+
     if run:
         try:
             success, buff = m.run_model(silent=False)
         except:
             success = False
         assert success, "base model run did not terminate successfully"
-        fn1 = os.path.join(apth, mfnam)
+        fn1 = os.path.join(model_ws2, mfnam)
 
     if run:
         fsum = os.path.join(
-            compth, "{}.budget.out".format(os.path.splitext(mfnam)[0])
+            model_ws, f"{os.path.splitext(mfnam)[0]}.budget.out"
         )
         try:
             success = pymake.compare_budget(
@@ -174,9 +156,6 @@ def test_unitnums_load_and_write():
             print("could not perform ls" "budget comparison")
 
         assert success, "budget comparison failure"
-
-    # clean up
-    shutil.rmtree(lpth)
 
     return
 

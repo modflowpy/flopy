@@ -11,7 +11,7 @@ import flopy
 # make the working directory
 tpth = os.path.join("temp", "t060")
 if not os.path.isdir(tpth):
-    os.makedirs(tpth)
+    os.makedirs(tpth, exist_ok=True)
 
 mfnwt_exe = "mfnwt"
 mt3d_usgs_exe = "mt3dusgs"
@@ -17324,7 +17324,7 @@ def test_lkt_with_multispecies():
     mt.write_input()
 
     # Make sure the just written files are loadable
-    namfile = modelname + ".nam"
+    namfile = f"{modelname}.nam"
     mf = flopy.modflow.Modflow.load(
         namfile,
         model_ws=tpth,
@@ -17332,7 +17332,7 @@ def test_lkt_with_multispecies():
         verbose=True,
         exe_name=mfnwt_exe,
     )
-    namfile = modelname + ".mtnam"
+    namfile = f"{modelname}.mtnam"
     mt = flopy.mt3d.mt.Mt3dms.load(
         namfile,
         model_ws=tpth,

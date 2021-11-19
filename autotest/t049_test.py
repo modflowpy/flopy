@@ -1,6 +1,5 @@
 # Test loading of MODFLOW and MT3D models that come with MT3D distribution
 import os
-import shutil
 import flopy
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,11 +11,9 @@ except ImportError:
     pymake = False
 
 cpth = os.path.join("temp", "t049")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-# make the directory
-os.makedirs(cpth)
+# make the directory if it does not exist
+if not os.path.isdir(cpth):
+    os.makedirs(cpth, exist_ok=True)
 
 mf2005_exe = "mf2005"
 v = flopy.which(mf2005_exe)
@@ -24,33 +21,27 @@ v = flopy.which(mf2005_exe)
 mpth_exe = "mp6"
 v2 = flopy.which(mpth_exe)
 
-rung = True
+run = True
 if v is None or v2 is None:
-    rung = False
+    run = False
 
 
 def test_modpath():
     pth = os.path.join("..", "examples", "data", "freyberg")
     mfnam = "freyberg.nam"
 
-    if pymake:
-        run = rung
-        lpth = os.path.join(cpth, os.path.splitext(mfnam)[0])
-        pymake.setup(os.path.join(pth, mfnam), lpth)
-    else:
-        run = False
-        lpth = pth
+    lpth = os.path.join(cpth, "test_mp")
 
     m = flopy.modflow.Modflow.load(
-        mfnam, model_ws=lpth, verbose=True, exe_name=mf2005_exe
+        mfnam, model_ws=pth, verbose=True, exe_name=mf2005_exe
     )
     assert m.load_fail is False
 
+    m.change_model_ws(lpth)
+    m.write_input()
+
     if run:
-        try:
-            success, buff = m.run_model(silent=False)
-        except:
-            success = False
+        success, buff = m.run_model(silent=False)
         assert success, "modflow model run did not terminate successfully"
 
     # create the forward modpath file
@@ -73,14 +64,11 @@ def test_modpath():
     # write forward particle track files
     mp.write_input()
 
-    if run:
-        try:
-            success, buff = mp.run_model(silent=False)
-        except:
-            success = False
-        assert success, (
-            "forward modpath model run " + "did not terminate successfully"
-        )
+    if success and run:
+        success, buff = mp.run_model(silent=False)
+        assert (
+            success
+        ), "forward modpath model run did not terminate successfully"
 
     mpnam = "freybergmpp"
     mpp = flopy.modpath.Modpath6(
@@ -101,148 +89,95 @@ def test_modpath():
     # write backward particle track files
     mpp.write_input()
 
-    if run:
-        try:
-            success, buff = mpp.run_model(silent=False)
-        except:
-            success = False
-        assert success, (
-            "backward modpath model run " + "did not terminate successfully"
-        )
+    if run and success:
+        success, buff = mpp.run_model(silent=False)
+        assert (
+            success
+        ), "backward modpath model run did not terminate successfully"
 
     # load modpath output files
-    if run:
+    if run and success:
         endfile = os.path.join(lpth, mp.sim.endpoint_file)
         pthfile = os.path.join(lpth, mpp.sim.pathline_file)
-    else:
-        endfile = os.path.join(
-            "..", "examples", "data", "mp6_examples", "freybergmp.gitmpend"
-        )
-        pthfile = os.path.join(
-            "..", "examples", "data", "mp6_examples", "freybergmpp.gitmppth"
-        )
 
-    # load the endpoint data
-    try:
-        endobj = flopy.utils.EndpointFile(endfile)
-    except:
-        assert False, "could not load endpoint file"
-    ept = endobj.get_alldata()
-    assert ept.shape == (695,), "shape of endpoint file is not (695,)"
+        # load the endpoint data
+        try:
+            endobj = flopy.utils.EndpointFile(endfile)
+        except:
+            assert False, "could not load endpoint file"
+        ept = endobj.get_alldata()
+        assert ept.shape == (695,), "shape of endpoint file is not (695,)"
 
-    # load the pathline data
-    try:
-        pthobj = flopy.utils.PathlineFile(pthfile)
-    except:
-        assert False, "could not load pathline file"
-    plines = pthobj.get_alldata()
-    assert len(plines) == 576, "there are not 576 particle pathlines in file"
+        # load the pathline data
+        try:
+            pthobj = flopy.utils.PathlineFile(pthfile)
+        except:
+            assert False, "could not load pathline file"
+        plines = pthobj.get_alldata()
+        assert (
+            len(plines) == 576
+        ), "there are not 576 particle pathlines in file"
+
+        eval_pathline_plot(lpth)
 
     return
 
 
-def test_pathline_plot():
-    pth = os.path.join("..", "examples", "data", "freyberg")
-    mfnam = "freyberg.nam"
-
-    run = rung
-    try:
-        lpth = os.path.join(cpth, os.path.splitext(mfnam)[0])
-    except:
-        run = False
-        lpth = pth
-
-    nampath = os.path.join(lpth, mfnam)
-    assert os.path.exists(nampath), "namefile {} doesn't exist.".format(
-        nampath
-    )
+def eval_pathline_plot(lpth):
     # load the modflow files for model map
+    mfnam = "freyberg.nam"
     m = flopy.modflow.Modflow.load(
-        mfnam, model_ws=lpth, verbose=True, forgive=False, exe_name=mf2005_exe
+        mfnam,
+        model_ws=lpth,
+        verbose=True,
+        forgive=False,
+        exe_name=mf2005_exe,
     )
 
     # load modpath output files
-    if run:
-        pthfile = os.path.join(lpth, "freybergmpp.mppth")
-    else:
-        pthfile = os.path.join(
-            "..", "examples", "data", "mp6_examples", "freybergmpp.gitmppth"
-        )
+    pthfile = os.path.join(lpth, "freybergmpp.mppth")
 
     # load the pathline data
-    try:
-        pthobj = flopy.utils.PathlineFile(pthfile)
-    except:
-        assert False, "could not load pathline file"
+    pthobj = flopy.utils.PathlineFile(pthfile)
 
     # determine version
     ver = pthobj.version
-    assert ver == 6, "{} is not a MODPATH version 6 pathline file".format(
-        pthfile
-    )
+    assert ver == 6, f"{pthfile} is not a MODPATH version 6 pathline file"
 
     # get all pathline data
     plines = pthobj.get_alldata()
 
     mm = flopy.plot.PlotMapView(model=m)
-    try:
-        mm.plot_pathline(plines, colors="blue", layer="all")
-    except:
-        assert False, 'could not plot pathline with layer="all"'
+    mm.plot_pathline(plines, colors="blue", layer="all")
 
     # plot the grid and ibound array
-    try:
-        mm.plot_grid()
-        mm.plot_ibound()
-    except:
-        assert False, "could not plot grid and ibound"
-
-    try:
-        fpth = os.path.join(lpth, "pathline.png")
-        plt.savefig(fpth)
-        plt.close()
-    except:
-        assert False, "could not save plot as {}".format(fpth)
+    mm.plot_grid()
+    mm.plot_ibound()
+    fpth = os.path.join(lpth, "pathline.png")
+    plt.savefig(fpth)
+    plt.close()
 
     mm = flopy.plot.PlotMapView(model=m)
-    try:
-        mm.plot_pathline(plines, colors="green", layer=0)
-    except:
-        assert False, "could not plot pathline with layer=0"
+    mm.plot_pathline(plines, colors="green", layer=0)
 
     # plot the grid and ibound array
-    try:
-        mm.plot_grid()
-        mm.plot_ibound()
-    except:
-        assert False, "could not plot grid and ibound"
+    mm.plot_grid()
+    mm.plot_ibound()
 
-    try:
-        fpth = os.path.join(lpth, "pathline2.png")
-        plt.savefig(fpth)
-        plt.close()
-    except:
-        assert False, "could not save plot as {}".format(fpth)
+    fpth = os.path.join(lpth, "pathline2.png")
+    plt.savefig(fpth)
+    plt.close()
 
     mm = flopy.plot.PlotMapView(model=m)
-    try:
-        mm.plot_pathline(plines, colors="red")
-    except:
-        assert False, "could not plot pathline"
+    mm.plot_pathline(plines, colors="red")
 
     # plot the grid and ibound array
-    try:
-        mm.plot_grid()
-        mm.plot_ibound()
-    except:
-        assert False, "could not plot grid and ibound"
+    mm.plot_grid()
+    mm.plot_ibound()
 
-    try:
-        fpth = os.path.join(lpth, "pathline3.png")
-        plt.savefig(fpth)
-        plt.close()
-    except:
-        assert False, "could not save plot as {}".format(fpth)
+    fpth = os.path.join(lpth, "pathline3.png")
+    plt.savefig(fpth)
+    plt.close()
 
     return
 
@@ -265,9 +200,9 @@ def test_pathline_plot_xc():
         exe_name=mpth_exe,
         modflowmodel=ml,
         model_ws=os.path.join(".", "temp"),
-        dis_file=ml.name + ".DIS",
-        head_file=ml.name + ".hed",
-        budget_file=ml.name + ".bud",
+        dis_file=f"{ml.name}.DIS",
+        head_file=f"{ml.name}.hed",
+        budget_file=f"{ml.name}.bud",
     )
 
     mpb = flopy.modpath.Modpath6Bas(
@@ -326,7 +261,7 @@ def test_mp5_load():
 
     # determine version
     ver = pthobj.version
-    assert ver == 5, "{} is not a MODPATH version 5 pathline file".format(fpth)
+    assert ver == 5, f"{fpth} is not a MODPATH version 5 pathline file"
 
     # read all of the pathline and endpoint data
     plines = pthobj.get_alldata()
@@ -347,17 +282,11 @@ def test_mp5_load():
         try:
             mm.plot_pathline(p, colors=colors[n], layer="all")
         except:
-            assert False, (
-                "could not plot pathline {} ".format(n + 1)
-                + 'with layer="all"'
-            )
+            assert False, f'could not plot pathline {n + 1} with layer="all"'
         try:
             mm.plot_endpoint(e)
         except:
-            assert False, (
-                "could not plot endpoint {} ".format(n + 1)
-                + 'with layer="all"'
-            )
+            assert False, f'could not plot endpoint {n + 1} with layer="all"'
 
     # plot the grid and ibound array
     try:
@@ -371,7 +300,7 @@ def test_mp5_load():
         plt.savefig(fpth, dpi=300)
         plt.close()
     except:
-        assert False, "could not save plot as {}".format(fpth)
+        assert False, f"could not save plot as {fpth}"
 
     return
 
@@ -405,8 +334,8 @@ def test_mp6_timeseries_load():
 def eval_timeseries(file):
     ts = flopy.utils.TimeseriesFile(file)
     msg = (
-        "{} ".format(os.path.basename(file))
-        + "is not an instance of flopy.utils.TimeseriesFile"
+        f"{os.path.basename(file)} "
+        "is not an instance of flopy.utils.TimeseriesFile"
     )
     assert isinstance(ts, flopy.utils.TimeseriesFile), msg
 
@@ -415,9 +344,7 @@ def eval_timeseries(file):
         tsd = ts.get_alldata()
     except:
         pass
-    msg = "could not load data using get_alldata() from " + "{}.".format(
-        os.path.basename(file)
-    )
+    msg = f"could not load data using get_alldata() from {os.path.basename(file)}."
     assert len(tsd) > 0, msg
 
     # get the data for the last particleid
@@ -428,7 +355,7 @@ def eval_timeseries(file):
         pass
     msg = (
         "could not get maximum particleid using get_maxid() from "
-        + "{}.".format(os.path.basename(file))
+        f"{os.path.basename(file)}."
     )
     assert partid is not None, msg
 
@@ -437,11 +364,8 @@ def eval_timeseries(file):
     except:
         pass
     msg = (
-        "could not load data for particleid {} ".format(partid)
-        + "using get_data() from "
-        + "{}. ".format(os.path.basename(file))
-        + "Maximum partid = "
-        + "{}.".format(ts.get_maxid())
+        f"could not load data for particleid {partid} using get_data() from "
+        f"{os.path.basename(file)}. Maximum partid = {ts.get_maxid()}."
     )
     assert tsd.shape[0] > 0, msg
 
@@ -452,7 +376,7 @@ def eval_timeseries(file):
         pass
     msg = (
         "could not get maximum time using get_maxtime() from "
-        + "{}.".format(os.path.basename(file))
+        f"{os.path.basename(file)}."
     )
     assert timemax is not None, msg
 
@@ -461,11 +385,8 @@ def eval_timeseries(file):
     except:
         pass
     msg = (
-        "could not load data for totim>={} ".format(timemax)
-        + "using get_alldata() from "
-        + "{}. ".format(os.path.basename(file))
-        + "Maximum totim = "
-        + "{}.".format(ts.get_maxtime())
+        f"could not load data for totim>={timemax} using get_alldata() from "
+        f"{os.path.basename(file)}. Maximum totim = {ts.get_maxtime()}."
     )
     assert len(tsd) > 0, msg
 
@@ -476,7 +397,7 @@ def eval_timeseries(file):
         pass
     msg = (
         "could not get maximum time using get_maxtime() from "
-        + "{}.".format(os.path.basename(file))
+        f"{os.path.basename(file)}."
     )
     assert timemax is not None, msg
 
@@ -485,11 +406,8 @@ def eval_timeseries(file):
     except:
         pass
     msg = (
-        "could not load data for totim<={} ".format(timemax)
-        + "using get_alldata() from "
-        + "{}. ".format(os.path.basename(file))
-        + "Maximum totim = "
-        + "{}.".format(ts.get_maxtime())
+        f"could not load data for totim<={timemax} using get_alldata() from "
+        f"{os.path.basename(file)}. Maximum totim = {ts.get_maxtime()}."
     )
     assert len(tsd) > 0, msg
 
@@ -498,7 +416,6 @@ def eval_timeseries(file):
 
 if __name__ == "__main__":
     test_modpath()
-    test_pathline_plot()
     test_pathline_plot_xc()
     test_mp5_load()
     test_mp5_timeseries_load()

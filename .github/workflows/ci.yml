@@ -22,17 +22,16 @@ jobs:
       run:
         shell: bash
 
-    if: github.repository_owner == 'modflowpy'
     steps:
 
     # check out repo
     - name: Checkout flopy repo
       uses: actions/checkout@v2.3.4
 
-    - name: Setup Python 3.8
-      uses: actions/setup-python@v2
+    - name: Setup Python 3.9
+      uses: actions/setup-python@v2.2.2
       with:
-        python-version: 3.8
+        python-version: 3.9
 
     - name: Upgrade pip
       run: |
@@ -40,7 +39,7 @@ jobs:
 
     - name: Base flopy installation
       run: |
-        pip install .
+        pip install . --use-feature=in-tree-build
 
     - name: Print flopy version
       run: |
@@ -56,7 +55,6 @@ jobs:
       run:
         shell: bash
 
-    if: github.repository_owner == 'modflowpy' && github.event_name != 'schedule'
     steps:
     # check out repo
     - name: Checkout flopy repo
@@ -66,15 +64,15 @@ jobs:
     # standard python here since only linting on linux.
     # Use standard bash shell with standard python
     - name: Setup Python 3.8
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v2.2.2
       with:
-        python-version: 3.8
+        python-version: 3.9
 
     - name: Print python version
       run: |
         python --version
 
-    - name: Install Python 3.8 packages
+    - name: Install Python 3.9 packages
       run: |
         python -m pip install --upgrade pip
         pip install -r etc/requirements.pip.txt
@@ -82,9 +80,9 @@ jobs:
     - name: Run black
       run: |
         echo "if black check fails run"
-        echo "  black --line-length 79 ./flopy"
+        echo "  black ./flopy"
         echo "and then commit the changes."
-        black --check --line-length 79 ./flopy
+        black --check ./flopy
 
     - name: Run flake8
       run: |
@@ -101,22 +99,30 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.8, 3.7, 3.6]
+        os: [ubuntu-latest, macos-latest]
+        python-version: [3.9, 3.8, 3.7]
         run-type: [std]
         test-pth: [""]
         include:
           - os: ubuntu-latest
-            python-version: 3.8
+            python-version: 3.9
             run-type: nb
-            test-path: autotest_notebooks.py
+            test-path: run_notebooks.py
           - os: ubuntu-latest
-            python-version: 3.8
+            python-version: 3.9
             run-type: script
-            test-path: autotest_scripts.py
+            test-path: run_scripts.py
+          - os: windows-latest
+            python-version: 3.9
+            run-type: std
+            test-path: ""
+          - os: windows-latest
+            python-version: 3.8
+            run-type: std
+            test-path: ""
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash
 
     steps:
     # check out repo
@@ -126,83 +132,94 @@ jobs:
     - name: Get branch name
       uses: nelonoel/branch-name@v1.0.1
 
-    - name: Cache Miniconda
-      uses: actions/cache@v2.1.0
-      env:
-        # Increase this value to reset cache if environment.yml has changed
-        CACHE_NUMBER: 0
-      with:
-        path: ~/conda_pkgs_dir
-        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.run-type }}-${{ env.CACHE_NUMBER }}-${{ hashFiles('etc/environment.yml') }}
-
-    # Standard python fails on windows without GDAL installation
-    # Using custom bash shell ("shell: bash -l {0}") with Miniconda
-    - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v2.1.1
+    - name: Setup Python
+      uses: actions/setup-python@v2.2.2
       with:
         python-version: ${{ matrix.python-version }}
-        mamba-version: "*"
-        channels: conda-forge
-        auto-update-conda: true
-        activate-environment: flopy
-        use-only-tar-bz2: true
+
+    - name: Upgrade pip and install wheel
+      run: |
+        python -m pip install --upgrade pip
+        pip install wheel
+
+    - name: Install Python packages on Windows
+      if: runner.os == 'Windows'
+      run: |
+        pip install -r etc/requirements.windows.pip.txt
+
+    - name: Install Python packages on Linux and MacOS
+      if: runner.os != 'Windows'
+      run: |
+        pip install -r etc/requirements.full.pip.txt
+
+    - name: Download Python packages with GDAL dependencies on Windows
+      if: runner.os == 'Windows'
+      shell: python
+      run: |
+        import os
+        from gohlkegrabber import GohlkeGrabber
+        gg = GohlkeGrabber()
+        wheel_path = os.path.join(".", "wheels")
+        os.makedirs(wheel_path, exist_ok=True)
+        gg.retrieve(wheel_path, "gdal")
+        gg.retrieve(wheel_path, "rasterio")
+        gg.retrieve(wheel_path, "fiona")
+
+    - name: Install Python packages with GDAL dependencies on Windows
+      if: runner.os == 'Windows'
+      run: |
+        ls -ltr ./wheels/
+        pip install ./wheels/GDAL*
+        pip install ./wheels/rasterio*
+        pip install ./wheels/Fiona*
 
     - name: Add jupyter and jupytext to notebooks run
       if: matrix.run-type == 'nb'
       run: |
-        mamba install --name flopy jupyter jupytext
-
-    - name: Add packages to flopy environment using mamba or conda
-      run: |
-        if [ "$RUNNER_OS" == "Windows" ]; then
-          conda env update --name flopy --file etc/environment.yml
-        else
-          mamba env update --name flopy --file etc/environment.yml
-        fi
+        pip install jupyter jupytext
 
     - name: Install pymake, xmipy, and flopy
       run: |
         pip install https://github.com/modflowpy/pymake/zipball/master
         pip install xmipy
-        pip install .
+        pip install . --use-feature=in-tree-build
 
-    - name: Setup symbolic link to gfortran on Linux
-      if: runner.os == 'Linux'
+    - name: Prepare for the autotests
+      working-directory: ./autotest
       run: |
-        sudo ln -fs /usr/bin/gfortran-10 /usr/local/bin/gfortran
-        sudo ln -fs /usr/bin/gcc-10 /usr/local/bin/gcc
-        sudo ln -fs /usr/bin/g++-10 /usr/local/bin/g++
+        pytest -v ci_prepare.py
 
-    - name: Setup symbolic link to gfortran on macOS
-      if: runner.os == 'macOS'
-      run: |
-        sudo ln -fs /usr/local/bin/gfortran-10 /usr/local/bin/gfortran
-        sudo ln -fs /usr/local/bin/gcc-10 /usr/local/bin/gcc
-        sudo ln -fs /usr/local/bin/g++-10 /usr/local/bin/g++
-
-    - name: Print GNU compiler versions
-      run: |
-        gfortran --version
-        gcc --version
-        g++ --version
-
-    - name: Download executables needed for tests
-      run: |
-        cd autotest
-        python get_exes.py
-        cd ..
-
-    - name: Add executables directory to path
+    - name: Add executables directory to path on Linux and MacOS
+      if: runner.os != 'Windows'
       run: |
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-    - name: Run nosetests
+    - name: Add executables directory to path on Windows
+      if: runner.os == 'Windows'
       run: |
-        coverage run -m nose -v --with-id --with-timer \
-        --with-coverage --cover-package=flopy --cover-xml \
-        --cover-xml-file=../coverage.xml -w ./autotest ${{ matrix.test-path }}
+        echo "C:\Users\runneradmin\.local\bin" >> $GITHUB_PATH
+
+    - name: Run pytest on autotest scripts
+      if: matrix.run-type == 'std'
+      working-directory: ./autotest
+      run: |
+        pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
+
+    - name: Run pytest on scripts and notebooks
+      if: matrix.run-type != 'std'
+      working-directory: ./autotest
+      run: |
+        pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml ${{ matrix.test-path }}
+
+    - name: Print coverage report before upload
+      working-directory: ./autotest
+      run: |
+        coverage report
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1.0.15
+      if:
+        github.repository_owner == 'modflowpy' && github.event_name == 'push'
+      uses: codecov/codecov-action@v2.1.0
       with:
-        file: ./coverage.xml
+        directory: ./autotest
+        file: coverage.xml

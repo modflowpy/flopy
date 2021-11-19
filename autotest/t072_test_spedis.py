@@ -16,19 +16,23 @@ import flopy
 import os
 import numpy as np
 import flopy.utils.binaryfile as bf
+from ci_framework import base_test_dir, FlopyTestSetup
+
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 # model names, file names and locations
-modelname_mf2005 = "t070_mf2005"
-modelname_mf6 = "t070_mf6"
-postproc_test_ws = os.path.join(".", "temp", "t072")
-modelws_mf2005 = os.path.join(postproc_test_ws, modelname_mf2005)
-modelws_mf6 = os.path.join(postproc_test_ws, modelname_mf6)
-cbcfile_mf2005 = os.path.join(modelws_mf2005, modelname_mf2005 + ".cbc")
-cbcfile_mf6 = os.path.join(modelws_mf6, modelname_mf6 + ".cbc")
-hdsfile_mf2005 = os.path.join(modelws_mf2005, modelname_mf2005 + ".hds")
-hdsfile_mf6 = os.path.join(modelws_mf6, modelname_mf6 + ".hds")
-namfile_mf2005 = os.path.join(modelws_mf2005, modelname_mf2005 + ".nam")
-namfile_mf6 = os.path.join(modelws_mf6, modelname_mf6 + ".nam")
+modelname_mf2005 = f"mf2005"
+modelname_mf6 = f"mf6"
+
+modelws_mf2005 = f"{base_dir}_{modelname_mf2005}"
+modelws_mf6 = f"{base_dir}_{modelname_mf6}"
+
+cbcfile_mf2005 = os.path.join(modelws_mf2005, f"{modelname_mf2005}.cbc")
+cbcfile_mf6 = os.path.join(modelws_mf6, f"{modelname_mf6}.cbc")
+hdsfile_mf2005 = os.path.join(modelws_mf2005, f"{modelname_mf2005}.hds")
+hdsfile_mf6 = os.path.join(modelws_mf6, f"{modelname_mf6}.hds")
+namfile_mf2005 = os.path.join(modelws_mf2005, f"{modelname_mf2005}.nam")
+namfile_mf6 = os.path.join(modelws_mf6, f"{modelname_mf6}.nam")
 
 # model domain, grid definition and properties
 Lx = 100.0
@@ -102,11 +106,6 @@ boundary_ifaces = {
 
 
 def build_model_mf2005():
-
-    # create folders
-    if not os.path.isdir(modelws_mf2005):
-        os.makedirs(modelws_mf2005)
-
     # create modflow model
     mf = flopy.modflow.Modflow(
         modelname_mf2005, model_ws=modelws_mf2005, exe_name="mf2005"
@@ -180,10 +179,6 @@ def build_model_mf2005():
 
 
 def build_model_mf6():
-
-    if not os.path.isdir(modelws_mf6):
-        os.makedirs(modelws_mf6)
-
     # create simulation
     simname = modelname_mf6
     sim = flopy.mf6.MFSimulation(
@@ -200,7 +195,7 @@ def build_model_mf6():
     gwf = flopy.mf6.ModflowGwf(
         sim,
         modelname=modelname_mf6,
-        model_nam_file="{}.nam".format(modelname_mf6),
+        model_nam_file=f"{modelname_mf6}.nam",
     )
     gwf.name_file.save_flows = True
 
@@ -294,8 +289,8 @@ def build_model_mf6():
     oc = flopy.mf6.ModflowGwfoc(
         gwf,
         pname="oc",
-        budget_filerecord="{}.cbc".format(modelname_mf6),
-        head_filerecord="{}.hds".format(modelname_mf6),
+        budget_filerecord=f"{modelname_mf6}.cbc",
+        head_filerecord=f"{modelname_mf6}.hds",
         headprintrecord=[("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "GENERAL")],
         saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
         printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
@@ -357,6 +352,8 @@ def local_balance_check(Qx_ext, Qy_ext, Qz_ext, hdsfile=None, model=None):
 
 
 def test_extended_budget_default():
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=modelws_mf2005)
+
     # build and run MODFLOW 2005 model
     build_model_mf2005()
 
@@ -371,10 +368,15 @@ def test_extended_budget_default():
     # overall check
     overall = np.sum(Qx_ext) + np.sum(Qy_ext) + np.sum(Qz_ext)
     assert np.allclose(overall, -1122.4931640625)
+
+    # call other evaluations
+    specific_discharge_default()
+    specific_discharge_comprehensive()
+
     return
 
 
-def test_extended_budget_comprehensive():
+def extended_budget_comprehensive():
     # load and postprocess
     mf = flopy.modflow.Modflow.load(namfile_mf2005, check=False)
     Qx_ext, Qy_ext, Qz_ext = flopy.utils.postprocessing.get_extended_budget(
@@ -396,7 +398,7 @@ def test_extended_budget_comprehensive():
     return
 
 
-def test_specific_discharge_default():
+def specific_discharge_default():
     # load and postprocess
     mf = flopy.modflow.Modflow.load(namfile_mf2005, check=False)
     cbc = bf.CellBudgetFile(cbcfile_mf2005)
@@ -410,7 +412,7 @@ def test_specific_discharge_default():
     return
 
 
-def test_specific_discharge_comprehensive():
+def specific_discharge_comprehensive():
     import matplotlib.pyplot as plt
     from matplotlib.quiver import Quiver
 
@@ -501,6 +503,8 @@ def test_specific_discharge_mf6():
     import matplotlib.pyplot as plt
     from matplotlib.quiver import Quiver
 
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=modelws_mf6)
+
     # build and run MODFLOW 6 model
     build_model_mf6()
 
@@ -572,11 +576,12 @@ def test_specific_discharge_mf6():
 
     # close figure
     plt.close()
+
     return
 
 
 if __name__ == "__main__":
-    test_extended_budget_default()
+    extended_budget_default()
     test_extended_budget_comprehensive()
     test_specific_discharge_default()
     test_specific_discharge_comprehensive()

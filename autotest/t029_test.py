@@ -1,6 +1,5 @@
-from nose.tools import raises
+import pytest
 import os
-import shutil
 
 import numpy as np
 import matplotlib
@@ -8,15 +7,12 @@ import matplotlib.pyplot as plt
 
 import flopy
 
+from ci_framework import base_test_dir, FlopyTestSetup
+
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
+
 pthtest = os.path.join("..", "examples", "data", "mfgrd_test")
 flowpth = os.path.join("..", "examples", "data", "mf6-freyberg")
-
-tpth = os.path.join("temp", "t029")
-# remove the directory if it exists
-if os.path.isdir(tpth):
-    shutil.rmtree(tpth)
-# make the directory
-os.makedirs(tpth)
 
 
 def test_mfgrddis_MfGrdFile():
@@ -26,14 +22,12 @@ def test_mfgrddis_MfGrdFile():
     nodes = grb.nodes
     ia = grb.ia
     shape = ia.shape[0]
-    assert shape == nodes + 1, "ia size ({}) not equal to {}".format(
-        shape, nodes + 1
-    )
+    assert shape == nodes + 1, f"ia size ({shape}) not equal to {nodes + 1}"
 
     nnz = ia[-1]
     ja = grb.ja
     shape = ja.shape[0]
-    assert shape == nnz, "ja size ({}) not equal to {}".format(shape, nnz)
+    assert shape == nnz, f"ja size ({shape}) not equal to {nnz}"
 
     modelgrid = grb.modelgrid
     assert isinstance(
@@ -53,34 +47,30 @@ def test_mfgrddis_modelgrid():
     lc = modelgrid.plot()
     assert isinstance(
         lc, matplotlib.collections.LineCollection
-    ), "could not plot grid object created from {}".format(fn)
+    ), f"could not plot grid object created from {fn}"
     plt.close()
 
     extents = modelgrid.extent
     errmsg = (
-        "extents {} of {} ".format(extents, fn)
-        + "does not equal (0.0, 8000.0, 0.0, 8000.0)"
+        f"extents {extents} of {fn} does not equal (0.0, 8000.0, 0.0, 8000.0)"
     )
     assert extents == (0.0, 8000.0, 0.0, 8000.0), errmsg
 
     ncpl = modelgrid.ncol * modelgrid.nrow
-    assert modelgrid.ncpl == ncpl, "ncpl ({}) does not equal {}".format(
-        modelgrid.ncpl, ncpl
-    )
+    assert (
+        modelgrid.ncpl == ncpl
+    ), f"ncpl ({modelgrid.ncpl}) does not equal {ncpl}"
 
     nvert = modelgrid.nvert
     iverts = modelgrid.iverts
     maxvertex = max([max(sublist[1:]) for sublist in iverts])
-    assert maxvertex + 1 == nvert, "nvert ({}) does not equal {}".format(
-        maxvertex + 1, nvert
-    )
-    verts = modelgrid.verts
     assert (
-        nvert == verts.shape[0]
-    ), "number of vertex (x, y) pairs ({}) ".format(
-        verts.shape[0]
-    ) + "does not equal {}".format(
-        nvert
+        maxvertex + 1 == nvert
+    ), f"nvert ({maxvertex + 1}) does not equal {nvert}"
+    verts = modelgrid.verts
+    assert nvert == verts.shape[0], (
+        f"number of vertex (x, y) pairs ({verts.shape[0]}) "
+        f"does not equal {nvert}"
     )
 
 
@@ -91,19 +81,17 @@ def test_mfgrddisv_MfGrdFile():
     nodes = grb.nodes
     ia = grb.ia
     shape = ia.shape[0]
-    assert shape == nodes + 1, "ia size ({}) not equal to {}".format(
-        shape, nodes + 1
-    )
+    assert shape == nodes + 1, f"ia size ({shape}) not equal to {nodes + 1}"
 
     nnz = ia[-1]
     ja = grb.ja
     shape = ja.shape[0]
-    assert shape == nnz, "ja size ({}) not equal to {}".format(shape, nnz)
+    assert shape == nnz, f"ja size ({shape}) not equal to {nnz}"
 
     mg = grb.modelgrid
     assert isinstance(
         mg, flopy.discretization.VertexGrid
-    ), "invalid grid type ({})".format(type(mg))
+    ), f"invalid grid type ({type(mg)})"
 
 
 def test_mfgrddisv_modelgrid():
@@ -113,42 +101,37 @@ def test_mfgrddisv_modelgrid():
     )
     assert isinstance(
         mg, flopy.discretization.VertexGrid
-    ), "invalid grid type ({})".format(type(mg))
+    ), f"invalid grid type ({type(mg)})"
 
     ncpl = 218
-    assert mg.ncpl == ncpl, "ncpl ({}) does not equal {}".format(mg.ncpl, ncpl)
+    assert mg.ncpl == ncpl, f"ncpl ({mg.ncpl}) does not equal {ncpl}"
 
     lc = mg.plot()
     assert isinstance(
         lc, matplotlib.collections.LineCollection
-    ), "could not plot grid object created from {}".format(fn)
+    ), f"could not plot grid object created from {fn}"
     plt.close("all")
 
     extents = mg.extent
     extents0 = (0.0, 700.0, 0.0, 700.0)
-    errmsg = "extents {} of {} ".format(
-        extents, fn
-    ) + "does not equal {}".format(extents0)
+    errmsg = f"extents {extents} of {fn} does not equal {extents0}"
     assert extents == extents0, errmsg
 
     nvert = mg.nvert
     iverts = mg.iverts
     maxvertex = max([max(sublist[1:]) for sublist in iverts])
-    assert maxvertex + 1 == nvert, "nvert ({}) does not equal {}".format(
-        maxvertex + 1, nvert
-    )
-    verts = mg.verts
     assert (
-        nvert == verts.shape[0]
-    ), "number of vertex (x, y) pairs ({}) ".format(
-        verts.shape[0]
-    ) + "does not equal {}".format(
-        nvert
+        maxvertex + 1 == nvert
+    ), f"nvert ({maxvertex + 1}) does not equal {nvert}"
+    verts = mg.verts
+    assert nvert == verts.shape[0], (
+        f"number of vertex (x, y) pairs ({verts.shape[0]}) "
+        f"does not equal {nvert}"
     )
 
     cellxy = np.column_stack((mg.xyzcellcenters[:2]))
-    errmsg = "shape of flow.disv centroids {} not equal to (218, 2).".format(
-        cellxy.shape
+    errmsg = (
+        f"shape of flow.disv centroids {cellxy.shape} not equal to (218, 2)."
     )
     assert cellxy.shape == (218, 2), errmsg
     return
@@ -161,27 +144,25 @@ def test_mfgrddisu_MfGrdFile():
     nodes = grb.nodes
     ia = grb.ia
     shape = ia.shape[0]
-    assert shape == nodes + 1, "ia size ({}) not equal to {}".format(
-        shape, nodes + 1
-    )
+    assert shape == nodes + 1, f"ia size ({shape}) not equal to {nodes + 1}"
 
     nnz = ia[-1]
     ja = grb.ja
     shape = ja.shape[0]
-    assert shape == nnz, "ja size ({}) not equal to {}".format(shape, nnz)
+    assert shape == nnz, f"ja size ({shape}) not equal to {nnz}"
 
     mg = grb.modelgrid
     assert isinstance(
         mg, flopy.discretization.UnstructuredGrid
-    ), "invalid grid type ({})".format(type(mg))
+    ), f"invalid grid type ({type(mg)})"
 
 
-@raises(TypeError)
 def test_mfgrddisu_modelgrid_fail():
     fn = os.path.join(pthtest, "flow.disu.grb")
-    mg = flopy.discretization.UnstructuredGrid.from_binary_grid_file(
-        fn, verbose=True
-    )
+    with pytest.raises(TypeError):
+        mg = flopy.discretization.UnstructuredGrid.from_binary_grid_file(
+            fn, verbose=True
+        )
 
 
 def test_mfgrddisu_modelgrid():
@@ -191,40 +172,38 @@ def test_mfgrddisu_modelgrid():
     )
     assert isinstance(
         mg, flopy.discretization.UnstructuredGrid
-    ), "invalid grid type ({})".format(type(mg))
+    ), f"invalid grid type ({type(mg)})"
 
     lc = mg.plot()
     assert isinstance(
         lc, matplotlib.collections.LineCollection
-    ), "could not plot grid object created from {}".format(fn)
+    ), f"could not plot grid object created from {fn}"
     plt.close("all")
 
     extents = mg.extent
     extents0 = (0.0, 10000.0, 0.0, 1.0)
-    errmsg = "extents {} of {} ".format(
-        extents, fn
-    ) + "does not equal {}".format(extents0)
+    errmsg = f"extents {extents} of {fn} does not equal {extents0}"
     assert extents == extents0, errmsg
 
     nvert = mg.nvert
     iverts = mg.iverts
     maxvertex = max([max(sublist[1:]) for sublist in iverts])
-    assert maxvertex + 1 == nvert, "nvert ({}) does not equal {}".format(
-        maxvertex + 1, nvert
-    )
-    verts = mg.verts
     assert (
-        nvert == verts.shape[0]
-    ), "number of vertex (x, y) pairs ({}) ".format(
-        verts.shape[0]
-    ) + "does not equal {}".format(
-        nvert
+        maxvertex + 1 == nvert
+    ), f"nvert ({maxvertex + 1}) does not equal {nvert}"
+    verts = mg.verts
+    assert nvert == verts.shape[0], (
+        f"number of vertex (x, y) pairs ({verts.shape[0]}) "
+        f"does not equal {nvert}"
     )
 
     return
 
 
 def test_faceflows():
+    model_ws = f"{base_dir}_test_faceflows"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     sim = flopy.mf6.MFSimulation.load(
         sim_name="freyberg",
         exe_name="mf6",
@@ -232,7 +211,7 @@ def test_faceflows():
     )
 
     # change the simulation workspace
-    sim.set_sim_path(tpth)
+    sim.set_sim_path(model_ws)
 
     # write the model simulation files
     sim.write_simulation()
@@ -241,7 +220,7 @@ def test_faceflows():
     sim.run_simulation()
 
     # get output
-    gwf = sim.get_model("gwf_1")
+    gwf = sim.get_model("freyberg")
     head = gwf.output.head().get_data()
     cbc = gwf.output.budget()
 
@@ -250,7 +229,7 @@ def test_faceflows():
 
     frf, fff, flf = flopy.mf6.utils.get_structured_faceflows(
         flowja,
-        grb_file=os.path.join(tpth, "freyberg.dis.grb"),
+        grb_file=os.path.join(model_ws, "freyberg.dis.grb"),
     )
     Qx, Qy, Qz = flopy.utils.postprocessing.get_specific_discharge(
         (frf, fff, flf),
@@ -298,15 +277,27 @@ def test_faceflows():
 
 
 def test_flowja_residuals():
+    model_ws = f"{base_dir}_test_flowja_residuals"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     sim = flopy.mf6.MFSimulation.load(
         sim_name="freyberg",
         exe_name="mf6",
-        sim_ws=tpth,
+        sim_ws=flowpth,
     )
 
+    # change the simulation workspace
+    sim.set_sim_path(model_ws)
+
+    # write the model simulation files
+    sim.write_simulation()
+
+    # run the simulation
+    sim.run_simulation()
+
     # get output
-    gwf = sim.get_model("gwf_1")
-    grb_file = os.path.join(tpth, "freyberg.dis.grb")
+    gwf = sim.get_model("freyberg")
+    grb_file = os.path.join(model_ws, "freyberg.dis.grb")
     cbc = gwf.output.budget()
 
     spdis = cbc.get_data(text="DATA-SPDIS")[0]
@@ -335,46 +326,46 @@ def test_flowja_residuals():
     return
 
 
-@raises(ValueError)
 def test_faceflows_empty():
     flowja = np.zeros(10, dtype=np.float64)
-    frf, fff, flf = flopy.mf6.utils.get_structured_faceflows(flowja)
+    with pytest.raises(ValueError):
+        frf, fff, flf = flopy.mf6.utils.get_structured_faceflows(flowja)
 
 
-@raises(ValueError)
 def test_faceflows_jaempty():
     flowja = np.zeros(10, dtype=np.float64)
     ia = np.zeros(10, dtype=np.int32)
-    frf, fff, flf = flopy.mf6.utils.get_structured_faceflows(flowja, ia=ia)
+    with pytest.raises(ValueError):
+        frf, fff, flf = flopy.mf6.utils.get_structured_faceflows(flowja, ia=ia)
 
 
-@raises(ValueError)
 def test_faceflows_iaempty():
     flowja = np.zeros(10, dtype=np.float64)
     ja = np.zeros(10, dtype=np.int32)
-    _v = flopy.mf6.utils.get_structured_faceflows(flowja, ja=ja)
+    with pytest.raises(ValueError):
+        _v = flopy.mf6.utils.get_structured_faceflows(flowja, ja=ja)
 
 
-@raises(ValueError)
 def test_faceflows_flowja_size():
     flowja = np.zeros(10, dtype=np.float64)
     ia = np.zeros(5, dtype=np.int32)
     ja = np.zeros(5, dtype=np.int32)
-    _v = flopy.mf6.utils.get_structured_faceflows(flowja, ia=ia, ja=ja)
+    with pytest.raises(ValueError):
+        _v = flopy.mf6.utils.get_structured_faceflows(flowja, ia=ia, ja=ja)
 
 
-@raises(ValueError)
 def test_residuals_jaempty():
     flowja = np.zeros(10, dtype=np.float64)
     ia = np.zeros(10, dtype=np.int32)
-    _v = flopy.mf6.utils.get_residuals(flowja, ia=ia)
+    with pytest.raises(ValueError):
+        _v = flopy.mf6.utils.get_residuals(flowja, ia=ia)
 
 
-@raises(ValueError)
 def test_residuals_iaempty():
     flowja = np.zeros(10, dtype=np.float64)
     ja = np.zeros(10, dtype=np.int32)
-    _v = flopy.mf6.utils.get_residuals(flowja, ja=ja)
+    with pytest.raises(ValueError):
+        _v = flopy.mf6.utils.get_residuals(flowja, ja=ja)
 
 
 if __name__ == "__main__":

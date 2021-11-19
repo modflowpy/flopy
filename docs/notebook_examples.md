@@ -19,8 +19,6 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + An overview of how FloPy handles external files for numeric arrays written by FloPy to MODFLOW-based input files is given in the [flopy3_external_file_handling](../examples/Notebooks/flopy3_external_file_handling.ipynb) Notebook.
 
-+ An overview of FloPy functionality in the ```SpatialReference``` class for locating the model in a "real world" coordinate reference system is given in the [flopy3_SpatialReference_demo](../examples/Notebooks/flopy3_SpatialReference_demo.ipynb) Notebook.
-
 + An overview of FloPy capabilities to load a SFR2 file and evaluate data contained in the file is given in the [flopy3_SFR2_load](../examples/Notebooks/flopy3_SFR2_load.ipynb) Notebook.
 
 + An overview of FloPy capabilities to create a SFR2 file and evaluate data contained in the file is given in the [flopy3_sfrpackage_example](../examples/Notebooks/flopy3_sfrpackage_example.ipynb) Notebook. This example also shows how to read SFR water balance output into a pandas dataframe for additional postprocessing.

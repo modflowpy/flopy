@@ -1,14 +1,10 @@
 import numpy as np
-from ..discretization import StructuredGrid, UnstructuredGrid
 from ..utils import geometry
 
-try:
-    import matplotlib.pyplot as plt
-    import matplotlib.colors
-    from matplotlib.collections import PathCollection, LineCollection
-    from matplotlib.path import Path
-except (ImportError, ModuleNotFoundError):
-    plt = None
+import matplotlib.pyplot as plt
+import matplotlib.colors
+from matplotlib.collections import PathCollection, LineCollection
+from matplotlib.path import Path
 
 from . import plotutil
 import warnings
@@ -46,13 +42,6 @@ class PlotMapView:
     def __init__(
         self, model=None, modelgrid=None, ax=None, layer=0, extent=None
     ):
-
-        if plt is None:
-            s = (
-                "Could not import matplotlib.  Must install matplotlib "
-                + " in order to use ModelMap method"
-            )
-            raise ImportError(s)
 
         self.model = model
         self.layer = layer
@@ -174,11 +163,7 @@ class PlotMapView:
         contour_set : matplotlib.pyplot.contour
 
         """
-        try:
-            import matplotlib.tri as tri
-        except ImportError:
-            err_msg = "matplotlib must be installed to use contour_array()"
-            raise ImportError(err_msg)
+        import matplotlib.tri as tri
 
         a = np.copy(a)
         if not isinstance(a, np.ndarray):
@@ -304,7 +289,7 @@ class PlotMapView:
         color_noflow="black",
         color_ch="blue",
         color_vpt="red",
-        **kwargs
+        **kwargs,
     ):
         """
         Make a plot of ibound.  If not specified, then pull ibound from the
@@ -390,7 +375,7 @@ class PlotMapView:
         kper=0,
         color=None,
         plotAll=False,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot boundary conditions locations for a specific boundary
@@ -447,7 +432,7 @@ class PlotMapView:
                         mflist = pp.stress_period_data.array[kper]
                     except Exception as e:
                         raise Exception(
-                            "Not a list-style boundary package: " + str(e)
+                            f"Not a list-style boundary package: {e!s}"
                         )
                     if mflist is None:
                         return
@@ -470,7 +455,7 @@ class PlotMapView:
                     mflist = p.stress_period_data[kper]
                 except Exception as e:
                     raise Exception(
-                        "Not a list-style boundary package: " + str(e)
+                        f"Not a list-style boundary package: {e!s}"
                     )
                 if mflist is None:
                     return
@@ -487,8 +472,10 @@ class PlotMapView:
             pa[tuple(idx[1:])] = 1
             for k in range(nlay):
                 plotarray[k] = pa.copy()
-        else:
+        elif len(self.mg.shape) > 1:
             plotarray[tuple(idx)] = 1
+        else:
+            plotarray[idx] = 1
 
         # mask the plot array
         plotarray = np.ma.masked_equal(plotarray, 0)
@@ -626,7 +613,7 @@ class PlotMapView:
         jstep=1,
         normalize=False,
         masked_values=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot a vector.
@@ -713,179 +700,6 @@ class PlotMapView:
         urot, vrot = geometry.rotate(u, v, 0.0, 0.0, self.mg.angrot_radians)
         quiver = ax.quiver(x, y, urot, vrot, pivot=pivot, **kwargs)
         return quiver
-
-    def plot_specific_discharge(
-        self, spdis, istep=1, jstep=1, normalize=False, **kwargs
-    ):
-        """
-        DEPRECATED. Use plot_vector() instead, which should follow after
-        postprocessing.get_specific_discharge().
-
-        Method to plot specific discharge from discharge vectors
-        provided by the cell by cell flow output file. In MODFLOW-6
-        this option is controled in the NPF options block. This method
-        uses matplotlib quiver to create a matplotlib plot of the output.
-
-        Parameters
-        ----------
-        spdis : np.recarray
-            specific discharge recarray from cbc file
-        istep : int
-            row frequency to plot. (Default is 1.)
-        jstep : int
-            column frequency to plot. (Default is 1.)
-        normalize : bool
-            boolean flag used to determine if discharge vectors should
-            be normalized using the magnitude of the specific discharge in each
-            cell. (default is False)
-        kwargs : matplotlib.pyplot keyword arguments for the
-            plt.quiver method.
-
-        Returns
-        -------
-        quiver : matplotlib.pyplot.quiver
-            quiver plot of discharge vectors
-
-        """
-        warnings.warn(
-            "plot_specific_discharge() has been deprecated and will be "
-            "removed in version 3.3.5. Use plot_vector() instead, which "
-            "should follow after postprocessing.get_specific_discharge()",
-            DeprecationWarning,
-        )
-
-        if isinstance(spdis, list):
-            print(
-                "Warning: Selecting the final stress period from Specific"
-                " Discharge list"
-            )
-            spdis = spdis[-1]
-
-        nodes = self.mg.nnodes
-
-        qx = np.zeros(nodes)
-        qy = np.zeros(nodes)
-
-        idx = np.array(spdis["node"]) - 1
-        qx[idx] = spdis["qx"]
-        qy[idx] = spdis["qy"]
-
-        return self.plot_vector(qx, qy, istep, jstep, normalize, **kwargs)
-
-    def plot_discharge(
-        self,
-        frf=None,
-        fff=None,
-        flf=None,
-        head=None,
-        istep=1,
-        jstep=1,
-        normalize=False,
-        **kwargs
-    ):
-        """
-        DEPRECATED. Use plot_vector() instead, which should follow after
-        postprocessing.get_specific_discharge().
-
-        Use quiver to plot vectors.
-
-        Parameters
-        ----------
-        frf : numpy.ndarray
-            MODFLOW's 'flow right face'
-        fff : numpy.ndarray
-            MODFLOW's 'flow front face'
-        flf : numpy.ndarray
-            MODFLOW's 'flow lower face' (Default is None.)
-        head : numpy.ndarray
-            MODFLOW's head array.  If not provided, then will assume confined
-            conditions in order to calculated saturated thickness.
-        istep : int
-            row frequency to plot. (Default is 1.)
-        jstep : int
-            column frequency to plot. (Default is 1.)
-        normalize : bool
-            boolean flag used to determine if discharge vectors should
-            be normalized using the magnitude of the specific discharge in each
-            cell. (default is False)
-        kwargs : dictionary
-            Keyword arguments passed to plt.quiver()
-
-        Returns
-        -------
-        quiver : matplotlib.pyplot.quiver
-            Vectors of specific discharge.
-
-        """
-        warnings.warn(
-            "plot_discharge() has been deprecated and will be replaced "
-            "in version 3.3.5. Use plot_vector() instead, which should "
-            "follow after postprocessing.get_specific_discharge()",
-            DeprecationWarning,
-        )
-
-        if self.mg.grid_type != "structured":
-            err_msg = "Use plot_specific_discharge for " "{} grids".format(
-                self.mg.grid_type
-            )
-            raise NotImplementedError(err_msg)
-
-        else:
-            if self.mg.top is None:
-                err = (
-                    "StructuredGrid must have top and "
-                    "botm defined to use plot_discharge()"
-                )
-                raise AssertionError(err)
-
-            delr = self.mg.delr
-            delc = self.mg.delc
-            top = np.copy(self.mg.top)
-            botm = np.copy(self.mg.botm)
-            laytyp = None
-            hnoflo = 999.0
-            hdry = 999.0
-            laycbd = None
-
-            if self.model is not None:
-                if self.model.laytyp is not None:
-                    laytyp = self.model.laytyp
-
-                if self.model.hnoflo is not None:
-                    hnoflo = self.model.hnoflo
-
-                if self.model.hdry is not None:
-                    hdry = self.model.hdry
-
-                if self.model.laycbd is not None:
-                    laycbd = self.model.laycbd
-
-            if laycbd is not None and 1 in laycbd:
-                active = np.ones((botm.shape[0],), dtype=int)
-                kon = 0
-                for cbd in laycbd:
-                    if cbd > 0:
-                        kon += 1
-                        active[kon] = 0
-                botm = botm[active == 1]
-
-            # If no access to head or laytyp, then calculate confined saturated
-            # thickness by setting laytyp to zeros
-            if head is None or laytyp is None:
-                head = np.zeros(botm.shape, np.float32)
-                laytyp = np.zeros((botm.shape[0],), dtype=int)
-
-            # calculate the saturated thickness
-            sat_thk = plotutil.PlotUtilities.saturated_thickness(
-                head, top, botm, laytyp, [hnoflo, hdry]
-            )
-
-            # Calculate specific discharge
-            qx, qy, qz = plotutil.PlotUtilities.centered_specific_discharge(
-                frf, fff, flf, delr, delc, sat_thk
-            )
-
-            return self.plot_vector(qx, qy, istep, jstep, normalize, **kwargs)
 
     def plot_pathline(self, pl, travel_time=None, **kwargs):
         """
@@ -1034,7 +848,7 @@ class PlotMapView:
         direction="ending",
         selection=None,
         selection_direction=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot the MODPATH endpoints.
@@ -1112,233 +926,3 @@ class PlotMapView:
             cb = plt.colorbar(sp, ax=ax, shrink=shrink)
             cb.set_label(colorbar_label)
         return sp
-
-
-class DeprecatedMapView(PlotMapView):
-    """
-    Deprecation handler for the PlotMapView class
-
-    Parameters
-    ----------
-    model : flopy.modflow.Modflow object
-    modelgrid : flopy.discretization.Grid object
-    ax : matplotlib.pyplot.axes object
-    layer : int
-        model layer to plot, default is layer 1
-    extent : tuple of floats
-        (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
-        then these will be calculated based on grid, coordinates, and rotation.
-
-    """
-
-    def __init__(
-        self, model=None, modelgrid=None, ax=None, layer=0, extent=None
-    ):
-        super().__init__(
-            model=model, modelgrid=modelgrid, ax=ax, layer=layer, extent=extent
-        )
-
-    def plot_discharge(
-        self,
-        frf,
-        fff,
-        dis=None,
-        flf=None,
-        head=None,
-        istep=1,
-        jstep=1,
-        normalize=False,
-        **kwargs
-    ):
-        """
-        Use quiver to plot vectors. Deprecated method that uses
-        the old function call to pass the method to PlotMapView
-
-        Parameters
-        ----------
-        frf : numpy.ndarray
-            MODFLOW's 'flow right face'
-        fff : numpy.ndarray
-            MODFLOW's 'flow front face'
-        dis : flopy.modflow.ModflowDis package
-            Depricated parameter
-        flf : numpy.ndarray
-            MODFLOW's 'flow lower face' (Default is None.)
-        head : numpy.ndarray
-            MODFLOW's head array.  If not provided, then will assume confined
-            conditions in order to calculated saturated thickness.
-        istep : int
-            row frequency to plot. (Default is 1.)
-        jstep : int
-            column frequency to plot. (Default is 1.)
-        normalize : bool
-            boolean flag used to determine if discharge vectors should
-            be normalized using the magnitude of the specific discharge in each
-            cell. (default is False)
-        kwargs : dictionary
-            Keyword arguments passed to plt.quiver()
-
-        Returns
-        -------
-        quiver : matplotlib.pyplot.quiver
-            Vectors of specific discharge.
-
-        """
-
-        if dis is not None:
-            self.mg = plotutil._depreciated_dis_handler(
-                modelgrid=self.mg, dis=dis
-            )
-
-        super().plot_discharge(
-            frf=frf,
-            fff=fff,
-            flf=flf,
-            head=head,
-            istep=1,
-            jstep=1,
-            normalize=normalize,
-            **kwargs
-        )
-
-
-class ModelMap:
-    """
-    DEPRECATED. ModelMap acts as a PlotMapView factory
-    object. Please migrate to PlotMapView for plotting
-    functionality and future code compatibility
-
-    Parameters
-    ----------
-    sr : flopy.utils.reference.SpatialReference
-        The spatial reference class (Default is None)
-    ax : matplotlib.pyplot axis
-        The plot axis.  If not provided it, plt.gca() will be used.
-        If there is not a current axis then a new one will be created.
-    model : flopy.modflow object
-        flopy model object. (Default is None)
-    dis : flopy.modflow.ModflowDis object
-        flopy discretization object. (Default is None)
-    layer : int
-        Layer to plot.  Default is 0.  Must be between 0 and nlay - 1.
-    xul : float
-        x coordinate for upper left corner
-    yul : float
-        y coordinate for upper left corner.  The default is the sum of the
-        delc array.
-    rotation : float
-        Angle of grid rotation around the upper left corner.  A positive value
-        indicates clockwise rotation.  Angles are in degrees.
-    extent : tuple of floats
-        (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
-        then these will be calculated based on grid, coordinates, and rotation.
-    length_multiplier : float
-        scaling factor for conversion from model units to another unit
-        length base ex. ft to m.
-
-    Notes
-    -----
-    ModelMap must know the position and rotation of the grid in order to make
-    the plot.  This information is contained in the SpatialReference class
-    (sr), which can be passed.  If sr is None, then it looks for sr in dis.
-    If dis is None, then it looks for sr in model.dis.  If all of these
-    arguments are none, then it uses xul, yul, and rotation.  If none of these
-    arguments are provided, then it puts the lower-left-hand corner of the
-    grid at (0, 0).
-    """
-
-    def __new__(
-        cls,
-        sr=None,
-        ax=None,
-        model=None,
-        dis=None,
-        layer=0,
-        extent=None,
-        xul=None,
-        yul=None,
-        xll=None,
-        yll=None,
-        rotation=None,
-        length_multiplier=None,
-    ):
-
-        from ..utils.reference import SpatialReferenceUnstructured
-
-        err_msg = (
-            "ModelMap is deprecated and has been replaced by "
-            "PlotMapView(). ModelMap will be removed in version 3.3.5; "
-            "Calling PlotMapView()"
-        )
-        warnings.warn(err_msg, DeprecationWarning)
-
-        modelgrid = None
-        if model is not None:
-            if (xul, yul, xll, yll, rotation) != (
-                None,
-                None,
-                None,
-                None,
-                None,
-            ):
-                modelgrid = plotutil._set_coord_info(
-                    model.modelgrid, xul, yul, xll, yll, rotation
-                )
-        elif sr is not None:
-            if length_multiplier is not None:
-                sr.length_multiplier = length_multiplier
-
-            if (xul, yul, xll, yll, rotation) != (
-                None,
-                None,
-                None,
-                None,
-                None,
-            ):
-                sr.set_spatialreference(xul, yul, xll, yll, rotation)
-
-            if isinstance(sr, SpatialReferenceUnstructured):
-                if dis is not None:
-                    modelgrid = UnstructuredGrid(
-                        vertices=sr.verts,
-                        iverts=sr.iverts,
-                        xcenters=sr.xc,
-                        ycenters=sr.yc,
-                        top=dis.top.array,
-                        botm=dis.botm.array,
-                        ncpl=sr.ncpl,
-                    )
-                else:
-                    modelgrid = UnstructuredGrid(
-                        vertices=sr.verts,
-                        iverts=sr.iverts,
-                        xcenters=sr.xc,
-                        ycenters=sr.yc,
-                        ncpl=sr.ncpl,
-                    )
-
-            elif dis is not None:
-                modelgrid = StructuredGrid(
-                    delc=sr.delc,
-                    delr=sr.delr,
-                    top=dis.top.array,
-                    botm=dis.botm.array,
-                    xoff=sr.xll,
-                    yoff=sr.yll,
-                    angrot=sr.rotation,
-                )
-            else:
-                modelgrid = StructuredGrid(
-                    delc=sr.delc,
-                    delr=sr.delr,
-                    xoff=sr.xll,
-                    yoff=sr.yll,
-                    angrot=sr.rotation,
-                )
-
-        else:
-            pass
-
-        return DeprecatedMapView(
-            model=model, modelgrid=modelgrid, ax=ax, layer=layer, extent=extent
-        )

@@ -1,10 +1,12 @@
 
 <img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
-### Version 3.3.4 &mdash; release candidate
-[![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
+### Version 3.3.5 &mdash; release candidate
+[![flopy continuous integration](https://github.com/modflowpy/flopy/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/modflowpy/flopy/actions/workflows/ci.yml)
+[![Read the Docs](https://github.com/modflowpy/flopy/actions/workflows/rtd.yml/badge.svg?branch=develop)](https://github.com/modflowpy/flopy/actions/workflows/rtd.yml)
+
 [![codecov](https://codecov.io/gh/modflowpy/flopy/branch/develop/graph/badge.svg)](https://codecov.io/gh/modflowpy/flopy)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/b23a5edd021b4aa19e947545ab49e577)](https://www.codacy.com/manual/jdhughes-usgs/flopy?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=modflowpy/flopy&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/3f44f457aa474a8f83ad60c1842f7be2)](https://www.codacy.com/gh/modflowpy/flopy/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=modflowpy/flopy&amp;utm_campaign=Badge_Grade)
 [![Documentation Status](https://readthedocs.org/projects/flopy/badge/?version=latest)](https://flopy.readthedocs.io/en/latest/?badge=latest)
 
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/flopy/badges/installer/conda.svg)](https://conda.anaconda.org/conda-forge)
@@ -24,7 +26,7 @@ For general modeling issues, please consult a modeling forum, such as the [MODFL
 Installation
 -----------------------------------------------
 
-FloPy requires **Python** 3.5 (or higher) and **NumPy** 1.9 (or higher).  Dependencies for optional FloPy methods are summarized [here](docs/flopy_method_dependencies.md).
+FloPy requires **Python** 3.7 (or higher), **NumPy** 1.15.0 (or higher), and **matplotlib** 1.4.0 (or higher).  Dependencies for optional FloPy methods are summarized [here](docs/flopy_method_dependencies.md).
 
 To install FloPy type:
 
@@ -41,7 +43,12 @@ The release candidate version can also be installed from the git repository usin
 Documentation
 -----------------------------------------------
 
-FloPy code documentation is available at [https://flopy.readthedocs.io](https://flopy.readthedocs.io)
+Documentation is available on **Read the Docs** and includes information
+on FloPy; tutorials for using FloPy with MODFLOW 6 and previous versions
+of MODFLOW, MT3DMS, MT3D-USGS, MODPATH, and ZONEBUDGET; and code documentation.
+
+ - Read the Docs for the [latest release](https://flopy.readthedocs.io).
+ - Read the Docs for the [current release candidate](https://flopy.readthedocs.io/en/latest/).
 
 
 Getting Started
@@ -50,7 +57,6 @@ Getting Started
 ### MODFLOW 6 Quick Start
 
 ```python
-import os
 import flopy
 ws = './mymodel'
 name = 'mymodel'
@@ -76,11 +82,12 @@ head = gwf.output.head().get_data()
 bud = gwf.output.budget()
 
 spdis = bud.get_data(text='DATA-SPDIS')[0]
+qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(spdis, gwf)
 pmv = flopy.plot.PlotMapView(gwf)
 pmv.plot_array(head)
 pmv.plot_grid(colors='white')
 pmv.contour_array(head, levels=[.2, .4, .6, .8], linewidths=3.)
-pmv.plot_specific_discharge(spdis, color='white')
+pmv.plot_vector(qx, qy, normalize=True, color="white")
 ```
 <img src="examples/images/quickstart.png" alt="plot" style="width:30;height:30">
 
@@ -140,7 +147,7 @@ How to Cite
 
 ##### ***Software/Code citation for FloPy:***
 
-[Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N., 2021, FloPy v3.3.4 &mdash; release candidate: U.S. Geological Survey Software Release, 18 February 2021, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, Mark, Post, Vincent, Hughes, J. D., Langevin, C. D., White, J. T., Leaf, A. T., Paulinski, S. R., Bellino, J. C., Morway, E. D., Toews, M. W., Larsen, J. D., Fienen, M. N., Starn, J. J., and Brakenhoff, Davíd, 2021, FloPy v3.3.5 &mdash; release candidate: U.S. Geological Survey Software Release, 20 August 2021, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 MODFLOW Resources

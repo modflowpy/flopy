@@ -8,8 +8,6 @@ important classes that can be accessed by the user.
 """
 
 import itertools
-import collections
-import warnings
 import numpy as np
 
 from numpy.lib.recfunctions import append_fields, stack_arrays
@@ -58,13 +56,10 @@ class _ModpathSeries(object):
             if isinstance(line, bytes):
                 line = line.decode()
             if self.skiprows < 1:
-                if (
-                    "MODPATH_{}_FILE 6".format(self.output_type)
-                    in line.upper()
-                ):
+                if f"MODPATH_{self.output_type}_FILE 6" in line.upper():
                     self.version = 6
                 elif (
-                    "MODPATH_{}_FILE         7".format(self.output_type)
+                    f"MODPATH_{self.output_type}_FILE         7"
                     in line.upper()
                 ):
                     self.version = 7
@@ -204,7 +199,8 @@ class _ModpathSeries(object):
         Parameters
         ----------
         dest_cells : list or array of tuples
-            (k, i, j) of each destination cell (zero-based)
+            (k, i, j) of each destination cell for MODPATH versions less than
+            MODPATH 7 or node number of each destination cell. (zero based)
         to_recarray : bool
             Boolean that controls returned series. If to_recarray is True,
             a single recarray with all of the pathlines that intersect
@@ -216,7 +212,8 @@ class _ModpathSeries(object):
         -------
         series : np.recarray
             Slice of data array (e.g. PathlineFile._data, TimeseriesFile._data)
-            containing only pathlines with final k,i,j in dest_cells.
+            containing endpoint, pathline, or timeseries data that intersect
+            (k,i,j) or (node) dest_cells.
 
         """
 
@@ -229,11 +226,10 @@ class _ModpathSeries(object):
             try:
                 raslice = ra[["k", "i", "j"]]
             except (KeyError, ValueError):
-                msg = (
+                raise KeyError(
                     "could not extract 'k', 'i', and 'j' keys "
-                    + "from {} data".format(self.output_type.lower())
+                    "from {} data".format(self.output_type.lower())
                 )
-                raise KeyError(msg)
         else:
             try:
                 raslice = ra[["node"]]
@@ -279,8 +275,7 @@ class _ModpathSeries(object):
         shpname="endpoints.shp",
         mg=None,
         epsg=None,
-        sr=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Write pathlines or timeseries to a shapefile
@@ -329,20 +324,8 @@ class _ModpathSeries(object):
         series = series.copy()
         series.sort(order=["particleid", "time"])
 
-        if mg is None and sr.__class__.__name__ == "SpatialReference":
-            warnings.warn(
-                "Deprecation warning: SpatialReference is deprecated."
-                "Use the Grid class instead.",
-                DeprecationWarning,
-            )
-            mg = StructuredGrid(sr.delc, sr.delr)
-            mg.set_coord_info(
-                xoff=sr.xll,
-                yoff=sr.yll,
-                angrot=sr.rotation,
-                epsg=sr.epsg,
-                proj4=sr.proj4_str,
-            )
+        if mg is None:
+            raise ValueError("A modelgrid object was not provided.")
 
         if epsg is None:
             epsg = mg.epsg
@@ -531,11 +514,10 @@ class PathlineFile(_ModpathSeries):
                 ]
             )
         elif self.version == 7:
-            msg = (
+            raise TypeError(
                 "_get_dtypes() should not be called for "
-                + "MODPATH 7 pathline files"
+                "MODPATH 7 pathline files"
             )
-            raise TypeError(msg)
         return dtype
 
     def _get_mp7data(self):
@@ -574,7 +556,7 @@ class PathlineFile(_ModpathSeries):
             ]
         )
         idx = 0
-        part_dict = collections.OrderedDict()
+        part_dict = {}
         ndata = 0
         while True:
             if idx == 0:
@@ -721,12 +703,13 @@ class PathlineFile(_ModpathSeries):
 
     def get_destination_pathline_data(self, dest_cells, to_recarray=False):
         """
-        Get pathline data for set of destination cells.
+        Get pathline data that pass through a set of destination cells.
 
         Parameters
         ----------
         dest_cells : list or array of tuples
-            (k, i, j) of each destination cell (zero-based)
+            (k, i, j) of each destination cell for MODPATH versions less than
+            MODPATH 7 or node number of each destination cell. (zero based)
         to_recarray : bool
             Boolean that controls returned pthldest. If to_recarray is True,
             a single recarray with all of the pathlines that intersect
@@ -738,7 +721,8 @@ class PathlineFile(_ModpathSeries):
         -------
         pthldest : np.recarray
             Slice of pathline data array (e.g. PathlineFile._data)
-            containing only pathlines with final k,i,j in dest_cells.
+            containing only pathlines that pass through (k,i,j) or (node)
+            dest_cells.
 
         Examples
         --------
@@ -761,8 +745,7 @@ class PathlineFile(_ModpathSeries):
         shpname="pathlines.shp",
         mg=None,
         epsg=None,
-        sr=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Write pathlines to a shapefile
@@ -800,8 +783,7 @@ class PathlineFile(_ModpathSeries):
             shpname=shpname,
             mg=mg,
             epsg=epsg,
-            sr=sr,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -893,9 +875,7 @@ class EndpointFile:
                 else:
                     self.version = None
                 if self.version is None:
-                    errmsg = "{} is not a valid endpoint file".format(
-                        self.fname
-                    )
+                    errmsg = f"{self.fname} is not a valid endpoint file"
                     raise Exception(errmsg)
             self.skiprows += 1
             if self.version == 6 or self.version == 7:
@@ -912,7 +892,7 @@ class EndpointFile:
         self.file.seek(0)
 
         if self.verbose:
-            print("MODPATH version {} endpoint file".format(self.version))
+            print(f"MODPATH version {self.version} endpoint file")
 
     def _get_dtypes(self):
         """
@@ -1026,57 +1006,8 @@ class EndpointFile:
             shaped = self._data.shape[0]
             pids = np.arange(1, shaped + 1, 1, dtype=np.int32)
 
-            # determine numpy version
-            npv = np.__version__
-            v = [int(s) for s in npv.split(".")]
-            if self.verbose:
-                print("numpy version {}".format(npv))
-
             # for numpy version 1.14 and higher
-            if v[0] > 1 or (v[0] == 1 and v[1] > 13):
-                self._data = append_fields(self._data, "particleid", pids)
-            # numpy versions prior to 1.14
-            else:
-                if self.verbose:
-                    print(self._data.dtype)
-
-                # convert pids to structured array
-                pids = np.array(
-                    pids, dtype=np.dtype([("particleid", np.int32)])
-                )
-
-                # create new dtype
-                dtype = self._get_mp35_dtype(add_id=True)
-                if self.verbose:
-                    print(dtype)
-
-                # create new array with new dtype and fill with available data
-                data = np.zeros(shaped, dtype=dtype)
-                if self.verbose:
-                    print("new data shape {}".format(data.shape))
-                    print("\nFilling new structured data array")
-
-                # add particle id to new array
-                if self.verbose:
-                    msg = (
-                        "writing particleid (pids) to new "
-                        + "structured data array"
-                    )
-                    print(msg)
-                data["particleid"] = pids["particleid"]
-
-                # add remaining data to the new array
-                if self.verbose:
-                    msg = (
-                        "writing remaining data to new "
-                        + "structured data array"
-                    )
-                    print(msg)
-                for name in self._data.dtype.names:
-                    data[name] = self._data[name]
-                if self.verbose:
-                    print("replacing data with copy of new data array")
-                self._data = data.copy()
+            self._data = append_fields(self._data, "particleid", pids)
         return
 
     def get_maxid(self):
@@ -1181,12 +1112,13 @@ class EndpointFile:
 
     def get_destination_endpoint_data(self, dest_cells, source=False):
         """
-        Get endpoint data for set of destination cells.
+        Get endpoint data that terminate in a set of destination cells.
 
         Parameters
         ----------
         dest_cells : list or array of tuples
-            (k, i, j) or (node,) of each destination cell (zero-based)
+            (k, i, j) of each destination cell for MODPATH versions less than
+            MODPATH 7 or node number of each destination cell. (zero based)
         source : bool
             Boolean to specify is dest_cells applies to source or
             destination cells (default is False).
@@ -1195,7 +1127,8 @@ class EndpointFile:
         -------
         epdest : np.recarray
             Slice of endpoint data array (e.g. EndpointFile.get_alldata)
-            containing only data with final k,i,j in dest_cells.
+            containing only endpoint data with final locations in (k,i,j) or
+            (node) dest_cells.
 
         Examples
         --------
@@ -1220,14 +1153,11 @@ class EndpointFile:
             try:
                 raslice = ra_slice(ra, keys)
             except (KeyError, ValueError):
-                msg = (
-                    "could not extract"
-                    + "'"
+                raise KeyError(
+                    "could not extract "
                     + "', '".join(keys)
-                    + "'"
-                    + "from endpoint data."
+                    + " from endpoint data."
                 )
-                raise KeyError(msg)
         else:
             if source:
                 keys = ["node0"]
@@ -1236,10 +1166,7 @@ class EndpointFile:
             try:
                 raslice = ra_slice(ra, keys)
             except (KeyError, ValueError):
-                msg = (
-                    "could not extract '{}' ".format(keys[0])
-                    + "key from endpoint data"
-                )
+                msg = f"could not extract '{keys[0]}' key from endpoint data"
                 raise KeyError(msg)
             if isinstance(dest_cells, (list, tuple)):
                 allint = all(isinstance(el, int) for el in dest_cells)
@@ -1266,8 +1193,7 @@ class EndpointFile:
         direction="ending",
         mg=None,
         epsg=None,
-        sr=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Write particle starting / ending locations to shapefile.
@@ -1304,25 +1230,12 @@ class EndpointFile:
         elif direction.lower() == "starting":
             xcol, ycol, zcol = "x0", "y0", "z0"
         else:
-            errmsg = (
+            raise Exception(
                 'flopy.map.plot_endpoint direction must be "ending" '
-                + 'or "starting".'
+                'or "starting".'
             )
-            raise Exception(errmsg)
-        if mg is None and sr.__class__.__name__ == "SpatialReference":
-            warnings.warn(
-                "Deprecation warning: SpatialReference is deprecated."
-                "Use the Grid class instead.",
-                DeprecationWarning,
-            )
-            mg = StructuredGrid(sr.delc, sr.delr)
-            mg.set_coord_info(
-                xoff=sr.xll,
-                yoff=sr.yll,
-                angrot=sr.rotation,
-                epsg=sr.epsg,
-                proj4=sr.proj4_str,
-            )
+        if mg is None:
+            raise ValueError("A modelgrid object was not provided.")
         if epsg is None:
             epsg = mg.epsg
 
@@ -1431,11 +1344,9 @@ class TimeseriesFile(_ModpathSeries):
                 else:
                     self.version = None
                 if self.version is None:
-                    errmsg = (
-                        "{} ".format(self.fname)
-                        + "is not a valid timeseries file"
+                    raise Exception(
+                        f"{self.fname} is not a valid timeseries file"
                     )
-                    raise Exception(errmsg)
             self.skiprows += 1
             if self.version == 6 or self.version == 7:
                 if "end header" in line.lower():
@@ -1637,18 +1548,20 @@ class TimeseriesFile(_ModpathSeries):
 
     def get_destination_timeseries_data(self, dest_cells):
         """
-        Get timeseries data for set of destination cells.
+        Get timeseries data that pass through a set of destination cells.
 
         Parameters
         ----------
         dest_cells : list or array of tuples
-            (k, i, j) or nodes of each destination cell (zero-based)
+            (k, i, j) of each destination cell for MODPATH versions less than
+            MODPATH 7 or node number of each destination cell. (zero based)
 
         Returns
         -------
         tsdest : np.recarray
             Slice of timeseries data array (e.g. TmeseriesFile._data)
-            containing only pathlines with final k,i,j in dest_cells.
+            containing only timeseries that pass through (k,i,j) or
+            (node) dest_cells.
 
         Examples
         --------
@@ -1669,8 +1582,7 @@ class TimeseriesFile(_ModpathSeries):
         shpname="pathlines.shp",
         mg=None,
         epsg=None,
-        sr=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Write pathlines to a shapefile
@@ -1708,6 +1620,5 @@ class TimeseriesFile(_ModpathSeries):
             shpname=shpname,
             mg=mg,
             epsg=epsg,
-            sr=sr,
-            **kwargs
+            **kwargs,
         )

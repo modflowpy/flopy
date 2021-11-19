@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import numpy as np
 from ..utils import flopy_io
 
@@ -27,27 +26,19 @@ class OptionBlock:
     vars = "vars"
     optional = "optional"
 
-    simple_flag = OrderedDict(
-        [(dtype, np.bool_), (nested, False), (optional, False)]
-    )
-    simple_str = OrderedDict(
-        [(dtype, str), (nested, False), (optional, False)]
-    )
-    simple_float = OrderedDict(
-        [(dtype, float), (nested, False), (optional, False)]
-    )
-    simple_int = OrderedDict(
-        [(dtype, int), (nested, False), (optional, False)]
-    )
+    simple_flag = dict([(dtype, np.bool_), (nested, False), (optional, False)])
+    simple_str = dict([(dtype, str), (nested, False), (optional, False)])
+    simple_float = dict([(dtype, float), (nested, False), (optional, False)])
+    simple_int = dict([(dtype, int), (nested, False), (optional, False)])
 
-    simple_tabfile = OrderedDict(
+    simple_tabfile = dict(
         [
             (dtype, np.bool_),
             (nested, True),
             (n_nested, 2),
             (
                 vars,
-                OrderedDict([("numtab", simple_int), ("maxval", simple_int)]),
+                dict([("numtab", simple_int), ("maxval", simple_int)]),
             ),
         ]
     )
@@ -282,7 +273,7 @@ class OptionBlock:
                     ix += 1
 
                 else:
-                    err_msg = "Option: {} not a valid option".format(t[ix])
+                    err_msg = f"Option: {t[ix]} not a valid option"
                     raise KeyError(err_msg)
 
             else:
@@ -359,12 +350,10 @@ class OptionBlock:
         if openfile:
             try:
                 options = open(options, "r")
-            except IOError:
-                err_msg = (
-                    "Unrecognized type for options"
-                    " variable: {}".format(type(options))
+            except OSError:
+                raise TypeError(
+                    f"Unrecognized type for options variable: {type(options)}"
                 )
-                raise TypeError(err_msg)
 
         option_line = ""
         while True:
@@ -398,10 +387,7 @@ class OptionBlock:
                                 valid = True
 
                             if not valid:
-                                err_msg = (
-                                    "Invalid type set to variable "
-                                    "{} in option block".format(k)
-                                )
+                                err_msg = f"Invalid type set to variable {k} in option block"
                                 raise TypeError(err_msg)
 
                             option_line += t[ix] + " "
@@ -488,10 +474,7 @@ class OptionUtil:
                 pass
 
         if not valid:
-            err_msg = (
-                "Invalid type set to variable "
-                "{} in option block".format(val)
-            )
+            err_msg = f"Invalid type set to variable {val} in option block"
             raise TypeError(err_msg)
 
         return valid

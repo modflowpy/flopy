@@ -10,15 +10,35 @@ Contents:
    :maxdepth: 2
 
    _notebooks/tutorial01_mf6
-   _notebooks/tutorial02_mf6
-   _notebooks/tutorial03_mf6
-   _notebooks/tutorial04_mf6
-   _notebooks/tutorial05_mf6
-   _notebooks/tutorial06_mf6
-   _notebooks/tutorial07_mf6
-   _notebooks/tutorial08_mf6
-   _notebooks/tutorial09_mf6
-   _notebooks/tutorial101_mf6_output
+
+
+MODFLOW 6 FloPy Use Tutorials
+-----------------------------
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   _notebooks/tutorial01_mf6_data
+   _notebooks/tutorial02_mf6_data
+   _notebooks/tutorial03_mf6_data
+   _notebooks/tutorial04_mf6_data
+   _notebooks/tutorial05_mf6_data
+   _notebooks/tutorial06_mf6_data
+   _notebooks/tutorial07_mf6_data
+   _notebooks/tutorial08_mf6_data
+
+
+MODFLOW 6 Output Tutorials
+--------------------------
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   _notebooks/tutorial01_mf6_output
 
 
 MODFLOW Tutorials
@@ -31,6 +51,18 @@ Contents:
 
    _notebooks/tutorial01_mf
    _notebooks/tutorial02_mf
+
+
+.IPYNB_CHECKPOINTS Tutorials
+----------------------------
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   _notebooks/tutorial01_mf-checkpoint
+   _notebooks/tutorial02_mf-checkpoint
 
 
 SEAWAT Tutorials

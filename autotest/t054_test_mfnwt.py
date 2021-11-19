@@ -7,11 +7,12 @@ import os
 import sys
 import flopy
 import pymake
+import pytest
 
 # make the working directory
 tpth = os.path.join("temp", "t054")
 if not os.path.isdir(tpth):
-    os.makedirs(tpth)
+    os.makedirs(tpth, exist_ok=True)
 
 # build list of name files to try and load
 nwtpth = os.path.join("..", "examples", "data", "mf2005_test")
@@ -45,10 +46,13 @@ else:
 
 
 #
-def test_mfnwt_model():
-    for fnwt in nwt_files:
-        d, f = os.path.split(fnwt)
-        yield mfnwt_model, f, d
+@pytest.mark.parametrize(
+    "fnwt",
+    list(nwt_files),
+)
+def test_mfnwt_model(fnwt):
+    d, f = os.path.split(fnwt)
+    mfnwt_model(f, d)
 
 
 # function to load a MODFLOW-2005 model, convert to a MFNWT model,
@@ -64,7 +68,7 @@ def mfnwt_model(namfile, model_ws):
         check=False,
         exe_name=mfnwt_exe,
     )
-    assert m, "Could not load namefile {}".format(namfile)
+    assert m, f"Could not load namefile {namfile}"
     assert m.load_fail is False
     # convert to MODFLOW-NWT model
     m.set_version("mfnwt")
@@ -115,7 +119,7 @@ def mfnwt_model(namfile, model_ws):
     wel = m.get_package("WEL")
     wel.specify = True
     wel.phiramp = 1.0e-5
-    wel.phiramp_unit = 2
+    wel.iunitramp = 2
 
     # change workspace and write MODFLOW-NWT model
     tdir = os.path.splitext(namfile)[0]
@@ -139,7 +143,7 @@ def mfnwt_model(namfile, model_ws):
         check=False,
         exe_name=mfnwt_exe,
     )
-    assert m, "Could not load namefile {}".format(namfile)
+    assert m, f"Could not load namefile {namfile}"
     assert m.load_fail is False
 
     # change workspace and write MODFLOW-NWT model
@@ -155,7 +159,7 @@ def mfnwt_model(namfile, model_ws):
         fn1 = os.path.join(pthf, namfile)
 
     if run:
-        fsum = os.path.join(pth, "{}.head.out".format(tdir))
+        fsum = os.path.join(pth, f"{tdir}.head.out")
         success = False
         try:
             success = pymake.compare_heads(fn0, fn1, outfile=fsum)
@@ -165,7 +169,7 @@ def mfnwt_model(namfile, model_ws):
 
         assert success, "head comparison failure"
 
-        fsum = os.path.join(pth, "{}.budget.out".format(tdir))
+        fsum = os.path.join(pth, f"{tdir}.budget.out")
         success = False
         try:
             success = pymake.compare_budget(

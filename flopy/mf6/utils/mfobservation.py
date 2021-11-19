@@ -1,6 +1,8 @@
 import numpy as np
 import csv
 
+from ...utils import import_optional_dependency
+
 
 def try_float(data):
     try:
@@ -207,11 +209,10 @@ class Observations:
         pd.DataFrame
 
         """
-        try:
-            import pandas as pd
-        except Exception as e:
-            print("this feature requires pandas")
-            return None
+        pd = import_optional_dependency(
+            "pandas",
+            error_message="get_dataframe() requires pandas.",
+        )
 
         data_str = self._reader(self.Obsname)
         data = self._array_to_dict(data_str)
@@ -255,9 +256,7 @@ class Observations:
             keys = self._key_list(keys)
             for key in keys:
                 if key not in data:
-                    raise KeyError(
-                        "Supplied data key: {} is not " "valid".format(key)
-                    )
+                    raise KeyError(f"Supplied data key: {key} is not valid")
                 else:
                     pass
 
@@ -410,8 +409,7 @@ class MFObservationRequester:
             pass
 
         else:
-            err = "{} is not a valid dictionary key\n".format(str(key))
-            raise KeyError(err)
+            raise KeyError(f"{key} is not a valid dictionary key")
 
     def _query_observation_data(self, modelpath, key):
         # get absolute path for observation data files
@@ -448,7 +446,7 @@ class MFObservationRequester:
             if check > 1:
                 multi_observations = [i for i in partial_key if i == line]
                 for i in range(len(multi_observations)):
-                    obs8_file = "OBS8_{}".format(i + 1)
+                    obs8_file = f"OBS8_{i + 1}"
                     # check for single observations, continuous observations
                     self._get_obsfile_names(
                         multi_observations[i], obs8_file, "SINGLE"
@@ -532,9 +530,7 @@ class MFObservationRequester:
             return "GWF"
 
         else:
-            raise KeyError(
-                "{} is not a valid observation " "type".format(package)
-            )
+            raise KeyError(f"{package} is not a valid observation type")
 
     @staticmethod
     def getkeys(mfdict, path):

@@ -8,7 +8,6 @@ MODFLOW Guide
 
 """
 import os
-import sys
 
 from ..pakbase import Package
 
@@ -155,13 +154,9 @@ class ModflowOc(Package):
         unitnumber=None,
         filenames=None,
         label="LABEL",
-        **kwargs
+        **kwargs,
     ):
 
-        """
-        Package constructor.
-
-        """
         if unitnumber is None:
             unitnumber = ModflowOc._defaultunit()
         elif isinstance(unitnumber, list):
@@ -169,15 +164,9 @@ class ModflowOc(Package):
                 for idx in range(len(unitnumber), 6):
                     unitnumber.append(0)
         self.label = label
+
         # set filenames
-        if filenames is None:
-            filenames = [None, None, None, None, None]
-        elif isinstance(filenames, str):
-            filenames = [filenames, None, None, None, None]
-        elif isinstance(filenames, list):
-            if len(filenames) < 5:
-                for idx in range(len(filenames), 5):
-                    filenames.append(None)
+        filenames = self._prepare_filenames(filenames, 5)
 
         # support structured and unstructured dis
         dis = model.get_package("DIS")
@@ -218,28 +207,26 @@ class ModflowOc(Package):
                     icnt += 1
 
         # set output unit numbers based on oc settings
-        self.savehead, self.saveddn, self.savebud, self.saveibnd = (
-            False,
-            False,
-            False,
-            False,
-        )
+        self.savehead = False
+        self.saveddn = False
+        self.savebud = False
+        self.saveibnd = False
         for key, value in stress_period_data.items():
-            tlist = list(value)
-            for t in tlist:
-                if "save head" in t.lower():
+            for t in list(value):
+                tlwr = t.lower()
+                if "save head" in tlwr:
                     self.savehead = True
                     if unitnumber[1] == 0:
                         unitnumber[1] = 51
-                if "save drawdown" in t.lower():
+                if "save drawdown" in tlwr:
                     self.saveddn = True
                     if unitnumber[2] == 0:
                         unitnumber[2] = 52
-                if "save budget" in t.lower():
+                if "save budget" in tlwr:
                     self.savebud = True
                     if unitnumber[3] == 0 and filenames is None:
                         unitnumber[3] = 53
-                if "save ibound" in t.lower():
+                if "save ibound" in tlwr:
                     self.saveibnd = True
                     if unitnumber[4] == 0:
                         unitnumber[4] = 54
@@ -263,23 +250,19 @@ class ModflowOc(Package):
         # add output files
         # head file
         if self.savehead:
-            iu = unitnumber[1]
-            binflag = True
-            if chedfm is not None:
-                binflag = False
-            fname = filenames[1]
             model.add_output_file(
-                iu, fname=fname, extension=extension[1], binflag=binflag
+                unitnumber[1],
+                fname=filenames[1],
+                extension=extension[1],
+                binflag=chedfm is None,
             )
         # drawdown file
         if self.saveddn:
-            iu = unitnumber[2]
-            binflag = True
-            if cddnfm is not None:
-                binflag = False
-            fname = filenames[2]
             model.add_output_file(
-                iu, fname=fname, extension=extension[2], binflag=binflag
+                unitnumber[2],
+                fname=filenames[2],
+                extension=extension[2],
+                binflag=cddnfm is None,
             )
         # budget file
         # Nothing is needed for the budget file
@@ -287,39 +270,23 @@ class ModflowOc(Package):
         # ibound file
         ibouun = unitnumber[4]
         if self.saveibnd:
-            iu = unitnumber[4]
-            binflag = True
-            if cboufm is not None:
-                binflag = False
-            fname = filenames[4]
             model.add_output_file(
-                iu, fname=fname, extension=extension[4], binflag=binflag
+                unitnumber[4],
+                fname=filenames[4],
+                extension=extension[4],
+                binflag=cboufm is None,
             )
 
-        name = [ModflowOc._ftype()]
-        extra = [""]
-        extension = [extension[0]]
-        unitnumber = unitnumber[0]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
-            extension=extension,
-            name=name,
-            unit_number=unitnumber,
-            extra=extra,
-            filenames=fname,
+            extension=extension[0],
+            name=self._ftype(),
+            unit_number=unitnumber[0],
+            filenames=filenames[0],
         )
 
-        self.heading = (
-            "# {} package for ".format(self.name[0])
-            + " {}, ".format(model.version_types[model.version])
-            + "generated by Flopy."
-        )
+        self._generate_heading()
 
         self.url = "oc.htm"
         self.ihedfm = ihedfm
@@ -397,15 +364,13 @@ class ModflowOc(Package):
                                 chk._add_to_summary(
                                     "Warning",
                                     package="OC",  # value=kperkstp,
-                                    desc="action {!r} ignored; too few words".format(
-                                        action
-                                    ),
+                                    desc=f"action {action!r} ignored; too few words",
                                 )
                             elif words[0:2] not in expected_actions:
                                 chk._add_to_summary(
                                     "Warning",
                                     package="OC",  # value=kperkstp,
-                                    desc="action {!r} ignored".format(action),
+                                    desc=f"action {action!r} ignored",
                                 )
                             # TODO: check data list of layers for some actions
             for kperkstp in keys:
@@ -429,37 +394,31 @@ class ModflowOc(Package):
 
         """
         f_oc = open(self.fn_path, "w")
-        f_oc.write("{}\n".format(self.heading))
+        f_oc.write(f"{self.heading}\n")
 
         # write options
-        line = "HEAD PRINT FORMAT {0:3.0f}\n".format(self.ihedfm)
+        line = f"HEAD PRINT FORMAT {self.ihedfm:3.0f}\n"
         f_oc.write(line)
         if self.chedfm is not None:
-            line = "HEAD SAVE FORMAT {0:20s} {1}\n".format(
-                self.chedfm, self.label
-            )
+            line = f"HEAD SAVE FORMAT {self.chedfm:20s} {self.label}\n"
             f_oc.write(line)
         if self.savehead:
-            line = "HEAD SAVE UNIT {0:5.0f}\n".format(self.iuhead)
+            line = f"HEAD SAVE UNIT {self.iuhead:5.0f}\n"
             f_oc.write(line)
 
-        f_oc.write("DRAWDOWN PRINT FORMAT {0:3.0f}\n".format(self.iddnfm))
+        f_oc.write(f"DRAWDOWN PRINT FORMAT {self.iddnfm:3.0f}\n")
         if self.cddnfm is not None:
-            line = "DRAWDOWN SAVE FORMAT {0:20s} {1}\n".format(
-                self.cddnfm, self.label
-            )
+            line = f"DRAWDOWN SAVE FORMAT {self.cddnfm:20s} {self.label}\n"
             f_oc.write(line)
         if self.saveddn:
-            line = "DRAWDOWN SAVE UNIT {0:5.0f}\n".format(self.iuddn)
+            line = f"DRAWDOWN SAVE UNIT {self.iuddn:5.0f}\n"
             f_oc.write(line)
 
         if self.saveibnd:
             if self.cboufm is not None:
-                line = "IBOUND SAVE FORMAT {0:20s} {1}\n".format(
-                    self.cboufm, self.label
-                )
+                line = f"IBOUND SAVE FORMAT {self.cboufm:20s} {self.label}\n"
                 f_oc.write(line)
-            line = "IBOUND SAVE UNIT {0:5.0f}\n".format(self.iuibnd)
+            line = f"IBOUND SAVE UNIT {self.iuibnd:5.0f}\n"
             f_oc.write(line)
 
         if self.compact:
@@ -495,13 +454,9 @@ class ModflowOc(Package):
                             if "DDREFERENCE" in item.upper():
                                 ddnref = item.lower()
                             else:
-                                lines += "  {}\n".format(item)
+                                lines += f"  {item}\n"
                 if len(lines) > 0:
-                    f_oc.write(
-                        "period {} step {} {}\n".format(
-                            kper + 1, kstp + 1, ddnref
-                        )
-                    )
+                    f_oc.write(f"period {kper + 1} step {kstp + 1} {ddnref}\n")
                     f_oc.write(lines)
                     f_oc.write("\n")
                     ddnref = ""
@@ -782,18 +737,17 @@ class ModflowOc(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading oc package file...\n")
+            print("loading oc package file...")
 
         # set nper
         if nper is None or nlay is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
 
         if nper == 0 or nlay == 0:
-            msg = (
+            raise ValueError(
                 "discretization package not defined for the model, "
-                + "nper and nlay must be provided to the .load() method"
+                "nper and nlay must be provided to the .load() method"
             )
-            raise ValueError(msg)
 
         # set nstp
         if nstp is None:
@@ -801,11 +755,10 @@ class ModflowOc(Package):
             if dis is None:
                 dis = model.get_package("DISU")
             if dis is None:
-                msg = (
+                raise ValueError(
                     "discretization package not defined for the model, "
-                    + "a nstp list must be provided to the .load() method"
+                    "a nstp list must be provided to the .load() method"
                 )
-                raise ValueError(msg)
             nstp = list(dis.nstp.array)
         else:
             if isinstance(nstp, (int, float)):
@@ -813,10 +766,10 @@ class ModflowOc(Package):
 
         # validate the size of nstp
         if len(nstp) != nper:
-            msg = "nstp must be a list with {} entries, ".format(
-                nper
-            ) + "provided nstp list has {} entries.".format(len(nstp))
-            raise IOError(msg)
+            raise OSError(
+                f"nstp must be a list with {nper} entries, "
+                f"provided nstp list has {len(nstp)} entries."
+            )
 
         # initialize
         ihedfm = 0
@@ -909,21 +862,21 @@ class ModflowOc(Package):
                             hdpr, ddpr = int(lnlst[0]), int(lnlst[1])
                             hdsv, ddsv = int(lnlst[2]), int(lnlst[3])
                             if hdpr != 0:
-                                headprint += " {}".format(k + 1)
+                                headprint += f" {k + 1}"
                             if ddpr != 0:
-                                ddnprint += " {}".format(k + 1)
+                                ddnprint += f" {k + 1}"
                             if hdsv != 0:
-                                headsave += " {}".format(k + 1)
+                                headsave += f" {k + 1}"
                             if ddsv != 0:
-                                ddnsave += " {}".format(k + 1)
+                                ddnsave += f" {k + 1}"
                         if len(headprint) > 0:
-                            lines.append("PRINT HEAD" + headprint)
+                            lines.append(f"PRINT HEAD{headprint}")
                         if len(ddnprint) > 0:
-                            lines.append("PRINT DRAWDOWN" + ddnprint)
+                            lines.append(f"PRINT DRAWDOWN{ddnprint}")
                         if len(headsave) > 0:
-                            lines.append("SAVE HEAD" + headsave)
+                            lines.append(f"SAVE HEAD{headsave}")
                         if len(ddnsave) > 0:
-                            lines.append("SAVE DRAWDOWN" + ddnsave)
+                            lines.append(f"SAVE DRAWDOWN{ddnsave}")
                     stress_period_data[(iperoc, itsoc)] = list(lines)
         else:
             iperoc, itsoc = 0, 0
@@ -1030,13 +983,9 @@ class ModflowOc(Package):
                         stress_period_data[kperkstp] = []
                 # dataset 3
                 elif "PRINT" in lnlst[0].upper():
-                    lines.append(
-                        "{} {}".format(lnlst[0].lower(), lnlst[1].lower())
-                    )
+                    lines.append(f"{lnlst[0].lower()} {lnlst[1].lower()}")
                 elif "SAVE" in lnlst[0].upper():
-                    lines.append(
-                        "{} {}".format(lnlst[0].lower(), lnlst[1].lower())
-                    )
+                    lines.append(f"{lnlst[0].lower()} {lnlst[1].lower()}")
                 else:
                     print("Error encountered in OC import.")
                     print("Creating default OC package.")

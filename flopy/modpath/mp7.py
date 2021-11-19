@@ -23,16 +23,11 @@ class Modpath7List(Package):
     """
 
     def __init__(self, model, extension="list", unitnumber=None):
-        """
-        Package constructor.
-
-        """
         if unitnumber is None:
             unitnumber = model.next_unit()
 
-        # Call ancestor's init to set self.parent, extension, name and
-        # unit number
-        Package.__init__(self, model, extension, "LIST", unitnumber)
+        # call base package constructor
+        super().__init__(model, extension, "LIST", unitnumber)
         # self.parent.add_package(self) This package is not added to the base
         # model so that it is not included in get_name_file_entries()
         return
@@ -108,16 +103,15 @@ class Modpath7(BaseModel):
 
         self.lst = Modpath7List(self)
 
-        self.mpnamefile = "{}.{}".format(self.name, namefile_ext)
-        self.mpbas_file = "{}.mpbas".format(modelname)
+        self.mpnamefile = f"{self.name}.{namefile_ext}"
+        self.mpbas_file = f"{modelname}.mpbas"
 
         if not isinstance(flowmodel, (Modflow, MFModel)):
-            msg = (
+            raise TypeError(
                 "Modpath7: flow model is not an instance of "
-                + "flopy.modflow.Modflow or flopy.mf6.MFModel. "
-                + "Passed object of type {}".format(type(flowmodel))
+                "flopy.modflow.Modflow or flopy.mf6.MFModel. "
+                "Passed object of type {}".format(type(flowmodel))
             )
-            raise TypeError(msg)
 
         # if a MFModel instance ensure flowmodel is a MODFLOW 6 GWF model
         if isinstance(flowmodel, MFModel):
@@ -125,11 +119,10 @@ class Modpath7(BaseModel):
                 flowmodel.model_type != "gwf"
                 and flowmodel.model_type != "gwf6"
             ):
-                msg = (
+                raise TypeError(
                     "Modpath7: flow model type must be gwf. "
-                    + "Passed model_type is {}.".format(flowmodel.model_type)
+                    "Passed model_type is {}.".format(flowmodel.model_type)
                 )
-                raise TypeError(msg)
 
         # set flowmodel and flow_version attributes
         self.flowmodel = flowmodel
@@ -140,11 +133,10 @@ class Modpath7(BaseModel):
             ibound = None
             dis = self.flowmodel.get_package("DIS")
             if dis is None:
-                msg = (
+                raise Exception(
                     "DIS, DISV, or DISU packages must be "
-                    + "included in the passed MODFLOW 6 model"
+                    "included in the passed MODFLOW 6 model"
                 )
-                raise Exception(msg)
             else:
                 if dis.package_name.lower() == "dis":
                     nlay, nrow, ncol = (
@@ -162,20 +154,18 @@ class Modpath7(BaseModel):
                         nodes,
                     )
                 else:
-                    msg = (
+                    raise TypeError(
                         "DIS, DISV, or DISU packages must be "
-                        + "included in the passed MODFLOW 6 model"
+                        "included in the passed MODFLOW 6 model"
                     )
-                    raise TypeError(msg)
 
             # terminate (for now) if mf6 model does not use dis or disv
             if len(shape) < 2:
-                msg = (
+                raise TypeError(
                     "DIS and DISV are currently the only supported "
-                    + "MODFLOW 6 discretization packages that can be "
-                    + "used with MODPATH 7"
+                    "MODFLOW 6 discretization packages that can be "
+                    "used with MODPATH 7"
                 )
-                raise TypeError(msg)
 
             # set ib
             ib = dis.idomain.array
@@ -185,16 +175,15 @@ class Modpath7(BaseModel):
 
             # set dis and grbdis file name
             dis_file = None
-            grbdis_file = dis.filename + ".grb"
-            grbtag = "GRB{}".format(dis.package_name.upper())
+            grbdis_file = f"{dis.filename}.grb"
+            grbtag = f"GRB{dis.package_name.upper()}"
 
             tdis = self.flowmodel.simulation.get_package("TDIS")
             if tdis is None:
-                msg = (
+                raise Exception(
                     "TDIS package must be "
-                    + "included in the passed MODFLOW 6 model"
+                    "included in the passed MODFLOW 6 model"
                 )
-                raise Exception(msg)
             tdis_file = tdis.filename
 
             # get stress period data
@@ -230,23 +219,20 @@ class Modpath7(BaseModel):
                 nlay, nrow, ncol = dis.nlay, dis.nrow, dis.ncol
                 shape = (nlay, nrow, ncol)
             if dis is None:
-                msg = (
+                raise Exception(
                     "DIS, or DISU packages must be "
-                    + "included in the passed MODFLOW model"
+                    "included in the passed MODFLOW model"
                 )
-                raise Exception(msg)
             elif dis is not None and shape is None:
                 nlay, nodes = dis.nlay, dis.nodes
                 shape = (nodes,)
 
             # terminate (for now) if mf6 model does not use dis
             if len(shape) != 3:
-                msg = (
+                raise Exception(
                     "DIS currently the only supported MODFLOW "
-                    + "discretization package that can be used with "
-                    + "MODPATH 7"
+                    "discretization package that can be used with MODPATH 7"
                 )
-                raise Exception(msg)
 
             # get stress period data
             nper = dis.nper
@@ -275,11 +261,10 @@ class Modpath7(BaseModel):
             if p is None:
                 p = self.flowmodel.get_package("UPW")
             if p is None:
-                msg = (
+                raise Exception(
                     "LPF, BCF6, or UPW packages must be "
-                    + "included in the passed MODFLOW model"
+                    "included in the passed MODFLOW model"
                 )
-                raise Exception(msg)
 
             # set budget file name
             if budgetfilename is None:
@@ -318,23 +303,20 @@ class Modpath7(BaseModel):
 
         # make sure the valid files are available
         if self.headfilename is None:
-            msg = (
+            raise ValueError(
                 "the head file in the MODFLOW model or passed "
-                + "to __init__ cannot be None"
+                "to __init__ cannot be None"
             )
-            raise ValueError(msg)
         if self.budgetfilename is None:
-            msg = (
+            raise ValueError(
                 "the budget file in the MODFLOW model or passed "
-                + "to __init__ cannot be None"
+                "to __init__ cannot be None"
             )
-            raise ValueError(msg)
         if self.dis_file is None and self.grbdis_file is None:
-            msg = (
+            raise ValueError(
                 "the dis file in the MODFLOW model or passed "
-                + "to __init__ cannot be None"
+                "to __init__ cannot be None"
             )
-            raise ValueError(msg)
 
         # set ib and ibound
         self.ib = ib
@@ -391,19 +373,19 @@ class Modpath7(BaseModel):
         """
         fpth = os.path.join(self.model_ws, self.mpnamefile)
         f = open(fpth, "w")
-        f.write("{}\n".format(self.heading))
+        f.write(f"{self.heading}\n")
         if self.mpbas_file is not None:
-            f.write("{:10s} {}\n".format("MPBAS", self.mpbas_file))
+            f.write(f"MPBAS      {self.mpbas_file}\n")
         if self.dis_file is not None:
-            f.write("{:10s} {}\n".format("DIS", self.dis_file))
+            f.write(f"DIS        {self.dis_file}\n")
         if self.grbdis_file is not None:
-            f.write("{:10s} {}\n".format(self.grbtag, self.grbdis_file))
+            f.write(f"{self.grbtag:10s} {self.grbdis_file}\n")
         if self.tdis_file is not None:
-            f.write("{:10s} {}\n".format("TDIS", self.tdis_file))
+            f.write(f"TDIS       {self.tdis_file}\n")
         if self.headfilename is not None:
-            f.write("{:10s} {}\n".format("HEAD", self.headfilename))
+            f.write(f"HEAD       {self.headfilename}\n")
         if self.budgetfilename is not None:
-            f.write("{:10s} {}\n".format("BUDGET", self.budgetfilename))
+            f.write(f"BUDGET     {self.budgetfilename}\n")
         f.close()
 
     @classmethod

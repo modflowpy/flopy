@@ -4,9 +4,14 @@ Tests to prevent performance regressions
 import os
 import sys
 import shutil
+import random
+import string
 import time
 import numpy as np
 import flopy.modflow as fm
+from ci_framework import base_test_dir
+
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 class TestModflowPerformance:
@@ -24,14 +29,19 @@ class TestModflowPerformance:
         nper = 10
         nsfr = int((size ** 2) / 5)
 
+        letters = string.ascii_lowercase
+        prepend = "".join(random.choice(letters) for i in range(10))
+
         cls.modelname = "junk"
-        cls.model_ws = "temp/t064"
+        cls.model_ws = f"{base_dir}_{prepend}"
         external_path = "external/"
 
         if not os.path.isdir(cls.model_ws):
-            os.makedirs(cls.model_ws)
+            os.makedirs(cls.model_ws, exist_ok=True)
         if not os.path.isdir(os.path.join(cls.model_ws, external_path)):
-            os.makedirs(os.path.join(cls.model_ws, external_path))
+            os.makedirs(
+                os.path.join(cls.model_ws, external_path), exist_ok=True
+            )
 
         m = fm.Modflow(
             cls.modelname, model_ws=cls.model_ws, external_path=external_path
@@ -82,10 +92,8 @@ class TestModflowPerformance:
         target = 0.3  # seconds
         assert (
             mfp.init_time < target
-        ), "model init took {:.2f}s, should take {:.1f}s".format(
-            mfp.init_time, target
-        )
-        print("setting up model took {:.2f}s".format(mfp.init_time))
+        ), f"model init took {mfp.init_time:.2f}s, should take {target:.1f}s"
+        print(f"setting up model took {mfp.init_time:.2f}s")
 
     def test_0_write_time(self):
         """test write time"""
@@ -100,27 +108,28 @@ class TestModflowPerformance:
         mfp.m.write_input()
         t1 = time.time() - t0
         if assert_time:
-            assert t1 < target, "model write took {:.2f}s, ".format(
-                t1
-            ) + "should take {:.1f}s".format(target)
-        print("writing input took {:.2f}s".format(t1))
+            assert (
+                t1 < target
+            ), f"model write took {t1:.2f}s, should take {target:.1f}s"
+        print(f"writing input took {t1:.2f}s")
 
     def test_9_load_time(self):
         """test model load time"""
         print("loading model...")
         mfp = TestModflowPerformance()
+        mfp.m.write_input()
         target = 3
         t0 = time.time()
         m = fm.Modflow.load(
-            "{}.nam".format(mfp.modelname), model_ws=mfp.model_ws, check=False
+            f"{mfp.modelname}.nam", model_ws=mfp.model_ws, check=False
         )
         t1 = time.time() - t0
         assert (
             t1 < target
-        ), "model load took {:.2f}s, should take {:.1f}s".format(t1, target)
-        print("loading the model took {:.2f}s".format(t1))
+        ), f"model load took {t1:.2f}s, should take {target:.1f}s"
+        print(f"loading the model took {t1:.2f}s")
 
     @classmethod
     def teardown_class(cls):
-        # cleanup
+
         shutil.rmtree(cls.model_ws)

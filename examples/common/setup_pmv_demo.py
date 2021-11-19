@@ -124,7 +124,7 @@ def run():
 
     # create gwf model
     gwf = flopy.mf6.ModflowGwf(
-        sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
     )
     gwf.name_file.save_flows = True
 
@@ -201,8 +201,8 @@ def run():
     oc = flopy.mf6.ModflowGwfoc(
         gwf,
         pname="oc",
-        budget_filerecord="{}.cbb".format(model_name),
-        head_filerecord="{}.hds".format(model_name),
+        budget_filerecord=f"{model_name}.cbb",
+        head_filerecord=f"{model_name}.hds",
         headprintrecord=[("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "GENERAL")],
         saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
         printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
@@ -211,8 +211,8 @@ def run():
     sim.write_simulation()
     sim.run_simulation()
 
-    mp_namea = model_name + "a_mp"
-    mp_nameb = model_name + "b_mp"
+    mp_namea = f"{model_name}a_mp"
+    mp_nameb = f"{model_name}b_mp"
 
     pcoord = np.array(
         [
@@ -248,7 +248,7 @@ def run():
     )
 
     # create backward particle group
-    fpth = mp_namea + ".sloc"
+    fpth = f"{mp_namea}.sloc"
     pga = flopy.modpath.ParticleGroup(
         particlegroupname="BACKWARD1", particledata=pa, filename=fpth
     )
@@ -270,7 +270,7 @@ def run():
     )
     pb = flopy.modpath.NodeParticleData(subdivisiondata=facedata, nodes=nodew)
     # create forward particle group
-    fpth = mp_nameb + ".sloc"
+    fpth = f"{mp_nameb}.sloc"
     pgb = flopy.modpath.ParticleGroupNodeTemplate(
         particlegroupname="BACKWARD2", particledata=pb, filename=fpth
     )
@@ -386,7 +386,7 @@ rchspd[0] = [[(0, 0, j), rrate, recharge_conc] for j in rcol]
 rchspd[1] = [[(0, 0, j), rrate, 0.0] for j in rcol]
 
 def build_mf6gwf(sim_folder):
-    print("Building mf6gwf model...{}".format(sim_folder))
+    print(f"Building mf6gwf model...{sim_folder}")
     ws = os.path.join("data", "mf6-gwt-keating")
     name = "flow"
     sim_ws = os.path.join(ws, 'mf6gwf')
@@ -461,8 +461,8 @@ def build_mf6gwf(sim_folder):
         pname="RCH-1",
     )
 
-    head_filerecord = "{}.hds".format(name)
-    budget_filerecord = "{}.bud".format(name)
+    head_filerecord = f"{name}.hds"
+    budget_filerecord = f"{name}.bud"
     flopy.mf6.ModflowGwfoc(
         gwf,
         head_filerecord=head_filerecord,
@@ -473,7 +473,7 @@ def build_mf6gwf(sim_folder):
 
 
 def build_mf6gwt(sim_folder):
-    print("Building mf6gwt model...{}".format(sim_folder))
+    print(f"Building mf6gwt model...{sim_folder}")
     ws = os.path.join("data", "mf6-gwt-keating")
     name = "trans"
     sim_ws = os.path.join(ws, 'mf6gwt')
@@ -521,7 +521,7 @@ def build_mf6gwt(sim_folder):
         gwt, xt3d_off=True, alh=alpha_l, ath1=alpha_th, atv=alpha_tv
     )
     pd = [
-        ("GWFHEAD", "../mf6gwf/flow.hds".format()),
+        ("GWFHEAD", "../mf6gwf/flow.hds"),
         ("GWFBUDGET", "../mf6gwf/flow.bud"),
     ]
     flopy.mf6.ModflowGwtfmi(
@@ -545,8 +545,8 @@ def build_mf6gwt(sim_folder):
     }
     flopy.mf6.ModflowGwtoc(
         gwt,
-        budget_filerecord="{}.cbc".format(name),
-        concentration_filerecord="{}.ucn".format(name),
+        budget_filerecord=f"{name}.cbc",
+        concentration_filerecord=f"{name}.ucn",
         concentrationprintrecord=[
             ("COLUMNS", ncol, "WIDTH", 15, "DIGITS", 6, "GENERAL")
         ],
@@ -560,7 +560,7 @@ def build_mf6gwt(sim_folder):
         ],
     )
     obs_data = {
-        "{}.obs.csv".format(name): [
+        f"{name}.obs.csv": [
             ("obs1", "CONCENTRATION", obs1),
             ("obs2", "CONCENTRATION", obs2),
         ],

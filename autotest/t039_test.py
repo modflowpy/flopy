@@ -17,7 +17,7 @@ zon_f = os.path.join(loadpth, "zonef_mlt.zbr")
 zbud_f = os.path.join(loadpth, "freyberg_mlt.csv")
 
 if not os.path.isdir(outpth):
-    os.makedirs(outpth)
+    os.makedirs(outpth, exist_ok=True)
 
 
 def read_zonebudget_file(fname):
@@ -65,7 +65,7 @@ def read_zonebudget_file(fname):
         elif items[0] == "" and items[1] == "\n":
             continue
 
-        record = "{}_".format(flow_dir) + "_".join(items[0].strip().split())
+        record = f"{flow_dir}_" + "_".join(items[0].strip().split())
         if record.startswith(("FROM_", "TO_")):
             record = "_".join(record.split("_")[1:])
         vals = [float(i) for i in items[1:-1]]
@@ -121,9 +121,7 @@ def test_compare2zonebudget(rtol=1e-2):
             #                                                 a1[idxloc],
             #                                                 a2[idxloc])
             # print(txt)
-            s = "Zonebudget arrays do not match at time {0} ({1}): {2}.".format(
-                time, name, mxdiff
-            )
+            s = f"Zonebudget arrays do not match at time {time} ({name}): {mxdiff}."
             assert allclose, s
     return
 
@@ -218,7 +216,9 @@ def test_zonbud_readwrite_zbarray():
     """
     x = np.random.randint(100, 200, size=(5, 150, 200))
     ZoneBudget.write_zone_file(os.path.join(outpth, "randint"), x)
-    ZoneBudget.write_zone_file(os.path.join(outpth, "randint"), x, fmtin=35, iprn=2)
+    ZoneBudget.write_zone_file(
+        os.path.join(outpth, "randint"), x, fmtin=35, iprn=2
+    )
     z = ZoneBudget.read_zone_file(os.path.join(outpth, "randint"))
     assert np.array_equal(x, z), "Input and output arrays do not match."
     return
@@ -255,107 +255,6 @@ def test_get_model_shape():
     return
 
 
-def test_zonebudget_output_to_netcdf():
-    from flopy.utils import HeadFile, ZoneBudgetOutput
-    from flopy.modflow import Modflow
-    from flopy.mf6 import MFSimulation
-    from flopy.export.utils import output_helper
-
-    model_ws = os.path.join(
-        "..", "examples", "data", "freyberg_multilayer_transient"
-    )
-    zb_ws = os.path.join("..", "examples", "data", "zonbud_examples")
-
-    hds = "freyberg.hds"
-    nam = "freyberg.nam"
-    zon = "zonef_mlt.zbr"
-
-    hds = HeadFile(os.path.join(model_ws, hds))
-    ml = Modflow.load(nam, model_ws=model_ws)
-    zone_array = ZoneBudget.read_zone_file(os.path.join(zb_ws, zon))
-
-    # test with standard zonebudget output
-    zbout = "freyberg_mlt.txt"
-    ncf_name = zbout + ".nc"
-
-    zb = ZoneBudgetOutput(os.path.join(zb_ws, zbout), ml.dis, zone_array)
-    vdf = zb.volumetric_flux()
-
-    netobj = zb.dataframe_to_netcdf_fmt(vdf, flux=False)
-
-    export_dict = {"hds": hds, "zonebud": netobj}
-
-    output_helper(os.path.join(outpth, ncf_name), ml, export_dict)
-
-    # test with zonebudget csv 1 output
-    zbout = "freyberg_mlt.1.csv"
-    ncf_name = zbout + ".nc"
-
-    zb = ZoneBudgetOutput(os.path.join(zb_ws, zbout), ml.dis, zone_array)
-
-    netobj = zb.dataframe_to_netcdf_fmt(zb.dataframe)
-
-    export_dict = {"hds": hds, "zonebud": netobj}
-
-    output_helper(os.path.join(outpth, ncf_name), ml, export_dict)
-
-    # test with zonebudget csv 2 output
-    zbout = "freyberg_mlt.2.csv"
-    ncf_name = zbout + ".nc"
-
-    zb = ZoneBudgetOutput(os.path.join(zb_ws, zbout), ml.dis, zone_array)
-    vdf = zb.volumetric_flux(extrapolate_kper=True)
-
-    netobj = zb.dataframe_to_netcdf_fmt(vdf, flux=False)
-
-    export_dict = {"hds": hds, "zonebud": netobj}
-
-    output_helper(os.path.join(outpth, ncf_name), ml, export_dict)
-
-    # test built in export function
-    zbout = "freyberg_mlt.2.csv"
-    ncf_name = zbout + ".bi1" + ".nc"
-
-    zb = ZoneBudgetOutput(os.path.join(zb_ws, zbout), ml.dis, zone_array)
-    zb.export(os.path.join(outpth, ncf_name), ml)
-
-    # test built in export function with NetCdf output object
-    zbout = "freyberg_mlt.2.csv"
-    ncf_name = zbout + ".bi2" + ".nc"
-
-    zb = ZoneBudgetOutput(os.path.join(zb_ws, zbout), ml.dis, zone_array)
-    export_dict = {"hds": hds}
-    ncfobj = output_helper(os.path.join(outpth, ncf_name), ml, export_dict)
-    zb.export(ncfobj, ml)
-
-    # test with modflow6/zonebudget6
-    sim_ws = os.path.join(
-        "..", "examples", "data", "mf6", "test005_advgw_tidal"
-    )
-    hds = "advgw_tidal.hds"
-    nam = "mfsim"
-    zon = "zonebudget6.csv"
-    ncf_name = zon + ".nc"
-
-    zone_array = np.ones((3, 15, 10), dtype=int)
-    zone_array = np.add.accumulate(zone_array, axis=0)
-    sim = MFSimulation.load(nam, sim_ws=sim_ws, exe_name="mf6")
-    sim.set_sim_path(outpth)
-    sim.write_simulation()
-    sim.run_simulation()
-    hds = HeadFile(os.path.join(outpth, hds))
-
-    ml = sim.get_model("gwf_1")
-
-    zb = ZoneBudgetOutput(os.path.join(zb_ws, zon), sim.tdis, zone_array)
-    vdf = zb.volumetric_flux()
-
-    netobj = zb.dataframe_to_netcdf_fmt(vdf, flux=False)
-    export_dict = {"hds": hds, "zbud": netobj}
-
-    output_helper(os.path.join(outpth, ncf_name), ml, export_dict)
-
-
 def test_zonbud_active_areas_zone_zero(rtol=1e-2):
     try:
         import pandas as pd
@@ -367,9 +266,7 @@ def test_zonbud_active_areas_zone_zero(rtol=1e-2):
     zbud = pd.read_csv(zbud_f)
     zbud.columns = [c.strip() for c in zbud.columns]
     zbud.columns = ["_".join(c.split()) for c in zbud.columns]
-    zbud.index = pd.Index(
-        ["ZONE_{}".format(z) for z in zbud.ZONE.values], name="name"
-    )
+    zbud.index = pd.Index([f"ZONE_{z}" for z in zbud.ZONE.values], name="name")
     cols = [c for c in zbud.columns if "ZONE_" in c]
     zbud = zbud[cols]
 
@@ -381,7 +278,7 @@ def test_zonbud_active_areas_zone_zero(rtol=1e-2):
     fpbud = fpbud[["name"] + [c for c in fpbud.columns if "ZONE" in c]]
     fpbud = fpbud.set_index("name").T
     fpbud = fpbud[[c for c in fpbud.columns if "ZONE" in c]]
-    fpbud = fpbud.loc[["ZONE_{}".format(z) for z in range(1, 4)]]
+    fpbud = fpbud.loc[[f"ZONE_{z}" for z in range(1, 4)]]
 
     # Test for equality
     allclose = np.allclose(zbud, fpbud, rtol)
@@ -397,7 +294,7 @@ def test_zonebudget_6():
     except ImportError:
         return
 
-    exe_name = 'mf6'
+    exe_name = "mf6"
     zb_exe_name = "zbud6"
     cpth = os.path.join(".", "temp", "t039")
 
@@ -407,8 +304,8 @@ def test_zonebudget_6():
     sim.write_simulation()
     success, _ = sim.run_simulation()
 
-    grb_file = os.path.join(cpth, 'test001e_UZF_3lay.dis.grb')
-    cbc_file = os.path.join(cpth, 'test001e_UZF_3lay.cbc')
+    grb_file = os.path.join(cpth, "test001e_UZF_3lay.dis.grb")
+    cbc_file = os.path.join(cpth, "test001e_UZF_3lay.cbc")
 
     ml = sim.get_model("gwf_1")
     idomain = np.ones(ml.modelgrid.shape, dtype=int)
@@ -470,6 +367,5 @@ if __name__ == "__main__":
     test_dataframes()
     test_get_budget()
     test_get_model_shape()
-    test_zonebudget_output_to_netcdf()
     test_zonbud_active_areas_zone_zero()
     test_zonebudget_6()

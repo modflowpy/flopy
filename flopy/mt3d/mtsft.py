@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 
 from ..pakbase import Package
@@ -205,7 +204,7 @@ class Mt3dSft(Package):
         filenames=None,
         dtype=None,
         extension="sft",
-        **kwargs
+        **kwargs,
     ):
 
         # set default unit number of one is not specified
@@ -215,55 +214,35 @@ class Mt3dSft(Package):
             unitnumber = Mt3dSft._reservedunit()
 
         # set filenames
-        if filenames is None:  # if filename not passed
-            filenames = [None, None]  # setup filenames
-            if abs(ioutobs) > 0:
-                filenames[1] = model.name
-        elif isinstance(filenames, str):
-            filenames = [filenames, None, None]
-        elif isinstance(filenames, list):
-            if len(filenames) < 2:
-                for idx in range(len(filenames), 2):
-                    filenames.append(None)
+        filenames = self._prepare_filenames(filenames, 2)
+        if filenames[1] is None and abs(ioutobs) > 0:
+            filenames[1] = model.name
 
         if ioutobs is not None:
             ext = "sftcobs.out"
             if filenames[1] is not None:
-                if (
-                    len(filenames[1].split(".", 1)) > 1
-                ):  # already has extension
-                    fname = "{}.{}".format(*filenames[1].split(".", 1))
-                else:
-                    fname = "{}.{}".format(filenames[1], ext)
+                fname = filenames[1]
+                if "." not in fname:  # add extension
+                    fname += f".{ext}"
             else:
-                fname = "{}.{}".format(model.name, ext)
+                fname = f"{model.name}.{ext}"
             model.add_output_file(
                 abs(ioutobs),
                 fname=fname,
                 extension=None,
                 binflag=False,
-                package=Mt3dSft._ftype(),
+                package=self._ftype(),
             )
         else:
             ioutobs = 0
 
-        # Fill namefile items
-        name = [Mt3dSft._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=filenames[0],
         )
 
         # Set dimensions
@@ -319,7 +298,7 @@ class Mt3dSft(Package):
                 for base_name, attr in zip(
                     ["coldsf", "dispsf"], [self.coldsf, self.dispsf]
                 ):
-                    name = "{0}{1}".format(base_name, icomp)
+                    name = f"{base_name}{icomp}"
                     if name in kwargs:
                         val = kwargs.pop(name)
                     else:
@@ -373,7 +352,7 @@ class Mt3dSft(Package):
         ]
         if ncomp > 1:
             for icomp in range(1, ncomp):
-                comp_name = "cbcsf{0:d}".format(icomp)
+                comp_name = f"cbcsf{icomp}"
                 type_list.append((comp_name, np.float32))
         dtype = np.dtype(type_list)
         return dtype
@@ -439,15 +418,14 @@ class Mt3dSft(Package):
             f.write(dispsf.get_file_entry())
 
         # Item 5
-        f.write("{0:10d}                 # nobssf\n".format(self.nobssf))
+        f.write(f"{self.nobssf:10d}                 # nobssf\n")
 
         # Item 6
         if self.nobssf != 0:
             for iobs in self.obs_sf:
                 line = (
-                    "{0:10d}".format(iobs)
-                    + 26 * " "
-                    + "# location of obs as given by position in irch list\n"
+                    f"{iobs:10d}                          "
+                    "# location of obs as given by position in irch list\n"
                 )
                 f.write(line)
 
@@ -463,7 +441,7 @@ class Mt3dSft(Package):
             if self.sf_stress_period_data is not None:
                 self.sf_stress_period_data.write_transient(f, single_per=kper)
             else:
-                f.write("{0:10d}       # ntmp - SP {1:5d}\n".format(0, kper))
+                f.write(f"{0:10d}       # ntmp - SP {kper:5d}\n")
 
         f.close()
         return
@@ -533,7 +511,7 @@ class Mt3dSft(Package):
 
         """
         if model.verbose:
-            sys.stdout.write("loading sft package file...\n")
+            print("loading sft package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:
@@ -575,11 +553,11 @@ class Mt3dSft(Package):
         ietsfr = int(vals[4])
 
         if model.verbose:
-            print("   NSFINIT {}".format(nsfinit))
-            print("   MXSFBC {}".format(mxsfbc))
-            print("   ICBCSF {}".format(icbcsf))
-            print("   IOUTOBS {}".format(ioutobs))
-            print("   IETSFR {}".format(ietsfr))
+            print(f"   NSFINIT {nsfinit}")
+            print(f"   MXSFBC {mxsfbc}")
+            print(f"   ICBCSF {icbcsf}")
+            print(f"   IOUTOBS {ioutobs}")
+            print(f"   IETSFR {ietsfr}")
             if ietsfr == 0:
                 print(
                     "   Mass does not exit the model via simulated "
@@ -617,13 +595,13 @@ class Mt3dSft(Package):
             print("   In version 1.0 of MT3D-USGS, isfsov=1 is only option")
 
         if model.verbose:
-            print("   ISFSOLV {}".format(isfsolv))
-            print("   WIMP {}".format(wimp))
-            print("   WUPS {}".format(wups))
-            print("   CCLOSESF {}".format(cclosesf))
-            print("   MXITERSF {}".format(mxitersf))
-            print("   CRNTSF {}".format(crntsf))
-            print("   IPRTXMD {}".format(iprtxmd))
+            print(f"   ISFSOLV {isfsolv}")
+            print(f"   WIMP {wimp}")
+            print(f"   WUPS {wups}")
+            print(f"   CCLOSESF {cclosesf}")
+            print(f"   MXITERSF {mxitersf}")
+            print(f"   CRNTSF {crntsf}")
+            print(f"   IPRTXMD {iprtxmd}")
 
         # Item 3 (COLDSF(NRCH)) Initial concentration
         if model.verbose:
@@ -653,9 +631,9 @@ class Mt3dSft(Package):
         kwargs = {}
         if ncomp > 1:
             for icomp in range(2, ncomp + 1):
-                name = "coldsf" + str(icomp)
+                name = f"coldsf{icomp}"
                 if model.verbose:
-                    print("   loading {}...".format(name))
+                    print(f"   loading {name}...")
                 u2d = Util2d.load(
                     f,
                     model,
@@ -691,9 +669,9 @@ class Mt3dSft(Package):
         )
         if ncomp > 1:
             for icomp in range(2, ncomp + 1):
-                name = "dispsf" + str(icomp)
+                name = f"dispsf{icomp}"
                 if model.verbose:
-                    print("   loading {}...".format(name))
+                    print(f"   loading {name}...")
                 u2d = Util2d.load(
                     f,
                     model,
@@ -712,7 +690,7 @@ class Mt3dSft(Package):
         m_arr = line.strip().split()
         nobssf = int(m_arr[0])
         if model.verbose:
-            print("   NOBSSF {}".format(nobssf))
+            print(f"   NOBSSF {nobssf}")
 
         # If NOBSSF > 0, store observation segment & reach (Item 6)
         obs_sf = []
@@ -731,8 +709,8 @@ class Mt3dSft(Package):
                 print("   Surface water concentration observation locations:")
                 text = ""
                 for o in obs_sf:
-                    text += "{} ".format(o)
-                print("   {}\n".format(text))
+                    text += f"{o} "
+                print(f"   {text}\n")
         else:
             if model.verbose:
                 print("   No observation points specified.")
@@ -743,11 +721,7 @@ class Mt3dSft(Package):
 
             # Item 7 NTMP (Transient data)
             if model.verbose:
-                print(
-                    "   loading NTMP...stress period {} of {}".format(
-                        iper + 1, nper
-                    )
-                )
+                print(f"   loading NTMP...stress period {iper + 1} of {nper}")
             line = f.readline()
             m_arr = line.strip().split()
             ntmp = int(m_arr[0])
@@ -822,7 +796,7 @@ class Mt3dSft(Package):
             sf_stress_period_data=sf_stress_period_data,
             unitnumber=unitnumber,
             filenames=filenames,
-            **kwargs
+            **kwargs,
         )
 
     @staticmethod

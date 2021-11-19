@@ -2,43 +2,37 @@
 Some basic tests for SWR2 load.
 """
 
+import pytest
 import os
 import flopy
+import pymake
+from ci_framework import base_test_dir, FlopyTestSetup
 
-path = os.path.join("..", "examples", "data", "mf2005_test")
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
+
+swi_path = os.path.join("..", "examples", "data", "mf2005_test")
 cpth = os.path.join("temp", "t037")
-# make the directory if it does not exist
-if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+
 
 mf_items = ["swiex1.nam", "swiex2_strat.nam", "swiex3.nam"]
-pths = []
-for val in mf_items:
-    pths.append(path)
+
+exe_name = "mf2005"
+v = flopy.which(exe_name)
+
+run = True
+if v is None:
+    run = False
 
 
-def load_swi(mfnam, pth):
-    exe_name = "mf2005"
-    v = flopy.which(exe_name)
+def load_swi(mfnam):
+    name = mfnam.replace(".nam", "")
+    model_ws = f"{base_dir}_{name}"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
-    run = True
-    if v is None:
-        run = False
-    try:
-        import pymake
-
-        lpth = os.path.join(cpth, os.path.splitext(mfnam)[0])
-        apth = os.path.join(lpth, "flopy")
-        compth = lpth
-        pymake.setup(os.path.join(pth, mfnam), lpth)
-    except:
-        run = False
-        lpth = pth
-        apth = cpth
-        compth = cpth
+    pymake.setup(os.path.join(swi_path, mfnam), model_ws)
 
     m = flopy.modflow.Modflow.load(
-        mfnam, model_ws=lpth, verbose=True, exe_name=exe_name
+        mfnam, model_ws=model_ws, verbose=True, exe_name=exe_name
     )
     assert m.load_fail is False
 
@@ -48,15 +42,16 @@ def load_swi(mfnam, pth):
         except:
             success = False
         assert success, "base model run did not terminate successfully"
-        fn0 = os.path.join(lpth, mfnam)
+        fn0 = os.path.join(model_ws, mfnam)
 
     # write free format files -
     # won't run without resetting to free format - evt external file issue
     m.free_format_input = True
 
     # rewrite files
+    model_ws2 = os.path.join(model_ws, "flopy")
     m.change_model_ws(
-        apth, reset_external=True
+        model_ws2, reset_external=True
     )  # l1b2k_bath wont run without this
     m.write_input()
     if run:
@@ -65,11 +60,11 @@ def load_swi(mfnam, pth):
         except:
             success = False
         assert success, "base model run did not terminate successfully"
-        fn1 = os.path.join(apth, mfnam)
+        fn1 = os.path.join(model_ws2, mfnam)
 
     if run:
         fsum = os.path.join(
-            compth, "{}.budget.out".format(os.path.splitext(mfnam)[0])
+            model_ws, f"{os.path.splitext(mfnam)[0]}.budget.out"
         )
         try:
             success = pymake.compare_budget(
@@ -84,12 +79,15 @@ def load_swi(mfnam, pth):
     return
 
 
-def test_mf2005swi2load():
-    for namfile, pth in zip(mf_items, pths):
-        yield load_swi, namfile, pth
+@pytest.mark.parametrize(
+    "namfile",
+    mf_items,
+)
+def test_mf2005swi2load(namfile):
+    load_swi(namfile)
     return
 
 
 if __name__ == "__main__":
-    for namfile, pth in zip(mf_items, pths):
-        load_swi(namfile, pth)
+    for namfile in mf_items:
+        load_swi(namfile)

@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 19, 2021 03:08:37 UTC
+# FILE created on October 29, 2021 21:09:57 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -59,6 +59,10 @@ class ModflowGwflak(mfpackage.MFPackage):
     budget_filerecord : [budgetfile]
         * budgetfile (string) name of the binary output file to write budget
           information.
+    budgetcsv_filerecord : [budgetcsvfile]
+        * budgetcsvfile (string) name of the comma-separated value (CSV) output
+          file to write budget summary information. A budget summary record
+          will be written to this file for each time step of the simulation.
     package_convergence_filerecord : [package_convergence_filename]
         * package_convergence_filename (string) name of the comma spaced values
           output file to write package convergence information.
@@ -421,6 +425,9 @@ class ModflowGwflak(mfpackage.MFPackage):
     budget_filerecord = ListTemplateGenerator(
         ("gwf6", "lak", "options", "budget_filerecord")
     )
+    budgetcsv_filerecord = ListTemplateGenerator(
+        ("gwf6", "lak", "options", "budgetcsv_filerecord")
+    )
     package_convergence_filerecord = ListTemplateGenerator(
         ("gwf6", "lak", "options", "package_convergence_filerecord")
     )
@@ -550,6 +557,36 @@ class ModflowGwflak(mfpackage.MFPackage):
         [
             "block options",
             "name budgetfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsv_filerecord",
+            "type record budgetcsv fileout budgetcsvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budgetcsv",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsvfile",
             "type string",
             "preserve_case true",
             "shape",
@@ -1201,6 +1238,7 @@ class ModflowGwflak(mfpackage.MFPackage):
         save_flows=None,
         stage_filerecord=None,
         budget_filerecord=None,
+        budgetcsv_filerecord=None,
         package_convergence_filerecord=None,
         timeseries=None,
         observations=None,
@@ -1236,6 +1274,9 @@ class ModflowGwflak(mfpackage.MFPackage):
         )
         self.budget_filerecord = self.build_mfdata(
             "budget_filerecord", budget_filerecord
+        )
+        self.budgetcsv_filerecord = self.build_mfdata(
+            "budgetcsv_filerecord", budgetcsv_filerecord
         )
         self.package_convergence_filerecord = self.build_mfdata(
             "package_convergence_filerecord", package_convergence_filerecord

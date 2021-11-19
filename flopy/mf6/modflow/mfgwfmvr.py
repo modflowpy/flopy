@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 19, 2021 03:08:37 UTC
+# FILE created on October 29, 2021 21:09:57 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -39,6 +39,10 @@ class ModflowGwfmvr(mfpackage.MFPackage):
     budget_filerecord : [budgetfile]
         * budgetfile (string) name of the output file to write budget
           information.
+    budgetcsv_filerecord : [budgetcsvfile]
+        * budgetcsvfile (string) name of the comma-separated value (CSV) output
+          file to write budget summary information. A budget summary record
+          will be written to this file for each time step of the simulation.
     maxmvr : integer
         * maxmvr (integer) integer value specifying the maximum number of water
           mover entries that will specified for any stress period.
@@ -111,6 +115,9 @@ class ModflowGwfmvr(mfpackage.MFPackage):
     budget_filerecord = ListTemplateGenerator(
         ("gwf6", "mvr", "options", "budget_filerecord")
     )
+    budgetcsv_filerecord = ListTemplateGenerator(
+        ("gwf6", "mvr", "options", "budgetcsv_filerecord")
+    )
     packages = ListTemplateGenerator(("gwf6", "mvr", "packages", "packages"))
     perioddata = ListTemplateGenerator(("gwf6", "mvr", "period", "perioddata"))
     package_abbr = "gwfmvr"
@@ -171,6 +178,36 @@ class ModflowGwfmvr(mfpackage.MFPackage):
         [
             "block options",
             "name budgetfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsv_filerecord",
+            "type record budgetcsv fileout budgetcsvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budgetcsv",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsvfile",
             "type string",
             "preserve_case true",
             "shape",
@@ -326,6 +363,7 @@ class ModflowGwfmvr(mfpackage.MFPackage):
         print_flows=None,
         modelnames=None,
         budget_filerecord=None,
+        budgetcsv_filerecord=None,
         maxmvr=None,
         maxpackages=None,
         packages=None,
@@ -344,6 +382,9 @@ class ModflowGwfmvr(mfpackage.MFPackage):
         self.modelnames = self.build_mfdata("modelnames", modelnames)
         self.budget_filerecord = self.build_mfdata(
             "budget_filerecord", budget_filerecord
+        )
+        self.budgetcsv_filerecord = self.build_mfdata(
+            "budgetcsv_filerecord", budgetcsv_filerecord
         )
         self.maxmvr = self.build_mfdata("maxmvr", maxmvr)
         self.maxpackages = self.build_mfdata("maxpackages", maxpackages)

@@ -4,8 +4,6 @@ the ModflowPar class as `flopy.modflow.ModflowPar`.
 
 
 """
-
-import sys
 import numpy as np
 from .mfzon import ModflowZon
 from .mfpval import ModflowPval
@@ -76,17 +74,11 @@ class ModflowPar:
                     zone.filename, model, ext_unit_dict=ext_unit_dict
                 )
                 if model.verbose:
-                    sys.stdout.write(
-                        "   {} package load...success\n".format(
-                            self.zone.name[0]
-                        )
-                    )
+                    print(f"   {self.zone.name[0]} package load...success")
                 ext_unit_dict.pop(zone_key)
                 model.remove_package("ZONE")
             except BaseException as o:
-                sys.stdout.write(
-                    "   {} package load...failed\n      {!s}".format("ZONE", o)
-                )
+                print(f"   ZONE package load...failed\n      {o!s}")
         return
 
     def set_mult(self, model, ext_unit_dict):
@@ -127,17 +119,11 @@ class ModflowPar:
                     mult.filename, model, ext_unit_dict=ext_unit_dict
                 )
                 if model.verbose:
-                    sys.stdout.write(
-                        "   {} package load...success\n".format(
-                            self.mult.name[0]
-                        )
-                    )
+                    print(f"   {self.mult.name[0]} package load...success")
                 ext_unit_dict.pop(mult_key)
                 model.remove_package("MULT")
             except BaseException as o:
-                sys.stdout.write(
-                    "   {} package load...failed\n      {!s}".format("MULT", o)
-                )
+                print(f"   MULT package load...failed\n      {o!s}")
 
         return
 
@@ -179,17 +165,11 @@ class ModflowPar:
                     pval.filename, model, ext_unit_dict=ext_unit_dict
                 )
                 if model.verbose:
-                    sys.stdout.write(
-                        "   {} package load...success\n".format(
-                            self.pval.name[0]
-                        )
-                    )
+                    print(f"   {self.pval.name[0]} package load...success")
                 ext_unit_dict.pop(pval_key)
                 model.remove_package("PVAL")
             except BaseException as o:
-                sys.stdout.write(
-                    "   {} package load...failed\n      {!s}".format("PVAL", o)
-                )
+                print(f"   PVAL package load...failed\n      {o!s}")
 
         return
 
@@ -229,7 +209,7 @@ class ModflowPar:
                 t = line.strip().split()
                 parnam = t[0].lower()
                 if verbose:
-                    print('   loading parameter "{}"...'.format(parnam))
+                    print(f'   loading parameter "{parnam}"...')
                 partyp = t[1].lower()
                 if partyp not in par_types:
                     par_types.append(partyp)

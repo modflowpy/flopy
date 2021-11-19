@@ -4,11 +4,7 @@ Module for input/output utilities
 import os
 import sys
 import numpy as np
-
-try:
-    import pandas as pd
-except:
-    pd = False
+from ..utils import import_optional_dependency
 
 
 def _fmt_string(array, float_format="{}"):
@@ -33,18 +29,18 @@ def _fmt_string(array, float_format="{}"):
         if vtype == "i":
             fmt_string += "{:.0f} "
         elif vtype == "f":
-            fmt_string += "{} ".format(float_format)
+            fmt_string += f"{float_format} "
         elif vtype == "o":
             fmt_string += "{} "
         elif vtype == "s":
             raise Exception(
-                "MfList error: 'str' type found in dtype."
-                + " This gives unpredictable results when "
-                + "recarray to file - change to 'object' type"
+                "MfList error: 'str' type found in dtype. "
+                "This gives unpredictable results when "
+                "recarray to file - change to 'object' type"
             )
         else:
             raise Exception(
-                "MfList.fmt_string error: unknown vtype " + "in dtype:" + vtype
+                f"MfList.fmt_string error: unknown vtype in dtype:{vtype}"
             )
     return fmt_string
 
@@ -176,32 +172,34 @@ def write_fixed_var(v, length=10, ipos=None, free=False, comment=None):
         elif isinstance(ipos, int):
             ipos = [ipos]
         if len(ipos) < ncol:
-            err = (
-                "user provided ipos length ({})".format(len(ipos))
-                + "should be greater than or equal "
-                + "to the length of v ({})".format(ncol)
+            raise Exception(
+                "user provided ipos length ({}) should be greater than or "
+                "equal to the length of v ({})".format(len(ipos), ncol)
             )
-            raise Exception(err)
     out = ""
     for n in range(ncol):
         if free:
             write_fmt = "{} "
         else:
+            width = ipos[n]
             if isinstance(v[n], (float, np.float32, np.float64)):
-                width = ipos[n] - 6
-                vmin, vmax = 10 ** -width, 10 ** width
+                decimal = width - 6
+                vmin, vmax = 10 ** -decimal, 10 ** decimal
                 if abs(v[n]) < vmin or abs(v[n]) > vmax:
-                    ctype = "g"
+                    ctype = "g"  # default precision is 6 if not specified
                 else:
-                    ctype = ".{}f".format(width)
+                    ctype = f".{decimal}f"
+                    # evaluate if the fixed format value will exceed width
+                    if len(f"{{:>{width}{ctype}}}".format(v[n])) > width:
+                        ctype = f".{decimal}g"  # preserve precision
             elif isinstance(v[n], (int, np.int32, np.int64)):
                 ctype = "d"
             else:
                 ctype = ""
-            write_fmt = "{{:>{}{}}}".format(ipos[n], ctype)
+            write_fmt = f"{{:>{width}{ctype}}}"
         out += write_fmt.format(v[n])
     if comment is not None:
-        out += "  # {}".format(comment)
+        out += f"  # {comment}"
     out += "\n"
     return out
 
@@ -231,7 +229,7 @@ def read_fixed_var(line, ncol=1, length=10, ipos=None, free=False):
 
     """
     if free:
-        out = line.rstrip().split()
+        out = line_parse(line)
     else:
         # construct ipos if it was not passed
         if ipos is None:
@@ -351,14 +349,14 @@ def loadtxt(
     """
     # test if pandas should be used, if available
     if use_pandas:
-        if pd:
-            if delimiter.isspace():
-                kwargs["delim_whitespace"] = True
-            if isinstance(dtype, np.dtype) and "names" not in kwargs:
-                kwargs["names"] = dtype.names
+        pd = import_optional_dependency("pandas")
+        if delimiter.isspace():
+            kwargs["delim_whitespace"] = True
+        if isinstance(dtype, np.dtype) and "names" not in kwargs:
+            kwargs["names"] = dtype.names
 
     # if use_pandas and pd then use pandas
-    if use_pandas and pd:
+    if use_pandas:
         df = pd.read_csv(file, dtype=dtype, skiprows=skiprows, **kwargs)
         return df.to_records(index=False)
     # default use of numpy
@@ -417,7 +415,7 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
     sfac = 1.0
     binary = False
     ncol = len(ra.dtype.names)
-    line_list = line.strip().split()
+    line_list = line_parse(line)
     close_the_file = False
     file_handle = f
     mode = "r"
@@ -425,15 +423,15 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
     # check for external
     if line.strip().lower().startswith("external"):
         inunit = int(line_list[1])
-        errmsg = "Could not find a file for unit {}".format(inunit)
+        errmsg = f"Could not find a file for unit {inunit}"
         if ext_unit_dict is not None:
             if inunit in ext_unit_dict:
                 namdata = ext_unit_dict[inunit]
                 file_handle = namdata.filehandle
             else:
-                raise IOError(errmsg)
+                raise OSError(errmsg)
         else:
-            raise IOError(errmsg)
+            raise OSError(errmsg)
         if namdata.filetype == "DATA(BINARY)":
             binary = True
         if not binary:
@@ -451,11 +449,7 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
             raw = [fname]
         fname = os.path.join(*raw)
         oc_filename = os.path.join(model.model_ws, fname)
-        msg = (
-            "Package.load() error: open/close filename "
-            + oc_filename
-            + " not found"
-        )
+        msg = f"Package.load() error: open/close filename {oc_filename} not found"
         assert os.path.exists(oc_filename), msg
         if "(binary)" in line.lower():
             binary = True
@@ -467,7 +461,6 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
 
     # check for scaling factor
     if not binary:
-        line_list = line.strip().split()
         if line.strip().lower().startswith("sfac"):
             sfac = float(line_list[1])
             line = file_handle.readline()
@@ -493,7 +486,7 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
 
             if model.free_format_input:
                 # whitespace separated
-                t = line.strip().split()
+                t = line_parse(line)
                 if len(t) < ncol:
                     t = t + (ncol - len(t)) * [0.0]
                 else:
@@ -516,3 +509,34 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
         file_handle.close()
 
     return ra
+
+
+def get_ts_sp(line):
+    """
+    Reader method to get time step and stress period numbers from
+    list files and Modflow other output files
+
+    Parameters
+    ----------
+    line : str
+        line containing information about the stress period and time step.
+        The line must contain "STRESS PERIOD   <x> TIME STEP   <y>"
+
+    Returns
+    -------
+        tuple of stress period and time step numbers
+    """
+    # Get rid of nasty things
+    line = line.replace(",", "").replace("*", "")
+
+    searchstring = "TIME STEP"
+    idx = line.index(searchstring) + len(searchstring)
+    ll = line_parse(line[idx:])
+    ts = int(ll[0])
+
+    searchstring = "STRESS PERIOD"
+    idx = line.index(searchstring) + len(searchstring)
+    ll = line_parse(line[idx:])
+    sp = int(ll[0])
+
+    return ts, sp

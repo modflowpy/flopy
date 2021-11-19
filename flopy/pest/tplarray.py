@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy as np
 from ..utils.util_array import Util3d as Util3d
 from ..utils.util_array import Transient2d as Transient2d
@@ -31,18 +30,14 @@ class Transient2dTpl:
         """
         # Verify parameter span contents
         if "kpers" not in p.span:
-            raise Exception(
-                "Parameter {} span does not contain kper.".format(p.name)
-            )
+            raise Exception(f"Parameter {p.name} span does not contain kper.")
         if "idx" not in p.span:
-            raise Exception(
-                "Parameter {} span does not contain idx.".format(p.name)
-            )
+            raise Exception(f"Parameter {p.name} span does not contain idx.")
 
         if p.span["idx"] is None:
             # Multiplier parameter is when p.span['idx'] is None
             for kper in p.span["kpers"]:
-                self.multipliers[kper] = "~ {0:^13s} ~".format(p.name)
+                self.multipliers[kper] = f"~ {p.name:^13s} ~"
         else:
             # Index parameter otherwise
             for kper in p.span["kpers"]:
@@ -76,7 +71,7 @@ class Transient2dTpl:
             if kper in self.params:
                 for p in self.params[kper]:
                     idx = p.span["idx"]
-                    chararray[idx] = "~{0:^13s}~".format(p.name)
+                    chararray[idx] = f"~{p.name:^13s}~"
             u2dtpl = Util2dTpl(chararray, u2d.name, multiplier, indexed_param)
             return (1, u2dtpl.get_file_entry())
         else:
@@ -126,19 +121,18 @@ class Util3dTpl:
 
         if "layers" in p.span and "idx" in p.span:
             if p.span["idx"] is not None:
-                e = (
+                raise Exception(
                     "For a Util3d object, cannot have layers and "
-                    + "idx in parameter.span"
+                    "idx in parameter.span"
                 )
-                raise Exception(e)
 
         if "layers" in p.span:
             for l in p.span["layers"]:
-                self.multipliers[l] = "~ {0:^13s} ~".format(p.name)
+                self.multipliers[l] = f"~ {p.name:^13s} ~"
 
         if "idx" in p.span and p.span["idx"] is not None:
             idx = p.span["idx"]
-            self.chararray[idx] = "~{0:^13s}~".format(p.name)
+            self.chararray[idx] = f"~{p.name:^13s}~"
             self.indexed_params = True
 
         return
@@ -179,18 +173,18 @@ class Util2dTpl:
         ncol = self.chararray.shape[-1]
         au = np.unique(self.chararray)
         if au.shape[0] == 1 and self.multiplier is None:
-            file_entry = "CONSTANT {0}    #{1}\n".format(au[0], self.name)
+            file_entry = f"CONSTANT {au[0]}    #{self.name}\n"
         else:
             mult = 1.0
             if self.multiplier is not None:
                 mult = self.multiplier
-            cr = "INTERNAL {0} (FREE) -1      #{1}\n".format(mult, self.name)
+            cr = f"INTERNAL {mult} (FREE) -1      #{self.name}\n"
             astring = ""
             icount = 0
             for i in range(self.chararray.shape[0]):
                 for j in range(self.chararray.shape[1]):
                     icount += 1
-                    astring += " {0:>15s}".format(self.chararray[i, j])
+                    astring += f" {self.chararray[i, j]:>15s}"
                     if icount == 10 or j == ncol - 1:
                         astring += "\n"
                         icount = 0

@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
@@ -205,35 +204,19 @@ class SeawatVdf(Package):
         extension="vdf",
         unitnumber=None,
         filenames=None,
-        **kwargs
+        **kwargs,
     ):
 
         if unitnumber is None:
             unitnumber = SeawatVdf._defaultunit()
 
-        # set filenames
-        if filenames is None:
-            filenames = [None]
-        elif isinstance(filenames, str):
-            filenames = [filenames]
-
-        # Fill namefile items
-        name = [SeawatVdf._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=self._prepare_filenames(filenames),
         )
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
@@ -381,7 +364,7 @@ class SeawatVdf(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading vdf package file...\n")
+            print("loading vdf package file...")
 
         # Open file, if necessary
         openfile = not hasattr(f, "read")
@@ -409,10 +392,10 @@ class SeawatVdf(Package):
         nswtcpl = int(t[2])
         iwtable = int(t[3])
         if model.verbose:
-            print("   MT3DRHOFLG {}".format(mt3drhoflg))
-            print("   MFNADVFD {}".format(mfnadvfd))
-            print("   NSWTCPL {}".format(nswtcpl))
-            print("   IWTABLE {}".format(iwtable))
+            print(f"   MT3DRHOFLG {mt3drhoflg}")
+            print(f"   MFNADVFD {mfnadvfd}")
+            print(f"   NSWTCPL {nswtcpl}")
+            print(f"   IWTABLE {iwtable}")
 
         # Item 2 -- DENSEMIN DENSEMAX
         if model.verbose:
@@ -491,15 +474,14 @@ class SeawatVdf(Package):
 
                 if model.verbose:
                     print(
-                        "   loading INDENSE "
-                        "for stress period {}...".format(iper + 1)
+                        f"   loading INDENSE for stress period {iper + 1}..."
                     )
                 line = f.readline()
                 t = line.strip().split()
                 indense = int(t[0])
 
                 if indense > 0:
-                    name = "DENSE_StressPeriod_{}".format(iper)
+                    name = f"DENSE_StressPeriod_{iper}"
                     t = Util3d.load(
                         f,
                         model,

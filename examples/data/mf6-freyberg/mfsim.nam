@@ -7,7 +7,7 @@ END TIMING
 
 BEGIN MODELS
   #modeltype   namefile       modelname
-	GWF6    freyberg.nam     GWF_1
+	GWF6    freyberg.nam     freyberg
 END MODELS
 
 BEGIN EXCHANGES
@@ -15,5 +15,5 @@ END EXCHANGES
 
 BEGIN SOLUTIONGROUP 1
   MXITER 1
-  IMS6 freyberg.ims  GWF_1
+  IMS6 freyberg.ims  freyberg
 END SOLUTIONGROUP

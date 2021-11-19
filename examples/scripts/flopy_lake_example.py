@@ -87,11 +87,11 @@ def run():
 
     # create external ibound array and starting head files
     files = []
-    hfile = "{}_strt.ref".format(name)
+    hfile = f"{name}_strt.ref"
     np.savetxt(hfile, start)
     hfiles = []
     for kdx in range(Nlay):
-        file = "{}_ib{:02d}.ref".format(name, kdx + 1)
+        file = f"{name}_ib{kdx + 1:02d}.ref"
         files.append(file)
         hfiles.append(hfile)
         np.savetxt(file, ibound[kdx, :, :], fmt="%5d")
@@ -118,14 +118,14 @@ def run():
     # specifying, in this case, the step number and period number for which we want to retrieve data.
     # A three-dimensional array is returned of size `nlay, nrow, ncol`. Matplotlib contouring functions
     # are used to make contours of the layers or a cross-section.
-    hds = flopy.utils.HeadFile(os.path.join(workspace, name + ".hds"))
+    hds = flopy.utils.HeadFile(os.path.join(workspace, f"{name}.hds"))
     h = hds.get_data(kstpkper=(0, 0))
     x = y = np.linspace(0, L, N)
     c = plt.contour(x, y, h[0], np.arange(90, 100.1, 0.2))
     plt.clabel(c, fmt="%2.1f")
     plt.axis("scaled")
 
-    outfig = os.path.join(workspace, "lake1.{0}".format(fext))
+    outfig = os.path.join(workspace, f"lake1.{fext}")
     fig = plt.gcf()
     fig.savefig(outfig, dpi=300)
     print("created...", outfig)
@@ -135,7 +135,7 @@ def run():
     plt.clabel(c, fmt="%1.1f")
     plt.axis("scaled")
 
-    outfig = os.path.join(workspace, "lake2.{0}".format(fext))
+    outfig = os.path.join(workspace, f"lake2.{fext}")
     fig = plt.gcf()
     fig.savefig(outfig, dpi=300)
     print("created...", outfig)
@@ -144,7 +144,7 @@ def run():
     c = plt.contour(x, z, h[:, 50, :], np.arange(90, 100.1, 0.2))
     plt.axis("scaled")
 
-    outfig = os.path.join(workspace, "lake3.{0}".format(fext))
+    outfig = os.path.join(workspace, f"lake3.{fext}")
     fig = plt.gcf()
     fig.savefig(outfig, dpi=300)
     print("created...", outfig)

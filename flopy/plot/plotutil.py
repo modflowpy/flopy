@@ -4,24 +4,12 @@ using ModelMap and ModelCrossSection. Functions for plotting
 shapefiles are also included.
 
 """
-from __future__ import print_function
 import os
-import sys
-import math
 import numpy as np
 import warnings
-from ..utils import Util3d
+import matplotlib.pyplot as plt
+from ..utils import Util3d, import_optional_dependency
 from ..datbase import DataType, DataInterface
-
-try:
-    import shapefile
-except ImportError:
-    shapefile = None
-
-try:
-    import matplotlib.pyplot as plt
-except ImportError:
-    plt = None
 
 warnings.simplefilter("ignore", RuntimeWarning)
 
@@ -37,11 +25,6 @@ bc_color_dict = {
     "UZF": "peru",
     "LAK": "royalblue",
 }
-
-
-class PlotException(Exception):
-    def __init__(self, message):
-        super().__init__(message)
 
 
 class PlotUtilities:
@@ -117,7 +100,7 @@ class PlotUtilities:
 
             model_filename_base = None
             if filename_base is not None:
-                model_filename_base = filename_base + "_" + model_name
+                model_filename_base = f"{filename_base}_{model_name}"
 
             if model.verbose:
                 print("   Plotting Model:   ", model_name)
@@ -132,7 +115,7 @@ class PlotUtilities:
                 key=defaults["key"],
                 initial_fig=ifig,
                 model_name=model_name,
-                **kwargs
+                **kwargs,
             )
 
             if isinstance(caxs, list):
@@ -408,7 +391,7 @@ class PlotUtilities:
                         fignum=fignum,
                         colorbar=colorbar,
                         modelgrid=defaults["modelgrid"],
-                        **kwargs
+                        **kwargs,
                     )
 
                     if ax is not None:
@@ -536,7 +519,7 @@ class PlotUtilities:
         filename_base=None,
         file_extension=None,
         mflay=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot stress period boundary condition (MfList) data for a specified
@@ -656,20 +639,17 @@ class PlotUtilities:
                 filenames=filenames,
                 mflay=mflay,
                 modelgrid=modelgrid,
-                **kwargs
+                **kwargs,
             )
         else:
             arr_dict = mflist.to_array(kper, mask=True)
 
             try:
                 arr = arr_dict[key]
-            except:
-                err_msg = "Cannot find key to plot\n"
-                err_msg += "  Provided key={}\n  Available keys=".format(key)
-                for name, arr in arr_dict.items():
-                    err_msg += "{}, ".format(name)
-                err_msg += "\n"
-                raise PlotException(err_msg)
+            except KeyError:
+                err_msg = f'Cannot find key "{key}" to plot\n  Available keys='
+                err_msg += ", ".join(str(k) for k in arr_dict.keys())
+                raise KeyError(err_msg)
 
             axes = PlotUtilities._plot_array_helper(
                 arr,
@@ -678,7 +658,7 @@ class PlotUtilities:
                 filenames=filenames,
                 mflay=mflay,
                 modelgrid=modelgrid,
-                **kwargs
+                **kwargs,
             )
         return axes
 
@@ -689,7 +669,7 @@ class PlotUtilities:
         filename_base=None,
         file_extension=None,
         fignum=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot 2-D model input data
@@ -752,7 +732,7 @@ class PlotUtilities:
             modelgrid = kwargs.pop("modelgrid")
 
         if title is None:
-            title = "{}{}".format(model_name, util2d.name)
+            title = f"{model_name}{util2d.name}"
 
         if file_extension is not None:
             fext = file_extension
@@ -761,7 +741,7 @@ class PlotUtilities:
 
         filename = None
         if filename_base is not None:
-            filename = "{}_{}.{}".format(filename_base, util2d.name, fext)
+            filename = f"{filename_base}_{util2d.name}.{fext}"
 
         axes = PlotUtilities._plot_array_helper(
             util2d.array,
@@ -770,7 +750,7 @@ class PlotUtilities:
             filenames=filename,
             fignum=fignum,
             modelgrid=modelgrid,
-            **kwargs
+            **kwargs,
         )
         return axes
 
@@ -781,7 +761,7 @@ class PlotUtilities:
         file_extension=None,
         mflay=None,
         fignum=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot 3-D model input data
@@ -860,7 +840,7 @@ class PlotUtilities:
             name = [name] * nplottable_layers
 
         names = [
-            "{}{} layer {}".format(model_name, name[k], k + 1)
+            f"{model_name}{name[k]} layer {k + 1}"
             for k in range(nplottable_layers)
         ]
 
@@ -868,7 +848,7 @@ class PlotUtilities:
         if filename_base is not None:
             # build filenames, use local "name" variable (flopy6 adaptation)
             filenames = [
-                "{}_{}_Layer{}.{}".format(filename_base, name[k], k + 1, fext)
+                f"{filename_base}_{name[k]}_Layer{k + 1}.{fext}"
                 for k in range(nplottable_layers)
             ]
 
@@ -880,7 +860,7 @@ class PlotUtilities:
             mflay=mflay,
             fignum=fignum,
             modelgrid=modelgrid,
-            **kwargs
+            **kwargs,
         )
         return axes
 
@@ -891,7 +871,7 @@ class PlotUtilities:
         file_extension=None,
         kper=0,
         fignum=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot transient 2-D model input data
@@ -990,7 +970,7 @@ class PlotUtilities:
             )
 
             if filename_base is not None:
-                filename = filename_base + "_{:05d}.{}".format(kper + 1, fext)
+                filename = f"{filename_base}_{kper + 1:05d}.{fext}"
             else:
                 filename = None
 
@@ -1002,7 +982,7 @@ class PlotUtilities:
                     filenames=filename,
                     fignum=fignum[idx],
                     modelgrid=modelgrid,
-                    **kwargs
+                    **kwargs,
                 )
             )
         return axes
@@ -1042,10 +1022,10 @@ class PlotUtilities:
         if "modelgrid" in kwargs:
             modelgrid = kwargs.pop("modelgrid")
 
-        title = "{}".format(scalar.name.replace("_", "").upper())
+        title = scalar.name.replace("_", "").upper()
 
         if filename_base is not None:
-            filename = filename_base + ".{}".format(fext)
+            filename = f"{filename_base}.{fext}"
         else:
             filename = None
 
@@ -1055,7 +1035,7 @@ class PlotUtilities:
             names=title,
             filenames=filename,
             modelgrid=modelgrid,
-            **kwargs
+            **kwargs,
         )
         return axes
 
@@ -1069,7 +1049,7 @@ class PlotUtilities:
         filenames=None,
         fignum=None,
         mflay=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Helper method to plot array objects
@@ -1117,15 +1097,6 @@ class PlotUtilities:
             "fmt": "%1.3f",
             "modelgrid": None,
         }
-
-        # check that matplotlib is installed
-        if plt is None:
-            err_msg = (
-                "Could not import matplotlib. "
-                "Must install matplotlib "
-                + " in order to plot LayerFile data."
-            )
-            raise PlotException(err_msg)
 
         for key in defaults:
             if key in kwargs:
@@ -1190,7 +1161,7 @@ class PlotUtilities:
                     plotarray,
                     masked_values=defaults["masked_values"],
                     ax=axes[idx],
-                    **kwargs
+                    **kwargs,
                 )
 
                 if defaults["colorbar"]:
@@ -1206,7 +1177,7 @@ class PlotUtilities:
                     ax=axes[idx],
                     colors=defaults["colors"],
                     levels=defaults["levels"],
-                    **kwargs
+                    **kwargs,
                 )
                 if defaults["clabel"]:
                     axes[idx].clabel(cl, fmt=defaults["fmt"], **kwargs)
@@ -1225,9 +1196,7 @@ class PlotUtilities:
             for idx, k in enumerate(range(i0, i1)):
                 fig = plt.figure(num=fignum[idx])
                 fig.savefig(filenames[idx], dpi=defaults["dpi"])
-                print(
-                    "    created...{}".format(os.path.basename(filenames[idx]))
-                )
+                print(f"    created...{os.path.basename(filenames[idx])}")
             # there will be nothing to return when done
             axes = None
             plt.close("all")
@@ -1243,7 +1212,7 @@ class PlotUtilities:
         filenames=None,
         fignum=None,
         mflay=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Helper method to plot bc objects from flopy packages
@@ -1273,13 +1242,6 @@ class PlotUtilities:
         """
 
         from .map import PlotMapView
-
-        if plt is None:
-            s = (
-                "Could not import matplotlib.  Must install matplotlib "
-                + " in order to plot boundary condition data."
-            )
-            raise PlotException(s)
 
         defaults = {
             "figsize": None,
@@ -1345,9 +1307,7 @@ class PlotUtilities:
                 fig = plt.figure(num=fignum[idx])
                 fig.savefig(filenames[idx], dpi=defaults["dpi"])
                 plt.close(fignum[idx])
-                print(
-                    "    created...{}".format(os.path.basename(filenames[idx]))
-                )
+                print(f"    created...{os.path.basename(filenames[idx])}")
             # there will be nothing to return when done
             axes = None
             plt.close("all")
@@ -1408,13 +1368,10 @@ class PlotUtilities:
         if names is not None:
             if not isinstance(names, list):
                 if maxlay > 1:
-                    names = [
-                        "{} layer {}".format(names, i + 1)
-                        for i in range(maxlay)
-                    ]
+                    names = [f"{names} layer {i + 1}" for i in range(maxlay)]
                 else:
                     names = [names]
-            msg = "{} /= {}: {}".format(len(names), maxlay, names)
+            msg = f"{len(names)} /= {maxlay}: {names}"
             assert len(names) == maxlay, msg
         return names
 
@@ -1444,7 +1401,7 @@ class PlotUtilities:
         if fignum is not None:
             if not isinstance(fignum, list):
                 fignum = [fignum]
-            msg = "{} /= {}".format(len(fignum), maxlay)
+            msg = f"{len(fignum)} /= {maxlay}"
             assert len(fignum) == maxlay, msg
             # check for existing figures
             f0 = fignum[0]
@@ -1508,7 +1465,7 @@ class PlotUtilities:
                     klay = k
                     if mflay is not None:
                         klay = int(mflay)
-                    title = "{} Layer {}".format("data", klay + 1)
+                    title = f"data Layer {klay + 1}"
                 ax.set_title(title)
                 axes.append(ax)
 
@@ -1781,11 +1738,13 @@ class UnstructuredPlotUtilities:
                         cells.append(cell)
                         cell_vertex_ix.append(cvert_ix)
 
-            # find interesection vertices
+            # find intersection vertices
             numa = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)
             numb = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)
             denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
-            ua = numa / denom
+            ua = np.zeros(denom.shape, dtype=denom.dtype)
+            idx = np.where(denom != 0.0)
+            ua[idx] = numa[idx] / denom[idx]
             # ub = numb / denom
             del numa
             del numb
@@ -1955,7 +1914,7 @@ class SwiConcentration:
             try:
                 dis = model.get_package("DIS")
             except:
-                sys.stdout.write("Error: DIS package not available.\n")
+                print("Error: DIS package not available.")
             self.__botm = np.zeros((dis.nlay + 1, dis.nrow, dis.ncol), float)
             self.__botm[0, :, :] = dis.top.array
             self.__botm[1:, :, :] = dis.botm.array
@@ -1965,7 +1924,7 @@ class SwiConcentration:
                 self.__istrat = swi.istrat
                 self.__nsrf = swi.nsrf
             except (AttributeError, ValueError):
-                sys.stdout.write("Error: SWI2 package not available...\n")
+                print("Error: SWI2 package not available...")
         self.__nlay = self.__botm.shape[0] - 1
         self.__nrow = self.__botm[0, :, :].shape[0]
         self.__ncol = self.__botm[0, :, :].shape[1]
@@ -2041,9 +2000,7 @@ def shapefile_extents(shp):
     >>> extent = flopy.plot.plotutil.shapefile_extents(fshp)
 
     """
-    if shapefile is None:
-        s = "Could not import shapefile.  Must install pyshp in order to plot shapefiles."
-        raise PlotException(s)
+    shapefile = import_optional_dependency("shapefile")
 
     sf = shapefile.Reader(shp)
     shapes = sf.shapes()
@@ -2083,9 +2040,7 @@ def shapefile_get_vertices(shp):
     >>> lines = flopy.plot.plotutil.shapefile_get_vertices(fshp)
 
     """
-    if shapefile is None:
-        s = "Could not import shapefile.  Must install pyshp in order to plot shapefiles."
-        raise PlotException(s)
+    shapefile = import_optional_dependency("shapefile")
 
     sf = shapefile.Reader(shp)
     shapes = sf.shapes()
@@ -2134,24 +2089,12 @@ def shapefile_to_patch_collection(shp, radius=500.0, idx=None):
             Patch collection of shapes in the shapefile
 
     """
-    if shapefile is None:
-        s = (
-            "Could not import shapefile.  Must install pyshp "
-            "in order to plot shapefiles."
-        )
-        raise PlotException(s)
-    if plt is None:
-        err_msg = (
-            "matplotlib must be installed to "
-            + "use shapefile_to_patch_collection()"
-        )
-        raise ImportError(err_msg)
-    else:
-        from matplotlib.patches import Polygon, Circle, PathPatch
-        import matplotlib.path as MPath
-        from matplotlib.collections import PatchCollection
-        from ..utils.geospatial_utils import GeoSpatialCollection
-        from ..utils.geometry import point_in_polygon
+    from matplotlib.patches import Polygon, Circle, PathPatch
+    import matplotlib.path as MPath
+    from matplotlib.collections import PatchCollection
+
+    from ..utils.geospatial_utils import GeoSpatialCollection
+    from ..utils.geometry import point_in_polygon
 
     geofeats = GeoSpatialCollection(shp)
     shapes = geofeats.shape
@@ -2245,7 +2188,7 @@ def plot_shapefile(
     a=None,
     masked_values=None,
     idx=None,
-    **kwargs
+    **kwargs,
 ):
     """
     Generic function for plotting a shapefile.
@@ -2283,14 +2226,6 @@ def plot_shapefile(
     --------
 
     """
-
-    if shapefile is None:
-        s = (
-            "Could not import shapefile.  Must install pyshp in "
-            "order to plot shapefiles."
-        )
-        raise PlotException(s)
-
     vmin = kwargs.pop("vmin", None)
     vmax = kwargs.pop("vmax", None)
 
@@ -2344,15 +2279,8 @@ def cvfd_to_patch_collection(verts, iverts):
         DeprecationWarning,
     )
 
-    if plt is None:
-        err_msg = (
-            "matplotlib must be installed to "
-            + "use cvfd_to_patch_collection()"
-        )
-        raise ImportError(err_msg)
-    else:
-        from matplotlib.patches import Polygon
-        from matplotlib.collections import PatchCollection
+    from matplotlib.patches import Polygon
+    from matplotlib.collections import PatchCollection
 
     ptchs = []
     for ivertlist in iverts:
@@ -2378,7 +2306,7 @@ def plot_cvfd(
     facecolor="scaled",
     a=None,
     masked_values=None,
-    **kwargs
+    **kwargs,
 ):
     """
     Generic function for plotting a control volume finite difference grid of
@@ -2422,9 +2350,6 @@ def plot_cvfd(
         "Use PlotMapView for plotting",
         DeprecationWarning,
     )
-    if plt is None:
-        err_msg = "matplotlib must be installed to use plot_cvfd()"
-        raise ImportError(err_msg)
 
     if "vmin" in kwargs:
         vmin = kwargs.pop("vmin")
@@ -2537,10 +2462,6 @@ def _set_coord_info(mg, xul, yul, xll, yll, rotation):
     import warnings
 
     if xul is not None and yul is not None:
-        warnings.warn(
-            "xul/yul have been deprecated. Use xll/yll instead.",
-            DeprecationWarning,
-        )
         if rotation is not None:
             mg._angrot = rotation
 
@@ -2649,7 +2570,7 @@ def advanced_package_bc_helper(pkg, modelgrid, kper):
             idx = np.array(idx)
     else:
         raise NotImplementedError(
-            "Pkg {} not implemented for bc plotting".format(pkg.package_type)
+            f"Pkg {pkg.package_type} not implemented for bc plotting"
         )
     return idx
 
@@ -2682,14 +2603,12 @@ def filter_modpath_by_travel_time(recarray, travel_time):
                     time = float(travel_time)
                     idx = recarray["time"] <= time
                 except (ValueError, KeyError):
-                    errmsg = (
-                        "flopy.map.plot_pathline travel_time "
-                        + "variable cannot be parsed. "
-                        + "Acceptable logical variables are , "
-                        + "<=, <, >=, and >. "
-                        + "You passed {}".format(travel_time)
+                    raise Exception(
+                        "flopy.map.plot_pathline travel_time variable cannot "
+                        "be parsed. Acceptable logical variables are , "
+                        "<=, <, >=, and >. "
+                        "You passed {}".format(travel_time)
                     )
-                    raise Exception(errmsg)
         else:
             time = float(travel_time)
             idx = recarray["time"] <= time
@@ -2971,21 +2890,17 @@ def parse_modpath_selection_options(
                 idx = (ep[ksel] == k) & (ep[isel] == i) & (ep[jsel] == j)
                 tep = ep[idx]
             else:
-                errmsg = (
-                    "plot_endpoint selection must be "
-                    + "a zero-based layer, row, column tuple "
-                    + "(l, r, c) or node number (MODPATH 7) of "
-                    + "the location to evaluate (i.e., well location)."
+                raise Exception(
+                    "plot_endpoint selection must be a zero-based layer, row, "
+                    "column tuple (l, r, c) or node number (MODPATH 7) of "
+                    "the location to evaluate (i.e., well location)."
                 )
-                raise Exception(errmsg)
         except (ValueError, KeyError, IndexError):
-            errmsg = (
-                "plot_endpoint selection must be a "
-                + "zero-based layer, row, column tuple (l, r, c) "
-                + "or node number (MODPATH 7) of the location "
-                + "to evaluate (i.e., well location)."
+            raise Exception(
+                "plot_endpoint selection must be a zero-based layer, row, "
+                "column tuple (l, r, c) or node number (MODPATH 7) of the "
+                "location to evaluate (i.e., well location)."
             )
-            raise Exception(errmsg)
     else:
         tep = ep.copy()
 

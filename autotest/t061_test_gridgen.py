@@ -1,4 +1,3 @@
-import shutil
 import os
 import numpy as np
 import flopy
@@ -13,11 +12,9 @@ except ImportError:
     shapefile = None
 
 cpth = os.path.join("temp", "t061")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-# make the directory
-os.makedirs(cpth)
+# make the directory if it does not exist
+if not os.path.isdir(cpth):
+    os.makedirs(cpth, exist_ok=True)
 
 exe_name = "gridgen"
 v = flopy.which(exe_name)
@@ -67,9 +64,7 @@ def test_gridgen():
         botm=botm,
     )
 
-    ms_u = flopy.modflow.Modflow(
-        modelname="mymfusgmodel", model_ws=cpth, version="mfusg"
-    )
+    ms_u = flopy.mfusg.MfUsg(modelname="mymfusgmodel", model_ws=cpth)
     dis_usg = flopy.modflow.ModflowDis(
         ms_u,
         nlay=nlay,
@@ -191,10 +186,7 @@ def test_gridgen():
         points = [(4750.0, 5250.0)]
         cells = g.intersect(points, "point", 0)
         n = cells["nodenumber"][0]
-        msg = (
-            "gridgen point intersect did not identify the correct "
-            "cell {} <> {}".format(n, 308)
-        )
+        msg = f"gridgen point intersect did not identify the correct cell {n} <> 308"
         assert n == 308, msg
 
         # test the gridgen line intersection
@@ -231,7 +223,7 @@ def test_gridgen():
         assert nlist == nlist2, msg
 
         # test getting a modflow-usg disu package
-        mu = flopy.modflow.Modflow(version="mfusg", structured=False)
+        mu = flopy.mfusg.MfUsg(structured=False)
         disu = g.get_disu(mu)
 
         # test mfusg with vertical pass-through (True above at instantiation)

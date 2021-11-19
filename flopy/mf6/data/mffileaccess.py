@@ -87,8 +87,6 @@ class MFFileAccess:
                     arr_line, self._path, self._simulation_data, line_num
                 )
 
-            storage.add_data_line_comment(arr_line, line_num)
-
             line = file_handle.readline()
             arr_line = PyListUtil.split_data_line(line)
         return line
@@ -117,9 +115,8 @@ class MFFileAccess:
             if not keyword_match and aux_var_index is None:
                 aux_text = ""
                 if aux_var_names is not None:
-                    aux_text = " or auxiliary variables " "{}".format(
-                        aux_var_names[0]
-                    )
+                    # TODO: aux_var_names is None, so this is never touched
+                    aux_text = f" or auxiliary variables {aux_var_names[0]}"
                 message = (
                     'Error reading variable "{}".  Expected '
                     'variable keyword "{}"{} not found '
@@ -158,7 +155,7 @@ class MFFileAccess:
         else:
             options = "r"
         if binary:
-            options = "{}b".format(options)
+            options = f"{options}b"
         try:
             fd = open(read_file, options)
             return fd
@@ -430,7 +427,7 @@ class MFFileAccessArray(MFFileAccess):
             return bin_data
 
     def get_data_string(self, data, data_type, data_indent=""):
-        layer_data_string = ["{}".format(data_indent)]
+        layer_data_string = [str(data_indent)]
         line_data_count = 0
         indent_str = self._simulation_data.indent_string
         data_iter = datautil.PyListUtil.next_item(data)
@@ -482,13 +479,11 @@ class MFFileAccessArray(MFFileAccess):
                     self._simulation_data.debug,
                     ex,
                 )
-            layer_data_string[-1] = "{}{}{}".format(
-                layer_data_string[-1], indent_str, data_lyr
-            )
+            layer_data_string[-1] += f"{indent_str}{data_lyr}"
 
             if jagged_def is not None:
                 if line_data_count == jagged_def[jagged_def_index]:
-                    layer_data_string.append("{}".format(data_indent))
+                    layer_data_string.append(str(data_indent))
                     line_data_count = 0
                     jagged_def_index += 1
             else:
@@ -497,13 +492,13 @@ class MFFileAccessArray(MFFileAccess):
                     == self._simulation_data.max_columns_of_data
                     or last_item
                 ):
-                    layer_data_string.append("{}".format(data_indent))
+                    layer_data_string.append(str(data_indent))
                     line_data_count = 0
         if len(layer_data_string) > 0:
             # clean up the text at the end of the array
             layer_data_string[-1] = layer_data_string[-1].strip()
         if len(layer_data_string) == 1:
-            return "{}{}\n".format(data_indent, layer_data_string[0].rstrip())
+            return f"{data_indent}{layer_data_string[0].rstrip()}\n"
         else:
             return "\n".join(layer_data_string)
 
@@ -674,8 +669,8 @@ class MFFileAccessArray(MFFileAccess):
             dimensions = storage.get_data_dimensions(layer_shape)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            comment = 'Could not get data shape for key "{}".'.format(
-                self._current_key
+            comment = (
+                f'Could not get data shape for key "{self._current_key}".'
             )
             raise MFDataException(
                 self.structure.get_model(),
@@ -841,7 +836,7 @@ class MFFileAccessArray(MFFileAccess):
                     self.structure.get_model(),
                     self.structure.get_package(),
                     self._path,
-                    "reading data from file " "{}".format(file_handle.name),
+                    f"reading data from file {file_handle.name}",
                     self.structure.name,
                     inspect.stack()[0][3],
                     type_,
@@ -863,7 +858,7 @@ class MFFileAccessArray(MFFileAccess):
                     print_format=print_format,
                 )
             except Exception as ex:
-                comment = 'Could not store data: "{}"'.format(data_shaped)
+                comment = f'Could not store data: "{data_shaped}"'
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(
                     self.structure.get_model(),
@@ -928,8 +923,8 @@ class MFFileAccessArray(MFFileAccess):
             dimensions = storage.get_data_dimensions(layer_shape)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            comment = 'Could not get data shape for key "{}".'.format(
-                self._current_key
+            comment = (
+                f'Could not get data shape for key "{self._current_key}".'
             )
             raise MFDataException(
                 self.structure.get_model(),
@@ -951,8 +946,7 @@ class MFFileAccessArray(MFFileAccess):
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
                 comment = (
-                    "Could not reshape data to dimensions "
-                    '"{}".'.format(dimensions)
+                    f'Could not reshape data to dimensions "{dimensions}".'
                 )
                 raise MFDataException(
                     self.structure.get_model(),
@@ -1179,7 +1173,15 @@ class MFFileAccessList(MFFileAccess):
         # read any pre-data commented lines
         while current_line and MFComment.is_comment(arr_line, True):
             arr_line.insert(0, "\n")
-            storage.add_data_line_comment(arr_line, line_num)
+            if storage.pre_data_comments is None:
+                storage.pre_data_comments = MFComment(
+                    " ".join(arr_line),
+                    self._path,
+                    self._simulation_data,
+                    line_num,
+                )
+            else:
+                storage.pre_data_comments.add_text(" ".join(arr_line))
             PyListUtil.reset_delimiter_used()
             current_line = file_handle.readline()
             arr_line = PyListUtil.split_data_line(current_line)
@@ -1242,15 +1244,14 @@ class MFFileAccessList(MFFileAccess):
             else:
                 # not a constant or open/close line, exception is valid
                 comment = (
-                    "Unable to process line 1 of data list: "
-                    '"{}"'.format(current_line)
+                    f'Unable to process line 1 of data list: "{current_line}"'
                 )
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(
                     struct.get_model(),
                     struct.get_package(),
                     struct.path,
-                    "loading data list from " "package file",
+                    "loading data list from package file",
                     struct.name,
                     inspect.stack()[0][3],
                     type_,
@@ -1451,7 +1452,7 @@ class MFFileAccessList(MFFileAccess):
                         struct.get_model(),
                         struct.get_package(),
                         struct.path,
-                        "loading data list from " "package file",
+                        "loading data list from package file",
                         struct.name,
                         inspect.stack()[0][3],
                         type_,
@@ -1645,9 +1646,7 @@ class MFFileAccessList(MFFileAccess):
                                             name_data
                                             not in data_item.keystring_dict
                                         ):
-                                            name_data = "{}record".format(
-                                                name_data
-                                            )
+                                            name_data = f"{name_data}record"
                                             if (
                                                 name_data
                                                 not in data_item.keystring_dict
@@ -1673,11 +1672,7 @@ class MFFileAccessList(MFFileAccess):
                                             data_item.keystring_dict[name_data]
                                         )
                                         if data_item_ks == 0:
-                                            comment = (
-                                                "Could not find "
-                                                "keystring "
-                                                "{}.".format(name_data)
-                                            )
+                                            comment = f"Could not find keystring {name_data}."
                                             (
                                                 type_,
                                                 value_,
@@ -1738,7 +1733,9 @@ class MFFileAccessList(MFFileAccess):
                                         data_item_ks, MFDataStructure
                                     ):
                                         dis = data_item_ks.data_item_structures
-                                        for ks_data_item in dis:
+                                        for idx, ks_data_item in enumerate(
+                                            dis
+                                        ):
                                             if (
                                                 ks_data_item.type
                                                 != DatumType.keyword
@@ -1763,6 +1760,12 @@ class MFFileAccessList(MFFileAccess):
                                                     data_line,
                                                     zero_based=zero_based,
                                                 )
+                                            elif (
+                                                idx > 0
+                                                and ks_data_item.type
+                                                == DatumType.keyword
+                                            ):
+                                                data_index += 1
                                         while data_index < arr_line_len:
                                             try:
                                                 # append remaining data
@@ -1782,7 +1785,7 @@ class MFFileAccessList(MFFileAccess):
                                                     repeat_count,
                                                     current_key,
                                                     data_line,
-                                                    zero_base=zero_based,
+                                                    zero_based=zero_based,
                                                 )
                                             except MFDataException:
                                                 break
@@ -2064,7 +2067,7 @@ class MFFileAccessList(MFFileAccess):
                         struct.get_model(),
                         struct.get_package(),
                         struct.path,
-                        "loading data list from package " "file",
+                        "loading data list from package file",
                         struct.name,
                         inspect.stack()[0][3],
                         type_,
@@ -2094,7 +2097,7 @@ class MFFileAccessList(MFFileAccess):
                             struct.get_model(),
                             struct.get_package(),
                             struct.path,
-                            "loading data list from package " "file",
+                            "loading data list from package file",
                             struct.name,
                             inspect.stack()[0][3],
                             type_,
@@ -2269,7 +2272,7 @@ class MFFileAccessScalar(MFFileAccess):
                 storage.set_data(converted_data, key=self._current_key)
                 index_num += 1
             except Exception as ex:
-                message = 'Could not set data "{}" with key ' '"{}".'.format(
+                message = 'Could not set data "{}" with key "{}".'.format(
                     converted_data, self._current_key
                 )
                 type_, value_, traceback_ = sys.exc_info()
@@ -2295,9 +2298,7 @@ class MFFileAccessScalar(MFFileAccess):
             try:
                 storage.set_data(True, key=self._current_key)
             except Exception as ex:
-                message = 'Could not set data "True" with key ' '"{}".'.format(
-                    self._current_key
-                )
+                message = f'Could not set data "True" with key "{self._current_key}".'
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(
                     self.structure.get_model(),
@@ -2370,7 +2371,7 @@ class MFFileAccessScalar(MFFileAccess):
                 # read next word as data
                 storage.set_data(converted_data, key=self._current_key)
             except Exception as ex:
-                message = 'Could not set data "{}" with key ' '"{}".'.format(
+                message = 'Could not set data "{}" with key "{}".'.format(
                     converted_data, self._current_key
                 )
                 type_, value_, traceback_ = sys.exc_info()

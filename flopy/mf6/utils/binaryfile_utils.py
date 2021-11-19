@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from ...utils import binaryfile as bf
+from ...utils import import_optional_dependency
 
 
 class MFOutput:
@@ -13,7 +14,7 @@ class MFOutput:
     ----------
     path: binary file path location
     mfdict: SimulationDict() object
-    key: OrderedDictionary key ex. ('flow15','CBC','FLOW RIGHT FACE')
+    key: dict key ex. ('flow15','CBC','FLOW RIGHT FACE')
 
     Returns
     -------
@@ -55,7 +56,7 @@ class MFOutputRequester:
 
     Parameters:
     ----------
-    mfdict: OrderedDict
+    mfdict: dict
         local instance of the SimulationDict() object
     path:
         pointer to the MFSimulationPath object
@@ -97,7 +98,7 @@ class MFOutputRequester:
             print("\nValid Keys Are:\n")
             for valid_key in self.dataDict:
                 print(valid_key)
-            raise KeyError("Invalid key {}".format(key))
+            raise KeyError(f"Invalid key {key}")
 
     def _querybinarydata(self, key):
         # Basic definition to get output from modflow binary files for
@@ -178,33 +179,25 @@ class MFOutputRequester:
             try:
                 return bf.CellBudgetFile(path, precision="double")
             except AssertionError:
-                raise AssertionError(
-                    "{} does not " "exist".format(self.dataDict[key])
-                )
+                raise AssertionError(f"{self.dataDict[key]} does not exist")
 
         elif bintype == "HDS":
             try:
                 return bf.HeadFile(path, precision="double")
             except AssertionError:
-                raise AssertionError(
-                    "{} does not " "exist".format(self.dataDict[key])
-                )
+                raise AssertionError(f"{self.dataDict[key]} does not exist")
 
         elif bintype == "DDN":
             try:
                 return bf.HeadFile(path, text="drawdown", precision="double")
             except AssertionError:
-                raise AssertionError(
-                    "{} does not " "exist".format(self.dataDict[key])
-                )
+                raise AssertionError(f"{self.dataDict[key]} does not exist")
 
         elif bintype == "UCN":
             try:
                 return bf.UcnFile(path, precision="single")
             except AssertionError:
-                raise AssertionError(
-                    "{} does not " "exist".format(self.dataDict[key])
-                )
+                raise AssertionError(f"{self.dataDict[key]} does not exist")
 
         else:
             raise AssertionError()
@@ -236,11 +229,10 @@ class MFOutputRequester:
         elevations corresponding to a row column location
         """
 
-        try:
-            import pandas as pd
-        except Exception as e:
-            msg = "MFOutputRequester._get_vertices(): requires pandas"
-            raise ImportError(msg)
+        pd = import_optional_dependency(
+            "pandas",
+            error_message="MFOutputRequester._get_vertices() requires pandas.",
+        )
 
         mname = key[0]
         cellid = mfdict[(mname, "DISV8", "CELL2D", "cell2d_num")]

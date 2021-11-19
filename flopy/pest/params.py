@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy as np
 
 
@@ -76,7 +75,7 @@ def zonearray2params(
     for i, iz in enumerate(parzones):
         span = {}
         span["idx"] = np.where(zonearray == iz)
-        parname = partype + "_" + str(iz)
+        parname = f"{partype}_{iz}"
         startvalue = parvals[i]
         p = Params(
             mfpackage,

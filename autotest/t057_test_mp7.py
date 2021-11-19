@@ -1,12 +1,11 @@
 import os
-import shutil
 import numpy as np
 import flopy
 
 model_ws = os.path.join("temp", "t057")
-# delete the directory if it exists
-if os.path.isdir(model_ws):
-    shutil.rmtree(model_ws)
+# make the directory if it does not exist
+if not os.path.isdir(model_ws):
+    os.makedirs(model_ws, exist_ok=True)
 
 exe_names = {"mf2005": "mf2005", "mf6": "mf6", "mp7": "mp7"}
 run = True
@@ -114,11 +113,8 @@ def test_pathline_output():
 
     # check maxid
     msg = (
-        "pathline maxid ({}) ".format(maxid0)
-        + "in {} ".format(os.path.basename(fpth0))
-        + "are not equal to the "
-        + "pathline maxid ({}) ".format(maxid1)
-        + "in {}".format(os.path.basename(fpth1))
+        f"pathline maxid ({maxid0}) in {os.path.basename(fpth0)} are not "
+        f"equal to the pathline maxid ({maxid1}) in {os.path.basename(fpth1)}"
     )
     assert maxid0 == maxid1, msg
 
@@ -160,11 +156,8 @@ def test_endpoint_output():
 
     # check maxid
     msg = (
-        "endpoint maxid ({}) ".format(maxid0)
-        + "in {} ".format(os.path.basename(fpth0))
-        + "are not equal to the "
-        + "endpoint maxid ({}) ".format(maxid1)
-        + "in {}".format(os.path.basename(fpth1))
+        f"endpoint maxid ({maxid0}) in {os.path.basename(fpth0)} are not "
+        f"equal to the endpoint maxid ({maxid1}) in {os.path.basename(fpth1)}"
     )
     assert maxid0 == maxid1, msg
 
@@ -198,9 +191,8 @@ def test_endpoint_output():
     )
     d = np.rec.fromarrays((e0[name] - e1[name] for name in names), dtype=dtype)
     msg = (
-        "endpoints in {} ".format(os.path.basename(fpth0))
-        + "are not equal (within 1e-5) to the "
-        + "endpoints  in {}".format(os.path.basename(fpth1))
+        f"endpoints in {os.path.basename(fpth0)} are not equal (within 1e-5) "
+        f"to the endpoints  in {os.path.basename(fpth1)}"
     )
     # assert not np.allclose(t0, t1), msg
 
@@ -264,7 +256,7 @@ def build_mf2005():
     # create modpath files
     exe_name = exe_names["mp7"]
     mp = flopy.modpath.Modpath7(
-        modelname=nm + "_mp", flowmodel=m, exe_name=exe_name, model_ws=ws
+        modelname=f"{nm}_mp", flowmodel=m, exe_name=exe_name, model_ws=ws
     )
     mpbas = flopy.modpath.Modpath7Bas(
         mp, porosity=0.1, defaultiface=defaultiface
@@ -292,7 +284,7 @@ def build_mf2005():
     # run modpath
     if run:
         success, buff = mp.run_model()
-        assert success, "mp7 model ({}) did not run".format(mp.name)
+        assert success, f"mp7 model ({mp.name}) did not run"
 
     return
 
@@ -318,7 +310,7 @@ def build_mf6():
     )
 
     # Create the Flopy groundwater flow (gwf) model object
-    model_nam_file = "{}.nam".format(nm)
+    model_nam_file = f"{nm}.nam"
     gwf = flopy.mf6.ModflowGwf(
         sim, modelname=nm, model_nam_file=model_nam_file, save_flows=True
     )
@@ -369,9 +361,9 @@ def build_mf6():
         rd.append([(0, i, ncol - 1), riv_h, riv_c, riv_z])
     flopy.mf6.modflow.mfgwfriv.ModflowGwfriv(gwf, stress_period_data={0: rd})
     # Create the output control package
-    headfile = "{}.hds".format(nm)
+    headfile = f"{nm}.hds"
     head_record = [headfile]
-    budgetfile = "{}.cbb".format(nm)
+    budgetfile = f"{nm}.cbb"
     budget_record = [budgetfile]
     saverecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
     oc = flopy.mf6.modflow.mfgwfoc.ModflowGwfoc(
@@ -393,7 +385,7 @@ def build_mf6():
     # create modpath files
     exe_name = exe_names["mp7"]
     mp = flopy.modpath.Modpath7(
-        modelname=nm + "_mp", flowmodel=gwf, exe_name=exe_name, model_ws=ws
+        modelname=f"{nm}_mp", flowmodel=gwf, exe_name=exe_name, model_ws=ws
     )
     mpbas = flopy.modpath.Modpath7Bas(
         mp, porosity=0.1, defaultiface=defaultiface6
@@ -421,7 +413,7 @@ def build_mf6():
     # run modpath
     if run:
         success, buff = mp.run_model()
-        assert success, "mp7 model ({}) did not run".format(mp.name)
+        assert success, f"mp7 model ({mp.name}) did not run"
 
     return
 

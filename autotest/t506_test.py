@@ -5,9 +5,7 @@ flopy.discretization grid classes
 """
 
 import os
-import sys
 import platform
-import shutil
 import numpy as np
 
 try:
@@ -23,10 +21,13 @@ from flopy.utils.gridgen import Gridgen
 try:
     import matplotlib
     import matplotlib.pyplot as plt
+    from matplotlib.collections import QuadMesh, PathCollection, LineCollection
 except:
     print("Matplotlib not installed, tests cannot be run.")
     matplotlib = None
     plt = None
+
+from ci_framework import base_test_dir, FlopyTestSetup
 
 # Set gridgen executable
 gridgen_exe = "gridgen"
@@ -46,15 +47,7 @@ if platform.system() in "Windows":
     mfusg_exe += ".exe"
 mfusg_exe = flopy.which(mfusg_exe)
 
-# set up the example folder
-tpth = os.path.join("temp", "t506")
-if not os.path.isdir(tpth):
-    os.makedirs(tpth)
-
-# set up a gridgen workspace
-gridgen_ws = os.path.join(tpth, "gridgen")
-if not os.path.exists(gridgen_ws):
-    os.makedirs(gridgen_ws)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 VERBOSITY_LEVEL = 0
 
@@ -70,6 +63,10 @@ def test_mf6disv():
     if Polygon is None:
         print("Unable to run test_mf6disv(). shapely is not available.")
         return
+
+    # set up a gridgen workspace
+    gridgen_ws = f"{base_dir}_mf6disv"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=gridgen_ws)
 
     name = "dummy"
     nlay = 3
@@ -114,11 +111,10 @@ def test_mf6disv():
         chdspd.append([(ilay, ic), head])
 
     # build run and post-process the MODFLOW 6 model
-    ws = os.path.join(tpth, "gridgen_disv")
     name = "mymodel"
     sim = flopy.mf6.MFSimulation(
         sim_name=name,
-        sim_ws=ws,
+        sim_ws=gridgen_ws,
         exe_name="mf6",
         verbosity_level=VERBOSITY_LEVEL,
     )
@@ -131,8 +127,8 @@ def test_mf6disv():
         gwf, xt3doptions=True, save_specific_discharge=True
     )
     chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chdspd)
-    budget_file = name + ".bud"
-    head_file = name + ".hds"
+    budget_file = f"{name}.bud"
+    head_file = f"{name}.hds"
     oc = flopy.mf6.ModflowGwfoc(
         gwf,
         budget_filerecord=budget_file,
@@ -144,19 +140,16 @@ def test_mf6disv():
     gwf.modelgrid.set_coord_info(angrot=15)
 
     # write grid and model shapefiles
-    fname = os.path.join(ws, "grid.shp")
+    fname = os.path.join(gridgen_ws, "grid.shp")
     gwf.modelgrid.write_shapefile(fname)
-    fname = os.path.join(ws, "model.shp")
+    fname = os.path.join(gridgen_ws, "model.shp")
     gwf.export(fname)
 
     if mf6_exe is not None:
         sim.run_simulation(silent=True)
-        head = flopy.utils.HeadFile(os.path.join(ws, head_file)).get_data()
-        bud = flopy.utils.CellBudgetFile(
-            os.path.join(ws, budget_file), precision="double"
-        )
+        head = gwf.output.head().get_data()
+        bud = gwf.output.budget()
         spdis = bud.get_data(text="DATA-SPDIS")[0]
-
         if matplotlib is not None:
             f = plt.figure(figsize=(10, 10))
             vmin = head.min()
@@ -176,17 +169,23 @@ def test_mf6disv():
                     vmin=vmin,
                     vmax=vmax,
                 )
-                ax.set_title("Layer {}".format(ilay + 1))
-                pmv.plot_specific_discharge(spdis, color="white")
+                ax.set_title(f"Layer {ilay + 1}")
+                pmv.plot_vector(spdis["qx"], spdis["qy"], color="white")
             fname = "results.png"
-            fname = os.path.join(ws, fname)
+            fname = os.path.join(gridgen_ws, fname)
             plt.savefig(fname)
             plt.close("all")
+
+        # test plotting
+        disv_dot_plot(gridgen_ws)
 
     return
 
 
 def test_mf6disu():
+    # set up a gridgen workspace
+    gridgen_ws = f"{base_dir}_mf6disu"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=gridgen_ws)
 
     name = "dummy"
     nlay = 3
@@ -229,11 +228,10 @@ def test_mf6disu():
         chdspd.append([(ic,), head])
 
     # build run and post-process the MODFLOW 6 model
-    ws = os.path.join(tpth, "gridgen_disu")
     name = "mymodel"
     sim = flopy.mf6.MFSimulation(
         sim_name=name,
-        sim_ws=ws,
+        sim_ws=gridgen_ws,
         exe_name="mf6",
         verbosity_level=VERBOSITY_LEVEL,
     )
@@ -246,8 +244,8 @@ def test_mf6disu():
         gwf, xt3doptions=True, save_specific_discharge=True
     )
     chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chdspd)
-    budget_file = name + ".bud"
-    head_file = name + ".hds"
+    budget_file = f"{name}.bud"
+    head_file = f"{name}.hds"
     oc = flopy.mf6.ModflowGwfoc(
         gwf,
         budget_filerecord=budget_file,
@@ -265,17 +263,15 @@ def test_mf6disu():
     assert np.allclose(gwf.modelgrid.ncpl, np.array([436, 184, 112]))
 
     # write grid and model shapefiles
-    fname = os.path.join(ws, "grid.shp")
+    fname = os.path.join(gridgen_ws, "grid.shp")
     gwf.modelgrid.write_shapefile(fname)
-    fname = os.path.join(ws, "model.shp")
+    fname = os.path.join(gridgen_ws, "model.shp")
     gwf.export(fname)
 
     if mf6_exe is not None:
         sim.run_simulation(silent=True)
-        head = flopy.utils.HeadFile(os.path.join(ws, head_file)).get_data()
-        bud = flopy.utils.CellBudgetFile(
-            os.path.join(ws, budget_file), precision="double"
-        )
+        head = gwf.output.head().get_data()
+        bud = gwf.output.budget()
         spdis = bud.get_data(text="DATA-SPDIS")[0]
 
         if matplotlib is not None:
@@ -297,17 +293,53 @@ def test_mf6disu():
                     vmin=vmin,
                     vmax=vmax,
                 )
-                ax.set_title("Layer {}".format(ilay + 1))
-                pmv.plot_specific_discharge(spdis, color="white")
+                ax.set_title(f"Layer {ilay + 1}")
+                pmv.plot_vector(spdis["qx"], spdis["qy"], color="white")
             fname = "results.png"
-            fname = os.path.join(ws, fname)
+            fname = os.path.join(gridgen_ws, fname)
             plt.savefig(fname)
             plt.close("all")
+
+            # check plot_bc works for unstructured mf6 grids
+            # (for each layer, and then for all layers in one plot)
+            plot_ranges = [range(gwf.modelgrid.nlay), range(1)]
+            plot_alls = [False, True]
+            for plot_range, plot_all in zip(plot_ranges, plot_alls):
+                f_bc = plt.figure(figsize=(10, 10))
+                for ilay in plot_range:
+                    ax = plt.subplot(1, plot_range[-1] + 1, ilay + 1)
+                    pmv = flopy.plot.PlotMapView(gwf, layer=ilay, ax=ax)
+                    ax.set_aspect("equal")
+
+                    pmv.plot_bc(
+                        "CHD", plotAll=plot_all, edgecolor="None", zorder=2
+                    )
+                    pmv.plot_grid(
+                        colors="k", linewidth=0.3, alpha=0.1, zorder=1
+                    )
+
+                    if len(ax.collections) == 0:
+                        raise AssertionError(
+                            "Boundary condition was not drawn"
+                        )
+
+                    for col in ax.collections:
+                        if not isinstance(
+                            col, (QuadMesh, PathCollection, LineCollection)
+                        ):
+                            raise AssertionError("Unexpected collection type")
+                plt.close()
+
+            # test plotting
+            disu_dot_plot(gridgen_ws)
 
     return
 
 
 def test_mfusg():
+    # set up a gridgen workspace
+    gridgen_ws = f"{base_dir}_mfusg"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=gridgen_ws)
 
     name = "dummy"
     nlay = 3
@@ -348,20 +380,18 @@ def test_mfusg():
     gridprops = g.get_gridprops_disu5()
 
     # create the mfusg modoel
-    ws = os.path.join(tpth, "gridgen_mfusg")
     name = "mymodel"
-    m = flopy.modflow.Modflow(
+    m = flopy.mfusg.MfUsg(
         modelname=name,
-        model_ws=ws,
-        version="mfusg",
+        model_ws=gridgen_ws,
         exe_name=mfusg_exe,
         structured=False,
     )
-    disu = flopy.modflow.ModflowDisU(m, **gridprops)
+    disu = flopy.mfusg.MfUsgDisU(m, **gridprops)
     bas = flopy.modflow.ModflowBas(m)
-    lpf = flopy.modflow.ModflowLpf(m)
+    lpf = flopy.mfusg.MfUsgLpf(m)
     chd = flopy.modflow.ModflowChd(m, stress_period_data=chdspd)
-    sms = flopy.modflow.ModflowSms(m)
+    sms = flopy.mfusg.MfUsgSms(m)
     oc = flopy.modflow.ModflowOc(m, stress_period_data={(0, 0): ["save head"]})
     m.write_input()
 
@@ -376,7 +406,7 @@ def test_mfusg():
         m.run_model()
 
         # head is returned as a list of head arrays for each layer
-        head_file = os.path.join(ws, name + ".hds")
+        head_file = os.path.join(gridgen_ws, f"{name}.hds")
         head = flopy.utils.HeadUFile(head_file).get_data()
 
         if matplotlib is not None:
@@ -392,22 +422,52 @@ def test_mfusg():
                 pmv.contour_array(
                     head[ilay], levels=[0.2, 0.4, 0.6, 0.8], linewidths=3.0
                 )
-                ax.set_title("Layer {}".format(ilay + 1))
+                ax.set_title(f"Layer {ilay + 1}")
                 # pmv.plot_specific_discharge(spdis, color='white')
             fname = "results.png"
-            fname = os.path.join(ws, fname)
+            fname = os.path.join(gridgen_ws, fname)
             plt.savefig(fname)
             plt.close("all")
 
+            # check plot_bc works for unstructured mfusg grids
+            # (for each layer, and then for all layers in one plot)
+            plot_ranges = [range(disu.nlay), range(1)]
+            plot_alls = [False, True]
+            for plot_range, plot_all in zip(plot_ranges, plot_alls):
+                f_bc = plt.figure(figsize=(10, 10))
+                for ilay in plot_range:
+                    ax = plt.subplot(1, plot_range[-1] + 1, ilay + 1)
+                    pmv = flopy.plot.PlotMapView(m, layer=ilay, ax=ax)
+                    ax.set_aspect("equal")
+
+                    pmv.plot_bc(
+                        "CHD", plotAll=plot_all, edgecolor="None", zorder=2
+                    )
+                    pmv.plot_grid(
+                        colors="k", linewidth=0.3, alpha=0.1, zorder=1
+                    )
+
+                    if len(ax.collections) == 0:
+                        raise AssertionError(
+                            "Boundary condition was not drawn"
+                        )
+
+                    for col in ax.collections:
+                        if not isinstance(
+                            col, (QuadMesh, PathCollection, LineCollection)
+                        ):
+                            raise AssertionError("Unexpected collection type")
+                plt.close()
+
         # re-run with an LPF keyword specified. This would have thrown an error
         # before the addition of ikcflag to mflpf.py (flopy 3.3.3 and earlier).
-        lpf = flopy.modflow.ModflowLpf(m, novfc=True, nocvcorrection=True)
+        lpf = flopy.mfusg.MfUsgLpf(m, novfc=True, nocvcorrection=True)
         m.write_input()
         m.run_model()
 
         # also test load of unstructured LPF with keywords
-        lpf2 = flopy.modflow.ModflowLpf.load(
-            os.path.join(ws, name + ".lpf"), m, check=False
+        lpf2 = flopy.mfusg.MfUsgLpf.load(
+            os.path.join(gridgen_ws, f"{name}.lpf"), m, check=False
         )
         msg = "NOCVCORRECTION and NOVFC should be in lpf options but at least one is not."
         assert (
@@ -415,13 +475,30 @@ def test_mfusg():
             and "NOCVCORRECTION" in lpf2.options.upper()
         ), msg
 
+    # test disu, bas6, lpf shapefile export for mfusg unstructured models
+    try:
+        m.disu.export(os.path.join(gridgen_ws, f"{name}_disu.shp"))
+    except:
+        raise AssertionError("Error exporting mfusg disu to shapefile.")
+    try:
+        m.bas6.export(os.path.join(gridgen_ws, f"{name}_bas6.shp"))
+    except:
+        raise AssertionError("Error exporting mfusg bas6 to shapefile.")
+    try:
+        m.lpf.export(os.path.join(gridgen_ws, f"{name}_lpf.shp"))
+    except:
+        raise AssertionError("Error exporting mfusg lpf to shapefile.")
+    try:
+        m.export(os.path.join(gridgen_ws, f"{name}.shp"))
+    except:
+        raise AssertionError("Error exporting mfusg model to shapefile.")
+
     return
 
 
-def test_disv_dot_plot():
+def disv_dot_plot(sim_path):
     # load up the vertex example problem
     name = "mymodel"
-    sim_path = os.path.join(tpth, "gridgen_disv")
     sim = flopy.mf6.MFSimulation.load(
         sim_name=name, version="mf6", exe_name="mf6", sim_ws=sim_path
     )
@@ -450,10 +527,9 @@ def test_disv_dot_plot():
     return
 
 
-def test_disu_dot_plot():
+def disu_dot_plot(sim_path):
     # load up the disu example problem
     name = "mymodel"
-    sim_path = os.path.join(tpth, "gridgen_disu")
     sim = flopy.mf6.MFSimulation.load(
         sim_name=name, version="mf6", exe_name="mf6", sim_ws=sim_path
     )
@@ -488,6 +564,4 @@ def test_disu_dot_plot():
 if __name__ == "__main__":
     test_mf6disv()
     test_mf6disu()
-    test_disv_dot_plot()
-    test_disu_dot_plot()
     test_mfusg()

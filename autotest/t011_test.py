@@ -2,11 +2,10 @@
 Some basic tests for mflistfile.py module (not super rigorous)
 
 """
-
+import pytest
 import os
 import flopy
 import numpy as np
-from nose.tools import raises
 
 
 def test_mflistfile():
@@ -97,13 +96,12 @@ def test_mf6listfile():
         "RCH2_OUT",
         "RCH3_OUT",
     ]:
-        assert item in names, "{} not found in names".format(item)
+        assert item in names, f"{item} not found in names"
     assert len(names) == 25
     inc = mflist.get_incremental()
     return
 
 
-@raises(AssertionError)
 def test_mflist_reducedpumping_fail():
     """
     test failure for reading reduced pumping data from list file
@@ -119,10 +117,10 @@ def test_mflist_reducedpumping_fail():
     list_file = os.path.join(pth, "ex3A.lst")
     # Catch before flopy to avoid masking file not found assert
     if not os.path.isfile(list_file):
-        msg = "{} {}".format(list_file, "not found")
-        raise FileNotFoundError(msg)
+        raise FileNotFoundError(f"{list_file} not found")
     mflist = flopy.utils.MfusgListBudget(list_file)
-    mflist.get_reduced_pumping()
+    with pytest.raises(AssertionError):
+        mflist.get_reduced_pumping()
 
     return
 

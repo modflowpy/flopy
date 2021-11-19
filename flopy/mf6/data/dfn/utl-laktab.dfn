@@ -1,0 +1,69 @@
+# --------------------- gwf laktab dimensions ---------------------
+
+block dimensions
+name nrow
+type integer
+reader urword
+optional false
+longname number of table rows
+description integer value specifying the number of rows in the lake table. There must be NROW rows of data in the TABLE block.
+
+block dimensions
+name ncol
+type integer
+reader urword
+optional false
+longname number of table columns
+description integer value specifying the number of columns in the lake table. There must be NCOL columns of data in the TABLE block. For lakes with HORIZONTAL and/or VERTICAL CTYPE connections, NCOL must be equal to 3. For lakes with EMBEDDEDH or EMBEDDEDV CTYPE connections, NCOL must be equal to 4.
+
+
+# --------------------- gwf laktab table ---------------------
+
+block table
+name table
+type recarray stage volume sarea barea
+shape (nrow)
+reader urword
+longname
+description
+
+block table
+name stage
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+longname lake stage
+description real value that defines the stage corresponding to the remaining data on the line.
+
+block table
+name volume
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+longname lake volume
+description real value that defines the lake volume corresponding to the stage specified on the line.
+
+block table
+name sarea
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+longname lake surface area
+description real value that defines the lake surface area corresponding to the stage specified on the line.
+
+block table
+name barea
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+optional true
+longname lake-GWF exchange area
+description real value that defines the lake-GWF exchange area corresponding to the stage specified on the line. BAREA is only specified if the CLAKTYPE for the lake is EMBEDDEDH or EMBEDDEDV.

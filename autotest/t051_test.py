@@ -1,14 +1,11 @@
-import shutil
 import os
 import numpy as np
 import flopy
 
 cpth = os.path.join("temp", "t051")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-# make the directory
-os.makedirs(cpth)
+# make the directory if it does not exist
+if not os.path.isdir(cpth):
+    os.makedirs(cpth, exist_ok=True)
 
 
 def test_default_oc_stress_period_data():
@@ -40,7 +37,7 @@ def test_mfcbc():
     spd = {(0, 0): ["save head", "save budget"]}
     oc = flopy.modflow.ModflowOc(m, stress_period_data=spd)
     t = oc.get_budgetunit()
-    assert t == [100, 101], "budget units are {}".format(t) + " not [100, 101]"
+    assert t == [100, 101], f"budget units are {t} not [100, 101]"
 
     nlay = 3
     nrow = 3
@@ -61,8 +58,8 @@ def test_mfcbc():
     oc.reset_budgetunit(budgetunit=1053, fname="big.bin")
 
     msg = (
-        "wel ipakcb ({}) ".format(wel.ipakcb)
-        + "not set correctly to 1053 using oc.resetbudgetunit()"
+        f"wel ipakcb ({wel.ipakcb}) "
+        "not set correctly to 1053 using oc.resetbudgetunit()"
     )
     assert wel.ipakcb == 1053, msg
 

@@ -26,6 +26,6 @@ from .plotutil import (
     shapefile_extents,
     PlotUtilities,
 )
-from .map import ModelMap, PlotMapView
-from .crosssection import ModelCrossSection, PlotCrossSection
+from .map import PlotMapView
+from .crosssection import PlotCrossSection
 from .styles import styles

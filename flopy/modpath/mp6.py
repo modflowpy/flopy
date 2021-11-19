@@ -11,13 +11,8 @@ class Modpath6List(Package):
     """
 
     def __init__(self, model, extension="list", listunit=7):
-        """
-        Package constructor.
-
-        """
-        # Call ancestor's init to set self.parent, extension, name and
-        # unit number
-        Package.__init__(self, model, extension, "LIST", listunit)
+        # call base package constructor
+        super().__init__(model, extension, "LIST", listunit)
         # self.parent.add_package(self) This package is not added to the base
         # model so that it is not included in get_name_file_entries()
         return
@@ -99,8 +94,8 @@ class Modpath6(BaseModel):
 
         self.__mf = modflowmodel
         self.lst = Modpath6List(self, listunit=listunit)
-        self.mpnamefile = "{}.{}".format(self.name, namefile_ext)
-        self.mpbas_file = "{}.mpbas".format(modelname)
+        self.mpnamefile = f"{self.name}.{namefile_ext}"
+        self.mpbas_file = f"{modelname}.mpbas"
         if self.__mf is not None:
             # ensure that user-specified files are used
             iu = self.__mf.oc.iuhead
@@ -111,11 +106,10 @@ class Modpath6(BaseModel):
             if p is None:
                 p = self.__mf.get_package("UPW")
             if p is None:
-                msg = (
+                raise Exception(
                     "LPF, BCF6, or UPW packages must be included in the "
-                    + "passed MODFLOW model"
+                    "passed MODFLOW model"
                 )
-                raise Exception(msg)
             iu = p.ipakcb
             budget_file = self.__mf.get_output(unit=iu)
             dis_file = (
@@ -128,23 +122,20 @@ class Modpath6(BaseModel):
         self.dis_unit = dis_unit
         # make sure the valid files are available
         if self.head_file is None:
-            msg = (
+            raise ValueError(
                 "the head file in the MODFLOW model or passed "
-                + "to __init__ cannot be None"
+                "to __init__ cannot be None"
             )
-            raise ValueError(msg)
         if self.budget_file is None:
-            msg = (
+            raise ValueError(
                 "the budget file in the MODFLOW model or passed "
-                + "to __init__ cannot be None"
+                "to __init__ cannot be None"
             )
-            raise ValueError(msg)
         if self.dis_file is None:
-            msg = (
+            raise ValueError(
                 "the dis file in the MODFLOW model or passed "
-                + "to __init__ cannot be None"
+                "to __init__ cannot be None"
             )
-            raise ValueError(msg)
 
         # set the rest of the attributes
         self.__sim = None
@@ -193,17 +184,17 @@ class Modpath6(BaseModel):
         """
         fn_path = os.path.join(self.model_ws, self.mpnamefile)
         f_nam = open(fn_path, "w")
-        f_nam.write("%s\n" % (self.heading))
+        f_nam.write(f"{self.heading}\n")
         if self.mpbas_file is not None:
-            f_nam.write("%s %3i %s\n" % ("MPBAS", 86, self.mpbas_file))
+            f_nam.write(f"MPBAS  86 {self.mpbas_file}\n")
         if self.dis_file is not None:
-            f_nam.write("%s %3i %s\n" % ("DIS", self.dis_unit, self.dis_file))
+            f_nam.write(f"DIS {self.dis_unit:3} {self.dis_file}\n")
         if self.head_file is not None:
-            f_nam.write("%s %3i %s\n" % ("HEAD", 88, self.head_file))
+            f_nam.write(f"HEAD  88 {self.head_file}\n")
         if self.budget_file is not None:
-            f_nam.write("%s %3i %s\n" % ("BUDGET", 89, self.budget_file))
+            f_nam.write(f"BUDGET  89 {self.budget_file}\n")
         for u, f in zip(self.external_units, self.external_fnames):
-            f_nam.write("DATA  {0:3d}  ".format(u) + f + "\n")
+            f_nam.write(f"DATA  {u:3d}  {f}\n")
         f_nam.close()
 
     sim = property(getsim)  # Property has no setter, so read-only
@@ -327,7 +318,7 @@ class Modpath6(BaseModel):
                         for j in range(ncol):
                             if arr[k, i, j] < 1:
                                 continue
-                            group_name.append("wc{}".format(icnt))
+                            group_name.append(f"wc{icnt}")
                             group_placement.append(
                                 [
                                     Grid,
@@ -368,7 +359,7 @@ class Modpath6(BaseModel):
                     else:
                         ifaces.append(default_ifaces)
                         face_ct.append(len(default_ifaces))
-                    group_name.append("{}{}".format(wellid, node_number))
+                    group_name.append(f"{wellid}{node_number}")
                     group_placement.append(
                         [
                             Grid,
@@ -442,15 +433,13 @@ class Modpath6(BaseModel):
                         "detected a particle starting locations file in packages"
                     )
                     assert len(packages) == 1, (
-                        "if a particle starting locations file is passed"
-                        + ", other packages cannot be specified"
+                        "if a particle starting locations file is passed, "
+                        "other packages cannot be specified"
                     )
                     ParticleGenerationOption = 2
                     strt_file = package
                 else:
-                    raise Exception(
-                        "package '{0}' not supported".format(package)
-                    )
+                    raise Exception(f"package '{package}' not supported")
 
         SimulationType = 1
         if simtype.lower() == "endpoint":

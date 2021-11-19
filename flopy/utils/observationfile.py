@@ -1,6 +1,8 @@
 import numpy as np
 import io
 from ..utils.utils_def import FlopyBinaryData
+from ..utils.flopy_io import get_ts_sp
+from ..utils import import_optional_dependency
 
 
 class ObsFiles(FlopyBinaryData):
@@ -173,12 +175,12 @@ class ObsFiles(FlopyBinaryData):
 
         """
 
-        try:
-            import pandas as pd
-            from ..utils.utils_def import totim_to_datetime
-        except Exception as e:
-            msg = "ObsFiles.get_dataframe() error import pandas: " + str(e)
-            raise ImportError(msg)
+        from ..utils.utils_def import totim_to_datetime
+
+        pd = import_optional_dependency(
+            "pandas",
+            error_message="ObsFiles.get_dataframe() requires pandas.",
+        )
 
         i0 = 0
         i1 = self.data.shape[0]
@@ -293,7 +295,7 @@ class Mf6Obs(ObsFiles):
                     isBinary = True
                 else:
                     err = "Could not determine if file is binary or ascii"
-                    raise IOError(err)
+                    raise ValueError(err)
         if isBinary:
             # --open binary head file
             self.file = open(filename, "rb")
@@ -489,20 +491,24 @@ class CsvFile:
     ----------
     csvfile : str
         csv file name
+    delimiter : str
+        optional delimiter for the csv or formatted text file,
+        defaults to ","
 
     """
 
-    def __init__(self, csvfile):
+    def __init__(self, csvfile, delimiter=","):
 
         self.file = open(csvfile, "r")
+        self.delimiter = delimiter
 
         # read header line
         line = self.file.readline()
-        self._header = line.rstrip().split(",")
+        self._header = line.rstrip().split(delimiter)
         self.floattype = "f8"
         self.dtype = _build_dtype(self._header, self.floattype)
 
-        self.data = self.read_csv(self.file, self.dtype)
+        self.data = self.read_csv(self.file, self.dtype, delimiter)
 
     @property
     def obsnames(self):
@@ -527,7 +533,7 @@ class CsvFile:
         return len(self.obsnames)
 
     @staticmethod
-    def read_csv(fobj, dtype):
+    def read_csv(fobj, dtype, delimiter=","):
         """
 
         Parameters
@@ -535,12 +541,15 @@ class CsvFile:
         fobj : file object
             open text file object to read
         dtype : np.dtype
+        delimiter : str
+            optional delimiter for the csv or formatted text file,
+            defaults to ","
 
         Returns
         -------
         np.recarray
         """
-        arr = np.genfromtxt(fobj, dtype=dtype, delimiter=",")
+        arr = np.genfromtxt(fobj, dtype=dtype, delimiter=delimiter)
         return arr.view(np.recarray)
 
 
@@ -566,9 +575,9 @@ def get_selection(data, names):
     for name in names:
         if name not in data.dtype.names:
             ierr += 1
-            print("Error: {} is not a valid column name".format(name))
+            print(f"Error: {name} is not a valid column name")
     if ierr > 0:
-        raise Exception("Error: {} names did not match".format(ierr))
+        raise Exception(f"Error: {ierr} names did not match")
 
     # Valid list of names so make a selection
     dtype2 = np.dtype({name: data.dtype.fields[name] for name in names})
@@ -592,8 +601,11 @@ def _build_dtype(obsnames, floattype="f4"):
 
     """
     dtype = []
-    if "time" in obsnames:
-        idx = obsnames.index("time")
+    if "time" in obsnames or "TIME" in obsnames:
+        try:
+            idx = obsnames.index("time")
+        except ValueError:
+            idx = obsnames.index("TIME")
         obsnames[idx] = "totim"
 
     elif "totim" not in obsnames:
@@ -604,5 +616,89 @@ def _build_dtype(obsnames, floattype="f4"):
             site_name = site.decode().strip()
         else:
             site_name = site.strip()
-        dtype.append((site_name, floattype))
+
+        if site_name in ("KPER", "KSTP", "NULL"):
+            dtype.append((site_name, int))
+        else:
+            dtype.append((site_name, floattype))
+
     return np.dtype(dtype)
+
+
+def get_reduced_pumping(f, structured=True):
+    """
+    Method to read reduced pumping from a list file or an external
+    reduced pumping observation file
+
+    Parameters
+    ----------
+    f : str
+        file name
+    structured : bool
+        boolean flag to indicate if model is Structured or USG model. Defaults
+        to True (structured grid).
+
+    Returns
+    -------
+        np.recarray : recarray of reduced pumping records.
+
+    """
+    # Set dtypes for resulting data
+    if structured:
+        dtype = np.dtype(
+            [
+                ("SP", int),
+                ("TS", int),
+                ("LAY", int),
+                ("ROW", int),
+                ("COL", int),
+                ("APPL.Q", float),
+                ("ACT.Q", float),
+                ("GW-HEAD", float),
+                ("CELL-BOT", float),
+            ]
+        )
+
+        key = "WELLS WITH REDUCED PUMPING FOR STRESS PERIOD"
+    else:
+        dtype = np.dtype(
+            [
+                ("SP", int),
+                ("TS", int),
+                ("WELL.NO", int),
+                ("CLN NODE", int),
+                ("APPL.Q", float),
+                ("ACT.Q", float),
+                ("GW_HEAD", float),
+                ("CELL_BOT", float),
+            ]
+        )
+
+        key = "WELLS WITH REDUCED PUMPING FOR STRESS PERIOD"
+
+    with open(f) as foo:
+        data = []
+        while True:
+            line = foo.readline()
+            if line == "":
+                break
+            # If l is reduced ppg header row
+            if key in line:
+                # Extract sp and ts
+                ts, sp = get_ts_sp(line)
+                # Skip line of data column titles
+                foo.readline()
+                # Iterate through lines of reduced ppg data
+                while True:
+                    line = foo.readline()
+                    # Condition to exit loop
+                    if len(line.strip().split()) < 6:
+                        break
+                    # Create list of hold line of data
+                    ls = [sp, ts]
+                    # Add other data to list
+                    ls.extend([float(x) for x in line.split()])
+                    # Add list to overall list of data
+                    data.append(tuple(ls))
+
+    return np.rec.fromrecords(data, dtype=dtype)

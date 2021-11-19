@@ -125,18 +125,16 @@ class ParticleData:
                 if alllsttup:
                     alllen3 = all(len(el) == 3 for el in partlocs)
                     if not alllen3:
-                        msg = (
-                            "{}: all partlocs entries ".format(self.name)
-                            + " must have 3 items for structured particle data"
+                        raise ValueError(
+                            "{}: all partlocs entries  must have 3 items for "
+                            "structured particle data".format(self.name)
                         )
-                        raise ValueError(msg)
                 else:
-                    msg = (
-                        "{}: partlocs list or tuple ".format(self.name)
-                        + "for structured particle data should "
-                        + "contain list or tuple entries"
+                    raise ValueError(
+                        "{}: partlocs list or tuple "
+                        "for structured particle data should "
+                        "contain list or tuple entries".format(self.name)
                     )
-                    raise ValueError(msg)
             else:
                 allint = all(
                     isinstance(el, (int, np.int32, np.int64))
@@ -154,19 +152,16 @@ class ParticleData:
                 if alllsttup:
                     alllen1 = all(len(el) == 1 for el in partlocs)
                     if not alllen1:
-                        msg = (
-                            "{}: all entries of ".format(self.name)
-                            + "partlocs must have 1 items "
-                            + "for unstructured particle data"
+                        raise ValueError(
+                            "{}: all entries of partlocs must have 1 items "
+                            "for unstructured particle data".format(self.name)
                         )
-                        raise ValueError(msg)
                 else:
-                    msg = (
-                        "{}: partlocs list or tuple ".format(self.name)
-                        + "for unstructured particle data should "
-                        + "contain integers or a list or tuple with one entry"
+                    raise ValueError(
+                        "{}: partlocs list or tuple for unstructured particle "
+                        "data should contain integers or a list or tuple with "
+                        "one entry".format(self.name)
                     )
-                    raise ValueError(msg)
 
             # convert partlocs composed of a lists/tuples of lists/tuples
             # to a numpy array
@@ -176,11 +171,9 @@ class ParticleData:
             if dtypein != dtype:
                 partlocs = np.array(partlocs, dtype=dtype)
         else:
-            msg = (
-                "{}: partlocs must be a list or ".format(self.name)
-                + "tuple with lists or tuples"
+            raise ValueError(
+                f"{self.name}: partlocs must be a list or tuple with lists or tuples"
             )
-            raise ValueError(msg)
 
         # localx
         if localx is None:
@@ -192,13 +185,12 @@ class ParticleData:
                 localx = np.array(localx, dtype=np.float32)
             if isinstance(localx, np.ndarray):
                 if localx.shape[0] != partlocs.shape[0]:
-                    msg = (
-                        "{}:".format(self.name)
-                        + "shape of localx ({}) ".format(localx.shape[0])
-                        + "is not equal to the shape "
-                        + "of partlocs ({}).".format(partlocs.shape[0])
+                    raise ValueError(
+                        "{}:shape of localx ({}) is not equal to the shape "
+                        "of partlocs ({}).".format(
+                            self.name, localx.shape[0], partlocs.shape[0]
+                        )
                     )
-                    raise ValueError(msg)
 
         # localy
         if localy is None:
@@ -210,13 +202,12 @@ class ParticleData:
                 localy = np.array(localy, dtype=np.float32)
             if isinstance(localy, np.ndarray):
                 if localy.shape[0] != partlocs.shape[0]:
-                    msg = (
-                        "{}:".format(self.name)
-                        + "shape of localy ({}) ".format(localy.shape[0])
-                        + "is not equal to the shape "
-                        + "of partlocs ({}).".format(partlocs.shape[0])
+                    raise ValueError(
+                        "{}:shape of localy ({}) is not equal to the shape "
+                        "of partlocs ({}).".format(
+                            self.name, localy.shape[0], partlocs.shape[0]
+                        )
                     )
-                    raise ValueError(msg)
 
         # localz
         if localz is None:
@@ -228,13 +219,12 @@ class ParticleData:
                 localz = np.array(localz, dtype=np.float32)
             if isinstance(localz, np.ndarray):
                 if localz.shape[0] != partlocs.shape[0]:
-                    msg = (
-                        "{}:".format(self.name)
-                        + "shape of localz ({}) ".format(localz.shape[0])
-                        + "is not equal to the shape "
-                        + "of partlocs ({}).".format(partlocs.shape[0])
+                    raise ValueError(
+                        "{}:shape of localz ({}) is not equal to the shape "
+                        "of partlocs ({}).".format(
+                            self.name, localz.shape[0], partlocs.shape[0]
+                        )
                     )
-                    raise ValueError(msg)
         # timeoffset
         if timeoffset is None:
             timeoffset = 0.0
@@ -247,14 +237,12 @@ class ParticleData:
                 timeoffset = np.array(timeoffset, dtype=np.float32)
             if isinstance(timeoffset, np.ndarray):
                 if timeoffset.shape[0] != partlocs.shape[0]:
-                    msg = (
-                        "{}:".format(self.name)
-                        + "shape of timeoffset "
-                        + "({}) ".format(timeoffset.shape[0])
-                        + "is not equal to the shape "
-                        + "of partlocs ({}).".format(partlocs.shape[0])
+                    raise ValueError(
+                        "{}:shape of timeoffset ({}) is not equal to the "
+                        "shape of partlocs ({}).".format(
+                            self.name, timeoffset.shape[0], partlocs.shape[0]
+                        )
                     )
-                    raise ValueError(msg)
 
         # drape
         if drape is None:
@@ -266,13 +254,12 @@ class ParticleData:
                 drape = np.array(drape, dtype=np.int32)
             if isinstance(drape, np.ndarray):
                 if drape.shape[0] != partlocs.shape[0]:
-                    msg = (
-                        "{}:".format(self.name)
-                        + "shape of drape ({}) ".format(drape.shape[0])
-                        + "is not equal to the shape "
-                        + "of partlocs ({}).".format(partlocs.shape[0])
+                    raise ValueError(
+                        "{}:shape of drape ({}) is not equal to the shape "
+                        "of partlocs ({}).".format(
+                            self.name, drape.shape[0], partlocs.shape[0]
+                        )
                     )
-                    raise ValueError(msg)
 
         # particleids
         if particleids is None:
@@ -282,26 +269,23 @@ class ParticleData:
             particleid = True
             particleidoption = 1
             if isinstance(particleids, (int, float)):
-                msg = (
-                    "{}:".format(self.name)
-                    + "A particleid must be provided for each partloc "
-                    + "as a list/tuple/np.ndarray of size "
-                    + "{}. ".format(partlocs.shape[0])
-                    + "A single particleid has been provided."
+                raise TypeError(
+                    "{}:A particleid must be provided for each partloc "
+                    "as a list/tuple/np.ndarray of size {}. "
+                    "A single particleid has been provided.".format(
+                        self.name, partlocs.shape[0]
+                    )
                 )
-                raise TypeError(msg)
             elif isinstance(particleids, (list, tuple)):
                 particleids = np.array(particleids, dtype=np.int32)
             if isinstance(particleids, np.ndarray):
                 if particleids.shape[0] != partlocs.shape[0]:
-                    msg = (
-                        "{}:".format(self.name)
-                        + "shape of particleids "
-                        + "({}) ".format(particleids.shape[0])
-                        + "is not equal to the shape "
-                        + "of partlocs ({}).".format(partlocs.shape[0])
+                    raise ValueError(
+                        "{}:shape of particleids ({}) is not equal to the "
+                        "shape of partlocs ({}).".format(
+                            self.name, particleids.shape[0], partlocs.shape[0]
+                        )
                     )
-                    raise ValueError(msg)
 
         # create empty particle
         ncells = partlocs.shape[0]
@@ -346,20 +330,26 @@ class ParticleData:
         """
         # validate that a valid file object was passed
         if not hasattr(f, "write"):
-            msg = (
-                "{}: cannot write data for template ".format(self.name)
-                + "without passing a valid file object ({}) ".format(f)
-                + "open for writing"
+            raise ValueError(
+                "{}: cannot write data for template without passing a valid "
+                "file object ({}) open for writing".format(self.name, f)
             )
-            raise ValueError(msg)
 
         # particle data item 4 and 5
         d = np.recarray.copy(self.particledata)
         lnames = [name.lower() for name in d.dtype.names]
         # Add one to the kij and node indices
-        for idx in ["k", "i", "j", "node", "id"]:
+        for idx in (
+            "k",
+            "i",
+            "j",
+            "node",
+        ):
             if idx in lnames:
                 d[idx] += 1
+        # Add one to the particle id if required
+        if self.particleidoption == 0 and "id" in lnames:
+            d["id"] += 1
 
         # write the particle data
         fmt = self._fmt_string + "\n"
@@ -441,18 +431,15 @@ class ParticleData:
             elif vtype == "o":
                 fmts.append("{:9s}")
             elif vtype == "s":
-                msg = (
-                    "Particles.fmt_string error: 'str' "
-                    + "type found in dtype. This gives unpredictable "
-                    + "results when recarray to file - change to 'object' type"
+                raise TypeError(
+                    "Particles.fmt_string error: 'str' type found in dtype. "
+                    "This gives unpredictable results when recarray to file - "
+                    "change to 'object' type"
                 )
-                raise TypeError(msg)
             else:
-                msg = (
-                    "MfList.fmt_string error: unknown vtype in "
-                    + "field: {}".format(field)
+                raise TypeError(
+                    f"MfList.fmt_string error: unknown vtype in field: {field}"
                 )
-                raise TypeError(msg)
         return " " + " ".join(fmts)
 
 
@@ -569,12 +556,11 @@ class FaceDataType:
         """
         # validate that a valid file object was passed
         if not hasattr(f, "write"):
-            msg = (
-                "{}: cannot write data for template ".format(self.name)
-                + "without passing a valid file object ({}) ".format(f)
-                + "open for writing"
+            raise ValueError(
+                "{}: cannot write data for template "
+                "without passing a valid file object ({}) "
+                "open for writing".format(self.name, f)
             )
-            raise ValueError(msg)
 
         # item 4
         fmt = 12 * " {}" + "\n"
@@ -665,12 +651,11 @@ class CellDataType:
         """
         # validate that a valid file object was passed
         if not hasattr(f, "write"):
-            msg = (
-                "{}: cannot write data for template ".format(self.name)
-                + "without passing a valid file object ({}) ".format(f)
-                + "open for writing"
+            raise ValueError(
+                "{}: cannot write data for template "
+                "without passing a valid file object ({}) "
+                "open for writing".format(self.name, f)
             )
-            raise ValueError(msg)
 
         # item 5
         fmt = " {} {} {}\n"
@@ -734,12 +719,12 @@ class LRCParticleData:
 
         for idx, fd in enumerate(subdivisiondata):
             if not isinstance(fd, (CellDataType, FaceDataType)):
-                msg = (
-                    "{}: facedata item {} ".format(self.name, idx)
-                    + "is of type {} ".format(type(fd))
-                    + "instead of an instance of CellDataType or FaceDataType"
+                raise TypeError(
+                    "{}: facedata item {} is of type {} instead of an "
+                    "instance of CellDataType or FaceDataType".format(
+                        self.name, idx, type(fd)
+                    )
                 )
-                raise TypeError(msg)
 
         # validate lrcregions data
         if isinstance(lrcregions, (list, tuple)):
@@ -748,32 +733,27 @@ class LRCParticleData:
                 isinstance(el, (list, tuple, np.ndarray)) for el in lrcregions
             )
             if not alllsttup:
-                msg = (
-                    "{}: lrcregions should be ".format(self.name)
-                    + "a list with lists, tuples, or arrays"
+                raise TypeError(
+                    "{}: lrcregions should be "
+                    "a list with lists, tuples, or arrays".format(self.name)
                 )
-                raise TypeError(msg)
             t = []
             for lrcregion in lrcregions:
                 t.append(np.array(lrcregion, dtype=np.int32))
             lrcregions = t
         else:
-            msg = (
-                "{}: lrcregions should be ".format(self.name)
-                + "a list of lists, tuples, or arrays "
-                + "not a {}.".format(type(lrcregions))
+            raise TypeError(
+                "{}: lrcregions should be a list of lists, tuples, or arrays "
+                "not a {}.".format(self.name, type(lrcregions))
             )
-            raise TypeError(msg)
 
         # validate size of nodes relative to subdivisiondata
         shape = len(subdivisiondata)
         if len(lrcregions) != shape:
-            msg = (
-                "{}: lrcregions data must have ".format(self.name)
-                + "{} rows but a total of ".format(shape)
-                + "{} rows were provided.".format(lrcregions.shape[0])
+            raise ValueError(
+                "{}: lrcregions data must have {} rows but a total of {} rows "
+                "were provided.".format(self.name, shape, lrcregions.shape[0])
             )
-            raise ValueError(msg)
 
         # validate that there are 6 columns in each lrcregions entry
         for idx, lrcregion in enumerate(lrcregions):
@@ -782,12 +762,11 @@ class LRCParticleData:
                 lrcregions[idx] = lrcregion.reshape(1, shapel)
                 shapel = lrcregion[idx].shape
             if shapel[1] != 6:
-                msg = (
-                    "{}: Each lrcregions entry must ".format(self.name)
-                    + "have 6 columns passed lrcregions has "
-                    + "{} columns".format(shapel[1])
+                raise ValueError(
+                    "{}: Each lrcregions entry must "
+                    "have 6 columns passed lrcregions has "
+                    "{} columns".format(self.name, shapel[1])
                 )
-                raise ValueError(msg)
 
         #
         totalcellregioncount = 0
@@ -815,26 +794,19 @@ class LRCParticleData:
         """
         # validate that a valid file object was passed
         if not hasattr(f, "write"):
-            msg = (
-                "{}: cannot write data for template ".format(self.name)
-                + "without passing a valid file object ({}) ".format(f)
-                + "open for writing"
+            raise ValueError(
+                "{}: cannot write data for template "
+                "without passing a valid file object ({}) "
+                "open for writing".format(self.name, f)
             )
-            raise ValueError(msg)
 
         # item 2
-        f.write(
-            "{} {}\n".format(
-                self.particletemplatecount, self.totalcellregioncount
-            )
-        )
+        f.write(f"{self.particletemplatecount} {self.totalcellregioncount}\n")
 
         for sd, lrcregion in zip(self.subdivisiondata, self.lrcregions):
             # item 3
             f.write(
-                "{} {} {}\n".format(
-                    sd.templatesubdivisiontype, lrcregion.shape[0], sd.drape
-                )
+                f"{sd.templatesubdivisiontype} {lrcregion.shape[0]} {sd.drape}\n"
             )
 
             # item 4 or 5
@@ -844,7 +816,7 @@ class LRCParticleData:
             for row in lrcregion:
                 line = ""
                 for lrc in row:
-                    line += "{} ".format(lrc + 1)
+                    line += f"{lrc + 1} "
                 line += "\n"
                 f.write(line)
 
@@ -899,20 +871,19 @@ class NodeParticleData:
         if isinstance(nodes, (int, np.int32, np.int64)):
             nodes = [(nodes,)]
         elif isinstance(nodes, (float, np.float32, np.float64)):
-            msg = (
-                "{}: nodes is of type {} ".format(self.name, type(nodes))
-                + "but must be an int if a single value is passed"
+            raise TypeError(
+                "{}: nodes is of type {} but must be an int if a "
+                "single value is passed".format(self.name, type(nodes))
             )
-            raise TypeError(msg)
 
         for idx, fd in enumerate(subdivisiondata):
             if not isinstance(fd, (CellDataType, FaceDataType)):
-                msg = (
-                    "{}: facedata item {} ".format(self.name, idx)
-                    + "is of type {} ".format(type(fd))
-                    + "instead of an instance of CellDataType or FaceDataType"
+                raise TypeError(
+                    "{}: facedata item {} is of type {} instead of an "
+                    "instance of CellDataType or FaceDataType".format(
+                        self.name, idx, type(fd)
+                    )
                 )
-                raise TypeError(msg)
 
         # validate nodes data
         if isinstance(nodes, np.ndarray):
@@ -934,33 +905,28 @@ class NodeParticleData:
                 isinstance(el, (list, tuple, np.ndarray)) for el in nodes
             )
             if not alllsttup:
-                msg = (
-                    "{}: nodes should be ".format(self.name)
-                    + "a list or tuple with lists or tuple if a single "
-                    + "int or numpy array is not provided"
+                raise TypeError(
+                    "{}: nodes should be "
+                    "a list or tuple with lists or tuple if a single "
+                    "int or numpy array is not provided".format(self.name)
                 )
-                raise TypeError(msg)
             t = []
             for idx in range(len(nodes)):
                 t.append(np.array(nodes[idx], dtype=np.int32))
             nodes = t
         else:
-            msg = (
-                "{}: nodes should be ".format(self.name)
-                + "a single integer, a numpy array, or a "
-                + "list/tuple or lists/tuples."
+            raise TypeError(
+                "{}: nodes should be a single integer, a numpy array, or a "
+                "list/tuple or lists/tuples.".format(self.name)
             )
-            raise TypeError(msg)
 
         # validate size of nodes relative to subdivisiondata
         shape = len(subdivisiondata)
         if len(nodes) != shape:
-            msg = (
-                "{}: node data must have ".format(self.name)
-                + "{} rows but a total of ".format(shape)
-                + "{} rows were provided.".format(nodes.shape[0])
+            raise ValueError(
+                "{}: node data must have {} rows but a total of {} rows were "
+                "provided.".format(self.name, shape, nodes.shape[0])
             )
-            raise ValueError(msg)
 
         totalcellcount = 0
         for t in nodes:
@@ -987,24 +953,19 @@ class NodeParticleData:
         """
         # validate that a valid file object was passed
         if not hasattr(f, "write"):
-            msg = (
-                "{}: cannot write data for template ".format(self.name)
-                + "without passing a valid file object ({}) ".format(f)
-                + "open for writing"
+            raise ValueError(
+                "{}: cannot write data for template "
+                "without passing a valid file object ({}) "
+                "open for writing".format(self.name, f)
             )
-            raise ValueError(msg)
 
         # item 2
-        f.write(
-            "{} {}\n".format(self.particletemplatecount, self.totalcellcount)
-        )
+        f.write(f"{self.particletemplatecount} {self.totalcellcount}\n")
 
         for sd, nodes in zip(self.subdivisiondata, self.nodedata):
             # item 3
             f.write(
-                "{} {} {}\n".format(
-                    sd.templatesubdivisiontype, nodes.shape[0], sd.drape
-                )
+                f"{sd.templatesubdivisiontype} {nodes.shape[0]} {sd.drape}\n"
             )
 
             # item 4 or 5
@@ -1013,7 +974,7 @@ class NodeParticleData:
             # item 6
             line = ""
             for idx, node in enumerate(nodes):
-                line += " {}".format(node + 1)
+                line += f" {node + 1}"
                 lineend = False
                 if idx > 0:
                     if idx % 10 == 0 or idx == nodes.shape[0] - 1:

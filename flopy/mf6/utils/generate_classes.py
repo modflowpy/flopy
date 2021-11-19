@@ -24,17 +24,17 @@ def delete_files(files, pth, allow_failure=False, exclude=None):
             continue
         fpth = os.path.join(pth, fn)
         try:
-            print("  removing...{}".format(fn))
+            print(f"  removing...{fn}")
             os.remove(fpth)
         except:
-            print("could not remove...{}".format(fn))
+            print(f"could not remove...{fn}")
             if not allow_failure:
                 return False
     return True
 
 
 def list_files(pth, exts=["py"]):
-    print("\nLIST OF FILES IN {}".format(pth))
+    print(f"\nLIST OF FILES IN {pth}")
     files = [
         entry
         for entry in os.listdir(pth)
@@ -45,7 +45,7 @@ def list_files(pth, exts=["py"]):
         ext = os.path.splitext(fn)[1][1:].lower()
         if ext in exts:
             idx += 1
-            print("    {:5d} - {}".format(idx, fn))
+            print(f"    {idx:5d} - {fn}")
     return
 
 
@@ -66,12 +66,10 @@ def download_dfn(branch, new_dfn_pth):
 
     mf6url = "https://github.com/MODFLOW-USGS/modflow6/archive/{}.zip"
     mf6url = mf6url.format(branch)
-    print("  Downloading MODFLOW 6 repository from {}".format(mf6url))
+    print(f"  Downloading MODFLOW 6 repository from {mf6url}")
     with tempfile.TemporaryDirectory() as tmpdirname:
         pymake.download_and_unzip(mf6url, tmpdirname)
-        downloaded_dfn_pth = os.path.join(
-            tmpdirname, "modflow6-{}".format(branch)
-        )
+        downloaded_dfn_pth = os.path.join(tmpdirname, f"modflow6-{branch}")
         downloaded_dfn_pth = os.path.join(
             downloaded_dfn_pth, "doc", "mf6io", "mf6ivar", "dfn"
         )
@@ -86,7 +84,7 @@ def backup_existing_dfns(flopy_dfn_path):
     shutil.copytree(flopy_dfn_path, backup_folder)
     assert os.path.isdir(
         backup_folder
-    ), "dfn backup files not found: {}".format(backup_folder)
+    ), f"dfn backup files not found: {backup_folder}"
     return
 
 
@@ -100,7 +98,7 @@ def replace_dfn_files(new_dfn_pth, flopy_dfn_path):
     filenames = os.listdir(new_dfn_pth)
     for filename in filenames:
         filename_w_path = os.path.join(new_dfn_pth, filename)
-        print("  copying..{}".format(filename))
+        print(f"  copying..{filename}")
         shutil.copy(filename_w_path, flopy_dfn_path)
 
 
@@ -146,23 +144,17 @@ def generate_classes(branch="master", dfnpath=None, backup=True):
     # download the dfn files and put them in flopy.mf6.data or update using
     # user provided dfnpath
     if dfnpath is None:
-        print(
-            "  Updating the MODFLOW 6 classes using the branch: {}".format(
-                branch
-            )
-        )
+        print(f"  Updating the MODFLOW 6 classes using the branch: {branch}")
         timestr = time.strftime("%Y%m%d-%H%M%S")
-        new_dfn_pth = os.path.join(flopypth, "mf6", "data", "dfn_" + timestr)
+        new_dfn_pth = os.path.join(flopypth, "mf6", "data", f"dfn_{timestr}")
         download_dfn(branch, new_dfn_pth)
     else:
-        print("  Updating the MODFLOW 6 classes using {}".format(dfnpath))
+        print(f"  Updating the MODFLOW 6 classes using {dfnpath}")
         assert os.path.isdir(dfnpath)
         new_dfn_pth = dfnpath
 
     if backup:
-        print(
-            "  Backup existing definition files in: {}".format(flopy_dfn_path)
-        )
+        print(f"  Backup existing definition files in: {flopy_dfn_path}")
         backup_existing_dfns(flopy_dfn_path)
 
     print("  Replacing existing definition files with new ones.")

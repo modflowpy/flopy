@@ -1,12 +1,11 @@
 import os
-import shutil
 import numpy as np
 import flopy
 
 model_ws = os.path.join("temp", "t058")
-# delete the directory if it exists
-if os.path.isdir(model_ws):
-    shutil.rmtree(model_ws)
+# make the directory if it does not exist
+if not os.path.isdir(model_ws):
+    os.makedirs(model_ws, exist_ok=True)
 
 exe_names = {"mf6": "mf6", "mp7": "mp7"}
 run = True
@@ -63,14 +62,14 @@ def test_mf6():
 
 
 def test_default_modpath():
-    mpnam = nm + "_mp_default"
+    mpnam = f"{nm}_mp_default"
     pg = flopy.modpath.ParticleGroup(particlegroupname="DEFAULT")
     build_modpath(mpnam, pg)
     return
 
 
 def test_faceparticles_is1():
-    mpnam = nm + "_mp_face_t1node"
+    mpnam = f"{nm}_mp_face_t1node"
     locs = []
     localx = []
     localy = []
@@ -84,7 +83,7 @@ def test_faceparticles_is1():
     p = flopy.modpath.ParticleData(
         locs, structured=False, drape=0, localx=localx, localy=localy, localz=1
     )
-    fpth = mpnam + ".sloc"
+    fpth = f"{mpnam}.sloc"
     pg = flopy.modpath.ParticleGroup(
         particlegroupname="T1NODEPG", particledata=p, filename=fpth
     )
@@ -93,7 +92,7 @@ def test_faceparticles_is1():
 
 
 def test_facenode_is3():
-    mpnam = nm + "_mp_face_t3node"
+    mpnam = f"{nm}_mp_face_t3node"
     locs = []
     for i in range(nrow):
         for j in range(ncol):
@@ -115,7 +114,7 @@ def test_facenode_is3():
         columndivisions6=3,
     )
     p = flopy.modpath.NodeParticleData(subdivisiondata=sd, nodes=locs)
-    fpth = mpnam + ".sloc"
+    fpth = f"{mpnam}.sloc"
     pg = flopy.modpath.ParticleGroupNodeTemplate(
         particlegroupname="T3NODEPG", particledata=p, filename=fpth
     )
@@ -124,7 +123,7 @@ def test_facenode_is3():
 
 
 def test_facenode_is3a():
-    mpnam = nm + "_mp_face_t3anode"
+    mpnam = f"{nm}_mp_face_t3anode"
     locsa = []
     for i in range(11):
         for j in range(ncol):
@@ -153,7 +152,7 @@ def test_facenode_is3a():
     p = flopy.modpath.NodeParticleData(
         subdivisiondata=[sd, sd], nodes=[locsa, locsb]
     )
-    fpth = mpnam + ".sloc"
+    fpth = f"{mpnam}.sloc"
     pg = flopy.modpath.ParticleGroupNodeTemplate(
         particlegroupname="T3ANODEPG", particledata=p, filename=fpth
     )
@@ -162,7 +161,7 @@ def test_facenode_is3a():
 
 
 def test_facenode_is2a():
-    mpnam = nm + "_mp_face_t2anode"
+    mpnam = f"{nm}_mp_face_t2anode"
     locsa = [[0, 0, 0, 0, 10, ncol - 1]]
     locsb = [[0, 11, 0, 0, nrow - 1, ncol - 1]]
     sd = flopy.modpath.FaceDataType(
@@ -183,7 +182,7 @@ def test_facenode_is2a():
     p = flopy.modpath.LRCParticleData(
         subdivisiondata=[sd, sd], lrcregions=[locsa, locsb]
     )
-    fpth = mpnam + ".sloc"
+    fpth = f"{mpnam}.sloc"
     pg = flopy.modpath.ParticleGroupNodeTemplate(
         particlegroupname="T2ANODEPG", particledata=p, filename=fpth
     )
@@ -192,7 +191,7 @@ def test_facenode_is2a():
 
 
 def test_cellparticles_is1():
-    mpnam = nm + "_mp_cell_t1node"
+    mpnam = f"{nm}_mp_cell_t1node"
     locs = []
     for k in range(nlay):
         for i in range(nrow):
@@ -202,7 +201,7 @@ def test_cellparticles_is1():
     p = flopy.modpath.ParticleData(
         locs, structured=False, drape=0, localx=0.5, localy=0.5, localz=0.5
     )
-    fpth = mpnam + ".sloc"
+    fpth = f"{mpnam}.sloc"
     pg = flopy.modpath.ParticleGroup(
         particlegroupname="T1NODEPG", particledata=p, filename=fpth
     )
@@ -211,7 +210,7 @@ def test_cellparticles_is1():
 
 
 def test_cellparticleskij_is1():
-    mpnam = nm + "_mp_cell_t1kij"
+    mpnam = f"{nm}_mp_cell_t1kij"
     locs = []
     for k in range(nlay):
         for i in range(nrow):
@@ -220,7 +219,7 @@ def test_cellparticleskij_is1():
     p = flopy.modpath.ParticleData(
         locs, structured=True, drape=0, localx=0.5, localy=0.5, localz=0.5
     )
-    fpth = mpnam + ".sloc"
+    fpth = f"{mpnam}.sloc"
     pg = flopy.modpath.ParticleGroup(
         particlegroupname="T1KIJPG", particledata=p, filename=fpth
     )
@@ -229,7 +228,7 @@ def test_cellparticleskij_is1():
 
 
 def test_cellnode_is3():
-    mpnam = nm + "_mp_cell_t3node"
+    mpnam = f"{nm}_mp_cell_t3node"
     locs = []
     for k in range(nlay):
         for i in range(nrow):
@@ -243,7 +242,7 @@ def test_cellnode_is3():
         layercelldivisions=1,
     )
     p = flopy.modpath.NodeParticleData(subdivisiondata=sd, nodes=locs)
-    fpth = mpnam + ".sloc"
+    fpth = f"{mpnam}.sloc"
     pg = flopy.modpath.ParticleGroupNodeTemplate(
         particlegroupname="T3CELLPG", particledata=p, filename=fpth
     )
@@ -252,7 +251,7 @@ def test_cellnode_is3():
 
 
 def test_cellnode_is3a():
-    mpnam = nm + "_mp_cell_t3anode"
+    mpnam = f"{nm}_mp_cell_t3anode"
     locsa = []
     for k in range(1):
         for i in range(nrow):
@@ -280,7 +279,7 @@ def test_cellnode_is3a():
     p = flopy.modpath.NodeParticleData(
         subdivisiondata=[sd, sd, sd], nodes=[locsa, locsb, locsc]
     )
-    fpth = mpnam + ".sloc"
+    fpth = f"{mpnam}.sloc"
     pg = flopy.modpath.ParticleGroupNodeTemplate(
         particlegroupname="T3ACELLPG", particledata=p, filename=fpth
     )
@@ -289,7 +288,7 @@ def test_cellnode_is3a():
 
 
 def test_cellnode_is2a():
-    mpnam = nm + "_mp_cell_t2anode"
+    mpnam = f"{nm}_mp_cell_t2anode"
     locsa = [
         [0, 0, 0, 0, nrow - 1, ncol - 1],
         [1, 0, 0, 1, nrow - 1, ncol - 1],
@@ -304,7 +303,7 @@ def test_cellnode_is2a():
     p = flopy.modpath.LRCParticleData(
         subdivisiondata=[sd, sd], lrcregions=[locsa, locsb]
     )
-    fpth = mpnam + ".sloc"
+    fpth = f"{mpnam}.sloc"
     pg = flopy.modpath.ParticleGroupLRCTemplate(
         particlegroupname="T2ACELLPG", particledata=p, filename=fpth
     )
@@ -374,31 +373,25 @@ def endpoint_compare(fpth0, epf):
 
         # check maxid
         msg = (
-            "endpoint maxid ({}) ".format(maxid0)
-            + "in {} ".format(os.path.basename(fpth0))
-            + "are not equal to the "
-            + "endpoint maxid ({}) ".format(maxid1)
-            + "in {}".format(os.path.basename(fpth1))
+            f"endpoint maxid ({maxid0}) in {os.path.basename(fpth0)} "
+            f"are not equal to the endpoint maxid ({maxid1}) "
+            f"in {os.path.basename(fpth1)}"
         )
         assert maxid0 == maxid1, msg
 
         # check maxtravel
         msg = (
-            "endpoint maxtraveltime ({}) ".format(maxtravel0)
-            + "in {} ".format(os.path.basename(fpth0))
-            + "are not equal to the "
-            + "endpoint maxtraveltime ({}) ".format(maxtravel1)
-            + "in {}".format(os.path.basename(fpth1))
+            f"endpoint maxtraveltime ({maxtravel0}) "
+            f"in {os.path.basename(fpth0)} are not equal to the endpoint "
+            f"maxtraveltime ({maxtravel1}) in {os.path.basename(fpth1)}"
         )
         assert maxtravel0 == maxtravel1, msg
 
         # check maxtimes
         msg = (
-            "endpoint maxtime ({}) ".format(maxtime0)
-            + "in {} ".format(os.path.basename(fpth0))
-            + "are not equal to the "
-            + "endpoint maxtime ({}) ".format(maxtime1)
-            + "in {}".format(os.path.basename(fpth1))
+            f"endpoint maxtime ({maxtime0}) in {os.path.basename(fpth0)} "
+            f"are not equal to the endpoint maxtime ({maxtime1}) "
+            f"in {os.path.basename(fpth1)}"
         )
         assert maxtime0 == maxtime1, msg
 
@@ -406,10 +399,9 @@ def endpoint_compare(fpth0, epf):
         t1 = np.rec.fromarrays((e1[name] for name in names), dtype=dtype)
         for name in names:
             msg = (
-                "endpoints in {} ".format(os.path.basename(fpth0))
-                + "are not equal (within 1e-5) to the "
-                + "endpoints  in {} ".format(os.path.basename(fpth1))
-                + "for column {}.".format(name)
+                f"endpoints in {os.path.basename(fpth0)} are not equal "
+                f"(within 1e-5) to the endpoints in {os.path.basename(fpth1)} "
+                f"for column {name}."
             )
             assert np.allclose(t0[name], t1[name]), msg
 
@@ -435,7 +427,7 @@ def build_mf6():
     )
 
     # Create the Flopy groundwater flow (gwf) model object
-    model_nam_file = "{}.nam".format(nm)
+    model_nam_file = f"{nm}.nam"
     gwf = flopy.mf6.ModflowGwf(
         sim, modelname=nm, model_nam_file=model_nam_file, save_flows=True
     )
@@ -479,9 +471,9 @@ def build_mf6():
         rd.append([(0, i, ncol - 1), riv_h, riv_c, riv_z])
     flopy.mf6.modflow.mfgwfriv.ModflowGwfriv(gwf, stress_period_data={0: rd})
     # Create the output control package
-    headfile = "{}.hds".format(nm)
+    headfile = f"{nm}.hds"
     head_record = [headfile]
-    budgetfile = "{}.cbb".format(nm)
+    budgetfile = f"{nm}.cbb"
     budget_record = [budgetfile]
     saverecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
     oc = flopy.mf6.modflow.mfgwfoc.ModflowGwfoc(
@@ -530,7 +522,7 @@ def build_modpath(mpn, particlegroups):
     # run modpath
     if run:
         success, buff = mp.run_model()
-        assert success, "mp7 model ({}) did not run".format(mp.name)
+        assert success, f"mp7 model ({mp.name}) did not run"
 
     return
 

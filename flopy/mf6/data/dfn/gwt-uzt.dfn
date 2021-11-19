@@ -25,7 +25,7 @@ shape
 reader urword
 optional true
 longname keyword to specify name of concentration auxiliary variable in flow package
-description keyword to specify the name of an auxiliary variable in the corresponding flow package.  If specified, then the simulated concentrations from this advanced transport package will be copied into the auxiliary variable specified with this name.  Note that the flow package must have an auxiliary variable with this name or the program will terminate with an error.  If the flows for this advanced transport package are read from a file, then this option will have no affect.
+description keyword to specify the name of an auxiliary variable in the corresponding flow package.  If specified, then the simulated concentrations from this advanced transport package will be copied into the auxiliary variable specified with this name.  Note that the flow package must have an auxiliary variable with this name or the program will terminate with an error.  If the flows for this advanced transport package are read from a file, then this option will have no effect.
 
 block options
 name boundnames
@@ -144,6 +144,39 @@ tagged false
 optional false
 longname file keyword
 description name of the binary output file to write budget information.
+
+block options
+name budgetcsv_filerecord
+type record budgetcsv fileout budgetcsvfile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name budgetcsv
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname budget keyword
+description keyword to specify that record corresponds to the budget CSV.
+
+block options
+name budgetcsvfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the comma-separated value (CSV) output file to write budget summary information.  A budget summary record will be written to this file for each time step of the simulation.
 
 block options
 name ts_filerecord

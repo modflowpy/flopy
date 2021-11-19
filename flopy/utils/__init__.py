@@ -21,6 +21,7 @@
 
     """
 from .mfreadnam import parsenamefile
+from .utl_import import import_optional_dependency
 from .util_array import Util3d, Util2d, Transient2d, Transient3d, read1d
 from .util_list import MfList
 from .binaryfile import (
@@ -53,11 +54,8 @@ from .utils_def import FlopyBinaryData, totim_to_datetime
 from .flopy_io import read_fixed_var, write_fixed_var
 from .zonbud import (
     ZoneBudget,
-    read_zbarray,
-    write_zbarray,
     ZoneFile6,
     ZoneBudget6,
-    ZoneBudgetOutput,
     ZBNetOutput,
 )
 from .postprocessing import get_transmissivities, get_specific_discharge
@@ -67,4 +65,3 @@ from .mtlistfile import MtListBudget
 from .optionblock import OptionBlock
 from .rasters import Raster
 from .gridintersect import GridIntersect, ModflowGridIndices
-from .binarygrid_util import MfGrdFile

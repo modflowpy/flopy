@@ -213,7 +213,7 @@ def to_string(
             return str(val)
         if len(arr_val) > 1:
             # quote any string with spaces
-            string_val = "'{}'".format(val)
+            string_val = f"'{val}'"
             if data_item is not None and data_item.ucase:
                 return string_val.upper()
             else:
@@ -304,9 +304,9 @@ class MFComment:
             if isinstance(self.text, list):
                 self.text.append(additional_text)
             elif new_line:
-                self.text = "{}{}".format(self.text, additional_text)
+                self.text = f"{self.text}{additional_text}"
             else:
-                self.text = "{} {}".format(self.text, additional_text)
+                self.text = f"{self.text} {additional_text}"
 
     """
     Get the comment text in the format to write to package files.
@@ -329,7 +329,7 @@ class MFComment:
                 if self.text.strip():
                     file_entry = self.text
             if eoln_suffix:
-                file_entry = "{}\n".format(file_entry)
+                file_entry = f"{file_entry}\n"
         return file_entry
 
     def _recursive_get(self, base_list):
@@ -337,11 +337,9 @@ class MFComment:
         if base_list and self.sim_data.comments_on:
             for item in base_list:
                 if not isinstance(item, str) and isinstance(item, list):
-                    file_entry = "{}{}".format(
-                        file_entry, self._recursive_get(item)
-                    )
+                    file_entry = f"{file_entry}{self._recursive_get(item)}"
                 else:
-                    file_entry = "{} {}".format(file_entry, item)
+                    file_entry = f"{file_entry} {item}"
         return file_entry
 
     """
@@ -427,7 +425,7 @@ class MFComment:
                 if not isinstance(item, str) and isinstance(item, list):
                     self._recursive_write(fd, item)
                 else:
-                    fd.write(" {}".format(item))
+                    fd.write(f" {item}")
 
 
 class TemplateGenerator:
@@ -839,8 +837,8 @@ class MFDocString:
     def __init__(self, description):
         self.indent = "    "
         self.description = description
-        self.parameter_header = "{}Parameters\n{}" "----------".format(
-            self.indent, self.indent
+        self.parameter_header = (
+            f"{self.indent}Parameters\n{self.indent}----------"
         )
         self.parameters = []
         self.model_parameters = []
@@ -877,7 +875,7 @@ class MFDocString:
         else:
             param_list = self.parameters
         for parameter in param_list:
-            doc_string += "{}\n".format(parameter)
+            doc_string += f"{parameter}\n"
         if not model_doc_string:
-            doc_string += '\n{}"""'.format(self.indent)
+            doc_string += f'\n{self.indent}"""'
         return doc_string

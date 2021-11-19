@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 19, 2021 03:08:37 UTC
+# FILE created on October 29, 2021 21:09:57 UTC
 from .. import mfmodel
 from ..data.mfdatautil import ListTemplateGenerator, ArrayTemplateGenerator
 
@@ -19,8 +19,8 @@ class ModflowGwf(mfmodel.MFModel):
         version of modflow
     exe_name : string
         model executable name
-    model_rel_path : string
-        model working folder path, relative to simulation directory.
+    model_ws : string
+        model working folder path
     sim : MFSimulation
         Simulation that this model is a part of.  Model is automatically
         added to simulation when it is initialized.
@@ -91,7 +91,7 @@ class ModflowGwf(mfmodel.MFModel):
         save_flows=None,
         newtonoptions=None,
         packages=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             simulation,
@@ -101,7 +101,7 @@ class ModflowGwf(mfmodel.MFModel):
             version=version,
             exe_name=exe_name,
             model_rel_path=model_rel_path,
-            **kwargs
+            **kwargs,
         )
 
         self.name_file.list.set_data(list)

@@ -3,6 +3,8 @@ Container objects for working with geometric information
 """
 import numpy as np
 
+from ..utils import import_optional_dependency
+
 
 class Shape:
     """
@@ -173,7 +175,7 @@ class Collection(list):
         super().__init__(geometries)
 
     def __repr__(self):
-        return "Shapes: {}".format(list(self))
+        return f"Shapes: {list(self)}"
 
     @property
     def __geo_interface__(self):
@@ -238,7 +240,7 @@ class MultiPolygon(Collection):
             super().__init__(polygons)
 
     def __repr__(self):
-        return "MultiPolygon: {}".format(list(self))
+        return f"MultiPolygon: {list(self)}"
 
     @property
     def __geo_interface__(self):
@@ -266,7 +268,7 @@ class MultiLineString(Collection):
             super().__init__(linestrings)
 
     def __repr__(self):
-        return "LineString: {}".format(list(self))
+        return f"LineString: {list(self)}"
 
     @property
     def __geo_interface__(self):
@@ -294,7 +296,7 @@ class MultiPoint(Collection):
             super().__init__(points)
 
     def __repr__(self):
-        return "MultiPoint: {}".format(list(self))
+        return f"MultiPoint: {list(self)}"
 
     @property
     def __geo_interface__(self):
@@ -382,12 +384,10 @@ class Polygon(Shape):
 
     @property
     def pyshp_parts(self):
-        from ..export.shapefile_utils import import_shapefile
-
         # exterior ring must be clockwise (negative area)
         # interiors rings must be counter-clockwise (positive area)
 
-        shapefile = import_shapefile()
+        shapefile = import_optional_dependency("shapefile")
 
         exterior = list(self.exterior)
         if shapefile.signed_area(exterior) > 0:
@@ -410,12 +410,9 @@ class Polygon(Shape):
         return self.get_patch()
 
     def get_patch(self, **kwargs):
-        try:
-            from descartes import PolygonPatch
-        except ImportError:
-            print(
-                'This feature requires descartes.\nTry "pip install descartes"'
-            )
+        descartes = import_optional_dependency("descartes")
+        from descartes import PolygonPatch
+
         return PolygonPatch(self.geojson, **kwargs)
 
     def plot(self, ax=None, **kwargs):
@@ -427,10 +424,7 @@ class Polygon(Shape):
         Accepts keyword arguments to descartes.PolygonPatch. Requires the
         descartes package (pip install descartes).
         """
-        try:
-            import matplotlib.pyplot as plt
-        except ImportError:
-            print("This feature requires matplotlib.")
+        import matplotlib.pyplot as plt
 
         if ax is None:
             ax = plt.gca()
@@ -522,10 +516,7 @@ class LineString(Shape):
         return [self.coords]
 
     def plot(self, ax=None, **kwargs):
-        try:
-            import matplotlib.pyplot as plt
-        except ImportError:
-            print("This feature requires matplotlib.")
+        import matplotlib.pyplot as plt
 
         if ax is None:
             ax = plt.gca()
@@ -621,10 +612,7 @@ class Point(Shape):
         return self.coords
 
     def plot(self, ax=None, **kwargs):
-        try:
-            import matplotlib.pyplot as plt
-        except ImportError:
-            print("This feature requires matplotlib.")
+        import matplotlib.pyplot as plt
 
         if ax is None:
             ax = plt.gca()
@@ -699,42 +687,6 @@ def transform(
         yrot /= length_multiplier
 
     return xrot, yrot
-
-
-def shape(pyshp_shpobj):
-    """
-    Convert a pyshp geometry object to a flopy geometry object.
-
-    Parameters
-    ----------
-    pyshp_shpobj : shapefile._Shape instance
-
-    Returns
-    -------
-    shape : flopy.utils.geometry Polygon, Linestring, or Point
-
-    Notes
-    -----
-    Currently only regular Polygons, LineStrings and Points (pyshp types 5, 3, 1) supported.
-
-    Examples
-    --------
-    >>> import shapefile as sf
-    >>> from flopy.utils.geometry import shape
-    >>> sfobj = sf.Reader('shapefile.shp')
-    >>> flopy_geom = shape(list(sfobj.iterShapes())[0])
-
-    """
-    import warnings
-
-    warnings.warn(
-        "Method will be Deprecated, calling GeoSpatialUtil",
-        DeprecationWarning,
-    )
-
-    from .geospatial_utils import GeoSpatialUtil
-
-    return GeoSpatialUtil(pyshp_shpobj).flopy_geometry
 
 
 def get_polygon_area(geom):

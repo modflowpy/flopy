@@ -17,11 +17,9 @@ try:
 except ImportError:
     shapefile = None
 
+from ci_framework import base_test_dir, FlopyTestSetup
 
-cpth = os.path.join("temp", "t006")
-# make the directory if it does not exist
-if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+cpth = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def test_binaryfile_reference():
@@ -53,6 +51,9 @@ def test_formattedfile_reference():
 
 
 def test_mflist_reference():
+
+    test_setup = FlopyTestSetup(test_dirs=cpth)
+
     # make the model
     ml = flopy.modflow.Modflow()
     assert isinstance(ml, flopy.modflow.Modflow)
@@ -116,7 +117,7 @@ def test_cbc_ts():
     )
     zobj = flopy.utils.CellBudgetFile(fpth, precision="single")
     ts = zobj.get_ts(text="ZETASRF  1", idx=(0, 0, 24))
-    errtxt = "shape of zeta timeseries is {} not (4, 2)".format(ts.shape)
+    errtxt = f"shape of zeta timeseries is {ts.shape} not (4, 2)"
     assert ts.shape == (4, 2), errtxt
 
 

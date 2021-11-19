@@ -167,74 +167,6 @@ def get_water_table(heads, nodata, per_idx=None):
     return np.squeeze(wt)
 
 
-def get_saturated_thickness(heads, m, nodata, per_idx=None):
-    """
-    Calculates the saturated thickness for each cell from the heads
-    array for each stress period.
-
-    Parameters
-    ----------
-    heads : 3 or 4-D np.ndarray
-        Heads array.
-    m : flopy.modflow.Modflow object
-        Must have a flopy.modflow.ModflowDis object attached.
-    nodata : float, list
-        HDRY value indicating dry cells and/or HNOFLO values.
-    per_idx : int or sequence of ints
-        stress periods to return. If None,
-        returns all stress periods (default).
-
-    Returns
-    -------
-    sat_thickness : 3 or 4-D np.ndarray
-        Array of saturated thickness
-    """
-    warnings.warn(
-        "postprocessing.get_saturated_thickness will be deprecated and "
-        "removed in version 3.3.5.  Use grid.saturated_thick(heads).",
-        PendingDeprecationWarning,
-    )
-
-    if not isinstance(nodata, list):
-        nodata = [nodata]
-    heads = np.array(heads, ndmin=4)
-    for mv in nodata:
-        heads[heads == mv] = np.nan
-
-    top = m.dis.top.array
-    botm = m.dis.botm.array
-    top.shape = (1,) + botm.shape[1:]
-    top = np.concatenate((top, botm[0:-1]), axis=0)
-    thickness = m.modelgrid.thick
-    nper, nlay, nrow, ncol = heads.shape
-    if per_idx is None:
-        per_idx = list(range(nper))
-    elif np.isscalar(per_idx):
-        per_idx = [per_idx]
-
-    # get confined or unconfined/convertible info
-    laytyp = m.laytyp
-    if len(laytyp.shape) == 1:
-        laytyp.shape = (m.nlay, 1, 1)
-        is_conf = np.logical_and(
-            (laytyp == 0), np.full(m.modelgrid.shape, True)
-        )
-    else:
-        is_conf = laytyp == 0
-
-    # calculate saturated thickness
-    sat_thickness = []
-    for per in per_idx:
-        hds = heads[per]
-        hds = np.where(hds < botm, botm, hds)  # for NWT when hds < botm
-        unconf_thickness = np.where(hds > top, top - botm, hds - botm)
-        perthickness = np.where(is_conf, thickness, unconf_thickness)
-        sat_thickness.append(perthickness)
-    sat_thickness = np.squeeze(sat_thickness)
-
-    return sat_thickness
-
-
 def get_gradients(heads, m, nodata, per_idx=None):
     """
     Calculates the hydraulic gradients from the heads
@@ -422,7 +354,7 @@ def get_extended_budget(
         # need calculated heads for some stresses and to check hnoflo and hdry
         if hdsfile is None:
             raise ValueError(
-                "hdsfile must be provided when using " "boundary_ifaces"
+                "hdsfile must be provided when using boundary_ifaces"
             )
         if isinstance(hdsfile, (bf.HeadFile, fm.FormattedHeadFile)):
             hds = hdsfile
@@ -436,7 +368,7 @@ def get_extended_budget(
         # get hnoflo and hdry values
         if model is None:
             raise ValueError(
-                "model must be provided when using " "boundary_ifaces"
+                "model must be provided when using boundary_ifaces"
             )
         noflo_or_dry = np.logical_or(head == model.hnoflo, head == model.hdry)
 
@@ -445,8 +377,7 @@ def get_extended_budget(
             matched_name = [s for s in rec_names if budget_term in s]
             if not matched_name:
                 raise RuntimeError(
-                    "Budget term " + budget_term + " not found"
-                    ' in "' + cbcfile + '" file.'
+                    f'Budget term {budget_term} not found in "{cbcfile}" file.'
                 )
             if len(matched_name) > 1:
                 raise RuntimeError(
@@ -515,8 +446,7 @@ def get_extended_budget(
                     raise ValueError(
                         "This function imposes the use of a "
                         "unique iface (normally = 6) for the "
-                        + budget_term
-                        + " budget term."
+                        "{} budget term.".format(budget_term)
                     )
 
                 # loop through boundary cells
@@ -604,7 +534,7 @@ def get_extended_budget(
                         Qz_ext[lay, row, col] -= Q_stress_cell
             else:
                 raise TypeError(
-                    "boundary_ifaces value must be either " "int or list."
+                    "boundary_ifaces value must be either int or list."
                 )
 
     return Qx_ext, Qy_ext, Qz_ext
@@ -708,12 +638,13 @@ def get_specific_discharge(
     if classical_budget:
         # get saturated thickness (head - bottom elev for unconfined layer)
         if head is None:
-            sat_thk = modelgrid.thick
+            sat_thk = modelgrid.remove_confining_beds(modelgrid.thick)
         else:
             sat_thk = modelgrid.saturated_thick(
                 head, mask=[model.hdry, model.hnoflo]
             )
-            sat_thk.shape = model.modelgrid.shape
+
+        sat_thk.shape = modelgrid.shape
 
         # inform modelgrid of no-flow and dry cells
         modelgrid = model.modelgrid
@@ -764,9 +695,7 @@ def get_specific_discharge(
             qy = tqy / cross_area_y
             qz = tqz / cross_area_z
         else:
-            raise ValueError(
-                '"' + position + '" is not a valid value for ' "position"
-            )
+            raise ValueError(f'"{position}" is not a valid value for position')
         if position == "vertices":
             qx = modelgrid.array_at_verts(qx)
             qy = modelgrid.array_at_verts(qy)

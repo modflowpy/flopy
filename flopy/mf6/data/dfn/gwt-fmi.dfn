@@ -1,6 +1,14 @@
 # --------------------- gwt fmi options ---------------------
 
 block options
+name save_flows
+type keyword
+reader urword
+optional true
+longname save calculated flow imbalance correction to budget file
+description REPLACE save_flows {'{#1}': 'FMI'}
+
+block options
 name flow_imbalance_correction
 type keyword
 reader urword

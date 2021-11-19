@@ -79,7 +79,7 @@ class StructuredSpatialReference:
         yul=None,
         rotation=0.0,
         proj4_str=None,
-        **kwargs
+        **kwargs,
     ):
         self.delc = np.atleast_1d(np.array(delc))
         self.delr = np.atleast_1d(np.array(delr))
@@ -260,10 +260,8 @@ class StructuredSpatialReference:
         self._reset()
 
     def __repr__(self):
-        s = "xul:{0:<G}, yul:{1:<G}, rotation:{2:<G}, ".format(
-            self.xul, self.yul, self.rotation
-        )
-        s += "proj4_str:{0}".format(self.proj4_str)
+        s = f"xul:{self.xul:<G}, yul:{self.yul:<G}, rotation:{self.rotation:<G}, "
+        s += f"proj4_str:{self.proj4_str}"
         return s
 
     @property
@@ -474,19 +472,13 @@ class StructuredSpatialReference:
     def write_gridSpec(self, filename):
         """write a PEST-style grid specification file"""
         f = open(filename, "w")
-        f.write(
-            "{0:10d} {1:10d}\n".format(self.delc.shape[0], self.delr.shape[0])
-        )
-        f.write(
-            "{0:15.6E} {1:15.6E} {2:15.6E}\n".format(
-                self.xul, self.yul, self.rotation
-            )
-        )
+        f.write(f"{self.delc.shape[0]:10d} {self.delr.shape[0]:10d}\n")
+        f.write(f"{self.xul:15.6E} {self.yul:15.6E} {self.rotation:15.6E}\n")
         for c in self.delc:
-            f.write("{0:15.6E} ".format(c))
+            f.write(f"{c:15.6E} ")
         f.write("\n")
         for r in self.delr:
-            f.write("{0:15.6E} ".format(r))
+            f.write(f"{r:15.6E} ")
         f.write("\n")
         return
 
@@ -605,14 +597,12 @@ class VertexSpatialReference:
         rotation=0.0,
         lenuni=1.0,
         proj4_str=None,
-        **kwargs
+        **kwargs,
     ):
 
         assert len(xvdict) == len(
             yvdict
-        ), "len(xvdict): {} != len(yvdict): {}".format(
-            len(xvdict), len(yvdict)
-        )
+        ), f"len(xvdict): {len(xvdict)} != len(yvdict): {len(yvdict)}"
 
         self._xv = np.array([xvdict[idx] for idx, key in enumerate(xvdict)])
         self._yv = np.array([yvdict[idx] for idx, key in enumerate(yvdict)])
@@ -935,12 +925,10 @@ class SpatialReference:
 
         elif distype == "unstructured":
             raise NotImplementedError(
-                "Unstructured discretization not yet " "implemented"
+                "Unstructured discretization not yet implemented"
             )
 
         else:
-            raise TypeError(
-                "Discretization type {} not " "supported".format(distype)
-            )
+            raise TypeError(f"Discretization type {distype} not supported")
 
         return new
