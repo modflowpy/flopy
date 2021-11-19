@@ -205,7 +205,8 @@ def test_rect_grid_point_outside():
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect(Point(25.0, 25.0))
+    # use GeoSpatialUtil to convert to shapely geometry
+    result = ix.intersect((25.0, 25.0), shapetype="point")
     assert len(result) == 0
     return result
 
@@ -1289,9 +1290,9 @@ def test_all_intersections_shapely_no_strtree():
     # offset and rotated grids
     test_point_offset_rot_structured_grid_shapely(rtree=False)
     test_linestring_offset_rot_structured_grid_shapely(rtree=False)
-    ix = test_polygon_offset_rot_structured_grid_shapely(rtree=False)
+    test_polygon_offset_rot_structured_grid_shapely(rtree=False)
 
-    return ix
+    return
 
 
 # %% test rasters
@@ -1416,8 +1417,3 @@ def test_raster_sampling_methods():
             raise AssertionError(
                 f"{method} resampling returning incorrect values"
             )
-
-
-if __name__ == "__main__":
-    test_rasters()
-    test_raster_sampling_methods()
