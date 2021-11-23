@@ -2805,7 +2805,7 @@ def reproject_modpath_to_crosssection(
                 rec[xp] = x
                 rec[yp] = y
                 pid = rec["particleid"][0]
-                pline = list(zip(rec[proj], rec[zp], rec['time']))
+                pline = list(zip(rec[proj], rec[zp], rec["time"]))
                 if pid not in ptdict:
                     ptdict[pid] = pline
                 else:
@@ -2823,7 +2823,7 @@ def reproject_modpath_to_crosssection(
                 rec[xp] = x
                 rec[yp] = y
                 pid = rec["particleid"][0]
-                pline = list(zip(rec[proj], rec[zp], rec['time']))
+                pline = list(zip(rec[proj], rec[zp], rec["time"]))
                 if pid not in ptdict:
                     ptdict[pid] = pline
                 else:
