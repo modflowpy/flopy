@@ -14,10 +14,10 @@ mf_exe_name = "mf6"
 
 def test_vtk_export_model_without_packages_names():
     base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=baseDir)
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=base_dir)
 
     name = "mymodel"
-    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=baseDir, exe_name="mf6")
+    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=base_dir, exe_name="mf6")
     tdis = flopy.mf6.ModflowTdis(sim)
     ims = flopy.mf6.ModflowIms(sim)
     gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
@@ -29,7 +29,7 @@ def test_vtk_export_model_without_packages_names():
     )
 
     # Export model without specifying packages_names parameter
-    vtk.export_model(sim.get_model(), baseDir)
+    vtk.export_model(sim.get_model(), base_dir)
 
     # If the function executes without error then test was successful
     assert True
