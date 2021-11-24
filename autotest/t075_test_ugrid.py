@@ -279,7 +279,7 @@ def test_voronoi_grid0(plot=False):
     test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     name = "vor0"
-    answer_ncpl = 3801  # 3804
+    answer_ncpl = 3804
     domain = [
         [1831.381546, 6335.543757],
         [4337.733475, 6851.136153],
@@ -548,14 +548,14 @@ def test_voronoi_grid5(plot=False):
 
 
 if __name__ == "__main__":
-    #test_unstructured_grid_shell()
-    #test_unstructured_grid_dimensions()
-    #test_unstructured_minimal_grid()
-    #test_unstructured_complete_grid()
-    #test_loading_argus_meshes()
-    #test_create_unstructured_grid_from_verts()
-    #test_triangle_unstructured_grid()
-    test_voronoi_vertex_grid()
+    # test_unstructured_grid_shell()
+    # test_unstructured_grid_dimensions()
+    # test_unstructured_minimal_grid()
+    # test_unstructured_complete_grid()
+    # test_loading_argus_meshes()
+    # test_create_unstructured_grid_from_verts()
+    # test_triangle_unstructured_grid()
+    # test_voronoi_vertex_grid()
     test_voronoi_grid0(plot=True)
     test_voronoi_grid1(plot=True)
     test_voronoi_grid2(plot=True)
