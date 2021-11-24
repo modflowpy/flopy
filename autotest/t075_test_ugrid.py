@@ -332,7 +332,7 @@ def test_voronoi_grid1(plot=False):
     test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     name = "vor1"
-    answer_ncpl = 1662  # 1679
+    answer_ncpl = 1679
     xmin = 0.0
     xmax = 2.0
     ymin = 0.0
@@ -368,7 +368,7 @@ def test_voronoi_grid2(plot=False):
     test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     name = "vor2"
-    answer_ncpl = 551  # 538
+    answer_ncpl = 538
     theta = np.arange(0.0, 2 * np.pi, 0.2)
     radius = 100.0
     x = radius * np.cos(theta)
@@ -486,7 +486,7 @@ def test_voronoi_grid5(plot=False):
     test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     name = "vor5"
-    answer_ncpl = 1068  # 1067
+    answer_ncpl = 1067
     active_domain = [(0, 0), (100, 0), (100, 100), (0, 100)]
     area1 = [(10, 10), (40, 10), (40, 40), (10, 40)]
     area2 = [(50, 50), (90, 50), (90, 90), (50, 90)]
