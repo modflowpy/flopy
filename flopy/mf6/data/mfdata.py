@@ -100,6 +100,12 @@ class MFTransient:
             self._verify_sp(transient_key)
         self._current_key = transient_key
         if transient_key not in self._data_storage:
+            if (
+                isinstance(transient_key, tuple)
+                and transient_key[0] in self._data_storage
+            ):
+                self._current_key = transient_key[0]
+                return
             self.add_transient_key(transient_key)
 
     def _set_data_prep(self, data, transient_key=0):
@@ -267,6 +273,10 @@ class MFData(DataInterface):
 
     def __str__(self):
         return str(self._get_storage_obj())
+
+    @property
+    def path(self):
+        return self._path
 
     @property
     def array(self):

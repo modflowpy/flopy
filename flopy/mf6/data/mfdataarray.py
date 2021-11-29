@@ -44,10 +44,12 @@ class MFArray(MFMultiDimVar):
         enable=True,
         path=None,
         dimensions=None,
+        block=None,
     ):
         super().__init__(
             sim_data, model_or_sim, structure, enable, path, dimensions
         )
+        self._block = block
         if self.structure.layered:
             try:
                 self._layer_shape = self.layer_shape()
@@ -719,12 +721,18 @@ class MFArray(MFMultiDimVar):
             layer = (layer,)
         storage = self._get_storage_obj()
         if storage is not None:
+            block_exists = self._block.header_exists(
+                self._current_key, self.path
+            )
             try:
-                data = storage.get_data(layer, apply_mult)
+                data = storage.get_data(
+                    layer, apply_mult, block_exists=block_exists
+                )
                 if (
                     "array" in kwargs
                     and kwargs["array"]
                     and isinstance(self, MFTransientArray)
+                    and data != []
                 ):
                     data = np.expand_dims(data, 0)
                 return data
@@ -1471,6 +1479,7 @@ class MFTransientArray(MFArray, MFTransient):
         enable=True,
         path=None,
         dimensions=None,
+        block=None,
     ):
         super().__init__(
             sim_data=sim_data,
@@ -1480,6 +1489,7 @@ class MFTransientArray(MFArray, MFTransient):
             enable=enable,
             path=path,
             dimensions=dimensions,
+            block=block,
         )
         self._transient_setup(self._data_storage)
         self.repeating = True
@@ -1632,7 +1642,7 @@ class MFTransientArray(MFArray, MFTransient):
                         break
                     if data is not None:
                         if self.structure.type == DatumType.integer:
-                            data = np.full_like(data, 0)
+                            data = np.full_like(data, 1)
                         else:
                             data = np.full_like(data, 0.0)
                         data = np.expand_dims(data, 0)
@@ -1641,6 +1651,17 @@ class MFTransientArray(MFArray, MFTransient):
             else:
                 output = np.concatenate((output, data))
         return output
+
+    def has_data(self, layer=None):
+        if layer is None:
+            for sto_key in self._data_storage.keys():
+                self.get_data_prep(sto_key)
+                if super().has_data():
+                    return True
+            return False
+        else:
+            self.get_data_prep(layer)
+            return super().has_data()
 
     def get_data(self, layer=None, apply_mult=True, **kwargs):
         """Returns the data associated with stress period key `layer`.
@@ -1677,6 +1698,10 @@ class MFTransientArray(MFArray, MFTransient):
                             else:
                                 output = {sp: data}
                         else:
+                            if data is None and self._block.header_exists(
+                                self._current_key, self.path
+                            ):
+                                data = []
                             if "array" in kwargs:
                                 output.append(data)
                             else:
