@@ -353,12 +353,19 @@ def test_multi_model():
 
 
 def test_array():
+    # get_data
+    # empty data in period block vs data repeating
+    # array
+    # aux values, test that they work the same as other arrays (is a value
+    # of zero always used even if aux is defined in a previous stress
+    # period?)
+
     import flopy
 
     mf6 = flopy.mf6
-    sim_name = "testsim"
-    model_name = "testmodel"
-    out_dir = "tmp"
+    sim_name = "test_array"
+    model_name = "test_array"
+    out_dir = os.path.join("temp", "t505_test_array")
 
     tdis_name = "{}.tdis".format(sim_name)
     sim = mf6.MFSimulation(
@@ -366,7 +373,22 @@ def test_array():
     )
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0), (6.0, 3, 1.0), (6.0, 3, 1.0)]
     tdis = mf6.ModflowTdis(sim, time_units="DAYS", nper=4, perioddata=tdis_rc)
-
+    ims_package = ModflowIms(
+        sim,
+        pname="my_ims_file",
+        filename=f"{sim_name}.ims",
+        print_option="ALL",
+        complexity="SIMPLE",
+        outer_dvclose=0.00001,
+        outer_maximum=50,
+        under_relaxation="NONE",
+        inner_maximum=30,
+        inner_dvclose=0.00001,
+        linear_acceleration="CG",
+        preconditioner_levels=7,
+        preconditioner_drop_tolerance=0.01,
+        number_orthogonalizations=2,
+    )
     model = mf6.ModflowGwf(
         sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
     )
@@ -374,27 +396,66 @@ def test_array():
     dis = mf6.ModflowGwfdis(
         model,
         length_units="FEET",
-        nlay=1,
+        nlay=4,
         nrow=2,
         ncol=2,
         delr=500.0,
         delc=500.0,
         top=100.0,
-        botm=50.0,
+        botm=[50.0, 0.0, -50.0, -100.0],
         filename="{}.dis".format(model_name),
     )
-    irch = {1: [[0, 1], [2, 1]], 2: [[0, 1], [2, 3]]}
-    rcha = mf6.ModflowGwfrcha(model, irch=irch, recharge={0: 1.0, 2: 2.0})
+    ic_package = mf6.ModflowGwfic(
+        model, strt=90.0, filename=f"{model_name}.ic"
+    )
+    npf_package = mf6.ModflowGwfnpf(
+        model,
+        pname="npf_1",
+        save_flows=True,
+        alternative_cell_averaging="logarithmic",
+        icelltype=1,
+        k=5.0,
+    )
+
+    aux = {1: [[50.0], [1.3]], 3: [[200.0], [1.5]]}
+    irch = {1: [[0, 2], [2, 1]], 2: [[0, 1], [2, 3]]}
+    rcha = mf6.ModflowGwfrcha(
+        model,
+        print_input=True,
+        print_flows=True,
+        auxiliary=[("var1", "var2")],
+        irch=irch,
+        recharge={1: 1.0, 2: 2.0},
+        aux=aux,
+    )
     val_irch = rcha.irch.array.sum(axis=(1, 2, 3))
-    assert val_irch[0] == 0
-    assert val_irch[1] == 4
+    assert val_irch[0] == 4
+    assert val_irch[1] == 5
     assert val_irch[2] == 6
     assert val_irch[3] == 6
+    val_irch_2 = rcha.irch.get_data()
+    assert val_irch_2[0] is None
+    assert val_irch_2[1][1, 1] == 1
+    assert val_irch_2[2][1, 1] == 3
+    assert val_irch_2[3] == []
     val_rch = rcha.recharge.array.sum(axis=(1, 2, 3))
-    assert val_rch[0] == 4.0
+    assert val_rch[0] == 0.0
     assert val_rch[1] == 4.0
     assert val_rch[2] == 8.0
     assert val_rch[3] == 8.0
+    val_rch_2 = rcha.recharge.get_data()
+    assert val_rch_2[0] is None
+    assert val_rch_2[1][0, 0] == 1.0
+    assert val_rch_2[2][0, 0] == 2.0
+    assert val_rch_2[3] == []
+    aux_data_0 = rcha.aux.get_data(0)
+    assert aux_data_0 is None
+    aux_data_1 = rcha.aux.get_data(1)
+    assert aux_data_1[0][0][0] == 50.0
+    aux_data_2 = rcha.aux.get_data(2)
+    assert aux_data_2 == []
+    aux_data_3 = rcha.aux.get_data(3)
+    assert aux_data_3[0][0][0] == 200.0
 
     welspdict = {1: [[(0, 0, 0), -25.0, 0.0]], 2: [[(0, 0, 0), 25.0, 0.0]]}
     wel = flopy.mf6.ModflowGwfwel(
@@ -411,6 +472,99 @@ def test_array():
     assert wel_array[1][0][1] == -25.0
     assert wel_array[2][0][1] == 25.0
     assert wel_array[3][0][1] == 25.0
+
+    drnspdict = {
+        0: [[(0, 0, 0), 60.0, 10.0]],
+        2: [],
+        3: [[(0, 0, 0), 55.0, 5.0]],
+    }
+    drn = flopy.mf6.ModflowGwfdrn(
+        model,
+        print_input=True,
+        print_flows=True,
+        stress_period_data=drnspdict,
+        save_flows=False,
+        pname="DRN-1",
+    )
+    drn_array = drn.stress_period_data.array
+    assert drn_array[0][0][1] == 60.0
+    assert drn_array[1][0][1] == 60.0
+    assert drn_array[2] is None
+    assert drn_array[3][0][1] == 55.0
+    drn_gd_0 = drn.stress_period_data.get_data(0)
+    assert drn_gd_0[0][1] == 60.0
+    drn_gd_1 = drn.stress_period_data.get_data(1)
+    assert drn_gd_1 is None
+    drn_gd_2 = drn.stress_period_data.get_data(2)
+    assert drn_gd_2 == []
+    drn_gd_3 = drn.stress_period_data.get_data(3)
+    assert drn_gd_3[0][1] == 55.0
+
+    # test writing and loading model
+    sim.write_simulation()
+    if run:
+        sim.run_simulation()
+
+    test_sim = MFSimulation.load(
+        sim_name,
+        "mf6",
+        exe_name,
+        out_dir,
+        write_headers=False,
+    )
+    model = test_sim.get_model()
+    rcha = model.get_package("rcha")
+    wel = model.get_package("wel")
+    drn = model.get_package("drn")
+    # do same tests as above
+    val_irch = rcha.irch.array.sum(axis=(1, 2, 3))
+    assert val_irch[0] == 4
+    assert val_irch[1] == 5
+    assert val_irch[2] == 6
+    assert val_irch[3] == 6
+    val_irch_2 = rcha.irch.get_data()
+    assert val_irch_2[0] is None
+    assert val_irch_2[1][1, 1] == 1
+    assert val_irch_2[2][1, 1] == 3
+    assert val_irch_2[3] == []
+    val_rch = rcha.recharge.array.sum(axis=(1, 2, 3))
+    assert val_rch[0] == 0.0
+    assert val_rch[1] == 4.0
+    assert val_rch[2] == 8.0
+    assert val_rch[3] == 8.0
+    val_rch_2 = rcha.recharge.get_data()
+    assert val_rch_2[0] is None
+    assert val_rch_2[1][0, 0] == 1.0
+    assert val_rch_2[2][0, 0] == 2.0
+    assert val_rch_2[3] == []
+    aux_data_0 = rcha.aux.get_data(0)
+    assert aux_data_0 is None
+    aux_data_1 = rcha.aux.get_data(1)
+    assert aux_data_1[0][0][0] == 50.0
+    aux_data_2 = rcha.aux.get_data(2)
+    assert aux_data_2 == []
+    aux_data_3 = rcha.aux.get_data(3)
+    assert aux_data_3[0][0][0] == 200.0
+
+    wel_array = wel.stress_period_data.array
+    assert wel_array[0] is None
+    assert wel_array[1][0][1] == -25.0
+    assert wel_array[2][0][1] == 25.0
+    assert wel_array[3][0][1] == 25.0
+
+    drn_array = drn.stress_period_data.array
+    assert drn_array[0][0][1] == 60.0
+    assert drn_array[1][0][1] == 60.0
+    assert drn_array[2] is None
+    assert drn_array[3][0][1] == 55.0
+    drn_gd_0 = drn.stress_period_data.get_data(0)
+    assert drn_gd_0[0][1] == 60.0
+    drn_gd_1 = drn.stress_period_data.get_data(1)
+    assert drn_gd_1 is None
+    drn_gd_2 = drn.stress_period_data.get_data(2)
+    assert drn_gd_2 == []
+    drn_gd_3 = drn.stress_period_data.get_data(3)
+    assert drn_gd_3[0][1] == 55.0
 
 
 def test_np001():
@@ -819,6 +973,7 @@ def test_np001():
     sim.rename_all_packages("file_rename")
     sim.set_sim_path(rename_folder)
     sim.write_simulation()
+
     if run:
         sim.run_simulation()
         sim.delete_output_files()
@@ -1222,7 +1377,7 @@ def test_np002():
     md2 = sim2.get_model()
     ghb2 = md2.get_package("ghb")
     spd2 = ghb2.stress_period_data.get_data(1)
-    assert spd2 is None
+    assert spd2 == []
 
     # test paths
     sim_path_test = os.path.join(run_folder, "sim_path")
