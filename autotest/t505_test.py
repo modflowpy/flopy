@@ -399,8 +399,8 @@ def test_array():
         nlay=4,
         nrow=2,
         ncol=2,
-        delr=500.0,
-        delc=500.0,
+        delr=5000.0,
+        delc=5000.0,
         top=100.0,
         botm=[50.0, 0.0, -50.0, -100.0],
         filename="{}.dis".format(model_name),
@@ -414,7 +414,7 @@ def test_array():
         save_flows=True,
         alternative_cell_averaging="logarithmic",
         icelltype=1,
-        k=5.0,
+        k=50.0,
     )
 
     aux = {1: [[50.0], [1.3]], 3: [[200.0], [1.5]]}
@@ -425,7 +425,7 @@ def test_array():
         print_flows=True,
         auxiliary=[("var1", "var2")],
         irch=irch,
-        recharge={1: 1.0, 2: 2.0},
+        recharge={1: 0.0001, 2: 0.0002},
         aux=aux,
     )
     val_irch = rcha.irch.array.sum(axis=(1, 2, 3))
@@ -437,27 +437,29 @@ def test_array():
     assert val_irch_2[0] is None
     assert val_irch_2[1][1, 1] == 1
     assert val_irch_2[2][1, 1] == 3
-    assert val_irch_2[3] == []
+    assert val_irch_2[3] is None
+    val_irch_2_3 = rcha.irch.get_data(3)
+    assert val_irch_2_3 is None
     val_rch = rcha.recharge.array.sum(axis=(1, 2, 3))
     assert val_rch[0] == 0.0
-    assert val_rch[1] == 4.0
-    assert val_rch[2] == 8.0
-    assert val_rch[3] == 8.0
+    assert val_rch[1] == 0.0004
+    assert val_rch[2] == 0.0008
+    assert val_rch[3] == 0.0008
     val_rch_2 = rcha.recharge.get_data()
     assert val_rch_2[0] is None
-    assert val_rch_2[1][0, 0] == 1.0
-    assert val_rch_2[2][0, 0] == 2.0
-    assert val_rch_2[3] == []
+    assert val_rch_2[1][0, 0] == 0.0001
+    assert val_rch_2[2][0, 0] == 0.0002
+    assert val_rch_2[3] is None
     aux_data_0 = rcha.aux.get_data(0)
     assert aux_data_0 is None
     aux_data_1 = rcha.aux.get_data(1)
     assert aux_data_1[0][0][0] == 50.0
     aux_data_2 = rcha.aux.get_data(2)
-    assert aux_data_2 == []
+    assert aux_data_2 is None
     aux_data_3 = rcha.aux.get_data(3)
     assert aux_data_3[0][0][0] == 200.0
 
-    welspdict = {1: [[(0, 0, 0), -25.0, 0.0]], 2: [[(0, 0, 0), 25.0, 0.0]]}
+    welspdict = {1: [[(0, 0, 0), 0.25, 0.0]], 2: [[(0, 0, 0), 0.1, 0.0]]}
     wel = flopy.mf6.ModflowGwfwel(
         model,
         print_input=True,
@@ -469,9 +471,9 @@ def test_array():
     )
     wel_array = wel.stress_period_data.array
     assert wel_array[0] is None
-    assert wel_array[1][0][1] == -25.0
-    assert wel_array[2][0][1] == 25.0
-    assert wel_array[3][0][1] == 25.0
+    assert wel_array[1][0][1] == 0.25
+    assert wel_array[2][0][1] == 0.1
+    assert wel_array[3][0][1] == 0.1
 
     drnspdict = {
         0: [[(0, 0, 0), 60.0, 10.0]],
@@ -500,6 +502,17 @@ def test_array():
     drn_gd_3 = drn.stress_period_data.get_data(3)
     assert drn_gd_3[0][1] == 55.0
 
+    ghbspdict = {
+        0: [[(0, 1, 1), 60.0, 10.0]],
+    }
+    ghb = flopy.mf6.ModflowGwfghb(
+        model,
+        print_input=True,
+        print_flows=True,
+        stress_period_data=ghbspdict,
+        save_flows=False,
+        pname="GHB-1",
+    )
     # test writing and loading model
     sim.write_simulation()
     if run:
@@ -526,31 +539,31 @@ def test_array():
     assert val_irch_2[0] is None
     assert val_irch_2[1][1, 1] == 1
     assert val_irch_2[2][1, 1] == 3
-    assert val_irch_2[3] == []
+    assert val_irch_2[3] is None
     val_rch = rcha.recharge.array.sum(axis=(1, 2, 3))
     assert val_rch[0] == 0.0
-    assert val_rch[1] == 4.0
-    assert val_rch[2] == 8.0
-    assert val_rch[3] == 8.0
+    assert val_rch[1] == 0.0004
+    assert val_rch[2] == 0.0008
+    assert val_rch[3] == 0.0008
     val_rch_2 = rcha.recharge.get_data()
     assert val_rch_2[0] is None
-    assert val_rch_2[1][0, 0] == 1.0
-    assert val_rch_2[2][0, 0] == 2.0
-    assert val_rch_2[3] == []
+    assert val_rch_2[1][0, 0] == 0.0001
+    assert val_rch_2[2][0, 0] == 0.0002
+    assert val_rch_2[3] is None
     aux_data_0 = rcha.aux.get_data(0)
     assert aux_data_0 is None
     aux_data_1 = rcha.aux.get_data(1)
     assert aux_data_1[0][0][0] == 50.0
     aux_data_2 = rcha.aux.get_data(2)
-    assert aux_data_2 == []
+    assert aux_data_2 is None
     aux_data_3 = rcha.aux.get_data(3)
     assert aux_data_3[0][0][0] == 200.0
 
     wel_array = wel.stress_period_data.array
     assert wel_array[0] is None
-    assert wel_array[1][0][1] == -25.0
-    assert wel_array[2][0][1] == 25.0
-    assert wel_array[3][0][1] == 25.0
+    assert wel_array[1][0][1] == 0.25
+    assert wel_array[2][0][1] == 0.1
+    assert wel_array[3][0][1] == 0.1
 
     drn_array = drn.stress_period_data.array
     assert drn_array[0][0][1] == 60.0
