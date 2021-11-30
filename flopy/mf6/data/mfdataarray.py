@@ -721,18 +721,13 @@ class MFArray(MFMultiDimVar):
             layer = (layer,)
         storage = self._get_storage_obj()
         if storage is not None:
-            block_exists = self._block.header_exists(
-                self._current_key, self.path
-            )
             try:
-                data = storage.get_data(
-                    layer, apply_mult, block_exists=block_exists
-                )
+                data = storage.get_data(layer, apply_mult)
                 if (
                     "array" in kwargs
                     and kwargs["array"]
                     and isinstance(self, MFTransientArray)
-                    and data != []
+                    and data is not []
                 ):
                     data = np.expand_dims(data, 0)
                 return data
@@ -1698,10 +1693,6 @@ class MFTransientArray(MFArray, MFTransient):
                             else:
                                 output = {sp: data}
                         else:
-                            if data is None and self._block.header_exists(
-                                self._current_key, self.path
-                            ):
-                                data = []
                             if "array" in kwargs:
                                 output.append(data)
                             else:
