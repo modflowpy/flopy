@@ -563,7 +563,7 @@ class UnstructuredGrid(Grid):
 
             xcellvert = []
             ycellvert = []
-            for ix in iverts:
+            for ix in (iv for iv in iverts if iv is not None):
                 xcellvert.append(vertexdict[ix][0])
                 ycellvert.append(vertexdict[ix][1])
 
