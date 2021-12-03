@@ -3,17 +3,6 @@ import numpy as np
 from ..utils.geometry import Shape, Collection
 from ..utils import import_optional_dependency
 
-shapely = import_optional_dependency("shapely", errors="silent")
-if shapely is not None:
-    from shapely.geometry import (
-        MultiPolygon,
-        Polygon,
-        Point,
-        MultiPoint,
-        LineString,
-        MultiLineString,
-    )
-
 geojson = import_optional_dependency("geojson", errors="silent")
 geojson_classes = {}
 if geojson is not None:
@@ -72,10 +61,7 @@ class GeoSpatialUtil:
         if shapetype is not None:
             shapetype = shapetype.lower()
 
-        if isinstance(obj, self.__shapefile.Shape):
-            self.__geo_interface = self.__obj.__geo_interface__
-
-        elif isinstance(obj, (Shape, Collection)):
+        if isinstance(obj, (Shape, Collection)):
             geo_interface = obj.__geo_interface__
             if geo_interface["type"] == "GeometryCollection":
                 raise TypeError("GeometryCollections are not supported")
@@ -93,6 +79,10 @@ class GeoSpatialUtil:
                 "type": shape_types[shapetype],
                 "coordinates": list(obj),
             }
+
+        if self.__shapefile is not None:
+            if isinstance(obj, self.__shapefile.Shape):
+                self.__geo_interface = self.__obj.__geo_interface__
 
         if geojson is not None:
             if isinstance(obj, geojson.Feature):
@@ -118,18 +108,24 @@ class GeoSpatialUtil:
                 }
 
         shapely_geo = import_optional_dependency("shapely.geometry")
-        if isinstance(
-            obj,
-            (
-                shapely_geo.Point,
-                shapely_geo.MultiPoint,
-                shapely_geo.Polygon,
-                shapely_geo.MultiPolygon,
-                shapely_geo.LineString,
-                shapely_geo.MultiLineString,
-            ),
-        ):
-            self.__geo_interface = obj.__geo_interface__
+        if shapely_geo is not None:
+            if isinstance(
+                obj,
+                (
+                    shapely_geo.Point,
+                    shapely_geo.MultiPoint,
+                    shapely_geo.Polygon,
+                    shapely_geo.MultiPolygon,
+                    shapely_geo.LineString,
+                    shapely_geo.MultiLineString,
+                ),
+            ):
+                self.__geo_interface = obj.__geo_interface__
+
+        if not self.__geo_interface:
+            raise AssertionError(
+                f"Reader is not installed for collection type: {type(obj)}"
+            )
 
     @property
     def __geo_interface__(self):
@@ -204,11 +200,12 @@ class GeoSpatialUtil:
         -------
             shapefile.shape
         """
-        if self._shape is None:
-            self._shape = self.__shapefile.Shape._from_geojson(
-                self.__geo_interface
-            )
-        return self._shape
+        if self.__shapefile is not None:
+            if self._shape is None:
+                self._shape = self.__shapefile.Shape._from_geojson(
+                    self.__geo_interface
+                )
+            return self._shape
 
     @property
     def flopy_geometry(self):
@@ -265,29 +262,21 @@ class GeoSpatialCollection:
         self._points = None
         self.__shapetype = None
 
-        if isinstance(obj, str):
-            with self.__shapefile.Reader(obj) as r:
-                for shape in r.shapes():
-                    self.__collection.append(GeoSpatialUtil(shape))
-
-        elif isinstance(obj, self.__shapefile.Reader):
-            for shape in obj.shapes():
-                self.__collection.append(GeoSpatialUtil(shape))
-
-        elif isinstance(obj, self.__shapefile.Shapes):
-            for shape in obj:
-                self.__collection.append(GeoSpatialUtil(shape))
-
-        elif isinstance(obj, Collection):
+        if isinstance(obj, Collection):
             for shape in obj:
                 self.__collection.append(GeoSpatialUtil(shape))
 
         elif isinstance(obj, (np.ndarray, list, tuple)):
-            if isinstance(obj[0], (Shape, Collection, self.__shapefile.Shape)):
+            if isinstance(obj[0], (Shape, Collection)):
                 for shape in obj:
                     self.__collection.append(GeoSpatialUtil(shape))
 
-            else:
+            elif self.__shapefile is not None:
+                if isinstance(obj[0], self.__shapefile.Shape):
+                    for shape in obj:
+                        self.__collection.append(GeoSpatialUtil(shape))
+
+            if not self.__collection:
                 if shapetype is None:
                     err = "a list of shapetypes must be provided"
                     raise AssertionError(err)
@@ -299,6 +288,20 @@ class GeoSpatialCollection:
                     self.__collection.append(
                         GeoSpatialUtil(geom, shapetype[ix])
                     )
+
+        elif self.__shapefile is not None:
+            if isinstance(obj, str):
+                with self.__shapefile.Reader(obj) as r:
+                    for shape in r.shapes():
+                        self.__collection.append(GeoSpatialUtil(shape))
+
+            elif isinstance(obj, self.__shapefile.Reader):
+                for shape in obj.shapes():
+                    self.__collection.append(GeoSpatialUtil(shape))
+
+            elif isinstance(obj, self.__shapefile.Shapes):
+                for shape in obj:
+                    self.__collection.append(GeoSpatialUtil(shape))
 
         if geojson is not None:
             if isinstance(
@@ -314,18 +317,24 @@ class GeoSpatialCollection:
                 for geom in obj.geometries:
                     self.__collection.append(GeoSpatialUtil(geom))
 
-        shapely_loc = import_optional_dependency("shapely.geometry")
-        if isinstance(
-            obj,
-            (
-                shapely_loc.collection.GeometryCollection,
-                shapely_loc.MultiPoint,
-                shapely_loc.MultiLineString,
-                shapely_loc.MultiPolygon,
-            ),
-        ):
-            for geom in obj.geoms:
-                self.__collection.append(GeoSpatialUtil(geom))
+        shapely_geo = import_optional_dependency("shapely.geometry")
+        if shapely_geo is not None:
+            if isinstance(
+                obj,
+                (
+                    shapely_geo.collection.GeometryCollection,
+                    shapely_geo.MultiPoint,
+                    shapely_geo.MultiLineString,
+                    shapely_geo.MultiPolygon,
+                ),
+            ):
+                for geom in obj.geoms:
+                    self.__collection.append(GeoSpatialUtil(geom))
+
+        if not self.__collection:
+            raise AssertionError(
+                f"Reader is not installed for collection type: {type(obj)}"
+            )
 
     def __iter__(self):
         """
@@ -374,8 +383,8 @@ class GeoSpatialCollection:
         -------
             shapely.geometry.collection.GeometryCollection object
         """
-        shapely_loc = import_optional_dependency("shapely.geometry")
-        self._shapely = shapely_loc.collection.GeometryCollection(
+        shapely_geo = import_optional_dependency("shapely.geometry")
+        self._shapely = shapely_geo.collection.GeometryCollection(
             [i.shapely for i in self.__collection]
         )
         return self._shapely
@@ -389,8 +398,8 @@ class GeoSpatialCollection:
         -------
             geojson.GeometryCollection
         """
-        geojson_loc = import_optional_dependency("geojson")
-        self._geojson = geojson_loc.GeometryCollection(
+        geojson = import_optional_dependency("geojson")
+        self._geojson = geojson.GeometryCollection(
             [i.geojson for i in self.__collection]
         )
         return self._geojson
