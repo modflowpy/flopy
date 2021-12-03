@@ -186,29 +186,34 @@ class GridIntersect:
                 )
             )
 
-    def intersect(self, shp, **kwargs):
-        """
-        Method to intersect a shape with a model grid
+    def intersect(
+        self, shp, shapetype=None, sort_by_cellid=True, keepzerolengths=False
+    ):
+        """Method to intersect a shape with a model grid.
 
         Parameters
         ----------
         shp : shapely.geometry, geojson object, shapefile.Shape,
-              or flopy geomerty object
+              or flopy geometry object
+        shapetype : str, optional
+            type of shape (i.e. "point", "linestring", "polygon" or
+            their multi-variants), used by GeoSpatialUtil if shp is
+            passed as a list of vertices, default is None
         sort_by_cellid : bool
-            Sort results by cellid
+            sort results by cellid, ensures cell with lowest cellid is
+            returned for boundary cases when using vertex methods, default
+            is True
         keepzerolengths : bool
             boolean method to keep zero length intersections for
-            linestring intersection
+            linestring intersection, used when shp is of type "linestring"
 
         Returns
         -------
         numpy.recarray
             a record array containing information about the intersection
         """
-        gu = GeoSpatialUtil(shp)
+        gu = GeoSpatialUtil(shp, shapetype=shapetype)
         shp = gu.shapely
-        sort_by_cellid = kwargs.pop("sort_by_cellid", True)
-        keepzerolengths = kwargs.pop("keepzerolengths", False)
 
         if gu.shapetype in ("Point", "MultiPoint"):
             if (
@@ -654,7 +659,7 @@ class GridIntersect:
 
         return rec
 
-    def intersects(self, shp):
+    def intersects(self, shp, shapetype=None):
         """Return cellIDs for shapes that intersect with shape.
 
         Parameters
@@ -662,7 +667,10 @@ class GridIntersect:
         shp : shapely.geometry, geojson geometry, shapefile.shape,
               or flopy geometry object
             shape to intersect with the grid
-
+        shapetype : str, optional
+            type of shape (i.e. "point", "linestring", "polygon" or
+            their multi-variants), used by GeoSpatialUtil if shp is
+            passed as a list of vertices, default is None
         Returns
         -------
         rec : numpy.recarray
@@ -670,7 +678,7 @@ class GridIntersect:
             the shape intersects with
         """
         # query grid
-        shp = GeoSpatialUtil(shp).shapely
+        shp = GeoSpatialUtil(shp, shapetype=shapetype).shapely
 
         qresult = self.query_grid(shp)
         # filter result further if possible (only strtree and filter methods)
@@ -754,7 +762,6 @@ class GridIntersect:
                 tempnodes.append(node)
                 tempshapes.append(ixs)
             else:
-                # TODO: not sure if this is correct
                 tempshapes[-1] = shapely_geo.MultiPoint([tempshapes[-1], ixs])
 
         ixshapes = tempshapes
