@@ -1069,8 +1069,9 @@ class PlotCrossSection:
         markers = []
         for _, arr in plines.items():
             arr = np.array(arr)
-            arr = arr[arr[:, 0].argsort()]
-            linecol.append(arr)
+            # sort by travel time
+            arr = arr[arr[:, -1].argsort()]
+            linecol.append(arr[:, :-1])
             if marker is not None:
                 for xy in arr[::markerevery]:
                     markers.append(xy)

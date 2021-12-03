@@ -462,6 +462,7 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
     # check for scaling factor
     if not binary:
         if line.strip().lower().startswith("sfac"):
+            line_list = line_parse(line)
             sfac = float(line_list[1])
             line = file_handle.readline()
 

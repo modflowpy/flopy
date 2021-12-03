@@ -2681,9 +2681,7 @@ def intersect_modpath_with_crosssection(
     nppts = {}
 
     for cell, verts in projpts.items():
-        tcell = cell
-        while tcell >= ncpl:
-            tcell -= ncpl
+        tcell = cell % ncpl
         zmin = np.min(np.array(verts)[:, 1])
         zmax = np.max(np.array(verts)[:, 1])
         nmin = np.min(v_norm[tcell])
@@ -2807,7 +2805,7 @@ def reproject_modpath_to_crosssection(
                 rec[xp] = x
                 rec[yp] = y
                 pid = rec["particleid"][0]
-                pline = list(zip(rec[proj], rec[zp]))
+                pline = list(zip(rec[proj], rec[zp], rec["time"]))
                 if pid not in ptdict:
                     ptdict[pid] = pline
                 else:
@@ -2825,7 +2823,7 @@ def reproject_modpath_to_crosssection(
                 rec[xp] = x
                 rec[yp] = y
                 pid = rec["particleid"][0]
-                pline = list(zip(rec[proj], rec[zp]))
+                pline = list(zip(rec[proj], rec[zp], rec["time"]))
                 if pid not in ptdict:
                     ptdict[pid] = pline
                 else:
