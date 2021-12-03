@@ -56,10 +56,17 @@ class MFBlockHeader:
     """
 
     def __init__(
-        self, name, variable_strings, comment, simulation_data=None, path=None
+        self,
+        name,
+        variable_strings,
+        comment,
+        simulation_data=None,
+        path=None,
+        block=None,
     ):
         self.name = name
         self.variable_strings = variable_strings
+        self.block = block
         if not (
             (simulation_data is None and path is None)
             or (simulation_data is not None and path is not None)
@@ -103,6 +110,17 @@ class MFBlockHeader:
             self.blk_trailing_comment_path = ("blk_trailing_comment",)
             self.blk_post_comment_path = ("blk_post_comment",)
 
+    def __lt__(self, other):
+        transient_key = self.get_transient_key()
+        if transient_key is None:
+            return True
+        else:
+            other_key = other.get_transient_key()
+            if other_key is None:
+                return False
+            else:
+                return transient_key < other_key
+
     def build_header_variables(
         self,
         simulation_data,
@@ -132,7 +150,7 @@ class MFBlockHeader:
         if len(fixed_data) > 0:
             fixed_data = [tuple(fixed_data)]
         # create data object
-        new_data = MFBlock.data_factory(
+        new_data = self.block.data_factory(
             simulation_data,
             None,
             block_header_structure[0],
@@ -257,11 +275,14 @@ class MFBlockHeader:
             fd.write(str(entry.rstrip()))
         fd.write("\n")
 
-    def get_transient_key(self):
+    def get_transient_key(self, data_path=None):
         """Get transient key associated with this block header."""
         transient_key = None
         for index in range(0, len(self.data_items)):
             if self.data_items[index].structure.type != DatumType.keyword:
+                if data_path == self.data_items[index].path:
+                    # avoid infinite recursion
+                    return True
                 transient_key = self.data_items[index].get_data()
                 if isinstance(transient_key, np.recarray):
                     item_struct = self.data_items[index].structure
@@ -342,6 +363,7 @@ class MFBlock:
                 MFComment("", path, simulation_data, 0),
                 simulation_data,
                 path,
+                self,
             )
         ]
         self.structure = structure
@@ -378,8 +400,8 @@ class MFBlock:
         return data_str
 
     # return an MFScalar, MFList, or MFArray
-    @staticmethod
     def data_factory(
+        self,
         sim_data,
         model_or_sim,
         structure,
@@ -424,10 +446,17 @@ class MFBlock:
                 enable,
                 path,
                 dimensions,
+                self,
             )
         elif data_type == mfstructure.DataType.array_transient:
             trans_array = mfdataarray.MFTransientArray(
-                sim_data, model_or_sim, structure, enable, path, dimensions
+                sim_data,
+                model_or_sim,
+                structure,
+                enable,
+                path,
+                dimensions,
+                self,
             )
             if data is not None:
                 trans_array.set_data(data, key=0)
@@ -442,6 +471,7 @@ class MFBlock:
                 path,
                 dimensions,
                 package,
+                self,
             )
         elif data_type == mfstructure.DataType.list_transient:
             trans_list = mfdatalist.MFTransientList(
@@ -452,6 +482,7 @@ class MFBlock:
                 path,
                 dimensions,
                 package,
+                self,
             )
             if data is not None:
                 trans_list.set_data(data, key=0, autofill=True)
@@ -465,6 +496,7 @@ class MFBlock:
                 path,
                 dimensions,
                 package,
+                self,
             )
             if data is not None:
                 mult_list.set_data(data, key=0, autofill=True)
@@ -594,7 +626,7 @@ class MFBlock:
         return self.datasets[var_path[-1]]
 
     def _build_repeating_header(self, header_data):
-        if self._header_exists(header_data[0]):
+        if self.header_exists(header_data[0]):
             return
         if (
             len(self.block_headers[-1].data_items) == 1
@@ -607,6 +639,7 @@ class MFBlock:
                 MFComment("", self.path, self._simulation_data, 0),
                 self._simulation_data,
                 block_header_path,
+                self,
             )
             self.block_headers.append(block_header)
         else:
@@ -651,7 +684,7 @@ class MFBlock:
             else:
                 initial_val_path = initial_val
             try:
-                new_data = MFBlock.data_factory(
+                new_data = self.data_factory(
                     self._simulation_data,
                     self._model_or_sim,
                     dataset_struct,
@@ -765,6 +798,7 @@ class MFBlock:
         self.enabled = True
         if not self.loaded:
             self.block_headers = []
+        block_header.block = self
         self.block_headers.append(block_header)
 
         # process any header variable
@@ -1154,25 +1188,27 @@ class MFBlock:
             for repeating_dataset in repeating_datasets:
                 # resolve any missing block headers
                 self._add_missing_block_headers(repeating_dataset)
-            for block_header in self.block_headers:
+            for block_header in sorted(self.block_headers):
                 # write block
                 self._write_block(fd, block_header, ext_file_action)
-
         else:
             self._write_block(fd, self.block_headers[0], ext_file_action)
 
     def _add_missing_block_headers(self, repeating_dataset):
         for key in repeating_dataset.get_active_key_list():
-            if not self._header_exists(key[0]):
+            data = repeating_dataset.get_data(key)
+            if not self.header_exists(key[0]) and data is not None:
                 self._build_repeating_header([key[0]])
 
-    def _header_exists(self, key):
+    def header_exists(self, key, data_path=None):
         if not isinstance(key, list):
             comp_key_list = [key]
         else:
             comp_key_list = key
         for block_header in self.block_headers:
-            transient_key = block_header.get_transient_key()
+            transient_key = block_header.get_transient_key(data_path)
+            if transient_key is True:
+                return
             for comp_key in comp_key_list:
                 if transient_key is not None and transient_key == comp_key:
                     return True
@@ -1259,11 +1295,65 @@ class MFBlock:
         return repeating_datasets
 
     def _write_block(self, fd, block_header, ext_file_action):
-        # write block header
-        block_header.write_header(fd)
         transient_key = None
         if len(block_header.data_items) > 0:
             transient_key = block_header.get_transient_key()
+
+        # gather data sets to write
+        data_set_output = []
+        data_found = False
+        for key, dataset in self.datasets.items():
+            try:
+                if transient_key is None:
+                    if (
+                        self._simulation_data.verbosity_level.value
+                        >= VerbosityLevel.verbose.value
+                    ):
+                        print(
+                            f"        writing data {dataset.structure.name}..."
+                        )
+                    data_set_output.append(
+                        dataset.get_file_entry(ext_file_action=ext_file_action)
+                    )
+                    data_found = True
+                else:
+                    if (
+                        self._simulation_data.verbosity_level.value
+                        >= VerbosityLevel.verbose.value
+                    ):
+                        print(
+                            "        writing data {} ({}).."
+                            ".".format(dataset.structure.name, transient_key)
+                        )
+                    if dataset.repeating:
+                        output = dataset.get_file_entry(
+                            transient_key, ext_file_action=ext_file_action
+                        )
+                        if output is not None:
+                            data_set_output.append(output)
+                            data_found = True
+                    else:
+                        data_set_output.append(
+                            dataset.get_file_entry(
+                                ext_file_action=ext_file_action
+                            )
+                        )
+                        data_found = True
+            except MFDataException as mfde:
+                raise MFDataException(
+                    mfdata_except=mfde,
+                    model=self._container_package.model_name,
+                    package=self._container_package._get_pname(),
+                    message=(
+                        "Error occurred while writing data "
+                        f'"{dataset.structure.name}" in block '
+                        f'"{self.structure.name}" to file "{fd.name}"'
+                    ),
+                )
+        if not data_found:
+            return
+        # write block header
+        block_header.write_header(fd)
 
         if self.external_file_name is not None:
             # write block contents to external file
@@ -1293,51 +1383,9 @@ class MFBlock:
                 )
 
         # write data sets
-        for key, dataset in self.datasets.items():
-            try:
-                if transient_key is None:
-                    if (
-                        self._simulation_data.verbosity_level.value
-                        >= VerbosityLevel.verbose.value
-                    ):
-                        print(
-                            f"        writing data {dataset.structure.name}..."
-                        )
-                    fd.write(
-                        dataset.get_file_entry(ext_file_action=ext_file_action)
-                    )
-                else:
-                    if (
-                        self._simulation_data.verbosity_level.value
-                        >= VerbosityLevel.verbose.value
-                    ):
-                        print(
-                            "        writing data {} ({}).."
-                            ".".format(dataset.structure.name, transient_key)
-                        )
-                    if dataset.repeating:
-                        fd.write(
-                            dataset.get_file_entry(
-                                transient_key, ext_file_action=ext_file_action
-                            )
-                        )
-                    else:
-                        fd.write(
-                            dataset.get_file_entry(
-                                ext_file_action=ext_file_action
-                            )
-                        )
-            except MFDataException as mfde:
-                raise MFDataException(
-                    mfdata_except=mfde,
-                    model=self._container_package.model_name,
-                    package=self._container_package._get_pname(),
-                    message=(
-                        "Error occurred while writing data "
-                        f'"{dataset.structure.name}" in block '
-                        f'"{self.structure.name}" to file "{fd.name}"'
-                    ),
-                )
+        for output in data_set_output:
+            fd.write(output)
+
         # write trailing comments
         pth = block_header.blk_trailing_comment_path
         if pth in self._simulation_data.mfdata:

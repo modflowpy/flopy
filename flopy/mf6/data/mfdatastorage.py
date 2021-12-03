@@ -633,10 +633,14 @@ class DataStorage:
 
     def has_data(self, layer=None):
         ret_val = self._access_data(layer, False)
-        return ret_val is not None and ret_val != False
+        return ret_val is not None and ret_val is not False
 
-    def get_data(self, layer=None, apply_mult=True):
-        return self._access_data(layer, True, apply_mult=apply_mult)
+    def get_data(self, layer=None, apply_mult=True, block_exists=False):
+        data = self._access_data(layer, True, apply_mult=apply_mult)
+        if data is None and block_exists:
+            return []
+        else:
+            return data
 
     def _access_data(self, layer, return_data=False, apply_mult=True):
         layer_check = self._resolve_layer(layer)
@@ -2347,7 +2351,10 @@ class DataStorage:
                 ):
                     full_data = data_out
                 else:
-                    full_data[layer] = data_out
+                    if is_aux and full_data.shape == data_out.shape:
+                        full_data = data_out
+                    else:
+                        full_data[layer] = data_out
             if is_aux:
                 if full_data is not None:
                     all_none = False

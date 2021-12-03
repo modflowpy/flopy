@@ -82,7 +82,7 @@ class MFScalar(mfdata.MFData):
                     return np.int32
         return None
 
-    def has_data(self):
+    def has_data(self, key=None):
         """Returns whether this object has data associated with it."""
         try:
             return self._get_storage_obj().has_data()
@@ -771,16 +771,13 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
 
     def has_data(self, key=None):
         if key is None:
-            data_found = False
             for sto_key in self._data_storage.keys():
                 self.get_data_prep(sto_key)
-                data_found = data_found or super().has_data()
-                if data_found:
-                    break
+                if super().has_data():
+                    return True
         else:
             self.get_data_prep(key)
-            data_found = super().has_data()
-        return data_found
+            return super().has_data()
 
     def get_data(self, key=0, **kwargs):
         """Returns the data for stress period `key`.
@@ -852,7 +849,7 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
                         ext_file_action=ext_file_action
                     )
                     file_entry.append(text_entry)
-            if file_entry > 1:
+            if len(file_entry) > 1:
                 return "\n\n".join(file_entry)
             elif file_entry == 1:
                 return file_entry[0]
