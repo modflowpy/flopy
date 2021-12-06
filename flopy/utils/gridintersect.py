@@ -45,7 +45,6 @@ if shapely_warning is not None and not SHAPELY_GE_20:
                 )
             yield
 
-
 elif SHAPELY_LT_18 and NUMPY_GE_121:
 
     @contextlib.contextmanager
@@ -57,7 +56,6 @@ elif SHAPELY_LT_18 and NUMPY_GE_121:
                 DeprecationWarning,
             )
             yield
-
 
 else:
 
