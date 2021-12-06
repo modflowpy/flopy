@@ -421,7 +421,7 @@ class MFModel(PackageContainer, ModelInterface):
                 xcenters = None
                 ycenters = None
             else:
-                iverts = [list(i)[4:] for i in cell2d]
+                iverts = [list(filter((None).__ne__, i))[4:] for i in cell2d]
                 xcenters = dis.cell2d.array["xc"]
                 ycenters = dis.cell2d.array["yc"]
             vertices = dis.vertices.array

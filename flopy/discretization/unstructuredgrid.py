@@ -200,7 +200,8 @@ class UnstructuredGrid(Grid):
 
     @property
     def iverts(self):
-        return self._iverts
+        if self._iverts is not None:
+            return [list(filter((None).__ne__, i)) for i in self._iverts]
 
     @property
     def verts(self):
@@ -559,11 +560,11 @@ class UnstructuredGrid(Grid):
         yvertices = []
 
         # build xy vertex and cell center info
-        for iverts in self._iverts:
+        for iverts in self.iverts:
 
             xcellvert = []
             ycellvert = []
-            for ix in (iv for iv in iverts if iv is not None):
+            for ix in iverts:
                 xcellvert.append(vertexdict[ix][0])
                 ycellvert.append(vertexdict[ix][1])
 
