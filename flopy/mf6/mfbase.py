@@ -270,17 +270,23 @@ class MFFileMgmt:
     def strip_model_relative_path(self, model_name, path):
         """Strip out the model relative path part of `path`.  For internal
         FloPy use, not intended for end user."""
+        new_path = path
         if model_name in self.model_relative_path:
             model_rel_path = self.model_relative_path[model_name]
-            new_path = None
-            while path:
-                path, leaf = os.path.split(path)
-                if leaf != model_rel_path:
-                    if new_path:
-                        new_path = os.path.join(leaf, new_path)
-                    else:
-                        new_path = leaf
-            return new_path
+            if (
+                model_rel_path is not None
+                and len(model_rel_path) > 0
+                and model_rel_path != "."
+            ):
+                model_rel_path_lst = model_rel_path.split(os.path.sep)
+                path_lst = path.split(os.path.sep)
+                new_path = ""
+                for i, mrp in enumerate(model_rel_path_lst):
+                    if mrp != path_lst[i]:
+                        new_path = os.path.join(new_path, path_lst[i])
+                for rp in path_lst[len(model_rel_path_lst) :]:
+                    new_path = os.path.join(new_path, rp)
+        return new_path
 
     @staticmethod
     def unique_file_name(file_name, lookup):

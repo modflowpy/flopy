@@ -1548,6 +1548,12 @@ class DataStorage:
                         precision="double",
                     )
                 else:
+                    # make sure folder exists
+                    file_path = os.path.split(fp)[0]
+                    if not os.path.exists(file_path):
+                        os.makedirs(file_path)
+
+                    # create file
                     try:
                         fd = open(fp, "w")
                     except:

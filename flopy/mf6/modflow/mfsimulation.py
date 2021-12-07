@@ -1166,12 +1166,17 @@ class MFSimulation(PackageContainer):
         # update package file names and count
         for package in package_array:
             if package.package_type not in package_type_count:
-                package.filename = f"{name}.{package.package_type}"
+                file_name = f"{name}.{package.package_type}"
                 package_type_count[package.package_type] = 1
             else:
                 package_type_count[package.package_type] += 1
                 ptc = package_type_count[package.package_type]
-                package.filename = f"{name}_{ptc}.{package.package_type}"
+                file_name = f"{name}_{ptc}.{package.package_type}"
+            base_filepath = os.path.split(package.filename)[0]
+            if base_filepath != "":
+                # include existing relative path in new file name
+                file_name = os.path.join(base_filepath, file_name)
+            package.filename = file_name
 
     def _rename_exchange_file(self, package, new_filename):
         self._exchange_files[package.filename] = package
@@ -1264,10 +1269,12 @@ class MFSimulation(PackageContainer):
             self._ims_files[new_name] = self._ims_files.pop(package.filename)
             self._update_ims_solution_group(package.filename, new_name)
         if package.filename in self._ghost_node_files:
+            self._update_exg_files_gnc(package.filename, new_name)
             self._ghost_node_files[new_name] = self._ghost_node_files.pop(
                 package.filename
             )
         if package.filename in self._mover_files:
+            self._update_exg_files_mvr(package.filename, new_name)
             self._mover_files[new_name] = self._mover_files.pop(
                 package.filename
             )
@@ -2364,6 +2371,52 @@ class MFSimulation(PackageContainer):
                         if rec_item[index] == item:
                             return True
         return False
+
+    def _update_exg_files_gnc(self, gnc_filename, new_filename):
+        for exchange_file in self._exchange_files.values():
+            if (
+                hasattr(exchange_file, "gnc_filerecord")
+                and exchange_file.gnc_filerecord.has_data()
+            ):
+                try:
+                    gnc_file = exchange_file.gnc_filerecord.get_data()
+                except MFDataException as mfde:
+                    message = (
+                        "An error occurred while retrieving the ghost "
+                        "node file record from exchange file "
+                        '"{}".'.format(exchange_file.filename)
+                    )
+                    raise MFDataException(
+                        mfdata_except=mfde,
+                        package=exchange_file._get_pname(),
+                        message=message,
+                    )
+                if gnc_file[0][0] == gnc_filename:
+                    gnc_file[0][0] = new_filename
+                    exchange_file.gnc_filerecord.set_data(gnc_file)
+
+    def _update_exg_file_mvr(self, mvr_filename, new_filename):
+        for exchange_file in self._exchange_files.values():
+            if (
+                hasattr(exchange_file, "mvr_filerecord")
+                and exchange_file.mvr_filerecord.has_data()
+            ):
+                try:
+                    mvr_file = exchange_file.mvr_filerecord.get_data()[0][0]
+                except MFDataException as mfde:
+                    message = (
+                        "An error occurred while retrieving the mover "
+                        "file record from exchange file "
+                        '"{}".'.format(exchange_file.filename)
+                    )
+                    raise MFDataException(
+                        mfdata_except=mfde,
+                        package=exchange_file._get_pname(),
+                        message=message,
+                    )
+                if mvr_file[0][0] == mvr_filename:
+                    mvr_file[0][0] = new_filename
+                    exchange_file.mvr_filerecord.set_data(mvr_file)
 
     def plot(self, model_list=None, SelPackList=None, **kwargs):
         """
