@@ -583,6 +583,7 @@ def test_np001():
     }
     wel_package = ModflowGwfwel(
         model,
+        filename=f"well_folder\\{model_name}.wel",
         print_input=True,
         print_flows=True,
         save_flows=True,
@@ -613,7 +614,7 @@ def test_np001():
 
     riv_spd = {
         0: {
-            "filename": "riv.txt",
+            "filename": os.path.join("riv_folder", "riv.txt"),
             "data": [((0, 0, 9), 110, 90.0, 100.0, 1.0, 2.0, 3.0)],
         }
     }
@@ -686,6 +687,12 @@ def test_np001():
     assert (
         sim.simulation_data.max_columns_of_data == dis_package.ncol.get_data()
     )
+    # test package file with relative path to simulation path
+    wel_path = os.path.join(run_folder, "well_folder", f"{model_name}.wel")
+    assert os.path.exists(wel_path)
+    # test data file with relative path to simulation path
+    riv_path = os.path.join(run_folder, "riv_folder", "riv.txt")
+    assert os.path.exists(riv_path)
 
     # run simulation
     if run:
@@ -722,6 +729,17 @@ def test_np001():
     sim.set_all_data_external(external_data_folder="data")
     sim.write_simulation()
 
+    # test file with relative path to model relative path
+    wel_path = os.path.join(
+        run_folder, md_folder, "well_folder", f"{model_name}.wel"
+    )
+    assert os.path.exists(wel_path)
+    # test data file was recreated by set_all_data_external
+    riv_path = os.path.join(
+        run_folder, md_folder, "data", "np001_mod.riv_stress_period_data_1.txt"
+    )
+    assert os.path.exists(riv_path)
+
     assert (
         sim.simulation_data.max_columns_of_data == dis_package.ncol.get_data()
     )
@@ -746,7 +764,6 @@ def test_np001():
             outfile=outfile,
         )
 
-        # budget_frf = sim.simulation_data.mfdata[(model_name, "CBC", "RIV")]
         budget_frf = model.output.budget().get_data(text="RIV", full3D=False)
         assert array_util.riv_array_comp(budget_frf_valid, budget_frf)
 
@@ -861,6 +878,7 @@ def test_np001():
     well_spd = {0: [(-1, -1, -1, -2000.0), (0, 0, 7, -2.0)], 1: []}
     wel_package = ModflowGwfwel(
         model,
+        pname="wel_1",
         filename="file_rename.wel",
         print_input=True,
         print_flows=True,
@@ -868,7 +886,7 @@ def test_np001():
         maxbound=2,
         stress_period_data=well_spd,
     )
-    wel_package.write()
+    sim.write_simulation()
     found_begin = False
     found_end = False
     text_between_begin_and_end = False
@@ -892,7 +910,7 @@ def test_np001():
         spath,
         write_headers=False,
     )
-    wel = test_sim.get_model().wel
+    wel = test_sim.get_model().get_package("wel_1")
     wel._filename = "np001_spd_test.wel"
     wel.write()
     found_begin = False
@@ -1549,7 +1567,7 @@ def test005_advgw_tidal():
         (31.0, 0.0, -600.0, -400.0),
     ]
     ts_dict = {
-        "filename": "well-rates.ts",
+        "filename": os.path.join("well-rates", "well-rates.ts"),
         "timeseries": timeseries,
         "time_series_namerecord": [
             ("well_1_rate", "well_2_rate", "well_3_rate")
@@ -1931,6 +1949,10 @@ def test005_advgw_tidal():
     sim.set_all_data_external()
     sim.write_simulation()
 
+    # test time series data file with relative path to simulation path
+    ts_path = os.path.join(run_folder, "well-rates", "well-rates.ts")
+    assert os.path.exists(ts_path)
+
     # run simulation
     sim.run_simulation()
 
@@ -1951,22 +1973,24 @@ def test005_advgw_tidal():
     package_type_dict = {}
     for package in model.packagelist:
         if not package.package_type in package_type_dict:
-            assert package.filename == f"new_name.{package.package_type}"
+            filename = os.path.split(package.filename)[1]
+            assert filename == f"new_name.{package.package_type}"
             package_type_dict[package.package_type] = 1
     sim.write_simulation()
     name_file = os.path.join(run_folder, "new_name.nam")
     assert os.path.exists(name_file)
     dis_file = os.path.join(run_folder, "new_name.dis")
     assert os.path.exists(dis_file)
+    # test time series data file with relative path to simulation path
+    ts_path = os.path.join(run_folder, "well-rates", "new_name.ts")
+    assert os.path.exists(ts_path)
 
     sim.rename_all_packages("all_files_same_name")
     package_type_dict = {}
     for package in model.packagelist:
         if not package.package_type in package_type_dict:
-            assert (
-                package.filename
-                == f"all_files_same_name.{package.package_type}"
-            )
+            filename = os.path.split(package.filename)[1]
+            assert filename == f"all_files_same_name.{package.package_type}"
             package_type_dict[package.package_type] = 1
     assert sim._tdis_file.filename == "all_files_same_name.tdis"
     for ims_file in sim._ims_files.values():
@@ -1978,6 +2002,9 @@ def test005_advgw_tidal():
     assert os.path.exists(dis_file)
     tdis_file = os.path.join(run_folder, "all_files_same_name.tdis")
     assert os.path.exists(tdis_file)
+    # test time series data file with relative path to simulation path
+    ts_path = os.path.join(run_folder, "well-rates", "all_files_same_name.ts")
+    assert os.path.exists(ts_path)
 
     # load simulation
     sim_load = MFSimulation.load(
@@ -2844,13 +2871,14 @@ def test006_2models_gnc():
 
     # test exg delete
     newexgrecarray = exgrecarray[10:]
+    gnc_path = os.path.join("gnc", "test006_2models_gnc.gnc")
     exg_package = ModflowGwfgwf(
         sim,
         print_input=True,
         print_flows=True,
         save_flows=True,
         auxiliary="testaux",
-        gnc_filerecord="test006_2models_gnc.gnc",
+        gnc_filerecord=gnc_path,
         nexg=26,
         exchangedata=newexgrecarray,
         exgtype="gwf6-gwf6",
@@ -2865,7 +2893,7 @@ def test006_2models_gnc():
         print_flows=True,
         save_flows=True,
         auxiliary="testaux",
-        gnc_filerecord="test006_2models_gnc.gnc",
+        gnc_filerecord=gnc_path,
         nexg=36,
         exchangedata=exgrecarray,
         exgtype="gwf6-gwf6",
@@ -2879,6 +2907,7 @@ def test006_2models_gnc():
     new_gncrecarray = gncrecarray[10:]
     gnc_package = ModflowGwfgnc(
         sim,
+        filename=gnc_path,
         print_input=True,
         print_flows=True,
         numgnc=26,
@@ -2889,6 +2918,7 @@ def test006_2models_gnc():
 
     gnc_package = ModflowGwfgnc(
         sim,
+        filename=gnc_path,
         print_input=True,
         print_flows=True,
         numgnc=36,
@@ -2901,6 +2931,10 @@ def test006_2models_gnc():
 
     # write simulation to new location
     sim.write_simulation()
+
+    # test gnc file was created in correct location
+    gnc_full_path = os.path.join(run_folder, gnc_path)
+    assert os.path.exists(gnc_full_path)
 
     # run simulation
     if run:
@@ -2943,6 +2977,9 @@ def test006_2models_gnc():
         sim_path, "model2", "data", "model2.dis_botm.txt"
     )
     assert os.path.exists(ext_file_path_2)
+    # test gnc file was created in correct location
+    gnc_full_path = os.path.join(sim_path, gnc_path)
+    assert os.path.exists(gnc_full_path)
     if run:
         sim.run_simulation()
 
@@ -2954,6 +2991,9 @@ def test006_2models_gnc():
     sim.rename_all_packages("file_rename")
     sim.set_sim_path(rename_folder)
     sim.write_simulation()
+    # test gnc file was created in correct location
+    gnc_full_path = os.path.join(rename_folder, "gnc", "file_rename.gnc")
+    assert os.path.exists(gnc_full_path)
     if run:
         sim.run_simulation()
         sim.delete_output_files()
