@@ -913,12 +913,19 @@ class MFBlock:
                             print(
                                 f"        loading child package {package_info[0]}..."
                             )
+                        fname = package_info[1]
+                        if package_info[2] is not None:
+                            fname = os.path.join(package_info[2], fname)
+                        filemgr = self._simulation_data.mfpath
+                        fname = filemgr.strip_model_relative_path(
+                            self._model_or_sim.name, fname
+                        )
                         pkg = self._model_or_sim.load_package(
                             package_info[0],
-                            package_info[1],
+                            fname,
                             package_info[1],
                             True,
-                            package_info[2],
+                            "",
                             package_info[3],
                             self._container_package,
                         )
@@ -1038,12 +1045,19 @@ class MFBlock:
                             print(
                                 f"        loading child package {package_info[1]}..."
                             )
+                        fname = package_info[1]
+                        if package_info[2] is not None:
+                            fname = os.path.join(package_info[2], fname)
+                        filemgr = self._simulation_data.mfpath
+                        fname = filemgr.strip_model_relative_path(
+                            self._model_or_sim.name, fname
+                        )
                         pkg = self._model_or_sim.load_package(
                             package_info[0],
-                            package_info[1],
+                            fname,
                             package_info[1],
                             True,
-                            package_info[2],
+                            "",
                             package_info[3],
                             self._container_package,
                         )
@@ -1094,12 +1108,19 @@ class MFBlock:
                         print(
                             f"        loading child package {package_info[0]}..."
                         )
+                    fname = package_info[1]
+                    if package_info[2] is not None:
+                        fname = os.path.join(package_info[2], fname)
+                    filemgr = self._simulation_data.mfpath
+                    fname = filemgr.strip_model_relative_path(
+                        self._model_or_sim.name, fname
+                    )
                     pkg = self._model_or_sim.load_package(
                         package_info[0],
-                        package_info[1],
+                        fname,
                         None,
                         True,
-                        package_info[2],
+                        "",
                         package_info[3],
                         self._container_package,
                     )
@@ -1626,10 +1647,6 @@ class MFPackage(PackageContainer, PackageInterface):
                     message,
                     model_or_sim.simulation_data.debug,
                 )
-            # only store the file name.  model relative path handled
-            # internally
-            if model_or_sim.type.lower() == "model":
-                filename = os.path.split(filename)[-1]
             self._filename = MFFileMgmt.string_to_file_path(filename)
         self.path, self.structure = model_or_sim.register_package(
             self, not loading_package, pname is None, filename is None

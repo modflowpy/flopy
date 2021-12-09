@@ -1045,10 +1045,24 @@ class MFModel(PackageContainer, ModelInterface):
                 packages_data = packages.get_data()
                 if packages_data is not None:
                     for index, entry in enumerate(packages_data):
-                        old_package_name = os.path.split(entry[1])[1]
-                        packages_data[index][1] = os.path.join(
-                            path, old_package_name
-                        )
+                        # get package object associated with entry
+                        package = None
+                        if len(entry) >= 3:
+                            package = self.get_package(entry[2])
+                        if package is None:
+                            package = self.get_package(entry[0])
+                        if package is not None:
+                            # combine model relative path with package path
+                            packages_data[index][1] = os.path.join(
+                                path, package.filename
+                            )
+                        else:
+                            # package not found, create path based on
+                            # information in name file
+                            old_package_name = os.path.split(entry[1])[-1]
+                            packages_data[index][1] = os.path.join(
+                                path, old_package_name
+                            )
                     packages.set_data(packages_data)
                 # update files referenced from within packages
                 for package in self.packagelist:
@@ -1186,12 +1200,15 @@ class MFModel(PackageContainer, ModelInterface):
                 message=message,
             )
         try:
+            file_mgr = self.simulation_data.mfpath
+            model_rel_path = file_mgr.model_relative_path[self.name]
             # update namefile package data with new name
             new_rec_array = None
+            old_leaf = os.path.split(package.filename)[1]
             for item in package_data:
-                base, leaf = os.path.split(item[1])
-                if leaf == package.filename:
-                    item[1] = os.path.join(base, new_name)
+                leaf = os.path.split(item[1])[1]
+                if leaf == old_leaf:
+                    item[1] = os.path.join(model_rel_path, new_name)
 
                 if new_rec_array is None:
                     new_rec_array = np.rec.array(
@@ -1246,7 +1263,14 @@ class MFModel(PackageContainer, ModelInterface):
         package_type_count = {}
         for package in self.packagelist:
             if package.package_type not in package_type_count:
-                package.filename = f"{name}.{package.package_type}"
+                base_filename, leaf = os.path.split(package.filename)
+                new_fileleaf = f"{name}.{package.package_type}"
+                if base_filename != "":
+                    package.filename = os.path.join(
+                        base_filename, new_fileleaf
+                    )
+                else:
+                    package.filename = new_fileleaf
                 package_type_count[package.package_type] = 1
             else:
                 package_type_count[package.package_type] += 1
