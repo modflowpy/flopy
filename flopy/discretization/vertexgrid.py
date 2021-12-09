@@ -125,7 +125,20 @@ class VertexGrid(Grid):
 
     @property
     def iverts(self):
-        return [[t[0]] + list(t)[4:] for t in self._cell2d]
+        if self._cell2d is not None:
+            return [[t[0]] + list(t)[4:] for t in self.cell2d]
+        elif self._cell1d is not None:
+            return [[t[0]] + list(t)[3:] for t in self.cell1d]
+
+    @property
+    def cell1d(self):
+        if self._cell1d is not None:
+            return [list(filter((None).__ne__, t)) for t in self._cell1d]
+
+    @property
+    def cell2d(self):
+        if self._cell2d is not None:
+            return [list(filter((None).__ne__, t)) for t in self._cell2d]
 
     @property
     def verts(self):
@@ -342,7 +355,7 @@ class VertexGrid(Grid):
             zcenters = []
             zvertices = []
             vertexdict = {v[0]: [v[1], v[2], v[3]] for v in self._vertices}
-            for cell1d in self._cell1d:
+            for cell1d in self.cell1d:
                 cell1d = tuple(cell1d)
                 xcenters.append(cell1d[1])
                 ycenters.append(cell1d[2])
@@ -350,8 +363,7 @@ class VertexGrid(Grid):
 
                 vert_number = []
                 for i in cell1d[3:]:
-                    if i is not None:
-                        vert_number.append(int(i))
+                    vert_number.append(int(i))
 
                 xcellvert = []
                 ycellvert = []
@@ -367,15 +379,14 @@ class VertexGrid(Grid):
         else:
             vertexdict = {v[0]: [v[1], v[2]] for v in self._vertices}
             # build xy vertex and cell center info
-            for cell2d in self._cell2d:
+            for cell2d in self.cell2d:
                 cell2d = tuple(cell2d)
                 xcenters.append(cell2d[1])
                 ycenters.append(cell2d[2])
 
                 vert_number = []
                 for i in cell2d[4:]:
-                    if i is not None:
-                        vert_number.append(int(i))
+                    vert_number.append(int(i))
 
                 xcellvert = []
                 ycellvert = []
