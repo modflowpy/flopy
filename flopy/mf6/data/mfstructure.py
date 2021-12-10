@@ -891,7 +891,8 @@ class MFDataItemStructure:
 
     def __init__(self):
         self.file_name_keywords = {"filein": False, "fileout": False}
-        self.contained_keywords = {"file_name": True}
+        self.file_name_key_seq = {"fname": True}
+        self.contained_keywords = {"fname": True, "file": True, "tdis6": True}
         self.block_name = None
         self.name = None
         self.display_name = None
@@ -1151,11 +1152,16 @@ class MFDataItemStructure:
             )
         return description
 
+    def file_nam_in_nam_file(self):
+        for key, item in self.contained_keywords.items():
+            if self.name.lower().find(key) != -1:
+                return True
+
     def indicates_file_name(self):
         if self.name.lower() in self.file_name_keywords:
             return True
-        for key, item in self.contained_keywords.items():
-            if self.name.lower().find(key) != -1:
+        for key in self.file_name_key_seq.keys():
+            if key in self.name.lower():
                 return True
         return False
 
@@ -1415,6 +1421,7 @@ class MFDataStructure:
         self.num_data_items = len(data_item.data_items)
         self.record_within_record = False
         self.file_data = False
+        self.nam_file_data = False
         self.block_type = data_item.block_type
         self.block_variable = data_item.block_variable
         self.model_data = model_data
@@ -1545,6 +1552,9 @@ class MFDataStructure:
                             self.path,
                         )
                     if isinstance(item, MFDataItemStructure):
+                        self.nam_file_data = (
+                            self.nam_file_data or item.file_nam_in_nam_file()
+                        )
                         self.file_data = (
                             self.file_data or item.indicates_file_name()
                         )
@@ -1558,6 +1568,9 @@ class MFDataStructure:
                     # insert placeholder in array
                     self.data_item_structures.append(None)
                 if isinstance(item, MFDataItemStructure):
+                    self.nam_file_data = (
+                        self.nam_file_data or item.file_nam_in_nam_file()
+                    )
                     self.file_data = (
                         self.file_data or item.indicates_file_name()
                     )

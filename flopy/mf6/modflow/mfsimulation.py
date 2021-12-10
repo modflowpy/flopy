@@ -1990,7 +1990,7 @@ class MFSimulation(PackageContainer):
             return path, self.structure.name_file_struct_obj
         elif package.package_type.lower() == "tdis":
             self._tdis_file = package
-            self._set_timing_block(package.filename)
+            self._set_timing_block(package.quoted_filename)
             return (
                 path,
                 self.structure.package_struct_objs[

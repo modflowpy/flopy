@@ -431,6 +431,10 @@ class MFFileMgmt:
         else:
             file_path = path
 
+        # remove quote characters from file path
+        file_path = file_path.replace("'", "")
+        file_path = file_path.replace('"', "")
+
         if os.path.isabs(file_path):
             # path is an absolute path
             if move_abs_paths:
