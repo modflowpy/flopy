@@ -16,6 +16,7 @@ from ...utils.datautil import (
     PyListUtil,
     ArrayIndexIter,
     MultiList,
+    clean_filename,
 )
 from .mfdatautil import convert_data, MFComment
 from .mffileaccess import MFFileAccessArray, MFFileAccessList, MFFileAccess
@@ -2065,9 +2066,9 @@ class DataStorage:
                     layer,
                 )
             if arr_line[0].lower() == "open/close":
-                data_file = arr_line[1]
+                data_file = clean_filename(arr_line[1])
             else:
-                data_file = arr_line[0]
+                data_file = clean_filename(arr_line[0])
         elif isinstance(arr_line, dict):
             for key, value in arr_line.items():
                 if key.lower() == "factor":
@@ -2104,7 +2105,7 @@ class DataStorage:
                 if key.lower() == "data":
                     data = value
             if "filename" in arr_line:
-                data_file = arr_line["filename"]
+                data_file = clean_filename(arr_line["filename"])
 
         if data_file is None:
             message = (

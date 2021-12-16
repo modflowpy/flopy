@@ -10,6 +10,7 @@ from ..mfbase import (
 from ..data.mfstructure import DatumType
 from ..coordinates.modeldimensions import DataDimensions, DiscretizationType
 from ...datbase import DataInterface, DataType
+from ...utils import datautil
 from .mfdatastorage import DataStructureType
 from .mfdatautil import to_string
 from ...mbase import ModelInterface
@@ -598,7 +599,7 @@ class MFMultiDimVar(MFData):
         ext_file_path = file_mgmt.get_updated_path(
             layer_storage.fname, model_name, ext_file_action
         )
-        layer_storage.fname = ext_file_path
+        layer_storage.fname = datautil.clean_filename(ext_file_path)
         ext_format = ["OPEN/CLOSE", f"'{ext_file_path}'"]
         if storage.data_structure_type != DataStructureType.recarray:
             if layer_storage.factor is not None:

@@ -2164,6 +2164,13 @@ class MFFileAccessList(MFFileAccess):
                         data_item,
                         sub_amt=sub_amt,
                     )
+                    if (
+                        data_item.indicates_file_name()
+                        or data_item.file_nam_in_nam_file()
+                    ):
+                        data_converted = datautil.clean_filename(
+                            data_converted
+                        )
                     if add_to_last_line:
                         self._last_line_info[-1].append(
                             [data_index, data_item.type, 0]

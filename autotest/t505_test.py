@@ -403,7 +403,7 @@ def test_array():
         delc=5000.0,
         top=100.0,
         botm=[50.0, 0.0, -50.0, -100.0],
-        filename="{}.dis".format(model_name),
+        filename=f"{model_name} 1.dis",
     )
     ic_package = mf6.ModflowGwfic(
         model, strt=90.0, filename=f"{model_name}.ic"
@@ -526,9 +526,11 @@ def test_array():
         write_headers=False,
     )
     model = test_sim.get_model()
+    dis = model.get_package("dis")
     rcha = model.get_package("rcha")
     wel = model.get_package("wel")
     drn = model.get_package("drn")
+    assert os.path.split(dis.filename)[1] == f"{model_name} 1.dis"
     # do same tests as above
     val_irch = rcha.irch.array.sum(axis=(1, 2, 3))
     assert val_irch[0] == 4
@@ -767,8 +769,8 @@ def test_np001():
 
     oc_package = ModflowGwfoc(
         model,
-        budget_filerecord=[("np001_mod.cbc",)],
-        head_filerecord=[("np001_mod.hds",)],
+        budget_filerecord=[("np001_mod 1.cbc",)],
+        head_filerecord=[("np001_mod 1.hds",)],
         saverecord={
             0: [("HEAD", "ALL"), ("BUDGET", "ALL")],
             1: [],
@@ -803,7 +805,7 @@ def test_np001():
     # test saving a binary file with list data
     well_spd = {
         0: {
-            "filename": "wel0.bin",
+            "filename": "wel 0.bin",
             "binary": True,
             "data": [(0, 0, 4, -2000.0), (0, 0, 7, -2.0)],
         },
@@ -933,7 +935,7 @@ def test_np001():
         )
 
         # compare output to expected results
-        head_new = os.path.join(run_folder, "np001_mod.hds")
+        head_new = os.path.join(run_folder, "np001_mod 1.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
         assert pymake.compare_heads(
             None,
@@ -982,7 +984,7 @@ def test_np001():
         )
 
         # compare output to expected results
-        head_new = os.path.join(run_folder_new, "np001_mod.hds")
+        head_new = os.path.join(run_folder_new, "np001_mod 1.hds")
         outfile = os.path.join(run_folder_new, "head_compare.dat")
         assert pymake.compare_heads(
             None,
@@ -1217,13 +1219,13 @@ def test_np002():
     sim.register_ims_package(ims_package, [model.name])
 
     # get rid of top_data.txt so that a later test does not automatically pass
-    top_data_file = os.path.join(run_folder, "top_data.txt")
+    top_data_file = os.path.join(run_folder, "top data.txt")
     if os.path.isfile(top_data_file):
         os.remove(top_data_file)
     # test loading data to be stored in a file and loading data from a file
     # using the "dictionary" input format
     top = {
-        "filename": "top_data.txt",
+        "filename": "top data.txt",
         "factor": 1.0,
         "data": [
             100.0,

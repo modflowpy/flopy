@@ -852,7 +852,8 @@ class MFBlock:
                             f'        opening external file "{file_name}"...'
                         )
                     external_file_info = arr_line
-                    fd_block = open(os.path.join(root_path, arr_line[1]), "r")
+                    file_name = datautil.clean_filename(arr_line[1])
+                    fd_block = open(os.path.join(root_path, file_name), "r")
                     # read first line of external file
                     line = fd_block.readline()
                     arr_line = datautil.PyListUtil.split_data_line(line)
@@ -1516,6 +1517,8 @@ class MFPackage(PackageContainer, PackageInterface):
         String defining the package type
     filename : str
         Filename of file where this package is stored
+    quoted_filename : str
+        Filename with quotes around it when there is a space in the name
     pname : str
         Package name
     loading_package : bool
@@ -1647,7 +1650,9 @@ class MFPackage(PackageContainer, PackageInterface):
                     message,
                     model_or_sim.simulation_data.debug,
                 )
-            self._filename = MFFileMgmt.string_to_file_path(filename)
+            self._filename = MFFileMgmt.string_to_file_path(
+                datautil.clean_filename(filename)
+            )
         self.path, self.structure = model_or_sim.register_package(
             self, not loading_package, pname is None, filename is None
         )
@@ -1714,6 +1719,13 @@ class MFPackage(PackageContainer, PackageInterface):
         """Package's file name."""
         return self._filename
 
+    @property
+    def quoted_filename(self):
+        """Package's file name with quotes if there is a space."""
+        if " " in self._filename:
+            return f'"{self._filename}"'
+        return self._filename
+
     @filename.setter
     def filename(self, fname):
         """Package's file name."""
@@ -1722,6 +1734,7 @@ class MFPackage(PackageContainer, PackageInterface):
             and self.structure.file_type
             in self.parent_file._child_package_groups
         ):
+            fname = datautil.clean_filename(fname)
             try:
                 child_pkg_group = self.parent_file._child_package_groups[
                     self.structure.file_type
@@ -2164,7 +2177,9 @@ class MFPackage(PackageContainer, PackageInterface):
         """
         # open file
         try:
-            fd_input_file = open(self.get_file_path(), "r")
+            fd_input_file = open(
+                datautil.clean_filename(self.get_file_path()), "r"
+            )
         except OSError as e:
             if e.errno == errno.ENOENT:
                 message = "File {} of type {} could not be opened.".format(

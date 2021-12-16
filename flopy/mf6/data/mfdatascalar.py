@@ -4,6 +4,7 @@ from ..data.mfstructure import DatumType
 from ..data import mfdata
 from ..mfbase import ExtFileAction, MFDataException
 from ...datbase import DataType
+from ...utils.datautil import clean_filename
 from .mfdatautil import convert_data, to_string
 from .mffileaccess import MFFileAccessScalar
 from .mfdatastorage import DataStorage, DataStructureType, DataStorageType
@@ -164,7 +165,11 @@ class MFScalar(mfdata.MFData):
                         data = [data]
         else:
             if isinstance(data, str):
-                data = data.strip().split()[-1]
+                if self.structure.file_data or self.structure.nam_file_data:
+                    # clean up file name data
+                    data = clean_filename(data)
+                else:
+                    data = data.strip().split()[-1]
             else:
                 while (
                     isinstance(data, list)
