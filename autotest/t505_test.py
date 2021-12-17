@@ -908,6 +908,10 @@ def test_np001():
         ],
     )
 
+    cell_list = [(0, 0, 4), (0, 0, 9)]
+    out_file = os.path.join("temp", "inspect_test_np001.csv")
+    model.inspect_cells(cell_list, output_file_path=out_file)
+
     # make folder to save simulation
     sim.set_sim_path(run_folder)
 
@@ -2183,6 +2187,10 @@ def test005_advgw_tidal():
     # test time series data file with relative path to simulation path
     ts_path = os.path.join(run_folder, "well-rates", "well-rates.ts")
     assert os.path.exists(ts_path)
+
+    cell_list = [(2, 3, 2), (0, 4, 2), (0, 2, 4), (0, 5, 5), (0, 9, 9)]
+    out_file = os.path.join("temp", "inspect_AdvGW_tidal.csv")
+    model.inspect_cells(cell_list, output_file_path=out_file)
 
     # run simulation
     sim.run_simulation()
@@ -3521,6 +3529,10 @@ def test028_sfr():
     assert sfr_package.connectiondata.get_data()[2][1] == 1.0
     assert sfr_package.packagedata.get_data()[1][1].lower() == "none"
 
+    cell_list = [(0, 2, 3), (0, 3, 4), (0, 4, 5)]
+    out_file = os.path.join("temp", "inspect_test028_sfr.csv")
+    model.inspect_cells(cell_list, output_file_path=out_file)
+
     sim.set_sim_path(run_folder)
     sim.write_simulation()
     sim.load(
@@ -3851,16 +3863,16 @@ def test_transport():
 
 
 if __name__ == "__main__":
+    test_np001()
+    test028_sfr()
     test_array()
     test_multi_model()
-    test_np001()
     test_np002()
     test004_bcfss()
     test005_advgw_tidal()
     test006_2models_gnc()
     test006_gwf3_disv()
     test021_twri()
-    test028_sfr()
     test035_fhb()
     test050_circle_island()
     test_transport()
