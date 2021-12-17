@@ -2048,6 +2048,8 @@ class MFPackage(PackageContainer, PackageInterface):
 
                         # loop through each dataset
                         for key, value in main_data.items():
+                            if value is None:
+                                continue
                             if data_output.data_header is None:
                                 data_output.data_header = value.dtype.names
                             # loop through list data rows
