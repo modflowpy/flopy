@@ -3,6 +3,7 @@ import sys
 import errno
 import inspect
 import datetime
+import copy
 import numpy as np
 
 from .mfbase import PackageContainer, ExtFileAction, PackageContainerType
@@ -18,9 +19,10 @@ from .data.mfstructure import DatumType
 from .data import mfstructure, mfdata
 from ..utils import datautil
 from .data import mfdataarray, mfdatalist, mfdatascalar
+from .data.mfstructure import MFDataItemStructure
 from .coordinates import modeldimensions
 from ..pakbase import PackageInterface
-from .data.mfdatautil import MFComment
+from .data.mfdatautil import MFComment, cellids_equal, DataSearchOutput
 from ..utils.check import mf6check
 from .utils.output_util import MF6Output
 from ..mbase import ModelInterface
@@ -1982,6 +1984,271 @@ class MFPackage(PackageContainer, PackageInterface):
                                         dataset.structure.name,
                                     )
                                 )
+
+    def inspect_cells(self, cell_list, stress_period=None):
+        """
+        Inspect model cells.  Returns package data associated with cells.
+
+        Parameters
+        ----------
+        cell_list : list of tuples
+            List of model cells.  Each model cell is a tuple of integers.
+            ex: [(1,1,1), (2,4,3)]
+        stress_period : int
+            For transient data, only return data from this stress period.  If
+            not specified or None, all stress period data will be returned.
+
+        Returns
+        -------
+        output : array
+            Array containing inspection results
+
+        """
+        data_found = []
+
+        # loop through blocks
+        local_index_names = []
+        local_index_blocks = []
+        local_index_values = []
+        local_index_cellids = []
+        # loop through blocks in package
+        for block in self.blocks.values():
+            # loop through data in block
+            for dataset in block.datasets.values():
+                if isinstance(dataset, mfdatalist.MFList):
+                    # handle list data
+                    cellid_column = None
+                    local_index_name = None
+                    # loop through list data column definitions
+                    for index, data_item in enumerate(
+                        dataset.structure.data_item_structures
+                    ):
+                        if index == 0 and data_item.type == DatumType.integer:
+                            local_index_name = data_item.name
+                        # look for cellid column in list data row
+                        if isinstance(data_item, MFDataItemStructure) and (
+                            data_item.is_cellid or data_item.possible_cellid
+                        ):
+                            cellid_column = index
+                            break
+                    if cellid_column is not None:
+                        data_output = DataSearchOutput(dataset.path)
+                        local_index_vals = []
+                        local_index_cells = []
+                        # get data
+                        if isinstance(dataset, mfdatalist.MFTransientList):
+                            # data may be in multiple transient blocks, get
+                            # data from appropriate blocks
+                            main_data = dataset.get_data(stress_period)
+                            if stress_period is not None:
+                                main_data = {stress_period: main_data}
+                        else:
+                            # data is all in one block, get data
+                            main_data = {-1: dataset.get_data()}
+
+                        # loop through each dataset
+                        for key, value in main_data.items():
+                            if data_output.data_header is None:
+                                data_output.data_header = value.dtype.names
+                            # loop through list data rows
+                            for line in value:
+                                # loop through list of cells we are searching
+                                # for
+                                for cell in cell_list:
+                                    if isinstance(
+                                        line[cellid_column], tuple
+                                    ) and cellids_equal(
+                                        line[cellid_column], cell
+                                    ):
+                                        # save data found
+                                        data_output.data_entries.append(line)
+                                        data_output.data_entry_ids.append(cell)
+                                        data_output.data_entry_stress_period.append(
+                                            key
+                                        )
+                                        if datautil.DatumUtil.is_int(line[0]):
+                                            # save index data for further
+                                            # processing.  assuming index is
+                                            # always first entry
+                                            local_index_vals.append(line[0])
+                                            local_index_cells.append(cell)
+
+                        if (
+                            local_index_name is not None
+                            and len(local_index_vals) > 0
+                        ):
+                            # capture index lookups for scanning related data
+                            local_index_names.append(local_index_name)
+                            local_index_blocks.append(block.path[-1])
+                            local_index_values.append(local_index_vals)
+                            local_index_cellids.append(local_index_cells)
+                        if len(data_output.data_entries) > 0:
+                            data_found.append(data_output)
+                elif isinstance(dataset, mfdataarray.MFArray):
+                    # handle array data
+                    data_shape = copy.deepcopy(
+                        dataset.structure.data_item_structures[0].shape
+                    )
+                    if dataset.path[-1] == "top":
+                        # top is a special case where the two datasets
+                        # need to be combined to get the correct layer top
+                        model_grid = self.model_or_sim.modelgrid
+                        main_data = {-1: model_grid.top_botm}
+                        data_shape.append("nlay")
+                    else:
+                        if isinstance(dataset, mfdataarray.MFTransientArray):
+                            # data may be in multiple blocks, get data from
+                            # appropriate blocks
+                            main_data = dataset.get_data(stress_period)
+                            if stress_period is not None:
+                                main_data = {stress_period: main_data}
+                        else:
+                            # data is all in one block, get a process data
+                            main_data = {-1: dataset.get_data()}
+                    if main_data is None:
+                        continue
+                    data_output = DataSearchOutput(dataset.path)
+                    # loop through datasets
+                    for key, array_data in main_data.items():
+                        if array_data is None:
+                            continue
+                        # loop through list of cells we are searching for
+                        for cell in cell_list:
+                            if (
+                                len(data_shape) == 3
+                                or data_shape[0] == "nodes"
+                            ):
+                                # data is by cell
+                                if array_data.ndim == 3 and len(cell) == 3:
+                                    data_output.data_entries.append(
+                                        array_data[cell[0], cell[1], cell[2]]
+                                    )
+                                    data_output.data_entry_ids.append(cell)
+                                    data_output.data_entry_stress_period.append(
+                                        key
+                                    )
+                                elif array_data.ndim == 2 and len(cell) == 2:
+                                    data_output.data_entries.append(
+                                        array_data[cell[0], cell[1]]
+                                    )
+                                    data_output.data_entry_ids.append(cell)
+                                    data_output.data_entry_stress_period.append(
+                                        key
+                                    )
+                                elif array_data.ndim == 1 and len(cell) == 1:
+                                    data_output.data_entries.append(
+                                        array_data[cell[0]]
+                                    )
+                                    data_output.data_entry_ids.append(cell)
+                                    data_output.data_entry_stress_period.append(
+                                        key
+                                    )
+                                else:
+                                    if (
+                                        self.simulation_data.verbosity_level.value
+                                        >= VerbosityLevel.normal.value
+                                    ):
+                                        warning_str = (
+                                            'WARNING: CellID "{}" not same '
+                                            "number of dimensions as data "
+                                            "{}.".format(cell, dataset.path)
+                                        )
+                                        print(warning_str)
+                            elif len(data_shape) == 2:
+                                # get data based on row/col
+                                if array_data.ndim == 2 and len(cell) == 3:
+                                    data_output.data_entries.append(
+                                        array_data[cell[1], cell[2]]
+                                    )
+                                    data_output.data_entry_ids.append(cell)
+                                    data_output.data_entry_stress_period.append(
+                                        key
+                                    )
+                                elif array_data.ndim == 1 and len(cell) == 2:
+                                    data_output.data_entries.append(
+                                        array_data[cell[1]]
+                                    )
+                                    data_output.data_entry_ids.append(cell)
+                                    data_output.data_entry_stress_period.append(
+                                        key
+                                    )
+                    if len(data_output.data_entries) > 0:
+                        data_found.append(data_output)
+
+        if len(local_index_names) > 0:
+            # look for data that shares the index value with data found
+            # for example a shared well or reach number
+            for block in self.blocks.values():
+                # loop through data
+                for dataset in block.datasets.values():
+                    if isinstance(dataset, mfdatalist.MFList):
+                        data_item = dataset.structure.data_item_structures[0]
+                        data_output = DataSearchOutput(dataset.path)
+                        # loop through previous data found
+                        for (
+                            local_index_name,
+                            local_index_vals,
+                            cell_ids,
+                            local_block_name,
+                        ) in zip(
+                            local_index_names,
+                            local_index_values,
+                            local_index_cellids,
+                            local_index_blocks,
+                        ):
+                            if local_block_name == block.path[-1]:
+                                continue
+                            if (
+                                isinstance(data_item, MFDataItemStructure)
+                                and data_item.name == local_index_name
+                                and data_item.type == DatumType.integer
+                            ):
+                                # matching data index type found, get data
+                                if isinstance(
+                                    dataset, mfdatalist.MFTransientList
+                                ):
+                                    # data may be in multiple blocks, get data
+                                    # from appropriate blocks
+                                    main_data = dataset.get_data(stress_period)
+                                    if stress_period is not None:
+                                        main_data = {stress_period: main_data}
+                                else:
+                                    # data is all in one block
+                                    main_data = {-1: dataset.get_data()}
+                                # loop through the data
+                                for key, value in main_data.items():
+                                    if value is None:
+                                        continue
+                                    if data_output.data_header is None:
+                                        data_output.data_header = (
+                                            value.dtype.names
+                                        )
+                                    # loop through each row of data
+                                    for line in value:
+                                        # loop through the index values we are
+                                        # looking for
+                                        for index_val, cell_id in zip(
+                                            local_index_vals, cell_ids
+                                        ):
+                                            # try to match index values we are
+                                            # looking for to the data
+                                            if index_val == line[0]:
+                                                # save data found
+                                                data_output.data_entries.append(
+                                                    line
+                                                )
+                                                data_output.data_entry_ids.append(
+                                                    index_val
+                                                )
+                                                data_output.data_entry_cellids.append(
+                                                    cell_id
+                                                )
+                                                data_output.data_entry_stress_period.append(
+                                                    key
+                                                )
+                        if len(data_output.data_entries) > 0:
+                            data_found.append(data_output)
+        return data_found
 
     def remove(self):
         """Removes this package from the simulation/model it is currently a

@@ -20,6 +20,7 @@ from flopy.discretization.modeltime import ModelTime
 from ..mbase import ModelInterface
 from .utils.mfenums import DiscretizationType
 from .data import mfstructure
+from .data.mfdatautil import iterable
 from .utils.output_util import MF6Output
 from ..utils.check import mf6check
 
@@ -824,6 +825,118 @@ class MFModel(PackageContainer, ModelInterface):
         # TODO: fix jagged lists where appropriate
 
         return instance
+
+    def inspect_cells(
+        self, cell_list, stress_period=None, output_file_path=None
+    ):
+        """
+        Inspect model cells.  Returns model data associated with cells.
+
+        Parameters
+        ----------
+        cell_list : list of tuples
+            List of model cells.  Each model cell is a tuple of integers.
+            ex: [(1,1,1), (2,4,3)]
+        stress_period : int
+            For transient data qnly return data from this stress period.  If
+            not specified or None, all stress period data will be returned.
+        output_file_path: str
+            path to output file that will contain the inspection results
+
+        Returns
+        -------
+        output : dict
+            Dictionary containing inspection results
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> sim = flopy.mf6.MFSimulation.load("name", "mf6", "mf6.exe", ".")
+        >>> model = sim.get_model()
+        >>> inspect_list = [(2, 3, 2), (0, 4, 2), (0, 2, 4)]
+        >>> out_file = os.path.join("temp", "inspect_AdvGW_tidal.csv")
+        >>> model.inspect_cells(inspect_list, output_file_path=out_file)
+        """
+        output_by_package = {}
+        # loop through all packages
+        for pp in self.packagelist:
+            # call the package's "inspect_cells" method
+            package_output = pp.inspect_cells(cell_list, stress_period)
+            if len(package_output) > 0:
+                output_by_package[pp.package_name] = package_output
+        if len(output_by_package) > 0 and output_file_path is not None:
+            with open(output_file_path, "w") as fd:
+                # write document header
+                fd.write(f"Inspect cell results for model {self.name}\n")
+                output = []
+                for cell in cell_list:
+                    output.append(" ".join([str(i) for i in cell]))
+                output = ",".join(output)
+                fd.write(f"Model cells inspected,{output}\n\n")
+
+                for package_name, matches in output_by_package.items():
+                    fd.write(f"Results from {package_name} package\n")
+                    for search_output in matches:
+                        # write header line with data name
+                        fd.write(
+                            f",Results from "
+                            f"{search_output.path_to_data[-1]}\n"
+                        )
+                        # write data header
+                        if search_output.transient:
+                            fd.write(",stress_period/key")
+                        if search_output.data_header is not None:
+                            if len(search_output.data_entry_cellids) > 0:
+                                fd.write(",cellid")
+                            h_columns = ",".join(search_output.data_header)
+                            fd.write(f",{h_columns}\n")
+                        else:
+                            fd.write(f",cellid,data\n")
+                        # write data found
+                        for index, data_entry in enumerate(
+                            search_output.data_entries
+                        ):
+                            if search_output.transient:
+                                sp = search_output.data_entry_stress_period[
+                                    index
+                                ]
+                                fd.write(f",{sp}")
+                            if search_output.data_header is not None:
+                                if len(search_output.data_entry_cellids) > 0:
+                                    cells = search_output.data_entry_cellids[
+                                        index
+                                    ]
+                                    output = " ".join([str(i) for i in cells])
+                                    fd.write(f",{output}")
+                                fd.write(self._format_data_entry(data_entry))
+                            else:
+                                output = " ".join(
+                                    [
+                                        str(i)
+                                        for i in search_output.data_entry_ids[
+                                            index
+                                        ]
+                                    ]
+                                )
+                                fd.write(f",{output}")
+                                fd.write(self._format_data_entry(data_entry))
+                    fd.write(f"\n")
+        return output_by_package
+
+    @staticmethod
+    def _format_data_entry(data_entry):
+        output = ""
+        if iterable(data_entry, True):
+            for item in data_entry:
+                if isinstance(item, tuple):
+                    formatted = " ".join([str(i) for i in item])
+                    output = f"{output},{formatted}"
+                else:
+                    output = f"{output},{item}"
+            return f"{output}\n"
+        else:
+            return f",{data_entry}\n"
 
     def write(self, ext_file_action=ExtFileAction.copy_relative_paths):
         """
