@@ -17,7 +17,9 @@ def test_vtk_export_model_without_packages_names():
     test_setup = FlopyTestSetup(verbose=True, test_dirs=base_dir)
 
     name = "mymodel"
-    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=base_dir, exe_name="mf6")
+    sim = flopy.mf6.MFSimulation(
+        sim_name=name, sim_ws=base_dir, exe_name="mf6"
+    )
     tdis = flopy.mf6.ModflowTdis(sim)
     ims = flopy.mf6.ModflowIms(sim)
     gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)

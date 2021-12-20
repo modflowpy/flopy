@@ -2,10 +2,9 @@ import os
 import numpy as np
 import flopy
 
-model_ws = os.path.join("temp", "t058")
-# make the directory if it does not exist
-if not os.path.isdir(model_ws):
-    os.makedirs(model_ws, exist_ok=True)
+from ci_framework import base_test_dir, FlopyTestSetup
+
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 exe_names = {"mf6": "mf6", "mp7": "mp7"}
 run = True
@@ -15,7 +14,6 @@ for key in exe_names.keys():
         run = False
         break
 
-ws = model_ws
 nm = "ex01b_mf6"
 
 # model data
@@ -56,19 +54,22 @@ local = np.array(
 )
 
 
-def test_mf6():
-    # build and run MODPATH 7 with MODFLOW 6
-    build_mf6()
-
-
 def test_default_modpath():
+    model_ws = f"{base_dir}_test_default_modpath"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+    build_mf6(model_ws)
+
     mpnam = f"{nm}_mp_default"
     pg = flopy.modpath.ParticleGroup(particlegroupname="DEFAULT")
-    build_modpath(mpnam, pg)
+    build_modpath(model_ws, mpnam, pg)
     return
 
 
 def test_faceparticles_is1():
+    model_ws = f"{base_dir}_test_faceparticles_is1"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+    build_mf6(model_ws)
+
     mpnam = f"{nm}_mp_face_t1node"
     locs = []
     localx = []
@@ -87,11 +88,29 @@ def test_faceparticles_is1():
     pg = flopy.modpath.ParticleGroup(
         particlegroupname="T1NODEPG", particledata=p, filename=fpth
     )
-    build_modpath(mpnam, pg)
+    build_modpath(model_ws, mpnam, pg)
+
+    # set base file name
+    fpth0 = os.path.join(model_ws, "ex01b_mf6_mp_face_t1node.mpend")
+
+    # get list of node endpath files
+    epf = [
+        os.path.join(model_ws, name)
+        for name in os.listdir(model_ws)
+        if ".mpend" in name and "_face_" in name and "_t2a" not in name
+    ]
+    epf.remove(fpth0)
+
+    endpoint_compare(fpth0, epf)
+
     return
 
 
 def test_facenode_is3():
+    model_ws = f"{base_dir}_test_facenode_is2"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+    build_mf6(model_ws)
+
     mpnam = f"{nm}_mp_face_t3node"
     locs = []
     for i in range(nrow):
@@ -118,11 +137,15 @@ def test_facenode_is3():
     pg = flopy.modpath.ParticleGroupNodeTemplate(
         particlegroupname="T3NODEPG", particledata=p, filename=fpth
     )
-    build_modpath(mpnam, pg)
+    build_modpath(model_ws, mpnam, pg)
     return
 
 
 def test_facenode_is3a():
+    model_ws = f"{base_dir}_test_facenode_is3a"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+    build_mf6(model_ws)
+
     mpnam = f"{nm}_mp_face_t3anode"
     locsa = []
     for i in range(11):
@@ -156,11 +179,15 @@ def test_facenode_is3a():
     pg = flopy.modpath.ParticleGroupNodeTemplate(
         particlegroupname="T3ANODEPG", particledata=p, filename=fpth
     )
-    build_modpath(mpnam, pg)
+    build_modpath(model_ws, mpnam, pg)
     return
 
 
 def test_facenode_is2a():
+    model_ws = f"{base_dir}_test_facenode_is2a"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+    build_mf6(model_ws)
+
     mpnam = f"{nm}_mp_face_t2anode"
     locsa = [[0, 0, 0, 0, 10, ncol - 1]]
     locsb = [[0, 11, 0, 0, nrow - 1, ncol - 1]]
@@ -186,11 +213,15 @@ def test_facenode_is2a():
     pg = flopy.modpath.ParticleGroupNodeTemplate(
         particlegroupname="T2ANODEPG", particledata=p, filename=fpth
     )
-    build_modpath(mpnam, pg)
+    build_modpath(model_ws, mpnam, pg)
     return
 
 
 def test_cellparticles_is1():
+    model_ws = f"{base_dir}_test_cellparticles_is1"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+    build_mf6(model_ws)
+
     mpnam = f"{nm}_mp_cell_t1node"
     locs = []
     for k in range(nlay):
@@ -205,11 +236,29 @@ def test_cellparticles_is1():
     pg = flopy.modpath.ParticleGroup(
         particlegroupname="T1NODEPG", particledata=p, filename=fpth
     )
-    build_modpath(mpnam, pg)
+    build_modpath(model_ws, mpnam, pg)
+
+    # set base file name
+    fpth0 = os.path.join(model_ws, "ex01b_mf6_mp_cell_t1node.mpend")
+
+    # get list of node endpath files
+    epf = [
+        os.path.join(model_ws, name)
+        for name in os.listdir(model_ws)
+        if ".mpend" in name and "_cell_" in name and "_t2a" not in name
+    ]
+    epf.remove(fpth0)
+
+    endpoint_compare(fpth0, epf)
+
     return
 
 
 def test_cellparticleskij_is1():
+    model_ws = f"{base_dir}_test_cellparticleskij_is1"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+    build_mf6(model_ws)
+
     mpnam = f"{nm}_mp_cell_t1kij"
     locs = []
     for k in range(nlay):
@@ -223,11 +272,15 @@ def test_cellparticleskij_is1():
     pg = flopy.modpath.ParticleGroup(
         particlegroupname="T1KIJPG", particledata=p, filename=fpth
     )
-    build_modpath(mpnam, pg)
+    build_modpath(model_ws, mpnam, pg)
     return
 
 
 def test_cellnode_is3():
+    model_ws = f"{base_dir}_test_cellnode_is3"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+    build_mf6(model_ws)
+
     mpnam = f"{nm}_mp_cell_t3node"
     locs = []
     for k in range(nlay):
@@ -246,11 +299,15 @@ def test_cellnode_is3():
     pg = flopy.modpath.ParticleGroupNodeTemplate(
         particlegroupname="T3CELLPG", particledata=p, filename=fpth
     )
-    build_modpath(mpnam, pg)
+    build_modpath(model_ws, mpnam, pg)
     return
 
 
 def test_cellnode_is3a():
+    model_ws = f"{base_dir}_test_cellnode_is3a"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+    build_mf6(model_ws)
+
     mpnam = f"{nm}_mp_cell_t3anode"
     locsa = []
     for k in range(1):
@@ -283,11 +340,15 @@ def test_cellnode_is3a():
     pg = flopy.modpath.ParticleGroupNodeTemplate(
         particlegroupname="T3ACELLPG", particledata=p, filename=fpth
     )
-    build_modpath(mpnam, pg)
+    build_modpath(model_ws, mpnam, pg)
     return
 
 
 def test_cellnode_is2a():
+    model_ws = f"{base_dir}_test_cellnode_is2a"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+    build_mf6(model_ws)
+
     mpnam = f"{nm}_mp_cell_t2anode"
     locsa = [
         [0, 0, 0, 0, nrow - 1, ncol - 1],
@@ -307,39 +368,7 @@ def test_cellnode_is2a():
     pg = flopy.modpath.ParticleGroupLRCTemplate(
         particlegroupname="T2ACELLPG", particledata=p, filename=fpth
     )
-    build_modpath(mpnam, pg)
-    return
-
-
-def test_face_endpoint_output():
-    # set base file name
-    fpth0 = os.path.join(model_ws, "ex01b_mf6_mp_face_t1node.mpend")
-
-    # get list of node endpath files
-    epf = [
-        os.path.join(model_ws, name)
-        for name in os.listdir(model_ws)
-        if ".mpend" in name and "_face_" in name and "_t2a" not in name
-    ]
-    epf.remove(fpth0)
-
-    endpoint_compare(fpth0, epf)
-    return
-
-
-def test_cell_endpoint_output():
-    # set base file name
-    fpth0 = os.path.join(model_ws, "ex01b_mf6_mp_cell_t1node.mpend")
-
-    # get list of node endpath files
-    epf = [
-        os.path.join(model_ws, name)
-        for name in os.listdir(model_ws)
-        if ".mpend" in name and "_cell_" in name and "_t2a" not in name
-    ]
-    epf.remove(fpth0)
-
-    endpoint_compare(fpth0, epf)
+    build_modpath(model_ws, mpnam, pg)
     return
 
 
@@ -408,7 +437,7 @@ def endpoint_compare(fpth0, epf):
     return
 
 
-def build_mf6():
+def build_mf6(ws):
     """
     MODPATH 7 example 1 for MODFLOW 6
     """
@@ -492,7 +521,7 @@ def build_mf6():
         assert success, "mf6 model did not run"
 
 
-def build_modpath(mpn, particlegroups):
+def build_modpath(ws, mpn, particlegroups):
     # load the MODFLOW 6 model
     sim = flopy.mf6.MFSimulation.load("mf6mod", "mf6", "mf6", ws)
     gwf = sim.get_model(nm)
