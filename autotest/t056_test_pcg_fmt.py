@@ -15,7 +15,7 @@ pcg_fname = os.path.join(
 )
 
 
-def pcg_fmt_test():
+def test_pcg_fmt():
     # mf2k container - this will pass
     m2k = fp.modflow.Modflow(version="mf2k")
     m2k.pcg = fp.modflow.ModflowPcg.load(model=m2k, f=pcg_fname)
@@ -32,4 +32,4 @@ def pcg_fmt_test():
 
 
 if __name__ == "__main__":
-    pcg_fmt_test()
+    test_pcg_fmt()
