@@ -3,15 +3,11 @@ Bug discovered in LKT with multi-species.  Adding test to check this functionali
 """
 
 import os
-import sys
-import platform
 import numpy as np
 import flopy
+from ci_framework import base_test_dir, FlopyTestSetup
 
-# make the working directory
-tpth = os.path.join("temp", "t060")
-if not os.path.isdir(tpth):
-    os.makedirs(tpth, exist_ok=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 mfnwt_exe = "mfnwt"
 mt3d_usgs_exe = "mt3dusgs"
@@ -20,14 +16,19 @@ ismt3dusgs = flopy.which(mt3d_usgs_exe)
 
 
 def test_lkt_with_multispecies():
-    modelpth = tpth
+    model_ws = f"{base_dir}_test_gage_load_and_write"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     modelname = "lkttest"
     mfexe = "mfnwt"
     mtexe = "mt3dusgs"
 
     # Instantiate MODFLOW object in flopy
     mf = flopy.modflow.Modflow(
-        modelname=modelname, exe_name=mfexe, model_ws=modelpth, version="mfnwt"
+        modelname=modelname,
+        exe_name=mfexe,
+        model_ws=model_ws,
+        version="mfnwt",
     )
 
     Lx = 27500.0
@@ -17206,7 +17207,7 @@ def test_lkt_with_multispecies():
     mt = flopy.mt3d.Mt3dms(
         modflowmodel=mf,
         modelname=modelname,
-        model_ws=modelpth,
+        model_ws=model_ws,
         version="mt3d-usgs",
         namefile_ext="mtnam",
         exe_name=mtexe,
@@ -17327,7 +17328,7 @@ def test_lkt_with_multispecies():
     namfile = f"{modelname}.nam"
     mf = flopy.modflow.Modflow.load(
         namfile,
-        model_ws=tpth,
+        model_ws=model_ws,
         version="mfnwt",
         verbose=True,
         exe_name=mfnwt_exe,
@@ -17335,7 +17336,7 @@ def test_lkt_with_multispecies():
     namfile = f"{modelname}.mtnam"
     mt = flopy.mt3d.mt.Mt3dms.load(
         namfile,
-        model_ws=tpth,
+        model_ws=model_ws,
         verbose=True,
         version="mt3d-usgs",
         exe_name=mt3d_usgs_exe,

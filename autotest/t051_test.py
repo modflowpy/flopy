@@ -1,15 +1,16 @@
 import os
 import numpy as np
 import flopy
+from ci_framework import base_test_dir, FlopyTestSetup
 
-cpth = os.path.join("temp", "t051")
-# make the directory if it does not exist
-if not os.path.isdir(cpth):
-    os.makedirs(cpth, exist_ok=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def test_default_oc_stress_period_data():
-    m = flopy.modflow.Modflow(model_ws=cpth, verbose=True)
+    model_ws = f"{base_dir}_test_default_oc_stress_period_data"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
+    m = flopy.modflow.Modflow(model_ws=model_ws, verbose=True)
     dis = flopy.modflow.ModflowDis(m, nper=10, perlen=10.0, nstp=5)
     bas = flopy.modflow.ModflowBas(m)
     lpf = flopy.modflow.ModflowLpf(m, ipakcb=100)
@@ -28,7 +29,10 @@ def test_default_oc_stress_period_data():
 
 
 def test_mfcbc():
-    m = flopy.modflow.Modflow(verbose=True)
+    model_ws = f"{base_dir}_test_mfcbc"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
+    m = flopy.modflow.Modflow(verbose=True, model_ws=model_ws)
     dis = flopy.modflow.ModflowDis(m)
     bas = flopy.modflow.ModflowBas(m)
     lpf = flopy.modflow.ModflowLpf(m, ipakcb=100)
@@ -42,7 +46,7 @@ def test_mfcbc():
     nlay = 3
     nrow = 3
     ncol = 3
-    ml = flopy.modflow.Modflow(modelname="t1", model_ws=cpth, verbose=True)
+    ml = flopy.modflow.Modflow(modelname="t1", model_ws=model_ws, verbose=True)
     dis = flopy.modflow.ModflowDis(
         ml, nlay=nlay, nrow=nrow, ncol=ncol, top=0, botm=[-1.0, -2.0, -3.0]
     )
@@ -67,5 +71,5 @@ def test_mfcbc():
 
 
 if __name__ == "__main__":
-    # test_mfcbc()
+    test_mfcbc()
     test_default_oc_stress_period_data()

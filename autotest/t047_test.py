@@ -4,11 +4,9 @@ Test the gmg load and write with an external summary file
 import os
 import flopy
 from flopy.utils.recarray_utils import recarray
+from ci_framework import base_test_dir, FlopyTestSetup
 
-cpth = os.path.join("temp", "t047")
-# make the directory if it does not exist
-if not os.path.isdir(cpth):
-    os.makedirs(cpth, exist_ok=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def get_namefile_entries(fpth):
@@ -49,10 +47,12 @@ def get_namefile_entries(fpth):
 
 
 def test_gage():
+    model_ws = f"{base_dir}_test_gage"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     mnam = "gage_test"
 
-    m = flopy.modflow.Modflow(modelname=mnam, model_ws=cpth)
+    m = flopy.modflow.Modflow(modelname=mnam, model_ws=model_ws)
     dis = flopy.modflow.ModflowDis(m)
     spd = {
         (0, 0): ["print head"],
@@ -73,7 +73,7 @@ def test_gage():
     m.write_input()
 
     # check that the gage output units entries are in the name file
-    fpth = os.path.join(cpth, f"{mnam}.nam")
+    fpth = os.path.join(model_ws, f"{mnam}.nam")
     entries = get_namefile_entries(fpth)
     for idx, g in enumerate(gages):
         if g[0] < 0:
@@ -93,10 +93,12 @@ def test_gage():
 
 
 def test_gage_files():
+    model_ws = f"{base_dir}_test_gage_files"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     mnam = "gage_test_files"
 
-    m = flopy.modflow.Modflow(modelname=mnam, model_ws=cpth)
+    m = flopy.modflow.Modflow(modelname=mnam, model_ws=model_ws)
     dis = flopy.modflow.ModflowDis(m)
     spd = {
         (0, 0): ["print head"],
@@ -120,7 +122,7 @@ def test_gage_files():
     m.write_input()
 
     # check that the gage output file entries are in the name file
-    fpth = os.path.join(cpth, f"{mnam}.nam")
+    fpth = os.path.join(model_ws, f"{mnam}.nam")
     entries = get_namefile_entries(fpth)
     for idx, f in enumerate(files):
         found = False
@@ -142,10 +144,12 @@ def test_gage_files():
 
 
 def test_gage_filenames0():
+    model_ws = f"{base_dir}_test_gage_filenames0"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     mnam = "gage_test_filenames0"
 
-    m = flopy.modflow.Modflow(modelname=mnam, model_ws=cpth)
+    m = flopy.modflow.Modflow(modelname=mnam, model_ws=model_ws)
     dis = flopy.modflow.ModflowDis(m)
     spd = {
         (0, 0): ["print head"],
@@ -169,7 +173,7 @@ def test_gage_filenames0():
     m.write_input()
 
     # check that the gage output units entries are in the name file
-    fpth = os.path.join(cpth, f"{mnam}.nam")
+    fpth = os.path.join(model_ws, f"{mnam}.nam")
     entries = get_namefile_entries(fpth)
     for idx, g in enumerate(gages):
         if g[0] < 0:
@@ -189,10 +193,12 @@ def test_gage_filenames0():
 
 
 def test_gage_filenames():
+    model_ws = f"{base_dir}_test_gage_filenames"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     mnam = "gage_test_filenames"
 
-    m = flopy.modflow.Modflow(modelname=mnam, model_ws=cpth)
+    m = flopy.modflow.Modflow(modelname=mnam, model_ws=model_ws)
     dis = flopy.modflow.ModflowDis(m)
     spd = {
         (0, 0): ["print head"],
@@ -216,7 +222,7 @@ def test_gage_filenames():
     m.write_input()
 
     # check that the gage output file entries are in the name file
-    fpth = os.path.join(cpth, f"{mnam}.nam")
+    fpth = os.path.join(model_ws, f"{mnam}.nam")
     entries = get_namefile_entries(fpth)
     for idx, f in enumerate(filenames[1:]):
         found = False

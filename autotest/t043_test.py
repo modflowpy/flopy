@@ -2,7 +2,6 @@
 Test the observation process load and write
 """
 import os
-import shutil
 import filecmp
 import flopy
 import pymake
