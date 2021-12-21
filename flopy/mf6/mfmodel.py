@@ -848,9 +848,9 @@ class MFModel(PackageContainer, ModelInterface):
         output_file_path: str
             Path to output file that will contain the inspection results
         inspect_budget: bool
-            Inpect budget file
+            Inspect budget file
         inspect_dependent_var: bool
-            Inpect head file
+            Inspect head file
         Returns
         -------
         output : dict
