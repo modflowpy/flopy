@@ -20,7 +20,7 @@ from flopy.discretization.modeltime import ModelTime
 from ..mbase import ModelInterface
 from .utils.mfenums import DiscretizationType
 from .data import mfstructure
-from .data.mfdatautil import iterable
+from .data.mfdatautil import iterable, DataSearchOutput
 from .utils.output_util import MF6Output
 from ..utils.check import mf6check
 
@@ -827,7 +827,12 @@ class MFModel(PackageContainer, ModelInterface):
         return instance
 
     def inspect_cells(
-        self, cell_list, stress_period=None, output_file_path=None
+        self,
+        cell_list,
+        stress_period=None,
+        output_file_path=None,
+        inspect_budget=True,
+        inspect_dependent_var=True,
     ):
         """
         Inspect model cells.  Returns model data associated with cells.
@@ -841,8 +846,11 @@ class MFModel(PackageContainer, ModelInterface):
             For transient data qnly return data from this stress period.  If
             not specified or None, all stress period data will be returned.
         output_file_path: str
-            path to output file that will contain the inspection results
-
+            Path to output file that will contain the inspection results
+        inspect_budget: bool
+            Inpect budget file
+        inspect_dependent_var: bool
+            Inpect head file
         Returns
         -------
         output : dict
@@ -858,13 +866,106 @@ class MFModel(PackageContainer, ModelInterface):
         >>> out_file = os.path.join("temp", "inspect_AdvGW_tidal.csv")
         >>> model.inspect_cells(inspect_list, output_file_path=out_file)
         """
+        # handle no cell case
+        if cell_list is None or len(cell_list) == 0:
+            return None
+
         output_by_package = {}
         # loop through all packages
         for pp in self.packagelist:
             # call the package's "inspect_cells" method
             package_output = pp.inspect_cells(cell_list, stress_period)
             if len(package_output) > 0:
-                output_by_package[pp.package_name] = package_output
+                output_by_package[
+                    f"{pp.package_name} package"
+                ] = package_output
+        # get dependent variable
+        if inspect_dependent_var:
+            try:
+                if self.model_type == "gwf6":
+                    heads = self.output.head()
+                    name = "heads"
+                elif self.model_type == "gwt6":
+                    heads = self.output.concentration()
+                    name = "concentration"
+                else:
+                    inspect_dependent_var = False
+            except Exception:
+                inspect_dependent_var = False
+        if inspect_dependent_var and heads is not None:
+            kstp_kper_lst = heads.get_kstpkper()
+            data_output = DataSearchOutput((name,))
+            data_output.output = True
+            for kstp_kper in kstp_kper_lst:
+                head_array = np.array(heads.get_data(kstpkper=kstp_kper))
+                # flatten output data in disv and disu cases
+                if len(cell_list[0]) == 2:
+                    head_array = head_array[0, :, :]
+                elif len(cell_list[0]) == 1:
+                    head_array = head_array[0, 0, :]
+                # find data matches
+                self.match_array_cells(
+                    cell_list,
+                    head_array.shape,
+                    head_array,
+                    kstp_kper,
+                    data_output,
+                )
+            if len(data_output.data_entries) > 0:
+                output_by_package[f"{name} output"] = [data_output]
+
+        # get model dimensions
+        model_shape = self.modelgrid.shape
+
+        # get budgets
+        if inspect_budget:
+            try:
+                bud = self.output.budget()
+            except Exception:
+                inspect_budget = False
+        if inspect_budget and bud is not None:
+            kstp_kper_lst = bud.get_kstpkper()
+            rec_names = bud.get_unique_record_names()
+            budget_matches = []
+            for rec_name in rec_names:
+                # clean up binary string name
+                string_name = str(rec_name)[3:-1].strip()
+                data_output = DataSearchOutput((string_name,))
+                data_output.output = True
+                for kstp_kper in kstp_kper_lst:
+                    budget_array = np.array(
+                        bud.get_data(
+                            kstpkper=kstp_kper,
+                            text=rec_name,
+                            full3D=True,
+                        )
+                    )
+                    if len(budget_array.shape) == 4:
+                        # get rid of 4th "time" dimension
+                        budget_array = budget_array[0, :, :, :]
+                    # flatten output data in disv and disu cases
+                    if len(cell_list[0]) == 2:
+                        budget_array = budget_array[0, :, :]
+                    elif len(cell_list[0]) == 1:
+                        budget_array = budget_array[0, :]
+                    # find data matches
+                    if budget_array.shape != model_shape:
+                        # no support yet for different shaped budgets like
+                        # flow_ja_face
+                        continue
+
+                    self.match_array_cells(
+                        cell_list,
+                        budget_array.shape,
+                        budget_array,
+                        kstp_kper,
+                        data_output,
+                    )
+                if len(data_output.data_entries) > 0:
+                    budget_matches.append(data_output)
+            if len(budget_matches) > 0:
+                output_by_package["budget output"] = budget_matches
+
         if len(output_by_package) > 0 and output_file_path is not None:
             with open(output_file_path, "w") as fd:
                 # write document header
@@ -876,7 +977,7 @@ class MFModel(PackageContainer, ModelInterface):
                 fd.write(f"Model cells inspected,{output}\n\n")
 
                 for package_name, matches in output_by_package.items():
-                    fd.write(f"Results from {package_name} package\n")
+                    fd.write(f"Results from {package_name}\n")
                     for search_output in matches:
                         # write header line with data name
                         fd.write(
@@ -885,7 +986,10 @@ class MFModel(PackageContainer, ModelInterface):
                         )
                         # write data header
                         if search_output.transient:
-                            fd.write(",stress_period/key")
+                            if search_output.output:
+                                fd.write(",stress_period,time_step")
+                            else:
+                                fd.write(",stress_period/key")
                         if search_output.data_header is not None:
                             if len(search_output.data_entry_cellids) > 0:
                                 fd.write(",cellid")
@@ -901,7 +1005,10 @@ class MFModel(PackageContainer, ModelInterface):
                                 sp = search_output.data_entry_stress_period[
                                     index
                                 ]
-                                fd.write(f",{sp}")
+                                if search_output.output:
+                                    fd.write(f",{sp[1]},{sp[0]}")
+                                else:
+                                    fd.write(f",{sp}")
                             if search_output.data_header is not None:
                                 if len(search_output.data_entry_cellids) > 0:
                                     cells = search_output.data_entry_cellids[
@@ -923,6 +1030,59 @@ class MFModel(PackageContainer, ModelInterface):
                                 fd.write(self._format_data_entry(data_entry))
                     fd.write(f"\n")
         return output_by_package
+
+    def match_array_cells(
+        self, cell_list, data_shape, array_data, key, data_output
+    ):
+        # loop through list of cells we are searching for
+        for cell in cell_list:
+            if len(data_shape) == 3 or data_shape[0] == "nodes":
+                # data is by cell
+                if array_data.ndim == 3 and len(cell) == 3:
+                    data_output.data_entries.append(
+                        array_data[cell[0], cell[1], cell[2]]
+                    )
+                    data_output.data_entry_ids.append(cell)
+                    data_output.data_entry_stress_period.append(key)
+                elif array_data.ndim == 2 and len(cell) == 2:
+                    data_output.data_entries.append(
+                        array_data[cell[0], cell[1]]
+                    )
+                    data_output.data_entry_ids.append(cell)
+                    data_output.data_entry_stress_period.append(key)
+                elif array_data.ndim == 1 and len(cell) == 1:
+                    data_output.data_entries.append(array_data[cell[0]])
+                    data_output.data_entry_ids.append(cell)
+                    data_output.data_entry_stress_period.append(key)
+                else:
+                    if (
+                        self.simulation_data.verbosity_level.value
+                        >= VerbosityLevel.normal.value
+                    ):
+                        warning_str = (
+                            'WARNING: CellID "{}" not same '
+                            "number of dimensions as data "
+                            "{}.".format(cell, data_output.path_to_data)
+                        )
+                        print(warning_str)
+            elif len(data_shape) == 2:
+                # get data based on ncpl/lay
+                if array_data.ndim == 2 and len(cell) == 2:
+                    data_output.data_entries.append(
+                        array_data[cell[0], cell[1]]
+                    )
+                    data_output.data_entry_ids.append(cell)
+                    data_output.data_entry_stress_period.append(key)
+                elif array_data.ndim == 1 and len(cell) == 1:
+                    data_output.data_entries.append(array_data[cell[0]])
+                    data_output.data_entry_ids.append(cell)
+                    data_output.data_entry_stress_period.append(key)
+            elif len(data_shape) == 1:
+                # get data based on nodes
+                if len(cell) == 1 and array_data.ndim == 1:
+                    data_output.data_entries.append(array_data[cell[0]])
+                    data_output.data_entry_ids.append(cell)
+                    data_output.data_entry_stress_period.append(key)
 
     @staticmethod
     def _format_data_entry(data_entry):

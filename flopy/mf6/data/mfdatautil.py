@@ -248,6 +248,7 @@ class DataSearchOutput:
         self.data_entry_cellids = []
         self.data_entry_stress_period = []
         self.data_entries = []
+        self.output = False
 
     @property
     def transient(self):

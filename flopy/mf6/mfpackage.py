@@ -2114,66 +2114,9 @@ class MFPackage(PackageContainer, PackageInterface):
                     for key, array_data in main_data.items():
                         if array_data is None:
                             continue
-                        # loop through list of cells we are searching for
-                        for cell in cell_list:
-                            if (
-                                len(data_shape) == 3
-                                or data_shape[0] == "nodes"
-                            ):
-                                # data is by cell
-                                if array_data.ndim == 3 and len(cell) == 3:
-                                    data_output.data_entries.append(
-                                        array_data[cell[0], cell[1], cell[2]]
-                                    )
-                                    data_output.data_entry_ids.append(cell)
-                                    data_output.data_entry_stress_period.append(
-                                        key
-                                    )
-                                elif array_data.ndim == 2 and len(cell) == 2:
-                                    data_output.data_entries.append(
-                                        array_data[cell[0], cell[1]]
-                                    )
-                                    data_output.data_entry_ids.append(cell)
-                                    data_output.data_entry_stress_period.append(
-                                        key
-                                    )
-                                elif array_data.ndim == 1 and len(cell) == 1:
-                                    data_output.data_entries.append(
-                                        array_data[cell[0]]
-                                    )
-                                    data_output.data_entry_ids.append(cell)
-                                    data_output.data_entry_stress_period.append(
-                                        key
-                                    )
-                                else:
-                                    if (
-                                        self.simulation_data.verbosity_level.value
-                                        >= VerbosityLevel.normal.value
-                                    ):
-                                        warning_str = (
-                                            'WARNING: CellID "{}" not same '
-                                            "number of dimensions as data "
-                                            "{}.".format(cell, dataset.path)
-                                        )
-                                        print(warning_str)
-                            elif len(data_shape) == 2:
-                                # get data based on row/col
-                                if array_data.ndim == 2 and len(cell) == 3:
-                                    data_output.data_entries.append(
-                                        array_data[cell[1], cell[2]]
-                                    )
-                                    data_output.data_entry_ids.append(cell)
-                                    data_output.data_entry_stress_period.append(
-                                        key
-                                    )
-                                elif array_data.ndim == 1 and len(cell) == 2:
-                                    data_output.data_entries.append(
-                                        array_data[cell[1]]
-                                    )
-                                    data_output.data_entry_ids.append(cell)
-                                    data_output.data_entry_stress_period.append(
-                                        key
-                                    )
+                        self.model_or_sim.match_array_cells(
+                            cell_list, data_shape, array_data, key, data_output
+                        )
                     if len(data_output.data_entries) > 0:
                         data_found.append(data_output)
 
