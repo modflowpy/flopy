@@ -386,6 +386,11 @@ def test006_gwf3():
         success, buff = sim.run_simulation()
         assert success, f"simulation {sim.name} rerun did not run"
 
+        # inspect cells
+        cell_list = [(0,), (7,), (14,)]
+        out_file = os.path.join("temp", "inspect_test006_gwf3.csv")
+        model.inspect_cells(cell_list, output_file_path=out_file)
+
         budget_obj = bf.CellBudgetFile(expected_cbc_file_a, precision="double")
         budget_fjf_valid = np.array(
             budget_obj.get_data(text="    FLOW JA FACE", full3D=True)
