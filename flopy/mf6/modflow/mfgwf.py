@@ -91,7 +91,7 @@ class ModflowGwf(mfmodel.MFModel):
         save_flows=None,
         newtonoptions=None,
         packages=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             simulation,

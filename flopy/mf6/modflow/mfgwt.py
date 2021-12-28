@@ -85,7 +85,7 @@ class ModflowGwt(mfmodel.MFModel):
         print_flows=None,
         save_flows=None,
         packages=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             simulation,
