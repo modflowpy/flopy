@@ -781,7 +781,7 @@ def create_packages():
             model_param_list.insert(0, "version='mf6'")
             model_param_list.insert(0, "model_nam_file=None")
             model_param_list.insert(0, "modelname='model'")
-            model_param_list.append("**kwargs")
+            model_param_list.append("**kwargs,")
             init_string_model = build_init_string(
                 init_string_model, model_param_list
             )
@@ -811,7 +811,7 @@ def create_packages():
                 "model_nam_file=model_nam_file,\n{}"
                 "version=version, exe_name=exe_name,\n{}"
                 "model_rel_path=model_rel_path,\n{}"
-                "**kwargs"
+                "**kwargs,"
                 ")\n".format(
                     mparent_init_string,
                     model_name,
