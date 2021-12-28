@@ -64,11 +64,19 @@ def clean_class_string(name):
     return name
 
 
-def build_dfn_string(dfn_list):
+def build_dfn_string(dfn_list, header):
     dfn_string = "    dfn = ["
     line_length = len(dfn_string)
     leading_spaces = " " * line_length
     first_di = True
+
+    # process header
+    dfn_string = f'{dfn_string}\n{leading_spaces}["header", '
+    for key, value in header.items():
+        if key == "multi-package":
+            dfn_string = f'{dfn_string}\n{leading_spaces} "multi-package", '
+    dfn_string = f"{dfn_string}],\n{leading_spaces}"
+
     # process all data items
     for data_item in dfn_list:
         line_length += 1
@@ -343,6 +351,7 @@ def create_packages():
             "",
             sim_struct.name_file_struct_obj.dfn_list,
             sim_struct.name_file_struct_obj.file_type,
+            sim_struct.name_file_struct_obj.header,
         )
     )
     for package in sim_struct.package_struct_objs.values():
@@ -354,6 +363,7 @@ def create_packages():
                 "",
                 package.dfn_list,
                 package.file_type,
+                package.header,
             )
         )
     for package in sim_struct.utl_struct_objs.values():
@@ -365,6 +375,7 @@ def create_packages():
                 "utl",
                 package.dfn_list,
                 package.file_type,
+                package.header,
             )
         )
     for model_key, model in sim_struct.model_struct_objs.items():
@@ -375,6 +386,7 @@ def create_packages():
                 model_key,
                 model.name_file_struct_obj.dfn_list,
                 model.name_file_struct_obj.file_type,
+                model.name_file_struct_obj.header,
             )
         )
         for package in model.package_struct_objs.values():
@@ -385,6 +397,7 @@ def create_packages():
                     model_key,
                     package.dfn_list,
                     package.file_type,
+                    package.header,
                 )
             )
 
@@ -411,7 +424,7 @@ def create_packages():
         set_param_list = []
         class_vars = []
         template_gens = []
-        dfn_string = build_dfn_string(package[3])
+        dfn_string = build_dfn_string(package[3], package[5])
         package_abbr = clean_class_string(
             f"{clean_class_string(package[2])}{package[0].file_type}"
         ).lower()

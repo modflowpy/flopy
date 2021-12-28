@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on October 29, 2021 21:09:57 UTC
+# FILE created on December 22, 2021 17:36:26 UTC
 from .. import mfmodel
 from ..data.mfdatautil import ListTemplateGenerator, ArrayTemplateGenerator
 
@@ -91,7 +91,7 @@ class ModflowGwf(mfmodel.MFModel):
         save_flows=None,
         newtonoptions=None,
         packages=None,
-        **kwargs,
+        **kwargs
     ):
         super().__init__(
             simulation,
@@ -101,7 +101,7 @@ class ModflowGwf(mfmodel.MFModel):
             version=version,
             exe_name=exe_name,
             model_rel_path=model_rel_path,
-            **kwargs,
+            **kwargs
         )
 
         self.name_file.list.set_data(list)

@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on October 29, 2021 21:09:57 UTC
+# FILE created on December 22, 2021 17:36:26 UTC
 from .. import mfpackage
 
 
@@ -37,13 +37,16 @@ class ModflowGwtadv(mfpackage.MFPackage):
 
     dfn = [
         [
+            "header",
+        ],
+        [
             "block options",
             "name scheme",
             "type string",
             "valid central upstream tvd",
             "reader urword",
             "optional true",
-        ]
+        ],
     ]
 
     def __init__(
