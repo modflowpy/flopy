@@ -186,6 +186,15 @@ class Gridgen:
         If true, Gridgen's GRID_TO_USGDATA command will connect layers
         where intermediate layers are inactive.
         (default is False)
+    **kwargs
+        verical_smoothing_level : int
+            maximum level difference between two vertically adjacent cells.
+            Adjust with caution, as adjustments can cause unexpected results
+            to simulated flows
+        horizontal_smoothing_level : int
+            maximum level difference between two horizontally adjacent cells.
+            Adjust with caution, as adjustments can cause unexpected results
+            to simulated flows
 
     Notes
     -----
@@ -201,6 +210,7 @@ class Gridgen:
         exe_name="gridgen",
         surface_interpolation="replicate",
         vertical_pass_through=False,
+        **kwargs,
     ):
         self.dis = dis
         if isinstance(dis, ModflowGwfdis):
@@ -241,6 +251,12 @@ class Gridgen:
         if vertical_pass_through:
             self.vertical_pass_through = "True"
 
+        self.smoothing_level_vertical = kwargs.pop(
+            "smoothing_level_vertical", 1
+        )
+        self.smoothing_level_horizontal = kwargs.pop(
+            "smoothing_level_horizontal", 1
+        )
         # Set up a blank _active_domain list with None for each layer
         self._addict = {}
         self._active_domain = []
@@ -1855,6 +1871,8 @@ class Gridgen:
             s += "\n"
 
         s += "  SMOOTHING = full\n"
+        s += f"  SMOOTHING_LEVEL_VERTICAL = {self.smoothing_level_vertical}\n"
+        s += f"  SMOOTHING_LEVEL_HORIZONTAL = {self.smoothing_level_horizontal}\n"
 
         for k in range(self.nlay):
             if self.surface_interpolation[k] == "ASCIIGRID":
