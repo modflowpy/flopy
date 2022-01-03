@@ -201,7 +201,7 @@ class UnstructuredGrid(Grid):
     @property
     def iverts(self):
         if self._iverts is not None:
-            return [list(filter((None).__ne__, i)) for i in self._iverts]
+            return [[ivt for ivt in t if ivt is not None] for t in self._iverts]
 
     @property
     def verts(self):

@@ -353,6 +353,10 @@ class Grid:
     def idomain(self):
         return copy.deepcopy(self._idomain)
 
+    @idomain.setter
+    def idomain(self, idomain):
+        self._idomain = idomain
+
     @property
     def ncpl(self):
         raise NotImplementedError("must define ncpl in child class")
