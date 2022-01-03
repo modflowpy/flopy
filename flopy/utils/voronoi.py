@@ -236,7 +236,7 @@ class VoronoiGrid:
             verts, iverts = tri2vor(tri, **kwargs)
         else:
             raise TypeError(
-                 "The tri argument must be of type flopy.utils.Triangle"
+                "The tri argument must be of type flopy.utils.Triangle"
             )
         self.points = points
         self.verts = verts
