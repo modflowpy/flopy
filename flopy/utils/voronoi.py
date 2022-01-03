@@ -73,8 +73,7 @@ def tri2vor(tri, **kwargs):
 
     """
     import_optional_dependency(
-        "scipy.spatial",
-        error_message="Voronoi requires SciPy.",
+        "scipy.spatial", error_message="Voronoi requires SciPy.",
     )
     from scipy.spatial import Voronoi
 
@@ -90,10 +89,12 @@ def tri2vor(tri, **kwargs):
     tri_verts_unique = np.unique(tri_verts, axis=0)
     if tri_verts.shape != tri_verts_unique.shape:
         npoints_unique = tri_verts_unique.shape[0]
-        errmsg = (f"There are duplicate points in the triangular mesh. "
-                  f"These can be caused by overlapping regions, holes, and "
-                  f"refinement features.  The triangular mesh has {npoints} "
-                  f"points but only {npoints_unique} are unique.")
+        errmsg = (
+            f"There are duplicate points in the triangular mesh. "
+            f"These can be caused by overlapping regions, holes, and "
+            f"refinement features.  The triangular mesh has {npoints} "
+            f"points but only {npoints_unique} are unique."
+        )
         raise Exception(errmsg)
 
     # construct the voronoi grid
@@ -194,9 +195,7 @@ def tri2vor(tri, **kwargs):
         vor_verts = np.array(vor_verts)
         for icell in range(len(vor_iverts)):
             iverts_cell = vor_iverts[icell]
-            vor_iverts[icell] = get_sorted_vertices(
-                iverts_cell, vor_verts
-            )
+            vor_iverts[icell] = get_sorted_vertices(iverts_cell, vor_verts)
 
     return vor_verts, vor_iverts
 
