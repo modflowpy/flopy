@@ -82,7 +82,7 @@ jobs:
         echo "if black check fails run"
         echo "  black ./flopy"
         echo "and then commit the changes."
-        black --check ./flopy
+        black --check --diff ./flopy
 
     - name: Run flake8
       run: |

@@ -133,12 +133,16 @@ class VertexGrid(Grid):
     @property
     def cell1d(self):
         if self._cell1d is not None:
-            return [list(filter((None).__ne__, t)) for t in self._cell1d]
+            return [
+                [ivt for ivt in t if ivt is not None] for t in self._cell2d
+            ]
 
     @property
     def cell2d(self):
         if self._cell2d is not None:
-            return [list(filter((None).__ne__, t)) for t in self._cell2d]
+            return [
+                [ivt for ivt in t if ivt is not None] for t in self._cell2d
+            ]
 
     @property
     def verts(self):
