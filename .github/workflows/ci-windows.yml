@@ -82,15 +82,14 @@ jobs:
       uses: conda-incubator/setup-miniconda@v2.1.1
       with:
         python-version: ${{ matrix.python-version }}
-        mamba-version: "*"
         channels: conda-forge
         auto-update-conda: true
         activate-environment: flopy
         use-only-tar-bz2: true
 
-    - name: Add packages to flopy environment using mamba
+    - name: Add packages to flopy environment using conda
       run: |
-        mamba env update --name flopy --file etc/environment.yml
+        conda env update --name flopy --file etc/environment.yml
 
     - name: Upgrade pip and install wheel
       run: |
