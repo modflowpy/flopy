@@ -1,4 +1,5 @@
 # --------------------- gwf ts attributes ---------------------
+# flopy multi-package
 
 block attributes
 name time_series_namerecord

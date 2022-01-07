@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on October 29, 2021 21:09:57 UTC
+# FILE created on December 22, 2021 17:36:26 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator, ArrayTemplateGenerator
 
@@ -82,6 +82,9 @@ class ModflowGwfsto(mfpackage.MFPackage):
     dfn_file_name = "gwf-sto.dfn"
 
     dfn = [
+        [
+            "header",
+        ],
         [
             "block options",
             "name save_flows",

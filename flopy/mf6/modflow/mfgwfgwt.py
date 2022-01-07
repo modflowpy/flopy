@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on October 29, 2021 21:09:57 UTC
+# FILE created on December 22, 2021 17:36:26 UTC
 from .. import mfpackage
 
 
@@ -37,7 +37,11 @@ class ModflowGwfgwt(mfpackage.MFPackage):
     _package_type = "gwfgwt"
     dfn_file_name = "exg-gwfgwt.dfn"
 
-    dfn = []
+    dfn = [
+        [
+            "header",
+        ],
+    ]
 
     def __init__(
         self,
