@@ -1,4 +1,4 @@
-name: flopy continuous integration
+name: flopy Windows CI
 
 on:
   schedule:
@@ -50,11 +50,10 @@ jobs:
   flopyCI_windows:
     name: autotests
     needs: [flopy_setup]
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
-        os: windows-latest
         python-version: [3.9, 3.8, 3.7]
     defaults:
       run:
