@@ -15,7 +15,7 @@ jobs:
 
   flopy_setup:
     name: standard installation
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     strategy:
       fail-fast: false
     defaults:
@@ -47,72 +47,18 @@ jobs:
         python -c "import flopy; print(flopy.__version__)"
 
 
-  flopy_lint:
-    name: linting
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-    defaults:
-      run:
-        shell: bash
-
-    steps:
-    # check out repo
-    - name: Checkout flopy repo
-      uses: actions/checkout@v2.3.4
-
-    - name: Setup Python 3.8
-      uses: actions/setup-python@v2.2.2
-      with:
-        python-version: 3.9
-
-    - name: Print python version
-      run: |
-        python --version
-
-    - name: Install Python 3.9 packages
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r etc/requirements.pip.txt
-
-    - name: Run black
-      run: |
-        echo "if black check fails run"
-        echo "  black ./flopy"
-        echo "and then commit the changes."
-        black --check --diff ./flopy
-
-    - name: Run flake8
-      run: |
-        flake8 --count --show-source --exit-zero ./flopy
-
-    - name: Run pylint
-      run: |
-        pylint --jobs=2 --errors-only --exit-zero ./flopy
-
-  flopyCI:
+  flopyCI_windows:
     name: autotests
-    needs: [flopy_setup, flopy_lint]
+    needs: [flopy_setup]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: windows-latest
         python-version: [3.9, 3.8, 3.7]
-        run-type: [std]
-        test-pth: [""]
-        include:
-          - os: ubuntu-latest
-            python-version: 3.9
-            run-type: nb
-            test-path: run_notebooks.py
-          - os: ubuntu-latest
-            python-version: 3.9
-            run-type: script
-            test-path: run_scripts.py
     defaults:
       run:
-        shell: bash
+        shell: bash -l {0}
 
     steps:
     # check out repo
@@ -122,24 +68,35 @@ jobs:
     - name: Get branch name
       uses: nelonoel/branch-name@v1.0.1
 
-    - name: Setup Python
-      uses: actions/setup-python@v2.2.2
+    - name: Cache Miniconda
+      uses: actions/cache@v2.1.0
+      env:
+        # Increase this value to reset cache if environment.yml has changed
+        CACHE_NUMBER: 3
+      with:
+        path: ~/conda_pkgs_dir
+        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.run-type }}-${{ env.CACHE_NUMBER }}-${{ hashFiles('etc/environment.yml') }}
+
+    # Standard python fails on windows without GDAL installation
+    # Using custom bash shell ("shell: bash -l {0}") with Miniconda
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.1.1
       with:
         python-version: ${{ matrix.python-version }}
+        mamba-version: "*"
+        channels: conda-forge
+        auto-update-conda: true
+        activate-environment: flopy
+        use-only-tar-bz2: true
+
+    - name: Add packages to flopy environment using mamba
+      run: |
+        mamba env update --name flopy --file etc/environment.yml
 
     - name: Upgrade pip and install wheel
       run: |
         python -m pip install --upgrade pip
         pip install wheel
-
-    - name: Install Python packages on Linux and MacOS
-      run: |
-        pip install -r etc/requirements.full.pip.txt
-
-    - name: Add jupyter and jupytext to notebooks run
-      if: matrix.run-type == 'nb'
-      run: |
-        pip install jupyter jupytext
 
     - name: Install pymake, xmipy, and flopy
       run: |
@@ -152,21 +109,14 @@ jobs:
       run: |
         pytest -v ci_prepare.py
 
-    - name: Add executables directory to path on Linux and MacOS
+    - name: Add executables directory to path on Windows
       run: |
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        echo "C:\Users\runneradmin\.local\bin" >> $GITHUB_PATH
 
     - name: Run pytest on autotest scripts
-      if: matrix.run-type == 'std'
       working-directory: ./autotest
       run: |
         pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
-
-    - name: Run pytest on scripts and notebooks
-      if: matrix.run-type != 'std'
-      working-directory: ./autotest
-      run: |
-        pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml ${{ matrix.test-path }}
 
     - name: Print coverage report before upload
       working-directory: ./autotest
