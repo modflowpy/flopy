@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on October 29, 2021 21:09:57 UTC
+# FILE created on December 22, 2021 17:36:26 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator
 
@@ -46,6 +46,9 @@ class ModflowGwfic(mfpackage.MFPackage):
 
     dfn = [
         [
+            "header",
+        ],
+        [
             "block griddata",
             "name strt",
             "type double precision",
@@ -53,7 +56,7 @@ class ModflowGwfic(mfpackage.MFPackage):
             "reader readarray",
             "layered true",
             "default_value 1.0",
-        ]
+        ],
     ]
 
     def __init__(

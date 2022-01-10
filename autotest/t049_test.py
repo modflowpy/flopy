@@ -1,19 +1,11 @@
 # Test loading of MODFLOW and MT3D models that come with MT3D distribution
 import os
-import flopy
 import numpy as np
 import matplotlib.pyplot as plt
+import flopy
+from ci_framework import base_test_dir, FlopyTestSetup
 
-try:
-    import pymake
-except ImportError:
-    print("could not import pymake")
-    pymake = False
-
-cpth = os.path.join("temp", "t049")
-# make the directory if it does not exist
-if not os.path.isdir(cpth):
-    os.makedirs(cpth, exist_ok=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 mf2005_exe = "mf2005"
 v = flopy.which(mf2005_exe)
@@ -27,17 +19,22 @@ if v is None or v2 is None:
 
 
 def test_modpath():
+    model_ws = f"{base_dir}_test_modpath"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     pth = os.path.join("..", "examples", "data", "freyberg")
     mfnam = "freyberg.nam"
 
-    lpth = os.path.join(cpth, "test_mp")
-
     m = flopy.modflow.Modflow.load(
-        mfnam, model_ws=pth, verbose=True, exe_name=mf2005_exe
+        mfnam,
+        model_ws=pth,
+        verbose=True,
+        exe_name=mf2005_exe,
+        check=False,
     )
     assert m.load_fail is False
 
-    m.change_model_ws(lpth)
+    m.change_model_ws(model_ws)
     m.write_input()
 
     if run:
@@ -47,7 +44,10 @@ def test_modpath():
     # create the forward modpath file
     mpnam = "freybergmp"
     mp = flopy.modpath.Modpath6(
-        mpnam, exe_name=mpth_exe, modflowmodel=m, model_ws=lpth
+        mpnam,
+        exe_name=mpth_exe,
+        modflowmodel=m,
+        model_ws=model_ws,
     )
     mpbas = flopy.modpath.Modpath6Bas(
         mp,
@@ -72,7 +72,10 @@ def test_modpath():
 
     mpnam = "freybergmpp"
     mpp = flopy.modpath.Modpath6(
-        mpnam, exe_name=mpth_exe, modflowmodel=m, model_ws=lpth
+        mpnam,
+        exe_name=mpth_exe,
+        modflowmodel=m,
+        model_ws=model_ws,
     )
     mpbas = flopy.modpath.Modpath6Bas(
         mpp,
@@ -97,8 +100,8 @@ def test_modpath():
 
     # load modpath output files
     if run and success:
-        endfile = os.path.join(lpth, mp.sim.endpoint_file)
-        pthfile = os.path.join(lpth, mpp.sim.pathline_file)
+        endfile = os.path.join(model_ws, mp.sim.endpoint_file)
+        pthfile = os.path.join(model_ws, mpp.sim.pathline_file)
 
         # load the endpoint data
         try:
@@ -118,7 +121,7 @@ def test_modpath():
             len(plines) == 576
         ), "there are not 576 particle pathlines in file"
 
-        eval_pathline_plot(lpth)
+        eval_pathline_plot(model_ws)
 
     return
 
@@ -185,13 +188,16 @@ def eval_pathline_plot(lpth):
 def test_pathline_plot_xc():
     from matplotlib.collections import LineCollection
 
+    model_ws = f"{base_dir}_test_pathline_plot_xc"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     # test with multi-layer example
-    model_ws = os.path.join("..", "examples", "data", "mp6")
+    load_ws = os.path.join("..", "examples", "data", "mp6")
 
     ml = flopy.modflow.Modflow.load(
-        "EXAMPLE.nam", model_ws=model_ws, exe_name=mf2005_exe
+        "EXAMPLE.nam", model_ws=load_ws, exe_name=mf2005_exe
     )
-    ml.change_model_ws(os.path.join(".", "temp"))
+    ml.change_model_ws(model_ws)
     ml.write_input()
     ml.run_model()
 
@@ -199,7 +205,7 @@ def test_pathline_plot_xc():
         modelname="ex6",
         exe_name=mpth_exe,
         modflowmodel=ml,
-        model_ws=os.path.join(".", "temp"),
+        model_ws=model_ws,
         dis_file=f"{ml.name}.DIS",
         head_file=f"{ml.name}.hed",
         budget_file=f"{ml.name}.bud",
@@ -219,7 +225,7 @@ def test_pathline_plot_xc():
 
     mp.run_model(silent=False)
 
-    pthobj = flopy.utils.PathlineFile(os.path.join("temp", "ex6.mppth"))
+    pthobj = flopy.utils.PathlineFile(os.path.join(model_ws, "ex6.mppth"))
     well_pathlines = pthobj.get_destination_pathline_data(
         dest_cells=[(4, 12, 12)]
     )
@@ -238,11 +244,18 @@ def test_pathline_plot_xc():
 
 
 def test_mp5_load():
+    model_ws = f"{base_dir}_test_mf5_load"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     # load the base freyberg model
-    pth = os.path.join("..", "examples", "data", "freyberg")
+    load_ws = os.path.join("..", "examples", "data", "freyberg")
     # load the modflow files for model map
     m = flopy.modflow.Modflow.load(
-        "freyberg.nam", model_ws=pth, check=False, verbose=True, forgive=False
+        "freyberg.nam",
+        model_ws=load_ws,
+        check=False,
+        verbose=True,
+        forgive=False,
     )
 
     # load the pathline data
@@ -296,7 +309,7 @@ def test_mp5_load():
         assert False, "could not plot grid and ibound"
 
     try:
-        fpth = os.path.join(cpth, "mp5.pathline.png")
+        fpth = os.path.join(model_ws, "mp5.pathline.png")
         plt.savefig(fpth, dpi=300)
         plt.close()
     except:
@@ -415,8 +428,8 @@ def eval_timeseries(file):
 
 
 if __name__ == "__main__":
-    test_modpath()
     test_pathline_plot_xc()
+    test_modpath()
     test_mp5_load()
     test_mp5_timeseries_load()
     test_mp6_timeseries_load()

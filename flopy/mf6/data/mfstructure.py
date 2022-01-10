@@ -46,9 +46,6 @@ class Dfn:
         folder containing package definition files (dfn)
     common : path
         file containing common information
-    multi_package : dict
-        contains the names of all packages that are allowed to have multiple
-        instances in a model/simulation
 
     Methods
     -------
@@ -70,31 +67,6 @@ class Dfn:
         # directories
         self.dfndir = os.path.join(".", "dfn")
         self.common = os.path.join(self.dfndir, "common.dfn")
-        # FIX: Transport - multi packages are hard coded
-        self.multi_package = {
-            "exggwfgwf": 0,
-            "gwfchd": 0,
-            "gwfwel": 0,
-            "gwfdrn": 0,
-            "gwfriv": 0,
-            "gwfghb": 0,
-            "gwfrch": 0,
-            "gwfrcha": 0,
-            "gwfevt": 0,
-            "gwfevta": 0,
-            "gwfmaw": 0,
-            "gwfsfr": 0,
-            "gwflak": 0,
-            "gwfuzf": 0,
-            "lnfcgeo": 0,
-            "lnfrgeo": 0,
-            "lnfngeo": 0,
-            "utlobs": 0,
-            "utlts": 0,
-            "utltas": 0,
-            "utlspc": 0,
-            "utlspca": 0,
-        }
 
     def get_file_list(self):
         file_order = [
@@ -192,8 +164,6 @@ class DfnPackage(Dfn):
 
     Methods
     -------
-    multi_package_support : () : bool
-        returns flag for multi-package support
     get_block_structure_dict : (path : tuple, common : bool, model_file :
             bool) : dict
         returns a dictionary of block structure information for the package
@@ -225,9 +195,6 @@ class DfnPackage(Dfn):
         )
         self.dfn_list = package.dfn
 
-    def multi_package_support(self):
-        return self.package.package_abbr in self.multi_package
-
     def get_block_structure_dict(self, path, common, model_file):
         block_dict = {}
         dataset_items_in_block = {}
@@ -235,7 +202,13 @@ class DfnPackage(Dfn):
         keystring_items_needed_dict = {}
         current_block = None
 
-        for dfn_entry in self.dfn_list:
+        # get header dict
+        header_dict = {}
+        for item in self.dfn_list[0]:
+            if item == "multi-package":
+                header_dict["multi-package"] = True
+
+        for dfn_entry in self.dfn_list[1:]:
             # load next data item
             new_data_item_struct = MFDataItemStructure()
             for next_line in dfn_entry:
@@ -389,7 +362,7 @@ class DfnPackage(Dfn):
                         )
                         block_dataset_struct.add_item(block_data_item_struct)
                         current_block.add_dataset(block_dataset_struct)
-        return block_dict
+        return block_dict, header_dict
 
     def _new_dataset(
         self,
@@ -451,8 +424,6 @@ class DfnFile(Dfn):
 
     Methods
     -------
-    multi_package_support : () : bool
-        returns flag for multi-package support
     dict_by_name : {} : dict
         returns a dictionary of data item descriptions from the dfn file with
         the data item name as the dictionary key
@@ -492,11 +463,6 @@ class DfnFile(Dfn):
         self.dataset_items_needed_dict = {}
         self.dfn_list = []
 
-    def multi_package_support(self):
-        base_file = os.path.splitext(self.file)[0]
-        base_file = base_file.replace("-", "")
-        return base_file in self.multi_package
-
     def dict_by_name(self):
         name_dict = {}
         name = None
@@ -520,6 +486,19 @@ class DfnFile(Dfn):
         current_block = None
         dfn_fp = open(self._file_path, "r")
 
+        # load header
+        header_dict = {}
+        while True:
+            line = dfn_fp.readline()
+            if len(line) < 1 or line[0] != "#":
+                break
+            line_lst = line.strip().split()
+            if len(line_lst) > 2 and line_lst[1] == "flopy":
+                # load flopy data
+                if line_lst[2] == "multi-package":
+                    header_dict["multi-package"] = True
+
+        # load file definitions
         for line in dfn_fp:
             if self._valid_line(line):
                 # load next data item
@@ -697,7 +676,7 @@ class DfnFile(Dfn):
                             )
                             current_block.add_dataset(block_dataset_struct)
         dfn_fp.close()
-        return block_dict
+        return block_dict, header_dict
 
     def _new_dataset(
         self,
@@ -2097,10 +2076,10 @@ class MFInputFileStructure:
         self.model_file = model_file  # file belongs to a specific model
         self.read_as_arrays = False
 
-        self.multi_package_support = dfn_file.multi_package_support()
-        self.blocks = dfn_file.get_block_structure_dict(
+        self.blocks, self.header = dfn_file.get_block_structure_dict(
             self.path, common, model_file
         )
+        self.multi_package_support = "multi-package" in self.header
         self.dfn_list = dfn_file.dfn_list
 
     def is_valid(self):

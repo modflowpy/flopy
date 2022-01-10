@@ -1,10 +1,8 @@
 import os
 import flopy
+from ci_framework import base_test_dir, FlopyTestSetup
 
-model_ws = os.path.join("temp", "t059")
-# make the directory if it does not exist
-if not os.path.isdir(model_ws):
-    os.makedirs(model_ws, exist_ok=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 exe_names = {"mf6": "mf6", "mp7": "mp7"}
 run = True
@@ -14,7 +12,6 @@ for key in exe_names.keys():
         run = False
         break
 
-ws = model_ws
 nm = "ex01_mf6"
 
 # model data
@@ -34,17 +31,16 @@ riv_z = 317.0
 riv_c = 1.0e5
 
 
-def test_mf6():
-    # build and run MODPATH 7 with MODFLOW 6
-    build_mf6()
-
-
 def test_forward():
+    model_ws = f"{base_dir}_test_forward"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+    build_mf6(model_ws)
+
     mpnam = f"{nm}_mp_forward"
     exe_name = exe_names["mp7"]
 
     # load the MODFLOW 6 model
-    sim = flopy.mf6.MFSimulation.load("mf6mod", "mf6", "mf6", ws)
+    sim = flopy.mf6.MFSimulation.load("mf6mod", "mf6", "mf6", model_ws)
     gwf = sim.get_model(nm)
 
     mp = flopy.modpath.Modpath7.create_mp7(
@@ -64,11 +60,15 @@ def test_forward():
 
 
 def test_backward():
+    model_ws = f"{base_dir}_test_backward"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+    build_mf6(model_ws)
+
     mpnam = f"{nm}_mp_backward"
     exe_name = exe_names["mp7"]
 
     # load the MODFLOW 6 model
-    sim = flopy.mf6.MFSimulation.load("mf6mod", "mf6", "mf6", ws)
+    sim = flopy.mf6.MFSimulation.load("mf6mod", "mf6", "mf6", model_ws)
     gwf = sim.get_model(nm)
 
     mp = flopy.modpath.Modpath7.create_mp7(
@@ -87,7 +87,7 @@ def test_backward():
     return
 
 
-def build_mf6():
+def build_mf6(model_ws):
     """
     MODPATH 7 example 1 for MODFLOW 6
     """
@@ -96,7 +96,10 @@ def build_mf6():
 
     # Create the Flopy simulation object
     sim = flopy.mf6.MFSimulation(
-        sim_name=nm, exe_name="mf6", version="mf6", sim_ws=ws
+        sim_name=nm,
+        exe_name="mf6",
+        version="mf6",
+        sim_ws=model_ws,
     )
 
     # Create the Flopy temporal discretization object

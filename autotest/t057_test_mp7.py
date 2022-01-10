@@ -1,11 +1,9 @@
 import os
 import numpy as np
 import flopy
+from ci_framework import base_test_dir, FlopyTestSetup
 
-model_ws = os.path.join("temp", "t057")
-# make the directory if it does not exist
-if not os.path.isdir(model_ws):
-    os.makedirs(model_ws, exist_ok=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 exe_names = {"mf2005": "mf2005", "mf6": "mf6", "mp7": "mp7"}
 run = True
@@ -43,26 +41,12 @@ for i in range(nrow):
 part0 = flopy.modpath.ParticleData(
     partlocs, structured=True, particleids=partids
 )
-# part0 = flopy.modpath.ParticleGroup.get_particledata_empty(ncells=21,
-#                                                            particleid=True)
-# part0['k'] = 0
-# part0['j'] = 2
-# part0['localx'] = 0.5
-# part0['localy'] = 0.5
-# part0['localz'] = 0.
-# part0['timeoffset'] = 0.
-# part0['drape'] = 0
-# for idx in range(part0.shape[0]):
-#     part0['id'][idx] = idx
-#     part0['i'][idx] = idx
 pg0 = flopy.modpath.ParticleGroup(
     particlegroupname="PG1", particledata=part0, filename="ex01a.sloc"
 )
 
 v = [(0,), (400,)]
 pids = [1, 2]  # [1000, 1001]
-# part1 = flopy.modpath.ParticleGroup.create_particledata(v, drape=1,
-#                                                         particleids=pids)
 part1 = flopy.modpath.ParticleData(
     v, structured=False, drape=1, particleids=pids
 )
@@ -76,17 +60,13 @@ defaultiface = {"RECHARGE": 6, "ET": 6}
 defaultiface6 = {"RCH": 6, "EVT": 6}
 
 
-def test_mf2005():
-    # build and run MODPATH 7 with MODFLOW-2005
-    build_mf2005()
-
-
-def test_mf6():
-    # build and run MODPATH 7 with MODFLOW 6
-    build_mf6()
-
-
 def test_pathline_output():
+    model_ws = f"{base_dir}_test_pathline_output"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
+    # build and run the models
+    build_mf2005(model_ws)
+    build_mf6(model_ws)
 
     # if models not run then there will be no output
     if not run:
@@ -103,14 +83,6 @@ def test_pathline_output():
     maxid1 = p.get_maxid()
     p1 = p.get_alldata()
 
-    # # check maxtimes
-    # msg = 'pathline maxtime ({}) '.format(maxtime0) + \
-    #       'in {} '.format(os.path.basename(fpth0)) + \
-    #       'are not equal to the ' + \
-    #       'pathline maxtime ({}) '.format(maxtime1) + \
-    #       'in {}'.format(os.path.basename(fpth1))
-    # assert maxtime0 == maxtime1, msg
-
     # check maxid
     msg = (
         f"pathline maxid ({maxid0}) in {os.path.basename(fpth0)} are not "
@@ -118,24 +90,16 @@ def test_pathline_output():
     )
     assert maxid0 == maxid1, msg
 
-    # check that pathline data are approximately the same
-    # names = ['x', 'y', 'z']
-    # dtype = np.dtype([('x', np.float32), ('y', np.float32),
-    #                   ('z', np.float32)])
-    # for jdx, (pl0, pl1) in enumerate(zip(p0, p1)):
-    #     t0 = np.rec.fromarrays((pl0[name] for name in names), dtype=dtype)
-    #     t1 = np.rec.fromarrays((pl1[name] for name in names), dtype=dtype)
-    #     for name in names:
-    #         msg = 'pathline {} in {} '.format(jdx, os.path.basename(fpth0)) + \
-    #               'are not equal (within 1e-5) to the ' + \
-    #               'pathline {} in {} '.format(jdx, os.path.basename(fpth1)) + \
-    #               'for column {}.'.format(name)
-    #         assert np.allclose(t0[name], t1[name]), msg
-
     return
 
 
 def test_endpoint_output():
+    model_ws = f"{base_dir}_test_endpoint_output"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
+    # build and run the models
+    build_mf2005(model_ws)
+    build_mf6(model_ws)
 
     # if models not run then there will be no output
     if not run:
@@ -161,22 +125,6 @@ def test_endpoint_output():
     )
     assert maxid0 == maxid1, msg
 
-    # # check maxtravel
-    # msg = 'endpoint maxtraveltime ({}) '.format(maxtravel0) + \
-    #       'in {} '.format(os.path.basename(fpth0)) + \
-    #       'are not equal to the ' + \
-    #       'endpoint maxtraveltime ({}) '.format(maxtravel1) + \
-    #       'in {}'.format(os.path.basename(fpth1))
-    # assert e0 != e1, msg
-    #
-    # # check maxtimes
-    # msg = 'endpoint maxtime ({}) '.format(maxtime0) + \
-    #       'in {} '.format(os.path.basename(fpth0)) + \
-    #       'are not equal to the ' + \
-    #       'endpoint maxtime ({}) '.format(maxtime1) + \
-    #       'in {}'.format(os.path.basename(fpth1))
-    # assert e0 != e1, msg
-
     # check that endpoint data are approximately the same
     names = ["x", "y", "z", "x0", "y0", "z0"]
     dtype = np.dtype(
@@ -199,7 +147,7 @@ def test_endpoint_output():
     return
 
 
-def build_mf2005():
+def build_mf2005(model_ws):
     """
     MODPATH 7 example 1 for MODFLOW-2005
     """
@@ -289,7 +237,7 @@ def build_mf2005():
     return
 
 
-def build_mf6():
+def build_mf6(model_ws):
     """
     MODPATH 7 example 1 for MODFLOW 6
     """
@@ -419,7 +367,5 @@ def build_mf6():
 
 
 if __name__ == "__main__":
-    test_mf2005()
-    test_mf6()
     test_pathline_output()
     test_endpoint_output()

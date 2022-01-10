@@ -1,4 +1,5 @@
 # --------------------- gwf obs options ---------------------
+# flopy multi-package
 
 block options
 name digits

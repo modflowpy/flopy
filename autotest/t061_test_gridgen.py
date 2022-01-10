@@ -11,10 +11,9 @@ try:
 except ImportError:
     shapefile = None
 
-cpth = os.path.join("temp", "t061")
-# make the directory if it does not exist
-if not os.path.isdir(cpth):
-    os.makedirs(cpth, exist_ok=True)
+from ci_framework import base_test_dir, FlopyTestSetup
+
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 exe_name = "gridgen"
 v = flopy.which(exe_name)
@@ -25,6 +24,8 @@ if v is None:
 
 
 def test_gridgen():
+    model_ws = f"{base_dir}_test_gridgen"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     # define the base grid and then create a couple levels of nested
     # refinement
@@ -64,7 +65,10 @@ def test_gridgen():
         botm=botm,
     )
 
-    ms_u = flopy.mfusg.MfUsg(modelname="mymfusgmodel", model_ws=cpth)
+    ms_u = flopy.mfusg.MfUsg(
+        modelname="mymfusgmodel",
+        model_ws=model_ws,
+    )
     dis_usg = flopy.modflow.ModflowDis(
         ms_u,
         nlay=nlay,
@@ -76,7 +80,7 @@ def test_gridgen():
         botm=botm,
     )
 
-    gridgen_ws = cpth
+    gridgen_ws = model_ws
     g = Gridgen(dis5, model_ws=gridgen_ws, exe_name=exe_name)
     g6 = Gridgen(dis6, model_ws=gridgen_ws, exe_name=exe_name)
     gu = Gridgen(

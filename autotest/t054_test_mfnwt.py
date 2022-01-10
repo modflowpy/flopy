@@ -8,11 +8,9 @@ import sys
 import flopy
 import pymake
 import pytest
+from ci_framework import base_test_dir, FlopyTestSetup
 
-# make the working directory
-tpth = os.path.join("temp", "t054")
-if not os.path.isdir(tpth):
-    os.makedirs(tpth, exist_ok=True)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 # build list of name files to try and load
 nwtpth = os.path.join("..", "examples", "data", "mf2005_test")
@@ -58,11 +56,15 @@ def test_mfnwt_model(fnwt):
 # function to load a MODFLOW-2005 model, convert to a MFNWT model,
 # write it back out, run the MFNWT model, load the MFNWT model,
 # and compare the results.
-def mfnwt_model(namfile, model_ws):
+def mfnwt_model(namfile, load_ws):
+    base_name = os.path.splitext(namfile)[0]
+    model_ws = f"{base_dir}_{base_name}"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     # load MODFLOW-2005 models as MODFLOW-NWT models
     m = flopy.modflow.Modflow.load(
         namfile,
-        model_ws=model_ws,
+        model_ws=load_ws,
         version="mfnwt",
         verbose=True,
         check=False,
@@ -122,9 +124,7 @@ def mfnwt_model(namfile, model_ws):
     wel.iunitramp = 2
 
     # change workspace and write MODFLOW-NWT model
-    tdir = os.path.splitext(namfile)[0]
-    pth = os.path.join(tpth, tdir)
-    m.change_model_ws(pth)
+    m.change_model_ws(model_ws)
     m.write_input()
     if run:
         try:
@@ -132,12 +132,12 @@ def mfnwt_model(namfile, model_ws):
         except:
             success = False
         assert success, "base model run did not terminate successfully"
-        fn0 = os.path.join(pth, namfile)
+        fn0 = os.path.join(model_ws, namfile)
 
     # reload the model just written
     m = flopy.modflow.Modflow.load(
         namfile,
-        model_ws=pth,
+        model_ws=model_ws,
         version="mfnwt",
         verbose=True,
         check=False,
@@ -147,7 +147,7 @@ def mfnwt_model(namfile, model_ws):
     assert m.load_fail is False
 
     # change workspace and write MODFLOW-NWT model
-    pthf = os.path.join(pth, "flopy")
+    pthf = os.path.join(model_ws, "flopy")
     m.change_model_ws(pthf)
     m.write_input()
     if run:
@@ -159,7 +159,7 @@ def mfnwt_model(namfile, model_ws):
         fn1 = os.path.join(pthf, namfile)
 
     if run:
-        fsum = os.path.join(pth, f"{tdir}.head.out")
+        fsum = os.path.join(model_ws, f"{base_name}.head.out")
         success = False
         try:
             success = pymake.compare_heads(fn0, fn1, outfile=fsum)
@@ -169,7 +169,7 @@ def mfnwt_model(namfile, model_ws):
 
         assert success, "head comparison failure"
 
-        fsum = os.path.join(pth, f"{tdir}.budget.out")
+        fsum = os.path.join(model_ws, f"{base_name}.budget.out")
         success = False
         try:
             success = pymake.compare_budget(

@@ -1402,14 +1402,12 @@ def test_raster_sampling_methods():
         "median": 2097.36254,
         "nearest": 2097.81079,
         "linear": 2097.81079,
-        "cubic": 2097.81079
+        "cubic": 2097.81079,
     }
 
     for method, value in methods.items():
         data = rio.resample_to_grid(
-            ml.modelgrid,
-            band=rio.bands[0],
-            method=method
+            ml.modelgrid, band=rio.bands[0], method=method
         )
 
         print(data[30, 37])
