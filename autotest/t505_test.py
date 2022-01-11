@@ -928,6 +928,13 @@ def test_np001():
     if run:
         sim.run_simulation()
 
+        # inspect cells
+        cell_list = [(0, 0, 0), (0, 0, 4), (0, 0, 9)]
+        out_file = os.path.join("temp", "inspect_test_np001.csv")
+        model.inspect_cells(
+            cell_list, output_file_path=out_file, stress_period=0
+        )
+
         # get expected results
         budget_obj = bf.CellBudgetFile(expected_cbc_file, precision="double")
         budget_frf_valid = np.array(
@@ -1336,6 +1343,10 @@ def test_np002():
     if run:
         # run simulation
         sim.run_simulation()
+
+        cell_list = [(0, 0, 0), (0, 0, 3), (0, 0, 4), (0, 0, 9)]
+        out_file = os.path.join("temp", "inspect_test_np002.csv")
+        model.inspect_cells(cell_list, output_file_path=out_file)
 
         sim2 = MFSimulation.load(sim_ws=run_folder)
         model_ = sim2.get_model(model_name)
@@ -2187,6 +2198,11 @@ def test005_advgw_tidal():
     # run simulation
     sim.run_simulation()
 
+    # inspect cells
+    cell_list = [(2, 3, 2), (0, 4, 2), (0, 2, 4), (0, 5, 5), (0, 9, 9)]
+    out_file = os.path.join("temp", "inspect_AdvGW_tidal.csv")
+    model.inspect_cells(cell_list, output_file_path=out_file)
+
     # compare output to expected results
     head_new = os.path.join(run_folder, "AdvGW_tidal.hds")
     outfile = os.path.join(run_folder, "head_compare.dat")
@@ -2844,6 +2860,11 @@ def test006_gwf3_disv():
     # run simulation
     if run:
         sim.run_simulation()
+
+        # inspect cells
+        cell_list = [(0, 0), (0, 7), (0, 17)]
+        out_file = os.path.join("temp", "inspect_test_gwf3_disv.csv")
+        model.inspect_cells(cell_list, output_file_path=out_file)
 
         # compare output to expected results
         head_new = os.path.join(run_folder, "flow.hds")
@@ -3590,6 +3611,11 @@ def test028_sfr():
     if run:
         sim.run_simulation()
 
+        # inspect cells
+        cell_list = [(0, 2, 3), (0, 3, 4), (0, 4, 5)]
+        out_file = os.path.join("temp", "inspect_test028_sfr.csv")
+        model.inspect_cells(cell_list, output_file_path=out_file)
+
         # compare output to expected results
         head_new = os.path.join(run_folder, "test1tr.hds")
         outfile = os.path.join(run_folder, "head_compare.dat")
@@ -3826,6 +3852,15 @@ def test_transport():
     # run simulation
     if run:
         sim.run_simulation()
+
+        # inspect cells
+        cell_list = [
+            (0, 0, 0),
+        ]
+        out_file = os.path.join("temp", "inspect_transport_gwf.csv")
+        gwf.inspect_cells(cell_list, output_file_path=out_file)
+        out_file = os.path.join("temp", "inspect_transport_gwt.csv")
+        gwt.inspect_cells(cell_list, output_file_path=out_file)
 
         # compare output to expected results
         head_new = os.path.join(run_folder, "gwf_mst03.hds")
