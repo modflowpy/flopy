@@ -929,10 +929,10 @@ def test_np001():
         sim.run_simulation()
 
         # inspect cells
-        cell_list = [(0, 0, 4), (0, 0, 9)]
+        cell_list = [(0, 0, 0), (0, 0, 4), (0, 0, 9)]
         out_file = os.path.join("temp", "inspect_test_np001.csv")
         model.inspect_cells(
-            cell_list, output_file_path=out_file, stress_period=1
+            cell_list, output_file_path=out_file, stress_period=0
         )
 
         # get expected results
@@ -1343,6 +1343,10 @@ def test_np002():
     if run:
         # run simulation
         sim.run_simulation()
+
+        cell_list = [(0, 0, 0), (0, 0, 3), (0, 0, 4), (0, 0, 9)]
+        out_file = os.path.join("temp", "inspect_test_np002.csv")
+        model.inspect_cells(cell_list, output_file_path=out_file)
 
         sim2 = MFSimulation.load(sim_ws=run_folder)
         model_ = sim2.get_model(model_name)

@@ -747,6 +747,10 @@ def test006_2models_mvr():
         success, buff = sim.run_simulation()
         assert success, f"simulation {sim.name} rerun did not run"
 
+        cell_list = [(0, 3, 1)]
+        out_file = os.path.join("temp", "inspect_test006_2models_mvr.csv")
+        models[0].inspect_cells(cell_list, output_file_path=out_file)
+
         # compare output to expected results
         head_new = os.path.join(save_folder, "model1.hds")
         assert pymake.compare_heads(
@@ -855,6 +859,11 @@ def test001e_uzf_3lay():
         success, buff = sim.run_simulation()
         assert success, f"simulation {sim.name} rerun did not run"
 
+        # inspect cells
+        cell_list = [(0, 0, 1), (0, 0, 2), (2, 0, 8)]
+        out_file = os.path.join("temp", "inspect_test001e_uzf_3lay.csv")
+        model.inspect_cells(cell_list, output_file_path=out_file)
+
     # test load_only
     model_package_check = ["chd", "ic", "npf", "oc", "sto", "uzf"]
     load_only_lists = [
@@ -945,6 +954,11 @@ def test045_lake2tr():
         # run simulation
         success, buff = sim.run_simulation()
         assert success, f"simulation {sim.name} rerun did not run"
+
+        # inspect cells
+        cell_list = [(0, 6, 5), (0, 8, 5), (1, 18, 6)]
+        out_file = os.path.join("temp", "inspect_test045_lake2tr.csv")
+        model.inspect_cells(cell_list, output_file_path=out_file)
 
         # compare output to expected results
         head_new = os.path.join(save_folder, "lakeex2a.hds")
