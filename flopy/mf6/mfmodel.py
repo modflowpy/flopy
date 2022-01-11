@@ -897,6 +897,8 @@ class MFModel(PackageContainer, ModelInterface):
             data_output = DataSearchOutput((name,))
             data_output.output = True
             for kstp_kper in kstp_kper_lst:
+                if stress_period is not None and stress_period != kstp_kper[1]:
+                    continue
                 head_array = np.array(heads.get_data(kstpkper=kstp_kper))
                 # flatten output data in disv and disu cases
                 if len(cell_list[0]) == 2:
@@ -933,20 +935,27 @@ class MFModel(PackageContainer, ModelInterface):
                 data_output = DataSearchOutput((string_name,))
                 data_output.output = True
                 for kstp_kper in kstp_kper_lst:
+                    if (
+                        stress_period is not None
+                        and stress_period != kstp_kper[1]
+                    ):
+                        continue
                     budget_array = np.array(
                         bud.get_data(
                             kstpkper=kstp_kper,
                             text=rec_name,
                             full3D=True,
-                        )
+                        )[0]
                     )
                     if len(budget_array.shape) == 4:
                         # get rid of 4th "time" dimension
                         budget_array = budget_array[0, :, :, :]
                     # flatten output data in disv and disu cases
-                    if len(cell_list[0]) == 2:
+                    if len(cell_list[0]) == 2 and len(budget_array.shape) >= 3:
                         budget_array = budget_array[0, :, :]
-                    elif len(cell_list[0]) == 1:
+                    elif (
+                        len(cell_list[0]) == 1 and len(budget_array.shape) >= 2
+                    ):
                         budget_array = budget_array[0, :]
                     # find data matches
                     if budget_array.shape != model_shape:
