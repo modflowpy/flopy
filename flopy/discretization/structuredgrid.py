@@ -1,5 +1,6 @@
 import copy
 import os.path
+import inspect
 
 import numpy as np
 from .grid import Grid, CachedData
@@ -771,6 +772,10 @@ class StructuredGrid(Grid):
             The column number
 
         """
+        # trigger interface change warning
+        frame_info = inspect.getframeinfo(inspect.currentframe())
+        self._warn_intersect(frame_info.filename, frame_info.lineno)
+
         # transform x and y to local coordinates
         x, y = super().intersect(x, y, local, forgive)
 

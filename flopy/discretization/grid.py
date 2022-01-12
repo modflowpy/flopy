@@ -671,6 +671,30 @@ class Grid:
         else:
             return x, y
 
+    def _warn_intersect(self, module, lineno):
+        """
+        Warning for modelgrid intersect() interface change.
+
+        Should be be removed after a couple of releases. Added in 3.3.5
+
+        Parameters
+        ----------
+        module : str
+            module name path
+        lineno : int
+            line number where warning is called from
+
+        Returns
+        -------
+            None
+        """
+        module = os.path.split(module)[-1]
+        warning = "The interface 'intersect(self, x, y, local=False, " \
+                  "forgive=False)' has been deprecated. Use the " \
+                  "intersect(self, x, y, z=None, local=False, " \
+                  "forgive=False) interface instead."
+        warnings.warn_explicit(warning, UserWarning, module, lineno)
+
     def set_coord_info(
         self,
         xoff=None,
