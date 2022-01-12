@@ -689,10 +689,12 @@ class Grid:
             None
         """
         module = os.path.split(module)[-1]
-        warning = "The interface 'intersect(self, x, y, local=False, " \
-                  "forgive=False)' has been deprecated. Use the " \
-                  "intersect(self, x, y, z=None, local=False, " \
-                  "forgive=False) interface instead."
+        warning = (
+            "The interface 'intersect(self, x, y, local=False, "
+            "forgive=False)' has been deprecated. Use the "
+            "intersect(self, x, y, z=None, local=False, "
+            "forgive=False) interface instead."
+        )
         warnings.warn_explicit(warning, UserWarning, module, lineno)
 
     def set_coord_info(
