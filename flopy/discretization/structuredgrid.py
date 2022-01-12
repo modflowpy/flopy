@@ -741,7 +741,7 @@ class StructuredGrid(Grid):
     ###############
     ### Methods ###
     ###############
-    def intersect(self, x, y, local=False, forgive=False):
+    def intersect(self, x, y, z=None, local=False, forgive=False):
         """
         Get the row and column of a point with coordinates x and y
 
@@ -754,6 +754,9 @@ class StructuredGrid(Grid):
             The x-coordinate of the requested point
         y : float
             The y-coordinate of the requested point
+        z : float
+            Optional z-coordinate of the requested point (will return layer,
+            row, column) if supplied
         local: bool (optional)
             If True, x and y are in local coordinates (defaults to False)
         forgive: bool (optional)
@@ -797,7 +800,28 @@ class StructuredGrid(Grid):
             row = np.where(ycomp)[0][-1]
         if np.any(np.isnan([row, col])):
             row = col = np.nan
-        return row, col
+            if z is not None:
+                return None, row, col
+
+        if z is None:
+            return row, col
+
+        lay = np.nan
+        for layer in range(self.__nlay):
+            if (
+                self.top_botm[layer, row, col]
+                >= z
+                >= self.top_botm[layer + 1, row, col]
+            ):
+                lay = layer
+                break
+
+        if np.any(np.isnan([lay, row, col])):
+            lay = row = col = np.nan
+            if not forgive:
+                raise Exception("point given is outside the model area")
+
+        return lay, row, col
 
     def _cell_vert_list(self, i, j):
         """Get vertices for a single cell or sequence of i, j locations."""
