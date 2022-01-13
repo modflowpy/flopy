@@ -401,17 +401,7 @@ def test_voronoi_grid2(plot=False):
     gridprops = vor.get_gridprops_vertexgrid()
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
 
-    if plot:
-        import matplotlib.pyplot as plt
-        fig = plt.figure(figsize=(10, 10))
-        ax = fig.add_subplot()
-        ax.set_aspect("equal")
-        voronoi_grid.plot(ax=ax)
-        plt.savefig(os.path.join(model_ws, f"{name}.png"))
-
-    # copy folder to ./failedTests folder
-    test_setup.save_as_artifact()
-
+    # Check for success
     success = True
     final_error_message = ""
 
@@ -431,6 +421,18 @@ def test_voronoi_grid2(plot=False):
     if len(ninvalid_cells) > 0:
         final_error_message += errmsg + "\n"
         success = False
+
+    plot = True
+    if plot:
+        import matplotlib.pyplot as plt
+        fig = plt.figure(figsize=(10, 10))
+        ax = fig.add_subplot()
+        ax.set_aspect("equal")
+        voronoi_grid.plot(ax=ax)
+        plt.savefig(os.path.join(model_ws, f"{name}.png"))
+
+    # copy folder to ./failedTests folder
+    test_setup.save_as_artifact()
 
     assert success, final_error_message
     return
