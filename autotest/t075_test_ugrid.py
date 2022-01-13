@@ -4,6 +4,8 @@ Unstructured grid tests
 """
 
 import os
+import shutil
+
 import numpy as np
 from flopy.discretization import UnstructuredGrid, VertexGrid
 from flopy.utils.triangle import Triangle
@@ -393,7 +395,7 @@ def test_voronoi_grid2(plot=False):
     circle_poly = [(x, y) for x, y in zip(x, y)]
     tri = Triangle(maximum_area=50, angle=30, model_ws=model_ws)
     tri.add_polygon(circle_poly)
-    tri.build(verbose=False)
+    tri.build(verbose=True)
 
     vor = VoronoiGrid(tri)
     gridprops = vor.get_gridprops_vertexgrid()
@@ -407,6 +409,11 @@ def test_voronoi_grid2(plot=False):
         ax.set_aspect("equal")
         voronoi_grid.plot(ax=ax)
         plt.savefig(os.path.join(model_ws, f"{name}.png"))
+
+    # copy folder to diagnose folder
+    dirname = os.path.split(model_ws)[-1]
+    print(os.path.split(model_ws))
+    shutil.copytree(model_ws, f"./diagnose/{dirname}")
 
     # ensure proper number of cells
     ncpl = gridprops["ncpl"]
@@ -616,7 +623,7 @@ if __name__ == "__main__":
     # test_voronoi_vertex_grid()
     #test_voronoi_grid0(plot=True)
     #test_voronoi_grid1(plot=True)
-    #test_voronoi_grid2(plot=True)
+    test_voronoi_grid2(plot=True)
     #test_voronoi_grid3(plot=True)
     #test_voronoi_grid4(plot=True)
-    test_voronoi_grid5(plot=True)
+    #test_voronoi_grid5(plot=True)

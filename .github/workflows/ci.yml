@@ -177,8 +177,9 @@ jobs:
 
     - name: Upload diagnose folder as an artifact
       uses: actions/upload-artifact@v2
+      if: always()
       with:
-        name: diagnose
+        name: diagnose-${{ matrix.python-version }}-${{ matrix.python-version }}
         path: |
           ./autotest/diagnose/
 
