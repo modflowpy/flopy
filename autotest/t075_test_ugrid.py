@@ -387,8 +387,9 @@ def test_voronoi_grid2(plot=False):
     test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     name = "vor2"
-    answer_ncpl = 538
-    theta = np.arange(0.0, 2 * np.pi, 0.2)
+    answer_ncpl = 540
+    #theta = np.arange(0.0, 2 * np.pi, 0.2)
+    theta = np.linspace(0.0, 2 * np.pi, 35)[:-1]
     radius = 100.0
     x = radius * np.cos(theta)
     y = radius * np.sin(theta)
