@@ -8,6 +8,7 @@ on:
       - master
       - develop
       - 'release*'
+      - 'ci-diagnose'
   pull_request:
     branches: [master, develop]
 
@@ -156,6 +157,12 @@ jobs:
       run: |
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
+    - name: Create diagnose artifact folder
+      working-directory: ./autotest
+      run: |
+        [ ! -d ./diagnose ] && mkdir ./diagnose
+        echo "artifact folder for diagnosing failures." > ./diagnose/readme.txt
+
     - name: Run pytest on autotest scripts
       if: matrix.run-type == 'std'
       working-directory: ./autotest
@@ -167,6 +174,13 @@ jobs:
       working-directory: ./autotest
       run: |
         pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml ${{ matrix.test-path }}
+
+    - name: Upload diagnose folder as an artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: diagnose
+        path: |
+          ./autotest/diagnose/
 
     - name: Print coverage report before upload
       working-directory: ./autotest
