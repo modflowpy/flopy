@@ -401,27 +401,26 @@ def test_voronoi_grid2(plot=False):
     gridprops = vor.get_gridprops_vertexgrid()
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
 
-    # force plotting for this test
-    plot = True
-
     if plot:
         import matplotlib.pyplot as plt
-
         fig = plt.figure(figsize=(10, 10))
         ax = fig.add_subplot()
         ax.set_aspect("equal")
         voronoi_grid.plot(ax=ax)
         plt.savefig(os.path.join(model_ws, f"{name}.png"))
 
-    # copy folder to diagnose folder
-    dirname = os.path.split(model_ws)[-1]
-    print(os.path.split(model_ws))
-    shutil.copytree(model_ws, f"./diagnose/{dirname}")
+    # copy folder to ./failedTests folder
+    test_setup.save_as_artifact()
+
+    success = True
+    final_error_message = ""
 
     # ensure proper number of cells
     ncpl = gridprops["ncpl"]
     errmsg = f"Number of cells should be {answer_ncpl}. Found {ncpl}"
-    assert ncpl == answer_ncpl, errmsg
+    if ncpl != answer_ncpl:
+        final_error_message += errmsg + "\n"
+        success = False
 
     # ensure that all cells have 3 or more points
     ninvalid_cells = []
@@ -429,8 +428,11 @@ def test_voronoi_grid2(plot=False):
         if len(ivts) < 3:
             ninvalid_cells.append(icell)
     errmsg = f"The following cells do not have 3 or more vertices.\n{ninvalid_cells}"
-    assert len(ninvalid_cells) == 0, errmsg
+    if len(ninvalid_cells) > 0:
+        final_error_message += errmsg + "\n"
+        success = False
 
+    assert success, final_error_message
     return
 
 

@@ -157,11 +157,11 @@ jobs:
       run: |
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-    - name: Create diagnose artifact folder
+    - name: Create failedTests artifact folder
       working-directory: ./autotest
       run: |
-        [ ! -d ./diagnose ] && mkdir ./diagnose
-        echo "artifact folder for diagnosing failures." > ./diagnose/readme.txt
+        [ ! -d ./failedTests ] && mkdir ./failedTests
+        echo "artifact folder for diagnosing failures." > ./failedTests/readme.txt
 
     - name: Run pytest on autotest scripts
       if: matrix.run-type == 'std'
@@ -175,13 +175,13 @@ jobs:
       run: |
         pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml ${{ matrix.test-path }}
 
-    - name: Upload diagnose folder as an artifact
+    - name: Upload failedTests folder as an artifact
       uses: actions/upload-artifact@v2
-      if: always()
+      if: failure()
       with:
-        name: diagnose-${{ matrix.os }}-${{ matrix.python-version }}
+        name: failedTests-${{ matrix.os }}-${{ matrix.python-version }}
         path: |
-          ./autotest/diagnose/
+          ./autotest/failedTests/
 
     - name: Print coverage report before upload
       working-directory: ./autotest
