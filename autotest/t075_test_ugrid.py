@@ -401,6 +401,9 @@ def test_voronoi_grid2(plot=False):
     gridprops = vor.get_gridprops_vertexgrid()
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
 
+    # force plotting for this test
+    plot = True
+
     if plot:
         import matplotlib.pyplot as plt
 

@@ -179,7 +179,7 @@ jobs:
       uses: actions/upload-artifact@v2
       if: always()
       with:
-        name: diagnose-${{ matrix.python-version }}-${{ matrix.python-version }}
+        name: diagnose-${{ matrix.os }}-${{ matrix.python-version }}
         path: |
           ./autotest/diagnose/
 
