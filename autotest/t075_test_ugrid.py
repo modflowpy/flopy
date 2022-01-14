@@ -4,6 +4,8 @@ Unstructured grid tests
 """
 
 import os
+import shutil
+
 import numpy as np
 from flopy.discretization import UnstructuredGrid, VertexGrid
 from flopy.utils.triangle import Triangle
@@ -393,25 +395,25 @@ def test_voronoi_grid2(plot=False):
     circle_poly = [(x, y) for x, y in zip(x, y)]
     tri = Triangle(maximum_area=50, angle=30, model_ws=model_ws)
     tri.add_polygon(circle_poly)
-    tri.build(verbose=False)
+    tri.build(verbose=True)
 
     vor = VoronoiGrid(tri)
     gridprops = vor.get_gridprops_vertexgrid()
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
 
-    if plot:
-        import matplotlib.pyplot as plt
+    # Check for success
+    success = True
+    final_error_message = ""
 
-        fig = plt.figure(figsize=(10, 10))
-        ax = fig.add_subplot()
-        ax.set_aspect("equal")
-        voronoi_grid.plot(ax=ax)
-        plt.savefig(os.path.join(model_ws, f"{name}.png"))
-
-    # ensure proper number of cells
+    # ensure proper number of cells; The answer should be answer_ncpl, but
+    # we are getting slightly different answers with triangle on ubuntu,
+    # so instead of matching exactly, we are making sure that the number of
+    # cells are close.
     ncpl = gridprops["ncpl"]
     errmsg = f"Number of cells should be {answer_ncpl}. Found {ncpl}"
-    assert ncpl == answer_ncpl, errmsg
+    if abs(ncpl - answer_ncpl) > 5:
+        final_error_message += errmsg + "\n"
+        success = False
 
     # ensure that all cells have 3 or more points
     ninvalid_cells = []
@@ -419,8 +421,24 @@ def test_voronoi_grid2(plot=False):
         if len(ivts) < 3:
             ninvalid_cells.append(icell)
     errmsg = f"The following cells do not have 3 or more vertices.\n{ninvalid_cells}"
-    assert len(ninvalid_cells) == 0, errmsg
+    if len(ninvalid_cells) > 0:
+        final_error_message += errmsg + "\n"
+        success = False
 
+    if plot:
+        import matplotlib.pyplot as plt
+        fig = plt.figure(figsize=(10, 10))
+        ax = fig.add_subplot()
+        ax.set_aspect("equal")
+        voronoi_grid.plot(ax=ax)
+        plt.savefig(os.path.join(model_ws, f"{name}.png"))
+
+    # copy folder to ./failedTests folder
+    # uncomment if problems encountered and this will save
+    # this test to the failedTests artifact on Github actions
+    # test_setup.save_as_artifact()
+
+    assert success, final_error_message
     return
 
 
@@ -616,7 +634,7 @@ if __name__ == "__main__":
     # test_voronoi_vertex_grid()
     #test_voronoi_grid0(plot=True)
     #test_voronoi_grid1(plot=True)
-    #test_voronoi_grid2(plot=True)
+    test_voronoi_grid2(plot=True)
     #test_voronoi_grid3(plot=True)
     #test_voronoi_grid4(plot=True)
-    test_voronoi_grid5(plot=True)
+    #test_voronoi_grid5(plot=True)

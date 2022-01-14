@@ -8,6 +8,7 @@ on:
       - master
       - develop
       - 'release*'
+      - 'ci-diagnose'
   pull_request:
     branches: [master, develop]
 
@@ -156,6 +157,12 @@ jobs:
       run: |
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
+    - name: Create failedTests artifact folder
+      working-directory: ./autotest
+      run: |
+        [ ! -d ./failedTests ] && mkdir ./failedTests
+        echo "artifact folder for diagnosing failures." > ./failedTests/readme.txt
+
     - name: Run pytest on autotest scripts
       if: matrix.run-type == 'std'
       working-directory: ./autotest
@@ -167,6 +174,14 @@ jobs:
       working-directory: ./autotest
       run: |
         pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml ${{ matrix.test-path }}
+
+    - name: Upload failedTests folder as an artifact
+      uses: actions/upload-artifact@v2
+      if: failure()
+      with:
+        name: failedTests-${{ matrix.os }}-${{ matrix.python-version }}
+        path: |
+          ./autotest/failedTests/
 
     - name: Print coverage report before upload
       working-directory: ./autotest
