@@ -1,6 +1,7 @@
 import os
 import copy
 import numpy as np
+import inspect
 
 from matplotlib.path import Path
 
@@ -254,7 +255,7 @@ class VertexGrid(Grid):
 
         return copy.copy(self._polygons)
 
-    def intersect(self, x, y, local=False, forgive=False):
+    def intersect(self, x, y, z=None, local=False, forgive=False):
         """
         Get the CELL2D number of a point with coordinates x and y
 
@@ -267,6 +268,9 @@ class VertexGrid(Grid):
             The x-coordinate of the requested point
         y : float
             The y-coordinate of the requested point
+        z : float, None
+            optional, z-coordiante of the requested point will return
+            (lay, icell2d)
         local: bool (optional)
             If True, x and y are in local coordinates (defaults to False)
         forgive: bool (optional)
@@ -279,6 +283,8 @@ class VertexGrid(Grid):
             The CELL2D number
 
         """
+        frame_info = inspect.getframeinfo(inspect.currentframe())
+        self._warn_intersect(frame_info.filename, frame_info.lineno)
 
         if local:
             # transform x and y to real-world coordinates
@@ -301,11 +307,25 @@ class VertexGrid(Grid):
                 else:
                     radius = 1e-9
                 if path.contains_point((x, y), radius=radius):
-                    return icell2d
+                    if z is None:
+                        return icell2d
+
+                    for lay in range(self.nlay):
+                        if (
+                            self.top_botm[lay, icell2d]
+                            >= z
+                            >= self.top_botm[lay + 1, icell2d]
+                        ):
+                            return lay, icell2d
+
         if forgive:
             icell2d = np.nan
+            if z is not None:
+                return np.nan, icell2d
+
             return icell2d
-        raise Exception("x, y point given is outside of the model area")
+
+        raise Exception("point given is outside of the model area")
 
     def get_cell_vertices(self, cellid):
         """
