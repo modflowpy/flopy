@@ -425,7 +425,6 @@ def test_voronoi_grid2(plot=False):
         final_error_message += errmsg + "\n"
         success = False
 
-    plot = True
     if plot:
         import matplotlib.pyplot as plt
         fig = plt.figure(figsize=(10, 10))
@@ -435,7 +434,9 @@ def test_voronoi_grid2(plot=False):
         plt.savefig(os.path.join(model_ws, f"{name}.png"))
 
     # copy folder to ./failedTests folder
-    test_setup.save_as_artifact()
+    # uncomment if problems encountered and this will save
+    # this test to the failedTests artifact on Github actions
+    # test_setup.save_as_artifact()
 
     assert success, final_error_message
     return
