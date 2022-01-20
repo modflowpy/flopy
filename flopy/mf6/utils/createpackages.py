@@ -3,6 +3,8 @@ import io
 import datetime
 import textwrap
 from enum import Enum
+
+# keep below as absolute imports
 from flopy.mf6.data import mfstructure, mfdatautil
 from flopy.utils import datautil
 

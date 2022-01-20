@@ -6,8 +6,8 @@ outputs to VTK.
 import os
 import warnings
 import numpy as np
-from flopy.datbase import DataType, DataInterface
-from flopy.utils import Util3d
+from ..datbase import DataType, DataInterface
+from ..utils import Util3d
 
 from ..utils import import_optional_dependency
 
@@ -1836,7 +1836,7 @@ def export_heads(
     if vtk_grid_type != "auto":
         warnings.warn("vtk_grid_type is deprecated, setting to binary")
 
-    from flopy.utils import HeadFile
+    from ..utils import HeadFile
 
     if not os.path.exists(otfolder):
         os.mkdir(otfolder)
@@ -1926,7 +1926,7 @@ def export_cbc(
     if vtk_grid_type != "auto":
         warnings.warn("vtk_grid_type is deprecated, setting to binary")
 
-    from flopy.utils import CellBudgetFile
+    from ..utils import CellBudgetFile
 
     if not os.path.exists(otfolder):
         os.mkdir(otfolder)

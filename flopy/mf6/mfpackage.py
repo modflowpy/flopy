@@ -2868,7 +2868,7 @@ class MFPackage(PackageContainer, PackageInterface):
             None or Netcdf object
 
         """
-        from flopy import export
+        from .. import export
 
         return export.utils.package_export(f, self, **kwargs)
 
@@ -2903,7 +2903,7 @@ class MFPackage(PackageContainer, PackageInterface):
             a list of matplotlib.pyplot.axis are returned.
 
         """
-        from flopy.plot.plotutil import PlotUtilities
+        from ..plot.plotutil import PlotUtilities
 
         if not self.plottable:
             raise TypeError("Simulation level packages are not plottable")

@@ -15,7 +15,7 @@ from .mtuzt import Mt3dUzt
 from .mtsft import Mt3dSft
 from .mtlkt import Mt3dLkt
 from ..discretization.structuredgrid import StructuredGrid
-from flopy.discretization.modeltime import ModelTime
+from ..discretization.modeltime import ModelTime
 
 
 class Mt3dList(Package):

@@ -1670,7 +1670,7 @@ class ZoneBudget:
             flopy.export.netcdf.NetCdf object
 
         """
-        from flopy.export.utils import output_helper
+        from ..export.utils import output_helper
 
         if isinstance(f, str):
             if not f.endswith(".nc"):
@@ -2136,7 +2136,7 @@ class ZoneBudget6:
             flopy.export.netcdf.NetCdf object
 
         """
-        from flopy.export.utils import output_helper
+        from ..export.utils import output_helper
 
         if isinstance(f, str):
             if not f.endswith(".nc"):

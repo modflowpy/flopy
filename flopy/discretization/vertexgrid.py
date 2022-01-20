@@ -361,7 +361,7 @@ class VertexGrid(Grid):
         lc : matplotlib.collections.LineCollection
 
         """
-        from flopy.plot import PlotMapView
+        from ..plot import PlotMapView
 
         mm = PlotMapView(modelgrid=self)
         return mm.plot_grid(**kwargs)

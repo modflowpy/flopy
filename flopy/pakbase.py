@@ -676,13 +676,13 @@ class Package(PackageInterface):
             None or Netcdf object
 
         """
-        from flopy import export
+        from . import export
 
         return export.utils.package_export(f, self, **kwargs)
 
     def _generate_heading(self):
         """Generate heading."""
-        from flopy import __version__
+        from . import __version__
 
         parent = self.parent
         self.heading = (
@@ -821,7 +821,7 @@ class Package(PackageInterface):
         >>> ml.dis.plot()
 
         """
-        from flopy.plot import PlotUtilities
+        from .plot import PlotUtilities
 
         if not self.plottable:
             raise TypeError(f"Package {self.name} is not plottable")

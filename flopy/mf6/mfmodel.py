@@ -16,7 +16,7 @@ from ..discretization.structuredgrid import StructuredGrid
 from ..discretization.vertexgrid import VertexGrid
 from ..discretization.unstructuredgrid import UnstructuredGrid
 from ..discretization.grid import Grid
-from flopy.discretization.modeltime import ModelTime
+from ..discretization.modeltime import ModelTime
 from ..mbase import ModelInterface
 from .utils.mfenums import DiscretizationType
 from .data import mfstructure
@@ -1871,7 +1871,7 @@ class MFModel(PackageContainer, ModelInterface):
                 Empty list is returned if filename_base is not None. Otherwise
                 a list of matplotlib.pyplot.axis are returned.
         """
-        from flopy.plot.plotutil import PlotUtilities
+        from ..plot.plotutil import PlotUtilities
 
         axes = PlotUtilities._plot_model_helper(
             self, SelPackList=SelPackList, **kwargs

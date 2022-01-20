@@ -123,7 +123,7 @@ class MfList(DataInterface, DataListInterface):
         return d
 
     def export(self, f, **kwargs):
-        from flopy import export
+        from .. import export
 
         return export.utils.mflist_export(f, self, **kwargs)
 
@@ -943,7 +943,7 @@ class MfList(DataInterface, DataListInterface):
 
         """
 
-        from flopy.plot import PlotUtilities
+        from ..plot import PlotUtilities
 
         axes = PlotUtilities._plot_mflist_helper(
             self,

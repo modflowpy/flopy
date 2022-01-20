@@ -1403,7 +1403,7 @@ class MFArray(MFMultiDimVar):
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis is returned.
         """
-        from flopy.plot import PlotUtilities
+        from ...plot import PlotUtilities
 
         if not self.plottable:
             raise TypeError(
@@ -1902,7 +1902,7 @@ class MFTransientArray(MFArray, MFTransient):
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis is returned.
         """
-        from flopy.plot.plotutil import PlotUtilities
+        from ...plot.plotutil import PlotUtilities
 
         if not self.plottable:
             raise TypeError("Simulation level packages are not plottable")
