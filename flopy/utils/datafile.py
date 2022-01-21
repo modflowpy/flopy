@@ -382,7 +382,7 @@ class LayerFile:
             ).transpose()
         ).transpose()
 
-        from flopy.plot.plotutil import PlotUtilities
+        from ..plot.plotutil import PlotUtilities
 
         return PlotUtilities._plot_array_helper(
             plotarray,

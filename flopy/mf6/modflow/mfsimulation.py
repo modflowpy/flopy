@@ -2456,7 +2456,7 @@ class MFSimulation(PackageContainer):
                 matplotlib.pyplot.axes objects
 
         """
-        from flopy.plot.plotutil import PlotUtilities
+        from ...plot.plotutil import PlotUtilities
 
         axes = PlotUtilities._plot_simulation_helper(
             self, model_list=model_list, SelPackList=SelPackList, **kwargs

@@ -674,7 +674,7 @@ class MFScalar(mfdata.MFData):
         Returns:
              axes: list matplotlib.axes object
         """
-        from flopy.plot.plotutil import PlotUtilities
+        from ...plot.plotutil import PlotUtilities
 
         if not self.plottable:
             raise TypeError("Scalar values are not plottable")
@@ -967,7 +967,7 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis is returned.
         """
-        from flopy.plot.plotutil import PlotUtilities
+        from ...plot.plotutil import PlotUtilities
 
         if not self.plottable:
             raise TypeError("Simulation level packages are not plottable")

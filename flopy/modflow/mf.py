@@ -14,7 +14,7 @@ from ..utils import mfreadnam
 from ..discretization.structuredgrid import StructuredGrid
 from ..discretization.unstructuredgrid import UnstructuredGrid
 from ..discretization.grid import Grid
-from flopy.discretization.modeltime import ModelTime
+from ..discretization.modeltime import ModelTime
 from .mfpar import ModflowPar
 
 

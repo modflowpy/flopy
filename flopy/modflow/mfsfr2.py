@@ -2061,8 +2061,8 @@ class ModflowSfr2(Package):
 
     def export(self, f, **kwargs):
         if isinstance(f, str) and f.lower().endswith(".shp"):
-            from flopy.utils.geometry import Polygon
-            from flopy.export.shapefile_utils import recarray2shp
+            from ..utils.geometry import Polygon
+            from ..export.shapefile_utils import recarray2shp
 
             geoms = []
             for ix, i in enumerate(self.reach_data.i):
@@ -2072,7 +2072,7 @@ class ModflowSfr2(Package):
                 geoms.append(Polygon(verts))
             recarray2shp(self.reach_data, geoms, shpname=f, **kwargs)
         else:
-            from flopy import export
+            from .. import export
 
             return export.utils.package_export(f, self, **kwargs)
 
@@ -2083,8 +2083,8 @@ class ModflowSfr2(Package):
         reaches can be used to filter for the longest connections in a GIS.
 
         """
-        from flopy.utils.geometry import LineString
-        from flopy.export.shapefile_utils import recarray2shp
+        from ..utils.geometry import LineString
+        from ..export.shapefile_utils import recarray2shp
 
         rd = self.reach_data.copy()
         m = self.parent
@@ -2126,8 +2126,8 @@ class ModflowSfr2(Package):
         the model (outset=0).
 
         """
-        from flopy.utils.geometry import Point
-        from flopy.export.shapefile_utils import recarray2shp
+        from ..utils.geometry import Point
+        from ..export.shapefile_utils import recarray2shp
 
         rd = self.reach_data
         if np.min(rd.outreach) == np.max(rd.outreach):
@@ -2160,8 +2160,8 @@ class ModflowSfr2(Package):
             Variable in SFR Package dataset 6a (see SFR package documentation)
 
         """
-        from flopy.utils.geometry import Point
-        from flopy.export.shapefile_utils import recarray2shp
+        from ..utils.geometry import Point
+        from ..export.shapefile_utils import recarray2shp
 
         rd = self.reach_data
         if np.min(rd.outreach) == np.max(rd.outreach):

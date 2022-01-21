@@ -6,7 +6,7 @@ from ..mt3d import Mt3dms
 from .swtvdf import SeawatVdf
 from .swtvsc import SeawatVsc
 from ..discretization.structuredgrid import StructuredGrid
-from flopy.discretization.modeltime import ModelTime
+from ..discretization.modeltime import ModelTime
 
 
 class SeawatList(Package):

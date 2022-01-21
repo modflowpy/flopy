@@ -653,7 +653,7 @@ class Util3d(DataInterface):
         return True
 
     def export(self, f, **kwargs):
-        from flopy import export
+        from .. import export
 
         return export.utils.array3d_export(f, self, **kwargs)
 
@@ -726,7 +726,7 @@ class Util3d(DataInterface):
         >>> ml.lpf.hk.plot()
 
         """
-        from flopy.plot import PlotUtilities
+        from ..plot import PlotUtilities
 
         axes = PlotUtilities._plot_util3d_helper(
             self,
@@ -1530,7 +1530,7 @@ class Transient2d(DataInterface):
         >>> ml.rch.rech.plot()
 
         """
-        from flopy.plot import PlotUtilities
+        from ..plot import PlotUtilities
 
         axes = PlotUtilities._plot_transient2d_helper(
             self,
@@ -1586,7 +1586,7 @@ class Transient2d(DataInterface):
         return arr
 
     def export(self, f, **kwargs):
-        from flopy import export
+        from .. import export
 
         return export.utils.transient2d_export(f, self, **kwargs)
 
@@ -1984,7 +1984,7 @@ class Util2d(DataInterface):
         >>> ml.dis.top.plot()
 
         """
-        from flopy.plot import PlotUtilities
+        from ..plot import PlotUtilities
 
         axes = PlotUtilities._plot_util2d_helper(
             self,
@@ -1997,7 +1997,7 @@ class Util2d(DataInterface):
         return axes
 
     def export(self, f, **kwargs):
-        from flopy import export
+        from .. import export
 
         return export.utils.array2d_export(f, self, **kwargs)
 

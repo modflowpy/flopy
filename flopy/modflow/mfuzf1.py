@@ -1,4 +1,4 @@
-﻿"""
+"""
 mfuzf1 module.  Contains the ModflowUzf1 class. Note that the user can access
 the ModflowUzf1 class as `flopy.modflow.ModflowUzf1`.
 

@@ -616,7 +616,7 @@ class UnstructuredGrid(Grid):
         lc : matplotlib.collections.LineCollection
 
         """
-        from flopy.plot import PlotMapView
+        from ..plot import PlotMapView
 
         layer = 0
         if "layer" in kwargs:
@@ -837,7 +837,7 @@ class UnstructuredGrid(Grid):
             number of cells per plottable layer
 
         """
-        from flopy.utils.gridgen import get_ia_from_iac
+        from ..utils.gridgen import get_ia_from_iac
 
         valid = False
         ia = get_ia_from_iac(iac)

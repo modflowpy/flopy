@@ -16,7 +16,7 @@ from shutil import which
 from subprocess import Popen, PIPE, STDOUT
 import copy
 import numpy as np
-from flopy import utils, discretization
+from . import utils, discretization
 from .version import __version__
 from .discretization.grid import Grid
 
@@ -1584,7 +1584,7 @@ class BaseModel(ModelInterface):
         >>> ml.plot()
 
         """
-        from flopy.plot import PlotUtilities
+        from .plot import PlotUtilities
 
         axes = PlotUtilities._plot_model_helper(
             self, SelPackList=SelPackList, **kwargs

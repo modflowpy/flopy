@@ -344,7 +344,7 @@ class MFData(DataInterface):
         return None, None
 
     def export(self, f, **kwargs):
-        from flopy.export import utils
+        from ...export import utils
 
         if (
             self.data_type == DataType.array2d

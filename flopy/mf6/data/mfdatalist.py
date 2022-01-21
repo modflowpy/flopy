@@ -1347,7 +1347,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis is returned.
         """
-        from flopy.plot import PlotUtilities
+        from ...plot import PlotUtilities
 
         if not self.plottable:
             raise TypeError("Simulation level packages are not plottable")
@@ -1930,7 +1930,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis is returned.
         """
-        from flopy.plot import PlotUtilities
+        from ...plot import PlotUtilities
 
         if not self.plottable:
             raise TypeError("Simulation level packages are not plottable")
