@@ -454,7 +454,7 @@ class Raster:
             else:
                 for node in range(ncpl):
                     verts = modelgrid.get_cell_vertices(node)
-                    rstr_data = self.sample_polygon(verts, band)
+                    rstr_data = self.sample_polygon(verts, band).astype(float)
                     msk = np.in1d(rstr_data, self.nodatavals)
                     rstr_data[msk] = np.nan
 
@@ -539,7 +539,7 @@ class Raster:
         """
         container.acquire()
         verts = modelgrid.get_cell_vertices(node)
-        rstr_data = self.sample_polygon(verts, band)
+        rstr_data = self.sample_polygon(verts, band).astype(float)
         msk = np.in1d(rstr_data, self.nodatavals)
         rstr_data[msk] = np.nan
 

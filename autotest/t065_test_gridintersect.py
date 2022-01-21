@@ -1398,7 +1398,7 @@ def test_raster_sampling_methods():
     methods = {
         "min": 2088.52343,
         "max": 2103.54882,
-        "mean": 2097.05053,
+        "mean": 2097.05035,
         "median": 2097.36254,
         "nearest": 2097.81079,
         "linear": 2097.81079,
