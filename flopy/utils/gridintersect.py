@@ -1,19 +1,19 @@
 import numpy as np
 import contextlib
 import warnings
-from distutils.version import LooseVersion
 
 from .utl_import import import_optional_dependency
 
 from .geometry import transform
 from .geospatial_utils import GeoSpatialUtil
+from .parse_version import Version
 
-NUMPY_GE_121 = str(np.__version__) >= LooseVersion("1.21")
+NUMPY_GE_121 = Version(np.__version__) >= Version("1.21")
 
 shapely = import_optional_dependency("shapely", errors="silent")
 if shapely is not None:
-    SHAPELY_GE_20 = str(shapely.__version__) >= LooseVersion("2.0")
-    SHAPELY_LT_18 = str(shapely.__version__) < LooseVersion("1.8")
+    SHAPELY_GE_20 = Version(shapely.__version__) >= Version("2.0")
+    SHAPELY_LT_18 = Version(shapely.__version__) < Version("1.8")
 else:
     SHAPELY_GE_20 = False
     SHAPELY_LT_18 = False
