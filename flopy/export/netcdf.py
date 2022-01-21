@@ -673,10 +673,10 @@ class NetCdf:
         needed for the netcdf file
         """
         pyproj = import_optional_dependency("pyproj")
-        from distutils.version import LooseVersion
+        from ..utils.parse_version import Version
 
         # Check if using newer pyproj version conventions
-        pyproj220 = LooseVersion(pyproj.__version__) >= LooseVersion("2.2.0")
+        pyproj220 = Version(pyproj.__version__) >= Version("2.2.0")
 
         proj4_str = self.proj4_str
         print(f"initialize_geometry::proj4_str = {proj4_str}")
