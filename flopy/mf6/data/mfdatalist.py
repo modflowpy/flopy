@@ -1423,7 +1423,10 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
     def dtype(self):
         data = self.get_data()
         if len(data) > 0:
-            return data[0].dtype
+            if 0 in data:
+                return data[0].dtype
+            else:
+                return next(iter(data.values())).dtype
         else:
             return None
 
