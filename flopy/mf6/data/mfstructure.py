@@ -928,7 +928,11 @@ class MFDataItemStructure:
                 self.name_list.append(self.name)
                 if len(self.name) >= 6 and self.name[0:6] == "cellid":
                     self.is_cellid = True
-                if self.name and self.name[0:2] == "id":
+                if (
+                    self.name
+                    and self.name[0:2] == "id"
+                    and self.type == DatumType.string
+                ):
                     self.possible_cellid = True
                 self.python_name = self.name.replace("-", "_").lower()
                 # don't allow name to be a python keyword
@@ -961,6 +965,12 @@ class MFDataItemStructure:
                     )
                 self.type_string = type_line[0].lower()
                 self.type = self._str_to_enum_type(type_line[0])
+                if (
+                    self.name
+                    and self.name[0:2] == "id"
+                    and self.type == DatumType.string
+                ):
+                    self.possible_cellid = True
                 if (
                     self.type == DatumType.recarray
                     or self.type == DatumType.record
@@ -1261,7 +1271,7 @@ class MFDataItemStructure:
 
     def get_rec_type(self):
         item_type = self.type_obj
-        if item_type == str or self.is_cellid:
+        if item_type == str or self.is_cellid or self.possible_cellid:
             return object
         return item_type
 
