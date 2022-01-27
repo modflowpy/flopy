@@ -12,7 +12,6 @@ from .mfutlts import ModflowUtlts
 from .mfutltas import ModflowUtltas
 from .mfutlats import ModflowUtlats
 from .mfutllaktab import ModflowUtllaktab
-from .mfutllaktab import ModflowUtllaktab
 from .mfutlsfrtab import ModflowUtlsfrtab
 from .mfutlspc import ModflowUtlspc
 from .mfutlspca import ModflowUtlspca
