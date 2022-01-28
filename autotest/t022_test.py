@@ -1,5 +1,6 @@
 # Test SWR binary read functionality
 import os
+
 import flopy
 
 pth = os.path.join("..", "examples", "data", "swr_test")

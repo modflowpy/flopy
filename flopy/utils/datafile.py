@@ -4,8 +4,6 @@ abstract classes that should not be directly accessed.
 
 """
 import numpy as np
-import flopy.utils
-from ..discretization.structuredgrid import StructuredGrid
 
 
 class Header:
@@ -154,6 +152,8 @@ class LayerFile:
     """
 
     def __init__(self, filename, precision, verbose, kwargs):
+        from ..discretization.structuredgrid import StructuredGrid
+
         self.filename = filename
         self.precision = precision
         self.verbose = verbose

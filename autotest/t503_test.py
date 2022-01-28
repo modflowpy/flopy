@@ -1,14 +1,11 @@
-import pytest
-import sys
 import os
 import shutil
-import flopy
+
 import pymake
-from ci_framework import (
-    base_test_dir,
-    FlopyTestSetup,
-    download_mf6_examples,
-)
+import pytest
+from ci_framework import FlopyTestSetup, base_test_dir, download_mf6_examples
+
+import flopy
 
 exe_name = "mf6"
 v = flopy.which(exe_name)

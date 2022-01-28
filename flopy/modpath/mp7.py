@@ -1,19 +1,20 @@
 """
 mp7 module.  Contains the Modpath7List and Modpath7 classes.
 
-
 """
 
+import os
+
 import numpy as np
+
 from ..mbase import BaseModel
-from ..modflow import Modflow
 from ..mf6 import MFModel
+from ..modflow import Modflow
 from ..pakbase import Package
 from .mp7bas import Modpath7Bas
-from .mp7sim import Modpath7Sim
 from .mp7particledata import CellDataType, NodeParticleData
 from .mp7particlegroup import ParticleGroupNodeTemplate
-import os
+from .mp7sim import Modpath7Sim
 
 
 class Modpath7List(Package):

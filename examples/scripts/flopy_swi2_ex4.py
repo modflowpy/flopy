@@ -2,11 +2,10 @@ import os
 import platform
 import sys
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 import flopy
-
-import matplotlib.pyplot as plt
 
 # --modify default matplotlib settings
 updates = {

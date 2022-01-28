@@ -1,10 +1,12 @@
 # Test vtk export
 
-import numpy as np
 import os
+
+import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
 import flopy
 from flopy.export.vtk import Vtk
-from ci_framework import base_test_dir, FlopyTestSetup
 
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
@@ -376,8 +378,8 @@ def test_vtk_vector():
     except ImportError:
         return
 
+    from flopy.utils import CellBudgetFile, HeadFile
     from flopy.utils import postprocessing as pp
-    from flopy.utils import HeadFile, CellBudgetFile
 
     test_setup = FlopyTestSetup(verbose=True)
 

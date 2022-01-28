@@ -1,16 +1,18 @@
 """Test copying of flopy objects.
 """
-import os
 import copy
 import inspect
+import os
+
 import numpy as np
+
 import flopy
+from flopy.datbase import DataInterface, DataType
+from flopy.mbase import ModelInterface
+from flopy.utils import TemporalReference
 
 fm = flopy.modflow
 mf6 = flopy.mf6
-from flopy.datbase import DataType, DataInterface
-from flopy.mbase import ModelInterface
-from flopy.utils import TemporalReference
 
 
 def get_package_list(model):

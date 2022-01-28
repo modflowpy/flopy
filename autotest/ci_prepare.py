@@ -2,18 +2,14 @@
 Script to be used to download any required data prior to autotests
 """
 import os
-import sys
 import shutil
 import subprocess
+import sys
 
 import pymake
-import flopy
+from ci_framework import download_mf6_examples, get_parent_path
 
-from ci_framework import (
-    get_parent_path,
-    create_test_dir,
-    download_mf6_examples,
-)
+import flopy
 
 # os.environ["CI"] = "1"
 

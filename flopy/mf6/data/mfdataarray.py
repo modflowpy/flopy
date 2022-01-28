@@ -1,14 +1,18 @@
-import sys, inspect, copy, os
+import copy
+import inspect
+import os
+import sys
+
 import numpy as np
+
+from ...datbase import DataType
+from ...utils.datautil import DatumUtil, MultiList
 from ..data.mfstructure import DatumType
-from .mfdatastorage import DataStorage, DataStructureType, DataStorageType
-from ...utils.datautil import MultiList, DatumUtil
 from ..mfbase import ExtFileAction, MFDataException, VerbosityLevel
 from ..utils.mfenums import DiscretizationType
-from ...datbase import DataType
-from .mffileaccess import MFFileAccessArray
 from .mfdata import MFMultiDimVar, MFTransient
-from ...mbase import ModelInterface
+from .mfdatastorage import DataStorage, DataStorageType, DataStructureType
+from .mffileaccess import MFFileAccessArray
 
 
 class MFArray(MFMultiDimVar):

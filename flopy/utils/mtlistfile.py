@@ -4,6 +4,7 @@ mt3d(usgs) run. Also includes support for SFT budget.
 
 """
 import warnings
+
 import numpy as np
 
 from ..utils import import_optional_dependency

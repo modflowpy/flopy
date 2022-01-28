@@ -1,28 +1,32 @@
-import os, sys, inspect, warnings
+import inspect
+import os
+import sys
+
 import numpy as np
+
+from ..discretization.grid import Grid
+from ..discretization.modeltime import ModelTime
+from ..discretization.structuredgrid import StructuredGrid
+from ..discretization.unstructuredgrid import UnstructuredGrid
+from ..discretization.vertexgrid import VertexGrid
+from ..mbase import ModelInterface
+from ..utils import datautil
+from ..utils.check import mf6check
+from .coordinates import modeldimensions
+from .data import mfstructure
+from .data.mfdatautil import DataSearchOutput, iterable
 from .mfbase import (
-    PackageContainer,
     ExtFileAction,
-    PackageContainerType,
-    MFDataException,
-    ReadAsArraysException,
     FlopyException,
+    MFDataException,
+    PackageContainer,
+    PackageContainerType,
+    ReadAsArraysException,
     VerbosityLevel,
 )
 from .mfpackage import MFPackage
-from .coordinates import modeldimensions
-from ..utils import datautil
-from ..discretization.structuredgrid import StructuredGrid
-from ..discretization.vertexgrid import VertexGrid
-from ..discretization.unstructuredgrid import UnstructuredGrid
-from ..discretization.grid import Grid
-from ..discretization.modeltime import ModelTime
-from ..mbase import ModelInterface
 from .utils.mfenums import DiscretizationType
-from .data import mfstructure
-from .data.mfdatautil import iterable, DataSearchOutput
 from .utils.output_util import MF6Output
-from ..utils.check import mf6check
 
 
 class MFModel(PackageContainer, ModelInterface):

@@ -1,12 +1,13 @@
-import os, copy
+import copy
+import os
 
 import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
 
 import flopy
 import flopy.utils.binaryfile as bf
-from flopy.utils.datautil import PyListUtil
 from flopy.mf6.modflow.mfsimulation import MFSimulation
-from ci_framework import base_test_dir, FlopyTestSetup
+from flopy.utils.datautil import PyListUtil
 
 try:
     import shapefile

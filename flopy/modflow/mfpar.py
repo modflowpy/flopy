@@ -5,9 +5,10 @@ the ModflowPar class as `flopy.modflow.ModflowPar`.
 
 """
 import numpy as np
-from .mfzon import ModflowZon
-from .mfpval import ModflowPval
+
 from .mfmlt import ModflowMlt
+from .mfpval import ModflowPval
+from .mfzon import ModflowZon
 
 
 class ModflowPar:

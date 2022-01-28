@@ -1,4 +1,5 @@
 black
+isort
 flake8
 pylint
 coverage

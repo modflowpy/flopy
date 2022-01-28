@@ -1,14 +1,15 @@
 import os
-import numpy as np
-import flopy
 import warnings
 from io import StringIO
 from struct import pack
 from tempfile import TemporaryFile
 from textwrap import dedent
-from flopy.utils.util_array import Util2d, Util3d, Transient2d, Transient3d
 
-from ci_framework import base_test_dir, FlopyTestSetup
+import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
+import flopy
+from flopy.utils.util_array import Transient2d, Transient3d, Util2d, Util3d
 
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
@@ -802,9 +803,6 @@ def test_mflist():
 
 
 def test_how():
-    import numpy as np
-    import flopy
-
     model_ws = f"{base_dir}_test_how"
     test_setup = FlopyTestSetup(test_dirs=model_ws)
 
@@ -835,7 +833,6 @@ def test_mflist_fromfile():
     the .array attribute will load the file
     """
     import pandas as pd
-    import flopy
 
     model_ws = f"{base_dir}_test_mflist_fromfile"
     test_setup = FlopyTestSetup(test_dirs=model_ws)

@@ -1,6 +1,7 @@
 import os
-import numpy as np
 import shlex
+
+import numpy as np
 
 
 def clean_filename(file_name):

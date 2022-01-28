@@ -8,11 +8,11 @@ MODFLOW Guide
 
 """
 import numpy as np
-from .mfpar import ModflowPar as mfpar
 
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, read1d
 from ..utils.flopy_io import line_parse
+from .mfpar import ModflowPar as mfpar
 
 
 class ModflowLpf(Package):

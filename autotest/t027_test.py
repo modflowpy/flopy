@@ -1,15 +1,14 @@
 """
 test MNW1 and MNW2 packages
 """
-import sys
-
-sys.path.insert(0, "..")
-import shutil
 import os
-import flopy
+import shutil
+
 import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
+import flopy
 from flopy.utils.flopy_io import line_parse
-from ci_framework import base_test_dir, FlopyTestSetup
 
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 

@@ -3,9 +3,10 @@ Some basic tests for SFR checker (not super rigorous)
 need to add a test case that has elevation input by reach
 """
 
+import os
+
 import pytest
 
-import os
 import flopy
 from flopy.modflow.mfsfr2 import check
 

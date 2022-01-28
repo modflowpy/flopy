@@ -1,7 +1,9 @@
 import os
+
 import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
 import flopy
-from ci_framework import base_test_dir, FlopyTestSetup
 
 pth = os.path.join("..", "examples", "data", "mf6-freyberg")
 

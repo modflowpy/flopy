@@ -1,7 +1,9 @@
 import os
-import flopy
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
+
+import flopy
 
 # grid properties
 nlay = 3

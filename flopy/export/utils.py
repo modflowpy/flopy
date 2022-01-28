@@ -1,19 +1,19 @@
 import os
+
 import numpy as np
-from ..utils import (
-    HeadFile,
-    CellBudgetFile,
-    UcnFile,
-    FormattedHeadFile,
-    ZBNetOutput,
-)
+
+from ..datbase import DataInterface, DataListInterface, DataType
 from ..mbase import BaseModel, ModelInterface
 from ..pakbase import PackageInterface
-from ..datbase import DataType, DataInterface, DataListInterface
-from . import NetCdf, netcdf
-from . import shapefile_utils
-from . import vtk
-from ..utils import import_optional_dependency
+from ..utils import (
+    CellBudgetFile,
+    FormattedHeadFile,
+    HeadFile,
+    UcnFile,
+    ZBNetOutput,
+    import_optional_dependency,
+)
+from . import NetCdf, netcdf, shapefile_utils, vtk
 from .longnames import NC_LONG_NAMES
 from .unitsformat import NC_UNITS_FORMAT
 

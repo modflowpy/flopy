@@ -1,11 +1,14 @@
 import math
+
 import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
 import flopy
+from flopy.discretization import StructuredGrid
+from flopy.export.shapefile_utils import shp2recarray
 
 fm = flopy.modflow
 fp6 = flopy.mf6
-from flopy.discretization import StructuredGrid
-from flopy.export.shapefile_utils import shp2recarray
 
 try:
     import shapefile
@@ -14,8 +17,6 @@ try:
         shapefile = None
 except ImportError:
     shapefile = None
-
-from ci_framework import base_test_dir, FlopyTestSetup
 
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 

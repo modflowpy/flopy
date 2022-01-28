@@ -1,11 +1,14 @@
-import sys, inspect
-import numpy as np
-from copy import deepcopy
-from collections.abc import Iterable
-from ..mfbase import MFDataException, FlopyException
-from .mfstructure import DatumType
-from ...utils.datautil import PyListUtil, DatumUtil
+import inspect
 import struct
+import sys
+from collections.abc import Iterable
+from copy import deepcopy
+
+import numpy as np
+
+from ...utils.datautil import DatumUtil, PyListUtil
+from ..mfbase import FlopyException, MFDataException
+from .mfstructure import DatumType
 
 
 def iterable(obj, any_iterator=False):
@@ -479,8 +482,8 @@ class TemplateGenerator:
         self.path = path
 
     def _get_data_dimensions(self, model):
-        from ..data import mfstructure
         from ..coordinates import modeldimensions
+        from ..data import mfstructure
 
         # get structure info
         sim_struct = mfstructure.MFStructure().sim_struct

@@ -1,6 +1,7 @@
-import sys
 import os
 import platform
+import sys
+
 import numpy as np
 
 # -- add development version of flopy to system path
@@ -11,7 +12,6 @@ if flopypath not in sys.path:
 
 import flopy
 import flopy.utils as fputl
-
 
 spth = os.getcwd()
 

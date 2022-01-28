@@ -1,14 +1,13 @@
-import numpy as np
-
-import matplotlib.pyplot as plt
-import matplotlib.colors
-from matplotlib.patches import Polygon
-
-from . import plotutil
-from ..utils import geometry
-
 import copy
 import warnings
+
+import matplotlib.colors
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.patches import Polygon
+
+from ..utils import geometry
+from . import plotutil
 
 warnings.simplefilter("always", PendingDeprecationWarning)
 
@@ -1020,7 +1019,6 @@ class PlotCrossSection:
         """
 
         from matplotlib.collections import LineCollection
-        from ..utils.geometry import point_in_polygon
 
         # make sure pathlines is a list
         if not isinstance(pl, list):
@@ -1413,8 +1411,8 @@ class PlotCrossSection:
         patches : matplotlib.collections.PatchCollection
 
         """
-        from matplotlib.patches import Polygon
         from matplotlib.collections import PatchCollection
+        from matplotlib.patches import Polygon
 
         use_cache = False
         if projpts is None:

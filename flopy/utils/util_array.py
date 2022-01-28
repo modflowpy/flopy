@@ -7,14 +7,16 @@ util_array module.  Contains the util_2d, util_3d and transient_2d classes.
 """
 # from future.utils import with_metaclass
 
+import copy
 import os
 import shutil
-import copy
-import numpy as np
 from warnings import warn
+
+import numpy as np
+
+from ..datbase import DataInterface, DataType
 from ..utils.binaryfile import BinaryHeader
 from ..utils.flopy_io import line_parse
-from ..datbase import DataType, DataInterface
 
 
 class ArrayFormat:

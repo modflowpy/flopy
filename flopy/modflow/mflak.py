@@ -8,9 +8,10 @@ MODFLOW Guide
 
 """
 import numpy as np
+
 from ..pakbase import Package
-from ..utils.util_array import Transient3d
 from ..utils import Util3d, read_fixed_var, write_fixed_var
+from ..utils.util_array import Transient3d
 
 
 class ModflowLak(Package):

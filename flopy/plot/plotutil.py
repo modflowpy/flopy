@@ -5,11 +5,13 @@ shapefiles are also included.
 
 """
 import os
-import numpy as np
 import warnings
+
 import matplotlib.pyplot as plt
+import numpy as np
+
+from ..datbase import DataInterface, DataType
 from ..utils import Util3d, import_optional_dependency
-from ..datbase import DataType, DataInterface
 
 warnings.simplefilter("ignore", RuntimeWarning)
 
@@ -1585,8 +1587,6 @@ class PlotUtilities:
             Specific discharge arrays that have been interpolated to cell centers.
 
         """
-        import warnings
-
         warnings.warn(
             "centered_specific_discharge() has been deprecated and will be "
             "removed in version 3.3.5. Use "
@@ -2089,12 +2089,12 @@ def shapefile_to_patch_collection(shp, radius=500.0, idx=None):
             Patch collection of shapes in the shapefile
 
     """
-    from matplotlib.patches import Polygon, Circle, PathPatch
     import matplotlib.path as MPath
     from matplotlib.collections import PatchCollection
+    from matplotlib.patches import Circle, PathPatch, Polygon
 
-    from ..utils.geospatial_utils import GeoSpatialCollection
     from ..utils.geometry import point_in_polygon
+    from ..utils.geospatial_utils import GeoSpatialCollection
 
     geofeats = GeoSpatialCollection(shp)
     shapes = geofeats.shape
@@ -2279,8 +2279,8 @@ def cvfd_to_patch_collection(verts, iverts):
         DeprecationWarning,
     )
 
-    from matplotlib.patches import Polygon
     from matplotlib.collections import PatchCollection
+    from matplotlib.patches import Polygon
 
     ptchs = []
     for ivertlist in iverts:
@@ -2459,8 +2459,6 @@ def _set_coord_info(mg, xul, yul, xll, yll, rotation):
     -------
     mg : fp.discretization.Grid object
     """
-    import warnings
-
     if xul is not None and yul is not None:
         if rotation is not None:
             mg._angrot = rotation
@@ -2494,8 +2492,7 @@ def _depreciated_dis_handler(modelgrid, dis):
 
     """
     # creates a new modelgrid instance with the dis information
-    from ..discretization import StructuredGrid, VertexGrid, UnstructuredGrid
-    import warnings
+    from ..discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 
     warnings.warn(
         "the dis parameter has been depreciated and will be removed in "

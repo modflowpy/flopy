@@ -1,9 +1,12 @@
 """ Base classes for Modflow 6 """
-import inspect, sys, traceback
-import os, copy
+import copy
+import inspect
+import os
+import sys
+import traceback
 from collections.abc import Iterable
-from shutil import copyfile
 from enum import Enum
+from shutil import copyfile
 
 
 # internal handled exceptions

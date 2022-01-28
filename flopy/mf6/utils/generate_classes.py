@@ -1,10 +1,9 @@
-import sys
 import os
-import tempfile
 import shutil
+import tempfile
 import time
-from .createpackages import create_packages
 
+from .createpackages import create_packages
 
 thisfilepath = os.path.dirname(os.path.abspath(__file__))
 flopypth = os.path.join(thisfilepath, "..", "..")

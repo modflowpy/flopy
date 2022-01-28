@@ -1,5 +1,6 @@
 # Test reference class
 import os
+
 import numpy as np
 
 try:
@@ -17,7 +18,7 @@ try:
 except ImportError:
     shapefile = None
 
-from ci_framework import base_test_dir, FlopyTestSetup
+from ci_framework import FlopyTestSetup, base_test_dir
 
 cpth = base_test_dir(__file__, rel_path="temp", verbose=True)
 

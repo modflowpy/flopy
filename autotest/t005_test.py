@@ -1,15 +1,15 @@
 # Test instantiation of flopy classes
 import os
 
-from ci_framework import base_test_dir, FlopyTestSetup
+import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
+import flopy
 
 cpth = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def test_modflow_unstructured():
-    import flopy
-    import numpy as np
-
     test_setup = FlopyTestSetup(test_dirs=cpth)
 
     mf = flopy.mfusg.MfUsg(structured=False, model_ws=cpth)

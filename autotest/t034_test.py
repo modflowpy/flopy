@@ -1,13 +1,15 @@
 """
 test UZF package
 """
+import glob
 import os
 import shutil
-import glob
+
+import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
 import flopy
 from flopy.utils.util_array import Util2d
-import numpy as np
-from ci_framework import base_test_dir, FlopyTestSetup
 
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
@@ -273,7 +275,7 @@ def test_uzf_surfk():
 def test_read_write_nwt_options():
     from io import StringIO
 
-    from flopy.modflow import ModflowWel, ModflowUzf1, ModflowSfr2
+    from flopy.modflow import ModflowSfr2, ModflowUzf1, ModflowWel
     from flopy.utils.optionblock import OptionBlock
 
     model_ws = f"{base_dir}_test_read_write_nwt_options"

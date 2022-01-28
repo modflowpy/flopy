@@ -12,11 +12,13 @@
 # - the model is a very small synthetic test case that just contains enough
 #   things to allow for the functions to be thoroughly tested
 
-import flopy
 import os
+
 import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
+import flopy
 import flopy.utils.binaryfile as bf
-from ci_framework import base_test_dir, FlopyTestSetup
 
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
@@ -499,9 +501,10 @@ def specific_discharge_comprehensive():
 
 
 def test_specific_discharge_mf6():
-    from flopy.mf6.modflow.mfsimulation import MFSimulation
     import matplotlib.pyplot as plt
     from matplotlib.quiver import Quiver
+
+    from flopy.mf6.modflow.mfsimulation import MFSimulation
 
     test_setup = FlopyTestSetup(verbose=True, test_dirs=modelws_mf6)
 

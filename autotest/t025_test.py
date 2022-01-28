@@ -2,11 +2,13 @@
 Some basic tests for LAKE load.
 """
 
-import pytest
 import os
-import flopy
+
 import pymake
-from ci_framework import base_test_dir, FlopyTestSetup
+import pytest
+from ci_framework import FlopyTestSetup, base_test_dir
+
+import flopy
 
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 

@@ -1,9 +1,6 @@
-import os
-import sys
-import warnings
 import numpy as np
+
 import flopy
-from flopy.utils import MfList
 
 # instance testing
 #override the default data type

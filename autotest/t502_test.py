@@ -1,11 +1,20 @@
-import os
+from ci_framework import FlopyTestSetup, base_test_dir
 
 import flopy
-from flopy.mf6.modflow import mfgwfriv, mfgwfsto, mfgwfoc, mfgwfwel, mfgwfdrn
-from flopy.mf6.modflow import mfims, mftdis, mfgwfic, mfgwfnpf, mfgwfdis, mfgwf
+from flopy.mf6.modflow import (
+    mfgwf,
+    mfgwfdis,
+    mfgwfdrn,
+    mfgwfic,
+    mfgwfnpf,
+    mfgwfoc,
+    mfgwfriv,
+    mfgwfsto,
+    mfgwfwel,
+    mfims,
+    mftdis,
+)
 from flopy.mf6.modflow.mfsimulation import MFSimulation
-
-from ci_framework import base_test_dir, FlopyTestSetup
 
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 

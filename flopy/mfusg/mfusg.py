@@ -1,11 +1,12 @@
 """Mfusg module."""
 import os
 from inspect import getfullargspec
+
 import flopy
 
-from ..utils import mfreadnam
-from ..modflow import Modflow
 from ..mbase import PackageLoadException
+from ..modflow import Modflow
+from ..utils import mfreadnam
 
 
 class MfUsg(Modflow):

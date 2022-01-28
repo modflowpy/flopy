@@ -3,8 +3,8 @@ Module for input/output utilities
 """
 import os
 import sys
+
 import numpy as np
-from ..utils import import_optional_dependency
 
 
 def _fmt_string(array, float_format="{}"):
@@ -277,9 +277,9 @@ def flux_to_wel(cbc_file, text, precision="single", model=None, verbose=False):
     flopy.modflow.ModflowWel instance
 
     """
+    from ..modflow import Modflow, ModflowWel
     from . import CellBudgetFile as CBF
     from .util_list import MfList
-    from ..modflow import Modflow, ModflowWel
 
     cbf = CBF(cbc_file, precision=precision, verbose=verbose)
 
@@ -347,6 +347,8 @@ def loadtxt(
     ra : np.recarray
         Numpy record array of file contents.
     """
+    from ..utils import import_optional_dependency
+
     # test if pandas should be used, if available
     if use_pandas:
         pd = import_optional_dependency("pandas")

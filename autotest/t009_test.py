@@ -1,15 +1,17 @@
 __author__ = "aleaf"
 
-import sys
-
-import os
 import glob
-import shutil
 import io
-import numpy as np
+import os
+import shutil
+
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
+
+from flopy.discretization import StructuredGrid
 from flopy.utils.recarray_utils import create_empty_recarray
+from flopy.utils.sfroutputfile import SfrFile
 
 try:
     import shapefile
@@ -22,8 +24,6 @@ except ImportError:
 import flopy
 
 fm = flopy.modflow
-from flopy.utils.sfroutputfile import SfrFile
-from flopy.discretization import StructuredGrid
 
 path = os.path.join("..", "examples", "data", "mf2005_test")
 path2 = os.path.join("..", "examples", "data", "sfr_test")

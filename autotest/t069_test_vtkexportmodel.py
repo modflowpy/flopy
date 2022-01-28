@@ -2,12 +2,10 @@
 Test vtk export_model function without packages_names definition
 """
 
+from ci_framework import FlopyTestSetup, base_test_dir
+
 import flopy
 from flopy.export import vtk
-from ci_framework import (
-    base_test_dir,
-    FlopyTestSetup,
-)
 
 mf_exe_name = "mf6"
 

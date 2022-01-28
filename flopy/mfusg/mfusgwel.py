@@ -9,15 +9,16 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?wel.htm>`_.
 """
 from copy import deepcopy
+
 import numpy as np
 from numpy.lib.recfunctions import stack_arrays
 
-from .mfusg import MfUsg
-from ..modflow.mfwel import ModflowWel
 from ..modflow.mfparbc import ModflowParBc as mfparbc
-from ..utils.flopy_io import ulstrd
+from ..modflow.mfwel import ModflowWel
 from ..utils import MfList
+from ..utils.flopy_io import ulstrd
 from ..utils.utils_def import get_open_file_object
+from .mfusg import MfUsg
 
 
 class MfUsgWel(ModflowWel):

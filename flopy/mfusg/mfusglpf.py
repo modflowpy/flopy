@@ -10,16 +10,16 @@ MODFLOW Guide
 """
 import numpy as np
 
-from ..modflow.mfpar import ModflowPar as mfpar
 from ..modflow.mflpf import ModflowLpf
-from .mfusg import MfUsg
+from ..modflow.mfpar import ModflowPar as mfpar
 from ..utils import Util2d, read1d
 from ..utils.flopy_io import line_parse
 from ..utils.utils_def import (
-    get_util2d_shape_for_layer,
-    get_unitnumber_from_ext_unit_dict,
     get_open_file_object,
+    get_unitnumber_from_ext_unit_dict,
+    get_util2d_shape_for_layer,
 )
+from .mfusg import MfUsg
 
 
 class MfUsgLpf(ModflowLpf):

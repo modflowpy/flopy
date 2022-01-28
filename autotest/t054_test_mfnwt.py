@@ -5,10 +5,12 @@ These are the examples that are distributed with MODFLOW-USG.
 
 import os
 import sys
-import flopy
+
 import pymake
 import pytest
-from ci_framework import base_test_dir, FlopyTestSetup
+from ci_framework import FlopyTestSetup, base_test_dir
+
+import flopy
 
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 

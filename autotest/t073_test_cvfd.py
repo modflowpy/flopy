@@ -1,6 +1,7 @@
 import numpy as np
+
 import flopy
-from flopy.utils.cvfdutil import to_cvfd, gridlist_to_disv_gridprops
+from flopy.utils.cvfdutil import gridlist_to_disv_gridprops, to_cvfd
 
 
 def test_tocvfd1():

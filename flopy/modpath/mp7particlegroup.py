@@ -6,9 +6,11 @@ mp7particlegroup module.  Contains the ParticleGroup, and
 """
 
 import os
+
 import numpy as np
+
 from ..utils.util_array import Util2d
-from .mp7particledata import ParticleData, NodeParticleData
+from .mp7particledata import NodeParticleData, ParticleData
 
 
 class _Modpath7ParticleGroup:

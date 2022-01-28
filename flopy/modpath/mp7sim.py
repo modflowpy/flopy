@@ -8,7 +8,9 @@ Additional information for this MODFLOW/MODPATH package can be found at the
 
 """
 from enum import Enum
+
 import numpy as np
+
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
 from .mp7particlegroup import (

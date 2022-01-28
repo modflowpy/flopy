@@ -8,11 +8,12 @@ MODFLOW Guide
 
 """
 import numpy as np
-from ..pakbase import Package
-from .mfparbc import ModflowParBc as mfparbc
 from numpy.lib.recfunctions import stack_arrays
+
+from ..pakbase import Package
 from ..utils.flopy_io import line_parse
 from ..utils.recarray_utils import create_empty_recarray
+from .mfparbc import ModflowParBc as mfparbc
 
 
 class ModflowHfb(Package):

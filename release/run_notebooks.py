@@ -1,6 +1,5 @@
 import os
 import sys
-import shutil
 
 # path to notebooks
 src_pths = (

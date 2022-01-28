@@ -4,7 +4,6 @@ HeadUFile get_ts tests using t505_test.py
 
 import os
 import platform
-import numpy as np
 
 try:
     from shapely.geometry import Polygon
@@ -13,9 +12,10 @@ except ImportWarning as e:
     Polygon = None
 
 
+from ci_framework import FlopyTestSetup, base_test_dir
+
 import flopy
 from flopy.utils.gridgen import Gridgen
-from ci_framework import base_test_dir, FlopyTestSetup
 
 # Set gridgen executable
 gridgen_exe = "gridgen"

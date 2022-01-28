@@ -1,15 +1,16 @@
 import os
+
+from ...mbase import ModelInterface
+from ...pakbase import PackageInterface
 from ...utils import (
-    HeadFile,
     CellBudgetFile,
+    HeadFile,
+    Mf6ListBudget,
     Mf6Obs,
     ZoneBudget6,
     ZoneFile6,
-    Mf6ListBudget,
 )
 from ...utils.observationfile import CsvFile
-from ...pakbase import PackageInterface
-from ...mbase import ModelInterface
 
 
 class MF6Output:
@@ -24,7 +25,7 @@ class MF6Output:
     """
 
     def __init__(self, obj):
-        from ..modflow import ModflowUtlobs, ModflowGwtoc, ModflowGwfoc
+        from ..modflow import ModflowGwfoc, ModflowGwtoc, ModflowUtlobs
 
         # set initial observation definitions
         methods = {

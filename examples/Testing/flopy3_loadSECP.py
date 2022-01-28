@@ -1,8 +1,9 @@
-import sys
 import os
 import platform
-import numpy as np
+import sys
+
 import matplotlib.pyplot as plt
+import numpy as np
 
 import flopy
 

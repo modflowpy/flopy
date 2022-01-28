@@ -13,8 +13,8 @@ import numpy as np
 
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
-from ..utils.reference import TemporalReference
 from ..utils.flopy_io import line_parse
+from ..utils.reference import TemporalReference
 
 ITMUNI = {"u": 0, "s": 1, "m": 2, "h": 3, "d": 4, "y": 5}
 LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}

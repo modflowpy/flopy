@@ -2,7 +2,7 @@
 # mf6/utils/createpackages.py
 # FILE created on December 22, 2021 17:36:26 UTC
 from .. import mfpackage
-from ..data.mfdatautil import ListTemplateGenerator, ArrayTemplateGenerator
+from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
 
 class ModflowUtltas(mfpackage.MFPackage):

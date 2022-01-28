@@ -14,6 +14,7 @@
 # ----------------------------------------------------
 import os
 import sys
+
 import numpy as np
 from pylab import *
 from PIL import Image, ImageDraw

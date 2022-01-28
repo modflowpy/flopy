@@ -2,13 +2,11 @@
 Test zonbud utility
 """
 import os
+
 import numpy as np
+
 import flopy
-from flopy.utils import (
-    ZoneBudget,
-    ZoneBudget6,
-    ZoneFile6,
-)
+from flopy.utils import ZoneBudget, ZoneBudget6, ZoneFile6
 
 loadpth = os.path.join("..", "examples", "data", "zonbud_examples")
 outpth = os.path.join("temp", "t039")

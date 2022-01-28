@@ -9,7 +9,9 @@ MODFLOW Guide
 """
 
 import re
+
 import numpy as np
+
 from ..pakbase import Package
 from ..utils import Util3d
 

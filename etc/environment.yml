@@ -11,6 +11,7 @@ dependencies:
   - pylint
   - flake8
   - black
+  - isort
   - coverage
   - pytest
   - pytest-xdist

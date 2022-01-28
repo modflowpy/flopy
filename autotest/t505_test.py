@@ -1,12 +1,12 @@
 import os
 
 import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
 
 import flopy
 import flopy.utils.binaryfile as bf
 from flopy.mf6.data.mfdatastorage import DataStorageType
-from flopy.utils.datautil import PyListUtil
-from flopy.mf6.mfbase import FlopyException
+from flopy.mf6.mfbase import FlopyException, MFDataException
 from flopy.mf6.modflow.mfgwf import ModflowGwf
 from flopy.mf6.modflow.mfgwfchd import ModflowGwfchd
 from flopy.mf6.modflow.mfgwfdis import ModflowGwfdis
@@ -30,12 +30,8 @@ from flopy.mf6.modflow.mfgwfwel import ModflowGwfwel
 from flopy.mf6.modflow.mfims import ModflowIms
 from flopy.mf6.modflow.mfsimulation import MFSimulation
 from flopy.mf6.modflow.mftdis import ModflowTdis
-from flopy.mf6.modflow.mfutlobs import ModflowUtlobs
-from flopy.mf6.modflow.mfutlts import ModflowUtlts
 from flopy.mf6.utils import testutils
-from flopy.mf6.mfbase import MFDataException
-from flopy.mf6.mfbase import ExtFileAction
-from ci_framework import base_test_dir, FlopyTestSetup
+from flopy.utils.datautil import PyListUtil
 
 try:
     import shapefile
@@ -359,8 +355,6 @@ def test_array():
     # aux values, test that they work the same as other arrays (is a value
     # of zero always used even if aux is defined in a previous stress
     # period?)
-
-    import flopy
 
     mf6 = flopy.mf6
     sim_name = "test_array"

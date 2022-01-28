@@ -5,14 +5,15 @@ recarrays, which can then be easily plotted.
 
 """
 
+import errno
 import os
 import re
-import numpy as np
-import errno
 
-from ..utils.utils_def import totim_to_datetime
-from ..utils.flopy_io import get_ts_sp
+import numpy as np
+
 from ..utils import import_optional_dependency
+from ..utils.flopy_io import get_ts_sp
+from ..utils.utils_def import totim_to_datetime
 
 
 class ListBudget:

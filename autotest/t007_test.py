@@ -1,15 +1,13 @@
 # Test export module
-import sys
-import pytest
-
-sys.path.append("..")
 import glob
 import os
 import shutil
-import numpy as np
-import flopy
 
-from ci_framework import base_test_dir, FlopyTestSetup
+import numpy as np
+import pytest
+from ci_framework import FlopyTestSetup, base_test_dir
+
+import flopy
 
 base_dir = base_test_dir(
     __file__,
@@ -336,8 +334,7 @@ def test_write_shapefile():
         return
 
     from flopy.discretization import StructuredGrid
-    from flopy.export.shapefile_utils import shp2recarray
-    from flopy.export.shapefile_utils import write_grid_shapefile
+    from flopy.export.shapefile_utils import shp2recarray, write_grid_shapefile
 
     ws_out = f"{base_dir}_shapefile_write"
     test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
@@ -1166,8 +1163,8 @@ def test_modelgrid_with_PlotMapView():
 
 
 def test_mapview_plot_bc():
-    from matplotlib.collections import QuadMesh, PathCollection
     import matplotlib.pyplot as plt
+    from matplotlib.collections import PathCollection, QuadMesh
 
     sim_name = "mfsim.nam"
     sim_path = os.path.join(
@@ -1251,8 +1248,8 @@ def test_mapview_plot_bc():
 
 
 def test_crosssection_plot_bc():
-    from matplotlib.collections import PatchCollection
     import matplotlib.pyplot as plt
+    from matplotlib.collections import PatchCollection
 
     sim_name = "mfsim.nam"
     sim_path = os.path.join(
@@ -1330,10 +1327,10 @@ def test_crosssection_plot_bc():
 
 
 def test_tricontour_NaN():
-    from flopy.plot import PlotMapView
-    import numpy as np
-    from flopy.discretization import StructuredGrid
     import matplotlib.pyplot as plt
+
+    from flopy.discretization import StructuredGrid
+    from flopy.plot import PlotMapView
 
     arr = np.random.rand(10, 10) * 100
     arr[-1, :] = np.nan
@@ -1741,6 +1738,7 @@ def test_export_contourf():
     if import_shapefile() is None:
         return
     import matplotlib.pyplot as plt
+
     from flopy.export.utils import export_contourf
 
     ws_out = f"{base_dir}_shapefile_export_contourf"

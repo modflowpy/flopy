@@ -8,11 +8,11 @@ MODFLOW Guide
 
 """
 import numpy as np
-from ..utils import MfList
+
 from ..pakbase import Package
-from ..utils.recarray_utils import create_empty_recarray
+from ..utils import MfList
 from ..utils.optionblock import OptionBlock
-import warnings
+from ..utils.recarray_utils import create_empty_recarray
 
 
 class ModflowWel(Package):

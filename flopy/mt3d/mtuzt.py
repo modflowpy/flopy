@@ -3,7 +3,7 @@ __author__ = "emorway"
 import numpy as np
 
 from ..pakbase import Package
-from ..utils import Util2d, Util3d, Transient2d
+from ..utils import Transient2d, Util2d
 
 
 class Mt3dUzt(Package):

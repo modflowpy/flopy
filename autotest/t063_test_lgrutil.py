@@ -1,5 +1,5 @@
-import os
 import numpy as np
+
 from flopy.utils.lgrutil import Lgr
 
 

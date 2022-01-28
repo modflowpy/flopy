@@ -11,14 +11,8 @@ from __future__ import annotations
 import collections
 import itertools
 import re
-from typing import (
-    Callable,
-    Iterator,
-    SupportsInt,
-    Tuple,
-    Union,
-)
 import warnings
+from typing import Callable, Iterator, SupportsInt, Tuple, Union
 
 __all__ = [
     "parse",

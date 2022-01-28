@@ -8,11 +8,11 @@ MODFLOW Guide
 
 """
 import numpy as np
-from ..utils import MfList
+
 from ..pakbase import Package
-from .mfparbc import ModflowParBc as mfparbc
+from ..utils import MfList, read_fixed_var, write_fixed_var
 from ..utils.recarray_utils import create_empty_recarray
-from ..utils import read_fixed_var, write_fixed_var
+from .mfparbc import ModflowParBc as mfparbc
 
 
 class ModflowStr(Package):

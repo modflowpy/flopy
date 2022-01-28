@@ -8,9 +8,10 @@ MODFLOW Guide
 
 """
 import numpy as np
+
 from ..pakbase import Package
-from ..utils.util_list import MfList
 from ..utils.recarray_utils import create_empty_recarray
+from ..utils.util_list import MfList
 
 
 class ModflowDrn(Package):

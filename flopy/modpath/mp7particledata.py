@@ -5,9 +5,8 @@ mp7particledata module. Contains the ParticleData, CellDataType,
 
 """
 
-import os
 import numpy as np
-from ..utils.util_array import Util2d
+
 from ..utils.recarray_utils import create_empty_recarray
 
 
