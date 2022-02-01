@@ -1,6 +1,8 @@
 import os
 import sys
+
 import numpy as np
+
 import flopy
 
 # Assign name and create modflow model object
@@ -52,6 +54,7 @@ mf.write_input()
 mf.run_model()
 
 import matplotlib.pyplot as plt
+
 import flopy.utils.binaryfile as bf
 
 plt.subplot(1, 1, 1, aspect="equal")

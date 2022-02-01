@@ -99,14 +99,15 @@ def disv_model():
 
 # simple functions to load vertices and index lists for unstructured grid
 def load_verts(fname):
-    verts = np.genfromtxt(fname, dtype=[int, float, float],
-                          names=['iv', 'x', 'y'])
-    verts['iv'] -= 1  # zero based
+    verts = np.genfromtxt(
+        fname, dtype=[int, float, float], names=["iv", "x", "y"]
+    )
+    verts["iv"] -= 1  # zero based
     return verts
 
 
 def load_iverts(fname):
-    f = open(fname, 'r')
+    f = open(fname, "r")
     iverts = []
     xc = []
     yc = []
@@ -244,8 +245,12 @@ def test_unstructured_xyz_intersect():
     ncpl = np.array(3 * [len(iverts)])
     nnodes = np.sum(ncpl)
 
-    top = np.ones((nnodes), )
-    botm = np.ones((nnodes), )
+    top = np.ones(
+        (nnodes),
+    )
+    botm = np.ones(
+        (nnodes),
+    )
 
     # set top and botm elevations
     i0 = 0
@@ -258,11 +263,15 @@ def test_unstructured_xyz_intersect():
         i1 += cpl
 
     # create the modelgrid
-    mg = flopy.discretization.UnstructuredGrid(vertices=verts,
-                                               iverts=iverts,
-                                               xcenters=xc,
-                                               ycenters=yc, top=top,
-                                               botm=botm, ncpl=ncpl)
+    mg = flopy.discretization.UnstructuredGrid(
+        vertices=verts,
+        iverts=iverts,
+        xcenters=xc,
+        ycenters=yc,
+        top=top,
+        botm=botm,
+        ncpl=ncpl,
+    )
 
     xc, yc, zc = mg.xyzcellcenters
     zc = zc[0].reshape(mg.nlay, mg.ncpl[0])

@@ -212,6 +212,7 @@ class FlopyTestSetup(object):
             shutil.copytree(test_dir, dst)
         return
 
+
 def _get_mf6path():
     """
     Get the path for the MODFLOW 6 example problems

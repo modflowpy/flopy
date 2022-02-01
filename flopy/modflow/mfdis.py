@@ -300,7 +300,7 @@ class ModflowDis(Package):
                 p = float(nstp[kper])
                 dt = perlen[kper]
                 if m > 1:
-                    dt *= (m - 1.0) / (m ** p - 1.0)
+                    dt *= (m - 1.0) / (m**p - 1.0)
                 else:
                     dt = dt / p
                 for kstp in range(nstp[kper]):

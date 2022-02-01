@@ -18,11 +18,13 @@
 # by using the built in `.output` attribute on any MODFLOW 6 model or
 # package object
 
-# ## Package import
-import flopy
 import os
 import platform
+
 import numpy as np
+
+# ## Package import
+import flopy
 
 # ## Load a simple demonstration model
 exe_name = "mf6"
@@ -37,7 +39,9 @@ else:
     )
 # load the model
 sim = flopy.mf6.MFSimulation.load(
-    sim_ws=sim_ws, exe_name=exe_name, verbosity_level=0,
+    sim_ws=sim_ws,
+    exe_name=exe_name,
+    verbosity_level=0,
 )
 # change the simulation path, rewrite the files, and run the model
 sim_ws = os.path.join("..", "..", "autotest", "temp", "mf6_output")

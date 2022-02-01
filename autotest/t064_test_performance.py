@@ -29,7 +29,7 @@ class TestModflowPerformance:
         size = 100
         nlay = 10
         nper = 10
-        nsfr = int((size ** 2) / 5)
+        nsfr = int((size**2) / 5)
 
         letters = string.ascii_lowercase
         prepend = "".join(random.choice(letters) for i in range(10))
@@ -63,7 +63,7 @@ class TestModflowPerformance:
             m, rech={k: 0.001 - np.cos(k) * 0.001 for k in range(nper)}
         )
 
-        ra = fm.ModflowWel.get_empty(size ** 2)
+        ra = fm.ModflowWel.get_empty(size**2)
         well_spd = {}
         for kper in range(nper):
             ra_per = ra.copy()
@@ -120,7 +120,10 @@ class TestModflowPerformance:
         print("loading model...")
         mfp = TestModflowPerformance()
         mfp.m.write_input()
-        target = 3
+        if sys.platform == "darwin":
+            target = 4.0
+        else:
+            target = 3.0
         t0 = time.time()
         m = fm.Modflow.load(
             f"{mfp.modelname}.nam", model_ws=mfp.model_ws, check=False
@@ -128,7 +131,7 @@ class TestModflowPerformance:
         t1 = time.time() - t0
         assert (
             t1 < target
-        ), f"model load took {t1:.2f}s, should take {target:.1f}s"
+        ), f"model load took {t1:.2f}s, should take {target:.2f}s"
         print(f"loading the model took {t1:.2f}s")
 
     @classmethod

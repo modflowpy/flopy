@@ -300,9 +300,9 @@ def test_voronoi_grid0(plot=False):
         [1330.11116, 1809.788273],
         [399.1804436, 2998.515188],
         [914.7728404, 5132.494831],
-#        [1831.381546, 6335.543757],
+        #        [1831.381546, 6335.543757],
     ]
-    area_max = 100.0 ** 2
+    area_max = 100.0**2
     tri = Triangle(maximum_area=area_max, angle=30, model_ws=model_ws)
     poly = np.array(domain)
     tri.add_polygon(poly)
@@ -427,6 +427,7 @@ def test_voronoi_grid2(plot=False):
 
     if plot:
         import matplotlib.pyplot as plt
+
         fig = plt.figure(figsize=(10, 10))
         ax = fig.add_subplot()
         ax.set_aspect("equal")
@@ -607,7 +608,11 @@ def test_voronoi_grid5(plot=False):
         voronoi_grid.plot(ax=ax)
 
         # plot invalid cells
-        ax.plot(voronoi_grid.xcellcenters[ninvalid_cells], voronoi_grid.ycellcenters[ninvalid_cells], 'ro')
+        ax.plot(
+            voronoi_grid.xcellcenters[ninvalid_cells],
+            voronoi_grid.ycellcenters[ninvalid_cells],
+            "ro",
+        )
 
         plt.savefig(os.path.join(model_ws, f"{name}.png"))
 
@@ -632,9 +637,9 @@ if __name__ == "__main__":
     # test_create_unstructured_grid_from_verts()
     # test_triangle_unstructured_grid()
     # test_voronoi_vertex_grid()
-    #test_voronoi_grid0(plot=True)
-    #test_voronoi_grid1(plot=True)
+    # test_voronoi_grid0(plot=True)
+    # test_voronoi_grid1(plot=True)
     test_voronoi_grid2(plot=True)
-    #test_voronoi_grid3(plot=True)
-    #test_voronoi_grid4(plot=True)
-    #test_voronoi_grid5(plot=True)
+    # test_voronoi_grid3(plot=True)
+    # test_voronoi_grid4(plot=True)
+    # test_voronoi_grid5(plot=True)

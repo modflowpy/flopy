@@ -328,22 +328,29 @@ def test_flowja_residuals():
 def test_structured_faceflows_3d():
     model_ws = f"{base_dir}_test_faceflows_3d"
     test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
-    name = 'mymodel'
-    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=model_ws, exe_name='mf6')
+    name = "mymodel"
+    sim = flopy.mf6.MFSimulation(
+        sim_name=name, sim_ws=model_ws, exe_name="mf6"
+    )
     tdis = flopy.mf6.ModflowTdis(sim)
     ims = flopy.mf6.ModflowIms(sim)
     gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
-    dis = flopy.mf6.ModflowGwfdis(gwf, nlay=3, nrow=10, ncol=10, top=0, botm=[-1, -2, -3])
+    dis = flopy.mf6.ModflowGwfdis(
+        gwf, nlay=3, nrow=10, ncol=10, top=0, botm=[-1, -2, -3]
+    )
     ic = flopy.mf6.ModflowGwfic(gwf)
     npf = flopy.mf6.ModflowGwfnpf(gwf, save_specific_discharge=True)
-    chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=[[(0, 0, 0), 1.],
-                                                           [(0, 9, 9), 0.]])
-    budget_file = name + '.bud'
-    head_file = name + '.hds'
-    oc = flopy.mf6.ModflowGwfoc(gwf,
-                                budget_filerecord=budget_file,
-                                head_filerecord=head_file,
-                                saverecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')])
+    chd = flopy.mf6.ModflowGwfchd(
+        gwf, stress_period_data=[[(0, 0, 0), 1.0], [(0, 9, 9), 0.0]]
+    )
+    budget_file = name + ".bud"
+    head_file = name + ".hds"
+    oc = flopy.mf6.ModflowGwfoc(
+        gwf,
+        budget_filerecord=budget_file,
+        head_filerecord=head_file,
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
     sim.write_simulation()
     sim.run_simulation()
 
@@ -354,9 +361,15 @@ def test_structured_faceflows_3d():
         flowja,
         grb_file=os.path.join(model_ws, "mymodel.dis.grb"),
     )
-    assert frf.shape == head.shape, f"frf.shape {frf.shape} != head.shape {head.shape}"
-    assert fff.shape == head.shape, f"frf.shape {frf.shape} != head.shape {head.shape}"
-    assert flf.shape == head.shape, f"frf.shape {frf.shape} != head.shape {head.shape}"
+    assert (
+        frf.shape == head.shape
+    ), f"frf.shape {frf.shape} != head.shape {head.shape}"
+    assert (
+        fff.shape == head.shape
+    ), f"frf.shape {frf.shape} != head.shape {head.shape}"
+    assert (
+        flf.shape == head.shape
+    ), f"frf.shape {frf.shape} != head.shape {head.shape}"
     return
 
 
