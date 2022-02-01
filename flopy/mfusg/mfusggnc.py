@@ -6,12 +6,12 @@ Contains the MfUsgGnc class. Note that the user can access
 the MfUsgGnc class as `flopy.mfusg.MfUsgGnc`.
 """
 import numpy as np
-from ..pakbase import Package
-from ..utils.recarray_utils import create_empty_recarray
-from ..utils.flopy_io import ulstrd
+
 from ..modflow.mfparbc import ModflowParBc as mfparbc
-from .mfusg import MfUsg
-from .mfusg import fmt_string
+from ..pakbase import Package
+from ..utils.flopy_io import ulstrd
+from ..utils.recarray_utils import create_empty_recarray
+from .mfusg import MfUsg, fmt_string
 
 
 class MfUsgGnc(Package):

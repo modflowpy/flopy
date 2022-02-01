@@ -1,32 +1,33 @@
-import os
-import sys
+import copy
+import datetime
 import errno
 import inspect
-import datetime
-import copy
+import os
+import sys
+
 import numpy as np
 
-from .mfbase import PackageContainer, ExtFileAction, PackageContainerType
-from .mfbase import (
-    MFFileMgmt,
-    MFDataException,
-    ReadAsArraysException,
-    MFInvalidTransientBlockHeaderException,
-    VerbosityLevel,
-    FlopyException,
-)
-from .data.mfstructure import DatumType
-from .data import mfstructure, mfdata
-from ..utils import datautil
-from .data import mfdataarray, mfdatalist, mfdatascalar
-from .data.mfstructure import MFDataItemStructure
-from .coordinates import modeldimensions
-from ..pakbase import PackageInterface
-from .data.mfdatautil import MFComment, cellids_equal, DataSearchOutput
-from ..utils.check import mf6check
-from .utils.output_util import MF6Output
 from ..mbase import ModelInterface
+from ..pakbase import PackageInterface
+from ..utils import datautil
+from ..utils.check import mf6check
 from ..version import __version__
+from .coordinates import modeldimensions
+from .data import mfdata, mfdataarray, mfdatalist, mfdatascalar, mfstructure
+from .data.mfdatautil import DataSearchOutput, MFComment, cellids_equal
+from .data.mfstructure import DatumType, MFDataItemStructure
+from .mfbase import (
+    ExtFileAction,
+    FlopyException,
+    MFDataException,
+    MFFileMgmt,
+    MFInvalidTransientBlockHeaderException,
+    PackageContainer,
+    PackageContainerType,
+    ReadAsArraysException,
+    VerbosityLevel,
+)
+from .utils.output_util import MF6Output
 
 
 class MFBlockHeader:

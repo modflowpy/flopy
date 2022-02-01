@@ -1,16 +1,17 @@
 __author__ = "aleaf"
 
-import os
-import numpy as np
-import warnings
 import copy
+import os
+import warnings
+
+import numpy as np
 from numpy.lib import recfunctions
+
 from ..pakbase import Package
-from ..utils import MfList
+from ..utils import MfList, import_optional_dependency
 from ..utils.flopy_io import line_parse
-from ..utils.recarray_utils import create_empty_recarray
 from ..utils.optionblock import OptionBlock
-from ..utils import import_optional_dependency
+from ..utils.recarray_utils import create_empty_recarray
 
 
 class ModflowSfr2(Package):
@@ -2061,8 +2062,8 @@ class ModflowSfr2(Package):
 
     def export(self, f, **kwargs):
         if isinstance(f, str) and f.lower().endswith(".shp"):
-            from ..utils.geometry import Polygon
             from ..export.shapefile_utils import recarray2shp
+            from ..utils.geometry import Polygon
 
             geoms = []
             for ix, i in enumerate(self.reach_data.i):
@@ -2083,8 +2084,8 @@ class ModflowSfr2(Package):
         reaches can be used to filter for the longest connections in a GIS.
 
         """
-        from ..utils.geometry import LineString
         from ..export.shapefile_utils import recarray2shp
+        from ..utils.geometry import LineString
 
         rd = self.reach_data.copy()
         m = self.parent
@@ -2126,8 +2127,8 @@ class ModflowSfr2(Package):
         the model (outset=0).
 
         """
-        from ..utils.geometry import Point
         from ..export.shapefile_utils import recarray2shp
+        from ..utils.geometry import Point
 
         rd = self.reach_data
         if np.min(rd.outreach) == np.max(rd.outreach):
@@ -2160,8 +2161,8 @@ class ModflowSfr2(Package):
             Variable in SFR Package dataset 6a (see SFR package documentation)
 
         """
-        from ..utils.geometry import Point
         from ..export.shapefile_utils import recarray2shp
+        from ..utils.geometry import Point
 
         rd = self.reach_data
         if np.min(rd.outreach) == np.max(rd.outreach):

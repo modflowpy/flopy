@@ -1,7 +1,7 @@
 import numpy as np
 
 from ..pakbase import Package
-from ..utils import Util2d, MfList
+from ..utils import MfList, Util2d
 
 __author__ = "emorway"
 

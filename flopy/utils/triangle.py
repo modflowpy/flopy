@@ -1,7 +1,9 @@
 import os
-import numpy as np
-import matplotlib.pyplot as plt
 import subprocess
+
+import matplotlib.pyplot as plt
+import numpy as np
+
 from ..mbase import which
 from ..utils.cvfdutil import centroid_of_polygon
 from ..utils.geospatial_utils import GeoSpatialUtil
@@ -241,8 +243,8 @@ class Triangle:
         None
 
         """
-        from ..plot import PlotMapView
         from ..discretization import VertexGrid
+        from ..plot import PlotMapView
 
         cell2d = self.get_cell2d()
         vertices = self.get_vertices()

@@ -8,11 +8,11 @@ MODFLOW Guide
 
 """
 import numpy as np
-from .mfparbc import ModflowParBc as mfparbc
-from ..utils import Transient2d, Util2d
-from ..utils.utils_def import get_pak_vals_shape
 
 from ..pakbase import Package
+from ..utils import Transient2d, Util2d
+from ..utils.utils_def import get_pak_vals_shape
+from .mfparbc import ModflowParBc as mfparbc
 
 
 class ModflowEvt(Package):

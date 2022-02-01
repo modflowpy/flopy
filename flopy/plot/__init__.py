@@ -20,12 +20,12 @@
     --------
 
     """
+from .crosssection import PlotCrossSection
+from .map import PlotMapView
 from .plotutil import (
+    PlotUtilities,
     SwiConcentration,
     plot_shapefile,
     shapefile_extents,
-    PlotUtilities,
 )
-from .map import PlotMapView
-from .crosssection import PlotCrossSection
 from .styles import styles

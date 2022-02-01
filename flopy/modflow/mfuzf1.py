@@ -7,12 +7,14 @@ MODFLOW Guide
 <https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?uzf_unsaturated_zone_flow_pack.htm>`_.
 
 """
-import numpy as np
-from ..utils.flopy_io import pop_item, line_parse, multi_line_strip
-from ..pakbase import Package
-from ..utils import Util2d, Transient2d
-from ..utils.optionblock import OptionBlock
 import warnings
+
+import numpy as np
+
+from ..pakbase import Package
+from ..utils import Transient2d, Util2d
+from ..utils.flopy_io import line_parse, multi_line_strip, pop_item
+from ..utils.optionblock import OptionBlock
 
 
 class ModflowUzf1(Package):

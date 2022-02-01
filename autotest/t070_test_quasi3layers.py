@@ -8,10 +8,12 @@ Created on Mon Feb 17 12:29:35 2020
 
 import os
 import sys
-import numpy as np
-import flopy
+
 import matplotlib.pyplot as plt
-from ci_framework import base_test_dir, FlopyTestSetup
+import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
+import flopy
 
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 

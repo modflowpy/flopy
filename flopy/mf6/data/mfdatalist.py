@@ -1,18 +1,20 @@
-import math
-import sys
-import os
 import inspect
+import math
+import os
+import sys
+
 import numpy as np
-from ..utils.mfenums import DiscretizationType
-from ..data import mfstructure, mfdata
-from ..mfbase import MFDataException, ExtFileAction, VerbosityLevel
-from .mfstructure import DatumType
-from ...utils import datautil
+
 from ...datbase import DataListInterface, DataType
 from ...mbase import ModelInterface
-from .mffileaccess import MFFileAccessList
+from ...utils import datautil
+from ..data import mfdata, mfstructure
+from ..mfbase import ExtFileAction, MFDataException, VerbosityLevel
+from ..utils.mfenums import DiscretizationType
 from .mfdatastorage import DataStorage, DataStorageType, DataStructureType
 from .mfdatautil import to_string
+from .mffileaccess import MFFileAccessList
+from .mfstructure import DatumType
 
 
 class MFList(mfdata.MFMultiDimVar, DataListInterface):

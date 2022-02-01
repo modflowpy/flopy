@@ -1,13 +1,12 @@
-import pytest
 import os
 
-import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
+import pytest
+from ci_framework import FlopyTestSetup, base_test_dir
 
 import flopy
-
-from ci_framework import base_test_dir, FlopyTestSetup
 
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 

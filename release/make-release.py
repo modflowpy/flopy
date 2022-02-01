@@ -1,10 +1,10 @@
 #!/usr/bin/python
 
-import subprocess
-import os
-import sys
 import datetime
 import json
+import os
+import subprocess
+import sys
 
 # file_paths dictionary has file names and the path to the file. Enter '.'
 # as the path if the file is in the root repository directory

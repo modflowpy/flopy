@@ -1,12 +1,13 @@
 import os
+
+from ..discretization.modeltime import ModelTime
+from ..discretization.structuredgrid import StructuredGrid
 from ..mbase import BaseModel
-from ..pakbase import Package
 from ..modflow import Modflow
 from ..mt3d import Mt3dms
+from ..pakbase import Package
 from .swtvdf import SeawatVdf
 from .swtvsc import SeawatVsc
-from ..discretization.structuredgrid import StructuredGrid
-from ..discretization.modeltime import ModelTime
 
 
 class SeawatList(Package):

@@ -2,14 +2,16 @@
 Tests to prevent performance regressions
 """
 import os
-import sys
-import shutil
 import random
+import shutil
 import string
+import sys
 import time
+
 import numpy as np
-import flopy.modflow as fm
 from ci_framework import base_test_dir
+
+import flopy.modflow as fm
 
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 

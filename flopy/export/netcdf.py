@@ -1,15 +1,16 @@
+import copy
+import json
 import os
 import platform
 import socket
-import copy
-import json
-import numpy as np
-from datetime import datetime
 import time
-from .metadata import acdd
+from datetime import datetime
+
+import numpy as np
 
 from ..utils import import_optional_dependency
 from .longnames import NC_LONG_NAMES
+from .metadata import acdd
 
 # globals
 FILLVALUE = -99999.9
@@ -749,8 +750,8 @@ class NetCdf:
                 self.model.dis.perlen and self.start_datetime
 
         """
-        from ..version import __version__ as version
         from ..export.shapefile_utils import CRS
+        from ..version import __version__ as version
 
         if self.nc is not None:
             raise Exception("nc file already initialized")

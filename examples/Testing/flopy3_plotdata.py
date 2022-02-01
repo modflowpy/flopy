@@ -1,10 +1,8 @@
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
 
 import flopy
-
 
 fb = flopy.modflow.Modflow.load('freyberg', version='mf2005', model_ws=os.path.join('..', 'data', 'freyberg'), verbose=True)
 

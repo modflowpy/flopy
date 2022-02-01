@@ -1,7 +1,7 @@
 import numpy as np
 
-from ..utils.geometry import Shape, Collection
 from ..utils import import_optional_dependency
+from ..utils.geometry import Collection, Shape
 
 geojson = import_optional_dependency("geojson", errors="silent")
 geojson_classes = {}

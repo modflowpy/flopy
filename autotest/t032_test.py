@@ -3,17 +3,19 @@ Test shapefile stuff
 """
 import os
 import shutil
+
 import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
 import flopy
-from flopy.utils.geometry import Polygon
+from flopy.export.netcdf import NetCdf
 from flopy.export.shapefile_utils import (
+    CRS,
+    EpsgReference,
     recarray2shp,
     shp2recarray,
-    EpsgReference,
-    CRS,
 )
-from flopy.export.netcdf import NetCdf
-from ci_framework import base_test_dir, FlopyTestSetup
+from flopy.utils.geometry import Polygon
 
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 

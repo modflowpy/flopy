@@ -1,7 +1,9 @@
 # test unstructured binary head file
 
 import os
+
 import numpy as np
+
 import flopy
 
 

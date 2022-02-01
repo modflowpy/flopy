@@ -1,15 +1,14 @@
 import os
-import numpy as np
 import subprocess
 
-# flopy imports
-from ..mfusg.mfusgdisu import MfUsgDisU
-from ..mf6.modflow import ModflowGwfdis
-from .util_array import Util2d  # read1d,
-from ..utils import import_optional_dependency
+import numpy as np
+
 from ..export.shapefile_utils import shp2recarray
 from ..mbase import which
-
+from ..mf6.modflow import ModflowGwfdis
+from ..mfusg.mfusgdisu import MfUsgDisU
+from ..utils import import_optional_dependency
+from .util_array import Util2d  # read1d,
 
 # todo
 # creation of line and polygon shapefiles from features (holes!)
@@ -698,6 +697,7 @@ class Gridgen:
 
         """
         import matplotlib.pyplot as plt
+
         from ..plot import plot_shapefile, shapefile_extents
 
         if ax is None:

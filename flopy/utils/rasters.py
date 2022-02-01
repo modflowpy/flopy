@@ -1,6 +1,7 @@
-import numpy as np
-import threading
 import queue
+import threading
+
+import numpy as np
 
 from .utl_import import import_optional_dependency
 

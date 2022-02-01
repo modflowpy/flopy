@@ -3,10 +3,12 @@ Try to load all of the MODFLOW-USG examples in ../examples/data/mfusg_test.
 These are the examples that are distributed with MODFLOW-USG.
 """
 
-import pytest
 import os
+
+import pytest
+from ci_framework import FlopyTestSetup, base_test_dir
+
 import flopy
-from ci_framework import base_test_dir, FlopyTestSetup
 
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 

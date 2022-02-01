@@ -4,13 +4,13 @@ Unstructured grid tests
 """
 
 import os
-import shutil
 
 import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
 from flopy.discretization import UnstructuredGrid, VertexGrid
 from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
-from ci_framework import base_test_dir, FlopyTestSetup
 
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 

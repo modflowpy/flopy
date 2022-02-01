@@ -1,11 +1,11 @@
-import os
-import io
 import datetime
+import io
+import os
 import textwrap
 from enum import Enum
 
 # keep below as absolute imports
-from flopy.mf6.data import mfstructure, mfdatautil
+from flopy.mf6.data import mfdatautil, mfstructure
 from flopy.utils import datautil
 
 """
@@ -409,15 +409,15 @@ def create_packages():
         "w",
         newline="\n",
     )
-    init_file.write("# imports\n")
-    init_file.write("from .mfsimulation import MFSimulation\n")
+    init_file.write("from .mfsimulation import MFSimulation  # isort:skip\n")
 
     nam_import_string = (
         "from .. import mfmodel\nfrom ..data.mfdatautil "
-        "import ListTemplateGenerator, ArrayTemplateGenerator"
+        "import ArrayTemplateGenerator, ListTemplateGenerator"
     )
 
     # loop through packages list
+    init_file_imports = []
     for package in package_list:
         data_structure_dict = {}
         package_properties = []
@@ -565,14 +565,8 @@ def create_packages():
 
         import_string = "from .. import mfpackage"
         if template_gens:
-            import_string = f"{import_string}\nfrom ..data.mfdatautil import "
-            first_string = True
-            for template in template_gens:
-                if first_string:
-                    import_string = f"{import_string}{template}"
-                    first_string = False
-                else:
-                    import_string = f"{import_string}, {template}"
+            import_string += "\nfrom ..data.mfdatautil import "
+            import_string += ", ".join(sorted(template_gens))
         # add extra docstrings for additional variables
         doc_string.add_parameter(
             "    filename : String\n        File name for this package."
@@ -769,7 +763,7 @@ def create_packages():
             pb_file.write(packages_str)
         pb_file.close()
 
-        init_file.write(
+        init_file_imports.append(
             f"from .mf{package_name} import Modflow{package_name.title()}\n"
         )
 
@@ -844,9 +838,12 @@ def create_packages():
             )
             md_file.write(package_string)
             md_file.close()
-            init_file.write(
+            init_file_imports.append(
                 f"from .mf{model_name} import Modflow{model_name.capitalize()}\n"
             )
+    # Sort the imports
+    for line in sorted(init_file_imports, key=lambda x: x.split()[3]):
+        init_file.write(line)
     init_file.close()
 
 

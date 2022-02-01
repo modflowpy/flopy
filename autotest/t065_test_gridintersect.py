@@ -1,11 +1,11 @@
-import sys
+import os
 
-sys.path.insert(1, "..")
-import flopy.discretization as fgrid
-import flopy.plot as fplot
 import matplotlib.pyplot as plt
 import numpy as np
 from descartes import PolygonPatch
+
+import flopy.discretization as fgrid
+import flopy.plot as fplot
 from flopy.utils.triangle import Triangle
 
 try:
@@ -1299,9 +1299,8 @@ def test_all_intersections_shapely_no_strtree():
 
 
 def test_rasters():
-    from flopy.utils import Raster
-    import os
     import flopy as fp
+    from flopy.utils import Raster
 
     ws = os.path.join("..", "examples", "data", "options")
     raster_name = "dem.img"
@@ -1366,9 +1365,8 @@ def test_rasters():
 
 
 def test_raster_sampling_methods():
-    from flopy.utils import Raster
-    import os
     import flopy as fp
+    from flopy.utils import Raster
 
     ws = os.path.join("..", "examples", "data", "options")
     raster_name = "dem.img"

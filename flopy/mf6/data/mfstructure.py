@@ -3,15 +3,15 @@ mfstructure module.  Contains classes related to package structure
 
 
 """
-import os
-import traceback
 import ast
 import keyword
+import os
 from enum import Enum
 from textwrap import TextWrapper
-import numpy as np
-from ..mfbase import PackageContainer, StructException
 
+import numpy as np
+
+from ..mfbase import PackageContainer, StructException
 
 numeric_index_text = (
     "This argument is an index variable, which means that "

@@ -2,15 +2,15 @@
 # modified to run in parallel on mac and windows os
 #
 
+import multiprocessing as mp
 import os
-import sys
 import platform
 import shutil
-import time
-import numpy as np
-
 import subprocess as sp
-import multiprocessing as mp
+import sys
+import time
+
+import numpy as np
 
 import flopy
 

@@ -5,20 +5,21 @@ mbase module
 
 """
 import abc
+import copy
 import os
+import queue as Queue
 import shutil
 import threading
 import warnings
-import queue as Queue
-
 from datetime import datetime
 from shutil import which
-from subprocess import Popen, PIPE, STDOUT
-import copy
+from subprocess import PIPE, STDOUT, Popen
+
 import numpy as np
-from . import utils, discretization
-from .version import __version__
+
+from . import discretization, utils
 from .discretization.grid import Grid
+from .version import __version__
 
 ## Global variables
 # Multiplier for individual array elements in integer and real arrays read by

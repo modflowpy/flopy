@@ -21,11 +21,11 @@ Methods, book 6, chap. A45, 66 p.
 """
 import numpy as np
 
-from .cln_dtypes import MfUsgClnDtypes
-from .mfusg import fmt_string, MfUsg
 from ..pakbase import Package
 from ..utils import Util2d
 from ..utils.utils_def import get_open_file_object
+from .cln_dtypes import MfUsgClnDtypes
+from .mfusg import MfUsg, fmt_string
 
 
 class MfUsgCln(Package):

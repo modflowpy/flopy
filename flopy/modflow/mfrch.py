@@ -8,9 +8,10 @@ MODFLOW Guide
 
 """
 import numpy as np
-from ..pakbase import Package
-from ..utils import Util2d, Transient2d
+
 from ..modflow.mfparbc import ModflowParBc as mfparbc
+from ..pakbase import Package
+from ..utils import Transient2d, Util2d
 from ..utils.flopy_io import line_parse
 from ..utils.utils_def import get_pak_vals_shape
 

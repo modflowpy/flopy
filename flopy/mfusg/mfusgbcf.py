@@ -7,15 +7,15 @@ access the MfUsgBcf class as `flopy.mfusg.MfUsgBcf`.
 import numpy as np
 
 from ..modflow import ModflowBcf
-from .mfusg import MfUsg
 from ..utils import Util2d, Util3d
 from ..utils.flopy_io import line_parse
 from ..utils.utils_def import (
-    get_util2d_shape_for_layer,
-    get_unitnumber_from_ext_unit_dict,
-    type_from_iterable,
     get_open_file_object,
+    get_unitnumber_from_ext_unit_dict,
+    get_util2d_shape_for_layer,
+    type_from_iterable,
 )
+from .mfusg import MfUsg
 
 
 class MfUsgBcf(ModflowBcf):

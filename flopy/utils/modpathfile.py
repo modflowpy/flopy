@@ -8,8 +8,8 @@ important classes that can be accessed by the user.
 """
 
 import itertools
-import numpy as np
 
+import numpy as np
 from numpy.lib.recfunctions import append_fields, stack_arrays
 
 from ..utils.flopy_io import loadtxt
@@ -304,10 +304,10 @@ class _ModpathSeries(object):
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
         """
-        from ..utils import geometry
         from ..discretization import StructuredGrid
-        from ..utils.geometry import LineString
         from ..export.shapefile_utils import recarray2shp
+        from ..utils import geometry
+        from ..utils.geometry import LineString
 
         series = data
         if series is None:
@@ -1216,10 +1216,10 @@ class EndpointFile:
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
         """
-        from ..utils import geometry
         from ..discretization import StructuredGrid
-        from ..utils.geometry import Point
         from ..export.shapefile_utils import recarray2shp
+        from ..utils import geometry
+        from ..utils.geometry import Point
 
         epd = endpoint_data.copy()
         if epd is None:

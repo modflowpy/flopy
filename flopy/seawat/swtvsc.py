@@ -1,6 +1,7 @@
 import numpy as np
+
 from ..pakbase import Package
-from ..utils import Util3d, Transient3d
+from ..utils import Transient3d, Util3d
 
 
 class SeawatVsc(Package):

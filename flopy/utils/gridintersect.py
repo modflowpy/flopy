@@ -1,12 +1,12 @@
-import numpy as np
 import contextlib
 import warnings
 
-from .utl_import import import_optional_dependency
+import numpy as np
 
 from .geometry import transform
 from .geospatial_utils import GeoSpatialUtil
 from .parse_version import Version
+from .utl_import import import_optional_dependency
 
 NUMPY_GE_121 = Version(np.__version__) >= Version("1.21")
 

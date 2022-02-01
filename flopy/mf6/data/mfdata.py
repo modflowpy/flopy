@@ -1,19 +1,20 @@
-from operator import itemgetter
-import sys
 import inspect
+import sys
+from operator import itemgetter
+
+from ...datbase import DataInterface, DataType
+from ...mbase import ModelInterface
+from ...utils import datautil
+from ..coordinates.modeldimensions import DataDimensions, DiscretizationType
+from ..data.mfstructure import DatumType
 from ..mfbase import (
+    FlopyException,
     MFDataException,
     MFInvalidTransientBlockHeaderException,
-    FlopyException,
     VerbosityLevel,
 )
-from ..data.mfstructure import DatumType
-from ..coordinates.modeldimensions import DataDimensions, DiscretizationType
-from ...datbase import DataInterface, DataType
-from ...utils import datautil
 from .mfdatastorage import DataStructureType
 from .mfdatautil import to_string
-from ...mbase import ModelInterface
 
 
 class MFTransient:

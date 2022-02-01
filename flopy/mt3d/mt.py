@@ -1,21 +1,23 @@
 import os
+
 import numpy as np
+
+from ..discretization.modeltime import ModelTime
+from ..discretization.structuredgrid import StructuredGrid
 from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam
-from .mtbtn import Mt3dBtn
 from .mtadv import Mt3dAdv
+from .mtbtn import Mt3dBtn
 from .mtdsp import Mt3dDsp
-from .mtssm import Mt3dSsm
-from .mtrct import Mt3dRct
 from .mtgcg import Mt3dGcg
-from .mttob import Mt3dTob
-from .mtphc import Mt3dPhc
-from .mtuzt import Mt3dUzt
-from .mtsft import Mt3dSft
 from .mtlkt import Mt3dLkt
-from ..discretization.structuredgrid import StructuredGrid
-from ..discretization.modeltime import ModelTime
+from .mtphc import Mt3dPhc
+from .mtrct import Mt3dRct
+from .mtsft import Mt3dSft
+from .mtssm import Mt3dSsm
+from .mttob import Mt3dTob
+from .mtuzt import Mt3dUzt
 
 
 class Mt3dList(Package):

@@ -1,5 +1,5 @@
 import os
-import numpy as np
+
 import flopy
 
 pth = os.path.join('..', 'data', 'mf2005_test')

@@ -1,25 +1,26 @@
 import errno
-import sys
 import inspect
 import os.path
+import sys
+
 import numpy as np
+
 from ...mbase import run_model
+from ..data import mfstructure
+from ..data.mfdatautil import MFComment
+from ..data.mfstructure import DatumType
 from ..mfbase import (
-    PackageContainer,
-    MFFileMgmt,
     ExtFileAction,
-    PackageContainerType,
-    MFDataException,
     FlopyException,
+    MFDataException,
+    MFFileMgmt,
+    PackageContainer,
+    PackageContainerType,
     VerbosityLevel,
 )
 from ..mfpackage import MFPackage
-from ..data.mfstructure import DatumType
-from ..data import mfstructure
-from ..utils import binaryfile_utils
-from ..utils import mfobservation
-from ..modflow import mfnam, mfims, mftdis, mfgwfgnc, mfgwfmvr
-from ..data.mfdatautil import MFComment
+from ..modflow import mfgwfgnc, mfgwfmvr, mfims, mfnam, mftdis
+from ..utils import binaryfile_utils, mfobservation
 
 
 class SimulationDict(dict):

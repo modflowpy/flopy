@@ -9,10 +9,12 @@ util_list module.  Contains the mflist class.
 """
 import os
 import warnings
+
 import numpy as np
+
 from ..datbase import DataInterface, DataListInterface, DataType
-from ..utils.recarray_utils import create_empty_recarray
 from ..utils import import_optional_dependency
+from ..utils.recarray_utils import create_empty_recarray
 
 
 class MfList(DataInterface, DataListInterface):

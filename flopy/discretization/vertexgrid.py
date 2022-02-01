@@ -1,12 +1,12 @@
-import os
 import copy
-import numpy as np
 import inspect
+import os
 
+import numpy as np
 from matplotlib.path import Path
 
-from .grid import Grid, CachedData
 from ..utils.geometry import is_clockwise
+from .grid import CachedData, Grid
 
 
 class VertexGrid(Grid):

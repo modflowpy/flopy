@@ -4,6 +4,7 @@ Generic classes and utility functions
 """
 
 from datetime import timedelta
+
 import numpy as np
 
 

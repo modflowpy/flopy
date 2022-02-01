@@ -1,6 +1,6 @@
 import os
 import sys
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import PIPE, STDOUT, Popen
 
 PY3 = sys.version_info[0] >= 3
 

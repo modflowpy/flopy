@@ -1,5 +1,7 @@
 import os
+
 import numpy as np
+
 from ...utils import binaryfile as bf
 from ...utils import import_optional_dependency
 

@@ -1,6 +1,8 @@
 
 import os
+
 import numpy as np
+
 import flopy
 
 # Assign name and create modflow model object
@@ -55,7 +57,9 @@ success, buff = mf.run_model()
 
 # Post process the results
 import matplotlib.pyplot as plt
+
 import flopy.utils.binaryfile as bf
+
 fig = plt.figure(figsize=(10,10))
 ax = fig.add_subplot(1, 1, 1, aspect='equal')
 

@@ -1,25 +1,25 @@
-from copy import deepcopy
-import sys
-import os
 import inspect
-from shutil import copyfile
+import os
+import sys
+from copy import deepcopy
 from enum import Enum
+from shutil import copyfile
+
 import numpy as np
-from ..mfbase import MFDataException, VerbosityLevel
-from ..data.mfstructure import DatumType, MFDataItemStructure
-from ..data import mfdatautil
-from .mfdatautil import iterable
+
 from ...utils.datautil import (
+    ArrayIndexIter,
     DatumUtil,
-    FileIter,
+    MultiList,
     MultiListIter,
     PyListUtil,
-    ArrayIndexIter,
-    MultiList,
     clean_filename,
 )
-from .mfdatautil import convert_data, MFComment
-from .mffileaccess import MFFileAccessArray, MFFileAccessList, MFFileAccess
+from ..data import mfdatautil
+from ..data.mfstructure import DatumType, MFDataItemStructure
+from ..mfbase import MFDataException, VerbosityLevel
+from .mfdatautil import MFComment, convert_data, iterable
+from .mffileaccess import MFFileAccess, MFFileAccessArray, MFFileAccessList
 
 
 class DataStorageType(Enum):

@@ -5,12 +5,13 @@ modeldimensions module.  Contains the model dimension information
 """
 
 import sys
-from .simulationtime import SimulationTime
-from .modelgrid import UnstructuredModelGrid, ModelGrid
-from ..mfbase import StructException, FlopyException, VerbosityLevel
-from ..data.mfstructure import DatumType
-from ..utils.mfenums import DiscretizationType
+
 from ...utils.datautil import DatumUtil, NameIter
+from ..data.mfstructure import DatumType
+from ..mfbase import FlopyException, StructException, VerbosityLevel
+from ..utils.mfenums import DiscretizationType
+from .modelgrid import ModelGrid, UnstructuredModelGrid
+from .simulationtime import SimulationTime
 
 
 class DataDimensions:

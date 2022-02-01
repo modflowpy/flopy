@@ -3,15 +3,15 @@ Module for exporting and importing flopy model attributes
 
 """
 import copy
-import shutil
 import json
-import numpy as np
 import os
+import shutil
 import warnings
 
-from ..datbase import DataType, DataInterface
-from ..utils import Util3d, import_optional_dependency
+import numpy as np
 
+from ..datbase import DataInterface, DataType
+from ..utils import Util3d, import_optional_dependency
 
 # web address of spatial reference dot org
 srefhttp = "https://spatialreference.org"

@@ -1,9 +1,10 @@
 import copy
-import os.path
 import inspect
+import os.path
 
 import numpy as np
-from .grid import Grid, CachedData
+
+from .grid import CachedData, Grid
 
 
 def array_at_verts_basic2d(a):

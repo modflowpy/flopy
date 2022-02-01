@@ -1,7 +1,7 @@
 import numpy as np
 
-from ..utils.flopy_io import get_url_text
 from ..utils import import_optional_dependency
+from ..utils.flopy_io import get_url_text
 
 
 class acdd:

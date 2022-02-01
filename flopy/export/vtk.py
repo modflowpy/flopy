@@ -5,11 +5,11 @@ outputs to VTK.
 
 import os
 import warnings
-import numpy as np
-from ..datbase import DataType, DataInterface
-from ..utils import Util3d
 
-from ..utils import import_optional_dependency
+import numpy as np
+
+from ..datbase import DataInterface, DataType
+from ..utils import Util3d, import_optional_dependency
 
 warnings.simplefilter("always", DeprecationWarning)
 

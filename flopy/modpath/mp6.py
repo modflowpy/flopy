@@ -1,8 +1,10 @@
+import os
+
 import numpy as np
+
 from ..mbase import BaseModel
 from ..pakbase import Package
 from .mp6sim import Modpath6Sim
-import os
 
 
 class Modpath6List(Package):

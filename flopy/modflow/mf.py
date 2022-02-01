@@ -5,16 +5,17 @@ mf module.  Contains the ModflowGlobal, ModflowList, and Modflow classes.
 """
 
 import os
-import flopy
 import warnings
 from inspect import getfullargspec
+
+import flopy
+
+from ..discretization.modeltime import ModelTime
+from ..discretization.structuredgrid import StructuredGrid
+from ..discretization.unstructuredgrid import UnstructuredGrid
 from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam
-from ..discretization.structuredgrid import StructuredGrid
-from ..discretization.unstructuredgrid import UnstructuredGrid
-from ..discretization.grid import Grid
-from ..discretization.modeltime import ModelTime
 from .mfpar import ModflowPar
 
 

@@ -1,5 +1,6 @@
-import numpy as np
 import csv
+
+import numpy as np
 
 from ...utils import import_optional_dependency
 

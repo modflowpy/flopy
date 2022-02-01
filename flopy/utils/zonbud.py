@@ -1,9 +1,11 @@
-import os
 import copy
-import numpy as np
+import os
 from itertools import groupby
-from .utils_def import totim_to_datetime
+
+import numpy as np
+
 from . import import_optional_dependency
+from .utils_def import totim_to_datetime
 
 
 class ZoneBudget:

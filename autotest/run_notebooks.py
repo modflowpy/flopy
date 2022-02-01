@@ -1,7 +1,7 @@
 # Remove the temp directory and then create a fresh one
 import os
-import pytest
 
+import pytest
 
 nbdir = os.path.join("..", "examples", "Notebooks")
 dpth = nbdir

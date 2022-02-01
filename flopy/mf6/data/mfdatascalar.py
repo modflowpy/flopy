@@ -1,13 +1,16 @@
-import sys, inspect
+import inspect
+import sys
+
 import numpy as np
-from ..data.mfstructure import DatumType
-from ..data import mfdata
-from ..mfbase import ExtFileAction, MFDataException
+
 from ...datbase import DataType
 from ...utils.datautil import clean_filename
+from ..data import mfdata
+from ..data.mfstructure import DatumType
+from ..mfbase import ExtFileAction, MFDataException
+from .mfdatastorage import DataStorage, DataStorageType, DataStructureType
 from .mfdatautil import convert_data, to_string
 from .mffileaccess import MFFileAccessScalar
-from .mfdatastorage import DataStorage, DataStructureType, DataStorageType
 
 
 class MFScalar(mfdata.MFData):

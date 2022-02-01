@@ -2,10 +2,12 @@
 Some basic tests for mflistfile.py module (not super rigorous)
 
 """
-import pytest
 import os
-import flopy
+
 import numpy as np
+import pytest
+
+import flopy
 
 
 def test_mflistfile():

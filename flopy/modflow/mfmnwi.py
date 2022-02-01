@@ -1,5 +1,5 @@
-from ..utils.flopy_io import line_parse, pop_item
 from ..pakbase import Package
+from ..utils.flopy_io import line_parse, pop_item
 
 
 class ModflowMnwi(Package):

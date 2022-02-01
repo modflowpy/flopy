@@ -2,13 +2,12 @@ import os
 import warnings
 
 import numpy as np
-from .mfdis import get_layer
-from ..utils import check
-from ..utils.flopy_io import line_parse, pop_item, get_next_line
-from ..utils import MfList
-from ..utils.recarray_utils import create_empty_recarray
 
 from ..pakbase import Package
+from ..utils import MfList, check
+from ..utils.flopy_io import get_next_line, line_parse, pop_item
+from ..utils.recarray_utils import create_empty_recarray
+from .mfdis import get_layer
 
 
 class Mnw:

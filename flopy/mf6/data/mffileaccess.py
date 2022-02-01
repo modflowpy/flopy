@@ -1,17 +1,15 @@
-import sys, inspect
+import inspect
+import sys
 from copy import deepcopy
+
 import numpy as np
-from ..mfbase import MFDataException, VerbosityLevel
-from ...utils.datautil import (
-    PyListUtil,
-    find_keyword,
-    DatumUtil,
-    MultiListIter,
-)
-from .mfdatautil import convert_data, to_string, MFComment
-from ...utils.binaryfile import BinaryHeader
+
 from ...utils import datautil
-from ..data.mfstructure import DatumType, MFDataStructure, DataType
+from ...utils.binaryfile import BinaryHeader
+from ...utils.datautil import DatumUtil, PyListUtil, find_keyword
+from ..data.mfstructure import DataType, DatumType, MFDataStructure
+from ..mfbase import MFDataException, VerbosityLevel
+from .mfdatautil import MFComment, convert_data, to_string
 
 
 class MFFileAccess:

@@ -1,6 +1,9 @@
-import numpy as np
-import copy, os
+import copy
+import os
 import warnings
+
+import numpy as np
+
 from ..utils import geometry
 
 

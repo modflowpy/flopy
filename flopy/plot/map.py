@@ -1,13 +1,13 @@
-import numpy as np
-from ..utils import geometry
+import warnings
 
-import matplotlib.pyplot as plt
 import matplotlib.colors
-from matplotlib.collections import PathCollection, LineCollection
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.collections import LineCollection, PathCollection
 from matplotlib.path import Path
 
+from ..utils import geometry
 from . import plotutil
-import warnings
 
 warnings.simplefilter("always", PendingDeprecationWarning)
 
@@ -348,9 +348,6 @@ class PlotMapView:
         lc : matplotlib.collections.LineCollection
 
         """
-
-        from matplotlib.collections import PatchCollection
-
         ax = kwargs.pop("ax", self.ax)
         colors = kwargs.pop("colors", "grey")
         colors = kwargs.pop("color", colors)

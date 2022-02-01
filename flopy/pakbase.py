@@ -11,9 +11,7 @@ import webbrowser as wb
 import numpy as np
 from numpy.lib.recfunctions import stack_arrays
 
-from .modflow.mfparbc import ModflowParBc as mfparbc
-from .utils import Util2d, Util3d, Transient2d, MfList, check
-from .utils import OptionBlock
+from .utils import MfList, OptionBlock, Transient2d, Util2d, Util3d, check
 from .utils.flopy_io import ulstrd
 
 
@@ -889,6 +887,7 @@ class Package(PackageInterface):
         Default load method for standard boundary packages.
 
         """
+        from .modflow.mfparbc import ModflowParBc as mfparbc
 
         # parse keywords
         if "nper" in kwargs:

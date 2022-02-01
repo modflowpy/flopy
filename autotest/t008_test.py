@@ -3,11 +3,12 @@ Try to load all of the MODFLOW examples in ../examples/data/mf2005_test.
 These are the examples that are distributed with MODFLOW-2005.
 """
 
-import pytest
 import os
-import flopy
 
-from ci_framework import base_test_dir, FlopyTestSetup
+import pytest
+from ci_framework import FlopyTestSetup, base_test_dir
+
+import flopy
 
 pth = os.path.join("..", "examples", "data", "mf2005_test")
 namfiles = [namfile for namfile in os.listdir(pth) if namfile.endswith(".nam")]
