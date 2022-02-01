@@ -121,7 +121,7 @@ class TestModflowPerformance:
         mfp = TestModflowPerformance()
         mfp.m.write_input()
         if sys.platform == "darwin":
-            target = 3.25
+            target = 4.0
         else:
             target = 3.0
         t0 = time.time()
@@ -131,7 +131,7 @@ class TestModflowPerformance:
         t1 = time.time() - t0
         assert (
             t1 < target
-        ), f"model load took {t1:.2f}s, should take {target:.1f}s"
+        ), f"model load took {t1:.2f}s, should take {target:.2f}s"
         print(f"loading the model took {t1:.2f}s")
 
     @classmethod
