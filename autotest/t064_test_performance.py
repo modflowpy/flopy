@@ -120,7 +120,10 @@ class TestModflowPerformance:
         print("loading model...")
         mfp = TestModflowPerformance()
         mfp.m.write_input()
-        target = 3
+        if sys.platform == "darwin":
+            target = 3.25
+        else:
+            target = 3.0
         t0 = time.time()
         m = fm.Modflow.load(
             f"{mfp.modelname}.nam", model_ws=mfp.model_ws, check=False
