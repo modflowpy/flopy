@@ -29,7 +29,7 @@ class TestModflowPerformance:
         size = 100
         nlay = 10
         nper = 10
-        nsfr = int((size ** 2) / 5)
+        nsfr = int((size**2) / 5)
 
         letters = string.ascii_lowercase
         prepend = "".join(random.choice(letters) for i in range(10))
@@ -63,7 +63,7 @@ class TestModflowPerformance:
             m, rech={k: 0.001 - np.cos(k) * 0.001 for k in range(nper)}
         )
 
-        ra = fm.ModflowWel.get_empty(size ** 2)
+        ra = fm.ModflowWel.get_empty(size**2)
         well_spd = {}
         for kper in range(nper):
             ra_per = ra.copy()

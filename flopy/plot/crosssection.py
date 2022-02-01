@@ -537,13 +537,13 @@ class PlotCrossSection:
             kwargs["levels"] = levels
 
         # workaround for tri-contour nan issue
-        plotarray[np.isnan(plotarray)] = -(2 ** 31)
+        plotarray[np.isnan(plotarray)] = -(2**31)
         if masked_values is None:
-            masked_values = [-(2 ** 31)]
+            masked_values = [-(2**31)]
         else:
             masked_values = list(masked_values)
-            if -(2 ** 31) not in masked_values:
-                masked_values.append(-(2 ** 31))
+            if -(2**31) not in masked_values:
+                masked_values.append(-(2**31))
 
         ismasked = None
         if masked_values is not None:
@@ -965,7 +965,7 @@ class PlotCrossSection:
 
         # normalize
         if normalize:
-            vmag = np.sqrt(u ** 2.0 + v ** 2.0)
+            vmag = np.sqrt(u**2.0 + v**2.0)
             idx = vmag > 0.0
             u[idx] /= vmag[idx]
             v[idx] /= vmag[idx]

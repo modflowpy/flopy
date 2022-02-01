@@ -55,15 +55,14 @@ Before you submit your Pull Request (PR) consider the following guidelines:
      ```
 
 4. Create your patch, **including appropriate test cases**. See [Autotesting,md](autotest/Autotesting.md) for guidelines for constructing autotests. 
-5. 
-6. Run the [black formatter](https://github.com/psf/black) on Flopy source files from the git repository root directory using:
+5. Run the [isort import sorter](https://github.com/PyCQA/isort) and [black formatter](https://github.com/psf/black) on Flopy source files from the git repository `autotest` directory using:
 
    ```shell
-   black ./flopy
+   python pull_request_prepare.py
    ```
-   Note: Pull Requests must pass black format checks run on the [GitHub actions](https://github.com/modflowpy/flopy/actions) (*linting*) before they will be accepted. The black formatter can be installed using [`pip`](https://pypi.org/project/black/) and [`conda`](https://anaconda.org/conda-forge/black). 
+   Note: Pull Requests must pass isort import and black format checks run on the [GitHub actions](https://github.com/modflowpy/flopy/actions) (*linting*) before they will be accepted. isort can be installed using [`pip`](https://pypi.org/project/isort/) and [`conda`](https://anaconda.org/conda-forge/isort). The black formatter can also be installed using [`pip`](https://pypi.org/project/black/) and [`conda`](https://anaconda.org/conda-forge/black). If the Pull Request fails the *linting* job in the [flopy continuous integration](https://github.com/modflowpy/flopy/actions/workflows/ci.yml) workflow, make sure the latest versions of isort and black are installed.
    
-7. Run the full FloPy test suite and ensure that all tests pass:
+6. Run the full FloPy test suite and ensure that all tests pass:
 
     ```shell
     cd autotest
@@ -72,7 +71,7 @@ Before you submit your Pull Request (PR) consider the following guidelines:
     ```
    Note: the FloPy test suite requires the [pytest](https://pypi.org/project/pytest/) and [pymake](https://github.com/modflowpy/pymake) python packages. All the FloPy dependencies must also be installed for the tests to pass.
 
-8. Commit your changes using a descriptive commit message that follows our
+7. Commit your changes using a descriptive commit message that follows our
   [commit message conventions](#commit). Adherence to these conventions
   is necessary because release notes are automatically generated from these messages.
 
@@ -81,13 +80,13 @@ Before you submit your Pull Request (PR) consider the following guidelines:
      ```
    Note: the optional commit `-a` command line option will automatically "add" and "rm" edited files.
 
-9. Push your branch to GitHub:
+8. Push your branch to GitHub:
 
     ```shell
     git push origin my-fix-branch
     ```
 
-10. In GitHub, send a pull request to `flopy:develop`.
+9. In GitHub, send a pull request to `flopy:develop`.
 * If we suggest changes then:
   * Make the required updates.
   * Re-run the FloPy test suites, in the autotest directory, to ensure tests are still passing.

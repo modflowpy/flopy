@@ -47,7 +47,9 @@
 
 # package import
 import os
+
 import numpy as np
+
 import flopy
 
 # set up where simulation workspace will be stored

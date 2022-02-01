@@ -44,13 +44,17 @@ import flopy
 # set up simulation and basic packages
 name = "tutorial02_mf6"
 sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=".")
-flopy.mf6.ModflowTdis(sim, nper=10, perioddata=[[365.0, 1, 1.0] for _ in range(10)])
+flopy.mf6.ModflowTdis(
+    sim, nper=10, perioddata=[[365.0, 1, 1.0] for _ in range(10)]
+)
 flopy.mf6.ModflowIms(sim)
 gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
 flopy.mf6.ModflowGwfdis(gwf, nlay=3, nrow=4, ncol=5)
 flopy.mf6.ModflowGwfic(gwf)
 flopy.mf6.ModflowGwfnpf(gwf, save_specific_discharge=True)
-flopy.mf6.ModflowGwfchd(gwf, stress_period_data=[[(0, 0, 0), 1.0], [(2, 3, 4), 0.0]])
+flopy.mf6.ModflowGwfchd(
+    gwf, stress_period_data=[[(0, 0, 0), 1.0], [(2, 3, 4), 0.0]]
+)
 budget_file = f"{name}.bud"
 head_file = f"{name}.hds"
 flopy.mf6.ModflowGwfoc(

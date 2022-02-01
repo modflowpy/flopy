@@ -1,5 +1,7 @@
 import os
+
 import numpy as np
+
 import flopy
 
 # Model domain and grid definition
@@ -121,6 +123,7 @@ if not success:
 
 # Imports
 import matplotlib.pyplot as plt
+
 import flopy.utils.binaryfile as bf
 
 # Create the headfile and budget file objects

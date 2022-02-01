@@ -184,7 +184,7 @@ def write_fixed_var(v, length=10, ipos=None, free=False, comment=None):
             width = ipos[n]
             if isinstance(v[n], (float, np.float32, np.float64)):
                 decimal = width - 6
-                vmin, vmax = 10 ** -decimal, 10 ** decimal
+                vmin, vmax = 10**-decimal, 10**decimal
                 if abs(v[n]) < vmin or abs(v[n]) > vmax:
                     ctype = "g"  # default precision is 6 if not specified
                 else:

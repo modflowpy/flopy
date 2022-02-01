@@ -22,6 +22,7 @@
 # If FloPy has been properly installed, then it can be imported as follows:
 
 import numpy as np
+
 import flopy
 
 # Now that we can import flopy, we begin creating our simple MODFLOW model.
@@ -145,6 +146,7 @@ if not success:
 # read the binary head file and create a plot of simulated heads for layer 1:
 
 import matplotlib.pyplot as plt
+
 import flopy.utils.binaryfile as bf
 
 # Extract the heads

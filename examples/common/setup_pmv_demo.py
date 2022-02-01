@@ -385,14 +385,13 @@ rchspd = {}
 rchspd[0] = [[(0, 0, j), rrate, recharge_conc] for j in rcol]
 rchspd[1] = [[(0, 0, j), rrate, 0.0] for j in rcol]
 
+
 def build_mf6gwf(sim_folder):
     print(f"Building mf6gwf model...{sim_folder}")
     ws = os.path.join("data", "mf6-gwt-keating")
     name = "flow"
-    sim_ws = os.path.join(ws, 'mf6gwf')
-    sim = flopy.mf6.MFSimulation(
-        sim_name=name, sim_ws=sim_ws, exe_name="mf6"
-    )
+    sim_ws = os.path.join(ws, "mf6gwf")
+    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=sim_ws, exe_name="mf6")
     tdis_ds = ((period1, 1, 1.0), (period2, 1, 1.0))
     flopy.mf6.ModflowTdis(
         sim, nper=len(tdis_ds), perioddata=tdis_ds, time_units=time_units
@@ -476,7 +475,7 @@ def build_mf6gwt(sim_folder):
     print(f"Building mf6gwt model...{sim_folder}")
     ws = os.path.join("data", "mf6-gwt-keating")
     name = "trans"
-    sim_ws = os.path.join(ws, 'mf6gwt')
+    sim_ws = os.path.join(ws, "mf6gwt")
     sim = flopy.mf6.MFSimulation(
         sim_name=name,
         sim_ws=sim_ws,

@@ -16,7 +16,7 @@ def analyticalWaterTableSolution(h1, h2, z, R, K, L, x):
     b2 = h2 - z
     h = (
         np.sqrt(
-            b1 ** 2 - (x / L) * (b1 ** 2 - b2 ** 2) + (R * x / K) * (L - x)
+            b1**2 - (x / L) * (b1**2 - b2**2) + (R * x / K) * (L - x)
         )
         + z
     )

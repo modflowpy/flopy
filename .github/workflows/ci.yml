@@ -76,9 +76,20 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r etc/requirements.pip.txt
 
+    - name: Run isort
+      run: |
+        echo "if isort check fails update isort using"
+        echo "  pip install isort --upgrade"
+        echo "and run"
+        echo "  isort ./flopy"
+        echo "and then commit the changes."
+        isort --check --diff ./flopy
+
     - name: Run black
       run: |
-        echo "if black check fails run"
+        echo "if black check fails update black using"
+        echo "  pip install black --upgrade"
+        echo "and run"
         echo "  black ./flopy"
         echo "and then commit the changes."
         black --check --diff ./flopy
@@ -93,7 +104,6 @@ jobs:
 
   flopyCI:
     name: autotests
-    needs: [flopy_setup, flopy_lint]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
