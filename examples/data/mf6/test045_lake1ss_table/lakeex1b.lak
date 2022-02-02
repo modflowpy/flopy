@@ -75,7 +75,7 @@ BEGIN connectiondata
 END connectiondata
 
 BEGIN tables
-  1  TAB6  FILEIN  lakeex1b_table.ref
+  1  TAB6  FILEIN  lt\lakeex1b_table.ref
 END tables
 
 BEGIN period  1
