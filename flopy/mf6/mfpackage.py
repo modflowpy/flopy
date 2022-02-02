@@ -1149,10 +1149,20 @@ class MFBlock:
                 item_name = data_item.name
                 package_type = item_name[:-1]
                 model_type = self._model_or_sim.structure.model_type
-                if (
-                    PackageContainer.package_factory(package_type, model_type)
-                    is not None
-                ):
+                package_types = [
+                    package_type,
+                    f"{self._container_package.package_type}"
+                    f"{package_type}",
+                ]
+                package_type_found = None
+                for ptype in package_types:
+                    if (
+                        PackageContainer.package_factory(ptype, model_type)
+                        is not None
+                    ):
+                        package_type_found = ptype
+                        break
+                if package_type_found is not None:
                     try:
                         data = dataset.get_data()
                     except MFDataException as mfde:
@@ -1172,9 +1182,14 @@ class MFBlock:
                         file_location = data
                     package_info_list = []
                     file_path, file_name = os.path.split(file_location)
-                    dict_package_name = f"{package_type}_{self.path[-2]}"
+                    dict_package_name = f"{package_type_found}_{self.path[-2]}"
                     package_info_list.append(
-                        (package_type, file_name, file_path, dict_package_name)
+                        (
+                            package_type_found,
+                            file_name,
+                            file_path,
+                            dict_package_name,
+                        )
                     )
                     return package_info_list
                 return None
