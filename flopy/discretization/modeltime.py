@@ -65,7 +65,7 @@ class ModelTime:
             for stp in range(nstp):
                 if stp == 0:
                     if tsmult != 1.0:
-                        dt = perlen * (tsmult - 1) / ((tsmult ** nstp) - 1)
+                        dt = perlen * (tsmult - 1) / ((tsmult**nstp) - 1)
                     else:
                         dt = perlen / nstp
                 else:

@@ -243,7 +243,7 @@ class ModflowMlt(Package):
             elif op == "/":
                 multarray = multarray / atemp
             elif op == "^":
-                multarray = multarray ** atemp
+                multarray = multarray**atemp
             else:
                 raise Exception(f"Invalid MULT operation {op}")
         return multarray
