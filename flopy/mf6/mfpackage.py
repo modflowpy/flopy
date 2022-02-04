@@ -1149,6 +1149,9 @@ class MFBlock:
                 item_name = data_item.name
                 package_type = item_name[:-1]
                 model_type = self._model_or_sim.structure.model_type
+                # not all packages have the same naming convention
+                # try different naming conventions to find the appropriate
+                # package
                 package_types = [
                     package_type,
                     f"{self._container_package.package_type}"
