@@ -9,11 +9,13 @@ Additional information for this MODFLOW package can be found at
 """
 
 import os
+
 import numpy as np
-from ..utils.flopy_io import multi_line_strip
+
 from ..pakbase import Package
-from ..utils.recarray_utils import create_empty_recarray
+from ..utils.flopy_io import multi_line_strip
 from ..utils.optionblock import OptionBlock
+from ..utils.recarray_utils import create_empty_recarray
 
 
 class ModflowAg(Package):
