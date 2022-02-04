@@ -7,6 +7,6 @@ requests
 appdirs
 numpy
 matplotlib
-pytest<2.2.0
+pytest
 pytest-xdist
 pytest-cov

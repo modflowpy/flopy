@@ -24,7 +24,7 @@ dependencies:
   - scipy
   - pandas
   - netcdf4
-  - pyshp<2.2.0
+  - pyshp>=2.0.0
   - rasterio
   - fiona
   - descartes

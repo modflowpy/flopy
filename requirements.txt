@@ -5,7 +5,7 @@ netcdf4
 fiona ; python_version < '3.8'
 descartes
 pyproj
-pyshp<2.2.0
+pyshp>=2.0.0
 pandas
 scipy
 affine
