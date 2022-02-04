@@ -9,13 +9,11 @@ Additional information for this MODFLOW package can be found at
 """
 
 import os
-
 import numpy as np
-
-from ..pakbase import Package
 from ..utils.flopy_io import multi_line_strip
-from ..utils.optionblock import OptionBlock
+from ..pakbase import Package
 from ..utils.recarray_utils import create_empty_recarray
+from ..utils.optionblock import OptionBlock
 
 
 class ModflowAg(Package):
@@ -360,7 +358,7 @@ class ModflowAg(Package):
 
             # check if item 12 exists and write item 12 - 14
             if self.segment_list is not None:
-                foo.write("# segment list for irriagation diversions\n")
+                foo.write("# segment list for irrigation diversions\n")
                 foo.write("SEGMENT LIST\n")
                 for iseg in self.segment_list:
                     foo.write(f"{iseg}\n")
