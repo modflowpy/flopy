@@ -9,7 +9,7 @@ dependencies:
   - conda-forge::scipy
   - conda-forge::pandas
   - conda-forge::netcdf4
-  - conda-forge::pyshp
+  - conda-forge::pyshp<2.2.0
   - conda-forge::rasterio
   - conda-forge::fiona
   - conda-forge::descartes
