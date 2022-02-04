@@ -2499,7 +2499,7 @@ class check:
 
             dx = delr[rd.j]
             dy = delc[rd.i]
-            hyp = np.sqrt(dx**2 + dy**2)
+            hyp = np.sqrt(dx ** 2 + dy ** 2)
 
             # breaks are when the connection distance is greater than
             # max node with * a tolerance

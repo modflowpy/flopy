@@ -781,7 +781,7 @@ class CellBudgetFile:
         if tsmult == 1:
             dt1 = this_perlen / float(nstp)
         else:
-            dt1 = this_perlen * (tsmult - 1.0) / ((tsmult**nstp) - 1.0)
+            dt1 = this_perlen * (tsmult - 1.0) / ((tsmult ** nstp) - 1.0)
         kstp_len = [dt1]
         for i in range(kstp + 1):
             kstp_len.append(kstp_len[-1] * tsmult)

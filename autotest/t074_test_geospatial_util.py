@@ -149,7 +149,11 @@ def test_polygon():
         is_equal = gi1 == gi2
 
         if not is_equal:
-            raise AssertionError("GeoSpatialUtil polygon conversion error")
+            # pyshp < 2.2.0 sorts coordinates in opposite direction
+            gi2['coordinates'] = (gi2['coordinates'][0][::-1],)
+            is_equal = gi1 == gi2
+            if not is_equal:
+                raise AssertionError("GeoSpatialUtil polygon conversion error")
 
 
 def test_polygon_with_hole():
@@ -181,7 +185,12 @@ def test_polygon_with_hole():
         is_equal = gi1 == gi2
 
         if not is_equal:
-            raise AssertionError("GeoSpatialUtil polygon conversion error")
+            # pyshp < 2.2.0 sorts coordinates in opposite direction
+            t = reversed(t)
+            gi2 = t.__geo_interface__
+            is_equal = gi1 == gi2
+            if not is_equal:
+                raise AssertionError("GeoSpatialUtil polygon conversion error")
 
 
 def test_multipolygon():
@@ -213,9 +222,14 @@ def test_multipolygon():
         is_equal = gi1 == gi2
 
         if not is_equal:
-            raise AssertionError(
-                "GeoSpatialUtil multipolygon conversion error"
-            )
+            # pyshp < 2.2.0 sorts coordinates in opposite direction
+            t = reversed(t)
+            gi2 = t.__geo_interface__
+            is_equal = gi1 == gi2
+            if not is_equal:
+                raise AssertionError(
+                    "GeoSpatialUtil multipolygon conversion error"
+                )
 
 
 def test_point():
@@ -375,15 +389,21 @@ def test_polygon_collection():
             continue
 
         gc2 = GeoSpatialCollection(col, shapetype)
-        gi2 = [i.flopy_geometry.__geo_interface__ for i in gc2]
 
-        for ix, gi in enumerate(gi2):
-            is_equal = gi == gi1[ix]
+        for ix, gi in enumerate(gc2):
+            t = gi.flopy_geometry
+            gi2 = t.__geo_interface__
+            is_equal = gi2 == gi1[ix]
 
             if not is_equal:
-                raise AssertionError(
-                    "GeoSpatialCollection Polygon conversion error"
-                )
+                # pyshp < 2.2.0 sorts coordinates in opposite direction
+                t = reversed(t)
+                gi2 = t.__geo_interface__
+                is_equal = gi2 == gi1[ix]
+                if not is_equal:
+                    raise AssertionError(
+                        "GeoSpatialCollection Polygon conversion error"
+                    )
 
 
 def test_point_collection():
@@ -485,13 +505,22 @@ def test_mixed_collection():
             continue
 
         gc2 = GeoSpatialCollection(col, shapetype)
-        gi2 = [i.flopy_geometry.__geo_interface__ for i in gc2]
 
-        for ix, gi in enumerate(gi2):
-            is_equal = gi == gi1[ix]
+        for ix, gi in enumerate(gc2):
+            t = gi.flopy_geometry
+            gi2 = t.__geo_interface__
+
+            is_equal = gi2 == gi1[ix]
 
             if not is_equal:
-                raise AssertionError("GeoSpatialCollection conversion error")
+                t = reversed(t)
+                gi2 = t.__geo_interface__
+                is_equal = gi2 == gi1[ix]
+
+                if not is_equal:
+                    raise AssertionError(
+                        "GeoSpatialCollection conversion error"
+                    )
 
 
 if __name__ == "__main__":
