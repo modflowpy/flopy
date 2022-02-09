@@ -1227,6 +1227,8 @@ class MFBlock:
 
     def header_exists(self, key, data_path=None):
         if not isinstance(key, list):
+            if key is None:
+                return
             comp_key_list = [key]
         else:
             comp_key_list = key
