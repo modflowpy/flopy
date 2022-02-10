@@ -399,6 +399,9 @@ class MFFileAccessArray(MFFileAccess):
     ):
         import flopy.utils.binaryfile as bf
 
+        if data_size != modelgrid.ncpl:
+            read_multi_layer = True
+
         fd = self._open_ext_file(fname, True)
         numpy_type, name = self.datum_to_numpy_type(data_type)
         header_dtype = bf.BinaryHeader.set_dtype(
