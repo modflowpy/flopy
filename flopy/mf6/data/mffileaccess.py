@@ -21,6 +21,7 @@ class MFFileAccess:
         self._simulation_data = simulation_data
         self._path = path
         self._current_key = current_key
+        self._pos = 0
 
     @staticmethod
     def _get_bintype(modelgrid):
@@ -408,18 +409,32 @@ class MFFileAccessArray(MFFileAccess):
             bintype=self._get_bintype(modelgrid), precision="double"
         )
         if read_multi_layer and len(data_shape) > 1:
-            all_data = np.empty(data_shape, numpy_type)
-            headers = []
-            layer_shape = data_shape[1:]
-            data_size = int(data_size / data_shape[0])
-            for index in range(0, data_shape[0]):
-                layer_data = self._read_binary_file_layer(
-                    fd, fname, header_dtype, numpy_type, data_size, layer_shape
+            try:
+                all_data = np.empty(data_shape, numpy_type)
+                headers = []
+                layer_shape = data_shape[1:]
+                layer_data_size = int(data_size / data_shape[0])
+                for index in range(0, data_shape[0]):
+                    layer_data = self._read_binary_file_layer(
+                        fd,
+                        fname,
+                        header_dtype,
+                        numpy_type,
+                        layer_data_size,
+                        layer_shape,
+                    )
+                    all_data[index, :] = layer_data[0]
+                    headers.append(layer_data[1])
+                fd.close()
+                return all_data, headers
+            except MFDataException:
+                fd.seek(self._pos, 0)
+                bin_data = self._read_binary_file_layer(
+                    fd, fname, header_dtype, numpy_type, data_size, data_shape
                 )
-                all_data[index, :] = layer_data[0]
-                headers.append(layer_data[1])
-            fd.close()
-            return all_data, headers
+                self._pos = fd.tell()
+                fd.close()
+                return bin_data
         else:
             bin_data = self._read_binary_file_layer(
                 fd, fname, header_dtype, numpy_type, data_size, data_shape
