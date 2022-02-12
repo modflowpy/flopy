@@ -56,6 +56,36 @@ if v is None:
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
+def write_head(
+    fbin,
+    data,
+    kstp=1,
+    kper=1,
+    pertim=1.0,
+    totim=1.0,
+    text="            HEAD",
+    ilay=1,
+):
+    dt = np.dtype(
+        [
+            ("kstp", "i4"),
+            ("kper", "i4"),
+            ("pertim", "f8"),
+            ("totim", "f8"),
+            ("text", "a16"),
+            ("ncol", "i4"),
+            ("nrow", "i4"),
+            ("ilay", "i4"),
+        ]
+    )
+    nrow = data.shape[0]
+    ncol = data.shape[1]
+    h = np.array((kstp, kper, pertim, totim, text, ncol, nrow, ilay), dtype=dt)
+    h.tofile(fbin)
+    data.tofile(fbin)
+    return
+
+
 def get_gwf_model(sim, gwfname, gwfpath, modelshape, chdspd=None, welspd=None):
     nlay, nrow, ncol = modelshape
     delr = 1.0
@@ -574,6 +604,126 @@ def test_array():
     assert drn_gd_2 == []
     drn_gd_3 = drn.stress_period_data.get_data(3)
     assert drn_gd_3[0][1] == 55.0
+
+
+def test_binary_read():
+    test_ex_name = "binary_read"
+
+    run_folder = f"{base_dir}_{test_ex_name}"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=run_folder)
+
+    nlay = 3
+    nrow = 10
+    ncol = 10
+
+    modelgrid = flopy.discretization.StructuredGrid(
+        nlay=nlay, nrow=nrow, ncol=ncol
+    )
+
+    arr = np.arange(nlay * nrow * ncol).astype(np.float64)
+    data_shape = (nlay, nrow, ncol)
+    data_size = nlay * nrow * ncol
+    arr.shape = data_shape
+
+    sim_data = flopy.mf6.mfsimulation.MFSimulationData(".", None)
+    dstruct = flopy.mf6.data.mfstructure.MFDataItemStructure()
+    dstruct.is_cellid = False
+    dstruct.name = "fake"
+    dstruct.data_items = [None,]
+    mfstruct = flopy.mf6.data.mfstructure.MFDataStructure(
+        dstruct, False, 'ic', None
+    )
+    mfstruct.data_item_structures = [dstruct,]
+    mfstruct.path = ["fake", ]
+
+    md = flopy.mf6.coordinates.modeldimensions.ModelDimensions('test', None)
+    pd = flopy.mf6.coordinates.modeldimensions.PackageDimensions(
+        [md], None, "."
+    )
+    dd = flopy.mf6.coordinates.modeldimensions.DataDimensions(pd, mfstruct)
+
+    binfile = os.path.join(run_folder, "structured_layered.hds")
+    with open(binfile, "wb") as foo:
+        for ix, a in enumerate(arr):
+            write_head(foo, a, ilay=ix)
+
+    fa = flopy.mf6.data.mffileaccess.MFFileAccessArray(
+        mfstruct, dd, sim_data, None, None
+    )
+    arr2 = fa.read_binary_data_from_file(
+        binfile, data_shape, data_size, np.float64, modelgrid
+    )[0]
+
+    if not np.allclose(arr, arr2):
+        raise AssertionError("Binary read for layered Structured failed")
+
+    binfile = os.path.join(run_folder, "structured_flat.hds")
+    with open(binfile, "wb") as foo:
+        a = np.expand_dims(np.ravel(arr), axis=0)
+        write_head(foo, a, ilay=1)
+
+    arr2 = fa.read_binary_data_from_file(
+        binfile, data_shape, data_size, np.float64, modelgrid
+    )[0]
+
+    if not np.allclose(arr, arr2):
+        raise AssertionError("Binary read for flat Structured failed")
+
+    ncpl = nrow * ncol
+    data_shape = (nlay, ncpl)
+    arr.shape = data_shape
+    modelgrid = flopy.discretization.VertexGrid(nlay=nlay, ncpl=ncpl)
+
+    fa = flopy.mf6.data.mffileaccess.MFFileAccessArray(
+        mfstruct, dd, sim_data, None, None
+    )
+
+    binfile = os.path.join(run_folder, "vertex_layered.hds")
+    with open(binfile, "wb") as foo:
+        tarr = arr.reshape((nlay, 1, ncpl))
+        for ix, a in enumerate(tarr):
+            write_head(foo, a, ilay=ix)
+
+    arr2 = fa.read_binary_data_from_file(
+        binfile, data_shape, data_size, np.float64, modelgrid
+    )[0]
+
+    if not np.allclose(arr, arr2):
+        raise AssertionError("Binary read for layered Vertex failed")
+
+    binfile = os.path.join(run_folder, "vertex_flat.hds")
+    with open(binfile, "wb") as foo:
+        a = np.expand_dims(np.ravel(arr), axis=0)
+        write_head(foo, a, ilay=1)
+
+    arr2 = fa.read_binary_data_from_file(
+        binfile, data_shape, data_size, np.float64, modelgrid
+    )[0]
+
+    if not np.allclose(arr, arr2):
+        raise AssertionError("Binary read for flat Vertex failed")
+
+    nlay = 3
+    ncpl = [50, 100, 150]
+    data_shape = (np.sum(ncpl),)
+    arr.shape = data_shape
+    modelgrid = flopy.discretization.UnstructuredGrid(ncpl=ncpl)
+
+    fa = flopy.mf6.data.mffileaccess.MFFileAccessArray(
+        mfstruct, dd, sim_data, None, None
+    )
+
+    binfile = os.path.join(run_folder, "unstructured.hds")
+    with open(binfile, "wb") as foo:
+        a = np.expand_dims(arr, axis=0)
+        write_head(foo, a, ilay=1)
+
+    arr2 = fa.read_binary_data_from_file(
+        binfile, data_shape, data_size, np.float64, modelgrid
+    )[0]
+
+    if not np.allclose(arr, arr2):
+        raise AssertionError("Binary read for Unstructured failed")
 
 
 def test_np001():
@@ -3880,6 +4030,7 @@ def test_transport():
 
 
 if __name__ == "__main__":
+    test_binary_read()
     test_array()
     test_multi_model()
     test_np001()
