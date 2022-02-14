@@ -1,0 +1,13 @@
+black
+isort
+flake8
+pylint
+coverage
+requests
+appdirs
+numpy
+matplotlib
+pytest
+pytest-xdist
+pytest-cov
+mfpymake

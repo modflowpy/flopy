@@ -1,0 +1,36 @@
+matplotlib>=1.4.0
+numpy>=1.15.0
+
+# testing
+pylint
+flake8
+black
+isort
+coverage
+pytest
+pytest-xdist
+pytest-cov
+mfpymake
+
+# optional
+appdirs
+python-dateutil>=2.4.0
+affine
+scipy
+pandas
+netcdf4
+pyshp<2.2.0
+rasterio
+fiona
+descartes
+pyproj
+shapely
+geos
+geojson
+vtk
+
+# external dependencies
+requests
+
+# MODFLOW API dependencies
+bmipy
