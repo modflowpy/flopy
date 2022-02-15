@@ -4,10 +4,9 @@ on: 15/02/22
 """
 import flopy
 import numpy as np
-from ci_framework import FlopyTestSetup, base_test_dir
-import platform
 
-base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
+from autotest.conftest import requires_exe
+
 nrow = 3
 ncol = 4
 nlay = 2
@@ -36,31 +35,13 @@ ipakcb = 740
 
 names = ['mf1', 'mf2']
 
-exe_names = {"mf2005": "mf2005", "mf6": "mf6", "mp7": "mp7"}
-run = True
-for key in exe_names.keys():
-    v = flopy.which(exe_names[key])
-    if v is None:
-        run = False
-        break
-
-mf2005_exe = "mf2005"
-if platform.system() in "Windows":
-    mf2005_exe += ".exe"
-mf2005_exe = flopy.which(mf2005_exe)
-
-mp6_exe = "mp6"
-if platform.system() in "Windows":
-    mp6_exe += ".exe"
-mp6_exe = flopy.which(mp6_exe)
-
 
 def _setup_modflow_model(nm, ws):
     m = flopy.modflow.Modflow(
         modelname=f"modflowtest_{nm}",
         namefile_ext="nam",
         version="mf2005",
-        exe_name=mf2005_exe,
+        exe_name='mf2005',
         model_ws=ws,
     )
 
@@ -126,32 +107,30 @@ def _setup_modflow_model(nm, ws):
     flopy.modflow.ModflowOc(m, stress_period_data=ocspd)
 
     m.write_input()
-    if run:
-        success, buff = m.run_model()
-        assert success
+    success, buff = m.run_model()
+    assert success
     return m
 
 
-def test_data_pass_no_modflow():
+@requires_exe('mf2005', 'mp6')
+def test_data_pass_no_modflow(tmpdir):
     """
     test that user can pass and create a mp model without an accompanying modflow model
     Returns
     -------
 
     """
-    ws = f"{base_dir}_test_mp_no_modflow"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
     dis_file = f"modflowtest_mf1.dis"
     bud_file = f"modflowtest_mf1.cbc"
     hd_file = f"modflowtest_mf1.hds"
 
-    m1 = _setup_modflow_model('mf1', ws)
+    m1 = _setup_modflow_model('mf1', str(tmpdir))
     mp = flopy.modpath.Modpath6(
         modelname="modpathtest",
         simfile_ext="mpsim",
         namefile_ext="mpnam",
         version="modpath",
-        exe_name=mp6_exe,
+        exe_name='mp6',
         modflowmodel=None,  # do not pass modflow model
 
         dis_file=dis_file,
@@ -200,38 +179,36 @@ def test_data_pass_no_modflow():
     stldata[1]["yloc0"] = 0.2
     stl.data = stldata
     mp.write_input()
-    if run:
-        success, buff = mp.run_model()
-        assert success
+    success, buff = mp.run_model()
+    assert success
 
 
-def test_data_pass_with_modflow():
+@requires_exe('mf2005', 'mp6')
+def test_data_pass_with_modflow(tmpdir):
     """
     test that user specified head files etc. are preferred over files from the modflow model
     Returns
     -------
 
     """
-    ws = f"{base_dir}_test_mp_with_modflow"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
     dis_file = f"modflowtest_mf1.dis"
     bud_file = f"modflowtest_mf1.cbc"
     hd_file = f"modflowtest_mf1.hds"
 
-    m1 = _setup_modflow_model('mf1', ws)
-    m2 = _setup_modflow_model('mf2', ws)
+    m1 = _setup_modflow_model('mf1', str(tmpdir))
+    m2 = _setup_modflow_model('mf2', str(tmpdir))
     mp = flopy.modpath.Modpath6(
         modelname="modpathtest",
         simfile_ext="mpsim",
         namefile_ext="mpnam",
         version="modpath",
-        exe_name=mp6_exe,
+        exe_name='mp6',
         modflowmodel=m2,  # do not pass modflow model
 
         dis_file=dis_file,
         head_file=hd_file,
         budget_file=bud_file,
-        model_ws=ws,
+        model_ws=str(tmpdir),
         external_path=None,
         verbose=False,
         load=False,
@@ -275,38 +252,36 @@ def test_data_pass_with_modflow():
     stldata[1]["yloc0"] = 0.2
     stl.data = stldata
     mp.write_input()
-    if run:
-        success, buff = mp.run_model()
-        assert success
+    success, buff = mp.run_model()
+    assert success
 
 
-def test_just_from_model():
+@requires_exe('mf2005', 'mp6')
+def test_just_from_model(tmpdir):
     """
     test that user specified head files etc. are preferred over files from the modflow model
     Returns
     -------
 
     """
-    ws = f"{base_dir}_test_mp_only_modflow"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
     dis_file = f"modflowtest_mf2.dis"
     bud_file = f"modflowtest_mf2.cbc"
     hd_file = f"modflowtest_mf2.hds"
 
-    m1 = _setup_modflow_model('mf1', ws)
-    m2 = _setup_modflow_model('mf2', ws)
+    m1 = _setup_modflow_model('mf1', str(tmpdir))
+    m2 = _setup_modflow_model('mf2', str(tmpdir))
     mp = flopy.modpath.Modpath6(
         modelname="modpathtest",
         simfile_ext="mpsim",
         namefile_ext="mpnam",
         version="modpath",
-        exe_name=mp6_exe,
+        exe_name='mp6',
         modflowmodel=m2,  # do not pass modflow model
 
         dis_file=None,
         head_file=None,
         budget_file=None,
-        model_ws=ws,
+        model_ws=str(tmpdir),
         external_path=None,
         verbose=False,
         load=False,
@@ -350,11 +325,5 @@ def test_just_from_model():
     stldata[1]["yloc0"] = 0.2
     stl.data = stldata
     mp.write_input()
-    if run:
-        success, buff = mp.run_model()
-        assert success
-
-
-if __name__ == '__main__':
-    pass
-    test_data_pass_no_modflow()
+    success, buff = mp.run_model()
+    assert success
