@@ -36,6 +36,14 @@ ipakcb = 740
 
 names = ['mf1']
 
+exe_names = {"mf2005": "mf2005", "mf6": "mf6", "mp7": "mp7"}
+run = True
+for key in exe_names.keys():
+    v = flopy.which(exe_names[key])
+    if v is None:
+        run = False
+        break
+
 mf2005_exe = "mf2005"
 if platform.system() in "Windows":
     mf2005_exe += ".exe"
@@ -47,7 +55,7 @@ if platform.system() in "Windows":
 mp6_exe = flopy.which(mp6_exe)
 
 
-def make_test_modflow_model(nm, ws):
+def _setup_modflow_model(nm, ws):
     m = flopy.modflow.Modflow(
         modelname=f"modflowtest_{nm}",
         namefile_ext="nam",
@@ -118,8 +126,9 @@ def make_test_modflow_model(nm, ws):
     flopy.modflow.ModflowOc(m, stress_period_data=ocspd)
 
     m.write_input()
-    success, buff = m.run_model()
-    assert success
+    if run:
+        success, buff = m.run_model()
+        assert success
 
     return m
 
@@ -181,17 +190,19 @@ def test_mp_wpandas_wo_pandas():
     ws = f"{base_dir}_test_mp_wpandas_wo_pandas"
     test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
 
-    m1 = make_test_modflow_model('mf1', ws)
+    m1 = _setup_modflow_model('mf1', ws)
     mp_pandas = make_mp_model('pandas', m1, ws, use_pandas=True)
     mp_no_pandas = make_mp_model('no_pandas', m1, ws, use_pandas=False)
 
     mp_no_pandas.write_input()
-    success, buff = mp_no_pandas.run_model()
-    assert success
+    if run:
+        success, buff = mp_no_pandas.run_model()
+        assert success
 
     mp_pandas.write_input()
-    success, buff = mp_pandas.run_model()
-    assert success
+    if run:
+        success, buff = mp_pandas.run_model()
+        assert success
 
     # read the two files and ensure they are identical
     with open(mp_pandas.get_package('loc').fn_path, 'r') as f:

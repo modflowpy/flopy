@@ -36,6 +36,14 @@ ipakcb = 740
 
 names = ['mf1', 'mf2']
 
+exe_names = {"mf2005": "mf2005", "mf6": "mf6", "mp7": "mp7"}
+run = True
+for key in exe_names.keys():
+    v = flopy.which(exe_names[key])
+    if v is None:
+        run = False
+        break
+
 mf2005_exe = "mf2005"
 if platform.system() in "Windows":
     mf2005_exe += ".exe"
@@ -47,8 +55,7 @@ if platform.system() in "Windows":
 mp6_exe = flopy.which(mp6_exe)
 
 
-
-def make_test_modflow_model(nm, ws):
+def _setup_modflow_model(nm, ws):
     m = flopy.modflow.Modflow(
         modelname=f"modflowtest_{nm}",
         namefile_ext="nam",
@@ -119,8 +126,9 @@ def make_test_modflow_model(nm, ws):
     flopy.modflow.ModflowOc(m, stress_period_data=ocspd)
 
     m.write_input()
-    success, buff = m.run_model()
-    assert success
+    if run:
+        success, buff = m.run_model()
+        assert success
     return m
 
 
@@ -137,7 +145,7 @@ def test_data_pass_no_modflow():
     bud_file = f"modflowtest_mf1.cbc"
     hd_file = f"modflowtest_mf1.hds"
 
-    m1 = make_test_modflow_model('mf1', ws)
+    m1 = _setup_modflow_model('mf1', ws)
     mp = flopy.modpath.Modpath6(
         modelname="modpathtest",
         simfile_ext="mpsim",
@@ -192,8 +200,9 @@ def test_data_pass_no_modflow():
     stldata[1]["yloc0"] = 0.2
     stl.data = stldata
     mp.write_input()
-    success, buff = mp.run_model()
-    assert success
+    if run:
+        success, buff = mp.run_model()
+        assert success
 
 
 def test_data_pass_with_modflow():
@@ -209,8 +218,8 @@ def test_data_pass_with_modflow():
     bud_file = f"modflowtest_mf1.cbc"
     hd_file = f"modflowtest_mf1.hds"
 
-    m1 = make_test_modflow_model('mf1', ws)
-    m2 = make_test_modflow_model('mf2', ws)
+    m1 = _setup_modflow_model('mf1', ws)
+    m2 = _setup_modflow_model('mf2', ws)
     mp = flopy.modpath.Modpath6(
         modelname="modpathtest",
         simfile_ext="mpsim",
@@ -255,7 +264,6 @@ def test_data_pass_with_modflow():
     # test ibound is pulled from modflow model
     assert np.isclose(mpbas.ibound.array, ibound['mf1']).all()
 
-
     sim = flopy.modpath.Modpath6Sim(model=mp)
     stl = flopy.modpath.mp6sim.StartingLocationsFile(model=mp)
     stldata = stl.get_empty_starting_locations_data(npt=2)
@@ -267,8 +275,10 @@ def test_data_pass_with_modflow():
     stldata[1]["yloc0"] = 0.2
     stl.data = stldata
     mp.write_input()
-    success, buff = mp.run_model()
-    assert success
+    if run:
+        success, buff = mp.run_model()
+        assert success
+
 
 def test_just_from_model():
     """
@@ -283,8 +293,8 @@ def test_just_from_model():
     bud_file = f"modflowtest_mf2.cbc"
     hd_file = f"modflowtest_mf2.hds"
 
-    m1 = make_test_modflow_model('mf1', ws)
-    m2 = make_test_modflow_model('mf2', ws)
+    m1 = _setup_modflow_model('mf1', ws)
+    m2 = _setup_modflow_model('mf2', ws)
     mp = flopy.modpath.Modpath6(
         modelname="modpathtest",
         simfile_ext="mpsim",
@@ -340,9 +350,9 @@ def test_just_from_model():
     stldata[1]["yloc0"] = 0.2
     stl.data = stldata
     mp.write_input()
-    success, buff = mp.run_model()
-    assert success
-
+    if run:
+        success, buff = mp.run_model()
+        assert success
 
 
 if __name__ == '__main__':
