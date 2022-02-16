@@ -678,7 +678,9 @@ class Mt3dBtn(Package):
 
         # A3; Keywords
         # Build a string of the active keywords
-        if self.parent.version == 'mt3d-usgs':  # Keywords not supported by MT3Dms
+        if (
+            self.parent.version == "mt3d-usgs"
+        ):  # Keywords not supported by MT3Dms
             str1 = ""
             if self.MFStyleArr:
                 str1 += " MODFLOWSTYLEARRAYS"

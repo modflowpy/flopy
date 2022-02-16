@@ -67,19 +67,19 @@ class Modpath6Bas(Package):
     """
 
     def __init__(
-            self,
-            model,
-            hnoflo=-9999.0,
-            hdry=-8888.0,
-            def_face_ct=0,
-            bud_label=None,
-            def_iface=None,
-            laytyp=None,
-            ibound=None,
-            prsity=0.30,
-            prsityCB=0.30,
-            extension="mpbas",
-            unitnumber=86,
+        self,
+        model,
+        hnoflo=-9999.0,
+        hdry=-8888.0,
+        def_face_ct=0,
+        bud_label=None,
+        def_iface=None,
+        laytyp=None,
+        ibound=None,
+        prsity=0.30,
+        prsityCB=0.30,
+        extension="mpbas",
+        unitnumber=86,
     ):
         super().__init__(model, extension, "MPBAS", unitnumber)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
@@ -94,13 +94,15 @@ class Modpath6Bas(Package):
         if ibound is None:
             mf = self.parent.getmf()
             if mf is None:
-                raise ValueError('either ibound must be passed or modflowmodel must not be None')
+                raise ValueError(
+                    "either ibound must be passed or modflowmodel must not be None"
+                )
             else:
-                bas = mf.get_package('BAS6')
+                bas = mf.get_package("BAS6")
                 if bas is not None:
                     ibound = bas.ibound.array
                 else:
-                    raise ValueError('could not get bas6 package from modflow')
+                    raise ValueError("could not get bas6 package from modflow")
         ibound = Util3d(
             model,
             (nlay, nrow, ncol),
@@ -180,7 +182,9 @@ class Modpath6Bas(Package):
         else:  # no user passed layertype
             have_layertype = False
             if self.parent.getmf() is None:
-                raise ValueError('if modflowmodel is None then laytype must be passed')
+                raise ValueError(
+                    "if modflowmodel is None then laytype must be passed"
+                )
 
             # run though flow packages
             flow_package = self.parent.getmf().get_package("BCF6")
@@ -217,5 +221,5 @@ class Modpath6Bas(Package):
                     locat=self.unit_number[0],
                 )
 
-        assert lc is not None, 'could not determine laytype'
+        assert lc is not None, "could not determine laytype"
         return lc

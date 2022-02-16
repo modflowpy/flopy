@@ -66,22 +66,22 @@ class Modpath6(BaseModel):
     """
 
     def __init__(
-            self,
-            modelname="modpathtest",
-            simfile_ext="mpsim",
-            namefile_ext="mpnam",
-            version="modpath",
-            exe_name="mp6.exe",
-            modflowmodel=None,
-            dis_file=None,
-            dis_unit=87,
-            head_file=None,
-            budget_file=None,
-            model_ws=None,
-            external_path=None,
-            verbose=False,
-            load=True,
-            listunit=7,
+        self,
+        modelname="modpathtest",
+        simfile_ext="mpsim",
+        namefile_ext="mpnam",
+        version="modpath",
+        exe_name="mp6.exe",
+        modflowmodel=None,
+        dis_file=None,
+        dis_unit=87,
+        head_file=None,
+        budget_file=None,
+        model_ws=None,
+        external_path=None,
+        verbose=False,
+        load=True,
+        listunit=7,
     ):
         super().__init__(
             modelname,
@@ -101,7 +101,11 @@ class Modpath6(BaseModel):
         if self.__mf is not None:
             # ensure that user-specified files are used
             iu = self.__mf.oc.iuhead
-            head_file = self.__mf.get_output(unit=iu) if head_file is None else head_file
+            head_file = (
+                self.__mf.get_output(unit=iu)
+                if head_file is None
+                else head_file
+            )
             p = self.__mf.get_package("LPF")
             if p is None:
                 p = self.__mf.get_package("BCF6")
@@ -113,8 +117,14 @@ class Modpath6(BaseModel):
                     "passed MODFLOW model"
                 )
             iu = p.ipakcb
-            budget_file = self.__mf.get_output(unit=iu) if budget_file is None else budget_file
-            dis_file = self.__mf.dis.file_name[0] if dis_file is None else dis_file
+            budget_file = (
+                self.__mf.get_output(unit=iu)
+                if budget_file is None
+                else budget_file
+            )
+            dis_file = (
+                self.__mf.dis.file_name[0] if dis_file is None else dis_file
+            )
 
             dis_unit = self.__mf.dis.unit_number[0]
             nper = self.__mf.dis.nper
@@ -152,12 +162,17 @@ class Modpath6(BaseModel):
             if not os.path.exists(read_dis):
                 # path doesn't exist, probably relative to model_ws
                 read_dis = os.path.join(self.model_ws, dis_file)
-            with open(read_dis, 'r') as f:
+            with open(read_dis, "r") as f:
                 line = f.readline()
-                while line[0] == '#':
+                while line[0] == "#":
                     line = f.readline()
                 nlay, nrow, ncol, nper, itmuni, lennuni = line.split()
-                self.nrow_ncol_nlay_nper = (int(nrow), int(ncol), int(nlay), int(nper))
+                self.nrow_ncol_nlay_nper = (
+                    int(nrow),
+                    int(ncol),
+                    int(nlay),
+                    int(nper),
+                )
 
         # set the rest of the attributes
         self.__sim = None
@@ -223,18 +238,18 @@ class Modpath6(BaseModel):
     mf = property(getmf)  # Property has no setter, so read-only
 
     def create_mpsim(
-            self,
-            simtype="pathline",
-            trackdir="forward",
-            packages="WEL",
-            start_time=0,
-            default_ifaces=None,
-            ParticleColumnCount=4,
-            ParticleRowCount=4,
-            MinRow=0,
-            MinColumn=0,
-            MaxRow=None,
-            MaxColumn=None,
+        self,
+        simtype="pathline",
+        trackdir="forward",
+        packages="WEL",
+        start_time=0,
+        default_ifaces=None,
+        ParticleColumnCount=4,
+        ParticleRowCount=4,
+        MinRow=0,
+        MinColumn=0,
+        MaxRow=None,
+        MaxColumn=None,
     ):
         """
         Create a MODPATH simulation file using available MODFLOW boundary
@@ -275,7 +290,9 @@ class Modpath6(BaseModel):
 
         """
         if self.__mf is None:
-            raise ValueError('cannot create simulation by packages if the Modflow model is None')
+            raise ValueError(
+                "cannot create simulation by packages if the Modflow model is None"
+            )
 
         if isinstance(packages, str):
             packages = [packages]
