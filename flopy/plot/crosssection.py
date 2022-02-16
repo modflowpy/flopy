@@ -554,6 +554,7 @@ class PlotCrossSection:
                     t = np.isclose(plotarray, mval)
                     ismasked += t
 
+        filled = kwargs.pop("filled", False)
         plot_triplot = kwargs.pop("plot_triplot", False)
 
         if "extent" in kwargs:
@@ -571,18 +572,33 @@ class PlotCrossSection:
 
         if mplcontour:
             plotarray = np.ma.masked_array(plotarray, ismasked)
-            contour_set = ax.contour(xcenters, zcenters, plotarray, **kwargs)
+            if filled:
+                contour_set = ax.contourf(
+                    xcenters, zcenters, plotarray, **kwargs
+                )
+            else:
+                contour_set = ax.contour(
+                    xcenters, zcenters, plotarray, **kwargs
+                )
         else:
             triang = tri.Triangulation(xcenters, zcenters)
+            analyze = tri.TriAnalyzer(triang)
+            mask = analyze.get_flat_tri_mask(rescale=False)
 
             if ismasked is not None:
                 ismasked = ismasked.flatten()
-                mask = np.any(
+                mask2 = np.any(
                     np.where(ismasked[triang.triangles], True, False), axis=1
                 )
-                triang.set_mask(mask)
+                mask[mask2] = True
 
-            contour_set = ax.tricontour(triang, plotarray, **kwargs)
+            triang.set_mask(mask)
+
+            if filled:
+                contour_set = ax.tricontourf(triang, plotarray, **kwargs)
+            else:
+                contour_set = ax.tricontour(triang, plotarray, **kwargs)
+
             if plot_triplot:
                 ax.triplot(triang, color="black", marker="o", lw=0.75)
 

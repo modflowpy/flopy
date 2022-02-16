@@ -1672,8 +1672,7 @@ def export_contourf(
     filename, contours, fieldname="level", epsg=None, prj=None, **kwargs
 ):
     """
-    Write matplotlib filled contours to shapefile.  This utility requires
-    that shapely is installed.
+    Write matplotlib filled contours to shapefile.
 
     Parameters
     ----------
@@ -1706,16 +1705,10 @@ def export_contourf(
     >>> export_contourf('myfilledcontours.shp', cs)
 
     """
-
-    shapely = import_optional_dependency(
-        "shapely", error_message="export_contourf requires shapely."
-    )
-    from shapely import geometry
-
-    from ..utils.geometry import Polygon
+    from ..utils.geometry import Polygon, is_clockwise
     from .shapefile_utils import recarray2shp
 
-    shapelygeoms = []
+    geoms = []
     level = []
 
     if not isinstance(contours, list):
@@ -1726,31 +1719,34 @@ def export_contourf(
         for idx, col in enumerate(c.collections):
             # Loop through all polygons that have the same intensity level
             for contour_path in col.get_paths():
-                # Create the polygon for this intensity level
-                # The first polygon in the path is the main one, the following
-                # ones are "holes"
+                # Create the polygon(s) for this intensity level
+                poly = None
                 for ncp, cp in enumerate(contour_path.to_polygons()):
                     x = cp[:, 0]
                     y = cp[:, 1]
-                    new_shape = geometry.Polygon(
-                        [(i[0], i[1]) for i in zip(x, y)]
-                    )
+                    verts = [(i[0], i[1]) for i in zip(x, y)]
+                    new_shape = Polygon(verts)
+
                     if ncp == 0:
                         poly = new_shape
                     else:
-                        # Remove the holes if there are any
-                        poly = poly.difference(new_shape)
+                        # check if this is a multipolygon by checking vertex
+                        # order.
+                        if is_clockwise(verts):
+                            # Clockwise is a hole, set to interiors
+                            if not poly.interiors:
+                                poly.interiors = [new_shape.exterior]
+                            else:
+                                poly.interiors.append(new_shape.exterior)
+                        else:
+                            geoms.append(poly)
+                            level.append(levels[idx])
+                            poly = new_shape
 
-                # store shapely geometry object
-                shapelygeoms.append(poly)
-                level.append(levels[idx])
-
-    geoms = []
-    for shpgeom in shapelygeoms:
-        xa, ya = shpgeom.exterior.coords.xy
-        interiors = [s.coords for s in shpgeom.interiors]
-        pg = Polygon([(x, y) for x, y in zip(xa, ya)], interiors=interiors)
-        geoms += [pg]
+                if poly is not None:
+                    # store geometry object
+                    geoms.append(poly)
+                    level.append(levels[idx])
 
     print(f"Writing {len(level)} polygons")
 

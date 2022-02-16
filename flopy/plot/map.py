@@ -205,9 +205,8 @@ class PlotMapView:
             if "cmap" in kwargs.keys():
                 kwargs.pop("cmap")
 
-        plot_triplot = False
-        if "plot_triplot" in kwargs:
-            plot_triplot = kwargs.pop("plot_triplot")
+        filled = kwargs.pop("filled", False)
+        plot_triplot = kwargs.pop("plot_triplot", False)
 
         # Get vertices for the selected layer
         xcentergrid = self.mg.get_xcellcenters_for_layer(self.layer)
@@ -238,7 +237,10 @@ class PlotMapView:
             )
             triang.set_mask(mask)
 
-        contour_set = ax.tricontour(triang, plotarray, **kwargs)
+        if filled:
+            contour_set = ax.tricontourf(triang, plotarray, **kwargs)
+        else:
+            contour_set = ax.tricontour(triang, plotarray, **kwargs)
 
         if plot_triplot:
             ax.triplot(triang, color="black", marker="o", lw=0.75)
