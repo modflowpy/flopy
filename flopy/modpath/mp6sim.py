@@ -15,7 +15,8 @@ from ..utils import Util3d, import_optional_dependency
 pd = import_optional_dependency(
     "pandas",
     error_message="writing particles is more effcient with pandas",
-    errors='ignore')
+    errors="ignore",
+)
 
 
 class Modpath6Sim(Package):
@@ -55,37 +56,37 @@ class Modpath6Sim(Package):
     """
 
     def __init__(
-            self,
-            model,
-            mp_name_file="mp.nam",
-            mp_list_file="mp.list",
-            option_flags=[1, 2, 1, 1, 1, 2, 2, 1, 2, 1, 1, 1],
-            ref_time=0,
-            ref_time_per_stp=[0, 0, 1.0],
-            stop_time=None,
-            group_name=["group_1"],
-            group_placement=[[1, 1, 1, 0, 1, 1]],
-            release_times=[[1, 1]],
-            group_region=[[1, 1, 1, 1, 1, 1]],
-            mask_nlay=[1],
-            mask_layer=[1],
-            mask_1lay=[1],
-            face_ct=[1],
-            ifaces=[[6, 1, 1]],
-            part_ct=[[1, 1, 1]],
-            time_ct=1,
-            release_time_incr=1,
-            time_pts=[1],
-            particle_cell_cnt=[[2, 2, 2]],
-            cell_bd_ct=1,
-            bud_loc=[[1, 1, 1, 1]],
-            trace_id=1,
-            stop_zone=1,
-            zone=1,
-            retard_fac=1.0,
-            retard_fcCB=1.0,
-            strt_file=None,
-            extension="mpsim",
+        self,
+        model,
+        mp_name_file="mp.nam",
+        mp_list_file="mp.list",
+        option_flags=[1, 2, 1, 1, 1, 2, 2, 1, 2, 1, 1, 1],
+        ref_time=0,
+        ref_time_per_stp=[0, 0, 1.0],
+        stop_time=None,
+        group_name=["group_1"],
+        group_placement=[[1, 1, 1, 0, 1, 1]],
+        release_times=[[1, 1]],
+        group_region=[[1, 1, 1, 1, 1, 1]],
+        mask_nlay=[1],
+        mask_layer=[1],
+        mask_1lay=[1],
+        face_ct=[1],
+        ifaces=[[6, 1, 1]],
+        part_ct=[[1, 1, 1]],
+        time_ct=1,
+        release_time_incr=1,
+        time_pts=[1],
+        particle_cell_cnt=[[2, 2, 2]],
+        cell_bd_ct=1,
+        bud_loc=[[1, 1, 1, 1]],
+        trace_id=1,
+        stop_zone=1,
+        zone=1,
+        retard_fac=1.0,
+        retard_fcCB=1.0,
+        strt_file=None,
+        extension="mpsim",
     ):
 
         # call base package constructor
@@ -196,8 +197,8 @@ class Modpath6Sim(Package):
 
         # MODPATH apparently produces no output if stoptime > last timepoint
         if (
-                self.options_dict["StopOption"] == 3
-                and self.options_dict["TimePointOption"] == 3
+            self.options_dict["StopOption"] == 3
+            and self.options_dict["TimePointOption"] == 3
         ):
             if self.time_pts[-1] < self.stop_time:
                 chk._add_to_summary(
@@ -244,8 +245,8 @@ class Modpath6Sim(Package):
             f_sim.write(f"{self.time_ser_file}\n")
         # item 7
         if (
-                self.options_dict["AdvectiveObservationsOption"] == 2
-                and self.option_dict["SimulationType"] == 3
+            self.options_dict["AdvectiveObservationsOption"] == 2
+            and self.option_dict["SimulationType"] == 3
         ):
             f_sim.write(f"{self.advobs_file}\n")
 
@@ -358,8 +359,8 @@ class Modpath6Sim(Package):
         if self.options_dict["TimePointOption"] != 1:
             # item 23
             if (
-                    self.options_dict["TimePointOption"] == 2
-                    or self.options_dict["TimePointOption"] == 3
+                self.options_dict["TimePointOption"] == 2
+                or self.options_dict["TimePointOption"] == 3
             ):
                 f_sim.write(f"{self.time_ct}\n")
             # item 24
@@ -371,8 +372,8 @@ class Modpath6Sim(Package):
                     f_sim.write(f"{self.time_pts[r]:f}\n")
 
         if (
-                self.options_dict["BudgetOutputOption"] != 1
-                or self.options_dict["BudgetOutputOption"] != 2
+            self.options_dict["BudgetOutputOption"] != 1
+            or self.options_dict["BudgetOutputOption"] != 2
         ):
             # item 26
             if self.options_dict["BudgetOutputOption"] == 3:
@@ -422,12 +423,12 @@ class StartingLocationsFile(Package):
     """
 
     def __init__(
-            self,
-            model,
-            inputstyle=1,
-            extension="loc",
-            verbose=False,
-            use_pandas=True,
+        self,
+        model,
+        inputstyle=1,
+        extension="loc",
+        verbose=False,
+        use_pandas=True,
     ):
 
         super().__init__(model, extension, "LOC", 33)
@@ -471,7 +472,7 @@ class StartingLocationsFile(Package):
 
     @staticmethod
     def get_empty_starting_locations_data(
-            npt=0, default_xloc0=0.5, default_yloc0=0.5, default_zloc0=0.0
+        npt=0, default_xloc0=0.5, default_yloc0=0.5, default_zloc0=0.0
     ):
         """get an empty recarray for particle starting location info.
 
@@ -542,10 +543,10 @@ class StartingLocationsFile(Package):
         # writing group loc data
         groups = (
             data[["particlegroup", "groupname"]]
-                .groupby("particlegroup")
-                .count()
-                .reset_index()
-                .rename(columns={"groupname": "count"})
+            .groupby("particlegroup")
+            .count()
+            .reset_index()
+            .rename(columns={"groupname": "count"})
         )
         groups.loc[:, "groupname"] = groups.loc[:, "particlegroup"].replace(
             group_dict
