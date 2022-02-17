@@ -988,8 +988,8 @@ class StructuredGrid(Grid):
         grd = cls(np.array(delc), np.array(delr), lenuni=lenuni)
         xll = grd._xul_to_xll(xul)
         yll = grd._yul_to_yll(yul)
-        cls.set_coord_info(xoff=xll, yoff=yll, angrot=rot)
-        return cls
+        grd.set_coord_info(xoff=xll, yoff=yll, angrot=rot)
+        return grd
 
     def array_at_verts_basic(self, a):
         """
