@@ -19,7 +19,7 @@ from ..mfbase import (
     VerbosityLevel,
 )
 from ..mfpackage import MFPackage
-from ..modflow import mfgwfgnc, mfgwfmvr, mfims, mfnam, mftdis
+from ..modflow import mfgwfgnc, mfgwfmvr, mfgwtmvt, mfims, mfnam, mftdis
 from ..utils import binaryfile_utils, mfobservation
 
 
@@ -418,6 +418,7 @@ class MFSimulation(PackageContainer):
         self._ims_files = {}
         self._ghost_node_files = {}
         self._mover_files = {}
+        self._mvt_files = {}
         self._other_files = {}
         self.structure = fpdata.sim_struct
         self.model_type = None
@@ -425,6 +426,7 @@ class MFSimulation(PackageContainer):
         self._exg_file_num = {}
         self._gnc_file_num = 0
         self._mvr_file_num = 0
+        self._mvt_file_num = 0
 
         self.simulation_data.mfpath.set_last_accessed_path()
 
@@ -924,6 +926,8 @@ class MFSimulation(PackageContainer):
             package_list.append(sim_package)
         for sim_package in self._mover_files.values():
             package_list.append(sim_package)
+        for sim_package in self._mvt_files.values():
+            package_list.append(sim_package)
         for sim_package in self._other_files.values():
             package_list.append(sim_package)
         return package_list
@@ -999,6 +1003,26 @@ class MFSimulation(PackageContainer):
                 self._mover_files[fname] = mover_file
                 self._mvr_file_num += 1
                 return mover_file
+        elif ftype == "mvt":
+            if fname not in self._mvt_files:
+                # Get package type from parent package
+                if parent_package:
+                    package_abbr = parent_package.package_abbr[0:3]
+                else:
+                    package_abbr = "GWT"
+                # build package name and package
+                mvt_name = f"{package_abbr}-MVT_{self._mvt_file_num}"
+                mvt_file = mfgwtmvt.ModflowGwtmvt(
+                    self,
+                    filename=fname,
+                    pname=mvt_name,
+                    parent_file=parent_package,
+                    loading_package=True,
+                )
+                mvt_file.load(strict)
+                self._mvt_files[fname] = mvt_file
+                self._mvt_file_num += 1
+                return mvt_file
         else:
             # create package
             package_obj = self.package_factory(ftype, "")
@@ -1279,6 +1303,11 @@ class MFSimulation(PackageContainer):
             self._mover_files[new_name] = self._mover_files.pop(
                 package.filename
             )
+        if package.filename in self._mvt_files:
+            self._update_exg_files_mvr(package.filename, new_name)
+            self._mvt_files[new_name] = self._mvt_files.pop(
+                package.filename
+            )
         if package.filename in self._other_files:
             self._other_files[new_name] = self._other_files.pop(
                 package.filename
@@ -1301,6 +1330,7 @@ class MFSimulation(PackageContainer):
         self._rename_package_group(self._ims_files, name)
         self._rename_package_group(self._ghost_node_files, name)
         self._rename_package_group(self._mover_files, name)
+        self._rename_package_group(self._mvt_files, name)
         self._rename_package_group(self._other_files, name)
         for model in self._models.values():
             model.rename_all_packages(name)
@@ -1334,6 +1364,8 @@ class MFSimulation(PackageContainer):
         # set data external for mover packages
         for package in self._mover_files.values():
             package.set_all_data_external(check_data, external_data_folder)
+        for package in self._mvt_files.values():
+            package.set_all_data_external(check_data, external_data_folder)
         for package in self._exchange_files.values():
             package.set_all_data_external(check_data, external_data_folder)
 
@@ -1349,6 +1381,8 @@ class MFSimulation(PackageContainer):
             package.set_all_data_internal(check_data)
         # set data external for mover packages
         for package in self._mover_files.values():
+            package.set_all_data_internal(check_data)
+        for package in self._mvt_files.values():
             package.set_all_data_internal(check_data)
         for package in self._exchange_files.values():
             package.set_all_data_internal(check_data)
@@ -1492,6 +1526,48 @@ class MFSimulation(PackageContainer):
                             "WARNING: Mover file {} not loaded prior to "
                             "writing. File will not be "
                             "written.".format(mvr_file)
+                        )
+
+            if (
+                hasattr(exchange_file, "mvt_filerecord")
+                and exchange_file.mvt_filerecord.has_data()
+            ):
+                try:
+                    mvt_file = exchange_file.mvt_filerecord.get_data()[0][0]
+                except MFDataException as mfde:
+                    message = (
+                        "An error occurred while retrieving the mover transport "
+                        "file record from exchange file "
+                        '"{}".'.format(exchange_file.filename)
+                    )
+                    raise MFDataException(
+                        mfdata_except=mfde,
+                        package=exchange_file._get_pname(),
+                        message=message,
+                    )
+
+                if mvt_file in self._mvt_files:
+                    if (
+                        self.simulation_data.verbosity_level.value
+                        >= VerbosityLevel.normal.value
+                    ):
+                        print(
+                            "  writing mvr package {}...".format(
+                                self._mvt_files[mvt_file]._get_pname()
+                            )
+                        )
+                    self._mvt_files[mvt_file].write(
+                        ext_file_action=ext_file_action
+                    )
+                else:
+                    if (
+                        self.simulation_data.verbosity_level.value
+                        >= VerbosityLevel.normal.value
+                    ):
+                        print(
+                            "WARNING: Mover transport file {} not loaded prior to "
+                            "writing. File will not be "
+                            "written.".format(mvt_file)
                         )
 
         # write other packages
@@ -1638,6 +1714,8 @@ class MFSimulation(PackageContainer):
                 del self._ghost_node_files[package.filename]
             if package.filename in self._mover_files:
                 del self._mover_files[package.filename]
+            if package.filename in self._mvt_files:
+                del self._mvt_files[package.filename]
             if package.filename in self._other_files:
                 del self._other_files[package.filename]
 
@@ -1724,6 +1802,26 @@ class MFSimulation(PackageContainer):
             return self._mover_files[filename]
         else:
             excpt_str = f'MVR file "{filename}" can not be found.'
+            raise FlopyException(excpt_str)
+
+    def get_mvt_file(self, filename):
+        """
+        Get a specified mvt file.
+
+        Parameters
+        ----------
+            filename : str
+                Name of mover transport file to get
+
+        Returns
+        --------
+            mover transport package : MFPackage
+
+        """
+        if filename in self._mvt_files:
+            return self._mvt_files[filename]
+        else:
+            excpt_str = f'MVT file "{filename}" can not be found.'
             raise FlopyException(excpt_str)
 
     def get_gnc_file(self, filename):
@@ -1937,6 +2035,23 @@ class MFSimulation(PackageContainer):
             self._remove_package(self._mover_files[package.filename])
             del self._mover_files[package.filename]
         elif (
+            package.package_type.lower() == "mvt"
+            and package.filename in self._mvt_files
+            and self._mvt_files[package.filename] in self._packagelist
+        ):
+            # mvr package with same file name already exists.  remove old
+            # mvr package
+            if (
+                self.simulation_data.verbosity_level.value
+                >= VerbosityLevel.normal.value
+            ):
+                print(
+                    f"WARNING: mvt package with name {pname} already exists. "
+                    "Replacing existing mvr package."
+                )
+            self._remove_package(self._mvt_files[package.filename])
+            del self._mvt_files[package.filename]
+        elif (
             package.package_type.lower() != "ims"
             and pname in self.package_name_dict
         ):
@@ -2019,6 +2134,16 @@ class MFSimulation(PackageContainer):
                 )
                 package.filename = file_name
                 self._mover_files[file_name] = package
+        elif package.package_type.lower() == "mvt":
+            if package.filename not in self._mvt_files:
+                self._mvt_files[package.filename] = package
+            else:
+                # auto generate a unique file name and register it
+                file_name = MFFileMgmt.unique_file_name(
+                    package.filename, self._mvt_files
+                )
+                package.filename = file_name
+                self._mvt_files[file_name] = package
         elif package.package_type.lower() == "ims":
             # default behavior is to register the ims package with the first
             # unregistered model
@@ -2418,6 +2543,29 @@ class MFSimulation(PackageContainer):
                 if mvr_file[0][0] == mvr_filename:
                     mvr_file[0][0] = new_filename
                     exchange_file.mvr_filerecord.set_data(mvr_file)
+
+    def _update_exg_file_mvt(self, mvt_filename, new_filename):
+        for exchange_file in self._exchange_files.values():
+            if (
+                hasattr(exchange_file, "mvt_filerecord")
+                and exchange_file.mvr_filerecord.has_data()
+            ):
+                try:
+                    mvt_file = exchange_file.mvt_filerecord.get_data()[0][0]
+                except MFDataException as mfde:
+                    message = (
+                        "An error occurred while retrieving the transport mover "
+                        "file record from exchange file "
+                        '"{}".'.format(exchange_file.filename)
+                    )
+                    raise MFDataException(
+                        mfdata_except=mfde,
+                        package=exchange_file._get_pname(),
+                        message=message,
+                    )
+                if mvt_file[0][0] == mvt_filename:
+                    mvt_file[0][0] = new_filename
+                    exchange_file.mvt_filerecord.set_data(mvt_file)
 
     def plot(self, model_list=None, SelPackList=None, **kwargs):
         """
