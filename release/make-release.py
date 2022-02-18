@@ -5,6 +5,7 @@ import json
 import os
 import subprocess
 import sys
+from importlib.machinery import SourceFileLoader
 
 # file_paths dictionary has file names and the path to the file. Enter '.'
 # as the path if the file is in the root repository directory
@@ -20,12 +21,12 @@ file_paths = {
 pak = "flopy"
 
 # local import of package variables in flopy/version.py
-# imports author_dict
-exec(open(os.path.join("..", "flopy", "version.py")).read())
+loader = SourceFileLoader("version", os.path.join("..", "flopy", "version.py"))
+version_mod = loader.load_module()
 
 # build authors list for Software/Code citation for FloPy
 authors = []
-for key in author_dict.keys():
+for key in version_mod.author_dict.keys():
     t = key.split()
     author = f"{t[-1]}"
     for str in t[0:-1]:
