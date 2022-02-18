@@ -33,6 +33,7 @@ class DfnType(Enum):
     gnc_file = 8
     mvr_file = 9
     utl = 10
+    mvt_file = 11
     unknown = 999
 
 
@@ -148,6 +149,8 @@ class Dfn:
                 return DfnType.gnc_file, model_type
             elif file_name[3:6] == "mvr":
                 return DfnType.mvr_file, model_type
+            elif file_name[3:6] == "mvt":
+                return DfnType.mvt_file, model_type
             else:
                 return DfnType.model_file, model_type
 
@@ -2292,6 +2295,7 @@ class MFSimulationStructure:
             or dfn_file.dfn_type == DfnType.model_name_file
             or dfn_file.dfn_type == DfnType.gnc_file
             or dfn_file.dfn_type == DfnType.mvr_file
+            or dfn_file.dfn_type == DfnType.mvt_file
         ):
             model_ver = f"{dfn_file.model_type}{MFStructure(True).get_version_string()}"
             if model_ver not in self.model_struct_objs:
@@ -2303,6 +2307,7 @@ class MFSimulationStructure:
             elif (
                 dfn_file.dfn_type == DfnType.gnc_file
                 or dfn_file.dfn_type == DfnType.mvr_file
+                or dfn_file.dfn_type == DfnType.mvt_file
             ):
                 # gnc and mvr files belong both on the simulation and model
                 # level
