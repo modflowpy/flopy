@@ -985,9 +985,9 @@ class StructuredGrid(Grid):
                     delc.append(float(r))
                     i += 1
         f.close()
-        grd = cls(np.array(delc), np.array(delr), lenuni=lenuni, angrot=rot)
-        xll = grd._xul_to_xll(xul)
-        yll = grd._yul_to_yll(yul)
+        grd = cls(np.array(delc), np.array(delr), lenuni=lenuni)
+        xll = grd._xul_to_xll(xul, angrot=rot)
+        yll = grd._yul_to_yll(yul, angrot=rot)
         grd.set_coord_info(xoff=xll, yoff=yll, angrot=rot)
         return grd
 
