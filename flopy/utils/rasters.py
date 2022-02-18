@@ -265,7 +265,7 @@ class Raster:
 
         return value
 
-    def sample_polygon(self, polygon, band, invert=False):
+    def sample_polygon(self, polygon, band, invert=False, **kwargs):
         """
         Method to get an unordered list of raster values that are located
         within a arbitrary polygon
@@ -309,7 +309,7 @@ class Raster:
                     arr_dict[b] = t
 
         else:
-            mask = self._intersection(polygon, invert)
+            mask = self._intersection(polygon, invert, **kwargs)
 
             arr_dict = {}
             for b, arr in self.__arr_dict.items():
@@ -455,7 +455,9 @@ class Raster:
             else:
                 for node in range(ncpl):
                     verts = modelgrid.get_cell_vertices(node)
-                    rstr_data = self.sample_polygon(verts, band).astype(float)
+                    rstr_data = self.sample_polygon(
+                        verts, band, convert=False
+                    ).astype(float)
                     msk = np.in1d(rstr_data, self.nodatavals)
                     rstr_data[msk] = np.nan
 
@@ -540,7 +542,9 @@ class Raster:
         """
         container.acquire()
         verts = modelgrid.get_cell_vertices(node)
-        rstr_data = self.sample_polygon(verts, band).astype(float)
+        rstr_data = self.sample_polygon(verts, band, convert=False).astype(
+            float
+        )
         msk = np.in1d(rstr_data, self.nodatavals)
         rstr_data[msk] = np.nan
 
@@ -715,7 +719,7 @@ class Raster:
 
         return arr_dict, rstr_crp_meta
 
-    def _intersection(self, polygon, invert):
+    def _intersection(self, polygon, invert, **kwargs):
         """
         Internal method to create an intersection mask, used for cropping
         arrays and sampling arrays.
@@ -740,14 +744,18 @@ class Raster:
             mask : np.ndarray (dtype = bool)
 
         """
-        from .geospatial_utils import GeoSpatialUtil
+        # the convert kwarg is to speed up the resample_to_grid method
+        #  which already provides the proper datatype to _intersect()
+        convert = kwargs.pop("convert", True)
+        if convert:
+            from .geospatial_utils import GeoSpatialUtil
 
-        if isinstance(polygon, (list, tuple, np.ndarray)):
-            polygon = [polygon]
+            if isinstance(polygon, (list, tuple, np.ndarray)):
+                polygon = [polygon]
 
-        geom = GeoSpatialUtil(polygon, shapetype="Polygon")
+            geom = GeoSpatialUtil(polygon, shapetype="Polygon")
 
-        polygon = geom.points[0]
+            polygon = geom.points[0]
 
         # step 2: create a grid of centoids
         xc = self.xcenters

@@ -360,7 +360,7 @@ class ModflowAg(Package):
 
             # check if item 12 exists and write item 12 - 14
             if self.segment_list is not None:
-                foo.write("# segment list for irriagation diversions\n")
+                foo.write("# segment list for irrigation diversions\n")
                 foo.write("SEGMENT LIST\n")
                 for iseg in self.segment_list:
                     foo.write(f"{iseg}\n")

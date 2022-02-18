@@ -1731,25 +1731,40 @@ def test_export_array_contours():
 
 
 def test_export_contourf():
-    try:
-        import shapely
-    except:
-        return
     if import_shapefile() is None:
         return
+    import shapefile
+    from flopy.export.utils import export_contourf
     import matplotlib.pyplot as plt
 
-    from flopy.export.utils import export_contourf
-
     ws_out = f"{base_dir}_shapefile_export_contourf"
+    filename = os.path.join(ws_out, "myfilledcontours.shp")
+
     test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
 
-    filename = os.path.join(ws_out, "myfilledcontours.shp")
-    a = np.random.random((10, 10))
-    cs = plt.contourf(a)
-    export_contourf(filename, cs)
-    assert os.path.isfile(filename), "did not create contourf shapefile"
+    model_ws = os.path.join("..", "examples", "data", "freyberg")
+    ml = flopy.modflow.Modflow.load("freyberg.nam", model_ws=model_ws)
+    hds_pth = os.path.join(model_ws, "freyberg.githds")
+    hds = flopy.utils.HeadFile(hds_pth)
+    head = hds.get_data()
+    levels = np.arange(10, 30, 0.5)
+
+    mapview = flopy.plot.PlotMapView(model=ml)
+    contour_set = mapview.contour_array(
+        head, masked_values=[999.0], levels=levels, filled=True
+    )
+
+    export_contourf(filename, contour_set)
     plt.close()
+    if not os.path.isfile(filename):
+        raise AssertionError("did not create contourf shapefile")
+
+    with shapefile.Reader(filename) as r:
+        shapes = r.shapes()
+        if len(shapes) != 65:
+            raise AssertionError(
+                "multipolygons were skipped in contourf routine"
+            )
 
 
 def main():
