@@ -1305,9 +1305,7 @@ class MFSimulation(PackageContainer):
             )
         if package.filename in self._mvt_files:
             self._update_exg_files_mvr(package.filename, new_name)
-            self._mvt_files[new_name] = self._mvt_files.pop(
-                package.filename
-            )
+            self._mvt_files[new_name] = self._mvt_files.pop(package.filename)
         if package.filename in self._other_files:
             self._other_files[new_name] = self._other_files.pop(
                 package.filename
