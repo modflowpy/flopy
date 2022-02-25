@@ -1030,7 +1030,6 @@ class MFSimulation(PackageContainer):
                 self,
                 filename=fname,
                 pname=dict_package_name,
-                add_to_package_list=False,
                 parent_file=parent_package,
                 loading_package=True,
             )
