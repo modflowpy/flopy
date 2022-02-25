@@ -1024,8 +1024,9 @@ class MFSimulation(PackageContainer):
                 self._mvt_file_num += 1
                 return mvt_file
         else:
-            # create package
+            # get package object from file type
             package_obj = self.package_factory(ftype, "")
+            # create package
             package = package_obj(
                 self,
                 filename=fname,
