@@ -267,7 +267,11 @@ def test_multi_model():
     )
 
     # gwf-gwf
-    gwfgwf_data = [[(0, 0, ncol - 1), (0, 0, 0), 1, 0.5, 0.5, 1.0, 0.0, 1.0]]
+    gwfgwf_data = []
+    for col in range(0, ncol):
+        gwfgwf_data.append(
+            [(0, 0, col), (0, 0, 0), 1, 0.5, 0.5, 1.0, 0.0, 1.0]
+        )
     gwfgwf = flopy.mf6.ModflowGwfgwf(
         sim,
         exgtype="GWF6-GWF6",
@@ -277,6 +281,17 @@ def test_multi_model():
         exchangedata=gwfgwf_data,
         auxiliary=["ANGLDEGX", "CDIST"],
         filename="flow1_flow2.gwfgwf",
+    )
+
+    # Observe flow for exchange
+    gwfgwfobs = {}
+    obs_list = []
+    for col in range(0, ncol):
+        obs_list.append([f"exchange_flow_{col}", "FLOW-JA-FACE", (col,)])
+    gwfgwfobs["gwfgwf.output.obs.csv"] = obs_list
+    fname = "gwfgwf.input.obs"
+    gwfgwf.obs.initialize(
+        filename=fname, digits=25, print_input=True, continuous=gwfgwfobs
     )
 
     # Create gwt model
@@ -629,14 +644,20 @@ def test_binary_read():
     dstruct = flopy.mf6.data.mfstructure.MFDataItemStructure()
     dstruct.is_cellid = False
     dstruct.name = "fake"
-    dstruct.data_items = [None,]
+    dstruct.data_items = [
+        None,
+    ]
     mfstruct = flopy.mf6.data.mfstructure.MFDataStructure(
-        dstruct, False, 'ic', None
+        dstruct, False, "ic", None
     )
-    mfstruct.data_item_structures = [dstruct,]
-    mfstruct.path = ["fake", ]
+    mfstruct.data_item_structures = [
+        dstruct,
+    ]
+    mfstruct.path = [
+        "fake",
+    ]
 
-    md = flopy.mf6.coordinates.modeldimensions.ModelDimensions('test', None)
+    md = flopy.mf6.coordinates.modeldimensions.ModelDimensions("test", None)
     pd = flopy.mf6.coordinates.modeldimensions.PackageDimensions(
         [md], None, "."
     )
