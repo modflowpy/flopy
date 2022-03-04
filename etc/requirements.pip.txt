@@ -10,4 +10,3 @@ matplotlib
 pytest
 pytest-xdist
 pytest-cov
-mfpymake

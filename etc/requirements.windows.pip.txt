@@ -10,7 +10,6 @@ coverage
 pytest
 pytest-xdist
 pytest-cov
-mfpymake
 
 # optional
 appdirs
