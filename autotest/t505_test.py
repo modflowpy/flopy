@@ -19,6 +19,7 @@ from flopy.mf6.modflow.mfgwfgnc import ModflowGwfgnc
 from flopy.mf6.modflow.mfgwfgwf import ModflowGwfgwf
 from flopy.mf6.modflow.mfgwfhfb import ModflowGwfhfb
 from flopy.mf6.modflow.mfgwfic import ModflowGwfic
+from flopy.mf6.modflow.mfgwflak import ModflowGwflak
 from flopy.mf6.modflow.mfgwfnpf import ModflowGwfnpf
 from flopy.mf6.modflow.mfgwfoc import ModflowGwfoc
 from flopy.mf6.modflow.mfgwfrch import ModflowGwfrch
@@ -27,6 +28,7 @@ from flopy.mf6.modflow.mfgwfriv import ModflowGwfriv
 from flopy.mf6.modflow.mfgwfsfr import ModflowGwfsfr
 from flopy.mf6.modflow.mfgwfsto import ModflowGwfsto
 from flopy.mf6.modflow.mfgwfwel import ModflowGwfwel
+from flopy.mf6.modflow.mfgwfmvr import ModflowGwfmvr
 from flopy.mf6.modflow.mfims import ModflowIms
 from flopy.mf6.modflow.mfsimulation import MFSimulation
 from flopy.mf6.modflow.mftdis import ModflowTdis
@@ -265,12 +267,25 @@ def test_multi_model():
         chdspd=chdspd,
         welspd=welspd,
     )
+    lakpd = [(0, -100.0, 1)]
+    lakecn = [(0, 0, (0, 0, 0), "HORIZONTAL", 1.0, 0.1, 1.0, 10.0, 1.0)]
+    lak_2 = ModflowGwflak(
+        gwf2,
+        pname="lak2",
+        print_input=True,
+        mover=True,
+        nlakes=1,
+        noutlets=0,
+        ntables=0,
+        packagedata=lakpd,
+        connectiondata=lakecn,
+    )
 
     # gwf-gwf
     gwfgwf_data = []
     for col in range(0, ncol):
         gwfgwf_data.append(
-            [(0, 0, col), (0, 0, 0), 1, 0.5, 0.5, 1.0, 0.0, 1.0]
+            [(0, 0, col), (0, 0, col), 1, 0.5, 0.5, 1.0, 0.0, 1.0]
         )
     gwfgwf = flopy.mf6.ModflowGwfgwf(
         sim,
@@ -281,6 +296,44 @@ def test_multi_model():
         exchangedata=gwfgwf_data,
         auxiliary=["ANGLDEGX", "CDIST"],
         filename="flow1_flow2.gwfgwf",
+    )
+    # set up mvr package
+    wel_1 = gwf1.get_package("wel")
+    wel_1.mover.set_data(True)
+    wel_name_1 = wel_1.name[0]
+    lak_name_2 = lak_2.name[0]
+    package_data = [(gwf1.name, wel_name_1), (gwf2.name, lak_name_2)]
+    period_data = [
+        (gwf1.name, wel_name_1, 0, gwf2.name, lak_name_2, 0, "FACTOR", 1.0)
+    ]
+    fname = "gwfgwf.input.mvr"
+    gwfgwf.mvr.initialize(
+        filename=fname,
+        modelnames=True,
+        print_input=True,
+        print_flows=True,
+        maxpackages=2,
+        maxmvr=1,
+        packages=package_data,
+        perioddata=period_data,
+    )
+
+    gnc_data = []
+    for col in range(0, ncol):
+        if col < ncol / 2.0:
+            gnc_data.append(((0, 0, col), (0, 0, col), (0, 0, col + 1), 0.25))
+        else:
+            gnc_data.append(((0, 0, col), (0, 0, col), (0, 0, col - 1), 0.25))
+
+    # set up gnc package
+    fname = "gwfgwf.input.gnc"
+    gwfgwf.gnc.initialize(
+        filename=fname,
+        print_input=True,
+        print_flows=True,
+        numgnc=ncol,
+        numalphaj=1,
+        gncdata=gnc_data,
     )
 
     # Observe flow for exchange
@@ -327,7 +380,7 @@ def test_multi_model():
         inner_maximum=ninner,
         inner_dvclose=hclose,
         rcloserecord=rclose,
-        linear_acceleration="CG",
+        linear_acceleration="BICGSTAB",
         scaling_method="NONE",
         reordering_method="NONE",
         relaxation_factor=relax,
@@ -503,6 +556,7 @@ def test_array():
         model,
         print_input=True,
         print_flows=True,
+        mover=True,
         stress_period_data=welspdict,
         save_flows=False,
         auxiliary="CONCENTRATION",
@@ -552,6 +606,37 @@ def test_array():
         save_flows=False,
         pname="GHB-1",
     )
+
+    lakpd = [(0, 70.0, 1)]
+    lakecn = [(0, 0, (0, 0, 0), "HORIZONTAL", 1.0, 60.0, 90.0, 10.0, 1.0)]
+    lak = ModflowGwflak(
+        model,
+        pname="lak",
+        print_input=True,
+        mover=True,
+        nlakes=1,
+        noutlets=0,
+        ntables=0,
+        packagedata=lakpd,
+        connectiondata=lakecn,
+    )
+
+    wel_name_1 = wel.name[0]
+    lak_name_2 = lak.name[0]
+    package_data = [(wel_name_1,), (lak_name_2,)]
+    period_data = [(wel_name_1, 0, lak_name_2, 0, "FACTOR", 1.0)]
+    fname = f"{model.name}.input.mvr"
+    mvr = ModflowGwfmvr(
+        model=model,
+        filename=fname,
+        print_input=True,
+        print_flows=True,
+        maxpackages=2,
+        maxmvr=1,
+        packages=package_data,
+        perioddata=period_data,
+    )
+
     # test writing and loading model
     sim.write_simulation()
     if run:
@@ -1182,28 +1267,6 @@ def test_np001():
         sim.run_simulation()
         sim.delete_output_files()
 
-    try:
-        error_occurred = False
-        well_spd = {
-            0: {
-                "filename": "wel0.bin",
-                "binary": True,
-                "data": [((0, 0, 4), -2000.0), ((0, 0, 7), -2.0)],
-            }
-        }
-        wel_package = ModflowGwfwel(
-            model,
-            boundnames=True,
-            print_input=True,
-            print_flows=True,
-            save_flows=True,
-            maxbound=2,
-            stress_period_data=well_spd,
-        )
-    except MFDataException:
-        error_occurred = True
-    assert error_occurred
-
     # test error checking
     drn_package = ModflowGwfdrn(
         model,
@@ -1265,7 +1328,7 @@ def test_np001():
     mpath = sim.simulation_data.mfpath.get_model_path(model.name)
     spath = sim.simulation_data.mfpath.get_sim_path()
     found_cellid = False
-    with open(os.path.join(mpath, "np001_mod.wel"), "r") as fd:
+    with open(os.path.join(mpath, "np001_mod.wel_1"), "r") as fd:
         for line in fd:
             line_lst = line.strip().split()
             if (
@@ -1281,7 +1344,7 @@ def test_np001():
     well_spd = {0: [(-1, -1, -1, -2000.0), (0, 0, 7, -2.0)], 1: []}
     wel_package = ModflowGwfwel(
         model,
-        pname="wel_1",
+        pname="wel_2",
         filename="file_rename.wel",
         print_input=True,
         print_flows=True,
@@ -1313,7 +1376,7 @@ def test_np001():
         spath,
         write_headers=False,
     )
-    wel = test_sim.get_model().get_package("wel_1")
+    wel = test_sim.get_model().get_package("wel_2")
     wel._filename = "np001_spd_test.wel"
     wel.write()
     found_begin = False
@@ -1330,6 +1393,29 @@ def test_np001():
                     if len(line.strip()) > 0:
                         text_between_begin_and_end = True
     assert found_begin and found_end and not text_between_begin_and_end
+
+    # test adding package with invalid data
+    try:
+        error_occurred = False
+        well_spd = {
+            0: {
+                "filename": "wel0.bin",
+                "binary": True,
+                "data": [((0, 0, 4), -2000.0), ((0, 0, 7), -2.0)],
+            }
+        }
+        wel_package = ModflowGwfwel(
+            model,
+            boundnames=True,
+            print_input=True,
+            print_flows=True,
+            save_flows=True,
+            maxbound=2,
+            stress_period_data=well_spd,
+        )
+    except MFDataException:
+        error_occurred = True
+    assert error_occurred
 
     return
 
@@ -1496,7 +1582,7 @@ def test_np002():
 
     rch_package.tas.initialize(
         filename="np002_mod.rch.tas",
-        tas_array={0.0: rch_array, 6.0: rch_array},
+        tas_array={0.0: rch_array, 6.0: rch_array, 12.0: rch_array},
         time_series_namerecord="rcharray",
         interpolation_methodrecord="linear",
     )
@@ -1548,6 +1634,7 @@ def test_np002():
     )
     chd_package = ModflowGwfchd(
         model,
+        pname="chd_2",
         print_input=True,
         print_flows=True,
         maxbound=1,
@@ -1564,7 +1651,7 @@ def test_np002():
         "checker threshold of 0.5" in summary
     )
     assert "Not a number" in summary
-
+    model.remove_package("chd_2")
     # check case where aux variable defined and stress period data has empty
     # stress period
     model.remove_package("ghb")
@@ -1576,7 +1663,15 @@ def test_np002():
         stress_period_data={0: [((0, 0, 9), 125.0, 60.0, 0.0)], 1: [()]},
         auxiliary=["CONCENTRATION"],
     )
+    # add adaptive time stepping
+    period_data = [
+        (0, 3.0, 1.0e-5, 6.0, 2.0, 5.0),
+        (1, 3.0, 1.0e-5, 6.0, 2.0, 5.0),
+    ]
+    ats = tdis_package.ats.initialize(maxats=2, perioddata=period_data)
+
     sim.write_simulation()
+    sim.run_simulation()
     sim2 = MFSimulation.load(
         sim_name=test_ex_name,
         version="mf6",
@@ -1601,6 +1696,9 @@ def test_np002():
     assert os.path.exists(
         os.path.join(ext_full_path, "np002_mod.dis_botm.txt")
     )
+
+    # run
+    sim.run_simulation()
 
     return
 
@@ -3295,7 +3393,7 @@ def test006_2models_gnc():
         print_flows=True,
         save_flows=True,
         auxiliary="testaux",
-        gnc_filerecord=gnc_path,
+        # gnc_filerecord=gnc_path,
         nexg=26,
         exchangedata=newexgrecarray,
         exgtype="gwf6-gwf6",
@@ -3310,7 +3408,7 @@ def test006_2models_gnc():
         print_flows=True,
         save_flows=True,
         auxiliary="testaux",
-        gnc_filerecord=gnc_path,
+        # gnc_filerecord=gnc_path,
         nexg=36,
         exchangedata=exgrecarray,
         exgtype="gwf6-gwf6",
@@ -3322,19 +3420,7 @@ def test006_2models_gnc():
     gncrecarray = testutils.read_gncrecarray(os.path.join(pth, "gnc.txt"))
     # test gnc delete
     new_gncrecarray = gncrecarray[10:]
-    gnc_package = ModflowGwfgnc(
-        sim,
-        filename=gnc_path,
-        print_input=True,
-        print_flows=True,
-        numgnc=26,
-        numalphaj=1,
-        gncdata=new_gncrecarray,
-    )
-    sim.remove_package(gnc_package.package_type)
-
-    gnc_package = ModflowGwfgnc(
-        sim,
+    gnc_package = exg_package.gnc.initialize(
         filename=gnc_path,
         print_input=True,
         print_flows=True,
@@ -3342,6 +3428,26 @@ def test006_2models_gnc():
         numalphaj=1,
         gncdata=gncrecarray,
     )
+    # gnc_package = ModflowGwfgnc(
+    #    sim,
+    #    filename=gnc_path,
+    #    print_input=True,
+    #    print_flows=True,
+    #    numgnc=26,
+    #    numalphaj=1,
+    #    gncdata=new_gncrecarray,
+    # )
+    # sim.remove_package(gnc_package.package_type)
+
+    # gnc_package = ModflowGwfgnc(
+    #    sim,
+    #    filename=gnc_path,
+    #    print_input=True,
+    #    print_flows=True,
+    #    numgnc=36,
+    #    numalphaj=1,
+    #    gncdata=gncrecarray,
+    # )
 
     # change folder to save simulation
     sim.set_sim_path(run_folder)
@@ -4051,10 +4157,10 @@ def test_transport():
 
 
 if __name__ == "__main__":
+    test_np001()
+    test_multi_model()
     test_binary_read()
     test_array()
-    test_multi_model()
-    test_np001()
     test_np002()
     test004_bcfss()
     test005_advgw_tidal()

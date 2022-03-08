@@ -15,7 +15,7 @@ from ..version import __version__
 from .coordinates import modeldimensions
 from .data import mfdata, mfdataarray, mfdatalist, mfdatascalar, mfstructure
 from .data.mfdatautil import DataSearchOutput, MFComment, cellids_equal
-from .data.mfstructure import DatumType, MFDataItemStructure
+from .data.mfstructure import DatumType, MFDataItemStructure, MFStructure
 from .mfbase import (
     ExtFileAction,
     FlopyException,
@@ -1754,8 +1754,7 @@ class MFPackage(PackageContainer, PackageInterface):
         """Package's file name."""
         if (
             isinstance(self.parent_file, MFPackage)
-            and self.structure.file_type
-            in self.parent_file._child_package_groups
+            and self.package_type in self.parent_file._child_package_groups
         ):
             fname = datautil.clean_filename(fname)
             try:
@@ -2232,6 +2231,17 @@ class MFPackage(PackageContainer, PackageInterface):
         # create child package object
         child_pkgs_name = f"utl{pkg_type}packages"
         child_pkgs_obj = self.package_factory(child_pkgs_name, "")
+        if child_pkgs_obj is None and self.model_or_sim.model_type is None:
+            # simulation level object, try just the package type in the name
+            child_pkgs_name = f"{pkg_type}packages"
+            child_pkgs_obj = self.package_factory(child_pkgs_name, "")
+        if child_pkgs_obj is None:
+            # see if the package is part of one of the supported model types
+            for model_type in MFStructure().sim_struct.model_types:
+                child_pkgs_name = f"{model_type}{pkg_type}packages"
+                child_pkgs_obj = self.package_factory(child_pkgs_name, "")
+                if child_pkgs_obj is not None:
+                    break
         child_pkgs = child_pkgs_obj(
             self.model_or_sim, self, pkg_type, filerecord, None, package_obj
         )
@@ -2733,16 +2743,9 @@ class MFPackage(PackageContainer, PackageInterface):
                 and self.model_or_sim.type == "Simulation"
             ):
                 # get exchange file name associated with gnc package
-                exg_file_name = None
-                for exg in self.model_or_sim.exchange_files:
-                    gnc_data = exg.gnc_filerecord.get_data()
-                    if (
-                        gnc_data is not None
-                        and gnc_data[0][0].lower() == self.filename.lower()
-                    ):
-                        exg_file_name = exg.filename
-                        self.parent = exg
-                if exg_file_name is None:
+                if self.parent_file is not None:
+                    exg_file_name = self.parent_file.filename
+                else:
                     raise Exception(
                         "Can not create a simulation-level "
                         "gnc file without a corresponding "

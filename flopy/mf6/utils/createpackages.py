@@ -1,3 +1,42 @@
+"""
+createpackages.py is a utility script that reads in the file definition
+metadata in the .dfn files and creates the package classes in the modflow
+folder. Run this script any time changes are made to the .dfn files.
+
+To create a new package that is part of an existing model, first create a new
+dfn file for the package in the mf6/data/dfn folder. Follow file naming
+convention <model abbr>-<package abbr>.dfn. Run createpackages.py
+
+To create a new type of model choose a unique three letter model abbreviation
+("gwf", "gwt", ...). Create a name file dfn with the naming convention
+<model abbr>-nam.dfn. The name file must have only an options and packages
+block (see gwf-nam.dfn as an example). Create a new dfn file for each of the
+packages in your new model type, following the naming convention described
+above. Run createpackages.py.
+
+A subpackage is a package that is referenced by another package (vs being
+referenced in the name file). The tas, ts, and obs packages are examples of
+subpackages. To create a subpackage, first edit the parent package's dfn file,
+adding a file record to the option block. The record's name should be:
+
+<subpackage-abbr>_filerecord
+
+and the record's type should be:
+
+record <subpackage-abbr>6 filein <subpackage-abbr>6_filename
+
+For example, for the time series package the file record definition starts
+with:
+
+block options
+name ts_filerecord
+type record ts6 filein ts6_filename
+
+Next, create the child package dfn like you would any other package. Then
+edit flopy.dfn to describe how the parent and child packages are linked. See
+documentation at the top of flopy.dfn for more information. Once complete,
+run createpackages.py.
+"""
 import datetime
 import io
 import os
@@ -7,12 +46,6 @@ from enum import Enum
 # keep below as absolute imports
 from flopy.mf6.data import mfdatautil, mfstructure
 from flopy.utils import datautil
-
-"""
-createpackages.py is a utility script that reads in the file definition
-metadata in the .dfn files to create the package classes in the modflow folder.
-Run this script any time changes are made to the .dfn files.
-"""
 
 
 class PackageLevel(Enum):
@@ -682,45 +715,47 @@ def create_packages():
         )
         pb_file.write(package_string)
 
-        if package[2] == "utl" and package_abbr != "utltab":
+        if package[0].sub_package and package_abbr != "utltab":
             set_param_list.append("filename=filename")
             set_param_list.append("pname=pname")
             set_param_list.append("parent_file=self._cpparent")
             whsp_1 = "                   "
             whsp_2 = "                                    "
 
+            file_prefix = package[0].dfn_file_name[0:3]
             chld_doc_string = (
-                '    """\n    Utl{}Packages is a container '
-                "class for the ModflowUtl{} class.\n\n    "
+                '    """\n    {}Packages is a container '
+                "class for the Modflow{} class.\n\n    "
                 "Methods\n    ----------"
-                "\n".format(package_short_name, package_short_name)
+                "\n".format(package_name.title(), package_name.title())
             )
 
             # write out child packages class
             chld_cls = (
-                "\n\nclass Utl{}Packages(mfpackage.MFChildPackage"
-                "s):\n".format(package_short_name)
+                "\n\nclass {}Packages(mfpackage.MFChildPackage"
+                "s):\n".format(package_name.title())
             )
             chld_var = (
-                f'    package_abbr = "utl{package_short_name}packages"\n\n'
+                f"    package_abbr = "
+                f'"{package_name.title().lower()}packages"\n\n'
             )
             chld_init = "    def initialize(self"
             chld_init = build_init_string(
                 chld_init, init_param_list[:-1], whsp_1
             )
             init_pkg = "\n        self._init_package(new_package, filename)"
-            params_init = f"        new_package = ModflowUtl{package_short_name}(self._model"
+            params_init = f"        new_package = Modflow{package_name.title()}(self._model"
             params_init = build_init_string(
                 params_init, set_param_list, whsp_2
             )
             chld_doc_string = (
                 "{}    initialize\n        Initializes a new "
-                "ModflowUtl{} package removing any sibling "
+                "Modflow{} package removing any sibling "
                 "child\n        packages attached to the same "
-                "parent package. See ModflowUtl{} init\n "
+                "parent package. See Modflow{} init\n "
                 "       documentation for definition of "
                 "parameters.\n".format(
-                    chld_doc_string, package_short_name, package_short_name
+                    chld_doc_string, package_name.title(), package_name.title()
                 )
             )
 
@@ -735,17 +770,21 @@ def create_packages():
                 append_pkg = (
                     "\n        self._append_package(new_package, filename)"
                 )
-                params_appn = f"        new_package = ModflowUtl{package_short_name}(self._model"
+                params_appn = f"        new_package = Modflow{file_prefix.capitalize()}{package_short_name}(self._model"
                 params_appn = build_init_string(
                     params_appn, set_param_list, whsp_2
                 )
                 chld_doc_string = (
                     "{}    append_package\n        Adds a "
-                    "new ModflowUtl{} package to the container."
-                    " See ModflowUtl{}\n        init "
+                    "new Modflow{}{} package to the container."
+                    " See Modflow{}{}\n        init "
                     "documentation for definition of "
                     "parameters.\n".format(
-                        chld_doc_string, package_short_name, package_short_name
+                        chld_doc_string,
+                        file_prefix.capitalize(),
+                        package_short_name,
+                        file_prefix.capitalize(),
+                        package_short_name,
                     )
                 )
             chld_doc_string = f'{chld_doc_string}    """\n'

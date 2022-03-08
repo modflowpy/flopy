@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 22, 2021 17:36:26 UTC
+# FILE created on March 08, 2022 15:49:22 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -394,3 +394,83 @@ class ModflowGwfmvr(mfpackage.MFPackage):
         self.packages = self.build_mfdata("packages", packages)
         self.perioddata = self.build_mfdata("perioddata", perioddata)
         self._init_complete = True
+
+
+class GwfmvrPackages(mfpackage.MFChildPackages):
+    """
+    GwfmvrPackages is a container class for the ModflowGwfmvr class.
+
+    Methods
+    ----------
+    initialize
+        Initializes a new ModflowGwfmvr package removing any sibling child
+        packages attached to the same parent package. See ModflowGwfmvr init
+        documentation for definition of parameters.
+    append_package
+        Adds a new ModflowGwfmvr package to the container. See ModflowGwfmvr
+        init documentation for definition of parameters.
+    """
+
+    package_abbr = "gwfmvrpackages"
+
+    def initialize(
+        self,
+        print_input=None,
+        print_flows=None,
+        modelnames=None,
+        budget_filerecord=None,
+        budgetcsv_filerecord=None,
+        maxmvr=None,
+        maxpackages=None,
+        packages=None,
+        perioddata=None,
+        filename=None,
+        pname=None,
+    ):
+        new_package = ModflowGwfmvr(
+            self._model,
+            print_input=print_input,
+            print_flows=print_flows,
+            modelnames=modelnames,
+            budget_filerecord=budget_filerecord,
+            budgetcsv_filerecord=budgetcsv_filerecord,
+            maxmvr=maxmvr,
+            maxpackages=maxpackages,
+            packages=packages,
+            perioddata=perioddata,
+            filename=filename,
+            pname=pname,
+            parent_file=self._cpparent,
+        )
+        self._init_package(new_package, filename)
+
+    def append_package(
+        self,
+        print_input=None,
+        print_flows=None,
+        modelnames=None,
+        budget_filerecord=None,
+        budgetcsv_filerecord=None,
+        maxmvr=None,
+        maxpackages=None,
+        packages=None,
+        perioddata=None,
+        filename=None,
+        pname=None,
+    ):
+        new_package = ModflowGwfmvr(
+            self._model,
+            print_input=print_input,
+            print_flows=print_flows,
+            modelnames=modelnames,
+            budget_filerecord=budget_filerecord,
+            budgetcsv_filerecord=budgetcsv_filerecord,
+            maxmvr=maxmvr,
+            maxpackages=maxpackages,
+            packages=packages,
+            perioddata=perioddata,
+            filename=filename,
+            pname=pname,
+            parent_file=self._cpparent,
+        )
+        self._append_package(new_package, filename)

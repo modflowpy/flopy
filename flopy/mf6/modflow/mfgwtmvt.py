@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 22, 2021 17:36:26 UTC
+# FILE created on March 08, 2022 15:49:22 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -185,3 +185,67 @@ class ModflowGwtmvt(mfpackage.MFPackage):
             "budgetcsv_filerecord", budgetcsv_filerecord
         )
         self._init_complete = True
+
+
+class GwtmvtPackages(mfpackage.MFChildPackages):
+    """
+    GwtmvtPackages is a container class for the ModflowGwtmvt class.
+
+    Methods
+    ----------
+    initialize
+        Initializes a new ModflowGwtmvt package removing any sibling child
+        packages attached to the same parent package. See ModflowGwtmvt init
+        documentation for definition of parameters.
+    append_package
+        Adds a new ModflowGwtmvt package to the container. See ModflowGwtmvt
+        init documentation for definition of parameters.
+    """
+
+    package_abbr = "gwtmvtpackages"
+
+    def initialize(
+        self,
+        print_input=None,
+        print_flows=None,
+        save_flows=None,
+        budget_filerecord=None,
+        budgetcsv_filerecord=None,
+        filename=None,
+        pname=None,
+    ):
+        new_package = ModflowGwtmvt(
+            self._model,
+            print_input=print_input,
+            print_flows=print_flows,
+            save_flows=save_flows,
+            budget_filerecord=budget_filerecord,
+            budgetcsv_filerecord=budgetcsv_filerecord,
+            filename=filename,
+            pname=pname,
+            parent_file=self._cpparent,
+        )
+        self._init_package(new_package, filename)
+
+    def append_package(
+        self,
+        print_input=None,
+        print_flows=None,
+        save_flows=None,
+        budget_filerecord=None,
+        budgetcsv_filerecord=None,
+        filename=None,
+        pname=None,
+    ):
+        new_package = ModflowGwtmvt(
+            self._model,
+            print_input=print_input,
+            print_flows=print_flows,
+            save_flows=save_flows,
+            budget_filerecord=budget_filerecord,
+            budgetcsv_filerecord=budgetcsv_filerecord,
+            filename=filename,
+            pname=pname,
+            parent_file=self._cpparent,
+        )
+        self._append_package(new_package, filename)

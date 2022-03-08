@@ -1550,7 +1550,14 @@ class MFModel(PackageContainer, ModelInterface):
         for package in self.packagelist:
             if package.package_type not in package_type_count:
                 base_filename, leaf = os.path.split(package.filename)
-                new_fileleaf = f"{name}.{package.package_type}"
+                lleaf = leaf.split(".")
+                if len(lleaf) > 1:
+                    # keep existing extension
+                    ext = lleaf[-1]
+                else:
+                    # no extension found, create a new one
+                    ext = package.package_type
+                new_fileleaf = f"{name}.{ext}"
                 if base_filename != "":
                     package.filename = os.path.join(
                         base_filename, new_fileleaf
@@ -1677,6 +1684,7 @@ class MFModel(PackageContainer, ModelInterface):
         if package.package_type.lower() == "nam":
             return path, self.structure.name_file_struct_obj
 
+        package_extension = package.package_type
         if set_package_name:
             # produce a default package name
             if (
@@ -1688,12 +1696,22 @@ class MFModel(PackageContainer, ModelInterface):
                 for package_name in name_iter:
                     if package_name not in self.package_name_dict:
                         package.package_name = package_name
+                        suffix = package_name.split("_")
+                        if (
+                            len(suffix) > 1
+                            and datautil.DatumUtil.is_int(suffix[-1])
+                            and suffix[-1] != "0"
+                        ):
+                            # update file extension to make unique
+                            package_extension = (
+                                f"{package_extension}_{suffix[-1]}"
+                            )
                         break
             else:
                 package.package_name = package.package_type
 
         if set_package_filename:
-            package._filename = f"{self.name}.{package.package_type}"
+            package._filename = f"{self.name}.{package_extension}"
 
         if add_to_package_list:
             self._add_package(package, path)

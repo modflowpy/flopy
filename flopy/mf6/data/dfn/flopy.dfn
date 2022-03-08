@@ -1,3 +1,28 @@
+# Subpackages are defined below.
+# A subpackage is a package that is referenced by another
+# package (instead of being referenced in the name file).
+# Subpackages must have an entry below to function
+# properly in flopy. Required fields are described below.
+#
+# name - Name of entry that appears in parent package's
+# constructor, for initialization of subpackage at the
+# same time as the parent package.
+#
+# construct_package - Unique package abbreviation being
+# constructed. This is the part of the dfn's file name
+# between the "-" and the ".".
+#
+# construct_data - The name of the data that gets constructed
+# when the subpackage is initialized at the same time as the
+# parent package.
+#
+# parameter_name - The name of the parameter/attribute
+# referenced when building a new child class.  If in doubt
+# use the same name as "construct_data".
+#
+# Once your child dfn is complete, your parent dfn has been
+# updated, and you have added an entry to this file, run
+# createpackages.py.
 name ts_filerecord
 construct_package ts
 construct_data timeseries
@@ -12,3 +37,23 @@ name tas_filerecord
 construct_package tas
 construct_data tas_array
 parameter_name timearrayseries
+
+name gnc_filerecord
+construct_package gnc
+construct_data gncdata
+parameter_name gncdata
+
+name mvr_filerecord
+construct_package mvr
+construct_data perioddata
+parameter_name perioddata
+
+name mvt_filerecord
+construct_package mvt
+construct_data perioddata
+parameter_name perioddata
+
+name ats_filerecord
+construct_package ats
+construct_data perioddata
+parameter_name ats_perioddata

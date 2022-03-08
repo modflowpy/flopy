@@ -2094,6 +2094,15 @@ class MFInputFileStructure:
         )
         self.multi_package_support = "multi-package" in self.header
         self.dfn_list = dfn_file.dfn_list
+        self.sub_package = self._sub_package()
+
+    def _sub_package(self):
+        mfstruct = MFStructure()
+        for value in mfstruct.flopy_dict.values():
+            if value is not None and "construct_package" in value:
+                if self.file_type == value["construct_package"]:
+                    return True
+        return False
 
     def is_valid(self):
         valid = True

@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 22, 2021 17:36:26 UTC
+# FILE created on March 08, 2022 15:49:22 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -217,3 +217,71 @@ class ModflowGnc(mfpackage.MFPackage):
         self.numalphaj = self.build_mfdata("numalphaj", numalphaj)
         self.gncdata = self.build_mfdata("gncdata", gncdata)
         self._init_complete = True
+
+
+class GncPackages(mfpackage.MFChildPackages):
+    """
+    GncPackages is a container class for the ModflowGnc class.
+
+    Methods
+    ----------
+    initialize
+        Initializes a new ModflowGnc package removing any sibling child
+        packages attached to the same parent package. See ModflowGnc init
+        documentation for definition of parameters.
+    append_package
+        Adds a new ModflowGwfgnc package to the container. See ModflowGwfgnc
+        init documentation for definition of parameters.
+    """
+
+    package_abbr = "gncpackages"
+
+    def initialize(
+        self,
+        print_input=None,
+        print_flows=None,
+        explicit=None,
+        numgnc=None,
+        numalphaj=None,
+        gncdata=None,
+        filename=None,
+        pname=None,
+    ):
+        new_package = ModflowGnc(
+            self._model,
+            print_input=print_input,
+            print_flows=print_flows,
+            explicit=explicit,
+            numgnc=numgnc,
+            numalphaj=numalphaj,
+            gncdata=gncdata,
+            filename=filename,
+            pname=pname,
+            parent_file=self._cpparent,
+        )
+        self._init_package(new_package, filename)
+
+    def append_package(
+        self,
+        print_input=None,
+        print_flows=None,
+        explicit=None,
+        numgnc=None,
+        numalphaj=None,
+        gncdata=None,
+        filename=None,
+        pname=None,
+    ):
+        new_package = ModflowGwfgnc(
+            self._model,
+            print_input=print_input,
+            print_flows=print_flows,
+            explicit=explicit,
+            numgnc=numgnc,
+            numalphaj=numalphaj,
+            gncdata=gncdata,
+            filename=filename,
+            pname=pname,
+            parent_file=self._cpparent,
+        )
+        self._append_package(new_package, filename)
