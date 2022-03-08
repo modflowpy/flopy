@@ -39,6 +39,7 @@ from .mfgwtdisu import ModflowGwtdisu
 from .mfgwtdisv import ModflowGwtdisv
 from .mfgwtdsp import ModflowGwtdsp
 from .mfgwtfmi import ModflowGwtfmi
+from .mfgwtgwt import ModflowGwtgwt
 from .mfgwtic import ModflowGwtic
 from .mfgwtist import ModflowGwtist
 from .mfgwtlkt import ModflowGwtlkt
@@ -53,6 +54,7 @@ from .mfgwtssm import ModflowGwtssm
 from .mfgwtuzt import ModflowGwtuzt
 from .mfims import ModflowIms
 from .mfmvr import ModflowMvr
+from .mfmvt import ModflowMvt
 from .mfnam import ModflowNam
 from .mftdis import ModflowTdis
 from .mfutlats import ModflowUtlats

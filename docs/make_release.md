@@ -20,10 +20,15 @@ Instructions for making a FloPy release
         ```
         python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="master", backup=False)'
         ```
-    5.  Run `black` on the updated MODFLOW 6 package classes by running the following from the root directory:
+    6.  Run `isort` on the updated MODFLOW 6 package classes by running the following from the root directory:
 
         ```
-        black flopy/mf6
+        isort .
+        ```
+    7.  Run `black` on the updated MODFLOW 6 package classes by running the following from the root directory:
+
+        ```
+        black .
         ```
 
 

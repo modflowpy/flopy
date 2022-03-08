@@ -113,16 +113,16 @@ multilinestring = {
 def test_import_geospatial_utils():
 
     from flopy.utils.geospatial_utils import (
-        GeoSpatialUtil,
         GeoSpatialCollection,
+        GeoSpatialUtil,
     )
 
     return
 
 
 def test_polygon():
+    from flopy.utils.geometry import Polygon, Shape
     from flopy.utils.geospatial_utils import GeoSpatialUtil
-    from flopy.utils.geometry import Shape, Polygon
 
     poly = Shape.from_geojson(polygon)
     gi1 = poly.__geo_interface__
@@ -150,15 +150,15 @@ def test_polygon():
 
         if not is_equal:
             # pyshp < 2.2.0 sorts coordinates in opposite direction
-            gi2['coordinates'] = (gi2['coordinates'][0][::-1],)
+            gi2["coordinates"] = (gi2["coordinates"][0][::-1],)
             is_equal = gi1 == gi2
             if not is_equal:
                 raise AssertionError("GeoSpatialUtil polygon conversion error")
 
 
 def test_polygon_with_hole():
+    from flopy.utils.geometry import Polygon, Shape
     from flopy.utils.geospatial_utils import GeoSpatialUtil
-    from flopy.utils.geometry import Shape, Polygon
 
     poly = Shape.from_geojson(poly_w_hole)
     gi1 = poly.__geo_interface__
@@ -194,8 +194,8 @@ def test_polygon_with_hole():
 
 
 def test_multipolygon():
+    from flopy.utils.geometry import MultiPolygon, Shape
     from flopy.utils.geospatial_utils import GeoSpatialUtil
-    from flopy.utils.geometry import Shape, MultiPolygon
 
     poly = Shape.from_geojson(multipolygon)
     gi1 = poly.__geo_interface__
@@ -233,8 +233,8 @@ def test_multipolygon():
 
 
 def test_point():
+    from flopy.utils.geometry import Point, Shape
     from flopy.utils.geospatial_utils import GeoSpatialUtil
-    from flopy.utils.geometry import Shape, Point
 
     pt = Shape.from_geojson(point)
     gi1 = pt.__geo_interface__
@@ -265,8 +265,8 @@ def test_point():
 
 
 def test_multipoint():
+    from flopy.utils.geometry import MultiPoint, Shape
     from flopy.utils.geospatial_utils import GeoSpatialUtil
-    from flopy.utils.geometry import Shape, MultiPoint
 
     mpt = Shape.from_geojson(multipoint)
     gi1 = mpt.__geo_interface__
@@ -297,8 +297,8 @@ def test_multipoint():
 
 
 def test_linestring():
+    from flopy.utils.geometry import LineString, Shape
     from flopy.utils.geospatial_utils import GeoSpatialUtil
-    from flopy.utils.geometry import Shape, LineString
 
     lstr = Shape.from_geojson(linestring)
     gi1 = lstr.__geo_interface__
@@ -329,8 +329,8 @@ def test_linestring():
 
 
 def test_multilinestring():
+    from flopy.utils.geometry import MultiLineString, Shape
     from flopy.utils.geospatial_utils import GeoSpatialUtil
-    from flopy.utils.geometry import Shape, MultiLineString
 
     mlstr = Shape.from_geojson(multilinestring)
     gi1 = mlstr.__geo_interface__
@@ -363,8 +363,8 @@ def test_multilinestring():
 
 
 def test_polygon_collection():
+    from flopy.utils.geometry import Collection, Shape
     from flopy.utils.geospatial_utils import GeoSpatialCollection
-    from flopy.utils.geometry import Shape, Collection
 
     col = [
         Shape.from_geojson(polygon),
@@ -407,8 +407,8 @@ def test_polygon_collection():
 
 
 def test_point_collection():
+    from flopy.utils.geometry import Collection, Shape
     from flopy.utils.geospatial_utils import GeoSpatialCollection
-    from flopy.utils.geometry import Shape, Collection
 
     col = [Shape.from_geojson(point), Shape.from_geojson(multipoint)]
 
@@ -441,8 +441,8 @@ def test_point_collection():
 
 
 def test_linestring_collection():
+    from flopy.utils.geometry import Collection, Shape
     from flopy.utils.geospatial_utils import GeoSpatialCollection
-    from flopy.utils.geometry import Shape, Collection
 
     col = [Shape.from_geojson(linestring), Shape.from_geojson(multilinestring)]
 
@@ -475,8 +475,8 @@ def test_linestring_collection():
 
 
 def test_mixed_collection():
+    from flopy.utils.geometry import Collection, Shape
     from flopy.utils.geospatial_utils import GeoSpatialCollection
-    from flopy.utils.geometry import Shape, Collection
 
     col = [
         Shape.from_geojson(polygon),

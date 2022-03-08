@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 22, 2021 17:36:26 UTC
+# FILE created on March 07, 2022 16:59:43 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -52,10 +52,11 @@ class ModflowGwtsft(mfpackage.MFPackage):
           is read.
     print_concentration : boolean
         * print_concentration (boolean) keyword to indicate that the list of
-          reach stages will be printed to the listing file for every stress
-          period in which "HEAD PRINT" is specified in Output Control. If there
-          is no Output Control option and PRINT_STAGE is specified, then stages
-          are printed for the last time step of each stress period.
+          reach concentration will be printed to the listing file for every
+          stress period in which "CONCENTRATION PRINT" is specified in Output
+          Control. If there is no Output Control option and PRINT_CONCENTRATION
+          is specified, then concentration are printed for the last time step
+          of each stress period.
     print_flows : boolean
         * print_flows (boolean) keyword to indicate that the list of reach flow
           rates will be printed to the listing file for every stress period
@@ -227,6 +228,7 @@ class ModflowGwtsft(mfpackage.MFPackage):
     dfn = [
         [
             "header",
+            "multi-package",
         ],
         [
             "block options",

@@ -1,6 +1,14 @@
 # --------------------- gwf tvk options ---------------------
 
 block options
+name print_input
+type keyword
+reader urword
+optional true
+longname print input to listing file
+description keyword to indicate that information for each change to the hydraulic conductivity in a cell will be written to the model listing file.
+
+block options
 name ts_filerecord
 type record ts6 filein ts6_filename
 shape
