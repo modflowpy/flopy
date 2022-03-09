@@ -41,6 +41,9 @@ class ModflowGwfgwf(mfpackage.MFPackage):
           vertical component, between the two cell centers. Both ANGLDEGX and
           CDIST are required if specific discharge is calculated for either of
           the groundwater models.
+    boundnames : boolean
+        * boundnames (boolean) keyword to indicate that boundary names may be
+          provided with the list of GWF Exchange cells.
     print_input : boolean
         * print_input (boolean) keyword to indicate that the list of exchange
           entries will be echoed to the listing file immediately after it is
@@ -89,10 +92,14 @@ class ModflowGwfgwf(mfpackage.MFPackage):
           containing data for the obs package with variable names as keys and
           package data as values. Data just for the observations variable is
           also acceptable. See obs package documentation for more information.
+    dev_interfacemodel_on : boolean
+        * dev_interfacemodel_on (boolean) activates the interface model
+          mechanism for calculating the coefficients at (and possibly near) the
+          exchange. This keyword should only be used for development purposes.
     nexg : integer
         * nexg (integer) keyword and integer value specifying the number of
           GWF-GWF exchanges.
-    exchangedata : [cellidm1, cellidm2, ihc, cl1, cl2, hwva, aux]
+    exchangedata : [cellidm1, cellidm2, ihc, cl1, cl2, hwva, aux, boundname]
         * cellidm1 ((integer, ...)) is the cellid of the cell in model 1 as
           specified in the simulation name file. For a structured grid that
           uses the DIS input file, CELLIDM1 is the layer, row, and column
@@ -130,6 +137,10 @@ class ModflowGwfgwf(mfpackage.MFPackage):
           each GWFGWF Exchange. The values of auxiliary variables must be
           present for each exchange. The values must be specified in the order
           of the auxiliary variables specified in the OPTIONS block.
+        * boundname (string) name of the GWF Exchange cell. BOUNDNAME is an
+          ASCII character variable that can contain as many as 40 characters.
+          If BOUNDNAME contains spaces in it, then the entire name must be
+          enclosed within single quotes.
     filename : String
         File name for this package.
     pname : String
@@ -168,6 +179,14 @@ class ModflowGwfgwf(mfpackage.MFPackage):
             "name auxiliary",
             "type string",
             "shape (naux)",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name boundnames",
+            "type keyword",
+            "shape",
             "reader urword",
             "optional true",
         ],
@@ -343,6 +362,13 @@ class ModflowGwfgwf(mfpackage.MFPackage):
             "optional false",
         ],
         [
+            "block options",
+            "name dev_interfacemodel_on",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
             "block dimensions",
             "name nexg",
             "type integer",
@@ -352,7 +378,7 @@ class ModflowGwfgwf(mfpackage.MFPackage):
         [
             "block exchangedata",
             "name exchangedata",
-            "type recarray cellidm1 cellidm2 ihc cl1 cl2 hwva aux",
+            "type recarray cellidm1 cellidm2 ihc cl1 cl2 hwva aux boundname",
             "reader urword",
             "optional false",
         ],
@@ -422,6 +448,16 @@ class ModflowGwfgwf(mfpackage.MFPackage):
             "reader urword",
             "optional true",
         ],
+        [
+            "block exchangedata",
+            "name boundname",
+            "type string",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "optional true",
+        ],
     ]
 
     def __init__(
@@ -432,6 +468,7 @@ class ModflowGwfgwf(mfpackage.MFPackage):
         exgmnamea=None,
         exgmnameb=None,
         auxiliary=None,
+        boundnames=None,
         print_input=None,
         print_flows=None,
         save_flows=None,
@@ -442,6 +479,7 @@ class ModflowGwfgwf(mfpackage.MFPackage):
         gncdata=None,
         perioddata=None,
         observations=None,
+        dev_interfacemodel_on=None,
         nexg=None,
         exchangedata=None,
         filename=None,
@@ -462,6 +500,7 @@ class ModflowGwfgwf(mfpackage.MFPackage):
         simulation.register_exchange_file(self)
 
         self.auxiliary = self.build_mfdata("auxiliary", auxiliary)
+        self.boundnames = self.build_mfdata("boundnames", boundnames)
         self.print_input = self.build_mfdata("print_input", print_input)
         self.print_flows = self.build_mfdata("print_flows", print_flows)
         self.save_flows = self.build_mfdata("save_flows", save_flows)
@@ -482,6 +521,9 @@ class ModflowGwfgwf(mfpackage.MFPackage):
         self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
         self._obs_package = self.build_child_package(
             "obs", observations, "continuous", self._obs_filerecord
+        )
+        self.dev_interfacemodel_on = self.build_mfdata(
+            "dev_interfacemodel_on", dev_interfacemodel_on
         )
         self.nexg = self.build_mfdata("nexg", nexg)
         self.exchangedata = self.build_mfdata("exchangedata", exchangedata)

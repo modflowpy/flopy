@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 22, 2021 17:36:26 UTC
+# FILE created on March 07, 2022 16:59:43 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -17,6 +17,10 @@ class ModflowUtltvk(mfpackage.MFPackage):
     loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
+    print_input : boolean
+        * print_input (boolean) keyword to indicate that information for each
+          change to the hydraulic conductivity in a cell will be written to the
+          model listing file.
     timeseries : {varname:data} or timeseries data
         * Contains data for the ts package. Data can be stored in a dictionary
           containing data for the ts package with variable names as keys and
@@ -83,6 +87,13 @@ class ModflowUtltvk(mfpackage.MFPackage):
     dfn = [
         [
             "header",
+        ],
+        [
+            "block options",
+            "name print_input",
+            "type keyword",
+            "reader urword",
+            "optional true",
         ],
         [
             "block options",
@@ -199,6 +210,7 @@ class ModflowUtltvk(mfpackage.MFPackage):
         self,
         model,
         loading_package=False,
+        print_input=None,
         timeseries=None,
         perioddata=None,
         filename=None,
@@ -210,6 +222,7 @@ class ModflowUtltvk(mfpackage.MFPackage):
         )
 
         # set up variables
+        self.print_input = self.build_mfdata("print_input", print_input)
         self._ts_filerecord = self.build_mfdata("ts_filerecord", None)
         self._ts_package = self.build_child_package(
             "ts", timeseries, "timeseries", self._ts_filerecord
@@ -236,10 +249,16 @@ class UtltvkPackages(mfpackage.MFChildPackages):
     package_abbr = "utltvkpackages"
 
     def initialize(
-        self, timeseries=None, perioddata=None, filename=None, pname=None
+        self,
+        print_input=None,
+        timeseries=None,
+        perioddata=None,
+        filename=None,
+        pname=None,
     ):
         new_package = ModflowUtltvk(
             self._model,
+            print_input=print_input,
             timeseries=timeseries,
             perioddata=perioddata,
             filename=filename,
@@ -249,10 +268,16 @@ class UtltvkPackages(mfpackage.MFChildPackages):
         self._init_package(new_package, filename)
 
     def append_package(
-        self, timeseries=None, perioddata=None, filename=None, pname=None
+        self,
+        print_input=None,
+        timeseries=None,
+        perioddata=None,
+        filename=None,
+        pname=None,
     ):
         new_package = ModflowUtltvk(
             self._model,
+            print_input=print_input,
             timeseries=timeseries,
             perioddata=perioddata,
             filename=filename,
