@@ -1,4 +1,5 @@
 import numpy as np
+
 from .binarygrid_util import MfGrdFile
 
 
@@ -60,7 +61,7 @@ def get_structured_faceflows(
     shape = (grb.nlay, grb.nrow, grb.ncol)
     frf = np.zeros(shape, dtype=float).flatten()
     fff = np.zeros(shape, dtype=float).flatten()
-    flf = np.zeros(shape, dtype=float)
+    flf = np.zeros(shape, dtype=float).flatten()
 
     # fill flow terms
     vmult = [-1.0, -1.0, -1.0]
@@ -152,6 +153,5 @@ def __check_flowja_size(flowja, ja):
     """
     if flowja.shape != ja.shape:
         raise ValueError(
-            "size of flowja ({}) not equal to "
-            "{}".format(flowja.shape, ja.shape)
+            f"size of flowja ({flowja.shape}) not equal to {ja.shape}"
         )

@@ -62,8 +62,6 @@ flopy/.idea
 examples/Notebooks/data
 examples/Notebooks/temp
 examples/FAQ/temp
-examples/Testing/.idea
-examples/Testing/data
 examples/scripts/data
 examples/groundwater_paper/Notebooks/temp
 
@@ -88,3 +86,4 @@ autotest/.noseids
 .docs/_temp
 .docs/_notebooks
 
+*.bak

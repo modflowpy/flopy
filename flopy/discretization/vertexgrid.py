@@ -1,14 +1,12 @@
-import os
 import copy
+import inspect
+import os
+
 import numpy as np
+from matplotlib.path import Path
 
-try:
-    from matplotlib.path import Path
-except ImportError:
-    Path = None
-
-from .grid import Grid, CachedData
 from ..utils.geometry import is_clockwise
+from .grid import CachedData, Grid
 
 
 class VertexGrid(Grid):
@@ -128,11 +126,28 @@ class VertexGrid(Grid):
 
     @property
     def iverts(self):
-        return [[t[0]] + t[4:] for t in self._cell2d]
+        if self._cell2d is not None:
+            return [[t[0]] + list(t)[4:] for t in self.cell2d]
+        elif self._cell1d is not None:
+            return [[t[0]] + list(t)[3:] for t in self.cell1d]
+
+    @property
+    def cell1d(self):
+        if self._cell1d is not None:
+            return [
+                [ivt for ivt in t if ivt is not None] for t in self._cell2d
+            ]
+
+    @property
+    def cell2d(self):
+        if self._cell2d is not None:
+            return [
+                [ivt for ivt in t if ivt is not None] for t in self._cell2d
+            ]
 
     @property
     def verts(self):
-        return np.array([t[1:] for t in self._vertices], dtype=float)
+        return np.array([list(t)[1:] for t in self._vertices], dtype=float)
 
     @property
     def shape(self):
@@ -226,10 +241,6 @@ class VertexGrid(Grid):
         -------
             list of Polygon objects
         """
-        try:
-            import matplotlib.path as mpath
-        except ImportError:
-            raise ImportError("matplotlib required to use this method")
         cache_index = "xyzgrid"
         if (
             cache_index not in self._cache_dict
@@ -239,13 +250,12 @@ class VertexGrid(Grid):
             self._polygons = None
         if self._polygons is None:
             self._polygons = [
-                mpath.Path(self.get_cell_vertices(nn))
-                for nn in range(self.ncpl)
+                Path(self.get_cell_vertices(nn)) for nn in range(self.ncpl)
             ]
 
         return copy.copy(self._polygons)
 
-    def intersect(self, x, y, local=False, forgive=False):
+    def intersect(self, x, y, z=None, local=False, forgive=False):
         """
         Get the CELL2D number of a point with coordinates x and y
 
@@ -258,6 +268,9 @@ class VertexGrid(Grid):
             The x-coordinate of the requested point
         y : float
             The y-coordinate of the requested point
+        z : float, None
+            optional, z-coordiante of the requested point will return
+            (lay, icell2d)
         local: bool (optional)
             If True, x and y are in local coordinates (defaults to False)
         forgive: bool (optional)
@@ -270,12 +283,8 @@ class VertexGrid(Grid):
             The CELL2D number
 
         """
-        if Path is None:
-            s = (
-                "Could not import matplotlib.  Must install matplotlib "
-                "in order to use VertexGrid.intersect() method"
-            )
-            raise ImportError(s)
+        frame_info = inspect.getframeinfo(inspect.currentframe())
+        self._warn_intersect(frame_info.filename, frame_info.lineno)
 
         if local:
             # transform x and y to real-world coordinates
@@ -298,11 +307,25 @@ class VertexGrid(Grid):
                 else:
                     radius = 1e-9
                 if path.contains_point((x, y), radius=radius):
-                    return icell2d
+                    if z is None:
+                        return icell2d
+
+                    for lay in range(self.nlay):
+                        if (
+                            self.top_botm[lay, icell2d]
+                            >= z
+                            >= self.top_botm[lay + 1, icell2d]
+                        ):
+                            return lay, icell2d
+
         if forgive:
             icell2d = np.nan
+            if z is not None:
+                return np.nan, icell2d
+
             return icell2d
-        raise Exception("x, y point given is outside of the model area")
+
+        raise Exception("point given is outside of the model area")
 
     def get_cell_vertices(self, cellid):
         """
@@ -314,9 +337,7 @@ class VertexGrid(Grid):
         """
         while cellid >= self.ncpl:
             if cellid > self.nnodes:
-                err = "cellid {} out of index for size {}".format(
-                    cellid, self.nnodes
-                )
+                err = f"cellid {cellid} out of index for size {self.nnodes}"
                 raise IndexError(err)
 
             cellid -= self.ncpl
@@ -340,7 +361,7 @@ class VertexGrid(Grid):
         lc : matplotlib.collections.LineCollection
 
         """
-        from flopy.plot import PlotMapView
+        from ..plot import PlotMapView
 
         mm = PlotMapView(modelgrid=self)
         return mm.plot_grid(**kwargs)
@@ -358,7 +379,7 @@ class VertexGrid(Grid):
             zcenters = []
             zvertices = []
             vertexdict = {v[0]: [v[1], v[2], v[3]] for v in self._vertices}
-            for cell1d in self._cell1d:
+            for cell1d in self.cell1d:
                 cell1d = tuple(cell1d)
                 xcenters.append(cell1d[1])
                 ycenters.append(cell1d[2])
@@ -366,8 +387,7 @@ class VertexGrid(Grid):
 
                 vert_number = []
                 for i in cell1d[3:]:
-                    if i is not None:
-                        vert_number.append(int(i))
+                    vert_number.append(int(i))
 
                 xcellvert = []
                 ycellvert = []
@@ -383,15 +403,14 @@ class VertexGrid(Grid):
         else:
             vertexdict = {v[0]: [v[1], v[2]] for v in self._vertices}
             # build xy vertex and cell center info
-            for cell2d in self._cell2d:
+            for cell2d in self.cell2d:
                 cell2d = tuple(cell2d)
                 xcenters.append(cell2d[1])
                 ycenters.append(cell2d[2])
 
                 vert_number = []
                 for i in cell2d[4:]:
-                    if i is not None:
-                        vert_number.append(int(i))
+                    vert_number.append(int(i))
 
                 xcellvert = []
                 ycellvert = []
@@ -491,7 +510,7 @@ class VertexGrid(Grid):
                 plotarray = plotarray[layer, :]
         else:
             raise Exception("Array to plot must be of dimension 1 or 2")
-        msg = "{} /= {}".format(plotarray.shape[0], required_shape)
+        msg = f"{plotarray.shape[0]} /= {required_shape}"
         assert plotarray.shape == required_shape, msg
         return plotarray
 
@@ -518,11 +537,10 @@ class VertexGrid(Grid):
 
         grb_obj = MfGrdFile(file_path, verbose=verbose)
         if grb_obj.grid_type != "DISV":
-            err_msg = (
-                "Binary grid file ({}) ".format(os.path.basename(file_path))
-                + "is not a vertex (DISV) grid."
+            raise ValueError(
+                f"Binary grid file ({os.path.basename(file_path)}) "
+                "is not a vertex (DISV) grid."
             )
-            raise ValueError(err_msg)
 
         idomain = grb_obj.idomain
         xorigin = grb_obj.xorigin

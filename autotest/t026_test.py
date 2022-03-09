@@ -3,14 +3,12 @@ Some basic tests for SEAWAT Henry create and run.
 
 """
 
-import os
 import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
 import flopy
 
-workspace = os.path.join("temp", "t026")
-# make the directory if it does not exist
-if not os.path.isdir(workspace):
-    os.makedirs(workspace)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 seawat_exe = "swtv4"
 isseawat = flopy.which(seawat_exe)
@@ -47,8 +45,11 @@ ssm_data[0] = ssm_sp1
 
 def test_seawat_henry():
     # SEAWAT model from a modflow model and an mt3d model
+    model_ws = f"{base_dir}_test_seawat_henry"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     modelname = "henry"
-    mf = flopy.modflow.Modflow(modelname, exe_name="swtv4", model_ws=workspace)
+    mf = flopy.modflow.Modflow(modelname, exe_name="swtv4", model_ws=model_ws)
     # shortened perlen to 0.1 to make this run faster -- should be about 0.5
     dis = flopy.modflow.ModflowDis(
         mf,
@@ -75,7 +76,7 @@ def test_seawat_henry():
     )
 
     # Create the basic MT3DMS model structure
-    mt = flopy.mt3d.Mt3dms(modelname, "nam_mt3dms", mf, model_ws=workspace)
+    mt = flopy.mt3d.Mt3dms(modelname, "nam_mt3dms", mf, model_ws=model_ws)
     btn = flopy.mt3d.Mt3dBtn(
         mt,
         nprs=-5,
@@ -94,7 +95,12 @@ def test_seawat_henry():
 
     # Create the SEAWAT model structure
     mswt = flopy.seawat.Seawat(
-        modelname, "nam_swt", mf, mt, model_ws=workspace, exe_name="swtv4"
+        modelname,
+        "nam_swt",
+        mf,
+        mt,
+        model_ws=model_ws,
+        exe_name="swtv4",
     )
     vdf = flopy.seawat.SeawatVdf(
         mswt,
@@ -113,16 +119,22 @@ def test_seawat_henry():
 
     if isseawat is not None:
         success, buff = mswt.run_model(silent=False)
-        assert success, "{} did not run".format(mswt.name)
+        assert success, f"{mswt.name} did not run"
 
     return
 
 
 def test_seawat2_henry():
     # SEAWAT model directly by adding packages
+    model_ws = f"{base_dir}_test_seawat2_henry"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     modelname = "henry2"
     m = flopy.seawat.swt.Seawat(
-        modelname, "nam", model_ws=workspace, exe_name="swtv4"
+        modelname,
+        "nam",
+        model_ws=model_ws,
+        exe_name="swtv4",
     )
     dis = flopy.modflow.ModflowDis(
         m,
@@ -181,7 +193,7 @@ def test_seawat2_henry():
 
     if isseawat is not None:
         success, buff = m.run_model(silent=False)
-        assert success, "{} did not run".format(m.name)
+        assert success, f"{m.name} did not run"
 
     return
 

@@ -9,12 +9,13 @@ Additional information for this MODFLOW package can be found at
 """
 
 import os
+
 import numpy as np
-from ..utils.flopy_io import multi_line_strip
+
 from ..pakbase import Package
-from ..utils.recarray_utils import create_empty_recarray
+from ..utils.flopy_io import multi_line_strip
 from ..utils.optionblock import OptionBlock
-from collections import OrderedDict
+from ..utils.recarray_utils import create_empty_recarray
 
 
 class ModflowAg(Package):
@@ -58,7 +59,7 @@ class ModflowAg(Package):
 
     """
 
-    _options = OrderedDict(
+    _options = dict(
         [
             ("noprint", OptionBlock.simple_flag),
             (
@@ -67,7 +68,7 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 2,
-                    OptionBlock.vars: OrderedDict(
+                    OptionBlock.vars: dict(
                         [
                             ("numirrdiversions", OptionBlock.simple_int),
                             ("maxcellsdiversion", OptionBlock.simple_int),
@@ -81,7 +82,7 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 2,
-                    OptionBlock.vars: OrderedDict(
+                    OptionBlock.vars: dict(
                         [
                             ("numirrwells", OptionBlock.simple_int),
                             ("maxcellswell", OptionBlock.simple_int),
@@ -95,7 +96,7 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 2,
-                    OptionBlock.vars: OrderedDict(
+                    OptionBlock.vars: dict(
                         [
                             ("numsupwells", OptionBlock.simple_int),
                             ("maxdiversions", OptionBlock.simple_int),
@@ -109,14 +110,28 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 1,
-                    OptionBlock.vars: OrderedDict(
+                    OptionBlock.vars: dict(
                         [("nummaxwell", OptionBlock.simple_int)]
                     ),
                 },
             ),
             ("tabfiles", OptionBlock.simple_tabfile),
             ("phiramp", OptionBlock.simple_flag),
-            ("etdemand", OptionBlock.simple_flag),
+            (
+                "etdemand",
+                {
+                    OptionBlock.dtype: np.bool_,
+                    OptionBlock.nested: True,
+                    OptionBlock.n_nested: 1,
+                    OptionBlock.vars: {
+                        "accel": {
+                            OptionBlock.dtype: float,
+                            OptionBlock.nested: False,
+                            OptionBlock.optional: True,
+                        }
+                    },
+                },
+            ),
             ("trigger", OptionBlock.simple_flag),
             ("timeseries_diversion", OptionBlock.simple_flag),
             ("timeseries_well", OptionBlock.simple_flag),
@@ -128,7 +143,7 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 1,
-                    OptionBlock.vars: OrderedDict(
+                    OptionBlock.vars: dict(
                         [("unit_diversionlist", OptionBlock.simple_int)]
                     ),
                 },
@@ -139,7 +154,7 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 1,
-                    OptionBlock.vars: OrderedDict(
+                    OptionBlock.vars: dict(
                         [("unit_welllist", OptionBlock.simple_int)]
                     ),
                 },
@@ -150,7 +165,7 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 1,
-                    OptionBlock.vars: OrderedDict(
+                    OptionBlock.vars: dict(
                         [("unit_wellirrlist", OptionBlock.simple_int)]
                     ),
                 },
@@ -161,7 +176,7 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 1,
-                    OptionBlock.vars: OrderedDict(
+                    OptionBlock.vars: dict(
                         [("unit_diversionirrlist", OptionBlock.simple_int)]
                     ),
                 },
@@ -172,7 +187,7 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 1,
-                    OptionBlock.vars: OrderedDict(
+                    OptionBlock.vars: dict(
                         [("unitcbc", OptionBlock.simple_int)]
                     ),
                 },
@@ -204,31 +219,17 @@ class ModflowAg(Package):
         if unitnumber is None:
             unitnumber = ModflowAg._defaultunit()
 
-        if filenames is None:
-            filenames = [None]
-        elif isinstance(filenames, str):
-            filenames = [filenames]
-
-        name = [ModflowAg._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
+        # call base package constructor
         super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=self._prepare_filenames(filenames),
         )
 
         # set up class
-        self.heading = "# {} package for {}, generated by flopy\n".format(
-            self.name[0], model.version_types[model.version]
-        )
+        self._generate_heading()
         self.url = "ag.htm"
 
         # options
@@ -336,7 +337,7 @@ class ModflowAg(Package):
         ws = self.parent.model_ws
         name = self.file_name[0]
         with open(os.path.join(ws, name), "w") as foo:
-            foo.write(self.heading)
+            foo.write(f"{self.heading}\n")
 
             # update options
             self.options.update_from_package(self)
@@ -350,9 +351,7 @@ class ModflowAg(Package):
                 for record in self.time_series:
                     if record["keyword"] in ("welletall", "wellall"):
                         foo.write(
-                            "{}   {:d}\n".format(
-                                record["keyword"], record["unit"]
-                            ).upper()
+                            f"{record['keyword']}   {record['unit']}\n".upper()
                         )
                     else:
                         foo.write(fmt.format(*record).upper())
@@ -361,10 +360,10 @@ class ModflowAg(Package):
 
             # check if item 12 exists and write item 12 - 14
             if self.segment_list is not None:
-                foo.write("# segment list for irriagation diversions\n")
+                foo.write("# segment list for irrigation diversions\n")
                 foo.write("SEGMENT LIST\n")
                 for iseg in self.segment_list:
-                    foo.write("{:d}\n".format(iseg))
+                    foo.write(f"{iseg}\n")
 
                 foo.write("END \n")
 
@@ -406,7 +405,7 @@ class ModflowAg(Package):
 
             foo.write("# ag stress period data\n")
             for per in range(self._nper):
-                foo.write("STRESS PERIOD {}\n".format(per + 1))
+                foo.write(f"STRESS PERIOD {per + 1}\n")
 
                 # check for item 18 and write items 18 - 21
                 if self.irrdiversion is not None:
@@ -428,7 +427,7 @@ class ModflowAg(Package):
                             recarray = self.irrdiversion[per]
 
                             # write item 19
-                            foo.write("{:d} \n".format(len(recarray)))
+                            foo.write(f"{len(recarray)} \n")
                             fmt21 = "{:d}   {:d}   {:f}   {:f}\n"
 
                             for rec in recarray:
@@ -452,10 +451,10 @@ class ModflowAg(Package):
                                 for i in range(num):
                                     foo.write(
                                         fmt21.format(
-                                            rec["i{}".format(i)] + 1,
-                                            rec["j{}".format(i)] + 1,
-                                            rec["eff_fact{}".format(i)],
-                                            rec["field_fact{}".format(i)],
+                                            rec[f"i{i}"] + 1,
+                                            rec[f"j{i}"] + 1,
+                                            rec[f"eff_fact{i}"],
+                                            rec[f"field_fact{i}"],
                                         )
                                     )
 
@@ -481,7 +480,7 @@ class ModflowAg(Package):
                             recarray = self.irrwell[per]
 
                             # write item 23
-                            foo.write("{:d} \n".format(len(recarray)))
+                            foo.write(f"{len(recarray)} \n")
                             fmt25 = "{:d}   {:d}   {:f}   {:f}\n"
 
                             for rec in recarray:
@@ -505,10 +504,10 @@ class ModflowAg(Package):
                                 for i in range(num):
                                     foo.write(
                                         fmt25.format(
-                                            rec["i{}".format(i)] + 1,
-                                            rec["j{}".format(i)] + 1,
-                                            rec["eff_fact{}".format(i)],
-                                            rec["field_fact{}".format(i)],
+                                            rec[f"i{i}"] + 1,
+                                            rec[f"j{i}"] + 1,
+                                            rec[f"eff_fact{i}"],
+                                            rec[f"field_fact{i}"],
                                         )
                                     )
                     else:
@@ -528,7 +527,7 @@ class ModflowAg(Package):
                             recarray = self.supwell[per]
 
                             # write item 27
-                            foo.write("{:d} \n".format(len(recarray)))
+                            foo.write(f"{len(recarray)} \n")
 
                             for rec in recarray:
                                 num = rec["numcell"]
@@ -540,7 +539,7 @@ class ModflowAg(Package):
                                 )
 
                                 for i in range(num):
-                                    if rec["fracsupmax{}".format(i)] != -1e10:
+                                    if rec[f"fracsupmax{i}"] != -1e10:
                                         foo.write(
                                             "{:d}   {:f}   {:f}\n".format(
                                                 rec["segid{}".format(i)],
@@ -646,10 +645,10 @@ class ModflowAg(Package):
 
             for i in range(maxells):
                 dtype += [
-                    ("i{}".format(i), int),
-                    ("j{}".format(i), int),
-                    ("eff_fact{}".format(i), float),
-                    ("field_fact{}".format(i), float),
+                    (f"i{i}", int),
+                    (f"j{i}", int),
+                    (f"eff_fact{i}", float),
+                    (f"field_fact{i}", float),
                 ]
 
         elif block == "irrwell":
@@ -662,10 +661,10 @@ class ModflowAg(Package):
 
             for i in range(maxells):
                 dtype += [
-                    ("i{}".format(i), int),
-                    ("j{}".format(i), int),
-                    ("eff_fact{}".format(i), float),
-                    ("field_fact{}".format(i), float),
+                    (f"i{i}", int),
+                    (f"j{i}", int),
+                    (f"eff_fact{i}", float),
+                    (f"field_fact{i}", float),
                 ]
 
         elif block == "supwell":
@@ -673,15 +672,13 @@ class ModflowAg(Package):
 
             for i in range(maxells):
                 dtype += [
-                    ("segid{}".format(i), int),
-                    ("fracsup{}".format(i), float),
-                    ("fracsupmax{}".format(i), float),
+                    (f"segid{i}", int),
+                    (f"fracsup{i}", float),
+                    (f"fracsupmax{i}", float),
                 ]
 
         else:
-            raise NotImplementedError(
-                "block type {}, not supported".format(block)
-            )
+            raise NotImplementedError(f"block type {block}, not supported")
 
         return np.dtype(dtype)
 
@@ -887,9 +884,7 @@ class ModflowAg(Package):
                     break
 
                 else:
-                    raise ValueError(
-                        "Something went wrong at: {}".format(line)
-                    )
+                    raise ValueError(f"Something went wrong at: {line}")
 
         return cls(
             model,

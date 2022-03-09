@@ -1,19 +1,17 @@
 """
 test modpath functionality
 """
-import sys
-
-sys.path.insert(0, "..")
-import glob
-import shutil
 import os
-import flopy
+import shutil
+
 import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
+import flopy
 from flopy.discretization import StructuredGrid
+from flopy.modpath.mp6sim import StartingLocationsFile
 from flopy.utils.modpathfile import EndpointFile, PathlineFile
 from flopy.utils.recarray_utils import ra_slice
-from flopy.utils.reference import SpatialReference
-from flopy.modpath.mp6sim import StartingLocationsFile
 
 try:
     import shapefile
@@ -23,17 +21,31 @@ try:
 except ImportError:
     shapefile = None
 
-mffiles = glob.glob("../examples/data/mp6/EXAMPLE*")
-path = os.path.join("temp", "t031")
+ex_pth = "../examples/data/mp6/"
 
-if not os.path.isdir(path):
-    os.makedirs(path)
-for f in mffiles:
-    shutil.copy(f, os.path.join(path, os.path.split(f)[1]))
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
+
+
+def copy_modpath_files(model_ws, baseName):
+    files = [
+        file
+        for file in os.listdir(ex_pth)
+        if file.startswith(baseName)
+        and os.path.isfile(os.path.join(ex_pth, file))
+    ]
+    for file in files:
+        src = os.path.join(ex_pth, file)
+        dst = os.path.join(model_ws, file)
+        print(f"copying {src} -> {dst}")
+        shutil.copy(src, dst)
 
 
 def test_mpsim():
-    model_ws = path
+    model_ws = f"{base_dir}_test_mpsim"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
+    copy_modpath_files(model_ws, "EXAMPLE.")
+
     m = flopy.modflow.Modflow.load("EXAMPLE.nam", model_ws=model_ws)
     m.get_package_list()
 
@@ -41,10 +53,10 @@ def test_mpsim():
         modelname="ex6",
         exe_name="mp6",
         modflowmodel=m,
-        model_ws=path,
-        dis_file=m.name + ".dis",
-        head_file=m.name + ".hed",
-        budget_file=m.name + ".bud",
+        model_ws=model_ws,
+        dis_file=f"{m.name}.dis",
+        head_file=f"{m.name}.hed",
+        budget_file=f"{m.name}.bud",
     )
 
     mpb = flopy.modpath.Modpath6Bas(
@@ -111,14 +123,20 @@ def test_mpsim():
     stldata[1]["yloc0"] = 0.2
     stl.data = stldata
     mp.write_input()
-    stllines = open(os.path.join(path, "ex6.loc")).readlines()
+    stllines = open(os.path.join(model_ws, "ex6.loc")).readlines()
     assert stllines[3].strip() == "group1"
     assert int(stllines[4].strip()) == 2
     assert stllines[6].strip().split()[-1] == "p2"
 
 
 def test_get_destination_data():
-    m = flopy.modflow.Modflow.load("EXAMPLE.nam", model_ws=path)
+    model_ws = f"{base_dir}_test_get_destination_data"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
+    copy_modpath_files(model_ws, "EXAMPLE.")
+    copy_modpath_files(model_ws, "EXAMPLE-3.")
+
+    m = flopy.modflow.Modflow.load("EXAMPLE.nam", model_ws=model_ws)
 
     mg1 = m.modelgrid
     mg1.set_coord_info(
@@ -135,12 +153,11 @@ def test_get_destination_data():
     )
 
     # test deprecation
-    sr2 = SpatialReference(xll=mg.xoffset, yll=mg.yoffset, rotation=-30)
     if shapefile:
-        m.dis.export(path + "/dis.shp")
+        m.dis.export(f"{model_ws}/dis.shp")
 
-    pthld = PathlineFile(os.path.join(path, "EXAMPLE-3.pathline"))
-    epd = EndpointFile(os.path.join(path, "EXAMPLE-3.endpoint"))
+    pthld = PathlineFile(os.path.join(model_ws, "EXAMPLE-3.pathline"))
+    epd = EndpointFile(os.path.join(model_ws, "EXAMPLE-3.endpoint"))
 
     well_epd = epd.get_destination_endpoint_data(dest_cells=[(4, 12, 12)])
     well_pthld = pthld.get_destination_pathline_data(
@@ -168,12 +185,12 @@ def test_get_destination_data():
     epd.write_shapefile(
         well_epd,
         direction="starting",
-        shpname=os.path.join(path, "starting_locs.shp"),
+        shpname=os.path.join(model_ws, "starting_locs.shp"),
         mg=m.modelgrid,
     )
 
     # test writing shapefile of pathlines
-    fpth = os.path.join(path, "pathlines_1per.shp")
+    fpth = os.path.join(model_ws, "pathlines_1per.shp")
     pthld.write_shapefile(
         well_pthld,
         one_per_particle=True,
@@ -181,7 +198,7 @@ def test_get_destination_data():
         mg=m.modelgrid,
         shpname=fpth,
     )
-    fpth = os.path.join(path, "pathlines_1per_end.shp")
+    fpth = os.path.join(model_ws, "pathlines_1per_end.shp")
     pthld.write_shapefile(
         well_pthld,
         one_per_particle=True,
@@ -190,7 +207,7 @@ def test_get_destination_data():
         shpname=fpth,
     )
     # test writing shapefile of pathlines
-    fpth = os.path.join(path, "pathlines_1per2.shp")
+    fpth = os.path.join(model_ws, "pathlines_1per2.shp")
     pthld.write_shapefile(
         well_pthld,
         one_per_particle=True,
@@ -199,15 +216,15 @@ def test_get_destination_data():
         shpname=fpth,
     )
     # test writing shapefile of pathlines
-    fpth = os.path.join(path, "pathlines_1per2_ll.shp")
+    fpth = os.path.join(model_ws, "pathlines_1per2_ll.shp")
     pthld.write_shapefile(
         well_pthld,
         one_per_particle=True,
         direction="starting",
-        sr=sr2,
+        mg=mg,
         shpname=fpth,
     )
-    fpth = os.path.join(path, "pathlines.shp")
+    fpth = os.path.join(model_ws, "pathlines.shp")
     pthld.write_shapefile(
         well_pthld, one_per_particle=False, mg=m.modelgrid, shpname=fpth
     )
@@ -215,7 +232,7 @@ def test_get_destination_data():
     # test that endpoints were rotated and written correctly
     from flopy.export.shapefile_utils import shp2recarray
 
-    ra = shp2recarray(os.path.join(path, "starting_locs.shp"))
+    ra = shp2recarray(os.path.join(model_ws, "starting_locs.shp"))
     p3 = ra.geometry[ra.particleid == 4][0]
     xorig, yorig = m.modelgrid.get_coords(well_epd.x0[0], well_epd.y0[0])
     assert p3.x - xorig + p3.y - yorig < 1e-4
@@ -225,16 +242,16 @@ def test_get_destination_data():
     )  # this also checks for 1-based
 
     # test that particle attribute information is consistent with pathline file
-    ra = shp2recarray(os.path.join(path, "pathlines.shp"))
+    ra = shp2recarray(os.path.join(model_ws, "pathlines.shp"))
     inds = (ra.particleid == 8) & (ra.i == 12) & (ra.j == 12)
     assert ra.time[inds][0] - 20181.7 < 0.1
     assert ra.xloc[inds][0] - 0.933 < 0.01
 
     # test that k, i, j are correct for single geometry pathlines, forwards
     # and backwards
-    ra = shp2recarray(os.path.join(path, "pathlines_1per.shp"))
+    ra = shp2recarray(os.path.join(model_ws, "pathlines_1per.shp"))
     assert ra.i[0] == 4, ra.j[0] == 5
-    ra = shp2recarray(os.path.join(path, "pathlines_1per_end.shp"))
+    ra = shp2recarray(os.path.join(model_ws, "pathlines_1per_end.shp"))
     assert ra.i[0] == 13, ra.j[0] == 13
 
     # test use of arbitrary spatial reference and offset
@@ -245,7 +262,7 @@ def test_get_destination_data():
         epsg=mg.epsg,
         proj4=mg.proj4,
     )
-    ra = shp2recarray(os.path.join(path, "pathlines_1per2.shp"))
+    ra = shp2recarray(os.path.join(model_ws, "pathlines_1per2.shp"))
     p3_2 = ra.geometry[ra.particleid == 4][0]
     test1 = mg1.xcellcenters[3, 4]
     test2 = mg1.ycellcenters[3, 4]
@@ -260,11 +277,9 @@ def test_get_destination_data():
     )
 
     # arbitrary spatial reference with ll specified instead of ul
-    ra = shp2recarray(os.path.join(path, "pathlines_1per2_ll.shp"))
+    ra = shp2recarray(os.path.join(model_ws, "pathlines_1per2_ll.shp"))
     p3_2 = ra.geometry[ra.particleid == 4][0]
-    # sr3 = SpatialReference(xll=sr.xll, yll=sr.yll, rotation=-30,
-    #                       delc=list(m.dis.delc))
-    mg.set_coord_info(xoff=mg.xoffset, yoff=mg.yoffset, angrot=-30.0)
+    mg.set_coord_info(xoff=mg.xoffset, yoff=mg.yoffset, angrot=30.0)
     assert (
         np.abs(
             p3_2.x[0]
@@ -278,7 +293,7 @@ def test_get_destination_data():
     xul = 3628793
     yul = 21940389
 
-    m = flopy.modflow.Modflow.load("EXAMPLE.nam", model_ws=path)
+    m = flopy.modflow.Modflow.load("EXAMPLE.nam", model_ws=model_ws)
 
     mg4 = m.modelgrid
     mg4.set_coord_info(
@@ -289,17 +304,24 @@ def test_get_destination_data():
         proj4=mg4.proj4,
     )
 
-    fpth = os.path.join(path, "dis2.shp")
+    fpth = os.path.join(model_ws, "dis2.shp")
     m.dis.export(fpth)
-    pthobj = flopy.utils.PathlineFile(os.path.join(path, "EXAMPLE-3.pathline"))
-    fpth = os.path.join(path, "pathlines_1per3.shp")
+    pthobj = flopy.utils.PathlineFile(
+        os.path.join(model_ws, "EXAMPLE-3.pathline")
+    )
+    fpth = os.path.join(model_ws, "pathlines_1per3.shp")
     pthobj.write_shapefile(shpname=fpth, direction="ending", mg=mg4)
 
 
 def test_loadtxt():
     from flopy.utils.flopy_io import loadtxt
 
-    pthfile = os.path.join(path, "EXAMPLE-3.pathline")
+    model_ws = f"{base_dir}_test_loadtxt"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
+    copy_modpath_files(model_ws, "EXAMPLE-3.")
+
+    pthfile = os.path.join(model_ws, "EXAMPLE-3.pathline")
     pthld = PathlineFile(pthfile)
     ra = loadtxt(pthfile, delimiter=" ", skiprows=3, dtype=pthld.dtype)
     ra2 = loadtxt(

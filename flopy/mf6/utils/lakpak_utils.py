@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=0.1):
+def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
     """
     Function to create lake package connection data from a zero-based
     integer array of lake numbers. If the shape of lake number array is
@@ -32,7 +32,10 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=0.1):
         bed leakance for lakes in the model domain. If bedleak is a float the
         same bed leakance is applied to each lake connection in the model.
         If bedleak is of size (nrow, ncol) or (ncpl) then all lake
-        connections for the cellid are given the same bed leakance value.
+        connections for the cellid are given the same bed leakance value. If
+        bedleak is None, lake conductance is only a function of aquifer
+        properties for all lakes. Can also pass mixed values as list or
+        ndarray of size (nrow, ncol) or (ncpl) with floats and 'none' strings.
 
     Returns
     -------
@@ -85,15 +88,23 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=0.1):
     # check dimensions of idomain
     if idomain.shape != shape3d:
         raise ValueError(
-            "shape of idomain "
-            "({}) not equal to {}".format(idomain.shape, shape3d)
+            f"shape of idomain ({idomain.shape}) not equal to {shape3d}"
         )
 
     # convert bedleak to numpy array if necessary
-    if isinstance(bedleak, (float, int)):
+    if bedleak is None:
+        bedleak = np.chararray(shape2d, itemsize=4, unicode=True)
+        bedleak[:] = "none"
+    elif isinstance(bedleak, (float, int)):
         bedleak = np.ones(shape2d, dtype=float) * float(bedleak)
     elif isinstance(bedleak, (list, tuple)):
-        bedleak = np.array(bedleak, dtype=float)
+        bedleak = np.array(bedleak, dtype=object)
+
+    # check the dimensions of the bedleak array
+    if bedleak.shape != shape2d:
+        raise ValueError(
+            f"shape of bedleak ({bedleak.shape}) not equal to {shape2d}"
+        )
 
     # get the model grid elevations and reset lake_map using idomain
     # if lake is embedded and in an inactive cell

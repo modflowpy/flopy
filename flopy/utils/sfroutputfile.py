@@ -1,5 +1,7 @@
 import numpy as np
 
+from ..utils import import_optional_dependency
+
 
 class SfrFile:
     """
@@ -49,14 +51,8 @@ class SfrFile:
         """
         Class constructor.
         """
-        try:
-            import pandas as pd
 
-            self.pd = pd
-        except ImportError:
-            print("This method requires pandas")
-            self.pd = None
-            return
+        self.pd = import_optional_dependency("pandas")
 
         # get the number of rows to skip at top, and the number of data columns
         self.filename = filename
@@ -80,9 +76,7 @@ class SfrFile:
                     break
         if not evaluated_format:
             raise ValueError(
-                "could not evaluate format of {!r} for SfrFile".format(
-                    self.filename
-                )
+                f"could not evaluate format of {self.filename!r} for SfrFile"
             )
         # all outputs start with the same 15 columns
         self.names = [
@@ -259,5 +253,5 @@ class SfrFile:
                 if len(srresults) > 0:
                     results = results.append(srresults)
                 else:
-                    print("No results for segment {}, reach {}!".format(s, r))
+                    print(f"No results for segment {s}, reach {r}!")
         return results

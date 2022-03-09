@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on August 06, 2021 20:57:00 UTC
+# FILE created on March 07, 2022 16:59:43 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -96,6 +96,9 @@ class ModflowGwfbuy(mfpackage.MFPackage):
     dfn_file_name = "gwf-buy.dfn"
 
     dfn = [
+        [
+            "header",
+        ],
         [
             "block options",
             "name hhformulation_rhs",

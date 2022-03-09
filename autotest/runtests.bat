@@ -1,4 +1,4 @@
 rmdir /S /Q __pycache__
-nosetests -v
+pytest -v -n auto
 rmdir /S /Q __pycache__
 pause

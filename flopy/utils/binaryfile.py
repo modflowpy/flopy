@@ -8,10 +8,10 @@ important classes that can be accessed by the user.
 *  CellBudgetFile (Binary cell-by-cell flow file)
 
 """
-from __future__ import print_function
-import numpy as np
 import warnings
-from collections import OrderedDict
+
+import numpy as np
+
 from ..utils.datafile import Header, LayerFile
 
 
@@ -56,18 +56,19 @@ class BinaryHeader(Header):
                 try:
                     self.header[0][k] = int(kwargs[k])
                 except:
-                    msg = "{0} key not available in {1} header "
-                    "dtype".format(k, self.header_type)
-                    print(msg)
+                    print(
+                        f"{k} key not available in {self.header_type} "
+                        "header dtype"
+                    )
         for k in fkey:
             if k in kwargs.keys():
                 try:
                     self.header[0][k] = float(kwargs[k])
                 except:
-                    msg = "{} key not available ".format(
-                        k
-                    ) + "in {} header dtype".format(self.header_type)
-                    print(msg)
+                    print(
+                        f"{k} key not available "
+                        f"in {self.header_type} header dtype"
+                    )
         for k in ckey:
             if k in kwargs.keys():
                 # Convert to upper case to be consistent case used by MODFLOW
@@ -127,6 +128,7 @@ def binaryread_struct(file, vartype, shape=(1,), charlen=16):
 
     """
     import struct
+
     import numpy as np
 
     # store the mapping from type to struct format (fmt)
@@ -219,7 +221,7 @@ def get_headfile_precision(filename):
     f.seek(0, 0)  # reset to beginning
     assert f.tell() == 0
     if totalbytes == 0:
-        raise IOError("datafile error: file is empty: " + str(filename))
+        raise ValueError(f"datafile error: file is empty: {filename}")
 
     # first try single
     vartype = [
@@ -261,9 +263,8 @@ def get_headfile_precision(filename):
             result = "double"
         except:
             f.close()
-            raise IOError(
-                "Could not determine the precision of "
-                "the headfile {}".format(filename)
+            raise ValueError(
+                f"Could not determine the precision of the headfile {filename}"
             )
 
     # close and return result
@@ -484,9 +485,7 @@ class HeadFile(BinaryLayerFile):
         if precision == "auto":
             precision = get_headfile_precision(filename)
             if precision == "unknown":
-                s = "Error. Precision could not be determined for {}".format(
-                    filename
-                )
+                s = f"Error. Precision could not be determined for {filename}"
                 print(s)
                 raise Exception()
         self.header_dtype = BinaryHeader.set_dtype(
@@ -548,15 +547,13 @@ class UcnFile(BinaryLayerFile):
         text="concentration",
         precision="auto",
         verbose=False,
-        **kwargs
+        **kwargs,
     ):
         self.text = text.encode()
         if precision == "auto":
             precision = get_headfile_precision(filename)
         if precision == "unknown":
-            s = "Error. Precision could not be determined for {}".format(
-                filename
-            )
+            s = f"Error. Precision could not be determined for {filename}"
             print(s)
             raise Exception()
         self.header_dtype = BinaryHeader.set_dtype(
@@ -616,7 +613,7 @@ class CellBudgetFile:
         self.file.seek(0, 0)  # reset to beginning
         assert self.file.tell() == 0
         if totalbytes == 0:
-            raise IOError("datafile error: file is empty: " + str(filename))
+            raise ValueError(f"datafile error: file is empty: {filename}")
         self.nrow = 0
         self.ncol = 0
         self.nlay = 0
@@ -664,7 +661,7 @@ class CellBudgetFile:
             self.modelgrid = kwargs.pop("modelgrid")
         if len(kwargs.keys()) > 0:
             args = ",".join(kwargs.keys())
-            raise Exception("LayerFile error: unrecognized kwargs: " + args)
+            raise Exception(f"LayerFile error: unrecognized kwargs: {args}")
 
         if precision == "auto":
             success = self._set_precision("single")
@@ -678,12 +675,19 @@ class CellBudgetFile:
         elif precision == "double":
             success = self._set_precision(precision)
         else:
-            raise Exception("Unknown precision specified: " + precision)
+            raise Exception(f"Unknown precision specified: {precision}")
+
+        # set shape for full3D option
+        if self.modelgrid is None:
+            self.shape = (self.nlay, self.nrow, self.ncol)
+            self.nnodes = self.nlay * self.nrow * self.ncol
+        else:
+            self.shape = self.modelgrid.shape
+            self.nnodes = self.modelgrid.nnodes
 
         if not success:
             raise Exception(
-                "Budget file could not be read using "
-                "{} precision".format(precision)
+                f"Budget file could not be read using {precision} precision"
             )
 
         return
@@ -777,7 +781,7 @@ class CellBudgetFile:
         if tsmult == 1:
             dt1 = this_perlen / float(nstp)
         else:
-            dt1 = this_perlen * (tsmult - 1.0) / ((tsmult ** nstp) - 1.0)
+            dt1 = this_perlen * (tsmult - 1.0) / ((tsmult**nstp) - 1.0)
         kstp_len = [dt1]
         for i in range(kstp + 1):
             kstp_len.append(kstp_len[-1] * tsmult)
@@ -795,19 +799,24 @@ class CellBudgetFile:
         for i in range(33, 127):
             asciiset += chr(i)
 
+        # read first record
         header = self._get_header()
-        self.nrow = header["nrow"]
-        self.ncol = header["ncol"]
-        self.nlay = np.abs(header["nlay"])
+        nrow = header["nrow"]
+        ncol = header["ncol"]
         text = header["text"]
         if isinstance(text, bytes):
             text = text.decode()
-        if self.nrow < 0 or self.ncol < 0:
+        if nrow < 0 or ncol < 0:
             raise Exception("negative nrow, ncol")
+        if not text.endswith("FLOW-JA-FACE"):
+            self.nrow = nrow
+            self.ncol = ncol
+            self.nlay = np.abs(header["nlay"])
         self.file.seek(0, 2)
         self.totalbytes = self.file.tell()
         self.file.seek(0, 0)
-        self.recorddict = OrderedDict()
+        self.recorddict = {}
+        # read the remaining records
         ipos = 0
         while ipos < self.totalbytes:
             self.iposheader.append(ipos)
@@ -863,7 +872,7 @@ class CellBudgetFile:
                     s = header[itxt]
                     if isinstance(s, bytes):
                         s = s.decode()
-                    print(itxt + ": " + str(s))
+                    print(f"{itxt}: {s}")
                 print("file position: ", ipos)
                 if (
                     int(header["imeth"]) != 5
@@ -871,6 +880,16 @@ class CellBudgetFile:
                     and int(header["imeth"]) != 7
                 ):
                     print("")
+
+            # set the nrow, ncol, and nlay if they have not been set
+            if self.nrow == 0:
+                text = header["text"]
+                if isinstance(text, bytes):
+                    text = text.decode()
+                if not text.endswith("FLOW-JA-FACE"):
+                    self.nrow = header["nrow"]
+                    self.ncol = header["ncol"]
+                    self.nlay = np.abs(header["nlay"])
 
             # store record and byte position mapping
             self.recorddict[
@@ -947,7 +966,7 @@ class CellBudgetFile:
                 + naux * self.realtype(1).nbytes
             )
         else:
-            raise Exception("invalid method code " + str(imeth))
+            raise Exception(f"invalid method code {imeth}")
         if nbytes != 0:
             self.file.seek(nbytes, 1)
         return
@@ -1043,7 +1062,7 @@ class CellBudgetFile:
         for rec, imeth in zip(self.textlist, self.imethlist):
             if isinstance(rec, bytes):
                 rec = rec.decode()
-            print("{:16} {:5d}".format(rec.strip(), imeth))
+            print(f"{rec.strip():16} {imeth:5d}")
         return
 
     def list_unique_packages(self):
@@ -1526,7 +1545,7 @@ class CellBudgetFile:
         t = header["text"][0]
         if isinstance(t, bytes):
             t = t.decode("utf-8")
-        s = "Returning " + str(t).strip() + " as "
+        s = f"Returning {t.strip()} as "
 
         nlay = abs(header["nlay"][0])
         nrow = header["nrow"][0]
@@ -1535,7 +1554,7 @@ class CellBudgetFile:
         # default method
         if imeth == 0:
             if self.verbose:
-                s += "an array of shape " + str((nlay, nrow, ncol))
+                s += f"an array of shape {(nlay, nrow, ncol)}"
                 print(s)
             return binaryread(
                 self.file, self.realtype(1), shape=(nlay, nrow, ncol)
@@ -1543,7 +1562,7 @@ class CellBudgetFile:
         # imeth 1
         elif imeth == 1:
             if self.verbose:
-                s += "an array of shape " + str((nlay, nrow, ncol))
+                s += f"an array of shape {(nlay, nrow, ncol)}"
                 print(s)
             return binaryread(
                 self.file, self.realtype(1), shape=(nlay, nrow, ncol)
@@ -1555,15 +1574,16 @@ class CellBudgetFile:
             dtype = np.dtype([("node", np.int32), ("q", self.realtype)])
             if self.verbose:
                 if full3D:
-                    s += "a numpy masked array of size ({}, {}, {})".format(
-                        nlay, nrow, ncol
+                    s += (
+                        f"a numpy masked array of "
+                        f"size ({nlay}, {nrow}, {ncol})"
                     )
                 else:
-                    s += "a numpy recarray of size ({}, 2)".format(nlist)
+                    s += f"a numpy recarray of size ({nlist}, 2)"
                 print(s)
             data = binaryread(self.file, dtype, shape=(nlist,))
             if full3D:
-                return self.create3D(data, nlay, nrow, ncol)
+                return self.__create3D(data)
             else:
                 return data.view(np.recarray)
 
@@ -1573,32 +1593,34 @@ class CellBudgetFile:
             data = binaryread(self.file, self.realtype(1), shape=(nrow, ncol))
             if self.verbose:
                 if full3D:
-                    s += "a numpy masked array of size ({}, {}, {})".format(
-                        nlay, nrow, ncol
+                    s += (
+                        "a numpy masked array of size "
+                        f"({nlay}, {nrow}, {ncol})"
                     )
                 else:
                     s += (
-                        "a list of two 2D numpy arrays.  "
-                        "The first is an integer layer array of shape {}.  "
-                        "The second is real data array of shape {}".format(
-                            (nrow, ncol),
-                            (nrow, ncol),
-                        )
+                        "a list of two 2D numpy arrays. The first is an "
+                        f"integer layer array of shape ({nrow}, {ncol}). The "
+                        f"second is real data array of shape ({nrow}, {ncol})"
                     )
                 print(s)
             if full3D:
-                out = np.ma.zeros((nlay, nrow, ncol), dtype=np.float32)
+                out = np.ma.zeros(self.nnodes, dtype=np.float32)
                 out.mask = True
-                vertical_layer = ilayer[0] - 1  # This is always the top layer
-                out[vertical_layer, :, :] = data
-                return out
+                vertical_layer = ilayer.flatten() - 1
+                # create the 2D cell index and then move it to
+                # the correct vertical location
+                idx = np.arange(0, vertical_layer.shape[0])
+                idx += vertical_layer * nrow * ncol
+                out[idx] = data.flatten()
+                return out.reshape(self.shape)
             else:
                 return [ilayer, data]
 
         # imeth 4
         elif imeth == 4:
             if self.verbose:
-                s += "a 2d numpy array of size ({}, {})".format(nrow, ncol)
+                s += f"a 2d numpy array of size ({nrow}, {ncol})"
                 print(s)
             return binaryread(self.file, self.realtype(1), shape=(nrow, ncol))
 
@@ -1617,16 +1639,12 @@ class CellBudgetFile:
             data = binaryread(self.file, dtype, shape=(nlist,))
             if full3D:
                 if self.verbose:
-                    s += "a list array of shape ({}, {}, {})".format(
-                        nlay, nrow, ncol
-                    )
+                    s += f"a list array of shape ({nlay}, {nrow}, {ncol})"
                     print(s)
-                return self.create3D(data, nlay, nrow, ncol)
+                return self.__create3D(data)
             else:
                 if self.verbose:
-                    s += "a numpy recarray of size ({}, {})".format(
-                        nlist, 2 + naux
-                    )
+                    s += f"a numpy recarray of size ({nlist}, {2 + naux})"
                     print(s)
                 return data.view(np.recarray)
 
@@ -1646,40 +1664,34 @@ class CellBudgetFile:
             data = binaryread(self.file, dtype, shape=(nlist,))
             if self.verbose:
                 if full3D:
-                    s += (
-                        "full 3D arrays not supported for "
-                        "imeth = {}".format(imeth)
-                    )
+                    s += f"a list array of shape ({nlay}, {nrow}, {ncol})"
                 else:
-                    s += "a numpy recarray of size ({}, 2)".format(nlist)
+                    s += f"a numpy recarray of size ({nlist}, 2)"
                 print(s)
             if full3D:
-                s += "full 3D arrays not supported for imeth = {}".format(
-                    imeth
-                )
-                raise ValueError(s)
+                data = self.__create3D(data)
+                if self.modelgrid is not None:
+                    return np.reshape(data, self.shape)
+                else:
+                    return data
             else:
                 return data.view(np.recarray)
         else:
-            raise ValueError("invalid imeth value - {}".format(imeth))
+            raise ValueError(f"invalid imeth value - {imeth}")
 
         # should not reach this point
         return
 
-    def create3D(self, data, nlay, nrow, ncol):
+    def __create3D(self, data):
         """
         Convert a dictionary of {node: q, ...} into a numpy masked array.
-        In most cases this should not be called directly by the user unless
-        you know what you're doing.  Instead, it is used as part of the
-        full3D keyword for get_data.
+        Used to create full grid arrays when the full3D keyword is set
+        to True in get_data.
 
         Parameters
         ----------
         data : dictionary
             Dictionary with node keywords and flows (q) items.
-
-        nlay, nrow, ncol : int
-            Number of layers, rows, and columns of the model grid.
 
         Returns
         ----------
@@ -1687,13 +1699,13 @@ class CellBudgetFile:
             List contains unique simulation times (totim) in binary file.
 
         """
-        out = np.ma.zeros((nlay * nrow * ncol), dtype=np.float32)
+        out = np.ma.zeros(self.nnodes, dtype=np.float32)
         out.mask = True
         for [node, q] in zip(data["node"], data["q"]):
             idx = node - 1
             out.data[idx] += q
             out.mask[idx] = False
-        return np.ma.reshape(out, (nlay, nrow, ncol))
+        return np.ma.reshape(out, self.shape)
 
     def get_times(self):
         """
@@ -1754,7 +1766,7 @@ class CellBudgetFile:
         for i in select_indices:
             text = self.recordarray[i]["text"].decode()
             if self.verbose:
-                print("processing {}".format(text))
+                print(f"processing {text}")
             flow = self.get_record(idx=i, full3D=True)
             if ncol > 1 and "RIGHT FACE" in text:
                 residual -= flow[:, :, :]
@@ -1873,9 +1885,7 @@ class HeadUFile(BinaryLayerFile):
         if precision == "auto":
             precision = get_headfile_precision(filename)
             if precision == "unknown":
-                s = "Error. Precision could not be determined for {}".format(
-                    filename
-                )
+                s = f"Error. Precision could not be determined for {filename}"
                 print(s)
                 raise Exception()
         self.header_dtype = BinaryHeader.set_dtype(
@@ -1894,7 +1904,7 @@ class HeadUFile(BinaryLayerFile):
         if totim >= 0.0:
             keyindices = np.where((self.recordarray["totim"] == totim))[0]
             if len(keyindices) == 0:
-                msg = "totim value ({}) not found in file...".format(totim)
+                msg = f"totim value ({totim}) not found in file..."
                 raise Exception(msg)
         else:
             raise Exception("Data not found...")
@@ -1908,10 +1918,7 @@ class HeadUFile(BinaryLayerFile):
             nend = self.recordarray["nrow"][idx]
             npl = nend - nstrt + 1
             if self.verbose:
-                msg = "Byte position in file: {} for ".format(
-                    ipos
-                ) + "layer {}".format(ilay)
-                print(msg)
+                print(f"Byte position in file: {ipos} for layer {ilay}")
             self.file.seek(ipos, 0)
             data[ilay - 1] = binaryread(self.file, self.realtype, shape=(npl,))
         return data
@@ -1939,14 +1946,14 @@ class HeadUFile(BinaryLayerFile):
 
     def get_ts(self, idx):
         """
-        Get a time series from the binary HeadUFile (not implemented).
+        Get a time series from the binary HeadUFile
 
         Parameters
         ----------
-        idx : tuple of ints, or a list of a tuple of ints
-            idx can be (layer, row, column) or it can be a list in the form
-            [(layer, row, column), (layer, row, column), ...].  The layer,
-            row, and column values must be zero based.
+        idx : int or list of ints
+            idx can be nodenumber or it can be a list in the form
+            [nodenumber, nodenumber, ...].  The nodenumber,
+            values must be zero based.
 
         Returns
         ----------
@@ -1954,15 +1961,43 @@ class HeadUFile(BinaryLayerFile):
             Array has size (ntimes, ncells + 1).  The first column in the
             data array will contain time (totim).
 
-        See Also
-        --------
-
-        Notes
-        -----
-
-        Examples
-        --------
-
         """
-        msg = "HeadUFile: get_ts() is not implemented"
-        raise NotImplementedError(msg)
+        times = self.get_times()
+
+        # find node number in layer that node is in
+        data = self.get_data(totim=times[0])
+        nodelay = [len(data[lay]) for lay in range(len(data))]
+        nodelay_cumsum = np.cumsum([0] + nodelay)
+
+        if isinstance(idx, int):
+            layer = np.searchsorted(nodelay_cumsum, idx)
+            nnode = idx - nodelay_cumsum[layer - 1]
+
+            result = []
+            for i, time in enumerate(times):
+                data = self.get_data(totim=time)
+                result.append([time, data[layer - 1][nnode]])
+
+        elif isinstance(idx, list):
+
+            result = []
+            for i, time in enumerate(times):
+                data = self.get_data(totim=time)
+                row = [time]
+
+                for node in idx:
+                    if isinstance(node, int):
+                        layer = np.searchsorted(nodelay_cumsum, node)
+                        nnode = node - nodelay_cumsum[layer - 1]
+                        row += [data[layer - 1][nnode]]
+                    else:
+                        errmsg = "idx must be an integer or a list of integers"
+                        raise Exception(errmsg)
+
+                result.append(row)
+
+        else:
+            errmsg = "idx must be an integer or a list of integers"
+            raise Exception(errmsg)
+
+        return np.array(result)

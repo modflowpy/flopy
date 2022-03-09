@@ -2,22 +2,17 @@
 Test the gmg load and write with an external summary file
 """
 import os
-import shutil
+
+import pymake
+import pytest
+from ci_framework import FlopyTestSetup, base_test_dir
+
 import flopy
 
-try:
-    import pymake
-except ImportError:
-    print("could not import pymake")
-    pymake = False
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
+
 
 path = os.path.join("..", "examples", "data", "secp")
-cpth = os.path.join("temp", "t045")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-# make the directory
-os.makedirs(cpth)
 
 mf_items = ["secp.nam"]
 pths = []
@@ -31,21 +26,19 @@ def load_and_write_gmg(mfnam, pth):
     """
     exe_name = "mf2005"
     v = flopy.which(exe_name)
+    run = v is not None
 
-    if pymake:
-        run = v is not None
-        lpth = os.path.join(cpth, os.path.splitext(mfnam)[0])
-        apth = os.path.join(lpth, "flopy")
-        compth = lpth
-        pymake.setup(os.path.join(pth, mfnam), lpth)
-    else:
-        run = False
-        lpth = pth
-        apth = cpth
-        compth = cpth
+    model_ws = f"{base_dir}_{mfnam}"
+    compth = os.path.join(model_ws, "flopy")
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
+    pymake.setup(os.path.join(pth, mfnam), model_ws)
 
     m = flopy.modflow.Modflow.load(
-        mfnam, model_ws=lpth, verbose=True, exe_name=exe_name
+        mfnam,
+        model_ws=model_ws,
+        verbose=True,
+        exe_name=exe_name,
     )
     assert m.load_fail is False
 
@@ -55,10 +48,10 @@ def load_and_write_gmg(mfnam, pth):
         except:
             success = False
         assert success, "base model run did not terminate successfully"
-        fn0 = os.path.join(lpth, mfnam)
+        fn0 = os.path.join(model_ws, mfnam)
 
     # rewrite files
-    m.change_model_ws(apth)
+    m.change_model_ws(compth)
     m.write_input()
     if run:
         try:
@@ -66,12 +59,10 @@ def load_and_write_gmg(mfnam, pth):
         except:
             success = False
         assert success, "new model run did not terminate successfully"
-        fn1 = os.path.join(apth, mfnam)
+        fn1 = os.path.join(compth, mfnam)
 
     if run:
-        fsum = os.path.join(
-            compth, "{}.head.out".format(os.path.splitext(mfnam)[0])
-        )
+        fsum = os.path.join(model_ws, f"{os.path.splitext(mfnam)[0]}.head.out")
         success = False
         try:
             success = pymake.compare_heads(fn0, fn1, outfile=fsum)
@@ -82,7 +73,7 @@ def load_and_write_gmg(mfnam, pth):
         assert success, "head comparison failure"
 
         fsum = os.path.join(
-            compth, "{}.budget.out".format(os.path.splitext(mfnam)[0])
+            model_ws, f"{os.path.splitext(mfnam)[0]}.budget.out"
         )
         success = False
         try:
@@ -98,9 +89,12 @@ def load_and_write_gmg(mfnam, pth):
     return
 
 
-def test_mf2005gmgload():
-    for namfile, pth in zip(mf_items, pths):
-        yield load_and_write_gmg, namfile, pth
+@pytest.mark.parametrize(
+    "namfile, pth",
+    zip(mf_items, pths),
+)
+def test_mf2005gmgload(namfile, pth):
+    load_and_write_gmg(namfile, pth)
     return
 
 

@@ -14,15 +14,18 @@ def create_notebooks():
     # get a list of python files
     py_files = []
     for dirpath, _, filenames in os.walk(pth):
-        py_files += [os.path.join(dirpath, filename) for filename in
-                     sorted(filenames) if filename.endswith(".py")]
+        py_files += [
+            os.path.join(dirpath, filename)
+            for filename in sorted(filenames)
+            if filename.endswith(".py")
+        ]
     # sort the python files
     py_files = sorted(py_files)
 
     # copy the python files
     for src in py_files:
         dst = os.path.join(wpth, os.path.basename(src))
-        print("{} -> {}".format(src, dst))
+        print(f"{src} -> {dst}")
         shutil.copyfile(src, dst)
 
     # create and run notebooks
@@ -43,10 +46,12 @@ def create_notebooks():
     os.makedirs(npth)
 
     for filepath in py_files:
-        src = os.path.join(wpth,
-                           os.path.basename(filepath).replace(".py", ".ipynb"))
-        dst = os.path.join(npth,
-                           os.path.basename(filepath).replace(".py", ".ipynb"))
+        src = os.path.join(
+            wpth, os.path.basename(filepath).replace(".py", ".ipynb")
+        )
+        dst = os.path.join(
+            npth, os.path.basename(filepath).replace(".py", ".ipynb")
+        )
         shutil.copyfile(src, dst)
     shutil.rmtree(".working")
 

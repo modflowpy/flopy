@@ -1,15 +1,17 @@
 __author__ = "aleaf"
 
-import sys
-
-import os
 import glob
-import shutil
 import io
-import numpy as np
+import os
+import shutil
+
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
+
+from flopy.discretization import StructuredGrid
 from flopy.utils.recarray_utils import create_empty_recarray
+from flopy.utils.sfroutputfile import SfrFile
 
 try:
     import shapefile
@@ -22,17 +24,13 @@ except ImportError:
 import flopy
 
 fm = flopy.modflow
-from flopy.utils.sfroutputfile import SfrFile
-from flopy.discretization import StructuredGrid
-from flopy.utils.reference import SpatialReference
 
 path = os.path.join("..", "examples", "data", "mf2005_test")
 path2 = os.path.join("..", "examples", "data", "sfr_test")
 outpath = os.path.join("temp", "t009")
 # make the directory if it does not exist
-if os.path.isdir(outpath):
-    shutil.rmtree(outpath)
-os.makedirs(outpath)
+if not os.path.isdir(outpath):
+    os.makedirs(outpath, exist_ok=True)
 
 sfr_items = {
     0: {"mfnam": "test1ss.nam", "sfrfile": "test1ss.sfr"},
@@ -123,8 +121,8 @@ def sfr_process(mfnam, sfrfile, model_ws, outfolder=outpath):
     m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws, verbose=False)
     sfr = m.get_package("SFR")
 
-    if not os.path.exists(outfolder):
-        os.makedirs(outfolder)
+    if not os.path.isdir(outfolder):
+        os.makedirs(outfolder, exist_ok=True)
     outpath = os.path.join(outfolder, sfrfile)
     sfr.write_file(outpath)
 
@@ -522,7 +520,7 @@ def test_no_ds_6bc():
     (e.g., see table at https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/sfr.htm)
     """
     sfrfiletxt = (
-        u"REACHINPUT\n"
+        "REACHINPUT\n"
         "2 2 0 0 128390 0.0001 119 0 3 10 1 30 0 4 0.75 91.54\n"
         "1 1 1 1 1 1.0 1.0 0.001 1 1 .3 0.02 3.5 0.7\n"
         "1 2 2 2 1 1.0 0.5 0.001 1 1 .3 0.02 3.5 0.7\n"
@@ -587,7 +585,7 @@ def test_ds_6d_6e_disordered():
 
 def test_disordered_reachdata_fields():
     path = os.path.join("..", "examples", "data", "hydmod_test")
-    wpath = os.path.join(".", "temp", "t009_disorderfields")
+    wpath = os.path.join(".", "temp", "t009", "disorderfields")
     m = flopy.modflow.Modflow.load("test1tr2.nam", model_ws=path)
     sfr = m.get_package("SFR")
     orig_reach_data = sfr.reach_data

@@ -1,8 +1,8 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on August 06, 2021 20:57:00 UTC
+# FILE created on March 07, 2022 16:59:43 UTC
 from .. import mfpackage
-from ..data.mfdatautil import ListTemplateGenerator, ArrayTemplateGenerator
+from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
 
 class ModflowGwtist(mfpackage.MFPackage):
@@ -21,6 +21,13 @@ class ModflowGwtist(mfpackage.MFPackage):
         * save_flows (boolean) keyword to indicate that IST flow terms will be
           written to the file specified with "BUDGET FILEOUT" in Output
           Control.
+    budget_filerecord : [budgetfile]
+        * budgetfile (string) name of the binary output file to write budget
+          information.
+    budgetcsv_filerecord : [budgetcsvfile]
+        * budgetcsvfile (string) name of the comma-separated value (CSV) output
+          file to write budget summary information. A budget summary record
+          will be written to this file for each time step of the simulation.
     sorption : boolean
         * sorption (boolean) is a text keyword to indicate that sorption will
           be activated. Use of this keyword requires that BULK_DENSITY and
@@ -44,6 +51,9 @@ class ModflowGwtist(mfpackage.MFPackage):
           concentrations will be written to this file at the same interval as
           mobile domain concentrations are saved, as specified in the GWT Model
           Output Control file.
+    fileout : boolean
+        * fileout (boolean) keyword to specify that an output filename is
+          expected next.
     cimprintrecord : [columns, width, digits, format]
         * columns (integer) number of columns for writing data.
         * width (integer) width for writing each number.
@@ -99,6 +109,12 @@ class ModflowGwtist(mfpackage.MFPackage):
 
     """
 
+    budget_filerecord = ListTemplateGenerator(
+        ("gwt6", "ist", "options", "budget_filerecord")
+    )
+    budgetcsv_filerecord = ListTemplateGenerator(
+        ("gwt6", "ist", "options", "budgetcsv_filerecord")
+    )
     cim_filerecord = ListTemplateGenerator(
         ("gwt6", "ist", "options", "cim_filerecord")
     )
@@ -122,11 +138,84 @@ class ModflowGwtist(mfpackage.MFPackage):
 
     dfn = [
         [
+            "header",
+        ],
+        [
             "block options",
             "name save_flows",
             "type keyword",
             "reader urword",
             "optional true",
+        ],
+        [
+            "block options",
+            "name budget_filerecord",
+            "type record budget fileout budgetfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budget",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name fileout",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsv_filerecord",
+            "type record budgetcsv fileout budgetcsvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budgetcsv",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsvfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
         ],
         [
             "block options",
@@ -323,10 +412,13 @@ class ModflowGwtist(mfpackage.MFPackage):
         model,
         loading_package=False,
         save_flows=None,
+        budget_filerecord=None,
+        budgetcsv_filerecord=None,
         sorption=None,
         first_order_decay=None,
         zero_order_decay=None,
         cim_filerecord=None,
+        fileout=None,
         cimprintrecord=None,
         cim=None,
         thetaim=None,
@@ -345,6 +437,12 @@ class ModflowGwtist(mfpackage.MFPackage):
 
         # set up variables
         self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self.budget_filerecord = self.build_mfdata(
+            "budget_filerecord", budget_filerecord
+        )
+        self.budgetcsv_filerecord = self.build_mfdata(
+            "budgetcsv_filerecord", budgetcsv_filerecord
+        )
         self.sorption = self.build_mfdata("sorption", sorption)
         self.first_order_decay = self.build_mfdata(
             "first_order_decay", first_order_decay
@@ -355,6 +453,7 @@ class ModflowGwtist(mfpackage.MFPackage):
         self.cim_filerecord = self.build_mfdata(
             "cim_filerecord", cim_filerecord
         )
+        self.fileout = self.build_mfdata("fileout", fileout)
         self.cimprintrecord = self.build_mfdata(
             "cimprintrecord", cimprintrecord
         )

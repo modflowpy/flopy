@@ -1,18 +1,16 @@
-import shutil
-import os
 import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
 import flopy
 
-cpth = os.path.join("temp", "t051")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-# make the directory
-os.makedirs(cpth)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def test_default_oc_stress_period_data():
-    m = flopy.modflow.Modflow(model_ws=cpth, verbose=True)
+    model_ws = f"{base_dir}_test_default_oc_stress_period_data"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
+    m = flopy.modflow.Modflow(model_ws=model_ws, verbose=True)
     dis = flopy.modflow.ModflowDis(m, nper=10, perlen=10.0, nstp=5)
     bas = flopy.modflow.ModflowBas(m)
     lpf = flopy.modflow.ModflowLpf(m, ipakcb=100)
@@ -31,7 +29,10 @@ def test_default_oc_stress_period_data():
 
 
 def test_mfcbc():
-    m = flopy.modflow.Modflow(verbose=True)
+    model_ws = f"{base_dir}_test_mfcbc"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
+    m = flopy.modflow.Modflow(verbose=True, model_ws=model_ws)
     dis = flopy.modflow.ModflowDis(m)
     bas = flopy.modflow.ModflowBas(m)
     lpf = flopy.modflow.ModflowLpf(m, ipakcb=100)
@@ -40,12 +41,12 @@ def test_mfcbc():
     spd = {(0, 0): ["save head", "save budget"]}
     oc = flopy.modflow.ModflowOc(m, stress_period_data=spd)
     t = oc.get_budgetunit()
-    assert t == [100, 101], "budget units are {}".format(t) + " not [100, 101]"
+    assert t == [100, 101], f"budget units are {t} not [100, 101]"
 
     nlay = 3
     nrow = 3
     ncol = 3
-    ml = flopy.modflow.Modflow(modelname="t1", model_ws=cpth, verbose=True)
+    ml = flopy.modflow.Modflow(modelname="t1", model_ws=model_ws, verbose=True)
     dis = flopy.modflow.ModflowDis(
         ml, nlay=nlay, nrow=nrow, ncol=ncol, top=0, botm=[-1.0, -2.0, -3.0]
     )
@@ -61,8 +62,8 @@ def test_mfcbc():
     oc.reset_budgetunit(budgetunit=1053, fname="big.bin")
 
     msg = (
-        "wel ipakcb ({}) ".format(wel.ipakcb)
-        + "not set correctly to 1053 using oc.resetbudgetunit()"
+        f"wel ipakcb ({wel.ipakcb}) "
+        "not set correctly to 1053 using oc.resetbudgetunit()"
     )
     assert wel.ipakcb == 1053, msg
 
@@ -70,5 +71,5 @@ def test_mfcbc():
 
 
 if __name__ == "__main__":
-    # test_mfcbc()
+    test_mfcbc()
     test_default_oc_stress_period_data()

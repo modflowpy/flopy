@@ -4,9 +4,6 @@ pakbase module
   all of the other packages inherit from.
 
 """
-
-from __future__ import print_function
-
 import abc
 import os
 import webbrowser as wb
@@ -14,9 +11,7 @@ import webbrowser as wb
 import numpy as np
 from numpy.lib.recfunctions import stack_arrays
 
-from .modflow.mfparbc import ModflowParBc as mfparbc
-from .utils import Util2d, Util3d, Transient2d, MfList, check
-from .utils import OptionBlock
+from .utils import MfList, OptionBlock, Transient2d, Util2d, Util3d, check
 from .utils.flopy_io import ulstrd
 
 
@@ -81,6 +76,12 @@ class PackageInterface:
     def has_stress_period_data(self):
         return self.__dict__.get("stress_period_data", None) is not None
 
+    @property
+    def _mg_resync(self):
+        if self.package_type.lower()[:4] in ("dis", "bas"):
+            return True
+        return False
+
     @staticmethod
     def _check_thresholds(chk, array, active, thresholds, name):
         """Checks array against min and max threshold values."""
@@ -88,13 +89,13 @@ class PackageInterface:
         chk.values(
             array,
             active & (array < mn),
-            "{} values below checker threshold of {}".format(name, mn),
+            f"{name} values below checker threshold of {mn}",
             "Warning",
         )
         chk.values(
             array,
             active & (array > mx),
-            "{} values above checker threshold of {}".format(name, mx),
+            f"{name} values above checker threshold of {mx}",
             "Warning",
         )
 
@@ -246,7 +247,7 @@ class PackageInterface:
                 chk.values(
                     self.__dict__[kp].array,
                     active & (self.__dict__[kp].array <= 0),
-                    "zero or negative {} values".format(name),
+                    f"zero or negative {name} values",
                     "Error",
                 )
 
@@ -338,9 +339,7 @@ class PackageInterface:
                 storage_coeff = False
             self._check_storage(chk, storage_coeff)
         else:
-            txt = "check method not implemented for {} Package.".format(
-                self.name[0]
-            )
+            txt = f"check method not implemented for {self.name[0]} Package."
             if f is not None:
                 if isinstance(f, str):
                     pth = os.path.join(self.parent.model_ws, f)
@@ -379,6 +378,7 @@ class PackageInterface:
             )
 
             # only check specific yield for convertible layers
+            skip_sy_check = False
             if "laytyp" in self.__dict__:
                 inds = np.array(
                     [
@@ -388,25 +388,28 @@ class PackageInterface:
                         for l in self.laytyp
                     ]
                 )
-                if self.ss.shape[1] is None:
-                    # unstructured; build flat nodal property array slicers (by layer)
-                    node_to = np.cumsum([s.array.size for s in self.ss])
-                    node_from = np.array([0] + list(node_to[:-1]))
-                    node_k_slices = np.array(
-                        [
-                            np.s_[n_from:n_to]
-                            for n_from, n_to in zip(node_from, node_to)
-                        ]
-                    )[inds]
-                    sarrays["sy"] = np.asarray(
-                        [sarrays["sy"][sl] for sl in node_k_slices]
-                    ).flatten()
-                    active = np.asarray(
-                        [active[sl] for sl in node_k_slices]
-                    ).flatten()
+                if inds.any():
+                    if self.sy.shape[1] is None:
+                        # unstructured; build flat nodal property array slicers (by layer)
+                        node_to = np.cumsum([s.array.size for s in self.ss])
+                        node_from = np.array([0] + list(node_to[:-1]))
+                        node_k_slices = np.array(
+                            [
+                                np.s_[n_from:n_to]
+                                for n_from, n_to in zip(node_from, node_to)
+                            ]
+                        )[inds]
+                        sarrays["sy"] = np.concatenate(
+                            [sarrays["sy"][sl] for sl in node_k_slices]
+                        ).flatten()
+                        active = np.concatenate(
+                            [active[sl] for sl in node_k_slices]
+                        ).flatten()
+                    else:
+                        sarrays["sy"] = sarrays["sy"][inds, :, :]
+                        active = active[inds, :, :]
                 else:
-                    sarrays["sy"] = sarrays["sy"][inds, :, :]
-                    active = active[inds, :, :]
+                    skip_sy_check = True
             else:
                 iconvert = self.iconvert.array
                 for ishape in np.ndindex(active.shape):
@@ -414,25 +417,39 @@ class PackageInterface:
                         active[ishape] = (
                             iconvert[ishape] > 0 or iconvert[ishape] < 0
                         )
-            chk.values(
-                sarrays["sy"],
-                active & (sarrays["sy"] < 0),
-                "zero or negative specific yield values",
-                "Error",
-            )
-            self._check_thresholds(
-                chk,
-                sarrays["sy"],
-                active,
-                chk.property_threshold_values["sy"],
-                "specific yield",
-            )
+            if not skip_sy_check:
+                chk.values(
+                    sarrays["sy"],
+                    active & (sarrays["sy"] < 0),
+                    "zero or negative specific yield values",
+                    "Error",
+                )
+                self._check_thresholds(
+                    chk,
+                    sarrays["sy"],
+                    active,
+                    chk.property_threshold_values["sy"],
+                    "specific yield",
+                )
 
 
 class Package(PackageInterface):
     """
     Base package class from which most other packages are derived.
 
+    Parameters
+    ----------
+    parent : object
+        Parent model object.
+    extension : str or list, default "glo"
+        File extension, without ".", use list to describe more than one.
+    name : str or list, default "GLOBAL"
+        Package name, use list to describe more than one.
+    unit_number : int or list, default 1
+        Unit number, use list to describe more than one.
+    filenames : str or list, default None
+    allowDuplicates : bool, default False
+        Allow more than one instance of package in parent.
     """
 
     def __init__(
@@ -441,23 +458,20 @@ class Package(PackageInterface):
         extension="glo",
         name="GLOBAL",
         unit_number=1,
-        extra="",
         filenames=None,
         allowDuplicates=False,
     ):
-        """
-        Package init
-
-        """
         # To be able to access the parent model object's attributes
         self.parent = parent
         if not isinstance(extension, list):
             extension = [extension]
         self.extension = []
         self.file_name = []
+        if isinstance(filenames, str):
+            filenames = [filenames]
         for idx, e in enumerate(extension):
             self.extension.append(e)
-            file_name = self.parent.name + "." + e
+            file_name = f"{self.parent.name}.{e}"
             if filenames is not None:
                 if idx < len(filenames):
                     if filenames[idx] is not None:
@@ -471,10 +485,6 @@ class Package(PackageInterface):
         if not isinstance(unit_number, list):
             unit_number = [unit_number]
         self.unit_number = unit_number
-        if not isinstance(extra, list):
-            self.extra = len(self.unit_number) * [extra]
-        else:
-            self.extra = extra
         self.url = "index.html"
         self.allowDuplicates = allowDuplicates
 
@@ -489,19 +499,13 @@ class Package(PackageInterface):
             if not (attr in exclude_attributes):
                 if isinstance(value, list):
                     if len(value) == 1:
-                        s += " {:s} = {:s}\n".format(attr, str(value[0]))
+                        s += f" {attr} = {value[0]!s}\n"
                     else:
-                        s += " {:s} (list, items = {:d})\n".format(
-                            attr, len(value)
-                        )
+                        s += f" {attr} (list, items = {len(value)})\n"
                 elif isinstance(value, np.ndarray):
-                    s += " {:s} (array, shape = {:s})\n".format(
-                        attr, str(value.shape)[1:-1]
-                    )
+                    s += f" {attr} (array, shape = {str(value.shape)[1:-1]})\n"
                 else:
-                    s += " {:s} = {:s} ({:s})\n".format(
-                        attr, str(value), str(type(value))[7:-2]
-                    )
+                    s += f" {attr} = {value!s} ({str(type(value))[7:-2]})\n"
         return s
 
     def __getitem__(self, item):
@@ -512,8 +516,7 @@ class Package(PackageInterface):
             if isinstance(item, MfList):
                 if not isinstance(item, list) and not isinstance(item, tuple):
                     msg = (
-                        "package.__getitem__() kper {} "
-                        "not in data.keys()".format(item)
+                        f"package.__getitem__() kper {item} not in data.keys()"
                     )
                     assert item in list(spd.data.keys()), msg
                     return spd[item]
@@ -525,9 +528,7 @@ class Package(PackageInterface):
                     )
 
                 msg = (
-                    "package.__getitem__() kper {} not in data.keys()".format(
-                        item[0]
-                    )
+                    f"package.__getitem__() kper {item[0]} not in data.keys()"
                 )
                 assert item[0] in list(spd.data.keys()), msg
 
@@ -602,11 +603,15 @@ class Package(PackageInterface):
                                     vo.dtype,
                                     v,
                                     name=vo.name,
-                                    fmtin=vo.fmtin,
+                                    fmtin=vo.format.fortran,
                                     locat=vo.locat,
                                 )
                             )
                         value = new_list
+
+        if all(hasattr(self, attr) for attr in ["parent", "_name"]):
+            if not self.parent._mg_resync:
+                self.parent._mg_resync = self._mg_resync
 
         super().__setattr__(key, value)
 
@@ -669,9 +674,35 @@ class Package(PackageInterface):
             None or Netcdf object
 
         """
-        from flopy import export
+        from . import export
 
         return export.utils.package_export(f, self, **kwargs)
+
+    def _generate_heading(self):
+        """Generate heading."""
+        from . import __version__
+
+        parent = self.parent
+        self.heading = (
+            f"# {self.name[0]} package for "
+            f"{parent.version_types[parent.version]} "
+            f"generated by Flopy {__version__}"
+        )
+
+    @staticmethod
+    def _prepare_filenames(filenames, num=1):
+        """Prepare filenames parameter."""
+        if filenames is None:
+            return [None] * num
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+        if isinstance(filenames, list):
+            if len(filenames) < num:
+                filenames += [None] * (num - len(filenames))
+            elif len(filenames) > num:
+                filenames = filenames[:num]
+            return filenames
+        raise ValueError(f"unexpected filenames: {filenames}")
 
     @staticmethod
     def add_to_dtype(dtype, field_names, field_types):
@@ -732,23 +763,17 @@ class Package(PackageInterface):
                 if k > kon:
                     kon = k
                     tag = name[k].lower().replace(" layer ", "")
-                    txt += "    {:>10s}{:>10s}{:>10s}{:>15s}\n".format(
-                        "layer", "row", "column", tag
-                    )
-                txt += "    {:10d}{:10d}{:10d}{:15.7g}\n".format(
-                    k + 1, i + 1, j + 1, v[k, i, j]
-                )
+                    txt += f"    {'layer':>10s}{'row':>10s}{'column':>10s}{tag:>15s}\n"
+                txt += f"    {k + 1:10d}{i + 1:10d}{j + 1:10d}{v[k, i, j]:15.7g}\n"
         elif ndim == 2:
             tag = name[0].lower().replace(" layer ", "")
-            txt += "    {:>10s}{:>10s}{:>15s}\n".format("row", "column", tag)
+            txt += f"    {'row':>10s}{'column':>10s}{tag:>15s}\n"
             for [i, j] in idx:
-                txt += "    {:10d}{:10d}{:15.7g}\n".format(
-                    i + 1, j + 1, v[i, j]
-                )
+                txt += f"    {i + 1:10d}{j + 1:10d}{v[i, j]:15.7g}\n"
         elif ndim == 1:
-            txt += "    {:>10s}{:>15s}\n".format("number", name[0])
+            txt += f"    {'number':>10s}{name[0]:>15s}\n"
             for i in idx:
-                txt += "    {:10d}{:15.7g}\n".format(i + 1, v[i])
+                txt += f"    {i + 1:10d}{v[i]:15.7g}\n"
         return txt
 
     def plot(self, **kwargs):
@@ -794,10 +819,10 @@ class Package(PackageInterface):
         >>> ml.dis.plot()
 
         """
-        from flopy.plot import PlotUtilities
+        from .plot import PlotUtilities
 
         if not self.plottable:
-            raise TypeError("Package {} is not plottable".format(self.name))
+            raise TypeError(f"Package {self.name} is not plottable")
 
         axes = PlotUtilities._plot_package_helper(self, **kwargs)
         return axes
@@ -836,20 +861,11 @@ class Package(PackageInterface):
 
     def webdoc(self):
         if self.parent.version == "mf2k":
-            wa = (
-                "http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/"
-                + self.url
-            )
+            wa = f"http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/{self.url}"
         elif self.parent.version == "mf2005":
-            wa = (
-                "http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/"
-                + self.url
-            )
+            wa = f"http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/{self.url}"
         elif self.parent.version == "ModflowNwt":
-            wa = (
-                "http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/"
-                + self.url
-            )
+            wa = f"http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/{self.url}"
         else:
             wa = None
 
@@ -857,7 +873,7 @@ class Package(PackageInterface):
         if wa is not None:
             wb.open(wa)
 
-    def write_file(self, check=False):
+    def write_file(self, f=None, check=False):
         """
         Every Package needs its own write_file function
 
@@ -871,6 +887,7 @@ class Package(PackageInterface):
         Default load method for standard boundary packages.
 
         """
+        from .modflow.mfparbc import ModflowParBc as mfparbc
 
         # parse keywords
         if "nper" in kwargs:
@@ -921,8 +938,7 @@ class Package(PackageInterface):
                 mxl = int(t[2])
                 if model.verbose:
                     print(
-                        "   Parameters detected. Number of "
-                        "parameters = {}".format(nppak)
+                        f"   Parameters detected. Number of parameters = {nppak}"
                     )
             line = f.readline()
 
@@ -934,21 +950,20 @@ class Package(PackageInterface):
             ipakcb = int(t[1])
         except:
             if model.verbose:
-                print("   implicit ipakcb in {}".format(filename))
+                print(f"   implicit ipakcb in {filename}")
         if "modflowdrt" in pak_type_str:
             try:
                 nppak = int(t[2])
                 imax += 1
             except:
                 if model.verbose:
-                    print("   implicit nppak in {}".format(filename))
+                    print(f"   implicit nppak in {filename}")
             if nppak > 0:
                 mxl = int(t[3])
                 imax += 1
                 if model.verbose:
                     print(
-                        "   Parameters detected. Number of "
-                        "parameters = {}".format(nppak)
+                        f"   Parameters detected. Number of parameters = {nppak}"
                     )
 
         options = []
@@ -966,13 +981,14 @@ class Package(PackageInterface):
                 it += 1
 
         # add auxillary information to nwt options
-        if nwt_options is not None and options:
-            if options[0] == "noprint":
-                nwt_options.noprint = True
-                if len(options) > 1:
-                    nwt_options.auxillary = options[1:]
-            else:
-                nwt_options.auxillary = options
+        if nwt_options is not None:
+            if options:
+                if options[0] == "noprint":
+                    nwt_options.noprint = True
+                    if len(options) > 1:
+                        nwt_options.auxillary = options[1:]
+                else:
+                    nwt_options.auxillary = options
 
             options = nwt_options
 
@@ -1027,7 +1043,7 @@ class Package(PackageInterface):
         current = None
         for iper in range(nper):
             if model.verbose:
-                msg = "   loading {} for kper {:5d}".format(pak_type, iper + 1)
+                msg = f"   loading {pak_type} for kper {iper + 1:5d}"
                 print(msg)
             line = f.readline()
             if line == "":
@@ -1039,7 +1055,7 @@ class Package(PackageInterface):
                 itmpp = int(t[1])
             except:
                 if model.verbose:
-                    print("   implicit itmpp in {}".format(filename))
+                    print(f"   implicit itmpp in {filename}")
 
             if itmp == 0:
                 bnd_output = None
@@ -1082,8 +1098,7 @@ class Package(PackageInterface):
                 except:
                     if model.verbose:
                         print(
-                            "  implicit static instance for "
-                            "parameter {}".format(pname)
+                            f"  implicit static instance for parameter {pname}"
                         )
 
                 par_dict, current_dict = pak_parms.get(pname)
@@ -1163,7 +1178,7 @@ class Package(PackageInterface):
         )
         if check:
             pak.check(
-                f="{}.chk".format(pak.name[0]),
+                f=f"{pak.name[0]}.chk",
                 verbose=pak.parent.verbose,
                 level=0,
             )

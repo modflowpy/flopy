@@ -1,4 +1,5 @@
 # --------------------- gwf evt options ---------------------
+# flopy multi-package
 
 block options
 name fixed_cell

@@ -1,18 +1,27 @@
-import os
-import shutil
+from ci_framework import FlopyTestSetup, base_test_dir
 
 import flopy
-from flopy.mf6.modflow import mfgwfriv, mfgwfsto, mfgwfoc, mfgwfwel, mfgwfdrn
-from flopy.mf6.modflow import mfims, mftdis, mfgwfic, mfgwfnpf, mfgwfdis, mfgwf
+from flopy.mf6.modflow import (
+    mfgwf,
+    mfgwfdis,
+    mfgwfdrn,
+    mfgwfic,
+    mfgwfnpf,
+    mfgwfoc,
+    mfgwfriv,
+    mfgwfsto,
+    mfgwfwel,
+    mfims,
+    mftdis,
+)
 from flopy.mf6.modflow.mfsimulation import MFSimulation
 
-out_dir = os.path.join("temp", "t502")
-if os.path.exists(out_dir):
-    shutil.rmtree(out_dir)
-os.mkdir(out_dir)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def test_create_and_run_model():
+
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=base_dir)
 
     # names
     sim_name = "testsim"
@@ -20,9 +29,9 @@ def test_create_and_run_model():
     exe_name = "mf6"
 
     # set up simulation
-    tdis_name = "{}.tdis".format(sim_name)
+    tdis_name = f"{sim_name}.tdis"
     sim = MFSimulation(
-        sim_name=sim_name, version="mf6", exe_name=exe_name, sim_ws=out_dir
+        sim_name=sim_name, version="mf6", exe_name=exe_name, sim_ws=base_dir
     )
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis = mftdis.ModflowTdis(
@@ -31,7 +40,7 @@ def test_create_and_run_model():
 
     # create model instance
     model = mfgwf.ModflowGwf(
-        sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
     )
 
     # create solution and add the model
@@ -39,11 +48,11 @@ def test_create_and_run_model():
         sim,
         print_option="ALL",
         complexity="SIMPLE",
-        outer_hclose=0.00001,
+        outer_dvclose=0.00001,
         outer_maximum=50,
         under_relaxation="NONE",
         inner_maximum=30,
-        inner_hclose=0.00001,
+        inner_dvclose=0.00001,
         linear_acceleration="CG",
         preconditioner_levels=7,
         preconditioner_drop_tolerance=0.01,
@@ -62,7 +71,7 @@ def test_create_and_run_model():
         delc=500.0,
         top=100.0,
         botm=50.0,
-        filename="{}.dis".format(model_name),
+        filename=f"{model_name}.dis",
     )
     ic_package = mfgwfic.ModflowGwfic(
         model,
@@ -78,7 +87,7 @@ def test_create_and_run_model():
             100.0,
             100.0,
         ],
-        filename="{}.ic".format(model_name),
+        filename=f"{model_name}.ic",
     )
     npf_package = mfgwfnpf.ModflowGwfnpf(
         model, save_flows=True, icelltype=1, k=100.0
@@ -118,8 +127,8 @@ def test_create_and_run_model():
     )
     oc_package = mfgwfoc.ModflowGwfoc(
         model,
-        budget_filerecord=["{}.cbc".format(model_name)],
-        head_filerecord=["{}.hds".format(model_name)],
+        budget_filerecord=[f"{model_name}.cbc"],
+        head_filerecord=[f"{model_name}.hds"],
         saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
         printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
     )
@@ -139,7 +148,8 @@ def test_create_and_run_model():
 
     # run the simulation and look for output
     if run:
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"{base_dir} did not run" f""
         # head = sim.simulation_data.mfdata[(model_name, 'HDS', 'HEAD')]
         # print('HEAD: ', head)
 

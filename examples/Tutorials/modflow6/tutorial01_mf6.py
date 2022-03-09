@@ -20,8 +20,10 @@
 # ## Getting Started
 
 import os
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
+
 import flopy
 
 # We are creating a square model with a specified head equal to `h1` along
@@ -79,7 +81,7 @@ ims = flopy.mf6.ModflowIms(
 
 # Create the Flopy groundwater flow (gwf) model object
 
-model_nam_file = "{}.nam".format(name)
+model_nam_file = f"{name}.nam"
 gwf = flopy.mf6.ModflowGwf(
     sim,
     modelname=name,
@@ -169,9 +171,9 @@ wel = flopy.mf6.ModflowGwfwel(
 # Save heads and budget output to binary files and print heads to the model
 # listing file at the end of the stress period.
 
-headfile = "{}.hds".format(name)
+headfile = f"{name}.hds"
 head_filerecord = [headfile]
-budgetfile = "{}.cbb".format(name)
+budgetfile = f"{name}.cbb"
 budget_filerecord = [budgetfile]
 saverecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
 printrecord = [("HEAD", "LAST")]
@@ -221,7 +223,7 @@ h = gwf.output.head().get_data(kstpkper=(0, 0))
 x = y = np.linspace(0, L, N)
 y = y[::-1]
 vmin, vmax = 90.0, 100.0
-contour_intervals = np.arange(90, 100.1, 1.)
+contour_intervals = np.arange(90, 100.1, 1.0)
 
 
 # ### Plot a Map of Layer 1
@@ -229,7 +231,7 @@ contour_intervals = np.arange(90, 100.1, 1.)
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 c = ax.contour(x, y, h[0], contour_intervals, colors="black")
-plt.clabel(c, fmt="%2.1f");
+plt.clabel(c, fmt="%2.1f")
 
 
 # ### Plot a Map of Layer 10
@@ -239,7 +241,7 @@ y = y[::-1]
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 c = ax.contour(x, y, h[-1], contour_intervals, colors="black")
-plt.clabel(c, fmt="%1.1f");
+plt.clabel(c, fmt="%1.1f")
 
 # ### Plot a Cross-section along row 25
 
@@ -247,7 +249,7 @@ z = np.linspace(-H / Nlay / 2, -H + H / Nlay / 2, Nlay)
 fig = plt.figure(figsize=(9, 3))
 ax = fig.add_subplot(1, 1, 1, aspect="auto")
 c = ax.contour(x, z, h[:, int(N / 4), :], contour_intervals, colors="black")
-plt.clabel(c, fmt="%1.1f");
+plt.clabel(c, fmt="%1.1f")
 
 # ### Use the FloPy `PlotMapView()` capabilities for MODFLOW 6
 #
@@ -270,7 +272,7 @@ ax.clabel(contours, fmt="%2.1f")
 cb = plt.colorbar(pa, shrink=0.5, ax=ax)
 # second subplot
 ax = axes[1]
-ax.set_title("Model Layer {}".format(Nlay))
+ax.set_title(f"Model Layer {Nlay}")
 modelmap = flopy.plot.PlotMapView(model=gwf, ax=ax, layer=Nlay - 1)
 linecollection = modelmap.plot_grid(lw=0.5, color="0.5")
 pa = modelmap.plot_array(h, vmin=vmin, vmax=vmax)
@@ -281,7 +283,7 @@ contours = modelmap.contour_array(
     colors="black",
 )
 ax.clabel(contours, fmt="%2.1f")
-cb = plt.colorbar(pa, shrink=0.5, ax=ax);
+cb = plt.colorbar(pa, shrink=0.5, ax=ax)
 
 
 # ### Use the FloPy `PlotCrossSection()` capabilities for MODFLOW 6
@@ -305,7 +307,7 @@ contours = modelmap.contour_array(
     colors="black",
 )
 ax.clabel(contours, fmt="%2.1f")
-cb = plt.colorbar(pa, shrink=0.5, ax=ax);
+cb = plt.colorbar(pa, shrink=0.5, ax=ax)
 
 
 # ## Determine the Flow Residual
@@ -318,15 +320,15 @@ cb = plt.colorbar(pa, shrink=0.5, ax=ax);
 #
 # First extract the `FLOW-JA-FACE` array from the cell-by-cell budget file
 
-flowja = gwf.oc.output.budget().get_data(
-    text="FLOW-JA-FACE", kstpkper=(0, 0)
-)[0]
+flowja = gwf.oc.output.budget().get_data(text="FLOW-JA-FACE", kstpkper=(0, 0))[
+    0
+]
 
 # Next extract the flow residual. The MODFLOW 6 binary grid file is passed
 # into the function because it contains the ia array that defines
 # the location of the diagonal position in the `FLOW-JA-FACE` array.
 
-grb_file = "{}.dis.grb".format(name)
+grb_file = f"{name}.dis.grb"
 residual = flopy.mf6.utils.get_residuals(flowja, grb_file=grb_file)
 
 # ### Plot a Map of the flow error in Layer 10
@@ -343,6 +345,4 @@ contours = modelmap.contour_array(
     colors="black",
 )
 ax.clabel(contours, fmt="%2.1f")
-plt.colorbar(pa, shrink=0.5);
-
-
+plt.colorbar(pa, shrink=0.5)

@@ -1,6 +1,7 @@
-import shutil
 import os
+
 import numpy as np
+
 import flopy
 from flopy.utils.gridgen import Gridgen
 
@@ -12,12 +13,9 @@ try:
 except ImportError:
     shapefile = None
 
-cpth = os.path.join("temp", "t061")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-# make the directory
-os.makedirs(cpth)
+from ci_framework import FlopyTestSetup, base_test_dir
+
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 exe_name = "gridgen"
 v = flopy.which(exe_name)
@@ -28,6 +26,8 @@ if v is None:
 
 
 def test_gridgen():
+    model_ws = f"{base_dir}_test_gridgen"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     # define the base grid and then create a couple levels of nested
     # refinement
@@ -67,8 +67,9 @@ def test_gridgen():
         botm=botm,
     )
 
-    ms_u = flopy.modflow.Modflow(
-        modelname="mymfusgmodel", model_ws=cpth, version="mfusg"
+    ms_u = flopy.mfusg.MfUsg(
+        modelname="mymfusgmodel",
+        model_ws=model_ws,
     )
     dis_usg = flopy.modflow.ModflowDis(
         ms_u,
@@ -81,7 +82,7 @@ def test_gridgen():
         botm=botm,
     )
 
-    gridgen_ws = cpth
+    gridgen_ws = model_ws
     g = Gridgen(dis5, model_ws=gridgen_ws, exe_name=exe_name)
     g6 = Gridgen(dis6, model_ws=gridgen_ws, exe_name=exe_name)
     gu = Gridgen(
@@ -191,10 +192,7 @@ def test_gridgen():
         points = [(4750.0, 5250.0)]
         cells = g.intersect(points, "point", 0)
         n = cells["nodenumber"][0]
-        msg = (
-            "gridgen point intersect did not identify the correct "
-            "cell {} <> {}".format(n, 308)
-        )
+        msg = f"gridgen point intersect did not identify the correct cell {n} <> 308"
         assert n == 308, msg
 
         # test the gridgen line intersection
@@ -231,7 +229,7 @@ def test_gridgen():
         assert nlist == nlist2, msg
 
         # test getting a modflow-usg disu package
-        mu = flopy.modflow.Modflow(version="mfusg", structured=False)
+        mu = flopy.mfusg.MfUsg(structured=False)
         disu = g.get_disu(mu)
 
         # test mfusg with vertical pass-through (True above at instantiation)

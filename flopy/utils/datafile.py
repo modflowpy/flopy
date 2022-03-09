@@ -3,10 +3,7 @@ Module to read MODFLOW output files.  The module contains shared
 abstract classes that should not be directly accessed.
 
 """
-from __future__ import print_function
 import numpy as np
-import flopy.utils
-from ..discretization.structuredgrid import StructuredGrid
 
 
 class Header:
@@ -121,7 +118,7 @@ class Header:
                 "Available types are:".format(self.header_type)
             )
             for idx, t in enumerate(self.header_types):
-                print("  {0} {1}".format(idx + 1, t))
+                print(f"  {idx + 1} {t}")
         return
 
     def get_dtype(self):
@@ -155,6 +152,8 @@ class LayerFile:
     """
 
     def __init__(self, filename, precision, verbose, kwargs):
+        from ..discretization.structuredgrid import StructuredGrid
+
         self.filename = filename
         self.precision = precision
         self.verbose = verbose
@@ -165,7 +164,7 @@ class LayerFile:
         self.file.seek(0, 0)  # reset to beginning
         assert self.file.tell() == 0
         if totalbytes == 0:
-            raise IOError("datafile error: file is empty: " + str(filename))
+            raise ValueError(f"datafile error: file is empty: {filename}")
         self.nrow = 0
         self.ncol = 0
         self.nlay = 0
@@ -179,7 +178,7 @@ class LayerFile:
         elif precision == "double":
             self.realtype = np.float64
         else:
-            raise Exception("Unknown precision specified: " + precision)
+            raise Exception(f"Unknown precision specified: {precision}")
 
         self.model = None
         self.dis = None
@@ -195,7 +194,7 @@ class LayerFile:
             self.mg = kwargs.pop("modelgrid")
         if len(kwargs.keys()) > 0:
             args = ",".join(kwargs.keys())
-            raise Exception("LayerFile error: unrecognized kwargs: " + args)
+            raise Exception(f"LayerFile error: unrecognized kwargs: {args}")
 
         # read through the file and build the pointer index
         self._build_index()
@@ -266,13 +265,11 @@ class LayerFile:
             ).transpose()
         ).transpose()
         if mflay != None:
-            attrib_dict = {
-                "{}{}".format(attrib_name, mflay): plotarray[0, :, :]
-            }
+            attrib_dict = {f"{attrib_name}{mflay}": plotarray[0, :, :]}
         else:
             attrib_dict = {}
             for k in range(plotarray.shape[0]):
-                name = "{}{}".format(attrib_name, k)
+                name = f"{attrib_name}{k}"
                 attrib_dict[name] = plotarray[k]
 
         from ..export.shapefile_utils import write_grid_shapefile
@@ -286,7 +283,7 @@ class LayerFile:
         totim=None,
         mflay=None,
         filename_base=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot 3-D model output data in a specific location
@@ -375,8 +372,7 @@ class LayerFile:
                 i0 = 0
                 i1 = self.nlay
             filenames = [
-                "{}_Layer{}.{}".format(filename_base, k + 1, fext)
-                for k in range(i0, i1)
+                f"{filename_base}_Layer{k + 1}.{fext}" for k in range(i0, i1)
             ]
 
         # make sure we have a (lay,row,col) shape plotarray
@@ -386,7 +382,7 @@ class LayerFile:
             ).transpose()
         ).transpose()
 
-        from flopy.plot.plotutil import PlotUtilities
+        from ..plot.plotutil import PlotUtilities
 
         return PlotUtilities._plot_array_helper(
             plotarray,
@@ -395,7 +391,7 @@ class LayerFile:
             filenames=filenames,
             mflay=mflay,
             modelgrid=self.mg,
-            **kwargs
+            **kwargs,
         )
 
     def _build_index(self):
@@ -428,7 +424,7 @@ class LayerFile:
         if totim >= 0.0:
             keyindices = np.where((self.recordarray["totim"] == totim))[0]
             if len(keyindices) == 0:
-                msg = "totim value ({}) not found in file...".format(totim)
+                msg = f"totim value ({totim}) not found in file..."
                 raise Exception(msg)
         else:
             raise Exception("Data not found...")
@@ -443,9 +439,7 @@ class LayerFile:
             ipos = self.iposarray[idx]
             ilay = self.recordarray["ilay"][idx]
             if self.verbose:
-                msg = "Byte position in file: {} for ".format(
-                    ipos
-                ) + "layer {}".format(ilay)
+                msg = f"Byte position in file: {ipos} for layer {ilay}"
                 print(msg)
             self.file.seek(ipos, 0)
             nrow = self.recordarray["nrow"][idx]
@@ -525,7 +519,7 @@ class LayerFile:
             )
             if idx[0].shape[0] == 0:
                 raise Exception(
-                    "get_data() error: kstpkper not found:{0}".format(kstpkper)
+                    f"get_data() error: kstpkper not found:{kstpkper}"
                 )
             totim1 = self.recordarray[idx]["totim"][0]
         elif totim is not None:

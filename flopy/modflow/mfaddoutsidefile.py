@@ -1,4 +1,3 @@
-from numpy import atleast_2d
 from ..pakbase import Package
 
 
@@ -8,9 +7,10 @@ class mfaddoutsidefile(Package):
     """
 
     def __init__(self, model, name, extension, unitnumber):
-        Package.__init__(
-            self, model, extension, name, unitnumber, allowDuplicates=True
-        )  # Call ancestor's init to set self.parent, extension, name and unit number
+        # call base package constructor
+        super().__init__(
+            model, extension, name, unitnumber, allowDuplicates=True
+        )
         self.parent.add_package(self)
 
     def __repr__(self):

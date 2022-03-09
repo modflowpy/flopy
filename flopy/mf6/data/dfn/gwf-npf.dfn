@@ -159,6 +159,49 @@ optional true
 longname keyword to indicate that specified K33 is a ratio
 description keyword to indicate that specified K33 is a ratio of K33 divided by K.  If this option is specified, then the K33 array entered in the NPF Package will be multiplied by K after being read.
 
+block options
+name tvk_filerecord
+type record tvk6 filein tvk_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name tvk6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname tvk keyword
+description keyword to specify that record corresponds to a time-varying hydraulic conductivity (TVK) file.  The behavior of TVK and a description of the input file is provided separately.
+
+block options
+name filein
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block options
+name tvk_filename
+type string
+preserve_case true
+in_record true
+reader urword
+optional false
+tagged false
+longname file name of TVK information
+description defines a time-varying hydraulic conductivity (TVK) input file.  Records in the TVK file can be used to change hydraulic conductivity properties at specified times or stress periods.
+
 
 # --------------------- gwf npf griddata ---------------------
 

@@ -5,9 +5,8 @@ mp7particledata module. Contains the ParticleData, CellDataType,
 
 """
 
-import os
 import numpy as np
-from ..utils.util_array import Util2d
+
 from ..utils.recarray_utils import create_empty_recarray
 
 
@@ -172,8 +171,7 @@ class ParticleData:
                 partlocs = np.array(partlocs, dtype=dtype)
         else:
             raise ValueError(
-                "{}: partlocs must be a list or "
-                "tuple with lists or tuples".format(self.name)
+                f"{self.name}: partlocs must be a list or tuple with lists or tuples"
             )
 
         # localx
@@ -439,8 +437,7 @@ class ParticleData:
                 )
             else:
                 raise TypeError(
-                    "MfList.fmt_string error: unknown vtype in "
-                    "field: {}".format(field)
+                    f"MfList.fmt_string error: unknown vtype in field: {field}"
                 )
         return " " + " ".join(fmts)
 
@@ -803,18 +800,12 @@ class LRCParticleData:
             )
 
         # item 2
-        f.write(
-            "{} {}\n".format(
-                self.particletemplatecount, self.totalcellregioncount
-            )
-        )
+        f.write(f"{self.particletemplatecount} {self.totalcellregioncount}\n")
 
         for sd, lrcregion in zip(self.subdivisiondata, self.lrcregions):
             # item 3
             f.write(
-                "{} {} {}\n".format(
-                    sd.templatesubdivisiontype, lrcregion.shape[0], sd.drape
-                )
+                f"{sd.templatesubdivisiontype} {lrcregion.shape[0]} {sd.drape}\n"
             )
 
             # item 4 or 5
@@ -824,7 +815,7 @@ class LRCParticleData:
             for row in lrcregion:
                 line = ""
                 for lrc in row:
-                    line += "{} ".format(lrc + 1)
+                    line += f"{lrc + 1} "
                 line += "\n"
                 f.write(line)
 
@@ -968,16 +959,12 @@ class NodeParticleData:
             )
 
         # item 2
-        f.write(
-            "{} {}\n".format(self.particletemplatecount, self.totalcellcount)
-        )
+        f.write(f"{self.particletemplatecount} {self.totalcellcount}\n")
 
         for sd, nodes in zip(self.subdivisiondata, self.nodedata):
             # item 3
             f.write(
-                "{} {} {}\n".format(
-                    sd.templatesubdivisiontype, nodes.shape[0], sd.drape
-                )
+                f"{sd.templatesubdivisiontype} {nodes.shape[0]} {sd.drape}\n"
             )
 
             # item 4 or 5
@@ -986,7 +973,7 @@ class NodeParticleData:
             # item 6
             line = ""
             for idx, node in enumerate(nodes):
-                line += " {}".format(node + 1)
+                line += f" {node + 1}"
                 lineend = False
                 if idx > 0:
                     if idx % 10 == 0 or idx == nodes.shape[0] - 1:

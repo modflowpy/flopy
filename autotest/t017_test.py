@@ -1,18 +1,18 @@
 # Test binary and formatted data readers
 import os
-import shutil
-import numpy as np
-import flopy
-from nose.tools import assert_raises
 
-cpth = os.path.join("temp", "t017")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-os.makedirs(cpth)
+import numpy as np
+import pytest
+from ci_framework import FlopyTestSetup, base_test_dir
+
+import flopy
+
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def test_formattedfile_read():
+    model_ws = f"{base_dir}_test_formattedfile_read"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     h = flopy.utils.FormattedHeadFile(
         os.path.join("..", "examples", "data", "mf2005_test", "test1tr.githds")
@@ -36,22 +36,25 @@ def test_formattedfile_read():
     ), "formatted head read using totim != head read using idx"
 
     ts = h.get_ts((0, 7, 5))
+    expected = 944.487
     assert np.isclose(
-        ts[0, 1], 944.487, 1e-6
-    ), "time series value ({}) != {}".format(ts[0, 1], 944.487)
+        ts[0, 1], expected, 1e-6
+    ), f"time series value ({ts[0, 1]}) != {expected}"
     h.close()
 
     # Check error when reading empty file
-    fname = os.path.join(cpth, "empty.githds")
+    fname = os.path.join(model_ws, "empty.githds")
     with open(fname, "w"):
         pass
-    with assert_raises(IOError):
+    with pytest.raises(ValueError):
         flopy.utils.FormattedHeadFile(fname)
 
     return
 
 
 def test_binaryfile_read():
+    model_ws = f"{base_dir}_test_binaryfile_read"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     h = flopy.utils.HeadFile(
         os.path.join("..", "examples", "data", "freyberg", "freyberg.githds")
@@ -59,7 +62,7 @@ def test_binaryfile_read():
     assert isinstance(h, flopy.utils.HeadFile)
 
     times = h.get_times()
-    assert np.isclose(times[0], 10.0), "times[0] != {}".format(times[0])
+    assert np.isclose(times[0], 10.0), f"times[0] != {times[0]}"
 
     kstpkper = h.get_kstpkper()
     assert kstpkper[0] == (0, 0), "kstpkper[0] != (0, 0)"
@@ -75,18 +78,19 @@ def test_binaryfile_read():
     ), "binary head read using totim != head read using idx"
 
     ts = h.get_ts((0, 7, 5))
+    expected = 26.00697135925293
     assert np.isclose(
-        ts[0, 1], 26.00697135925293
-    ), "time series value ({}) != {}".format(ts[0, 1], -26.00697135925293)
+        ts[0, 1], expected
+    ), f"time series value ({ts[0, 1]}) != {expected}"
     h.close()
 
     # Check error when reading empty file
-    fname = os.path.join(cpth, "empty.githds")
+    fname = os.path.join(model_ws, "empty.githds")
     with open(fname, "w"):
         pass
-    with assert_raises(IOError):
+    with pytest.raises(ValueError):
         flopy.utils.HeadFile(fname)
-    with assert_raises(IOError):
+    with pytest.raises(ValueError):
         flopy.utils.HeadFile(fname, "head", "single")
 
     return
@@ -102,9 +106,9 @@ def test_binaryfile_read_context():
         assert not h.file.closed
     assert h.file.closed
 
-    with assert_raises(ValueError) as e:
+    with pytest.raises(ValueError) as e:
         h.get_data()
-    assert str(e.exception) == "seek of closed file", str(e.exception)
+    assert str(e.value) == "seek of closed file", str(e.value)
 
 
 def test_cellbudgetfile_read_context():
@@ -117,9 +121,9 @@ def test_cellbudgetfile_read_context():
         assert not v.file.closed
     assert v.file.closed
 
-    with assert_raises(ValueError) as e:
+    with pytest.raises(ValueError) as e:
         v.get_data(text="DRAINS")
-    assert str(e.exception) == "seek of closed file", str(e.exception)
+    assert str(e.value) == "seek of closed file", str(e.value)
 
 
 def test_cellbudgetfile_read():
@@ -138,10 +142,9 @@ def test_cellbudgetfile_read():
         for record in records:
             t0 = v.get_data(kstpkper=t, text=record, full3D=True)[0]
             t1 = v.get_data(idx=idx, text=record, full3D=True)[0]
-            assert np.array_equal(
-                t0, t1
-            ), "binary budget item {0} read using kstpkper != binary budget item {0} read using idx".format(
-                record
+            assert np.array_equal(t0, t1), (
+                f"binary budget item {record} read using kstpkper != binary "
+                f"budget item {record} read using idx"
             )
             idx += 1
     v.close()
@@ -149,6 +152,8 @@ def test_cellbudgetfile_read():
 
 
 def test_cellbudgetfile_position():
+    model_ws = f"{base_dir}_test_cellbudgetfile_position"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     fpth = os.path.join(
         "..", "examples", "data", "zonbud_examples", "freyberg.gitcbc"
@@ -160,11 +165,11 @@ def test_cellbudgetfile_position():
     idx = 8767
     ipos = v.get_position(idx)
     ival = 50235424
-    assert ipos == ival, "position of index 8767 != {}".format(ival)
+    assert ipos == ival, f"position of index 8767 != {ival}"
 
     ipos = v.get_position(idx, header=True)
     ival = 50235372
-    assert ipos == ival, "position of index 8767 header != {}".format(ival)
+    assert ipos == ival, f"position of index 8767 header != {ival}"
 
     cbcd = []
     for i in range(idx, v.get_nrecords()):
@@ -177,7 +182,7 @@ def test_cellbudgetfile_position():
     length = os.path.getsize(fpth) - ipos
 
     buffsize = 32
-    opth = os.path.join(cpth, "end.cbc")
+    opth = os.path.join(model_ws, "end.cbc")
     with open(opth, "wb") as fout:
         while length:
             chunk = min(buffsize, length)
@@ -191,7 +196,7 @@ def test_cellbudgetfile_position():
     try:
         v2.list_records()
     except:
-        assert False, "could not list records on {}".format(opth)
+        assert False, f"could not list records on {opth}"
 
     names = v2.get_unique_record_names(decode=True)
 
@@ -201,14 +206,14 @@ def test_cellbudgetfile_position():
     v2.close()
 
     for i, (d1, d2) in enumerate(zip(cbcd, cbcd2)):
-        msg = "{} data from slice is not identical".format(names[i].rstrip())
+        msg = f"{names[i].rstrip()} data from slice is not identical"
         assert np.array_equal(d1, d2), msg
 
     # Check error when reading empty file
-    fname = os.path.join(cpth, "empty.gitcbc")
+    fname = os.path.join(model_ws, "empty.gitcbc")
     with open(fname, "w"):
         pass
-    with assert_raises(IOError):
+    with pytest.raises(ValueError):
         flopy.utils.CellBudgetFile(fname)
 
     return
@@ -225,9 +230,9 @@ def test_cellbudgetfile_readrecord():
     kstpkper = v.get_kstpkper()
     assert len(kstpkper) == 30, "length of kstpkper != 30"
 
-    with assert_raises(TypeError) as e:
+    with pytest.raises(TypeError) as e:
         v.get_data()
-    assert str(e.exception).startswith(
+    assert str(e.value).startswith(
         "get_data() missing 1 required argument"
     ), str(e.exception)
 
@@ -325,12 +330,14 @@ def test_cellbudgetfile_readrecord_waux():
 
 
 def test_binaryfile_writeread():
+    model_ws = f"{base_dir}_test_binaryfile_writeread"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     pth = os.path.join("..", "examples", "data", "nwt_test")
     model = "Pr3_MFNWT_lower.nam"
     ml = flopy.modflow.Modflow.load(model, version="mfnwt", model_ws=pth)
     # change the model work space
-    ml.change_model_ws(os.path.join("temp", "t017"))
+    ml.change_model_ws(model_ws)
     #
     ncol = ml.dis.ncol
     nrow = ml.dis.nrow
@@ -351,7 +358,7 @@ def test_binaryfile_writeread():
         kper=1,
     )
     b = ml.dis.botm.array[0, :, :].astype(np.float64)
-    pth = os.path.join("temp", "t017", "bottom.hds")
+    pth = os.path.join(model_ws, "bottom.hds")
     flopy.utils.Util2d.write_bin(b.shape, pth, b, header_data=header)
 
     bo = flopy.utils.HeadFile(pth, precision=precision)
@@ -381,7 +388,7 @@ def test_binaryfile_writeread():
         kper=1,
     )
     b = ml.dis.botm.array[0, :, :].astype(np.float32)
-    pth = os.path.join("temp", "t017", "bottom_single.hds")
+    pth = os.path.join(model_ws, "bottom_single.hds")
     flopy.utils.Util2d.write_bin(b.shape, pth, b, header_data=header)
 
     bo = flopy.utils.HeadFile(pth, precision=precision)

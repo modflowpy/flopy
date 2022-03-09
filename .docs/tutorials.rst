@@ -53,6 +53,18 @@ Contents:
    _notebooks/tutorial02_mf
 
 
+.IPYNB_CHECKPOINTS Tutorials
+----------------------------
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   _notebooks/tutorial01_mf-checkpoint
+   _notebooks/tutorial02_mf-checkpoint
+
+
 SEAWAT Tutorials
 ----------------
 

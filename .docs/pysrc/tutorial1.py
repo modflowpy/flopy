@@ -1,6 +1,8 @@
 import os
 import sys
+
 import numpy as np
+
 import flopy
 
 # Assign name and create modflow model object
@@ -52,10 +54,11 @@ mf.write_input()
 mf.run_model()
 
 import matplotlib.pyplot as plt
+
 import flopy.utils.binaryfile as bf
 
 plt.subplot(1, 1, 1, aspect="equal")
-hds = bf.HeadFile(modelname + ".hds")
+hds = bf.HeadFile(f"{modelname}.hds")
 head = hds.get_data(totim=1.0)
 levels = np.arange(1, 10, 1)
 extent = (delr / 2.0, Lx - delc / 2.0, Ly - delc / 2.0, delc / 2.0)
@@ -66,12 +69,12 @@ plt.savefig("tutorial1a.png")
 fig = plt.figure(figsize=(10, 10))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
-hds = bf.HeadFile(modelname + ".hds")
+hds = bf.HeadFile(f"{modelname}.hds")
 times = hds.get_times()
 head = hds.get_data(totim=times[-1])
 levels = np.linspace(0, 10, 11)
 
-cbb = bf.CellBudgetFile(modelname + ".cbc")
+cbb = bf.CellBudgetFile(f"{modelname}.cbc")
 kstpkper_list = cbb.get_kstpkper()
 frf = cbb.get_data(text="FLOW RIGHT FACE", totim=times[-1])[0]
 fff = cbb.get_data(text="FLOW FRONT FACE", totim=times[-1])[0]

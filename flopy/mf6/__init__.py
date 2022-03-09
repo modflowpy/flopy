@@ -1,9 +1,5 @@
-# imports
-from . import coordinates
-from . import data
-from .modflow import *
-from . import utils
-
-from .data import mfdatascalar, mfdatalist, mfdataarray
-from .mfmodel import MFModel
+from . import coordinates, data, utils
+from .data import mfdataarray, mfdatalist, mfdatascalar
 from .mfbase import ExtFileAction
+from .mfmodel import MFModel
+from .modflow import *

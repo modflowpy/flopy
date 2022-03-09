@@ -1,15 +1,13 @@
 import numpy as np
-from ..utils.mfenums import DiscretizationType
+
 from ..data.mfstructure import MFStructure
+from ..utils.mfenums import DiscretizationType
 
 
 class MFGridException(Exception):
     """
     Model grid related exception
     """
-
-    def __init__(self, error):
-        Exception.__init__(self, "MFGridException: {}".format(error))
 
 
 class ModelCell:
@@ -433,28 +431,28 @@ class ModelGrid:
         structure = MFStructure()
         if (
             package_recarray.search_data(
-                "dis{}".format(structure.get_version_string()), 0
+                f"dis{structure.get_version_string()}", 0
             )
             is not None
         ):
             return DiscretizationType.DIS
         elif (
             package_recarray.search_data(
-                "disv{}".format(structure.get_version_string()), 0
+                f"disv{structure.get_version_string()}", 0
             )
             is not None
         ):
             return DiscretizationType.DISV
         elif (
             package_recarray.search_data(
-                "disu{}".format(structure.get_version_string()), 0
+                f"disu{structure.get_version_string()}", 0
             )
             is not None
         ):
             return DiscretizationType.DISU
         elif (
             package_recarray.search_data(
-                "disl{}".format(structure.get_version_string()), 0
+                f"disl{structure.get_version_string()}", 0
             )
             is not None
         ):

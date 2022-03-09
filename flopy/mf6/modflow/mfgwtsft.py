@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on August 06, 2021 20:57:00 UTC
+# FILE created on March 07, 2022 16:59:43 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -52,10 +52,11 @@ class ModflowGwtsft(mfpackage.MFPackage):
           is read.
     print_concentration : boolean
         * print_concentration (boolean) keyword to indicate that the list of
-          reach stages will be printed to the listing file for every stress
-          period in which "HEAD PRINT" is specified in Output Control. If there
-          is no Output Control option and PRINT_STAGE is specified, then stages
-          are printed for the last time step of each stress period.
+          reach concentration will be printed to the listing file for every
+          stress period in which "CONCENTRATION PRINT" is specified in Output
+          Control. If there is no Output Control option and PRINT_CONCENTRATION
+          is specified, then concentration are printed for the last time step
+          of each stress period.
     print_flows : boolean
         * print_flows (boolean) keyword to indicate that the list of reach flow
           rates will be printed to the listing file for every stress period
@@ -73,6 +74,10 @@ class ModflowGwtsft(mfpackage.MFPackage):
     budget_filerecord : [budgetfile]
         * budgetfile (string) name of the binary output file to write budget
           information.
+    budgetcsv_filerecord : [budgetcsvfile]
+        * budgetcsvfile (string) name of the comma-separated value (CSV) output
+          file to write budget summary information. A budget summary record
+          will be written to this file for each time step of the simulation.
     timeseries : {varname:data} or timeseries data
         * Contains data for the ts package. Data can be stored in a dictionary
           containing data for the ts package with variable names as keys and
@@ -201,6 +206,9 @@ class ModflowGwtsft(mfpackage.MFPackage):
     budget_filerecord = ListTemplateGenerator(
         ("gwt6", "sft", "options", "budget_filerecord")
     )
+    budgetcsv_filerecord = ListTemplateGenerator(
+        ("gwt6", "sft", "options", "budgetcsv_filerecord")
+    )
     ts_filerecord = ListTemplateGenerator(
         ("gwt6", "sft", "options", "ts_filerecord")
     )
@@ -218,6 +226,10 @@ class ModflowGwtsft(mfpackage.MFPackage):
     dfn_file_name = "gwt-sft.dfn"
 
     dfn = [
+        [
+            "header",
+            "multi-package",
+        ],
         [
             "block options",
             "name flow_package_name",
@@ -340,6 +352,36 @@ class ModflowGwtsft(mfpackage.MFPackage):
         [
             "block options",
             "name budgetfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsv_filerecord",
+            "type record budgetcsv fileout budgetcsvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budgetcsv",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsvfile",
             "type string",
             "preserve_case true",
             "shape",
@@ -619,6 +661,7 @@ class ModflowGwtsft(mfpackage.MFPackage):
         save_flows=None,
         concentration_filerecord=None,
         budget_filerecord=None,
+        budgetcsv_filerecord=None,
         timeseries=None,
         observations=None,
         packagedata=None,
@@ -651,6 +694,9 @@ class ModflowGwtsft(mfpackage.MFPackage):
         )
         self.budget_filerecord = self.build_mfdata(
             "budget_filerecord", budget_filerecord
+        )
+        self.budgetcsv_filerecord = self.build_mfdata(
+            "budgetcsv_filerecord", budgetcsv_filerecord
         )
         self._ts_filerecord = self.build_mfdata("ts_filerecord", None)
         self._ts_package = self.build_child_package(

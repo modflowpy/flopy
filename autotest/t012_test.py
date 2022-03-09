@@ -1,6 +1,7 @@
 # Test loading of MODFLOW and MT3D models that come with MT3D distribution
 import os
 import sys
+
 import flopy
 
 pthtest = os.path.join("..", "examples", "data", "mt3d_test")
@@ -36,7 +37,7 @@ def test_mf2005_p07():
 
     if ismf2005 is not None:
         success, buff = mf.run_model(silent=False)
-        assert success, "{} did not run".format(mf.name)
+        assert success, f"{mf.name} did not run"
 
     namfile = "p7mt.nam"
     mt = flopy.mt3d.mt.Mt3dms.load(
@@ -56,7 +57,7 @@ def test_mf2005_p07():
         success, buff = mt.run_model(
             silent=False, normal_msg="program completed."
         )
-        assert success, "{} did not run".format(mt.name)
+        assert success, f"{mt.name} did not run"
         os.remove(os.path.join(cpth, ftlfile))
     return
 
@@ -75,7 +76,7 @@ def test_mf2000_p07():
 
     if ismf2k is not None:
         success, buff = mf.run_model(silent=True)
-        assert success, "{} did not run".format(mf.name)
+        assert success, f"{mf.name} did not run"
 
     namfile = "p7mt.nam"
     mt = flopy.mt3d.mt.Mt3dms.load(
@@ -89,7 +90,7 @@ def test_mf2000_p07():
         success, buff = mt.run_model(
             silent=False, normal_msg="program completed."
         )
-        assert success, "{} did not run".format(mt.name)
+        assert success, f"{mt.name} did not run"
         os.remove(os.path.join(cpth, ftlfile))
     return
 
@@ -107,7 +108,7 @@ def test_mf2000_HSSTest():
     mf.write_input()
     if ismf2k is not None:
         success, buff = mf.run_model(silent=True)
-        assert success, "{} did not run".format(mf.name)
+        assert success, f"{mf.name} did not run"
     namfile = "hsstest_mt.nam"
     mt = flopy.mt3d.mt.Mt3dms.load(
         namfile, model_ws=pth, verbose=True, exe_name=mt3d_exe
@@ -122,7 +123,7 @@ def test_mf2000_HSSTest():
         success, buff = mt.run_model(
             silent=False, normal_msg="program completed."
         )
-        assert success, "{} did not run".format(mt.name)
+        assert success, f"{mt.name} did not run"
         os.remove(os.path.join(cpth, ftlfile))
     return
 
@@ -158,7 +159,7 @@ def test_mf2000_MultiDiffusion():
     mf.write_input()
     if ismf2k is not None:
         success, buff = mf.run_model(silent=True)
-        assert success, "{} did not run".format(mf.name)
+        assert success, f"{mf.name} did not run"
     namfile = "P7MT.NAM"
     mt = flopy.mt3d.mt.Mt3dms.load(
         namfile, model_ws=pth, verbose=True, exe_name=mt3d_exe
@@ -171,7 +172,7 @@ def test_mf2000_MultiDiffusion():
         success, buff = mt.run_model(
             silent=False, normal_msg="program completed."
         )
-        assert success, "{} did not run".format(mt.name)
+        assert success, f"{mt.name} did not run"
         os.remove(os.path.join(cpth, ftlfile))
     return
 
@@ -189,7 +190,7 @@ def test_mf2000_reinject():
     mf.write_input()
     if ismf2k is not None:
         success, buff = mf.run_model(silent=True)
-        assert success, "{} did not run".format(mf.name)
+        assert success, f"{mf.name} did not run"
 
     namfile = "p3mt.nam"
     mt = flopy.mt3d.mt.Mt3dms.load(
@@ -204,7 +205,7 @@ def test_mf2000_reinject():
         success, buff = mt.run_model(
             silent=False, normal_msg="program completed."
         )
-        assert success, "{} did not run".format(mt.name)
+        assert success, f"{mt.name} did not run"
         os.remove(os.path.join(cpth, ftlfile))
     return
 
@@ -222,7 +223,7 @@ def test_mf2000_SState():
     mf.write_input()
     if ismf2k is not None:
         success, buff = mf.run_model(silent=True)
-        assert success, "{} did not run".format(mf.name)
+        assert success, f"{mf.name} did not run"
 
     namfile = "SState_mt.nam"
     mt = flopy.mt3d.mt.Mt3dms.load(
@@ -237,7 +238,7 @@ def test_mf2000_SState():
         success, buff = mt.run_model(
             silent=False, normal_msg="program completed."
         )
-        assert success, "{} did not run".format(mt.name)
+        assert success, f"{mt.name} did not run"
         os.remove(os.path.join(cpth, ftlfile))
     return
 
@@ -257,7 +258,7 @@ def test_mf2000_tob():
     mf.write_input()
     if ismf2k is not None:
         success, buff = mf.run_model(silent=True)
-        assert success, "{} did not run".format(mf.name)
+        assert success, f"{mf.name} did not run"
 
     namfile = "p7mt.nam"
     mt = flopy.mt3d.mt.Mt3dms.load(
@@ -271,7 +272,7 @@ def test_mf2000_tob():
         success, buff = mt.run_model(
             silent=False, normal_msg="program completed."
         )
-        assert success, "{} did not run".format(mt.name)
+        assert success, f"{mt.name} did not run"
         os.remove(os.path.join(cpth, ftlfile))
     return
 
@@ -289,7 +290,7 @@ def test_mf2000_zeroth():
     mf.write_input()
     if ismf2k is not None:
         success, buff = mf.run_model(silent=True)
-        assert success, "{} did not run".format(mf.name)
+        assert success, f"{mf.name} did not run"
 
     namfile = "z0mt.nam"
     mt = flopy.mt3d.mt.Mt3dms.load(
@@ -303,7 +304,7 @@ def test_mf2000_zeroth():
         success, buff = mt.run_model(
             silent=False, normal_msg="program completed."
         )
-        assert success, "{} did not run".format(mt.name)
+        assert success, f"{mt.name} did not run"
         os.remove(os.path.join(cpth, ftlfile))
     return
 
@@ -332,7 +333,7 @@ def test_mfnwt_CrnkNic():
         mf.write_input()
         if ismfnwt is not None:
             success, buff = mf.run_model(silent=False)
-            assert success, "{} did not run".format(mf.name)
+            assert success, f"{mf.name} did not run"
 
         namefile = "CrnkNic.mtnam"
         mt = flopy.mt3d.mt.Mt3dms.load(
@@ -352,7 +353,7 @@ def test_mfnwt_CrnkNic():
             success, buff = mt.run_model(
                 silent=False, normal_msg="program completed."
             )
-            assert success, "{} did not run".format(mt.name)
+            assert success, f"{mt.name} did not run"
             os.remove(os.path.join(cpth, ftlfile))
     return
 
@@ -380,7 +381,7 @@ def test_mfnwt_LKT():
     success = False
     if ismfnwt is not None:
         success, buff = mf.run_model(silent=False)
-        assert success, "{} did not run".format(mf.name)
+        assert success, f"{mf.name} did not run"
 
     namefile = "lkt_mt.nam"
     mt = flopy.mt3d.mt.Mt3dms.load(
@@ -403,7 +404,7 @@ def test_mfnwt_LKT():
         success, buff = mt.run_model(
             silent=False, normal_msg="program completed."
         )
-        assert success, "{} did not run".format(mt.name)
+        assert success, f"{mt.name} did not run"
         os.remove(os.path.join(cpth, ftlfile))
     return
 
@@ -425,7 +426,7 @@ def test_mfnwt_keat_uzf():
     mf.write_input()
     if ismfnwt is not None:
         success, buff = mf.run_model(silent=True)
-        assert success, "{} did not run".format(mf.name)
+        assert success, f"{mf.name} did not run"
 
     namefile = "Keat_UZF_mt.nam"
     mt = flopy.mt3d.mt.Mt3dms.load(
@@ -450,7 +451,7 @@ def test_mfnwt_keat_uzf():
         success, buff = mt.run_model(
             silent=False, normal_msg="program completed."
         )
-        assert success, "{} did not run".format(mt.name)
+        assert success, f"{mt.name} did not run"
         os.remove(os.path.join(cpth, ftlfile))
     return
 

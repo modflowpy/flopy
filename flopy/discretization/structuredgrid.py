@@ -1,36 +1,10 @@
 import copy
+import inspect
 import os.path
 
 import numpy as np
-from .grid import Grid, CachedData
 
-try:
-    from numpy.lib import NumpyVersion
-
-    numpy115 = NumpyVersion(np.__version__) >= "1.15.0"
-except ImportError:
-    numpy115 = False
-
-if not numpy115:
-
-    def flip_numpy115(m, axis=None):
-        """Provide same behavior for np.flip since numpy 1.15.0."""
-        import numpy.core.numeric as _nx
-        from numpy.core.numeric import asarray
-
-        if not hasattr(m, "ndim"):
-            m = asarray(m)
-        if axis is None:
-            indexer = (np.s_[::-1],) * m.ndim
-        else:
-            axis = _nx.normalize_axis_tuple(axis, m.ndim)
-            indexer = [np.s_[:]] * m.ndim
-            for ax in axis:
-                indexer[ax] = np.s_[::-1]
-            indexer = tuple(indexer)
-        return m[indexer]
-
-    np.flip = flip_numpy115
+from .grid import CachedData, Grid
 
 
 def array_at_verts_basic2d(a):
@@ -189,15 +163,15 @@ class StructuredGrid(Grid):
                 self.__nlay = nlay
             else:
                 if laycbd is not None:
-                    self.__nlay = len(botm) - np.sum(laycbd > 0)
+                    self.__nlay = len(botm) - np.count_nonzero(laycbd)
                 else:
                     self.__nlay = len(botm)
         else:
             self.__nlay = nlay
         if laycbd is not None:
-            self.__laycbd = laycbd
+            self._laycbd = laycbd
         else:
-            self.__laycbd = np.zeros(self.__nlay or (), dtype=int)
+            self._laycbd = np.zeros(self.__nlay or (), dtype=int)
 
     ####################
     # Properties
@@ -464,7 +438,7 @@ class StructuredGrid(Grid):
                 z = np.empty((self.__nlay, self.__nrow, self.__ncol))
                 z[0, :, :] = (self._top[:, :] + self._botm[0, :, :]) / 2.0
                 ibs = np.arange(self.__nlay)
-                quasi3d = [cbd != 0 for cbd in self.__laycbd]
+                quasi3d = [cbd != 0 for cbd in self._laycbd]
                 if np.any(quasi3d):
                     ibs[1:] = ibs[1:] + np.cumsum(quasi3d)[: self.__nlay - 1]
                 for l, ib in enumerate(ibs[1:], 1):
@@ -753,10 +727,6 @@ class StructuredGrid(Grid):
         -------
             list of Polygon objects
         """
-        try:
-            import matplotlib.path as mpath
-        except ImportError:
-            raise ImportError("matplotlib required to use this method")
         cache_index = "xyzgrid"
         if (
             cache_index not in self._cache_dict
@@ -773,7 +743,7 @@ class StructuredGrid(Grid):
     ###############
     ### Methods ###
     ###############
-    def intersect(self, x, y, local=False, forgive=False):
+    def intersect(self, x, y, z=None, local=False, forgive=False):
         """
         Get the row and column of a point with coordinates x and y
 
@@ -786,6 +756,9 @@ class StructuredGrid(Grid):
             The x-coordinate of the requested point
         y : float
             The y-coordinate of the requested point
+        z : float
+            Optional z-coordinate of the requested point (will return layer,
+            row, column) if supplied
         local: bool (optional)
             If True, x and y are in local coordinates (defaults to False)
         forgive: bool (optional)
@@ -800,6 +773,10 @@ class StructuredGrid(Grid):
             The column number
 
         """
+        # trigger interface change warning
+        frame_info = inspect.getframeinfo(inspect.currentframe())
+        self._warn_intersect(frame_info.filename, frame_info.lineno)
+
         # transform x and y to local coordinates
         x, y = super().intersect(x, y, local, forgive)
 
@@ -829,7 +806,28 @@ class StructuredGrid(Grid):
             row = np.where(ycomp)[0][-1]
         if np.any(np.isnan([row, col])):
             row = col = np.nan
-        return row, col
+            if z is not None:
+                return None, row, col
+
+        if z is None:
+            return row, col
+
+        lay = np.nan
+        for layer in range(self.__nlay):
+            if (
+                self.top_botm[layer, row, col]
+                >= z
+                >= self.top_botm[layer + 1, row, col]
+            ):
+                lay = layer
+                break
+
+        if np.any(np.isnan([lay, row, col])):
+            lay = row = col = np.nan
+            if not forgive:
+                raise Exception("point given is outside the model area")
+
+        return lay, row, col
 
     def _cell_vert_list(self, i, j):
         """Get vertices for a single cell or sequence of i, j locations."""
@@ -1562,7 +1560,7 @@ class StructuredGrid(Grid):
                 plotarray = plotarray[layer, :, :]
         else:
             raise Exception("Array to plot must be of dimension 1, 2, or 3")
-        msg = "{} /= {}".format(plotarray.shape, required_shape)
+        msg = f"{plotarray.shape} /= {required_shape}"
         assert plotarray.shape == required_shape, msg
         return plotarray
 
@@ -1643,11 +1641,10 @@ class StructuredGrid(Grid):
 
         grb_obj = MfGrdFile(file_path, verbose=verbose)
         if grb_obj.grid_type != "DIS":
-            err_msg = (
-                "Binary grid file ({}) ".format(os.path.basename(file_path))
-                + "is not a structured (DIS) grid."
+            raise ValueError(
+                f"Binary grid file ({os.path.basename(file_path)}) "
+                "is not a structured (DIS) grid."
             )
-            raise ValueError(err_msg)
 
         idomain = grb_obj.idomain
         xorigin = grb_obj.xorigin

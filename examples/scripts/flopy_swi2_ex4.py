@@ -1,14 +1,11 @@
-from __future__ import print_function
-
 import os
 import platform
 import sys
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 import flopy
-
-import matplotlib.pyplot as plt
 
 # --modify default matplotlib settings
 updates = {
@@ -27,7 +24,7 @@ plt.rcParams.update(updates)
 def LegBar(ax, x0, y0, t0, dx, dy, dt, cc):
     for c in cc:
         ax.plot([x0, x0 + dx], [y0, y0], color=c, linewidth=4)
-        ctxt = "{0:=3d} years".format(t0)
+        ctxt = f"{t0:=3d} years"
         ax.text(x0 + 2.0 * dx, y0 + dy / 2.0, ctxt, size=5)
         y0 += dy
         t0 += dt
@@ -62,7 +59,7 @@ def run():
             if os.path.isdir(fpth):
                 continue
             if ".py" != os.path.splitext(f)[1].lower():
-                print("  removing...{}".format(os.path.basename(f)))
+                print(f"  removing...{os.path.basename(f)}")
                 try:
                     os.remove(fpth)
                 except:
@@ -299,7 +296,7 @@ def run():
     # Load the simulation 1 `ZETA` data and `ZETA` observations.
     # read base model zeta
     zfile = flopy.utils.CellBudgetFile(
-        os.path.join(workspace, modelname + ".zta")
+        os.path.join(workspace, f"{modelname}.zta")
     )
     kstpkper = zfile.get_kstpkper()
     zeta = []
@@ -308,13 +305,13 @@ def run():
     zeta = np.array(zeta)
     # read swi obs
     zobs = np.genfromtxt(
-        os.path.join(workspace, modelname + ".zobs.out"), names=True
+        os.path.join(workspace, f"{modelname}.zobs.out"), names=True
     )
 
     # Load the simulation 2 `ZETA` data and `ZETA` observations.
     # read saltwater well model zeta
     zfile2 = flopy.utils.CellBudgetFile(
-        os.path.join(workspace, modelname2 + ".zta")
+        os.path.join(workspace, f"{modelname2}.zta")
     )
     kstpkper = zfile2.get_kstpkper()
     zeta2 = []
@@ -323,7 +320,7 @@ def run():
     zeta2 = np.array(zeta2)
     # read swi obs
     zobs2 = np.genfromtxt(
-        os.path.join(workspace, modelname2 + ".zobs.out"), names=True
+        os.path.join(workspace, f"{modelname2}.zobs.out"), names=True
     )
 
     # Create arrays for the x-coordinates and the output years
@@ -367,7 +364,7 @@ def run():
             drawstyle="steps-mid",
             linewidth=0.5,
             color=cc[idx],
-            label="{:2d} years".format(years[idx]),
+            label=f"{years[idx]:2d} years",
         )
         # layer 2
         ax.plot(
@@ -425,7 +422,7 @@ def run():
             drawstyle="steps-mid",
             linewidth=0.5,
             color=cc[idx - 5],
-            label="{:2d} years".format(years[idx]),
+            label=f"{years[idx]:2d} years",
         )
         # layer 2
         ax.plot(
@@ -483,7 +480,7 @@ def run():
             drawstyle="steps-mid",
             linewidth=0.5,
             color=cc[idx - 5],
-            label="{:2d} years".format(years[idx]),
+            label=f"{years[idx]:2d} years",
         )
         # layer 2
         ax.plot(
@@ -582,7 +579,7 @@ def run():
         size="7",
     )
 
-    outfig = os.path.join(workspace, "Figure09_swi2ex4.{0}".format(fext))
+    outfig = os.path.join(workspace, f"Figure09_swi2ex4.{fext}")
     fig.savefig(outfig, dpi=300)
     print("created...", outfig)
 

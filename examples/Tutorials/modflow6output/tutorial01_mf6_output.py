@@ -18,11 +18,13 @@
 # by using the built in `.output` attribute on any MODFLOW 6 model or
 # package object
 
-# ## Package import
-import flopy
 import os
 import platform
+
 import numpy as np
+
+# ## Package import
+import flopy
 
 # ## Load a simple demonstration model
 exe_name = "mf6"
@@ -37,10 +39,12 @@ else:
     )
 # load the model
 sim = flopy.mf6.MFSimulation.load(
-    sim_ws=sim_ws, exe_name=exe_name, verbosity_level=0,
+    sim_ws=sim_ws,
+    exe_name=exe_name,
+    verbosity_level=0,
 )
 # change the simulation path, rewrite the files, and run the model
-sim_ws = os.path.join("..", "..", "..", "autotest", "temp")
+sim_ws = os.path.join("..", "..", "autotest", "temp", "mf6_output")
 sim.set_sim_path(sim_ws)
 sim.write_simulation(silent=True)
 sim.run_simulation(silent=True)
@@ -58,6 +62,10 @@ sim.run_simulation(silent=True)
 # | budget()              | Method to get the `CellBudgetFile` object for  |
 # |                       | the model. Accessed from the model object or   |
 # |                       | the OC package object                          |
+# +-----------------------+------------------------------------------------+
+# | budgetcsv()           | Method to get the MODFLOW-6 budget csv as a    |
+# |                       | `CsvFile` object. Valid for model, oc, and     |
+# |                       | advanced packages such as MAW, UZF, LAK        |
 # +-----------------------+------------------------------------------------+
 # | zonebudget()          | Method to get the `ZoneBudget6` object for     |
 # |                       | the model. Accessed from the model object or   |
@@ -99,6 +107,9 @@ ml = sim.get_model("gwf_1")
 bud = ml.output.budget()
 bud.get_data(idx=0, full3D=True)
 
+budcsv = ml.output.budgetcsv()
+budcsv.data
+
 hds = ml.output.head()
 hds.get_data()
 
@@ -111,12 +122,15 @@ hds.get_data()
 # ## Get output associated with a specific package
 # The `.output` attribute is tied to the package object and allows the user
 # to get the output types specified in the MODFLOW 6 package. Here is an
-# example with a UZF package that has UZF budget file output,
-# package convergence output, and observation data.
+# example with a UZF package that has UZF budget file output, budgetcsv
+# file output, package convergence output, and observation data.
 
 uzf = ml.uzf
 uzf_bud = uzf.output.budget()
 uzf_bud.get_data(idx=0)
+
+uzf_budcsv = uzf.output.budgetcsv()
+uzf_budcsv.data
 
 uzf_conv = uzf.output.package_convergence()
 if uzf_conv is not None:

@@ -1,21 +1,9 @@
-import numpy as np
-import threading
 import queue
+import threading
 
-try:
-    import rasterio
-except ImportError:
-    rasterio = None
+import numpy as np
 
-try:
-    import affine
-except ImportError:
-    affine = None
-
-try:
-    import scipy
-except ImportError:
-    scipy = None
+from .utl_import import import_optional_dependency
 
 
 class Raster:
@@ -70,23 +58,12 @@ class Raster:
         driver="GTiff",
         rio_ds=None,
     ):
-        if rasterio is None:
-            msg = (
-                "Raster(): error "
-                + 'importing rasterio - try "pip install rasterio"'
-            )
-            raise ImportError(msg)
-        else:
-            from rasterio.crs import CRS
-
-        if affine is None:
-            msg = (
-                "Raster(): error "
-                + 'importing affine - try "pip install affine"'
-            )
-            raise ImportError(msg)
-
         from .geometry import point_in_polygon
+
+        rasterio = import_optional_dependency("rasterio")
+        from rasterio.crs import CRS
+
+        self._affine = import_optional_dependency("affine")
 
         self._point_in_polygon = point_in_polygon
         self._array = array
@@ -128,7 +105,7 @@ class Raster:
         meta["height"] = height
         meta["width"] = width
 
-        if not isinstance(transform, affine.Affine):
+        if not isinstance(transform, self._affine.Affine):
             raise TypeError("Transform must be defined by an Affine object")
 
         meta["transform"] = transform
@@ -288,7 +265,7 @@ class Raster:
 
         return value
 
-    def sample_polygon(self, polygon, band, invert=False):
+    def sample_polygon(self, polygon, band, invert=False, **kwargs):
         """
         Method to get an unordered list of raster values that are located
         within a arbitrary polygon
@@ -332,7 +309,7 @@ class Raster:
                     arr_dict[b] = t
 
         else:
-            mask = self._intersection(polygon, invert)
+            mask = self._intersection(polygon, invert, **kwargs)
 
             arr_dict = {}
             for b, arr in self.__arr_dict.items():
@@ -375,6 +352,11 @@ class Raster:
             ``mean`` for mean sampling
 
             ``median`` for median sampling
+
+            ``min`` for minimum sampling
+
+            ``max`` for maximum sampling
+
         multithread : bool
             boolean flag indicating if multithreading should be used with
             the ``mean`` and ``median`` sampling methods
@@ -389,13 +371,8 @@ class Raster:
         -------
             np.array
         """
-        if scipy is None:
-            print(
-                "Raster().resample_to_grid(): error "
-                + 'importing scipy - try "pip install scipy"'
-            )
-        else:
-            from scipy.interpolate import griddata
+        import_optional_dependency("scipy")
+        from scipy.interpolate import griddata
 
         method = method.lower()
         if method in ("linear", "nearest", "cubic"):
@@ -428,8 +405,8 @@ class Raster:
                 method=method,
             )
 
-        elif method in ("median", "mean"):
-            # these methods are slow and could use a speed u
+        elif method in ("median", "mean", "min", "max"):
+            # these methods are slow and could use a speed up
             ncpl = modelgrid.ncpl
             data_shape = modelgrid.xcellcenters.shape
             if isinstance(ncpl, (list, np.ndarray)):
@@ -440,39 +417,65 @@ class Raster:
             if multithread:
                 q = queue.Queue()
                 container = threading.BoundedSemaphore(thread_pool)
-                threads = []
-                for node in range(ncpl):
-                    t = threading.Thread(
-                        target=self.__threaded_resampling,
-                        args=(modelgrid, node, band, method, container, q),
-                    )
-                    threads.append(t)
 
-                for thread in threads:
-                    thread.daemon = True
-                    thread.start()
-                for thread in threads:
-                    thread.join()
+                # determine the number of thread pairs required to
+                # fill the grid
+                nthreadpairs = int(ncpl / thread_pool)
+                if ncpl % thread_pool != 0:
+                    nthreadpairs += 1
 
-                for _ in range(len(threads)):
-                    node, val = q.get()
-                    data[node] = val
+                # iterate over the tread pairs
+                for idx in range(nthreadpairs):
+                    i0 = idx * thread_pool
+                    nthreads = thread_pool
+                    if i0 + thread_pool > ncpl:
+                        nthreads = ncpl - i0
+                    i1 = i0 + nthreads
+                    threads = []
+                    for node in range(i0, i1):
+                        t = threading.Thread(
+                            target=self.__threaded_resampling,
+                            args=(modelgrid, node, band, method, container, q),
+                        )
+                        threads.append(t)
+
+                    # start the threads
+                    for thread in threads:
+                        thread.daemon = True
+                        thread.start()
+
+                    # wait until all threads are terminated
+                    for thread in threads:
+                        thread.join()
+
+                    for idx in range(nthreads):
+                        node, val = q.get()
+                        data[node] = val
 
             else:
                 for node in range(ncpl):
                     verts = modelgrid.get_cell_vertices(node)
-                    rstr_data = self.sample_polygon(verts, band)
+                    rstr_data = self.sample_polygon(
+                        verts, band, convert=False
+                    ).astype(float)
                     msk = np.in1d(rstr_data, self.nodatavals)
                     rstr_data[msk] = np.nan
 
-                    if method == "median":
-                        val = np.nanmedian(rstr_data)
+                    if rstr_data.size == 0:
+                        val = self.nodatavals[0]
                     else:
-                        val = np.nanmean(rstr_data)
+                        if method == "median":
+                            val = np.nanmedian(rstr_data)
+                        elif method == "mean":
+                            val = np.nanmean(rstr_data)
+                        elif method == "max":
+                            val = np.nanmax(rstr_data)
+                        else:
+                            val = np.nanmin(rstr_data)
 
                     data[node] = val
         else:
-            raise TypeError("{} method not supported".format(method))
+            raise TypeError(f"{method} method not supported")
 
         if extrapolate_edges and method != "nearest":
             xc = modelgrid.xcellcenters
@@ -539,14 +542,25 @@ class Raster:
         """
         container.acquire()
         verts = modelgrid.get_cell_vertices(node)
-        rstr_data = self.sample_polygon(verts, band)
+        rstr_data = self.sample_polygon(verts, band, convert=False).astype(
+            float
+        )
         msk = np.in1d(rstr_data, self.nodatavals)
         rstr_data[msk] = np.nan
 
-        if method == "median":
-            val = np.nanmedian(rstr_data)
+        if rstr_data.size == 0:
+            val = self.nodatavals[0]
+
         else:
-            val = np.nanmean(rstr_data)
+            if method == "median":
+                val = np.nanmedian(rstr_data)
+            elif method == "mean":
+                val = np.nanmean(rstr_data)
+            elif method == "max":
+                val = np.nanmax(rstr_data)
+            else:
+                val = np.nanmin(rstr_data)
+
         q.put((node, val))
         container.release()
 
@@ -580,25 +594,6 @@ class Raster:
             self.__ycenters = None
 
         else:
-            # crop from user supplied points using numpy
-            if rasterio is None:
-                msg = (
-                    "Raster().crop(): error "
-                    + 'importing rasterio try "pip install rasterio"'
-                )
-                raise ImportError(msg)
-            else:
-                from rasterio.mask import mask
-
-            if affine is None:
-                msg = (
-                    "Raster(),crop(): error "
-                    + 'importing affine - try "pip install affine"'
-                )
-                raise ImportError(msg)
-            else:
-                from affine import Affine
-
             mask = self._intersection(polygon, invert)
 
             xc = self.xcenters
@@ -659,7 +654,7 @@ class Raster:
             self._meta["height"] = crp_mask.shape[0]
             self._meta["width"] = crp_mask.shape[1]
             transform = self._meta["transform"]
-            self._meta["transform"] = Affine(
+            self._meta["transform"] = self._affine.Affine(
                 transform[0],
                 transform[1],
                 xmin,
@@ -695,14 +690,8 @@ class Raster:
             tuple : (arr_dict, raster_crp_meta)
 
         """
-        if rasterio is None:
-            msg = (
-                "Raster()._sample_rio_dataset(): error "
-                + 'importing rasterio try "pip install rasterio"'
-            )
-            raise ImportError(msg)
-        else:
-            from rasterio.mask import mask
+        import_optional_dependency("rasterio")
+        from rasterio.mask import mask
 
         from .geospatial_utils import GeoSpatialUtil
 
@@ -730,7 +719,7 @@ class Raster:
 
         return arr_dict, rstr_crp_meta
 
-    def _intersection(self, polygon, invert):
+    def _intersection(self, polygon, invert, **kwargs):
         """
         Internal method to create an intersection mask, used for cropping
         arrays and sampling arrays.
@@ -755,14 +744,18 @@ class Raster:
             mask : np.ndarray (dtype = bool)
 
         """
-        from .geospatial_utils import GeoSpatialUtil
+        # the convert kwarg is to speed up the resample_to_grid method
+        #  which already provides the proper datatype to _intersect()
+        convert = kwargs.pop("convert", True)
+        if convert:
+            from .geospatial_utils import GeoSpatialUtil
 
-        if isinstance(polygon, (list, tuple, np.ndarray)):
-            polygon = [polygon]
+            if isinstance(polygon, (list, tuple, np.ndarray)):
+                polygon = [polygon]
 
-        geom = GeoSpatialUtil(polygon, shapetype="Polygon")
+            geom = GeoSpatialUtil(polygon, shapetype="Polygon")
 
-        polygon = geom.points[0]
+            polygon = geom.points[0]
 
         # step 2: create a grid of centoids
         xc = self.xcenters
@@ -820,12 +813,7 @@ class Raster:
             output raster .tif file name
 
         """
-        if rasterio is None:
-            msg = (
-                "Raster().write(): error "
-                + 'importing rasterio - try "pip install rasterio"'
-            )
-            raise ImportError(msg)
+        rasterio = import_optional_dependency("rasterio")
 
         if not name.endswith(".tif"):
             name += ".tif"
@@ -849,12 +837,7 @@ class Raster:
             Raster object
 
         """
-        if rasterio is None:
-            msg = (
-                "Raster().load(): error "
-                + 'importing rasterio - try "pip install rasterio"'
-            )
-            raise ImportError(msg)
+        rasterio = import_optional_dependency("rasterio")
 
         dataset = rasterio.open(raster)
         array = dataset.read()
@@ -891,17 +874,16 @@ class Raster:
             ax : matplotlib.pyplot.axes
 
         """
-        if rasterio is None:
-            msg = (
-                "Raster().plot(): error "
-                + 'importing rasterio - try "pip install rasterio"'
-            )
-            raise ImportError(msg)
-        else:
-            from rasterio.plot import show
+        import_optional_dependency("rasterio")
+        from rasterio.plot import show
 
         if self._dataset is not None:
-            ax = show(self._dataset, ax=ax, contour=contour, **kwargs)
+            ax = show(
+                self._dataset,
+                ax=ax,
+                contour=contour,
+                **kwargs,
+            )
 
         else:
             d0 = len(self.__arr_dict)
@@ -924,7 +906,7 @@ class Raster:
                 ax=ax,
                 contour=contour,
                 transform=self._meta["transform"],
-                **kwargs
+                **kwargs,
             )
 
         return ax
@@ -948,14 +930,8 @@ class Raster:
             ax : matplotlib.pyplot.axes
 
         """
-        if rasterio is None:
-            msg = (
-                "Raster().histogram(): error "
-                + 'importing rasterio - try "pip install rasterio"'
-            )
-            raise ImportError(msg)
-        else:
-            from rasterio.plot import show_hist
+        import_optional_dependency("rasterio")
+        from rasterio.plot import show_hist
 
         if "alpha" not in kwargs:
             kwargs["alpha"] = 0.3

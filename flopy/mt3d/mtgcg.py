@@ -1,4 +1,3 @@
-import sys
 from ..pakbase import Package
 
 
@@ -98,29 +97,13 @@ class Mt3dGcg(Package):
         elif unitnumber == 0:
             unitnumber = Mt3dGcg._reservedunit()
 
-        # set filenames
-        if filenames is None:
-            filenames = [None]
-        elif isinstance(filenames, str):
-            filenames = [filenames]
-
-        # Fill namefile items
-        name = [Mt3dGcg._ftype()]
-        units = [unitnumber]
-        extra = [""]
-
-        # set package name
-        fname = [filenames[0]]
-
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(
-            self,
+        # call base package constructor
+        super().__init__(
             model,
             extension=extension,
-            name=name,
-            unit_number=units,
-            extra=extra,
-            filenames=fname,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=self._prepare_filenames(filenames),
         )
 
         self.mxiter = mxiter
@@ -144,12 +127,8 @@ class Mt3dGcg(Package):
         """
         # Open file for writing
         f_gcg = open(self.fn_path, "w")
-        f_gcg.write(
-            "{} {} {} {}\n".format(
-                self.mxiter, self.iter1, self.isolve, self.ncrs
-            )
-        )
-        f_gcg.write("{} {} {}\n".format(self.accl, self.cclose, self.iprgcg))
+        f_gcg.write(f"{self.mxiter} {self.iter1} {self.isolve} {self.ncrs}\n")
+        f_gcg.write(f"{self.accl} {self.cclose} {self.iprgcg}\n")
         f_gcg.close()
         return
 
@@ -187,7 +166,7 @@ class Mt3dGcg(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading gcg package file...\n")
+            print("loading gcg package file...")
 
         # Open file, if necessary
         openfile = not hasattr(f, "read")
@@ -210,10 +189,10 @@ class Mt3dGcg(Package):
         isolve = int(t[2])
         ncrs = int(t[3])
         if model.verbose:
-            print("   MXITER {}".format(mxiter))
-            print("   ITER1 {}".format(iter1))
-            print("   ISOLVE {}".format(isolve))
-            print("   NCRS {}".format(ncrs))
+            print(f"   MXITER {mxiter}")
+            print(f"   ITER1 {iter1}")
+            print(f"   ISOLVE {isolve}")
+            print(f"   NCRS {ncrs}")
 
         # Item F2: ACCL, CCLOSE, IPRGCG
         if model.verbose:
@@ -224,9 +203,9 @@ class Mt3dGcg(Package):
         cclose = float(t[1])
         iprgcg = int(t[2])
         if model.verbose:
-            print("   ACCL {}".format(accl))
-            print("   CCLOSE {}".format(cclose))
-            print("   IPRGCG {}".format(iprgcg))
+            print(f"   ACCL {accl}")
+            print(f"   CCLOSE {cclose}")
+            print(f"   IPRGCG {iprgcg}")
 
         if openfile:
             f.close()

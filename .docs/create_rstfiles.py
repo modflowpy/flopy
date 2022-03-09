@@ -4,11 +4,11 @@ import os
 def create_section(f, title, filenames, upper_case=False):
     if upper_case:
         title = title.upper()
-    title = "{} Tutorials".format(title)
-    line = "{}\n".format(title) + len(title) * "-" + "\n\n"
+    title = f"{title} Tutorials"
+    line = f"{title}\n" + len(title) * "-" + "\n\n"
     line += "Contents:\n\n.. toctree::\n   :maxdepth: 2\n\n"
     for filename in filenames:
-        line += "   _notebooks/{}\n".format(filename)
+        line += f"   _notebooks/{filename}\n"
     line += "\n\n"
     f.write(line)
 
@@ -19,8 +19,11 @@ def create_tutorial_rst():
     tutorial_dict = {}
     for dirpath, _, filenames in os.walk(pth):
         key = os.path.basename(os.path.normpath(dirpath))
-        files = [filename.replace(".py", "") for filename in sorted(filenames)
-                 if filename.endswith(".py")]
+        files = [
+            filename.replace(".py", "")
+            for filename in sorted(filenames)
+            if filename.endswith(".py")
+        ]
         if len(files) > 0:
             tutorial_dict[key] = files
 

@@ -7,6 +7,7 @@ important classes that can be accessed by the user.
 """
 
 import numpy as np
+
 from ..utils.datafile import Header, LayerFile
 
 
@@ -83,7 +84,7 @@ class FormattedHeader(Header):
             or not is_int(arrheader[7])
         ):
             raise Exception(
-                "Unexpected format for FHDTextHeader: " + header_text
+                f"Unexpected format for FHDTextHeader: {header_text}"
             )
 
         headerinfo = np.empty([8], dtype=self.dtype)
@@ -369,7 +370,7 @@ class FormattedHeadFile(FormattedLayerFile):
         text="head",
         precision="single",
         verbose=False,
-        **kwargs
+        **kwargs,
     ):
         self.text = text
         super().__init__(filename, precision, verbose, kwargs)

@@ -1,7 +1,10 @@
-import numpy as np
 import io
-from ..utils.utils_def import FlopyBinaryData
+
+import numpy as np
+
+from ..utils import import_optional_dependency
 from ..utils.flopy_io import get_ts_sp
+from ..utils.utils_def import FlopyBinaryData
 
 
 class ObsFiles(FlopyBinaryData):
@@ -174,12 +177,12 @@ class ObsFiles(FlopyBinaryData):
 
         """
 
-        try:
-            import pandas as pd
-            from ..utils.utils_def import totim_to_datetime
-        except Exception as e:
-            msg = "ObsFiles.get_dataframe() error import pandas: " + str(e)
-            raise ImportError(msg)
+        from ..utils.utils_def import totim_to_datetime
+
+        pd = import_optional_dependency(
+            "pandas",
+            error_message="ObsFiles.get_dataframe() requires pandas.",
+        )
 
         i0 = 0
         i1 = self.data.shape[0]
@@ -294,7 +297,7 @@ class Mf6Obs(ObsFiles):
                     isBinary = True
                 else:
                     err = "Could not determine if file is binary or ascii"
-                    raise IOError(err)
+                    raise ValueError(err)
         if isBinary:
             # --open binary head file
             self.file = open(filename, "rb")
@@ -574,9 +577,9 @@ def get_selection(data, names):
     for name in names:
         if name not in data.dtype.names:
             ierr += 1
-            print("Error: {} is not a valid column name".format(name))
+            print(f"Error: {name} is not a valid column name")
     if ierr > 0:
-        raise Exception("Error: {} names did not match".format(ierr))
+        raise Exception(f"Error: {ierr} names did not match")
 
     # Valid list of names so make a selection
     dtype2 = np.dtype({name: data.dtype.fields[name] for name in names})

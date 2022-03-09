@@ -1,0 +1,89 @@
+# --------------------- ssm spca options ---------------------
+# flopy multi-package
+
+block options
+name readasarrays
+type keyword
+shape
+reader urword
+optional false
+longname use array-based input
+description indicates that array-based input will be used for the SPC Package.  This keyword must be specified to use array-based input.
+default_value True
+
+block options
+name print_input
+type keyword
+reader urword
+optional true
+longname print input to listing file
+description REPLACE print_input {'{#1}': 'spc'}
+
+block options
+name tas_filerecord
+type record tas6 filein tas6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name tas6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname head keyword
+description keyword to specify that record corresponds to a time-array-series file.
+
+block options
+name filein
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block options
+name tas6_filename
+type string
+preserve_case true
+in_record true
+reader urword
+optional false
+tagged false
+longname file name of time series information
+description defines a time-array-series file defining a time-array series that can be used to assign time-varying values. See the Time-Variable Input section for instructions on using the time-array series capability.
+
+
+# --------------------- ssm spca period ---------------------
+
+block period
+name iper
+type integer
+block_variable True
+in_record true
+tagged false
+shape
+valid
+reader urword
+optional false
+longname stress period number
+description REPLACE iper {}
+
+block period
+name concentration
+type double precision
+shape (ncol*nrow; ncpl)
+reader readarray
+longname concentration
+description is the concentration of the associated Recharge or Evapotranspiration stress package.  The concentration array may be defined by a time-array series (see the "Using Time-Array Series in a Package" section).
+default_value 0.
+

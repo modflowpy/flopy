@@ -1,8 +1,8 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on August 06, 2021 20:56:59 UTC
+# FILE created on March 07, 2022 16:59:43 UTC
 from .. import mfpackage
-from ..data.mfdatautil import ArrayTemplateGenerator
+from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
 
 class ModflowGwfsto(mfpackage.MFPackage):
@@ -30,6 +30,10 @@ class ModflowGwfsto(mfpackage.MFPackage):
           greater than or equal to the top of the cell). This option is
           identical to the approach used to calculate storage changes under
           confined conditions in MODFLOW-2005.
+    tvs_filerecord : [tvs_filename]
+        * tvs_filename (string) defines a time-varying storage (TVS) input
+          file. Records in the TVS file can be used to change specific storage
+          and specific yield properties at specified times or stress periods.
     iconvert : [integer]
         * iconvert (integer) is a flag for each cell that specifies whether or
           not a cell is convertible for the storage calculation. 0 indicates
@@ -67,6 +71,9 @@ class ModflowGwfsto(mfpackage.MFPackage):
 
     """
 
+    tvs_filerecord = ListTemplateGenerator(
+        ("gwf6", "sto", "options", "tvs_filerecord")
+    )
     iconvert = ArrayTemplateGenerator(("gwf6", "sto", "griddata", "iconvert"))
     ss = ArrayTemplateGenerator(("gwf6", "sto", "griddata", "ss"))
     sy = ArrayTemplateGenerator(("gwf6", "sto", "griddata", "sy"))
@@ -75,6 +82,9 @@ class ModflowGwfsto(mfpackage.MFPackage):
     dfn_file_name = "gwf-sto.dfn"
 
     dfn = [
+        [
+            "header",
+        ],
         [
             "block options",
             "name save_flows",
@@ -95,6 +105,45 @@ class ModflowGwfsto(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+        ],
+        [
+            "block options",
+            "name tvs_filerecord",
+            "type record tvs6 filein tvs_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name tvs6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name tvs_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
         ],
         [
             "block griddata",
@@ -168,6 +217,7 @@ class ModflowGwfsto(mfpackage.MFPackage):
         save_flows=None,
         storagecoefficient=None,
         ss_confined_only=None,
+        tvs_filerecord=None,
         iconvert=0,
         ss=1.0e-5,
         sy=0.15,
@@ -188,6 +238,9 @@ class ModflowGwfsto(mfpackage.MFPackage):
         )
         self.ss_confined_only = self.build_mfdata(
             "ss_confined_only", ss_confined_only
+        )
+        self.tvs_filerecord = self.build_mfdata(
+            "tvs_filerecord", tvs_filerecord
         )
         self.iconvert = self.build_mfdata("iconvert", iconvert)
         self.ss = self.build_mfdata("ss", ss)

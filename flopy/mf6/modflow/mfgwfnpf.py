@@ -1,8 +1,8 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on August 06, 2021 20:56:59 UTC
+# FILE created on March 07, 2022 16:59:43 UTC
 from .. import mfpackage
-from ..data.mfdatautil import ListTemplateGenerator, ArrayTemplateGenerator
+from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
 
 class ModflowGwfnpf(mfpackage.MFPackage):
@@ -92,6 +92,11 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         * k33overk (boolean) keyword to indicate that specified K33 is a ratio
           of K33 divided by K. If this option is specified, then the K33 array
           entered in the NPF Package will be multiplied by K after being read.
+    tvk_filerecord : [tvk_filename]
+        * tvk_filename (string) defines a time-varying hydraulic conductivity
+          (TVK) input file. Records in the TVK file can be used to change
+          hydraulic conductivity properties at specified times or stress
+          periods.
     icelltype : [integer]
         * icelltype (integer) flag for each cell that specifies how saturated
           thickness is treated. 0 means saturated thickness is held constant;
@@ -196,6 +201,9 @@ class ModflowGwfnpf(mfpackage.MFPackage):
     rewet_record = ListTemplateGenerator(
         ("gwf6", "npf", "options", "rewet_record")
     )
+    tvk_filerecord = ListTemplateGenerator(
+        ("gwf6", "npf", "options", "tvk_filerecord")
+    )
     icelltype = ArrayTemplateGenerator(
         ("gwf6", "npf", "griddata", "icelltype")
     )
@@ -211,6 +219,9 @@ class ModflowGwfnpf(mfpackage.MFPackage):
     dfn_file_name = "gwf-npf.dfn"
 
     dfn = [
+        [
+            "header",
+        ],
         [
             "block options",
             "name save_flows",
@@ -352,6 +363,45 @@ class ModflowGwfnpf(mfpackage.MFPackage):
             "optional true",
         ],
         [
+            "block options",
+            "name tvk_filerecord",
+            "type record tvk6 filein tvk_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name tvk6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name tvk_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
+        ],
+        [
             "block griddata",
             "name icelltype",
             "type integer",
@@ -450,6 +500,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         save_saturation=None,
         k22overk=None,
         k33overk=None,
+        tvk_filerecord=None,
         icelltype=0,
         k=1.0,
         k22=None,
@@ -484,6 +535,9 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         )
         self.k22overk = self.build_mfdata("k22overk", k22overk)
         self.k33overk = self.build_mfdata("k33overk", k33overk)
+        self.tvk_filerecord = self.build_mfdata(
+            "tvk_filerecord", tvk_filerecord
+        )
         self.icelltype = self.build_mfdata("icelltype", icelltype)
         self.k = self.build_mfdata("k", k)
         self.k22 = self.build_mfdata("k22", k22)

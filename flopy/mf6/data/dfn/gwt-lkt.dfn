@@ -1,4 +1,5 @@
 # --------------------- gwt lkt options ---------------------
+# flopy multi-package
 
 block options
 name flow_package_name
@@ -50,7 +51,7 @@ type keyword
 reader urword
 optional true
 longname print calculated stages to listing file
-description REPLACE print_head {'{#1}': 'lake', '{#2}': 'concentration', '{#3}': 'CONCENTRATION'}
+description REPLACE print_concentration {'{#1}': 'lake', '{#2}': 'concentration', '{#3}': 'CONCENTRATION'}
 
 block options
 name print_flows
@@ -144,6 +145,39 @@ tagged false
 optional false
 longname file keyword
 description name of the binary output file to write budget information.
+
+block options
+name budgetcsv_filerecord
+type record budgetcsv fileout budgetcsvfile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name budgetcsv
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname budget keyword
+description keyword to specify that record corresponds to the budget CSV.
+
+block options
+name budgetcsvfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the comma-separated value (CSV) output file to write budget summary information.  A budget summary record will be written to this file for each time step of the simulation.
 
 block options
 name ts_filerecord

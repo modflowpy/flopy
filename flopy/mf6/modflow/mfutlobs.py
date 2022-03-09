@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on August 06, 2021 20:56:59 UTC
+# FILE created on March 07, 2022 16:59:43 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -19,13 +19,17 @@ class ModflowUtlobs(mfpackage.MFPackage):
         processing purposes only.
     digits : integer
         * digits (integer) Keyword and an integer digits specifier used for
-          conversion of simulated values to text on output. The default is 5
-          digits. When simulated values are written to a file specified as file
-          type DATA in the Name File, the digits specifier controls the number
-          of significant digits with which simulated values are written to the
+          conversion of simulated values to text on output. If not specified,
+          the default is the maximum number of digits stored in the program (as
+          written with the G0 Fortran specifier). When simulated values are
+          written to a comma-separated value text file specified in a
+          CONTINUOUS block below, the digits specifier controls the number of
+          significant digits with which simulated values are written to the
           output file. The digits specifier has no effect on the number of
           significant digits with which the simulation time is written for
-          continuous observations.
+          continuous observations. If DIGITS is specified as zero, then
+          observations are written with the default setting, which is the
+          maximum number of digits.
     print_input : boolean
         * print_input (boolean) keyword to indicate that the list of
           observation information will be written to the listing file
@@ -74,6 +78,10 @@ class ModflowUtlobs(mfpackage.MFPackage):
     dfn_file_name = "utl-obs.dfn"
 
     dfn = [
+        [
+            "header",
+            "multi-package",
+        ],
         [
             "block options",
             "name digits",

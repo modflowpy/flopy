@@ -20,10 +20,15 @@ Instructions for making a FloPy release
         ```
         python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="master", backup=False)'
         ```
-    5.  Run `black` on the updated MODFLOW 6 package classes by running the following from the root directory:
+    6.  Run `isort` on the updated MODFLOW 6 package classes by running the following from the root directory:
 
         ```
-        black -l 79 flopy/mf6
+        isort .
+        ```
+    7.  Run `black` on the updated MODFLOW 6 package classes by running the following from the root directory:
+
+        ```
+        black .
         ```
 
 
@@ -120,26 +125,24 @@ Use `run_notebooks.py` in the `release` directory to rerun all of the notebooks 
 
 ## Update PyPi
 
-1.  Make sure `pypandoc` and `twine` are installed using:
+1.  Make sure `twine` is installed using:
 
     ```
-    conda search pypandoc
     conda search twine
     ```
 
 
-2.  If they are not installed, install one or both using using:
+2.  If it is not installed, install using using:
 
 
     ```
-    conda install pypandoc
     conda install twine
     ```
 
 3.  Create the source zip file in a terminal using:
 
     ```
-    python setup.py sdist --format=zip
+    python setup.py sdist
     ```
 
 4.  Upload the release to PyPi using (*make sure* `twine` *is installed using conda*):

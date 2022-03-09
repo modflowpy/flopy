@@ -1,16 +1,13 @@
-import numpy as np
-
-try:
-    import matplotlib.pyplot as plt
-    import matplotlib.colors
-    from matplotlib.patches import Polygon
-except (ImportError, ModuleNotFoundError):
-    plt = None
-
-from flopy.plot import plotutil
-from flopy.utils import geometry
 import copy
 import warnings
+
+import matplotlib.colors
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.patches import Polygon
+
+from ..utils import geometry
+from . import plotutil
 
 warnings.simplefilter("always", PendingDeprecationWarning)
 
@@ -56,12 +53,6 @@ class PlotCrossSection:
 
         self.ax = ax
         self.geographic_coords = geographic_coords
-        if plt is None:
-            raise ImportError(
-                "Could not import matplotlib.  Must install matplotlib "
-                "in order to use ModelCrossSection method"
-            )
-
         self.model = model
 
         if modelgrid is not None:
@@ -87,7 +78,7 @@ class PlotCrossSection:
                 "dictionary keys specified: "
             )
             for k in line.keys():
-                s += "{} ".format(k)
+                s += f"{k} "
             raise AssertionError(s)
 
         if ax is None:
@@ -179,7 +170,7 @@ class PlotCrossSection:
         if len(self.xypts) < 2:
             s = "cross-section cannot be created\n."
             s += "   less than 2 points intersect the model grid\n"
-            s += "   {} points intersect the grid.".format(len(self.xypts))
+            s += f"   {len(self.xypts)} points intersect the grid."
             raise Exception(s)
 
         if self.geographic_coords:
@@ -430,7 +421,7 @@ class PlotCrossSection:
         colors=("blue", "red"),
         masked_values=None,
         head=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot a three-dimensional array as lines.
@@ -504,11 +495,7 @@ class PlotCrossSection:
         contour_set : matplotlib.pyplot.contour
 
         """
-        if plt is None:
-            err_msg = "matplotlib must be installed to use contour_array()"
-            raise ImportError(err_msg)
-        else:
-            import matplotlib.tri as tri
+        import matplotlib.tri as tri
 
         if not isinstance(a, np.ndarray):
             a = np.array(a)
@@ -550,13 +537,13 @@ class PlotCrossSection:
             kwargs["levels"] = levels
 
         # workaround for tri-contour nan issue
-        plotarray[np.isnan(plotarray)] = -(2 ** 31)
+        plotarray[np.isnan(plotarray)] = -(2**31)
         if masked_values is None:
-            masked_values = [-(2 ** 31)]
+            masked_values = [-(2**31)]
         else:
             masked_values = list(masked_values)
-            if -(2 ** 31) not in masked_values:
-                masked_values.append(-(2 ** 31))
+            if -(2**31) not in masked_values:
+                masked_values.append(-(2**31))
 
         ismasked = None
         if masked_values is not None:
@@ -567,6 +554,7 @@ class PlotCrossSection:
                     t = np.isclose(plotarray, mval)
                     ismasked += t
 
+        filled = kwargs.pop("filled", False)
         plot_triplot = kwargs.pop("plot_triplot", False)
 
         if "extent" in kwargs:
@@ -584,18 +572,33 @@ class PlotCrossSection:
 
         if mplcontour:
             plotarray = np.ma.masked_array(plotarray, ismasked)
-            contour_set = ax.contour(xcenters, zcenters, plotarray, **kwargs)
+            if filled:
+                contour_set = ax.contourf(
+                    xcenters, zcenters, plotarray, **kwargs
+                )
+            else:
+                contour_set = ax.contour(
+                    xcenters, zcenters, plotarray, **kwargs
+                )
         else:
             triang = tri.Triangulation(xcenters, zcenters)
+            analyze = tri.TriAnalyzer(triang)
+            mask = analyze.get_flat_tri_mask(rescale=False)
 
             if ismasked is not None:
                 ismasked = ismasked.flatten()
-                mask = np.any(
+                mask2 = np.any(
                     np.where(ismasked[triang.triangles], True, False), axis=1
                 )
-                triang.set_mask(mask)
+                mask[mask2] = True
 
-            contour_set = ax.tricontour(triang, plotarray, **kwargs)
+            triang.set_mask(mask)
+
+            if filled:
+                contour_set = ax.tricontourf(triang, plotarray, **kwargs)
+            else:
+                contour_set = ax.tricontour(triang, plotarray, **kwargs)
+
             if plot_triplot:
                 ax.triplot(triang, color="black", marker="o", lw=0.75)
 
@@ -646,7 +649,7 @@ class PlotCrossSection:
         color_ch="blue",
         color_vpt="red",
         head=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Make a plot of ibound.  If not specified, then pull ibound from the
@@ -700,7 +703,7 @@ class PlotCrossSection:
             head=head,
             cmap=cmap,
             norm=norm,
-            **kwargs
+            **kwargs,
         )
         return patches
 
@@ -787,7 +790,7 @@ class PlotCrossSection:
                         mflist = pp.stress_period_data.array[kper]
                     except Exception as e:
                         raise Exception(
-                            "Not a list-style boundary package: " + str(e)
+                            f"Not a list-style boundary package: {e!s}"
                         )
                     if mflist is None:
                         return
@@ -810,7 +813,7 @@ class PlotCrossSection:
                     mflist = p.stress_period_data[kper]
                 except Exception as e:
                     raise Exception(
-                        "Not a list-style boundary package: " + str(e)
+                        f"Not a list-style boundary package: {e!s}"
                     )
                 if mflist is None:
                     return
@@ -846,7 +849,7 @@ class PlotCrossSection:
             head=head,
             cmap=cmap,
             norm=norm,
-            **kwargs
+            **kwargs,
         )
 
         return patches
@@ -861,7 +864,7 @@ class PlotCrossSection:
         hstep=1,
         normalize=False,
         masked_values=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot a vector.
@@ -978,7 +981,7 @@ class PlotCrossSection:
 
         # normalize
         if normalize:
-            vmag = np.sqrt(u ** 2.0 + v ** 2.0)
+            vmag = np.sqrt(u**2.0 + v**2.0)
             idx = vmag > 0.0
             u[idx] /= vmag[idx]
             v[idx] /= vmag[idx]
@@ -991,198 +994,6 @@ class PlotCrossSection:
         quiver = ax.quiver(x, z, u, v, pivot=pivot, **kwargs)
 
         return quiver
-
-    def plot_specific_discharge(
-        self, spdis, head=None, kstep=1, hstep=1, normalize=False, **kwargs
-    ):
-        """
-        DEPRECATED. Use plot_vector() instead, which should follow after
-        postprocessing.get_specific_discharge().
-
-        Use quiver to plot vectors.
-
-        Parameters
-        ----------
-        spdis : np.recarray
-            numpy recarray of specific discharge information. This
-            can be grabbed directly from the CBC file if
-            SAVE_SPECIFIC_DISCHARGE is used in the MF6 NPF file.
-        head : numpy.ndarray
-            MODFLOW's head array. If not provided, then the quivers will be
-             plotted in the cell center.
-        kstep : int
-            layer frequency to plot. (Default is 1.)
-        hstep : int
-            horizontal frequency to plot. (Default is 1.)
-        normalize : bool
-            boolean flag used to determine if discharge vectors should
-            be normalized using the magnitude of the specific discharge in each
-            cell. (default is False)
-        kwargs : dictionary
-            Keyword arguments passed to plt.quiver()
-
-        Returns
-        -------
-        quiver : matplotlib.pyplot.quiver
-            Vectors
-
-        """
-        import warnings
-
-        warnings.warn(
-            "plot_specific_discharge() has been deprecated and will be"
-            "removed in version 3.3.5. Use plot_vector() instead, which "
-            "should follow after postprocessing.get_specific_discharge()",
-            DeprecationWarning,
-        )
-
-        if isinstance(spdis, list):
-            print(
-                "Warning: Selecting the final stress period from Specific"
-                " Discharge list"
-            )
-            spdis = spdis[-1]
-
-        ncpl = self._ncpl
-        nlay = self._nlay
-
-        qx = np.zeros((nlay * ncpl))
-        qy = np.zeros((nlay * ncpl))
-        qz = np.zeros((nlay * ncpl))
-
-        idx = np.array(spdis["node"]) - 1
-        qx[idx] = spdis["qx"]
-        qy[idx] = spdis["qy"]
-        qz[idx] = spdis["qz"]
-
-        return self.plot_vector(
-            qx,
-            qy,
-            qz,
-            head=head,
-            kstep=kstep,
-            hstep=hstep,
-            normalize=normalize,
-            **kwargs
-        )
-
-    def plot_discharge(
-        self,
-        frf,
-        fff,
-        flf=None,
-        head=None,
-        kstep=1,
-        hstep=1,
-        normalize=False,
-        **kwargs
-    ):
-        """
-        DEPRECATED. Use plot_vector() instead, which should follow after
-        postprocessing.get_specific_discharge().
-
-        Use quiver to plot vectors.
-
-        Parameters
-        ----------
-        frf : numpy.ndarray
-            MODFLOW's 'flow right face'
-        fff : numpy.ndarray
-            MODFLOW's 'flow front face'
-        flf : numpy.ndarray
-            MODFLOW's 'flow lower face' (Default is None.)
-        head : numpy.ndarray
-            MODFLOW's head array.  If not provided, then will assume confined
-            conditions in order to calculated saturated thickness.
-        kstep : int
-            layer frequency to plot. (Default is 1.)
-        hstep : int
-            horizontal frequency to plot. (Default is 1.)
-        normalize : bool
-            boolean flag used to determine if discharge vectors should
-            be normalized using the magnitude of the specific discharge in each
-            cell. (default is False)
-        kwargs : dictionary
-            Keyword arguments passed to plt.quiver()
-
-        Returns
-        -------
-        quiver : matplotlib.pyplot.quiver
-            Vectors
-
-        """
-        import warnings
-
-        warnings.warn(
-            "plot_discharge() has been deprecated and will be removed in"
-            "version 3.3.5. Use plot_vector() instead, which should follow "
-            "after postprocessing.get_specific_discharge()",
-            DeprecationWarning,
-        )
-
-        if self.mg.grid_type != "structured":
-            raise NotImplementedError(
-                "Use plot_specific_discharge for "
-                "{} grids".format(self.mg.grid_type)
-            )
-
-        else:
-            delr = self.mg.delr
-            delc = self.mg.delc
-            top = self.mg.top
-            botm = self.mg.botm
-            if not np.all(self.active == 1):
-                botm = botm[self.active == 1]
-            nlay = botm.shape[0]
-            laytyp = None
-            hnoflo = 999.0
-            hdry = 999.0
-
-            if self.model is not None:
-                if self.model.laytyp is not None:
-                    laytyp = self.model.laytyp
-
-                if self.model.hnoflo is not None:
-                    hnoflo = self.model.hnoflo
-
-                if self.model.hdry is not None:
-                    hdry = self.model.hdry
-
-            # If no access to head or laytyp, then calculate confined saturated
-            # thickness by setting laytyp to zeros
-            if head is None or laytyp is None:
-                head = np.zeros(botm.shape, np.float32)
-                laytyp = np.zeros((nlay,), dtype=int)
-                head[0, :, :] = top
-                if nlay > 1:
-                    head[1:, :, :] = botm[:-1, :, :]
-
-            sat_thk = plotutil.PlotUtilities.saturated_thickness(
-                head, top, botm, laytyp, [hnoflo, hdry]
-            )
-
-            # Calculate specific discharge
-            qx, qy, qz = plotutil.PlotUtilities.centered_specific_discharge(
-                frf, fff, flf, delr, delc, sat_thk
-            )
-
-            if qz is None:
-                qz = np.zeros(qx.shape, dtype=float)
-
-            qx = qx.ravel()
-            qy = qy.ravel()
-            qz = qz.ravel()
-
-            return self.plot_vector(
-                qx,
-                qy,
-                qz,
-                head=head,
-                kstep=kstep,
-                hstep=hstep,
-                normalize=normalize,
-                **kwargs
-            )
 
     def plot_pathline(
         self, pl, travel_time=None, method="cell", head=None, **kwargs
@@ -1224,7 +1035,6 @@ class PlotCrossSection:
         """
 
         from matplotlib.collections import LineCollection
-        from ..utils.geometry import point_in_polygon
 
         # make sure pathlines is a list
         if not isinstance(pl, list):
@@ -1273,8 +1083,9 @@ class PlotCrossSection:
         markers = []
         for _, arr in plines.items():
             arr = np.array(arr)
-            arr = arr[arr[:, 0].argsort()]
-            linecol.append(arr)
+            # sort by travel time
+            arr = arr[arr[:, -1].argsort()]
+            linecol.append(arr[:, :-1])
             if marker is not None:
                 for xy in arr[::markerevery]:
                     markers.append(xy)
@@ -1342,7 +1153,7 @@ class PlotCrossSection:
         selection_direction=None,
         method="cell",
         head=None,
-        **kwargs
+        **kwargs,
     ):
         """
 
@@ -1616,8 +1427,8 @@ class PlotCrossSection:
         patches : matplotlib.collections.PatchCollection
 
         """
-        from matplotlib.patches import Polygon
         from matplotlib.collections import PatchCollection
+        from matplotlib.patches import Polygon
 
         use_cache = False
         if projpts is None:
@@ -1699,112 +1510,3 @@ class PlotCrossSection:
             patches = None
 
         return patches
-
-
-class DeprecatedCrossSection(PlotCrossSection):
-    """
-    Deprecation handler for the PlotCrossSection class
-
-    Parameters
-    ----------
-    ax : matplotlib.pyplot.axes object
-    model : flopy.modflow.Modflow object
-    modelgrid : flopy.discretization.Grid object
-    line : dict
-        Dictionary with either "row", "column", or "line" key. If key
-        is "row" or "column" key value should be the zero-based row or
-        column index for cross-section. If key is "line" value should
-        be an array of (x, y) tuples with vertices of cross-section.
-        Vertices should be in map coordinates consistent with xul,
-        yul, and rotation.
-    extent : tuple of floats
-        (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
-        then these will be calculated based on grid, coordinates, and rotation.
-
-    """
-
-    def __init__(
-        self, ax=None, model=None, modelgrid=None, line=None, extent=None
-    ):
-        super().__init__(
-            ax=ax, model=model, modelgrid=modelgrid, line=line, extent=extent
-        )
-
-
-class ModelCrossSection:
-    """
-    DEPRECATED. Class to create a cross section of the model.
-
-    Parameters
-    ----------
-    ax : matplotlib.pyplot axis
-        The plot axis.  If not provided it, plt.gca() will be used.
-    model : flopy.modflow object
-        flopy model object. (Default is None)
-    dis : flopy.modflow.ModflowDis object
-        flopy discretization object. (Default is None)
-    line : dict
-        Dictionary with either "row", "column", or "line" key. If key
-        is "row" or "column" key value should be the zero-based row or
-        column index for cross-section. If key is "line" value should
-        be an array of (x, y) tuples with vertices of cross-section.
-        Vertices should be in map coordinates consistent with xul,
-        yul, and rotation.
-    xul : float
-        x coordinate for upper left corner
-    yul : float
-        y coordinate for upper left corner.  The default is the sum of the
-        delc array.
-    rotation : float
-        Angle of grid rotation around the upper left corner.  A positive value
-        indicates clockwise rotation.  Angles are in degrees. Default is None
-    extent : tuple of floats
-        (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
-        then these will be calculated based on grid, coordinates, and rotation.
-
-    """
-
-    def __new__(
-        cls,
-        ax=None,
-        model=None,
-        dis=None,
-        line=None,
-        xul=None,
-        yul=None,
-        rotation=None,
-        extent=None,
-    ):
-
-        from flopy.discretization import StructuredGrid
-
-        err_msg = (
-            "ModelCrossSection is Deprecated and has been replaced by "
-            "PlotCrossSection(). ModelCrossSection will be removed in "
-            "version 3.3.5, Calling PlotCrossSection()"
-        )
-        warnings.warn(err_msg, DeprecationWarning)
-
-        modelgrid = None
-        if model is not None:
-            if (xul, yul, rotation) != (None, None, None):
-                modelgrid = plotutil._set_coord_info(
-                    model.modelgrid, xul, yul, None, None, rotation
-                )
-
-        elif dis is not None:
-            modelgrid = StructuredGrid(
-                delr=dis.delr.array,
-                delc=dis.delc.array,
-                top=dis.top.array,
-                botm=dis.botm.array,
-            )
-
-        if (xul, yul, rotation) != (None, None, None):
-            modelgrid = plotutil._set_coord_info(
-                modelgrid, xul, yul, None, None, rotation
-            )
-
-        return DeprecatedCrossSection(
-            ax=ax, model=model, modelgrid=modelgrid, line=line, extent=extent
-        )

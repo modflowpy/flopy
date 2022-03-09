@@ -56,3 +56,67 @@ optional false
 longname auxiliary variable name
 description name of the auxiliary variable in the package PNAME.  This auxiliary variable must exist and be specified by the user in that package.  The values in this auxiliary variable will be used to set the concentration associated with the flows for that boundary package.
 
+
+# --------------------- gwt ssm fileinput ---------------------
+
+block fileinput
+name fileinput
+type recarray pname spc6 filein spc6_filename mixed
+reader urword
+longname
+description
+
+block fileinput
+name pname
+in_record true
+type string
+tagged false
+reader urword
+longname package name
+description name of the flow package for which an SPC6 input file contains a source concentration.  If this flow package is represented using an advanced transport package (SFT, LKT, MWT, or UZT), then the advanced transport package will override SSM terms specified here.
+
+
+block fileinput
+name spc6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname head keyword
+description keyword to specify that record corresponds to a source sink mixing input file.
+
+block fileinput
+name filein
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block fileinput
+name spc6_filename
+type string
+preserve_case true
+in_record true
+reader urword
+optional false
+tagged false
+longname spc file name
+description character string that defines the path and filename for the file containing source and sink input data for the flow package. The SPC6\_FILENAME file is a flexible input file that allows concentrations to be specified by stress period and with time series. Instructions for creating the SPC6\_FILENAME input file are provided in the next section on file input for boundary concentrations.
+
+block fileinput
+name mixed
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional true
+longname mixed keyword
+description keyword to specify that these stress package boundaries will have the mixed condition.  The MIXED condition is described in the SOURCES block for AUXMIXED.  The MIXED condition allows for water to be withdrawn at a concentration that is less than the cell concentration.  It is intended primarily for representing evapotranspiration.
+

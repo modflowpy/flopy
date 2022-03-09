@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on August 06, 2021 20:56:59 UTC
+# FILE created on March 07, 2022 16:59:43 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -59,6 +59,10 @@ class ModflowGwfsfr(mfpackage.MFPackage):
     budget_filerecord : [budgetfile]
         * budgetfile (string) name of the binary output file to write budget
           information.
+    budgetcsv_filerecord : [budgetcsvfile]
+        * budgetcsvfile (string) name of the comma-separated value (CSV) output
+          file to write budget summary information. A budget summary record
+          will be written to this file for each time step of the simulation.
     package_convergence_filerecord : [package_convergence_filename]
         * package_convergence_filename (string) name of the comma spaced values
           output file to write package convergence information.
@@ -130,8 +134,8 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           greater than zero.
         * rgrd (double) real value that defines the stream gradient (slope)
           across the reach. RGRD must be greater than zero.
-        * rtp (double) real value that defines the top elevation of the reach
-          streambed.
+        * rtp (double) real value that defines the bottom elevation of the
+          reach.
         * rbth (double) real value that defines the thickness of the reach
           streambed. RBTH can be any value if CELLID is 'NONE'. Otherwise, RBTH
           must be greater than zero.
@@ -169,6 +173,22 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           ASCII character variable that can contain as many as 40 characters.
           If BOUNDNAME contains spaces in it, then the entire name must be
           enclosed within single quotes.
+    crosssections : [rno, tab6_filename]
+        * rno (integer) integer value that defines the reach number associated
+          with the specified cross-section table file on the line. RNO must be
+          greater than zero and less than or equal to NREACHES. The program
+          will also terminate with an error if table information for a reach is
+          specified more than once. This argument is an index variable, which
+          means that it should be treated as zero-based when working with FloPy
+          and Python. Flopy will automatically subtract one when loading index
+          variables and add one when writing index variables.
+        * tab6_filename (string) character string that defines the path and
+          filename for the file containing cross-section table data for the
+          reach. The TAB6_FILENAME file includes the number of entries in the
+          file and the station elevation data in terms of the fractional width
+          and the reach depth. Instructions for creating the TAB6_FILENAME
+          input file are provided in SFR Reach Cross-Section Table Input File
+          section.
     connectiondata : [rno, ic]
         * rno (integer) integer value that defines the reach number associated
           with the specified CONNECTIONDATA data on the line. RNO must be
@@ -355,6 +375,14 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                   that is applied as upstream inflow to the reach. The sum of
                   all USTRF values for all reaches connected to the same
                   upstream reach must be equal to one.
+            cross_sectionrecord : [tab6_filename]
+                * tab6_filename (string) character string that defines the path
+                  and filename for the file containing cross-section table data
+                  for the reach. The TAB6_FILENAME file includes the number of
+                  entries in the file and the station elevation data in terms
+                  of the fractional width and the reach depth. Instructions for
+                  creating the TAB6_FILENAME input file are provided in SFR
+                  Reach Cross-Section Table Input File section.
             auxiliaryrecord : [auxname, auxval]
                 * auxname (string) name for the auxiliary variable to be
                   assigned AUXVAL. AUXNAME must match one of the auxiliary
@@ -384,6 +412,9 @@ class ModflowGwfsfr(mfpackage.MFPackage):
     budget_filerecord = ListTemplateGenerator(
         ("gwf6", "sfr", "options", "budget_filerecord")
     )
+    budgetcsv_filerecord = ListTemplateGenerator(
+        ("gwf6", "sfr", "options", "budgetcsv_filerecord")
+    )
     package_convergence_filerecord = ListTemplateGenerator(
         ("gwf6", "sfr", "options", "package_convergence_filerecord")
     )
@@ -395,6 +426,9 @@ class ModflowGwfsfr(mfpackage.MFPackage):
     )
     packagedata = ListTemplateGenerator(
         ("gwf6", "sfr", "packagedata", "packagedata")
+    )
+    crosssections = ListTemplateGenerator(
+        ("gwf6", "sfr", "crosssections", "crosssections")
     )
     connectiondata = ListTemplateGenerator(
         ("gwf6", "sfr", "connectiondata", "connectiondata")
@@ -408,6 +442,10 @@ class ModflowGwfsfr(mfpackage.MFPackage):
     dfn_file_name = "gwf-sfr.dfn"
 
     dfn = [
+        [
+            "header",
+            "multi-package",
+        ],
         [
             "block options",
             "name auxiliary",
@@ -514,6 +552,36 @@ class ModflowGwfsfr(mfpackage.MFPackage):
         [
             "block options",
             "name budgetfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsv_filerecord",
+            "type record budgetcsv fileout budgetcsvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budgetcsv",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsvfile",
             "type string",
             "preserve_case true",
             "shape",
@@ -810,6 +878,55 @@ class ModflowGwfsfr(mfpackage.MFPackage):
             "optional true",
         ],
         [
+            "block crosssections",
+            "name crosssections",
+            "type recarray rno tab6 filein tab6_filename",
+            "shape",
+            "valid",
+            "optional false",
+            "reader urword",
+        ],
+        [
+            "block crosssections",
+            "name rno",
+            "type integer",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "numeric_index true",
+        ],
+        [
+            "block crosssections",
+            "name tab6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block crosssections",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block crosssections",
+            "name tab6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
+        ],
+        [
             "block connectiondata",
             "name connectiondata",
             "type recarray rno ic",
@@ -917,7 +1034,8 @@ class ModflowGwfsfr(mfpackage.MFPackage):
             "block period",
             "name sfrsetting",
             "type keystring status manning stage inflow rainfall evaporation "
-            "runoff diversionrecord upstream_fraction auxiliaryrecord",
+            "runoff diversionrecord upstream_fraction cross_sectionrecord "
+            "auxiliaryrecord",
             "shape",
             "tagged false",
             "in_record true",
@@ -1040,6 +1158,55 @@ class ModflowGwfsfr(mfpackage.MFPackage):
         ],
         [
             "block period",
+            "name cross_sectionrecord",
+            "type record cross_section tab6 filein tab6_filename",
+            "shape",
+            "tagged",
+            "in_record false",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name cross_section",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name tab6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name tab6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
+        ],
+        [
+            "block period",
             "name auxiliaryrecord",
             "type record auxiliary auxname auxval",
             "shape",
@@ -1088,6 +1255,7 @@ class ModflowGwfsfr(mfpackage.MFPackage):
         save_flows=None,
         stage_filerecord=None,
         budget_filerecord=None,
+        budgetcsv_filerecord=None,
         package_convergence_filerecord=None,
         timeseries=None,
         observations=None,
@@ -1098,6 +1266,7 @@ class ModflowGwfsfr(mfpackage.MFPackage):
         unit_conversion=None,
         nreaches=None,
         packagedata=None,
+        crosssections=None,
         connectiondata=None,
         diversions=None,
         perioddata=None,
@@ -1121,6 +1290,9 @@ class ModflowGwfsfr(mfpackage.MFPackage):
         )
         self.budget_filerecord = self.build_mfdata(
             "budget_filerecord", budget_filerecord
+        )
+        self.budgetcsv_filerecord = self.build_mfdata(
+            "budgetcsv_filerecord", budgetcsv_filerecord
         )
         self.package_convergence_filerecord = self.build_mfdata(
             "package_convergence_filerecord", package_convergence_filerecord
@@ -1148,6 +1320,7 @@ class ModflowGwfsfr(mfpackage.MFPackage):
         )
         self.nreaches = self.build_mfdata("nreaches", nreaches)
         self.packagedata = self.build_mfdata("packagedata", packagedata)
+        self.crosssections = self.build_mfdata("crosssections", crosssections)
         self.connectiondata = self.build_mfdata(
             "connectiondata", connectiondata
         )

@@ -129,8 +129,7 @@ class SimulationTime:
         ].get_data()
         if len(period_data) <= sp_num:
             raise FlopyException(
-                "Stress period {} was requested but does not "
-                "exist.".format(sp_num)
+                f"Stress period {sp_num} was requested but does not exist."
             )
         return period_data[sp_num][1]
 

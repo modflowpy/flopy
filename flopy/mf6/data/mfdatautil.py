@@ -1,21 +1,40 @@
-import sys, inspect
-import numpy as np
-from copy import deepcopy
-from collections.abc import Iterable
-from ..mfbase import MFDataException, FlopyException
-from .mfstructure import DatumType
-from ...utils.datautil import PyListUtil, DatumUtil
+import inspect
 import struct
+import sys
+from collections.abc import Iterable
+from copy import deepcopy
+
+import numpy as np
+
+from ...utils.datautil import DatumUtil, PyListUtil
+from ..mfbase import FlopyException, MFDataException
+from .mfstructure import DatumType
 
 
-def iterable(obj):
-    return isinstance(obj, Iterable)
+def iterable(obj, any_iterator=False):
+    if any_iterator:
+        try:
+            my_iter = iter(obj)
+        except TypeError as te:
+            return False
+        return True
+    else:
+        return isinstance(obj, Iterable)
 
 
 def get_first_val(arr):
     while isinstance(arr, list) or isinstance(arr, np.ndarray):
         arr = arr[0]
     return arr
+
+
+def cellids_equal(cellid_1, cellid_2):
+    if len(cellid_1) != len(cellid_2):
+        return False
+    for id1, id2 in zip(cellid_1, cellid_2):
+        if id1 != id2:
+            return False
+    return True
 
 
 # convert_data(data, type) : type
@@ -213,7 +232,7 @@ def to_string(
             return str(val)
         if len(arr_val) > 1:
             # quote any string with spaces
-            string_val = "'{}'".format(val)
+            string_val = f"'{val}'"
             if data_item is not None and data_item.ucase:
                 return string_val.upper()
             else:
@@ -222,6 +241,24 @@ def to_string(
         return str(val).upper()
     else:
         return str(val)
+
+
+class DataSearchOutput:
+    def __init__(self, path_to_data=None, data_header=None):
+        self.path_to_data = path_to_data
+        self.data_header = data_header
+        self.data_entry_ids = []
+        self.data_entry_cellids = []
+        self.data_entry_stress_period = []
+        self.data_entries = []
+        self.output = False
+
+    @property
+    def transient(self):
+        if len(self.data_entry_stress_period) > 0:
+            if self.data_entry_stress_period[0] != -1:
+                return True
+        return False
 
 
 class MFComment:
@@ -304,9 +341,9 @@ class MFComment:
             if isinstance(self.text, list):
                 self.text.append(additional_text)
             elif new_line:
-                self.text = "{}{}".format(self.text, additional_text)
+                self.text = f"{self.text}{additional_text}"
             else:
-                self.text = "{} {}".format(self.text, additional_text)
+                self.text = f"{self.text} {additional_text}"
 
     """
     Get the comment text in the format to write to package files.
@@ -329,7 +366,7 @@ class MFComment:
                 if self.text.strip():
                     file_entry = self.text
             if eoln_suffix:
-                file_entry = "{}\n".format(file_entry)
+                file_entry = f"{file_entry}\n"
         return file_entry
 
     def _recursive_get(self, base_list):
@@ -337,11 +374,9 @@ class MFComment:
         if base_list and self.sim_data.comments_on:
             for item in base_list:
                 if not isinstance(item, str) and isinstance(item, list):
-                    file_entry = "{}{}".format(
-                        file_entry, self._recursive_get(item)
-                    )
+                    file_entry = f"{file_entry}{self._recursive_get(item)}"
                 else:
-                    file_entry = "{} {}".format(file_entry, item)
+                    file_entry = f"{file_entry} {item}"
         return file_entry
 
     """
@@ -427,7 +462,7 @@ class MFComment:
                 if not isinstance(item, str) and isinstance(item, list):
                     self._recursive_write(fd, item)
                 else:
-                    fd.write(" {}".format(item))
+                    fd.write(f" {item}")
 
 
 class TemplateGenerator:
@@ -447,8 +482,8 @@ class TemplateGenerator:
         self.path = path
 
     def _get_data_dimensions(self, model):
-        from ..data import mfstructure
         from ..coordinates import modeldimensions
+        from ..data import mfstructure
 
         # get structure info
         sim_struct = mfstructure.MFStructure().sim_struct
@@ -839,8 +874,8 @@ class MFDocString:
     def __init__(self, description):
         self.indent = "    "
         self.description = description
-        self.parameter_header = "{}Parameters\n{}----------".format(
-            self.indent, self.indent
+        self.parameter_header = (
+            f"{self.indent}Parameters\n{self.indent}----------"
         )
         self.parameters = []
         self.model_parameters = []
@@ -877,7 +912,7 @@ class MFDocString:
         else:
             param_list = self.parameters
         for parameter in param_list:
-            doc_string += "{}\n".format(parameter)
+            doc_string += f"{parameter}\n"
         if not model_doc_string:
-            doc_string += '\n{}"""'.format(self.indent)
+            doc_string += f'\n{self.indent}"""'
         return doc_string

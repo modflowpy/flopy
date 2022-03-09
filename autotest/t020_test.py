@@ -1,13 +1,13 @@
-# Test modflow write adn run
+# Test modflow write and run
+import os
+
+import matplotlib.pyplot as plt
 import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
 
-try:
-    import matplotlib.pyplot as plt
+import flopy
 
-    # if os.getenv('TRAVIS'):  # are we running https://travis-ci.org/ automated tests ?
-    #     matplotlib.use('Agg')  # Force matplotlib  not to use any Xwindows backend
-except:
-    plt = None
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def analyticalWaterTableSolution(h1, h2, z, R, K, L, x):
@@ -16,7 +16,7 @@ def analyticalWaterTableSolution(h1, h2, z, R, K, L, x):
     b2 = h2 - z
     h = (
         np.sqrt(
-            b1 ** 2 - (x / L) * (b1 ** 2 - b2 ** 2) + (R * x / K) * (L - x)
+            b1**2 - (x / L) * (b1**2 - b2**2) + (R * x / K) * (L - x)
         )
         + z
     )
@@ -24,22 +24,17 @@ def analyticalWaterTableSolution(h1, h2, z, R, K, L, x):
 
 
 def test_mfnwt_run():
-    import os
-    import flopy
-
     exe_name = "mfnwt"
     exe = flopy.which(exe_name)
 
     if exe is None:
-        print(
-            "Specified executable {} does not exist in path".format(exe_name)
-        )
+        print(f"Specified executable {exe_name} does not exist in path")
         return
 
+    model_ws = f"{base_dir}_test_mfnwt_run"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     modelname = "watertable"
-    model_ws = os.path.join("temp", "t020")
-    if not os.path.exists(model_ws):
-        os.makedirs(model_ws)
 
     # model dimensions
     nlay, nrow, ncol = 1, 1, 100
@@ -128,7 +123,7 @@ def test_mfnwt_run():
 
     # remove existing heads results, if necessary
     try:
-        os.remove(os.path.join(model_ws, "{0}.hds".format(modelname)))
+        os.remove(os.path.join(model_ws, f"{modelname}.hds"))
     except:
         pass
     # run existing model
@@ -136,7 +131,7 @@ def test_mfnwt_run():
 
     # Read the simulated MODFLOW-2005 model results
     # Create the headfile object
-    headfile = os.path.join(model_ws, "{0}.hds".format(modelname))
+    headfile = os.path.join(model_ws, f"{modelname}.hds")
     headobj = flopy.utils.HeadFile(headfile, precision="single")
     times = headobj.get_times()
     head = headobj.get_data(totim=times[-1])
@@ -165,14 +160,14 @@ def test_mfnwt_run():
         ax.set_xlabel("Horizontal distance, in m")
         ax.set_ylabel("Percent Error")
 
-        fig.savefig(os.path.join(model_ws, "{}.png".format(modelname)))
+        fig.savefig(os.path.join(model_ws, f"{modelname}.png"))
 
     return
 
 
 def test_irch():
-    import os
-    import flopy
+    model_ws = f"{base_dir}_test_tpl_constant"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     org_model_ws = os.path.join(
         "..", "examples", "data", "freyberg_multilayer_transient"
@@ -199,11 +194,11 @@ def test_irch():
         d = arr - aarr
         assert np.abs(d).sum() == 0
 
-    new_model_ws = "temp"
-    m.change_model_ws(new_model_ws)
+    m.change_model_ws(model_ws)
     m.write_input()
+
     mm = flopy.modflow.Modflow.load(
-        nam_file, model_ws="temp", forgive=False, verbose=True, check=False
+        nam_file, model_ws=model_ws, forgive=False, verbose=True, check=False
     )
     for kper in range(m.nper):
         arr = irch[kper]

@@ -1,18 +1,18 @@
 import os
+
 import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
 import flopy
 
-mpth = os.path.join("temp", "t019")
-# make the directory if it does not exist
-if not os.path.isdir(mpth):
-    os.makedirs(mpth)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 # Test hydmod data readers
 def test_hydmodfile_create():
-    model_ws = os.path.join(mpth)
-    if not os.path.exists(model_ws):
-        os.makedirs(model_ws)
+    model_ws = f"{base_dir}_test_hydmodfile_create"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     m = flopy.modflow.Modflow("test", model_ws=model_ws)
     hyd = flopy.modflow.ModflowHyd(m)
     m.hyd.write_file()
@@ -48,6 +48,9 @@ def test_hydmodfile_create():
 
 
 def test_hydmodfile_load():
+    model_ws = f"{base_dir}_test_hydmodfile_load"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     model = "test1tr.nam"
     pth = os.path.join("..", "examples", "data", "hydmod_test")
     m = flopy.modflow.Modflow.load(
@@ -57,10 +60,6 @@ def test_hydmodfile_load():
     assert isinstance(
         hydref, flopy.modflow.ModflowHyd
     ), "Did not load hydmod package...test1tr.hyd"
-
-    model_ws = os.path.join(mpth)
-    if not os.path.exists(model_ws):
-        os.makedirs(model_ws)
 
     m.change_model_ws(model_ws)
     m.hyd.write_file()
@@ -75,8 +74,6 @@ def test_hydmodfile_load():
 
 
 def test_hydmodfile_read():
-    import os
-    import flopy
 
     pth = os.path.join(
         "..", "examples", "data", "hydmod_test", "test1tr.hyd.gitbin"
@@ -115,17 +112,15 @@ def test_hydmodfile_read():
 
     for label in labels:
         data = h.get_data(obsname=label)
-        assert data.shape == (len(times),), "data shape is not ({},)".format(
-            len(times)
-        )
+        assert data.shape == (
+            len(times),
+        ), f"data shape is not ({len(times)},)"
 
     data = h.get_data()
-    assert data.shape == (len(times),), "data shape is not ({},)".format(
-        len(times)
-    )
+    assert data.shape == (len(times),), f"data shape is not ({len(times)},)"
     assert (
         len(data.dtype.names) == nitems + 1
-    ), "data column length is not {}".format(len(nitems + 1))
+    ), f"data column length is not {len(nitems + 1)}"
 
     try:
         import pandas as pd
@@ -151,8 +146,6 @@ def test_hydmodfile_read():
 
 
 def test_mf6obsfile_read():
-    import os
-    import flopy
 
     try:
         import pandas as pd
@@ -171,9 +164,9 @@ def test_mf6obsfile_read():
         assert isinstance(h, flopy.utils.Mf6Obs)
 
         ntimes = h.get_ntimes()
-        assert ntimes == 3, "Not enough times in {} file...{}".format(
-            txt, os.path.basename(pth)
-        )
+        assert (
+            ntimes == 3
+        ), f"Not enough times in {txt} file...{os.path.basename(pth)}"
 
         times = h.get_times()
         assert len(times) == 3, "Not enough times in {} file...{}".format(
@@ -203,15 +196,15 @@ def test_mf6obsfile_read():
             data = h.get_data(obsname=label)
             assert data.shape == (
                 len(times),
-            ), "data shape is not ({},)".format(len(times))
+            ), f"data shape is not ({len(times)},)"
 
         data = h.get_data()
-        assert data.shape == (len(times),), "data shape is not ({},)".format(
-            len(times)
-        )
+        assert data.shape == (
+            len(times),
+        ), f"data shape is not ({len(times)},)"
         assert (
             len(data.dtype.names) == nitems + 1
-        ), "data column length is not {}".format(len(nitems + 1))
+        ), f"data column length is not {len(nitems + 1)}"
 
         if pd is not None:
             for idx in range(ntimes):

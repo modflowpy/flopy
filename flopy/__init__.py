@@ -20,19 +20,36 @@ contribute.
 
 """
 
-from .version import __version__, __author__, __author_email__
-
-# imports
-from . import modflow
-from . import mt3d
-from . import seawat
-from . import modpath
-from . import modflowlgr
-from . import utils
-from . import plot
-from . import export
-from . import pest
-from . import mf6
-from . import discretization
-
+from .version import __author__, __author_email__, __version__  # isort:skip
+from . import (
+    discretization,
+    export,
+    mf6,
+    mfusg,
+    modflow,
+    modflowlgr,
+    modpath,
+    mt3d,
+    pest,
+    plot,
+    seawat,
+    utils,
+)
 from .mbase import run_model, which
+
+__all__ = [
+    "modflow",
+    "mt3d",
+    "seawat",
+    "modpath",
+    "modflowlgr",
+    "modflowusg",
+    "utils",
+    "plot",
+    "export",
+    "pest",
+    "mf6",
+    "discretization",
+    "run_model",
+    "which",
+]

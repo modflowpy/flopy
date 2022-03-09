@@ -1,6 +1,7 @@
 import os
-import sys
+
 import numpy as np
+
 from ..pakbase import Package
 from ..utils import parsenamefile
 
@@ -131,9 +132,6 @@ class ModflowFlwob(Package):
         unitnumber=None,
     ):
 
-        """
-        Package constructor
-        """
         if nqobfb is None:
             nqobfb = []
         if nqclfb is None:
@@ -217,24 +215,14 @@ class ModflowFlwob(Package):
                 unitnumber = [unitnumber[0], outunits[name[0].lower()]]
         iufbobsv = unitnumber[1]
 
-        # set filenames
-        if filenames is None:
-            filenames = [None, None]
-        elif isinstance(filenames, str):
-            filenames = [filenames, None]
-        elif isinstance(filenames, list):
-            if len(filenames) < 2:
-                filenames.append(None)
-
         # call base package constructor
-        Package.__init__(
-            self,
+        super().__init__(
             model,
             extension=extension,
             name=name,
             unit_number=unitnumber,
             allowDuplicates=True,
-            filenames=filenames,
+            filenames=self._prepare_filenames(filenames, 2),
         )
 
         self.nqfb = nqfb
@@ -315,35 +303,33 @@ class ModflowFlwob(Package):
         f_fbob = open(self.fn_path, "w")
 
         # write header
-        f_fbob.write("{}\n".format(self.heading))
+        f_fbob.write(f"{self.heading}\n")
 
         # write sections 1 and 2 : NOTE- what about NOPRINT?
-        line = "{:10d}".format(self.nqfb)
-        line += "{:10d}".format(self.nqcfb)
-        line += "{:10d}".format(self.nqtfb)
-        line += "{:10d}".format(self.iufbobsv)
+        line = f"{self.nqfb:10d}"
+        line += f"{self.nqcfb:10d}"
+        line += f"{self.nqtfb:10d}"
+        line += f"{self.iufbobsv:10d}"
         if self.no_print or "NOPRINT" in self.options:
             line += "{: >10}".format("NOPRINT")
         line += "\n"
         f_fbob.write(line)
-        f_fbob.write("{:10e}\n".format(self.tomultfb))
+        f_fbob.write(f"{self.tomultfb:10e}\n")
 
         # write sections 3-5 looping through observations groups
         c = 0
         for i in range(self.nqfb):
             #        while (i < self.nqfb):
             # write section 3
-            f_fbob.write(
-                "{:10d}{:10d}\n".format(self.nqobfb[i], self.nqclfb[i])
-            )
+            f_fbob.write(f"{self.nqobfb[i]:10d}{self.nqclfb[i]:10d}\n")
 
             # Loop through observation times for the groups
             for j in range(self.nqobfb[i]):
                 # write section 4
-                line = "{:12}".format(self.obsnam[c])
-                line += "{:8d}".format(self.irefsp[c] + 1)
-                line += "{:16.10g}".format(self.toffset[c])
-                line += " {:10.4g}\n".format(self.flwobs[c])
+                line = f"{self.obsnam[c]:12}"
+                line += f"{self.irefsp[c] + 1:8d}"
+                line += f"{self.toffset[c]:16.10g}"
+                line += f" {self.flwobs[c]:10.4g}\n"
                 f_fbob.write(line)
                 c += 1  # index variable
 
@@ -353,12 +339,12 @@ class ModflowFlwob(Package):
                 # set factor to 1.0 for all cells in group
                 if self.nqclfb[i] < 0:
                     self.factor[i, :] = 1.0
-                line = "{:10d}".format(self.layer[i, j] + 1)
-                line += "{:10d}".format(self.row[i, j] + 1)
-                line += "{:10d}".format(self.column[i, j] + 1)
+                line = f"{self.layer[i, j] + 1:10d}"
+                line += f"{self.row[i, j] + 1:10d}"
+                line += f"{self.column[i, j] + 1:10d}"
                 line += " ".format(self.factor[i, j])
                 # note is 10f good enough here?
-                line += "{:10f}\n".format(self.factor[i, j])
+                line += f"{self.factor[i, j]:10f}\n"
                 f_fbob.write(line)
 
         f_fbob.close()
@@ -371,9 +357,9 @@ class ModflowFlwob(Package):
         # write header
         f_ins = open(sfname, "w")
         f_ins.write("jif @\n")
-        f_ins.write("StandardFile 0 1 {}\n".format(self.nqtfb))
+        f_ins.write(f"StandardFile 0 1 {self.nqtfb}\n")
         for i in range(0, self.nqtfb):
-            f_ins.write("{}\n".format(self.obsnam[i]))
+            f_ins.write(f"{self.obsnam[i]}\n")
 
         f_ins.close()
         # swm: END hack for writing standard file
@@ -416,7 +402,7 @@ class ModflowFlwob(Package):
         """
 
         if model.verbose:
-            sys.stdout.write("loading flwob package file...\n")
+            print("loading flwob package file...")
 
         openfile = not hasattr(f, "read")
         if openfile:
@@ -610,10 +596,7 @@ def _get_ftype_from_filename(fn, ext_unit_dict=None):
         elif "rv" in ext.lower():
             ftype = "RVOB"
 
-    msg = (
-        "ModflowFlwob: filetype cannot be inferred "
-        "from file name {}".format(fn)
-    )
+    msg = f"ModflowFlwob: filetype cannot be inferred from file name {fn}"
     if ftype is None:
         raise AssertionError(msg)
 

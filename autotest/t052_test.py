@@ -1,20 +1,12 @@
-import shutil
 import os
+
 import numpy as np
+import pymake
+from ci_framework import FlopyTestSetup, base_test_dir
+
 import flopy
 
-try:
-    import pymake
-except:
-    print("could not import pymake")
-
-
-cpth = os.path.join("temp", "t052")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-# make the directory
-os.makedirs(cpth)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 exe_name = "mf2005"
 v = flopy.which(exe_name)
@@ -25,13 +17,18 @@ if v is None:
 
 
 def test_binary_well():
+    model_ws = f"{base_dir}_test_binary_well"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     nlay = 3
     nrow = 3
     ncol = 3
     mfnam = "t1"
     ml = flopy.modflow.Modflow(
-        modelname=mfnam, model_ws=cpth, verbose=True, exe_name=exe_name
+        modelname=mfnam,
+        model_ws=model_ws,
+        verbose=True,
+        exe_name=exe_name,
     )
     dis = flopy.modflow.ModflowDis(
         ml, nlay=nlay, nrow=nrow, ncol=ncol, top=0, botm=[-1.0, -2.0, -3.0]
@@ -67,11 +64,14 @@ def test_binary_well():
     if run:
         success, buff = ml.run_model(silent=False)
         assert success, "could not run MODFLOW-2005 model"
-        fn0 = os.path.join(cpth, mfnam + ".nam")
+        fn0 = os.path.join(model_ws, f"{mfnam}.nam")
 
     # load the model
     m = flopy.modflow.Modflow.load(
-        mfnam + ".nam", model_ws=cpth, verbose=True, exe_name=exe_name
+        f"{mfnam}.nam",
+        model_ws=model_ws,
+        verbose=True,
+        exe_name=exe_name,
     )
 
     wl = m.wel.stress_period_data[0]
@@ -82,7 +82,7 @@ def test_binary_well():
     assert np.array_equal(wel.stress_period_data[0], wl), msg
 
     # change model work space
-    pth = os.path.join(cpth, "flopy")
+    pth = os.path.join(model_ws, "flopy")
     m.change_model_ws(new_pth=pth)
 
     # remove the existing well package
@@ -100,13 +100,11 @@ def test_binary_well():
     if run:
         success, buff = m.run_model(silent=False)
         assert success, "could not run the new MODFLOW-2005 model"
-        fn1 = os.path.join(pth, mfnam + ".nam")
+        fn1 = os.path.join(pth, f"{mfnam}.nam")
 
     # compare the files
     if run:
-        fsum = os.path.join(
-            cpth, "{}.head.out".format(os.path.splitext(mfnam)[0])
-        )
+        fsum = os.path.join(model_ws, f"{os.path.splitext(mfnam)[0]}.head.out")
         success = False
         try:
             success = pymake.compare_heads(fn0, fn1, outfile=fsum)
@@ -116,7 +114,7 @@ def test_binary_well():
         assert success, "head comparison failure"
 
         fsum = os.path.join(
-            cpth, "{}.budget.out".format(os.path.splitext(mfnam)[0])
+            model_ws, f"{os.path.splitext(mfnam)[0]}.budget.out"
         )
         success = False
         try:
@@ -127,9 +125,6 @@ def test_binary_well():
             print("could not perform budget comparison")
 
         assert success, "budget comparison failure"
-
-    # clean up
-    shutil.rmtree(cpth)
 
 
 if __name__ == "__main__":

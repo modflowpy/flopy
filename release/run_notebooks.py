@@ -1,6 +1,5 @@
 import os
 import sys
-import shutil
 
 # path to notebooks
 src_pths = (
@@ -49,4 +48,4 @@ for src in nb_files:
 
 # write out failed runs
 for idx, src in enumerate(failed_runs):
-    print("{:2d}...{} FAILED".format(idx + 1, src))
+    print(f"{idx + 1:2d}...{src} FAILED")

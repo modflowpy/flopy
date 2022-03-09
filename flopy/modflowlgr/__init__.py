@@ -1,1 +1,1 @@
-from .mflgr import ModflowLgr, LgrChild
+from .mflgr import LgrChild, ModflowLgr

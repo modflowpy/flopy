@@ -3,19 +3,14 @@ Test the observation process load and write
 """
 import os
 import shutil
+
 import numpy as np
+import pytest
+from ci_framework import FlopyTestSetup, base_test_dir
+
 import flopy
-from nose.tools import raises
 
-try:
-    import pymake
-except:
-    print("could not import pymake")
-
-cpth = os.path.join("temp", "t041")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 exe_name = "mf2005"
 v = flopy.which(exe_name)
@@ -29,7 +24,9 @@ def test_hob_simple():
     """
     test041 create and run a simple MODFLOW-2005 OBS example
     """
-    pth = os.path.join(cpth, "simple")
+    model_ws = f"{base_dir}_test_hob_simple"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     modelname = "hob_simple"
     nlay, nrow, ncol = 1, 11, 11
     shape3d = (nlay, nrow, ncol)
@@ -38,7 +35,7 @@ def test_hob_simple():
     ib[0, 0, 0] = -1
     m = flopy.modflow.Modflow(
         modelname=modelname,
-        model_ws=pth,
+        model_ws=model_ws,
         verbose=False,
         exe_name=exe_name,
     )
@@ -68,6 +65,8 @@ def test_hob_simple():
         success, buff = m.run_model(silent=False)
         assert success, "could not run simple MODFLOW-2005 model"
 
+    evaluate_filenames(model_ws)
+
     return
 
 
@@ -75,22 +74,24 @@ def test_obs_load_and_write():
     """
     test041 load and write of MODFLOW-2005 OBS example problem
     """
+    model_ws = f"{base_dir}_test_obs_load_and_write"
+    test_setup = FlopyTestSetup(
+        verbose=True,
+        test_dirs=model_ws,
+    )
+
     pth = os.path.join("..", "examples", "data", "mf2005_obs")
-    opth = os.path.join(cpth, "tc1-true", "orig")
-    # delete the directory if it exists
-    if os.path.isdir(opth):
-        shutil.rmtree(opth)
-    os.makedirs(opth)
+
     # copy the original files
     files = os.listdir(pth)
     for file in files:
         src = os.path.join(pth, file)
-        dst = os.path.join(opth, file)
+        dst = os.path.join(model_ws, file)
         shutil.copyfile(src, dst)
 
     # load the modflow model
     mf = flopy.modflow.Modflow.load(
-        "tc1-true.nam", verbose=True, model_ws=opth, exe_name=exe_name
+        "tc1-true.nam", verbose=True, model_ws=model_ws, exe_name=exe_name
     )
 
     # run the modflow-2005 model
@@ -101,13 +102,13 @@ def test_obs_load_and_write():
         try:
             iu = mf.hob.iuhobsv
             fpth = mf.get_output(unit=iu)
-            pth0 = os.path.join(opth, fpth)
+            pth0 = os.path.join(model_ws, fpth)
             obs0 = np.genfromtxt(pth0, skip_header=1)
         except:
             raise ValueError("could not load original HOB output file")
 
-    npth = os.path.join(cpth, "tc1-true", "new")
-    mf.change_model_ws(new_pth=npth, reset_external=True)
+    model_ws2 = os.path.join(model_ws, "flopy")
+    mf.change_model_ws(new_pth=model_ws2, reset_external=True)
 
     # write the lgr model in to the new path
     mf.write_input()
@@ -119,7 +120,7 @@ def test_obs_load_and_write():
 
         # compare parent results
         try:
-            pth1 = os.path.join(npth, fpth)
+            pth1 = os.path.join(model_ws2, fpth)
             obs1 = np.genfromtxt(pth1, skip_header=1)
 
             msg = "new simulated heads are not approximately equal"
@@ -130,29 +131,33 @@ def test_obs_load_and_write():
         except:
             raise ValueError("could not load new HOB output file")
 
+    eval_flwob_load(model_ws)
+
 
 def test_obs_create_and_write():
     """
     test041 create and write of MODFLOW-2005 OBS example problem
     """
+    model_ws = f"{base_dir}_test_obs_create_and_write"
+    test_setup = FlopyTestSetup(
+        verbose=True,
+        test_dirs=model_ws,
+    )
+
     pth = os.path.join("..", "examples", "data", "mf2005_obs")
-    opth = os.path.join(cpth, "create", "orig")
-    # delete the directory if it exists
-    if os.path.isdir(opth):
-        shutil.rmtree(opth)
-    os.makedirs(opth)
+
     # copy the original files
     files = os.listdir(pth)
     for file in files:
         src = os.path.join(pth, file)
-        dst = os.path.join(opth, file)
+        dst = os.path.join(model_ws, file)
         shutil.copyfile(src, dst)
 
     # load the modflow model
     mf = flopy.modflow.Modflow.load(
         "tc1-true.nam",
         verbose=True,
-        model_ws=opth,
+        model_ws=model_ws,
         exe_name=exe_name,
         forgive=False,
     )
@@ -218,13 +223,13 @@ def test_obs_create_and_write():
         try:
             iu = mf.hob.iuhobsv
             fpth = mf.get_output(unit=iu)
-            pth0 = os.path.join(opth, fpth)
+            pth0 = os.path.join(model_ws, fpth)
             obs0 = np.genfromtxt(pth0, skip_header=1)
         except:
             raise ValueError("could not load original HOB output file")
 
-    npth = os.path.join(cpth, "create", "new")
-    mf.change_model_ws(new_pth=npth, reset_external=True)
+    model_ws2 = os.path.join(model_ws, "flopy")
+    mf.change_model_ws(new_pth=model_ws2, reset_external=True)
 
     # write the model at the new path
     mf.write_input()
@@ -236,7 +241,7 @@ def test_obs_create_and_write():
 
         # compare parent results
         try:
-            pth1 = os.path.join(npth, fpth)
+            pth1 = os.path.join(model_ws2, fpth)
             obs1 = np.genfromtxt(pth1, skip_header=1)
 
             msg = "new simulated heads are not approximately equal"
@@ -246,65 +251,6 @@ def test_obs_create_and_write():
             assert np.allclose(obs0[:, 1], obs1[:, 1], atol=1e-4), msg
         except:
             raise ValueError("could not load new HOB output file")
-
-
-def test_filenames():
-    """
-    test041 load and run a simple MODFLOW-2005 OBS example with specified
-    filenames
-    """
-    print(
-        "test041 load and run a simple MODFLOW-2005 OBS example with"
-        " specified filenames"
-    )
-    pth = os.path.join(cpth, "simple")
-    modelname = "hob_simple"
-    pkglst = ["dis", "bas6", "pcg", "lpf"]
-    m = flopy.modflow.Modflow.load(
-        modelname + ".nam",
-        model_ws=pth,
-        check=False,
-        load_only=pkglst,
-        verbose=False,
-        exe_name=exe_name,
-        forgive=False,
-    )
-
-    obs = flopy.modflow.HeadObservation(
-        m,
-        layer=0,
-        row=5,
-        column=5,
-        time_series_data=[[1.0, 54.4], [2.0, 55.2]],
-    )
-    f_in = modelname + "_custom_fname.hob"
-    f_out = modelname + "_custom_fname.hob.out"
-    filenames = [f_in, f_out]
-    hob = flopy.modflow.ModflowHob(
-        m,
-        iuhobsv=51,
-        hobdry=-9999.0,
-        obs_data=[obs],
-        options=["NOPRINT"],
-        filenames=filenames,
-    )
-
-    # Write the model input files
-    m.write_input()
-
-    s = "output filename ({}) does not match specified name".format(
-        m.get_output(unit=51)
-    )
-    assert m.get_output(unit=51) == f_out, s
-    s = "specified HOB input file not found"
-    assert os.path.isfile(os.path.join(pth, f_in)), s
-
-    # run the modflow-2005 model
-    if run:
-        success, buff = m.run_model(silent=False)
-        assert success, "could not run simple MODFLOW-2005 model"
-
-    return
 
 
 def test_multilayerhob_pr():
@@ -326,7 +272,6 @@ def test_multilayerhob_pr():
     return
 
 
-@raises(ValueError)
 def test_multilayerhob_prfail():
     """
     test041 failure of multilayer obs PR == 1 criteria
@@ -335,14 +280,15 @@ def test_multilayerhob_prfail():
     dis = flopy.modflow.ModflowDis(
         ml, nlay=3, nrow=1, ncol=1, nper=1, perlen=[1]
     )
-    flopy.modflow.HeadObservation(
-        ml,
-        layer=-3,
-        row=0,
-        column=0,
-        time_series_data=[[1.0, 0]],
-        mlay={0: 0.50, 1: 0.50, 2: 0.01},
-    )
+    with pytest.raises(ValueError):
+        flopy.modflow.HeadObservation(
+            ml,
+            layer=-3,
+            row=0,
+            column=0,
+            time_series_data=[[1.0, 0]],
+            mlay={0: 0.50, 1: 0.50, 2: 0.01},
+        )
     return
 
 
@@ -381,18 +327,17 @@ def test_multilayerhob_pr_multiline():
         raise AssertionError("pr, mlay... load error")
 
 
-def test_flwob_load():
+def eval_flwob_load(model_ws):
     """
     test041 create, write, and load ModflowFlwob package.
     """
     # load the modflow model
-    opth = os.path.join(cpth, "tc1-true", "orig")
     m = flopy.modflow.Modflow.load(
-        "tc1-true.nam", verbose=True, model_ws=opth, exe_name=exe_name
+        "tc1-true.nam", verbose=True, model_ws=model_ws, exe_name=exe_name
     )
 
-    npth = os.path.join(cpth, "tc1-true", "flwob")
-    m.change_model_ws(new_pth=npth, reset_external=True)
+    model_ws2 = os.path.join(model_ws, "flwob")
+    m.change_model_ws(new_pth=model_ws2, reset_external=True)
 
     # write the lgr model in to the new path
     m.write_input()
@@ -444,7 +389,7 @@ def test_flwob_load():
     pkglst = ["drob"]
     m = flopy.modflow.Modflow.load(
         "tc1-true.nam",
-        model_ws=npth,
+        model_ws=model_ws2,
         check=False,
         load_only=pkglst,
         verbose=False,
@@ -453,24 +398,80 @@ def test_flwob_load():
     )
 
     # check variables were read properly
-    s = "nqfb loaded from {} read incorrectly".format(m.drob.fn_path)
+    s = f"nqfb loaded from {m.drob.fn_path} read incorrectly"
     assert drob.nqfb == m.drob.nqfb, s
-    s = "nqcfb loaded from {} read incorrectly".format(m.drob.fn_path)
+    s = f"nqcfb loaded from {m.drob.fn_path} read incorrectly"
     assert drob.nqcfb == m.drob.nqcfb, s
-    s = "nqtfb loaded from {} read incorrectly".format(m.drob.fn_path)
+    s = f"nqtfb loaded from {m.drob.fn_path} read incorrectly"
     assert drob.nqtfb == m.drob.nqtfb, s
-    s = "obsnam loaded from {} read incorrectly".format(m.drob.fn_path)
+    s = f"obsnam loaded from {m.drob.fn_path} read incorrectly"
     assert list([n for n in drob.obsnam]) == list(
         [n for n in m.drob.obsnam]
     ), s
-    s = "flwobs loaded from {} read incorrectly".format(m.drob.fn_path)
+    s = f"flwobs loaded from {m.drob.fn_path} read incorrectly"
     assert np.array_equal(drob.flwobs, m.drob.flwobs), s
-    s = "layer loaded from {} read incorrectly".format(m.drob.fn_path)
+    s = f"layer loaded from {m.drob.fn_path} read incorrectly"
     assert np.array_equal(drob.layer, m.drob.layer), s
-    s = "row loaded from {} read incorrectly".format(m.drob.fn_path)
+    s = f"row loaded from {m.drob.fn_path} read incorrectly"
     assert np.array_equal(drob.row, m.drob.row), s
-    s = "column loaded from {} read incorrectly".format(m.drob.fn_path)
+    s = f"column loaded from {m.drob.fn_path} read incorrectly"
     assert np.array_equal(drob.column, m.drob.column), s
+
+    return
+
+
+def evaluate_filenames(model_ws):
+    """
+    test041 load and run a simple MODFLOW-2005 OBS example with specified
+    filenames
+    """
+    print(
+        "test041 load and run a simple MODFLOW-2005 OBS example with"
+        " specified filenames"
+    )
+    modelname = "hob_simple"
+    pkglst = ["dis", "bas6", "pcg", "lpf"]
+    m = flopy.modflow.Modflow.load(
+        f"{modelname}.nam",
+        model_ws=model_ws,
+        check=False,
+        load_only=pkglst,
+        verbose=False,
+        exe_name=exe_name,
+        forgive=False,
+    )
+
+    obs = flopy.modflow.HeadObservation(
+        m,
+        layer=0,
+        row=5,
+        column=5,
+        time_series_data=[[1.0, 54.4], [2.0, 55.2]],
+    )
+    f_in = f"{modelname}_custom_fname.hob"
+    f_out = f"{modelname}_custom_fname.hob.out"
+    filenames = [f_in, f_out]
+    hob = flopy.modflow.ModflowHob(
+        m,
+        iuhobsv=51,
+        hobdry=-9999.0,
+        obs_data=[obs],
+        options=["NOPRINT"],
+        filenames=filenames,
+    )
+
+    # Write the model input files
+    m.write_input()
+
+    s = f"output filename ({m.get_output(unit=51)}) does not match specified name"
+    assert m.get_output(unit=51) == f_out, s
+    s = "specified HOB input file not found"
+    assert os.path.isfile(os.path.join(model_ws, f_in)), s
+
+    # run the modflow-2005 model
+    if run:
+        success, buff = m.run_model(silent=False)
+        assert success, "could not run simple MODFLOW-2005 model"
 
     return
 
@@ -479,6 +480,4 @@ if __name__ == "__main__":
     test_hob_simple()
     test_obs_create_and_write()
     test_obs_load_and_write()
-    test_filenames()
-    test_flwob_load()
     test_multilayerhob_pr_multiline()

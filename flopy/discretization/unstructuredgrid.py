@@ -1,7 +1,12 @@
-import os
 import copy
+import inspect
+import os
+
 import numpy as np
-from .grid import Grid, CachedData
+from matplotlib.path import Path
+
+from ..utils.geometry import is_clockwise
+from .grid import CachedData, Grid
 
 
 class UnstructuredGrid(Grid):
@@ -128,14 +133,13 @@ class UnstructuredGrid(Grid):
 
         if iverts is not None:
             if self.grid_varies_by_layer:
-                msg = "Length of iverts must equal grid nodes ({} {})".format(
-                    len(iverts), self.nnodes
+                msg = (
+                    "Length of iverts must equal grid nodes "
+                    f"({len(iverts)} {self.nnodes})"
                 )
                 assert len(iverts) == self.nnodes, msg
             else:
-                msg = "Length of iverts must equal ncpl ({} {})".format(
-                    len(iverts), self.ncpl
-                )
+                msg = f"Length of iverts must equal ncpl ({len(iverts)} {self.ncpl})"
                 assert np.all([cpl == len(iverts) for cpl in self.ncpl]), msg
 
         return
@@ -201,14 +205,17 @@ class UnstructuredGrid(Grid):
 
     @property
     def iverts(self):
-        return self._iverts
+        if self._iverts is not None:
+            return [
+                [ivt for ivt in t if ivt is not None] for t in self._iverts
+            ]
 
     @property
     def verts(self):
         if self._vertices is None:
             return self._vertices
         else:
-            return np.array([t[1:] for t in self._vertices], dtype=float)
+            return np.array([list(t)[1:] for t in self._vertices], dtype=float)
 
     @property
     def ia(self):
@@ -472,10 +479,7 @@ class UnstructuredGrid(Grid):
         -------
             list or dict of matplotlib.collections.Polygon
         """
-        try:
-            from matplotlib.path import Path
-        except ImportError:
-            raise ImportError("matplotlib required to use this method")
+        from matplotlib.path import Path
 
         cache_index = "xyzgrid"
         if (
@@ -507,9 +511,77 @@ class UnstructuredGrid(Grid):
 
         return copy.copy(self._polygons)
 
-    def intersect(self, x, y, local=False, forgive=False):
-        x, y = super().intersect(x, y, local, forgive)
-        raise Exception("Not implemented yet")
+    def intersect(self, x, y, z=None, local=False, forgive=False):
+        """
+        Get the CELL2D number of a point with coordinates x and y
+
+        When the point is on the edge of two cells, the cell with the lowest
+        CELL2D number is returned.
+
+        Parameters
+        ----------
+        x : float
+            The x-coordinate of the requested point
+        y : float
+            The y-coordinate of the requested point
+        z : float, None
+            optional, z-coordiante of the requested point
+        local: bool (optional)
+            If True, x and y are in local coordinates (defaults to False)
+        forgive: bool (optional)
+            Forgive x,y arguments that fall outside the model grid and
+            return NaNs instead (defaults to False - will throw exception)
+
+        Returns
+        -------
+        icell2d : int
+            The CELL2D number
+
+        """
+        frame_info = inspect.getframeinfo(inspect.currentframe())
+        self._warn_intersect(frame_info.filename, frame_info.lineno)
+
+        if local:
+            # transform x and y to real-world coordinates
+            x, y = super().get_coords(x, y)
+        xv, yv, zv = self.xyzvertices
+
+        if self.grid_varies_by_layer:
+            ncpl = self.nnodes
+        else:
+            ncpl = self.ncpl[0]
+
+        for icell2d in range(ncpl):
+            xa = np.array(xv[icell2d])
+            ya = np.array(yv[icell2d])
+            # x and y at least have to be within the bounding box of the cell
+            if (
+                np.any(x <= xa)
+                and np.any(x >= xa)
+                and np.any(y <= ya)
+                and np.any(y >= ya)
+            ):
+                if is_clockwise(xa, ya):
+                    radius = -1e-9
+                else:
+                    radius = 1e-9
+                path = Path(np.stack((xa, ya)).transpose())
+                # use a small radius, so that the edge of the cell is included
+                if path.contains_point((x, y), radius=radius):
+                    if z is None:
+                        return icell2d
+
+                    for lay in range(self.nlay):
+                        if lay != 0 and not self.grid_varies_by_layer:
+                            icell2d += self.ncpl[lay - 1]
+                        if zv[0, icell2d] >= z >= zv[1, icell2d]:
+                            return icell2d
+
+        if forgive:
+            icell2d = np.nan
+            return icell2d
+
+        raise Exception("point given is outside of the model area")
 
     @property
     def top_botm(self):
@@ -544,7 +616,7 @@ class UnstructuredGrid(Grid):
         lc : matplotlib.collections.LineCollection
 
         """
-        from flopy.plot import PlotMapView
+        from ..plot import PlotMapView
 
         layer = 0
         if "layer" in kwargs:
@@ -563,7 +635,7 @@ class UnstructuredGrid(Grid):
         yvertices = []
 
         # build xy vertex and cell center info
-        for iverts in self._iverts:
+        for iverts in self.iverts:
 
             xcellvert = []
             ycellvert = []
@@ -765,7 +837,7 @@ class UnstructuredGrid(Grid):
             number of cells per plottable layer
 
         """
-        from flopy.utils.gridgen import get_ia_from_iac
+        from ..utils.gridgen import get_ia_from_iac
 
         valid = False
         ia = get_ia_from_iac(iac)
@@ -809,11 +881,10 @@ class UnstructuredGrid(Grid):
 
         grb_obj = MfGrdFile(file_path, verbose=verbose)
         if grb_obj.grid_type != "DISU":
-            err_msg = (
-                "Binary grid file ({}) ".format(os.path.basename(file_path))
-                + "is not a vertex (DISU) grid."
+            raise ValueError(
+                f"Binary grid file ({os.path.basename(file_path)}) "
+                "is not a vertex (DISU) grid."
             )
-            raise ValueError(err_msg)
 
         iverts = grb_obj.iverts
         if iverts is not None:
@@ -842,8 +913,7 @@ class UnstructuredGrid(Grid):
                 angrot=angrot,
             )
         else:
-            err_msg = (
-                "{} binary grid file".format(os.path.basename(file_path))
-                + " does not include vertex data"
+            raise TypeError(
+                f"{os.path.basename(file_path)} binary grid file "
+                "does not include vertex data"
             )
-            raise TypeError(err_msg)

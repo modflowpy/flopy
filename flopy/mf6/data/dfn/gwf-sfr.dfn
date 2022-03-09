@@ -1,4 +1,5 @@
 # --------------------- gwf sfr options ---------------------
+# flopy multi-package
 
 block options
 name auxiliary
@@ -126,6 +127,39 @@ tagged false
 optional false
 longname file keyword
 description name of the binary output file to write budget information.
+
+block options
+name budgetcsv_filerecord
+type record budgetcsv fileout budgetcsvfile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name budgetcsv
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname budget keyword
+description keyword to specify that record corresponds to the budget CSV.
+
+block options
+name budgetcsvfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the comma-separated value (CSV) output file to write budget summary information.  A budget summary record will be written to this file for each time step of the simulation.
 
 block options
 name package_convergence_filerecord
@@ -355,8 +389,8 @@ shape
 tagged false
 in_record true
 reader urword
-longname streambed top
-description real value that defines the top elevation of the reach streambed.
+longname reach bottom
+description real value that defines the bottom elevation of the reach.
 
 block packagedata
 name rbth
@@ -443,6 +477,61 @@ optional true
 longname well name
 description REPLACE boundname {'{#1}': 'stream reach'}
 
+# --------------------- gwf srf crosssections ---------------------
+
+block crosssections
+name crosssections
+type recarray rno tab6 filein tab6_filename
+shape
+valid
+optional false
+reader urword
+longname
+description
+
+block crosssections
+name rno
+type integer
+shape
+tagged false
+in_record true
+reader urword
+longname reach number for this entry
+description integer value that defines the reach number associated with the specified cross-section table file on the line. RNO must be greater than zero and less than or equal to NREACHES. The program will also terminate with an error if table information for a reach is specified more than once.
+numeric_index true
+
+block crosssections
+name tab6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname head keyword
+description keyword to specify that record corresponds to a cross-section table file.
+
+block crosssections
+name filein
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block crosssections
+name tab6_filename
+type string
+preserve_case true
+in_record true
+reader urword
+optional false
+tagged false
+longname table file name
+description character string that defines the path and filename for the file containing cross-section table data for the reach. The TAB6\_FILENAME file includes the number of entries in the file and the station elevation data in terms of the fractional width and the reach depth. Instructions for creating the TAB6\_FILENAME input file are provided in SFR Reach Cross-Section Table Input File section.
 
 # --------------------- gwf sfr connectiondata ---------------------
 
@@ -477,6 +566,8 @@ longname connected reach numbers
 description integer value that defines the reach number of the reach connected to the current reach and whether it is connected to the upstream or downstream end of the reach. Negative IC numbers indicate connected reaches are connected to the downstream end of the current reach. Positive IC numbers indicate connected reaches are connected to the upstream end of the current reach. The absolute value of IC must be greater than zero and less than or equal to NREACHES. IC should not be specified when NCON is zero but must be specified otherwise.
 numeric_index true
 support_negative_index true
+
+
 
 # --------------------- gwf sfr diversions ---------------------
 
@@ -568,7 +659,7 @@ numeric_index true
 
 block period
 name sfrsetting
-type keystring status manning stage inflow rainfall evaporation runoff diversionrecord upstream_fraction auxiliaryrecord
+type keystring status manning stage inflow rainfall evaporation runoff diversionrecord upstream_fraction cross_sectionrecord auxiliaryrecord
 shape
 tagged false
 in_record true
@@ -702,6 +793,60 @@ in_record true
 reader urword
 longname fraction of upstream flow
 description real value that defines the fraction of upstream flow (USTRF) from each upstream reach that is applied as upstream inflow to the reach. The sum of all USTRF values for all reaches connected to the same upstream reach must be equal to one.
+
+block period
+name cross_sectionrecord
+type record cross_section tab6 filein tab6_filename
+shape
+tagged
+in_record false
+reader urword
+longname
+description
+
+block period
+name cross_section
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname cross_section keyword
+description keyword to specify that record corresponds to a reach cross-section.
+
+block period
+name tab6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname head keyword
+description keyword to specify that record corresponds to a cross-section table file.
+
+block period
+name filein
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block period
+name tab6_filename
+type string
+preserve_case true
+in_record true
+reader urword
+optional false
+tagged false
+longname table file name
+description character string that defines the path and filename for the file containing cross-section table data for the reach. The TAB6\_FILENAME file includes the number of entries in the file and the station elevation data in terms of the fractional width and the reach depth. Instructions for creating the TAB6\_FILENAME input file are provided in SFR Reach Cross-Section Table Input File section.
 
 block period
 name auxiliaryrecord

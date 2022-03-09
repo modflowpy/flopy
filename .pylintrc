@@ -346,6 +346,9 @@ single-line-class-stmt=no
 # else.
 single-line-if-stmt=no
 
+# Good variable names which should always be accepted, separated by a comma
+good-names=kv,nr,nc,sy,ss,iu,hy,hk
+
 
 [SIMILARITIES]
 

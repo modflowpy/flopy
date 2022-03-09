@@ -1,25 +1,24 @@
 import os
+
 import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
 import flopy
 
-# import flopy.pest.templatewriter
-# import flopy.pest.templatewriter as flopy.pest.templatewriter
-# import flopy.pest.flopy.pest.params as flopy.pest.params
-
-mpth = os.path.join("temp", "t018")
-# make the directory if it does not exist
-if not os.path.isdir(mpth):
-    os.makedirs(mpth)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def test_tpl_constant():
+    model_ws = f"{base_dir}_test_tpl_constant"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     # Define the model dimensions
     nlay = 3
     nrow = 20
     ncol = 20
 
     # Create the flopy model object and add the dis and lpf packages
-    m = flopy.modflow.Modflow(modelname="tpl1", model_ws=mpth)
+    m = flopy.modflow.Modflow(modelname="tpl1", model_ws=model_ws)
     dis = flopy.modflow.ModflowDis(m, nlay, nrow, ncol)
     lpf = flopy.modflow.ModflowLpf(m, hk=10.0)
 
@@ -46,19 +45,22 @@ def test_tpl_constant():
     tw = flopy.pest.templatewriter.TemplateWriter(m, [p])
     tw.write_template()
 
-    tplfile = os.path.join(mpth, "tpl1.lpf.tpl")
+    tplfile = os.path.join(model_ws, "tpl1.lpf.tpl")
     assert os.path.isfile(tplfile)
 
     return
 
 
 def test_tpl_layered():
+    model_ws = f"{base_dir}_test_tpl_layered"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     nlay = 3
     nrow = 20
     ncol = 20
 
     # Create the flopy model object and add the dis and lpf packages
-    m = flopy.modflow.Modflow(modelname="tpl2", model_ws=mpth)
+    m = flopy.modflow.Modflow(modelname="tpl2", model_ws=model_ws)
     dis = flopy.modflow.ModflowDis(m, nlay, nrow, ncol)
     lpf = flopy.modflow.ModflowLpf(m, hk=10.0)
 
@@ -81,19 +83,22 @@ def test_tpl_layered():
     tw = flopy.pest.templatewriter.TemplateWriter(m, [p])
     tw.write_template()
 
-    tplfile = os.path.join(mpth, "tpl2.lpf.tpl")
+    tplfile = os.path.join(model_ws, "tpl2.lpf.tpl")
     assert os.path.isfile(tplfile)
 
     return
 
 
 def test_tpl_zoned():
+    model_ws = f"{base_dir}_test_tpl_zoned"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     nlay = 3
     nrow = 20
     ncol = 20
 
     # Create the flopy model object and add the dis and lpf packages
-    m = flopy.modflow.Modflow(modelname="tpl3", model_ws=mpth)
+    m = flopy.modflow.Modflow(modelname="tpl3", model_ws=model_ws)
     dis = flopy.modflow.ModflowDis(m, nlay, nrow, ncol)
     lpf = flopy.modflow.ModflowLpf(m, hk=10.0)
 
@@ -144,7 +149,7 @@ def test_tpl_zoned():
     tw = flopy.pest.templatewriter.TemplateWriter(m, plist)
     tw.write_template()
 
-    tplfile = os.path.join(mpth, "tpl3.lpf.tpl")
+    tplfile = os.path.join(model_ws, "tpl3.lpf.tpl")
     assert os.path.isfile(tplfile)
 
     return

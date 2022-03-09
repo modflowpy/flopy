@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import numpy as np
 
 
@@ -174,18 +173,16 @@ def to_cvfd(
     # First create vertexdict {(x1, y1): ivert1, (x2, y2): ivert2, ...} and
     # vertexlist [[ivert1, ivert2, ...], [ivert9, ivert10, ...], ...]
     # In the process, filter out any duplicate vertices
-    vertexdict = OrderedDict()
+    vertexdict = {}
     vertexlist = []
     xcyc = np.empty((ncells, 2), dtype=float)
     iv = 0
     nvertstart = 0
     if verbose:
         print("Converting vertdict to cvfd representation.")
-        print("Number of cells in vertdict is: {}".format(len(vertdict)))
+        print(f"Number of cells in vertdict is: {len(vertdict)}")
         print(
-            "Cell {} up to {} (but not including) will be processed.".format(
-                nodestart, nodestop
-            )
+            f"Cell {nodestart} up to {nodestop} (but not including) will be processed."
         )
     for icell in range(nodestart, nodestop):
         points = vertdict[icell]
@@ -204,20 +201,18 @@ def to_cvfd(
                 iv += 1
             ivertlist.append(ivert)
         if ivertlist[0] != ivertlist[-1]:
-            raise Exception("Cell {} not closed".format(icell))
+            raise Exception(f"Cell {icell} not closed")
         vertexlist.append(ivertlist)
 
     # next create vertex_cell_dict = {}; for each vertex, store list of cells
     # that use it
     nvert = len(vertexdict)
     if verbose:
-        print("Started with {} vertices.".format(nvertstart))
-        print("Ended up with {} vertices.".format(nvert))
-        print(
-            "Reduced total number of vertices by {}".format(nvertstart - nvert)
-        )
+        print(f"Started with {nvertstart} vertices.")
+        print(f"Ended up with {nvert} vertices.")
+        print(f"Reduced total number of vertices by {nvertstart - nvert}")
         print("Creating dict of vertices with their associated cells")
-    vertex_cell_dict = OrderedDict()
+    vertex_cell_dict = {}
     for icell in range(nodestart, nodestop):
         ivertlist = vertexlist[icell]
         for ivert in ivertlist:
@@ -271,7 +266,7 @@ def to_cvfd(
 def shapefile_to_cvfd(shp, **kwargs):
     import shapefile
 
-    print("Translating shapefile ({}) into cvfd format".format(shp))
+    print(f"Translating shapefile ({shp}) into cvfd format")
     sf = shapefile.Reader(shp)
     shapes = sf.shapes()
     vertdict = {}
@@ -300,7 +295,7 @@ def shapefile_to_xcyc(shp):
     """
     import shapefile
 
-    print("Translating shapefile ({}) into cell centroids".format(shp))
+    print(f"Translating shapefile ({shp}) into cell centroids")
     sf = shapefile.Reader(shp)
     shapes = sf.shapes()
     ncells = len(shapes)

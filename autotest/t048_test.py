@@ -2,8 +2,9 @@
 Test the observation process load and write
 """
 import os
-import shutil
-import filecmp
+
+import pytest
+
 import flopy
 
 try:
@@ -14,11 +15,10 @@ except ImportError:
 
 path = os.path.join("..", "examples", "data", "mf2005_test")
 cpth = os.path.join("temp", "t048")
-# delete the directory if it exists
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-# make the directory
-os.makedirs(cpth)
+
+# make the directory if it does not exist
+if not os.path.isdir(cpth):
+    os.makedirs(cpth, exist_ok=True)
 
 mf_items = [
     "fhb.nam",
@@ -76,9 +76,7 @@ def load_and_write_fhb(mfnam, pth):
         fn1 = os.path.join(apth, mfnam)
 
     if run:
-        fsum = os.path.join(
-            compth, "{}.head.out".format(os.path.splitext(mfnam)[0])
-        )
+        fsum = os.path.join(compth, f"{os.path.splitext(mfnam)[0]}.head.out")
         success = False
         try:
             success = pymake.compare_heads(fn0, fn1, outfile=fsum)
@@ -88,9 +86,7 @@ def load_and_write_fhb(mfnam, pth):
 
         assert success, "head comparison failure"
 
-        fsum = os.path.join(
-            compth, "{}.budget.out".format(os.path.splitext(mfnam)[0])
-        )
+        fsum = os.path.join(compth, f"{os.path.splitext(mfnam)[0]}.budget.out")
         success = False
         try:
             success = pymake.compare_budget(
@@ -105,9 +101,12 @@ def load_and_write_fhb(mfnam, pth):
     return
 
 
-def test_mf2005fhbload():
-    for namfile, pth in zip(mf_items, pths):
-        yield load_and_write_fhb, namfile, pth
+@pytest.mark.parametrize(
+    "namfile, pth",
+    zip(mf_items, pths),
+)
+def test_mf2005fhbload(namfile, pth):
+    load_and_write_fhb(namfile, pth)
     return
 
 

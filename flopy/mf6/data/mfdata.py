@@ -1,18 +1,20 @@
-from operator import itemgetter
-import sys
 import inspect
+import sys
+from operator import itemgetter
+
+from ...datbase import DataInterface, DataType
+from ...mbase import ModelInterface
+from ...utils import datautil
+from ..coordinates.modeldimensions import DataDimensions, DiscretizationType
+from ..data.mfstructure import DatumType
 from ..mfbase import (
+    FlopyException,
     MFDataException,
     MFInvalidTransientBlockHeaderException,
-    FlopyException,
     VerbosityLevel,
 )
-from ..data.mfstructure import DatumType
-from ..coordinates.modeldimensions import DataDimensions, DiscretizationType
-from ...datbase import DataInterface, DataType
 from .mfdatastorage import DataStructureType
 from .mfdatautil import to_string
-from ...mbase import ModelInterface
 
 
 class MFTransient:
@@ -100,6 +102,12 @@ class MFTransient:
             self._verify_sp(transient_key)
         self._current_key = transient_key
         if transient_key not in self._data_storage:
+            if (
+                isinstance(transient_key, tuple)
+                and transient_key[0] in self._data_storage
+            ):
+                self._current_key = transient_key[0]
+                return
             self.add_transient_key(transient_key)
 
     def _set_data_prep(self, data, transient_key=0):
@@ -122,10 +130,10 @@ class MFTransient:
         transient_key = block_header.get_transient_key()
         if isinstance(transient_key, int):
             if not self._verify_sp(transient_key):
-                message = 'Invalid transient key "{}" in block' ' "{}"'.format(
-                    transient_key, block_header.name
+                raise MFInvalidTransientBlockHeaderException(
+                    f'Invalid transient key "{transient_key}" '
+                    f'in block "{block_header.name}"'
                 )
-                raise MFInvalidTransientBlockHeaderException(message)
         if transient_key not in self._data_storage:
             self.add_transient_key(transient_key)
         self._current_key = transient_key
@@ -226,7 +234,7 @@ class MFData(DataInterface):
         path=None,
         dimensions=None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         # initialize
         self._current_key = None
@@ -251,7 +259,7 @@ class MFData(DataInterface):
             index = 0
             while self._path in self._simulation_data.mfdata:
                 self._path = self._org_path[:-1] + (
-                    "{}_{}".format(self._org_path[-1], index),
+                    f"{self._org_path[-1]}_{index}",
                 )
                 index += 1
         self._structure_init()
@@ -267,6 +275,10 @@ class MFData(DataInterface):
 
     def __str__(self):
         return str(self._get_storage_obj())
+
+    @property
+    def path(self):
+        return self._path
 
     @property
     def array(self):
@@ -333,7 +345,7 @@ class MFData(DataInterface):
         return None, None
 
     def export(self, f, **kwargs):
-        from flopy.export import utils
+        from ...export import utils
 
         if (
             self.data_type == DataType.array2d
@@ -438,9 +450,7 @@ class MFData(DataInterface):
             else:
                 if data_item.description:
                     if description:
-                        description = "{}\n{}".format(
-                            description, data_item.description
-                        )
+                        description = f"{description}\n{data_item.description}"
                     else:
                         description = data_item.description
         return description
@@ -516,7 +526,7 @@ class MFData(DataInterface):
             self._data_dimensions,
             verify_data=self._simulation_data.verify_data,
         )
-        return "{}{}".format(sim_data.indent_string.join(const_format), suffix)
+        return f"{sim_data.indent_string.join(const_format)}{suffix}"
 
     def _get_aux_var_name(self, aux_var_index):
         aux_var_names = self._data_dimensions.package_dim.get_aux_variables()
@@ -590,8 +600,8 @@ class MFMultiDimVar(MFData):
         ext_file_path = file_mgmt.get_updated_path(
             layer_storage.fname, model_name, ext_file_action
         )
-        layer_storage.fname = ext_file_path
-        ext_format = ["OPEN/CLOSE", "'{}'".format(ext_file_path)]
+        layer_storage.fname = datautil.clean_filename(ext_file_path)
+        ext_format = ["OPEN/CLOSE", f"'{ext_file_path}'"]
         if storage.data_structure_type != DataStructureType.recarray:
             if layer_storage.factor is not None:
                 data_type = self.structure.get_datum_type(
@@ -607,6 +617,4 @@ class MFMultiDimVar(MFData):
         if layer_storage.iprn is not None:
             ext_format.append("IPRN")
             ext_format.append(str(layer_storage.iprn))
-        return "{}\n".format(
-            self._simulation_data.indent_string.join(ext_format)
-        )
+        return f"{self._simulation_data.indent_string.join(ext_format)}\n"

@@ -1,0 +1,118 @@
+# --------------------- ssm spc options ---------------------
+# flopy multi-package
+
+block options
+name print_input
+type keyword
+reader urword
+optional true
+longname print input to listing file
+description REPLACE print_input {'{#1}': 'spc'}
+
+block options
+name ts_filerecord
+type record ts6 filein ts6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name ts6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname head keyword
+description keyword to specify that record corresponds to a time-series file.
+
+block options
+name filein
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block options
+name ts6_filename
+type string
+preserve_case true
+in_record true
+reader urword
+optional false
+tagged false
+longname file name of time series information
+description REPLACE timeseriesfile {}
+
+# --------------------- ssm spc dimensions ---------------------
+
+block dimensions
+name maxbound
+type integer
+reader urword
+optional false
+longname maximum number of ssm entries
+description REPLACE maxbound {'{#1}': 'spc'}
+
+# --------------------- ssm spc period ---------------------
+
+block period
+name iper
+type integer
+block_variable True
+in_record true
+tagged false
+shape
+valid
+reader urword
+optional false
+longname stress period number
+description REPLACE iper {}
+
+block period
+name perioddata
+type recarray bndno spcsetting
+shape
+reader urword
+longname
+description
+
+block period
+name bndno
+type integer
+shape
+tagged false
+in_record true
+reader urword
+longname bound number for this entry
+description integer value that defines the boundary package feature number associated with the specified PERIOD data on the line. BNDNO must be greater than zero and less than or equal to MAXBOUND.
+numeric_index true
+
+block period
+name spcsetting
+type keystring concentration
+shape
+tagged false
+in_record true
+reader urword
+longname
+description line of information that is parsed into a keyword and values.  Keyword values that can be used to start the MAWSETTING string include: CONCENTRATION.
+
+block period
+name concentration
+type double precision
+shape
+tagged true
+in_record true
+reader urword
+time_series true
+longname well boundary concentration
+description is the boundary concentration. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value. By default, the CONCENTRATION for each boundary feature is zero.

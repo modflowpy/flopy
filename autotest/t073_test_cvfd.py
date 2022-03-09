@@ -1,6 +1,7 @@
 import numpy as np
+
 import flopy
-from flopy.utils.cvfdutil import to_cvfd, gridlist_to_disv_gridprops
+from flopy.utils.cvfdutil import gridlist_to_disv_gridprops, to_cvfd
 
 
 def test_tocvfd1():
@@ -69,7 +70,7 @@ def test_tocvfd3():
     # spot check information for cell 28 (zero based)
     answer = [28, 250.0, 150.0, 7, 38, 142, 143, 45, 46, 44, 38]
     for i, j in zip(cell2d[28], answer):
-        assert i == j, "{} not equal {}".format(i, j)
+        assert i == j, f"{i} not equal {j}"
 
 
 if __name__ == "__main__":

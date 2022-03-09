@@ -1,14 +1,11 @@
-from __future__ import print_function
-
+import math
 import os
 import sys
-import math
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 import flopy
-
-import matplotlib.pyplot as plt
 
 # --modify default matplotlib settings
 updates = {
@@ -48,7 +45,7 @@ def run():
             if os.path.isdir(f):
                 continue
             if ".py" != os.path.splitext(f)[1].lower():
-                print("  removing...{}".format(os.path.basename(f)))
+                print(f"  removing...{os.path.basename(f)}")
                 os.remove(os.path.join(workspace, f))
         return 1
 
@@ -123,12 +120,12 @@ def run():
     # run the model
     m = ml.run_model(silent=False)
     # read model heads
-    headfile = os.path.join(workspace, "{}.hds".format(modelname))
+    headfile = os.path.join(workspace, f"{modelname}.hds")
     hdobj = flopy.utils.HeadFile(headfile)
     head = hdobj.get_alldata()
     head = np.array(head)
     # read model zeta
-    zetafile = os.path.join(workspace, "{}.zta".format(modelname))
+    zetafile = os.path.join(workspace, f"{modelname}.zta")
     zobj = flopy.utils.CellBudgetFile(zetafile)
     zkstpkper = zobj.get_kstpkper()
     zeta = []
@@ -226,7 +223,7 @@ def run():
         ax.text(
             x[ipos],
             -37.75,
-            "{0} days".format(((i + 1) * 100)),
+            f"{(i + 1) * 100} days",
             size=5,
             ha="left",
             va="center",
@@ -262,7 +259,7 @@ def run():
     ax.set_ylabel("Elevation, in meters")
     ax.set_xlabel("Horizontal distance, in meters")
 
-    outfig = os.path.join(workspace, "Figure06_swi2ex1.{0}".format(fext))
+    outfig = os.path.join(workspace, f"Figure06_swi2ex1.{fext}")
     fig.savefig(outfig, dpi=300)
     print("created...", outfig)
 

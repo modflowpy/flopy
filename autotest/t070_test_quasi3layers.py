@@ -8,9 +8,14 @@ Created on Mon Feb 17 12:29:35 2020
 
 import os
 import sys
-import numpy as np
-import flopy
+
 import matplotlib.pyplot as plt
+import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
+import flopy
+
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 
 def test_plotting_with_quasi3d_layers():
@@ -21,9 +26,12 @@ def test_plotting_with_quasi3d_layers():
             runTest = False
 
     if runTest:
+        model_ws = f"{base_dir}_test_mfusg"
+        test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
         modelname = "model_mf"
-        model_ws = os.path.join(".", "temp", "t070")
         exe_name = "mf2005"
+
         mf = flopy.modflow.Modflow(
             modelname, model_ws=model_ws, exe_name=exe_name
         )
@@ -89,12 +97,10 @@ def test_plotting_with_quasi3d_layers():
         assert success, "test_plotting_with_quasi3d_layers() failed"
 
         # read output
-        hf = flopy.utils.HeadFile(
-            os.path.join(mf.model_ws, "{}.hds".format(mf.name))
-        )
+        hf = flopy.utils.HeadFile(os.path.join(mf.model_ws, f"{mf.name}.hds"))
         head = hf.get_data(totim=1.0)
         cbb = flopy.utils.CellBudgetFile(
-            os.path.join(mf.model_ws, "{}.cbc".format(mf.name))
+            os.path.join(mf.model_ws, f"{mf.name}.cbc")
         )
         frf = cbb.get_data(text="FLOW RIGHT FACE", totim=1.0)[0]
         fff = cbb.get_data(text="FLOW FRONT FACE", totim=1.0)[0]
@@ -109,6 +115,7 @@ def test_plotting_with_quasi3d_layers():
         mv.plot_ibound()
         mv.plot_bc("wel")
         mv.plot_vector(frf, fff)
+        plt.savefig(os.path.join(model_ws, "plt01.png"))
         plt.close()
 
         # plot a cross-section
@@ -122,6 +129,7 @@ def test_plotting_with_quasi3d_layers():
         cs.plot_ibound()
         cs.plot_bc("wel")
         cs.plot_vector(frf, fff, flf, head=head)
+        plt.savefig(os.path.join(model_ws, "plt02.png"))
         plt.close()
 
 

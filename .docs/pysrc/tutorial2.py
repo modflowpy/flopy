@@ -1,5 +1,7 @@
 import os
+
 import numpy as np
+
 import flopy
 
 # Model domain and grid definition
@@ -121,12 +123,13 @@ if not success:
 
 # Imports
 import matplotlib.pyplot as plt
+
 import flopy.utils.binaryfile as bf
 
 # Create the headfile and budget file objects
-headobj = bf.HeadFile(modelname + ".hds")
+headobj = bf.HeadFile(f"{modelname}.hds")
 times = headobj.get_times()
-cbb = bf.CellBudgetFile(modelname + ".cbc")
+cbb = bf.CellBudgetFile(f"{modelname}.cbc")
 
 # Setup contour parameters
 levels = np.linspace(0, 10, 11)
@@ -156,7 +159,7 @@ for iplot, time in enumerate(mytimes):
     # Create the plot
     f = plt.figure()
     plt.subplot(1, 1, 1, aspect="equal")
-    plt.title("stress period " + str(iplot + 1))
+    plt.title(f"stress period {iplot + 1}")
 
     modelmap = flopy.plot.PlotMapView(model=mf, layer=0)
     qm = modelmap.plot_ibound()
@@ -181,13 +184,13 @@ for iplot, time in enumerate(mytimes):
         zorder=9,
     )
     plt.text(wpt[0] + 25, wpt[1] - 25, "well", size=12, zorder=12)
-    plt.savefig("tutorial2-{}.png".format(iplot))
+    plt.savefig(f"tutorial2-{iplot}.png")
 
 # Plot the head versus time
 idx = (0, int(nrow / 2) - 1, int(ncol / 2) - 1)
 ts = headobj.get_ts(idx)
 plt.subplot(1, 1, 1)
-ttl = "Head at cell ({0},{1},{2})".format(idx[0] + 1, idx[1] + 1, idx[2] + 1)
+ttl = f"Head at cell ({idx[0] + 1},{idx[1] + 1},{idx[2] + 1})"
 plt.title(ttl)
 plt.xlabel("time")
 plt.ylabel("head")

@@ -1,19 +1,17 @@
 """
 test MNW1 and MNW2 packages
 """
-import sys
-
-sys.path.insert(0, "..")
-import shutil
 import os
-import flopy
+import shutil
+
 import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
+import flopy
 from flopy.utils.flopy_io import line_parse
 
-cpth = os.path.join("temp", "t027")
-# make the directory if it does not exist
-if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
+
 mf2005pth = os.path.join("..", "examples", "data", "mnw2_examples")
 mnw1_path = os.path.join("..", "examples", "data", "mf2005_test")
 
@@ -28,22 +26,25 @@ def test_line_parse():
 
 def test_load():
     """t027 test load of MNW2 Package"""
+    model_ws = f"{base_dir}_test_load"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     # load in the test problem (1 well, 3 stress periods)
     m = flopy.modflow.Modflow.load(
         "MNW2-Fig28.nam", model_ws=mf2005pth, verbose=True, forgive=False
     )
-    m.change_model_ws(cpth)
+    m.change_model_ws(model_ws)
     assert m.has_package("MNW2")
     assert m.has_package("MNWI")
 
     # load a real mnw2 package from a steady state model (multiple wells)
-    m2 = flopy.modflow.Modflow("br", model_ws=cpth)
+    m2 = flopy.modflow.Modflow("br", model_ws=model_ws)
     path = os.path.join("..", "examples", "data", "mnw2_examples")
-    mnw2_2 = flopy.modflow.ModflowMnw2.load(path + "/BadRiver_cal.mnw2", m2)
-    mnw2_2.write_file(os.path.join(cpth, "brtest.mnw2"))
+    mnw2_2 = flopy.modflow.ModflowMnw2.load(f"{path}/BadRiver_cal.mnw2", m2)
+    mnw2_2.write_file(os.path.join(model_ws, "brtest.mnw2"))
 
-    m3 = flopy.modflow.Modflow("br", model_ws=cpth)
-    mnw2_3 = flopy.modflow.ModflowMnw2.load(cpth + "/brtest.mnw2", m3)
+    m3 = flopy.modflow.Modflow("br", model_ws=model_ws)
+    mnw2_3 = flopy.modflow.ModflowMnw2.load(f"{model_ws}/brtest.mnw2", m3)
     mnw2_2.node_data.sort(order="wellid")
     mnw2_3.node_data.sort(order="wellid")
     assert np.array_equal(mnw2_2.node_data, mnw2_3.node_data)
@@ -60,6 +61,9 @@ def test_load():
 
 
 def test_mnw1_load_write():
+    model_ws = f"{base_dir}_test_mnw1_load_write"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     m = flopy.modflow.Modflow.load(
         "mnw1.nam",
         model_ws=mnw1_path,
@@ -73,14 +77,17 @@ def test_mnw1_load_write():
         assert len(m.mnw1.stress_period_data[i]) == 17
         assert len(np.unique(m.mnw1.stress_period_data[i]["mnw_no"])) == 15
         assert len(set(m.mnw1.stress_period_data[i]["label"])) == 4
-    shutil.copy(mnw1_path + "/mnw1.nam", cpth)
-    shutil.copy(mnw1_path + "/mnw1.dis", cpth)
-    shutil.copy(mnw1_path + "/mnw1.bas", cpth)
-    m.mnw1.fn_path = cpth + "/mnw1.mnw"
+
+    shutil.copy(f"{mnw1_path}/mnw1.nam", model_ws)
+    shutil.copy(f"{mnw1_path}/mnw1.dis", model_ws)
+    shutil.copy(f"{mnw1_path}/mnw1.bas", model_ws)
+
+    m.mnw1.fn_path = f"{model_ws}/mnw1.mnw"
     m.mnw1.write_file()
+
     m2 = flopy.modflow.Modflow.load(
         "mnw1.nam",
-        model_ws=cpth,
+        model_ws=model_ws,
         load_only=["mnw1"],
         verbose=True,
         forgive=False,
@@ -91,7 +98,10 @@ def test_mnw1_load_write():
 
 def test_make_package():
     """t027 test make MNW2 Package"""
-    m4 = flopy.modflow.Modflow("mnw2example", model_ws=cpth)
+    model_ws = f"{base_dir}_test_make_package"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
+    m4 = flopy.modflow.Modflow("mnw2example", model_ws=model_ws)
     dis = flopy.modflow.ModflowDis(
         nrow=5, ncol=5, nlay=3, nper=3, top=10, botm=0, model=m4
     )
@@ -282,7 +292,7 @@ def test_make_package():
         mnw2_4.stress_period_data[1], mnw2fromobj.stress_period_data[1]
     )
     # verify that loaded package is the same
-    m5 = flopy.modflow.Modflow("mnw2example", model_ws=cpth)
+    m5 = flopy.modflow.Modflow("mnw2example", model_ws=model_ws)
     dis = flopy.modflow.ModflowDis(
         nrow=5, ncol=5, nlay=3, nper=3, top=10, botm=0, model=m5
     )
@@ -298,6 +308,9 @@ def test_mnw2_create_file():
     multiple node lengths
     """
     import pandas as pd
+
+    model_ws = f"{base_dir}_test_mnw2_create_file"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     mf = flopy.modflow.Modflow("test_mfmnw2", exe_name="mf2005")
     wellids = [1, 2]
@@ -359,7 +372,7 @@ def test_mnw2_create_file():
     if len(mnw2.node_data) != 6:
         raise AssertionError("Node data not properly set")
 
-    mnw2.write_file("./temp/t027/ndata.mnw2")
+    mnw2.write_file(os.path.join(model_ws, "ndata.mnw2"))
 
 
 def test_export():
@@ -368,6 +381,10 @@ def test_export():
         import netCDF4
     except:
         netCDF4 = None
+
+    model_ws = f"{base_dir}_test_export"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     m = flopy.modflow.Modflow.load(
         "MNW2-Fig28.nam",
         model_ws=mf2005pth,
@@ -378,9 +395,13 @@ def test_export():
 
     # netDF4 tests
     if netCDF4 is not None:
-        m.wel.export(os.path.join(cpth, "MNW2-Fig28_well.nc"))
-        m.mnw2.export(os.path.join(cpth, "MNW2-Fig28.nc"))
-        fpth = os.path.join(cpth, "MNW2-Fig28.nc")
+        fcw = m.wel.export(os.path.join(model_ws, "MNW2-Fig28_well.nc"))
+        fcw.write()
+        fpth = os.path.join(model_ws, "MNW2-Fig28.nc")
+        # test context statement
+        with m.mnw2.export(fpth):
+            pass
+        fpth = os.path.join(model_ws, "MNW2-Fig28.nc")
         nc = netCDF4.Dataset(fpth)
         assert np.array_equal(
             nc.variables["mnw2_qdes"][:, 0, 29, 40],
@@ -392,6 +413,9 @@ def test_export():
 
 
 def test_blank_lines():
+    model_ws = f"{base_dir}_test_blank_lines"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
     mnw2str = """3 50 0
 EB-33 -3
 SKIN -1 0 0 0
@@ -421,7 +445,7 @@ EB-35 -534.72
 eb-36 -534.72
 
 """
-    fpth = os.path.join(cpth, "mymnw2.mnw2")
+    fpth = os.path.join(model_ws, "mymnw2.mnw2")
     f = open(fpth, "w")
     f.write(mnw2str)
     f.close()
@@ -437,7 +461,7 @@ constant -3 bottom of layer 3
  1.  1 1. Tr    PERLEN NSTP TSMULT Ss/tr
 """
 
-    fpth = os.path.join(cpth, "mymnw2.dis")
+    fpth = os.path.join(model_ws, "mymnw2.dis")
     f = open(fpth, "w")
     f.write(disstr)
     f.close()
@@ -446,13 +470,13 @@ constant -3 bottom of layer 3
 dis  102 mymnw2.dis
 mnw2 103 mymnw2.mnw2"""
 
-    fpth = os.path.join(cpth, "mymnw2.nam")
+    fpth = os.path.join(model_ws, "mymnw2.nam")
     f = open(fpth, "w")
     f.write(namstr)
     f.close()
 
     m = flopy.modflow.Modflow.load(
-        "mymnw2.nam", model_ws=cpth, verbose=True, check=False
+        "mymnw2.nam", model_ws=model_ws, verbose=True, check=False
     )
     mnw2 = m.mnw2
     wellids = ["eb-33", "eb-35", "eb-36"]
@@ -467,13 +491,13 @@ mnw2 103 mymnw2.mnw2"""
     wellids2 = list(spd["wellid"])
     emsg = "incorrect keys returned from load mnw2 stress period data"
     for wellid, wellid2 in zip(wellids, wellids2):
-        emsg += "\n    {} -- {}".format(wellid, wellid2)
+        emsg += f"\n    {wellid} -- {wellid2}"
     assert wellids2 == wellids, emsg
 
     rates2 = list(spd["qdes"])
     emsg = "incorrect qdes rates returned from load mnw2 stress period data"
     for rate, rate2 in zip(rates, rates2):
-        emsg += "\n    {} -- {}".format(rate, rate2)
+        emsg += f"\n    {rate} -- {rate2}"
     assert rates2 == rates, emsg
 
     return
@@ -509,7 +533,7 @@ if __name__ == "__main__":
     test_make_well()
     test_blank_lines()
     test_make_package()
-    # test_export()
+    test_export()
     # test_checks()
     test_mnw1_load_write()
     test_mnw2_create_file()
