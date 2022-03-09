@@ -1,9 +1,9 @@
 
 <img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
-### Version 3.3.5 &mdash; release candidate
-[![flopy continuous integration](https://github.com/modflowpy/flopy/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/modflowpy/flopy/actions/workflows/ci.yml)
-[![Read the Docs](https://github.com/modflowpy/flopy/actions/workflows/rtd.yml/badge.svg?branch=develop)](https://github.com/modflowpy/flopy/actions/workflows/rtd.yml)
+### Version 3.3.5
+[![flopy continuous integration](https://github.com/modflowpy/flopy/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/modflowpy/flopy/actions/workflows/ci.yml)
+[![Read the Docs](https://github.com/modflowpy/flopy/actions/workflows/rtd.yml/badge.svg?branch=master)](https://github.com/modflowpy/flopy/actions/workflows/rtd.yml)
 
 [![codecov](https://codecov.io/gh/modflowpy/flopy/branch/develop/graph/badge.svg)](https://codecov.io/gh/modflowpy/flopy)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/3f44f457aa474a8f83ad60c1842f7be2)](https://www.codacy.com/gh/modflowpy/flopy/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=modflowpy/flopy&amp;utm_campaign=Badge_Grade)
@@ -13,7 +13,7 @@
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/flopy/badges/version.svg)](https://anaconda.org/conda-forge/flopy)
 [![PyPI Version](https://img.shields.io/pypi/v/flopy.png)](https://pypi.python.org/pypi/flopy)
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/modflowpy/flopy.git/develop)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/modflowpy/flopy.git/master)
 
 Introduction
 -----------------------------------------------
@@ -147,7 +147,7 @@ How to Cite
 
 ##### ***Software/Code citation for FloPy:***
 
-[Bakker, Mark, Post, Vincent, Hughes, J. D., Langevin, C. D., White, J. T., Leaf, A. T., Paulinski, S. R., Bellino, J. C., Morway, E. D., Toews, M. W., Larsen, J. D., Fienen, M. N., Starn, J. J., and Brakenhoff, Davíd, 2021, FloPy v3.3.5 &mdash; release candidate: U.S. Geological Survey Software Release, 20 August 2021, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, Mark, Post, Vincent, Hughes, J. D., Langevin, C. D., White, J. T., Leaf, A. T., Paulinski, S. R., Bellino, J. C., Morway, E. D., Toews, M. W., Larsen, J. D., Fienen, M. N., Starn, J. J., and Brakenhoff, Davíd, 2022, FloPy v3.3.5: U.S. Geological Survey Software Release, 07 March 2022, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 MODFLOW Resources
@@ -162,12 +162,13 @@ MODFLOW Resources
 Disclaimer
 ----------
 
-This software is preliminary or provisional and is subject to revision. It is
-being provided to meet the need for timely best science. The software has not
-received final approval by the U.S. Geological Survey (USGS). No warranty,
-expressed or implied, is made by the USGS or the U.S. Government as to the
-functionality of the software and related material nor shall the fact of release
-constitute any such warranty. The software is provided on the condition that
-neither the USGS nor the U.S. Government shall be held liable for any damages
-resulting from the authorized or unauthorized use of the software.
+This software has been approved for release by the U.S. Geological Survey
+(USGS). Although the software has been subjected to rigorous review, the USGS
+reserves the right to update the software as needed pursuant to further analysis
+and review. No warranty, expressed or implied, is made by the USGS or the U.S.
+Government as to the functionality of the software and related material nor
+shall the fact of release constitute any such warranty. Furthermore, the
+software is released on condition that neither the USGS nor the U.S. Government
+shall be held liable for any damages resulting from its authorized or
+unauthorized use.
 

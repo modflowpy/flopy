@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 22, 2021 17:36:26 UTC
+# FILE created on March 07, 2022 16:59:43 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -60,6 +60,11 @@ class ModflowGwfwel(mfpackage.MFPackage):
           bottom. AUTO_FLOW_REDUCE is set to 0.1 if the specified value is less
           than or equal to zero. By default, negative pumping rates are not
           reduced during a simulation.
+    afrcsv_filerecord : [afrcsvfile]
+        * afrcsvfile (string) name of the comma-separated value (CSV) output
+          file to write information about well extraction rates that have been
+          reduced by the program. Entries are only written if the extraction
+          rates are reduced.
     timeseries : {varname:data} or timeseries data
         * Contains data for the ts package. Data can be stored in a dictionary
           containing data for the ts package with variable names as keys and
@@ -119,6 +124,9 @@ class ModflowGwfwel(mfpackage.MFPackage):
     """
 
     auxiliary = ListTemplateGenerator(("gwf6", "wel", "options", "auxiliary"))
+    afrcsv_filerecord = ListTemplateGenerator(
+        ("gwf6", "wel", "options", "afrcsv_filerecord")
+    )
     ts_filerecord = ListTemplateGenerator(
         ("gwf6", "wel", "options", "ts_filerecord")
     )
@@ -188,6 +196,46 @@ class ModflowGwfwel(mfpackage.MFPackage):
             "type double precision",
             "reader urword",
             "optional true",
+        ],
+        [
+            "block options",
+            "name afrcsv_filerecord",
+            "type record auto_flow_reduce_csv fileout afrcsvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name auto_flow_reduce_csv",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name fileout",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name afrcsvfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
         ],
         [
             "block options",
@@ -350,6 +398,7 @@ class ModflowGwfwel(mfpackage.MFPackage):
         print_flows=None,
         save_flows=None,
         auto_flow_reduce=None,
+        afrcsv_filerecord=None,
         timeseries=None,
         observations=None,
         mover=None,
@@ -372,6 +421,9 @@ class ModflowGwfwel(mfpackage.MFPackage):
         self.save_flows = self.build_mfdata("save_flows", save_flows)
         self.auto_flow_reduce = self.build_mfdata(
             "auto_flow_reduce", auto_flow_reduce
+        )
+        self.afrcsv_filerecord = self.build_mfdata(
+            "afrcsv_filerecord", afrcsv_filerecord
         )
         self._ts_filerecord = self.build_mfdata("ts_filerecord", None)
         self._ts_package = self.build_child_package(

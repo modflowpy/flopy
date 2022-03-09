@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 22, 2021 17:36:26 UTC
+# FILE created on March 07, 2022 16:59:43 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -53,10 +53,10 @@ class ModflowGwtuzt(mfpackage.MFPackage):
     print_concentration : boolean
         * print_concentration (boolean) keyword to indicate that the list of
           UZF cell concentration will be printed to the listing file for every
-          stress period in which "HEAD PRINT" is specified in Output Control.
-          If there is no Output Control option and PRINT_CONCENTRATION is
-          specified, then concentration are printed for the last time step of
-          each stress period.
+          stress period in which "CONCENTRATION PRINT" is specified in Output
+          Control. If there is no Output Control option and PRINT_CONCENTRATION
+          is specified, then concentration are printed for the last time step
+          of each stress period.
     print_flows : boolean
         * print_flows (boolean) keyword to indicate that the list of
           unsaturated zone flow rates will be printed to the listing file for
@@ -214,6 +214,7 @@ class ModflowGwtuzt(mfpackage.MFPackage):
     dfn = [
         [
             "header",
+            "multi-package",
         ],
         [
             "block options",

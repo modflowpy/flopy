@@ -1733,9 +1733,10 @@ def test_export_array_contours():
 def test_export_contourf():
     if import_shapefile() is None:
         return
-    import shapefile
-    from flopy.export.utils import export_contourf
     import matplotlib.pyplot as plt
+    import shapefile
+
+    from flopy.export.utils import export_contourf
 
     ws_out = f"{base_dir}_shapefile_export_contourf"
     filename = os.path.join(ws_out, "myfilledcontours.shp")

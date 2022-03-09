@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 22, 2021 17:36:26 UTC
+# FILE created on March 07, 2022 16:59:43 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -134,8 +134,8 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           greater than zero.
         * rgrd (double) real value that defines the stream gradient (slope)
           across the reach. RGRD must be greater than zero.
-        * rtp (double) real value that defines the top elevation of the reach
-          streambed.
+        * rtp (double) real value that defines the bottom elevation of the
+          reach.
         * rbth (double) real value that defines the thickness of the reach
           streambed. RBTH can be any value if CELLID is 'NONE'. Otherwise, RBTH
           must be greater than zero.

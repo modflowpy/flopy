@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 22, 2021 17:36:26 UTC
+# FILE created on March 07, 2022 16:59:43 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -24,6 +24,10 @@ class ModflowUtltvs(mfpackage.MFPackage):
           groundwater storage formulation will be modified to correctly adjust
           heads based on transient variations in stored water volumes arising
           from changes to SS and SY properties.
+    print_input : boolean
+        * print_input (boolean) keyword to indicate that information for each
+          change to a storage property in a cell will be written to the model
+          listing file.
     timeseries : {varname:data} or timeseries data
         * Contains data for the ts package. Data can be stored in a dictionary
           containing data for the ts package with variable names as keys and
@@ -85,6 +89,13 @@ class ModflowUtltvs(mfpackage.MFPackage):
         [
             "block options",
             "name disable_storage_change_integration",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_input",
             "type keyword",
             "reader urword",
             "optional true",
@@ -195,6 +206,7 @@ class ModflowUtltvs(mfpackage.MFPackage):
         model,
         loading_package=False,
         disable_storage_change_integration=None,
+        print_input=None,
         timeseries=None,
         perioddata=None,
         filename=None,
@@ -210,6 +222,7 @@ class ModflowUtltvs(mfpackage.MFPackage):
             "disable_storage_change_integration",
             disable_storage_change_integration,
         )
+        self.print_input = self.build_mfdata("print_input", print_input)
         self._ts_filerecord = self.build_mfdata("ts_filerecord", None)
         self._ts_package = self.build_child_package(
             "ts", timeseries, "timeseries", self._ts_filerecord
@@ -238,6 +251,7 @@ class UtltvsPackages(mfpackage.MFChildPackages):
     def initialize(
         self,
         disable_storage_change_integration=None,
+        print_input=None,
         timeseries=None,
         perioddata=None,
         filename=None,
@@ -246,6 +260,7 @@ class UtltvsPackages(mfpackage.MFChildPackages):
         new_package = ModflowUtltvs(
             self._model,
             disable_storage_change_integration=disable_storage_change_integration,
+            print_input=print_input,
             timeseries=timeseries,
             perioddata=perioddata,
             filename=filename,
@@ -257,6 +272,7 @@ class UtltvsPackages(mfpackage.MFChildPackages):
     def append_package(
         self,
         disable_storage_change_integration=None,
+        print_input=None,
         timeseries=None,
         perioddata=None,
         filename=None,
@@ -265,6 +281,7 @@ class UtltvsPackages(mfpackage.MFChildPackages):
         new_package = ModflowUtltvs(
             self._model,
             disable_storage_change_integration=disable_storage_change_integration,
+            print_input=print_input,
             timeseries=timeseries,
             perioddata=perioddata,
             filename=filename,
