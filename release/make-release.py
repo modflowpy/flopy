@@ -12,7 +12,7 @@ from importlib.machinery import SourceFileLoader
 file_paths = {
     "version.py": "../flopy",
     "README.md": "../",
-    "PyPi_release.md": "../docs",
+    "PyPI_release.md": "../docs",
     "code.json": "../",
     "DISCLAIMER.md": "../flopy",
     "notebook_examples.md": "../docs",
@@ -215,8 +215,8 @@ def update_version():
     # update code.json
     update_codejson(vmajor, vminor, vmicro)
 
-    # update PyPi_release.md
-    update_PyPi_release(vmajor, vminor, vmicro)
+    # update PyPI_release.md
+    update_PyPI_release(vmajor, vminor, vmicro)
 
 
 def update_codejson(vmajor, vminor, vmicro):
@@ -360,7 +360,7 @@ def update_notebook_examples_markdown():
     f.close()
 
 
-def update_PyPi_release(vmajor, vminor, vmicro):
+def update_PyPI_release(vmajor, vminor, vmicro):
     # create disclaimer text
     is_approved, disclaimer = get_disclaimer()
 
@@ -368,7 +368,7 @@ def update_PyPi_release(vmajor, vminor, vmicro):
     version = get_tag(vmajor, vminor, vmicro)
 
     # read README.md into memory
-    file = "PyPi_release.md"
+    file = "PyPI_release.md"
     fpth = os.path.join(file_paths[file], file)
     with open(fpth, "r") as file:
         lines = [line.rstrip() for line in file]

@@ -123,32 +123,26 @@ Use `run_notebooks.py` in the `release` directory to rerun all of the notebooks 
 6.  Make pull request to [flopy-feedstock](https://github.com/conda-forge/flopy-feedstock)
 
 
-## Update PyPi
+## Update PyPI
 
-1.  Make sure `twine` is installed using:
-
-    ```
-    conda search twine
-    ```
-
-
-2.  If it is not installed, install using using:
-
+1.  Make sure the latest `build` and `twine` tools are installed using:
 
     ```
-    conda install twine
+    pip install --upgrade build twine
     ```
 
-3.  Create the source zip file in a terminal using:
+2.  Create the source and wheel packages with:
 
     ```
-    python setup.py sdist
+    rm -rf dist
+    python -m build
     ```
 
-4.  Upload the release to PyPi using (*make sure* `twine` *is installed using conda*):
+3.  Check and upload the release to PyPI using:
 
     ```
-    twine upload dist/flopy-version.zip
+    twine check --strict dist/*
+    twine upload dist/*
     ```
 
 ## Sync develop and master branches
