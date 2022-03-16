@@ -827,10 +827,10 @@ def is_clockwise(*geom):
         geom = GeoSpatialUtil(geom, shapetype="Polygon")
         x, y = np.array(geom.points[0]).T
 
-    if not (x[0] == x[-1]) and (y[0] == y[-1]):
+    if not ((x[0] == x[-1]) and (y[0] == y[-1])):
         # close the ring if needed
-        x = np.append(x, x[-1])
-        y = np.append(y, y[-1])
+        x = np.append(x, x[0])
+        y = np.append(y, y[0])
     return np.sum((np.diff(x)) * (y[1:] + y[:-1])) > 0
 
 
