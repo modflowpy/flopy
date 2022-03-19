@@ -276,7 +276,7 @@ class MFArray(MFMultiDimVar):
                 a[k] = value
                 a = a.astype(self._get_data().dtype)
                 layer_storage = storage.layer_storage.first_item()
-                self._get_storage_obj()._set_data(
+                self._get_storage_obj().set_data(
                     a, key=self._current_key, multiplier=layer_storage.factor
                 )
             except Exception as ex:
