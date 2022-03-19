@@ -127,9 +127,9 @@ class VertexGrid(Grid):
     @property
     def iverts(self):
         if self._cell2d is not None:
-            return [[t[0]] + list(t)[4:] for t in self.cell2d]
+            return [list(t)[4:] for t in self.cell2d]
         elif self._cell1d is not None:
-            return [[t[0]] + list(t)[3:] for t in self.cell1d]
+            return [list(t)[3:] for t in self.cell1d]
 
     @property
     def cell1d(self):
