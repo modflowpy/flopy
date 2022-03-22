@@ -216,4 +216,4 @@ The footer should contain any information about **Breaking Changes** and is also
 
 [coc]: https://github.com/modflowpy/flopy/blob/develop/CODE_OF_CONDUCT.md
 [github]: https://github.com/modflowpy/flopy
-[stackoverflow]: http://stackoverflow.com/questions/tagged/flopy
+[stackoverflow]: https://stackoverflow.com/questions/tagged/flopy

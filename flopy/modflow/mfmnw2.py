@@ -1032,7 +1032,7 @@ class ModflowMnw2(Package):
             filenames=filenames[0],
         )
 
-        self.url = "mnw2.htm"
+        self.url = "mnw2.html"
         self.nper = self.parent.nrow_ncol_nlay_nper[-1]
         self.nper = (
             1 if self.nper == 0 else self.nper

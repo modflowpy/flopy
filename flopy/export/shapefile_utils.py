@@ -737,7 +737,7 @@ class CRS:
     def grid_mapping_attribs(self):
         """
         Map parameters for CF Grid Mappings
-        http://http://cfconventions.org/cf-conventions/cf-conventions.html,
+        https://cfconventions.org/cf-conventions/cf-conventions.html#appendix-grid-mappings,
         Appendix F: Grid Mappings
 
         """

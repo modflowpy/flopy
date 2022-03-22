@@ -4,7 +4,7 @@ the NamData class as `flopy.modflow.NamData`.
 
 Additional information about the MODFLOW name file can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/name_file.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/name_file.html>`_.
 
 """
 import os

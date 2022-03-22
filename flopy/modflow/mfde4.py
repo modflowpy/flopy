@@ -4,7 +4,7 @@ the ModflowDe4 class as `flopy.modflow.ModflowDe4`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/de4.htm>`_.
+<https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/de4.html>`_.
 
 """
 from ..pakbase import Package
@@ -149,7 +149,7 @@ class ModflowDe4(Package):
             raise Exception(err)
 
         self._generate_heading()
-        self.url = "de4.htm"
+        self.url = "de4.html"
 
         self.itmx = itmx
         self.mxup = mxup

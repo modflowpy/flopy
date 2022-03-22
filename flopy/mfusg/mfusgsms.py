@@ -290,7 +290,6 @@ class MfUsgSms(Package):
         )
 
         self._generate_heading()
-        self.url = " "
         self.hclose = hclose
         self.hiclose = hiclose
         self.mxiter = mxiter

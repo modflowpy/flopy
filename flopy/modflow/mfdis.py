@@ -4,7 +4,7 @@ the ModflowDis class as `flopy.modflow.ModflowDis`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?dis.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/dis.html>`_.
 
 """
 import warnings
@@ -158,7 +158,7 @@ class ModflowDis(Package):
             filenames=self._prepare_filenames(filenames),
         )
 
-        self.url = "dis.htm"
+        self.url = "dis.html"
         self.nrow = nrow
         self.ncol = ncol
         self.nlay = nlay

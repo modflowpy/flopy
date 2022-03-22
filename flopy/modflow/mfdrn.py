@@ -4,7 +4,7 @@ the ModflowDrn class as `flopy.modflow.ModflowDrn`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?drn.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/drn.html>`_.
 
 """
 import numpy as np
@@ -157,7 +157,7 @@ class ModflowDrn(Package):
         )
 
         self._generate_heading()
-        self.url = "drn.htm"
+        self.url = "drn.html"
 
         self.ipakcb = ipakcb
 

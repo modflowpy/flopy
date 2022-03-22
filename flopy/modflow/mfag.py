@@ -230,7 +230,6 @@ class ModflowAg(Package):
 
         # set up class
         self._generate_heading()
-        self.url = "ag.htm"
 
         # options
         self.noprint = None

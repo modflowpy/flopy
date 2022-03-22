@@ -4,7 +4,7 @@ the ModflowLmt class as `flopy.modflow.ModflowLmt`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?lmt6.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/lmt6.html>`_.
 
 """
 import os
@@ -101,7 +101,7 @@ class ModflowLmt(Package):
         )
 
         self._generate_heading()
-        self.url = "lmt.htm"
+        self.url = "lmt6.html"
         self.output_file_name = output_file_name
         self.output_file_unit = output_file_unit
         self.output_file_header = output_file_header

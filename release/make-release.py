@@ -148,8 +148,8 @@ def get_software_citation(version, is_approved):
     line += (
         f", {now.year}, FloPy v{version}{sb}: "
         f"U.S. Geological Survey Software Release, {now:%d %B %Y}, "
-        "http://dx.doi.org/10.5066/F7BK19FH]"
-        "(http://dx.doi.org/10.5066/F7BK19FH)"
+        "https://doi.org/10.5066/F7BK19FH]"
+        "(https://doi.org/10.5066/F7BK19FH)"
     )
 
     return line
@@ -308,7 +308,7 @@ def update_readme_markdown(vmajor, vminor, vmicro):
                 "(https://mybinder.org/v2/gh/modflowpy/flopy.git/"
                 "{})".format(branch)
             )
-        elif "http://dx.doi.org/10.5066/F7BK19FH" in line:
+        elif "doi.org/10.5066/F7BK19FH" in line:
             line = get_software_citation(version, is_approved)
         elif "Disclaimer" in line:
             line = disclaimer
@@ -377,7 +377,7 @@ def update_PyPI_release(vmajor, vminor, vmicro):
     terminate = False
     f = open(fpth, "w")
     for line in lines:
-        if "http://dx.doi.org/10.5066/F7BK19FH" in line:
+        if "doi.org/10.5066/F7BK19FH" in line:
             line = get_software_citation(version, is_approved)
         elif "Disclaimer" in line:
             line = disclaimer

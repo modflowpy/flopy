@@ -4,7 +4,7 @@ the ModflowGhb class as `flopy.modflow.ModflowGhb`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?ghb.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/ghb.html>`_.
 
 """
 import numpy as np
@@ -143,7 +143,7 @@ class ModflowGhb(Package):
         )
 
         self._generate_heading()
-        self.url = "ghb.htm"
+        self.url = "ghb.html"
 
         self.ipakcb = ipakcb
         self.no_print = no_print

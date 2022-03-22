@@ -4,7 +4,7 @@ the ModpathBas class as `flopy.modflow.ModpathBas`.
 
 Additional information for this MODFLOW/MODPATH package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?bas6.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/bas6.html>`_.
 
 """
 import numpy as np

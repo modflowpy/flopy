@@ -860,18 +860,17 @@ class Package(PackageInterface):
         self.export(filename)
 
     def webdoc(self):
+        """Open the web documentation."""
         if self.parent.version == "mf2k":
-            wa = f"http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/{self.url}"
+            wa = f"https://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/{self.url}"
         elif self.parent.version == "mf2005":
-            wa = f"http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/{self.url}"
+            wa = f"https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/{self.url}"
         elif self.parent.version == "ModflowNwt":
-            wa = f"http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/{self.url}"
+            wa = f"https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/{self.url}"
         else:
-            wa = None
+            return
 
-        # open the web address
-        if wa is not None:
-            wb.open(wa)
+        wb.open(wa)
 
     def write_file(self, f=None, check=False):
         """

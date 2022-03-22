@@ -6,7 +6,7 @@ the MfUsgWel class as `flopy.mfusg.MfUsgWel`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?wel.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/wel.html>`_.
 """
 from copy import deepcopy
 
