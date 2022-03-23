@@ -6,7 +6,7 @@ the MfUsgLpf class as `flopy.mfusg.MfUsgLpf`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?lpf.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/lpf.html>`_.
 """
 import numpy as np
 

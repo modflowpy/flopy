@@ -4,7 +4,7 @@ the ModflowOc class as `flopy.modflow.ModflowOc`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?oc.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/oc.html>`_.
 
 """
 import os
@@ -288,7 +288,7 @@ class ModflowOc(Package):
 
         self._generate_heading()
 
-        self.url = "oc.htm"
+        self.url = "oc.html"
         self.ihedfm = ihedfm
         self.iddnfm = iddnfm
         self.chedfm = chedfm

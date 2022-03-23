@@ -385,7 +385,7 @@ class ModflowSfr2(Package):
             filenames=filenames[0],
         )
 
-        self.url = "sfr2.htm"
+        self.url = "sfr2.html"
         self._graph = None  # dict of routing connections
 
         # Dataset 0
@@ -2274,8 +2274,7 @@ class check:
         Notes
         -----
         info about appending to record arrays (views vs. copies and upcoming
-        changes to numpy):
-        http://stackoverflow.com/questions/22865877/how-do-i-write-to-multiple-fields-of-a-structured-array
+        changes to numpy): https://stackoverflow.com/q/22865877/
         """
         txt = ""
         array = array.view(np.recarray).copy()
@@ -3212,8 +3211,7 @@ def _get_dataset(line, dataset):
 def _get_duplicates(a):
     """
     Returns duplicate values in an array, similar to pandas .duplicated()
-    method
-    http://stackoverflow.com/questions/11528078/determining-duplicate-values-in-an-array
+    method https://stackoverflow.com/q/11528078/
     """
     s = np.sort(a, axis=None)
     equal_to_previous_item = np.append(
@@ -3318,7 +3316,8 @@ def _print_rec_array(array, cols=None, delimiter=" ", float_format="{!s}"):
 def _parse_1c(line, reachinput, transroute):
     """
     Parse Data Set 1c for SFR2 package.
-    See http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?sfr.htm for more info
+    See https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/sfr.html
+    for more info
 
     Parameters
     ----------
@@ -3398,7 +3397,7 @@ def _parse_1c(line, reachinput, transroute):
 def _parse_6a(line, option):
     """
     Parse Data Set 6a for SFR2 package.
-    See http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?sfr.htm for more info
+    See https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/sfr.html for more info
 
     Parameters
     ----------
@@ -3470,7 +3469,7 @@ def _parse_6a(line, option):
 def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
     """
     Parse Data Set 6b for SFR2 package.
-    See http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?sfr.htm for more info
+    See https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/sfr.html for more info
 
     Parameters
     ----------

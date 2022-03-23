@@ -123,7 +123,6 @@ class ModflowPks(Package):
             raise Exception(err)
 
         self._generate_heading()
-        self.url = "pks.htm"
         self.mxiter = mxiter
         self.innerit = innerit
         self.isolver = isolver

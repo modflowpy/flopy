@@ -248,7 +248,6 @@ class MfUsgDisU(Package):
         )
 
         # Set values of all parameters
-        self.url = "dis.htm"
         self._generate_heading()
 
         self.nodes = nodes

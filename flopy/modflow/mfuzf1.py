@@ -4,7 +4,7 @@ the ModflowUzf1 class as `flopy.modflow.ModflowUzf1`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?uzf_unsaturated_zone_flow_pack.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/uzf_-_unsaturated_zone_flow_pa_3.html>`_.
 
 """
 import warnings
@@ -479,7 +479,7 @@ class ModflowUzf1(Package):
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
 
         self._generate_heading()
-        self.url = "uzf_unsaturated_zone_flow_pack.htm"
+        self.url = "uzf_-_unsaturated_zone_flow_pa_3.html"
 
         # Data Set 1a
         if nwt_11_fmt:

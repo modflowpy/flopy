@@ -325,7 +325,7 @@ def loadtxt(
     """
     Use pandas if it is available to load a text file
     (significantly faster than n.loadtxt or genfromtxt see
-    http://stackoverflow.com/questions/18259393/numpy-loading-csv-too-slow-compared-to-matlab)
+    https://stackoverflow.com/q/18259393/)
 
     Parameters
     ----------

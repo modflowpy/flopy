@@ -4,7 +4,7 @@ the ModflowLpf class as `flopy.modflow.ModflowLpf`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?lpf.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/lpf.html>`_.
 
 """
 import numpy as np
@@ -239,7 +239,7 @@ class ModflowLpf(Package):
         )
 
         self._generate_heading()
-        self.url = "lpf.htm"
+        self.url = "lpf.html"
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
 
         # item 1
