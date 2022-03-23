@@ -624,7 +624,12 @@ def write_prj(shpname, mg=None, epsg=None, prj=None, wkt_string=None):
         prjtxt = CRS.getprj(epsg)
     # copy a supplied prj file
     elif prj is not None:
-        shutil.copy(prj, prjname)
+        if os.path.exists(prjname):
+            print(
+                ".prj file {} already exists ".format(prjname)
+            )
+        else:
+            shutil.copy(prj, prjname)
 
     elif mg is not None:
         if mg.epsg is not None:
