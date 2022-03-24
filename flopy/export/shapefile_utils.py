@@ -625,9 +625,7 @@ def write_prj(shpname, mg=None, epsg=None, prj=None, wkt_string=None):
     # copy a supplied prj file
     elif prj is not None:
         if os.path.exists(prjname):
-            print(
-                ".prj file {} already exists ".format(prjname)
-            )
+            print(".prj file {} already exists ".format(prjname))
         else:
             shutil.copy(prj, prjname)
 
