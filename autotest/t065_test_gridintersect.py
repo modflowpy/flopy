@@ -1398,6 +1398,7 @@ def test_raster_sampling_methods():
         "max": 2103.54882,
         "mean": 2097.05035,
         "median": 2097.36254,
+        "mode": 2088.52343,
         "nearest": 2097.81079,
         "linear": 2097.81079,
         "cubic": 2097.81079,
@@ -1413,3 +1414,7 @@ def test_raster_sampling_methods():
             raise AssertionError(
                 f"{method} resampling returning incorrect values"
             )
+
+
+if __name__ == "__main__":
+    test_raster_sampling_methods()
