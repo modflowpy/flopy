@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on April 11, 2022 16:16:27 UTC
+# FILE created on April 11, 2022 18:22:41 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -167,10 +167,7 @@ class ModflowGwtgwt(mfpackage.MFPackage):
     dfn_file_name = "exg-gwtgwt.dfn"
 
     dfn = [
-        [
-            "header",
-            "multi-package",
-        ],
+        ["header", "multi-package",],
         [
             "block options",
             "name gwfmodelname1",
@@ -444,7 +441,7 @@ class ModflowGwtgwt(mfpackage.MFPackage):
         exchangedata=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             simulation, "gwtgwt", filename, pname, loading_package, **kwargs

@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on April 11, 2022 16:16:27 UTC
+# FILE created on April 11, 2022 18:22:41 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -212,10 +212,7 @@ class ModflowGwtuzt(mfpackage.MFPackage):
     dfn_file_name = "gwt-uzt.dfn"
 
     dfn = [
-        [
-            "header",
-            "multi-package",
-        ],
+        ["header", "multi-package",],
         [
             "block options",
             "name flow_package_name",
@@ -634,7 +631,7 @@ class ModflowGwtuzt(mfpackage.MFPackage):
         uztperioddata=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             model, "uzt", filename, pname, loading_package, **kwargs

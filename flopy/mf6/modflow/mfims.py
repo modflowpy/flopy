@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on April 11, 2022 16:16:27 UTC
+# FILE created on April 11, 2022 18:22:41 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -379,9 +379,7 @@ class ModflowIms(mfpackage.MFPackage):
     dfn_file_name = "sln-ims.dfn"
 
     dfn = [
-        [
-            "header",
-        ],
+        ["header",],
         [
             "block options",
             "name print_option",
@@ -759,7 +757,7 @@ class ModflowIms(mfpackage.MFPackage):
         reordering_method=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             simulation, "ims", filename, pname, loading_package, **kwargs

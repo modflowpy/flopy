@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on April 11, 2022 16:16:27 UTC
+# FILE created on April 11, 2022 18:22:41 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -55,10 +55,7 @@ class ModflowUtltas(mfpackage.MFPackage):
     dfn_file_name = "utl-tas.dfn"
 
     dfn = [
-        [
-            "header",
-            "multi-package",
-        ],
+        ["header", "multi-package",],
         [
             "block attributes",
             "name time_series_namerecord",
@@ -173,7 +170,7 @@ class ModflowUtltas(mfpackage.MFPackage):
         tas_array=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             parent_package, "tas", filename, pname, loading_package, **kwargs

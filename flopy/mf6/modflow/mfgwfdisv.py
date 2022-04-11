@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on April 11, 2022 16:16:27 UTC
+# FILE created on April 11, 2022 18:22:41 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -118,9 +118,7 @@ class ModflowGwfdisv(mfpackage.MFPackage):
     dfn_file_name = "gwf-disv.dfn"
 
     dfn = [
-        [
-            "header",
-        ],
+        ["header",],
         [
             "block options",
             "name length_units",
@@ -312,7 +310,7 @@ class ModflowGwfdisv(mfpackage.MFPackage):
         cell2d=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             model, "disv", filename, pname, loading_package, **kwargs

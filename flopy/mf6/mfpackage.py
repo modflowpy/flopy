@@ -2328,6 +2328,7 @@ class MFPackage(PackageContainer, PackageInterface):
 
             # append package to list
             package_group.init_package(package, child_path)
+            return package
 
     def build_mfdata(self, var_name, data=None):
         """Returns the appropriate data type object (mfdatalist, mfdataarray,

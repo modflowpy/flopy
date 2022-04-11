@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on April 11, 2022 16:16:27 UTC
+# FILE created on April 11, 2022 18:22:41 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -119,9 +119,7 @@ class ModflowGwtsrc(mfpackage.MFPackage):
     dfn_file_name = "gwt-src.dfn"
 
     dfn = [
-        [
-            "header",
-        ],
+        ["header",],
         [
             "block options",
             "name auxiliary",
@@ -325,7 +323,7 @@ class ModflowGwtsrc(mfpackage.MFPackage):
         stress_period_data=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             model, "src", filename, pname, loading_package, **kwargs
