@@ -50,7 +50,7 @@ class MF6Output:
             if isinstance(obj, ModelInterface):
                 self._model = obj
             else:
-                self._model = obj.parent
+                self._model = obj.model_or_sim
             self._mtype = self._model.model_type
             nam_file = self._model.model_nam_file[:-4]
             self._lst = (

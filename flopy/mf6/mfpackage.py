@@ -15,7 +15,7 @@ from ..version import __version__
 from .coordinates import modeldimensions
 from .data import mfdata, mfdataarray, mfdatalist, mfdatascalar, mfstructure
 from .data.mfdatautil import DataSearchOutput, MFComment, cellids_equal
-from .data.mfstructure import DatumType, MFDataItemStructure
+from .data.mfstructure import DatumType, MFDataItemStructure, MFStructure
 from .mfbase import (
     ExtFileAction,
     FlopyException,
@@ -1180,24 +1180,36 @@ class MFBlock:
                                 dataset.structure.name, self.structure.name
                             ),
                         )
-                    if isinstance(data, np.recarray):
-                        file_location = data[-1][index]
-                    else:
-                        file_location = data
                     package_info_list = []
-                    file_path, file_name = os.path.split(file_location)
-                    dict_package_name = f"{package_type_found}_{self.path[-2]}"
-                    package_info_list.append(
-                        (
-                            package_type_found,
-                            file_name,
-                            file_path,
-                            dict_package_name,
+                    if isinstance(data, np.recarray):
+                        for row in data:
+                            self._add_to_info_list(
+                                package_info_list,
+                                row[index],
+                                package_type_found,
+                            )
+                    else:
+                        self._add_to_info_list(
+                            package_info_list, data, package_type_found
                         )
-                    )
+
                     return package_info_list
                 return None
         return None
+
+    def _add_to_info_list(
+        self, package_info_list, file_location, package_type_found
+    ):
+        file_path, file_name = os.path.split(file_location)
+        dict_package_name = f"{package_type_found}_{self.path[-2]}"
+        package_info_list.append(
+            (
+                package_type_found,
+                file_name,
+                file_path,
+                dict_package_name,
+            )
+        )
 
     def _save_comments(self, arr_line, line, key, comments):
         # FIX: Save these comments somewhere in the data set
@@ -1534,8 +1546,8 @@ class MFPackage(PackageContainer, PackageInterface):
 
     Parameters
     ----------
-    model_or_sim : MFModel of MFSimulation
-        The parent model or simulation containing this package
+    parent : MFModel, MFSimulation, or MFPackage
+        The parent model, simulation, or package containing this package
     package_type : str
         String defining the package type
     filename : str
@@ -1547,8 +1559,6 @@ class MFPackage(PackageContainer, PackageInterface):
     loading_package : bool
         Whether or not to add this package to the parent container's package
         list during initialization
-    parent_file : MFPackage
-        Parent package that contains this package
 
     Attributes
     ----------
@@ -1565,19 +1575,26 @@ class MFPackage(PackageContainer, PackageInterface):
 
     def __init__(
         self,
-        model_or_sim,
+        parent,
         package_type,
         filename=None,
         pname=None,
         loading_package=False,
-        parent_file=None,
+        **kwargs,
     ):
-
-        self.model_or_sim = model_or_sim
+        if isinstance(parent, MFPackage):
+            self.model_or_sim = parent.model_or_sim
+            self.parent_file = parent
+        elif "parent_file" in kwargs:
+            self.model_or_sim = parent
+            self.parent_file = kwargs["parent_file"]
+        else:
+            self.model_or_sim = parent
+            self.parent_file = None
         self._data_list = []
         self._package_type = package_type
-        if model_or_sim.type == "Model" and package_type.lower() != "nam":
-            self.model_name = model_or_sim.name
+        if self.model_or_sim.type == "Model" and package_type.lower() != "nam":
+            self.model_name = self.model_or_sim.name
         else:
             self.model_name = None
 
@@ -1585,11 +1602,14 @@ class MFPackage(PackageContainer, PackageInterface):
         if not hasattr(self, "dfn_file_name"):
             self.dfn_file_name = ""
 
-        if model_or_sim.type != "Model" and model_or_sim.type != "Simulation":
+        if (
+            self.model_or_sim.type != "Model"
+            and self.model_or_sim.type != "Simulation"
+        ):
             message = (
                 "Invalid model_or_sim parameter. Expecting either a "
                 'model or a simulation. Instead type "{}" was '
-                "given.".format(type(model_or_sim))
+                "given.".format(type(self.model_or_sim))
             )
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(
@@ -1603,14 +1623,13 @@ class MFPackage(PackageContainer, PackageInterface):
                 value_,
                 traceback_,
                 message,
-                model_or_sim.simulation_data.debug,
+                self.model_or_sim.simulation_data.debug,
             )
 
-        super().__init__(model_or_sim.simulation_data, self.model_name)
+        super().__init__(self.model_or_sim.simulation_data, self.model_name)
 
-        self.parent = model_or_sim
-        self._simulation_data = model_or_sim.simulation_data
-        self.parent_file = parent_file
+        self._simulation_data = self.model_or_sim.simulation_data
+
         self.blocks = {}
         self.container_type = []
         self.loading_package = loading_package
@@ -1633,7 +1652,7 @@ class MFPackage(PackageContainer, PackageInterface):
                     value_,
                     traceback_,
                     message,
-                    model_or_sim.simulation_data.debug,
+                    self.model_or_sim.simulation_data.debug,
                 )
 
             self.package_name = pname.lower()
@@ -1641,7 +1660,7 @@ class MFPackage(PackageContainer, PackageInterface):
             self.package_name = None
 
         if filename is None:
-            if model_or_sim.type == "Simulation":
+            if self.model_or_sim.type == "Simulation":
                 # filename uses simulation base name
                 base_name = os.path.basename(
                     os.path.normpath(self.model_or_sim.name)
@@ -1671,12 +1690,12 @@ class MFPackage(PackageContainer, PackageInterface):
                     value_,
                     traceback_,
                     message,
-                    model_or_sim.simulation_data.debug,
+                    self.model_or_sim.simulation_data.debug,
                 )
             self._filename = MFFileMgmt.string_to_file_path(
                 datautil.clean_filename(filename)
             )
-        self.path, self.structure = model_or_sim.register_package(
+        self.path, self.structure = self.model_or_sim.register_package(
             self, not loading_package, pname is None, filename is None
         )
         self.dimensions = self.create_package_dimensions()
@@ -1690,7 +1709,7 @@ class MFPackage(PackageContainer, PackageInterface):
                     "WARNING: Package type {} failed to register property."
                     " {}".format(self._package_type, self.path)
                 )
-        if parent_file is not None:
+        if self.parent_file is not None:
             self.container_type.append(PackageContainerType.package)
         # init variables that may be used later
         self.post_block_comments = None
@@ -1698,6 +1717,14 @@ class MFPackage(PackageContainer, PackageInterface):
         self.bc_color = "black"
         self.__inattr = False
         self._child_package_groups = {}
+        if (
+            self.parent_file is not None
+            and "child_builder_call" not in kwargs
+            and package_type in self.parent_file._child_package_groups
+        ):
+            # initialize as part of the parent's child package group
+            chld_pkg_grp = self.parent_file._child_package_groups[package_type]
+            chld_pkg_grp.init_package(self, self._filename)
 
     def __init_subclass__(cls):
         """Register package type"""
@@ -1754,8 +1781,7 @@ class MFPackage(PackageContainer, PackageInterface):
         """Package's file name."""
         if (
             isinstance(self.parent_file, MFPackage)
-            and self.structure.file_type
-            in self.parent_file._child_package_groups
+            and self.package_type in self.parent_file._child_package_groups
         ):
             fname = datautil.clean_filename(fname)
             try:
@@ -1791,12 +1817,12 @@ class MFPackage(PackageContainer, PackageInterface):
     @property
     def parent(self):
         """Parent package"""
-        return self._parent
+        return self.model_or_sim
 
     @parent.setter
     def parent(self, parent):
         """Parent package"""
-        self._parent = parent
+        assert False, "Do not use this setter to set the parent"
 
     @property
     def plottable(self):
@@ -1822,6 +1848,15 @@ class MFPackage(PackageContainer, PackageInterface):
         """List of data in this package."""
         # return [data_object, data_object, ...]
         return self._data_list
+
+    def _add_package(self, package, path):
+        pkg_type = package.package_type.lower()
+        if pkg_type in self.package_type_dict:
+            for existing_pkg in self.package_type_dict[pkg_type]:
+                if existing_pkg is package:
+                    # do not add the same package twice
+                    return
+        super()._add_package(package, path)
 
     def check(self, f=None, verbose=True, level=1, checktype=None):
         """Data check, returns True on success."""
@@ -2232,6 +2267,17 @@ class MFPackage(PackageContainer, PackageInterface):
         # create child package object
         child_pkgs_name = f"utl{pkg_type}packages"
         child_pkgs_obj = self.package_factory(child_pkgs_name, "")
+        if child_pkgs_obj is None and self.model_or_sim.model_type is None:
+            # simulation level object, try just the package type in the name
+            child_pkgs_name = f"{pkg_type}packages"
+            child_pkgs_obj = self.package_factory(child_pkgs_name, "")
+        if child_pkgs_obj is None:
+            # see if the package is part of one of the supported model types
+            for model_type in MFStructure().sim_struct.model_types:
+                child_pkgs_name = f"{model_type}{pkg_type}packages"
+                child_pkgs_obj = self.package_factory(child_pkgs_name, "")
+                if child_pkgs_obj is not None:
+                    break
         child_pkgs = child_pkgs_obj(
             self.model_or_sim, self, pkg_type, filerecord, None, package_obj
         )
@@ -2252,7 +2298,7 @@ class MFPackage(PackageContainer, PackageInterface):
                 pkg_type, self.model_or_sim.model_type
             )
             package = package_obj(
-                self.model_or_sim, filename=child_path, parent_file=self
+                self, filename=child_path, child_builder_call=True
             )
             assert hasattr(package, parameter_name)
 
@@ -2281,7 +2327,7 @@ class MFPackage(PackageContainer, PackageInterface):
                 setattr(package, parameter_name, data)
 
             # append package to list
-            package_group._init_package(package, child_path)
+            package_group.init_package(package, child_path)
 
     def build_mfdata(self, var_name, data=None):
         """Returns the appropriate data type object (mfdatalist, mfdataarray,
@@ -2733,16 +2779,9 @@ class MFPackage(PackageContainer, PackageInterface):
                 and self.model_or_sim.type == "Simulation"
             ):
                 # get exchange file name associated with gnc package
-                exg_file_name = None
-                for exg in self.model_or_sim.exchange_files:
-                    gnc_data = exg.gnc_filerecord.get_data()
-                    if (
-                        gnc_data is not None
-                        and gnc_data[0][0].lower() == self.filename.lower()
-                    ):
-                        exg_file_name = exg.filename
-                        self.parent = exg
-                if exg_file_name is None:
+                if self.parent_file is not None:
+                    exg_file_name = self.parent_file.filename
+                else:
                     raise Exception(
                         "Can not create a simulation-level "
                         "gnc file without a corresponding "
@@ -2945,7 +2984,7 @@ class MFChildPackages:
 
     def __init__(
         self,
-        model,
+        model_or_sim,
         parent,
         pkg_type,
         filerecord,
@@ -2956,7 +2995,7 @@ class MFChildPackages:
         self._filerecord = filerecord
         if package is not None:
             self._packages.append(package)
-        self._model = model
+        self._model_or_sim = model_or_sim
         self._cpparent = parent
         self._pkg_type = pkg_type
         self._package_class = package_class
@@ -2986,7 +3025,7 @@ class MFChildPackages:
     def __setattr__(self, key, value):
         if (
             key != "_packages"
-            and key != "_model"
+            and key != "_model_or_sim"
             and key != "_cpparent"
             and key != "_inattr"
             and key != "_filerecord"
@@ -3036,7 +3075,7 @@ class MFChildPackages:
             suffix += 1
         return possible_path
 
-    def _init_package(self, package, fname):
+    def init_package(self, package, fname):
         # clear out existing packages
         self._remove_packages()
         if fname is None:
@@ -3084,10 +3123,14 @@ class MFChildPackages:
             new_file_record_data.append((fname,))
             self._filerecord.set_data(new_file_record_data)
 
+        for existing_pkg in self._packages:
+            if existing_pkg is package:
+                # do not add the same package twice
+                return
         # add the package to the list
         self._packages.append(package)
 
     def _remove_packages(self):
         for package in self._packages:
-            self._model.remove_package(package)
+            self._model_or_sim.remove_package(package)
         self._packages = []

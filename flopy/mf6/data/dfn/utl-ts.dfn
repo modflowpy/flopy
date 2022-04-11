@@ -1,5 +1,7 @@
 # --------------------- gwf ts attributes ---------------------
 # flopy multi-package
+# flopy subpackage ts_filerecord ts timeseries timeseries
+# flopy parent_name_type parent_package MFPackage
 
 block attributes
 name time_series_namerecord
