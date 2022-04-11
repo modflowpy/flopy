@@ -590,6 +590,8 @@ def test045_lake1ss_table():
 
     # change some settings
     model = sim.get_model(model_name)
+    lak = model.get_package("lak")
+    laktbl = lak.get_package("laktab")
     laktbl = model.get_package("laktab").table
     laktbl_data = laktbl.get_data()
     laktbl_data[-1][0] = 700.0
