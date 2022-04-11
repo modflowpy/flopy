@@ -64,7 +64,9 @@ class ModflowTdis(mfpackage.MFPackage):
     dfn_file_name = "sim-tdis.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name time_units",

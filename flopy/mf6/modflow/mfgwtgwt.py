@@ -167,7 +167,10 @@ class ModflowGwtgwt(mfpackage.MFPackage):
     dfn_file_name = "exg-gwtgwt.dfn"
 
     dfn = [
-        ["header", "multi-package",],
+        [
+            "header",
+            "multi-package",
+        ],
         [
             "block options",
             "name gwfmodelname1",

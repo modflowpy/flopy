@@ -379,7 +379,9 @@ class ModflowIms(mfpackage.MFPackage):
     dfn_file_name = "sln-ims.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name print_option",

@@ -78,7 +78,10 @@ class ModflowUtlobs(mfpackage.MFPackage):
     dfn_file_name = "utl-obs.dfn"
 
     dfn = [
-        ["header", "multi-package",],
+        [
+            "header",
+            "multi-package",
+        ],
         [
             "block options",
             "name digits",

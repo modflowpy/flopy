@@ -228,7 +228,10 @@ class ModflowGwtlkt(mfpackage.MFPackage):
     dfn_file_name = "gwt-lkt.dfn"
 
     dfn = [
-        ["header", "multi-package",],
+        [
+            "header",
+            "multi-package",
+        ],
         [
             "block options",
             "name flow_package_name",

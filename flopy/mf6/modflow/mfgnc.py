@@ -104,7 +104,9 @@ class ModflowGnc(mfpackage.MFPackage):
     dfn_file_name = "gwf-gnc.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name print_input",

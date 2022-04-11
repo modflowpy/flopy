@@ -68,7 +68,9 @@ class ModflowGwfapi(mfpackage.MFPackage):
     dfn_file_name = "gwf-api.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name boundnames",

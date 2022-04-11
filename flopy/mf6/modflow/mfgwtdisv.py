@@ -118,7 +118,9 @@ class ModflowGwtdisv(mfpackage.MFPackage):
     dfn_file_name = "gwt-disv.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name length_units",

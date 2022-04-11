@@ -97,7 +97,9 @@ class ModflowGwtmst(mfpackage.MFPackage):
     dfn_file_name = "gwt-mst.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name save_flows",

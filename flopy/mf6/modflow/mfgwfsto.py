@@ -83,7 +83,9 @@ class ModflowGwfsto(mfpackage.MFPackage):
     dfn_file_name = "gwf-sto.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name save_flows",

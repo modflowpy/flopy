@@ -76,7 +76,9 @@ class ModflowGwfnam(mfpackage.MFPackage):
     dfn_file_name = "gwf-nam.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name list",

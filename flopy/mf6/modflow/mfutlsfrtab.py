@@ -64,7 +64,10 @@ class ModflowUtlsfrtab(mfpackage.MFPackage):
     dfn_file_name = "utl-sfrtab.dfn"
 
     dfn = [
-        ["header", "multi-package",],
+        [
+            "header",
+            "multi-package",
+        ],
         [
             "block dimensions",
             "name nrow",

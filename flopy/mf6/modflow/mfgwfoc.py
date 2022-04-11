@@ -112,7 +112,9 @@ class ModflowGwfoc(mfpackage.MFPackage):
     dfn_file_name = "gwf-oc.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name budget_filerecord",

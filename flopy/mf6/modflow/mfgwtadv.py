@@ -36,7 +36,9 @@ class ModflowGwtadv(mfpackage.MFPackage):
     dfn_file_name = "gwt-adv.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name scheme",

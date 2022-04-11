@@ -38,7 +38,9 @@ class ModflowGwfgwt(mfpackage.MFPackage):
     dfn_file_name = "exg-gwfgwt.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
     ]
 
     def __init__(

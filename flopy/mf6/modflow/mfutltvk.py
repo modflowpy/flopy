@@ -85,7 +85,9 @@ class ModflowUtltvk(mfpackage.MFPackage):
     dfn_file_name = "utl-tvk.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name print_input",

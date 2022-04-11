@@ -55,7 +55,10 @@ class ModflowUtltas(mfpackage.MFPackage):
     dfn_file_name = "utl-tas.dfn"
 
     dfn = [
-        ["header", "multi-package",],
+        [
+            "header",
+            "multi-package",
+        ],
         [
             "block attributes",
             "name time_series_namerecord",

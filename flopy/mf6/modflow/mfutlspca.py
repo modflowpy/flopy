@@ -55,7 +55,10 @@ class ModflowUtlspca(mfpackage.MFPackage):
     dfn_file_name = "utl-spca.dfn"
 
     dfn = [
-        ["header", "multi-package",],
+        [
+            "header",
+            "multi-package",
+        ],
         [
             "block options",
             "name readasarrays",

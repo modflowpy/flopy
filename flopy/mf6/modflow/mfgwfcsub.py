@@ -322,7 +322,9 @@ class ModflowGwfcsub(mfpackage.MFPackage):
     dfn_file_name = "gwf-csub.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name boundnames",

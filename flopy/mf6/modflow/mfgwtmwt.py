@@ -203,7 +203,10 @@ class ModflowGwtmwt(mfpackage.MFPackage):
     dfn_file_name = "gwt-mwt.dfn"
 
     dfn = [
-        ["header", "multi-package",],
+        [
+            "header",
+            "multi-package",
+        ],
         [
             "block options",
             "name flow_package_name",

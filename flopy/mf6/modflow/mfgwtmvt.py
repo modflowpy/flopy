@@ -61,7 +61,9 @@ class ModflowGwtmvt(mfpackage.MFPackage):
     dfn_file_name = "gwt-mvt.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name print_input",

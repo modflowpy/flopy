@@ -219,7 +219,9 @@ class ModflowGwfnpf(mfpackage.MFPackage):
     dfn_file_name = "gwf-npf.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name save_flows",

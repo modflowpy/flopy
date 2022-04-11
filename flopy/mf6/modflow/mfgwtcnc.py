@@ -117,7 +117,9 @@ class ModflowGwtcnc(mfpackage.MFPackage):
     dfn_file_name = "gwt-cnc.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name auxiliary",

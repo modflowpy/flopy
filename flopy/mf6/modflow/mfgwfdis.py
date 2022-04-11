@@ -90,7 +90,9 @@ class ModflowGwfdis(mfpackage.MFPackage):
     dfn_file_name = "gwf-dis.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name length_units",

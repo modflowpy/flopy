@@ -119,7 +119,9 @@ class ModflowGwtsrc(mfpackage.MFPackage):
     dfn_file_name = "gwt-src.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name auxiliary",

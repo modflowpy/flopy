@@ -83,7 +83,9 @@ class ModflowNam(mfpackage.MFPackage):
     dfn_file_name = "sim-nam.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name continue",

@@ -442,7 +442,10 @@ class ModflowGwfsfr(mfpackage.MFPackage):
     dfn_file_name = "gwf-sfr.dfn"
 
     dfn = [
-        ["header", "multi-package",],
+        [
+            "header",
+            "multi-package",
+        ],
         [
             "block options",
             "name auxiliary",

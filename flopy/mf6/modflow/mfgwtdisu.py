@@ -205,7 +205,9 @@ class ModflowGwtdisu(mfpackage.MFPackage):
     dfn_file_name = "gwt-disu.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name length_units",

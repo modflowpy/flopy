@@ -74,7 +74,9 @@ class ModflowGwfhfb(mfpackage.MFPackage):
     dfn_file_name = "gwf-hfb.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name print_input",

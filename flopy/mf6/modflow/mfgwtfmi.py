@@ -60,7 +60,9 @@ class ModflowGwtfmi(mfpackage.MFPackage):
     dfn_file_name = "gwt-fmi.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name save_flows",

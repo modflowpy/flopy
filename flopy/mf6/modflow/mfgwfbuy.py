@@ -96,7 +96,9 @@ class ModflowGwfbuy(mfpackage.MFPackage):
     dfn_file_name = "gwf-buy.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name hhformulation_rhs",

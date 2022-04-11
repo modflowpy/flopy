@@ -53,7 +53,10 @@ class ModflowUtllaktab(mfpackage.MFPackage):
     dfn_file_name = "utl-laktab.dfn"
 
     dfn = [
-        ["header", "multi-package",],
+        [
+            "header",
+            "multi-package",
+        ],
         [
             "block dimensions",
             "name nrow",

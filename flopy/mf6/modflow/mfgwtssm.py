@@ -91,7 +91,9 @@ class ModflowGwtssm(mfpackage.MFPackage):
     dfn_file_name = "gwt-ssm.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name print_flows",

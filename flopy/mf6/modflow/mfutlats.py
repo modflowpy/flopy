@@ -77,7 +77,9 @@ class ModflowUtlats(mfpackage.MFPackage):
     dfn_file_name = "utl-ats.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block dimensions",
             "name maxats",

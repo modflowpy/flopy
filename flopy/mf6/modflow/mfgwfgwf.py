@@ -170,7 +170,10 @@ class ModflowGwfgwf(mfpackage.MFPackage):
     dfn_file_name = "exg-gwfgwf.dfn"
 
     dfn = [
-        ["header", "multi-package",],
+        [
+            "header",
+            "multi-package",
+        ],
         [
             "block options",
             "name auxiliary",

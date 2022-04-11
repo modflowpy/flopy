@@ -125,7 +125,9 @@ class ModflowGwfmvr(mfpackage.MFPackage):
     dfn_file_name = "gwf-mvr.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name print_input",

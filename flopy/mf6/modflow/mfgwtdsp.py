@@ -86,7 +86,9 @@ class ModflowGwtdsp(mfpackage.MFPackage):
     dfn_file_name = "gwt-dsp.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block options",
             "name xt3d_off",

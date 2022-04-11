@@ -45,7 +45,9 @@ class ModflowGwfic(mfpackage.MFPackage):
     dfn_file_name = "gwf-ic.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block griddata",
             "name strt",

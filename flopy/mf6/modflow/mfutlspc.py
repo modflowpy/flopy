@@ -65,7 +65,10 @@ class ModflowUtlspc(mfpackage.MFPackage):
     dfn_file_name = "utl-spc.dfn"
 
     dfn = [
-        ["header", "multi-package",],
+        [
+            "header",
+            "multi-package",
+        ],
         [
             "block options",
             "name print_input",

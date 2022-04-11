@@ -129,7 +129,10 @@ class ModflowGwfriv(mfpackage.MFPackage):
     dfn_file_name = "gwf-riv.dfn"
 
     dfn = [
-        ["header", "multi-package",],
+        [
+            "header",
+            "multi-package",
+        ],
         [
             "block options",
             "name auxiliary",

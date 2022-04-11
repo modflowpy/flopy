@@ -39,7 +39,9 @@ class ModflowGwtic(mfpackage.MFPackage):
     dfn_file_name = "gwt-ic.dfn"
 
     dfn = [
-        ["header",],
+        [
+            "header",
+        ],
         [
             "block griddata",
             "name strt",
