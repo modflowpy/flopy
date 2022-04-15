@@ -255,7 +255,7 @@ class MF6Output:
             ZoneFile6(zonbud, izone)
             zonbud.bud = budget
             try:
-                if self._obj.model_or_sim.model_type in ("gwf", "gwf6"):
+                if "gwf" in self._obj.model_or_sim.model_type or "gwt" in self._obj.model_or_sim.model_type:
                     if self._obj.package_type == "oc":
                         dis = self._obj.model_or_sim.dis
                         if (
