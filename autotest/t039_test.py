@@ -124,25 +124,6 @@ def test_compare2zonebudget(rtol=1e-2):
     return
 
 
-# def test_compare2mflist_mlt(rtol=1e-2):
-#
-#     loadpth = os.path.join('..', 'examples', 'data', 'zonbud_examples', 'freyberg_mlt')
-#
-#     list_f = os.path.join(loadpth, 'freyberg.list')
-#     mflistbud = MfListBudget(list_f)
-#     print(help(mflistbud))
-#     mflistrecs = mflistbud.get_data(idx=-1, incremental=True)
-#     print(repr(mflistrecs))
-#
-#     zon = np.ones((3, 40, 20), dtype=int)
-#     cbc_fname = os.path.join(loadpth, 'freyberg.cbc')
-#     kstp, kper = CellBudgetFile(cbc_fname).get_kstpkper()[-1]
-#     zb = ZoneBudget(cbc_fname, zon, kstpkper=(kstp, kper))
-#     zbrecs = zb.get_budget()
-#     print(repr(zbrecs))
-#     return
-
-
 def test_zonbud_get_record_names():
     """
     t039 Test zonbud get_record_names method
@@ -353,8 +334,29 @@ def test_zonebudget_6():
         raise AssertionError("Alias testing failed")
 
 
+def test_zonebudget6_from_output_method():
+    exe_name = "mf6"
+    zb_exe_name = "zbud6"
+    cpth = os.path.join(".", "temp", "t039")
+
+    sim_ws = os.path.join("..", "examples", "data", "mf6", "test001e_UZF_3lay")
+    sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws, exe_name=exe_name)
+    sim.simulation_data.mfpath.set_sim_path(cpth)
+    sim.write_simulation()
+    success, _ = sim.run_simulation()
+
+    gwf = sim.get_model("gwf_1")
+
+    idomain = np.ones(gwf.modelgrid.shape, dtype=int)
+    zonbud = gwf.output.zonebudget(idomain)
+    zonbud.write_input()
+    success, buff = zonbud.run_model(exe_name=zb_exe_name)
+
+    if not success:
+        raise AssertionError("zonebudget6 model run failed")
+
+
 if __name__ == "__main__":
-    # test_compare2mflist_mlt()
     test_compare2zonebudget()
     test_zonbud_aliases()
     test_zonbud_to_csv()
@@ -367,3 +369,4 @@ if __name__ == "__main__":
     test_get_model_shape()
     test_zonbud_active_areas_zone_zero()
     test_zonebudget_6()
+    test_zonebudget6_from_output_method()
