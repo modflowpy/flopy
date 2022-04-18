@@ -63,7 +63,7 @@ jobs:
 
     - name: Clone MODFLOW 6 repo
       run: |
-        git clone https://github.com/MODFLOW-USGS/modflow6.git modflow6
+        git clone https://github.com/spaulins-usgs/modflow6.git modflow6
 
     - name: Update flopy MODFLOW 6 classes
       working-directory: ./modflow6/autotest
