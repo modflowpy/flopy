@@ -87,7 +87,7 @@ jobs:
         use-only-tar-bz2: true
 
     - name: Add packages to flopy environment using conda
-      run: |
+      run: | 
         conda env update --name flopy --file etc/environment.yml
 
     - name: Upgrade pip
