@@ -63,7 +63,7 @@ def download_dfn(branch, new_dfn_pth):
         print(msg)
         return
 
-    mf6url = "https://github.com/MODFLOW-USGS/modflow6/archive/{}.zip"
+    mf6url = "https://github.com/spaulins-usgs/modflow6/archive/{}.zip"
     mf6url = mf6url.format(branch)
     print(f"  Downloading MODFLOW 6 repository from {mf6url}")
     with tempfile.TemporaryDirectory() as tmpdirname:
