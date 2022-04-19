@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 07, 2022 16:59:43 UTC
+# FILE created on April 11, 2022 18:22:41 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -12,7 +12,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
     Parameters
     ----------
     model : MFModel
-        Model that this package is a part of.  Package is automatically
+        Model that this package is a part of. Package is automatically
         added to model when it is initialized.
     loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
@@ -92,11 +92,11 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         * k33overk (boolean) keyword to indicate that specified K33 is a ratio
           of K33 divided by K. If this option is specified, then the K33 array
           entered in the NPF Package will be multiplied by K after being read.
-    tvk_filerecord : [tvk_filename]
-        * tvk_filename (string) defines a time-varying hydraulic conductivity
-          (TVK) input file. Records in the TVK file can be used to change
-          hydraulic conductivity properties at specified times or stress
-          periods.
+    perioddata : {varname:data} or tvk_perioddata data
+        * Contains data for the tvk package. Data can be stored in a dictionary
+          containing data for the tvk package with variable names as keys and
+          package data as values. Data just for the perioddata variable is also
+          acceptable. See tvk package documentation for more information.
     icelltype : [integer]
         * icelltype (integer) flag for each cell that specifies how saturated
           thickness is treated. 0 means saturated thickness is held constant;
@@ -370,6 +370,9 @@ class ModflowGwfnpf(mfpackage.MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "construct_package tvk",
+            "construct_data tvk_perioddata",
+            "parameter_name perioddata",
         ],
         [
             "block options",
@@ -500,7 +503,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         save_saturation=None,
         k22overk=None,
         k33overk=None,
-        tvk_filerecord=None,
+        perioddata=None,
         icelltype=0,
         k=1.0,
         k22=None,
@@ -511,10 +514,10 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         wetdry=None,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            model, "npf", filename, pname, loading_package, parent_file
+            model, "npf", filename, pname, loading_package, **kwargs
         )
 
         # set up variables
@@ -535,8 +538,9 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         )
         self.k22overk = self.build_mfdata("k22overk", k22overk)
         self.k33overk = self.build_mfdata("k33overk", k33overk)
-        self.tvk_filerecord = self.build_mfdata(
-            "tvk_filerecord", tvk_filerecord
+        self._tvk_filerecord = self.build_mfdata("tvk_filerecord", None)
+        self._tvk_package = self.build_child_package(
+            "tvk", perioddata, "tvk_perioddata", self._tvk_filerecord
         )
         self.icelltype = self.build_mfdata("icelltype", icelltype)
         self.k = self.build_mfdata("k", k)

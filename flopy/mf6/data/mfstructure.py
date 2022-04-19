@@ -210,7 +210,6 @@ class DfnPackage(Dfn):
         for item in self.dfn_list[0]:
             if item == "multi-package":
                 header_dict["multi-package"] = True
-
         for dfn_entry in self.dfn_list[1:]:
             # load next data item
             new_data_item_struct = MFDataItemStructure()
@@ -500,7 +499,11 @@ class DfnFile(Dfn):
                 # load flopy data
                 if line_lst[2] == "multi-package":
                     header_dict["multi-package"] = True
-
+                if line_lst[2] == "parent_name_type" and len(line_lst) == 5:
+                    header_dict["parent_name_type"] = [
+                        line_lst[3],
+                        line_lst[4],
+                    ]
         # load file definitions
         for line in dfn_fp:
             if self._valid_line(line):
@@ -2094,6 +2097,15 @@ class MFInputFileStructure:
         )
         self.multi_package_support = "multi-package" in self.header
         self.dfn_list = dfn_file.dfn_list
+        self.sub_package = self._sub_package()
+
+    def _sub_package(self):
+        mfstruct = MFStructure()
+        for value in mfstruct.flopy_dict.values():
+            if value is not None and "construct_package" in value:
+                if self.file_type == value["construct_package"]:
+                    return True
+        return False
 
     def is_valid(self):
         valid = True
@@ -2450,12 +2462,32 @@ class MFStructure:
             mf_dfn = Dfn()
             dfn_files = mf_dfn.get_file_list()
 
-            # load flopy-specific settings
-            self.__load_flopy()
-
             # get common
             common_dfn = DfnFile("common.dfn")
             self.sim_struct.process_dfn(common_dfn)
+
+            # process each file's flopy header
+            for file in dfn_files:
+                dfn_path, tail = os.path.split(os.path.realpath(__file__))
+                dfn_path = os.path.join(dfn_path, "dfn")
+                dfn_file = os.path.join(dfn_path, file)
+                with open(dfn_file, "r") as fd_dfn:
+                    for line in fd_dfn:
+                        if len(line) < 1 or line[0] != "#":
+                            break
+                        line_lst = line.strip().split()
+                        if len(line_lst) > 2 and line_lst[1] == "flopy":
+                            # load flopy data
+                            if (
+                                line_lst[2] == "subpackage"
+                                and len(line_lst) == 7
+                            ):
+                                sp_dict = {
+                                    "construct_package": line_lst[4],
+                                    "construct_data": line_lst[5],
+                                    "parameter_name": line_lst[6],
+                                }
+                                MFStructure().flopy_dict[line_lst[3]] = sp_dict
 
             # process each file
             for file in dfn_files:
@@ -2468,26 +2500,6 @@ class MFStructure:
             self.sim_struct.tag_read_as_arrays()
 
         return True
-
-    def __load_flopy(self):
-        current_variable = None
-        var_info = {}
-        dfn_path, tail = os.path.split(os.path.realpath(__file__))
-        flopy_path = os.path.join(dfn_path, "dfn", "flopy.dfn")
-        dfn_fp = open(flopy_path, "r")
-        for line in dfn_fp:
-            if self.__valid_line(line):
-                lst_line = line.strip().split()
-                if lst_line[0].lower() == "name":
-                    # store current variable
-                    self.flopy_dict[current_variable] = var_info
-                    # reset var_info dict
-                    var_info = {}
-                    current_variable = lst_line[1].lower()
-                else:
-                    var_info[lst_line[0].lower()] = lst_line[1].lower()
-        # store last variable
-        self.flopy_dict[current_variable] = var_info
 
     @staticmethod
     def __valid_line(line):

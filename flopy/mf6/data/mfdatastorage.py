@@ -320,6 +320,7 @@ class DataStorage:
         self.in_model = (
             self.data_dimensions is not None
             and len(package_dim.package_path) > 1
+            and package_dim.model_dim[0].model_name is not None
             and package_dim.model_dim[0].model_name.lower()
             == package_dim.package_path[0]
         )
