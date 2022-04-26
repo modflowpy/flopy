@@ -39,7 +39,7 @@ class ListBudget:
     --------
     >>> mf_list = MfListBudget("my_model.list")
     >>> incremental, cumulative = mf_list.get_budget()
-    >>> df_in, df_out = mf_list.get_dataframes(start_datetime="10-21-2015")
+    >>> df_inc, df_cumul = mf_list.get_dataframes(start_datetime="10-21-2015")
 
     """
 
