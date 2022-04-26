@@ -735,8 +735,6 @@ class PlotMapView:
 
         # make sure pathlines is a list
         if not isinstance(pl, list):
-            # todo: check to see if this is an individual or if it
-            # todo: is multiple pathlines
             pids = np.unique(pl["particleid"])
             if len(pids) > 1:
                 pl = [pl[pl["particleid"] == pid] for pid in pids]
