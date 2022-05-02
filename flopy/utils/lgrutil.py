@@ -5,7 +5,7 @@ from .util_array import Util2d, Util3d
 from ..discretization import StructuredGrid
 
 
-class SimpleRegularGrid():
+class SimpleRegularGrid:
     """
     Simple object for representing regular MODFLOW grid information.
 
@@ -33,7 +33,19 @@ class SimpleRegularGrid():
         y location of grid lower left corner
     """
 
-    def __init__(self, nlay, nrow, ncol, delr, delc, top, botm, idomain, xorigin, yorigin):
+    def __init__(
+        self,
+        nlay,
+        nrow,
+        ncol,
+        delr,
+        delc,
+        top,
+        botm,
+        idomain,
+        xorigin,
+        yorigin,
+    ):
         # enforce compliance
         assert delr.shape == (ncol,)
         assert delc.shape == (nrow,)
