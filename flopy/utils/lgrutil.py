@@ -1,8 +1,8 @@
 import numpy as np
 
+from ..discretization import StructuredGrid
 from ..modflow import Modflow
 from .util_array import Util2d, Util3d
-from ..discretization import StructuredGrid
 
 
 class SimpleRegularGrid:
