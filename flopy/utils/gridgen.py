@@ -78,7 +78,6 @@ def features_to_shapefile(features, featuretype, filename):
         wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
         wr.field("SHAPEID", "N", 20, 0)
         for i, line in enumerate(features):
-            t = line.__geo_interface__["coordinates"]
             wr.line([line.__geo_interface__["coordinates"]])
             wr.record(i)
 
