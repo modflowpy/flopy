@@ -1,5 +1,7 @@
 # --------------------- gwf obs options ---------------------
 # flopy multi-package
+# flopy subpackage obs_filerecord obs continuous observations
+# flopy parent_name_type parent_model_or_package MFModel/MFPackage
 
 block options
 name digits

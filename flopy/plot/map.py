@@ -735,7 +735,11 @@ class PlotMapView:
 
         # make sure pathlines is a list
         if not isinstance(pl, list):
-            pl = [pl]
+            pids = np.unique(pl["particleid"])
+            if len(pids) > 1:
+                pl = [pl[pl["particleid"] == pid] for pid in pids]
+            else:
+                pl = [pl]
 
         if "layer" in kwargs:
             kon = kwargs.pop("layer")

@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 07, 2022 16:59:43 UTC
+# FILE created on April 11, 2022 18:22:41 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -82,10 +82,11 @@ class ModflowGwtgwt(mfpackage.MFPackage):
     filein : boolean
         * filein (boolean) keyword to specify that an input filename is
           expected next.
-    mvt_filerecord : [mvt6_filename]
-        * mvt6_filename (string) is the file name of the transport mover input
-          file to apply to this exchange. Information for the transport mover
-          are provided in the file provided with these keywords.
+    perioddata : {varname:data} or perioddata data
+        * Contains data for the mvt package. Data can be stored in a dictionary
+          containing data for the mvt package with variable names as keys and
+          package data as values. Data just for the perioddata variable is also
+          acceptable. See mvt package documentation for more information.
     observations : {varname:data} or continuous data
         * Contains data for the obs package. Data can be stored in a dictionary
           containing data for the obs package with variable names as keys and
@@ -263,6 +264,9 @@ class ModflowGwtgwt(mfpackage.MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "construct_package mvt",
+            "construct_data perioddata",
+            "parameter_name perioddata",
         ],
         [
             "block options",
@@ -433,17 +437,17 @@ class ModflowGwtgwt(mfpackage.MFPackage):
         xt3d_off=None,
         xt3d_rhs=None,
         filein=None,
-        mvt_filerecord=None,
+        perioddata=None,
         observations=None,
         dev_interfacemodel_on=None,
         nexg=None,
         exchangedata=None,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            simulation, "gwtgwt", filename, pname, loading_package, parent_file
+            simulation, "gwtgwt", filename, pname, loading_package, **kwargs
         )
 
         # set up variables
@@ -466,8 +470,9 @@ class ModflowGwtgwt(mfpackage.MFPackage):
         self.xt3d_off = self.build_mfdata("xt3d_off", xt3d_off)
         self.xt3d_rhs = self.build_mfdata("xt3d_rhs", xt3d_rhs)
         self.filein = self.build_mfdata("filein", filein)
-        self.mvt_filerecord = self.build_mfdata(
-            "mvt_filerecord", mvt_filerecord
+        self._mvt_filerecord = self.build_mfdata("mvt_filerecord", None)
+        self._mvt_package = self.build_child_package(
+            "mvt", perioddata, "perioddata", self._mvt_filerecord
         )
         self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
         self._obs_package = self.build_child_package(

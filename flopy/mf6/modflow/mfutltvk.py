@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 07, 2022 16:59:43 UTC
+# FILE created on April 11, 2022 18:22:41 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -11,9 +11,9 @@ class ModflowUtltvk(mfpackage.MFPackage):
 
     Parameters
     ----------
-    model : MFModel
-        Model that this package is a part of.  Package is automatically
-        added to model when it is initialized.
+    parent_package : MFPackage
+        Parent_package that this package is a part of. Package is automatically
+        added to parent_package when it is initialized.
     loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
@@ -208,17 +208,17 @@ class ModflowUtltvk(mfpackage.MFPackage):
 
     def __init__(
         self,
-        model,
+        parent_package,
         loading_package=False,
         print_input=None,
         timeseries=None,
         perioddata=None,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            model, "tvk", filename, pname, loading_package, parent_file
+            parent_package, "tvk", filename, pname, loading_package, **kwargs
         )
 
         # set up variables
@@ -257,15 +257,15 @@ class UtltvkPackages(mfpackage.MFChildPackages):
         pname=None,
     ):
         new_package = ModflowUtltvk(
-            self._model,
+            self._cpparent,
             print_input=print_input,
             timeseries=timeseries,
             perioddata=perioddata,
             filename=filename,
             pname=pname,
-            parent_file=self._cpparent,
+            child_builder_call=True,
         )
-        self._init_package(new_package, filename)
+        self.init_package(new_package, filename)
 
     def append_package(
         self,
@@ -276,12 +276,12 @@ class UtltvkPackages(mfpackage.MFChildPackages):
         pname=None,
     ):
         new_package = ModflowUtltvk(
-            self._model,
+            self._cpparent,
             print_input=print_input,
             timeseries=timeseries,
             perioddata=perioddata,
             filename=filename,
             pname=pname,
-            parent_file=self._cpparent,
+            child_builder_call=True,
         )
         self._append_package(new_package, filename)

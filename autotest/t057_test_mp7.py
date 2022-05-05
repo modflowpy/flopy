@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import matplotlib.pyplot as plt
 from ci_framework import FlopyTestSetup, base_test_dir
 
 import flopy
@@ -410,10 +411,37 @@ def build_mf6(model_ws):
         success, buff = mp.run_model()
         assert success, f"mp7 model ({mp.name}) did not run"
 
-    return
+    return gwf
+
+
+def test_pathline_plotting():
+    model_ws = f"{base_dir}_test_pathline_output"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
+    gwf = build_mf6(model_ws)
+
+    modelgrid = gwf.modelgrid
+    nodes = list(range(modelgrid.nnodes))
+
+    if run:
+        fpth1 = os.path.join(model_ws, "mf6", "ex01_mf6_mp.mppth")
+        p = flopy.utils.PathlineFile(fpth1)
+        p1 = p.get_alldata()
+        pls = p.get_destination_data(nodes)
+
+        pmv = flopy.plot.PlotMapView(modelgrid=modelgrid, layer=0)
+        pmv.plot_grid()
+        linecol = pmv.plot_pathline(pls, layer="all")
+        linecol2 = pmv.plot_pathline(p1, layer="all")
+        if not len(linecol._paths) == len(linecol2._paths):
+            raise AssertionError(
+                "plot_pathline not properly splitting particles from recarray"
+            )
+        plt.close()
 
 
 if __name__ == "__main__":
     test_pathline_output()
     test_endpoint_output()
     test_pgroup_release_data()
+    test_pathline_plotting()

@@ -1,5 +1,6 @@
 # --------------------- sim ats options ---------------------
-
+# flopy subpackage ats_filerecord ats perioddata ats_perioddata
+# flopy parent_name_type parent_package MFPackage
 
 # --------------------- sim ats dimensions ---------------------
 
