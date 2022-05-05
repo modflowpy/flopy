@@ -285,7 +285,7 @@ class MFFileMgmt:
                 path_lst = path.split(os.path.sep)
                 new_path = ""
                 for i, mrp in enumerate(model_rel_path_lst):
-                    if mrp != path_lst[i]:
+                    if i >= len(path_lst) or mrp != path_lst[i]:
                         new_path = os.path.join(new_path, path_lst[i])
                 for rp in path_lst[len(model_rel_path_lst) :]:
                     new_path = os.path.join(new_path, rp)

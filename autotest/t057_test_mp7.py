@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import matplotlib.pyplot as plt
 from ci_framework import FlopyTestSetup, base_test_dir
 
 import flopy
@@ -145,6 +146,51 @@ def test_endpoint_output():
         f"to the endpoints  in {os.path.basename(fpth1)}"
     )
     # assert not np.allclose(t0, t1), msg
+
+    return
+
+
+def test_pgroup_release_data():
+    model_ws = f"{base_dir}_test_pgroup_release_data"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
+    # create particles
+    partlocs = []
+    partids  = []
+    for i in range(nrow):
+        partlocs.append((0, i, 2))
+        partids.append(i)
+    pdata = flopy.modpath.ParticleData(
+        partlocs, structured=True, particleids=partids
+    )
+    pgrd1 = flopy.modpath.ParticleGroup(
+        particlegroupname="PG1", particledata=pdata, filename="exrd1.sloc", 
+        releasedata=0.0,
+    )
+    nripg2= 10
+    ripg2 = 1.0
+    pgrd2 = flopy.modpath.ParticleGroup(
+        particlegroupname="PG2", particledata=pdata, filename="exrd2.sloc",
+        releasedata=[nripg2, 0.0, ripg2]
+    )
+    nripg3= 10
+    pgrd3 = flopy.modpath.ParticleGroup(
+        particlegroupname="PG3", particledata=pdata, filename="exrd3.sloc",
+        releasedata=[nripg3, np.arange(0,nripg3)]
+    )
+
+    assert len(pgrd1.releasetimes)     == 1,  \
+            f"mp7: pgroup with releaseoption 1 returned " \
+            f"len(releasetimes)={len(pgrd1.releasetimes)}. Should be 1"
+    assert len(pgrd2.releasetimes)     == nripg2, \
+            f"mp7: pgroup with releaseoption 2 returned " \
+            f"len(releasetimes)={len(pgrd2.releasetimes)}. Should be {nripg2}"
+    assert type(pgrd2.releaseinterval) == type(ripg2),    \
+            f"mp7: pgroup with releaseoption 2 returned " \
+            f"type(releaseinterval)={type(pgrd2.releaseinterval)}. Should remain as {type(ripg2)}"
+    assert len(pgrd3.releasetimes)     == nripg3, \
+            f"mp7: pgroup with releaseoption 3 returned " \
+            f"len(releasetimes)={len(pgrd3.releasetimes)}. Should be {nripg3}"
 
     return
 
@@ -365,9 +411,37 @@ def build_mf6(model_ws):
         success, buff = mp.run_model()
         assert success, f"mp7 model ({mp.name}) did not run"
 
-    return
+    return gwf
+
+
+def test_pathline_plotting():
+    model_ws = f"{base_dir}_test_pathline_output"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
+    gwf = build_mf6(model_ws)
+
+    modelgrid = gwf.modelgrid
+    nodes = list(range(modelgrid.nnodes))
+
+    if run:
+        fpth1 = os.path.join(model_ws, "mf6", "ex01_mf6_mp.mppth")
+        p = flopy.utils.PathlineFile(fpth1)
+        p1 = p.get_alldata()
+        pls = p.get_destination_data(nodes)
+
+        pmv = flopy.plot.PlotMapView(modelgrid=modelgrid, layer=0)
+        pmv.plot_grid()
+        linecol = pmv.plot_pathline(pls, layer="all")
+        linecol2 = pmv.plot_pathline(p1, layer="all")
+        if not len(linecol._paths) == len(linecol2._paths):
+            raise AssertionError(
+                "plot_pathline not properly splitting particles from recarray"
+            )
+        plt.close()
 
 
 if __name__ == "__main__":
     test_pathline_output()
     test_endpoint_output()
+    test_pgroup_release_data()
+    test_pathline_plotting()

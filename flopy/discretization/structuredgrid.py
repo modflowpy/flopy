@@ -1571,11 +1571,9 @@ class StructuredGrid(Grid):
 
         """
         iverts = []
-        inode = 0
         for i in range(self.nrow):
             for j in range(self.ncol):
-                iverts.append([inode] + self._build_structured_iverts(i, j))
-                inode += 1
+                iverts.append(self._build_structured_iverts(i, j))
         self._iverts = iverts
         return
 

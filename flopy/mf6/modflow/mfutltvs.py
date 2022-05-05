@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 22, 2021 17:36:26 UTC
+# FILE created on April 11, 2022 18:22:41 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -11,9 +11,9 @@ class ModflowUtltvs(mfpackage.MFPackage):
 
     Parameters
     ----------
-    model : MFModel
-        Model that this package is a part of.  Package is automatically
-        added to model when it is initialized.
+    parent_package : MFPackage
+        Parent_package that this package is a part of. Package is automatically
+        added to parent_package when it is initialized.
     loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
@@ -24,6 +24,10 @@ class ModflowUtltvs(mfpackage.MFPackage):
           groundwater storage formulation will be modified to correctly adjust
           heads based on transient variations in stored water volumes arising
           from changes to SS and SY properties.
+    print_input : boolean
+        * print_input (boolean) keyword to indicate that information for each
+          change to a storage property in a cell will be written to the model
+          listing file.
     timeseries : {varname:data} or timeseries data
         * Contains data for the ts package. Data can be stored in a dictionary
           containing data for the ts package with variable names as keys and
@@ -85,6 +89,13 @@ class ModflowUtltvs(mfpackage.MFPackage):
         [
             "block options",
             "name disable_storage_change_integration",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_input",
             "type keyword",
             "reader urword",
             "optional true",
@@ -192,17 +203,18 @@ class ModflowUtltvs(mfpackage.MFPackage):
 
     def __init__(
         self,
-        model,
+        parent_package,
         loading_package=False,
         disable_storage_change_integration=None,
+        print_input=None,
         timeseries=None,
         perioddata=None,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            model, "tvs", filename, pname, loading_package, parent_file
+            parent_package, "tvs", filename, pname, loading_package, **kwargs
         )
 
         # set up variables
@@ -210,6 +222,7 @@ class ModflowUtltvs(mfpackage.MFPackage):
             "disable_storage_change_integration",
             disable_storage_change_integration,
         )
+        self.print_input = self.build_mfdata("print_input", print_input)
         self._ts_filerecord = self.build_mfdata("ts_filerecord", None)
         self._ts_package = self.build_child_package(
             "ts", timeseries, "timeseries", self._ts_filerecord
@@ -238,37 +251,41 @@ class UtltvsPackages(mfpackage.MFChildPackages):
     def initialize(
         self,
         disable_storage_change_integration=None,
+        print_input=None,
         timeseries=None,
         perioddata=None,
         filename=None,
         pname=None,
     ):
         new_package = ModflowUtltvs(
-            self._model,
+            self._cpparent,
             disable_storage_change_integration=disable_storage_change_integration,
+            print_input=print_input,
             timeseries=timeseries,
             perioddata=perioddata,
             filename=filename,
             pname=pname,
-            parent_file=self._cpparent,
+            child_builder_call=True,
         )
-        self._init_package(new_package, filename)
+        self.init_package(new_package, filename)
 
     def append_package(
         self,
         disable_storage_change_integration=None,
+        print_input=None,
         timeseries=None,
         perioddata=None,
         filename=None,
         pname=None,
     ):
         new_package = ModflowUtltvs(
-            self._model,
+            self._cpparent,
             disable_storage_change_integration=disable_storage_change_integration,
+            print_input=print_input,
             timeseries=timeseries,
             perioddata=perioddata,
             filename=filename,
             pname=pname,
-            parent_file=self._cpparent,
+            child_builder_call=True,
         )
         self._append_package(new_package, filename)

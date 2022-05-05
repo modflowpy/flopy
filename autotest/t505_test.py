@@ -7,6 +7,7 @@ import flopy
 import flopy.utils.binaryfile as bf
 from flopy.mf6.data.mfdatastorage import DataStorageType
 from flopy.mf6.mfbase import FlopyException, MFDataException
+from flopy.mf6.modflow.mfutltas import ModflowUtltas
 from flopy.mf6.modflow.mfgwf import ModflowGwf
 from flopy.mf6.modflow.mfgwfchd import ModflowGwfchd
 from flopy.mf6.modflow.mfgwfdis import ModflowGwfdis
@@ -19,6 +20,8 @@ from flopy.mf6.modflow.mfgwfgnc import ModflowGwfgnc
 from flopy.mf6.modflow.mfgwfgwf import ModflowGwfgwf
 from flopy.mf6.modflow.mfgwfhfb import ModflowGwfhfb
 from flopy.mf6.modflow.mfgwfic import ModflowGwfic
+from flopy.mf6.modflow.mfgwflak import ModflowGwflak
+from flopy.mf6.modflow.mfutllaktab import ModflowUtllaktab
 from flopy.mf6.modflow.mfgwfnpf import ModflowGwfnpf
 from flopy.mf6.modflow.mfgwfoc import ModflowGwfoc
 from flopy.mf6.modflow.mfgwfrch import ModflowGwfrch
@@ -27,6 +30,7 @@ from flopy.mf6.modflow.mfgwfriv import ModflowGwfriv
 from flopy.mf6.modflow.mfgwfsfr import ModflowGwfsfr
 from flopy.mf6.modflow.mfgwfsto import ModflowGwfsto
 from flopy.mf6.modflow.mfgwfwel import ModflowGwfwel
+from flopy.mf6.modflow.mfgwfmvr import ModflowGwfmvr
 from flopy.mf6.modflow.mfims import ModflowIms
 from flopy.mf6.modflow.mfsimulation import MFSimulation
 from flopy.mf6.modflow.mftdis import ModflowTdis
@@ -265,9 +269,26 @@ def test_multi_model():
         chdspd=chdspd,
         welspd=welspd,
     )
+    lakpd = [(0, -100.0, 1)]
+    lakecn = [(0, 0, (0, 0, 0), "HORIZONTAL", 1.0, 0.1, 1.0, 10.0, 1.0)]
+    lak_2 = ModflowGwflak(
+        gwf2,
+        pname="lak2",
+        print_input=True,
+        mover=True,
+        nlakes=1,
+        noutlets=0,
+        ntables=0,
+        packagedata=lakpd,
+        connectiondata=lakecn,
+    )
 
     # gwf-gwf
-    gwfgwf_data = [[(0, 0, ncol - 1), (0, 0, 0), 1, 0.5, 0.5, 1.0, 0.0, 1.0]]
+    gwfgwf_data = []
+    for col in range(0, ncol):
+        gwfgwf_data.append(
+            [(0, 0, col), (0, 0, col), 1, 0.5, 0.5, 1.0, 0.0, 1.0]
+        )
     gwfgwf = flopy.mf6.ModflowGwfgwf(
         sim,
         exgtype="GWF6-GWF6",
@@ -277,6 +298,55 @@ def test_multi_model():
         exchangedata=gwfgwf_data,
         auxiliary=["ANGLDEGX", "CDIST"],
         filename="flow1_flow2.gwfgwf",
+    )
+    # set up mvr package
+    wel_1 = gwf1.get_package("wel")
+    wel_1.mover.set_data(True)
+    wel_name_1 = wel_1.name[0]
+    lak_name_2 = lak_2.name[0]
+    package_data = [(gwf1.name, wel_name_1), (gwf2.name, lak_name_2)]
+    period_data = [
+        (gwf1.name, wel_name_1, 0, gwf2.name, lak_name_2, 0, "FACTOR", 1.0)
+    ]
+    fname = "gwfgwf.input.mvr"
+    gwfgwf.mvr.initialize(
+        filename=fname,
+        modelnames=True,
+        print_input=True,
+        print_flows=True,
+        maxpackages=2,
+        maxmvr=1,
+        packages=package_data,
+        perioddata=period_data,
+    )
+
+    gnc_data = []
+    for col in range(0, ncol):
+        if col < ncol / 2.0:
+            gnc_data.append(((0, 0, col), (0, 0, col), (0, 0, col + 1), 0.25))
+        else:
+            gnc_data.append(((0, 0, col), (0, 0, col), (0, 0, col - 1), 0.25))
+
+    # set up gnc package
+    fname = "gwfgwf.input.gnc"
+    gwfgwf.gnc.initialize(
+        filename=fname,
+        print_input=True,
+        print_flows=True,
+        numgnc=ncol,
+        numalphaj=1,
+        gncdata=gnc_data,
+    )
+
+    # Observe flow for exchange
+    gwfgwfobs = {}
+    obs_list = []
+    for col in range(0, ncol):
+        obs_list.append([f"exchange_flow_{col}", "FLOW-JA-FACE", (col,)])
+    gwfgwfobs["gwfgwf.output.obs.csv"] = obs_list
+    fname = "gwfgwf.input.obs"
+    gwfgwf.obs.initialize(
+        filename=fname, digits=25, print_input=True, continuous=gwfgwfobs
     )
 
     # Create gwt model
@@ -312,7 +382,7 @@ def test_multi_model():
         inner_maximum=ninner,
         inner_dvclose=hclose,
         rcloserecord=rclose,
-        linear_acceleration="CG",
+        linear_acceleration="BICGSTAB",
         scaling_method="NONE",
         reordering_method="NONE",
         relaxation_factor=relax,
@@ -403,11 +473,11 @@ def test_array():
         filename=f"{sim_name}.ims",
         print_option="ALL",
         complexity="SIMPLE",
-        outer_dvclose=0.00001,
+        outer_dvclose=0.0001,
         outer_maximum=50,
         under_relaxation="NONE",
         inner_maximum=30,
-        inner_dvclose=0.00001,
+        inner_dvclose=0.0001,
         linear_acceleration="CG",
         preconditioner_levels=7,
         preconditioner_drop_tolerance=0.01,
@@ -441,6 +511,17 @@ def test_array():
         k=50.0,
     )
 
+    oc_package = ModflowGwfoc(
+        model,
+        budget_filerecord=[("test_array.cbc",)],
+        head_filerecord=[("test_array.hds",)],
+        saverecord={
+            0: [("HEAD", "ALL"), ("BUDGET", "ALL")],
+            1: [],
+        },
+        printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
+
     aux = {1: [[50.0], [1.3]], 3: [[200.0], [1.5]]}
     irch = {1: [[0, 2], [2, 1]], 2: [[0, 1], [2, 3]]}
     rcha = mf6.ModflowGwfrcha(
@@ -449,7 +530,7 @@ def test_array():
         print_flows=True,
         auxiliary=[("var1", "var2")],
         irch=irch,
-        recharge={1: 0.0001, 2: 0.0002},
+        recharge={1: 0.0001, 2: 0.00001},
         aux=aux,
     )
     val_irch = rcha.irch.array.sum(axis=(1, 2, 3))
@@ -467,12 +548,12 @@ def test_array():
     val_rch = rcha.recharge.array.sum(axis=(1, 2, 3))
     assert val_rch[0] == 0.0
     assert val_rch[1] == 0.0004
-    assert val_rch[2] == 0.0008
-    assert val_rch[3] == 0.0008
+    assert val_rch[2] == 0.00004
+    assert val_rch[3] == 0.00004
     val_rch_2 = rcha.recharge.get_data()
     assert val_rch_2[0] is None
     assert val_rch_2[1][0, 0] == 0.0001
-    assert val_rch_2[2][0, 0] == 0.0002
+    assert val_rch_2[2][0, 0] == 0.00001
     assert val_rch_2[3] is None
     aux_data_0 = rcha.aux.get_data(0)
     assert aux_data_0 is None
@@ -488,6 +569,7 @@ def test_array():
         model,
         print_input=True,
         print_flows=True,
+        mover=True,
         stress_period_data=welspdict,
         save_flows=False,
         auxiliary="CONCENTRATION",
@@ -537,6 +619,73 @@ def test_array():
         save_flows=False,
         pname="GHB-1",
     )
+
+    lakpd = [(0, 70.0, 1), (1, 65.0, 1)]
+    lakecn = [
+        (0, 0, (0, 0, 0), "HORIZONTAL", 1.0, 60.0, 90.0, 10.0, 1.0),
+        (1, 0, (0, 1, 1), "HORIZONTAL", 1.0, 60.0, 90.0, 10.0, 1.0),
+    ]
+    lak_tables = [(0, "lak01.tab"), (1, "lak02.tab")]
+    lak = ModflowGwflak(
+        model,
+        pname="lak",
+        print_input=True,
+        mover=True,
+        nlakes=2,
+        noutlets=0,
+        ntables=1,
+        packagedata=lakpd,
+        connectiondata=lakecn,
+        tables=lak_tables,
+    )
+
+    table_01 = [
+        (30.0, 100000.0, 10000.0),
+        (40.0, 200500.0, 10100.0),
+        (50.0, 301200.0, 10130.0),
+        (60.0, 402000.0, 10180.0),
+        (70.0, 503000.0, 10200.0),
+        (80.0, 700000.0, 20000.0),
+    ]
+    lak_tab = ModflowUtllaktab(
+        model,
+        filename="lak01.tab",
+        nrow=6,
+        ncol=3,
+        table=table_01,
+    )
+
+    table_02 = [
+        (40.0, 100000.0, 10000.0),
+        (50.0, 200500.0, 10100.0),
+        (60.0, 301200.0, 10130.0),
+        (70.0, 402000.0, 10180.0),
+        (80.0, 503000.0, 10200.0),
+        (90.0, 700000.0, 20000.0),
+    ]
+    lak_tab_2 = ModflowUtllaktab(
+        model,
+        filename="lak02.tab",
+        nrow=6,
+        ncol=3,
+        table=table_02,
+    )
+    wel_name_1 = wel.name[0]
+    lak_name_2 = lak.name[0]
+    package_data = [(wel_name_1,), (lak_name_2,)]
+    period_data = [(wel_name_1, 0, lak_name_2, 0, "FACTOR", 1.0)]
+    fname = f"{model.name}.input.mvr"
+    mvr = ModflowGwfmvr(
+        parent_model_or_package=model,
+        filename=fname,
+        print_input=True,
+        print_flows=True,
+        maxpackages=2,
+        maxmvr=1,
+        packages=package_data,
+        perioddata=period_data,
+    )
+
     # test writing and loading model
     sim.write_simulation()
     if run:
@@ -554,6 +703,8 @@ def test_array():
     rcha = model.get_package("rcha")
     wel = model.get_package("wel")
     drn = model.get_package("drn")
+    lak = model.get_package("lak")
+    lak_tab = model.get_package("laktab")
     assert os.path.split(dis.filename)[1] == f"{model_name} 1.dis"
     # do same tests as above
     val_irch = rcha.irch.array.sum(axis=(1, 2, 3))
@@ -569,12 +720,12 @@ def test_array():
     val_rch = rcha.recharge.array.sum(axis=(1, 2, 3))
     assert val_rch[0] == 0.0
     assert val_rch[1] == 0.0004
-    assert val_rch[2] == 0.0008
-    assert val_rch[3] == 0.0008
+    assert val_rch[2] == 0.00004
+    assert val_rch[3] == 0.00004
     val_rch_2 = rcha.recharge.get_data()
     assert val_rch_2[0] is None
     assert val_rch_2[1][0, 0] == 0.0001
-    assert val_rch_2[2][0, 0] == 0.0002
+    assert val_rch_2[2][0, 0] == 0.00001
     assert val_rch_2[3] is None
     aux_data_0 = rcha.aux.get_data(0)
     assert aux_data_0 is None
@@ -605,6 +756,18 @@ def test_array():
     drn_gd_3 = drn.stress_period_data.get_data(3)
     assert drn_gd_3[0][1] == 55.0
 
+    lak_tab_array = lak.tables.get_data()
+    assert lak_tab_array[0][1] == "lak01.tab"
+    assert lak_tab_array[1][1] == "lak02.tab"
+
+    assert len(lak_tab) == 2
+    lak_tab_1 = lak_tab[0].table.get_data()
+    assert lak_tab_1[0][0] == 30.0
+    assert lak_tab_1[5][2] == 20000.0
+    lak_tab_2 = lak_tab[1].table.get_data()
+    assert lak_tab_2[0][0] == 40.0
+    assert lak_tab_2[4][1] == 503000.0
+
 
 def test_binary_read():
     test_ex_name = "binary_read"
@@ -629,14 +792,20 @@ def test_binary_read():
     dstruct = flopy.mf6.data.mfstructure.MFDataItemStructure()
     dstruct.is_cellid = False
     dstruct.name = "fake"
-    dstruct.data_items = [None,]
+    dstruct.data_items = [
+        None,
+    ]
     mfstruct = flopy.mf6.data.mfstructure.MFDataStructure(
-        dstruct, False, 'ic', None
+        dstruct, False, "ic", None
     )
-    mfstruct.data_item_structures = [dstruct,]
-    mfstruct.path = ["fake", ]
+    mfstruct.data_item_structures = [
+        dstruct,
+    ]
+    mfstruct.path = [
+        "fake",
+    ]
 
-    md = flopy.mf6.coordinates.modeldimensions.ModelDimensions('test', None)
+    md = flopy.mf6.coordinates.modeldimensions.ModelDimensions("test", None)
     pd = flopy.mf6.coordinates.modeldimensions.PackageDimensions(
         [md], None, "."
     )
@@ -1161,28 +1330,6 @@ def test_np001():
         sim.run_simulation()
         sim.delete_output_files()
 
-    try:
-        error_occurred = False
-        well_spd = {
-            0: {
-                "filename": "wel0.bin",
-                "binary": True,
-                "data": [((0, 0, 4), -2000.0), ((0, 0, 7), -2.0)],
-            }
-        }
-        wel_package = ModflowGwfwel(
-            model,
-            boundnames=True,
-            print_input=True,
-            print_flows=True,
-            save_flows=True,
-            maxbound=2,
-            stress_period_data=well_spd,
-        )
-    except MFDataException:
-        error_occurred = True
-    assert error_occurred
-
     # test error checking
     drn_package = ModflowGwfdrn(
         model,
@@ -1244,7 +1391,7 @@ def test_np001():
     mpath = sim.simulation_data.mfpath.get_model_path(model.name)
     spath = sim.simulation_data.mfpath.get_sim_path()
     found_cellid = False
-    with open(os.path.join(mpath, "np001_mod.wel"), "r") as fd:
+    with open(os.path.join(mpath, "np001_mod.wel_1"), "r") as fd:
         for line in fd:
             line_lst = line.strip().split()
             if (
@@ -1260,7 +1407,7 @@ def test_np001():
     well_spd = {0: [(-1, -1, -1, -2000.0), (0, 0, 7, -2.0)], 1: []}
     wel_package = ModflowGwfwel(
         model,
-        pname="wel_1",
+        pname="wel_2",
         filename="file_rename.wel",
         print_input=True,
         print_flows=True,
@@ -1292,7 +1439,7 @@ def test_np001():
         spath,
         write_headers=False,
     )
-    wel = test_sim.get_model().get_package("wel_1")
+    wel = test_sim.get_model().get_package("wel_2")
     wel._filename = "np001_spd_test.wel"
     wel.write()
     found_begin = False
@@ -1309,6 +1456,29 @@ def test_np001():
                     if len(line.strip()) > 0:
                         text_between_begin_and_end = True
     assert found_begin and found_end and not text_between_begin_and_end
+
+    # test adding package with invalid data
+    try:
+        error_occurred = False
+        well_spd = {
+            0: {
+                "filename": "wel0.bin",
+                "binary": True,
+                "data": [((0, 0, 4), -2000.0), ((0, 0, 7), -2.0)],
+            }
+        }
+        wel_package = ModflowGwfwel(
+            model,
+            boundnames=True,
+            print_input=True,
+            print_flows=True,
+            save_flows=True,
+            maxbound=2,
+            stress_period_data=well_spd,
+        )
+    except MFDataException:
+        error_occurred = True
+    assert error_occurred
 
     return
 
@@ -1473,9 +1643,10 @@ def test_np002():
     rch_array[0, 3] = 0.02
     rch_array[0, 6] = 0.1
 
-    rch_package.tas.initialize(
+    tas = ModflowUtltas(
+        rch_package,
         filename="np002_mod.rch.tas",
-        tas_array={0.0: rch_array, 6.0: rch_array},
+        tas_array={0.0: rch_array, 6.0: rch_array, 12.0: rch_array},
         time_series_namerecord="rcharray",
         interpolation_methodrecord="linear",
     )
@@ -1527,6 +1698,7 @@ def test_np002():
     )
     chd_package = ModflowGwfchd(
         model,
+        pname="chd_2",
         print_input=True,
         print_flows=True,
         maxbound=1,
@@ -1543,7 +1715,7 @@ def test_np002():
         "checker threshold of 0.5" in summary
     )
     assert "Not a number" in summary
-
+    model.remove_package("chd_2")
     # check case where aux variable defined and stress period data has empty
     # stress period
     model.remove_package("ghb")
@@ -1555,7 +1727,15 @@ def test_np002():
         stress_period_data={0: [((0, 0, 9), 125.0, 60.0, 0.0)], 1: [()]},
         auxiliary=["CONCENTRATION"],
     )
+    # add adaptive time stepping
+    period_data = [
+        (0, 3.0, 1.0e-5, 6.0, 2.0, 5.0),
+        (1, 3.0, 1.0e-5, 6.0, 2.0, 5.0),
+    ]
+    ats = tdis_package.ats.initialize(maxats=2, perioddata=period_data)
+
     sim.write_simulation()
+    sim.run_simulation()
     sim2 = MFSimulation.load(
         sim_name=test_ex_name,
         version="mf6",
@@ -1580,6 +1760,9 @@ def test_np002():
     assert os.path.exists(
         os.path.join(ext_full_path, "np002_mod.dis_botm.txt")
     )
+
+    # run
+    sim.run_simulation()
 
     return
 
@@ -3274,7 +3457,6 @@ def test006_2models_gnc():
         print_flows=True,
         save_flows=True,
         auxiliary="testaux",
-        gnc_filerecord=gnc_path,
         nexg=26,
         exchangedata=newexgrecarray,
         exgtype="gwf6-gwf6",
@@ -3289,7 +3471,6 @@ def test006_2models_gnc():
         print_flows=True,
         save_flows=True,
         auxiliary="testaux",
-        gnc_filerecord=gnc_path,
         nexg=36,
         exchangedata=exgrecarray,
         exgtype="gwf6-gwf6",
@@ -3301,19 +3482,7 @@ def test006_2models_gnc():
     gncrecarray = testutils.read_gncrecarray(os.path.join(pth, "gnc.txt"))
     # test gnc delete
     new_gncrecarray = gncrecarray[10:]
-    gnc_package = ModflowGwfgnc(
-        sim,
-        filename=gnc_path,
-        print_input=True,
-        print_flows=True,
-        numgnc=26,
-        numalphaj=1,
-        gncdata=new_gncrecarray,
-    )
-    sim.remove_package(gnc_package.package_type)
-
-    gnc_package = ModflowGwfgnc(
-        sim,
+    gnc_package = exg_package.gnc.initialize(
         filename=gnc_path,
         print_input=True,
         print_flows=True,

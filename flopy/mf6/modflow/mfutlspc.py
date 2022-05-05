@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 22, 2021 17:36:26 UTC
+# FILE created on April 11, 2022 18:22:41 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -12,7 +12,7 @@ class ModflowUtlspc(mfpackage.MFPackage):
     Parameters
     ----------
     model : MFModel
-        Model that this package is a part of.  Package is automatically
+        Model that this package is a part of. Package is automatically
         added to model when it is initialized.
     loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
@@ -185,10 +185,10 @@ class ModflowUtlspc(mfpackage.MFPackage):
         perioddata=None,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            model, "spc", filename, pname, loading_package, parent_file
+            model, "spc", filename, pname, loading_package, **kwargs
         )
 
         # set up variables
@@ -200,63 +200,3 @@ class ModflowUtlspc(mfpackage.MFPackage):
         self.maxbound = self.build_mfdata("maxbound", maxbound)
         self.perioddata = self.build_mfdata("perioddata", perioddata)
         self._init_complete = True
-
-
-class UtlspcPackages(mfpackage.MFChildPackages):
-    """
-    UtlspcPackages is a container class for the ModflowUtlspc class.
-
-    Methods
-    ----------
-    initialize
-        Initializes a new ModflowUtlspc package removing any sibling child
-        packages attached to the same parent package. See ModflowUtlspc init
-        documentation for definition of parameters.
-    append_package
-        Adds a new ModflowUtlspc package to the container. See ModflowUtlspc
-        init documentation for definition of parameters.
-    """
-
-    package_abbr = "utlspcpackages"
-
-    def initialize(
-        self,
-        print_input=None,
-        timeseries=None,
-        maxbound=None,
-        perioddata=None,
-        filename=None,
-        pname=None,
-    ):
-        new_package = ModflowUtlspc(
-            self._model,
-            print_input=print_input,
-            timeseries=timeseries,
-            maxbound=maxbound,
-            perioddata=perioddata,
-            filename=filename,
-            pname=pname,
-            parent_file=self._cpparent,
-        )
-        self._init_package(new_package, filename)
-
-    def append_package(
-        self,
-        print_input=None,
-        timeseries=None,
-        maxbound=None,
-        perioddata=None,
-        filename=None,
-        pname=None,
-    ):
-        new_package = ModflowUtlspc(
-            self._model,
-            print_input=print_input,
-            timeseries=timeseries,
-            maxbound=maxbound,
-            perioddata=perioddata,
-            filename=filename,
-            pname=pname,
-            parent_file=self._cpparent,
-        )
-        self._append_package(new_package, filename)

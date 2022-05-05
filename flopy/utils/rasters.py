@@ -373,6 +373,7 @@ class Raster:
         """
         import_optional_dependency("scipy")
         from scipy.interpolate import griddata
+        from scipy.stats import mode
 
         method = method.lower()
         if method in ("linear", "nearest", "cubic"):
@@ -405,7 +406,7 @@ class Raster:
                 method=method,
             )
 
-        elif method in ("median", "mean", "min", "max"):
+        elif method in ("median", "mean", "min", "max", "mode"):
             # these methods are slow and could use a speed up
             ncpl = modelgrid.ncpl
             data_shape = modelgrid.xcellcenters.shape
@@ -470,6 +471,14 @@ class Raster:
                             val = np.nanmean(rstr_data)
                         elif method == "max":
                             val = np.nanmax(rstr_data)
+                        elif method == "mode":
+                            val = mode(
+                                rstr_data, axis=None, nan_policy="omit"
+                            ).mode
+                            if len(val) == 0:
+                                val = np.nan
+                            else:
+                                val = val[0]
                         else:
                             val = np.nanmin(rstr_data)
 
@@ -541,6 +550,10 @@ class Raster:
             None
         """
         container.acquire()
+
+        import_optional_dependency("scipy")
+        from scipy.stats import mode
+
         verts = modelgrid.get_cell_vertices(node)
         rstr_data = self.sample_polygon(verts, band, convert=False).astype(
             float
@@ -558,6 +571,12 @@ class Raster:
                 val = np.nanmean(rstr_data)
             elif method == "max":
                 val = np.nanmax(rstr_data)
+            elif method == "mode":
+                val = mode(rstr_data, axis=None, nan_policy="omit").mode
+                if len(val) == 0:
+                    val = np.nan
+                else:
+                    val = val[0]
             else:
                 val = np.nanmin(rstr_data)
 

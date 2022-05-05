@@ -4,7 +4,7 @@ the ModflowSip class as `flopy.modflow.ModflowSip`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?sip.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/sip.html>`_.
 
 """
 from ..pakbase import Package
@@ -114,7 +114,7 @@ class ModflowSip(Package):
             )
 
         self._generate_heading()
-        self.url = "sip.htm"
+        self.url = "sip.html"
 
         self.mxiter = mxiter
         self.nparm = nparm

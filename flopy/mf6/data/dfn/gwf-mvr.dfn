@@ -1,4 +1,6 @@
 # --------------------- gwf mvr options ---------------------
+# flopy subpackage mvr_filerecord mvr perioddata perioddata
+# flopy parent_name_type parent_model_or_package MFModel/MFPackage
 
 block options
 name print_input

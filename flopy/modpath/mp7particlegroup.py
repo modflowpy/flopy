@@ -75,8 +75,12 @@ class _Modpath7ParticleGroup:
         elif len(releasedata) == 3:
             releaseoption = 2
             releasetimecount = int(releasedata[0])
-            releaseinterval = int(releasedata[2])
-            releasetimes = np.array(releasedata[1], dtype=np.float32)
+            releaseinterval = releasedata[2]
+            releasetimes = np.arange(
+                releasedata[1],
+                releasedata[1] + releasetimecount * releaseinterval,
+                releaseinterval,
+            ).astype(np.float32)
         elif len(releasedata) == 2:
             releaseoption = 3
             releasetimecount = int(releasedata[0])

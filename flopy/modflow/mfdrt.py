@@ -4,7 +4,7 @@ the ModflowDrt class as `flopy.modflow.ModflowDrt`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?drt.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/drt.html>`_.
 
 """
 import numpy as np
@@ -153,7 +153,7 @@ class ModflowDrt(Package):
         )
 
         self._generate_heading()
-        self.url = "drt.htm"
+        self.url = "drt.html"
 
         self.ipakcb = ipakcb
 

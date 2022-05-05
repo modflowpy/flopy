@@ -34,19 +34,23 @@ jobs:
       with:
         python-version: 3.9
 
-    - name: Upgrade pip and install wheel
+    - name: Upgrade pip and install build and twine
       run: |
         python -m pip install --upgrade pip
-        pip install wheel
+        pip install build twine
 
     - name: Base flopy installation
       run: |
-        pip install . --use-feature=in-tree-build
+        pip install .
 
     - name: Print flopy version
       run: |
         python -c "import flopy; print(flopy.__version__)"
 
+    - name: Build flopy packages, check dist outputs
+      run: |
+        python -m build
+        twine check --strict dist/*
 
   flopy_lint:
     name: linting
@@ -138,10 +142,9 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Upgrade pip and install wheel
+    - name: Upgrade pip
       run: |
         python -m pip install --upgrade pip
-        pip install wheel
 
     - name: Install Python packages on Linux and MacOS
       run: |
@@ -156,7 +159,7 @@ jobs:
       run: |
         pip install https://github.com/modflowpy/pymake/zipball/master
         pip install xmipy
-        pip install . --use-feature=in-tree-build
+        pip install .
 
     - name: Prepare for the autotests
       working-directory: ./autotest

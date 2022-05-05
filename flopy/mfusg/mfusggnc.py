@@ -113,7 +113,6 @@ class MfUsgGnc(Package):
         )
 
         self._generate_heading()
-        self.url = " "
 
         if options is None:
             options = []

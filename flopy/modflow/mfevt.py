@@ -4,7 +4,7 @@ the ModflowEvt class as `flopy.modflow.ModflowEvt`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?evt.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/evt.html>`_.
 
 """
 import numpy as np
@@ -124,7 +124,7 @@ class ModflowEvt(Package):
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         self._generate_heading()
-        self.url = "evt.htm"
+        self.url = "evt.html"
         self.nevtop = nevtop
         self.ipakcb = ipakcb
         self.external = external

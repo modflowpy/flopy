@@ -1,4 +1,14 @@
 # --------------------- gwf tvk options ---------------------
+# flopy subpackage tvk_filerecord tvk tvk_perioddata perioddata
+# flopy parent_name_type parent_package MFPackage
+
+block options
+name print_input
+type keyword
+reader urword
+optional true
+longname print input to listing file
+description keyword to indicate that information for each change to the hydraulic conductivity in a cell will be written to the model listing file.
 
 block options
 name ts_filerecord

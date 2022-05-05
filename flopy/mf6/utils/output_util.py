@@ -50,7 +50,7 @@ class MF6Output:
             if isinstance(obj, ModelInterface):
                 self._model = obj
             else:
-                self._model = obj.parent
+                self._model = obj.model_or_sim
             self._mtype = self._model.model_type
             nam_file = self._model.model_nam_file[:-4]
             self._lst = (
@@ -255,7 +255,10 @@ class MF6Output:
             ZoneFile6(zonbud, izone)
             zonbud.bud = budget
             try:
-                if self._obj.model_or_sim.model_type == "gwf":
+                if (
+                    "gwf" in self._obj.model_or_sim.model_type
+                    or "gwt" in self._obj.model_or_sim.model_type
+                ):
                     if self._obj.package_type == "oc":
                         dis = self._obj.model_or_sim.dis
                         if (

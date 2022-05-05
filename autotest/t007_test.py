@@ -1470,6 +1470,27 @@ def test_model_dot_plot():
     ), "ml.bcf6.vcont.plot() ax is is not of type plt.Axes"
     plt.close("all")
 
+    ws = f"{base_dir}_plot_export"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
+
+    fh = os.path.join(ws, "ibs2k")
+    ml.plot(
+        mflay=0,
+        filename_base=fh,
+        file_extension="png"
+    )
+    files = [f for f in os.listdir(ws) if f.endswith(".png")]
+    if len(files) < 10:
+        raise AssertionError(
+            "ml.plot did not properly export all supported data types"
+        )
+
+    for f in files:
+        t = f.split("_")
+        if len(t) < 3:
+            raise AssertionError("Plot filenames not written correctly")
+    plt.close("all")
+
 
 def test_get_rc_from_node_coordinates():
     m = flopy.modflow.Modflow(rotation=20.0)
@@ -1733,9 +1754,10 @@ def test_export_array_contours():
 def test_export_contourf():
     if import_shapefile() is None:
         return
-    import shapefile
-    from flopy.export.utils import export_contourf
     import matplotlib.pyplot as plt
+    import shapefile
+
+    from flopy.export.utils import export_contourf
 
     ws_out = f"{base_dir}_shapefile_export_contourf"
     filename = os.path.join(ws_out, "myfilledcontours.shp")

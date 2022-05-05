@@ -965,14 +965,13 @@ class PlotUtilities:
         if "mflay" in kwargs:
             kwargs.pop("mflay")
 
+        name = transient2d.name.replace("_", "").upper()
         axes = []
         for idx, kper in enumerate(range(k0, k1)):
-            title = "{} stress period {:d}".format(
-                transient2d.name.replace("_", "").upper(), kper + 1
-            )
+            title = f"{name} stress period {kper + 1 :d}"
 
             if filename_base is not None:
-                filename = f"{filename_base}_{kper + 1:05d}.{fext}"
+                filename = f"{filename_base}_{name}_{kper + 1:05d}.{fext}"
             else:
                 filename = None
 

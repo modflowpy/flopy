@@ -1640,7 +1640,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                     return True
             return False
         else:
-            self.get_data_prep(layer)
+            self.get_data_prep(key)
             return super().has_data()
 
     def get_data(self, key=None, apply_mult=False, **kwargs):

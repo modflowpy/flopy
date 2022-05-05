@@ -4,7 +4,7 @@ the ModflowGmg class as `flopy.modflow.ModflowGmg`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/gmg.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/gmg.html>`_.
 
 """
 from ..pakbase import Package
@@ -242,7 +242,7 @@ class ModflowGmg(Package):
             raise Exception(err)
 
         self._generate_heading()
-        self.url = "gmg.htm"
+        self.url = "gmg.html"
 
         self.mxiter = mxiter
         self.iiter = iiter

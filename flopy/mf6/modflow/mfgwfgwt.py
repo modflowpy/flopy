@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 22, 2021 17:36:26 UTC
+# FILE created on April 11, 2022 18:22:41 UTC
 from .. import mfpackage
 
 
@@ -52,10 +52,10 @@ class ModflowGwfgwt(mfpackage.MFPackage):
         exgmnameb=None,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            simulation, "gwfgwt", filename, pname, loading_package, parent_file
+            simulation, "gwfgwt", filename, pname, loading_package, **kwargs
         )
 
         # set up variables

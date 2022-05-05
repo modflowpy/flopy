@@ -104,5 +104,61 @@ def test_lgrutil():
     return
 
 
+def test_lgrutil2():
+    # Define parent grid information
+    xoffp = 0.0
+    yoffp = 0.0
+    nlayp = 1
+    nrowp = 5
+    ncolp = 5
+    dx = 100.0
+    dy = 100.0
+    dz = 100.0
+    delrp = dx * np.array([1.0, 0.75, 0.5, 0.75, 1.0], dtype=float)
+    delcp = dy * np.array([1.0, 0.75, 0.5, 0.75, 1.0], dtype=float)
+    topp = dz * np.ones((nrowp, ncolp), dtype=float)
+    botmp = np.empty((nlayp, nrowp, ncolp), dtype=float)
+    for k in range(nlayp):
+        botmp[k] = -(k + 1) * dz
+
+    # Define relation of child to parent
+    idomainp = np.ones((nlayp, nrowp, ncolp), dtype=int)
+    idomainp[:, 1:4, 1:4] = 0
+    ncpp = 3
+    ncppl = nlayp * [1]
+
+    lgr = Lgr(
+        nlayp,
+        nrowp,
+        ncolp,
+        delrp,
+        delcp,
+        topp,
+        botmp,
+        idomainp,
+        ncpp=ncpp,
+        ncppl=ncppl,
+        xllp=xoffp,
+        yllp=yoffp,
+    )
+
+    # check to make sure child delr and delc are calculated correctly for
+    # the case where the parent grid has variable row and column spacings
+    answer = [
+        25.0,
+        25.0,
+        25.0,
+        50.0 / 3.0,
+        50.0 / 3.0,
+        50.0 / 3.0,
+        25.0,
+        25.0,
+        25.0,
+    ]
+    assert np.allclose(lgr.delr, answer), f"{lgr.delr} /= {answer}"
+    assert np.allclose(lgr.delc, answer), f"{lgr.delc} /= {answer}"
+
+
 if __name__ == "__main__":
     test_lgrutil()
+    test_lgrutil2()
