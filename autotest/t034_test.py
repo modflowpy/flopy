@@ -643,16 +643,6 @@ def test_uzf_negative_iuzfopt():
     upw = flopy.modflow.ModflowUpw(ml)
     oc = flopy.modflow.ModflowOc(ml)
 
-    iuzfbnd = 1
-    irunbnd = 1
-    vks = 1e-4
-    surfk = 1e-4
-
-    finf = 1e-6
-    pet = 1e-8
-    extdp = 0.2
-    extwc = 0.10
-
     uzf = flopy.modflow.ModflowUzf1(
         ml,
         nuztop=3,
