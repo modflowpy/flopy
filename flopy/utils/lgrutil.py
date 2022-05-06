@@ -560,7 +560,8 @@ class Lgr:
         """
         delrc, delcc = self.get_delr_delc()
         idomainc = self.get_idomain()  # child idomain
-        topc, botmc = self.get_top_botm()  # top/bottom of child grid
+        topc = self.top
+        botmc = self.botm
         child_dis_shp = self.get_shape()
         nlayc = child_dis_shp[0]
         nrowc = child_dis_shp[1]
