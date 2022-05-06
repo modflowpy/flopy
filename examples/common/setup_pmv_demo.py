@@ -190,7 +190,7 @@ def run():
         gwf, recharge=0.005, auxiliary=[("iface",)], aux={0: [6]}
     )
     # riv
-    riverline = [[[(Lx - 1.0, Ly), (Lx - 1.0, 0.0)]]]
+    riverline = [[(Lx - 1.0, Ly), (Lx - 1.0, 0.0)]]
     rivcells = g.intersect(riverline, "line", 0)
     rivspd = [
         [(0, icpl), 320.0, 100000.0, 318] for icpl in rivcells["nodenumber"]

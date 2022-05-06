@@ -196,7 +196,7 @@ def test_gridgen():
         assert n == 308, msg
 
         # test the gridgen line intersection
-        line = [[[(Lx, Ly), (Lx, 0.0)]]]
+        line = [[(Lx, Ly), (Lx, 0.0)]]
         cells = g.intersect(line, "line", 0)
         nlist = [n for n in cells["nodenumber"]]
         nlist2 = [
