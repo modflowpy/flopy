@@ -1005,7 +1005,7 @@ class ModflowUzf1(Package):
             load_util2d("irunbnd", np.int32)
 
         # dataset 4
-        if iuzfopt in [0, 1]:
+        if np.abs(iuzfopt) in [0, 1]:
             load_util2d("vks", np.float32)
 
         # dataset 4b
@@ -1049,7 +1049,7 @@ class ModflowUzf1(Package):
             if nuzf1 >= 0:
                 load_util2d("finf", np.float32, per=per)
 
-            if ietflg > 0:
+            if ietflg > 0 and iuzfopt > 0:
                 # dataset 11
                 line = line_parse(f.readline())
                 nuzf2 = pop_item(line, int)

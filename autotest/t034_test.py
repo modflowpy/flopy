@@ -622,6 +622,38 @@ def test_load_write_wel_option_line():
     assert wel.iunitramp == 20
 
 
+def test_uzf_negative_iuzfopt():
+    model_ws = f"{base_dir}_test_uzf_negative_iuzfopt"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
+    ml = flopy.modflow.Modflow(
+        version="mfnwt",
+        exe_name="mfnwt.exe",
+        model_ws=model_ws
+    )
+    dis = flopy.modflow.ModflowDis(
+        ml,
+        nper=2,
+        perlen=[1,1],
+        nstp=[1,1],
+        tsmult=1,
+        steady=[True, False]
+    )
+    bas = flopy.modflow.ModflowBas(ml)
+    upw = flopy.modflow.ModflowUpw(ml)
+    oc = flopy.modflow.ModflowOc(ml)
+
+    uzf = flopy.modflow.ModflowUzf1(
+        ml,
+        nuztop=3,
+        iuzfopt=-1,
+        irunflg=1,
+        ietflg=1,
+        irunbnd=1,
+        specifysurfk=True,
+        seepsurfk=True
+    )
+
 if __name__ == "__main__":
     test_create_uzf()
     test_read_write_nwt_options()
@@ -632,3 +664,4 @@ if __name__ == "__main__":
     test_load_write_wel_option_block()
     test_load_write_wel_option_line()
     test_uzf_surfk()
+    test_uzf_negative_iuzfopt()
