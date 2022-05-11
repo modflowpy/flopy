@@ -498,6 +498,14 @@ class Modpath7Sim(Package):
         self.timepointoption = timepointoption
         self.timepointdata = timepointdata
 
+        shape = self.parent.shape
+        if len(shape) == 3:
+            shape3d = shape
+        elif len(shape) == 2:
+            shape3d = (shape[0], 1, shape[1])
+        else:
+            shape3d = (1, 1, shape[0])
+
         # zonedataoption
         try:
             self.zonedataoption = onoffOpt[zonedataoption.lower()].value
@@ -517,7 +525,7 @@ class Modpath7Sim(Package):
                 )
             self.zones = Util3d(
                 model,
-                self.parent.shape,
+                shape3d,
                 np.int32,
                 zones,
                 name="zones",
@@ -541,7 +549,7 @@ class Modpath7Sim(Package):
                 )
             self.retardation = Util3d(
                 model,
-                self.parent.shape,
+                shape3d,
                 np.float32,
                 retardation,
                 name="retardation",
