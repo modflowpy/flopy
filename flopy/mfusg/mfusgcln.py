@@ -224,6 +224,8 @@ class MfUsgCln(Package):
             filenames=filenames,
         )
 
+        self.url = "Connected_Linear_Network.htm"
+
         self._generate_heading()
 
         # Options
@@ -695,6 +697,8 @@ class MfUsgCln(Package):
         transient = False
         printiaja = False
         line = f_obj.readline().upper()
+        while line.find("#") >= 0:
+            line = f_obj.readline().upper()
         if line.startswith("OPTIONS"):
             line_text = line.strip().split()
             transient = bool("TRANSIENT" in line_text)
