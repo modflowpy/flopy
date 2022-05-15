@@ -315,7 +315,7 @@ class ModflowEvt(Package):
             if model.structured:
                 u2d_shape = (nrow, ncol)
             else:
-                u2d_shape = (1, inievt)
+                u2d_shape = (1, insurf)
 
             if insurf >= 0:
                 if model.verbose:
@@ -327,6 +327,8 @@ class ModflowEvt(Package):
             surf[iper] = current_surf
 
             if inevtr >= 0:
+                if not model.structured:
+                    u2d_shape = (1, inevtr)
                 if npar == 0:
                     if model.verbose:
                         print(
@@ -366,6 +368,8 @@ class ModflowEvt(Package):
                 current_evtr = t
             evtr[iper] = current_evtr
             if inexdp >= 0:
+                if not model.structured:
+                    u2d_shape = (1, inexdp)
                 if model.verbose:
                     print(f"   loading exdp stress period {iper + 1:3d}...")
                 t = Util2d.load(
@@ -375,6 +379,8 @@ class ModflowEvt(Package):
             exdp[iper] = current_exdp
             if nevtop == 2:
                 if inievt >= 0:
+                    if not model.structured:
+                        u2d_shape = (1, inievt)
                     if model.verbose:
                         print(
                             f"   loading ievt stress period {iper + 1:3d}..."

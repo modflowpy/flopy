@@ -464,7 +464,7 @@ class ModflowRch(Package):
             if model.structured:
                 u2d_shape = (nrow, ncol)
             else:
-                u2d_shape = (1, inirch)
+                u2d_shape = (1, inrech)
 
             if inrech >= 0:
                 if npar == 0:
@@ -502,7 +502,11 @@ class ModflowRch(Package):
 
                 current_rech = t
             rech[iper] = current_rech
+
             if nrchop == 2:
+                if not model.structured:
+                    u2d_shape = (1, inirch)
+
                 if inirch >= 0:
                     if model.verbose:
                         print(
