@@ -245,3 +245,11 @@ def get_open_file_object(fname_or_fobj, read_write="rw"):
         f_obj = fname_or_fobj
 
     return f_obj
+
+
+def get_dis(model):
+    """Returns dis or disu object from a given model object."""
+    dis = model.dis
+    if not model.structured:
+        dis = model.disu
+    return dis
