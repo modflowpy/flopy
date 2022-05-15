@@ -539,7 +539,7 @@ def fmt_string(array):
         if vtype in ("i", "b"):
             fmts.append("%10d")
         elif vtype == "f":
-            fmts.append("%10.2E")
+            fmts.append("%14.6g")
         elif vtype == "o":
             fmts.append("%10s")
         elif vtype == "s":
