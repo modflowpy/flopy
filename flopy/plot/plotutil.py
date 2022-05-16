@@ -2789,6 +2789,8 @@ def reproject_modpath_to_crosssection(
             while tcell >= ncpl:
                 tcell -= ncpl
             line = xypts[tcell]
+            if len(line) < 2:
+                continue
             if projection == "x":
                 d0 = np.min([i[0] for i in projpts[cell]])
             else:
