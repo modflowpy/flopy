@@ -388,7 +388,9 @@ class ModflowEvt(Package):
                     t = Util2d.load(
                         f, model, u2d_shape, np.int32, "ievt", ext_unit_dict
                     )
-                    current_ievt = t
+                    current_ievt = Util2d(
+                        model, u2d_shape, np.int32, t.array - 1, "ievt"
+                    )
                 ievt[iper] = current_ievt
 
         if openfile:
