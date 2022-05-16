@@ -629,7 +629,7 @@ def test_uzf_negative_iuzfopt():
     ml = flopy.modflow.Modflow(
         modelname="uzf_neg",
         version="mfnwt",
-        exe_name="mfnwt.exe",
+        exe_name="mfnwt",
         model_ws=model_ws
     )
     dis = flopy.modflow.ModflowDis(
