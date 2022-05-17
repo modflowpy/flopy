@@ -1038,7 +1038,11 @@ class PlotCrossSection:
 
         # make sure pathlines is a list
         if not isinstance(pl, list):
-            pl = [pl]
+            pids = np.unique(pl["particleid"])
+            if len(pids) > 1:
+                pl = [pl[pl["particleid"] == pid] for pid in pids]
+            else:
+                pl = [pl]
 
         marker = kwargs.pop("marker", None)
         markersize = kwargs.pop("markersize", None)
