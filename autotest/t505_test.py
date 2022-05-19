@@ -7,7 +7,6 @@ import flopy
 import flopy.utils.binaryfile as bf
 from flopy.mf6.data.mfdatastorage import DataStorageType
 from flopy.mf6.mfbase import FlopyException, MFDataException
-from flopy.mf6.modflow.mfutltas import ModflowUtltas
 from flopy.mf6.modflow.mfgwf import ModflowGwf
 from flopy.mf6.modflow.mfgwfchd import ModflowGwfchd
 from flopy.mf6.modflow.mfgwfdis import ModflowGwfdis
@@ -21,7 +20,7 @@ from flopy.mf6.modflow.mfgwfgwf import ModflowGwfgwf
 from flopy.mf6.modflow.mfgwfhfb import ModflowGwfhfb
 from flopy.mf6.modflow.mfgwfic import ModflowGwfic
 from flopy.mf6.modflow.mfgwflak import ModflowGwflak
-from flopy.mf6.modflow.mfutllaktab import ModflowUtllaktab
+from flopy.mf6.modflow.mfgwfmvr import ModflowGwfmvr
 from flopy.mf6.modflow.mfgwfnpf import ModflowGwfnpf
 from flopy.mf6.modflow.mfgwfoc import ModflowGwfoc
 from flopy.mf6.modflow.mfgwfrch import ModflowGwfrch
@@ -30,10 +29,11 @@ from flopy.mf6.modflow.mfgwfriv import ModflowGwfriv
 from flopy.mf6.modflow.mfgwfsfr import ModflowGwfsfr
 from flopy.mf6.modflow.mfgwfsto import ModflowGwfsto
 from flopy.mf6.modflow.mfgwfwel import ModflowGwfwel
-from flopy.mf6.modflow.mfgwfmvr import ModflowGwfmvr
 from flopy.mf6.modflow.mfims import ModflowIms
 from flopy.mf6.modflow.mfsimulation import MFSimulation
 from flopy.mf6.modflow.mftdis import ModflowTdis
+from flopy.mf6.modflow.mfutllaktab import ModflowUtllaktab
+from flopy.mf6.modflow.mfutltas import ModflowUtltas
 from flopy.mf6.utils import testutils
 from flopy.utils.datautil import PyListUtil
 

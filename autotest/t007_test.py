@@ -1474,11 +1474,7 @@ def test_model_dot_plot():
     test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
 
     fh = os.path.join(ws, "ibs2k")
-    ml.plot(
-        mflay=0,
-        filename_base=fh,
-        file_extension="png"
-    )
+    ml.plot(mflay=0, filename_base=fh, file_extension="png")
     files = [f for f in os.listdir(ws) if f.endswith(".png")]
     if len(files) < 10:
         raise AssertionError(

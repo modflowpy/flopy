@@ -630,7 +630,7 @@ def test_uzf_negative_iuzfopt():
         modelname="uzf_neg",
         version="mfnwt",
         exe_name="mfnwt",
-        model_ws=model_ws
+        model_ws=model_ws,
     )
     dis = flopy.modflow.ModflowDis(
         ml,
@@ -642,7 +642,7 @@ def test_uzf_negative_iuzfopt():
         perlen=[1, 1],
         nstp=[5, 5],
         tsmult=1,
-        steady=[False, False]
+        steady=[False, False],
     )
     bas = flopy.modflow.ModflowBas(ml, strt=9, ibound=1)
     upw = flopy.modflow.ModflowUpw(
@@ -663,7 +663,7 @@ def test_uzf_negative_iuzfopt():
         pet=0.1,
         extdp=0.2,
         specifysurfk=True,
-        seepsurfk=True
+        seepsurfk=True,
     )
 
     # uzf.write_file(os.path.join(model_ws, "uzf_neg.uzf"))
@@ -674,9 +674,7 @@ def test_uzf_negative_iuzfopt():
         raise AssertionError("UZF model with -1 iuzfopt failed to run")
 
     ml2 = flopy.modflow.Modflow.load(
-        "uzf_neg.nam",
-        version="mfnwt",
-        model_ws=model_ws
+        "uzf_neg.nam", version="mfnwt", model_ws=model_ws
     )
 
     pet = ml2.uzf.pet.array
