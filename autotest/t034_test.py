@@ -627,21 +627,30 @@ def test_uzf_negative_iuzfopt():
     test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     ml = flopy.modflow.Modflow(
+        modelname="uzf_neg",
         version="mfnwt",
-        exe_name="mfnwt.exe",
-        model_ws=model_ws
+        exe_name="mfnwt",
+        model_ws=model_ws,
     )
     dis = flopy.modflow.ModflowDis(
         ml,
         nper=2,
-        perlen=[1,1],
-        nstp=[1,1],
+        nlay=1,
+        nrow=10,
+        ncol=10,
+        top=10,
+        perlen=[1, 1],
+        nstp=[5, 5],
         tsmult=1,
-        steady=[True, False]
+        steady=[False, False],
     )
-    bas = flopy.modflow.ModflowBas(ml)
-    upw = flopy.modflow.ModflowUpw(ml)
+    bas = flopy.modflow.ModflowBas(ml, strt=9, ibound=1)
+    upw = flopy.modflow.ModflowUpw(
+        ml,
+        vka=0.1,
+    )
     oc = flopy.modflow.ModflowOc(ml)
+    nwt = flopy.modflow.ModflowNwt(ml, options="SIMPLE")
 
     uzf = flopy.modflow.ModflowUzf1(
         ml,
@@ -650,9 +659,33 @@ def test_uzf_negative_iuzfopt():
         irunflg=1,
         ietflg=1,
         irunbnd=1,
+        finf=1e-06,
+        pet=0.1,
+        extdp=0.2,
         specifysurfk=True,
-        seepsurfk=True
+        seepsurfk=True,
     )
+
+    # uzf.write_file(os.path.join(model_ws, "uzf_neg.uzf"))
+
+    ml.write_input()
+    success, buff = ml.run_model()
+    if not success:
+        raise AssertionError("UZF model with -1 iuzfopt failed to run")
+
+    ml2 = flopy.modflow.Modflow.load(
+        "uzf_neg.nam", version="mfnwt", model_ws=model_ws
+    )
+
+    pet = ml2.uzf.pet.array
+    extpd = ml2.uzf.pet.array
+
+    if not np.max(pet) == np.min(pet) and np.max(pet) != 0.1:
+        raise AssertionError("Read error for iuzfopt less than 0")
+
+    if not np.max(extpd) == np.min(extpd) and np.max(extpd) != 0.2:
+        raise AssertionError("Read error for iuzfopt less than 0")
+
 
 if __name__ == "__main__":
     test_create_uzf()

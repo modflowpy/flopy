@@ -670,7 +670,11 @@ class BaseModel(ModelInterface):
 
         # return self.get_package(item)
         # to avoid infinite recursion
-        if item == "_packagelist" or item == "packagelist":
+        if (
+            item == "_packagelist"
+            or item == "packagelist"
+            or item == "mfnam_packages"
+        ):
             raise AttributeError(item)
         pckg = self.get_package(item)
         if pckg is not None or item in self.mfnam_packages:
