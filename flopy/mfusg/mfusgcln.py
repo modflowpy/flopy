@@ -224,8 +224,6 @@ class MfUsgCln(Package):
             filenames=filenames,
         )
 
-        self.url = "Connected_Linear_Network.htm"
-
         self._generate_heading()
 
         # Options
