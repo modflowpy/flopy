@@ -695,6 +695,8 @@ class MfUsgCln(Package):
         transient = False
         printiaja = False
         line = f_obj.readline().upper()
+        while line.find("#") >= 0:
+            line = f_obj.readline().upper()
         if line.startswith("OPTIONS"):
             line_text = line.strip().split()
             transient = bool("TRANSIENT" in line_text)
