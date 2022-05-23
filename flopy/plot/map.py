@@ -809,6 +809,9 @@ class PlotMapView:
                     color=markercolor,
                     ms=markersize,
                 )
+
+        ax.set_xlim(self.extent[0], self.extent[1])
+        ax.set_ylim(self.extent[2], self.extent[3])
         return lc
 
     def plot_timeseries(self, ts, travel_time=None, **kwargs):

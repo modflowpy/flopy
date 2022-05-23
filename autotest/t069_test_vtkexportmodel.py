@@ -2,15 +2,18 @@
 Test vtk export_model function without packages_names definition
 """
 
-from ci_framework import FlopyTestSetup, base_test_dir
 import os
+
 import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
 import flopy
 from flopy.utils import import_optional_dependency
 
 mf_exe_name = "mf6"
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 test_setup = FlopyTestSetup(verbose=True, test_dirs=base_dir)
+
 
 def test_vtk_export_model_without_packages_names():
     dir_name = os.path.join(base_dir, "test_0")
@@ -84,14 +87,20 @@ def test_vtk_export_disv1_model():
 
     nlay, nrow, ncol = 1, 3, 3
     from flopy.discretization import StructuredGrid
-    mg = StructuredGrid(delc=np.array(nrow * [1]), delr=np.array(ncol * [1]),
-                        top=np.zeros((nrow, ncol)), botm=np.zeros((nlay, nrow, ncol)) - 1,
-                        idomain=np.ones((nlay, nrow, ncol)))
+
+    mg = StructuredGrid(
+        delc=np.array(nrow * [1]),
+        delr=np.array(ncol * [1]),
+        top=np.zeros((nrow, ncol)),
+        botm=np.zeros((nlay, nrow, ncol)) - 1,
+        idomain=np.ones((nlay, nrow, ncol)),
+    )
 
     from flopy.utils.cvfdutil import gridlist_to_disv_gridprops
+
     gridprops = gridlist_to_disv_gridprops([mg])
     gridprops["top"] = 0
-    gridprops["botm"] = np.zeros((nlay, nrow*ncol), dtype=float) - 1
+    gridprops["botm"] = np.zeros((nlay, nrow * ncol), dtype=float) - 1
     gridprops["nlay"] = nlay
 
     disv = flopy.mf6.ModflowGwfdisv(gwf, **gridprops)
@@ -122,7 +131,7 @@ def test_vtk_export_disv1_model():
         vtk_points = grid.GetPoints()
         vtk_points = vtk_points.GetData()
         vtk_points = vtk_to_numpy(vtk_points)
-        #print(vtk_points)
+        # print(vtk_points)
 
         # get cell locations (ia format of point to cell relationship)
         cell_locations = vtk_to_numpy(grid.GetCellLocationsArray())
@@ -145,10 +154,13 @@ def test_vtk_export_disv1_model():
 
 def grid2disvgrid(nrow, ncol):
     """Simple function to create disv verts and iverts for a regular grid of size nrow, ncol"""
+
     def lower_left_point(i, j, ncol):
         return i * (ncol + 1) + j
 
-    mg = np.meshgrid(np.linspace(0, ncol, ncol + 1), np.linspace(0, nrow, nrow + 1))
+    mg = np.meshgrid(
+        np.linspace(0, ncol, ncol + 1), np.linspace(0, nrow, nrow + 1)
+    )
     verts = np.vstack((mg[0].flatten(), mg[1].flatten())).transpose()
 
     # in the creation of iverts here, we intentionally do not close the cell polygon
@@ -178,10 +190,11 @@ def test_vtk_export_disv2_model():
     nlay, nrow, ncol = 1, 3, 3
     verts, iverts = grid2disvgrid(3, 3)
     from flopy.utils.cvfdutil import get_disv_gridprops
+
     gridprops = get_disv_gridprops(verts, iverts)
 
     gridprops["top"] = 0
-    gridprops["botm"] = np.zeros((nlay, nrow*ncol), dtype=float) - 1
+    gridprops["botm"] = np.zeros((nlay, nrow * ncol), dtype=float) - 1
     gridprops["nlay"] = nlay
 
     disv = flopy.mf6.ModflowGwfdisv(gwf, **gridprops)
@@ -212,7 +225,7 @@ def test_vtk_export_disv2_model():
         vtk_points = grid.GetPoints()
         vtk_points = vtk_points.GetData()
         vtk_points = vtk_to_numpy(vtk_points)
-        #print(vtk_points)
+        # print(vtk_points)
 
         # get cell locations (ia format of point to cell relationship)
         cell_locations = vtk_to_numpy(grid.GetCellLocationsArray())
@@ -231,6 +244,7 @@ def test_vtk_export_disv2_model():
 
     # If the function executes without error then test was successful
     assert True
+
 
 def load_verts(fname):
     verts = np.genfromtxt(
@@ -273,8 +287,12 @@ def test_vtk_export_disu1_grid():
     ncpl = np.array(3 * [len(iverts)])
     nnodes = np.sum(ncpl)
 
-    top = np.ones((nnodes),)
-    botm = np.ones((nnodes),)
+    top = np.ones(
+        (nnodes),
+    )
+    botm = np.ones(
+        (nnodes),
+    )
 
     # set top and botm elevations
     i0 = 0
@@ -305,7 +323,10 @@ def test_vtk_export_disu1_grid():
 
         outfile = os.path.join(dir_name, "disu_grid.vtu")
         vtkobj = flopy.export.vtk.Vtk(
-            modelgrid=modelgrid, vertical_exageration=2, binary=True, smooth=False
+            modelgrid=modelgrid,
+            vertical_exageration=2,
+            binary=True,
+            smooth=False,
         )
         vtkobj.add_array(modelgrid.top, "top")
         vtkobj.add_array(modelgrid.botm, "botm")
@@ -354,8 +375,12 @@ def test_vtk_export_disu2_grid():
     ncpl = np.array(3 * [len(iverts)])
     nnodes = np.sum(ncpl)
 
-    top = np.ones((nnodes),)
-    botm = np.ones((nnodes),)
+    top = np.ones(
+        (nnodes),
+    )
+    botm = np.ones(
+        (nnodes),
+    )
 
     # set top and botm elevations
     i0 = 0
@@ -386,7 +411,10 @@ def test_vtk_export_disu2_grid():
 
         outfile = os.path.join(dir_name, "disu_grid.vtu")
         vtkobj = flopy.export.vtk.Vtk(
-            modelgrid=modelgrid, vertical_exageration=2, binary=True, smooth=False
+            modelgrid=modelgrid,
+            vertical_exageration=2,
+            binary=True,
+            smooth=False,
         )
         vtkobj.add_array(modelgrid.top, "top")
         vtkobj.add_array(modelgrid.botm, "botm")
@@ -454,10 +482,24 @@ def test_vtk_export_disu_model():
     ymin = 8 * delc
     ymax = 13 * delc
     rfpoly = [
-        [[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax),
-          (xmin, ymin)]]
+        [
+            [
+                (xmin, ymin),
+                (xmax, ymin),
+                (xmax, ymax),
+                (xmin, ymax),
+                (xmin, ymin),
+            ]
+        ]
     ]
-    g.add_refinement_features(rfpoly, "polygon", 2, [0,])
+    g.add_refinement_features(
+        rfpoly,
+        "polygon",
+        2,
+        [
+            0,
+        ],
+    )
     g.build(verbose=False)
 
     gridprops = g.get_gridprops_disu6()
