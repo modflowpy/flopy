@@ -68,17 +68,17 @@ def get_structured_faceflows(
     flows = [frf, fff, flf]
     for n in range(grb.nodes):
         i0, i1 = ia[n] + 1, ia[n + 1]
-        ipos = 0
         for j in range(i0, i1):
             jcol = ja[j]
             if jcol > n:
+                if jcol == n + 1:
+                    ipos = 0
+                elif jcol == n + grb.ncol:
+                    ipos = 1
+                else:
+                    ipos = 2
                 flows[ipos][n] = vmult[ipos] * flowja[j]
-                ipos += 1
-    # reshape flow terms
-    frf = frf.reshape(shape)
-    fff = fff.reshape(shape)
-    flf = flf.reshape(shape)
-    return frf, fff, flf
+    return frf.reshape(shape), fff.reshape(shape), flf.reshape(shape)
 
 
 def get_residuals(
