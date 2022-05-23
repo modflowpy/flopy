@@ -1146,7 +1146,7 @@ class Transient3d(DataInterface):
                 s += self.transient_3ds[kper][k].get_file_entry()
             return 1, s
         elif kper < min(self.transient_3ds.keys()):
-            t = self.get_zero_3d(kper).get_file_entry()
+            t = self.get_zero_3d(kper)
             s = ""
             for k in range(self.shape[0]):
                 s += t[k].get_file_entry()

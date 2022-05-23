@@ -10,7 +10,7 @@ MODFLOW Guide
 import numpy as np
 
 from ..pakbase import Package
-from ..utils import Util3d, read_fixed_var, write_fixed_var
+from ..utils import Util3d, read_fixed_var, utils_def, write_fixed_var
 from ..utils.util_array import Transient3d
 
 
@@ -381,7 +381,9 @@ class ModflowLak(Package):
                 raise Exception(
                     f"stage_range should be a list or array of size ({nlakes}, 2)"
                 )
-        if self.parent.dis.steady[0]:
+
+        self.dis = utils_def.get_dis(model)
+        if self.dis.steady[0]:
             if stage_range.shape != (nlakes, 2):
                 raise Exception(
                     "stages shape should be ({},2) but is only "
@@ -437,7 +439,7 @@ class ModflowLak(Package):
                     flux_data[key] = td
                 elif isinstance(value, dict):
                     try:
-                        steady = self.parent.dis.steady[key]
+                        steady = self.dis.steady[key]
                     except:
                         steady = True
                     nlen = 4
@@ -499,7 +501,7 @@ class ModflowLak(Package):
             )
         )
         # dataset 2
-        steady = np.any(self.parent.dis.steady.array)
+        steady = np.any(self.dis.steady.array)
         t = [self.theta]
         if self.theta < 0.0 or steady:
             t.append(self.nssitr)
@@ -509,7 +511,7 @@ class ModflowLak(Package):
         f.write(write_fixed_var(t, free=self.parent.free_format_input))
 
         # dataset 3
-        steady = self.parent.dis.steady[0]
+        steady = self.dis.steady[0]
         for n in range(self.nlakes):
             ipos = [10]
             t = [self.stages[n]]
@@ -531,7 +533,7 @@ class ModflowLak(Package):
             list(self.sill_data.keys()) if self.sill_data is not None else []
         )
         ds9_keys = list(self.flux_data.keys())
-        nper = self.parent.dis.steady.shape[0]
+        nper = self.dis.steady.shape[0]
         for kper in range(nper):
             itmp, file_entry_lakarr = self.lakarr.get_kper_entry(kper)
             ibd, file_entry_bdlknc = self.bdlknc.get_kper_entry(kper)
@@ -591,7 +593,7 @@ class ModflowLak(Package):
                 ds9 = self.flux_data[kper]
                 for n in range(self.nlakes):
                     try:
-                        steady = self.parent.dis.steady[kper]
+                        steady = self.dis.steady[kper]
                     except:
                         steady = True
                     if kper > 0 and steady:
@@ -643,6 +645,8 @@ class ModflowLak(Package):
         >>> lak = flopy.modflow.ModflowStr.load('test.lak', m)
 
         """
+
+        cls.dis = utils_def.get_dis(model)
 
         if model.verbose:
             print("loading lak package file...")
@@ -721,7 +725,7 @@ class ModflowLak(Package):
                 t = read_fixed_var(line, ipos=[10, 10, 10, 5])
             stages.append(t[0])
             ipos = 1
-            if model.dis.steady[0]:
+            if cls.dis.steady[0]:
                 stage_range.append((float(t[ipos]), float(t[ipos + 1])))
                 ipos += 2
             if tabdata:
@@ -823,7 +827,7 @@ class ModflowLak(Package):
                     tds.append(float(t[1]))
                     tds.append(float(t[2]))
                     tds.append(float(t[3]))
-                    if model.dis.steady[iper]:
+                    if cls.dis.steady[iper]:
                         if iper == 0:
                             tds.append(stage_range[n][0])
                             tds.append(stage_range[n][1])
