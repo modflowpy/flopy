@@ -182,14 +182,26 @@ class ModflowEvt(Package):
             f_evt = open(self.fn_path, "w")
         f_evt.write(f"{self.heading}\n")
         f_evt.write(f"{self.nevtop:10d}{self.ipakcb:10d}\n")
-        if self.nevtop == 2 and not self.parent.structured:
-            mxndevt = np.max(
-                [
-                    u2d.array.size
-                    for kper, u2d in self.ievt.transient_2ds.items()
-                ]
+
+        if self.nevtop == 2:
+            ievt = {}
+            for kper, u2d in self.ievt.transient_2ds.items():
+                ievt[kper] = u2d.array + 1
+            ievt = Transient2d(
+                self.parent,
+                self.ievt.shape,
+                self.ievt.dtype,
+                ievt,
+                self.ievt.name,
             )
-            f_evt.write(f"{mxndevt:10d}\n")
+            if not self.parent.structured:
+                mxndevt = np.max(
+                    [
+                        u2d.array.size
+                        for kper, u2d in self.ievt.transient_2ds.items()
+                    ]
+                )
+                f_evt.write(f"{mxndevt:10d}\n")
 
         for n in range(nper):
             insurf, surf = self.surf.get_kper_entry(n)
