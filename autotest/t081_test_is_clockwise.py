@@ -1,5 +1,6 @@
-import flopy
 import numpy as np
+
+import flopy
 
 
 def test_does_isclockwise_work():
