@@ -207,9 +207,11 @@ class ModflowEvt(Package):
             insurf, surf = self.surf.get_kper_entry(n)
             inevtr, evtr = self.evtr.get_kper_entry(n)
             inexdp, exdp = self.exdp.get_kper_entry(n)
-            inievt, ievt = self.ievt.get_kper_entry(n)
-            if self.nevtop == 2 and not self.parent.structured:
-                inievt = self.ievt[n].array.size
+            inievt = 0
+            if self.nevtop == 2:
+                inievt, file_entry_ievt = ievt.get_kper_entry(n)
+                if inievt >= 0 and not self.parent.structured:
+                    inievt = self.ievt[n].array.size
             comment = f"Evapotranspiration dataset 5 for stress period {n + 1}"
             f_evt.write(
                 f"{insurf:10d}{inevtr:10d}{inexdp:10d}{inievt:10d} # {comment}\n"
@@ -221,7 +223,7 @@ class ModflowEvt(Package):
             if inexdp >= 0:
                 f_evt.write(exdp)
             if self.nevtop == 2 and inievt >= 0:
-                f_evt.write(ievt)
+                f_evt.write(file_entry_ievt)
         f_evt.close()
 
     @classmethod
