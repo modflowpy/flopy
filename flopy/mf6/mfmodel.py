@@ -19,6 +19,7 @@ from .mfbase import (
     ExtFileAction,
     FlopyException,
     MFDataException,
+    MFFileMgmt,
     PackageContainer,
     PackageContainerType,
     ReadAsArraysException,
