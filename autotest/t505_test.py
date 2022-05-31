@@ -1391,7 +1391,7 @@ def test_np001():
     mpath = sim.simulation_data.mfpath.get_model_path(model.name)
     spath = sim.simulation_data.mfpath.get_sim_path()
     found_cellid = False
-    with open(os.path.join(mpath, "np001_mod.wel_1"), "r") as fd:
+    with open(os.path.join(mpath, "np001_mod.wel"), "r") as fd:
         for line in fd:
             line_lst = line.strip().split()
             if (

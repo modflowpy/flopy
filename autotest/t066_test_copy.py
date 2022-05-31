@@ -56,6 +56,7 @@ def model_is_copy(m1, m2):
             "package_key_dict",
             "package_type_dict",
             "package_name_dict",
+            "package_filename_dict",
             "_ftype_num_dict",
         ]:
             continue
@@ -101,6 +102,7 @@ def package_is_copy(pk1, pk2):
             "dimensions",
             "package_key_dict",
             "package_name_dict",
+            "package_filename_dict",
             "package_type_dict",
             "post_block_comments",
             "simulation_data",
