@@ -483,6 +483,7 @@ class PackageContainer:
         self._packagelist = []
         self.package_type_dict = {}
         self.package_name_dict = {}
+        self.package_filename_dict = {}
         self.package_key_dict = {}
 
     @staticmethod
@@ -572,6 +573,8 @@ class PackageContainer:
         self._packagelist.append(package)
         if package.package_name is not None:
             self.package_name_dict[package.package_name.lower()] = package
+        if package.filename is not None:
+            self.package_filename_dict[package.filename.lower()] = package
         self.package_key_dict[path[-1].lower()] = package
         if package.package_type not in self.package_type_dict:
             self.package_type_dict[package.package_type.lower()] = []
@@ -584,6 +587,11 @@ class PackageContainer:
             and package.package_name.lower() in self.package_name_dict
         ):
             del self.package_name_dict[package.package_name.lower()]
+        if (
+            package.filename is not None
+            and package.filename.lower() in self.package_filename_dict
+        ):
+            del self.package_filename_dict[package.filename.lower()]
         del self.package_key_dict[package.path[-1].lower()]
         package_list = self.package_type_dict[package.package_type.lower()]
         package_list.remove(package)
@@ -671,6 +679,10 @@ class PackageContainer:
         # search for package key
         if name.lower() in self.package_key_dict:
             return self.package_key_dict[name.lower()]
+
+        # search for file name
+        if name.lower() in self.package_filename_dict:
+            return self.package_filename_dict[name.lower()]
 
         # search for partial and case-insensitive package name
         for pp in self._packagelist:

@@ -19,6 +19,7 @@ from .mfbase import (
     ExtFileAction,
     FlopyException,
     MFDataException,
+    MFFileMgmt,
     PackageContainer,
     PackageContainerType,
     ReadAsArraysException,
@@ -1711,7 +1712,16 @@ class MFModel(PackageContainer, ModelInterface):
                 package.package_name = package.package_type
 
         if set_package_filename:
-            package._filename = f"{self.name}.{package_extension}"
+            # filename uses model base name
+            package._filename = MFFileMgmt.string_to_file_path(
+                f"{self.name}.{package.package_type}"
+            )
+            if package._filename in self.package_filename_dict:
+                # auto generate a unique file name and register it
+                file_name = MFFileMgmt.unique_file_name(
+                    package._filename, self.package_filename_dict
+                )
+                package._filename = file_name
 
         if add_to_package_list:
             self._add_package(package, path)
