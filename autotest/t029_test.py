@@ -415,6 +415,51 @@ def test_residuals_iaempty():
         _v = flopy.mf6.utils.get_residuals(flowja, ja=ja)
 
 
+def test_from_gridspec():
+    for fn in [os.path.join(pthtest, "..", "specfile", "grd.spc"),
+               os.path.join(pthtest, "..", "specfile", "grdrot.spc")]:
+        modelgrid = flopy.discretization.StructuredGrid.from_gridspec(fn)
+        assert isinstance(
+            modelgrid, flopy.discretization.StructuredGrid
+        ), "invalid grid type"
+
+        lc = modelgrid.plot()
+        assert isinstance(
+            lc, matplotlib.collections.LineCollection
+        ), f"could not plot grid object created from {fn}"
+        plt.close()
+
+        extents = modelgrid.extent
+        theta = modelgrid.angrot_radians
+        if "rot" in fn:
+            assert theta != 0, "rotation missing"
+        rotated_extents = (0,  # xmin
+                           8000*np.sin(theta)+8000*np.cos(theta),  # xmax
+                           8000*np.sin(theta)*np.tan(theta/2),  # ymin
+                           8000+8000*np.sin(theta))  # ymax
+        errmsg = (
+            f"extents {extents} of {fn} does not equal {rotated_extents}"
+        )
+        assert all([np.isclose(x, x0)
+                    for x, x0 in zip(modelgrid.extent, rotated_extents)]), errmsg
+
+        ncpl = modelgrid.ncol * modelgrid.nrow
+        assert (
+            modelgrid.ncpl == ncpl
+        ), f"ncpl ({modelgrid.ncpl}) does not equal {ncpl}"
+
+        nvert = modelgrid.nvert
+        iverts = modelgrid.iverts
+        maxvertex = max([max(sublist[1:]) for sublist in iverts])
+        assert (
+            maxvertex + 1 == nvert
+        ), f"nvert ({maxvertex + 1}) does not equal {nvert}"
+        verts = modelgrid.verts
+        assert nvert == verts.shape[0], (
+            f"number of vertex (x, y) pairs ({verts.shape[0]}) "
+            f"does not equal {nvert}"
+        )
+
 if __name__ == "__main__":
     # test_mfgrddis_MfGrdFile()
     # test_mfgrddis_modelgrid()
@@ -423,5 +468,6 @@ if __name__ == "__main__":
     # test_mfgrddisu_MfGrdFile()
     # test_mfgrddisu_modelgrid()
     # test_faceflows()
-    test_structured_faceflows_3d()
+    # test_structured_faceflows_3d()
     # test_flowja_residuals()
+    test_from_gridspec()
