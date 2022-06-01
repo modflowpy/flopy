@@ -339,7 +339,7 @@ def test_usg_str():
     return
 
 def test_usg_lak():
-    # test mfusg model with str package
+    # test mfusg model with lak package
     print("testing unstructured mfusg with LAK: usg_rch_evt_lak.nam")
 
     new_ws = f"{base_dir}_test_usg_lak"
@@ -349,6 +349,27 @@ def test_usg_lak():
         "..", "examples", "data", "mfusg_test", "rch_evt_tests"
     )
     nam = "usg_rch_evt_lak.nam"
+    m = flopy.mfusg.MfUsg.load(nam, model_ws=model_ws, exe_name=v)
+
+    m.model_ws = new_ws
+    m.write_input()
+    if run:
+        success, buff = m.run_model()
+        assert success
+
+    return
+
+def test_freyburg_usg():
+    # test mfusg model with rch nrchop 3 / freyburg.usg
+    print("testing usg nrchop 3: freyburg.usg.nam")
+
+    new_ws = f"{base_dir}_test_usg_freyburg"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=new_ws)
+
+    model_ws = os.path.join(
+        "..", "examples", "data", "freyberg_usg"
+    )
+    nam = "freyberg.usg.nam"
     m = flopy.mfusg.MfUsg.load(nam, model_ws=model_ws, exe_name=v)
 
     m.model_ws = new_ws
@@ -372,3 +393,4 @@ if __name__ == "__main__":
     test_usg_ss_to_tr()
     test_usg_str()
     test_usg_lak()
+    test_freyburg_usg()

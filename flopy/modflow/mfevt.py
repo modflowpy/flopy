@@ -305,6 +305,8 @@ class ModflowEvt(Package):
         else:
             nrow, ncol, nlay, _ = model.get_nrow_ncol_nlay_nper()
 
+        u2d_shape = (nrow, ncol)
+
         # Read data for every stress period
         surf = {}
         evtr = {}
@@ -320,16 +322,13 @@ class ModflowEvt(Package):
             insurf = int(t[0])
             inevtr = int(t[1])
             inexdp = int(t[2])
+
             if nevtop == 2:
                 inievt = int(t[3])
+                if (not model.structured) and (inievt >= 0):
+                    u2d_shape = (1, inievt)
             elif not model.structured:
-                # usg uses only layer 1 nodes for options 1 and 3. ncol is nodelay for mfusg models.
-                inievt = ncol[0]
-
-            if model.structured:
-                u2d_shape = (nrow, ncol)
-            else:
-                u2d_shape = (1, insurf)
+                u2d_shape = (1, ncol[0])
 
             if insurf >= 0:
                 if model.verbose:
@@ -341,8 +340,6 @@ class ModflowEvt(Package):
             surf[iper] = current_surf
 
             if inevtr >= 0:
-                if not model.structured:
-                    u2d_shape = (1, inevtr)
                 if npar == 0:
                     if model.verbose:
                         print(
@@ -382,8 +379,6 @@ class ModflowEvt(Package):
                 current_evtr = t
             evtr[iper] = current_evtr
             if inexdp >= 0:
-                if not model.structured:
-                    u2d_shape = (1, inexdp)
                 if model.verbose:
                     print(f"   loading exdp stress period {iper + 1:3d}...")
                 t = Util2d.load(
@@ -393,8 +388,6 @@ class ModflowEvt(Package):
             exdp[iper] = current_exdp
             if nevtop == 2:
                 if inievt >= 0:
-                    if not model.structured:
-                        u2d_shape = (1, inievt)
                     if model.verbose:
                         print(
                             f"   loading ievt stress period {iper + 1:3d}..."
