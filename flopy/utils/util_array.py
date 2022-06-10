@@ -795,6 +795,17 @@ class Util3d(DataInterface):
         ):
             self.__value = [self.__value] * self.shape[0]
 
+        # if this is a flat array for an unstructured mfusg model,
+        # convert to a (possibly jagged) list of layer arrays
+        if (
+            self.shape[1] is None
+            and isinstance(self.shape[2], (np.ndarray, list))
+            and len(self.__value) == np.sum(self.shape[2])
+        ):
+            self.__value = np.split(
+                self.__value, np.cumsum(self.shape[2])[:-1]
+            )
+
         # if this is a list or 1-D array with constant values per layer
         if isinstance(self.__value, list) or (
             isinstance(self.__value, np.ndarray) and (self.__value.ndim == 1)
