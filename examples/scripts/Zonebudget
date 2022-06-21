@@ -1,0 +1,685 @@
+Import Libraries
+import os
+import pandas as pd
+import flopy
+import matplotlib
+import numpy as np
+import matplotlib.pyplot as plt
+import flopy.utils.binaryfile as bf
+import math
+from flopy.utils.gridgen import Gridgen
+import geopandas as gpd
+import flopy.discretization as fgrid
+from flopy.utils.gridintersect import GridIntersect
+from shapely.geometry import MultiLineString
+Model Name
+model_ws='../../Outputs/Resultados_Base/'
+modelname= 'RUCM_Base'
+exe_name= '../../Solver/mf2005.exe'
+mf= flopy.modflow.Modflow(modelname, exe_name=exe_name, model_ws=model_ws)
+Basin
+# Shapefile de la cuenca:
+basinDf = gpd.read_file("../../Inputs/Data_GIS/Shp/Cuenca/RUCM_Cuenca.shp")
+basinGeom = basinDf.iloc[0].geometry
+# Obteniendo los distancias geometricas de la cuenca:
+basinGeomXDim = basinGeom.bounds[2] - basinGeom.bounds[0]
+basinGeomYDim = basinGeom.bounds[3] - basinGeom.bounds[1]
+DISCRETIZACION
+DISCRETIZACION TEMPORAL
+# Calendario
+import calendar
+anio_inicial = 1980
+anio_final = 2016
+​
+time = []
+for anio in range(anio_inicial,anio_final+1): # intervalo de años
+    for mes in range(1,13):
+        x = calendar.monthrange(anio,mes)
+        time.append(x[1]) # extrayendo solo los dias
+time_days = time[9:-3:1] #inicia en Octubre y termina en Setiembre
+# Discretizacion temporal:
+nper = len(time_days) #numero de stress period
+perlen = time_days  #tiempo total de cada periodo
+nstp = [1]+[1]*(nper-1) #time step
+tsmult = [1]+[1]*(nper-1) #multiplicador
+steady = [False]+[False]*(nper-1) # estado transitorio desde el 1° stress period
+DISCRETIZACION ESPACIAL
+# Discretizacion espacial preliminar:
+ztop = 600
+zbot = [-66, -152, -360]
+nlay = 3
+delr = 500
+delc = 500
+nrow = 99
+ncol = 127
+sgr = fgrid.StructuredGrid(delc*np.ones(nrow), delr*np.ones(ncol),
+                           xoff=626814.041187938, yoff=4349765.06031221)
+ix = GridIntersect(sgr, method='vertex', rtree=True)
+basin_intersected = ix.intersect_polygon(basinGeom)
+# PAQUETE DIS
+dis=flopy.modflow.ModflowDis(mf, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr, delc=delc,
+                             top=ztop, botm=zbot, nper=nper, nstp=nstp, perlen=perlen,
+                             tsmult=tsmult, steady=steady, start_datetime='1/1/1980')
+mf.modelgrid.set_coord_info(xoff=626814.041187938, yoff=4349765.06031221,
+                           angrot=0, epsg=25830) 
+from scipy.interpolate import griddata
+import pandas as pd
+Data_mtop = pd.read_excel('../../Inputs/Datos_del_modelo.xlsx', 
+                                sheet_name='mtop')
+mtop = Data_mtop.to_numpy()
+mf.dis.top = mtop 
+zbot = np.zeros((nlay, nrow, ncol))
+zbot[0,:,:] = mtop -66
+zbot[1,:,:] = mtop -152 
+zbot[2,:,:] = mtop -360
+mf.dis.botm = zbot
+ALTURAS INICIALES
+Data_AlturasIniciales = pd.read_excel('../../Inputs/Datos_del_modelo.xlsx', 
+                                sheet_name='Alturas_Iniciales')
+top_AI = Data_AlturasIniciales.to_numpy()
+BAS
+# Variables for the BAS package
+idomain = np.zeros((nlay, nrow, ncol))
+for i in basin_intersected.cellids:
+    idomain[:,i[0],i[1]]=1
+    idomain[:,76,54]=1
+    idomain[:,83,65]=1
+mf.modelgrid.set_coord_info(xoff=626814.041187938, yoff=4349765.06031221,
+                            angrot=0, epsg=25830)                        
+                            #xoff=basinGeom.bounds[0], yoff=basinGeom.bounds[1],
+bas = flopy.modflow.ModflowBas(mf,ibound=idomain,
+                               strt=np.stack([top_AI for i in range(nlay)]),
+                              ichflg= 'CHTOCH')
+CONDUCTIVIDAD HIDRAULICA
+# leyendo el archivo excel:
+Excel_Kx_Layer1 = pd.read_excel('../../Inputs/Datos_del_modelo.xlsx', 
+                                sheet_name='Parametros', usecols=[1])
+Excel_Kx_Layer2 = pd.read_excel('../../Inputs/Datos_del_modelo.xlsx', 
+                                sheet_name='Parametros', usecols=[2])
+Excel_Kx_Layer3 = pd.read_excel('../../Inputs/Datos_del_modelo.xlsx', 
+                                sheet_name='Parametros', usecols=[3])
+#Convirtiendo de lista a matriz
+Kx_Layer1 = Excel_Kx_Layer1.values.tolist()
+Kx_Layer2 = Excel_Kx_Layer2.values.tolist()
+Kx_Layer3 = Excel_Kx_Layer3.values.tolist()
+#Extrayendo los valores del matriz
+Kx_Layer1_valor=[y for x in Kx_Layer1 for y in x]
+Kx_Layer2_valor=[y for x in Kx_Layer2 for y in x]
+Kx_Layer3_valor=[y for x in Kx_Layer3 for y in x]
+shp
+#Leyendo los shapefiles
+Zonificacion_Parametros = gpd.read_file("../../Inputs/Data_GIS/Shp/Parametros/RUCM_Zonificacion_Parametros.shp")
+# Creando una funcion para la CH:
+def Funcion_Conductividad_Hidraulica(i):
+    Zonificacion_Geom = Zonificacion_Parametros.iloc[i].geometry #Extrayendo la propiedad de geometria de los shapefiles por zonas
+    Zona_intersected = ix.intersect_polygon(Zonificacion_Geom) #Intersecando el shapefile y la grilla
+    
+    #Integrando las conductividades hidraulicas por zonas:
+    Kx_Zona = np.zeros((nlay, nrow, ncol)) #Creando matrices nlay,nrow,ncol por zonas:
+    for j in Zona_intersected.cellids:
+        Kx_Zona[0,j[0],j[1]] = Kx_Layer1_valor[i]
+        Kx_Zona[1,j[0],j[1]] = Kx_Layer2_valor[i]
+        Kx_Zona[2,j[0],j[1]] = Kx_Layer3_valor[i]
+    return Kx_Zona
+# Conductividades hidraulicas por zona:
+Kx_Aluvial_1 = Funcion_Conductividad_Hidraulica(0)
+Kx_Aluvial_2 = Funcion_Conductividad_Hidraulica(1)
+Kx_Aluvial_3 = Funcion_Conductividad_Hidraulica(2)
+Kx_CarbonatadaAlta_1 = Funcion_Conductividad_Hidraulica(3)
+Kx_CarbonatadaAlta_2 = Funcion_Conductividad_Hidraulica(4)
+Kx_CarbonatadaAlta_3 = Funcion_Conductividad_Hidraulica(5)
+Kx_CarbonatadaAlta_4 = Funcion_Conductividad_Hidraulica(6)
+Kx_CarbonatadaMedia_1 = Funcion_Conductividad_Hidraulica(7)
+Kx_CarbonatadaMedia_2 = Funcion_Conductividad_Hidraulica(8)
+Kx_CarbonatadaMedia_3 = Funcion_Conductividad_Hidraulica(9)
+Kx_CarbonatadaMedia_4 = Funcion_Conductividad_Hidraulica(10)
+Kx_CarbonatadaMedia_5 = Funcion_Conductividad_Hidraulica(11)
+Kx_DetreticaMedia_1 = Funcion_Conductividad_Hidraulica(12)
+Kx_DetreticaMedia_2 = Funcion_Conductividad_Hidraulica(13)
+Kx_DetreticaMedia_3 = Funcion_Conductividad_Hidraulica(14)
+Kx_DetreticaMedia_4 = Funcion_Conductividad_Hidraulica(15)
+Kx_DetreticaMedia_5 = Funcion_Conductividad_Hidraulica(16)
+Kx_DetreticaMedia_6 = Funcion_Conductividad_Hidraulica(17)
+Kx_DetreticaMuyBaja_1 = Funcion_Conductividad_Hidraulica(18)
+Kx_DetreticaMuyBaja_2 = Funcion_Conductividad_Hidraulica(19)
+#Conductividad hidraulica total:
+Kx_Aluvial = Kx_Aluvial_1+Kx_Aluvial_2+Kx_Aluvial_3
+Kx_CarbonatadaAlta = Kx_CarbonatadaAlta_1+Kx_CarbonatadaAlta_2+Kx_CarbonatadaAlta_3+Kx_CarbonatadaAlta_4
+Kx_CarbonatadaMedia = Kx_CarbonatadaMedia_1+Kx_CarbonatadaMedia_2+Kx_CarbonatadaMedia_3+Kx_CarbonatadaMedia_4+Kx_CarbonatadaMedia_5
+Kx_DetreticaMedia = Kx_DetreticaMedia_1+Kx_DetreticaMedia_2+Kx_DetreticaMedia_3+Kx_DetreticaMedia_4+Kx_DetreticaMedia_5+Kx_DetreticaMedia_6
+Kx_DetreticaMuyBaja = Kx_DetreticaMuyBaja_1+Kx_DetreticaMuyBaja_2
+​
+Kx = Kx_Aluvial+Kx_CarbonatadaAlta+Kx_CarbonatadaMedia+Kx_DetreticaMedia+Kx_DetreticaMuyBaja
+ALMACENAMIENTO Y RENDIMIENTO ESPECIFICO
+ALMACENAMIENTO ESPECIFICO
+# leyendo el archivo excel:
+Excel_Ss_Layer1 = pd.read_excel('../../Inputs/Datos_del_modelo.xlsx', 
+                                sheet_name='Parametros', usecols=[4])
+Excel_Ss_Layer2 = pd.read_excel('../../Inputs/Datos_del_modelo.xlsx', 
+                                sheet_name='Parametros', usecols=[5])
+Excel_Ss_Layer3 = pd.read_excel('../../Inputs/Datos_del_modelo.xlsx', 
+                                sheet_name='Parametros', usecols=[6])
+#Convirtiendo de lista a matriz
+Ss_Layer1 = Excel_Ss_Layer1.values.tolist()
+Ss_Layer2 = Excel_Ss_Layer2.values.tolist()
+Ss_Layer3 = Excel_Ss_Layer3.values.tolist()
+#Extrayendo los valores del matriz
+Ss_Layer1_valor=[y for x in Ss_Layer1 for y in x]
+Ss_Layer2_valor=[y for x in Ss_Layer2 for y in x]
+Ss_Layer3_valor=[y for x in Ss_Layer3 for y in x]
+# Creando una funcion para el Almacenamiento Especifico :
+def Funcion_Ss(i):
+    Zonificacion_Geom = Zonificacion_Parametros.iloc[i].geometry #Extrayendo la propiedad de geometria de los shapefiles por zonas
+    Zona_intersected = ix.intersect_polygon(Zonificacion_Geom) #Intersecando el shapefile y la grilla
+    
+    #Integrando las conductividades hidraulicas por zonas:
+    Ss_Zona = np.zeros((nlay, nrow, ncol)) #Creando matrices nlay,nrow,ncol por zonas:
+    for j in Zona_intersected.cellids:
+        Ss_Zona[0,j[0],j[1]] = Ss_Layer1_valor[i]
+        Ss_Zona[1,j[0],j[1]] = Ss_Layer2_valor[i]
+        Ss_Zona[2,j[0],j[1]] = Ss_Layer3_valor[i]
+    return Ss_Zona
+# Almacenamiento Especifico por zonas:
+Ss_Aluvial_1 = Funcion_Ss(0)
+Ss_Aluvial_2 = Funcion_Ss(1)
+Ss_Aluvial_3 = Funcion_Ss(2)
+Ss_CarbonatadaAlta_1 = Funcion_Ss(3)
+Ss_CarbonatadaAlta_2 = Funcion_Ss(4)
+Ss_CarbonatadaAlta_3 = Funcion_Ss(5)
+Ss_CarbonatadaAlta_4 = Funcion_Ss(6)
+Ss_CarbonatadaMedia_1 = Funcion_Ss(7)
+Ss_CarbonatadaMedia_2 = Funcion_Ss(8)
+Ss_CarbonatadaMedia_3 = Funcion_Ss(9)
+Ss_CarbonatadaMedia_4 = Funcion_Ss(10)
+Ss_CarbonatadaMedia_5 = Funcion_Ss(11)
+Ss_DetreticaMedia_1 = Funcion_Ss(12)
+Ss_DetreticaMedia_2 = Funcion_Ss(13)
+Ss_DetreticaMedia_3 = Funcion_Ss(14)
+Ss_DetreticaMedia_4 = Funcion_Ss(15)
+Ss_DetreticaMedia_5 = Funcion_Ss(16)
+Ss_DetreticaMedia_6 = Funcion_Ss(17)
+Ss_DetreticaMuyBaja_1 = Funcion_Ss(18)
+Ss_DetreticaMuyBaja_2 = Funcion_Ss(19)
+# Almacenamiento Especifico total:
+Ss_Aluvial = Ss_Aluvial_1+Ss_Aluvial_2+Ss_Aluvial_3
+Ss_CarbonatadaAlta = Ss_CarbonatadaAlta_1+Ss_CarbonatadaAlta_2+Ss_CarbonatadaAlta_3+Ss_CarbonatadaAlta_4
+Ss_CarbonatadaMedia = Ss_CarbonatadaMedia_1+Ss_CarbonatadaMedia_2+Ss_CarbonatadaMedia_3+Ss_CarbonatadaMedia_4+Ss_CarbonatadaMedia_5
+Ss_DetreticaMedia = Ss_DetreticaMedia_1+Ss_DetreticaMedia_2+Ss_DetreticaMedia_3+Ss_DetreticaMedia_4+Ss_DetreticaMedia_5+Ss_DetreticaMedia_6
+Ss_DetreticaMuyBaja = Ss_DetreticaMuyBaja_1+Ss_DetreticaMuyBaja_2
+​
+Ss = Ss_Aluvial+Ss_CarbonatadaAlta+Ss_CarbonatadaMedia+Ss_DetreticaMedia+Ss_DetreticaMuyBaja
+RENDIMIENTO ESPECIFICO
+# leyendo el archivo excel:
+Excel_Sy_Layer1 = pd.read_excel('../../Inputs/Datos_del_modelo.xlsx', 
+                                sheet_name='Parametros', usecols=[7])
+Excel_Sy_Layer2 = pd.read_excel('../../Inputs/Datos_del_modelo.xlsx', 
+                                sheet_name='Parametros', usecols=[8])
+Excel_Sy_Layer3 = pd.read_excel('../../Inputs/Datos_del_modelo.xlsx', 
+                                sheet_name='Parametros', usecols=[9])
+# Convirtiendo de lista a matriz
+Sy_Layer1 = Excel_Sy_Layer1.values.tolist()
+Sy_Layer2 = Excel_Sy_Layer2.values.tolist()
+Sy_Layer3 = Excel_Sy_Layer3.values.tolist()
+#Extrayendo los valores del matriz
+Sy_Layer1_valor=[y for x in Sy_Layer1 for y in x]
+Sy_Layer2_valor=[y for x in Sy_Layer2 for y in x]
+Sy_Layer3_valor=[y for x in Sy_Layer3 for y in x]
+# Creando una funcion para el Rendimiento Especifico :
+def Funcion_Sy(i):
+    Zonificacion_Geom = Zonificacion_Parametros.iloc[i].geometry #Extrayendo la propiedad de geometria de los shapefiles por zonas
+    Zona_intersected = ix.intersect_polygon(Zonificacion_Geom) #Intersecando el shapefile y la grilla
+    
+    #Integrando las conductividades hidraulicas por zonas:
+    Sy_Zona = np.zeros((nlay, nrow, ncol)) #Creando matrices nlay,nrow,ncol por zonas:
+    for j in Zona_intersected.cellids:
+        Sy_Zona[0,j[0],j[1]] = Sy_Layer1_valor[i]
+        Sy_Zona[1,j[0],j[1]] = Sy_Layer2_valor[i]
+        Sy_Zona[2,j[0],j[1]] = Sy_Layer3_valor[i]
+    return Sy_Zona
+# Rendimiento Especifico por zonas:
+Sy_Aluvial_1 = Funcion_Sy(0)
+Sy_Aluvial_2 = Funcion_Sy(1)
+Sy_Aluvial_3 = Funcion_Sy(2)
+Sy_CarbonatadaAlta_1 = Funcion_Sy(3)
+Sy_CarbonatadaAlta_2 = Funcion_Sy(4)
+Sy_CarbonatadaAlta_3 = Funcion_Sy(5)
+Sy_CarbonatadaAlta_4 = Funcion_Sy(6)
+Sy_CarbonatadaMedia_1 = Funcion_Sy(7)
+Sy_CarbonatadaMedia_2 = Funcion_Sy(8)
+Sy_CarbonatadaMedia_3 = Funcion_Sy(9)
+Sy_CarbonatadaMedia_4 = Funcion_Sy(10)
+Sy_CarbonatadaMedia_5 = Funcion_Sy(11)
+Sy_DetreticaMedia_1 = Funcion_Sy(12)
+Sy_DetreticaMedia_2 = Funcion_Sy(13)
+Sy_DetreticaMedia_3 = Funcion_Sy(14)
+Sy_DetreticaMedia_4 = Funcion_Sy(15)
+Sy_DetreticaMedia_5 = Funcion_Sy(16)
+Sy_DetreticaMedia_6 = Funcion_Sy(17)
+Sy_DetreticaMuyBaja_1 = Funcion_Sy(18)
+Sy_DetreticaMuyBaja_2 = Funcion_Sy(19)
+# Rendimiento Especifico total:
+Sy_Aluvial = Sy_Aluvial_1+Sy_Aluvial_2+Sy_Aluvial_3
+Sy_CarbonatadaAlta = Sy_CarbonatadaAlta_1+Sy_CarbonatadaAlta_2+Sy_CarbonatadaAlta_3+Sy_CarbonatadaAlta_4
+Sy_CarbonatadaMedia = Sy_CarbonatadaMedia_1+Sy_CarbonatadaMedia_2+Sy_CarbonatadaMedia_3+Sy_CarbonatadaMedia_4+Sy_CarbonatadaMedia_5
+Sy_DetreticaMedia = Sy_DetreticaMedia_1+Sy_DetreticaMedia_2+Sy_DetreticaMedia_3+Sy_DetreticaMedia_4+Sy_DetreticaMedia_5+Sy_DetreticaMedia_6
+Sy_DetreticaMuyBaja = Sy_DetreticaMuyBaja_1+Sy_DetreticaMuyBaja_2
+​
+Sy = Sy_Aluvial+Sy_CarbonatadaAlta+Sy_CarbonatadaMedia+Sy_DetreticaMedia+Sy_DetreticaMuyBaja
+#PAQUETE LPF:
+laytyp = [1,1,0] # Capa1=libre, Capa2=Libre, Capa3=Confinado
+​
+# Add LPF package to the MODFLOW model
+lpf = flopy.modflow.ModflowLpf(mf, hk=Kx, vka=Kx/10, laytyp=laytyp, #hdry=-1e+30,
+                               ss=Ss,sy=Sy,ipakcb=53, chani=-1)
+CONDICIONES DE BORDE
+#Leyendo los shapefiles
+Limite_Mira = gpd.read_file("../../Inputs/Data_GIS/Shp/CondiciondeBorde/GHB_LaMira.shp")
+Limite_Bunol_Cheste = gpd.read_file("../../Inputs/Data_GIS/Shp/CondiciondeBorde/GHB_BunolCheste.shp")
+#Intersecando el shapefile y la grilla
+Limite_Mira_intersected = ix.intersect_linestring(MultiLineString(Limite_Mira.geometry.values))
+Limite_Bunol_Cheste_intersected = ix.intersect_linestring(MultiLineString(Limite_Bunol_Cheste.geometry.values))
+Data_GHB_Mira = pd.read_excel('../../Inputs/Datos_del_modelo.xlsx',sheet_name='GHB_Mira')
+Data_GHB_Mira = Data_GHB_Mira.values.tolist()
+GHB_list = []
+for i in Limite_Bunol_Cheste_intersected.cellids:
+    GHB_list.append([0,i[0],i[1],300,2.5])
+    GHB_list.append([1,i[0],i[1],300,2.5])
+    GHB_list.append([2,i[0],i[1],300,2.5])
+for i in range(len(Data_GHB_Mira)):
+        GHB_list.append([0,Data_GHB_Mira[i][0]-1,Data_GHB_Mira[i][1]-1,
+                              Data_GHB_Mira[i][2],Data_GHB_Mira[i][3]])
+        GHB_list.append([1,Data_GHB_Mira[i][0]-1,Data_GHB_Mira[i][1]-1,
+                              Data_GHB_Mira[i][2],Data_GHB_Mira[i][3]])
+        GHB_list.append([2,Data_GHB_Mira[i][0]-1,Data_GHB_Mira[i][1]-1,
+                              Data_GHB_Mira[i][2],Data_GHB_Mira[i][3]])    
+GHB_total = {i:GHB_list for i in range(nper)}
+ghb =flopy.modflow.mfghb.ModflowGhb(mf, stress_period_data=GHB_total, ipakcb=53)
+RECARGA
+# leyendo el archivo excel:
+def Funcion_Data_Recargas(ncol):
+    Data_Recargas = pd.read_excel('../../Inputs/Datos_del_modelo.xlsx',sheet_name='Recargas', usecols=[ncol])
+    Data_Recargas = Data_Recargas.values.tolist()
+    return Data_Recargas
+Data_8103310 = Funcion_Data_Recargas(6)
+Data_8103320 = Funcion_Data_Recargas(7)
+Data_8103330 = Funcion_Data_Recargas(8)
+Data_8103340 = Funcion_Data_Recargas(9)
+Data_8103350 = Funcion_Data_Recargas(10)
+Data_8103360 = Funcion_Data_Recargas(11)
+Data_8103365 = Funcion_Data_Recargas(12)
+Data_8103370 = Funcion_Data_Recargas(13)
+Data_8103375 = Funcion_Data_Recargas(14)
+Data_8103380 = Funcion_Data_Recargas(15)
+Data_8103385 = Funcion_Data_Recargas(16)
+Data_8103390 = Funcion_Data_Recargas(17)
+Data_8103920 = Funcion_Data_Recargas(18)
+Data_8103940 = Funcion_Data_Recargas(19)
+Data_8103960 = Funcion_Data_Recargas(20)
+#Leyendo los shapefiles
+GIS_Recarga = gpd.read_file("../../Inputs/Data_GIS/Shp/Recargas/RUCM_Recargas.shp")
+def Funcion_Recarga(i):  # i: poligono , j:    
+    Recarga_Geom = GIS_Recarga.iloc[i].geometry
+    Recarga_intersected = ix.intersect_polygon(Recarga_Geom)
+    Recarga_spd = np.zeros([nrow,ncol])
+    
+    for j in Recarga_intersected.cellids:
+        Recarga_spd[j] = 1
+    
+    return Recarga_spd
+# Matrices de ones para conocer la fila y columna en la que se ubica el valor de recarga
+Recarga_8103310 = Funcion_Recarga(0)
+Recarga_8103320 = Funcion_Recarga(1)
+Recarga_8103330 = Funcion_Recarga(2)
+Recarga_8103340 = Funcion_Recarga(3)
+Recarga_8103350 = Funcion_Recarga(4)
+Recarga_8103360 = Funcion_Recarga(5)
+Recarga_8103365 = Funcion_Recarga(6)
+Recarga_8103370 = Funcion_Recarga(7)
+Recarga_8103375 = Funcion_Recarga(8)
+Recarga_8103380 = Funcion_Recarga(9)
+Recarga_8103385 = Funcion_Recarga(10)
+Recarga_8103390 = Funcion_Recarga(11)
+Recarga_8103920 = Funcion_Recarga(12)
+Recarga_8103940 = Funcion_Recarga(13)
+Recarga_8103960 = Funcion_Recarga(14)
+RETORNOS
+# leyendo el archivo excel:
+def Funcion_Data_Retornos(ncol):
+    Data_Retornos = pd.read_excel('../../Inputs/Datos_del_modelo.xlsx',sheet_name='Retornos', usecols=[ncol])
+    Data_Retornos = Data_Retornos.values.tolist()
+    return Data_Retornos
+#Convirtiendo de lista a matriz
+Retornos_AltoMagro = Funcion_Data_Retornos(6)
+Retornos_PlanaUtiel = Funcion_Data_Retornos(7)
+Retornos_BunolChiva = Funcion_Data_Retornos(8)
+#Leyendo los shapefiles
+rch_AltoMagro = gpd.read_file("../../Inputs/Data_GIS/Shp/Retornos/RUCM_Retorno_AltoMagro_label.shp")
+rch_PlanaUtiel = gpd.read_file("../../Inputs/Data_GIS/Shp/Retornos/RUCM_Retorno_PlanaUtiel_label.shp")
+rch_BunolChiva = gpd.read_file("../../Inputs/Data_GIS/Shp/Retornos/RUCM_Retorno_BunolChiva_label.shp")
+def Funcion_Retorno(Retorno_GIS):
+    retorno_Geom=[]
+    retorno_intersected=[]
+    retorno_list=np.zeros([nrow,ncol])
+    a=len(Retorno_GIS)
+​
+    for i in range(a):
+        retorno_Geom.append(Retorno_GIS.iloc[i].geometry)
+​
+    for i in range(a):
+        retorno_intersected.append(ix.intersect_point(retorno_Geom[i]))
+    
+    for i in range(a):
+        for j in retorno_intersected[i].cellids:
+            retorno_list[j] = 1
+    
+    return retorno_list
+AltoMagro = Funcion_Retorno(rch_AltoMagro)
+PlanaUtiel = Funcion_Retorno(rch_PlanaUtiel)
+BunolChiva = Funcion_Retorno(rch_BunolChiva)
+retorno_total = {i: [Recarga_8103310*Data_8103310[i]+Recarga_8103320*Data_8103320[i]+Recarga_8103330*Data_8103330[i]
+                     +Recarga_8103340*Data_8103340[i]+Recarga_8103350*Data_8103350[i]+Recarga_8103360*Data_8103360[i]
+                     +Recarga_8103365*Data_8103365[i]+Recarga_8103370*Data_8103370[i]+Recarga_8103375*Data_8103375[i]
+                     +Recarga_8103380*Data_8103380[i]+Recarga_8103385*Data_8103385[i]+Recarga_8103390*Data_8103390[i]
+                     +Recarga_8103920*Data_8103920[i]+Recarga_8103940*Data_8103940[i]+Recarga_8103960*Data_8103960[i]
+                     +AltoMagro*Retornos_AltoMagro[i]+PlanaUtiel*Retornos_PlanaUtiel[i]
+                     +BunolChiva*Retornos_BunolChiva[i]] for i in range(nper)}
+# PAQUETE RECHARGE
+rch = flopy.modflow.ModflowRch(mf,rech=retorno_total, ipakcb=53)
+RIOS
+#Leyendo los shapefiles
+rioDf_Bunol = gpd.read_file("../../Inputs/Data_GIS/Shp/Rios/RUCM_Rio_Bunol.shp")
+rioDf_LaTorre = gpd.read_file("../../Inputs/Data_GIS/Shp/Rios/RUCM_Rio_LaTorre.shp")
+rioDf_LaMadre = gpd.read_file("../../Inputs/Data_GIS/Shp/Rios/RUCM_Rio_LaMadre.shp")
+rioDf_Magro = gpd.read_file("../../Inputs/Data_GIS/Shp/Rios/RUCM_Rio_Magro.shp")
+#rioDf_Bunol
+def Funcion_Rio(Rio_GIS):
+    rio_Geom=[]
+    rio_Elev=[]
+    rio_Cond=[]
+    rio_intersected=[]
+    rio_list=[]
+    a=len(Rio_GIS)
+    
+    for i in range(a):
+        rio_Geom.append(Rio_GIS.iloc[i].geometry)
+        rio_Elev.append(Rio_GIS.iloc[i].Elevation)
+        rio_Cond.append(Rio_GIS.iloc[i].Conductanc)
+        
+    for i in range(a):
+        rio_intersected.append(ix.intersect_point(rio_Geom[i]))
+    
+    for j in range(a):
+        for i in rio_intersected[j].cellids:
+            if mtop[i]-66 < rio_Elev[j]: #valores para el layer 1
+                rio_list.append([0,i[0],i[1], rio_Elev[j]+1,rio_Cond[j],rio_Elev[j]])
+            if mtop[i]-66 > rio_Elev[j]: #valores para el layer 2
+                rio_list.append([1,i[0],i[1], rio_Elev[j]+1,rio_Cond[j],rio_Elev[j]])
+    
+    return rio_list
+rio_Bunol = Funcion_Rio(rioDf_Bunol)
+rio_LaTorre = Funcion_Rio(rioDf_LaTorre)
+rio_LaMadre= Funcion_Rio(rioDf_LaMadre)
+rio_Magro = Funcion_Rio(rioDf_Magro)
+rio1 = np.concatenate((rio_Bunol,rio_LaTorre,rio_LaMadre,rio_Magro),0)  
+rio = {i:rio1 for i in range(nper)}
+riv = flopy.modflow.ModflowRiv(mf, stress_period_data=rio, ipakcb=53)
+WELL
+#Leyendo los shapefiles
+RU_Industriales = gpd.read_file("../../Inputs/Data_GIS/Shp/Pozos/RU_Industriales.shp")
+RU_Urbanas = gpd.read_file("../../Inputs/Data_GIS/Shp/Pozos/RU_Urbanas.shp")
+RU_Agricolas = gpd.read_file("../../Inputs/Data_GIS/Shp/Pozos/RU_Agricolas.shp")
+CM_Industriales = gpd.read_file("../../Inputs/Data_GIS/Shp/Pozos/CM_Industriales.shp")
+CM_Urbanas = gpd.read_file("../../Inputs/Data_GIS/Shp/Pozos/CM_Urbanas.shp")
+CM_Agricolas = gpd.read_file("../../Inputs/Data_GIS/Shp/Pozos/CM_Agricolas.shp")
+RUCM_PozosTotales = gpd.read_file("../../Inputs/Data_GIS/Shp/Pozos/RUCM_PozosTotales.shp")
+#Leyendo los bombeos desde el excel:
+wel_excel = pd.read_csv('../../Inputs/Data_Pozos/Bombeo_RUCM.csv')
+#Convirtiendo de lista a matriz
+Wel_RU_I = wel_excel['Bombeo'].values.tolist() 
+b = len(RU_Industriales)
+n = len(Wel_RU_I)
+Wel_RU=[]
+for i in range(nper):
+    Wel_RU.append(Wel_RU_I[i:n:nper])  
+RU_I_Geom=[]
+RU_I_Layer=[]
+RU_I_intersected=[]
+RU_list=[]
+RU_F=[]
+​
+def Funcion_Well(RU_GIS):
+    a=len(RU_GIS)
+    for i in range(a):
+        RU_I_Geom.append(RU_GIS.iloc[i].geometry)
+        RU_I_Layer.append(RU_GIS.iloc[i].Layer)
+        
+    for i in range(a):
+        RU_I_intersected.append(ix.intersect_point(RU_I_Geom[i]))
+        
+    for z in range(nper):
+        W = Wel_RU[z]
+        for j in range(a):
+            for i in RU_I_intersected[j].cellids:
+                RU_list.append([RU_I_Layer[j]-1,i[0],i[1],W[j]])
+      
+    for i in range(0,len(RU_list),a):
+        RU_F.append(RU_list[i:i+a])
+ 
+    wel_spd = {i:RU_F[i] for i in range(nper)}
+    
+    return wel_spd
+wel_spd_RU = Funcion_Well(RUCM_PozosTotales)
+wel = flopy.modflow.ModflowWel(mf,stress_period_data=wel_spd_RU, ipakcb=53)
+HOB
+# leyendo el archivo excel:
+Data_Piezometros = pd.read_csv('../../Inputs/Data_Piezometros/RUCM_Piezometros.csv')
+# Funcion para obtener los registros de medicion de piezometros:
+def Funcion_HOB(y):
+    PO_tsd = []
+    PO = Data_Piezometros[y].values.tolist()
+    Perlen_PO = Data_Piezometros['Inicio'].values.tolist()
+    for i in range(nper):
+        if PO[i]>0:
+            PO_tsd.append([Perlen_PO[i],PO[i]])
+    return PO_tsd
+tsd_1 = Funcion_HOB('08_18_003')
+tsd_2 = Funcion_HOB('08_18_005')
+tsd_3 = Funcion_HOB('08_18_086')
+tsd_4 = Funcion_HOB('08_24_005')
+tsd_5 = Funcion_HOB('08_24_007')
+tsd_6 = Funcion_HOB('08_24_008')
+tsd_7 = Funcion_HOB('08_24_010')
+tsd_8 = Funcion_HOB('08_24_031')
+tsd_9 = Funcion_HOB('08_24_032')
+tsd_10 = Funcion_HOB('08_24_033')
+def Funcion_Mediciones(n,m):
+    L = [n]
+    k = len(m)
+    L1 = ['{}{}'.format(x, y) for y in range(1, k+1) for x in L]
+    return L1
+Name_1 = Funcion_Mediciones('P0818003.',tsd_1)
+Name_2 = Funcion_Mediciones('P0818005.',tsd_2)
+Name_3 = Funcion_Mediciones('P0818086.',tsd_3)
+Name_4 = Funcion_Mediciones('P0824005.',tsd_4)
+Name_5 = Funcion_Mediciones('P0824007.',tsd_5)
+Name_6 = Funcion_Mediciones('P0824008.',tsd_6)
+Name_7 = Funcion_Mediciones('P0824010.',tsd_7)
+Name_8 = Funcion_Mediciones('P0824031.',tsd_8)
+Name_9 = Funcion_Mediciones('P0824032.',tsd_9)
+Name_10 = Funcion_Mediciones('P0824033.',tsd_10)
+#Leyendo los shapefiles
+GIS_Piezometros = gpd.read_file("../../Inputs/Data_GIS/Shp/Piezometros/RUCM_Piezometros.shp")
+HOB_Geom=[]
+HOB_intersected=[]
+HOB_list=[]
+HOB_altura=[]
+  
+a=len(GIS_Piezometros)
+for i in range(a):
+    HOB_Geom.append(GIS_Piezometros.iloc[i].geometry)
+        
+for i in range(a):
+    HOB_intersected.append(ix.intersect_point(HOB_Geom[i]))
+   
+for j in range(a):
+    for i in HOB_intersected[j].cellids:
+        HOB_list.append((i[0],i[1]))  
+obs_data = []
+obs_data.append(flopy.modflow.HeadObservation(mf, layer=0, row=HOB_list[0][0], column=HOB_list[0][1],
+                                              time_series_data=tsd_1,
+                                              names=Name_1, obsname='08_18_003'))
+obs_data.append(flopy.modflow.HeadObservation(mf, layer=1, row=HOB_list[1][0], column=HOB_list[1][1],
+                                              time_series_data=tsd_2, 
+                                              names=Name_2, obsname='08_18_005'))
+obs_data.append(flopy.modflow.HeadObservation(mf, layer=2, row=HOB_list[2][0], column=HOB_list[2][1],
+                                              time_series_data=tsd_3, 
+                                              names=Name_3, obsname='08_18_086'))
+obs_data.append(flopy.modflow.HeadObservation(mf, layer=0, row=HOB_list[3][0], column=HOB_list[3][1],
+                                              time_series_data=tsd_4, 
+                                              names=Name_4, obsname='08_24_005'))
+obs_data.append(flopy.modflow.HeadObservation(mf, layer=0, row=HOB_list[4][0], column=HOB_list[4][1],
+                                              time_series_data=tsd_5, 
+                                              names=Name_5, obsname='08_24_007'))
+obs_data.append(flopy.modflow.HeadObservation(mf, layer=0, row=HOB_list[5][0], column=HOB_list[5][1],
+                                              time_series_data=tsd_6, 
+                                              names=Name_6, obsname='08_24_008'))
+obs_data.append(flopy.modflow.HeadObservation(mf, layer=0, row=HOB_list[6][0], column=HOB_list[6][1],
+                                              time_series_data=tsd_7, 
+                                              names=Name_7, obsname='08_24_010'))
+obs_data.append(flopy.modflow.HeadObservation(mf, layer=0, row=HOB_list[7][0], column=HOB_list[7][1],
+                                              time_series_data=tsd_8, 
+                                              names=Name_8, obsname='08_24_031'))
+obs_data.append(flopy.modflow.HeadObservation(mf, layer=0, row=HOB_list[8][0], column=HOB_list[8][1],
+                                              time_series_data=tsd_9, 
+                                              names=Name_9, obsname='08_24_032'))
+obs_data.append(flopy.modflow.HeadObservation(mf, layer=0, row=HOB_list[9][0], column=HOB_list[9][1],
+                                              time_series_data=tsd_10, 
+                                              names=Name_10, obsname='08_24_033'))
+​
+hob = flopy.modflow.ModflowHob(mf, iuhobsv=42, hobdry=-1e+6, tomulth=1.0, obs_data=obs_data)
+OC
+spd = {}
+for i in range(nper):
+    for j in range(nstp[i]):
+        spd[(i,j)]=['print head', 'print budget', 'save head', 'save budget']
+oc= flopy.modflow.ModflowOc(mf,stress_period_data=spd, compact=True)
+DE4 - Direct Solver Package
+de4 = flopy.modflow.ModflowDe4(mf, itmx=5, mxup=0, mxlow=0, mxbw=0, 
+                               ifreq=3, mutd4=0, accl=1, hclose=3e-1, 
+                               iprd4=1, extension='de4')
+RUN
+#Write input files -> write file with extensions
+mf.write_input()
+​
+#run model -> gives the solution
+mf.run_model(silent=True)
+(True, [])
+ZONEBUDGET
+BALANCE POR ZONAS
+# Zona 1: Contorno con Mira.
+# Zona 2: Contorno con Buñol Cheste.
+# Zona 3: Rambla de la Torre.
+# Zona 4: Río Madre.
+# Zona 5: Río Magro.
+# Zona 6: Río Buñol.
+def Funcion_Contorno_zb(zb,nzb): #zb: zonebuget geometry, #nzb: numero de zona
+    Zona_Contorno = np.zeros((nlay, nrow, ncol), dtype=np.int32) # nlay, nrow, ncol
+    for i in zb.cellids:
+        Zona_Contorno[0,i[0],i[1]] = nzb
+        Zona_Contorno[1,i[0],i[1]] = nzb
+        Zona_Contorno[2,i[0],i[1]] = nzb
+    return Zona_Contorno
+def Funcion_Rio_zb(Rio_GIS,nzb):
+    rio_Geom=[]
+    rio_Elev=[]
+    rio_intersected=[]
+    a=len(Rio_GIS)
+    
+    for i in range(a):
+        rio_Geom.append(Rio_GIS.iloc[i].geometry)
+        rio_Elev.append(Rio_GIS.iloc[i].Elevation)
+        
+    for i in range(a):
+        rio_intersected.append(ix.intersect_point(rio_Geom[i]))
+    
+    Zona_rio = np.zeros((nlay, nrow, ncol),dtype=np.int32)
+    for j in range(a):
+        for i in rio_intersected[j].cellids:
+            if mtop[i]-66 < rio_Elev[j]: #valores para el layer 1
+                Zona_rio[0,i[0],i[1]]=nzb
+            if mtop[i]-66 > rio_Elev[j]: #valores para el layer 2
+                Zona_rio[1,i[0],i[1]]=nzb
+    return Zona_rio
+Zona_1 = Funcion_Contorno_zb(Limite_Mira_intersected, 1)
+Zona_2 = Funcion_Contorno_zb(Limite_Bunol_Cheste_intersected, 2)
+Zona_3 = Funcion_Rio_zb(rioDf_LaTorre, 3)
+Zona_4 = Funcion_Rio_zb(rioDf_LaMadre, 4)
+Zona_5 = Funcion_Rio_zb(rioDf_Magro, 5)
+Zona_6 = Funcion_Rio_zb(rioDf_Bunol, 6)
+zones= (Zona_1+((Zona_6-Zona_6.max())/-Zona_6.max())*Zona_2+
+        ((Zona_1-Zona_1.max())/-Zona_1.max())*Zona_3+Zona_4+Zona_5+Zona_6).astype(int)
+# Convirtiendo la matriz en lista
+zon_lst = zones.tolist()
+zon_lst2 = [num for elem in zon_lst for num in elem]
+mylst = [num for elem in zon_lst2 for num in elem]
+# Creando el archivo .zon
+​
+def chunk_list(alist, n):
+    for i in range(0, len(alist), n):
+        yield alist[i:i + n]
+​
+def block_gen(mylst, rows, cols, file_cols, field_len):
+    # mylst is a 1D array whose length matches that of the number of cells in the model
+    # rows, cols: These are the total rows, columns; respectively
+    # Assumes integers for zonation file
+    frmt = '{:>%d}' % field_len
+    zon_str = ''
+    for lay in chunk_list(mylst, (rows * cols)):
+        zon_str += 'INTERNAL          ({:}I{})\n'.format(file_cols, field_len)
+        for block in chunk_list(lay, cols):
+            for line in chunk_list(block, file_cols):
+                zon_str += ''.join([frmt.format(cell) for cell in line]) + '\n'
+    return zon_str
+​
+def write_zb_zonefile(filepath, lays, rows, cols, zon_str):
+    with open(filepath, 'w+') as file:
+        file.write('{:<6}{:<6}{:<6}\n'.format(lays, rows, cols))
+        file.write(zon_str)
+    return
+​
+zon_str = block_gen(mylst, nrow, ncol, 10, 3)
+write_zb_zonefile((os.path.join(model_ws,modelname+'.zon')), nlay, nrow, ncol, zon_str)
+BALANCE TOTAL
+# Convirtiendo la matriz en lista
+idomain_zone = idomain.astype(int)
+zon_lst_total = idomain_zone.tolist() # Se usa matriz de dominio
+zon_lst2_total = [num for elem in zon_lst_total for num in elem]
+mylst_total = [num for elem in zon_lst2_total for num in elem]
+# Creando el archivo .zon
+zon_str_total = block_gen(mylst_total, nrow, ncol, 10, 3)
+write_zb_zonefile((os.path.join(model_ws,modelname+'.zontotal')), nlay, nrow, ncol, zon_str_total)
+BALANCE POR MASAS SUBTERRANEAS
+#Leyendo los shapefiles
+Masa_RU_GIS = gpd.read_file("../../Inputs/Data_GIS/Shp/Masas/Masa_RU.shp")
+Masa_CM_GIS = gpd.read_file("../../Inputs/Data_GIS/Shp/Masas/Masa_CM.shp")
+# Creando una funcion para las masas:
+def Funcion_Masas(Masa, n):
+    Masa_Geom = Masa.iloc[0].geometry #Extrayendo la propiedad de geometria de los shapefiles por zonas 
+    Masa_intersected = ix.intersect_polygon(Masa_Geom) #Intersecando el shapefile y la grilla
+    
+    Masas_Zonas = np.zeros((nlay, nrow, ncol),dtype=np.int32) #Creando matrices nlay,nrow,ncol por zonas:
+    for i in Masa_intersected.cellids:
+        Masas_Zonas[0,i[0],i[1]] = n
+        Masas_Zonas[1,i[0],i[1]] = n
+        Masas_Zonas[2,i[0],i[1]] = n
+    return Masas_Zonas
+Masa_RU = Funcion_Masas(Masa_RU_GIS,1) # 1: Masa Requena-Utiel
+Masa_CM = Funcion_Masas(Masa_CM_GIS,2) # 2: Masa Cabrillas-Malacara
+Masa_RUCM = Masa_RU + Masa_CM
+# Convirtiendo la matriz en lista
+Masas_lst = Masa_RUCM.tolist()
+Masas_lst2 = [num for elem in Masas_lst for num in elem]
+Masas_mylst = [num for elem in Masas_lst2 for num in elem]
+# Creando el archivo .zon
+Masas_str_total = block_gen(Masas_mylst, nrow, ncol, 10, 3)
+write_zb_zonefile((os.path.join(model_ws,modelname+'.zon_masas')), nlay, nrow, ncol, Masas_str_total)
