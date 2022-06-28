@@ -32,6 +32,14 @@ def test_mflistfile():
     # TODO: there are two return types, but only one is documented
     assert isinstance(bud, np.ndarray) or bud is None
 
+    ts_lens = mflist.get_tslens()
+    # verify time step lengths add up to time step total times, within
+    # rounding error
+    ts_len_total = 0.0
+    for time, ts_len in zip(times, ts_lens):
+        ts_len_total += ts_len
+        assert abs(ts_len_total - time) < 1.0
+
     # plt.bar(bud['index'], bud['value'])
     # plt.xticks(bud['index'], bud['name'], rotation=45, size=6)
     # plt.show()
@@ -99,7 +107,7 @@ def test_mf6listfile():
         "RCH3_OUT",
     ]:
         assert item in names, f"{item} not found in names"
-    assert len(names) == 25
+    assert len(names) == 26
     inc = mflist.get_incremental()
     return
 
