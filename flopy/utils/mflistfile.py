@@ -739,12 +739,12 @@ class ListBudget:
         # build dtype for recarray
         dtype_tups = [
             ("totim", np.float32),
-            ("tslen", np.float32),
             ("time_step", np.int32),
             ("stress_period", np.int32),
         ]
         for entry in self.entries:
             dtype_tups.append((entry, np.float32))
+        dtype_tups.append(("tslen", np.float32))
         dtype = np.dtype(dtype_tups)
 
         # create recarray
