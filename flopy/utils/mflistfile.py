@@ -158,6 +158,26 @@ class ListBudget:
             return None
         return self.inc["totim"].tolist()
 
+    def get_tslens(self):
+        """
+        Get a list of unique water budget time step lengths in the list file.
+
+        Returns
+        -------
+        out : list of floats
+            List contains unique water budget simulation time step lengths
+            (tslen) in list file.
+
+        Examples
+        --------
+        >>> mf_list = MfListBudget('my_model.list')
+        >>> ts_lengths = mf_list.get_tslens()
+
+        """
+        if not self._isvalid:
+            return None
+        return self.inc["tslen"].tolist()
+
     def get_kstpkper(self):
         """
         Get a list of unique stress periods and time steps in the list file
@@ -700,6 +720,7 @@ class ListBudget:
         if incdict is None and cumdict is None:
             return
         totim = []
+        tslens = []
         for ts, sp, seekpoint in self.idx_map:
             tinc, tcum = self._get_sp(ts, sp, seekpoint)
             for entry in self.entries:
@@ -710,6 +731,7 @@ class ListBudget:
             seekpoint = self._seek_to_string("TIME SUMMARY AT END")
             tslen, sptim, tt = self._get_totim(ts, sp, seekpoint)
             totim.append(tt)
+            tslens.append(tslen)
 
         # get kstp and kper
         idx_array = np.array(self.idx_map)
@@ -722,6 +744,7 @@ class ListBudget:
         ]
         for entry in self.entries:
             dtype_tups.append((entry, np.float32))
+        dtype_tups.append(("tslen", np.float32))
         dtype = np.dtype(dtype_tups)
 
         # create recarray
@@ -737,6 +760,7 @@ class ListBudget:
         # file the totim, time_step, and stress_period columns for the
         # incremental and cumulative recarrays (zero-based kstp,kper)
         self.inc["totim"] = np.array(totim)[:]
+        self.inc["tslen"] = np.array(tslens)[:]
         self.inc["time_step"] = idx_array[:, 0] - 1
         self.inc["stress_period"] = idx_array[:, 1] - 1
 
