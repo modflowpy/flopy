@@ -171,7 +171,7 @@ class ListBudget:
         Examples
         --------
         >>> mf_list = MfListBudget('my_model.list')
-        >>> time_lengths = mf_list.get_tslens()
+        >>> ts_lengths = mf_list.get_tslens()
 
         """
         if not self._isvalid:
