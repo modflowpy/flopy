@@ -5,9 +5,17 @@ To run the autotests you will need to install `pytest`
 
     pip install pytest
 
-If you want to run the autotests you should install `pytest-xd`
+If you want to run the autotests you should install `pytest-xdist`
 
-    pip install pytest pytest-xd
+    pip install pytest pytest-xdist
+
+To install all packages required for testing at once, use
+
+    pip install ".[test]"
+
+To install all optional packages at once, use
+
+    pip install ".[optional]"
 
 ### Running tests
 If you want to run a single autotest run the following command from the 
@@ -35,7 +43,7 @@ If you want to run the autotests in parallel add `-n auto` after `-v` in your
 
     pytest -v -n auto t001_test.py
 
-The `auto` keyword indicates that the `pytest-xd` extension will query your 
+The `auto` keyword indicates that the `pytest-xdist` extension will query your 
 computer to determine the number of processors available. You can specify a 
 specific number of processors to use (for example, `-n 2` to run on two 
 processors). 
