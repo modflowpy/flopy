@@ -61,7 +61,7 @@ On OSX you may see unidentified developer warnings upon running the executables.
 
     `for f in *; do xattr -d com.apple.quarantine "$f" && chmod +x "$f"; done;`
 
-When run on OSX, certain tests may also produce errors like
+When run on OSX, certain tests (e.g., `t032_test.py::test_polygon_from_ij`) may produce errors like
 
 ```shell
 URLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1129)'))
