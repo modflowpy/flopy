@@ -168,13 +168,13 @@ A number of scripts and notebooks to demonstrate `flopy` usage are located in `e
 
 ### Scripts
 
-Example scripts are in `examples/scripts` and `examples/Tutorials`.
+[Example scripts](docs/script_examples.md) are in `examples/scripts` and `examples/Tutorials`.
 
 Some of the scripts use [optional dependencies](docs/flopy_method_dependencies.md).
 
 ### Notebooks
 
-Example notebooks are located in `examples/Notebooks`.
+[Example notebooks](docs/notebook_examples.md) are located in `examples/Notebooks`.
 
 To run the example notebooks you will need `jupyter` installed. Some of the notebooks use [optional dependencies](docs/flopy_method_dependencies.md) as well.
 
