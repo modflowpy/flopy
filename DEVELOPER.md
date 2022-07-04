@@ -4,7 +4,7 @@ This document describes how to set up a development environment for FloPy. Detai
 
 - [Installation](#installation)
 - [Running tests](#running-tests)
-- [Running example notebooks](#running-example-notebooks)
+- [Running examples](#running-examples)
 
 ## Installation
 
@@ -162,12 +162,28 @@ def test_mytest():
 Pull requests with new autotests will not be accepted if tests do not follow
 the example provided above. Make sure your pull request also conforms to the [contribution guidelines](CONTRIBUTING.md) before submitting.
 
-## Running example notebooks
+## Running examples
 
-To run the example notebooks you will need `jupyter` installed. Some of the notebooks use [optional dependencies](docs/flopy_method_dependencies.md) as well.
+A number of scripts and notebooks to demonstrate `flopy` usage are located in `examples/`.
 
-To install all optional packages at once, use
+### Scripts
+
+Example scripts are in `examples/scripts` and `examples/Tutorials`.
+
+Some of the scripts use [optional dependencies](docs/flopy_method_dependencies.md). To install all optional dependencies at once, use
 
     pip install ".[optional]"
 
+### Notebooks
 
+Example notebooks are located in `examples/Notebooks`.
+
+To run the example notebooks you will need `jupyter` installed. Some of the notebooks use [optional dependencies](docs/flopy_method_dependencies.md) as well.
+
+To install jupyter and all optional dependencies at once, use
+
+    pip install jupyter ".[optional]"
+
+To start a local Jupyter notebook server, run
+
+    jupyter notebook
