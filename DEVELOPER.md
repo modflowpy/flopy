@@ -17,7 +17,7 @@ To develop `flopy` you must have the following software installed on your machin
 
 ### Python
 
-Install Python, via [standalone download](https://www.python.org/downloads/) or a distribution like [Anaconda](https://www.anaconda.com/products/individual) or [miniconda](https://docs.conda.io/en/latest/miniconda.html). You will need Python 3.8.1 or greater. (An [infinite recursion bug](https://github.com/python/cpython/pull/17098) in 3.8.0's [`shutil.copytree`](https://github.com/python/cpython/commit/65c92c5870944b972a879031abd4c20c4f0d7981) affects a few tests.)
+Install Python 3.7.x or >=3.8.1, via [standalone download](https://www.python.org/downloads/) or a distribution like [Anaconda](https://www.anaconda.com/products/individual) or [miniconda](https://docs.conda.io/en/latest/miniconda.html). (An [infinite recursion bug](https://github.com/python/cpython/pull/17098) in 3.8.0's [`shutil.copytree`](https://github.com/python/cpython/commit/65c92c5870944b972a879031abd4c20c4f0d7981) affects a few tests.)
 
 Then install `flopy` and core dependencies from the project root
 
@@ -170,9 +170,7 @@ A number of scripts and notebooks to demonstrate `flopy` usage are located in `e
 
 Example scripts are in `examples/scripts` and `examples/Tutorials`.
 
-Some of the scripts use [optional dependencies](docs/flopy_method_dependencies.md). To install all optional dependencies at once, use
-
-    pip install ".[optional]"
+Some of the scripts use [optional dependencies](docs/flopy_method_dependencies.md).
 
 ### Notebooks
 
