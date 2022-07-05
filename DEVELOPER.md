@@ -87,12 +87,10 @@ If you want to run all of the standard autotests (tests that match
 
     pytest -v 
 
-If you want to run all of the autotests the match a pattern run a command like the following
+If you want to run all of the autotests that match a pattern run a command like the following
 from the `autotest` directory
 
     pytest -v -k "t01"
-
-This would run autotests 10 through 19.
 
 ### Running tests in parallel
 
