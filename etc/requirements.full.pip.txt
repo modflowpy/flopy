@@ -18,7 +18,7 @@ affine
 scipy
 pandas
 netcdf4
-pyshp<2.2.0
+pyshp
 rasterio
 fiona
 descartes
