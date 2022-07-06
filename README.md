@@ -127,7 +127,7 @@ To save your and our time, **we will systematically close all issues that are re
 Contributing
 ------------------------------------------------
 
-Bug reports, code contributions, or improvements to the documentation are welcome from the community. Prior to contributing, please read up on our guidelines for [contributing](CONTRIBUTING.md) and then check out one of our issues in the [hotlist: community-help](https://github.com/modflowpy/flopy/labels/hotlist%3A%20community%20help).
+Bug reports, code contributions, or improvements to the documentation are welcome from the community. See the [developer docs](DEVELOPER.md) to begin. Please also read up on our guidelines for [contributing](CONTRIBUTING.md) and check out our issues in the [hotlist: community-help](https://github.com/modflowpy/flopy/labels/hotlist%3A%20community%20help).
 
 
 <a name="relcand"></a>Installing the latest FloPy release candidate
