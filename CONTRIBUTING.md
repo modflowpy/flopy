@@ -54,7 +54,7 @@ Before you submit your Pull Request (PR) consider the following guidelines:
      git checkout -b my-fix-branch develop
      ```
 
-4. Create your patch, **including appropriate test cases**. See [Autotesting,md](autotest/Autotesting.md) for guidelines for constructing autotests. 
+4. Create your patch, **including appropriate test cases**. See [DEVELOPER,md](DEVELOPER.md#running-tests) for guidelines for constructing autotests. 
 5. Run the [isort import sorter](https://github.com/PyCQA/isort) and [black formatter](https://github.com/psf/black) on Flopy source files from the git repository `autotest` directory using:
 
    ```shell
