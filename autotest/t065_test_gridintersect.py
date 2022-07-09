@@ -874,6 +874,57 @@ def test_rect_grid_polygon_with_hole():
     return result
 
 
+def test_rect_grid_polygon_contains_centroid(rtree=True):
+    # avoid test fail when shapely not available
+    try:
+        import shapely
+    except:
+        return
+    gr = get_rect_grid()
+    ix = GridIntersect(gr)
+    p = Polygon(
+        [(6.0, 5.0), (4.0, 16.0), (25.0, 14.0), (25.0, -5.0), (6.0, -5.0)],
+        holes=[[(9.0, -1), (9, 11), (21, 11), (21, -1)]],
+    )
+    result = ix.intersect(p, contains_centroid=True)
+    assert len(result) == 1
+    return
+
+
+def test_rect_grid_polygon_min_area(rtree=True):
+    # avoid test fail when shapely not available
+    try:
+        import shapely
+    except:
+        return
+    gr = get_rect_grid()
+    ix = GridIntersect(gr)
+    p = Polygon(
+        [(5.0, 5.0), (5.0, 15.0), (25.0, 15.0), (25.0, -5.0), (5.0, -5.0)],
+        holes=[[(9.0, -1), (9, 11), (21, 11), (21, -1)]],
+    )
+    result = ix.intersect(p, min_area_fraction=0.4)
+    assert len(result) == 2
+    return
+
+
+def test_rect_grid_polygon_centroid_and_min_area():
+    # avoid test fail when shapely not available
+    try:
+        import shapely
+    except:
+        return
+    gr = get_rect_grid()
+    ix = GridIntersect(gr)
+    p = Polygon(
+        [(5.0, 5.0), (5.0, 15.0), (25.0, 14.0), (25.0, -5.0), (5.0, -5.0)],
+        holes=[[(9.0, -1), (9, 11), (21, 11), (21, -1)]],
+    )
+    result = ix.intersect(p, min_area_fraction=0.35, contains_centroid=True)
+    assert len(result) == 1
+    return
+
+
 # %% test polygon shapely
 
 
@@ -1133,6 +1184,43 @@ def test_tri_grid_polygon_with_hole(rtree=True):
     assert result.areas.sum() == 104.0
     return result
 
+
+def test_tri_grid_polygon_min_area(rtree=True):
+    # avoid test fail when shapely not available
+    try:
+        import shapely
+    except:
+        return
+    gr = get_tri_grid()
+    if gr == -1:
+        return
+    ix = GridIntersect(gr, rtree=rtree)
+    p = Polygon(
+        [(5.0, 5.0), (5.0, 15.0), (25.0, 15.0), (25.0, -5.0), (5.0, -5.0)],
+        holes=[[(9.0, -1), (9, 11), (21, 11), (21, -1)]],
+    )
+    result = ix.intersect(p, min_area_fraction=0.5)
+    assert len(result) == 2
+    return
+
+
+def test_tri_grid_polygon_contains_centroid(rtree=True):
+    # avoid test fail when shapely not available
+    try:
+        import shapely
+    except:
+        return
+    gr = get_tri_grid()
+    if gr == -1:
+        return
+    ix = GridIntersect(gr, rtree=rtree)
+    p = Polygon(
+        [(5.0, 5.0), (6.0, 14.0), (25.0, 15.0), (25.0, -5.0), (5.0, -5.0)],
+        holes=[[(9.0, -1), (9, 11), (21, 11), (21, -1)]],
+    )
+    result = ix.intersect(p, contains_centroid=True)
+    assert len(result) == 2
+    return
 
 # %% test rotated offset grids
 
@@ -1417,3 +1505,54 @@ def test_raster_sampling_methods():
             raise AssertionError(
                 f"{method} resampling returning incorrect values"
             )
+
+
+# %%
+if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+
+    gr = get_rect_grid()
+    ix = GridIntersect(gr, method="structured")
+    p = Polygon(
+        [(6.0, 5.0), (4.0, 16.0), (25.0, 14.0), (25.0, -5.0), (6.0, -5.0)],
+        holes=[[(9.0, -1), (9, 11), (21, 11), (21, -1)]],
+    )
+    result = ix.intersect(p, contains_centroid=True)
+    print(len(result))
+    fig, ax = plt.subplots()
+    gr.plot(ax=ax)
+    ix.plot_polygon(result, ax=ax)
+
+    p = Polygon(
+        [(5.0, 5.0), (5.0, 15.0), (25.0, 15.0), (25.0, -5.0), (5.0, -5.0)],
+        holes=[[(9.0, -1), (9, 11), (21, 11), (21, -1)]],
+    )
+    result = ix.intersect(p, min_area_fraction=0.4)
+    print(len(result))
+    fig, ax = plt.subplots()
+    gr.plot(ax=ax)
+    ix.plot_polygon(result, ax=ax)
+
+    p = Polygon(
+        [(5.0, 5.0), (5.0, 15.0), (25.0, 14.0), (25.0, -5.0), (5.0, -5.0)],
+        holes=[[(9.0, -1), (9, 11), (21, 11), (21, -1)]],
+    )
+    result = ix.intersect(p, min_area_fraction=0.35, contains_centroid=True)
+    print(len(result))
+    fig, ax = plt.subplots()
+    gr.plot(ax=ax)
+    ix.plot_polygon(result, ax=ax)
+
+    rtree = True
+    gr = get_tri_grid()
+    ix = GridIntersect(gr, rtree=rtree)
+    p = Polygon(
+        [(5.0, 5.0), (6.0, 14.0), (25.0, 15.0), (25.0, -5.0), (5.0, -5.0)],
+        holes=[[(9.0, -1), (9, 11), (21, 11), (21, -1)]],
+    )
+    result = ix.intersect(p, min_area_fraction=0.5)
+    fig, ax = plt.subplots()
+    gr.plot(ax=ax)
+    ix.plot_polygon(result, ax=ax)
+
+    plt.show()

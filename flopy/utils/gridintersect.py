@@ -187,7 +187,13 @@ class GridIntersect:
             )
 
     def intersect(
-        self, shp, shapetype=None, sort_by_cellid=True, keepzerolengths=False
+        self,
+        shp,
+        shapetype=None,
+        sort_by_cellid=True,
+        keepzerolengths=False,
+        contains_centroid=False,
+        min_area_fraction=None,
     ):
         """Method to intersect a shape with a model grid.
 
@@ -205,7 +211,15 @@ class GridIntersect:
             is True
         keepzerolengths : bool
             boolean method to keep zero length intersections for
-            linestring intersection, used when shp is of type "linestring"
+            linestring intersection, only used if shape type is "linestring"
+        contains_centroid :  bool, optional
+            if True, only store intersection result if cell centroid is
+            contained within intersection shape, only used if shape type
+            is "polygon"
+        min_area_fraction : float, optional
+            float defining minimum intersection area threshold, if
+            intersection area is smaller than min_frac_area * cell_area, do
+            not store intersection result, only used if shape type is "polygon"
 
         Returns
         -------
@@ -240,9 +254,18 @@ class GridIntersect:
                 self.method == "structured"
                 and self.mfgrid.grid_type == "structured"
             ):
-                rec = self._intersect_polygon_structured(shp)
+                rec = self._intersect_polygon_structured(
+                    shp,
+                    contains_centroid=contains_centroid,
+                    min_area_fraction=min_area_fraction
+                )
             else:
-                rec = self._intersect_polygon_shapely(shp, sort_by_cellid)
+                rec = self._intersect_polygon_shapely(
+                    shp,
+                    sort_by_cellid=sort_by_cellid,
+                    contains_centroid=contains_centroid,
+                    min_area_fraction=min_area_fraction
+                )
         else:
             err = f"Shapetype {gu.shapetype} is not supported"
             raise TypeError(err)
@@ -593,7 +616,13 @@ class GridIntersect:
 
         return rec
 
-    def _intersect_polygon_shapely(self, shp, sort_by_cellid=True):
+    def _intersect_polygon_shapely(
+        self,
+        shp,
+        sort_by_cellid=True,
+        contains_centroid=False,
+        min_area_fraction=None,
+    ):
         """intersect with Polygon or MultiPolygon.
 
         Parameters
@@ -603,6 +632,13 @@ class GridIntersect:
         sort_by_cellid : bool, optional
             flag whether to sort cells by id, used to ensure node
             with lowest id is returned, by default True
+        contains_centroid :  bool, optional
+            if True, only store intersection result if cell centroid is
+            contained within intersection shape
+        min_area_fraction : float, optional
+            float defining minimum intersection area threshold, if
+            intersection area is smaller than min_frac_area * cell_area, do
+            not store intersection result
 
         Returns
         -------
@@ -640,6 +676,17 @@ class GridIntersect:
                 # don't store intersections with 0 area
                 if c.area == 0.0:
                     continue
+                # option: only store result if cell centroid is contained
+                # within intersection result
+                if contains_centroid:
+                    if not c.intersects(r.centroid):
+                        continue
+                # option: min_area_fraction, only store if intersected area
+                # is larger than fraction * cell_area
+                if min_area_fraction:
+                    if c.area < (min_area_fraction * r.area):
+                        continue
+
                 verts = c.__geo_interface__["coordinates"]
                 isectshp.append(c)
                 areas.append(c.area)
@@ -1287,7 +1334,9 @@ class GridIntersect:
 
         return nodelist
 
-    def _intersect_polygon_structured(self, shp):
+    def _intersect_polygon_structured(
+        self, shp, contains_centroid=False, min_area_fraction=None
+    ):
         """intersect polygon with a structured grid. Uses bounding box of the
         Polygon to limit search space.
 
@@ -1301,6 +1350,13 @@ class GridIntersect:
         ----------
         shp : shapely.geometry.Polygon
             polygon to intersect with the grid
+        contains_centroid :  bool, optional
+            if True, only store intersection result if cell centroid is
+            contained within intersection shape
+        min_area_fraction : float, optional
+            float defining minimum intersection area threshold, if
+            intersection area is smaller than min_frac_area * cell_area, do
+            not store intersection result
 
         Returns
         -------
@@ -1351,46 +1407,55 @@ class GridIntersect:
             node_polygon = shapely_geo.Polygon(cell_coords)
             if shp.intersects(node_polygon):
                 intersect = shp.intersection(node_polygon)
-                if intersect.area > 0.0:
-                    nodelist.append((i, j))
-                    areas.append(intersect.area)
 
-                    # if necessary, transform coordinates back to real
-                    # world coordinates
-                    if (
-                        self.mfgrid.angrot != 0.0
-                        or self.mfgrid.xoffset != 0.0
-                        or self.mfgrid.yoffset != 0.0
-                    ):
-                        v_realworld = []
-                        if intersect.geom_type.startswith("Multi"):
-                            for ipoly in intersect:
-                                v_realworld += (
-                                    self._transform_geo_interface_polygon(
-                                        ipoly
-                                    )
-                                )
-                        else:
+                # only store results if area > 0.0
+                if intersect.area == 0.0:
+                    continue
+                # option: only store result if cell centroid is contained
+                # within intersection result
+                if contains_centroid:
+                    if not intersect.intersects(node_polygon.centroid):
+                        continue
+                # option: min_area_fraction, only store if intersected area
+                # is larger than fraction * cell_area
+                if min_area_fraction:
+                    if (intersect.area <
+                            (min_area_fraction * node_polygon.area)):
+                        continue
+
+                nodelist.append((i, j))
+                areas.append(intersect.area)
+
+                # if necessary, transform coordinates back to real
+                # world coordinates
+                if (
+                    self.mfgrid.angrot != 0.0
+                    or self.mfgrid.xoffset != 0.0
+                    or self.mfgrid.yoffset != 0.0
+                ):
+                    v_realworld = []
+                    if intersect.geom_type.startswith("Multi"):
+                        for ipoly in intersect:
                             v_realworld += (
-                                self._transform_geo_interface_polygon(
-                                    intersect
-                                )
+                                self._transform_geo_interface_polygon(ipoly)
                             )
-                        intersect_realworld = affinity_loc.rotate(
-                            intersect, self.mfgrid.angrot, origin=(0.0, 0.0)
-                        )
-                        intersect_realworld = affinity_loc.translate(
-                            intersect_realworld,
-                            self.mfgrid.xoffset,
-                            self.mfgrid.yoffset,
-                        )
                     else:
-                        v_realworld = intersect.__geo_interface__[
-                            "coordinates"
-                        ]
-                        intersect_realworld = intersect
-                    ixshapes.append(intersect_realworld)
-                    vertices.append(v_realworld)
+                        v_realworld += self._transform_geo_interface_polygon(
+                            intersect
+                        )
+                    intersect_realworld = affinity_loc.rotate(
+                        intersect, self.mfgrid.angrot, origin=(0.0, 0.0)
+                    )
+                    intersect_realworld = affinity_loc.translate(
+                        intersect_realworld,
+                        self.mfgrid.xoffset,
+                        self.mfgrid.yoffset,
+                    )
+                else:
+                    v_realworld = intersect.__geo_interface__["coordinates"]
+                    intersect_realworld = intersect
+                ixshapes.append(intersect_realworld)
+                vertices.append(v_realworld)
 
         rec = np.recarray(
             len(nodelist),
