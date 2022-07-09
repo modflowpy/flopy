@@ -1,5 +1,7 @@
 import copy
 import os
+import shutil
+from pathlib import Path
 
 import numpy as np
 from ci_framework import FlopyTestSetup, base_test_dir
@@ -76,8 +78,8 @@ def test001a_tharmonic():
     sim.set_all_data_external(external_data_folder="data")
     sim.write_simulation(silent=True)
     # verify external data written to correct location
-    data_path = os.path.join(run_folder, "data", "flow15.dis_botm.txt")
-    assert os.path.exists(data_path)
+    data_folder = os.path.join(run_folder, "data", "flow15.dis_botm.txt")
+    assert os.path.exists(data_folder)
     # model export test
     model = sim.get_model(model_name)
     model.export(f"{model.model_ws}/tharmonic.nc")
@@ -171,13 +173,12 @@ def test003_gwfs_disv():
     test_ex_name = "test003_gwfs_disv"
     model_name = "gwf_1"
 
-    pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
+    data_folder = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = f"{base_dir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    test_setup = FlopyTestSetup(verbose=True)
-    test_setup.add_test_dir([run_folder, save_folder])
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=[run_folder, save_folder])
 
-    expected_output_folder = os.path.join(pth, "expected_output")
+    expected_output_folder = os.path.join(data_folder, "expected_output")
     expected_head_file_a = os.path.join(
         expected_output_folder, "model_unch.hds"
     )
@@ -192,7 +193,7 @@ def test003_gwfs_disv():
     array_util = PyListUtil()
 
     # load simulation
-    sim = MFSimulation.load(model_name, "mf6", exe_name, pth, verify_data=True)
+    sim = MFSimulation.load(model_name, "mf6", exe_name, data_folder, verify_data=True)
 
     # make temp folder to save simulation
     sim.set_sim_path(run_folder)
@@ -224,7 +225,7 @@ def test003_gwfs_disv():
 
     model = sim.get_model(model_name)
     if shapefile:
-        model.export(f"{pth}/{test_ex_name}.shp")
+        model.export(f"{run_folder}/{test_ex_name}.shp")
 
     # change some settings
     chd_head_left = model.get_package("CHD_LEFT")
@@ -344,8 +345,7 @@ def test006_gwf3():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = f"{base_dir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    test_setup = FlopyTestSetup(verbose=True)
-    test_setup.add_test_dir([run_folder, save_folder])
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=[run_folder, save_folder])
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -359,7 +359,7 @@ def test006_gwf3():
 
     # load simulation
     sim = MFSimulation.load(model_name, "mf6", exe_name, pth, verify_data=True)
-
+    sim.set_sim_path(run_folder)
     model = sim.get_model()
     disu = model.get_package("disu")
     # test switching disu array to internal array
@@ -626,13 +626,17 @@ def test006_2models_mvr():
     sim_name = "test006_2models_mvr"
     model_names = ["parent", "child"]
 
-    pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
+    data_folder = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = f"{base_dir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    test_setup = FlopyTestSetup(verbose=True)
-    test_setup.add_test_dir([run_folder, save_folder])
 
-    expected_output_folder = os.path.join(pth, "expected_output")
+    # copy example data into working directory
+    if Path(data_folder).is_dir():
+        shutil.copytree(data_folder, run_folder)
+
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=[run_folder, save_folder])
+
+    expected_output_folder = os.path.join(run_folder, "expected_output")
     expected_head_file_a = os.path.join(
         expected_output_folder, "model1_unch.hds"
     )
@@ -651,7 +655,7 @@ def test006_2models_mvr():
     )
 
     # load simulation
-    sim = MFSimulation.load(sim_name, "mf6", exe_name, pth, verify_data=True)
+    sim = MFSimulation.load(sim_name, "mf6", exe_name, data_folder, verify_data=True)
 
     # make temp folder to save simulation
     sim.set_sim_path(run_folder)
@@ -777,7 +781,7 @@ def test006_2models_mvr():
     ]
     for load_only in load_only_lists:
         sim = MFSimulation.load(
-            sim_name, "mf6", exe_name, pth, load_only=load_only
+            sim_name, "mf6", exe_name, data_folder, load_only=load_only
         )
         for model_name in model_names:
             model = sim.get_model(model_name)
@@ -796,7 +800,7 @@ def test006_2models_mvr():
     # load package by name
     load_only_list = ["ic6", "maw", "npf_p1", "oc_p2", "ims"]
     sim = MFSimulation.load(
-        sim_name, "mf6", exe_name, pth, load_only=load_only_list
+        sim_name, "mf6", exe_name, data_folder, load_only=load_only_list
     )
     model_parent = sim.get_model("parent")
     model_child = sim.get_model("child")
@@ -808,8 +812,9 @@ def test006_2models_mvr():
     if run:
         # test running a runnable load_only case
         sim = MFSimulation.load(
-            sim_name, "mf6", exe_name, pth, load_only=load_only_lists[0]
+            sim_name, "mf6", exe_name, data_folder, load_only=load_only_lists[0]
         )
+        sim.set_sim_path(run_folder)
         success, buff = sim.run_simulation()
         assert success, f"simulation {sim.name} did not run"
 
@@ -824,8 +829,7 @@ def test001e_uzf_3lay():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = f"{base_dir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    test_setup = FlopyTestSetup(verbose=True)
-    test_setup.add_test_dir([run_folder, save_folder])
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=[run_folder, save_folder])
 
     # load simulation
     sim = MFSimulation.load(model_name, "mf6", exe_name, pth, verify_data=True)
@@ -876,6 +880,7 @@ def test001e_uzf_3lay():
         sim = MFSimulation.load(
             model_name, "mf6", exe_name, pth, load_only=load_only
         )
+        sim.set_sim_path(run_folder)
         model = sim.get_model()
         for package in model_package_check:
             assert (package in model.package_type_dict) == (
@@ -886,6 +891,7 @@ def test001e_uzf_3lay():
         sim = MFSimulation.load(
             model_name, "mf6", exe_name, pth, load_only=load_only_lists[0]
         )
+        sim.set_sim_path(run_folder)
         success, buff = sim.run_simulation()
         assert success, f"simulation {sim.name} from load did not run"
 
