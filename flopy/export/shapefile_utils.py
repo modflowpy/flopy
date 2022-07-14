@@ -54,7 +54,7 @@ def write_gridlines_shapefile(filename, mg):
 
 
 def write_grid_shapefile(
-    filename,
+    path,
     mg,
     array_dict,
     nan_val=np.nan,
@@ -66,8 +66,8 @@ def write_grid_shapefile(
 
     Parameters
     ----------
-    filename : str
-        shapefile file name path
+    path : str
+        shapefile file path
     mg : flopy.discretization.Grid object
         flopy model grid
     array_dict : dict
@@ -85,7 +85,7 @@ def write_grid_shapefile(
 
     """
     shapefile = import_optional_dependency("shapefile")
-    w = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
+    w = shapefile.Writer(path, shapeType=shapefile.POLYGON)
     w.autoBalance = 1
 
     if mg.__class__.__name__ == "SpatialReference":
@@ -196,14 +196,14 @@ def write_grid_shapefile(
 
     # close
     w.close()
-    print(f"wrote {filename}")
+    print(f"wrote {path}")
     # write the projection file
-    write_prj(filename, mg, epsg, prj)
+    write_prj(path, mg, epsg, prj)
     return
 
 
 def model_attributes_to_shapefile(
-    filename, ml, package_names=None, array_dict=None, **kwargs
+    path, ml, package_names=None, array_dict=None, **kwargs
 ):
     """
     Wrapper function for writing a shapefile of model data.  If package_names
@@ -212,8 +212,8 @@ def model_attributes_to_shapefile(
 
     Parameters
     ----------
-    filename : string
-        name of the shapefile to write
+    path : string
+        path to write the shapefile to
     ml : flopy.mbase
         model instance
     package_names : list of package names (e.g. ["dis","lpf"])
@@ -373,10 +373,10 @@ def model_attributes_to_shapefile(
                                 array_dict[name] = arr
 
     # write data arrays to a shapefile
-    write_grid_shapefile(filename, grid, array_dict)
+    write_grid_shapefile(path, grid, array_dict)
     epsg = kwargs.get("epsg", None)
     prj = kwargs.get("prj", None)
-    write_prj(filename, grid, epsg, prj)
+    write_prj(path, grid, epsg, prj)
 
 
 def shape_attr_name(name, length=6, keep_layer=False):

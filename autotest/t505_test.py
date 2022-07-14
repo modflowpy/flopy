@@ -1,4 +1,6 @@
 import os
+import shutil
+from pathlib import Path
 
 import numpy as np
 from ci_framework import FlopyTestSetup, base_test_dir
@@ -900,14 +902,16 @@ def test_np001():
     test_ex_name = "np001"
     model_name = "np001_mod"
 
+    data_path = os.path.join("..", "examples", "data", "mf6", "create_tests", test_ex_name)
     run_folder = f"{base_dir}_{test_ex_name}"
+
+    # copy example data into working directory
+    if Path(data_path).is_dir():
+        shutil.copytree(data_path, run_folder)
+
     test_setup = FlopyTestSetup(verbose=True, test_dirs=run_folder)
 
-    pth = os.path.join(
-        "..", "examples", "data", "mf6", "create_tests", test_ex_name
-    )
-
-    expected_output_folder = os.path.join(pth, "expected_output")
+    expected_output_folder = os.path.join(data_path, "expected_output")
     expected_head_file = os.path.join(expected_output_folder, "np001_mod.hds")
     expected_cbc_file = os.path.join(expected_output_folder, "np001_mod.cbc")
 
@@ -954,9 +958,10 @@ def test_np001():
         sim_name=test_ex_name,
         version="mf6",
         exe_name=exe_name,
-        sim_ws=pth,
+        sim_ws=data_path,
         write_headers=False,
     )
+    sim.set_sim_path(run_folder)
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis_package = ModflowTdis(
         sim, time_units="DAYS", nper=1, perioddata=[(2.0, 1, 1.0)]
@@ -1488,16 +1493,16 @@ def test_np002():
     test_ex_name = "np002"
     model_name = "np002_mod"
 
+    data_folder = os.path.join("..", "examples", "data", "mf6", "create_tests", test_ex_name)
     run_folder = f"{base_dir}_{test_ex_name}"
+
+    # copy example data into working directory
+    if Path(data_folder).is_dir():
+        shutil.copytree(data_folder, run_folder)
+
     test_setup = FlopyTestSetup(verbose=True, test_dirs=run_folder)
 
-    pth = os.path.join(
-        "..", "examples", "data", "mf6", "create_tests", test_ex_name
-    )
-    # pth_for_mf = os.path.join("..", "..", "..", pth)
-    pth_for_mf = os.path.join("..", "..", pth)
-
-    expected_output_folder = os.path.join(pth, "expected_output")
+    expected_output_folder = os.path.join(data_folder, "expected_output")
     expected_head_file = os.path.join(expected_output_folder, "np002_mod.hds")
     expected_cbc_file = os.path.join(expected_output_folder, "np002_mod.cbc")
 
@@ -1509,6 +1514,7 @@ def test_np002():
         sim_ws=run_folder,
         nocheck=True,
     )
+    sim.set_sim_path(run_folder)
     sim.simulation_data.max_columns_of_data = 22
 
     name = sim.name_file
@@ -1561,8 +1567,7 @@ def test_np002():
             100.0,
         ],
     }
-    botm_file = os.path.join(pth_for_mf, "botm.txt")
-    botm = {"filename": botm_file, "factor": 1.0}
+    botm = {"filename": 'botm.txt', "factor": 1.0}
     dis_package = ModflowGwfdis(
         model,
         length_units="FEET",
@@ -1772,20 +1777,23 @@ def test021_twri():
     test_ex_name = "test021_twri"
     model_name = "twri"
 
+    data_folder = os.path.join("..", "examples", "data", "mf6", "create_tests", test_ex_name)
     run_folder = f"{base_dir}_{test_ex_name}"
+
+    # copy example data into working directory
+    if Path(data_folder).is_dir():
+        shutil.copytree(data_folder, run_folder)
+
     test_setup = FlopyTestSetup(verbose=True, test_dirs=run_folder)
 
-    pth = os.path.join(
-        "..", "examples", "data", "mf6", "create_tests", test_ex_name
-    )
-
-    expected_output_folder = os.path.join(pth, "expected_output")
+    expected_output_folder = os.path.join(data_folder, "expected_output")
     expected_head_file = os.path.join(expected_output_folder, "twri.hds")
 
     # create simulation
     sim = MFSimulation(
-        sim_name=test_ex_name, version="mf6", exe_name=exe_name, sim_ws=pth
+        sim_name=test_ex_name, version="mf6", exe_name=exe_name, sim_ws=data_folder
     )
+    sim.set_sim_path(run_folder)
     tdis_rc = [(86400.0, 1, 1.0)]
     tdis_package = ModflowTdis(
         sim, time_units="SECONDS", nper=1, perioddata=tdis_rc
@@ -1813,8 +1821,8 @@ def test021_twri():
     fname = "top.bin"
     nrow = 15
     ncol = 15
-    pth = os.path.join(sim.simulation_data.mfpath.get_sim_path(), fname)
-    f = open(pth, "wb")
+    data_folder = os.path.join(sim.simulation_data.mfpath.get_sim_path(), fname)
+    f = open(data_folder, "wb")
     header = flopy.utils.BinaryHeader.create(
         bintype="HEAD",
         precision="double",
@@ -2926,20 +2934,18 @@ def test006_gwf3_disv():
     test_ex_name = "test006_gwf3_disv"
     model_name = "flow"
 
+    data_path = os.path.join("..", "examples", "data", "mf6", "create_tests", test_ex_name)
     run_folder = f"{base_dir}_{test_ex_name}"
     test_setup = FlopyTestSetup(verbose=True, test_dirs=run_folder)
 
-    pth = os.path.join(
-        "..", "examples", "data", "mf6", "create_tests", test_ex_name
-    )
-
-    expected_output_folder = os.path.join(pth, "expected_output")
+    expected_output_folder = os.path.join(data_path, "expected_output")
     expected_head_file = os.path.join(expected_output_folder, "flow.hds")
 
     # create simulation
     sim = MFSimulation(
-        sim_name=test_ex_name, version="mf6", exe_name=exe_name, sim_ws=pth
+        sim_name=test_ex_name, version="mf6", exe_name=exe_name, sim_ws=data_path
     )
+    sim.set_sim_path(run_folder)
     tdis_rc = [(1.0, 1, 1.0)]
     tdis_package = ModflowTdis(
         sim, time_units="DAYS", nper=1, perioddata=tdis_rc
@@ -2962,8 +2968,8 @@ def test006_gwf3_disv():
         relaxation_factor=0.97,
     )
     sim.register_ims_package(ims_package, [model.name])
-    vertices = testutils.read_vertices(os.path.join(pth, "vertices.txt"))
-    c2drecarray = testutils.read_cell2d(os.path.join(pth, "cell2d.txt"))
+    vertices = testutils.read_vertices(os.path.join(data_path, "vertices.txt"))
+    c2drecarray = testutils.read_cell2d(os.path.join(data_path, "cell2d.txt"))
     disv_package = ModflowGwfdisv(
         model,
         ncpl=121,

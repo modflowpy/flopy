@@ -297,8 +297,8 @@ def output_helper(f, ml, oudic, **kwargs):
 
     Parameters
     ----------
-    f : str
-        filename for output - must have .shp or .nc extension
+    f : filepath to write output to (must have .shp or .nc extension)
+        or NetCDF object or dict
     ml : flopy.mbase.ModelInterface derived type
     oudic : dict
         output_filename,flopy datafile/cellbudgetfile instance
@@ -573,8 +573,8 @@ def model_export(f, ml, fmt=None, **kwargs):
     Parameters
     ----------
     f : str
-        file name (".nc" for netcdf or ".shp" for shapefile)
-        or dictionary of ....
+        file path (".nc" for netcdf or ".shp" for shapefile)
+        or NetCDF object or dict
     ml : flopy.modflow.mbase.ModelInterface object
         flopy model object
     fmt : str
@@ -655,7 +655,8 @@ def package_export(f, pak, fmt=None, **kwargs):
     Parameters
     ----------
     f : str
-        output file name (ends in .shp for shapefile or .nc for netcdf)
+        output file path (extension .shp for shapefile or .nc for netcdf)
+        or NetCDF object or dict
     pak : flopy.pakbase.Package object
         package to export
     fmt : str
@@ -676,6 +677,7 @@ def package_export(f, pak, fmt=None, **kwargs):
 
     """
     assert isinstance(pak, PackageInterface)
+
     if isinstance(f, str) and f.lower().endswith(".nc"):
         f = NetCdf(f, pak.parent, **kwargs)
 
@@ -846,7 +848,7 @@ def mflist_export(f, mfl, **kwargs):
     Parameters
     -----------
     f : str
-        filename or existing export instance type (NetCdf only for now)
+        file path or existing export instance type (NetCdf only for now)
     mfl : MfList instance
     **kwargs : keyword arguments
         modelgrid : flopy.discretization.Grid
