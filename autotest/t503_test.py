@@ -129,7 +129,7 @@ def runmodel(exdir):
     test_setup.add_test_dir(base_dir)
 
 
-# for running tests with pytest
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "exdir",
     exdirs,
