@@ -34,8 +34,5 @@ dependencies:
   - geojson
   - vtk
 
-  # external dependencies
-  - requests
-
   # MODFLOW API dependencies
   - bmipy
