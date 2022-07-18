@@ -28,7 +28,7 @@ jobs:
     - name: Checkout flopy repo
       uses: actions/checkout@v2.3.4
 
-    - name: Setup Python 3.9
+    - name: Setup Python
       uses: actions/setup-python@v2.2.2
       with:
         python-version: 3.9
@@ -43,7 +43,7 @@ jobs:
 
     - name: Print flopy version
       run: |
-        python -c "import flopy; print(flopy.__version__)"
+        python -c "import flopy; print(f'{flopy.__version__=}')"
 
 
   flopyCI_windows:

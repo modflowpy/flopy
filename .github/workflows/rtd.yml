@@ -41,19 +41,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
 
-      - name: Install Python packages
-        run: |
-          pip install -r etc/requirements.full.pip.txt
-
-      - name: Add jupyter and jupytext to scripts run
-        run: |
-          pip install jupyter jupytext
-
-      - name: Install pymake, xmipy, and flopy
+      - name: Install prerequisites
         run: |
           pip install https://github.com/modflowpy/pymake/zipball/master
-          pip install xmipy
-          pip install .
+          pip install jupyter jupytext
+
+      - name: Install flopy and dependencies
+        run: |
+          pip install .[test,doc]
 
       - name: Prepare for the autotests
         working-directory: ./autotest
