@@ -5,21 +5,11 @@ import shutil
 
 import numpy as np
 import pytest
-from ci_framework import FlopyTestSetup, base_test_dir
 
 import flopy
 
-base_dir = base_test_dir(
-    __file__,
-    rel_path="temp",
-    verbose=True,
-)
 
-pth = os.path.join("..", "examples", "data", "mf2005_test")
-namfiles = [namfile for namfile in os.listdir(pth) if namfile.endswith(".nam")]
-# skip = ["MNW2-Fig28.nam", "testsfr2.nam", "testsfr2_tab.nam"]
-skip = []
-
+# utilities
 
 def import_shapefile():
     try:
@@ -39,37 +29,6 @@ def remove_shp(shpname):
             os.remove(fname)
 
 
-def export_mf6_netcdf(ws, path):
-    print(f"in export_mf6_netcdf: {path}")
-
-    test_setup = FlopyTestSetup(test_dirs=ws)
-
-    sim = flopy.mf6.modflow.mfsimulation.MFSimulation.load(sim_ws=path)
-    for name, model in sim.get_model_itr():
-        export_netcdf(ws, model)
-
-
-def export_mf2005_netcdf(ws, namfile):
-    print(f"in export_mf2005_netcdf: {namfile}")
-    if namfile in skip:
-        return
-
-    m = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=False)
-    if m.dis.lenuni == 0:
-        m.dis.lenuni = 1
-        # print('skipping...lenuni==0 (undefined)')
-        # return
-    # if sum(m.dis.laycbd) != 0:
-    if m.dis.botm.shape[0] != m.nlay:
-        print("skipping...botm.shape[0] != nlay")
-        return
-    assert m, f"Could not load namefile {namfile}"
-    msg = f"Could not load {namfile} model"
-    assert isinstance(m, flopy.modflow.Modflow), msg
-
-    export_netcdf(ws, m)
-
-
 def export_netcdf(ws, m):
     # Do not fail if netCDF4 not installed
     try:
@@ -77,8 +36,6 @@ def export_netcdf(ws, m):
         import pyproj
     except:
         return
-    test_setup = FlopyTestSetup(test_dirs=ws)
-
     fnc = m.export(os.path.join(ws, f"{m.name}.nc"))
     fnc.write()
     fnc_name = os.path.join(ws, f"{m.name}.nc")
@@ -100,104 +57,18 @@ def export_netcdf(ws, m):
     return
 
 
-def export_shapefile(ws, namfile):
-    print(f"in export_shapefile: {namfile}")
-    shp = import_shapefile()
-    if shp is None:
-        return
+# tests
 
-    m = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=False)
-
-    assert m, f"Could not load namefile {namfile}"
-    msg = f"Could not load {namfile} model"
-    assert isinstance(m, flopy.modflow.Modflow), msg
-    fnc_name = os.path.join(ws, f"{m.name}.shp")
-
-    try:
-        fnc = m.export(fnc_name)
-        # fnc2 = m.export(fnc_name, package_names=None)
-        # fnc3 = m.export(fnc_name, package_names=['DIS'])
-    except Exception as e:
-        msg = f"shapefile export fail for namfile {namfile}:\n{e!s}"
-        raise Exception(msg)
-
-    try:
-        s = shp.Reader(fnc_name)
-    except Exception as e:
-        msg = f"shapefile import fail for {fnc_name}:\n{e!s}"
-        raise Exception(msg)
-    msg = f"wrong number of records in shapefile {fnc_name}:{s.numRecords}"
-    assert s.numRecords == m.nrow * m.ncol, msg
-    return
-
-
-def export_shapefile_modelgrid_override(namfile):
-    print(f"in export_modelgrid_override: {namfile}")
-    shp = import_shapefile()
-    if shp is None:
-        return
-
-    from flopy.discretization import StructuredGrid
-
-    m = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=False)
-    mg0 = m.modelgrid
-    modelgrid = StructuredGrid(
-        mg0.delc * 0.3048,
-        mg0.delr * 0.3048,
-        mg0.top,
-        mg0.botm,
-        mg0.idomain,
-        mg0.lenuni,
-        mg0.epsg,
-        mg0.proj4,
-        xoff=mg0.xoffset,
-        yoff=mg0.yoffset,
-        angrot=mg0.angrot,
-    )
-
-    assert m, f"Could not load namefile {namfile}"
-    assert isinstance(m, flopy.modflow.Modflow)
-
-    name = namfile.replace(".nam", "")
-    ws_out = f"{base_dir}_{name}_shapefile_modelgrid_override"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
-
-    fnc_name = os.path.join(ws_out, f"{m.name}.shp")
-
-    try:
-        fnc = m.export(fnc_name, modelgrid=modelgrid)
-        # fnc2 = m.export(fnc_name, package_names=None)
-        # fnc3 = m.export(fnc_name, package_names=['DIS'])
-
-    except Exception as e:
-        msg = f"shapefile export fail for namfile {namfile}:\n{e!s}"
-        raise Exception(msg)
-    try:
-        s = shp.Reader(fnc_name)
-        s.close()
-    except Exception as e:
-        msg = f"shapefile import fail for {fnc_name}:{e!s}"
-        raise Exception(msg)
-
-
-def test_output_helper_shapefile_export():
+def test_output_helper_shapefile_export(tmpdir, get_example_model):
     if import_shapefile() is None:
         return
 
-    ws = os.path.join(
-        "..", "examples", "data", "freyberg_multilayer_transient"
-    )
-    name = "freyberg.nam"
-
-    ml = flopy.modflow.Modflow.load(name, model_ws=ws)
-    head = flopy.utils.HeadFile(os.path.join(ws, "freyberg.hds"))
-    cbc = flopy.utils.CellBudgetFile(os.path.join(ws, "freyberg.cbc"))
-
-    ws_out = f"{base_dir}_helper_shapefile"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
+    ml = get_example_model("freyberg_multilayer_transient", namfile="freyberg.nam")
+    head = flopy.utils.HeadFile(os.path.join(ml.model_ws, "freyberg.hds"))
+    cbc = flopy.utils.CellBudgetFile(os.path.join(ml.model_ws, "freyberg.cbc"))
 
     flopy.export.utils.output_helper(
-        os.path.join(ws_out, "test.shp"),
+        os.path.join(tmpdir, "test.shp"),
         ml,
         {"HDS": head, "cbc": cbc},
         mflay=1,
@@ -205,34 +76,29 @@ def test_output_helper_shapefile_export():
     )
 
 
-def test_freyberg_export():
+def test_freyberg_export(tmpdir, example_model_paths):
     if import_shapefile() is None:
         return
 
     from flopy.discretization import StructuredGrid
 
-    namfile = "freyberg.nam"
-
     # steady state
-    model_ws = "../examples/data/freyberg"
+    namfile = "freyberg.nam"
+    model_ws = example_model_paths["freyberg"]
     m = flopy.modflow.Modflow.load(
         namfile, model_ws=model_ws, check=False, verbose=False
     )
 
-    name = namfile.replace(".nam", "")
-    ws_out = f"{base_dir}_{name}_shapefile_freyberg"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
-
     # test export at model, package and object levels
-    m.export(f"{ws_out}/model.shp")
-    m.wel.export(f"{ws_out}/wel.shp")
-    m.lpf.hk.export(f"{ws_out}/hk.shp")
-    m.riv.stress_period_data.export(f"{ws_out}/riv_spd.shp")
+    m.export(f"{tmpdir}/model.shp")
+    m.wel.export(f"{tmpdir}/wel.shp")
+    m.lpf.hk.export(f"{tmpdir}/hk.shp")
+    m.riv.stress_period_data.export(f"{tmpdir}/riv_spd.shp")
 
     # transient
     # (doesn't work at model level because the total size of
     #  the attribute fields exceeds the shapefile limit)
-    model_ws = "../examples/data/freyberg_multilayer_transient/"
+    model_ws = example_model_paths["freyberg_multilayer_transient"]
     m = flopy.modflow.Modflow.load(
         namfile,
         model_ws=model_ws,
@@ -240,7 +106,7 @@ def test_freyberg_export():
         load_only=["DIS", "BAS6", "NWT", "OC", "RCH", "WEL", "DRN", "UPW"],
     )
     # test export without instantiating an sr
-    outshp = os.path.join(ws_out, f"{namfile[:-4]}_drn_sparse.shp")
+    outshp = os.path.join(tmpdir, f"{namfile[:-4]}_drn_sparse.shp")
     m.drn.stress_period_data.export(outshp, sparse=True)
     assert os.path.exists(outshp)
     remove_shp(outshp)
@@ -269,7 +135,7 @@ def test_freyberg_export():
     # if wkt text was fetched from spatialreference.org
     if wkt is not None:
         # test default package export
-        outshp = os.path.join(ws_out, f"{namfile[:-4]}_dis.shp")
+        outshp = os.path.join(tmpdir, f"{namfile[:-4]}_dis.shp")
         m.dis.export(outshp)
         prjfile = outshp.replace(".shp", ".prj")
         with open(prjfile) as src:
@@ -278,7 +144,7 @@ def test_freyberg_export():
         remove_shp(outshp)
 
         # test default package export to higher level dir
-        outshp = os.path.join(ws_out, f"{namfile[:-4]}_dis.shp")
+        outshp = os.path.join(tmpdir, f"{namfile[:-4]}_dis.shp")
         m.dis.export(outshp)
         prjfile = outshp.replace(".shp", ".prj")
         with open(prjfile) as src:
@@ -287,7 +153,7 @@ def test_freyberg_export():
         remove_shp(outshp)
 
         # test sparse package export
-        outshp = os.path.join(ws_out, f"{namfile[:-4]}_drn_sparse.shp")
+        outshp = os.path.join(tmpdir, f"{namfile[:-4]}_drn_sparse.shp")
         m.drn.stress_period_data.export(outshp, sparse=True)
         prjfile = outshp.replace(".shp", ".prj")
         assert os.path.exists(prjfile)
@@ -297,8 +163,7 @@ def test_freyberg_export():
         remove_shp(outshp)
 
 
-def test_export_output():
-
+def test_export_output(tmpdir, get_example_model):
     # Do not fail if netCDF4 not installed
     try:
         import netCDF4
@@ -306,15 +171,11 @@ def test_export_output():
     except:
         return
 
-    model_ws = os.path.join("..", "examples", "data", "freyberg")
-    ml = flopy.modflow.Modflow.load("freyberg.nam", model_ws=model_ws)
-    hds_pth = os.path.join(model_ws, "freyberg.githds")
+    ml = get_example_model("freyberg", namfile="freyberg.nam")
+    hds_pth = os.path.join(ml.model_ws, "freyberg.githds")
     hds = flopy.utils.HeadFile(hds_pth)
 
-    ws = f"{base_dir}_freyberg_export_output_netcdf"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
-    out_pth = os.path.join(ws, "freyberg.out.nc")
-
+    out_pth = os.path.join(tmpdir, "freyberg.out.nc")
     nc = flopy.export.utils.output_helper(
         out_pth, ml, {"freyberg.githds": hds}
     )
@@ -328,16 +189,14 @@ def test_export_output():
     nc.nc.close()
 
 
-def test_write_shapefile():
+@pytest.mark.unit
+def test_write_shapefile(tmpdir):
     sf = import_shapefile()
     if not sf:
         return
 
     from flopy.discretization import StructuredGrid
     from flopy.export.shapefile_utils import shp2recarray, write_grid_shapefile
-
-    ws_out = f"{base_dir}_shapefile_write"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
 
     sg = StructuredGrid(
         delr=np.ones(10) * 1.1,
@@ -346,7 +205,7 @@ def test_write_shapefile():
         # cell spacing along model columns
         epsg=26715,
     )
-    outshp = os.path.join(ws_out, "junk.shp")
+    outshp = os.path.join(tmpdir, "junk.shp")
     write_grid_shapefile(outshp, sg, array_dict={})
 
     # test that vertices aren't getting altered by writing shapefile
@@ -378,7 +237,7 @@ def test_write_shapefile():
         pass
 
 
-def test_shapefile_polygon_closed():
+def test_shapefile_polygon_closed(tmpdir):
     shapefile = import_shapefile()
     if shapefile is None:
         return
@@ -400,10 +259,7 @@ def test_shapefile_polygon_closed():
         m, delr=spacing, delc=spacing, nrow=nrow, ncol=ncol
     )
 
-    ws_out = f"{base_dir}_shapefile_polygon_closed"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
-
-    shp_file = os.path.join(ws_out, "test_polygon.shp")
+    shp_file = os.path.join(tmpdir, "test_polygon.shp")
     m.dis.export(shp_file)
 
     shp = shapefile.Reader(shp_file)
@@ -414,7 +270,7 @@ def test_shapefile_polygon_closed():
     shp.close()
 
 
-def test_export_array():
+def test_export_array(tmpdir, example_model_paths):
     from flopy.export import utils
 
     try:
@@ -423,11 +279,8 @@ def test_export_array():
         rotate = False
         pass
 
-    ws_out = f"{base_dir}_export_array"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
-
     namfile = "freyberg.nam"
-    model_ws = "../examples/data/freyberg_multilayer_transient/"
+    model_ws = example_model_paths["freyberg_multilayer_transient"]
     m = flopy.modflow.Modflow.load(
         namfile, model_ws=model_ws, verbose=False, load_only=["DIS", "BAS6"]
     )
@@ -435,17 +288,17 @@ def test_export_array():
     nodata = -9999
     utils.export_array(
         m.modelgrid,
-        os.path.join(ws_out, "fb.asc"),
+        os.path.join(tmpdir, "fb.asc"),
         m.dis.top.array,
         nodata=nodata,
     )
-    arr = np.loadtxt(os.path.join(ws_out, "fb.asc"), skiprows=6)
+    arr = np.loadtxt(os.path.join(tmpdir, "fb.asc"), skiprows=6)
 
     if import_shapefile() is not None:
-        m.modelgrid.write_shapefile(os.path.join(ws_out, "grid.shp"))
+        m.modelgrid.write_shapefile(os.path.join(tmpdir, "grid.shp"))
 
     # check bounds
-    with open(os.path.join(ws_out, "fb.asc")) as src:
+    with open(os.path.join(tmpdir, "fb.asc")) as src:
         for line in src:
             if "xllcorner" in line.lower():
                 val = float(line.strip().split()[-1])
@@ -483,23 +336,20 @@ def test_export_array():
     if rasterio is not None:
         utils.export_array(
             m.modelgrid,
-            os.path.join(ws_out, "fb.tif"),
+            os.path.join(tmpdir, "fb.tif"),
             m.dis.top.array,
             nodata=nodata,
         )
-        with rasterio.open(os.path.join(ws_out, "fb.tif")) as src:
+        with rasterio.open(os.path.join(tmpdir, "fb.tif")) as src:
             arr = src.read(1)
             assert src.shape == (m.nrow, m.ncol)
             # TODO: these tests currently fail -- fix is in progress
             # assert np.abs(src.bounds[0] - m.modelgrid.extent[0]) < 1e-6
             # assert np.abs(src.bounds[1] - m.modelgrid.extent[1]) < 1e-6
+            pass
 
 
-def test_mbase_modelgrid():
-
-    ws = f"{base_dir}_mbase_modelgrid"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
-
+def test_mbase_modelgrid(tmpdir):
     ml = flopy.modflow.Modflow(
         modelname="test", xll=500.0, rotation=12.5, start_datetime="1/1/2016"
     )
@@ -515,7 +365,7 @@ def test_mbase_modelgrid():
     assert ml.modelgrid.xoffset == 500
     assert ml.modelgrid.yoffset == 0.0
     assert ml.modelgrid.proj4 is None
-    ml.model_ws = ws
+    ml.model_ws = tmpdir
 
     ml.write_input()
     ml1 = flopy.modflow.Modflow.load("test.nam", model_ws=ml.model_ws)
@@ -524,11 +374,7 @@ def test_mbase_modelgrid():
     assert ml1.modelgrid.proj4 is None
 
 
-def test_mt_modelgrid():
-
-    ws = f"{base_dir}_mt_modelgrid"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
-
+def test_mt_modelgrid(tmpdir):
     ml = flopy.modflow.Modflow(
         modelname="test",
         xll=500.0,
@@ -542,7 +388,7 @@ def test_mt_modelgrid():
     assert ml.modelgrid.yoffset == 0.0
     assert ml.modelgrid.epsg == 2193
     assert ml.modelgrid.idomain is None
-    ml.model_ws = ws
+    ml.model_ws = tmpdir
 
     mt = flopy.mt3d.Mt3dms(
         modelname="test_mt",
@@ -622,11 +468,7 @@ def test_mt_modelgrid():
     assert np.array_equal(swt.modelgrid.idomain, ml.modelgrid.idomain)
 
 
-def test_free_format_flag():
-
-    ws_out = f"{base_dir}_free_format_flag"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
-
+def test_free_format_flag(tmpdir):
     Lx = 100.0
     Ly = 100.0
     nlay = 1
@@ -657,7 +499,7 @@ def test_free_format_flag():
     bas.ifrefm = True
     assert ms.free_format_input == bas.ifrefm
 
-    ms.model_ws = ws_out
+    ms.model_ws = tmpdir
     ms.write_input()
     ms1 = flopy.modflow.Modflow.load(ms.namefile, model_ws=ms.model_ws)
     assert ms1.free_format_input == ms.free_format_input
@@ -670,20 +512,17 @@ def test_free_format_flag():
     assert ms1.free_format_input == ms1.bas6.ifrefm
 
 
-def test_sr():
-    ws = f"{base_dir}_test_sr"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
-
+def test_sr(tmpdir):
     m = flopy.modflow.Modflow(
         "test",
-        model_ws=ws,
+        model_ws=tmpdir,
         xll=12345,
         yll=12345,
         proj4_str="test test test",
     )
     flopy.modflow.ModflowDis(m, 10, 10, 10)
     m.write_input()
-    mm = flopy.modflow.Modflow.load("test.nam", model_ws=ws)
+    mm = flopy.modflow.Modflow.load("test.nam", model_ws=tmpdir)
     extents = mm.modelgrid.extent
     if extents[2] != 12345:
         raise AssertionError()
@@ -699,7 +538,6 @@ def test_sr():
 
 
 def test_dis_sr():
-
     delr = 640
     delc = 640
     nrow = np.ceil(59040.0 / delc).astype(int)
@@ -730,13 +568,10 @@ def test_dis_sr():
     np.testing.assert_almost_equal(y, yul)
 
 
-def test_mf6_modelgrid_update():
-    base_dir = os.path.join("..", "examples", "data", "mf6")
-    # dis
-    model_ws = os.path.join(base_dir, "test001a_Tharmonic")
-    sim = flopy.mf6.MFSimulation.load(sim_ws=model_ws)
+def test_mf6_modelgrid_update(tmpdir, example_mf6simulation_paths):
+    ml_path = example_mf6simulation_paths["test001a_Tharmonic"]
+    sim = flopy.mf6.MFSimulation.load(sim_ws=str(ml_path))
     gwf = sim.get_model("flow15")
-
     mg = gwf.modelgrid
     gwf.dis.top = 12
 
@@ -744,10 +579,9 @@ def test_mf6_modelgrid_update():
         raise AssertionError("StructuredGrid failed dynamic update test")
 
     # disv
-    model_ws = os.path.join(base_dir, "test003_gwfs_disv")
-    sim = flopy.mf6.MFSimulation.load(sim_ws=model_ws)
+    ml_path = example_mf6simulation_paths["test003_gwfs_disv"]
+    sim = flopy.mf6.MFSimulation.load(sim_ws=str(ml_path))
     gwf = sim.get_model("gwf_1")
-
     mg = gwf.modelgrid
     gwf.disv.top = 6.12
 
@@ -755,10 +589,9 @@ def test_mf6_modelgrid_update():
         raise AssertionError("VertexGrid failed dynamic update test")
 
     # disu
-    model_ws = os.path.join(base_dir, "test006_gwf3")
-    sim = flopy.mf6.MFSimulation.load(sim_ws=model_ws)
+    ml_path = example_mf6simulation_paths["test006_gwf3"]
+    sim = flopy.mf6.MFSimulation.load(sim_ws=str(ml_path))
     gwf = sim.get_model("gwf_1")
-
     mg = gwf.modelgrid
     gwf.disu.top = 101
 
@@ -766,9 +599,10 @@ def test_mf6_modelgrid_update():
         raise AssertionError("UnstructuredGrid failed dynamic update test")
 
 
-def test_twri_mg():
+def test_twri_mg(example_model_paths):
+    ml_path = example_model_paths["mf2005_test"]
     name = "twri.nam"
-    ml = flopy.modflow.Modflow.load(name, model_ws=pth, check=False)
+    ml = flopy.modflow.Modflow.load(name, model_ws=ml_path, check=False)
     mg = ml.modelgrid
     assert isinstance(
         mg, flopy.discretization.StructuredGrid
@@ -785,11 +619,8 @@ def test_twri_mg():
     return
 
 
-def test_mg():
+def test_mg(tmpdir):
     from flopy.utils import geometry
-
-    ws = f"{base_dir}_test_modelgrid"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
 
     Lx = 100.0
     Ly = 100.0
@@ -862,7 +693,7 @@ def test_mg():
     assert ms.start_datetime == "1-1-2016"
     assert ms.dis.start_datetime == "1-1-2016"
 
-    ms.model_ws = ws
+    ms.model_ws = tmpdir
 
     ms.write_input()
     ms1 = flopy.modflow.Modflow.load(ms.namefile, model_ws=ms.model_ws)
@@ -932,16 +763,12 @@ def test_dynamic_xll_yll():
     assert yll1 == yll, f"modelgrid.yoffset ({yll1}) is not equal to {yll}"
 
 
-def test_namfile_readwrite():
-
-    ws = f"{base_dir}__namfile_readwrite"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
-
+def test_namfile_readwrite(tmpdir, example_model_paths):
     nlay, nrow, ncol = 1, 30, 5
     delr, delc = 250, 500
     xll, yll = 272300, 5086000
     fm = flopy.modflow
-    m = fm.Modflow(modelname="junk", model_ws=ws)
+    m = fm.Modflow(modelname="junk", model_ws=tmpdir)
     dis = fm.ModflowDis(
         m, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr, delc=delc
     )
@@ -959,7 +786,7 @@ def test_namfile_readwrite():
 
     # test reading and writing of SR information to namfile
     m.write_input()
-    m2 = fm.Modflow.load("junk.nam", model_ws=ws)
+    m2 = fm.Modflow.load("junk.nam", model_ws=tmpdir)
 
     t_value = abs(m2.modelgrid.xoffset - xll)
     msg = f"m2.modelgrid.xoffset ({m2.modelgrid.xoffset}) does not equal {xll}"
@@ -972,9 +799,7 @@ def test_namfile_readwrite():
     msg = f"m2.modelgrid.angrot ({m2.modelgrid.angrot}) does not equal 30"
     assert m2.modelgrid.angrot == 30, msg
 
-    model_ws = os.path.join(
-        "..", "examples", "data", "freyberg_multilayer_transient"
-    )
+    model_ws = example_model_paths["freyberg_multilayer_transient"]
     ml = flopy.modflow.Modflow.load(
         "freyberg.nam",
         model_ws=model_ws,
@@ -988,16 +813,14 @@ def test_namfile_readwrite():
     assert ml.modelgrid.angrot == 15.0
 
 
-def test_read_usgs_model_reference():
-    model_ws = f"{base_dir}_usgs_model_reference"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+def test_read_usgs_model_reference(tmpdir, usgs_model_reference_path):
 
     nlay, nrow, ncol = 1, 30, 5
     delr, delc = 250, 500
     # xll, yll = 272300, 5086000
 
-    mrf = os.path.join(model_ws, "usgs.model.reference")
-    shutil.copy("../examples/data/usgs.model.reference", mrf)
+    mrf = os.path.join(tmpdir, "usgs.model.reference")
+    shutil.copy(usgs_model_reference_path, mrf)
 
     xul, yul = 0, 0
     with open(mrf) as foo:
@@ -1010,7 +833,7 @@ def test_read_usgs_model_reference():
                 continue
 
     fm = flopy.modflow
-    m = fm.Modflow(modelname="junk", model_ws=model_ws)
+    m = fm.Modflow(modelname="junk", model_ws=tmpdir)
     # feet and days
     dis = fm.ModflowDis(
         m,
@@ -1025,7 +848,7 @@ def test_read_usgs_model_reference():
     m.write_input()
 
     # test reading of SR information from usgs.model.reference
-    m2 = fm.Modflow.load("junk.nam", model_ws=model_ws)
+    m2 = fm.Modflow.load("junk.nam", model_ws=tmpdir)
     from flopy.discretization import StructuredGrid
 
     mg = StructuredGrid(delr=dis.delr.array, delc=dis.delc.array)
@@ -1051,7 +874,7 @@ def test_read_usgs_model_reference():
                     line = line.replace("102733", "4326")
                 dst.write(line)
 
-    m2 = fm.Modflow.load("junk.nam", model_ws=model_ws)
+    m2 = fm.Modflow.load("junk.nam", model_ws=tmpdir)
     m2.modelgrid.read_usgs_model_reference_file(mrf)
 
     assert m2.modelgrid.epsg == 4326
@@ -1162,15 +985,11 @@ def test_modelgrid_with_PlotMapView():
     plt.close()
 
 
-def test_mapview_plot_bc():
+def test_mapview_plot_bc(get_example_mf6simulation):
     import matplotlib.pyplot as plt
     from matplotlib.collections import PathCollection, QuadMesh
 
-    sim_name = "mfsim.nam"
-    sim_path = os.path.join(
-        "..", "examples", "data", "mf6", "test003_gwfs_disv"
-    )
-    sim = flopy.mf6.MFSimulation.load(sim_name=sim_name, sim_ws=sim_path)
+    sim = get_example_mf6simulation("test003_gwfs_disv")
     ml6 = sim.get_model("gwf_1")
     ml6.modelgrid.set_coord_info(angrot=-14)
     mapview = flopy.plot.PlotMapView(model=ml6)
@@ -1185,10 +1004,7 @@ def test_mapview_plot_bc():
             raise AssertionError("Unexpected collection type")
     plt.close()
 
-    sim_name = "mfsim.nam"
-    sim_path = os.path.join("..", "examples", "data", "mf6", "test045_lake2tr")
-    sim = flopy.mf6.MFSimulation.load(sim_name=sim_name, sim_ws=sim_path)
-
+    sim = get_example_mf6simulation("test045_lake2tr")
     ml6 = sim.get_model("lakeex2a")
     mapview = flopy.plot.PlotMapView(model=ml6)
     mapview.plot_bc("LAK")
@@ -1203,36 +1019,29 @@ def test_mapview_plot_bc():
             raise AssertionError("Unexpected collection type")
     plt.close()
 
-    sim_name = "mfsim.nam"
-    sim_path = os.path.join(
-        "..", "examples", "data", "mf6", "test006_2models_mvr"
-    )
-    sim = flopy.mf6.MFSimulation.load(sim_name=sim_name, sim_ws=sim_path)
-
+    sim = get_example_mf6simulation("test006_2models_mvr")
     ml6 = sim.get_model("parent")
     ml6c = sim.get_model("child")
     ml6c.modelgrid.set_coord_info(xoff=700, yoff=0, angrot=0)
 
     mapview = flopy.plot.PlotMapView(model=ml6)
     mapview.plot_bc("MAW")
+    ax = mapview.ax
+
+    assert len(ax.collections) > 0, "Boundary condition was not drawn"
 
     mapview2 = flopy.plot.PlotMapView(model=ml6c, ax=mapview.ax)
     mapview2.plot_bc("MAW")
     ax = mapview2.ax
 
-    if len(ax.collections) == 0:
-        raise AssertionError("Boundary condition was not drawn")
+    assert len(ax.collections) > 0, "Boundary condition was not drawn"
 
     for col in ax.collections:
         if not isinstance(col, (QuadMesh, PathCollection)):
             raise AssertionError("Unexpected collection type")
     plt.close()
 
-    sim_name = "mfsim.nam"
-    sim_path = os.path.join(
-        "..", "examples", "data", "mf6", "test001e_UZF_3lay"
-    )
-    sim = flopy.mf6.MFSimulation.load(sim_name=sim_name, sim_ws=sim_path)
+    sim = get_example_mf6simulation("test001e_UZF_3lay")
     ml6 = sim.get_model("gwf_1")
 
     mapview = flopy.plot.PlotMapView(model=ml6)
@@ -1247,15 +1056,11 @@ def test_mapview_plot_bc():
     plt.close()
 
 
-def test_crosssection_plot_bc():
+def test_crosssection_plot_bc(get_example_mf6simulation):
     import matplotlib.pyplot as plt
     from matplotlib.collections import PatchCollection
 
-    sim_name = "mfsim.nam"
-    sim_path = os.path.join(
-        "..", "examples", "data", "mf6", "test003_gwfs_disv"
-    )
-    sim = flopy.mf6.MFSimulation.load(sim_name=sim_name, sim_ws=sim_path)
+    sim = get_example_mf6simulation("test003_gwfs_disv")
     ml6 = sim.get_model("gwf_1")
     xc = flopy.plot.PlotCrossSection(ml6, line={"line": ([0, 5.5], [10, 5.5])})
     xc.plot_bc("CHD")
@@ -1269,10 +1074,7 @@ def test_crosssection_plot_bc():
             raise AssertionError("Unexpected collection type")
     plt.close()
 
-    sim_name = "mfsim.nam"
-    sim_path = os.path.join("..", "examples", "data", "mf6", "test045_lake2tr")
-    sim = flopy.mf6.MFSimulation.load(sim_name=sim_name, sim_ws=sim_path)
-
+    sim = get_example_mf6simulation("test045_lake2tr")
     ml6 = sim.get_model("lakeex2a")
     xc = flopy.plot.PlotCrossSection(ml6, line={"row": 10})
     xc.plot_bc("LAK")
@@ -1287,30 +1089,19 @@ def test_crosssection_plot_bc():
             raise AssertionError("Unexpected collection type")
     plt.close()
 
-    sim_name = "mfsim.nam"
-    sim_path = os.path.join(
-        "..", "examples", "data", "mf6", "test006_2models_mvr"
-    )
-    sim = flopy.mf6.MFSimulation.load(sim_name=sim_name, sim_ws=sim_path)
-
+    sim = get_example_mf6simulation("test006_2models_mvr")
     ml6 = sim.get_model("parent")
     xc = flopy.plot.PlotCrossSection(ml6, line={"column": 1})
     xc.plot_bc("MAW")
 
     ax = xc.ax
-    if len(ax.collections) == 0:
-        raise AssertionError("Boundary condition was not drawn")
+    assert len(ax.collections) > 0, "Boundary condition was not drawn"
 
     for col in ax.collections:
-        if not isinstance(col, PatchCollection):
-            raise AssertionError("Unexpected collection type")
+        assert isinstance(col, PatchCollection)
     plt.close()
 
-    sim_name = "mfsim.nam"
-    sim_path = os.path.join(
-        "..", "examples", "data", "mf6", "test001e_UZF_3lay"
-    )
-    sim = flopy.mf6.MFSimulation.load(sim_name=sim_name, sim_ws=sim_path)
+    sim = get_example_mf6simulation("test001e_UZF_3lay")
     ml6 = sim.get_model("gwf_1")
 
     xc = flopy.plot.PlotCrossSection(ml6, line={"row": 0})
@@ -1326,6 +1117,7 @@ def test_crosssection_plot_bc():
     plt.close()
 
 
+@pytest.mark.unit
 def test_tricontour_NaN():
     import matplotlib.pyplot as plt
 
@@ -1428,28 +1220,25 @@ def test_get_lrc_get_node():
     return
 
 
-def test_vertex_model_dot_plot():
+def test_vertex_model_dot_plot(get_example_mf6simulation):
     import matplotlib.pyplot as plt
     from matplotlib import rcParams
 
     rcParams["figure.max_open_warning"] = 36
+
     # load up the vertex example problem
-    sim_name = "mfsim.nam"
-    sim_path = "../examples/data/mf6/test003_gwftri_disv"
-    disv_sim = flopy.mf6.MFSimulation.load(
-        sim_name=sim_name, version="mf6", exe_name="mf6", sim_ws=sim_path
-    )
-    disv_ml = disv_sim.get_model("gwf_1")
+    sim = get_example_mf6simulation("test003_gwftri_disv")
+    disv_ml = sim.get_model("gwf_1")
     ax = disv_ml.plot()
     assert isinstance(ax, list)
     assert len(ax) == 36
     plt.close("all")
 
 
-def test_model_dot_plot():
+def test_model_dot_plot(tmpdir, example_model_paths):
     import matplotlib.pyplot as plt
 
-    loadpth = os.path.join("..", "examples", "data", "mf2005_test")
+    loadpth = example_model_paths["mf2005_test"]
     ml = flopy.modflow.Modflow.load(
         "ibs2k.nam", "mf2k", model_ws=loadpth, check=False
     )
@@ -1470,12 +1259,9 @@ def test_model_dot_plot():
     ), "ml.bcf6.vcont.plot() ax is is not of type plt.Axes"
     plt.close("all")
 
-    ws = f"{base_dir}_plot_export"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
-
-    fh = os.path.join(ws, "ibs2k")
+    fh = os.path.join(tmpdir, "ibs2k")
     ml.plot(mflay=0, filename_base=fh, file_extension="png")
-    files = [f for f in os.listdir(ws) if f.endswith(".png")]
+    files = [f for f in os.listdir(tmpdir) if f.endswith(".png")]
     if len(files) < 10:
         raise AssertionError(
             "ml.plot did not properly export all supported data types"
@@ -1517,8 +1303,7 @@ def test_get_rc_from_node_coordinates():
             assert c == j, f"col {c} not equal {j} for xy ({x}, {y})"
 
 
-def test_netcdf_classmethods():
-
+def test_netcdf_classmethods(tmpdir, example_model_paths):
     # Do not fail if netCDF4 not installed
     try:
         import netCDF4
@@ -1528,19 +1313,14 @@ def test_netcdf_classmethods():
 
     namfile = "freyberg.nam"
     name = namfile.replace(".nam", "")
-    ws = f"{base_dir}_{name}_netcdf_classmethods"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
-
-    model_ws = os.path.join(
-        "..", "examples", "data", "freyberg_multilayer_transient"
-    )
+    model_ws = example_model_paths["freyberg_multilayer_transient"]
     ml = flopy.modflow.Modflow.load(
         namfile, model_ws=model_ws, check=False, verbose=True, load_only=[]
     )
 
-    f = ml.export(os.path.join(ws, "freyberg.nc"))
+    f = ml.export(os.path.join(tmpdir, "freyberg.nc"))
     v1_set = set(f.nc.variables.keys())
-    fnc = os.path.join(ws, "freyberg.new.nc")
+    fnc = os.path.join(tmpdir, "freyberg.new.nc")
     new_f = flopy.export.NetCdf.zeros_like(f, output_filename=fnc)
     v2_set = set(new_f.nc.variables.keys())
     diff = v1_set.symmetric_difference(v2_set)
@@ -1551,7 +1331,7 @@ def test_netcdf_classmethods():
     new_f.nc.close()
 
 
-def test_wkt_parse():
+def test_wkt_parse(example_shapefiles):
     """Test parsing of Coordinate Reference System parameters
     from well-known-text in .prj files."""
 
@@ -1568,8 +1348,7 @@ def test_wkt_parse():
         "gcs_unit",
     ]
 
-    prjs = glob.glob("../examples/data/prj_test/*")
-    for prj in prjs:
+    for prj in example_shapefiles:
         with open(prj) as src:
             wkttxt = src.read()
             wkttxt = wkttxt.replace("'", '"')
@@ -1587,19 +1366,14 @@ def test_wkt_parse():
                         assert crsobj.__dict__[k] is not None
 
 
-def test_shapefile_ibound():
+def test_shapefile_ibound(tmpdir, example_model_paths):
     shapefile = import_shapefile()
     if not shapefile:
         return
 
-    ws_out = f"{base_dir}_shapefile_ibound"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
-
-    shape_name = os.path.join(ws_out, "test.shp")
+    shape_name = os.path.join(tmpdir, "test.shp")
     namfile = "freyberg.nam"
-    model_ws = os.path.join(
-        "..", "examples", "data", "freyberg_multilayer_transient"
-    )
+    model_ws = example_model_paths["freyberg_multilayer_transient"] 
     ml = flopy.modflow.Modflow.load(
         namfile,
         model_ws=model_ws,
@@ -1616,64 +1390,117 @@ def test_shapefile_ibound():
     shp.close()
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
-    "namfile",
-    list(namfiles),
-)
-def test_shapefile(namfile):
-    name = namfile.replace(".nam", "")
-    ws = f"{base_dir}_{name}_shapefile"
-    test_setup = FlopyTestSetup(test_dirs=ws)
-    export_shapefile(ws, namfile)
+    "example_model_namfiles",
+    ["mf2005_test", "freyberg"],
+    indirect=True)
+def test_shapefile(tmpdir, example_model_paths, example_model_namfiles):
+    for namfile in example_model_namfiles:
+        ml_path = example_model_paths["mf2005_test"]
+        name = str(namfile).replace(".nam", "")
 
-    return
+        shp = import_shapefile()
+        if shp is None:
+            return
+
+        m = flopy.modflow.Modflow.load(namfile, model_ws=ml_path, verbose=False)
+
+        assert m, f"Could not load namefile {namfile}"
+        msg = f"Could not load {namfile} model"
+        assert isinstance(m, flopy.modflow.Modflow), msg
+        fnc_name = os.path.join(tmpdir, f"{m.name}.shp")
+
+        try:
+            fnc = m.export(fnc_name)
+            # fnc2 = m.export(fnc_name, package_names=None)
+            # fnc3 = m.export(fnc_name, package_names=['DIS'])
+        except Exception as e:
+            msg = f"shapefile export fail for namfile {namfile}:\n{e!s}"
+            raise Exception(msg)
+
+        try:
+            s = shp.Reader(fnc_name)
+        except Exception as e:
+            msg = f"shapefile import fail for {fnc_name}:\n{e!s}"
+            raise Exception(msg)
+        msg = f"wrong number of records in shapefile {fnc_name}:{s.numRecords}"
+        assert s.numRecords == m.nrow * m.ncol, msg
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
-    "namfile",
-    namfiles[0:2],
-)
-def test_shapefile_export_modelgrid_override(namfile):
-    export_shapefile_modelgrid_override(namfile)
-    return
+    "example_model_namfiles",
+    ["mf2005_test", "freyberg"],
+    indirect=True)
+def test_shapefile_export_modelgrid_override(tmpdir, example_model_paths, example_model_namfiles):
+    for namfile in example_model_namfiles:
+        print(f"in export_modelgrid_override: {namfile}")
+        shp = import_shapefile()
+        if shp is None:
+            return
+
+        from flopy.discretization import StructuredGrid
+
+        ml_path = example_model_paths["mf2005_test"]
+        m = flopy.modflow.Modflow.load(namfile, model_ws=ml_path, verbose=False)
+        mg0 = m.modelgrid
+        modelgrid = StructuredGrid(
+            mg0.delc * 0.3048,
+            mg0.delr * 0.3048,
+            mg0.top,
+            mg0.botm,
+            mg0.idomain,
+            mg0.lenuni,
+            mg0.epsg,
+            mg0.proj4,
+            xoff=mg0.xoffset,
+            yoff=mg0.yoffset,
+            angrot=mg0.angrot,
+        )
+
+        assert m, f"Could not load namefile {namfile}"
+        assert isinstance(m, flopy.modflow.Modflow)
+
+        name = str(namfile).replace(".nam", "")
+        fnc_name = os.path.join(tmpdir, f"{m.name}.shp")
+
+        fnc = m.export(fnc_name, modelgrid=modelgrid)
+        # fnc2 = m.export(fnc_name, package_names=None)
+        # fnc3 = m.export(fnc_name, package_names=['DIS'])
+
+        s = shp.Reader(fnc_name)
+        s.close()
 
 
-@pytest.mark.parametrize(
-    "namfile",
-    list(namfiles),
-)
-def test_netcdf(namfile):
-    name = namfile.replace(".nam", "")
-    ws = f"{base_dir}_{name}_netcdf"
-    export_mf2005_netcdf(ws, namfile)
-    return
+@pytest.mark.parametrize("example_model_namfiles", ["mf2005_test", "freyberg"], indirect=True)
+def test_netcdf(tmpdir, example_model_namfiles):
+    for namfile in example_model_namfiles:
+        name = str(namfile).replace(".nam", "")
+        ml_path = str(namfile.parent)
+        m = flopy.modflow.Modflow.load(namfile, model_ws=ml_path, verbose=False)
+        if m.dis.lenuni == 0:
+            m.dis.lenuni = 1
+            # print('skipping...lenuni==0 (undefined)')
+            # return
+        # if sum(m.dis.laycbd) != 0:
+        if m.dis.botm.shape[0] != m.nlay:
+            print("skipping...botm.shape[0] != nlay")
+            return
+        assert m, f"Could not load namefile {namfile}"
+        msg = f"Could not load {namfile} model"
+        assert isinstance(m, flopy.modflow.Modflow), msg
+
+        export_netcdf(tmpdir, m)
 
 
-def build_netcdf():
-    for namfile in namfiles:
-        name = namfile.replace(".nam", "")
-        ws = f"{base_dir}_{name}_netcdf"
-        export_mf2005_netcdf(ws, namfile)
-    return
-
-
-def build_sfr_netcdf():
-    namfile = "testsfr2.nam"
-    name = namfile.replace(".nam", "")
-    ws = f"{base_dir}_{name}_netcdf"
-    export_mf2005_netcdf(ws, namfile)
-    return
-
-
-def test_export_array2():
+@pytest.mark.unit
+def test_export_array2(tmpdir):
     if import_shapefile() is None:
         return
     from flopy.discretization import StructuredGrid
     from flopy.export.utils import export_array
 
-    ws_out = f"{base_dir}_shapefile_export_array2"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
-
     nrow = 7
     ncol = 11
     epsg = 4111
@@ -1682,7 +1509,7 @@ def test_export_array2():
     modelgrid = StructuredGrid(
         delr=np.ones(ncol) * 1.1, delc=np.ones(nrow) * 1.1
     )
-    filename = os.path.join(ws_out, "myarray1.shp")
+    filename = os.path.join(tmpdir, "myarray1.shp")
     a = np.arange(nrow * ncol).reshape((nrow, ncol))
     export_array(modelgrid, filename, a)
     assert os.path.isfile(filename), "did not create array shapefile"
@@ -1691,7 +1518,7 @@ def test_export_array2():
     modelgrid = StructuredGrid(
         delr=np.ones(ncol) * 1.1, delc=np.ones(nrow) * 1.1, epsg=epsg
     )
-    filename = os.path.join(ws_out, "myarray2.shp")
+    filename = os.path.join(tmpdir, "myarray2.shp")
     a = np.arange(nrow * ncol).reshape((nrow, ncol))
     export_array(modelgrid, filename, a)
     assert os.path.isfile(filename), "did not create array shapefile"
@@ -1700,20 +1527,18 @@ def test_export_array2():
     modelgrid = StructuredGrid(
         delr=np.ones(ncol) * 1.1, delc=np.ones(nrow) * 1.1
     )
-    filename = os.path.join(ws_out, "myarray3.shp")
+    filename = os.path.join(tmpdir, "myarray3.shp")
     a = np.arange(nrow * ncol).reshape((nrow, ncol))
     export_array(modelgrid, filename, a, epsg=epsg)
     assert os.path.isfile(filename), "did not create array shapefile"
 
 
-def test_export_array_contours():
+@pytest.mark.unit
+def test_export_array_contours(tmpdir):
     if import_shapefile() is None:
         return
     from flopy.discretization import StructuredGrid
     from flopy.export.utils import export_array_contours
-
-    ws_out = f"{base_dir}_shapefile_array_contours"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
 
     nrow = 7
     ncol = 11
@@ -1723,7 +1548,7 @@ def test_export_array_contours():
     modelgrid = StructuredGrid(
         delr=np.ones(ncol) * 1.1, delc=np.ones(nrow) * 1.1
     )
-    filename = os.path.join(ws_out, "myarraycontours1.shp")
+    filename = os.path.join(tmpdir, "myarraycontours1.shp")
     a = np.arange(nrow * ncol).reshape((nrow, ncol))
     export_array_contours(modelgrid, filename, a)
     assert os.path.isfile(filename), "did not create contour shapefile"
@@ -1732,7 +1557,7 @@ def test_export_array_contours():
     modelgrid = StructuredGrid(
         delr=np.ones(ncol) * 1.1, delc=np.ones(nrow) * 1.1, epsg=epsg
     )
-    filename = os.path.join(ws_out, "myarraycontours2.shp")
+    filename = os.path.join(tmpdir, "myarraycontours2.shp")
     a = np.arange(nrow * ncol).reshape((nrow, ncol))
     export_array_contours(modelgrid, filename, a)
     assert os.path.isfile(filename), "did not create contour shapefile"
@@ -1741,13 +1566,13 @@ def test_export_array_contours():
     modelgrid = StructuredGrid(
         delr=np.ones(ncol) * 1.1, delc=np.ones(nrow) * 1.1
     )
-    filename = os.path.join(ws_out, "myarraycontours3.shp")
+    filename = os.path.join(tmpdir, "myarraycontours3.shp")
     a = np.arange(nrow * ncol).reshape((nrow, ncol))
     export_array_contours(modelgrid, filename, a, epsg=epsg)
     assert os.path.isfile(filename), "did not create contour shapefile"
 
 
-def test_export_contourf():
+def test_export_contourf(tmpdir, get_example_model):
     if import_shapefile() is None:
         return
     import matplotlib.pyplot as plt
@@ -1755,14 +1580,9 @@ def test_export_contourf():
 
     from flopy.export.utils import export_contourf
 
-    ws_out = f"{base_dir}_shapefile_export_contourf"
-    filename = os.path.join(ws_out, "myfilledcontours.shp")
-
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws_out)
-
-    model_ws = os.path.join("..", "examples", "data", "freyberg")
-    ml = flopy.modflow.Modflow.load("freyberg.nam", model_ws=model_ws)
-    hds_pth = os.path.join(model_ws, "freyberg.githds")
+    filename = os.path.join(tmpdir, "myfilledcontours.shp")
+    ml = get_example_model("freyberg", namfile="freyberg.nam")
+    hds_pth = os.path.join(ml.model_ws, "freyberg.githds")
     hds = flopy.utils.HeadFile(hds_pth)
     head = hds.get_data()
     levels = np.arange(10, 30, 0.5)
