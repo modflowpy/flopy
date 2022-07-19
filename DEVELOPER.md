@@ -19,13 +19,37 @@ To develop `flopy` you must have the following software installed on your machin
 
 Install Python 3.7.x or >=3.8.1, via [standalone download](https://www.python.org/downloads/) or a distribution like [Anaconda](https://www.anaconda.com/products/individual) or [miniconda](https://docs.conda.io/en/latest/miniconda.html). (An [infinite recursion bug](https://github.com/python/cpython/pull/17098) in 3.8.0's [`shutil.copytree`](https://github.com/python/cpython/commit/65c92c5870944b972a879031abd4c20c4f0d7981) affects a few tests.)
 
-Then install `flopy` and core dependencies from the project root
+Then install `flopy` and core dependencies from the project root:
 
     pip install .
 
-Note that `flopy` has a number of [optional dependencies](docs/flopy_method_dependencies.md), as well as dependencies required for running tests. To install all required, testing and optional packages at once, use
+Alternatively, with Anaconda or Miniconda:
 
-    pip install ".[test, optional]"
+    conda env create -f etc/environment.yml
+    conda activate flopy
+
+Note that `flopy` has a number of [optional dependencies](docs/flopy_method_dependencies.md), as well as dependencies required for running tests. All required, testing and optional dependencies are included in the Conda environment in `etc/environment.yml`. Only core dependencies are included in the PyPI package &mdash; to install extra testing, linting and optional packages with pip, use
+
+    pip install ".[test, lint, optional]"
+
+#### IDE configuration
+
+##### Visual Studio Code
+
+VSCode users on Windows may need to run `conda init`, then open a fresh terminal before `conda activate ...` commands are recognized. To set a default Python interpreter and configure IDE terminals to automatically activate the associated environment, add the following to your VSCode's `settings.json`:
+
+```json
+{
+    "python.defaultInterpreterPath": "/path/to/your/virtual/environment",
+    "python.terminal.activateEnvironment": true
+}
+```
+
+To locate a Conda environment's Python executable, run `where python` with the environment activated.
+
+##### PyCharm
+
+To configure a Python interpreter in PyCharm, navigate to `Settings -> Project -> Python Interpreter`, click the gear icon, then select `Add Interpreter`. This presents a wizard to create a new virtual environment or select an existing one.
 
 ### MODFLOW executables
 
@@ -33,7 +57,7 @@ To develop `flopy` you will need a number of MODFLOW executables installed. Bina
 
 #### Linux
 
-For example, to download and extract all executables for Linux (e.g., Ubuntu)
+To download and extract all executables for Linux (e.g., Ubuntu):
 
 ```shell
 wget https://github.com/MODFLOW-USGS/executables/releases/download/8.0/linux.zip && \
@@ -46,7 +70,7 @@ Then add the install location to your `PATH`
 
 #### Mac
 
-For example, to download and extract all executables for OSX
+The same commands should work to download and extract executables for OSX:
 
 ```shell
 wget https://github.com/MODFLOW-USGS/executables/releases/download/8.0/mac.zip && \
@@ -71,51 +95,40 @@ This can be fixed by running `Install Certificates.command` in your Python insta
 
 ## Running tests
 
-To run the autotests you will need to have `pytest` installed. To run the tests in parallel you will also need `pytest-xdist`. To prepare your code for a pull request, you will need a few more packages (see the docs on [submitting a pull request](CONTRIBUTING.md)).
-
-To install all packages required for testing at once, use
-
-    pip install ".[test]"
+To run the autotests you will need to have `pytest` installed. To run the tests in parallel you will also need `pytest-xdist`. Testing dependencies are specified in the `test` extras group in `setup.cfg` (with pip, use `pip install ".[test]"`). Test dependencies are included by default in the Conda environment `etc/environment`. To prepare your code for a pull request, you will need a few more packages specified in the `lint` extras group in `setup.cfg` (also included by default for Conda). See the docs on [submitting a pull request](CONTRIBUTING.md) for more info.
 
 If you want to run a single autotest run the following command from the 
-`autotest` directory
+`autotest` directory:
 
     pytest -v t001_test.py
 
-If you want to run all of the standard autotests (tests that match 
-`tXXX_test_*.py`) run the following command from the `autotest` directory
+To run all standard tests (tests matching `tXXX_test*.py`) from the `autotest` directory:
 
     pytest -v 
 
-If you want to run all of the autotests that match a pattern run a command like the following
-from the `autotest` directory
+The `-v` flag enables verbose output. To run all tests matching a pattern run:
 
     pytest -v -k "t01"
 
 ### Running tests in parallel
 
-If you want to run the autotests in parallel add `-n auto` after `-v` in your
-`pytest` command. For example,
+To run the tests in parallel add `-n auto` to the `pytest` command. For example,
 
-    pytest -v -n auto t001_test.py
+    pytest -v -n auto
 
-The `auto` keyword indicates that the `pytest-xdist` extension will query your 
-computer to determine the number of processors available. You can specify a 
-specific number of processors to use (for example, `-n 2` to run on two 
-processors). 
-
-The space between `-n` and the number of processors can be replaced with a
-`=`. For example,
-
-    pytest -v -n=auto t001_test.py
+The `auto` keyword configures the `pytest-xdist` extension to query your computer for the number of processors available. You can explicitly set the number of cores, substitute an integer for `auto` in the `-n` argument, e.g. `pytest -v -n 2`. (The space between `-n` and the number of processors can be replaced with `=`, e.g. `-n=2`.)
 
 ### Debugging failed tests
 
-To debug a failed autotest rerun the failed test by running the following command from the autotest directory
+To debug a failed test it can be helpful to inspect its output, which is cleaned up automatically by default. To run a failing test and keep its output, use the `--keep` flag:
 
-    python mffailedtest.py --keep
+    python t001_test.py --keep
 
-The `--keep` will retain the test directories created by the test, which will allow the input or output files to be evaluated for errors.
+This will retain the test directories created by the test, which will allow the input or output files to be evaluated for errors.
+
+A similar `-keep` argument is also available for `pytest`. Tests using the function-scoped `tmpdir` and related fixtures (e.g. `class_tmpdir`, `module_tmpdir`) defined in `conftest.py` are compatible with this mechanism, which differs from the Python CLI argument only in that the location to save test outputs must be provided explicitly, e.g.
+
+    pytest t001_test.py --keep t001_output
 
 ### Creating an autotest
 
@@ -125,14 +138,10 @@ loading data from fixed and free format text, loading binary files, using
 `util2D`, and using `util3D`. Preferably all of these tests should have 
 been grouped into like tests and put into a separate autotest script.  
 
-The autotests run on GitHub Actions in parallel so new autotests should be
-developed so that data written by a specific test is written to a 
-unique folder that includes the basename for the script with the test (`t013` 
-for `t013_test.py`) and the test name (`t013_mytest`). This can all be done
-programatically using functions and classes in `ci_framework` script. An
-example of how to construct an autotest is given below
+The autotests run on GitHub Actions in parallel. Tests must not pollute the working space of other tests. New tests should write to a unique, appropriately named folder (e.g.,`t013` for test cases `t013_test.py`) and the test name (`t013_mytest`). This can be accomplished programmatically with the `FlopyTestSetup` class in `ci_framework` script:
 
 ```python
+from pathlib import Path
 from ci_framework import base_test_dir, FlopyTestSetup
 
 # set the baseDir variable using the script name
@@ -142,23 +151,32 @@ def test_mytest():
     ws = f"{base_dir}_test_mytest"
     test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
     
-    ...test something
-    
-    assert something is True, "oops"
+    assert Path(ws).is_dir()
     
     ws = f"{base_dir}_test_mytest_another_directory"
     test_setup.add_test_dir(ws)
     
-    ...test something_else
-    
-    assert something_else is True, "oops"
-    
-    return
-
+    assert Path(ws).is_dir()
 ```
 
-Pull requests with new autotests will not be accepted if tests do not follow
-the example provided above. Make sure your pull request also conforms to the [contribution guidelines](CONTRIBUTING.md) before submitting.
+An alternative compatible with the `pytest --keep` argument is to use the `tmpdir` fixture (or its equivalent for the appropriate scope) defined in `conftest.py`. These fixtures can be substituted transparently for `pytest`'s built-in `tmp_path`. When the `--keep` argument is provided, e.g. `pytest --keep temp`, outputs will automatically be saved to subdirectories of `temp` named according to the test case, class or module.
+
+```python
+from pathlib import Path
+import inspect
+
+def test_something(tmpdir, module_tmpdir):
+    # function-scoped temporary directory
+    assert isinstance(tmpdir, Path)
+    assert tmpdir.is_dir()
+    assert inspect.currentframe().f_code.co_name in tmpdir.stem
+
+    # module-scoped temp dir (accessible to other tests in the script)
+    assert module_tmpdir.is_dir()
+    assert Path(__file__).stem in module_tmpdir.stem
+```
+
+Any new tests should use one of these facilities to prevent the proliferation of test outputs and untracked files (see also the [contribution guidelines](CONTRIBUTING.md) for before submitting a pull request).
 
 ## Running examples
 
