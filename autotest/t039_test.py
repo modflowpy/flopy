@@ -1,6 +1,7 @@
 """
 Test zonbud utility
 """
+import io
 import os
 
 import numpy as np
@@ -267,6 +268,27 @@ def test_zonbud_active_areas_zone_zero(rtol=1e-2):
     return
 
 
+def test_read_zone_file():
+    zf = (
+        "2    2    4\n" 
+        "INTERNAL     (4I3)\n"
+        "  1  1  1  0\n"
+        "  0  1  1  1\n"
+        "INTERNAL     (4I3)\n"
+        "  1  1  1  0\n"
+        "  0  1  1  1\n"
+        "  0"
+    )
+    name = os.path.join(outpth, "zonefiletest.txt")
+    with open(name, "w") as foo:
+        foo.write(zf)
+    zones = flopy.utils.ZoneBudget.read_zone_file(name)
+    if zones.shape != (2, 2, 4):
+        raise AssertionError(
+            "zone file read failed"
+        )
+
+
 def test_zonebudget_6():
     try:
         import pandas as pd
@@ -368,5 +390,6 @@ if __name__ == "__main__":
     test_get_budget()
     test_get_model_shape()
     test_zonbud_active_areas_zone_zero()
+    test_read_zone_file()
     test_zonebudget_6()
     test_zonebudget6_from_output_method()
