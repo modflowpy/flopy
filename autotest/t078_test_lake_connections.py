@@ -149,20 +149,20 @@ def test_base_run():
     bot = gwf.dis.botm.array.squeeze()
     __export_ascii_grid(
         gwf.modelgrid,
-        os.path.join(pth, "bot.asc"),
+        os.path.join(model_ws, "bot.asc"),
         bot,
     )
     top = gwf.output.head().get_data().squeeze() + 2.0
     top = np.where(gwf.dis.idomain.array.squeeze() < 1.0, 0.0, top)
     __export_ascii_grid(
         gwf.modelgrid,
-        os.path.join(pth, "top.asc"),
+        os.path.join(model_ws, "top.asc"),
         top,
     )
     k11 = gwf.npf.k.array.squeeze()
     __export_ascii_grid(
         gwf.modelgrid,
-        os.path.join(pth, "k11.asc"),
+        os.path.join(model_ws, "k11.asc"),
         k11,
     )
 
