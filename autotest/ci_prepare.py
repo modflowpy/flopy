@@ -2,23 +2,14 @@
 Script to be used to download any required data prior to autotests
 """
 import os
-import shutil
 import subprocess
 import sys
 
-import pymake
-from ci_framework import download_mf6_examples, get_parent_path
+from ci_framework import download_mf6_examples
 
 import flopy
 
 # os.environ["CI"] = "1"
-
-# path where downloaded executables will be extracted
-parent_path = get_parent_path()
-exe_pth = os.path.join(parent_path, "temp", "exe_download")
-# make the directory if it does not exist
-if not os.path.isdir(exe_pth):
-    os.makedirs(exe_pth, exist_ok=True)
 
 # determine if running on Travis
 is_CI = "CI" in os.environ
@@ -29,13 +20,12 @@ if is_CI:
     dotlocal = True
 
 if not dotlocal:
-    for idx, arg in enumerate(sys.argv):
+    for arg in sys.argv:
         if "--ci" in arg.lower():
             dotlocal = True
             break
 if dotlocal:
     bindir = os.path.join(os.path.expanduser("~"), ".local", "bin")
-    bindir = os.path.abspath(bindir)
     print(f"bindir: {bindir}")
     if not os.path.isdir(bindir):
         os.makedirs(bindir, exist_ok=True)
@@ -44,7 +34,7 @@ if dotlocal:
 print(f'modflow executables will be downloaded to:\n\n    "{bindir}"')
 
 run_type = "std"
-for idx, arg in enumerate(sys.argv):
+for arg in sys.argv:
     if "--other" in arg.lower():
         run_type = "other"
         break
@@ -86,39 +76,8 @@ def get_branch():
     return branch
 
 
-def cleanup():
-    if os.path.isdir(exe_pth):
-        shutil.rmtree(exe_pth)
-    return
-
-
-def move_exe():
-    files = os.listdir(exe_pth)
-    for file in files:
-        if file.startswith("__"):
-            continue
-        src = os.path.join(exe_pth, file)
-        dst = os.path.join(bindir, file)
-        print(f"moving {src} -> {dst}")
-        shutil.move(src, dst)
-    return
-
-
-def list_exes():
-    cmd = f"ls -l {bindir}"
-    os.system(cmd)
-    return
-
-
 def test_download_and_unzip():
-    error_msg = "pymake not installed - cannot download executables"
-    assert pymake is not None, error_msg
-
-    pymake.getmfexes(exe_pth, verbose=True)
-
-    move_exe()
-
-    return
+    flopy.utils.get_modflow_main(bindir)
 
 
 def test_download_nightly_build():
@@ -132,11 +91,7 @@ def test_download_nightly_build():
     # Replace MODFLOW 6 executables with the latest versions
     else:
         print("Updating MODFLOW 6 executables from the nightly-build repo")
-        pymake.getmfnightly(pth=exe_pth, exes=["mf6", "libmf6"], verbose=True)
-
-        move_exe()
-
-    return
+        flopy.utils.get_modflow_main(bindir, repo="modflow6-nightly-build")
 
 
 def test_update_flopy():
@@ -146,14 +101,6 @@ def test_update_flopy():
     else:
         print("Update flopy MODFLOW 6 classes")
         flopy.mf6.utils.generate_classes(branch="develop", backup=False)
-
-
-def test_cleanup():
-    cleanup()
-
-
-def test_list_download():
-    list_exes()
 
 
 def test_download_mf6_examples(delete_existing=True):
@@ -168,6 +115,4 @@ if __name__ == "__main__":
     test_download_and_unzip()
     test_download_nightly_build()
     test_update_flopy()
-    cleanup()
-    list_exes()
     test_download_mf6_examples()
