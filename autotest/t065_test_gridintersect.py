@@ -1,4 +1,4 @@
-import os
+import sys
 
 sys.path.insert(1, "..")
 import matplotlib.pyplot as plt
