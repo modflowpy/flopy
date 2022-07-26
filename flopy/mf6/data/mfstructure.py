@@ -3,15 +3,15 @@ mfstructure module.  Contains classes related to package structure
 
 
 """
-import os
-import traceback
 import ast
 import keyword
+import os
 from enum import Enum
 from textwrap import TextWrapper
-import numpy as np
-from ..mfbase import PackageContainer, StructException
 
+import numpy as np
+
+from ..mfbase import PackageContainer, StructException
 
 numeric_index_text = (
     "This argument is an index variable, which means that "
@@ -33,6 +33,7 @@ class DfnType(Enum):
     gnc_file = 8
     mvr_file = 9
     utl = 10
+    mvt_file = 11
     unknown = 999
 
 
@@ -46,9 +47,6 @@ class Dfn:
         folder containing package definition files (dfn)
     common : path
         file containing common information
-    multi_package : dict
-        contains the names of all packages that are allowed to have multiple
-        instances in a model/simulation
 
     Methods
     -------
@@ -70,31 +68,6 @@ class Dfn:
         # directories
         self.dfndir = os.path.join(".", "dfn")
         self.common = os.path.join(self.dfndir, "common.dfn")
-        # FIX: Transport - multi packages are hard coded
-        self.multi_package = {
-            "exggwfgwf": 0,
-            "gwfchd": 0,
-            "gwfwel": 0,
-            "gwfdrn": 0,
-            "gwfriv": 0,
-            "gwfghb": 0,
-            "gwfrch": 0,
-            "gwfrcha": 0,
-            "gwfevt": 0,
-            "gwfevta": 0,
-            "gwfmaw": 0,
-            "gwfsfr": 0,
-            "gwflak": 0,
-            "gwfuzf": 0,
-            "lnfcgeo": 0,
-            "lnfrgeo": 0,
-            "lnfngeo": 0,
-            "utlobs": 0,
-            "utlts": 0,
-            "utltas": 0,
-            "utlspc": 0,
-            "utlspca": 0,
-        }
 
     def get_file_list(self):
         file_order = [
@@ -176,6 +149,8 @@ class Dfn:
                 return DfnType.gnc_file, model_type
             elif file_name[3:6] == "mvr":
                 return DfnType.mvr_file, model_type
+            elif file_name[3:6] == "mvt":
+                return DfnType.mvt_file, model_type
             else:
                 return DfnType.model_file, model_type
 
@@ -192,8 +167,6 @@ class DfnPackage(Dfn):
 
     Methods
     -------
-    multi_package_support : () : bool
-        returns flag for multi-package support
     get_block_structure_dict : (path : tuple, common : bool, model_file :
             bool) : dict
         returns a dictionary of block structure information for the package
@@ -225,9 +198,6 @@ class DfnPackage(Dfn):
         )
         self.dfn_list = package.dfn
 
-    def multi_package_support(self):
-        return self.package.package_abbr in self.multi_package
-
     def get_block_structure_dict(self, path, common, model_file):
         block_dict = {}
         dataset_items_in_block = {}
@@ -235,7 +205,12 @@ class DfnPackage(Dfn):
         keystring_items_needed_dict = {}
         current_block = None
 
-        for dfn_entry in self.dfn_list:
+        # get header dict
+        header_dict = {}
+        for item in self.dfn_list[0]:
+            if item == "multi-package":
+                header_dict["multi-package"] = True
+        for dfn_entry in self.dfn_list[1:]:
             # load next data item
             new_data_item_struct = MFDataItemStructure()
             for next_line in dfn_entry:
@@ -389,7 +364,7 @@ class DfnPackage(Dfn):
                         )
                         block_dataset_struct.add_item(block_data_item_struct)
                         current_block.add_dataset(block_dataset_struct)
-        return block_dict
+        return block_dict, header_dict
 
     def _new_dataset(
         self,
@@ -451,8 +426,6 @@ class DfnFile(Dfn):
 
     Methods
     -------
-    multi_package_support : () : bool
-        returns flag for multi-package support
     dict_by_name : {} : dict
         returns a dictionary of data item descriptions from the dfn file with
         the data item name as the dictionary key
@@ -492,11 +465,6 @@ class DfnFile(Dfn):
         self.dataset_items_needed_dict = {}
         self.dfn_list = []
 
-    def multi_package_support(self):
-        base_file = os.path.splitext(self.file)[0]
-        base_file = base_file.replace("-", "")
-        return base_file in self.multi_package
-
     def dict_by_name(self):
         name_dict = {}
         name = None
@@ -520,6 +488,23 @@ class DfnFile(Dfn):
         current_block = None
         dfn_fp = open(self._file_path, "r")
 
+        # load header
+        header_dict = {}
+        while True:
+            line = dfn_fp.readline()
+            if len(line) < 1 or line[0] != "#":
+                break
+            line_lst = line.strip().split()
+            if len(line_lst) > 2 and line_lst[1] == "flopy":
+                # load flopy data
+                if line_lst[2] == "multi-package":
+                    header_dict["multi-package"] = True
+                if line_lst[2] == "parent_name_type" and len(line_lst) == 5:
+                    header_dict["parent_name_type"] = [
+                        line_lst[3],
+                        line_lst[4],
+                    ]
+        # load file definitions
         for line in dfn_fp:
             if self._valid_line(line):
                 # load next data item
@@ -697,7 +682,7 @@ class DfnFile(Dfn):
                             )
                             current_block.add_dataset(block_dataset_struct)
         dfn_fp.close()
-        return block_dict
+        return block_dict, header_dict
 
     def _new_dataset(
         self,
@@ -891,7 +876,8 @@ class MFDataItemStructure:
 
     def __init__(self):
         self.file_name_keywords = {"filein": False, "fileout": False}
-        self.contained_keywords = {"file_name": True}
+        self.file_name_key_seq = {"fname": True}
+        self.contained_keywords = {"fname": True, "file": True, "tdis6": True}
         self.block_name = None
         self.name = None
         self.display_name = None
@@ -948,7 +934,11 @@ class MFDataItemStructure:
                 self.name_list.append(self.name)
                 if len(self.name) >= 6 and self.name[0:6] == "cellid":
                     self.is_cellid = True
-                if self.name and self.name[0:2] == "id":
+                if (
+                    self.name
+                    and self.name[0:2] == "id"
+                    and self.type == DatumType.string
+                ):
                     self.possible_cellid = True
                 self.python_name = self.name.replace("-", "_").lower()
                 # don't allow name to be a python keyword
@@ -981,6 +971,12 @@ class MFDataItemStructure:
                     )
                 self.type_string = type_line[0].lower()
                 self.type = self._str_to_enum_type(type_line[0])
+                if (
+                    self.name
+                    and self.name[0:2] == "id"
+                    and self.type == DatumType.string
+                ):
+                    self.possible_cellid = True
                 if (
                     self.type == DatumType.recarray
                     or self.type == DatumType.record
@@ -1151,11 +1147,16 @@ class MFDataItemStructure:
             )
         return description
 
+    def file_nam_in_nam_file(self):
+        for key, item in self.contained_keywords.items():
+            if self.name.lower().find(key) != -1:
+                return True
+
     def indicates_file_name(self):
         if self.name.lower() in self.file_name_keywords:
             return True
-        for key, item in self.contained_keywords.items():
-            if self.name.lower().find(key) != -1:
+        for key in self.file_name_key_seq.keys():
+            if key in self.name.lower():
                 return True
         return False
 
@@ -1276,7 +1277,7 @@ class MFDataItemStructure:
 
     def get_rec_type(self):
         item_type = self.type_obj
-        if item_type == str or self.is_cellid:
+        if item_type == str or self.is_cellid or self.possible_cellid:
             return object
         return item_type
 
@@ -1415,6 +1416,7 @@ class MFDataStructure:
         self.num_data_items = len(data_item.data_items)
         self.record_within_record = False
         self.file_data = False
+        self.nam_file_data = False
         self.block_type = data_item.block_type
         self.block_variable = data_item.block_variable
         self.model_data = model_data
@@ -1545,6 +1547,9 @@ class MFDataStructure:
                             self.path,
                         )
                     if isinstance(item, MFDataItemStructure):
+                        self.nam_file_data = (
+                            self.nam_file_data or item.file_nam_in_nam_file()
+                        )
                         self.file_data = (
                             self.file_data or item.indicates_file_name()
                         )
@@ -1558,6 +1563,9 @@ class MFDataStructure:
                     # insert placeholder in array
                     self.data_item_structures.append(None)
                 if isinstance(item, MFDataItemStructure):
+                    self.nam_file_data = (
+                        self.nam_file_data or item.file_nam_in_nam_file()
+                    )
                     self.file_data = (
                         self.file_data or item.indicates_file_name()
                     )
@@ -2084,11 +2092,20 @@ class MFInputFileStructure:
         self.model_file = model_file  # file belongs to a specific model
         self.read_as_arrays = False
 
-        self.multi_package_support = dfn_file.multi_package_support()
-        self.blocks = dfn_file.get_block_structure_dict(
+        self.blocks, self.header = dfn_file.get_block_structure_dict(
             self.path, common, model_file
         )
+        self.multi_package_support = "multi-package" in self.header
         self.dfn_list = dfn_file.dfn_list
+        self.sub_package = self._sub_package()
+
+    def _sub_package(self):
+        mfstruct = MFStructure()
+        for value in mfstruct.flopy_dict.values():
+            if value is not None and "construct_package" in value:
+                if self.file_type == value["construct_package"]:
+                    return True
+        return False
 
     def is_valid(self):
         valid = True
@@ -2290,6 +2307,7 @@ class MFSimulationStructure:
             or dfn_file.dfn_type == DfnType.model_name_file
             or dfn_file.dfn_type == DfnType.gnc_file
             or dfn_file.dfn_type == DfnType.mvr_file
+            or dfn_file.dfn_type == DfnType.mvt_file
         ):
             model_ver = f"{dfn_file.model_type}{MFStructure(True).get_version_string()}"
             if model_ver not in self.model_struct_objs:
@@ -2301,6 +2319,7 @@ class MFSimulationStructure:
             elif (
                 dfn_file.dfn_type == DfnType.gnc_file
                 or dfn_file.dfn_type == DfnType.mvr_file
+                or dfn_file.dfn_type == DfnType.mvt_file
             ):
                 # gnc and mvr files belong both on the simulation and model
                 # level
@@ -2443,12 +2462,32 @@ class MFStructure:
             mf_dfn = Dfn()
             dfn_files = mf_dfn.get_file_list()
 
-            # load flopy-specific settings
-            self.__load_flopy()
-
             # get common
             common_dfn = DfnFile("common.dfn")
             self.sim_struct.process_dfn(common_dfn)
+
+            # process each file's flopy header
+            for file in dfn_files:
+                dfn_path, tail = os.path.split(os.path.realpath(__file__))
+                dfn_path = os.path.join(dfn_path, "dfn")
+                dfn_file = os.path.join(dfn_path, file)
+                with open(dfn_file, "r") as fd_dfn:
+                    for line in fd_dfn:
+                        if len(line) < 1 or line[0] != "#":
+                            break
+                        line_lst = line.strip().split()
+                        if len(line_lst) > 2 and line_lst[1] == "flopy":
+                            # load flopy data
+                            if (
+                                line_lst[2] == "subpackage"
+                                and len(line_lst) == 7
+                            ):
+                                sp_dict = {
+                                    "construct_package": line_lst[4],
+                                    "construct_data": line_lst[5],
+                                    "parameter_name": line_lst[6],
+                                }
+                                MFStructure().flopy_dict[line_lst[3]] = sp_dict
 
             # process each file
             for file in dfn_files:
@@ -2461,26 +2500,6 @@ class MFStructure:
             self.sim_struct.tag_read_as_arrays()
 
         return True
-
-    def __load_flopy(self):
-        current_variable = None
-        var_info = {}
-        dfn_path, tail = os.path.split(os.path.realpath(__file__))
-        flopy_path = os.path.join(dfn_path, "dfn", "flopy.dfn")
-        dfn_fp = open(flopy_path, "r")
-        for line in dfn_fp:
-            if self.__valid_line(line):
-                lst_line = line.strip().split()
-                if lst_line[0].lower() == "name":
-                    # store current variable
-                    self.flopy_dict[current_variable] = var_info
-                    # reset var_info dict
-                    var_info = {}
-                    current_variable = lst_line[1].lower()
-                else:
-                    var_info[lst_line[0].lower()] = lst_line[1].lower()
-        # store last variable
-        self.flopy_dict[current_variable] = var_info
 
     @staticmethod
     def __valid_line(line):

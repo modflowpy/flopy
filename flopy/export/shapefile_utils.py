@@ -3,15 +3,15 @@ Module for exporting and importing flopy model attributes
 
 """
 import copy
-import shutil
 import json
-import numpy as np
 import os
+import shutil
 import warnings
 
-from ..datbase import DataType, DataInterface
-from ..utils import Util3d, import_optional_dependency
+import numpy as np
 
+from ..datbase import DataInterface, DataType
+from ..utils import Util3d, import_optional_dependency
 
 # web address of spatial reference dot org
 srefhttp = "https://spatialreference.org"
@@ -54,7 +54,7 @@ def write_gridlines_shapefile(filename, mg):
 
 
 def write_grid_shapefile(
-    filename,
+    path,
     mg,
     array_dict,
     nan_val=np.nan,
@@ -66,8 +66,8 @@ def write_grid_shapefile(
 
     Parameters
     ----------
-    filename : str
-        shapefile file name path
+    path : str
+        shapefile file path
     mg : flopy.discretization.Grid object
         flopy model grid
     array_dict : dict
@@ -85,7 +85,7 @@ def write_grid_shapefile(
 
     """
     shapefile = import_optional_dependency("shapefile")
-    w = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
+    w = shapefile.Writer(path, shapeType=shapefile.POLYGON)
     w.autoBalance = 1
 
     if mg.__class__.__name__ == "SpatialReference":
@@ -196,14 +196,14 @@ def write_grid_shapefile(
 
     # close
     w.close()
-    print(f"wrote {filename}")
+    print(f"wrote {path}")
     # write the projection file
-    write_prj(filename, mg, epsg, prj)
+    write_prj(path, mg, epsg, prj)
     return
 
 
 def model_attributes_to_shapefile(
-    filename, ml, package_names=None, array_dict=None, **kwargs
+    path, ml, package_names=None, array_dict=None, **kwargs
 ):
     """
     Wrapper function for writing a shapefile of model data.  If package_names
@@ -212,8 +212,8 @@ def model_attributes_to_shapefile(
 
     Parameters
     ----------
-    filename : string
-        name of the shapefile to write
+    path : string
+        path to write the shapefile to
     ml : flopy.mbase
         model instance
     package_names : list of package names (e.g. ["dis","lpf"])
@@ -373,10 +373,10 @@ def model_attributes_to_shapefile(
                                 array_dict[name] = arr
 
     # write data arrays to a shapefile
-    write_grid_shapefile(filename, grid, array_dict)
+    write_grid_shapefile(path, grid, array_dict)
     epsg = kwargs.get("epsg", None)
     prj = kwargs.get("prj", None)
-    write_prj(filename, grid, epsg, prj)
+    write_prj(path, grid, epsg, prj)
 
 
 def shape_attr_name(name, length=6, keep_layer=False):
@@ -624,7 +624,10 @@ def write_prj(shpname, mg=None, epsg=None, prj=None, wkt_string=None):
         prjtxt = CRS.getprj(epsg)
     # copy a supplied prj file
     elif prj is not None:
-        shutil.copy(prj, prjname)
+        if os.path.exists(prjname):
+            print(".prj file {} already exists ".format(prjname))
+        else:
+            shutil.copy(prj, prjname)
 
     elif mg is not None:
         if mg.epsg is not None:
@@ -737,7 +740,7 @@ class CRS:
     def grid_mapping_attribs(self):
         """
         Map parameters for CF Grid Mappings
-        http://http://cfconventions.org/cf-conventions/cf-conventions.html,
+        https://cfconventions.org/cf-conventions/cf-conventions.html#appendix-grid-mappings,
         Appendix F: Grid Mappings
 
         """
@@ -896,7 +899,7 @@ class CRS:
         url : str
 
         """
-        from flopy.utils.flopy_io import get_url_text
+        from ..utils.flopy_io import get_url_text
 
         epsg_categories = (
             "epsg",

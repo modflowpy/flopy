@@ -1,15 +1,16 @@
+import copy
+import json
 import os
 import platform
 import socket
-import copy
-import json
-import numpy as np
-from datetime import datetime
 import time
-from .metadata import acdd
+from datetime import datetime
+
+import numpy as np
 
 from ..utils import import_optional_dependency
 from .longnames import NC_LONG_NAMES
+from .metadata import acdd
 
 # globals
 FILLVALUE = -99999.9
@@ -626,7 +627,7 @@ class NetCdf:
         ), "NetCdf._initialize_attributes() error: nc attribute already set"
 
         self.nc_epsg_str = "epsg:4326"
-        self.nc_crs_longname = "http://www.opengis.net/def/crs/EPSG/0/4326"
+        self.nc_crs_longname = "https://www.opengis.net/def/crs/EPSG/0/4326"
         self.nc_semi_major = float(6378137.0)
         self.nc_inverse_flat = float(298.257223563)
 
@@ -673,10 +674,10 @@ class NetCdf:
         needed for the netcdf file
         """
         pyproj = import_optional_dependency("pyproj")
-        from distutils.version import LooseVersion
+        from ..utils.parse_version import Version
 
         # Check if using newer pyproj version conventions
-        pyproj220 = LooseVersion(pyproj.__version__) >= LooseVersion("2.2.0")
+        pyproj220 = Version(pyproj.__version__) >= Version("2.2.0")
 
         proj4_str = self.proj4_str
         print(f"initialize_geometry::proj4_str = {proj4_str}")
@@ -749,8 +750,8 @@ class NetCdf:
                 self.model.dis.perlen and self.start_datetime
 
         """
-        from ..version import __version__ as version
         from ..export.shapefile_utils import CRS
+        from ..version import __version__ as version
 
         if self.nc is not None:
             raise Exception("nc file already initialized")

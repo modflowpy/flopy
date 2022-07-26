@@ -1,6 +1,2 @@
-# imports
-from .netcdf import NetCdf
-from . import utils
-from . import shapefile_utils
-from .netcdf import Logger
-from . import metadata
+from .netcdf import Logger, NetCdf  # isort:skip
+from . import metadata, shapefile_utils, utils

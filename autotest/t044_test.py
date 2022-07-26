@@ -1,21 +1,17 @@
 """
 Test the observation process load and write
 """
-import pytest
 import os
+
+import pymake
+import pytest
+from ci_framework import FlopyTestSetup, base_test_dir
+
 import flopy
 
-try:
-    import pymake
-except ImportError:
-    print("could not import pymake")
-    pymake = False
+base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
 path = os.path.join("..", "examples", "data", "pcgn_test")
-cpth = os.path.join("temp", "t044")
-# make the directory if it does not exist
-if not os.path.isdir(cpth):
-    os.makedirs(cpth, exist_ok=True)
 
 mf_items = ["twri.nam", "MNW2.nam"]
 pths = []
@@ -29,21 +25,19 @@ def load_and_write_pcgn(mfnam, pth):
     """
     exe_name = "mf2005"
     v = flopy.which(exe_name)
+    run = v is not None
 
-    if pymake:
-        run = v is not None
-        lpth = os.path.join(cpth, os.path.splitext(mfnam)[0])
-        apth = os.path.join(lpth, "flopy")
-        compth = lpth
-        pymake.setup(os.path.join(pth, mfnam), lpth)
-    else:
-        run = False
-        lpth = pth
-        apth = cpth
-        compth = cpth
+    model_ws = f"{base_dir}_{mfnam}"
+    compth = os.path.join(model_ws, "flopy")
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
+
+    pymake.setup(os.path.join(pth, mfnam), model_ws)
 
     m = flopy.modflow.Modflow.load(
-        mfnam, model_ws=lpth, verbose=True, exe_name=exe_name
+        mfnam,
+        model_ws=model_ws,
+        verbose=True,
+        exe_name=exe_name,
     )
     assert m.load_fail is False
     if mfnam in ["twri.nam"]:  # update this list for fixed models
@@ -57,10 +51,10 @@ def load_and_write_pcgn(mfnam, pth):
         except:
             success = False
         assert success, "base model run did not terminate successfully"
-        fn0 = os.path.join(lpth, mfnam)
+        fn0 = os.path.join(model_ws, mfnam)
 
     # rewrite files
-    m.change_model_ws(apth)
+    m.change_model_ws(compth)
     m.write_input()
     if run:
         try:
@@ -68,10 +62,10 @@ def load_and_write_pcgn(mfnam, pth):
         except:
             success = False
         assert success, "new model run did not terminate successfully"
-        fn1 = os.path.join(apth, mfnam)
+        fn1 = os.path.join(compth, mfnam)
 
     if run:
-        fsum = os.path.join(compth, f"{os.path.splitext(mfnam)[0]}.head.out")
+        fsum = os.path.join(model_ws, f"{os.path.splitext(mfnam)[0]}.head.out")
         success = False
         try:
             success = pymake.compare_heads(fn0, fn1, outfile=fsum, htol=0.005)

@@ -1,4 +1,5 @@
 # --------------------- ssm spca options ---------------------
+# flopy multi-package
 
 block options
 name readasarrays

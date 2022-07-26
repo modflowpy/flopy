@@ -1,24 +1,25 @@
-from copy import deepcopy
-import sys
-import os
 import inspect
-from shutil import copyfile
+import os
+import sys
+from copy import deepcopy
 from enum import Enum
+from shutil import copyfile
+
 import numpy as np
-from ..mfbase import MFDataException, VerbosityLevel
-from ..data.mfstructure import DatumType, MFDataItemStructure
-from ..data import mfdatautil
-from .mfdatautil import iterable
+
 from ...utils.datautil import (
+    ArrayIndexIter,
     DatumUtil,
-    FileIter,
+    MultiList,
     MultiListIter,
     PyListUtil,
-    ArrayIndexIter,
-    MultiList,
+    clean_filename,
 )
-from .mfdatautil import convert_data, MFComment
-from .mffileaccess import MFFileAccessArray, MFFileAccessList, MFFileAccess
+from ..data import mfdatautil
+from ..data.mfstructure import DatumType, MFDataItemStructure
+from ..mfbase import MFDataException, VerbosityLevel
+from .mfdatautil import MFComment, convert_data, iterable
+from .mffileaccess import MFFileAccess, MFFileAccessArray, MFFileAccessList
 
 
 class DataStorageType(Enum):
@@ -319,6 +320,7 @@ class DataStorage:
         self.in_model = (
             self.data_dimensions is not None
             and len(package_dim.package_path) > 1
+            and package_dim.model_dim[0].model_name is not None
             and package_dim.model_dim[0].model_name.lower()
             == package_dim.package_path[0]
         )
@@ -633,10 +635,14 @@ class DataStorage:
 
     def has_data(self, layer=None):
         ret_val = self._access_data(layer, False)
-        return ret_val is not None and ret_val != False
+        return ret_val is not None and ret_val is not False
 
-    def get_data(self, layer=None, apply_mult=True):
-        return self._access_data(layer, True, apply_mult=apply_mult)
+    def get_data(self, layer=None, apply_mult=True, block_exists=False):
+        data = self._access_data(layer, True, apply_mult=apply_mult)
+        if data is None and block_exists:
+            return []
+        else:
+            return data
 
     def _access_data(self, layer, return_data=False, apply_mult=True):
         layer_check = self._resolve_layer(layer)
@@ -1548,6 +1554,12 @@ class DataStorage:
                         precision="double",
                     )
                 else:
+                    # make sure folder exists
+                    file_path = os.path.split(fp)[0]
+                    if not os.path.exists(file_path):
+                        os.makedirs(file_path)
+
+                    # create file
                     try:
                         fd = open(fp, "w")
                     except:
@@ -2055,9 +2067,9 @@ class DataStorage:
                     layer,
                 )
             if arr_line[0].lower() == "open/close":
-                data_file = arr_line[1]
+                data_file = clean_filename(arr_line[1])
             else:
-                data_file = arr_line[0]
+                data_file = clean_filename(arr_line[0])
         elif isinstance(arr_line, dict):
             for key, value in arr_line.items():
                 if key.lower() == "factor":
@@ -2094,7 +2106,7 @@ class DataStorage:
                 if key.lower() == "data":
                     data = value
             if "filename" in arr_line:
-                data_file = arr_line["filename"]
+                data_file = clean_filename(arr_line["filename"])
 
         if data_file is None:
             message = (
@@ -2347,7 +2359,10 @@ class DataStorage:
                 ):
                     full_data = data_out
                 else:
-                    full_data[layer] = data_out
+                    if is_aux and full_data.shape == data_out.shape:
+                        full_data = data_out
+                    else:
+                        full_data[layer] = data_out
             if is_aux:
                 if full_data is not None:
                     all_none = False

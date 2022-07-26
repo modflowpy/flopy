@@ -1,8 +1,10 @@
 import copy
+import inspect
 import os.path
 
 import numpy as np
-from .grid import Grid, CachedData
+
+from .grid import CachedData, Grid
 
 
 def array_at_verts_basic2d(a):
@@ -741,7 +743,7 @@ class StructuredGrid(Grid):
     ###############
     ### Methods ###
     ###############
-    def intersect(self, x, y, local=False, forgive=False):
+    def intersect(self, x, y, z=None, local=False, forgive=False):
         """
         Get the row and column of a point with coordinates x and y
 
@@ -754,6 +756,9 @@ class StructuredGrid(Grid):
             The x-coordinate of the requested point
         y : float
             The y-coordinate of the requested point
+        z : float
+            Optional z-coordinate of the requested point (will return layer,
+            row, column) if supplied
         local: bool (optional)
             If True, x and y are in local coordinates (defaults to False)
         forgive: bool (optional)
@@ -768,6 +773,10 @@ class StructuredGrid(Grid):
             The column number
 
         """
+        # trigger interface change warning
+        frame_info = inspect.getframeinfo(inspect.currentframe())
+        self._warn_intersect(frame_info.filename, frame_info.lineno)
+
         # transform x and y to local coordinates
         x, y = super().intersect(x, y, local, forgive)
 
@@ -797,7 +806,28 @@ class StructuredGrid(Grid):
             row = np.where(ycomp)[0][-1]
         if np.any(np.isnan([row, col])):
             row = col = np.nan
-        return row, col
+            if z is not None:
+                return None, row, col
+
+        if z is None:
+            return row, col
+
+        lay = np.nan
+        for layer in range(self.__nlay):
+            if (
+                self.top_botm[layer, row, col]
+                >= z
+                >= self.top_botm[layer + 1, row, col]
+            ):
+                lay = layer
+                break
+
+        if np.any(np.isnan([lay, row, col])):
+            lay = row = col = np.nan
+            if not forgive:
+                raise Exception("point given is outside the model area")
+
+        return lay, row, col
 
     def _cell_vert_list(self, i, j):
         """Get vertices for a single cell or sequence of i, j locations."""
@@ -956,10 +986,10 @@ class StructuredGrid(Grid):
                     i += 1
         f.close()
         grd = cls(np.array(delc), np.array(delr), lenuni=lenuni)
-        xll = grd._xul_to_xll(xul)
-        yll = grd._yul_to_yll(yul)
-        cls.set_coord_info(xoff=xll, yoff=yll, angrot=rot)
-        return cls
+        xll = grd._xul_to_xll(xul, angrot=rot)
+        yll = grd._yul_to_yll(yul, angrot=rot)
+        grd.set_coord_info(xoff=xll, yoff=yll, angrot=rot)
+        return grd
 
     def array_at_verts_basic(self, a):
         """
@@ -1541,11 +1571,9 @@ class StructuredGrid(Grid):
 
         """
         iverts = []
-        inode = 0
         for i in range(self.nrow):
             for j in range(self.ncol):
-                iverts.append([inode] + self._build_structured_iverts(i, j))
-                inode += 1
+                iverts.append(self._build_structured_iverts(i, j))
         self._iverts = iverts
         return
 

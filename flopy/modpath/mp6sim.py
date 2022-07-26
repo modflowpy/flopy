@@ -4,10 +4,11 @@ the ModpathSim class as `flopy.modpath.ModpathSim`.
 
 Additional information for this MODFLOW/MODPATH package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?dis.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/dis.html>`_.
 
 """
 import numpy as np
+
 from ..pakbase import Package
 from ..utils import Util3d
 

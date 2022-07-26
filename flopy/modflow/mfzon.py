@@ -4,10 +4,11 @@ the ModflowZone class as `flopy.modflow.ModflowZone`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/zone.htm>`_.
+<https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/zone.html>`_.
 
 """
 import numpy as np
+
 from ..pakbase import Package
 from ..utils import Util2d
 
@@ -81,7 +82,7 @@ class ModflowZon(Package):
         )
 
         self._generate_heading()
-        self.url = "zone.htm"
+        self.url = "zone.html"
 
         self.nzn = 0
         if zone_dict is not None:

@@ -1,19 +1,17 @@
 """
 test modpath functionality
 """
-import sys
-
-sys.path.insert(0, "..")
-import glob
-import shutil
 import os
-import flopy
+import shutil
+
 import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
+import flopy
 from flopy.discretization import StructuredGrid
+from flopy.modpath.mp6sim import StartingLocationsFile
 from flopy.utils.modpathfile import EndpointFile, PathlineFile
 from flopy.utils.recarray_utils import ra_slice
-from flopy.modpath.mp6sim import StartingLocationsFile
-from ci_framework import base_test_dir, FlopyTestSetup
 
 try:
     import shapefile

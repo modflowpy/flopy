@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on October 29, 2021 21:09:57 UTC
+# FILE created on April 11, 2022 18:22:41 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -12,7 +12,7 @@ class ModflowGwtlkt(mfpackage.MFPackage):
     Parameters
     ----------
     model : MFModel
-        Model that this package is a part of.  Package is automatically
+        Model that this package is a part of. Package is automatically
         added to model when it is initialized.
     loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
@@ -53,10 +53,10 @@ class ModflowGwtlkt(mfpackage.MFPackage):
     print_concentration : boolean
         * print_concentration (boolean) keyword to indicate that the list of
           lake concentration will be printed to the listing file for every
-          stress period in which "HEAD PRINT" is specified in Output Control.
-          If there is no Output Control option and PRINT_CONCENTRATION is
-          specified, then concentration are printed for the last time step of
-          each stress period.
+          stress period in which "CONCENTRATION PRINT" is specified in Output
+          Control. If there is no Output Control option and PRINT_CONCENTRATION
+          is specified, then concentration are printed for the last time step
+          of each stress period.
     print_flows : boolean
         * print_flows (boolean) keyword to indicate that the list of lake flow
           rates will be printed to the listing file for every stress period
@@ -228,6 +228,10 @@ class ModflowGwtlkt(mfpackage.MFPackage):
     dfn_file_name = "gwt-lkt.dfn"
 
     dfn = [
+        [
+            "header",
+            "multi-package",
+        ],
         [
             "block options",
             "name flow_package_name",
@@ -666,10 +670,10 @@ class ModflowGwtlkt(mfpackage.MFPackage):
         lakeperioddata=None,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            model, "lkt", filename, pname, loading_package, parent_file
+            model, "lkt", filename, pname, loading_package, **kwargs
         )
 
         # set up variables

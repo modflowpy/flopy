@@ -1,8 +1,8 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on October 29, 2021 21:09:57 UTC
+# FILE created on April 11, 2022 18:22:41 UTC
 from .. import mfpackage
-from ..data.mfdatautil import ListTemplateGenerator, ArrayTemplateGenerator
+from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
 
 class ModflowUtltas(mfpackage.MFPackage):
@@ -11,9 +11,9 @@ class ModflowUtltas(mfpackage.MFPackage):
 
     Parameters
     ----------
-    model : MFModel
-        Model that this package is a part of.  Package is automatically
-        added to model when it is initialized.
+    parent_package : MFPackage
+        Parent_package that this package is a part of. Package is automatically
+        added to parent_package when it is initialized.
     loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
@@ -55,6 +55,10 @@ class ModflowUtltas(mfpackage.MFPackage):
     dfn_file_name = "utl-tas.dfn"
 
     dfn = [
+        [
+            "header",
+            "multi-package",
+        ],
         [
             "block attributes",
             "name time_series_namerecord",
@@ -161,7 +165,7 @@ class ModflowUtltas(mfpackage.MFPackage):
 
     def __init__(
         self,
-        model,
+        parent_package,
         loading_package=False,
         time_series_namerecord=None,
         interpolation_methodrecord=None,
@@ -169,10 +173,10 @@ class ModflowUtltas(mfpackage.MFPackage):
         tas_array=None,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            model, "tas", filename, pname, loading_package, parent_file
+            parent_package, "tas", filename, pname, loading_package, **kwargs
         )
 
         # set up variables
@@ -214,16 +218,16 @@ class UtltasPackages(mfpackage.MFChildPackages):
         pname=None,
     ):
         new_package = ModflowUtltas(
-            self._model,
+            self._cpparent,
             time_series_namerecord=time_series_namerecord,
             interpolation_methodrecord=interpolation_methodrecord,
             sfacrecord=sfacrecord,
             tas_array=tas_array,
             filename=filename,
             pname=pname,
-            parent_file=self._cpparent,
+            child_builder_call=True,
         )
-        self._init_package(new_package, filename)
+        self.init_package(new_package, filename)
 
     def append_package(
         self,
@@ -235,13 +239,13 @@ class UtltasPackages(mfpackage.MFChildPackages):
         pname=None,
     ):
         new_package = ModflowUtltas(
-            self._model,
+            self._cpparent,
             time_series_namerecord=time_series_namerecord,
             interpolation_methodrecord=interpolation_methodrecord,
             sfacrecord=sfacrecord,
             tas_array=tas_array,
             filename=filename,
             pname=pname,
-            parent_file=self._cpparent,
+            child_builder_call=True,
         )
         self._append_package(new_package, filename)

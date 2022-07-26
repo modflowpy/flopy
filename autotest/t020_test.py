@@ -1,7 +1,11 @@
 # Test modflow write and run
-import numpy as np
+import os
+
 import matplotlib.pyplot as plt
-from ci_framework import base_test_dir, FlopyTestSetup
+import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
+import flopy
 
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
@@ -12,7 +16,7 @@ def analyticalWaterTableSolution(h1, h2, z, R, K, L, x):
     b2 = h2 - z
     h = (
         np.sqrt(
-            b1 ** 2 - (x / L) * (b1 ** 2 - b2 ** 2) + (R * x / K) * (L - x)
+            b1**2 - (x / L) * (b1**2 - b2**2) + (R * x / K) * (L - x)
         )
         + z
     )
@@ -20,9 +24,6 @@ def analyticalWaterTableSolution(h1, h2, z, R, K, L, x):
 
 
 def test_mfnwt_run():
-    import os
-    import flopy
-
     exe_name = "mfnwt"
     exe = flopy.which(exe_name)
 
@@ -165,9 +166,6 @@ def test_mfnwt_run():
 
 
 def test_irch():
-    import os
-    import flopy
-
     model_ws = f"{base_dir}_test_tpl_constant"
     test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 

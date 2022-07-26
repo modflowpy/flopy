@@ -1,4 +1,5 @@
 import numpy as np
+
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
 
@@ -45,7 +46,6 @@ class ModflowBct(Package):
         # call base package constructor
         super().__init__(model, extension, self._ftype(), unitnumber)
 
-        self.url = "bct.htm"
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         self.itrnsp = itrnsp
         self.ibctcb = ibctcb

@@ -1,16 +1,17 @@
 __author__ = "aleaf"
 
-import os
-import numpy as np
-import warnings
 import copy
+import os
+import warnings
+
+import numpy as np
 from numpy.lib import recfunctions
+
 from ..pakbase import Package
-from ..utils import MfList
+from ..utils import MfList, import_optional_dependency
 from ..utils.flopy_io import line_parse
-from ..utils.recarray_utils import create_empty_recarray
 from ..utils.optionblock import OptionBlock
-from ..utils import import_optional_dependency
+from ..utils.recarray_utils import create_empty_recarray
 
 
 class ModflowSfr2(Package):
@@ -384,7 +385,7 @@ class ModflowSfr2(Package):
             filenames=filenames[0],
         )
 
-        self.url = "sfr2.htm"
+        self.url = "sfr2.html"
         self._graph = None  # dict of routing connections
 
         # Dataset 0
@@ -2061,8 +2062,8 @@ class ModflowSfr2(Package):
 
     def export(self, f, **kwargs):
         if isinstance(f, str) and f.lower().endswith(".shp"):
-            from flopy.utils.geometry import Polygon
-            from flopy.export.shapefile_utils import recarray2shp
+            from ..export.shapefile_utils import recarray2shp
+            from ..utils.geometry import Polygon
 
             geoms = []
             for ix, i in enumerate(self.reach_data.i):
@@ -2072,7 +2073,7 @@ class ModflowSfr2(Package):
                 geoms.append(Polygon(verts))
             recarray2shp(self.reach_data, geoms, shpname=f, **kwargs)
         else:
-            from flopy import export
+            from .. import export
 
             return export.utils.package_export(f, self, **kwargs)
 
@@ -2083,8 +2084,8 @@ class ModflowSfr2(Package):
         reaches can be used to filter for the longest connections in a GIS.
 
         """
-        from flopy.utils.geometry import LineString
-        from flopy.export.shapefile_utils import recarray2shp
+        from ..export.shapefile_utils import recarray2shp
+        from ..utils.geometry import LineString
 
         rd = self.reach_data.copy()
         m = self.parent
@@ -2126,8 +2127,8 @@ class ModflowSfr2(Package):
         the model (outset=0).
 
         """
-        from flopy.utils.geometry import Point
-        from flopy.export.shapefile_utils import recarray2shp
+        from ..export.shapefile_utils import recarray2shp
+        from ..utils.geometry import Point
 
         rd = self.reach_data
         if np.min(rd.outreach) == np.max(rd.outreach):
@@ -2160,8 +2161,8 @@ class ModflowSfr2(Package):
             Variable in SFR Package dataset 6a (see SFR package documentation)
 
         """
-        from flopy.utils.geometry import Point
-        from flopy.export.shapefile_utils import recarray2shp
+        from ..export.shapefile_utils import recarray2shp
+        from ..utils.geometry import Point
 
         rd = self.reach_data
         if np.min(rd.outreach) == np.max(rd.outreach):
@@ -2273,8 +2274,7 @@ class check:
         Notes
         -----
         info about appending to record arrays (views vs. copies and upcoming
-        changes to numpy):
-        http://stackoverflow.com/questions/22865877/how-do-i-write-to-multiple-fields-of-a-structured-array
+        changes to numpy): https://stackoverflow.com/q/22865877/
         """
         txt = ""
         array = array.view(np.recarray).copy()
@@ -2498,7 +2498,7 @@ class check:
 
             dx = delr[rd.j]
             dy = delc[rd.i]
-            hyp = np.sqrt(dx ** 2 + dy ** 2)
+            hyp = np.sqrt(dx**2 + dy**2)
 
             # breaks are when the connection distance is greater than
             # max node with * a tolerance
@@ -3211,8 +3211,7 @@ def _get_dataset(line, dataset):
 def _get_duplicates(a):
     """
     Returns duplicate values in an array, similar to pandas .duplicated()
-    method
-    http://stackoverflow.com/questions/11528078/determining-duplicate-values-in-an-array
+    method https://stackoverflow.com/q/11528078/
     """
     s = np.sort(a, axis=None)
     equal_to_previous_item = np.append(
@@ -3317,7 +3316,8 @@ def _print_rec_array(array, cols=None, delimiter=" ", float_format="{!s}"):
 def _parse_1c(line, reachinput, transroute):
     """
     Parse Data Set 1c for SFR2 package.
-    See http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?sfr.htm for more info
+    See https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/sfr.html
+    for more info
 
     Parameters
     ----------
@@ -3397,7 +3397,7 @@ def _parse_1c(line, reachinput, transroute):
 def _parse_6a(line, option):
     """
     Parse Data Set 6a for SFR2 package.
-    See http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?sfr.htm for more info
+    See https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/sfr.html for more info
 
     Parameters
     ----------
@@ -3469,7 +3469,7 @@ def _parse_6a(line, option):
 def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
     """
     Parse Data Set 6b for SFR2 package.
-    See http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?sfr.htm for more info
+    See https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/sfr.html for more info
 
     Parameters
     ----------

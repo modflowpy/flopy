@@ -11,9 +11,7 @@ import webbrowser as wb
 import numpy as np
 from numpy.lib.recfunctions import stack_arrays
 
-from .modflow.mfparbc import ModflowParBc as mfparbc
-from .utils import Util2d, Util3d, Transient2d, MfList, check
-from .utils import OptionBlock
+from .utils import MfList, OptionBlock, Transient2d, Util2d, Util3d, check
 from .utils.flopy_io import ulstrd
 
 
@@ -676,13 +674,13 @@ class Package(PackageInterface):
             None or Netcdf object
 
         """
-        from flopy import export
+        from . import export
 
         return export.utils.package_export(f, self, **kwargs)
 
     def _generate_heading(self):
         """Generate heading."""
-        from flopy import __version__
+        from . import __version__
 
         parent = self.parent
         self.heading = (
@@ -821,7 +819,7 @@ class Package(PackageInterface):
         >>> ml.dis.plot()
 
         """
-        from flopy.plot import PlotUtilities
+        from .plot import PlotUtilities
 
         if not self.plottable:
             raise TypeError(f"Package {self.name} is not plottable")
@@ -862,18 +860,17 @@ class Package(PackageInterface):
         self.export(filename)
 
     def webdoc(self):
+        """Open the web documentation."""
         if self.parent.version == "mf2k":
-            wa = f"http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/{self.url}"
+            wa = f"https://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/{self.url}"
         elif self.parent.version == "mf2005":
-            wa = f"http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/{self.url}"
+            wa = f"https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/{self.url}"
         elif self.parent.version == "ModflowNwt":
-            wa = f"http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/{self.url}"
+            wa = f"https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/{self.url}"
         else:
-            wa = None
+            return
 
-        # open the web address
-        if wa is not None:
-            wb.open(wa)
+        wb.open(wa)
 
     def write_file(self, f=None, check=False):
         """
@@ -889,6 +886,7 @@ class Package(PackageInterface):
         Default load method for standard boundary packages.
 
         """
+        from .modflow.mfparbc import ModflowParBc as mfparbc
 
         # parse keywords
         if "nper" in kwargs:

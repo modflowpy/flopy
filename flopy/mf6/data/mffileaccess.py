@@ -1,17 +1,15 @@
-import sys, inspect
+import inspect
+import sys
 from copy import deepcopy
+
 import numpy as np
-from ..mfbase import MFDataException, VerbosityLevel
-from ...utils.datautil import (
-    PyListUtil,
-    find_keyword,
-    DatumUtil,
-    MultiListIter,
-)
-from .mfdatautil import convert_data, to_string, MFComment
-from ...utils.binaryfile import BinaryHeader
+
 from ...utils import datautil
-from ..data.mfstructure import DatumType, MFDataStructure, DataType
+from ...utils.binaryfile import BinaryHeader
+from ...utils.datautil import DatumUtil, PyListUtil, find_keyword
+from ..data.mfstructure import DataType, DatumType, MFDataStructure
+from ..mfbase import MFDataException, VerbosityLevel
+from .mfdatautil import MFComment, convert_data, to_string
 
 
 class MFFileAccess:
@@ -23,6 +21,7 @@ class MFFileAccess:
         self._simulation_data = simulation_data
         self._path = path
         self._current_key = current_key
+        self._pos = 0
 
     @staticmethod
     def _get_bintype(modelgrid):
@@ -401,24 +400,42 @@ class MFFileAccessArray(MFFileAccess):
     ):
         import flopy.utils.binaryfile as bf
 
+        if not isinstance(modelgrid.ncpl, np.ndarray):
+            if data_size != modelgrid.ncpl:
+                read_multi_layer = True
+
         fd = self._open_ext_file(fname, True)
         numpy_type, name = self.datum_to_numpy_type(data_type)
         header_dtype = bf.BinaryHeader.set_dtype(
             bintype=self._get_bintype(modelgrid), precision="double"
         )
         if read_multi_layer and len(data_shape) > 1:
-            all_data = np.empty(data_shape, numpy_type)
-            headers = []
-            layer_shape = data_shape[1:]
-            data_size = int(data_size / data_shape[0])
-            for index in range(0, data_shape[0]):
-                layer_data = self._read_binary_file_layer(
-                    fd, fname, header_dtype, numpy_type, data_size, layer_shape
+            try:
+                all_data = np.empty(data_shape, numpy_type)
+                headers = []
+                layer_shape = data_shape[1:]
+                layer_data_size = int(data_size / data_shape[0])
+                for index in range(0, data_shape[0]):
+                    layer_data = self._read_binary_file_layer(
+                        fd,
+                        fname,
+                        header_dtype,
+                        numpy_type,
+                        layer_data_size,
+                        layer_shape,
+                    )
+                    all_data[index, :] = layer_data[0]
+                    headers.append(layer_data[1])
+                fd.close()
+                return all_data, headers
+            except MFDataException:
+                fd.seek(self._pos, 0)
+                bin_data = self._read_binary_file_layer(
+                    fd, fname, header_dtype, numpy_type, data_size, data_shape
                 )
-                all_data[index, :] = layer_data[0]
-                headers.append(layer_data[1])
-            fd.close()
-            return all_data, headers
+                self._pos = fd.tell()
+                fd.close()
+                return bin_data
         else:
             bin_data = self._read_binary_file_layer(
                 fd, fname, header_dtype, numpy_type, data_size, data_shape
@@ -2164,6 +2181,13 @@ class MFFileAccessList(MFFileAccess):
                         data_item,
                         sub_amt=sub_amt,
                     )
+                    if (
+                        data_item.indicates_file_name()
+                        or data_item.file_nam_in_nam_file()
+                    ):
+                        data_converted = datautil.clean_filename(
+                            data_converted
+                        )
                     if add_to_last_line:
                         self._last_line_info[-1].append(
                             [data_index, data_item.type, 0]

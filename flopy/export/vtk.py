@@ -5,16 +5,29 @@ outputs to VTK.
 
 import os
 import warnings
-import numpy as np
-from flopy.datbase import DataType, DataInterface
-from flopy.utils import Util3d
 
-from ..utils import import_optional_dependency
+import numpy as np
+
+from ..datbase import DataInterface, DataType
+from ..utils import Util3d, import_optional_dependency
 
 warnings.simplefilter("always", DeprecationWarning)
 
 
-VTKIGNORE = ("vkcb", "perlen", "steady", "tsmult", "nstp")
+VTKIGNORE = (
+    "vkcb",
+    "perlen",
+    "steady",
+    "tsmult",
+    "nstp",
+    "iac",
+    "ja",
+    "ihc",
+    "cl12",
+    "hwva",
+    "angldegx",
+    "angledegx",
+)
 
 
 class Pvd:
@@ -154,12 +167,18 @@ class Vtk:
         self.point_scalars = point_scalars
 
         self.verts = self.modelgrid.verts
-        self.iverts = self.modelgrid.iverts
         self.nnodes = self.modelgrid.nnodes
+
+        # check if iverts is has closed verts
+        self.iverts = []
+        for iv in self.modelgrid.iverts:
+            if iv[0] == iv[-1]:
+                iv = iv[:-1]
+            self.iverts.append(iv)
 
         nvpl = 0
         for iv in self.iverts:
-            nvpl += len(iv) - 1
+            nvpl += len(iv)
 
         self.nvpl = nvpl
 
@@ -235,7 +254,6 @@ class Vtk:
         """
         elevations = {}
         for i, iv in enumerate(self.iverts):
-            iv = iv[1:]
             for v in iv:
                 if v is None:
                     continue
@@ -275,7 +293,6 @@ class Vtk:
 
         for k in range(self.nlay):
             for i, iv in enumerate(self.iverts):
-                iv = iv[1:]
                 adji = (k * self.ncpl) + i
                 for v in iv:
                     if v is None:
@@ -301,7 +318,6 @@ class Vtk:
 
             if k == self.nlay - 1 or not shared_points:
                 for i, iv in enumerate(self.iverts):
-                    iv = iv[1:]
                     adji = (k * self.ncpl) + i
                     for v in iv:
                         if v is None:
@@ -387,7 +403,6 @@ class Vtk:
                 elevations = self._create_smoothed_elevation_graph(adjk)
 
             for i, iv in enumerate(self.iverts):
-                iv = iv[1:]
                 for v in iv:
                     if v is None:
                         continue
@@ -435,7 +450,6 @@ class Vtk:
                     )
 
                 for i, iv in enumerate(self.iverts):
-                    iv = iv[1:]
                     for v in iv:
                         if v is None:
                             continue
@@ -1836,7 +1850,7 @@ def export_heads(
     if vtk_grid_type != "auto":
         warnings.warn("vtk_grid_type is deprecated, setting to binary")
 
-    from flopy.utils import HeadFile
+    from ..utils import HeadFile
 
     if not os.path.exists(otfolder):
         os.mkdir(otfolder)
@@ -1926,7 +1940,7 @@ def export_cbc(
     if vtk_grid_type != "auto":
         warnings.warn("vtk_grid_type is deprecated, setting to binary")
 
-    from flopy.utils import CellBudgetFile
+    from ..utils import CellBudgetFile
 
     if not os.path.exists(otfolder):
         os.mkdir(otfolder)

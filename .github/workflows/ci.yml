@@ -8,6 +8,7 @@ on:
       - master
       - develop
       - 'release*'
+      - 'ci-diagnose'
   pull_request:
     branches: [master, develop]
 
@@ -33,18 +34,23 @@ jobs:
       with:
         python-version: 3.9
 
-    - name: Upgrade pip
+    - name: Upgrade pip and install build and twine
       run: |
         python -m pip install --upgrade pip
+        pip install build twine
 
     - name: Base flopy installation
       run: |
-        pip install . --use-feature=in-tree-build
+        pip install .
 
     - name: Print flopy version
       run: |
-        python -c "import flopy; print(flopy.__version__)"
+        python -c "import flopy; print(f'{flopy.__version__=}')"
 
+    - name: Build flopy packages, check dist outputs
+      run: |
+        python -m build
+        twine check --strict dist/*
 
   flopy_lint:
     name: linting
@@ -60,29 +66,37 @@ jobs:
     - name: Checkout flopy repo
       uses: actions/checkout@v2.3.4
 
-    # Standard python fails on windows without GDAL installation. Using
-    # standard python here since only linting on linux.
-    # Use standard bash shell with standard python
-    - name: Setup Python 3.8
+    - name: Setup Python
       uses: actions/setup-python@v2.2.2
       with:
         python-version: 3.9
 
-    - name: Print python version
+    - name: Print Python version
       run: |
         python --version
 
-    - name: Install Python 3.9 packages
+    - name: Install flopy and lint dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r etc/requirements.pip.txt
+        pip install .[lint]
+
+    - name: Run isort
+      run: |
+        echo "if isort check fails update isort using"
+        echo "  pip install isort --upgrade"
+        echo "and run"
+        echo "  isort ./flopy"
+        echo "and then commit the changes."
+        isort --check --diff ./flopy
 
     - name: Run black
       run: |
-        echo "if black check fails run"
+        echo "if black check fails update black using"
+        echo "  pip install black --upgrade"
+        echo "and run"
         echo "  black ./flopy"
         echo "and then commit the changes."
-        black --check ./flopy
+        black --check --diff ./flopy
 
     - name: Run flake8
       run: |
@@ -94,7 +108,6 @@ jobs:
 
   flopyCI:
     name: autotests
-    needs: [flopy_setup, flopy_lint]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -112,14 +125,6 @@ jobs:
             python-version: 3.9
             run-type: script
             test-path: run_scripts.py
-          - os: windows-latest
-            python-version: 3.9
-            run-type: std
-            test-path: ""
-          - os: windows-latest
-            python-version: 3.8
-            run-type: std
-            test-path: ""
     defaults:
       run:
         shell: bash
@@ -137,52 +142,22 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Upgrade pip and install wheel
+    - name: Upgrade pip
       run: |
         python -m pip install --upgrade pip
-        pip install wheel
 
-    - name: Install Python packages on Windows
-      if: runner.os == 'Windows'
+    - name: Install prerequisites
       run: |
-        pip install -r etc/requirements.windows.pip.txt
-
-    - name: Install Python packages on Linux and MacOS
-      if: runner.os != 'Windows'
-      run: |
-        pip install -r etc/requirements.full.pip.txt
-
-    - name: Download Python packages with GDAL dependencies on Windows
-      if: runner.os == 'Windows'
-      shell: python
-      run: |
-        import os
-        from gohlkegrabber import GohlkeGrabber
-        gg = GohlkeGrabber()
-        wheel_path = os.path.join(".", "wheels")
-        os.makedirs(wheel_path, exist_ok=True)
-        gg.retrieve(wheel_path, "gdal")
-        gg.retrieve(wheel_path, "rasterio")
-        gg.retrieve(wheel_path, "fiona")
-
-    - name: Install Python packages with GDAL dependencies on Windows
-      if: runner.os == 'Windows'
-      run: |
-        ls -ltr ./wheels/
-        pip install ./wheels/GDAL*
-        pip install ./wheels/rasterio*
-        pip install ./wheels/Fiona*
+        pip install https://github.com/modflowpy/pymake/zipball/master
 
     - name: Add jupyter and jupytext to notebooks run
       if: matrix.run-type == 'nb'
       run: |
         pip install jupyter jupytext
 
-    - name: Install pymake, xmipy, and flopy
+    - name: Install flopy and dependencies
       run: |
-        pip install https://github.com/modflowpy/pymake/zipball/master
-        pip install xmipy
-        pip install . --use-feature=in-tree-build
+        pip install .[test,optional]
 
     - name: Prepare for the autotests
       working-directory: ./autotest
@@ -190,14 +165,14 @@ jobs:
         pytest -v ci_prepare.py
 
     - name: Add executables directory to path on Linux and MacOS
-      if: runner.os != 'Windows'
       run: |
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-    - name: Add executables directory to path on Windows
-      if: runner.os == 'Windows'
+    - name: Create failedTests artifact folder
+      working-directory: ./autotest
       run: |
-        echo "C:\Users\runneradmin\.local\bin" >> $GITHUB_PATH
+        [ ! -d ./failedTests ] && mkdir ./failedTests
+        echo "artifact folder for diagnosing failures." > ./failedTests/readme.txt
 
     - name: Run pytest on autotest scripts
       if: matrix.run-type == 'std'
@@ -210,6 +185,14 @@ jobs:
       working-directory: ./autotest
       run: |
         pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml ${{ matrix.test-path }}
+
+    - name: Upload failedTests folder as an artifact
+      uses: actions/upload-artifact@v2
+      if: failure()
+      with:
+        name: failedTests-${{ matrix.os }}-${{ matrix.python-version }}
+        path: |
+          ./autotest/failedTests/
 
     - name: Print coverage report before upload
       working-directory: ./autotest

@@ -1,19 +1,19 @@
-import numpy as np
 import contextlib
 import warnings
-from distutils.version import LooseVersion
 
-from .utl_import import import_optional_dependency
+import numpy as np
 
 from .geometry import transform
 from .geospatial_utils import GeoSpatialUtil
+from .parse_version import Version
+from .utl_import import import_optional_dependency
 
-NUMPY_GE_121 = str(np.__version__) >= LooseVersion("1.21")
+NUMPY_GE_121 = Version(np.__version__) >= Version("1.21")
 
 shapely = import_optional_dependency("shapely", errors="silent")
 if shapely is not None:
-    SHAPELY_GE_20 = str(shapely.__version__) >= LooseVersion("2.0")
-    SHAPELY_LT_18 = str(shapely.__version__) < LooseVersion("1.8")
+    SHAPELY_GE_20 = Version(shapely.__version__) >= Version("2.0")
+    SHAPELY_LT_18 = Version(shapely.__version__) < Version("1.8")
 else:
     SHAPELY_GE_20 = False
     SHAPELY_LT_18 = False
@@ -45,7 +45,6 @@ if shapely_warning is not None and not SHAPELY_GE_20:
                 )
             yield
 
-
 elif SHAPELY_LT_18 and NUMPY_GE_121:
 
     @contextlib.contextmanager
@@ -57,7 +56,6 @@ elif SHAPELY_LT_18 and NUMPY_GE_121:
                 DeprecationWarning,
             )
             yield
-
 
 else:
 
@@ -186,29 +184,34 @@ class GridIntersect:
                 )
             )
 
-    def intersect(self, shp, **kwargs):
-        """
-        Method to intersect a shape with a model grid
+    def intersect(
+        self, shp, shapetype=None, sort_by_cellid=True, keepzerolengths=False
+    ):
+        """Method to intersect a shape with a model grid.
 
         Parameters
         ----------
         shp : shapely.geometry, geojson object, shapefile.Shape,
-              or flopy geomerty object
+              or flopy geometry object
+        shapetype : str, optional
+            type of shape (i.e. "point", "linestring", "polygon" or
+            their multi-variants), used by GeoSpatialUtil if shp is
+            passed as a list of vertices, default is None
         sort_by_cellid : bool
-            Sort results by cellid
+            sort results by cellid, ensures cell with lowest cellid is
+            returned for boundary cases when using vertex methods, default
+            is True
         keepzerolengths : bool
             boolean method to keep zero length intersections for
-            linestring intersection
+            linestring intersection, used when shp is of type "linestring"
 
         Returns
         -------
         numpy.recarray
             a record array containing information about the intersection
         """
-        gu = GeoSpatialUtil(shp)
+        gu = GeoSpatialUtil(shp, shapetype=shapetype)
         shp = gu.shapely
-        sort_by_cellid = kwargs.pop("sort_by_cellid", True)
-        keepzerolengths = kwargs.pop("keepzerolengths", False)
 
         if gu.shapetype in ("Point", "MultiPoint"):
             if (
@@ -654,7 +657,7 @@ class GridIntersect:
 
         return rec
 
-    def intersects(self, shp):
+    def intersects(self, shp, shapetype=None):
         """Return cellIDs for shapes that intersect with shape.
 
         Parameters
@@ -662,7 +665,10 @@ class GridIntersect:
         shp : shapely.geometry, geojson geometry, shapefile.shape,
               or flopy geometry object
             shape to intersect with the grid
-
+        shapetype : str, optional
+            type of shape (i.e. "point", "linestring", "polygon" or
+            their multi-variants), used by GeoSpatialUtil if shp is
+            passed as a list of vertices, default is None
         Returns
         -------
         rec : numpy.recarray
@@ -670,7 +676,7 @@ class GridIntersect:
             the shape intersects with
         """
         # query grid
-        shp = GeoSpatialUtil(shp).shapely
+        shp = GeoSpatialUtil(shp, shapetype=shapetype).shapely
 
         qresult = self.query_grid(shp)
         # filter result further if possible (only strtree and filter methods)
@@ -754,7 +760,6 @@ class GridIntersect:
                 tempnodes.append(node)
                 tempshapes.append(ixs)
             else:
-                # TODO: not sure if this is correct
                 tempshapes[-1] = shapely_geo.MultiPoint([tempshapes[-1], ixs])
 
         ixshapes = tempshapes

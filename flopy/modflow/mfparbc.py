@@ -5,6 +5,7 @@ the ModflowParBc class as `flopy.modflow.ModflowParBc`.
 """
 
 import numpy as np
+
 from ..utils.flopy_io import line_strip, ulstrd
 
 

@@ -3,9 +3,11 @@ Test MT3D model creation and file writing
 """
 
 import os
-import flopy
+
 import numpy as np
-from ci_framework import base_test_dir, FlopyTestSetup
+from ci_framework import FlopyTestSetup, base_test_dir
+
+import flopy
 
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 

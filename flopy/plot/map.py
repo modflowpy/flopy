@@ -1,13 +1,13 @@
-import numpy as np
-from ..utils import geometry
+import warnings
 
-import matplotlib.pyplot as plt
 import matplotlib.colors
-from matplotlib.collections import PathCollection, LineCollection
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.collections import LineCollection, PathCollection
 from matplotlib.path import Path
 
+from ..utils import geometry
 from . import plotutil
-import warnings
 
 warnings.simplefilter("always", PendingDeprecationWarning)
 
@@ -182,13 +182,13 @@ class PlotMapView:
 
         # workaround for tri-contour nan issue
         # use -2**31 to allow for 32 bit int arrays
-        plotarray[np.isnan(plotarray)] = -(2 ** 31)
+        plotarray[np.isnan(plotarray)] = -(2**31)
         if masked_values is None:
-            masked_values = [-(2 ** 31)]
+            masked_values = [-(2**31)]
         else:
             masked_values = list(masked_values)
-            if -(2 ** 31) not in masked_values:
-                masked_values.append(-(2 ** 31))
+            if -(2**31) not in masked_values:
+                masked_values.append(-(2**31))
 
         ismasked = None
         if masked_values is not None:
@@ -205,9 +205,8 @@ class PlotMapView:
             if "cmap" in kwargs.keys():
                 kwargs.pop("cmap")
 
-        plot_triplot = False
-        if "plot_triplot" in kwargs:
-            plot_triplot = kwargs.pop("plot_triplot")
+        filled = kwargs.pop("filled", False)
+        plot_triplot = kwargs.pop("plot_triplot", False)
 
         # Get vertices for the selected layer
         xcentergrid = self.mg.get_xcellcenters_for_layer(self.layer)
@@ -238,7 +237,10 @@ class PlotMapView:
             )
             triang.set_mask(mask)
 
-        contour_set = ax.tricontour(triang, plotarray, **kwargs)
+        if filled:
+            contour_set = ax.tricontourf(triang, plotarray, **kwargs)
+        else:
+            contour_set = ax.tricontour(triang, plotarray, **kwargs)
 
         if plot_triplot:
             ax.triplot(triang, color="black", marker="o", lw=0.75)
@@ -348,9 +350,6 @@ class PlotMapView:
         lc : matplotlib.collections.LineCollection
 
         """
-
-        from matplotlib.collections import PatchCollection
-
         ax = kwargs.pop("ax", self.ax)
         colors = kwargs.pop("colors", "grey")
         colors = kwargs.pop("color", colors)
@@ -687,7 +686,7 @@ class PlotMapView:
 
         # normalize
         if normalize:
-            vmag = np.sqrt(u ** 2.0 + v ** 2.0)
+            vmag = np.sqrt(u**2.0 + v**2.0)
             idx = vmag > 0.0
             u[idx] /= vmag[idx]
             v[idx] /= vmag[idx]
@@ -736,7 +735,11 @@ class PlotMapView:
 
         # make sure pathlines is a list
         if not isinstance(pl, list):
-            pl = [pl]
+            pids = np.unique(pl["particleid"])
+            if len(pids) > 1:
+                pl = [pl[pl["particleid"] == pid] for pid in pids]
+            else:
+                pl = [pl]
 
         if "layer" in kwargs:
             kon = kwargs.pop("layer")
@@ -806,6 +809,9 @@ class PlotMapView:
                     color=markercolor,
                     ms=markersize,
                 )
+
+        ax.set_xlim(self.extent[0], self.extent[1])
+        ax.set_ylim(self.extent[2], self.extent[3])
         return lc
 
     def plot_timeseries(self, ts, travel_time=None, **kwargs):

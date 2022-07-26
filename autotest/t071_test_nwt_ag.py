@@ -1,7 +1,9 @@
 import os
-import flopy
+
 import numpy as np
-from ci_framework import base_test_dir, FlopyTestSetup
+from ci_framework import FlopyTestSetup, base_test_dir
+
+import flopy
 
 mpth = os.path.join("..", "examples", "data", "ag_test")
 

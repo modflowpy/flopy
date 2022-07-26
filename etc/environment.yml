@@ -11,6 +11,7 @@ dependencies:
   - pylint
   - flake8
   - black
+  - isort
   - coverage
   - pytest
   - pytest-xdist
@@ -23,7 +24,7 @@ dependencies:
   - scipy
   - pandas
   - netcdf4
-  - pyshp>=2.0.0
+  - pyshp
   - rasterio
   - fiona
   - descartes
@@ -32,9 +33,6 @@ dependencies:
   - geos
   - geojson
   - vtk
-
-  # external dependencies
-  - requests
 
   # MODFLOW API dependencies
   - bmipy

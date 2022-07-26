@@ -4,15 +4,15 @@ the ModflowStr class as `flopy.modflow.ModflowStr`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/str.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/str.html>`_.
 
 """
 import numpy as np
-from ..utils import MfList
+
 from ..pakbase import Package
-from .mfparbc import ModflowParBc as mfparbc
+from ..utils import MfList, read_fixed_var, write_fixed_var
 from ..utils.recarray_utils import create_empty_recarray
-from ..utils import read_fixed_var, write_fixed_var
+from .mfparbc import ModflowParBc as mfparbc
 
 
 class ModflowStr(Package):
@@ -274,7 +274,7 @@ class ModflowStr(Package):
         )
 
         self._generate_heading()
-        self.url = "str.htm"
+        self.url = "str.html"
         self.mxacts = mxacts
         self.nss = nss
         self.icalc = icalc

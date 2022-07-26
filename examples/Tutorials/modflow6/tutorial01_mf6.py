@@ -20,8 +20,10 @@
 # ## Getting Started
 
 import os
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
+
 import flopy
 
 # We are creating a square model with a specified head equal to `h1` along
@@ -221,7 +223,7 @@ h = gwf.output.head().get_data(kstpkper=(0, 0))
 x = y = np.linspace(0, L, N)
 y = y[::-1]
 vmin, vmax = 90.0, 100.0
-contour_intervals = np.arange(90, 100.1, 1.)
+contour_intervals = np.arange(90, 100.1, 1.0)
 
 
 # ### Plot a Map of Layer 1
@@ -229,7 +231,7 @@ contour_intervals = np.arange(90, 100.1, 1.)
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 c = ax.contour(x, y, h[0], contour_intervals, colors="black")
-plt.clabel(c, fmt="%2.1f");
+plt.clabel(c, fmt="%2.1f")
 
 
 # ### Plot a Map of Layer 10
@@ -239,7 +241,7 @@ y = y[::-1]
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 c = ax.contour(x, y, h[-1], contour_intervals, colors="black")
-plt.clabel(c, fmt="%1.1f");
+plt.clabel(c, fmt="%1.1f")
 
 # ### Plot a Cross-section along row 25
 
@@ -247,7 +249,7 @@ z = np.linspace(-H / Nlay / 2, -H + H / Nlay / 2, Nlay)
 fig = plt.figure(figsize=(9, 3))
 ax = fig.add_subplot(1, 1, 1, aspect="auto")
 c = ax.contour(x, z, h[:, int(N / 4), :], contour_intervals, colors="black")
-plt.clabel(c, fmt="%1.1f");
+plt.clabel(c, fmt="%1.1f")
 
 # ### Use the FloPy `PlotMapView()` capabilities for MODFLOW 6
 #
@@ -281,7 +283,7 @@ contours = modelmap.contour_array(
     colors="black",
 )
 ax.clabel(contours, fmt="%2.1f")
-cb = plt.colorbar(pa, shrink=0.5, ax=ax);
+cb = plt.colorbar(pa, shrink=0.5, ax=ax)
 
 
 # ### Use the FloPy `PlotCrossSection()` capabilities for MODFLOW 6
@@ -305,7 +307,7 @@ contours = modelmap.contour_array(
     colors="black",
 )
 ax.clabel(contours, fmt="%2.1f")
-cb = plt.colorbar(pa, shrink=0.5, ax=ax);
+cb = plt.colorbar(pa, shrink=0.5, ax=ax)
 
 
 # ## Determine the Flow Residual
@@ -318,9 +320,9 @@ cb = plt.colorbar(pa, shrink=0.5, ax=ax);
 #
 # First extract the `FLOW-JA-FACE` array from the cell-by-cell budget file
 
-flowja = gwf.oc.output.budget().get_data(
-    text="FLOW-JA-FACE", kstpkper=(0, 0)
-)[0]
+flowja = gwf.oc.output.budget().get_data(text="FLOW-JA-FACE", kstpkper=(0, 0))[
+    0
+]
 
 # Next extract the flow residual. The MODFLOW 6 binary grid file is passed
 # into the function because it contains the ia array that defines
@@ -343,6 +345,4 @@ contours = modelmap.contour_array(
     colors="black",
 )
 ax.clabel(contours, fmt="%2.1f")
-plt.colorbar(pa, shrink=0.5);
-
-
+plt.colorbar(pa, shrink=0.5)

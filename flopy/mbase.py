@@ -5,20 +5,21 @@ mbase module
 
 """
 import abc
+import copy
 import os
+import queue as Queue
 import shutil
 import threading
 import warnings
-import queue as Queue
-
 from datetime import datetime
 from shutil import which
-from subprocess import Popen, PIPE, STDOUT
-import copy
+from subprocess import PIPE, STDOUT, Popen
+
 import numpy as np
-from flopy import utils, discretization
-from .version import __version__
+
+from . import discretization, utils
 from .discretization.grid import Grid
+from .version import __version__
 
 ## Global variables
 # Multiplier for individual array elements in integer and real arrays read by
@@ -669,7 +670,11 @@ class BaseModel(ModelInterface):
 
         # return self.get_package(item)
         # to avoid infinite recursion
-        if item == "_packagelist" or item == "packagelist":
+        if (
+            item == "_packagelist"
+            or item == "packagelist"
+            or item == "mfnam_packages"
+        ):
             raise AttributeError(item)
         pckg = self.get_package(item)
         if pckg is not None or item in self.mfnam_packages:
@@ -1584,7 +1589,7 @@ class BaseModel(ModelInterface):
         >>> ml.plot()
 
         """
-        from flopy.plot import PlotUtilities
+        from .plot import PlotUtilities
 
         axes = PlotUtilities._plot_model_helper(
             self, SelPackList=SelPackList, **kwargs

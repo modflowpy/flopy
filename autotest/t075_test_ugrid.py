@@ -4,11 +4,13 @@ Unstructured grid tests
 """
 
 import os
+
 import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
+
 from flopy.discretization import UnstructuredGrid, VertexGrid
 from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
-from ci_framework import base_test_dir, FlopyTestSetup
 
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
@@ -279,7 +281,7 @@ def test_voronoi_grid0(plot=False):
     test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     name = "vor0"
-    answer_ncpl = 3804
+    answer_ncpl = 3803
     domain = [
         [1831.381546, 6335.543757],
         [4337.733475, 6851.136153],
@@ -298,9 +300,9 @@ def test_voronoi_grid0(plot=False):
         [1330.11116, 1809.788273],
         [399.1804436, 2998.515188],
         [914.7728404, 5132.494831],
-        [1831.381546, 6335.543757],
+        #        [1831.381546, 6335.543757],
     ]
-    area_max = 100.0 ** 2
+    area_max = 100.0**2
     tri = Triangle(maximum_area=area_max, angle=30, model_ws=model_ws)
     poly = np.array(domain)
     tri.add_polygon(poly)
@@ -308,11 +310,6 @@ def test_voronoi_grid0(plot=False):
 
     vor = VoronoiGrid(tri)
     gridprops = vor.get_gridprops_vertexgrid()
-    ncpl = gridprops["ncpl"]
-    assert (
-        ncpl == answer_ncpl
-    ), f"Number of cells should be {answer_ncpl}. Found {ncpl}"
-
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
 
     if plot:
@@ -323,6 +320,19 @@ def test_voronoi_grid0(plot=False):
         ax.set_aspect("equal")
         voronoi_grid.plot(ax=ax)
         plt.savefig(os.path.join(model_ws, f"{name}.png"))
+
+    # ensure proper number of cells
+    ncpl = gridprops["ncpl"]
+    errmsg = f"Number of cells should be {answer_ncpl}. Found {ncpl}"
+    assert ncpl == answer_ncpl, errmsg
+
+    # ensure that all cells have 3 or more points
+    ninvalid_cells = []
+    for icell, ivts in enumerate(vor.iverts):
+        if len(ivts) < 3:
+            ninvalid_cells.append(icell)
+    errmsg = f"The following cells do not have 3 or more vertices.\n{ninvalid_cells}"
+    assert len(ninvalid_cells) == 0, errmsg
 
     return
 
@@ -346,10 +356,6 @@ def test_voronoi_grid1(plot=False):
     vor = VoronoiGrid(tri)
     gridprops = vor.get_gridprops_vertexgrid()
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
-    ncpl = gridprops["ncpl"]
-    assert (
-        ncpl == answer_ncpl
-    ), f"Number of cells should be {answer_ncpl}. Found {ncpl}"
 
     if plot:
         import matplotlib.pyplot as plt
@@ -359,6 +365,19 @@ def test_voronoi_grid1(plot=False):
         ax.set_aspect("equal")
         voronoi_grid.plot(ax=ax)
         plt.savefig(os.path.join(model_ws, f"{name}.png"))
+
+    # ensure proper number of cells
+    ncpl = gridprops["ncpl"]
+    errmsg = f"Number of cells should be {answer_ncpl}. Found {ncpl}"
+    assert ncpl == answer_ncpl, errmsg
+
+    # ensure that all cells have 3 or more points
+    ninvalid_cells = []
+    for icell, ivts in enumerate(vor.iverts):
+        if len(ivts) < 3:
+            ninvalid_cells.append(icell)
+    errmsg = f"The following cells do not have 3 or more vertices.\n{ninvalid_cells}"
+    assert len(ninvalid_cells) == 0, errmsg
 
     return
 
@@ -376,15 +395,35 @@ def test_voronoi_grid2(plot=False):
     circle_poly = [(x, y) for x, y in zip(x, y)]
     tri = Triangle(maximum_area=50, angle=30, model_ws=model_ws)
     tri.add_polygon(circle_poly)
-    tri.build(verbose=False)
+    tri.build(verbose=True)
 
     vor = VoronoiGrid(tri)
     gridprops = vor.get_gridprops_vertexgrid()
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
+
+    # Check for success
+    success = True
+    final_error_message = ""
+
+    # ensure proper number of cells; The answer should be answer_ncpl, but
+    # we are getting slightly different answers with triangle on ubuntu,
+    # so instead of matching exactly, we are making sure that the number of
+    # cells are close.
     ncpl = gridprops["ncpl"]
-    assert (
-        ncpl == answer_ncpl
-    ), f"Number of cells should be {answer_ncpl}. Found {ncpl}"
+    errmsg = f"Number of cells should be {answer_ncpl}. Found {ncpl}"
+    if abs(ncpl - answer_ncpl) > 5:
+        final_error_message += errmsg + "\n"
+        success = False
+
+    # ensure that all cells have 3 or more points
+    ninvalid_cells = []
+    for icell, ivts in enumerate(vor.iverts):
+        if len(ivts) < 3:
+            ninvalid_cells.append(icell)
+    errmsg = f"The following cells do not have 3 or more vertices.\n{ninvalid_cells}"
+    if len(ninvalid_cells) > 0:
+        final_error_message += errmsg + "\n"
+        success = False
 
     if plot:
         import matplotlib.pyplot as plt
@@ -395,6 +434,12 @@ def test_voronoi_grid2(plot=False):
         voronoi_grid.plot(ax=ax)
         plt.savefig(os.path.join(model_ws, f"{name}.png"))
 
+    # copy folder to ./failedTests folder
+    # uncomment if problems encountered and this will save
+    # this test to the failedTests artifact on Github actions
+    # test_setup.save_as_artifact()
+
+    assert success, final_error_message
     return
 
 
@@ -426,10 +471,6 @@ def test_voronoi_grid3(plot=False):
     vor = VoronoiGrid(tri)
     gridprops = vor.get_gridprops_vertexgrid()
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
-    ncpl = gridprops["ncpl"]
-    assert (
-        ncpl == answer_ncpl
-    ), f"Number of cells should be {answer_ncpl}. Found {ncpl}"
 
     if plot:
         import matplotlib.pyplot as plt
@@ -439,6 +480,19 @@ def test_voronoi_grid3(plot=False):
         ax.set_aspect("equal")
         voronoi_grid.plot(ax=ax)
         plt.savefig(os.path.join(model_ws, f"{name}.png"))
+
+    # ensure proper number of cells
+    ncpl = gridprops["ncpl"]
+    errmsg = f"Number of cells should be {answer_ncpl}. Found {ncpl}"
+    assert ncpl == answer_ncpl, errmsg
+
+    # ensure that all cells have 3 or more points
+    ninvalid_cells = []
+    for icell, ivts in enumerate(vor.iverts):
+        if len(ivts) < 3:
+            ninvalid_cells.append(icell)
+    errmsg = f"The following cells do not have 3 or more vertices.\n{ninvalid_cells}"
+    assert len(ninvalid_cells) == 0, errmsg
 
     return
 
@@ -464,10 +518,6 @@ def test_voronoi_grid4(plot=False):
     vor = VoronoiGrid(tri)
     gridprops = vor.get_gridprops_vertexgrid()
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
-    ncpl = gridprops["ncpl"]
-    assert (
-        ncpl == answer_ncpl
-    ), f"Number of cells should be {answer_ncpl}. Found {ncpl}"
 
     if plot:
         import matplotlib.pyplot as plt
@@ -478,6 +528,19 @@ def test_voronoi_grid4(plot=False):
         voronoi_grid.plot(ax=ax)
         plt.savefig(os.path.join(model_ws, f"{name}.png"))
 
+    # ensure proper number of cells
+    ncpl = gridprops["ncpl"]
+    errmsg = f"Number of cells should be {answer_ncpl}. Found {ncpl}"
+    assert ncpl == answer_ncpl, errmsg
+
+    # ensure that all cells have 3 or more points
+    ninvalid_cells = []
+    for icell, ivts in enumerate(vor.iverts):
+        if len(ivts) < 3:
+            ninvalid_cells.append(icell)
+    errmsg = f"The following cells do not have 3 or more vertices.\n{ninvalid_cells}"
+    assert len(ninvalid_cells) == 0, errmsg
+
     return
 
 
@@ -486,10 +549,10 @@ def test_voronoi_grid5(plot=False):
     test_setup = FlopyTestSetup(verbose=True, test_dirs=model_ws)
 
     name = "vor5"
-    answer_ncpl = 1067
+    answer_ncpl = 1305
     active_domain = [(0, 0), (100, 0), (100, 100), (0, 100)]
     area1 = [(10, 10), (40, 10), (40, 40), (10, 40)]
-    area2 = [(50, 50), (90, 50), (90, 90), (50, 90)]
+    area2 = [(70, 70), (90, 70), (90, 90), (70, 90)]
 
     tri = Triangle(angle=30, model_ws=model_ws)
 
@@ -515,7 +578,7 @@ def test_voronoi_grid5(plot=False):
     # tri.add_hole((70, 20))
 
     # add line through domain to force conforming cells
-    line = [(x, x) for x in np.linspace(10, 90, 100)]
+    line = [(x, x) for x in np.linspace(11, 89, 100)]
     tri.add_polygon(line)
 
     # then regions and other polygons should follow
@@ -523,17 +586,18 @@ def test_voronoi_grid5(plot=False):
     tri.add_polygon(area2)
     tri.add_region((1, 1), 0, maximum_area=100)  # point inside active domain
     tri.add_region((11, 11), 1, maximum_area=10)  # point inside area1
-    tri.add_region((70, 70), 2, maximum_area=3)  # point inside area2
+    tri.add_region((70, 70), 2, maximum_area=1)  # point inside area2
 
     tri.build(verbose=False)
 
     vor = VoronoiGrid(tri)
     gridprops = vor.get_gridprops_vertexgrid()
     voronoi_grid = VertexGrid(**gridprops, nlay=1)
-    ncpl = gridprops["ncpl"]
-    assert (
-        ncpl == answer_ncpl
-    ), f"Number of cells should be {answer_ncpl}. Found {ncpl}"
+
+    ninvalid_cells = []
+    for icell, ivts in enumerate(vor.iverts):
+        if len(ivts) < 3:
+            ninvalid_cells.append(icell)
 
     if plot:
         import matplotlib.pyplot as plt
@@ -542,7 +606,24 @@ def test_voronoi_grid5(plot=False):
         ax = fig.add_subplot()
         ax.set_aspect("equal")
         voronoi_grid.plot(ax=ax)
+
+        # plot invalid cells
+        ax.plot(
+            voronoi_grid.xcellcenters[ninvalid_cells],
+            voronoi_grid.ycellcenters[ninvalid_cells],
+            "ro",
+        )
+
         plt.savefig(os.path.join(model_ws, f"{name}.png"))
+
+    # ensure proper number of cells
+    ncpl = gridprops["ncpl"]
+    errmsg = f"Number of cells should be {answer_ncpl}. Found {ncpl}"
+    assert ncpl == answer_ncpl, errmsg
+
+    # ensure that all cells have 3 or more points
+    errmsg = f"The following cells do not have 3 or more vertices.\n{ninvalid_cells}"
+    assert len(ninvalid_cells) == 0, errmsg
 
     return
 
@@ -556,9 +637,9 @@ if __name__ == "__main__":
     # test_create_unstructured_grid_from_verts()
     # test_triangle_unstructured_grid()
     # test_voronoi_vertex_grid()
-    test_voronoi_grid0(plot=True)
-    test_voronoi_grid1(plot=True)
+    # test_voronoi_grid0(plot=True)
+    # test_voronoi_grid1(plot=True)
     test_voronoi_grid2(plot=True)
-    test_voronoi_grid3(plot=True)
-    test_voronoi_grid4(plot=True)
-    test_voronoi_grid5(plot=True)
+    # test_voronoi_grid3(plot=True)
+    # test_voronoi_grid4(plot=True)
+    # test_voronoi_grid5(plot=True)

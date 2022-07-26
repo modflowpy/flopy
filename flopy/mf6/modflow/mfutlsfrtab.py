@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on October 29, 2021 21:09:57 UTC
+# FILE created on April 11, 2022 18:22:41 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -12,7 +12,7 @@ class ModflowUtlsfrtab(mfpackage.MFPackage):
     Parameters
     ----------
     model : MFModel
-        Model that this package is a part of.  Package is automatically
+        Model that this package is a part of. Package is automatically
         added to model when it is initialized.
     loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
@@ -24,13 +24,29 @@ class ModflowUtlsfrtab(mfpackage.MFPackage):
     ncol : integer
         * ncol (integer) integer value specifying the number of columns in the
           reach cross-section table. There must be NCOL columns of data in the
-          TABLE block. Currently, NCOL must be equal to 2.
-    table : [xfraction, depth]
+          TABLE block. NCOL must be equal to 2 if MANFRACTION is not specified
+          or 3 otherwise.
+    table : [xfraction, height, manfraction]
         * xfraction (double) real value that defines the station (x) data for
           the cross-section as a fraction of the width (RWID) of the reach.
-        * depth (double) real value that defines the elevation (z) data for the
-          cross-section as a depth relative to the top elevation of the reach
-          (RTP) and corresponding to the station data on the same line.
+          XFRACTION must be greater than or equal to zero but can be greater
+          than one. XFRACTION values can be used to decrease or increase the
+          width of a reach from the specified reach width (RWID).
+        * height (double) real value that is the height relative to the top of
+          the lowest elevation of the streambed (RTP) and corresponding to the
+          station data on the same line. HEIGHT must be greater than or equal
+          to zero and at least one cross-section height must be equal to zero.
+        * manfraction (double) real value that defines the Manning's roughness
+          coefficient data for the cross-section as a fraction of the Manning's
+          roughness coefficient for the reach (MAN) and corresponding to the
+          station data on the same line. MANFRACTION must be greater than zero.
+          MANFRACTION is applied from the XFRACTION value on the same line to
+          the XFRACTION value on the next line. Although a MANFRACTION value is
+          specified on the last line, any value greater than zero can be
+          applied to MANFRACTION(NROW). MANFRACTION is only specified if NCOL
+          is 3. If MANFRACTION is not specified, the Manning's roughness
+          coefficient for the reach (MAN) is applied to the entire cross-
+          section.
     filename : String
         File name for this package.
     pname : String
@@ -49,6 +65,10 @@ class ModflowUtlsfrtab(mfpackage.MFPackage):
 
     dfn = [
         [
+            "header",
+            "multi-package",
+        ],
+        [
             "block dimensions",
             "name nrow",
             "type integer",
@@ -65,7 +85,7 @@ class ModflowUtlsfrtab(mfpackage.MFPackage):
         [
             "block table",
             "name table",
-            "type recarray xfraction depth",
+            "type recarray xfraction height manfraction",
             "shape (nrow)",
             "reader urword",
         ],
@@ -80,12 +100,22 @@ class ModflowUtlsfrtab(mfpackage.MFPackage):
         ],
         [
             "block table",
-            "name depth",
+            "name height",
             "type double precision",
             "shape",
             "tagged false",
             "in_record true",
             "reader urword",
+        ],
+        [
+            "block table",
+            "name manfraction",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "optional true",
         ],
     ]
 
@@ -98,10 +128,10 @@ class ModflowUtlsfrtab(mfpackage.MFPackage):
         table=None,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            model, "sfrtab", filename, pname, loading_package, parent_file
+            model, "sfrtab", filename, pname, loading_package, **kwargs
         )
 
         # set up variables
@@ -109,49 +139,3 @@ class ModflowUtlsfrtab(mfpackage.MFPackage):
         self.ncol = self.build_mfdata("ncol", ncol)
         self.table = self.build_mfdata("table", table)
         self._init_complete = True
-
-
-class UtlsfrtabPackages(mfpackage.MFChildPackages):
-    """
-    UtlsfrtabPackages is a container class for the ModflowUtlsfrtab class.
-
-    Methods
-    ----------
-    initialize
-        Initializes a new ModflowUtlsfrtab package removing any sibling child
-        packages attached to the same parent package. See ModflowUtlsfrtab init
-        documentation for definition of parameters.
-    append_package
-        Adds a new ModflowUtlsfrtab package to the container. See ModflowUtlsfrtab
-        init documentation for definition of parameters.
-    """
-
-    package_abbr = "utlsfrtabpackages"
-
-    def initialize(
-        self, nrow=None, ncol=None, table=None, filename=None, pname=None
-    ):
-        new_package = ModflowUtlsfrtab(
-            self._model,
-            nrow=nrow,
-            ncol=ncol,
-            table=table,
-            filename=filename,
-            pname=pname,
-            parent_file=self._cpparent,
-        )
-        self._init_package(new_package, filename)
-
-    def append_package(
-        self, nrow=None, ncol=None, table=None, filename=None, pname=None
-    ):
-        new_package = ModflowUtlsfrtab(
-            self._model,
-            nrow=nrow,
-            ncol=ncol,
-            table=table,
-            filename=filename,
-            pname=pname,
-            parent_file=self._cpparent,
-        )
-        self._append_package(new_package, filename)

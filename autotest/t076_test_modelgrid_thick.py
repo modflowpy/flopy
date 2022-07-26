@@ -4,7 +4,8 @@ Model grid thick method tests
 """
 
 import numpy as np
-from flopy.discretization import StructuredGrid, VertexGrid, UnstructuredGrid
+
+from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 
 
 def test_structured_thick():

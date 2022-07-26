@@ -1,11 +1,11 @@
 # Remove the temp directory and then create a fresh one
-import pytest
 import os
-import sys
 import shutil
-from subprocess import Popen, PIPE
+import sys
+from subprocess import PIPE, Popen
 
-from ci_framework import get_parent_path, FlopyTestSetup
+import pytest
+from ci_framework import FlopyTestSetup, get_parent_path
 
 parent_path = get_parent_path()
 base_dir = os.path.join(parent_path, "temp")

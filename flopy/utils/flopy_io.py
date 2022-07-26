@@ -3,8 +3,8 @@ Module for input/output utilities
 """
 import os
 import sys
+
 import numpy as np
-from ..utils import import_optional_dependency
 
 
 def _fmt_string(array, float_format="{}"):
@@ -184,7 +184,7 @@ def write_fixed_var(v, length=10, ipos=None, free=False, comment=None):
             width = ipos[n]
             if isinstance(v[n], (float, np.float32, np.float64)):
                 decimal = width - 6
-                vmin, vmax = 10 ** -decimal, 10 ** decimal
+                vmin, vmax = 10**-decimal, 10**decimal
                 if abs(v[n]) < vmin or abs(v[n]) > vmax:
                     ctype = "g"  # default precision is 6 if not specified
                 else:
@@ -277,9 +277,9 @@ def flux_to_wel(cbc_file, text, precision="single", model=None, verbose=False):
     flopy.modflow.ModflowWel instance
 
     """
+    from ..modflow import Modflow, ModflowWel
     from . import CellBudgetFile as CBF
     from .util_list import MfList
-    from ..modflow import Modflow, ModflowWel
 
     cbf = CBF(cbc_file, precision=precision, verbose=verbose)
 
@@ -325,7 +325,7 @@ def loadtxt(
     """
     Use pandas if it is available to load a text file
     (significantly faster than n.loadtxt or genfromtxt see
-    http://stackoverflow.com/questions/18259393/numpy-loading-csv-too-slow-compared-to-matlab)
+    https://stackoverflow.com/q/18259393/)
 
     Parameters
     ----------
@@ -347,6 +347,8 @@ def loadtxt(
     ra : np.recarray
         Numpy record array of file contents.
     """
+    from ..utils import import_optional_dependency
+
     # test if pandas should be used, if available
     if use_pandas:
         pd = import_optional_dependency("pandas")
@@ -462,6 +464,7 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
     # check for scaling factor
     if not binary:
         if line.strip().lower().startswith("sfac"):
+            line_list = line_parse(line)
             sfac = float(line_list[1])
             line = file_handle.readline()
 

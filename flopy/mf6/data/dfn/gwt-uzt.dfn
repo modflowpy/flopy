@@ -1,4 +1,5 @@
 # --------------------- gwt uzt options ---------------------
+# flopy multi-package
 
 block options
 name flow_package_name
@@ -50,7 +51,7 @@ type keyword
 reader urword
 optional true
 longname print calculated concentrations to listing file
-description REPLACE print_head {'{#1}': 'UZF cell', '{#2}': 'concentration', '{#3}': 'CONCENTRATION'}
+description REPLACE print_concentration {'{#1}': 'UZF cell', '{#2}': 'concentration', '{#3}': 'CONCENTRATION'}
 
 block options
 name print_flows

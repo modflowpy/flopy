@@ -7,14 +7,16 @@ util_array module.  Contains the util_2d, util_3d and transient_2d classes.
 """
 # from future.utils import with_metaclass
 
+import copy
 import os
 import shutil
-import copy
-import numpy as np
 from warnings import warn
+
+import numpy as np
+
+from ..datbase import DataInterface, DataType
 from ..utils.binaryfile import BinaryHeader
 from ..utils.flopy_io import line_parse
-from ..datbase import DataType, DataInterface
 
 
 class ArrayFormat:
@@ -653,7 +655,7 @@ class Util3d(DataInterface):
         return True
 
     def export(self, f, **kwargs):
-        from flopy import export
+        from .. import export
 
         return export.utils.array3d_export(f, self, **kwargs)
 
@@ -726,7 +728,7 @@ class Util3d(DataInterface):
         >>> ml.lpf.hk.plot()
 
         """
-        from flopy.plot import PlotUtilities
+        from ..plot import PlotUtilities
 
         axes = PlotUtilities._plot_util3d_helper(
             self,
@@ -792,6 +794,17 @@ class Util3d(DataInterface):
             self.__value, np.ndarray
         ):
             self.__value = [self.__value] * self.shape[0]
+
+        # if this is a flat array for an unstructured mfusg model,
+        # convert to a (possibly jagged) list of layer arrays
+        if (
+            self.shape[1] is None
+            and isinstance(self.shape[2], (np.ndarray, list))
+            and len(self.__value) == np.sum(self.shape[2])
+        ):
+            self.__value = np.split(
+                self.__value, np.cumsum(self.shape[2])[:-1]
+            )
 
         # if this is a list or 1-D array with constant values per layer
         if isinstance(self.__value, list) or (
@@ -1144,7 +1157,7 @@ class Transient3d(DataInterface):
                 s += self.transient_3ds[kper][k].get_file_entry()
             return 1, s
         elif kper < min(self.transient_3ds.keys()):
-            t = self.get_zero_3d(kper).get_file_entry()
+            t = self.get_zero_3d(kper)
             s = ""
             for k in range(self.shape[0]):
                 s += t[k].get_file_entry()
@@ -1530,7 +1543,7 @@ class Transient2d(DataInterface):
         >>> ml.rch.rech.plot()
 
         """
-        from flopy.plot import PlotUtilities
+        from ..plot import PlotUtilities
 
         axes = PlotUtilities._plot_transient2d_helper(
             self,
@@ -1586,7 +1599,7 @@ class Transient2d(DataInterface):
         return arr
 
     def export(self, f, **kwargs):
-        from flopy import export
+        from .. import export
 
         return export.utils.transient2d_export(f, self, **kwargs)
 
@@ -1984,7 +1997,7 @@ class Util2d(DataInterface):
         >>> ml.dis.top.plot()
 
         """
-        from flopy.plot import PlotUtilities
+        from ..plot import PlotUtilities
 
         axes = PlotUtilities._plot_util2d_helper(
             self,
@@ -1997,7 +2010,7 @@ class Util2d(DataInterface):
         return axes
 
     def export(self, f, **kwargs):
-        from flopy import export
+        from .. import export
 
         return export.utils.array2d_export(f, self, **kwargs)
 

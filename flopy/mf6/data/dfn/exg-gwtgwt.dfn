@@ -1,0 +1,275 @@
+# --------------------- exg gwtgwt options ---------------------
+# flopy multi-package
+
+block options
+name gwfmodelname1
+type string
+reader urword
+optional false
+longname keyword to specify name of first corresponding GWF Model
+description keyword to specify name of first corresponding GWF Model.  In the simulation name file, the GWT6-GWT6 entry contains names for GWT Models (exgmnamea and exgmnameb).  The GWT Model with the name exgmnamea must correspond to the GWF Model with the name gwfmodelname1.
+
+block options
+name gwfmodelname2
+type string
+reader urword
+optional false
+longname keyword to specify name of second corresponding GWF Model
+description keyword to specify name of second corresponding GWF Model.  In the simulation name file, the GWT6-GWT6 entry contains names for GWT Models (exgmnamea and exgmnameb).  The GWT Model with the name exgmnameb must correspond to the GWF Model with the name gwfmodelname2.
+
+block options
+name auxiliary
+type string
+shape (naux)
+reader urword
+optional true
+longname keyword to specify aux variables
+description an array of auxiliary variable names.  There is no limit on the number of auxiliary variables that can be provided. Most auxiliary variables will not be used by the GWF-GWF Exchange, but they will be available for use by other parts of the program.  If an auxiliary variable with the name ``ANGLDEGX'' is found, then this information will be used as the angle (provided in degrees) between the connection face normal and the x axis, where a value of zero indicates that a normal vector points directly along the positive x axis.  The connection face normal is a normal vector on the cell face shared between the cell in model 1 and the cell in model 2 pointing away from the model 1 cell.  Additional information on ``ANGLDEGX'' is provided in the description of the DISU Package.  If an auxiliary variable with the name ``CDIST'' is found, then this information will be used as the straight-line connection distance, including the vertical component, between the two cell centers.  Both ANGLDEGX and CDIST are required if specific discharge is calculated for either of the groundwater models.
+
+block options
+name boundnames
+type keyword
+shape
+reader urword
+optional true
+longname
+description REPLACE boundnames {'{#1}': 'GWT Exchange'}
+
+block options
+name print_input
+type keyword
+reader urword
+optional true
+longname keyword to print input to list file
+description keyword to indicate that the list of exchange entries will be echoed to the listing file immediately after it is read.
+
+block options
+name print_flows
+type keyword
+reader urword
+optional true
+longname keyword to print gwfgwf flows to list file
+description keyword to indicate that the list of exchange flow rates will be printed to the listing file for every stress period in which ``SAVE BUDGET'' is specified in Output Control.
+
+block options
+name save_flows
+type keyword
+reader urword
+optional true
+longname keyword to save GWFGWF flows
+description keyword to indicate that cell-by-cell flow terms will be written to the budget file for each model provided that the Output Control for the models are set up with the ``BUDGET SAVE FILE'' option.
+
+block options
+name advscheme
+type string
+valid upstream central tvd
+reader urword
+optional true
+longname advective scheme
+description scheme used to solve the advection term.  Can be upstream, central, or TVD.  If not specified, upstream weighting is the default weighting scheme.
+
+block options
+name xt3d_off
+type keyword
+shape
+reader urword
+optional true
+longname deactivate xt3d
+description deactivate the xt3d method and use the faster and less accurate approximation for this exchange.
+
+block options
+name xt3d_rhs
+type keyword
+shape
+reader urword
+optional true
+longname xt3d on right-hand side
+description add xt3d terms to right-hand side, when possible, for this exchange.
+
+block options
+name filein
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block options
+name mvt_filerecord
+type record mvt6 filein mvt6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name mvt6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname obs keyword
+description keyword to specify that record corresponds to a transport mover file.
+
+block options
+name mvt6_filename
+type string
+preserve_case true
+in_record true
+tagged false
+reader urword
+optional false
+longname mvt6 input filename
+description is the file name of the transport mover input file to apply to this exchange.  Information for the transport mover are provided in the file provided with these keywords.
+
+block options
+name obs_filerecord
+type record obs6 filein obs6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name obs6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname obs keyword
+description keyword to specify that record corresponds to an observations file.
+
+block options
+name obs6_filename
+type string
+preserve_case true
+in_record true
+tagged false
+reader urword
+optional false
+longname obs6 input filename
+description is the file name of the observations input file for this exchange. See the ``Observation utility'' section for instructions for preparing observation input files. Table \ref{table:gwt-obstypetable} lists observation type(s) supported by the GWT-GWT package.
+
+block options
+name dev_interfacemodel_on
+type keyword
+reader urword
+optional true
+longname activate interface model on exchange
+description activates the interface model mechanism for calculating the coefficients at (and possibly near) the exchange. This keyword should only be used for development purposes.
+
+# --------------------- exg gwtgwt dimensions ---------------------
+
+block dimensions
+name nexg
+type integer
+reader urword
+optional false
+longname number of exchanges
+description keyword and integer value specifying the number of GWT-GWT exchanges.
+
+
+# --------------------- exg gwtgwt exchangedata ---------------------
+
+block exchangedata
+name exchangedata
+type recarray cellidm1 cellidm2 ihc cl1 cl2 hwva aux boundname
+reader urword
+optional false
+longname exchange data
+description
+
+block exchangedata
+name cellidm1
+type integer
+in_record true
+tagged false
+reader urword
+optional false
+longname cellid of first cell
+description is the cellid of the cell in model 1 as specified in the simulation name file. For a structured grid that uses the DIS input file, CELLIDM1 is the layer, row, and column numbers of the cell.   For a grid that uses the DISV input file, CELLIDM1 is the layer number and CELL2D number for the two cells.  If the model uses the unstructured discretization (DISU) input file, then CELLIDM1 is the node number for the cell.
+numeric_index true
+
+block exchangedata
+name cellidm2
+type integer
+in_record true
+tagged false
+reader urword
+optional false
+longname cellid of second cell
+description is the cellid of the cell in model 2 as specified in the simulation name file. For a structured grid that uses the DIS input file, CELLIDM2 is the layer, row, and column numbers of the cell.   For a grid that uses the DISV input file, CELLIDM2 is the layer number and CELL2D number for the two cells.  If the model uses the unstructured discretization (DISU) input file, then CELLIDM2 is the node number for the cell.
+numeric_index true
+
+block exchangedata
+name ihc
+type integer
+in_record true
+tagged false
+reader urword
+optional false
+longname integer flag for connection type
+description is an integer flag indicating the direction between node n and all of its m connections. If IHC = 0 then the connection is vertical.  If IHC = 1 then the connection is horizontal. If IHC = 2 then the connection is horizontal for a vertically staggered grid.
+
+block exchangedata
+name cl1
+type double precision
+in_record true
+tagged false
+reader urword
+optional false
+longname connection distance
+description is the distance between the center of cell 1 and the its shared face with cell 2.
+
+block exchangedata
+name cl2
+type double precision
+in_record true
+tagged false
+reader urword
+optional false
+longname connection distance
+description is the distance between the center of cell 2 and the its shared face with cell 1.
+
+block exchangedata
+name hwva
+type double precision
+in_record true
+tagged false
+reader urword
+optional false
+longname horizontal cell width or area for vertical flow
+description is the horizontal width of the flow connection between cell 1 and cell 2 if IHC $>$ 0, or it is the area perpendicular to flow of the vertical connection between cell 1 and cell 2 if IHC = 0.
+
+block exchangedata
+name aux
+type double precision
+in_record true
+tagged false
+shape (naux)
+reader urword
+optional true
+longname auxiliary variables
+description represents the values of the auxiliary variables for each GWTGWT Exchange. The values of auxiliary variables must be present for each exchange. The values must be specified in the order of the auxiliary variables specified in the OPTIONS block.
+
+block exchangedata
+name boundname
+type string
+shape
+tagged false
+in_record true
+reader urword
+optional true
+longname exchange boundname
+description REPLACE boundname {'{#1}': 'GWT Exchange'}

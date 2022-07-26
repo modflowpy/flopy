@@ -1,16 +1,18 @@
 """Test copying of flopy objects.
 """
-import os
 import copy
 import inspect
+import os
+
 import numpy as np
+
 import flopy
+from flopy.datbase import DataInterface, DataType
+from flopy.mbase import ModelInterface
+from flopy.utils import TemporalReference
 
 fm = flopy.modflow
 mf6 = flopy.mf6
-from flopy.datbase import DataType, DataInterface
-from flopy.mbase import ModelInterface
-from flopy.utils import TemporalReference
 
 
 def get_package_list(model):
@@ -54,6 +56,7 @@ def model_is_copy(m1, m2):
             "package_key_dict",
             "package_type_dict",
             "package_name_dict",
+            "package_filename_dict",
             "_ftype_num_dict",
         ]:
             continue
@@ -99,6 +102,7 @@ def package_is_copy(pk1, pk2):
             "dimensions",
             "package_key_dict",
             "package_name_dict",
+            "package_filename_dict",
             "package_type_dict",
             "post_block_comments",
             "simulation_data",

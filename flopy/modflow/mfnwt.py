@@ -4,7 +4,7 @@ the ModflowNwt class as `flopy.modflow.ModflowNwt`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/nwt_newton_solver.htm>`_.
+<https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/nwt_newton_solver.html>`_.
 
 """
 from ..pakbase import Package
@@ -255,7 +255,7 @@ class ModflowNwt(Package):
         )
 
         self._generate_heading()
-        self.url = "nwt_newton_solver.htm"
+        self.url = "nwt_newton_solver.html"
         self.headtol = headtol
         self.fluxtol = fluxtol
         self.maxiterout = maxiterout

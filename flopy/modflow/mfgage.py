@@ -4,7 +4,7 @@ the ModflowGage class as `flopy.modflow.ModflowGage`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/gage.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/gage.html>`_.
 
 """
 import os
@@ -179,7 +179,7 @@ class ModflowGage(Package):
         )
 
         # no heading for this format
-        self.url = "gage.htm"
+        self.url = "gage.html"
 
         self.numgage = numgage
         self.files = files

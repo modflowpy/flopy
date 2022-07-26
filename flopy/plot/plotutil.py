@@ -5,11 +5,13 @@ shapefiles are also included.
 
 """
 import os
-import numpy as np
 import warnings
+
 import matplotlib.pyplot as plt
+import numpy as np
+
+from ..datbase import DataInterface, DataType
 from ..utils import Util3d, import_optional_dependency
-from ..datbase import DataType, DataInterface
 
 warnings.simplefilter("ignore", RuntimeWarning)
 
@@ -963,14 +965,13 @@ class PlotUtilities:
         if "mflay" in kwargs:
             kwargs.pop("mflay")
 
+        name = transient2d.name.replace("_", "").upper()
         axes = []
         for idx, kper in enumerate(range(k0, k1)):
-            title = "{} stress period {:d}".format(
-                transient2d.name.replace("_", "").upper(), kper + 1
-            )
+            title = f"{name} stress period {kper + 1 :d}"
 
             if filename_base is not None:
-                filename = f"{filename_base}_{kper + 1:05d}.{fext}"
+                filename = f"{filename_base}_{name}_{kper + 1:05d}.{fext}"
             else:
                 filename = None
 
@@ -1585,8 +1586,6 @@ class PlotUtilities:
             Specific discharge arrays that have been interpolated to cell centers.
 
         """
-        import warnings
-
         warnings.warn(
             "centered_specific_discharge() has been deprecated and will be "
             "removed in version 3.3.5. Use "
@@ -2089,12 +2088,12 @@ def shapefile_to_patch_collection(shp, radius=500.0, idx=None):
             Patch collection of shapes in the shapefile
 
     """
-    from matplotlib.patches import Polygon, Circle, PathPatch
     import matplotlib.path as MPath
     from matplotlib.collections import PatchCollection
+    from matplotlib.patches import Circle, PathPatch, Polygon
 
-    from ..utils.geospatial_utils import GeoSpatialCollection
     from ..utils.geometry import point_in_polygon
+    from ..utils.geospatial_utils import GeoSpatialCollection
 
     geofeats = GeoSpatialCollection(shp)
     shapes = geofeats.shape
@@ -2279,8 +2278,8 @@ def cvfd_to_patch_collection(verts, iverts):
         DeprecationWarning,
     )
 
-    from matplotlib.patches import Polygon
     from matplotlib.collections import PatchCollection
+    from matplotlib.patches import Polygon
 
     ptchs = []
     for ivertlist in iverts:
@@ -2459,8 +2458,6 @@ def _set_coord_info(mg, xul, yul, xll, yll, rotation):
     -------
     mg : fp.discretization.Grid object
     """
-    import warnings
-
     if xul is not None and yul is not None:
         if rotation is not None:
             mg._angrot = rotation
@@ -2494,8 +2491,7 @@ def _depreciated_dis_handler(modelgrid, dis):
 
     """
     # creates a new modelgrid instance with the dis information
-    from ..discretization import StructuredGrid, VertexGrid, UnstructuredGrid
-    import warnings
+    from ..discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 
     warnings.warn(
         "the dis parameter has been depreciated and will be removed in "
@@ -2681,9 +2677,7 @@ def intersect_modpath_with_crosssection(
     nppts = {}
 
     for cell, verts in projpts.items():
-        tcell = cell
-        while tcell >= ncpl:
-            tcell -= ncpl
+        tcell = cell % ncpl
         zmin = np.min(np.array(verts)[:, 1])
         zmax = np.max(np.array(verts)[:, 1])
         nmin = np.min(v_norm[tcell])
@@ -2795,6 +2789,8 @@ def reproject_modpath_to_crosssection(
             while tcell >= ncpl:
                 tcell -= ncpl
             line = xypts[tcell]
+            if len(line) < 2:
+                continue
             if projection == "x":
                 d0 = np.min([i[0] for i in projpts[cell]])
             else:
@@ -2807,7 +2803,7 @@ def reproject_modpath_to_crosssection(
                 rec[xp] = x
                 rec[yp] = y
                 pid = rec["particleid"][0]
-                pline = list(zip(rec[proj], rec[zp]))
+                pline = list(zip(rec[proj], rec[zp], rec["time"]))
                 if pid not in ptdict:
                     ptdict[pid] = pline
                 else:
@@ -2825,7 +2821,7 @@ def reproject_modpath_to_crosssection(
                 rec[xp] = x
                 rec[yp] = y
                 pid = rec["particleid"][0]
-                pline = list(zip(rec[proj], rec[zp]))
+                pline = list(zip(rec[proj], rec[zp], rec["time"]))
                 if pid not in ptdict:
                     ptdict[pid] = pline
                 else:

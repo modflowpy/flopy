@@ -1,5 +1,19 @@
 import os
+import shlex
+
 import numpy as np
+
+
+def clean_filename(file_name):
+    if (
+        file_name[0] in PyListUtil.quote_list
+        and file_name[-1] in PyListUtil.quote_list
+    ):
+        # quoted string
+        # keep entire string and remove the quotes
+        f_name = file_name.strip('"')
+        return f_name.strip("'")
+    return file_name
 
 
 def clean_name(name):
@@ -295,7 +309,8 @@ class PyListUtil:
         else:
             # compare against the default split option without comments split
             comment_split = line.split("#", 1)
-            clean_line = comment_split[0].strip().split()
+            # first try standard split preserving quotes
+            clean_line = shlex.split(comment_split[0].strip(), posix=False)
             if len(comment_split) > 1:
                 clean_line.append("#")
                 clean_line.append(comment_split[1].strip())
@@ -342,7 +357,8 @@ class PyListUtil:
                 if item and item[0] in PyListUtil.quote_list:
                     # starts with a quote, handle quoted text
                     if item[-1] in PyListUtil.quote_list:
-                        arr_fixed_line.append(item[1:-1])
+                        # if quoted on both ends, keep quotes
+                        arr_fixed_line.append(item)
                     else:
                         arr_fixed_line.append(item[1:])
                         # loop until trailing quote found

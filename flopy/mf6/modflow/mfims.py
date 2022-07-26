@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on October 29, 2021 21:09:57 UTC
+# FILE created on April 11, 2022 18:22:41 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -86,8 +86,8 @@ class ModflowIms(mfpackage.MFPackage):
           Step (ATS) capability if it is active. If this value is set to zero
           by the user, then this solution will have no effect on ATS behavior.
           This value must be greater than or equal to zero and less than or
-          equal to 0.5 or the program will terminate with an error. If it not
-          specified by the user, then it is assigned a default value of one
+          equal to 0.5 or the program will terminate with an error. If it is
+          not specified by the user, then it is assigned a default value of one
           third. When the number of outer iterations for this solution is less
           than the product of this value and the maximum allowable outer
           iterations, then ATS will increase the time step length by a factor
@@ -379,6 +379,9 @@ class ModflowIms(mfpackage.MFPackage):
     dfn_file_name = "sln-ims.dfn"
 
     dfn = [
+        [
+            "header",
+        ],
         [
             "block options",
             "name print_option",
@@ -756,10 +759,10 @@ class ModflowIms(mfpackage.MFPackage):
         reordering_method=None,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            simulation, "ims", filename, pname, loading_package, parent_file
+            simulation, "ims", filename, pname, loading_package, **kwargs
         )
 
         # set up variables

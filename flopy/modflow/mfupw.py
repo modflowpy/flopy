@@ -4,14 +4,15 @@ the ModflowUpw class as `flopy.modflow.ModflowUpw`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/upw_upstream_weighting_package.htm>`_.
+<https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/upw_upstream_weighting_package.html>`_.
 
 """
 import numpy as np
-from .mfpar import ModflowPar as mfpar
+
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, read1d
 from ..utils.flopy_io import line_parse
+from .mfpar import ModflowPar as mfpar
 
 
 class ModflowUpw(Package):
@@ -190,7 +191,7 @@ class ModflowUpw(Package):
         )
 
         self._generate_heading()
-        self.url = "upw_upstream_weighting_package.htm"
+        self.url = "upw_upstream_weighting_package.html"
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # item 1

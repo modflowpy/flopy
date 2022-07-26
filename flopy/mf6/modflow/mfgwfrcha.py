@@ -1,8 +1,8 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on October 29, 2021 21:09:57 UTC
+# FILE created on April 11, 2022 18:22:41 UTC
 from .. import mfpackage
-from ..data.mfdatautil import ListTemplateGenerator, ArrayTemplateGenerator
+from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
 
 class ModflowGwfrcha(mfpackage.MFPackage):
@@ -12,7 +12,7 @@ class ModflowGwfrcha(mfpackage.MFPackage):
     Parameters
     ----------
     model : MFModel
-        Model that this package is a part of.  Package is automatically
+        Model that this package is a part of. Package is automatically
         added to model when it is initialized.
     loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
@@ -116,6 +116,10 @@ class ModflowGwfrcha(mfpackage.MFPackage):
     dfn_file_name = "gwf-rcha.dfn"
 
     dfn = [
+        [
+            "header",
+            "multi-package",
+        ],
         [
             "block options",
             "name readasarrays",
@@ -301,10 +305,10 @@ class ModflowGwfrcha(mfpackage.MFPackage):
         aux=None,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            model, "rcha", filename, pname, loading_package, parent_file
+            model, "rcha", filename, pname, loading_package, **kwargs
         )
 
         # set up variables

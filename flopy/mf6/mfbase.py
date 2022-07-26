@@ -1,9 +1,12 @@
 """ Base classes for Modflow 6 """
-import inspect, sys, traceback
-import os, copy
+import copy
+import inspect
+import os
+import sys
+import traceback
 from collections.abc import Iterable
-from shutil import copyfile
 from enum import Enum
+from shutil import copyfile
 
 
 # internal handled exceptions
@@ -270,17 +273,23 @@ class MFFileMgmt:
     def strip_model_relative_path(self, model_name, path):
         """Strip out the model relative path part of `path`.  For internal
         FloPy use, not intended for end user."""
+        new_path = path
         if model_name in self.model_relative_path:
             model_rel_path = self.model_relative_path[model_name]
-            new_path = None
-            while path:
-                path, leaf = os.path.split(path)
-                if leaf != model_rel_path:
-                    if new_path:
-                        new_path = os.path.join(leaf, new_path)
-                    else:
-                        new_path = leaf
-            return new_path
+            if (
+                model_rel_path is not None
+                and len(model_rel_path) > 0
+                and model_rel_path != "."
+            ):
+                model_rel_path_lst = model_rel_path.split(os.path.sep)
+                path_lst = path.split(os.path.sep)
+                new_path = ""
+                for i, mrp in enumerate(model_rel_path_lst):
+                    if i >= len(path_lst) or mrp != path_lst[i]:
+                        new_path = os.path.join(new_path, path_lst[i])
+                for rp in path_lst[len(model_rel_path_lst) :]:
+                    new_path = os.path.join(new_path, rp)
+        return new_path
 
     @staticmethod
     def unique_file_name(file_name, lookup):
@@ -425,6 +434,10 @@ class MFFileMgmt:
         else:
             file_path = path
 
+        # remove quote characters from file path
+        file_path = file_path.replace("'", "")
+        file_path = file_path.replace('"', "")
+
         if os.path.isabs(file_path):
             # path is an absolute path
             if move_abs_paths:
@@ -470,6 +483,7 @@ class PackageContainer:
         self._packagelist = []
         self.package_type_dict = {}
         self.package_name_dict = {}
+        self.package_filename_dict = {}
         self.package_key_dict = {}
 
     @staticmethod
@@ -559,6 +573,8 @@ class PackageContainer:
         self._packagelist.append(package)
         if package.package_name is not None:
             self.package_name_dict[package.package_name.lower()] = package
+        if package.filename is not None:
+            self.package_filename_dict[package.filename.lower()] = package
         self.package_key_dict[path[-1].lower()] = package
         if package.package_type not in self.package_type_dict:
             self.package_type_dict[package.package_type.lower()] = []
@@ -571,6 +587,11 @@ class PackageContainer:
             and package.package_name.lower() in self.package_name_dict
         ):
             del self.package_name_dict[package.package_name.lower()]
+        if (
+            package.filename is not None
+            and package.filename.lower() in self.package_filename_dict
+        ):
+            del self.package_filename_dict[package.filename.lower()]
         del self.package_key_dict[package.path[-1].lower()]
         package_list = self.package_type_dict[package.package_type.lower()]
         package_list.remove(package)
@@ -658,6 +679,10 @@ class PackageContainer:
         # search for package key
         if name.lower() in self.package_key_dict:
             return self.package_key_dict[name.lower()]
+
+        # search for file name
+        if name.lower() in self.package_filename_dict:
+            return self.package_filename_dict[name.lower()]
 
         # search for partial and case-insensitive package name
         for pp in self._packagelist:

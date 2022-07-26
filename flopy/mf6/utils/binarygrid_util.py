@@ -5,10 +5,11 @@ be accessed by the user.
 
 """
 
+import warnings
+
 import numpy as np
 
 from ...utils.utils_def import FlopyBinaryData
-import warnings
 
 warnings.simplefilter("always", DeprecationWarning)
 
@@ -176,8 +177,8 @@ class MfGrdFile(FlopyBinaryData):
         modelgrid : grid
         """
         from ...discretization.structuredgrid import StructuredGrid
-        from ...discretization.vertexgrid import VertexGrid
         from ...discretization.unstructuredgrid import UnstructuredGrid
+        from ...discretization.vertexgrid import VertexGrid
 
         modelgrid = None
         idomain = self.idomain

@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on October 29, 2021 21:09:57 UTC
+# FILE created on April 11, 2022 18:22:41 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -11,9 +11,9 @@ class ModflowUtlobs(mfpackage.MFPackage):
 
     Parameters
     ----------
-    model : MFModel
-        Model that this package is a part of.  Package is automatically
-        added to model when it is initialized.
+    parent_model_or_package : MFModel/MFPackage
+        Parent_model_or_package that this package is a part of. Package is automatically
+        added to parent_model_or_package when it is initialized.
     loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
@@ -78,6 +78,10 @@ class ModflowUtlobs(mfpackage.MFPackage):
     dfn_file_name = "utl-obs.dfn"
 
     dfn = [
+        [
+            "header",
+            "multi-package",
+        ],
         [
             "block options",
             "name digits",
@@ -183,17 +187,22 @@ class ModflowUtlobs(mfpackage.MFPackage):
 
     def __init__(
         self,
-        model,
+        parent_model_or_package,
         loading_package=False,
         digits=None,
         print_input=None,
         continuous=None,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            model, "obs", filename, pname, loading_package, parent_file
+            parent_model_or_package,
+            "obs",
+            filename,
+            pname,
+            loading_package,
+            **kwargs,
         )
 
         # set up variables
@@ -226,12 +235,12 @@ class UtlobsPackages(mfpackage.MFChildPackages):
         pname=None,
     ):
         new_package = ModflowUtlobs(
-            self._model,
+            self._cpparent,
             digits=digits,
             print_input=print_input,
             continuous=continuous,
             filename=filename,
             pname=pname,
-            parent_file=self._cpparent,
+            child_builder_call=True,
         )
-        self._init_package(new_package, filename)
+        self.init_package(new_package, filename)

@@ -1,8 +1,10 @@
 """
 Test the observation process load and write
 """
-import pytest
 import os
+
+import pytest
+
 import flopy
 
 try:

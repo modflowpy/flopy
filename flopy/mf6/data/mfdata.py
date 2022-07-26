@@ -1,18 +1,20 @@
-from operator import itemgetter
-import sys
 import inspect
+import sys
+from operator import itemgetter
+
+from ...datbase import DataInterface, DataType
+from ...mbase import ModelInterface
+from ...utils import datautil
+from ..coordinates.modeldimensions import DataDimensions, DiscretizationType
+from ..data.mfstructure import DatumType
 from ..mfbase import (
+    FlopyException,
     MFDataException,
     MFInvalidTransientBlockHeaderException,
-    FlopyException,
     VerbosityLevel,
 )
-from ..data.mfstructure import DatumType
-from ..coordinates.modeldimensions import DataDimensions, DiscretizationType
-from ...datbase import DataInterface, DataType
 from .mfdatastorage import DataStructureType
 from .mfdatautil import to_string
-from ...mbase import ModelInterface
 
 
 class MFTransient:
@@ -100,6 +102,12 @@ class MFTransient:
             self._verify_sp(transient_key)
         self._current_key = transient_key
         if transient_key not in self._data_storage:
+            if (
+                isinstance(transient_key, tuple)
+                and transient_key[0] in self._data_storage
+            ):
+                self._current_key = transient_key[0]
+                return
             self.add_transient_key(transient_key)
 
     def _set_data_prep(self, data, transient_key=0):
@@ -269,6 +277,10 @@ class MFData(DataInterface):
         return str(self._get_storage_obj())
 
     @property
+    def path(self):
+        return self._path
+
+    @property
     def array(self):
         kwargs = {"array": True}
         return self.get_data(apply_mult=True, **kwargs)
@@ -333,7 +345,7 @@ class MFData(DataInterface):
         return None, None
 
     def export(self, f, **kwargs):
-        from flopy.export import utils
+        from ...export import utils
 
         if (
             self.data_type == DataType.array2d
@@ -588,7 +600,7 @@ class MFMultiDimVar(MFData):
         ext_file_path = file_mgmt.get_updated_path(
             layer_storage.fname, model_name, ext_file_action
         )
-        layer_storage.fname = ext_file_path
+        layer_storage.fname = datautil.clean_filename(ext_file_path)
         ext_format = ["OPEN/CLOSE", f"'{ext_file_path}'"]
         if storage.data_structure_type != DataStructureType.recarray:
             if layer_storage.factor is not None:

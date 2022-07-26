@@ -1,21 +1,40 @@
-import sys, inspect
-import numpy as np
-from copy import deepcopy
-from collections.abc import Iterable
-from ..mfbase import MFDataException, FlopyException
-from .mfstructure import DatumType
-from ...utils.datautil import PyListUtil, DatumUtil
+import inspect
 import struct
+import sys
+from collections.abc import Iterable
+from copy import deepcopy
+
+import numpy as np
+
+from ...utils.datautil import DatumUtil, PyListUtil
+from ..mfbase import FlopyException, MFDataException
+from .mfstructure import DatumType
 
 
-def iterable(obj):
-    return isinstance(obj, Iterable)
+def iterable(obj, any_iterator=False):
+    if any_iterator:
+        try:
+            my_iter = iter(obj)
+        except TypeError as te:
+            return False
+        return True
+    else:
+        return isinstance(obj, Iterable)
 
 
 def get_first_val(arr):
     while isinstance(arr, list) or isinstance(arr, np.ndarray):
         arr = arr[0]
     return arr
+
+
+def cellids_equal(cellid_1, cellid_2):
+    if len(cellid_1) != len(cellid_2):
+        return False
+    for id1, id2 in zip(cellid_1, cellid_2):
+        if id1 != id2:
+            return False
+    return True
 
 
 # convert_data(data, type) : type
@@ -222,6 +241,24 @@ def to_string(
         return str(val).upper()
     else:
         return str(val)
+
+
+class DataSearchOutput:
+    def __init__(self, path_to_data=None, data_header=None):
+        self.path_to_data = path_to_data
+        self.data_header = data_header
+        self.data_entry_ids = []
+        self.data_entry_cellids = []
+        self.data_entry_stress_period = []
+        self.data_entries = []
+        self.output = False
+
+    @property
+    def transient(self):
+        if len(self.data_entry_stress_period) > 0:
+            if self.data_entry_stress_period[0] != -1:
+                return True
+        return False
 
 
 class MFComment:
@@ -445,8 +482,8 @@ class TemplateGenerator:
         self.path = path
 
     def _get_data_dimensions(self, model):
-        from ..data import mfstructure
         from ..coordinates import modeldimensions
+        from ..data import mfstructure
 
         # get structure info
         sim_struct = mfstructure.MFStructure().sim_struct

@@ -1,11 +1,11 @@
-import sys
+import os
 
-sys.path.insert(1, "..")
-import flopy.discretization as fgrid
-import flopy.plot as fplot
 import matplotlib.pyplot as plt
 import numpy as np
 from descartes import PolygonPatch
+
+import flopy.discretization as fgrid
+import flopy.plot as fplot
 from flopy.utils.triangle import Triangle
 
 try:
@@ -205,7 +205,8 @@ def test_rect_grid_point_outside():
         return
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect(Point(25.0, 25.0))
+    # use GeoSpatialUtil to convert to shapely geometry
+    result = ix.intersect((25.0, 25.0), shapetype="point")
     assert len(result) == 0
     return result
 
@@ -1289,18 +1290,17 @@ def test_all_intersections_shapely_no_strtree():
     # offset and rotated grids
     test_point_offset_rot_structured_grid_shapely(rtree=False)
     test_linestring_offset_rot_structured_grid_shapely(rtree=False)
-    ix = test_polygon_offset_rot_structured_grid_shapely(rtree=False)
+    test_polygon_offset_rot_structured_grid_shapely(rtree=False)
 
-    return ix
+    return
 
 
 # %% test rasters
 
 
 def test_rasters():
-    from flopy.utils import Raster
-    import os
     import flopy as fp
+    from flopy.utils import Raster
 
     ws = os.path.join("..", "examples", "data", "options")
     raster_name = "dem.img"
@@ -1365,9 +1365,8 @@ def test_rasters():
 
 
 def test_raster_sampling_methods():
-    from flopy.utils import Raster
-    import os
     import flopy as fp
+    from flopy.utils import Raster
 
     ws = os.path.join("..", "examples", "data", "options")
     raster_name = "dem.img"
@@ -1397,18 +1396,17 @@ def test_raster_sampling_methods():
     methods = {
         "min": 2088.52343,
         "max": 2103.54882,
-        "mean": 2097.05053,
+        "mean": 2097.05035,
         "median": 2097.36254,
+        "mode": 2088.52343,
         "nearest": 2097.81079,
         "linear": 2097.81079,
-        "cubic": 2097.81079
+        "cubic": 2097.81079,
     }
 
     for method, value in methods.items():
         data = rio.resample_to_grid(
-            ml.modelgrid,
-            band=rio.bands[0],
-            method=method
+            ml.modelgrid, band=rio.bands[0], method=method
         )
 
         print(data[30, 37])
@@ -1419,5 +1417,4 @@ def test_raster_sampling_methods():
 
 
 if __name__ == "__main__":
-    test_rasters()
     test_raster_sampling_methods()

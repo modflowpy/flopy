@@ -9,10 +9,12 @@ util_list module.  Contains the mflist class.
 """
 import os
 import warnings
+
 import numpy as np
+
 from ..datbase import DataInterface, DataListInterface, DataType
-from ..utils.recarray_utils import create_empty_recarray
 from ..utils import import_optional_dependency
+from ..utils.recarray_utils import create_empty_recarray
 
 
 class MfList(DataInterface, DataListInterface):
@@ -123,7 +125,7 @@ class MfList(DataInterface, DataListInterface):
         return d
 
     def export(self, f, **kwargs):
-        from flopy import export
+        from .. import export
 
         return export.utils.mflist_export(f, self, **kwargs)
 
@@ -943,7 +945,7 @@ class MfList(DataInterface, DataListInterface):
 
         """
 
-        from flopy.plot import PlotUtilities
+        from ..plot import PlotUtilities
 
         axes = PlotUtilities._plot_mflist_helper(
             self,
