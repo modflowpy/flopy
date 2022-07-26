@@ -918,6 +918,21 @@ def test_rect_grid_polygon_on_outer_boundary():
     return result
 
 
+def test_rect_grid_polygon_running_along_boundary():
+    # avoid test fail when shapely not available
+    try:
+        import shapely
+    except:
+        return
+    gr = get_rect_grid()
+    ix = GridIntersect(gr, method="structured")
+    result = ix.intersect(
+        Polygon([(5.0, 5.0), (5.0, 10.0), (9.0, 10.0), (9.0, 15.0),
+                 (1.0, 15.0), (1.0, 5.0)])
+    )
+    return result
+
+
 def test_rect_grid_polygon_on_inner_boundary():
     # avoid test fail when shapely not available
     try:
