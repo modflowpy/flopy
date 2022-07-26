@@ -1557,6 +1557,16 @@ class GridIntersect:
             if shp.intersects(node_polygon):
                 intersect = shp.intersection(node_polygon)
 
+                collection = parse_shapely_ix_result(
+                    [], intersect, shptyps=["Polygon", "MultiPolygon"]
+                )
+                if len(collection) == 0:
+                    continue
+                if len(collection) > 1:
+                    intersect = shapely_geo.MultiPolgon(collection)
+                else:
+                    intersect = collection[0]
+
                 # only store results if area > 0.0
                 if intersect.area == 0.0:
                     continue
