@@ -564,6 +564,21 @@ def test_rect_grid_linestring_in_and_out_of_cell2():
     return result
 
 
+def test_rect_grid_linestring_starting_on_vertex():
+    # avoid test fail when shapely not available
+    try:
+        import shapely
+    except:
+        return
+    gr = get_rect_grid()
+    ix = GridIntersect(gr, method="structured")
+    result = ix.intersect(LineString([(10.0, 10.0), (15.0, 5.0)]))
+    assert len(result) == 1
+    assert np.allclose(result.lengths.sum(), np.sqrt(50))
+    assert result.cellids[0] == (1, 1)
+    return result
+
+
 # %% test linestring shapely
 
 

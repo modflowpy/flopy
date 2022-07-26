@@ -962,8 +962,12 @@ class GridIntersect:
         tempverts = []
         tempshapes = []
         unique_nodes = list(set(nodelist))
+        parsed_nodes = []
         if len(unique_nodes) < len(nodelist):
-            for inode in unique_nodes:
+            for inode in nodelist:
+                # maintain order of nodes by keeping track of parsed nodes
+                if inode in parsed_nodes:
+                    continue
                 templengths.append(
                     sum([l for l, i in zip(lengths, nodelist) if i == inode])
                 )
@@ -973,8 +977,9 @@ class GridIntersect:
                 tempshapes.append(
                     [ix for ix, i in zip(ixshapes, nodelist) if i == inode]
                 )
+                parsed_nodes.append(inode)
 
-            nodelist = unique_nodes
+            nodelist = parsed_nodes
             lengths = templengths
             vertices = tempverts
             ixshapes = tempshapes
@@ -990,7 +995,13 @@ class GridIntersect:
                     tempnodes.append(nodelist[i])
                     templengths.append(lengths[i])
                     tempverts.append(vertices[i])
-                    tempshapes.append(ixshapes[i])
+                    ishp = ixshapes[i]
+                    if isinstance(ishp, list):
+                        if len(ishp) > 1:
+                            ishp = shapely_geo.MultiLineString(ishp)
+                        else:
+                            ishp = ishp[0]
+                    tempshapes.append(ishp)
             nodelist = tempnodes
             lengths = templengths
             vertices = tempverts
@@ -1248,6 +1259,36 @@ class GridIntersect:
                         y = intersect.xy[1]
                     verts.append([(ixy[0], ixy[1]) for ixy in zip(x, y)])
                     node.append((ii, jj))
+
+        # special case for linestrings intersecting in vertex and continuing
+        # towards bottom right, check diagonally to front-right, if no other
+        # neighbours found
+        if np.sum(length) == 0:
+            if (i < self.mfgrid.nrow - 1) and (j < self.mfgrid.ncol - 1):
+                ii = i + 1
+                jj = j + 1
+                if (ii, jj) not in nodelist:
+                    xmin = Xe[jj]
+                    xmax = Xe[jj + 1]
+                    ymax = Ye[ii]
+                    ymin = Ye[ii + 1]
+                    pl = shapely_geo.box(xmin, ymin, xmax, ymax)
+                    if linestring.intersects(pl):
+                        intersect = linestring.intersection(pl)
+                        ixshape.append(intersect)
+                        length.append(intersect.length)
+                        if hasattr(intersect, "geoms"):
+                            x, y = [], []
+                            for igeom in intersect.geoms:
+                                x.append(igeom.xy[0])
+                                y.append(igeom.xy[1])
+                            x = np.concatenate(x)
+                            y = np.concatenate(y)
+                        else:
+                            x = intersect.xy[0]
+                            y = intersect.xy[1]
+                        verts.append([(ixy[0], ixy[1]) for ixy in zip(x, y)])
+                        node.append((ii, jj))
 
         return node, length, verts, ixshape
 
@@ -1688,7 +1729,7 @@ class ModflowGridIndices:
         x : float
             The x position to find in arr.
         """
-        jpos = None
+        jpos = []
 
         if x == arr[-1]:
             return len(arr) - 2
@@ -1706,10 +1747,13 @@ class ModflowGridIndices:
             frac = (x - xl) / (xr - xl)
             if 0.0 <= frac <= 1.0:
                 # if min(xl, xr) <= x < max(xl, xr):
-                jpos = j
-                return jpos
-
-        return jpos
+                jpos.append(j)
+        if len(jpos) == 0:
+            return None
+        elif len(jpos) == 1:
+            return jpos[0]
+        else:
+            return jpos
 
     @staticmethod
     def kij_from_nodenumber(nodenumber, nlay, nrow, ncol):
