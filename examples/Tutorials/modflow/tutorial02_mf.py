@@ -35,6 +35,7 @@
 # As shown in the previous MODFLOW tutorial, import flopy.
 
 import numpy as np
+
 import flopy
 
 # ## Creating the MODFLOW Model
@@ -211,6 +212,7 @@ if not success:
 
 # Imports
 import matplotlib.pyplot as plt
+
 import flopy.utils.binaryfile as bf
 
 # Create the headfile and budget file objects

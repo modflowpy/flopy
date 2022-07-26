@@ -1,14 +1,13 @@
-import numpy as np
-
-import matplotlib.pyplot as plt
-import matplotlib.colors
-from matplotlib.patches import Polygon
-
-from . import plotutil
-from ..utils import geometry
-
 import copy
 import warnings
+
+import matplotlib.colors
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.patches import Polygon
+
+from ..utils import geometry
+from . import plotutil
 
 warnings.simplefilter("always", PendingDeprecationWarning)
 
@@ -538,13 +537,13 @@ class PlotCrossSection:
             kwargs["levels"] = levels
 
         # workaround for tri-contour nan issue
-        plotarray[np.isnan(plotarray)] = -(2 ** 31)
+        plotarray[np.isnan(plotarray)] = -(2**31)
         if masked_values is None:
-            masked_values = [-(2 ** 31)]
+            masked_values = [-(2**31)]
         else:
             masked_values = list(masked_values)
-            if -(2 ** 31) not in masked_values:
-                masked_values.append(-(2 ** 31))
+            if -(2**31) not in masked_values:
+                masked_values.append(-(2**31))
 
         ismasked = None
         if masked_values is not None:
@@ -555,6 +554,7 @@ class PlotCrossSection:
                     t = np.isclose(plotarray, mval)
                     ismasked += t
 
+        filled = kwargs.pop("filled", False)
         plot_triplot = kwargs.pop("plot_triplot", False)
 
         if "extent" in kwargs:
@@ -572,18 +572,33 @@ class PlotCrossSection:
 
         if mplcontour:
             plotarray = np.ma.masked_array(plotarray, ismasked)
-            contour_set = ax.contour(xcenters, zcenters, plotarray, **kwargs)
+            if filled:
+                contour_set = ax.contourf(
+                    xcenters, zcenters, plotarray, **kwargs
+                )
+            else:
+                contour_set = ax.contour(
+                    xcenters, zcenters, plotarray, **kwargs
+                )
         else:
             triang = tri.Triangulation(xcenters, zcenters)
+            analyze = tri.TriAnalyzer(triang)
+            mask = analyze.get_flat_tri_mask(rescale=False)
 
             if ismasked is not None:
                 ismasked = ismasked.flatten()
-                mask = np.any(
+                mask2 = np.any(
                     np.where(ismasked[triang.triangles], True, False), axis=1
                 )
-                triang.set_mask(mask)
+                mask[mask2] = True
 
-            contour_set = ax.tricontour(triang, plotarray, **kwargs)
+            triang.set_mask(mask)
+
+            if filled:
+                contour_set = ax.tricontourf(triang, plotarray, **kwargs)
+            else:
+                contour_set = ax.tricontour(triang, plotarray, **kwargs)
+
             if plot_triplot:
                 ax.triplot(triang, color="black", marker="o", lw=0.75)
 
@@ -966,7 +981,7 @@ class PlotCrossSection:
 
         # normalize
         if normalize:
-            vmag = np.sqrt(u ** 2.0 + v ** 2.0)
+            vmag = np.sqrt(u**2.0 + v**2.0)
             idx = vmag > 0.0
             u[idx] /= vmag[idx]
             v[idx] /= vmag[idx]
@@ -1020,11 +1035,14 @@ class PlotCrossSection:
         """
 
         from matplotlib.collections import LineCollection
-        from ..utils.geometry import point_in_polygon
 
         # make sure pathlines is a list
         if not isinstance(pl, list):
-            pl = [pl]
+            pids = np.unique(pl["particleid"])
+            if len(pids) > 1:
+                pl = [pl[pl["particleid"] == pid] for pid in pids]
+            else:
+                pl = [pl]
 
         marker = kwargs.pop("marker", None)
         markersize = kwargs.pop("markersize", None)
@@ -1069,8 +1087,9 @@ class PlotCrossSection:
         markers = []
         for _, arr in plines.items():
             arr = np.array(arr)
-            arr = arr[arr[:, 0].argsort()]
-            linecol.append(arr)
+            # sort by travel time
+            arr = arr[arr[:, -1].argsort()]
+            linecol.append(arr[:, :-1])
             if marker is not None:
                 for xy in arr[::markerevery]:
                     markers.append(xy)
@@ -1412,8 +1431,8 @@ class PlotCrossSection:
         patches : matplotlib.collections.PatchCollection
 
         """
-        from matplotlib.patches import Polygon
         from matplotlib.collections import PatchCollection
+        from matplotlib.patches import Polygon
 
         use_cache = False
         if projpts is None:

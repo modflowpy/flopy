@@ -4,11 +4,12 @@ the ModflowChd class as `flopy.modflow.ModflowChd`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/chd.htm>`_.
+<https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/chd.html>`_.
 
 """
 
 import numpy as np
+
 from ..pakbase import Package
 from ..utils import MfList
 from ..utils.recarray_utils import create_empty_recarray
@@ -125,7 +126,7 @@ class ModflowChd(Package):
             filenames=self._prepare_filenames(filenames),
         )
 
-        self.url = "chd.htm"
+        self.url = "chd.html"
         self._generate_heading()
 
         if dtype is not None:

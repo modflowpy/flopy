@@ -199,6 +199,11 @@ class Collection(list):
 
         return xmin, ymin, xmax, ymax
 
+    def __reversed__(self):
+        for shp in self:
+            reversed(shp)
+        return self
+
     def plot(self, ax=None, **kwargs):
         """
         Plotting method for collection
@@ -409,6 +414,19 @@ class Polygon(Shape):
     def patch(self):
         return self.get_patch()
 
+    def __reversed__(self):
+        # method to reverse the sorting on polygon points, patch for
+        # differences in pyshp 2.2.0 vs pyshp < 2.2.0
+        if self.exterior:
+            self.exterior = self.exterior[::-1]
+        if self.interiors:
+            interiors = []
+            for i in self.interiors:
+                interiors.append(i[::-1])
+            self.interiors = interiors
+
+        return self
+
     def get_patch(self, **kwargs):
         descartes = import_optional_dependency("descartes")
         from descartes import PolygonPatch
@@ -515,6 +533,10 @@ class LineString(Shape):
     def pyshp_parts(self):
         return [self.coords]
 
+    def __reversed__(self):
+        self.coords = self.coords[::-1]
+        return self
+
     def plot(self, ax=None, **kwargs):
         import matplotlib.pyplot as plt
 
@@ -610,6 +632,9 @@ class Point(Shape):
     @property
     def pyshp_parts(self):
         return self.coords
+
+    def __reversed__(self):
+        return self
 
     def plot(self, ax=None, **kwargs):
         import matplotlib.pyplot as plt
@@ -802,10 +827,10 @@ def is_clockwise(*geom):
         geom = GeoSpatialUtil(geom, shapetype="Polygon")
         x, y = np.array(geom.points[0]).T
 
-    if not (x[0] == x[-1]) and (y[0] == y[-1]):
+    if not ((x[0] == x[-1]) and (y[0] == y[-1])):
         # close the ring if needed
-        x = np.append(x, x[-1])
-        y = np.append(y, y[-1])
+        x = np.append(x, x[0])
+        y = np.append(y, y[0])
     return np.sum((np.diff(x)) * (y[1:] + y[:-1])) > 0
 
 

@@ -4,15 +4,16 @@ the ModflowHfb class as `flopy.modflow.ModflowHfb`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?hfb6.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/hfb6.html>`_.
 
 """
 import numpy as np
-from ..pakbase import Package
-from .mfparbc import ModflowParBc as mfparbc
 from numpy.lib.recfunctions import stack_arrays
+
+from ..pakbase import Package
 from ..utils.flopy_io import line_parse
 from ..utils.recarray_utils import create_empty_recarray
+from .mfparbc import ModflowParBc as mfparbc
 
 
 class ModflowHfb(Package):
@@ -127,7 +128,7 @@ class ModflowHfb(Package):
         )
 
         self._generate_heading()
-        self.url = "hfb6.htm"
+        self.url = "hfb6.html"
 
         self.nphfb = nphfb
         self.mxfb = mxfb

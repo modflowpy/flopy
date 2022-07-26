@@ -2,11 +2,10 @@ import os
 import platform
 import sys
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 import flopy
-
-import matplotlib.pyplot as plt
 
 # --modify default matplotlib settings
 updates = {
@@ -345,7 +344,7 @@ def run():
     for idx in cr:
         cc.append(colormap(idx))
 
-    # Recreate **Figure 9** from the SWI2 documentation (http://pubs.usgs.gov/tm/6a46/).
+    # Recreate **Figure 9** from the SWI2 documentation (https://pubs.usgs.gov/tm/6a46/).
 
     plt.rcParams.update({"legend.fontsize": 6, "legend.frameon": False})
     fig = plt.figure(figsize=(fwid, fhgt), facecolor="w")

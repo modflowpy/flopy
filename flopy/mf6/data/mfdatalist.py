@@ -1,18 +1,20 @@
-import math
-import sys
-import os
 import inspect
+import math
+import os
+import sys
+
 import numpy as np
-from ..utils.mfenums import DiscretizationType
-from ..data import mfstructure, mfdata
-from ..mfbase import MFDataException, ExtFileAction, VerbosityLevel
-from .mfstructure import DatumType
-from ...utils import datautil
+
 from ...datbase import DataListInterface, DataType
 from ...mbase import ModelInterface
-from .mffileaccess import MFFileAccessList
+from ...utils import datautil
+from ..data import mfdata, mfstructure
+from ..mfbase import ExtFileAction, MFDataException, VerbosityLevel
+from ..utils.mfenums import DiscretizationType
 from .mfdatastorage import DataStorage, DataStorageType, DataStructureType
 from .mfdatautil import to_string
+from .mffileaccess import MFFileAccessList
+from .mfstructure import DatumType
 
 
 class MFList(mfdata.MFMultiDimVar, DataListInterface):
@@ -49,6 +51,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         path=None,
         dimensions=None,
         package=None,
+        block=None,
     ):
         super().__init__(
             sim_data, model_or_sim, structure, enable, path, dimensions
@@ -72,6 +75,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 ex,
             )
         self._package = package
+        self._block = block
         self._last_line_info = []
         self._data_line = None
         self._temp_dict = {}
@@ -316,7 +320,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 }
                 self._set_data(internal_data, check_data=check_data)
 
-    def has_data(self):
+    def has_data(self, key=None):
         """Returns whether this MFList has any data associated with it."""
         try:
             if self._get_storage_obj() is None:
@@ -343,7 +347,10 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         try:
             if self._get_storage_obj() is None:
                 return None
-            return self._get_storage_obj().get_data()
+            block_exists = self._block.header_exists(
+                self._current_key, self.path
+            )
+            return self._get_storage_obj().get_data(block_exists=block_exists)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(
@@ -1342,7 +1349,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis is returned.
         """
-        from flopy.plot import PlotUtilities
+        from ...plot import PlotUtilities
 
         if not self.plottable:
             raise TypeError("Simulation level packages are not plottable")
@@ -1393,6 +1400,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         path=None,
         dimensions=None,
         package=None,
+        block=None,
     ):
         super().__init__(
             sim_data=sim_data,
@@ -1403,6 +1411,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             path=path,
             dimensions=dimensions,
             package=package,
+            block=block,
         )
         self._transient_setup(self._data_storage)
         self.repeating = True
@@ -1416,7 +1425,10 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
     def dtype(self):
         data = self.get_data()
         if len(data) > 0:
-            return data[0].dtype
+            if 0 in data:
+                return data[0].dtype
+            else:
+                return next(iter(data.values())).dtype
         else:
             return None
 
@@ -1618,6 +1630,19 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                 )
         self._cache_model_grid = False
 
+    def has_data(self, key=None):
+        """Returns whether this MFList has any data associated with it in key
+        "key"."""
+        if key is None:
+            for sto_key in self._data_storage.keys():
+                self.get_data_prep(sto_key)
+                if super().has_data():
+                    return True
+            return False
+        else:
+            self.get_data_prep(key)
+            return super().has_data()
+
     def get_data(self, key=None, apply_mult=False, **kwargs):
         """Returns the data for stress period `key`.
 
@@ -1641,14 +1666,14 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                         0
                     ].simulation_time
                     num_sp = sim_time.get_num_stress_periods()
+                    data = None
                     for sp in range(0, num_sp):
                         if sp in self._data_storage:
                             self.get_data_prep(sp)
-                            output.append(
-                                super().get_data(apply_mult=apply_mult)
-                            )
-                        else:
-                            output.append(None)
+                            data = super().get_data(apply_mult=apply_mult)
+                        elif self._block.header_exists(sp):
+                            data = None
+                        output.append(data)
                     return output
                 else:
                     output = {}
@@ -1910,7 +1935,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis is returned.
         """
-        from flopy.plot import PlotUtilities
+        from ...plot import PlotUtilities
 
         if not self.plottable:
             raise TypeError("Simulation level packages are not plottable")
@@ -1968,6 +1993,7 @@ class MFMultipleList(MFTransientList):
         path=None,
         dimensions=None,
         package=None,
+        block=None,
     ):
         super().__init__(
             sim_data=sim_data,
@@ -1977,6 +2003,7 @@ class MFMultipleList(MFTransientList):
             path=path,
             dimensions=dimensions,
             package=package,
+            block=block,
         )
 
     def get_data(self, key=None, apply_mult=False, **kwargs):

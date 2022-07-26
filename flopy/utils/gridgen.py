@@ -1,15 +1,14 @@
 import os
-import numpy as np
 import subprocess
 
-# flopy imports
-from ..mfusg.mfusgdisu import MfUsgDisU
-from ..mf6.modflow import ModflowGwfdis
-from .util_array import Util2d  # read1d,
-from ..utils import import_optional_dependency
+import numpy as np
+
 from ..export.shapefile_utils import shp2recarray
 from ..mbase import which
-
+from ..mf6.modflow import ModflowGwfdis
+from ..mfusg.mfusgdisu import MfUsgDisU
+from ..utils import import_optional_dependency
+from .util_array import Util2d  # read1d,
 
 # todo
 # creation of line and polygon shapefiles from features (holes!)
@@ -79,7 +78,7 @@ def features_to_shapefile(features, featuretype, filename):
         wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
         wr.field("SHAPEID", "N", 20, 0)
         for i, line in enumerate(features):
-            wr.line(line.__geo_interface__["coordinates"])
+            wr.line([line.__geo_interface__["coordinates"]])
             wr.record(i)
 
     elif featuretype.lower() == "point":
@@ -186,6 +185,15 @@ class Gridgen:
         If true, Gridgen's GRID_TO_USGDATA command will connect layers
         where intermediate layers are inactive.
         (default is False)
+    **kwargs
+        verical_smoothing_level : int
+            maximum level difference between two vertically adjacent cells.
+            Adjust with caution, as adjustments can cause unexpected results
+            to simulated flows
+        horizontal_smoothing_level : int
+            maximum level difference between two horizontally adjacent cells.
+            Adjust with caution, as adjustments can cause unexpected results
+            to simulated flows
 
     Notes
     -----
@@ -201,6 +209,7 @@ class Gridgen:
         exe_name="gridgen",
         surface_interpolation="replicate",
         vertical_pass_through=False,
+        **kwargs,
     ):
         self.dis = dis
         if isinstance(dis, ModflowGwfdis):
@@ -241,6 +250,12 @@ class Gridgen:
         if vertical_pass_through:
             self.vertical_pass_through = "True"
 
+        self.smoothing_level_vertical = kwargs.pop(
+            "smoothing_level_vertical", 1
+        )
+        self.smoothing_level_horizontal = kwargs.pop(
+            "smoothing_level_horizontal", 1
+        )
         # Set up a blank _active_domain list with None for each layer
         self._addict = {}
         self._active_domain = []
@@ -682,6 +697,7 @@ class Gridgen:
 
         """
         import matplotlib.pyplot as plt
+
         from ..plot import plot_shapefile, shapefile_extents
 
         if ax is None:
@@ -1855,6 +1871,8 @@ class Gridgen:
             s += "\n"
 
         s += "  SMOOTHING = full\n"
+        s += f"  SMOOTHING_LEVEL_VERTICAL = {self.smoothing_level_vertical}\n"
+        s += f"  SMOOTHING_LEVEL_HORIZONTAL = {self.smoothing_level_horizontal}\n"
 
         for k in range(self.nlay):
             if self.surface_interpolation[k] == "ASCIIGRID":

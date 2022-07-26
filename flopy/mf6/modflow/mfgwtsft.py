@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on October 29, 2021 21:09:57 UTC
+# FILE created on April 11, 2022 18:22:41 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -12,7 +12,7 @@ class ModflowGwtsft(mfpackage.MFPackage):
     Parameters
     ----------
     model : MFModel
-        Model that this package is a part of.  Package is automatically
+        Model that this package is a part of. Package is automatically
         added to model when it is initialized.
     loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
@@ -52,10 +52,11 @@ class ModflowGwtsft(mfpackage.MFPackage):
           is read.
     print_concentration : boolean
         * print_concentration (boolean) keyword to indicate that the list of
-          reach stages will be printed to the listing file for every stress
-          period in which "HEAD PRINT" is specified in Output Control. If there
-          is no Output Control option and PRINT_STAGE is specified, then stages
-          are printed for the last time step of each stress period.
+          reach concentration will be printed to the listing file for every
+          stress period in which "CONCENTRATION PRINT" is specified in Output
+          Control. If there is no Output Control option and PRINT_CONCENTRATION
+          is specified, then concentration are printed for the last time step
+          of each stress period.
     print_flows : boolean
         * print_flows (boolean) keyword to indicate that the list of reach flow
           rates will be printed to the listing file for every stress period
@@ -225,6 +226,10 @@ class ModflowGwtsft(mfpackage.MFPackage):
     dfn_file_name = "gwt-sft.dfn"
 
     dfn = [
+        [
+            "header",
+            "multi-package",
+        ],
         [
             "block options",
             "name flow_package_name",
@@ -663,10 +668,10 @@ class ModflowGwtsft(mfpackage.MFPackage):
         reachperioddata=None,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            model, "sft", filename, pname, loading_package, parent_file
+            model, "sft", filename, pname, loading_package, **kwargs
         )
 
         # set up variables

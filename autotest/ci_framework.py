@@ -1,6 +1,7 @@
 import os
-import sys
 import shutil
+import sys
+
 import pymake
 
 # command line arguments to:
@@ -195,6 +196,21 @@ class FlopyTestSetup(object):
                 if self._verbose:
                     print(f"adding test directory...{test_dir}")
                 create_test_dir(test_dir, clean=clean, verbose=self._verbose)
+
+    def save_as_artifact(self):
+        """
+        Save test folder in directory ./failedTests.  When run as CI
+        the ./failedTests folder will be stored as a job artifact.
+
+        """
+        for test_dir in self._test_dirs:
+            dirname = os.path.split(test_dir)[-1]
+            dst = f"./failedTests/{dirname}"
+            print(f"archiving test folder {dirname} in {dst}")
+            if os.path.isdir(dst):
+                shutil.rmtree(dst)
+            shutil.copytree(test_dir, dst)
+        return
 
 
 def _get_mf6path():

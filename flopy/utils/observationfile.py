@@ -1,8 +1,10 @@
-import numpy as np
 import io
-from ..utils.utils_def import FlopyBinaryData
-from ..utils.flopy_io import get_ts_sp
+
+import numpy as np
+
 from ..utils import import_optional_dependency
+from ..utils.flopy_io import get_ts_sp
+from ..utils.utils_def import FlopyBinaryData
 
 
 class ObsFiles(FlopyBinaryData):

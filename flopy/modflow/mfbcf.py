@@ -139,7 +139,7 @@ class ModflowBcf(Package):
             filenames=filenames[0],
         )
 
-        self.url = "bcf.htm"
+        self.url = "bcf.html"
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Set values of all parameters

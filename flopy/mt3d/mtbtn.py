@@ -7,10 +7,12 @@ User's Manual.
 
 """
 
+import warnings
+
 import numpy as np
+
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
-import warnings
 
 
 class Mt3dBtn(Package):

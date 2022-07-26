@@ -20,6 +20,7 @@
 # ## Getting Started
 
 import numpy as np
+
 import flopy
 
 # ### Input variables for the Henry Problem
@@ -148,6 +149,7 @@ if not success:
 # ## Post-process the results
 
 import numpy as np
+
 import flopy.utils.binaryfile as bf
 
 # ### Load the concentration data
@@ -168,13 +170,13 @@ qz = cbbobj.get_data(text="flow lower face", totim=times[-1])[0]
 
 import matplotlib.pyplot as plt
 
-fig = plt.figure(figsize=(12,9))
+fig = plt.figure(figsize=(12, 9))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 pmv = flopy.plot.PlotCrossSection(model=swt, ax=ax, line={"row": 0})
 arr = pmv.plot_array(concentration)
 pmv.plot_vector(qx, qy, -qz, color="white", kstep=3, hstep=3)
 plt.colorbar(arr, shrink=0.5, ax=ax)
-ax.set_title("Simulated Concentrations");
+ax.set_title("Simulated Concentrations")
 
 # ### Load the head data
 
@@ -192,4 +194,4 @@ arr = pmv.plot_array(head)
 contours = pmv.contour_array(head, colors="white")
 ax.clabel(contours, fmt="%2.2f")
 plt.colorbar(arr, shrink=0.5, ax=ax)
-ax.set_title("Simulated Heads");
+ax.set_title("Simulated Heads")

@@ -1,11 +1,12 @@
-import os
 import copy
-import numpy as np
+import inspect
+import os
 
+import numpy as np
 from matplotlib.path import Path
 
-from .grid import Grid, CachedData
 from ..utils.geometry import is_clockwise
+from .grid import CachedData, Grid
 
 
 class VertexGrid(Grid):
@@ -125,7 +126,24 @@ class VertexGrid(Grid):
 
     @property
     def iverts(self):
-        return [[t[0]] + list(t)[4:] for t in self._cell2d]
+        if self._cell2d is not None:
+            return [list(t)[4:] for t in self.cell2d]
+        elif self._cell1d is not None:
+            return [list(t)[3:] for t in self.cell1d]
+
+    @property
+    def cell1d(self):
+        if self._cell1d is not None:
+            return [
+                [ivt for ivt in t if ivt is not None] for t in self._cell2d
+            ]
+
+    @property
+    def cell2d(self):
+        if self._cell2d is not None:
+            return [
+                [ivt for ivt in t if ivt is not None] for t in self._cell2d
+            ]
 
     @property
     def verts(self):
@@ -237,7 +255,7 @@ class VertexGrid(Grid):
 
         return copy.copy(self._polygons)
 
-    def intersect(self, x, y, local=False, forgive=False):
+    def intersect(self, x, y, z=None, local=False, forgive=False):
         """
         Get the CELL2D number of a point with coordinates x and y
 
@@ -250,6 +268,9 @@ class VertexGrid(Grid):
             The x-coordinate of the requested point
         y : float
             The y-coordinate of the requested point
+        z : float, None
+            optional, z-coordiante of the requested point will return
+            (lay, icell2d)
         local: bool (optional)
             If True, x and y are in local coordinates (defaults to False)
         forgive: bool (optional)
@@ -262,6 +283,8 @@ class VertexGrid(Grid):
             The CELL2D number
 
         """
+        frame_info = inspect.getframeinfo(inspect.currentframe())
+        self._warn_intersect(frame_info.filename, frame_info.lineno)
 
         if local:
             # transform x and y to real-world coordinates
@@ -284,11 +307,25 @@ class VertexGrid(Grid):
                 else:
                     radius = 1e-9
                 if path.contains_point((x, y), radius=radius):
-                    return icell2d
+                    if z is None:
+                        return icell2d
+
+                    for lay in range(self.nlay):
+                        if (
+                            self.top_botm[lay, icell2d]
+                            >= z
+                            >= self.top_botm[lay + 1, icell2d]
+                        ):
+                            return lay, icell2d
+
         if forgive:
             icell2d = np.nan
+            if z is not None:
+                return np.nan, icell2d
+
             return icell2d
-        raise Exception("x, y point given is outside of the model area")
+
+        raise Exception("point given is outside of the model area")
 
     def get_cell_vertices(self, cellid):
         """
@@ -324,7 +361,7 @@ class VertexGrid(Grid):
         lc : matplotlib.collections.LineCollection
 
         """
-        from flopy.plot import PlotMapView
+        from ..plot import PlotMapView
 
         mm = PlotMapView(modelgrid=self)
         return mm.plot_grid(**kwargs)
@@ -342,7 +379,7 @@ class VertexGrid(Grid):
             zcenters = []
             zvertices = []
             vertexdict = {v[0]: [v[1], v[2], v[3]] for v in self._vertices}
-            for cell1d in self._cell1d:
+            for cell1d in self.cell1d:
                 cell1d = tuple(cell1d)
                 xcenters.append(cell1d[1])
                 ycenters.append(cell1d[2])
@@ -350,8 +387,7 @@ class VertexGrid(Grid):
 
                 vert_number = []
                 for i in cell1d[3:]:
-                    if i is not None:
-                        vert_number.append(int(i))
+                    vert_number.append(int(i))
 
                 xcellvert = []
                 ycellvert = []
@@ -367,15 +403,14 @@ class VertexGrid(Grid):
         else:
             vertexdict = {v[0]: [v[1], v[2]] for v in self._vertices}
             # build xy vertex and cell center info
-            for cell2d in self._cell2d:
+            for cell2d in self.cell2d:
                 cell2d = tuple(cell2d)
                 xcenters.append(cell2d[1])
                 ycenters.append(cell2d[2])
 
                 vert_number = []
                 for i in cell2d[4:]:
-                    if i is not None:
-                        vert_number.append(int(i))
+                    vert_number.append(int(i))
 
                 xcellvert = []
                 ycellvert = []

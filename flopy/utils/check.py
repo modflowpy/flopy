@@ -1,6 +1,8 @@
 import os
+
 import numpy as np
 from numpy.lib import recfunctions
+
 from ..utils.recarray_utils import recarray
 from ..utils.util_array import Util3d
 
@@ -188,8 +190,7 @@ class check:
         Notes
         -----
         info about appending to record arrays (views vs. copies and upcoming
-        changes to numpy):
-        http://stackoverflow.com/questions/22865877/how-do-i-write-to-multiple-fields-of-a-structured-array
+        changes to numpy): http://stackoverflow.com/q/22865877/
         """
         txt = ""
         array = array.copy()
@@ -797,8 +798,7 @@ def _print_rec_array(array, cols=None, delimiter=" ", float_format="{:.6f}"):
 def fields_view(arr, fields):
     """
     creates view of array that only contains the fields in fields.
-    http://stackoverflow.com/questions/15182381/how-to-return-a-view-of-
-    several-columns-in-numpy-structured-array
+    https://stackoverflow.com/q/15182381/
     """
     dtype2 = np.dtype({name: arr.dtype.fields[name] for name in fields})
     return np.ndarray(arr.shape, dtype2, arr, 0, arr.strides)

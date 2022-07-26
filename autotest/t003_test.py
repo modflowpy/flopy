@@ -1,6 +1,8 @@
-import pytest
-import flopy
 import os
+
+import pytest
+
+import flopy
 
 
 def test_loadfreyberg():

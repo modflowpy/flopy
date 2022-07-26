@@ -1,5 +1,5 @@
-from ..utils.flopy_io import line_parse, pop_item
 from ..pakbase import Package
+from ..utils.flopy_io import line_parse, pop_item
 
 
 class ModflowMnwi(Package):
@@ -137,7 +137,7 @@ class ModflowMnwi(Package):
             filenames=filenames[0],
         )
 
-        self.url = "mnwi.htm"
+        self.url = "mnwi.html"
         self._generate_heading()
         # integer flag indicating output to be written for each MNW node at
         # the end of each stress period

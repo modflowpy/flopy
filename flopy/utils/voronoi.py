@@ -1,7 +1,7 @@
 import numpy as np
+
 from .cvfdutil import get_disv_gridprops
 from .geometry import point_in_polygon
-
 from .utl_import import import_optional_dependency
 
 
@@ -82,15 +82,26 @@ def tri2vor(tri, **kwargs):
     tri_verts = tri.verts
     tri_iverts = tri.iverts
     tri_edge = tri.edge
+    npoints = tri_verts.shape[0]
+    ntriangles = len(tri_iverts)
+    nedges = tri_edge.shape[0]
+
+    # check to make sure there are no duplicate points
+    tri_verts_unique = np.unique(tri_verts, axis=0)
+    if tri_verts.shape != tri_verts_unique.shape:
+        npoints_unique = tri_verts_unique.shape[0]
+        errmsg = (
+            f"There are duplicate points in the triangular mesh. "
+            f"These can be caused by overlapping regions, holes, and "
+            f"refinement features.  The triangular mesh has {npoints} "
+            f"points but only {npoints_unique} are unique."
+        )
+        raise Exception(errmsg)
 
     # construct the voronoi grid
     vor = Voronoi(tri_verts, **kwargs)
     ridge_points = vor.ridge_points
     ridge_vertices = vor.ridge_vertices
-
-    npoints = tri_verts.shape[0]
-    ntriangles = len(tri_iverts)
-    nedges = tri_edge.shape[0]
 
     # test the voronoi vertices, and mark those outside of the domain
     nvertices = vor.vertices.shape[0]
@@ -115,6 +126,9 @@ def tri2vor(tri, **kwargs):
     # renumber valid vertices consecutively
     idx_vertindex[idx_filtered] = np.arange(nvalid_vertices)
 
+    # Create new lists for the voronoi grid vertices and the
+    # voronoi grid incidence list.  There should be one voronoi
+    # cell for each vertex point in the triangular grid
     vor_verts = [(x, y) for x, y in vor.vertices[idx_filtered]]
     vor_iverts = [[] for i in range(npoints)]
 
@@ -181,9 +195,8 @@ def tri2vor(tri, **kwargs):
     if True:
         vor_verts = np.array(vor_verts)
         for icell in range(len(vor_iverts)):
-            vor_iverts[icell] = get_sorted_vertices(
-                vor_iverts[icell], vor_verts
-            )
+            iverts_cell = vor_iverts[icell]
+            vor_iverts[icell] = get_sorted_vertices(iverts_cell, vor_verts)
 
     return vor_verts, vor_iverts
 

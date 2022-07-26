@@ -1,4 +1,6 @@
 # --------------------- gwf tvs options ---------------------
+# flopy subpackage tvs_filerecord tvs tvs_perioddata perioddata
+# flopy parent_name_type parent_package MFPackage
 
 block options
 name disable_storage_change_integration
@@ -7,6 +9,14 @@ reader urword
 optional true
 longname deactivate storage change integration
 description keyword that deactivates inclusion of storage derivative terms in the STO package matrix formulation.  In the absence of this keyword (the default), the groundwater storage formulation will be modified to correctly adjust heads based on transient variations in stored water volumes arising from changes to SS and SY properties.
+
+block options
+name print_input
+type keyword
+reader urword
+optional true
+longname print input to listing file
+description keyword to indicate that information for each change to a storage property in a cell will be written to the model listing file.
 
 block options
 name ts_filerecord

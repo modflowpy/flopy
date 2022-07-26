@@ -3,11 +3,12 @@ Test postprocessing utilities
 """
 
 import numpy as np
+
 import flopy
 from flopy.utils.postprocessing import (
+    get_gradients,
     get_transmissivities,
     get_water_table,
-    get_gradients,
 )
 
 mf = flopy.modflow

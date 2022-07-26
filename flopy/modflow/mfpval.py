@@ -4,7 +4,7 @@ the ModflowPval class as `flopy.modflow.ModflowPval`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/parameter_value_file.htm>`_.
+<https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/parameter_value_file.html>`_.
 
 """
 from ..pakbase import Package
@@ -79,7 +79,7 @@ class ModflowPval(Package):
         )
 
         self._generate_heading()
-        self.url = "parameter_value_file.htm"
+        self.url = "parameter_value_file.html"
 
         self.npval = 0
         if pval_dict is not None:

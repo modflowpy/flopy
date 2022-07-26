@@ -6,6 +6,7 @@ flopy.discretization grid classes
 
 import os
 import platform
+
 import numpy as np
 
 try:
@@ -21,13 +22,13 @@ from flopy.utils.gridgen import Gridgen
 try:
     import matplotlib
     import matplotlib.pyplot as plt
-    from matplotlib.collections import QuadMesh, PathCollection, LineCollection
+    from matplotlib.collections import LineCollection, PathCollection, QuadMesh
 except:
     print("Matplotlib not installed, tests cannot be run.")
     matplotlib = None
     plt = None
 
-from ci_framework import base_test_dir, FlopyTestSetup
+from ci_framework import FlopyTestSetup, base_test_dir
 
 # Set gridgen executable
 gridgen_exe = "gridgen"

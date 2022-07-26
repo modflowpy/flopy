@@ -1,6 +1,7 @@
 import numpy as np
+
 from ..pakbase import Package
-from ..utils import Util2d, Util3d
+from ..utils import Util3d
 from ..utils.util_array import Transient3d
 
 

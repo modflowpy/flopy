@@ -12,9 +12,10 @@ except ImportWarning as e:
     Polygon = None
 
 
+from ci_framework import FlopyTestSetup, base_test_dir
+
 import flopy
 from flopy.utils.gridgen import Gridgen
-from ci_framework import base_test_dir, FlopyTestSetup
 
 # Set gridgen executable
 gridgen_exe = "gridgen"
@@ -128,5 +129,57 @@ def test_mfusg():
     return
 
 
+def test_usg_iverts():
+    iverts = [
+        [4, 3, 2, 1, 0, None],
+        [7, 0, 1, 6, 5, None],
+        [11, 10, 9, 8, 2, 3],
+        [1, 6, 13, 12, 8, 2],
+        [15, 14, 13, 6, 5, None],
+        [10, 9, 18, 17, 16, None],
+        [8, 12, 20, 19, 18, 9],
+        [22, 14, 13, 12, 20, 21],
+        [24, 17, 18, 19, 23, None],
+        [21, 20, 19, 23, 25, None],
+    ]
+    verts = [
+        [0.0, 22.5],
+        [5.1072, 22.5],
+        [7.5, 24.0324],
+        [7.5, 30.0],
+        [0.0, 30.0],
+        [0.0, 7.5],
+        [4.684, 7.5],
+        [0.0, 15.0],
+        [14.6582, 21.588],
+        [22.5, 24.3766],
+        [22.5, 30.0],
+        [15.0, 30.0],
+        [15.3597, 8.4135],
+        [7.5, 5.6289],
+        [7.5, 0.0],
+        [0.0, 0.0],
+        [30.0, 30.0],
+        [30.0, 22.5],
+        [25.3285, 22.5],
+        [24.8977, 7.5],
+        [22.5, 5.9676],
+        [22.5, 0.0],
+        [15.0, 0.0],
+        [30.0, 7.5],
+        [30.0, 15.0],
+        [30.0, 0.0],
+    ]
+
+    grid = flopy.discretization.UnstructuredGrid(
+        verts, iverts, ncpl=[len(iverts)]
+    )
+
+    iverts = grid.iverts
+    if any(None in l for l in iverts):
+        raise ValueError("None type should not be returned in iverts list")
+
+
 if __name__ == "__main__":
     test_mfusg()
+    test_usg_iverts()

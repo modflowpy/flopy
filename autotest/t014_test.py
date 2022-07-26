@@ -2,11 +2,12 @@
 Some basic tests for STR load.
 """
 
+import os
+
+import numpy as np
 import pytest
 
-import os
 import flopy
-import numpy as np
 
 path = os.path.join("..", "examples", "data", "mf2005_test")
 pthgw = os.path.join("..", "examples", "groundwater_paper", "uspb", "flopy")

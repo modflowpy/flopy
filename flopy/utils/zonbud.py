@@ -1,9 +1,11 @@
-import os
 import copy
-import numpy as np
+import os
 from itertools import groupby
-from .utils_def import totim_to_datetime
+
+import numpy as np
+
 from . import import_optional_dependency
+from .utils_def import totim_to_datetime
 
 
 class ZoneBudget:
@@ -1472,12 +1474,16 @@ class ZoneBudget:
         # The number of values to read before placing
         # them into the zone array
         datalen = nrow * ncol
+        totaldatalen = nlay * nrow * ncol
 
         # List of valid values for LOCAT
         locats = ["CONSTANT", "INTERNAL", "EXTERNAL"]
 
         # ITERATE OVER THE ROWS
         for line in lines:
+            if totlen == totaldatalen:
+                break
+
             rowitems = line.strip().split()
 
             # Skip blank lines
@@ -1670,7 +1676,7 @@ class ZoneBudget:
             flopy.export.netcdf.NetCdf object
 
         """
-        from flopy.export.utils import output_helper
+        from ..export.utils import output_helper
 
         if isinstance(f, str):
             if not f.endswith(".nc"):
@@ -2136,7 +2142,7 @@ class ZoneBudget6:
             flopy.export.netcdf.NetCdf object
 
         """
-        from flopy.export.utils import output_helper
+        from ..export.utils import output_helper
 
         if isinstance(f, str):
             if not f.endswith(".nc"):

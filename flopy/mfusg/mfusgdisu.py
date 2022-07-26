@@ -4,11 +4,11 @@ the MfUsgDisU class as `flopy.mfusg.MfUsgDisU`.
 """
 import numpy as np
 
-from .mfusg import MfUsg
+from ..discretization.unstructuredgrid import UnstructuredGrid
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, read1d
 from ..utils.reference import TemporalReference
-from ..discretization.unstructuredgrid import UnstructuredGrid
+from .mfusg import MfUsg
 
 ITMUNI = {"u": 0, "s": 1, "m": 2, "h": 3, "d": 4, "y": 5}
 LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}
@@ -248,7 +248,6 @@ class MfUsgDisU(Package):
         )
 
         # Set values of all parameters
-        self.url = "dis.htm"
         self._generate_heading()
 
         self.nodes = nodes

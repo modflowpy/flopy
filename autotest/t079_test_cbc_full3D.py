@@ -1,11 +1,11 @@
 import os
 import sys
-import pytest
 
 import numpy as np
-import flopy
+import pytest
+from ci_framework import FlopyTestSetup, base_test_dir
 
-from ci_framework import base_test_dir, FlopyTestSetup
+import flopy
 
 ex_pths = (
     os.path.join("..", "examples", "data", "freyberg"),

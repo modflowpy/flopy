@@ -1,18 +1,20 @@
-﻿"""
+"""
 mfuzf1 module.  Contains the ModflowUzf1 class. Note that the user can access
 the ModflowUzf1 class as `flopy.modflow.ModflowUzf1`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?uzf_unsaturated_zone_flow_pack.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/uzf_-_unsaturated_zone_flow_pa_3.html>`_.
 
 """
-import numpy as np
-from ..utils.flopy_io import pop_item, line_parse, multi_line_strip
-from ..pakbase import Package
-from ..utils import Util2d, Transient2d
-from ..utils.optionblock import OptionBlock
 import warnings
+
+import numpy as np
+
+from ..pakbase import Package
+from ..utils import Transient2d, Util2d
+from ..utils.flopy_io import line_parse, multi_line_strip, pop_item
+from ..utils.optionblock import OptionBlock
 
 
 class ModflowUzf1(Package):
@@ -477,7 +479,7 @@ class ModflowUzf1(Package):
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
 
         self._generate_heading()
-        self.url = "uzf_unsaturated_zone_flow_pack.htm"
+        self.url = "uzf_-_unsaturated_zone_flow_pa_3.html"
 
         # Data Set 1a
         if nwt_11_fmt:
@@ -855,7 +857,11 @@ class ModflowUzf1(Package):
                 write_transient("extdp")
                 if self.iuzfopt > 0:
                     write_transient("extwc")
-            if self.capillaryuzet and "nwt" in self.parent.version:
+            if (
+                self.capillaryuzet
+                and "nwt" in self.parent.version
+                and self.iuzfopt > 0
+            ):
                 write_transient("air_entry")
                 write_transient("hroot")
                 write_transient("rootact")
@@ -1003,7 +1009,7 @@ class ModflowUzf1(Package):
             load_util2d("irunbnd", np.int32)
 
         # dataset 4
-        if iuzfopt in [0, 1]:
+        if np.abs(iuzfopt) in [0, 1]:
             load_util2d("vks", np.float32)
 
         # dataset 4b
@@ -1061,13 +1067,14 @@ class ModflowUzf1(Package):
                     # dataset 14
                     load_util2d("extdp", np.float32, per=per)
                 # dataset 15
-                line = line_parse(f.readline())
-                nuzf4 = pop_item(line, int)
-                if nuzf4 >= 0:
-                    # dataset 16
-                    load_util2d("extwc", np.float32, per=per)
+                if iuzfopt > 0:
+                    line = line_parse(f.readline())
+                    nuzf4 = pop_item(line, int)
+                    if nuzf4 >= 0:
+                        # dataset 16
+                        load_util2d("extwc", np.float32, per=per)
 
-                if capillaryuzet:
+                if capillaryuzet and iuzfopt > 0:
                     # dataset 17
                     line = line_parse(f.readline())
                     nuzf5 = pop_item(line, int)

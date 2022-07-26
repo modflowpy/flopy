@@ -3,12 +3,12 @@ polygon = {
     "coordinates": (
         (
             (-121.389308, 38.560816),
-            (-121.363391, 38.568835),
-            (-121.358641, 38.565972),
-            (-121.359327, 38.562767),
-            (-121.369932, 38.560575),
-            (-121.370609, 38.557232),
             (-121.385435, 38.555018),
+            (-121.370609, 38.557232),
+            (-121.369932, 38.560575),
+            (-121.359327, 38.562767),
+            (-121.358641, 38.565972),
+            (-121.363391, 38.568835),
             (-121.389308, 38.560816),
         ),
     ),
@@ -19,19 +19,19 @@ poly_w_hole = {
     "coordinates": (
         (
             (-121.383097, 38.565764),
-            (-121.342866, 38.579086),
-            (-121.342739, 38.578995),
-            (-121.323309, 38.578953),
-            (-121.358295, 38.561163),
-            (-121.379047, 38.559053),
             (-121.382318, 38.562934),
+            (-121.379047, 38.559053),
+            (-121.358295, 38.561163),
+            (-121.323309, 38.578953),
+            (-121.342739, 38.578995),
+            (-121.342866, 38.579086),
             (-121.383097, 38.565764),
         ),
         (
             (-121.367281, 38.567214),
-            (-121.362633, 38.562622),
-            (-121.345857, 38.570301),
             (-121.352168, 38.572258),
+            (-121.345857, 38.570301),
+            (-121.362633, 38.562622),
             (-121.367281, 38.567214),
         ),
     ),
@@ -43,17 +43,17 @@ multipolygon = {
         [
             (
                 (-121.433775, 38.544254),
-                (-121.424263, 38.547474),
                 (-121.422917, 38.540376),
+                (-121.424263, 38.547474),
                 (-121.433775, 38.544254),
             )
         ],
         [
             (
                 (-121.456113, 38.552220),
-                (-121.440092, 38.548303),
-                (-121.440053, 38.537820),
                 (-121.459991, 38.541350),
+                (-121.440053, 38.537820),
+                (-121.440092, 38.548303),
                 (-121.456113, 38.552220),
             )
         ],
@@ -113,16 +113,16 @@ multilinestring = {
 def test_import_geospatial_utils():
 
     from flopy.utils.geospatial_utils import (
-        GeoSpatialUtil,
         GeoSpatialCollection,
+        GeoSpatialUtil,
     )
 
     return
 
 
 def test_polygon():
+    from flopy.utils.geometry import Polygon, Shape
     from flopy.utils.geospatial_utils import GeoSpatialUtil
-    from flopy.utils.geometry import Shape, Polygon
 
     poly = Shape.from_geojson(polygon)
     gi1 = poly.__geo_interface__
@@ -149,12 +149,16 @@ def test_polygon():
         is_equal = gi1 == gi2
 
         if not is_equal:
-            raise AssertionError("GeoSpatialUtil polygon conversion error")
+            # pyshp < 2.2.0 sorts coordinates in opposite direction
+            gi2["coordinates"] = (gi2["coordinates"][0][::-1],)
+            is_equal = gi1 == gi2
+            if not is_equal:
+                raise AssertionError("GeoSpatialUtil polygon conversion error")
 
 
 def test_polygon_with_hole():
+    from flopy.utils.geometry import Polygon, Shape
     from flopy.utils.geospatial_utils import GeoSpatialUtil
-    from flopy.utils.geometry import Shape, Polygon
 
     poly = Shape.from_geojson(poly_w_hole)
     gi1 = poly.__geo_interface__
@@ -181,12 +185,17 @@ def test_polygon_with_hole():
         is_equal = gi1 == gi2
 
         if not is_equal:
-            raise AssertionError("GeoSpatialUtil polygon conversion error")
+            # pyshp < 2.2.0 sorts coordinates in opposite direction
+            t = reversed(t)
+            gi2 = t.__geo_interface__
+            is_equal = gi1 == gi2
+            if not is_equal:
+                raise AssertionError("GeoSpatialUtil polygon conversion error")
 
 
 def test_multipolygon():
+    from flopy.utils.geometry import MultiPolygon, Shape
     from flopy.utils.geospatial_utils import GeoSpatialUtil
-    from flopy.utils.geometry import Shape, MultiPolygon
 
     poly = Shape.from_geojson(multipolygon)
     gi1 = poly.__geo_interface__
@@ -213,14 +222,19 @@ def test_multipolygon():
         is_equal = gi1 == gi2
 
         if not is_equal:
-            raise AssertionError(
-                "GeoSpatialUtil multipolygon conversion error"
-            )
+            # pyshp < 2.2.0 sorts coordinates in opposite direction
+            t = reversed(t)
+            gi2 = t.__geo_interface__
+            is_equal = gi1 == gi2
+            if not is_equal:
+                raise AssertionError(
+                    "GeoSpatialUtil multipolygon conversion error"
+                )
 
 
 def test_point():
+    from flopy.utils.geometry import Point, Shape
     from flopy.utils.geospatial_utils import GeoSpatialUtil
-    from flopy.utils.geometry import Shape, Point
 
     pt = Shape.from_geojson(point)
     gi1 = pt.__geo_interface__
@@ -251,8 +265,8 @@ def test_point():
 
 
 def test_multipoint():
+    from flopy.utils.geometry import MultiPoint, Shape
     from flopy.utils.geospatial_utils import GeoSpatialUtil
-    from flopy.utils.geometry import Shape, MultiPoint
 
     mpt = Shape.from_geojson(multipoint)
     gi1 = mpt.__geo_interface__
@@ -283,8 +297,8 @@ def test_multipoint():
 
 
 def test_linestring():
+    from flopy.utils.geometry import LineString, Shape
     from flopy.utils.geospatial_utils import GeoSpatialUtil
-    from flopy.utils.geometry import Shape, LineString
 
     lstr = Shape.from_geojson(linestring)
     gi1 = lstr.__geo_interface__
@@ -315,8 +329,8 @@ def test_linestring():
 
 
 def test_multilinestring():
+    from flopy.utils.geometry import MultiLineString, Shape
     from flopy.utils.geospatial_utils import GeoSpatialUtil
-    from flopy.utils.geometry import Shape, MultiLineString
 
     mlstr = Shape.from_geojson(multilinestring)
     gi1 = mlstr.__geo_interface__
@@ -349,8 +363,8 @@ def test_multilinestring():
 
 
 def test_polygon_collection():
+    from flopy.utils.geometry import Collection, Shape
     from flopy.utils.geospatial_utils import GeoSpatialCollection
-    from flopy.utils.geometry import Shape, Collection
 
     col = [
         Shape.from_geojson(polygon),
@@ -375,20 +389,26 @@ def test_polygon_collection():
             continue
 
         gc2 = GeoSpatialCollection(col, shapetype)
-        gi2 = [i.flopy_geometry.__geo_interface__ for i in gc2]
 
-        for ix, gi in enumerate(gi2):
-            is_equal = gi == gi1[ix]
+        for ix, gi in enumerate(gc2):
+            t = gi.flopy_geometry
+            gi2 = t.__geo_interface__
+            is_equal = gi2 == gi1[ix]
 
             if not is_equal:
-                raise AssertionError(
-                    "GeoSpatialCollection Polygon conversion error"
-                )
+                # pyshp < 2.2.0 sorts coordinates in opposite direction
+                t = reversed(t)
+                gi2 = t.__geo_interface__
+                is_equal = gi2 == gi1[ix]
+                if not is_equal:
+                    raise AssertionError(
+                        "GeoSpatialCollection Polygon conversion error"
+                    )
 
 
 def test_point_collection():
+    from flopy.utils.geometry import Collection, Shape
     from flopy.utils.geospatial_utils import GeoSpatialCollection
-    from flopy.utils.geometry import Shape, Collection
 
     col = [Shape.from_geojson(point), Shape.from_geojson(multipoint)]
 
@@ -421,8 +441,8 @@ def test_point_collection():
 
 
 def test_linestring_collection():
+    from flopy.utils.geometry import Collection, Shape
     from flopy.utils.geospatial_utils import GeoSpatialCollection
-    from flopy.utils.geometry import Shape, Collection
 
     col = [Shape.from_geojson(linestring), Shape.from_geojson(multilinestring)]
 
@@ -455,8 +475,8 @@ def test_linestring_collection():
 
 
 def test_mixed_collection():
+    from flopy.utils.geometry import Collection, Shape
     from flopy.utils.geospatial_utils import GeoSpatialCollection
-    from flopy.utils.geometry import Shape, Collection
 
     col = [
         Shape.from_geojson(polygon),
@@ -485,13 +505,22 @@ def test_mixed_collection():
             continue
 
         gc2 = GeoSpatialCollection(col, shapetype)
-        gi2 = [i.flopy_geometry.__geo_interface__ for i in gc2]
 
-        for ix, gi in enumerate(gi2):
-            is_equal = gi == gi1[ix]
+        for ix, gi in enumerate(gc2):
+            t = gi.flopy_geometry
+            gi2 = t.__geo_interface__
+
+            is_equal = gi2 == gi1[ix]
 
             if not is_equal:
-                raise AssertionError("GeoSpatialCollection conversion error")
+                t = reversed(t)
+                gi2 = t.__geo_interface__
+                is_equal = gi2 == gi1[ix]
+
+                if not is_equal:
+                    raise AssertionError(
+                        "GeoSpatialCollection conversion error"
+                    )
 
 
 if __name__ == "__main__":

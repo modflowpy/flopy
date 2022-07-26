@@ -15,10 +15,10 @@ import sys
 
 # add flopy root directory to the python path
 sys.path.insert(0, os.path.abspath(".."))
-from flopy import __version__, __author__
+from flopy import __author__, __version__
 
 # -- determine if running on readthedocs ------------------------------------
-on_rtd = os.environ.get('READTHEDOCS') == 'True'
+on_rtd = os.environ.get("READTHEDOCS") == "True"
 
 # -- determine if this version is a release candidate
 with open("../README.md", "r") as f:

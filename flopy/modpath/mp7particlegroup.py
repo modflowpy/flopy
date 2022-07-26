@@ -6,9 +6,11 @@ mp7particlegroup module.  Contains the ParticleGroup, and
 """
 
 import os
+
 import numpy as np
+
 from ..utils.util_array import Util2d
-from .mp7particledata import ParticleData, NodeParticleData
+from .mp7particledata import NodeParticleData, ParticleData
 
 
 class _Modpath7ParticleGroup:
@@ -73,8 +75,12 @@ class _Modpath7ParticleGroup:
         elif len(releasedata) == 3:
             releaseoption = 2
             releasetimecount = int(releasedata[0])
-            releaseinterval = int(releasedata[2])
-            releasetimes = np.array(releasedata[1], dtype=np.float32)
+            releaseinterval = releasedata[2]
+            releasetimes = np.arange(
+                releasedata[1],
+                releasedata[1] + releasetimecount * releaseinterval,
+                releaseinterval,
+            ).astype(np.float32)
         elif len(releasedata) == 2:
             releaseoption = 3
             releasetimecount = int(releasedata[0])

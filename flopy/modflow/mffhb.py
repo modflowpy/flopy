@@ -4,14 +4,14 @@ the ModflowFhb class as `flopy.modflow.ModflowFhb`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?fhb.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/fhb.html>`_.
 
 """
 import numpy as np
 
 from ..pakbase import Package
-from ..utils.recarray_utils import create_empty_recarray
 from ..utils import read1d
+from ..utils.recarray_utils import create_empty_recarray
 
 
 class ModflowFhb(Package):
@@ -181,7 +181,7 @@ class ModflowFhb(Package):
         )
 
         self._generate_heading()
-        self.url = "flow_and_head_boundary_packag2.htm"
+        self.url = "fhb.html"
 
         self.nbdtim = nbdtim
         self.nflw = nflw

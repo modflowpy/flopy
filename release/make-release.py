@@ -1,17 +1,18 @@
 #!/usr/bin/python
 
-import subprocess
-import os
-import sys
 import datetime
 import json
+import os
+import subprocess
+import sys
+from importlib.machinery import SourceFileLoader
 
 # file_paths dictionary has file names and the path to the file. Enter '.'
 # as the path if the file is in the root repository directory
 file_paths = {
     "version.py": "../flopy",
     "README.md": "../",
-    "PyPi_release.md": "../docs",
+    "PyPI_release.md": "../docs",
     "code.json": "../",
     "DISCLAIMER.md": "../flopy",
     "notebook_examples.md": "../docs",
@@ -20,12 +21,12 @@ file_paths = {
 pak = "flopy"
 
 # local import of package variables in flopy/version.py
-# imports author_dict
-exec(open(os.path.join("..", "flopy", "version.py")).read())
+loader = SourceFileLoader("version", os.path.join("..", "flopy", "version.py"))
+version_mod = loader.load_module()
 
 # build authors list for Software/Code citation for FloPy
 authors = []
-for key in author_dict.keys():
+for key in version_mod.author_dict.keys():
     t = key.split()
     author = f"{t[-1]}"
     for str in t[0:-1]:
@@ -147,8 +148,8 @@ def get_software_citation(version, is_approved):
     line += (
         f", {now.year}, FloPy v{version}{sb}: "
         f"U.S. Geological Survey Software Release, {now:%d %B %Y}, "
-        "http://dx.doi.org/10.5066/F7BK19FH]"
-        "(http://dx.doi.org/10.5066/F7BK19FH)"
+        "https://doi.org/10.5066/F7BK19FH]"
+        "(https://doi.org/10.5066/F7BK19FH)"
     )
 
     return line
@@ -214,8 +215,8 @@ def update_version():
     # update code.json
     update_codejson(vmajor, vminor, vmicro)
 
-    # update PyPi_release.md
-    update_PyPi_release(vmajor, vminor, vmicro)
+    # update PyPI_release.md
+    update_PyPI_release(vmajor, vminor, vmicro)
 
 
 def update_codejson(vmajor, vminor, vmicro):
@@ -307,7 +308,7 @@ def update_readme_markdown(vmajor, vminor, vmicro):
                 "(https://mybinder.org/v2/gh/modflowpy/flopy.git/"
                 "{})".format(branch)
             )
-        elif "http://dx.doi.org/10.5066/F7BK19FH" in line:
+        elif "doi.org/10.5066/F7BK19FH" in line:
             line = get_software_citation(version, is_approved)
         elif "Disclaimer" in line:
             line = disclaimer
@@ -359,7 +360,7 @@ def update_notebook_examples_markdown():
     f.close()
 
 
-def update_PyPi_release(vmajor, vminor, vmicro):
+def update_PyPI_release(vmajor, vminor, vmicro):
     # create disclaimer text
     is_approved, disclaimer = get_disclaimer()
 
@@ -367,7 +368,7 @@ def update_PyPi_release(vmajor, vminor, vmicro):
     version = get_tag(vmajor, vminor, vmicro)
 
     # read README.md into memory
-    file = "PyPi_release.md"
+    file = "PyPI_release.md"
     fpth = os.path.join(file_paths[file], file)
     with open(fpth, "r") as file:
         lines = [line.rstrip() for line in file]
@@ -376,7 +377,7 @@ def update_PyPi_release(vmajor, vminor, vmicro):
     terminate = False
     f = open(fpth, "w")
     for line in lines:
-        if "http://dx.doi.org/10.5066/F7BK19FH" in line:
+        if "doi.org/10.5066/F7BK19FH" in line:
             line = get_software_citation(version, is_approved)
         elif "Disclaimer" in line:
             line = disclaimer

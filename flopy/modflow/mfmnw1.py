@@ -1,8 +1,10 @@
 import re
+
 import numpy as np
+
 from ..pakbase import Package
-from ..utils.flopy_io import line_parse, pop_item
 from ..utils import MfList
+from ..utils.flopy_io import line_parse, pop_item
 from ..utils.recarray_utils import create_empty_recarray, recarray
 
 
@@ -118,7 +120,7 @@ class ModflowMnw1(Package):
             filenames=filenames[0],
         )
 
-        self.url = "mnw1.htm"
+        self.url = "mnw.html"
         self.nper = self.parent.nrow_ncol_nlay_nper[-1]
         self._generate_heading()
         self.mxmnw = (

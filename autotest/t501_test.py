@@ -1,8 +1,9 @@
 # Test instantiation of mf6 classes
 import os
-import flopy
 
-from ci_framework import base_test_dir, FlopyTestSetup
+from ci_framework import FlopyTestSetup, base_test_dir
+
+import flopy
 
 
 def test_mf6():
@@ -134,8 +135,9 @@ def test_mf6():
 
 
 def test_mf6_string_to_file_path():
-    from flopy.mf6.mfbase import MFFileMgmt
     import platform
+
+    from flopy.mf6.mfbase import MFFileMgmt
 
     if platform.system().lower() == "windows":
         unc_path = r"\\server\path\path"

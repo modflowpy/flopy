@@ -1,4 +1,5 @@
 import numpy as np
+
 from ..pakbase import Package
 from ..utils.recarray_utils import create_empty_recarray
 
@@ -125,7 +126,7 @@ class ModflowHob(Package):
             filenames=filenames[0],
         )
 
-        self.url = "hob.htm"
+        self.url = "hob.html"
         self._generate_heading()
 
         self.iuhobsv = iuhobsv

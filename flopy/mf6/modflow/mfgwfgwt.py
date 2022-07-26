@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on October 29, 2021 21:09:57 UTC
+# FILE created on April 11, 2022 18:22:41 UTC
 from .. import mfpackage
 
 
@@ -37,7 +37,11 @@ class ModflowGwfgwt(mfpackage.MFPackage):
     _package_type = "gwfgwt"
     dfn_file_name = "exg-gwfgwt.dfn"
 
-    dfn = []
+    dfn = [
+        [
+            "header",
+        ],
+    ]
 
     def __init__(
         self,
@@ -48,10 +52,10 @@ class ModflowGwfgwt(mfpackage.MFPackage):
         exgmnameb=None,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            simulation, "gwfgwt", filename, pname, loading_package, parent_file
+            simulation, "gwfgwt", filename, pname, loading_package, **kwargs
         )
 
         # set up variables

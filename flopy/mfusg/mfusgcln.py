@@ -21,11 +21,11 @@ Methods, book 6, chap. A45, 66 p.
 """
 import numpy as np
 
-from .cln_dtypes import MfUsgClnDtypes
-from .mfusg import fmt_string, MfUsg
 from ..pakbase import Package
 from ..utils import Util2d
 from ..utils.utils_def import get_open_file_object
+from .cln_dtypes import MfUsgClnDtypes
+from .mfusg import MfUsg, fmt_string
 
 
 class MfUsgCln(Package):
@@ -223,8 +223,6 @@ class MfUsgCln(Package):
             unit_number=unitnumber,
             filenames=filenames,
         )
-
-        self.url = "Connected_Linear_Network.htm"
 
         self._generate_heading()
 
@@ -697,6 +695,8 @@ class MfUsgCln(Package):
         transient = False
         printiaja = False
         line = f_obj.readline().upper()
+        while line.find("#") >= 0:
+            line = f_obj.readline().upper()
         if line.startswith("OPTIONS"):
             line_text = line.strip().split()
             transient = bool("TRANSIENT" in line_text)

@@ -7,6 +7,7 @@ important classes that can be accessed by the user.
 """
 
 import numpy as np
+
 from ..utils.datafile import Header, LayerFile
 
 

@@ -1,11 +1,12 @@
 """Mfusg module."""
 import os
 from inspect import getfullargspec
+
 import flopy
 
-from ..utils import mfreadnam
-from ..modflow import Modflow
 from ..mbase import PackageLoadException
+from ..modflow import Modflow
+from ..utils import mfreadnam
 
 
 class MfUsg(Modflow):
@@ -538,7 +539,7 @@ def fmt_string(array):
         if vtype in ("i", "b"):
             fmts.append("%10d")
         elif vtype == "f":
-            fmts.append("%10.2E")
+            fmts.append("%14.6g")
         elif vtype == "o":
             fmts.append("%10s")
         elif vtype == "s":

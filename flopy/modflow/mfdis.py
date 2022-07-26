@@ -4,7 +4,7 @@ the ModflowDis class as `flopy.modflow.ModflowDis`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?dis.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/dis.html>`_.
 
 """
 import warnings
@@ -13,8 +13,8 @@ import numpy as np
 
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
-from ..utils.reference import TemporalReference
 from ..utils.flopy_io import line_parse
+from ..utils.reference import TemporalReference
 
 ITMUNI = {"u": 0, "s": 1, "m": 2, "h": 3, "d": 4, "y": 5}
 LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}
@@ -158,7 +158,7 @@ class ModflowDis(Package):
             filenames=self._prepare_filenames(filenames),
         )
 
-        self.url = "dis.htm"
+        self.url = "dis.html"
         self.nrow = nrow
         self.ncol = ncol
         self.nlay = nlay
@@ -300,7 +300,7 @@ class ModflowDis(Package):
                 p = float(nstp[kper])
                 dt = perlen[kper]
                 if m > 1:
-                    dt *= (m - 1.0) / (m ** p - 1.0)
+                    dt *= (m - 1.0) / (m**p - 1.0)
                 else:
                     dt = dt / p
                 for kstp in range(nstp[kper]):

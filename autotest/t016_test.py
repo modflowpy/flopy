@@ -1,7 +1,9 @@
 import os
-import flopy
+
 import numpy as np
-from ci_framework import base_test_dir, FlopyTestSetup
+from ci_framework import FlopyTestSetup, base_test_dir
+
+import flopy
 
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 
@@ -336,6 +338,79 @@ def test_usg_str():
 
     return
 
+def test_usg_lak():
+    # test mfusg model with lak package
+    print("testing unstructured mfusg with LAK: usg_rch_evt_lak.nam")
+
+    new_ws = f"{base_dir}_test_usg_lak"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=new_ws)
+
+    model_ws = os.path.join(
+        "..", "examples", "data", "mfusg_test", "rch_evt_tests"
+    )
+    nam = "usg_rch_evt_lak.nam"
+    m = flopy.mfusg.MfUsg.load(nam, model_ws=model_ws, exe_name=v)
+
+    m.model_ws = new_ws
+    m.write_input()
+    if run:
+        success, buff = m.run_model()
+        assert success
+
+    return
+
+def test_freyburg_usg():
+    # test mfusg model with rch nrchop 3 / freyburg.usg
+    print("testing usg nrchop 3: freyburg.usg.nam")
+
+    new_ws = f"{base_dir}_test_usg_freyburg"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=new_ws)
+
+    model_ws = os.path.join(
+        "..", "examples", "data", "freyberg_usg"
+    )
+    nam = "freyberg.usg.nam"
+    m = flopy.mfusg.MfUsg.load(nam, model_ws=model_ws, exe_name=v)
+
+    m.model_ws = new_ws
+    m.write_input()
+    if run:
+        success, buff = m.run_model()
+        assert success
+
+    return
+
+def test_flat_array_to_util3d_usg():
+    # test mfusg model package constructor with flat arrays
+    # for layer-based properties
+    print("testing usg flat arrays to layer property constructor")
+
+    new_ws = f"{base_dir}_test_usg_freyburg"
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=new_ws)
+
+    model_ws = os.path.join(
+        "..", "examples", "data", "freyberg_usg"
+    )
+    nam = "freyberg.usg.nam"
+    m = flopy.mfusg.MfUsg.load(nam, model_ws=model_ws, exe_name=v)
+
+    custom_array = m.lpf.hk.array
+    
+    msg = "lpf.hk.array should return a flat array disu.nodes long"
+    assert custom_array.ndim == 1 and custom_array.size == m.disu.nodes, msg
+
+    # modify hk array and check updates values are in the lpf
+    custom_array[m.disu.nodelay[1]:m.disu.nodelay[1] + 2] = 999.9
+    lpf_new = flopy.mfusg.MfUsgLpf(m, hk=custom_array)
+
+    msg = "modified flat array provided to lpf constructor is not updated as expected."
+    assert (lpf_new.hk[1][:2] == 999.9).all(), msg
+
+    # ensure we can still write the lpf file
+    m.model_ws = new_ws
+    m.write_input()
+
+    return
 
 if __name__ == "__main__":
     test_usg_disu_load()
@@ -348,3 +423,6 @@ if __name__ == "__main__":
     test_usg_rch_evt_models02a()
     test_usg_ss_to_tr()
     test_usg_str()
+    test_usg_lak()
+    test_freyburg_usg()
+    test_flat_array_to_util3d_usg()

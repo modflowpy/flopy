@@ -1,12 +1,15 @@
-import os, copy
+import copy
+import os
+import shutil
+from pathlib import Path
 
 import numpy as np
+from ci_framework import FlopyTestSetup, base_test_dir
 
 import flopy
 import flopy.utils.binaryfile as bf
-from flopy.utils.datautil import PyListUtil
 from flopy.mf6.modflow.mfsimulation import MFSimulation
-from ci_framework import base_test_dir, FlopyTestSetup
+from flopy.utils.datautil import PyListUtil
 
 try:
     import shapefile
@@ -75,8 +78,8 @@ def test001a_tharmonic():
     sim.set_all_data_external(external_data_folder="data")
     sim.write_simulation(silent=True)
     # verify external data written to correct location
-    data_path = os.path.join(run_folder, "data", "flow15.dis_botm.txt")
-    assert os.path.exists(data_path)
+    data_folder = os.path.join(run_folder, "data", "flow15.dis_botm.txt")
+    assert os.path.exists(data_folder)
     # model export test
     model = sim.get_model(model_name)
     model.export(f"{model.model_ws}/tharmonic.nc")
@@ -170,13 +173,12 @@ def test003_gwfs_disv():
     test_ex_name = "test003_gwfs_disv"
     model_name = "gwf_1"
 
-    pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
+    data_folder = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = f"{base_dir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    test_setup = FlopyTestSetup(verbose=True)
-    test_setup.add_test_dir([run_folder, save_folder])
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=[run_folder, save_folder])
 
-    expected_output_folder = os.path.join(pth, "expected_output")
+    expected_output_folder = os.path.join(data_folder, "expected_output")
     expected_head_file_a = os.path.join(
         expected_output_folder, "model_unch.hds"
     )
@@ -191,7 +193,7 @@ def test003_gwfs_disv():
     array_util = PyListUtil()
 
     # load simulation
-    sim = MFSimulation.load(model_name, "mf6", exe_name, pth, verify_data=True)
+    sim = MFSimulation.load(model_name, "mf6", exe_name, data_folder, verify_data=True)
 
     # make temp folder to save simulation
     sim.set_sim_path(run_folder)
@@ -223,7 +225,7 @@ def test003_gwfs_disv():
 
     model = sim.get_model(model_name)
     if shapefile:
-        model.export(f"{pth}/{test_ex_name}.shp")
+        model.export(f"{run_folder}/{test_ex_name}.shp")
 
     # change some settings
     chd_head_left = model.get_package("CHD_LEFT")
@@ -343,8 +345,7 @@ def test006_gwf3():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = f"{base_dir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    test_setup = FlopyTestSetup(verbose=True)
-    test_setup.add_test_dir([run_folder, save_folder])
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=[run_folder, save_folder])
 
     expected_output_folder = os.path.join(pth, "expected_output")
     expected_head_file_a = os.path.join(
@@ -358,7 +359,7 @@ def test006_gwf3():
 
     # load simulation
     sim = MFSimulation.load(model_name, "mf6", exe_name, pth, verify_data=True)
-
+    sim.set_sim_path(run_folder)
     model = sim.get_model()
     disu = model.get_package("disu")
     # test switching disu array to internal array
@@ -385,6 +386,11 @@ def test006_gwf3():
         # run simulation
         success, buff = sim.run_simulation()
         assert success, f"simulation {sim.name} rerun did not run"
+
+        # inspect cells
+        cell_list = [(0,), (7,), (14,)]
+        out_file = os.path.join("temp", "inspect_test006_gwf3.csv")
+        model.inspect_cells(cell_list, output_file_path=out_file)
 
         budget_obj = bf.CellBudgetFile(expected_cbc_file_a, precision="double")
         budget_fjf_valid = np.array(
@@ -532,94 +538,10 @@ def test006_gwf3():
     return
 
 
-# def test045_lake1ss_table():
-#     # init paths
-#     test_ex_name = "test045_lake1ss_table"
-#     model_name = "lakeex1b"
-#
-#     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
-#     run_folder = f"{base_dir}_{test_ex_name}"
-#     save_folder = f"{run_folder}_save"
-#     test_setup = flopyTest(verbose=True)
-#     test_setup.add_test_dir([run_folder, save_folder])
-#
-#     expected_output_folder = os.path.join(pth, "expected_output")
-#     expected_head_file_a = os.path.join(
-#         expected_output_folder, "lakeex1b_unch.hds"
-#     )
-#     expected_head_file_b = os.path.join(
-#         expected_output_folder, "lakeex1b_adj.hds"
-#     )
-#
-#     # load simulation
-#     sim = MFSimulation.load(
-#         sim_name=model_name,
-#         exe_name=exe_name,
-#         sim_ws=pth,
-#         verify_data=True,
-#     )
-#
-#     # make temp folder to save simulation
-#     sim.set_sim_path(run_folder)
-#
-#     # write simulation to new location
-#     sim.write_simulation()
-#
-#     if run:
-#         # run simulation
-#         success, buff = sim.run_simulation()
-#         assert success, f"simulation {sim.name} did not run"
-#
-#         # compare output to expected results
-#         head_new = os.path.join(run_folder, "lakeex1b.hds")
-#         outfile = os.path.join(run_folder, "headcompare_a.txt")
-#         success = pymake.compare_heads(
-#             None,
-#             None,
-#             files1=expected_head_file_a,
-#             files2=head_new,
-#             outfile=outfile,
-#         )
-#         assert success
-#
-#     # change some settings
-#     model = sim.get_model(model_name)
-#     laktbl = model.get_package("tab").table
-#     laktbl_data = laktbl.get_data()
-#     laktbl_data[-1][0] = 700.0
-#     laktbl.set_data(laktbl_data)
-#
-#     # write simulation again
-#     sim.set_sim_path(save_folder)
-#     sim.write_simulation()
-#
-#     if run:
-#         # run simulation
-#         success, buff = sim.run_simulation()
-#         assert success, f"simulation {sim.name} rerun did not run"
-#
-#         # compare output to expected results
-#         head_new = os.path.join(save_folder, "lakeex1b.hds")
-#         outfile = os.path.join(run_folder, "headcompare_b.txt")
-#         success = pymake.compare_heads(
-#             None,
-#             None,
-#             files1=expected_head_file_b,
-#             files2=head_new,
-#             outfile=outfile,
-#         )
-#         assert success
-#
-#
-#
-#     return
-
-
-def test006_2models_mvr():
+def test045_lake1ss_table():
     # init paths
-    test_ex_name = "test006_2models_mvr"
-    sim_name = "test006_2models_mvr"
-    model_names = ["parent", "child"]
+    test_ex_name = "test045_lake1ss_table"
+    model_name = "lakeex1b"
 
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = f"{base_dir}_{test_ex_name}"
@@ -628,6 +550,93 @@ def test006_2models_mvr():
     test_setup.add_test_dir([run_folder, save_folder])
 
     expected_output_folder = os.path.join(pth, "expected_output")
+    expected_head_file_a = os.path.join(
+        expected_output_folder, "lakeex1b_unch.hds"
+    )
+    expected_head_file_b = os.path.join(
+        expected_output_folder, "lakeex1b_adj.hds"
+    )
+
+    # load simulation
+    sim = MFSimulation.load(
+        sim_name=model_name,
+        exe_name=exe_name,
+        sim_ws=pth,
+        verify_data=True,
+    )
+
+    # make temp folder to save simulation
+    sim.set_sim_path(run_folder)
+
+    # write simulation to new location
+    sim.write_simulation()
+
+    if run:
+        # run simulation
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} did not run"
+
+        # compare output to expected results
+        head_new = os.path.join(run_folder, "lakeex1b.hds")
+        outfile = os.path.join(run_folder, "headcompare_a.txt")
+        success = pymake.compare_heads(
+            None,
+            None,
+            files1=expected_head_file_a,
+            files2=head_new,
+            outfile=outfile,
+        )
+        assert success
+
+    # change some settings
+    model = sim.get_model(model_name)
+    lak = model.get_package("lak")
+    laktbl = lak.get_package("laktab")
+    laktbl = model.get_package("laktab").table
+    laktbl_data = laktbl.get_data()
+    laktbl_data[-1][0] = 700.0
+    laktbl.set_data(laktbl_data)
+    # write simulation again
+    sim.set_sim_path(save_folder)
+    sim.write_simulation()
+
+    if run:
+        # run simulation
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} rerun did not run"
+
+        # compare output to expected results
+        head_new = os.path.join(save_folder, "lakeex1b.hds")
+        outfile = os.path.join(run_folder, "headcompare_b.txt")
+        success = pymake.compare_heads(
+            None,
+            None,
+            files1=expected_head_file_b,
+            files2=head_new,
+            outfile=outfile,
+        )
+        assert success
+
+    return
+
+
+def test006_2models_mvr():
+    # init paths
+    test_ex_name = "test006_2models_mvr"
+    sim_name = "test006_2models_mvr"
+    model_names = ["parent", "child"]
+
+    data_folder = os.path.join("..", "examples", "data", "mf6", test_ex_name)
+    run_folder = f"{base_dir}_{test_ex_name}"
+    save_folder = f"{run_folder}_save"
+
+    # copy example data into working directory
+    if Path(data_folder).is_dir():
+        shutil.copytree(data_folder, run_folder)
+
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=[run_folder, save_folder])
+
+    expected_output_folder = os.path.join(run_folder, "expected_output")
     expected_head_file_a = os.path.join(
         expected_output_folder, "model1_unch.hds"
     )
@@ -646,7 +655,7 @@ def test006_2models_mvr():
     )
 
     # load simulation
-    sim = MFSimulation.load(sim_name, "mf6", exe_name, pth, verify_data=True)
+    sim = MFSimulation.load(sim_name, "mf6", exe_name, data_folder, verify_data=True)
 
     # make temp folder to save simulation
     sim.set_sim_path(run_folder)
@@ -742,6 +751,10 @@ def test006_2models_mvr():
         success, buff = sim.run_simulation()
         assert success, f"simulation {sim.name} rerun did not run"
 
+        cell_list = [(0, 3, 1)]
+        out_file = os.path.join("temp", "inspect_test006_2models_mvr.csv")
+        models[0].inspect_cells(cell_list, output_file_path=out_file)
+
         # compare output to expected results
         head_new = os.path.join(save_folder, "model1.hds")
         assert pymake.compare_heads(
@@ -768,7 +781,7 @@ def test006_2models_mvr():
     ]
     for load_only in load_only_lists:
         sim = MFSimulation.load(
-            sim_name, "mf6", exe_name, pth, load_only=load_only
+            sim_name, "mf6", exe_name, data_folder, load_only=load_only
         )
         for model_name in model_names:
             model = sim.get_model(model_name)
@@ -787,7 +800,7 @@ def test006_2models_mvr():
     # load package by name
     load_only_list = ["ic6", "maw", "npf_p1", "oc_p2", "ims"]
     sim = MFSimulation.load(
-        sim_name, "mf6", exe_name, pth, load_only=load_only_list
+        sim_name, "mf6", exe_name, data_folder, load_only=load_only_list
     )
     model_parent = sim.get_model("parent")
     model_child = sim.get_model("child")
@@ -799,8 +812,9 @@ def test006_2models_mvr():
     if run:
         # test running a runnable load_only case
         sim = MFSimulation.load(
-            sim_name, "mf6", exe_name, pth, load_only=load_only_lists[0]
+            sim_name, "mf6", exe_name, data_folder, load_only=load_only_lists[0]
         )
+        sim.set_sim_path(run_folder)
         success, buff = sim.run_simulation()
         assert success, f"simulation {sim.name} did not run"
 
@@ -815,8 +829,7 @@ def test001e_uzf_3lay():
     pth = os.path.join("..", "examples", "data", "mf6", test_ex_name)
     run_folder = f"{base_dir}_{test_ex_name}"
     save_folder = f"{run_folder}_save"
-    test_setup = FlopyTestSetup(verbose=True)
-    test_setup.add_test_dir([run_folder, save_folder])
+    test_setup = FlopyTestSetup(verbose=True, test_dirs=[run_folder, save_folder])
 
     # load simulation
     sim = MFSimulation.load(model_name, "mf6", exe_name, pth, verify_data=True)
@@ -850,6 +863,11 @@ def test001e_uzf_3lay():
         success, buff = sim.run_simulation()
         assert success, f"simulation {sim.name} rerun did not run"
 
+        # inspect cells
+        cell_list = [(0, 0, 1), (0, 0, 2), (2, 0, 8)]
+        out_file = os.path.join("temp", "inspect_test001e_uzf_3lay.csv")
+        model.inspect_cells(cell_list, output_file_path=out_file)
+
     # test load_only
     model_package_check = ["chd", "ic", "npf", "oc", "sto", "uzf"]
     load_only_lists = [
@@ -862,6 +880,7 @@ def test001e_uzf_3lay():
         sim = MFSimulation.load(
             model_name, "mf6", exe_name, pth, load_only=load_only
         )
+        sim.set_sim_path(run_folder)
         model = sim.get_model()
         for package in model_package_check:
             assert (package in model.package_type_dict) == (
@@ -872,6 +891,7 @@ def test001e_uzf_3lay():
         sim = MFSimulation.load(
             model_name, "mf6", exe_name, pth, load_only=load_only_lists[0]
         )
+        sim.set_sim_path(run_folder)
         success, buff = sim.run_simulation()
         assert success, f"simulation {sim.name} from load did not run"
 
@@ -940,6 +960,11 @@ def test045_lake2tr():
         # run simulation
         success, buff = sim.run_simulation()
         assert success, f"simulation {sim.name} rerun did not run"
+
+        # inspect cells
+        cell_list = [(0, 6, 5), (0, 8, 5), (1, 18, 6)]
+        out_file = os.path.join("temp", "inspect_test045_lake2tr.csv")
+        model.inspect_cells(cell_list, output_file_path=out_file)
 
         # compare output to expected results
         head_new = os.path.join(save_folder, "lakeex2a.hds")
@@ -1282,6 +1307,7 @@ if __name__ == "__main__":
     test006_gwf3()
     test027_timeseriestest()
     test036_twrihfb()
+    test045_lake1ss_table()
     test045_lake2tr()
     test_mf6_output()
     test_mf6_output_add_observation()

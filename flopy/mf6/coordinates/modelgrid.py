@@ -1,6 +1,7 @@
 import numpy as np
-from ..utils.mfenums import DiscretizationType
+
 from ..data.mfstructure import MFStructure
+from ..utils.mfenums import DiscretizationType
 
 
 class MFGridException(Exception):

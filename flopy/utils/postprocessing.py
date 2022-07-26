@@ -1,5 +1,4 @@
 import numpy as np
-import warnings
 
 
 def get_transmissivities(
@@ -702,6 +701,12 @@ def get_specific_discharge(
             qz = modelgrid.array_at_verts(qz)
 
     else:
+        if position != "centers":
+            raise ValueError(
+                f"MF6 vectors cannot be calculated at {position}, 'centers' "
+                f"is the only supported option"
+            )
+
         nnodes = model.modelgrid.nnodes
         qx = np.full((nnodes), np.nan, dtype=np.float64)
         qy = np.full((nnodes), np.nan, dtype=np.float64)

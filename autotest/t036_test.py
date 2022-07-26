@@ -2,9 +2,11 @@
 Test loading and preserving existing unit numbers
 """
 import os
-import flopy
+
 import pymake
-from ci_framework import base_test_dir, FlopyTestSetup
+from ci_framework import FlopyTestSetup, base_test_dir
+
+import flopy
 
 base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
 

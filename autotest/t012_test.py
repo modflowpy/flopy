@@ -1,6 +1,7 @@
 # Test loading of MODFLOW and MT3D models that come with MT3D distribution
 import os
 import sys
+
 import flopy
 
 pthtest = os.path.join("..", "examples", "data", "mt3d_test")

@@ -1,15 +1,16 @@
 import os
+
+from ...mbase import ModelInterface
+from ...pakbase import PackageInterface
 from ...utils import (
-    HeadFile,
     CellBudgetFile,
+    HeadFile,
+    Mf6ListBudget,
     Mf6Obs,
     ZoneBudget6,
     ZoneFile6,
-    Mf6ListBudget,
 )
 from ...utils.observationfile import CsvFile
-from ...pakbase import PackageInterface
-from ...mbase import ModelInterface
 
 
 class MF6Output:
@@ -24,7 +25,7 @@ class MF6Output:
     """
 
     def __init__(self, obj):
-        from ..modflow import ModflowUtlobs, ModflowGwtoc, ModflowGwfoc
+        from ..modflow import ModflowGwfoc, ModflowGwtoc, ModflowUtlobs
 
         # set initial observation definitions
         methods = {
@@ -49,7 +50,7 @@ class MF6Output:
             if isinstance(obj, ModelInterface):
                 self._model = obj
             else:
-                self._model = obj.parent
+                self._model = obj.model_or_sim
             self._mtype = self._model.model_type
             nam_file = self._model.model_nam_file[:-4]
             self._lst = (
@@ -254,7 +255,10 @@ class MF6Output:
             ZoneFile6(zonbud, izone)
             zonbud.bud = budget
             try:
-                if self._obj.model_or_sim.model_type == "gwf":
+                if (
+                    "gwf" in self._obj.model_or_sim.model_type
+                    or "gwt" in self._obj.model_or_sim.model_type
+                ):
                     if self._obj.package_type == "oc":
                         dis = self._obj.model_or_sim.dis
                         if (
