@@ -1,11 +1,12 @@
 import sys
 
 sys.path.insert(1, "..")
-import flopy.discretization as fgrid
-import flopy.plot as fplot
 import matplotlib.pyplot as plt
 import numpy as np
 from descartes import PolygonPatch
+
+import flopy.discretization as fgrid
+import flopy.plot as fplot
 from flopy.utils.triangle import Triangle
 
 try:
@@ -268,6 +269,21 @@ def test_rect_grid_multipoint_in_multiple_cells():
     return result
 
 
+def test_rect_grid_point_on_all_vertices_return_all_ix(rtree=True):
+    # avoid test fail when shapely not available
+    try:
+        import shapely
+    except:
+        return
+    gr = get_rect_grid()
+    ix = GridIntersect(gr, method="structured", rtree=rtree)
+    n_intersections = [1, 2, 1, 2, 4, 2, 1, 2, 1]
+    for v, n in zip(gr.verts, n_intersections):
+        r = ix.intersect(Point(*v), return_all_intersections=True)
+        assert len(r) == n
+    return
+
+
 # %% test point shapely
 
 
@@ -364,6 +380,21 @@ def test_rect_grid_multipoint_in_multiple_cells_shapely(rtree=True):
     return result
 
 
+def test_rect_grid_point_on_all_vertices_return_all_ix_shapely(rtree=True):
+    # avoid test fail when shapely not available
+    try:
+        import shapely
+    except:
+        return
+    gr = get_rect_grid()
+    ix = GridIntersect(gr, method="vertex", rtree=rtree)
+    n_intersections = [1, 2, 1, 2, 4, 2, 1, 2, 1]
+    for v, n in zip(gr.verts, n_intersections):
+        r = ix.intersect(Point(*v), return_all_intersections=True)
+        assert len(r) == n
+    return
+
+
 def test_tri_grid_point_outside(rtree=True):
     # avoid test fail when shapely not available
     try:
@@ -442,6 +473,21 @@ def test_tri_grid_multipoint_in_multiple_cells(rtree=True):
     assert result.cellids[0] == 0
     assert result.cellids[1] == 1
     return result
+
+
+def test_tri_grid_points_on_all_vertices_return_all_ix_shapely(rtree=True):
+    # avoid test fail when shapely not available
+    try:
+        import shapely
+    except:
+        return
+    gr = get_tri_grid()
+    ix = GridIntersect(gr, method="vertex", rtree=rtree)
+    n_intersections = [2, 2, 2, 2, 8, 2, 2, 2, 2]
+    for v, n in zip(gr.verts, n_intersections):
+        r = ix.intersect(Point(*v), return_all_intersections=True)
+        assert len(r) == n
+    return
 
 
 # %% test linestring structured
@@ -564,6 +610,23 @@ def test_rect_grid_linestring_in_and_out_of_cell2():
     return result
 
 
+def test_rect_grid_linestrings_on_boundaries_return_all_ix():
+    # avoid test fail when shapely not available
+    try:
+        import shapely
+    except:
+        return
+    gr = get_rect_grid()
+    ix = GridIntersect(gr, method="structured")
+    x, y = ix._rect_grid_to_shape_list()[0].exterior.xy
+    n_intersections = [1, 2, 2, 1]
+    for i in range(4):
+        ls = LineString([(x[i], y[i]), (x[i + 1], y[i + 1])])
+        r = ix.intersect(ls, return_all_intersections=True)
+        assert len(r) == n_intersections[i]
+    return
+
+
 def test_rect_grid_linestring_starting_on_vertex():
     # avoid test fail when shapely not available
     try:
@@ -681,6 +744,23 @@ def test_rect_grid_linestring_in_and_out_of_cell_shapely(rtree=True):
     return result
 
 
+def test_rect_grid_linestrings_on_boundaries_return_all_ix_shapely(rtree=True):
+    # avoid test fail when shapely not available
+    try:
+        import shapely
+    except:
+        return
+    gr = get_rect_grid()
+    ix = GridIntersect(gr, method="vertex", rtree=rtree)
+    x, y = ix._rect_grid_to_shape_list()[0].exterior.xy
+    n_intersections = [1, 2, 2, 1]
+    for i in range(4):
+        ls = LineString([(x[i], y[i]), (x[i + 1], y[i + 1])])
+        r = ix.intersect(ls, return_all_intersections=True)
+        assert len(r) == n_intersections[i]
+    return
+
+
 def test_tri_grid_linestring_outside(rtree=True):
     # avoid test fail when shapely not available
     try:
@@ -772,6 +852,23 @@ def test_tri_grid_multilinestring_in_one_cell(rtree=True):
     assert result.lengths == 15.0
     assert result.cellids[0] == 4
     return result
+
+
+def test_tri_grid_linestrings_on_boundaries_return_all_ix(rtree=True):
+    # avoid test fail when shapely not available
+    try:
+        import shapely
+    except:
+        return
+    tgr = get_tri_grid()
+    ix = GridIntersect(tgr, method="vertex", rtree=rtree)
+    x, y = ix._vtx_grid_to_shape_list()[0].exterior.xy
+    n_intersections = [2, 1, 2]
+    for i in range(len(x) - 1):
+        ls = LineString([(x[i], y[i]), (x[i + 1], y[i + 1])])
+        r = ix.intersect(ls, return_all_intersections=True)
+        assert len(r) == n_intersections[i]
+    return
 
 
 # %% test polygon structured
@@ -1237,6 +1334,7 @@ def test_tri_grid_polygon_contains_centroid(rtree=True):
     assert len(result) == 2
     return
 
+
 # %% test rotated offset grids
 
 
@@ -1402,9 +1500,10 @@ def test_all_intersections_shapely_no_strtree():
 
 
 def test_rasters():
-    from flopy.utils import Raster
     import os
+
     import flopy as fp
+    from flopy.utils import Raster
 
     ws = os.path.join("..", "examples", "data", "options")
     raster_name = "dem.img"
@@ -1469,9 +1568,10 @@ def test_rasters():
 
 
 def test_raster_sampling_methods():
-    from flopy.utils import Raster
     import os
+
     import flopy as fp
+    from flopy.utils import Raster
 
     ws = os.path.join("..", "examples", "data", "options")
     raster_name = "dem.img"
@@ -1505,14 +1605,12 @@ def test_raster_sampling_methods():
         "median": 2097.36254,
         "nearest": 2097.81079,
         "linear": 2097.81079,
-        "cubic": 2097.81079
+        "cubic": 2097.81079,
     }
 
     for method, value in methods.items():
         data = rio.resample_to_grid(
-            ml.modelgrid,
-            band=rio.bands[0],
-            method=method
+            ml.modelgrid, band=rio.bands[0], method=method
         )
 
         print(data[30, 37])
@@ -1520,54 +1618,3 @@ def test_raster_sampling_methods():
             raise AssertionError(
                 f"{method} resampling returning incorrect values"
             )
-
-
-# %%
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-
-    gr = get_rect_grid()
-    ix = GridIntersect(gr, method="structured")
-    p = Polygon(
-        [(6.0, 5.0), (4.0, 16.0), (25.0, 14.0), (25.0, -5.0), (6.0, -5.0)],
-        holes=[[(9.0, -1), (9, 11), (21, 11), (21, -1)]],
-    )
-    result = ix.intersect(p, contains_centroid=True)
-    print(len(result))
-    fig, ax = plt.subplots()
-    gr.plot(ax=ax)
-    ix.plot_polygon(result, ax=ax)
-
-    p = Polygon(
-        [(5.0, 5.0), (5.0, 15.0), (25.0, 15.0), (25.0, -5.0), (5.0, -5.0)],
-        holes=[[(9.0, -1), (9, 11), (21, 11), (21, -1)]],
-    )
-    result = ix.intersect(p, min_area_fraction=0.4)
-    print(len(result))
-    fig, ax = plt.subplots()
-    gr.plot(ax=ax)
-    ix.plot_polygon(result, ax=ax)
-
-    p = Polygon(
-        [(5.0, 5.0), (5.0, 15.0), (25.0, 14.0), (25.0, -5.0), (5.0, -5.0)],
-        holes=[[(9.0, -1), (9, 11), (21, 11), (21, -1)]],
-    )
-    result = ix.intersect(p, min_area_fraction=0.35, contains_centroid=True)
-    print(len(result))
-    fig, ax = plt.subplots()
-    gr.plot(ax=ax)
-    ix.plot_polygon(result, ax=ax)
-
-    rtree = True
-    gr = get_tri_grid()
-    ix = GridIntersect(gr, rtree=rtree)
-    p = Polygon(
-        [(5.0, 5.0), (6.0, 14.0), (25.0, 15.0), (25.0, -5.0), (5.0, -5.0)],
-        holes=[[(9.0, -1), (9, 11), (21, 11), (21, -1)]],
-    )
-    result = ix.intersect(p, min_area_fraction=0.5)
-    fig, ax = plt.subplots()
-    gr.plot(ax=ax)
-    ix.plot_polygon(result, ax=ax)
-
-    plt.show()
