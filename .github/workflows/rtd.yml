@@ -54,6 +54,8 @@ jobs:
           mkdir -p $HOME/.local/bin
           get-modflow $HOME/.local/bin
           echo "$HOME/.local/bin" >> $GITHUB_PATH
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run jupytext on tutorials
         working-directory: ./.docs
