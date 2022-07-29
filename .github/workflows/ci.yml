@@ -163,6 +163,8 @@ jobs:
       working-directory: ./autotest
       run: |
         pytest -v ci_prepare.py
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Add executables directory to path on Linux and MacOS
       run: |

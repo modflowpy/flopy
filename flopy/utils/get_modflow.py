@@ -40,9 +40,21 @@ def get_ostag():
     raise ValueError(f"platform {sys.platform!r} not supported")
 
 
+def get_request(url):
+    """Get urllib.request.Request, with headers.
+
+    This bears GITHUB_TOKEN if it is set as an environment variable.
+    """
+    headers = {}
+    github_token = os.environ.get("GITHUB_TOKEN")
+    if github_token:
+        headers["Authorization"] = f"Bearer {github_token}"
+    return urllib.request.Request(url, headers=headers)
+
+
 def get_avail_releases(api_url):
     """Get list of available releases."""
-    with urllib.request.urlopen(f"{api_url}/releases") as resp:
+    with urllib.request.urlopen(get_request(f"{api_url}/releases")) as resp:
         result = resp.read()
     releases = json.loads(result.decode())
     avail_releases = ["latest"]
@@ -179,15 +191,29 @@ def run_main(
     else:
         req_url = f"{api_url}/releases/tags/{release_id}"
     try:
-        with urllib.request.urlopen(req_url) as resp:
+        with urllib.request.urlopen(get_request(req_url)) as resp:
             result = resp.read()
+            remaining = int(resp.headers["x-ratelimit-remaining"])
+            if remaining <= 10:
+                print(
+                    f"Only {remaining} GitHub API requests remaining "
+                    "before rate-limiting"
+                )
     except urllib.error.HTTPError as err:
-        if err.code == 404:
+        if err.code == 401 and os.environ.get("GITHUB_TOKEN"):
+            raise ValueError(
+                "environment variable GITHUB_TOKEN is invalid"
+            ) from err
+        if err.code == 403 and "rate limit exceeded" in err.reason:
+            raise ValueError(
+                "use environment variable GITHUB_TOKEN to bypass rate limit"
+            ) from err
+        elif err.code == 404:
             avail_releases = get_avail_releases(api_url)
             raise ValueError(
                 f"Release {release_id!r} not found -- "
                 f"choose from {avail_releases}"
-            )
+            ) from err
         else:
             raise err
     release = json.loads(result.decode())
