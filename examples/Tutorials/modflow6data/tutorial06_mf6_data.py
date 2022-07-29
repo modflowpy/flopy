@@ -65,16 +65,17 @@
 
 # package import
 import os
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import numpy as np
 
 import flopy
 
 # set up where simulation workspace will be stored
-workspace = os.path.join("data", "mf6_working_with_data")
-name = "example_1"
-if not os.path.exists(workspace):
-    os.makedirs(workspace)
+temp_dir = TemporaryDirectory()
+workspace = temp_dir.name
+name = "tutorial06_mf6_data"
 
 # create the Flopy simulation and tdis objects
 sim = flopy.mf6.MFSimulation(
@@ -193,7 +194,6 @@ stress_period_data = {
     1: [],
 }  # stress period 2 well data is empty
 
-
 # Then, using the dictionary created above, we build the wel package.
 
 wel = flopy.mf6.ModflowGwfwel(
@@ -278,3 +278,9 @@ print(str(wel.stress_period_data))
 # appear in a MODFLOW 6 file.
 
 print(wel.stress_period_data.get_file_entry(0))
+
+try:
+    temp_dir.cleanup()
+except PermissionError:
+    # can occur on windows: https://docs.python.org/3/library/tempfile.html#tempfile.TemporaryDirectory
+    pass

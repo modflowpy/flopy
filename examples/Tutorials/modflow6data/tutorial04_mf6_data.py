@@ -33,16 +33,17 @@
 
 # package import
 import os
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import numpy as np
 
 import flopy
 
 # set up where simulation workspace will be stored
-workspace = os.path.join("data", "mf6_working_with_data")
-name = "example_1"
-if not os.path.exists(workspace):
-    os.makedirs(workspace)
+temp_dir = TemporaryDirectory()
+workspace = temp_dir.name
+name = "tutorial04_mf6_data"
 
 # create the Flopy simulation and tdis objects
 sim = flopy.mf6.MFSimulation(
@@ -149,3 +150,9 @@ rcha.tas.initialize(
     time_series_namerecord="rcharray_1",
     interpolation_methodrecord="LINEAR",
 )
+
+try:
+    temp_dir.cleanup()
+except PermissionError:
+    # can occur on windows: https://docs.python.org/3/library/tempfile.html#tempfile.TemporaryDirectory
+    pass

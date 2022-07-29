@@ -3,21 +3,25 @@
 This document describes how to set up a development environment for FloPy. Details on how to contribute your code to the repository are found in the separate document [CONTRIBUTING.md](CONTRIBUTING.md).
 
 - [Installation](#installation)
-- [Running tests](#running-tests)
-- [Running examples](#running-examples)
+- [Examples](#examples)
+- [Tests](#tests)
 
 ## Installation
 
-To develop `flopy` you must have the following software installed on your machine.
+To develop `flopy` you must have the following software installed on your machine:
+
+- git
+- Python3
+- Modflow executables
 
 ### Git
 
-[Git](https://git-scm.com) and/or the **GitHub app** (for [Mac](https://mac.github.com) or [Windows](https://windows.github.com)).
-[GitHub's Guide to Installing Git](https://help.github.com/articles/set-up-git) is a good source of information.
+You will need [Git](https://git-scm.com) and/or the **GitHub app** (for [Mac](https://mac.github.com) or [Windows](https://windows.github.com)).
+GitHub's  [Guide to Installing Git](https://help.github.com/articles/set-up-git) is a good source of information.
 
 ### Python
 
-Install Python 3.7.x or >=3.8.1, via [standalone download](https://www.python.org/downloads/) or a distribution like [Anaconda](https://www.anaconda.com/products/individual) or [miniconda](https://docs.conda.io/en/latest/miniconda.html). (An [infinite recursion bug](https://github.com/python/cpython/pull/17098) in 3.8.0's [`shutil.copytree`](https://github.com/python/cpython/commit/65c92c5870944b972a879031abd4c20c4f0d7981) affects a few tests.)
+Install Python 3.7.x or >=3.8.1, via [standalone download](https://www.python.org/downloads/) or a distribution like [Anaconda](https://www.anaconda.com/products/individual) or [miniconda](https://docs.conda.io/en/latest/miniconda.html). (An [infinite recursion bug](https://github.com/python/cpython/pull/17098) in 3.8.0's [`shutil.copytree`](https://github.com/python/cpython/commit/65c92c5870944b972a879031abd4c20c4f0d7981) can cause test failures if the destination is a subdirectory of the source.)
 
 Then install `flopy` and core dependencies from the project root:
 
@@ -28,7 +32,7 @@ Alternatively, with Anaconda or Miniconda:
     conda env create -f etc/environment.yml
     conda activate flopy
 
-Note that `flopy` has a number of [optional dependencies](docs/flopy_method_dependencies.md), as well as dependencies required for running tests. All required, testing and optional dependencies are included in the Conda environment in `etc/environment.yml`. Only core dependencies are included in the PyPI package &mdash; to install extra testing, linting and optional packages with pip, use
+Note that `flopy` has a number of [optional dependencies](docs/flopy_method_dependencies.md), as well as dependencies required for linting, testing, and building documentation. All required, linting, testing and optional dependencies are included in the Conda environment in `etc/environment.yml`. Only core dependencies are included in the PyPI package &mdash; to install extra testing, linting and optional packages with pip, use
 
     pip install ".[test, lint, optional]"
 
@@ -53,7 +57,13 @@ To configure a Python interpreter in PyCharm, navigate to `Settings -> Project -
 
 ### MODFLOW executables
 
-To develop `flopy` you will need a number of MODFLOW executables installed. Binaries for all major platforms can be downloaded from the [distribution repository](https://github.com/MODFLOW-USGS/executables).
+To develop `flopy` you will need a number of MODFLOW executables installed.
+
+#### Scripted installation
+
+A utility script is provided to easily download and install executables: after installing `flopy`, just run `get-modflow` (see the script's [documentation](docs/get_modflow.md) for more info).
+
+#### Manually installing executables
 
 #### Linux
 
@@ -93,79 +103,101 @@ URLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certifica
 
 This can be fixed by running `Install Certificates.command` in your Python installation directory (see the [StackOverflow discussion here](https://stackoverflow.com/a/58525755/6514033) for more information).
 
-## Running tests
+## Examples
 
-To run the autotests you will need to have `pytest` installed. To run the tests in parallel you will also need `pytest-xdist`. Testing dependencies are specified in the `test` extras group in `setup.cfg` (with pip, use `pip install ".[test]"`). Test dependencies are included by default in the Conda environment `etc/environment`. To prepare your code for a pull request, you will need a few more packages specified in the `lint` extras group in `setup.cfg` (also included by default for Conda). See the docs on [submitting a pull request](CONTRIBUTING.md) for more info.
+A number of scripts and notebooks demonstrating various `flopy` functions and features are located in `examples/`. These are probably the easiest way to get acquainted with `flopy`.
 
-If you want to run a single autotest run the following command from the 
-`autotest` directory:
+### Scripts
 
-    pytest -v t001_test.py
+[Example scripts](docs/script_examples.md) are in `examples/scripts` and `examples/Tutorials`. Each can be invoked by name with Python per usual. By default, all scripts create and (attempt to) clean up temporary working directories. (On Windows, Python's `TemporaryDirectory` can raise permissions errors, so cleanup is trapped with `try/except`.) Some scripts also accept a `--quiet` flag, curtailing verbose output, and a `--keep` option to specify a working directory of the user's choice.
 
-To run all standard tests (tests matching `tXXX_test*.py`) from the `autotest` directory:
+Some of the scripts use [optional dependencies](docs/flopy_method_dependencies.md). If you're using `pip` make sure these have been installed with `pip install ".[optional]"`. The conda environment provided in `etc/environment.yml` already includes all dependencies.
 
-    pytest -v 
+### Notebooks
 
-The `-v` flag enables verbose output. To run all tests matching a pattern run:
+[Example notebooks](docs/notebook_examples.md) are located in `examples/Notebooks`.
 
-    pytest -v -k "t01"
+To run the example notebooks you will need `jupyter` installed (`jupyter` is included with the `test` optional dependency group in `setup.cfg`). Some of the notebooks use [optional dependencies](docs/flopy_method_dependencies.md) as well.
 
-### Running tests in parallel
+To install jupyter and optional dependencies at once:
 
-To run the tests in parallel add `-n auto` to the `pytest` command. For example,
+    pip install jupyter ".[optional]"
+
+To start a local Jupyter notebook server, run
+
+    jupyter notebook
+
+Like the scripts and tutorials, each notebook is configured to create and (attempt to) dispose of its own isolated temporary workspace. (On Windows, Python's `TemporaryDirectory` can raise permissions errors, so cleanup is trapped with `try/except`.)
+
+## Tests
+
+To run the tests you will need `pytest` and a few plugins, including [`pytest-xdist`](https://pytest-xdist.readthedocs.io/en/latest/) and [`pytest-benchmark`](https://pytest-benchmark.readthedocs.io/en/latest/index.html). Test dependencies are specified in the `test` extras group in `setup.cfg` (with pip, use `pip install ".[test]"`). Test dependencies are included in the Conda environment `etc/environment`.
+
+**Note:** to prepare your code for a pull request, you will need a few more packages specified in the `lint` extras group in `setup.cfg` (also included by default for Conda). See the docs on [submitting a pull request](CONTRIBUTING.md) for more info.
+
+### Running tests
+
+Tests must be run from the `autotest` directory. To run a single test script in verbose mode:
+
+    pytest -v test_conftest.py
+
+The `test_conftest.py` script tests the test suite's `pytest` configuration. This includes shared fixtures providing a single source of truth for the location of example data, as well as various other fixtures and utilities.
+
+Tests matching a pattern can be run with `-k`, e.g.:
+
+    pytest -v -k "export"
+
+To run all tests in parallel, using however many cores your machine is willing to spare:
 
     pytest -v -n auto
 
-The `auto` keyword configures the `pytest-xdist` extension to query your computer for the number of processors available. You can explicitly set the number of cores, substitute an integer for `auto` in the `-n` argument, e.g. `pytest -v -n 2`. (The space between `-n` and the number of processors can be replaced with `=`, e.g. `-n=2`.)
+The `-n auto` option configures the `pytest-xdist` extension to query your computer for the number of processors available. To explicitly set the number of cores, substitute an integer for `auto` in the `-n` argument, e.g. `pytest -v -n 2`. (The space between `-n` and the number of processors can be replaced with `=`, e.g. `-n=2`.)
+
+The above will run all regression tests, benchmarks, and example scripts and notebooks, which can take some time (likely ~30 minutes to an hour, depending on your machine). To run only fast tests with benchmarking disabled:
+
+    pytest -v -n auto -m "not slow" --benchmark-disable
+
+Fast tests should complete in under a minute on most machines.
+
+A marker `slow` is used above to select a subset of tests. These can be applied in boolean combinations with `and` and `not`. A few more `pytest` markers are provided:
+
+- `regression`: tests comparing the output of multiple runs
+- `example`: example scripts, tutorials, and notebooks
+
+Most of the `regression` and `example` tests are also `slow`, however there are some other slow tests, especially in `test_export.py`, and some regression tests are fairly fast.
+
+### Benchmarking
+
+Benchmarking is accomplished with the [`pytest-benchmark`](https://pytest-benchmark.readthedocs.io/en/latest/index.html) plugin. If the `--benchmark-disable` flag is not provided when `pytest` is invoked, benchmarking is enabled and some tests will be repeated several times to establish a performance profile. Benchmarked tests can be identified by the `benchmark` fixture used in the test signature. By default, two kinds of tests are benchmarked:
+
+- model-loading tests
+- regression tests
+
+To save benchmarking results to a JSON file, use the `--benchmark-autosave` flag. By default, this will create a `.benchmark` directory in `autotest`.
 
 ### Debugging failed tests
 
-To debug a failed test it can be helpful to inspect its output, which is cleaned up automatically by default. To run a failing test and keep its output, use the `--keep` flag:
+To debug a failed test it can be helpful to inspect its output, which is cleaned up automatically by default. To run a failing test and keep its output, use the `--keep` option to provide a save location:
 
-    python t001_test.py --keep
+    pytest test_export.py --keep exports_scratch
 
-This will retain the test directories created by the test, which will allow the input or output files to be evaluated for errors.
+This will retain the test directories created by the test, which allows files to be evaluated for errors. Any tests using the function-scoped `tmpdir` and related fixtures (e.g. `class_tmpdir`, `module_tmpdir`) defined in `conftest.py` are compatible with this mechanism.
 
-A similar `-keep` argument is also available for `pytest`. Tests using the function-scoped `tmpdir` and related fixtures (e.g. `class_tmpdir`, `module_tmpdir`) defined in `conftest.py` are compatible with this mechanism, which differs from the Python CLI argument only in that the location to save test outputs must be provided explicitly, e.g.
+### Writing tests
 
-    pytest t001_test.py --keep t001_output
+Test functions and files should be named informatively, with related tests grouped in the same file. The test suite runs on GitHub Actions in parallel, so tests must not pollute the working space of other tests, example scripts, tutorials or notebooks. A number of shared test fixtures are provided in `autotest/conftest.py`. New tests should use these facilities where possible, to standardize conventions, help keep maintenance minimal, and prevent shared test state and proliferation of untracked files. See also the [contribution guidelines](CONTRIBUTING.md) before submitting a pull request.
 
-### Creating an autotest
+#### Keepable temporary directories
 
-Limit your autotest to a few tests of the same type. See `t002_test.py` for 
-an example of how not to create an autotest. This test includes tests for 
-loading data from fixed and free format text, loading binary files, using 
-`util2D`, and using `util3D`. Preferably all of these tests should have 
-been grouped into like tests and put into a separate autotest script.  
+The `tmpdir` fixtures defined in `conftest.py` provide a path to a temporary directory which is automatically created before test code runs and automatically removed afterwards. (The builtin `pytest` `temp_path` fixture can also be used, but is not compatible with the `--keep` command line argument detailed above.)
 
-The autotests run on GitHub Actions in parallel. Tests must not pollute the working space of other tests. New tests should write to a unique, appropriately named folder (e.g.,`t013` for test cases `t013_test.py`) and the test name (`t013_mytest`). This can be accomplished programmatically with the `FlopyTestSetup` class in `ci_framework` script:
-
-```python
-from pathlib import Path
-from ci_framework import base_test_dir, FlopyTestSetup
-
-# set the baseDir variable using the script name
-base_dir = base_test_dir(__file__, rel_path="temp", verbose=True)
-
-def test_mytest():
-    ws = f"{base_dir}_test_mytest"
-    test_setup = FlopyTestSetup(verbose=True, test_dirs=ws)
-    
-    assert Path(ws).is_dir()
-    
-    ws = f"{base_dir}_test_mytest_another_directory"
-    test_setup.add_test_dir(ws)
-    
-    assert Path(ws).is_dir()
-```
-
-An alternative compatible with the `pytest --keep` argument is to use the `tmpdir` fixture (or its equivalent for the appropriate scope) defined in `conftest.py`. These fixtures can be substituted transparently for `pytest`'s built-in `tmp_path`. When the `--keep` argument is provided, e.g. `pytest --keep temp`, outputs will automatically be saved to subdirectories of `temp` named according to the test case, class or module.
+For instance, using temporary directory fixtures for various scopes:
 
 ```python
 from pathlib import Path
 import inspect
 
-def test_something(tmpdir, module_tmpdir):
+def test_tmpdirs(tmpdir, module_tmpdir):
     # function-scoped temporary directory
     assert isinstance(tmpdir, Path)
     assert tmpdir.is_dir()
@@ -173,31 +205,98 @@ def test_something(tmpdir, module_tmpdir):
 
     # module-scoped temp dir (accessible to other tests in the script)
     assert module_tmpdir.is_dir()
-    assert Path(__file__).stem in module_tmpdir.stem
+    assert "autotest" in module_tmpdir.stem
 ```
 
-Any new tests should use one of these facilities to prevent the proliferation of test outputs and untracked files (see also the [contribution guidelines](CONTRIBUTING.md) for before submitting a pull request).
+These fixtures can be substituted transparently for `pytest`'s built-in `tmp_path`, with the additional benefit that when `pytest` is invoked with the `--keep` argument, e.g. `pytest --keep temp`, outputs will automatically be saved to subdirectories of `temp` named according to the test case, class or module. (As described above, this is useful for debugging a failed test by inspecting its outputs, which would otherwise be cleaned up.)
 
-## Running examples
+#### Locating example data
 
-A number of scripts and notebooks to demonstrate `flopy` usage are located in `examples/`.
+Shared fixtures and utility functions are also provided for locating example data on disk. The `example_data_path` fixture resolves to `examples/data` relative to the project root, regardless of the location of the test script (as long as it's somewhere in the `autotest` directory).
 
-### Scripts
+```python
+def test_with_data(tmpdir, example_data_path):
+    model_path = example_data_path / "freyberg"
+    # load model...
+```
 
-[Example scripts](docs/script_examples.md) are in `examples/scripts` and `examples/Tutorials`.
+This is preferable to manually handling relative paths as if the location of the example data changes in the future, only a single fixture in `conftest.py` will need to be updated rather than every test case individually.
 
-Some of the scripts use [optional dependencies](docs/flopy_method_dependencies.md).
+An equivalent function `get_example_data_path(path=None)` is also provided in `conftest.py`. This is useful to dynamically generate data for test parametrization. (Due to a [longstanding `pytest` limitation](https://github.com/pytest-dev/pytest/issues/349), fixtures cannot be used to generate test parameters.) This function accepts a path hint, taken as the path to the current test file, but will try to locate the example data even if the current file is not provided.
 
-### Notebooks
+```python
+import pytest
+from autotest.conftest import get_example_data_path
 
-[Example notebooks](docs/notebook_examples.md) are located in `examples/Notebooks`.
+# current test script can be provided (or not)
 
-To run the example notebooks you will need `jupyter` installed. Some of the notebooks use [optional dependencies](docs/flopy_method_dependencies.md) as well.
+@pytest.mark.parametrize("current_path", [__file__, None])
+def test_get_example_data_path(current_path):
+    parts = get_example_data_path(current_path).parts
+    assert (parts[-1] == "data" and
+            parts[-2] == "examples" and
+            parts[-3] == "flopy")
+```
 
-To install jupyter and all optional dependencies at once, use
+#### Locating the project root
 
-    pip install jupyter ".[optional]"
+A similar `get_project_root_path(path=None)` function is also provided, doing what it says on the tin:
 
-To start a local Jupyter notebook server, run
+```python
+from autotest.conftest import get_project_root_path, get_example_data_path
 
-    jupyter notebook
+def test_get_paths():
+    example_data = get_example_data_path(__file__)
+    project_root = get_project_root_path(__file__)
+
+    assert example_data.parent.parent == project_root
+```
+
+#### Conditionally skipping tests
+
+Several `pytest` markers are provided to conditionally skip tests based on executable availability or operating system.
+
+To skip tests if an executable is not available on the path:
+
+```python
+from shutil import which
+from autotest.conftest import requires_exe
+
+@requires_exe("mf6")
+def test_mf6():
+    assert which("mf6")
+```
+
+A variant for multiple executables is also provided:
+
+```python
+from shutil import which
+from autotest.conftest import requires_exes
+
+exes = ["mfusg", "mfnwt"]
+
+@requires_exes(exes)
+def test_mfusg_and_mfnwt():
+    assert all(which(exe) for exe in exes)
+```
+
+To mark tests requiring or incompatible with particular operating systems:
+
+```python
+import os
+import platform
+from autotest.conftest import requires_platform, excludes_platform
+
+@requires_platform("Windows")
+def test_needs_windows():
+    assert platform.system() == "Windows"
+
+@excludes_platform("Darwin", ci_only=True)
+def test_breaks_osx_ci():
+    if "CI" in os.environ:
+        assert platform.system() != "Darwin"
+```
+
+These both accept a `ci_only` flag, which indicates whether the policy should only apply when the test is running on GitHub Actions CI.
+
+There is also a `@requires_github` marker, which will skip decorated tests if the GitHub API is unreachable.

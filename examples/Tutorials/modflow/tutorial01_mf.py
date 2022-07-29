@@ -20,6 +20,8 @@
 # ## Getting Started
 #
 # If FloPy has been properly installed, then it can be imported as follows:
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import numpy as np
 
@@ -45,8 +47,10 @@ import flopy
 #
 # We start by creating our flopy model object.
 
-modelname = "tutorial1_mf"
-mf = flopy.modflow.Modflow(modelname, exe_name="mf2005")
+temp_dir = TemporaryDirectory()
+workspace = temp_dir.name
+name = "tutorial01_mf"
+mf = flopy.modflow.Modflow(name, exe_name="mf2005", model_ws=workspace)
 
 # Next, let's proceed by defining our model domain and creating a MODFLOW grid
 # to span the domain.
@@ -131,8 +135,7 @@ mf.write_input()
 # the model:
 
 success, buff = mf.run_model()
-if not success:
-    raise Exception("MODFLOW did not terminate normally.")
+assert success, "MODFLOW did not terminate normally."
 
 # Here we have used run_model, and we could also have specified values for the
 # optional keywords silent, pause, and report.
@@ -151,7 +154,7 @@ import flopy.utils.binaryfile as bf
 
 # Extract the heads
 
-hds = bf.HeadFile(f"{modelname}.hds")
+hds = bf.HeadFile(str(Path(workspace) / f"{name}.hds"))
 head = hds.get_data(totim=1.0)
 
 # Contour the heads
@@ -167,13 +170,13 @@ ax.contour(head[0, :, :], levels=np.arange(1, 10, 1), extent=extent)
 # plot head contours, and plot vectors:
 
 # Extract the heads
-hds = bf.HeadFile(f"{modelname}.hds")
+hds = bf.HeadFile(str(Path(workspace) / f"{name}.hds"))
 times = hds.get_times()
 head = hds.get_data(totim=times[-1])
 
 # Extract the cell-by-cell flows
 
-cbb = bf.CellBudgetFile(f"{modelname}.cbc")
+cbb = bf.CellBudgetFile(str(Path(workspace) / f"{name}.cbc"))
 kstpkper_list = cbb.get_kstpkper()
 frf = cbb.get_data(text="FLOW RIGHT FACE", totim=times[-1])[0]
 fff = cbb.get_data(text="FLOW FRONT FACE", totim=times[-1])[0]
@@ -190,3 +193,9 @@ qm = modelmap.plot_ibound()
 lc = modelmap.plot_grid()
 cs = modelmap.contour_array(head, levels=np.linspace(0, 10, 11))
 quiver = modelmap.plot_vector(qx, qy)
+
+try:
+    temp_dir.cleanup()
+except:
+    # prevent windows permission error
+    pass

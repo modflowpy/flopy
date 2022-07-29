@@ -1,5 +1,7 @@
 import os
 import sys
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,12 +9,7 @@ import numpy as np
 import flopy
 
 
-def run():
-    workspace = os.path.join("lake")
-    # make sure workspace directory exists
-    if not os.path.exists(workspace):
-        os.makedirs(workspace)
-
+def run(workspace, quiet):
     fext = "png"
     narg = len(sys.argv)
     iarg = 0
@@ -22,12 +19,6 @@ def run():
             basearg = sys.argv[iarg].lower()
             if basearg == "--pdf":
                 fext = "pdf"
-
-    # save the starting path
-    cwdpth = os.getcwd()
-
-    # change to the working directory
-    os.chdir(workspace)
 
     # We are creating a square model with a specified head equal to `h1` along all boundaries.
     # The head at the cell in the center in the top layer is fixed to `h2`. First, set the name
@@ -48,7 +39,7 @@ def run():
     # The exe_name should be the full path to your MODFLOW executable. The version is either 'mf2k'
     # for MODFLOW2000 or 'mf2005'for MODFLOW2005.
     ml = flopy.modflow.Modflow(
-        modelname=name, exe_name="mf2005", version="mf2005"
+        modelname=name, exe_name="mf2005", version="mf2005", model_ws=workspace
     )
 
     # Define the discretization of the model. All layers are given equal thickness. The `bot` array
@@ -88,11 +79,11 @@ def run():
 
     # create external ibound array and starting head files
     files = []
-    hfile = f"{name}_strt.ref"
+    hfile = str(Path(workspace) / f"{name}_strt.ref")
     np.savetxt(hfile, start)
     hfiles = []
     for kdx in range(Nlay):
-        file = f"{name}_ib{kdx + 1:02d}.ref"
+        file = str(Path(workspace) / f"{name}_ib{kdx + 1:02d}.ref")
         files.append(file)
         hfiles.append(hfile)
         np.savetxt(file, ibound[kdx, :, :], fmt="%5d")
@@ -109,10 +100,7 @@ def run():
     pcg = flopy.modflow.ModflowPcg(ml)
     oc = flopy.modflow.ModflowOc(ml)
     ml.write_input()
-    ml.run_model()
-
-    # change back to the starting directory
-    os.chdir(cwdpth)
+    ml.run_model(silent=quiet)
 
     # Once the model has terminated normally, we can read the heads file. First, a link to the heads
     # file is created with `HeadFile`. The link can then be accessed with the `get_data` function, by
@@ -150,8 +138,28 @@ def run():
     fig.savefig(outfig, dpi=300)
     print("created...", outfig)
 
-    return 0
-
 
 if __name__ == "__main__":
-    success = run()
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--keep", help="output directory")
+    parser.add_argument("--quiet", action="store_false", help="don't show model output")
+    args = vars(parser.parse_args())
+
+    workspace = args.get('keep', None)
+    quiet = args.get('quiet', False)
+
+    if workspace is not None:
+        run(workspace, quiet)
+    else:
+        temp_dir = TemporaryDirectory()
+        workspace = temp_dir.name
+
+        run(workspace, quiet)
+
+        try:
+            temp_dir.cleanup()
+        except:
+            # prevent permission errors on windows
+            pass

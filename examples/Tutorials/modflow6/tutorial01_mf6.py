@@ -19,7 +19,8 @@
 
 # ## Getting Started
 
-import os
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -33,7 +34,6 @@ import flopy
 # rows and columns `N`, lengths of the sides of the model `L`, aquifer
 # thickness `H`, hydraulic conductivity `k`, and the well pumping rate `q`.
 
-name = "tutorial01_mf6"
 h1 = 100
 Nlay = 10
 N = 101
@@ -60,8 +60,12 @@ q = -1000.0
 
 # ### Create the FloPy simulation object
 
+temp_dir = TemporaryDirectory()
+workspace = temp_dir.name
+name = "tutorial01_mf6"
+
 sim = flopy.mf6.MFSimulation(
-    sim_name=name, exe_name="mf6", version="mf6", sim_ws="."
+    sim_name=name, exe_name="mf6", version="mf6", sim_ws=workspace
 )
 
 # ### Create the Flopy `TDIS` object
@@ -185,7 +189,6 @@ oc = flopy.mf6.ModflowGwfoc(
     printrecord=printrecord,
 )
 
-
 # ## Create the MODFLOW 6 Input Files and Run the Model
 #
 # Once all the flopy objects are created, it is very easy to create
@@ -207,8 +210,7 @@ sim.write_simulation()
 # This would be done by specifying exe_name with the full path.
 
 success, buff = sim.run_simulation()
-if not success:
-    raise Exception("MODFLOW 6 did not terminate normally.")
+assert success, "MODFLOW 6 did not terminate normally."
 
 # ## Post-Process Head Results
 #
@@ -225,14 +227,12 @@ y = y[::-1]
 vmin, vmax = 90.0, 100.0
 contour_intervals = np.arange(90, 100.1, 1.0)
 
-
 # ### Plot a Map of Layer 1
 
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 c = ax.contour(x, y, h[0], contour_intervals, colors="black")
 plt.clabel(c, fmt="%2.1f")
-
 
 # ### Plot a Map of Layer 10
 
@@ -285,7 +285,6 @@ contours = modelmap.contour_array(
 ax.clabel(contours, fmt="%2.1f")
 cb = plt.colorbar(pa, shrink=0.5, ax=ax)
 
-
 # ### Use the FloPy `PlotCrossSection()` capabilities for MODFLOW 6
 #
 # ### Plot a cross-section of heads along row 25
@@ -309,7 +308,6 @@ contours = modelmap.contour_array(
 ax.clabel(contours, fmt="%2.1f")
 cb = plt.colorbar(pa, shrink=0.5, ax=ax)
 
-
 # ## Determine the Flow Residual
 #
 # The `FLOW-JA-FACE` cell-by-cell budget data can be processed to
@@ -328,7 +326,7 @@ flowja = gwf.oc.output.budget().get_data(text="FLOW-JA-FACE", kstpkper=(0, 0))[
 # into the function because it contains the ia array that defines
 # the location of the diagonal position in the `FLOW-JA-FACE` array.
 
-grb_file = f"{name}.dis.grb"
+grb_file = str(Path(workspace) / f"{name}.dis.grb")
 residual = flopy.mf6.utils.get_residuals(flowja, grb_file=grb_file)
 
 # ### Plot a Map of the flow error in Layer 10
@@ -346,3 +344,9 @@ contours = modelmap.contour_array(
 )
 ax.clabel(contours, fmt="%2.1f")
 plt.colorbar(pa, shrink=0.5)
+
+try:
+    temp_dir.cleanup()
+except PermissionError:
+    # can occur on windows: https://docs.python.org/3/library/tempfile.html#tempfile.TemporaryDirectory
+    pass

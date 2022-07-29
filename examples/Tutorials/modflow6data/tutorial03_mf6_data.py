@@ -34,16 +34,17 @@
 
 # package import
 import os
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import numpy as np
 
 import flopy
 
 # set up where simulation workspace will be stored
-workspace = os.path.join("data", "mf6_working_with_data")
-name = "example_1"
-if not os.path.exists(workspace):
-    os.makedirs(workspace)
+temp_dir = TemporaryDirectory()
+workspace = temp_dir.name
+name = "tutorial03_mf6_data"
 
 # create the flopy simulation and tdis objects
 sim = flopy.mf6.MFSimulation(
@@ -246,3 +247,9 @@ print(
         ghb.ts[2].interpolation_methodrecord.get_data()[0][0],
     )
 )
+
+try:
+    temp_dir.cleanup()
+except PermissionError:
+    # can occur on windows: https://docs.python.org/3/library/tempfile.html#tempfile.TemporaryDirectory
+    pass
