@@ -35,7 +35,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v2.2.2
         with:
-          python-version: 3.9
+          python-version: 3.8
 
       - name: Upgrade pip
         run: |
@@ -43,20 +43,16 @@ jobs:
 
       - name: Install prerequisites
         run: |
-          pip install https://github.com/modflowpy/pymake/zipball/master
           pip install jupyter jupytext
 
       - name: Install flopy and dependencies
         run: |
-          pip install .[test,doc]
+          pip install .[doc]
 
-      - name: Prepare for the autotests
-        working-directory: ./autotest
+      - name: Install executables and add to PATH
         run: |
-          pytest -v ci_prepare.py
-
-      - name: Add executables directory to path
-        run: |
+          mkdir -p $HOME/.local/bin
+          get-modflow $HOME/.local/bin
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Run jupytext on tutorials

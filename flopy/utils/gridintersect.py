@@ -185,7 +185,14 @@ class GridIntersect:
             )
 
     def intersect(
-        self, shp, shapetype=None, sort_by_cellid=True, keepzerolengths=False
+        self,
+        shp,
+        shapetype=None,
+        sort_by_cellid=True,
+        keepzerolengths=False,
+        return_all_intersections=False,
+        contains_centroid=False,
+        min_area_fraction=None,
     ):
         """Method to intersect a shape with a model grid.
 
@@ -194,16 +201,29 @@ class GridIntersect:
         shp : shapely.geometry, geojson object, shapefile.Shape,
               or flopy geometry object
         shapetype : str, optional
-            type of shape (i.e. "point", "linestring", "polygon" or
-            their multi-variants), used by GeoSpatialUtil if shp is
-            passed as a list of vertices, default is None
+            type of shape (i.e. "point", "linestring", "polygon" or their
+            multi-variants), used by GeoSpatialUtil if shp is passed as a list
+            of vertices, default is None
         sort_by_cellid : bool
-            sort results by cellid, ensures cell with lowest cellid is
-            returned for boundary cases when using vertex methods, default
-            is True
+            sort results by cellid, ensures cell with lowest cellid is returned
+            for boundary cases when using vertex methods, default is True
         keepzerolengths : bool
-            boolean method to keep zero length intersections for
-            linestring intersection, used when shp is of type "linestring"
+            boolean method to keep zero length intersections for linestring
+            intersection, only used if shape type is "linestring"
+        return_all_intersections :  bool, optional
+            if True, return multiple intersection results for points or
+            linestrings on grid cell boundaries (e.g. returns 2 intersection
+            results if a point lies on the boundary between two grid cells).
+            The default is False. Only used if shape type is "point" or
+            "linestring".
+        contains_centroid :  bool, optional
+            if True, only store intersection result if cell centroid is
+            contained within intersection shape, only used if shape type is
+            "polygon"
+        min_area_fraction : float, optional
+            float defining minimum intersection area threshold, if intersection
+            area is smaller than min_frac_area * cell_area, do not store
+            intersection result, only used if shape type is "polygon"
 
         Returns
         -------
@@ -218,29 +238,49 @@ class GridIntersect:
                 self.method == "structured"
                 and self.mfgrid.grid_type == "structured"
             ):
-                rec = self._intersect_point_structured(shp)
+                rec = self._intersect_point_structured(
+                    shp, return_all_intersections=return_all_intersections
+                )
             else:
-                rec = self._intersect_point_shapely(shp, sort_by_cellid)
+                rec = self._intersect_point_shapely(
+                    shp,
+                    sort_by_cellid=sort_by_cellid,
+                    return_all_intersections=return_all_intersections,
+                )
         elif gu.shapetype in ("LineString", "MultiLineString"):
             if (
                 self.method == "structured"
                 and self.mfgrid.grid_type == "structured"
             ):
                 rec = self._intersect_linestring_structured(
-                    shp, keepzerolengths
+                    shp,
+                    keepzerolengths,
+                    return_all_intersections=return_all_intersections,
                 )
             else:
                 rec = self._intersect_linestring_shapely(
-                    shp, keepzerolengths, sort_by_cellid
+                    shp,
+                    keepzerolengths,
+                    sort_by_cellid=sort_by_cellid,
+                    return_all_intersections=return_all_intersections,
                 )
         elif gu.shapetype in ("Polygon", "MultiPolygon"):
             if (
                 self.method == "structured"
                 and self.mfgrid.grid_type == "structured"
             ):
-                rec = self._intersect_polygon_structured(shp)
+                rec = self._intersect_polygon_structured(
+                    shp,
+                    contains_centroid=contains_centroid,
+                    min_area_fraction=min_area_fraction,
+                )
             else:
-                rec = self._intersect_polygon_shapely(shp, sort_by_cellid)
+                rec = self._intersect_polygon_shapely(
+                    shp,
+                    sort_by_cellid=sort_by_cellid,
+                    contains_centroid=contains_centroid,
+                    min_area_fraction=min_area_fraction,
+                )
         else:
             err = f"Shapetype {gu.shapetype} is not supported"
             raise TypeError(err)
@@ -440,18 +480,27 @@ class GridIntersect:
         shapelist.sort(key=sort_key)
         return shapelist
 
-    def _intersect_point_shapely(self, shp, sort_by_cellid=True):
+    def _intersect_point_shapely(
+        self, shp, sort_by_cellid=True, return_all_intersections=False
+    ):
         """intersect grid with Point or MultiPoint.
 
         Parameters
         ----------
         shp : Point or MultiPoint
-            shapely Point or MultiPoint to intersect with grid. Note,
-            it is generally faster to loop over a MultiPoint and intersect
-            per point than to intersect a MultiPoint directly.
+
+            shapely Point or MultiPoint to intersect with grid. Note, it is
+            generally faster to loop over a MultiPoint and intersect per point
+            than to intersect a MultiPoint directly.
         sort_by_cellid : bool, optional
-            flag whether to sort cells by id, used to ensure node
-            with lowest id is returned, by default True
+            flag whether to sort cells by id, used to ensure node with lowest
+            id is returned, by default True
+        return_all_intersections :  bool, optional
+            if True, return multiple intersection results for points on grid
+            cell boundaries (e.g. returns 2 intersection results if a point
+            lies on the boundary between two grid cells). The default is
+            False, which will return a single intersection result for boundary
+            cases.
 
         Returns
         -------
@@ -492,10 +541,12 @@ class GridIntersect:
             for c in collection:
                 verts = c.__geo_interface__["coordinates"]
                 # avoid returning multiple cells for points on boundaries
-                if verts in parsed_points:
-                    continue
+                # if return_all_intersections is False
+                if not return_all_intersections:
+                    if verts in parsed_points:
+                        continue
                 parsed_points.append(verts)
-                cell_shps.append(c)  # collect only new points
+                cell_shps.append(c)  # collect points
                 cell_verts.append(verts)
             # if any new ix found
             if len(cell_shps) > 0:
@@ -521,7 +572,11 @@ class GridIntersect:
         return rec
 
     def _intersect_linestring_shapely(
-        self, shp, keepzerolengths=False, sort_by_cellid=True
+        self,
+        shp,
+        keepzerolengths=False,
+        sort_by_cellid=True,
+        return_all_intersections=False,
     ):
         """intersect with LineString or MultiLineString.
 
@@ -534,6 +589,12 @@ class GridIntersect:
         sort_by_cellid : bool, optional
             flag whether to sort cells by id, used to ensure node
             with lowest id is returned, by default True
+        return_all_intersections :  bool, optional
+            if True, return multiple intersection results for linestrings on
+            grid cell boundaries (e.g. returns 2 intersection results if a
+            linestring lies on the boundary between two grid cells). The
+            default is False, which will return a single intersection result
+            for boundary cases.
 
         Returns
         -------
@@ -566,9 +627,11 @@ class GridIntersect:
             # loop over intersection result and store information
             for c in collection:
                 verts = c.__geo_interface__["coordinates"]
-                # test if linestring was already processed (if on boundary)
-                if verts in vertices:
-                    continue
+                # test if linestring was already processed (if on boundary),
+                # ignore if return_all_intersections is True
+                if not return_all_intersections:
+                    if verts in vertices:
+                        continue
                 # if keep zero don't check length
                 if not keepzerolengths:
                     if c.length == 0.0:
@@ -591,7 +654,13 @@ class GridIntersect:
 
         return rec
 
-    def _intersect_polygon_shapely(self, shp, sort_by_cellid=True):
+    def _intersect_polygon_shapely(
+        self,
+        shp,
+        sort_by_cellid=True,
+        contains_centroid=False,
+        min_area_fraction=None,
+    ):
         """intersect with Polygon or MultiPolygon.
 
         Parameters
@@ -601,6 +670,13 @@ class GridIntersect:
         sort_by_cellid : bool, optional
             flag whether to sort cells by id, used to ensure node
             with lowest id is returned, by default True
+        contains_centroid :  bool, optional
+            if True, only store intersection result if cell centroid is
+            contained within intersection shape
+        min_area_fraction : float, optional
+            float defining minimum intersection area threshold, if
+            intersection area is smaller than min_frac_area * cell_area, do
+            not store intersection result
 
         Returns
         -------
@@ -638,6 +714,17 @@ class GridIntersect:
                 # don't store intersections with 0 area
                 if c.area == 0.0:
                     continue
+                # option: only store result if cell centroid is contained
+                # within intersection result
+                if contains_centroid:
+                    if not c.intersects(r.centroid):
+                        continue
+                # option: min_area_fraction, only store if intersected area
+                # is larger than fraction * cell_area
+                if min_area_fraction:
+                    if c.area < (min_area_fraction * r.area):
+                        continue
+
                 verts = c.__geo_interface__["coordinates"]
                 isectshp.append(c)
                 areas.append(c.area)
@@ -688,13 +775,18 @@ class GridIntersect:
         rec.cellids = cids
         return rec
 
-    def _intersect_point_structured(self, shp):
+    def _intersect_point_structured(self, shp, return_all_intersections=False):
         """intersection method for intersecting points with structured grids.
 
         Parameters
         ----------
         shp : shapely.geometry.Point or MultiPoint
             point shape to intersect with grid
+        return_all_intersections :  bool, optional
+            if True, return multiple intersection results for points on grid
+            cell boundaries (e.g. returns 2 intersection results if a point
+            lies on the boundary between two grid cells). The default is False,
+            which will return a single intersection result for boundary cases.
 
         Returns
         -------
@@ -739,31 +831,76 @@ class GridIntersect:
             ipos = ModflowGridIndices.find_position_in_array(Ye, ry)
 
             if jpos is not None and ipos is not None:
+                # use only first idx if return_all_intersections is False
+                if not return_all_intersections:
+                    if isinstance(jpos, list):
+                        jpos = jpos[0]
+                    if isinstance(ipos, list):
+                        ipos = ipos[0]
                 # three dimensional point
                 if p._ndim == 3:
-                    # find k
+                    # find k, if ipos or jpos on boundary, use first entry
+                    if isinstance(jpos, list):
+                        jj = jpos[0]
+                    else:
+                        jj = jpos
+                    if isinstance(ipos, list):
+                        ii = ipos[0]
+                    else:
+                        ii = ipos
                     kpos = ModflowGridIndices.find_position_in_array(
-                        self.mfgrid.botm[:, ipos, jpos], p.z
+                        self.mfgrid.botm[:, ii, jj], p.z
                     )
+                    # if z-position on boundary, use first k
+                    if isinstance(kpos, list):
+                        kpos = kpos[0]
                     if kpos is not None:
-                        nodelist.append((kpos, ipos, jpos))
-                        ixshapes.append(p)
+                        # point on boundary, either jpos or ipos has len > 1
+                        if isinstance(ipos, list) or isinstance(jpos, list):
+                            # convert to list if needed for loop
+                            if not isinstance(ipos, list):
+                                ipos = [ipos]
+                            if not isinstance(jpos, list):
+                                jpos = [jpos]
+                            for ii in ipos:
+                                for jj in jpos:
+                                    nodelist.append((kpos, ii, jj))
+                                    ixshapes.append(p)
+                        # point not on boundary
+                        else:
+                            nodelist.append((kpos, ipos, jpos))
+                            ixshapes.append(p)
                 else:
-                    nodelist.append((ipos, jpos))
-                    ixshapes.append(p)
+                    # point on boundary, either jpos or ipos has len > 1
+                    if isinstance(ipos, list) or isinstance(jpos, list):
+                        # convert to list if needed for loop
+                        if not isinstance(ipos, list):
+                            ipos = [ipos]
+                        if not isinstance(jpos, list):
+                            jpos = [jpos]
+                        for ii in ipos:
+                            for jj in jpos:
+                                nodelist.append((ii, jj))
+                                ixshapes.append(p)
+                    else:
+                        nodelist.append((ipos, jpos))
+                        ixshapes.append(p)
 
         # remove duplicates
-        tempnodes = []
-        tempshapes = []
-        for node, ixs in zip(nodelist, ixshapes):
-            if node not in tempnodes:
-                tempnodes.append(node)
-                tempshapes.append(ixs)
-            else:
-                tempshapes[-1] = shapely_geo.MultiPoint([tempshapes[-1], ixs])
+        if not return_all_intersections:
+            tempnodes = []
+            tempshapes = []
+            for node, ixs in zip(nodelist, ixshapes):
+                if node not in tempnodes:
+                    tempnodes.append(node)
+                    tempshapes.append(ixs)
+                else:
+                    tempshapes[-1] = shapely_geo.MultiPoint(
+                        [tempshapes[-1], ixs]
+                    )
 
-        ixshapes = tempshapes
-        nodelist = tempnodes
+            ixshapes = tempshapes
+            nodelist = tempnodes
 
         rec = np.recarray(
             len(nodelist), names=["cellids", "ixshapes"], formats=["O", "O"]
@@ -773,7 +910,9 @@ class GridIntersect:
             rec.ixshapes = ixshapes
         return rec
 
-    def _intersect_linestring_structured(self, shp, keepzerolengths=False):
+    def _intersect_linestring_structured(
+        self, shp, keepzerolengths=False, return_all_intersections=False
+    ):
         """method for intersecting linestrings with structured grids.
 
         Parameters
@@ -784,6 +923,12 @@ class GridIntersect:
             if True keep intersection results with length=0, in
             other words, grid cells the linestring does not cross
             but does touch, by default False
+        return_all_intersections :  bool, optional
+            if True, return multiple intersection results for linestrings on
+            grid cell boundaries (e.g. returns 2 intersection results if a
+            linestring lies on the boundary between two grid cells). The
+            default is False, which will return a single intersection result
+            for boundary cases.
 
         Returns
         -------
@@ -830,7 +975,9 @@ class GridIntersect:
             nodelist, lengths, vertices = [], [], []
             ixshapes = []
             for ls in lineclip.geoms:
-                n, l, v, ixs = self._get_nodes_intersecting_linestring(ls)
+                n, l, v, ixs = self._get_nodes_intersecting_linestring(
+                    ls, return_all_intersections=return_all_intersections
+                )
                 nodelist += n
                 lengths += l
                 # if necessary, transform coordinates back to real
@@ -874,7 +1021,9 @@ class GridIntersect:
                 lengths,
                 vertices,
                 ixshapes,
-            ) = self._get_nodes_intersecting_linestring(lineclip)
+            ) = self._get_nodes_intersecting_linestring(
+                lineclip, return_all_intersections=return_all_intersections
+            )
             # if necessary, transform coordinates back to real
             # world coordinates
             if (
@@ -913,8 +1062,12 @@ class GridIntersect:
         tempverts = []
         tempshapes = []
         unique_nodes = list(set(nodelist))
+        parsed_nodes = []
         if len(unique_nodes) < len(nodelist):
-            for inode in unique_nodes:
+            for inode in nodelist:
+                # maintain order of nodes by keeping track of parsed nodes
+                if inode in parsed_nodes:
+                    continue
                 templengths.append(
                     sum([l for l, i in zip(lengths, nodelist) if i == inode])
                 )
@@ -924,8 +1077,9 @@ class GridIntersect:
                 tempshapes.append(
                     [ix for ix, i in zip(ixshapes, nodelist) if i == inode]
                 )
+                parsed_nodes.append(inode)
 
-            nodelist = unique_nodes
+            nodelist = parsed_nodes
             lengths = templengths
             vertices = tempverts
             ixshapes = tempshapes
@@ -941,7 +1095,13 @@ class GridIntersect:
                     tempnodes.append(nodelist[i])
                     templengths.append(lengths[i])
                     tempverts.append(vertices[i])
-                    tempshapes.append(ixshapes[i])
+                    ishp = ixshapes[i]
+                    if isinstance(ishp, list):
+                        if len(ishp) > 1:
+                            ishp = shapely_geo.MultiLineString(ishp)
+                        else:
+                            ishp = ishp[0]
+                    tempshapes.append(ishp)
             nodelist = tempnodes
             lengths = templengths
             vertices = tempverts
@@ -960,7 +1120,9 @@ class GridIntersect:
 
         return rec
 
-    def _get_nodes_intersecting_linestring(self, linestring):
+    def _get_nodes_intersecting_linestring(
+        self, linestring, return_all_intersections=False
+    ):
         """helper function, intersect the linestring with the a structured grid
         and return a list of node indices and the length of the line in that
         node.
@@ -1047,7 +1209,13 @@ class GridIntersect:
 
             for inode, ilength, ivert, ix in zip(node, length, verts, ixshape):
                 if inode is not None:
-                    if ivert not in vertices:
+                    if not return_all_intersections:
+                        if ivert not in vertices:
+                            nodelist.append(inode)
+                            lengths.append(ilength)
+                            vertices.append(ivert)
+                            ixshapes.append(ix)
+                    else:
                         nodelist.append(inode)
                         lengths.append(ilength)
                         vertices.append(ivert)
@@ -1200,6 +1368,36 @@ class GridIntersect:
                     verts.append([(ixy[0], ixy[1]) for ixy in zip(x, y)])
                     node.append((ii, jj))
 
+        # special case for linestrings intersecting in vertex and continuing
+        # towards bottom right, check diagonally to front-right, if no other
+        # neighbours found
+        if np.sum(length) == 0:
+            if (i < self.mfgrid.nrow - 1) and (j < self.mfgrid.ncol - 1):
+                ii = i + 1
+                jj = j + 1
+                if (ii, jj) not in nodelist:
+                    xmin = Xe[jj]
+                    xmax = Xe[jj + 1]
+                    ymax = Ye[ii]
+                    ymin = Ye[ii + 1]
+                    pl = shapely_geo.box(xmin, ymin, xmax, ymax)
+                    if linestring.intersects(pl):
+                        intersect = linestring.intersection(pl)
+                        ixshape.append(intersect)
+                        length.append(intersect.length)
+                        if hasattr(intersect, "geoms"):
+                            x, y = [], []
+                            for igeom in intersect.geoms:
+                                x.append(igeom.xy[0])
+                                y.append(igeom.xy[1])
+                            x = np.concatenate(x)
+                            y = np.concatenate(y)
+                        else:
+                            x = intersect.xy[0]
+                            y = intersect.xy[1]
+                        verts.append([(ixy[0], ixy[1]) for ixy in zip(x, y)])
+                        node.append((ii, jj))
+
         return node, length, verts, ixshape
 
     def _intersect_rectangle_structured(self, rectangle):
@@ -1285,7 +1483,9 @@ class GridIntersect:
 
         return nodelist
 
-    def _intersect_polygon_structured(self, shp):
+    def _intersect_polygon_structured(
+        self, shp, contains_centroid=False, min_area_fraction=None
+    ):
         """intersect polygon with a structured grid. Uses bounding box of the
         Polygon to limit search space.
 
@@ -1299,6 +1499,13 @@ class GridIntersect:
         ----------
         shp : shapely.geometry.Polygon
             polygon to intersect with the grid
+        contains_centroid :  bool, optional
+            if True, only store intersection result if cell centroid is
+            contained within intersection shape
+        min_area_fraction : float, optional
+            float defining minimum intersection area threshold, if
+            intersection area is smaller than min_frac_area * cell_area, do
+            not store intersection result
 
         Returns
         -------
@@ -1349,46 +1556,66 @@ class GridIntersect:
             node_polygon = shapely_geo.Polygon(cell_coords)
             if shp.intersects(node_polygon):
                 intersect = shp.intersection(node_polygon)
-                if intersect.area > 0.0:
-                    nodelist.append((i, j))
-                    areas.append(intersect.area)
 
-                    # if necessary, transform coordinates back to real
-                    # world coordinates
-                    if (
-                        self.mfgrid.angrot != 0.0
-                        or self.mfgrid.xoffset != 0.0
-                        or self.mfgrid.yoffset != 0.0
+                collection = parse_shapely_ix_result(
+                    [], intersect, shptyps=["Polygon", "MultiPolygon"]
+                )
+                if len(collection) == 0:
+                    continue
+                if len(collection) > 1:
+                    intersect = shapely_geo.MultiPolgon(collection)
+                else:
+                    intersect = collection[0]
+
+                # only store results if area > 0.0
+                if intersect.area == 0.0:
+                    continue
+                # option: only store result if cell centroid is contained
+                # within intersection result
+                if contains_centroid:
+                    if not intersect.intersects(node_polygon.centroid):
+                        continue
+                # option: min_area_fraction, only store if intersected area
+                # is larger than fraction * cell_area
+                if min_area_fraction:
+                    if intersect.area < (
+                        min_area_fraction * node_polygon.area
                     ):
-                        v_realworld = []
-                        if intersect.geom_type.startswith("Multi"):
-                            for ipoly in intersect:
-                                v_realworld += (
-                                    self._transform_geo_interface_polygon(
-                                        ipoly
-                                    )
-                                )
-                        else:
+                        continue
+
+                nodelist.append((i, j))
+                areas.append(intersect.area)
+
+                # if necessary, transform coordinates back to real
+                # world coordinates
+                if (
+                    self.mfgrid.angrot != 0.0
+                    or self.mfgrid.xoffset != 0.0
+                    or self.mfgrid.yoffset != 0.0
+                ):
+                    v_realworld = []
+                    if intersect.geom_type.startswith("Multi"):
+                        for ipoly in intersect:
                             v_realworld += (
-                                self._transform_geo_interface_polygon(
-                                    intersect
-                                )
+                                self._transform_geo_interface_polygon(ipoly)
                             )
-                        intersect_realworld = affinity_loc.rotate(
-                            intersect, self.mfgrid.angrot, origin=(0.0, 0.0)
-                        )
-                        intersect_realworld = affinity_loc.translate(
-                            intersect_realworld,
-                            self.mfgrid.xoffset,
-                            self.mfgrid.yoffset,
-                        )
                     else:
-                        v_realworld = intersect.__geo_interface__[
-                            "coordinates"
-                        ]
-                        intersect_realworld = intersect
-                    ixshapes.append(intersect_realworld)
-                    vertices.append(v_realworld)
+                        v_realworld += self._transform_geo_interface_polygon(
+                            intersect
+                        )
+                    intersect_realworld = affinity_loc.rotate(
+                        intersect, self.mfgrid.angrot, origin=(0.0, 0.0)
+                    )
+                    intersect_realworld = affinity_loc.translate(
+                        intersect_realworld,
+                        self.mfgrid.xoffset,
+                        self.mfgrid.yoffset,
+                    )
+                else:
+                    v_realworld = intersect.__geo_interface__["coordinates"]
+                    intersect_realworld = intersect
+                ixshapes.append(intersect_realworld)
+                vertices.append(v_realworld)
 
         rec = np.recarray(
             len(nodelist),
@@ -1493,6 +1720,7 @@ class GridIntersect:
         """
 
         import matplotlib.pyplot as plt
+        from matplotlib.collections import PatchCollection
 
         import_optional_dependency("descartes")
         from descartes import PolygonPatch
@@ -1500,13 +1728,16 @@ class GridIntersect:
         if ax is None:
             _, ax = plt.subplots()
 
+        patches = []
         for i, ishp in enumerate(rec.ixshapes):
             if "facecolor" in kwargs:
                 fc = kwargs.pop("facecolor")
             else:
                 fc = f"C{i % 10}"
             ppi = PolygonPatch(ishp, facecolor=fc, **kwargs)
-            ax.add_patch(ppi)
+            patches.append(ppi)
+        pc = PatchCollection(patches, match_original=True)
+        ax.add_collection(pc)
 
         return ax
 
@@ -1621,7 +1852,7 @@ class ModflowGridIndices:
         x : float
             The x position to find in arr.
         """
-        jpos = None
+        jpos = []
 
         if x == arr[-1]:
             return len(arr) - 2
@@ -1639,10 +1870,13 @@ class ModflowGridIndices:
             frac = (x - xl) / (xr - xl)
             if 0.0 <= frac <= 1.0:
                 # if min(xl, xr) <= x < max(xl, xr):
-                jpos = j
-                return jpos
-
-        return jpos
+                jpos.append(j)
+        if len(jpos) == 0:
+            return None
+        elif len(jpos) == 1:
+            return jpos[0]
+        else:
+            return jpos
 
     @staticmethod
     def kij_from_nodenumber(nodenumber, nlay, nrow, ncol):
