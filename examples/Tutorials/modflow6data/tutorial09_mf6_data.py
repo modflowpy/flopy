@@ -25,17 +25,16 @@
 # The following code sets up a basic simulation.
 
 # package import
-import os
-
-import numpy as np
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import flopy
 
 # set up where simulation workspace will be stored
-workspace = os.path.join("data", "mf6_working_with_data")
-name = "example_1"
-if not os.path.exists(workspace):
-    os.makedirs(workspace)
+temp_dir = TemporaryDirectory()
+workspace = temp_dir.name
+name = "tutorial09_mf6_data"
+
 # create the FloPy simulation and tdis objects
 sim = flopy.mf6.MFSimulation(
     sim_name=name, exe_name="mf6", version="mf6", sim_ws=workspace
@@ -296,3 +295,9 @@ gwfgwf.mvr.initialize(
 
 sim.write_simulation()
 sim.run_simulation()
+
+try:
+    temp_dir.cleanup()
+except PermissionError:
+    # can occur on windows: https://docs.python.org/3/library/tempfile.html#tempfile.TemporaryDirectory
+    pass

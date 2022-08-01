@@ -116,15 +116,6 @@ jobs:
         python-version: [3.9, 3.8, 3.7]
         run-type: [std]
         test-pth: [""]
-        include:
-          - os: ubuntu-latest
-            python-version: 3.9
-            run-type: nb
-            test-path: run_notebooks.py
-          - os: ubuntu-latest
-            python-version: 3.9
-            run-type: script
-            test-path: run_scripts.py
     defaults:
       run:
         shell: bash
@@ -159,10 +150,12 @@ jobs:
       run: |
         pip install .[test,optional]
 
-    - name: Prepare for the autotests
+    - name: Install modflow executables
       working-directory: ./autotest
       run: |
-        pytest -v ci_prepare.py
+        mkdir -p $HOME/.local/bin
+        get-modflow $HOME/.local/bin
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -176,17 +169,13 @@ jobs:
         [ ! -d ./failedTests ] && mkdir ./failedTests
         echo "artifact folder for diagnosing failures." > ./failedTests/readme.txt
 
-    - name: Run pytest on autotest scripts
+    - name: Run tests
       if: matrix.run-type == 'std'
       working-directory: ./autotest
       run: |
-        pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
-
-    - name: Run pytest on scripts and notebooks
-      if: matrix.run-type != 'std'
-      working-directory: ./autotest
-      run: |
-        pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml ${{ matrix.test-path }}
+        pytest -v -n auto --benchmark-disable --cov=flopy --cov-report=xml --durations=0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Upload failedTests folder as an artifact
       uses: actions/upload-artifact@v2

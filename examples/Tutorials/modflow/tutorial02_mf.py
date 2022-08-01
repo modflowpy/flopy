@@ -33,6 +33,8 @@
 # ## Getting Started
 #
 # As shown in the previous MODFLOW tutorial, import flopy.
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import numpy as np
 
@@ -83,8 +85,10 @@ steady = [True, False, False]
 # With this information, we can now create the static flopy objects that do
 # not change with time:
 
-modelname = "tutorial2_mf"
-mf = flopy.modflow.Modflow(modelname, exe_name="mf2005")
+temp_dir = TemporaryDirectory()
+workspace = temp_dir.name
+name = "tutorial02_mf"
+mf = flopy.modflow.Modflow(name, exe_name="mf2005", model_ws=workspace)
 dis = flopy.modflow.ModflowDis(
     mf,
     nlay,
@@ -192,8 +196,7 @@ mf.write_input()
 
 # Run the model
 success, mfoutput = mf.run_model(silent=True, pause=False)
-if not success:
-    raise Exception("MODFLOW did not terminate normally.")
+assert success, "MODFLOW did not terminate normally."
 
 # ## Post-Processing the Results
 #
@@ -216,9 +219,9 @@ import matplotlib.pyplot as plt
 import flopy.utils.binaryfile as bf
 
 # Create the headfile and budget file objects
-headobj = bf.HeadFile(f"{modelname}.hds")
+headobj = bf.HeadFile(str(Path(workspace) / f"{name}.hds"))
 times = headobj.get_times()
-cbb = bf.CellBudgetFile(f"{modelname}.cbc")
+cbb = bf.CellBudgetFile(str(Path(workspace) / f"{name}.cbc"))
 
 # Setup contour parameters
 levels = np.linspace(0, 10, 11)
@@ -288,3 +291,9 @@ ax.set_title(ttl)
 ax.set_xlabel("time")
 ax.set_ylabel("head")
 ax.plot(ts[:, 0], ts[:, 1], "bo-")
+
+try:
+    temp_dir.cleanup()
+except:
+    # prevent windows permission error
+    pass

@@ -100,10 +100,10 @@ jobs:
         pip install xmipy
         pip install .
 
-    - name: Prepare for the autotests
-      working-directory: ./autotest
+    - name: Install modflow executables
       run: |
-        pytest -v ci_prepare.py
+        md C:\Users\runneradmin\.local\bin
+        get-modflow "C:\Users\runneradmin\.local\bin"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -115,10 +115,12 @@ jobs:
       run: |
         echo "C:\Users\runneradmin\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-    - name: Run pytest on autotest scripts
+    - name: Run tests
       working-directory: ./autotest
       run: |
-        pytest -v -n auto --durations=0 --cov=flopy --cov-report=xml
+        pytest -v -n auto --benchmark-disable --cov=flopy --cov-report=xml --durations=0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Print coverage report before upload
       working-directory: ./autotest

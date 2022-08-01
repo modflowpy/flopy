@@ -1,5 +1,7 @@
 import os
 import sys
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,11 +22,7 @@ updates = {
 plt.rcParams.update(updates)
 
 
-def run():
-    workspace = "swiex2"
-    if not os.path.isdir(workspace):
-        os.mkdir(workspace)
-
+def run(workspace, quiet):
     cleanFiles = False
     skipRuns = False
     fext = "png"
@@ -143,7 +141,8 @@ def run():
     ml.write_input()
     # run stratified model
     if not skipRuns:
-        m = ml.run_model(silent=False)
+        m = ml.run_model(silent=quiet)
+
     # read stratified results
     zetafile = os.path.join(dirs[0], f"{modelname}.zta")
     zobj = flopy.utils.CellBudgetFile(zetafile)
@@ -192,7 +191,8 @@ def run():
     ml.write_input()
     # run vd model
     if not skipRuns:
-        m = ml.run_model(silent=False)
+        m = ml.run_model(silent=quiet)
+
     # read vd model data
     zetafile = os.path.join(dirs[0], f"{modelname}.zta")
     zobj = flopy.utils.CellBudgetFile(zetafile)
@@ -333,7 +333,8 @@ def run():
     m.write_input()
     # run seawat model
     if not skipRuns:
-        m = m.run_model(silent=False)
+        m = m.run_model(silent=quiet)
+
     # read seawat model data
     ucnfile = os.path.join(dirs[1], "MT3D001.UCN")
     uobj = flopy.utils.UcnFile(ucnfile)
@@ -471,9 +472,28 @@ def run():
     xsf.savefig(outfig, dpi=300)
     print("created...", outfig)
 
-    return 0
-
 
 if __name__ == "__main__":
-    success = run()
-    sys.exit(success)
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--keep", help="output directory")
+    parser.add_argument("--quiet", action="store_false", help="don't show model output")
+    args = vars(parser.parse_args())
+
+    workspace = args.get('keep', None)
+    quiet = args.get('quiet', False)
+
+    if workspace is not None:
+        run(workspace, quiet)
+    else:
+        temp_dir = TemporaryDirectory()
+        workspace = temp_dir.name
+
+        run(workspace, quiet)
+
+        try:
+            temp_dir.cleanup()
+        except:
+            # prevent permission errors on windows
+            pass

@@ -94,7 +94,7 @@ jobs:
       run: |
         pytest -v --durations=0 get_exes.py
 
-    - name: Run pytest
+    - name: Run tests
       working-directory: ./modflow6/autotest
       run: |
         pytest -v -n auto -k "test_gw" --durations=0 --cov=flopy --cov-report=xml
