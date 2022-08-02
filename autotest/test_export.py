@@ -8,7 +8,6 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from flaky import flaky
 
 import flopy
 from autotest.conftest import (

@@ -14,7 +14,7 @@ str_items = {
 
 @requires_exe("mf2005")
 @pytest.mark.regression
-def test_str_fixed_free(tmpdir, example_data_path, benchmark):
+def test_str_fixed_free(tmpdir, example_data_path):
     mf2005_model_path = example_data_path / "mf2005_test"
     pytest.importorskip("pymake")
     import pymake
@@ -100,7 +100,7 @@ def test_str_fixed_free(tmpdir, example_data_path, benchmark):
     m.set_ifrefm()
     m.write_input()
 
-    success, buff = benchmark(lambda: m.run_model())
+    success, buff = m.run_model()
     assert success, "free format model run did not terminate successfully"
 
     # load the free format model

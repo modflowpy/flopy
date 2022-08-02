@@ -8,7 +8,7 @@ import pytest
 from autotest.conftest import get_project_root_path
 
 
-def get_scripts(exclude=None):
+def get_example_scripts(exclude=None):
     prjroot = get_project_root_path(__file__)
 
     # sort to appease pytest-xdist: all workers must collect identically ordered sets of tests
@@ -21,10 +21,10 @@ def get_scripts(exclude=None):
 
 @pytest.mark.slow
 @pytest.mark.example
-@pytest.mark.parametrize("script", get_scripts())
-def test_scripts_and_tutorials(script, benchmark):
+@pytest.mark.parametrize("script", get_example_scripts())
+def test_scripts(script):
     proc = Popen(("python", Path(script).name), stdout=PIPE, stderr=PIPE, cwd=Path(script).parent)
-    stdout, stderr = benchmark(lambda: proc.communicate())
+    stdout, stderr = proc.communicate()
     if stdout: print(stdout.decode("utf-8"))
 
     allowed_patterns = [

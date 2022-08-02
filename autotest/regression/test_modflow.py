@@ -22,7 +22,7 @@ def uzf_example_path(example_data_path):
 @requires_exe("mf2005")
 @pytest.mark.slow
 @pytest.mark.regression
-def test_uzf_unit_numbers(tmpdir, uzf_example_path, benchmark):
+def test_uzf_unit_numbers(tmpdir, uzf_example_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -69,7 +69,7 @@ def test_uzf_unit_numbers(tmpdir, uzf_example_path, benchmark):
     m.write_input()
 
     # run and compare the output files
-    success, buff = benchmark(lambda: m.run_model(silent=False))
+    success, buff = m.run_model(silent=False)
     assert success, "new model run did not terminate successfully"
     fn1 = join(model_ws2, mfnam)
 
@@ -86,7 +86,7 @@ def test_uzf_unit_numbers(tmpdir, uzf_example_path, benchmark):
 @requires_exe("mf2005")
 @pytest.mark.slow
 @pytest.mark.regression
-def test_unitnums(tmpdir, mf2005_test_path, benchmark):
+def test_unitnums(tmpdir, mf2005_test_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -113,7 +113,7 @@ def test_unitnums(tmpdir, mf2005_test_path, benchmark):
 
     m.write_input()
 
-    success, buff = benchmark(lambda: m.run_model(silent=False))
+    success, buff = m.run_model(silent=False)
     assert success, "base model run did not terminate successfully"
     fn1 = join(model_ws2, mfnam)
 
@@ -127,7 +127,7 @@ def test_unitnums(tmpdir, mf2005_test_path, benchmark):
 @requires_exe("mf2005")
 @pytest.mark.slow
 @pytest.mark.regression
-def test_gage(tmpdir, example_data_path, benchmark):
+def test_gage(tmpdir, example_data_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -146,7 +146,7 @@ def test_gage(tmpdir, example_data_path, benchmark):
     )
 
     # run the modflow-2005 model
-    success, buff = mf.run_model(silent=False)
+    success, buff = mf.run_model()
     assert success, "could not run original MODFLOW-2005 model"
 
     files = mf.gage.files
@@ -158,7 +158,7 @@ def test_gage(tmpdir, example_data_path, benchmark):
     mf.write_input()
 
     # run the modflow-2005 model
-    success, buff = benchmark(lambda: mf.run_model(silent=False))
+    success, buff = mf.run_model()
     assert success, "could not run new MODFLOW-2005 model"
 
     # compare the two results
@@ -180,7 +180,7 @@ __example_data_path = get_example_data_path(Path(__file__))
     str(__example_data_path / "pcgn_test" / nf)
     for nf in ["twri.nam", "MNW2.nam"]
 ])
-def test_mf2005pcgn(tmpdir, namfile, benchmark):
+def test_mf2005pcgn(tmpdir, namfile):
     pytest.importorskip("pymake")
     import pymake
 
@@ -209,7 +209,7 @@ def test_mf2005pcgn(tmpdir, namfile, benchmark):
     m.change_model_ws(str(ws2))
     m.write_input()
 
-    success, buff = benchmark(lambda: m.run_model(silent=False))
+    success, buff = m.run_model(silent=False)
     assert success, "new model run did not terminate successfully"
     fn1 = str(ws2 / nf)
 
@@ -228,7 +228,7 @@ def test_mf2005pcgn(tmpdir, namfile, benchmark):
 @pytest.mark.slow
 @pytest.mark.regression
 @pytest.mark.parametrize("namfile", [str(__example_data_path / "secp" / nf) for nf in ["secp.nam"]])
-def test_mf2005gmg(tmpdir, namfile, benchmark):
+def test_mf2005gmg(tmpdir, namfile):
     pytest.importorskip("pymake")
     import pymake
 
@@ -252,7 +252,7 @@ def test_mf2005gmg(tmpdir, namfile, benchmark):
     m.change_model_ws(str(tmpdir))
     m.write_input()
 
-    success, buff = benchmark(lambda: m.run_model(silent=False))
+    success, buff = m.run_model(silent=False)
     assert success, "new model run did not terminate successfully"
     fn1 = str(tmpdir / nf)
 
@@ -270,7 +270,7 @@ def test_mf2005gmg(tmpdir, namfile, benchmark):
 @requires_exe("mf2005")
 @pytest.mark.regression
 @pytest.mark.parametrize("namfile", [str(__example_data_path / "freyberg" / nf) for nf in ["freyberg.nam"]])
-def test_mf2005(tmpdir, namfile, benchmark):
+def test_mf2005(tmpdir, namfile):
     """
     test045 load and write of MODFLOW-2005 GMG example problem
     """
@@ -313,7 +313,7 @@ def test_mf2005(tmpdir, namfile, benchmark):
     # rewrite files
     m.write_input()
 
-    success, buff = benchmark(lambda: m.run_model(silent=False))
+    success, buff = m.run_model()
     assert success, "new model run did not terminate successfully"
     fn1 = str(compth / Path(namfile).name)
 
@@ -348,7 +348,7 @@ mf2005_namfiles = [str(__example_data_path / "mf2005_test" / nf) for nf in [
 @pytest.mark.slow
 @pytest.mark.regression
 @pytest.mark.parametrize("namfile", mf2005_namfiles)
-def test_mf2005fhb(tmpdir, namfile, benchmark):
+def test_mf2005fhb(tmpdir, namfile):
     pytest.importorskip("pymake")
     import pymake
 
@@ -366,7 +366,7 @@ def test_mf2005fhb(tmpdir, namfile, benchmark):
     m.change_model_ws(str(tmpdir), reset_external=True)
     m.write_input()
 
-    success, buff = benchmark(lambda: m.run_model(silent=False))
+    success, buff = m.run_model()
     assert success, "new model run did not terminate successfully"
     fn1 = join(str(tmpdir), Path(namfile).name)
 
@@ -385,7 +385,7 @@ def test_mf2005fhb(tmpdir, namfile, benchmark):
 @pytest.mark.slow
 @pytest.mark.regression
 @pytest.mark.parametrize("namfile", mf2005_namfiles)
-def test_mf2005_lake(tmpdir, namfile, mf2005_test_path, benchmark):
+def test_mf2005_lake(tmpdir, namfile, mf2005_test_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -416,7 +416,7 @@ def test_mf2005_lake(tmpdir, namfile, mf2005_test_path, benchmark):
     )  # l1b2k_bath wont run without this
     m.write_input()
 
-    success, buff = benchmark(lambda: m.run_model(silent=False))
+    success, buff = m.run_model()
     assert success
     fn1 = join(model_ws2, Path(namfile).name)
 

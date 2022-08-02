@@ -17,7 +17,7 @@ from flopy.modflow import (
 
 @requires_exe("mf2005")
 @pytest.mark.regression
-def test_binary_well(tmpdir, benchmark):
+def test_binary_well(tmpdir):
     pytest.importorskip("pymake")
     import pymake
 
@@ -94,7 +94,7 @@ def test_binary_well(tmpdir, benchmark):
     m.write_input()
 
     # run the new modflow-2005 model
-    success, buff = benchmark(lambda: m.run_model(silent=False))
+    success, buff = m.run_model()
     assert success, "could not run the new MODFLOW-2005 model"
     fn1 = os.path.join(pth, f"{mfnam}.nam")
 

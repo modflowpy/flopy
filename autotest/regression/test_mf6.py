@@ -1,5 +1,6 @@
 import copy
 import os
+import sys
 import shutil
 from pathlib import Path
 
@@ -21,8 +22,8 @@ from flopy.utils.datautil import PyListUtil
 
 @requires_exe("mf6")
 @pytest.mark.regression
-@pytest.mark.xfail(reason="IndexError: list index out of range on Python 3.7, investigating")
-def test_np001(tmpdir, example_data_path, benchmark):
+@pytest.mark.skipif(sys.version_info == (3, 7), reason="IndexError: list index out of range on Python 3.7")
+def test_np001(tmpdir, example_data_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -405,7 +406,7 @@ def test_np001(tmpdir, example_data_path, benchmark):
 
     assert sim.simulation_data.max_columns_of_data == dis_package.ncol.get_data()
     # run simulation from new path with external files
-    benchmark(lambda: sim.run_simulation())
+    sim.run_simulation()
 
     # get expected results
     budget_obj = CellBudgetFile(expected_cbc_file, precision="double")
@@ -434,7 +435,7 @@ def test_np001(tmpdir, example_data_path, benchmark):
     sim.set_sim_path(rename_folder)
     sim.write_simulation()
 
-    benchmark(lambda: sim.run_simulation())
+    sim.run_simulation()
     sim.delete_output_files()
 
     # test error checking
@@ -590,7 +591,7 @@ def test_np001(tmpdir, example_data_path, benchmark):
 
 @requires_exe("mf6")
 @pytest.mark.regression
-def test_np002(tmpdir, example_data_path, benchmark):
+def test_np002(tmpdir, example_data_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -760,7 +761,7 @@ def test_np002(tmpdir, example_data_path, benchmark):
     assert os.path.isfile(top_data_file)
 
     # run simulation
-    benchmark(lambda: sim.run_simulation())
+    sim.run_simulation()
 
     cell_list = [(0, 0, 0), (0, 0, 3), (0, 0, 4), (0, 0, 9)]
     out_file = str(tmpdir / "inspect_test_np002.csv")
@@ -867,7 +868,7 @@ def test_np002(tmpdir, example_data_path, benchmark):
 
 @requires_exe("mf6")
 @pytest.mark.regression
-def test021_twri(tmpdir, example_data_path, benchmark):
+def test021_twri(tmpdir, example_data_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -1063,7 +1064,7 @@ def test021_twri(tmpdir, example_data_path, benchmark):
     sim.write_simulation()
 
     # run simulation
-    benchmark(lambda: sim.run_simulation())
+    sim.run_simulation()
 
     sim2 = MFSimulation.load(sim_ws=ws)
     model2 = sim2.get_model()
@@ -1094,7 +1095,7 @@ def test021_twri(tmpdir, example_data_path, benchmark):
 @requires_exe("mf6")
 @pytest.mark.slow
 @pytest.mark.regression
-def test005_create_tests_advgw_tidal(tmpdir, example_data_path, benchmark):
+def test005_create_tests_advgw_tidal(tmpdir, example_data_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -1721,7 +1722,7 @@ def test005_create_tests_advgw_tidal(tmpdir, example_data_path, benchmark):
 
 @requires_exe("mf6")
 @pytest.mark.regression
-def test004_create_tests_bcfss(tmpdir, example_data_path, benchmark):
+def test004_create_tests_bcfss(tmpdir, example_data_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -1853,7 +1854,7 @@ def test004_create_tests_bcfss(tmpdir, example_data_path, benchmark):
     sim.write_simulation()
 
     # run simulation
-    benchmark(lambda: sim.run_simulation())
+    sim.run_simulation()
 
     # compare output to expected results
     head_new = os.path.join(str(tmpdir), "bcf2ss.hds")
@@ -1872,7 +1873,7 @@ def test004_create_tests_bcfss(tmpdir, example_data_path, benchmark):
 
 @requires_exe("mf6")
 @pytest.mark.regression
-def test035_create_tests_fhb(tmpdir, example_data_path, benchmark):
+def test035_create_tests_fhb(tmpdir, example_data_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -1996,7 +1997,7 @@ def test035_create_tests_fhb(tmpdir, example_data_path, benchmark):
     sim.write_simulation()
 
     # run simulation
-    benchmark(lambda: sim.run_simulation())
+    sim.run_simulation()
 
     # compare output to expected results
     head_new = str(tmpdir / "fhb2015_fhb.hds")
@@ -2015,7 +2016,7 @@ def test035_create_tests_fhb(tmpdir, example_data_path, benchmark):
 
 @requires_exe("mf6")
 @pytest.mark.regression
-def test006_create_tests_gwf3_disv(tmpdir, example_data_path, benchmark):
+def test006_create_tests_gwf3_disv(tmpdir, example_data_path):
     pytest.importorskip("shapefile")
     pytest.importorskip("pymake")
     import pymake
@@ -2280,7 +2281,7 @@ def test006_create_tests_gwf3_disv(tmpdir, example_data_path, benchmark):
     sim.write_simulation()
 
     # run simulation
-    benchmark(lambda: sim.run_simulation())
+    sim.run_simulation()
 
     # inspect cells
     cell_list = [(0, 0), (0, 7), (0, 17)]
@@ -2310,7 +2311,7 @@ def test006_create_tests_gwf3_disv(tmpdir, example_data_path, benchmark):
 
 @requires_exe("mf6")
 @pytest.mark.regression
-def test006_create_tests_2models_gnc(tmpdir, example_data_path, benchmark):
+def test006_create_tests_2models_gnc(tmpdir, example_data_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -2644,14 +2645,14 @@ def test006_create_tests_2models_gnc(tmpdir, example_data_path, benchmark):
     gnc_full_path = os.path.join(rename_folder, "gnc", "file_rename.gnc")
     assert os.path.exists(gnc_full_path)
 
-    benchmark(lambda: sim.run_simulation())
+    sim.run_simulation()
     sim.delete_output_files()
 
 
 @requires_exe("mf6")
 @pytest.mark.slow
 @pytest.mark.regression
-def test050_create_tests_circle_island(tmpdir, example_data_path, benchmark):
+def test050_create_tests_circle_island(tmpdir, example_data_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -2732,7 +2733,7 @@ def test050_create_tests_circle_island(tmpdir, example_data_path, benchmark):
     sim.write_simulation()
 
     # run simulation
-    benchmark(lambda: sim.run_simulation())
+    sim.run_simulation()
 
     # compare output to expected results
     head_new = str(tmpdir / "ci.output.hds")
@@ -2753,7 +2754,7 @@ def test050_create_tests_circle_island(tmpdir, example_data_path, benchmark):
 @pytest.mark.xfail(reason="possible python3.7/windows incompatibilities in testutils.read_std_array "
                           "https://github.com/modflowpy/flopy/runs/7581629193?check_suite_focus=true#step:11:1753")
 @pytest.mark.regression
-def test028_create_tests_sfr(tmpdir, example_data_path, benchmark):
+def test028_create_tests_sfr(tmpdir, example_data_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -2999,7 +3000,7 @@ def test028_create_tests_sfr(tmpdir, example_data_path, benchmark):
     sim.write_simulation()
 
     # run simulation
-    benchmark(lambda: sim.run_simulation())
+    sim.run_simulation()
 
     # inspect cells
     cell_list = [(0, 2, 3), (0, 3, 4), (0, 4, 5)]
@@ -3024,7 +3025,7 @@ def test028_create_tests_sfr(tmpdir, example_data_path, benchmark):
 
 @requires_exe("mf6")
 @pytest.mark.regression
-def test_create_tests_transport(tmpdir, example_data_path, benchmark):
+def test_create_tests_transport(tmpdir, example_data_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -3228,7 +3229,7 @@ def test_create_tests_transport(tmpdir, example_data_path, benchmark):
     sim.write_simulation()
 
     # run simulation
-    benchmark(lambda: sim.run_simulation())
+    sim.run_simulation()
 
     # inspect cells
     cell_list = [
@@ -3265,7 +3266,7 @@ def test_create_tests_transport(tmpdir, example_data_path, benchmark):
 @requires_exe("mf6")
 @pytest.mark.slow
 @pytest.mark.regression
-def test001a_tharmonic(tmpdir, example_data_path, benchmark):
+def test001a_tharmonic(tmpdir, example_data_path):
     pytest.importorskip("shapely")
     pytest.importorskip("pymake")
     import pymake
@@ -3374,7 +3375,7 @@ def test001a_tharmonic(tmpdir, example_data_path, benchmark):
     sim.write_simulation()
 
     # run simulation
-    success, buff = benchmark(lambda: sim.run_simulation())
+    success, buff = sim.run_simulation()
     assert success, f"simulation {sim.name} rerun did not run"
 
     # get expected results
@@ -3397,7 +3398,7 @@ def test001a_tharmonic(tmpdir, example_data_path, benchmark):
 
 @requires_exe("mf6")
 @pytest.mark.regression
-def test003_gwfs_disv(tmpdir, example_data_path, benchmark):
+def test003_gwfs_disv(tmpdir, example_data_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -3467,7 +3468,7 @@ def test003_gwfs_disv(tmpdir, example_data_path, benchmark):
     sim.write_simulation()
 
     # run simulation
-    success, buff = benchmark(lambda: sim.run_simulation())
+    success, buff = sim.run_simulation()
     assert success, f"simulation {sim.name} rerun did not run"
 
     # get expected results
@@ -3491,7 +3492,7 @@ def test003_gwfs_disv(tmpdir, example_data_path, benchmark):
 @requires_exe("mf6")
 @pytest.mark.slow
 @pytest.mark.regression
-def test005_advgw_tidal(tmpdir, example_data_path, benchmark):
+def test005_advgw_tidal(tmpdir, example_data_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -3558,7 +3559,7 @@ def test005_advgw_tidal(tmpdir, example_data_path, benchmark):
 
 @requires_exe("mf6")
 @pytest.mark.regression
-def test006_gwf3(tmpdir, example_data_path, benchmark):
+def test006_gwf3(tmpdir, example_data_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -3653,7 +3654,7 @@ def test006_gwf3(tmpdir, example_data_path, benchmark):
     sim.write_simulation()
 
     # run simulation
-    success, buff = benchmark(lambda: sim.run_simulation())
+    success, buff = sim.run_simulation()
     assert success, f"simulation {sim.name} rerun(2) did not run"
 
     # get expected results
@@ -3743,7 +3744,7 @@ def test006_gwf3(tmpdir, example_data_path, benchmark):
 
 @requires_exe("mf6")
 @pytest.mark.regression
-def test045_lake1ss_table(tmpdir, example_data_path, benchmark):
+def test045_lake1ss_table(tmpdir, example_data_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -3804,7 +3805,7 @@ def test045_lake1ss_table(tmpdir, example_data_path, benchmark):
     sim.write_simulation()
 
     # run simulation
-    success, buff = benchmark(lambda: sim.run_simulation())
+    success, buff = sim.run_simulation()
     assert success, f"simulation {sim.name} rerun did not run"
 
     # compare output to expected results
@@ -3823,7 +3824,7 @@ def test045_lake1ss_table(tmpdir, example_data_path, benchmark):
 @requires_exe("mf6")
 @pytest.mark.slow
 @pytest.mark.regression
-def test006_2models_mvr(tmpdir, example_data_path, benchmark):
+def test006_2models_mvr(tmpdir, example_data_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -3939,7 +3940,7 @@ def test006_2models_mvr(tmpdir, example_data_path, benchmark):
     sim.write_simulation()
 
     # run simulation
-    success, buff = benchmark(lambda: sim.run_simulation())
+    success, buff = sim.run_simulation()
     assert success, f"simulation {sim.name} rerun did not run"
 
     cell_list = [(0, 3, 1)]
@@ -4012,7 +4013,7 @@ def test006_2models_mvr(tmpdir, example_data_path, benchmark):
 @requires_exe("mf6")
 @pytest.mark.slow
 @pytest.mark.regression
-def test001e_uzf_3lay(tmpdir, example_data_path, benchmark):
+def test001e_uzf_3lay(tmpdir, example_data_path):
     pytest.importorskip("pymake")
 
     # init paths
@@ -4051,7 +4052,7 @@ def test001e_uzf_3lay(tmpdir, example_data_path, benchmark):
     sim.write_simulation()
 
     # run simulation
-    success, buff = benchmark(lambda: sim.run_simulation())
+    success, buff = sim.run_simulation()
     assert success, f"simulation {sim.name} rerun did not run"
 
     # inspect cells
@@ -4112,7 +4113,7 @@ def test001e_uzf_3lay(tmpdir, example_data_path, benchmark):
 @requires_exe("mf6")
 @pytest.mark.slow
 @pytest.mark.regression
-def test045_lake2tr(tmpdir, example_data_path, benchmark):
+def test045_lake2tr(tmpdir, example_data_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -4165,7 +4166,7 @@ def test045_lake2tr(tmpdir, example_data_path, benchmark):
     sim.write_simulation()
 
     # run simulation
-    success, buff = benchmark(lambda: sim.run_simulation())
+    success, buff = sim.run_simulation()
     assert success, f"simulation {sim.name} rerun did not run"
 
     # inspect cells
@@ -4186,7 +4187,7 @@ def test045_lake2tr(tmpdir, example_data_path, benchmark):
 
 @requires_exe("mf6")
 @pytest.mark.regression
-def test036_twrihfb(tmpdir, example_data_path, benchmark):
+def test036_twrihfb(tmpdir, example_data_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -4255,7 +4256,7 @@ def test036_twrihfb(tmpdir, example_data_path, benchmark):
     sim.write_simulation()
 
     # run simulation
-    success, buff = benchmark(lambda: sim.run_simulation())
+    success, buff = sim.run_simulation()
     assert success, f"simulation {sim.name} rerun did not run"
 
     # compare output to expected results
@@ -4271,7 +4272,7 @@ def test036_twrihfb(tmpdir, example_data_path, benchmark):
 @requires_exe("mf6")
 @pytest.mark.slow
 @pytest.mark.regression
-def test027_timeseriestest(tmpdir, example_data_path, benchmark):
+def test027_timeseriestest(tmpdir, example_data_path):
     pytest.importorskip("pymake")
     import pymake
 
@@ -4334,7 +4335,7 @@ def test027_timeseriestest(tmpdir, example_data_path, benchmark):
     sim.write_simulation()
 
     # run simulation
-    success, buff = benchmark(lambda: sim.run_simulation())
+    success, buff = sim.run_simulation()
     assert success, f"simulation {sim.name} rerun did not run"
 
     # compare output to expected results

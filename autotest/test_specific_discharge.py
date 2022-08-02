@@ -12,12 +12,9 @@
 # - the model is a very small synthetic test case that just contains enough
 #   things to allow for the functions to be thoroughly tested
 
-import os
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from flaky import flaky
 from matplotlib.quiver import Quiver
 
 import flopy.utils.binaryfile as bf

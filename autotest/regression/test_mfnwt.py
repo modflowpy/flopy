@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 
 import pytest
 
@@ -30,7 +29,7 @@ def get_nfnwt_namfiles():
 @pytest.mark.slow
 @pytest.mark.regression
 @pytest.mark.parametrize("namfile", get_nfnwt_namfiles())
-def test_run_mfnwt_model(tmpdir, namfile, benchmark):
+def test_run_mfnwt_model(tmpdir, namfile):
     pytest.importorskip("pymake")
     import pymake
 
@@ -130,7 +129,7 @@ def test_run_mfnwt_model(tmpdir, namfile, benchmark):
     pthf = str(tmpdir / "flopy")
     m.change_model_ws(pthf)
     m.write_input()
-    success, buff = benchmark(lambda: m.run_model(silent=False))
+    success, buff = m.run_model(silent=False)
     assert success, "base model run did not terminate successfully"
     fn1 = os.path.join(pthf, namfile)
 
