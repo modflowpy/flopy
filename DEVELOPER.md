@@ -1,6 +1,6 @@
 # Developing FloPy
 
-This document describes how to set up a FloPy development environment, run the example scripts and notebooks, and use the tests. Testing conventions are also briefly discussed. More etail on how to contribute your code to this repository can be found in [CONTRIBUTING.md](CONTRIBUTING.md).
+This document describes how to set up a FloPy development environment, run the example scripts and notebooks, and use the tests. Testing conventions are also briefly discussed. More detail on how to contribute your code to this repository can be found in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -30,6 +30,9 @@ This document describes how to set up a FloPy development environment, run the e
     - [Locating example data](#locating-example-data)
     - [Locating the project root](#locating-the-project-root)
     - [Conditionally skipping tests](#conditionally-skipping-tests)
+  - [Miscellaneous](#miscellaneous)
+    - [Generating TOCs with `doctoc`](#generating-tocs-with-doctoc)
+    - [Testing CI workflows with `act`](#testing-ci-workflows-with-act)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -203,6 +206,8 @@ To debug a failed test it can be helpful to inspect its output, which is cleaned
 
 This will retain the test directories created by the test, which allows files to be evaluated for errors. Any tests using the function-scoped `tmpdir` and related fixtures (e.g. `class_tmpdir`, `module_tmpdir`) defined in `conftest.py` are compatible with this mechanism.
 
+There is also a `--keep-failed <dir>` option which automatically preserves the outputs of failed tests in the given location. Note that this option is only compatible with function-scoped temporary directories (i.e., the `tmpdir` fixture defined in `conftest.py`).
+
 ### Benchmarking
 
 Performance testing is accomplished with [`pytest-benchmark`](https://pytest-benchmark.readthedocs.io/en/latest/index.html). Performance tests are located in `autotest/test_performance.py`. Test functions request the `benchmark` fixture, which can be used to wrap any function call. Benchmarked tests are run several times (the number of iterations depending on the test's runtime, with faster tests getting more reps) to establish a performance profile. Benchmarking is incompatible with `pytest-xdist` and is disabled when tests are run in parallel. When tests are not run in parallel, benchmarking is enabled by default. Benchmarks can be disabled with the `--benchmark-disable` flag.
@@ -323,6 +328,49 @@ def test_breaks_osx_ci():
         assert platform.system() != "Darwin"
 ```
 
-These both accept a `ci_only` flag, which indicates whether the policy should only apply when the test is running on GitHub Actions CI.
+Platforms must be specified as returned by `platform.system()`.
+
+Both these markers accept a `ci_only` flag, which indicates whether the policy should only apply when the test is running on GitHub Actions CI.
 
 There is also a `@requires_github` marker, which will skip decorated tests if the GitHub API is unreachable.
+
+### Miscellaneous
+
+A few other useful tools for FloPy development include:
+
+- [`doctoc`](https://www.npmjs.com/package/doctoc): automatically generate table of contents sections for markdown files
+- [`act`](https://github.com/nektos/act): test GitHub Actions workflows locally (requires Docker)
+
+#### Generating TOCs with `doctoc`
+
+The [`doctoc`](https://www.npmjs.com/package/doctoc) tool can be used to automatically generate table of contents sections for markdown files. `doctoc` is distributed with the [Node Package Manager](https://docs.npmjs.com/cli/v7/configuring-npm/install). With Node installed use `npm install -g doctoc` to install `doctoc` globally. Then just run `doctoc <file>`, e.g.:
+
+```shell
+doctoc DEVELOPER.md
+```
+
+This will insert HTML comments surrounding an automatically edited region, scanning for headers and creating an appropriately indented TOC tree.  Subsequent runs are idempotent, updating if the file has changed or leaving it untouched if not.
+
+To run `doctoc` for all markdown files in a particular directory (recursive), use `doctoc some/path`.
+
+#### Testing CI workflows with `act`
+
+The [`act`](https://github.com/nektos/act) tool uses Docker to run containerized CI workflows in a simulated GitHub Actions environment. [Docker Desktop](https://www.docker.com/products/docker-desktop/) is required for Mac or Windows and [Docker Engine](https://docs.docker.com/engine/) on Linux.
+
+With Docker installed and running, run `act -l` from the project root to see available CI workflows. To run all workflows and jobs, just run `act`. To run a particular workflow use `-W`:
+
+```shell
+act -W .github/workflows/ci.yml
+```
+
+To run a particular job within a workflow, add the `-j` option:
+
+```shell
+act -W .github/workflows/ci.yml -j build
+```
+
+**Note:** GitHub API rate limits are easy to exceed, especially with job matrices. Authenticated GitHub users have a much higher rate limit: use `-s GITHUB_TOKEN=<your token>` when invoking `act` to provide a personal access token. Note that this will log your token in shell history &mdash; leave the value blank for a prompt to enter it more securely.
+
+The `-n` flag can be used to execute a dry run, which doesn't run anything, just evaluates workflow, job and step definitions. See the [docs](https://github.com/nektos/act#example-commands) for more.
+
+**Note:** `act` can only run Linux-based container definitions, so Mac or Windows workflows or matrix OS entries will be skipped.

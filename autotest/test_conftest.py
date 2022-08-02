@@ -183,34 +183,30 @@ def test_meta():
     assert pytest.main(args, plugins=[TestMeta()]) == ExitCode.OK
 
 
-# CLI argument --keep (-K)
+# CLI arguments --keep (-K) and --keep-failed
 
 HELLO_FNAME = 'hello.txt'
 
 
-@pytest.mark.unit
 @pytest.mark.meta("test_keep")
 def test_keep_function_scoped_tmpdir_inner(tmpdir):
     with open(tmpdir / HELLO_FNAME, "w") as f:
         f.write("hello, function-scoped tmpdir")
 
 
-@pytest.mark.unit
 @pytest.mark.meta("test_keep")
-class TestKeepClassScopedTmpdir:
+class TestKeepClassScopedTmpdirInner:
     def test_keep_class_scoped_tmpdir_inner(self, class_tmpdir):
         with open(class_tmpdir / HELLO_FNAME, "w") as f:
             f.write("hello, class-scoped tmpdir")
 
 
-@pytest.mark.unit
 @pytest.mark.meta("test_keep")
 def test_keep_module_scoped_tmpdir_inner(module_tmpdir):
     with open(module_tmpdir / HELLO_FNAME, "w") as f:
         f.write("hello, module-scoped tmpdir")
 
 
-@pytest.mark.unit
 @pytest.mark.meta("test_keep")
 def test_keep_session_scoped_tmpdir_inner(session_tmpdir):
     with open(session_tmpdir / HELLO_FNAME, "w") as f:
@@ -233,11 +229,11 @@ def test_keep_function_scoped_tmpdir(tmpdir, arg):
 @pytest.mark.parametrize("arg", ["--keep", "-K"])
 def test_keep_class_scoped_tmpdir(tmpdir, arg):
     args = [__file__, "-v", "-s",
-            "-k", TestKeepClassScopedTmpdir.test_keep_class_scoped_tmpdir_inner.__name__,
+            "-k", TestKeepClassScopedTmpdirInner.test_keep_class_scoped_tmpdir_inner.__name__,
             "-M", "test_keep",
             "-K", tmpdir]
     assert pytest.main(args) == ExitCode.OK
-    assert Path(tmpdir / f"{TestKeepClassScopedTmpdir.__name__}0" / HELLO_FNAME).is_file()
+    assert Path(tmpdir / f"{TestKeepClassScopedTmpdirInner.__name__}0" / HELLO_FNAME).is_file()
 
 
 @pytest.mark.unit
@@ -262,3 +258,25 @@ def test_keep_session_scoped_tmpdir(tmpdir, arg, request):
             "-K", tmpdir]
     assert pytest.main(args) == ExitCode.OK
     assert Path(tmpdir / f"{request.session.name}0" / HELLO_FNAME).is_file()
+
+
+@pytest.mark.meta("test_keep_failed")
+def test_keep_failed_function_scoped_tmpdir_inner(tmpdir):
+    with open(tmpdir / HELLO_FNAME, "w") as f:
+        f.write("hello, function-scoped tmpdir")
+
+    assert False, "oh no"
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("keep", [True, False])
+def test_keep_failed_function_scoped_tmpdir(tmpdir, keep):
+    inner_fn = test_keep_failed_function_scoped_tmpdir_inner.__name__
+    args = [__file__, "-v", "-s",
+            "-k", inner_fn,
+            "-M", "test_keep_failed"]
+    if keep: args += ["--keep-failed", tmpdir]
+    assert pytest.main(args) == ExitCode.TESTS_FAILED
+
+    kept_file = Path(tmpdir / f"{inner_fn}0" / HELLO_FNAME).is_file()
+    assert kept_file if keep else not kept_file

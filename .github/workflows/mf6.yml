@@ -1,4 +1,4 @@
-name: flopy mf6 CI
+name: FloPy Modflow6 continuous integration
 
 on:
   schedule:
@@ -13,8 +13,8 @@ on:
 
 jobs:
 
-  flopymf6CI:
-    name: mf6 flopy autotests
+  test:
+    name: Modflow6 FloPy tests
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
