@@ -1,7 +1,6 @@
 import os
 import socket
 import subprocess
-import sys
 from os import environ
 from os.path import basename, normpath
 from pathlib import Path
@@ -15,95 +14,21 @@ import pytest
 
 # constants
 
-MODELS = {
-    "mf6": [
-        "test001a_Tharmonic",
-        "test003_gwfs_disv",
-        "test006_gwf3",
-        "test045_lake2tr",
-        "test006_2models_mvr",
-        "test001e_UZF_3lay",
-        "test003_gwftri_disv",
-    ],
-    "mf2005": [
-        "mf2005_test",
-        "freyberg",
-        "freyberg_multilayer_transient",
-        "mfgrd_test",
-    ],
-    "mf2k": [
-        # TODO
-    ],
-    "mfnwt": [
-        # TODO
-    ],
-    "mfusg": [
-        # TODO
-    ],
-}
-
 SHAPEFILE_EXTENSIONS = ["prj", "shx", "dbf"]
 
 
 # misc utilities
 
 
-def get_current_branch() -> str:
-    # check if on GitHub Actions CI
-    ref = environ.get("GITHUB_REF")
-    if ref is not None:
-        return basename(normpath(ref)).lower()
-
-    # otherwise ask git about it
-    try:
-        b = subprocess.Popen(
-            ("git", "status"),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-        ).communicate()[0]
-
-        if isinstance(b, bytes):
-            b = b.decode("utf-8")
-
-        for line in b.splitlines():
-            if "On branch" in line:
-                return line.replace("On branch ", "").rstrip().lower()
-    except:
-        raise ValueError(
-            "Could not determine current branch. Is git installed?"
-        )
-
-
-def github_rate_limited() -> Optional[bool]:
-    """
-    Determines if a GitHub API rate limit is applied to the current IP.
-    Note that running this function will consume an API request!
-
-    Returns
-    -------
-        True if rate-limiting is applied, otherwise False (or None if the connection fails).
-    """
-    try:
-        with request.urlopen(
-            "https://api.github.com/users/octocat"
-        ) as response:
-            remaining = int(response.headers["x-ratelimit-remaining"])
-            if remaining < 10:
-                warn(
-                    f"Only {remaining} GitHub API requests remaining before rate-limiting"
-                )
-            return remaining > 0
-    except:
-        return None
-
-
-def get_project_root_path(path=None):
+def get_project_root_path(path=None) -> Path:
     """
     Infers the path to the project root given the path to the current working directory.
-    The current working location must be somewhere in the project, i.e. below the root.
+    The current working location must be somewhere in the project, below the project root.
 
-    This function aims to work from GitHub Actions CI runners, local `act` runners, from
-    `jupyter` or `pytest`, as well as invoking `python` directly for the example scripts.
+    This function aims to work whether invoked from the autotests directory, the examples
+    directory, the flopy module directory, or any subdirectories of these. GitHub Actions
+    CI runners, local `act` runners for GitHub CI, and local environments are supported.
+    This function can be modified to support other flopy testing environments if needed.
 
     Parameters
     ----------
@@ -111,14 +36,14 @@ def get_project_root_path(path=None):
 
     Returns
     -------
-        The path to the project root
+        The absolute path to the project root
     """
 
     cwd = Path(path) if path is not None else Path(os.getcwd())
 
     def backtrack_or_raise():
         tries = [1]
-        if running_in_CI():
+        if is_in_ci():
             tries.append(2)
         for t in tries:
             parts = cwd.parts[0: cwd.parts.index("flopy") + t]
@@ -165,30 +90,47 @@ def get_project_root_path(path=None):
 
 
 def get_example_data_path(path=None) -> Path:
+    """
+    Gets the absolute path to example models and data.
+    The path argument is a hint, interpreted as
+    the current working location.
+    """
     return get_project_root_path(path) / "examples" / "data"
 
 
-def get_namfile(path, model_type: str) -> Path:
+def get_flopy_data_path(path=None) -> Path:
     """
-    Returns the first namfile found for a model of the given type under the given path.
-    If no namfile is found, None is returned.
+    Gets the absolute path to flopy module data.
+    The path argument is a hint, interpreted as
+    the current working location.
     """
-    candidates = list(Path(path).rglob("*.nam"))
-    return next(
-        iter([p for p in candidates if p.parent.name in MODELS[model_type]]),
-        None,
-    )
+    return get_project_root_path(path) / "flopy" / "data"
 
 
-def requires_exes(exes):
-    return pytest.mark.skipif(
-        any(which(exe) is None for exe in exes),
-        reason=f"requires executables: {', '.join(exes)}",
-    )
+def get_current_branch() -> str:
+    # check if on GitHub Actions CI
+    ref = environ.get("GITHUB_REF")
+    if ref is not None:
+        return basename(normpath(ref)).lower()
 
+    # otherwise ask git about it
+    try:
+        b = subprocess.Popen(
+            ("git", "status"),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        ).communicate()[0]
 
-def requires_exe(exe):
-    return requires_exes([exe])
+        if isinstance(b, bytes):
+            b = b.decode("utf-8")
+
+        for line in b.splitlines():
+            if "On branch" in line:
+                return line.replace("On branch ", "").rstrip().lower()
+    except:
+        raise ValueError(
+            "Could not determine current branch. Is git installed?"
+        )
 
 
 def is_connected(hostname):
@@ -203,28 +145,54 @@ def is_connected(hostname):
     return False
 
 
-requires_github = pytest.mark.skipif(
-    not is_connected("github.com"), reason="github.com is required."
-)
-
-
-def running_in_CI():
+def is_in_ci():
     return "CI" in os.environ
 
 
-ci_only = pytest.mark.skipif(not running_in_CI(), reason="only runs on CI")
+def is_github_rate_limited() -> Optional[bool]:
+    """
+    Determines if a GitHub API rate limit is applied to the current IP.
+    Note that running this function will consume an API request!
+
+    Returns
+    -------
+        True if rate-limiting is applied, otherwise False (or None if the connection fails).
+    """
+    try:
+        with request.urlopen(
+            "https://api.github.com/users/octocat"
+        ) as response:
+            remaining = int(response.headers["x-ratelimit-remaining"])
+            if remaining < 10:
+                warn(
+                    f"Only {remaining} GitHub API requests remaining before rate-limiting"
+                )
+            return remaining > 0
+    except:
+        return None
+
+
+def requires_exes(exes):
+    return pytest.mark.skipif(
+        any(which(exe) is None for exe in exes),
+        reason=f"requires executables: {', '.join(exes)}",
+    )
+
+
+def requires_exe(exe):
+    return requires_exes([exe])
 
 
 def requires_platform(platform, ci_only=False):
     return pytest.mark.skipif(
-        system().lower() != platform.lower() and (running_in_CI() if ci_only else True),
+        system().lower() != platform.lower() and (is_in_ci() if ci_only else True),
         reason=f"only compatible with platform: {platform.lower()}",
     )
 
 
 def excludes_platform(platform, ci_only=False):
     return pytest.mark.skipif(
-        system().lower() == platform.lower() and (running_in_CI() if ci_only else True),
+        system().lower() == platform.lower() and (is_in_ci() if ci_only else True),
         reason=f"not compatible with platform: {platform.lower()}",
     )
 
@@ -243,7 +211,17 @@ def excludes_branch(branch):
     )
 
 
+requires_github = pytest.mark.skipif(
+    not is_connected("github.com"),
+    reason="github.com is required.")
+
+
 # example data fixtures
+
+@pytest.fixture(scope="session")
+def project_root_path(request) -> Path:
+    return get_project_root_path(request.session.path)
+
 
 @pytest.fixture(scope="session")
 def example_data_path(request) -> Path:
@@ -252,22 +230,12 @@ def example_data_path(request) -> Path:
 
 @pytest.fixture(scope="session")
 def flopy_data_path(request) -> Path:
-    return get_project_root_path(request.session.path) / "flopy" / "data"
+    return get_flopy_data_path(request.session.path)
 
 
 @pytest.fixture(scope="session")
 def example_shapefiles(example_data_path) -> List[Path]:
     return [f.resolve() for f in (example_data_path / "prj_test").glob("*")]
-
-
-@pytest.fixture(scope="session")
-@pytest.mark.parametrize("model_type", MODELS.keys())
-def model_namfile(example_data_path, model_type) -> Path:
-    """
-    A name file (the first found) for each model type.
-    """
-
-    return get_namfile(example_data_path, model_type=model_type)
 
 
 # keepable temporary directory fixtures for various scopes
@@ -320,7 +288,7 @@ def session_tmpdir(tmpdir_factory, request) -> Path:
         copytree(temp, Path(keep) / temp.name)
 
 
-# pytest configuration
+# pytest configuration hooks
 
 
 def pytest_addoption(parser):

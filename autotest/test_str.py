@@ -1,4 +1,5 @@
 import matplotlib
+
 from autotest.conftest import requires_exe
 
 from flopy.modflow import Modflow
@@ -14,7 +15,7 @@ str_items = {
 }
 
 
-@requires_exe("mf2005'")
+@requires_exe("mf2005")
 def test_str_issue1164(tmpdir, example_data_path):
     mf2005_model_path = example_data_path / "mf2005_test"
     m = Modflow.load(

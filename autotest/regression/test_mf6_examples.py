@@ -11,7 +11,7 @@ from flopy.mf6 import MFSimulation
 @requires_exe("mf6")
 @pytest.mark.slow
 @pytest.mark.regression
-def test_mf6_example_simulations(tmpdir, mf6_example_namfiles, benchmark):
+def test_mf6_example_simulations(tmpdir, mf6_example_namfiles):
     """
     MF6 examples parametrized by simulation. Arg `mf6_example_namfiles` is a list
     of models to run in order provided. Coupled models share the same workspace.
@@ -85,4 +85,4 @@ def test_mf6_example_simulations(tmpdir, mf6_example_namfiles, benchmark):
                 files2=[str(p) for p in headfiles2],
                 outfile=str(cmpdir / "head_compare.dat"))
 
-    benchmark(lambda: run_models())
+    run_models()

@@ -1,12 +1,39 @@
-# Building and testing FloPy
+# Developing FloPy
 
-This document describes how to set up a development environment for FloPy. Details on how to contribute your code to the repository are found in the separate document [CONTRIBUTING.md](CONTRIBUTING.md).
+This document describes how to set up a FloPy development environment, run the example scripts and notebooks, and use the tests. Testing conventions are also briefly discussed. More etail on how to contribute your code to this repository can be found in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-- [Installation](#installation)
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Requirements & installation](#requirements--installation)
+  - [Git](#git)
+  - [Python](#python)
+    - [Python IDEs](#python-ides)
+      - [Visual Studio Code](#visual-studio-code)
+      - [PyCharm](#pycharm)
+  - [MODFLOW executables](#modflow-executables)
+    - [Scripted installation](#scripted-installation)
+    - [Manually installing executables](#manually-installing-executables)
+      - [Linux](#linux)
+      - [Mac](#mac)
 - [Examples](#examples)
+  - [Scripts](#scripts)
+  - [Notebooks](#notebooks)
 - [Tests](#tests)
+  - [Running tests](#running-tests)
+    - [Selecting tests with markers](#selecting-tests-with-markers)
+  - [Debugging tests](#debugging-tests)
+  - [Benchmarking](#benchmarking)
+  - [Writing tests](#writing-tests)
+    - [Keepable temporary directories](#keepable-temporary-directories)
+    - [Locating example data](#locating-example-data)
+    - [Locating the project root](#locating-the-project-root)
+    - [Conditionally skipping tests](#conditionally-skipping-tests)
 
-## Installation
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Requirements & installation
 
 To develop `flopy` you must have the following software installed on your machine:
 
@@ -36,7 +63,7 @@ Note that `flopy` has a number of [optional dependencies](docs/flopy_method_depe
 
     pip install ".[test, lint, optional]"
 
-#### IDE configuration
+#### Python IDEs
 
 ##### Visual Studio Code
 
@@ -65,7 +92,7 @@ A utility script is provided to easily download and install executables: after i
 
 #### Manually installing executables
 
-#### Linux
+##### Linux
 
 To download and extract all executables for Linux (e.g., Ubuntu):
 
@@ -78,7 +105,7 @@ Then add the install location to your `PATH`
 
     export PATH="/path/to/your/install/location:$PATH"
 
-#### Mac
+##### Mac
 
 The same commands should work to download and extract executables for OSX:
 
@@ -155,33 +182,32 @@ The `-n auto` option configures the `pytest-xdist` extension to query your compu
 
 The above will run all regression tests, benchmarks, and example scripts and notebooks, which can take some time (likely ~30 minutes to an hour, depending on your machine). To run only fast tests with benchmarking disabled:
 
-    pytest -v -n auto -m "not slow" --benchmark-disable
+    pytest -v -n auto -m "not slow"
 
 Fast tests should complete in under a minute on most machines.
 
-A marker `slow` is used above to select a subset of tests. These can be applied in boolean combinations with `and` and `not`. A few more `pytest` markers are provided:
+#### Selecting tests with markers
+
+The `slow` marker is used above to select a subset of tests. These can be applied in boolean combinations with `and` and `not`. A few more `pytest` markers are provided:
 
 - `regression`: tests comparing the output of multiple runs
 - `example`: example scripts, tutorials, and notebooks
 
 Most of the `regression` and `example` tests are also `slow`, however there are some other slow tests, especially in `test_export.py`, and some regression tests are fairly fast.
 
-### Benchmarking
-
-Benchmarking is accomplished with the [`pytest-benchmark`](https://pytest-benchmark.readthedocs.io/en/latest/index.html) plugin. If the `--benchmark-disable` flag is not provided when `pytest` is invoked, benchmarking is enabled and some tests will be repeated several times to establish a performance profile. Benchmarked tests can be identified by the `benchmark` fixture used in the test signature. By default, two kinds of tests are benchmarked:
-
-- model-loading tests
-- regression tests
-
-To save benchmarking results to a JSON file, use the `--benchmark-autosave` flag. By default, this will create a `.benchmark` directory in `autotest`.
-
-### Debugging failed tests
+### Debugging tests
 
 To debug a failed test it can be helpful to inspect its output, which is cleaned up automatically by default. To run a failing test and keep its output, use the `--keep` option to provide a save location:
 
     pytest test_export.py --keep exports_scratch
 
 This will retain the test directories created by the test, which allows files to be evaluated for errors. Any tests using the function-scoped `tmpdir` and related fixtures (e.g. `class_tmpdir`, `module_tmpdir`) defined in `conftest.py` are compatible with this mechanism.
+
+### Benchmarking
+
+Performance testing is accomplished with [`pytest-benchmark`](https://pytest-benchmark.readthedocs.io/en/latest/index.html). Performance tests are located in `autotest/test_performance.py`. Test functions request the `benchmark` fixture, which can be used to wrap any function call. Benchmarked tests are run several times (the number of iterations depending on the test's runtime, with faster tests getting more reps) to establish a performance profile. Benchmarking is incompatible with `pytest-xdist` and is disabled when tests are run in parallel. When tests are not run in parallel, benchmarking is enabled by default. Benchmarks can be disabled with the `--benchmark-disable` flag.
+
+Benchmarking results are only printed to stdout by default. To save results to a JSON file, use `--benchmark-autosave`. This will create a `.benchmark` folder in the current working location (if you're running tests, this should appear at `autotest/.benchmark`).
 
 ### Writing tests
 

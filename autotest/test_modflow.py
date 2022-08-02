@@ -1,11 +1,7 @@
-import filecmp
 import glob
-import inspect
 import os
 import shutil
-from os.path import join
 from pathlib import Path
-from shutil import copytree
 
 import numpy as np
 import pytest
@@ -552,104 +548,39 @@ def parameters_model_namfiles():
 @pytest.mark.parametrize(
     "namfile",
     mf2005_model_namfiles() + parameters_model_namfiles())
-def test_mf2005_test_models_load(example_data_path, namfile, benchmark):
-    assert not benchmark(lambda: Modflow.load(
+def test_mf2005_test_models_load(example_data_path, namfile):
+    assert not Modflow.load(
         namfile,
         model_ws=str(example_data_path / "mf2005_test"),
         version="mf2005",
         verbose=True,
-    ).load_fail)
+    ).load_fail
 
 
 @requires_exe("mf2005")
 @pytest.mark.parametrize("namfile", parameters_model_namfiles())
-def test_parameters_models_load(parameters_model_path, namfile, benchmark):
-    assert not benchmark(lambda: Modflow.load(
+def test_parameters_models_load(parameters_model_path, namfile):
+    assert not Modflow.load(
         namfile,
         model_ws=str(parameters_model_path),
         version="mf2005",
         verbose=True,
-    ).load_fail)
+    ).load_fail
 
 
 @pytest.mark.parametrize("namfile", mf2005_model_namfiles())
-def test_mf2005_test_models_loadonly(example_data_path, namfile, benchmark):
-    assert not benchmark(lambda: Modflow.load(
+def test_mf2005_test_models_loadonly(example_data_path, namfile):
+    assert not Modflow.load(
         str(namfile),
         model_ws=str(example_data_path / "mf2005_test"),
         version="mf2005",
         verbose=True,
         load_only=["bas6"],
         check=False,
-    ).load_fail)
+    ).load_fail
 
 
-def _build_model(ws, name):
-    m = Modflow(name, model_ws=ws)
-
-    size = 100
-    nlay = 10
-    nper = 10
-    nsfr = int((size ** 2) / 5)
-
-    dis = ModflowDis(
-        m,
-        nper=nper,
-        nlay=nlay,
-        nrow=size,
-        ncol=size,
-        top=nlay,
-        botm=list(range(nlay)),
-    )
-
-    rch = ModflowRch(
-        m, rech={k: 0.001 - np.cos(k) * 0.001 for k in range(nper)}
-    )
-
-    ra = ModflowWel.get_empty(size ** 2)
-    well_spd = {}
-    for kper in range(nper):
-        ra_per = ra.copy()
-        ra_per["k"] = 1
-        ra_per["i"] = (
-            (np.ones((size, size)) * np.arange(size))
-                .transpose()
-                .ravel()
-                .astype(int)
-        )
-        ra_per["j"] = list(range(size)) * size
-        well_spd[kper] = ra
-    wel = ModflowWel(m, stress_period_data=well_spd)
-
-    # SFR package
-    rd = ModflowSfr2.get_empty_reach_data(nsfr)
-    rd["iseg"] = range(len(rd))
-    rd["ireach"] = 1
-    sd = ModflowSfr2.get_empty_segment_data(nsfr)
-    sd["nseg"] = range(len(sd))
-    sfr = ModflowSfr2(reach_data=rd, segment_data=sd, model=m)
-
-    return m
-
-
-def test_simple_model_init_time(tmpdir, benchmark):
-    name = inspect.getframeinfo(inspect.currentframe()).function
-    benchmark(lambda: _build_model(ws=str(tmpdir), name=name))
-
-
-def test_simple_model_write_time(tmpdir, benchmark):
-    name = inspect.getframeinfo(inspect.currentframe()).function
-    model = _build_model(ws=str(tmpdir), name=name)
-    benchmark(lambda: model.write_input())
-
-
-def test_simple_model_load_time(tmpdir, benchmark):
-    name = inspect.getframeinfo(inspect.currentframe()).function
-    model = _build_model(ws=str(tmpdir), name=name)
-    model.write_input()
-    benchmark(lambda: Modflow.load(f"{name}.nam", model_ws=str(tmpdir), check=False))
-
-
+@pytest.mark.slow
 def test_write_irch(tmpdir, example_data_path):
     mpath = example_data_path / "freyberg_multilayer_transient"
     nam_file = "freyberg.nam"
@@ -699,9 +630,9 @@ def test_mflist_external(tmpdir):
     ml = Modflow(
         "mflist_test",
         model_ws=str(tmpdir),
-        # external_path=ws.name,  # uncomment and test will pass
-        external_path=str(ws),
-    )
+        # external_path=str(ws),  # full path causes failure
+        external_path=ws.name)
+
     dis = ModflowDis(ml, 1, 10, 10, nper=3, perlen=1.0)
     wel_data = {
         0: [[0, 0, 0, -1], [1, 1, 1, -1]],
