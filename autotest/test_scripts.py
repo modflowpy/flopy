@@ -1,14 +1,12 @@
 """Test scripts."""
 import sys
-import time
 import urllib
 from subprocess import PIPE, Popen
 from urllib.error import HTTPError
 
 import pytest
-from flaky import flaky
 
-import flopy
+from flopy.utils import get_modflow_main
 from autotest.conftest import (
     get_project_root_path,
     requires_github,
@@ -51,16 +49,7 @@ def test_script_usage():
 rate_limit_msg = "rate limit exceeded"
 
 
-def delay_rerun(*args):
-    # github releases API is sometimes inconsistent,
-    # need to retry in case "latest" can't be found
-    time.sleep(2)
-    return True
-
-
-@flaky(max_runs=3, rerun_filter=delay_rerun)
 @requires_github
-@pytest.mark.slow
 def test_get_modflow_script(tmp_path, downloads_dir):
     # exit if extraction directory does not exist
     bindir = tmp_path / "bin1"
@@ -130,9 +119,7 @@ def test_get_modflow_script(tmp_path, downloads_dir):
     assert sorted(files) == ["mfnwt.exe", "mfnwtdbl.exe"]
 
 
-@flaky(max_runs=3, rerun_filter=delay_rerun)
 @requires_github
-@pytest.mark.slow
 def test_get_nightly_script(tmp_path, downloads_dir):
     bindir = tmp_path / "bin1"
     bindir.mkdir()
@@ -150,12 +137,10 @@ def test_get_nightly_script(tmp_path, downloads_dir):
     assert len(files) >= 4
 
 
-@flaky(max_runs=3, rerun_filter=delay_rerun)
 @requires_github
-@pytest.mark.slow
 def test_get_modflow(tmpdir):
     try:
-        flopy.utils.get_modflow_main(tmpdir)
+        get_modflow_main(tmpdir)
     except HTTPError as err:
         if err.code == 403:
             pytest.skip(f"GitHub {rate_limit_msg}")
@@ -194,12 +179,10 @@ def test_get_modflow(tmpdir):
     assert all(exe in actual for exe in expected)
 
 
-@flaky(max_runs=3, rerun_filter=delay_rerun)
 @requires_github
-@pytest.mark.slow
 def test_get_nightly(tmpdir):
     try:
-        flopy.utils.get_modflow_main(tmpdir, repo="modflow6-nightly-build")
+        get_modflow_main(tmpdir, repo="modflow6-nightly-build")
     except urllib.error.HTTPError as err:
         if err.code == 403:
             pytest.skip(f"GitHub {rate_limit_msg}")

@@ -233,7 +233,7 @@ jobs:
       - name: Run tests
         working-directory: ./autotest
         run: |
-          pytest -v test_performance.py --cov=flopy --cov-report=xml --durations=0 --benchmark-autosave  --keep-failed .failed
+          pytest -v --cov=flopy --cov-report=xml --durations=0 --benchmark-only --benchmark-autosave  --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -250,7 +250,7 @@ jobs:
         with:
           name: benchmark-${{ matrix.os }}-${{ matrix.python-version }}
           path: |
-            ./autotest/.benchmark/**/*.json
+            ./autotest/.benchmarks/**/*.json
 
       - name: Print coverage report
         working-directory: ./autotest
@@ -490,7 +490,7 @@ jobs:
       - name: Run tests
         working-directory: ./autotest
         run: |
-          pytest -v test_performance.py --cov=flopy --cov-report=xml --durations=0 --benchmark-autosave --keep-failed=.failed
+          pytest -v --cov=flopy --cov-report=xml --durations=0 --benchmark-only --benchmark-autosave --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -507,7 +507,7 @@ jobs:
         with:
           name: benchmark-${{ matrix.os }}-${{ matrix.python-version }}
           path: |
-            ./autotest/.benchmark/**/*.json
+            ./autotest/.benchmarks/**/*.json
 
       - name: Print coverage report
         working-directory: ./autotest
