@@ -242,17 +242,20 @@ def example_shapefiles(example_data_path) -> List[Path]:
 
 @pytest.fixture(scope="function")
 def tmpdir(tmpdir_factory, request) -> Path:
-    node = (
-        request.node.name.replace("/", "_")
-        .replace("\\", "_")
+    node = request.node.name\
+        .replace("/", "_")\
+        .replace("\\", "_")\
         .replace(":", "_")
-    )
     temp = Path(tmpdir_factory.mktemp(node))
     yield Path(temp)
 
     keep = request.config.getoption("--keep")
     if keep:
         copytree(temp, Path(keep) / temp.name)
+
+    keep_failed = request.config.getoption("--keep-failed")
+    if keep_failed and request.node.rep_call.failed:
+        copytree(temp, Path(keep_failed) / temp.name)
 
 
 @pytest.fixture(scope="class")
@@ -290,6 +293,19 @@ def session_tmpdir(tmpdir_factory, request) -> Path:
 
 # pytest configuration hooks
 
+@pytest.hookimpl(hookwrapper=True, tryfirst=True)
+def pytest_runtest_makereport(item, call):
+    # this is necessary so temp dir fixtures can
+    # inspect test results and check for failure
+    # (see https://doc.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures)
+
+    outcome = yield
+    rep = outcome.get_result()
+
+    # report attribute for each phase (setup, call, teardown)
+    # we're only interested in result of the function call
+    setattr(item, "rep_" + rep.when, rep)
+
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -297,10 +313,20 @@ def pytest_addoption(parser):
         "--keep",
         action="store",
         default=None,
-        help="Move the contents of temporary test directories to correspondingly named subdirectories at the KEEP "
+        help="Move the contents of temporary test directories to correspondingly named subdirectories at the given "
         "location after tests complete. This option can be used to exclude test results from automatic cleanup, "
         "e.g. for manual inspection. The provided path is created if it does not already exist. An error is "
         "thrown if any matching files already exist.",
+    )
+
+    parser.addoption(
+        "--keep-failed",
+        action="store",
+        default=None,
+        help="Move the contents of temporary test directories to correspondingly named subdirectories at the given "
+             "location if the test case fails. This option automatically saves the outputs of failed tests in the "
+             "given location. The path is created if it doesn't already exist. An error is thrown if files with the "
+             "same names already exist in the given location.",
     )
 
     parser.addoption(
@@ -309,6 +335,14 @@ def pytest_addoption(parser):
         action="store",
         metavar="NAME",
         help="Marker indicating a test is only run by other tests (e.g., the test framework testing itself).",
+    )
+
+    parser.addoption(
+        "-S",
+        "--smoke",
+        action="store_true",
+        default=False,
+        help="Run only smoke tests (should complete in <1 minute)."
     )
 
 
@@ -320,7 +354,16 @@ def pytest_configure(config):
 
 
 def pytest_runtest_setup(item):
-    # apply meta-test marker
+    # apply meta-test option
+    meta = item.config.getoption("--meta")
     metagroups = [mark.args[0] for mark in item.iter_markers(name="meta")]
-    if metagroups and item.config.getoption("--meta") not in metagroups:
+    if metagroups and meta not in metagroups:
+        pytest.skip()
+
+    # if smoke option, only run fast tests
+    smoke = item.config.getoption("--smoke")
+    slow = list(item.iter_markers(name="slow"))
+    example = list(item.iter_markers(name="slow"))
+    regression = list(item.iter_markers(name="slow"))
+    if smoke and (slow or example or regression):
         pytest.skip()
