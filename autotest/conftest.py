@@ -345,6 +345,21 @@ def pytest_addoption(parser):
         help="Run only smoke tests (should complete in <1 minute)."
     )
 
+    parser.addoption(
+        "-P",
+        "--profile",
+        action="store_true",
+        default=False,
+        help="Run performance profiling tests (skipped otherwise)."
+    )
+
+    parser.addoption(
+        "--profile-autosave",
+        action="store_true",
+        default=False,
+        help="Store performance profiling results in a folder called .profile in the current working directory",
+    )
+
 
 def pytest_configure(config):
     config.addinivalue_line(
@@ -360,10 +375,16 @@ def pytest_runtest_setup(item):
     if metagroups and meta not in metagroups:
         pytest.skip()
 
-    # if smoke option, only run fast tests
+    # smoke tests are \ {slow U example U regression}
     smoke = item.config.getoption("--smoke")
     slow = list(item.iter_markers(name="slow"))
-    example = list(item.iter_markers(name="slow"))
-    regression = list(item.iter_markers(name="slow"))
+    example = list(item.iter_markers(name="example"))
+    regression = list(item.iter_markers(name="regression"))
     if smoke and (slow or example or regression):
+        pytest.skip()
+
+    # performance profiling mutually excludes normal tests
+    should_profile = item.config.getoption("--profile")
+    is_profiletest = any(item.iter_markers(name="profile"))
+    if (is_profiletest and not should_profile) or (not is_profiletest and should_profile):
         pytest.skip()

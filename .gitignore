@@ -33,14 +33,17 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-# test coverage / benchmarking reports
+# test coverage reports
 htmlcov/
 .tox/
-**/.benchmarks
 .coverage
 .cache
 nosetests.xml
 coverage.xml
+
+# benchmarking/profiling reports
+**/.benchmarks
+**/.profile
 
 # Translations
 *.mo

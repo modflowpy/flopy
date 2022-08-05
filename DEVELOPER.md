@@ -183,20 +183,33 @@ To run all tests in parallel, using however many cores your machine is willing t
 
 The `-n auto` option configures the `pytest-xdist` extension to query your computer for the number of processors available. To explicitly set the number of cores, substitute an integer for `auto` in the `-n` argument, e.g. `pytest -v -n 2`. (The space between `-n` and the number of processors can be replaced with `=`, e.g. `-n=2`.)
 
-The above will run all regression tests, benchmarks, and example scripts and notebooks, which can take some time (likely ~30 minutes to an hour, depending on your machine). To run only fast tests with benchmarking disabled:
-
-    pytest -v -n auto -m "not slow"
-
-Fast tests should complete in under a minute on most machines.
+The above will run all regression tests, benchmarks, and example scripts and notebooks, which can take some time (likely ~30 minutes to an hour, depending on your machine).
 
 #### Selecting tests with markers
 
-The `slow` marker is used above to select a subset of tests. These can be applied in boolean combinations with `and` and `not`. A few more `pytest` markers are provided:
+Markers are a `pytest` feature that can be used to select subsets of tests. Markers provided in `pytest.ini` include:
 
-- `regression`: tests comparing the output of multiple runs
-- `example`: example scripts, tutorials, and notebooks
+- `slow`: tests that don't complete in a few seconds
+- `example`: exercise scripts, tutorials and notebooks
+- `regression`: tests that compare multiple results
+- `benchmark`: test that gather runtime statistics
+- `profile`: tests measuring performance in detail
 
-Most of the `regression` and `example` tests are also `slow`, however there are some other slow tests, especially in `test_export.py`, and some regression tests are fairly fast.
+Markers can be used with the `-m <marker>` option. For example, to run only fast tests:
+
+    pytest -v -n auto -m "not slow"
+
+Markers can be applied in boolean combinations with `and` and `not`. For instance, to run fast tests in parallel, excluding example scripts/notebooks and regression tests:
+
+    pytest -v -n auto -m "not slow and not example and not regression"
+
+A CLI option `--smoke` (short form `-S`) is provided as an alias for the above. For instance:
+
+    pytest -v -n auto -S
+
+This should complete in under a minute on most machines. Smoke testing aims to cover a reasonable fraction of the codebase while being fast enough to run often during development. (To preserve this ability, new tests should be marked as slow if they take longer than a second or two to complete.)
+
+**Note:** most the `regression` and `example` tests are `slow`, but there are some other slow tests, e.g. in `test_export.py`, and some regression tests and examples are fast.
 
 ### Debugging tests
 
@@ -206,13 +219,57 @@ To debug a failed test it can be helpful to inspect its output, which is cleaned
 
 This will retain the test directories created by the test, which allows files to be evaluated for errors. Any tests using the function-scoped `tmpdir` and related fixtures (e.g. `class_tmpdir`, `module_tmpdir`) defined in `conftest.py` are compatible with this mechanism.
 
-There is also a `--keep-failed <dir>` option which automatically preserves the outputs of failed tests in the given location. Note that this option is only compatible with function-scoped temporary directories (i.e., the `tmpdir` fixture defined in `conftest.py`).
+There is also a `--keep-failed <dir>` option which preserves the outputs of failed tests in the given location, however this option is only compatible with function-scoped temporary directories (the `tmpdir` fixture defined in `conftest.py`).
 
 ### Benchmarking
 
-Performance testing is accomplished with [`pytest-benchmark`](https://pytest-benchmark.readthedocs.io/en/latest/index.html). Performance tests are located in `autotest/test_performance.py`. Test functions request the `benchmark` fixture, which can be used to wrap any function call. Benchmarked tests are run several times (the number of iterations depending on the test's runtime, with faster tests getting more reps) to establish a performance profile. Benchmarking is incompatible with `pytest-xdist` and is disabled when tests are run in parallel. When tests are not run in parallel, benchmarking is enabled by default. Benchmarks can be disabled with the `--benchmark-disable` flag.
+Benchmarking is accomplished with [`pytest-benchmark`](https://pytest-benchmark.readthedocs.io/en/latest/index.html). Any test function can be turned into a benchmark by requesting the `benchmark` fixture (i.e. declaring a `benchmark` argument), which can be used to wrap any function call. For instance:
 
-Benchmarking results are only printed to stdout by default. To save results to a JSON file, use `--benchmark-autosave`. This will create a `.benchmark` folder in the current working location (if you're running tests, this should appear at `autotest/.benchmark`).
+```python
+def test_benchmark(benchmark):
+    def sleep_1s():
+        import time
+        time.sleep(1)
+        return True
+        
+    assert benchmark(sleep_1s)
+```
+
+Arguments can be provided to the function as well:
+
+```python
+def test_benchmark(benchmark):
+    def sleep_s(s):
+        import time
+        time.sleep(s)
+        return True
+        
+    assert benchmark(sleep_s, 1)
+```
+
+Rather than alter an existing function call to use this syntax, a lambda can be used to wrap the call unmodified:
+
+```python
+def test_benchmark(benchmark):
+    def sleep_1s():
+        import time
+        time.sleep(1)
+        return True
+        
+    assert benchmark(lambda: sleep_1s())
+```
+
+This can be convenient when the function call is complicated or passes many arguments.
+
+To control the number of repetitions and rounds (repetitions of repetitions) use `benchmark.pedantic`, e.g. `benchmark.pedantic(some_function(), iterations=1, rounds=1)`.
+
+Benchmarked functions are repeated several times (the number of iterations depending on the test's runtime, with faster tests generally getting more reps) to compute summary statistics. Benchmarking is incompatible with `pytest-xdist` and is disabled automatically when tests are run in parallel. When tests are not run in parallel, benchmarking is enabled by default. Benchmarks can be disabled with the `--benchmark-disable` flag.
+
+Benchmark results are only printed to stdout by default. To save results to a JSON file, use `--benchmark-autosave`. This will create a `.benchmarks` folder in the current working location (if you're running tests, this should appear at `autotest/.benchmarks`).
+
+### Profiling
+
+Profiling is [distinct](https://stackoverflow.com/a/39381805/6514033) from benchmarking in considering program behavior in detail, while benchmarking just invokes functions repeatedly and computes summary statistics. Profiling test files may be named either as typical test files or matching `profile_*.py` or `*_profile*.py`. Functions marked with the `profile` marker are considered profiling tests and will not run unless `pytest` is invoked with the `--profile` (short `-P`) flag.
 
 ### Writing tests
 

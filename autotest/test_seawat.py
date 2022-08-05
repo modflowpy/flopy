@@ -237,7 +237,6 @@ def test_seawat_load_and_write(tmpdir, namfile, binary):
         assert success
 
 
-@pytest.mark.unit
 def test_vdf_vsc(tmpdir):
     nlay = 3
     nrow = 4

@@ -1,89 +1,16 @@
 import inspect
-from os.path import join
-from pathlib import Path
+import io
+import pstats
 from shutil import copytree
 
-import numpy as np
 import pytest
+
+from flopy.mf6 import MFSimulation, ModflowTdis, ModflowGwf, ModflowIms, ModflowGwfic, ModflowGwfdis, ModflowGwfnpf, ModflowGwfrcha, ModflowGwfwel, \
+    ModflowGwfriv, ModflowGwfoc
+from flopy.modpath import Modpath7
 from flopy.utils import PathlineFile, EndpointFile
 
-from flopy.modpath import Modpath7
-
-from flopy.mf6 import MFSimulation, ModflowTdis, ModflowGwf, ModflowIms, ModflowGwfdis, ModflowGwfic, ModflowGwfnpf, ModflowGwfrcha, ModflowGwfwel, \
-    ModflowGwfriv, ModflowGwfoc
-
 from autotest.conftest import requires_exes
-
-from flopy.modflow import Modflow, ModflowDis, ModflowRch, ModflowWel, ModflowSfr2
-
-
-def build_basic_modflow_model(ws, name):
-    m = Modflow(name, model_ws=ws)
-
-    size = 100
-    nlay = 10
-    nper = 10
-    nsfr = int((size ** 2) / 5)
-
-    dis = ModflowDis(
-        m,
-        nper=nper,
-        nlay=nlay,
-        nrow=size,
-        ncol=size,
-        top=nlay,
-        botm=list(range(nlay)),
-    )
-
-    rch = ModflowRch(
-        m, rech={k: 0.001 - np.cos(k) * 0.001 for k in range(nper)}
-    )
-
-    ra = ModflowWel.get_empty(size ** 2)
-    well_spd = {}
-    for kper in range(nper):
-        ra_per = ra.copy()
-        ra_per["k"] = 1
-        ra_per["i"] = (
-            (np.ones((size, size)) * np.arange(size))
-                .transpose()
-                .ravel()
-                .astype(int)
-        )
-        ra_per["j"] = list(range(size)) * size
-        well_spd[kper] = ra
-    wel = ModflowWel(m, stress_period_data=well_spd)
-
-    # SFR package
-    rd = ModflowSfr2.get_empty_reach_data(nsfr)
-    rd["iseg"] = range(len(rd))
-    rd["ireach"] = 1
-    sd = ModflowSfr2.get_empty_segment_data(nsfr)
-    sd["nseg"] = range(len(sd))
-    sfr = ModflowSfr2(reach_data=rd, segment_data=sd, model=m)
-
-    return m
-
-
-@pytest.mark.slow
-def test_model_init_time(tmpdir, benchmark):
-    name = inspect.getframeinfo(inspect.currentframe()).function
-    benchmark(lambda: build_basic_modflow_model(ws=str(tmpdir), name=name))
-
-
-@pytest.mark.slow
-def test_model_write_time(tmpdir, benchmark):
-    name = inspect.getframeinfo(inspect.currentframe()).function
-    model = build_basic_modflow_model(ws=str(tmpdir), name=name)
-    benchmark(lambda: model.write_input())
-
-
-@pytest.mark.slow
-def test_model_load_time(tmpdir, benchmark):
-    name = inspect.getframeinfo(inspect.currentframe()).function
-    model = build_basic_modflow_model(ws=str(tmpdir), name=name)
-    model.write_input()
-    benchmark(lambda: Modflow.load(f"{name}.nam", model_ws=str(tmpdir), check=False))
 
 
 @pytest.fixture(scope="session")
@@ -242,12 +169,13 @@ def mp7_simulation(session_tmpdir):
     return sim, forward_model_name, backward_model_name, nodew, nodesr
 
 
+
 @requires_exes(["mf6", "mp7"])
-@pytest.mark.skip(reason="skip until performance improves (https://github.com/modflowpy/flopy/issues/1479)")
+@pytest.mark.skip(reason="pending https://github.com/modflowpy/flopy/issues/1479")
 @pytest.mark.slow
 @pytest.mark.parametrize("direction", ["forward", "backward"])
 @pytest.mark.parametrize("locations", ["well", "river"])
-def test_get_destination_pathline_data(tmpdir, benchmark, mp7_simulation, direction, locations):
+def test_get_destination_pathline_data(tmpdir, mp7_simulation, direction, locations, benchmark):
     sim, forward_model_name, backward_model_name, nodew, nodesr = mp7_simulation
     ws = tmpdir / "ws"
 
@@ -263,15 +191,14 @@ def test_get_destination_pathline_data(tmpdir, benchmark, mp7_simulation, direct
     # get pathline file corresponding to parametrized direction
     pathline_file = PathlineFile(str(backward_path) if direction == "backward" else str(forward_path))
 
-    # run benchmark (only 1 round with 1 iteration, since this is slow)
+    # run benchmark
     pathline_data = benchmark(lambda: pathline_file.get_destination_pathline_data(dest_cells=nodew if locations == "well" else nodesr))
 
 
 @requires_exes(["mf6", "mp7"])
-@pytest.mark.slow
 @pytest.mark.parametrize("direction", ["forward", "backward"])
 @pytest.mark.parametrize("locations", ["well", "river"])
-def test_get_destination_endpoint_data(tmpdir, benchmark, mp7_simulation, direction, locations):
+def test_get_destination_endpoint_data(tmpdir, mp7_simulation, direction, locations, benchmark):
     sim, forward_model_name, backward_model_name, nodew, nodesr = mp7_simulation
     ws = tmpdir / "ws"
 
@@ -287,5 +214,94 @@ def test_get_destination_endpoint_data(tmpdir, benchmark, mp7_simulation, direct
     # get endpoint file corresponding to parametrized direction
     endpoint_file = EndpointFile(str(backward_end) if direction == "backward" else str(forward_end))
 
-    # run benchmark (only 1 round with 1 iteration, since this is slow)
+    # run benchmark
     endpoint_data = benchmark(lambda: endpoint_file.get_destination_endpoint_data(dest_cells=nodew if locations == "well" else nodesr))
+
+
+# performance profiling
+
+@pytest.fixture
+def profile_outdir(request, project_root_path):
+    autosave = request.config.getoption("--profile-autosave")
+    return project_root_path / "autotest" / ".profile" if autosave else None
+
+
+@requires_exes(["mf6", "mp7"])
+@pytest.mark.profile
+@pytest.mark.parametrize("direction", ["forward", "backward"])
+@pytest.mark.parametrize("locations", ["well", "river"])
+def test_profile_get_destination_pathline_data(tmpdir, profile_outdir, mp7_simulation, direction, locations):
+    import cProfile
+
+    sim, forward_model_name, backward_model_name, nodew, nodesr = mp7_simulation
+    ws = tmpdir / "ws"
+
+    # copy simulation data from fixture setup to temp workspace
+    copytree(sim.simulation_data.mfpath.get_sim_path(), ws)
+
+    # make sure we have pathline files
+    backward_path = ws / f"{backward_model_name}.mppth"
+    assert backward_path.is_file()
+
+    # get pathline file corresponding to parametrized direction
+    pathline_file = PathlineFile(str(backward_path))
+
+    # capture perf profile
+    with cProfile.Profile() as pr:
+        pathline_file.get_destination_pathline_data(nodesr)
+
+    # show perf profile
+    s = io.StringIO()
+    ps = pstats.Stats(pr, stream=s).sort_stats('tottime')
+    ps.print_stats()
+
+    # save perf profile to file
+    if profile_outdir:
+        profile_outdir.mkdir(exist_ok=True)
+
+        file_stem = f"{inspect.currentframe().f_code.co_name}.{direction}.{locations}".replace("test", "profile", 1)
+        pr.dump_stats(file=profile_outdir / f"{file_stem}.dmp")
+        with open(profile_outdir / f"{file_stem}.txt", 'w+') as f:
+            f.write(s.getvalue())
+
+
+@requires_exes(["mf6", "mp7"])
+@pytest.mark.profile
+@pytest.mark.parametrize("direction", ["forward", "backward"])
+@pytest.mark.parametrize("locations", ["well", "river"])
+def test_get_destination_endpoint_data(tmpdir, profile_outdir, mp7_simulation, direction, locations):
+    import cProfile
+
+    sim, forward_model_name, backward_model_name, nodew, nodesr = mp7_simulation
+    ws = tmpdir / "ws"
+
+    # copy simulation data from fixture setup to temp workspace
+    copytree(sim.simulation_data.mfpath.get_sim_path(), ws)
+
+    # make sure we have endpoint files
+    forward_end = ws / f"{forward_model_name}.mpend"
+    backward_end = ws / f"{backward_model_name}.mpend"
+    assert forward_end.is_file()
+    assert backward_end.is_file()
+
+    # get endpoint file corresponding to parametrized direction
+    endpoint_file = EndpointFile(str(backward_end) if direction == "backward" else str(forward_end))
+
+    # capture perf profile
+    with cProfile.Profile() as pr:
+        endpoint_file.get_destination_endpoint_data(dest_cells=nodew if locations == "well" else nodesr)
+
+    # show results
+    s = io.StringIO()
+    ps = pstats.Stats(pr, stream=s).sort_stats('tottime')
+    ps.print_stats()
+
+    # save results to file
+    if profile_outdir:
+        profile_outdir.mkdir(exist_ok=True)
+
+        file_stem = f"{inspect.currentframe().f_code.co_name}.{direction}.{locations}".replace("test", "profile", 1)
+        pr.dump_stats(file=profile_outdir / f"{file_stem}.dmp")
+        with open(profile_outdir / f"{file_stem}.txt", 'w+') as f:
+            f.write(s.getvalue())
+

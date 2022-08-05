@@ -22,7 +22,6 @@ from flopy.utils.datautil import PyListUtil
 
 @requires_exe("mf6")
 @pytest.mark.regression
-@pytest.mark.skipif(sys.version_info == (3, 7), reason="IndexError: list index out of range on Python 3.7")
 def test_np001(tmpdir, example_data_path):
     pytest.importorskip("pymake")
     import pymake
