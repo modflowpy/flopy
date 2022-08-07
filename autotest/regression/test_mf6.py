@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 import flopy
-from autotest.conftest import requires_exe
+from autotest.conftest import requires_exe, requires_pkg
 from flopy.mf6 import MFSimulation, ModflowTdis, ModflowGwfgwf, ModflowGwfgwt, ModflowIms, ModflowGwf, ModflowGwfdis, ModflowGwfic, \
     ModflowGwfnpf, ModflowGwfoc, ModflowGwfsto, ModflowGwfsfr, ModflowGwfwel, ModflowGwfdrn, ModflowGwfriv, ModflowGwfhfb, ModflowGwfchd, \
     ModflowGwfghb, ModflowGwfrcha, ModflowUtltas, ModflowGwfevt, ModflowGwfrch, ModflowGwfdisv, ModflowGwfgnc, ModflowGwfevta, MFModel, ModflowGwtdis, \
@@ -21,9 +21,9 @@ from flopy.utils.datautil import PyListUtil
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake")
 @pytest.mark.regression
 def test_np001(tmpdir, example_data_path):
-    pytest.importorskip("pymake")
     import pymake
 
     # init paths
@@ -589,9 +589,9 @@ def test_np001(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake")
 @pytest.mark.regression
 def test_np002(tmpdir, example_data_path):
-    pytest.importorskip("pymake")
     import pymake
 
     # init paths
@@ -866,9 +866,9 @@ def test_np002(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake")
 @pytest.mark.regression
 def test021_twri(tmpdir, example_data_path):
-    pytest.importorskip("pymake")
     import pymake
 
     # init paths
@@ -1092,10 +1092,10 @@ def test021_twri(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 def test005_create_tests_advgw_tidal(tmpdir, example_data_path):
-    pytest.importorskip("pymake")
     import pymake
 
     # init paths
@@ -1720,9 +1720,9 @@ def test005_create_tests_advgw_tidal(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake")
 @pytest.mark.regression
 def test004_create_tests_bcfss(tmpdir, example_data_path):
-    pytest.importorskip("pymake")
     import pymake
 
     # init paths
@@ -1871,9 +1871,9 @@ def test004_create_tests_bcfss(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake")
 @pytest.mark.regression
 def test035_create_tests_fhb(tmpdir, example_data_path):
-    pytest.importorskip("pymake")
     import pymake
 
     # init paths
@@ -2014,10 +2014,9 @@ def test035_create_tests_fhb(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake", "shapefile")
 @pytest.mark.regression
 def test006_create_tests_gwf3_disv(tmpdir, example_data_path):
-    pytest.importorskip("shapefile")
-    pytest.importorskip("pymake")
     import pymake
 
     # init paths
@@ -2309,9 +2308,9 @@ def test006_create_tests_gwf3_disv(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake")
 @pytest.mark.regression
 def test006_create_tests_2models_gnc(tmpdir, example_data_path):
-    pytest.importorskip("pymake")
     import pymake
 
     # init paths
@@ -2649,10 +2648,10 @@ def test006_create_tests_2models_gnc(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 def test050_create_tests_circle_island(tmpdir, example_data_path):
-    pytest.importorskip("pymake")
     import pymake
 
     # init paths
@@ -2750,11 +2749,11 @@ def test050_create_tests_circle_island(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake")
 @pytest.mark.xfail(reason="possible python3.7/windows incompatibilities in testutils.read_std_array "
                           "https://github.com/modflowpy/flopy/runs/7581629193?check_suite_focus=true#step:11:1753")
 @pytest.mark.regression
 def test028_create_tests_sfr(tmpdir, example_data_path):
-    pytest.importorskip("pymake")
     import pymake
 
     # init paths
@@ -3023,9 +3022,9 @@ def test028_create_tests_sfr(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake")
 @pytest.mark.regression
 def test_create_tests_transport(tmpdir, example_data_path):
-    pytest.importorskip("pymake")
     import pymake
 
     # init paths
@@ -3263,11 +3262,10 @@ def test_create_tests_transport(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake", "shapely")
 @pytest.mark.slow
 @pytest.mark.regression
 def test001a_tharmonic(tmpdir, example_data_path):
-    pytest.importorskip("shapely")
-    pytest.importorskip("pymake")
     import pymake
 
     # init paths
@@ -3396,9 +3394,9 @@ def test001a_tharmonic(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake")
 @pytest.mark.regression
 def test003_gwfs_disv(tmpdir, example_data_path):
-    pytest.importorskip("pymake")
     import pymake
 
     # init paths
@@ -3489,10 +3487,10 @@ def test003_gwfs_disv(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 def test005_advgw_tidal(tmpdir, example_data_path):
-    pytest.importorskip("pymake")
     import pymake
 
     # init paths
@@ -3557,9 +3555,9 @@ def test005_advgw_tidal(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake")
 @pytest.mark.regression
 def test006_gwf3(tmpdir, example_data_path):
-    pytest.importorskip("pymake")
     import pymake
 
     # init paths
@@ -3742,9 +3740,9 @@ def test006_gwf3(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake")
 @pytest.mark.regression
 def test045_lake1ss_table(tmpdir, example_data_path):
-    pytest.importorskip("pymake")
     import pymake
 
     # init paths
@@ -3821,10 +3819,10 @@ def test045_lake1ss_table(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 def test006_2models_mvr(tmpdir, example_data_path):
-    pytest.importorskip("pymake")
     import pymake
 
     # init paths
@@ -4010,10 +4008,10 @@ def test006_2models_mvr(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 def test001e_uzf_3lay(tmpdir, example_data_path):
-    pytest.importorskip("pymake")
 
     # init paths
     test_ex_name = "test001e_UZF_3lay"
@@ -4110,10 +4108,10 @@ def test001e_uzf_3lay(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 def test045_lake2tr(tmpdir, example_data_path):
-    pytest.importorskip("pymake")
     import pymake
 
     # init paths
@@ -4185,9 +4183,9 @@ def test045_lake2tr(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake")
 @pytest.mark.regression
 def test036_twrihfb(tmpdir, example_data_path):
-    pytest.importorskip("pymake")
     import pymake
 
     # init paths
@@ -4269,10 +4267,10 @@ def test036_twrihfb(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 def test027_timeseriestest(tmpdir, example_data_path):
-    pytest.importorskip("pymake")
     import pymake
 
     # init paths

@@ -3,7 +3,7 @@ import os
 import numpy as np
 import pytest
 
-from autotest.conftest import requires_exe
+from autotest.conftest import requires_exe, requires_pkg
 from flopy.modflow import (
     Modflow,
     ModflowBas,
@@ -16,9 +16,9 @@ from flopy.modflow import (
 
 
 @requires_exe("mf2005")
+@requires_pkg("pymake")
 @pytest.mark.regression
 def test_binary_well(tmpdir):
-    pytest.importorskip("pymake")
     import pymake
 
     nlay = 3

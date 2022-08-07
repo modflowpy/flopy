@@ -6,6 +6,8 @@ import pytest
 from flaky import flaky
 from matplotlib import pyplot as plt
 
+from autotest.conftest import requires_pkg
+
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 from flopy.mf6 import MFSimulation, ModflowGwf, ModflowGwfdis, ModflowGwfdisv
 from flopy.modflow import Modflow, ModflowDis
@@ -689,6 +691,7 @@ def test_unstructured_complete_grid():
     assert np.allclose(zv, np.array([[1, 0], [0, -1]]))
 
 
+@requires_pkg("shapely")
 def test_loading_argus_meshes(example_data_path):
     datapth = str(example_data_path / "unstructured")
     fnames = [fname for fname in os.listdir(datapth) if fname.endswith(".exp")]
@@ -741,6 +744,7 @@ def test_create_unstructured_grid_from_verts(tmpdir, example_data_path):
     assert g.nnodes == g.ncpl.sum() == 1090
 
 
+@requires_pkg("shapely")
 def test_triangle_unstructured_grid(tmpdir):
     maximum_area = 30000.0
     extent = (214270.0, 221720.0, 4366610.0, 4373510.0)
@@ -772,6 +776,7 @@ def test_triangle_unstructured_grid(tmpdir):
     assert g.nnodes == g.ncpl == 2730
 
 
+@requires_pkg("shapely", "scipy")
 def test_voronoi_vertex_grid(tmpdir):
     xmin = 0.0
     xmax = 2.0
@@ -868,6 +873,7 @@ def voronoi_grid_2():
     return __voronoi_grid_2()
 
 
+@requires_pkg("shapely", "scipy")
 @flaky
 @pytest.mark.parametrize(
     "grid_info", [__voronoi_grid_0(), __voronoi_grid_1(), __voronoi_grid_2()]
@@ -901,6 +907,7 @@ def test_voronoi_grid(tmpdir, grid_info):
     assert len(ninvalid_cells) == 0, errmsg
 
 
+@requires_pkg("shapely", "scipy")
 @flaky
 def test_voronoi_grid3(tmpdir):
     name = "vor3"
@@ -950,6 +957,7 @@ def test_voronoi_grid3(tmpdir):
     assert len(ninvalid_cells) == 0, errmsg
 
 
+@requires_pkg("shapely", "scipy")
 @flaky
 def test_voronoi_grid4(tmpdir):
     name = "vor4"
@@ -990,6 +998,7 @@ def test_voronoi_grid4(tmpdir):
     assert len(ninvalid_cells) == 0, errmsg
 
 
+@requires_pkg("shapely", "scipy")
 @flaky
 def test_voronoi_grid5(tmpdir):
     name = "vor5"

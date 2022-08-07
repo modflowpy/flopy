@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from autotest.conftest import get_example_data_path, requires_exe
+from autotest.conftest import get_example_data_path, requires_exe, requires_pkg
 from matplotlib import pyplot as plt
 
 from flopy.discretization import StructuredGrid
@@ -938,6 +938,7 @@ def test_rchload(tmpdir):
     assert np.allclose(a1, a2)
 
 
+@requires_pkg("pandas")
 def test_mp5_load(tmpdir, example_data_path):
     # load the base freyberg model
     freyberg_ws = example_data_path / "freyberg"
@@ -995,6 +996,7 @@ def test_mp5_load(tmpdir, example_data_path):
     plt.close()
 
 
+@requires_pkg("pandas")
 def test_mp5_timeseries_load(example_data_path):
     pth = str(example_data_path / "mp5")
     files = [
@@ -1007,6 +1009,7 @@ def test_mp5_timeseries_load(example_data_path):
         eval_timeseries(file)
 
 
+@requires_pkg("pandas")
 def test_mp6_timeseries_load(example_data_path):
     pth = str(example_data_path / "mp5")
     files = [

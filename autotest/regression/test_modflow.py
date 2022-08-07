@@ -5,7 +5,7 @@ import filecmp
 
 import pytest
 
-from autotest.conftest import requires_exe, get_example_data_path
+from autotest.conftest import requires_exe, requires_pkg, get_example_data_path
 from flopy.modflow import Modflow, ModflowOc
 
 
@@ -20,10 +20,10 @@ def uzf_example_path(example_data_path):
 
 
 @requires_exe("mf2005")
+@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 def test_uzf_unit_numbers(tmpdir, uzf_example_path):
-    pytest.importorskip("pymake")
     import pymake
 
     mfnam = "UZFtest2.nam"
@@ -84,10 +84,10 @@ def test_uzf_unit_numbers(tmpdir, uzf_example_path):
 
 
 @requires_exe("mf2005")
+@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 def test_unitnums(tmpdir, mf2005_test_path):
-    pytest.importorskip("pymake")
     import pymake
 
     mfnam = "testsfr2_tab.nam"
@@ -125,15 +125,14 @@ def test_unitnums(tmpdir, mf2005_test_path):
 
 
 @requires_exe("mf2005")
+@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 def test_gage(tmpdir, example_data_path):
-    pytest.importorskip("pymake")
-    import pymake
-
     """
     test043 load and write of MODFLOW-2005 GAGE example problem
     """
+    import pymake
 
     pth = str(example_data_path / "mf2005_test")
     fpth = join(pth, "testsfr2_tab.nam")
@@ -174,6 +173,7 @@ __example_data_path = get_example_data_path(Path(__file__))
 
 
 @requires_exe("mf2005")
+@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 @pytest.mark.parametrize("namfile", [
@@ -181,7 +181,6 @@ __example_data_path = get_example_data_path(Path(__file__))
     for nf in ["twri.nam", "MNW2.nam"]
 ])
 def test_mf2005pcgn(tmpdir, namfile):
-    pytest.importorskip("pymake")
     import pymake
 
     ws = tmpdir / "ws"
@@ -225,11 +224,11 @@ def test_mf2005pcgn(tmpdir, namfile):
 
 
 @requires_exe("mf2005")
+@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 @pytest.mark.parametrize("namfile", [str(__example_data_path / "secp" / nf) for nf in ["secp.nam"]])
 def test_mf2005gmg(tmpdir, namfile):
-    pytest.importorskip("pymake")
     import pymake
 
     ws = tmpdir / "ws"
@@ -268,13 +267,13 @@ def test_mf2005gmg(tmpdir, namfile):
 
 
 @requires_exe("mf2005")
+@requires_pkg("pymake")
 @pytest.mark.regression
 @pytest.mark.parametrize("namfile", [str(__example_data_path / "freyberg" / nf) for nf in ["freyberg.nam"]])
 def test_mf2005(tmpdir, namfile):
     """
     test045 load and write of MODFLOW-2005 GMG example problem
     """
-    pytest.importorskip("pymake")
     import pymake
 
     compth = tmpdir / "flopy"
@@ -345,11 +344,11 @@ mf2005_namfiles = [str(__example_data_path / "mf2005_test" / nf) for nf in [
 
 
 @requires_exe("mf2005")
+@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 @pytest.mark.parametrize("namfile", mf2005_namfiles)
 def test_mf2005fhb(tmpdir, namfile):
-    pytest.importorskip("pymake")
     import pymake
 
     ws = str(tmpdir / "ws")
@@ -382,11 +381,11 @@ def test_mf2005fhb(tmpdir, namfile):
 
 
 @requires_exe("mf2005")
+@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 @pytest.mark.parametrize("namfile", mf2005_namfiles)
 def test_mf2005_lake(tmpdir, namfile, mf2005_test_path):
-    pytest.importorskip("pymake")
     import pymake
 
     ws = str(tmpdir / "ws")

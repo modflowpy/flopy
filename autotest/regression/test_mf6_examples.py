@@ -3,12 +3,13 @@ from shutil import copytree
 
 import pytest
 
-from autotest.conftest import requires_exe
+from autotest.conftest import requires_exe, requires_pkg
 from autotest.regression.conftest import is_nested
 from flopy.mf6 import MFSimulation
 
 
 @requires_exe("mf6")
+@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 def test_mf6_example_simulations(tmpdir, mf6_example_namfiles):
@@ -22,7 +23,6 @@ def test_mf6_example_simulations(tmpdir, mf6_example_namfiles):
     mf6_example_namfiles: ordered list of namfiles for 1+ coupled models
     """
 
-    pytest.importorskip("pymake")
     import pymake
 
     # make sure we have at least 1 name file

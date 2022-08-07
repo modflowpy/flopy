@@ -7,7 +7,7 @@ from flaky import flaky
 
 from autotest.conftest import (
     excludes_platform,
-    requires_exes,
+    requires_exe,
 )
 from flopy.modflow import (
     Modflow,
@@ -61,7 +61,7 @@ def mfnwtmt3d_model_path(mt3d_test_model_path):
     return mt3d_test_model_path / "mfnwt_mt3dusgs"
 
 
-@requires_exes(["mf2005", "mt3dms"])
+@requires_exe("mf2005", "mt3dms")
 def test_mf2005_p07(tmpdir, mf2005mt3d_model_path):
     pth = str(mf2005mt3d_model_path / "P07")
     namfile = "p7mf2005.nam"
@@ -92,7 +92,7 @@ def test_mf2005_p07(tmpdir, mf2005mt3d_model_path):
     os.remove(os.path.join(cpth, ftlfile))
 
 
-@requires_exes(["mf2000", "mt3dms"])
+@requires_exe("mf2000", "mt3dms")
 def test_mf2000_p07(tmpdir, mf2kmt3d_model_path):
     pth = str(mf2kmt3d_model_path / "P07")
     namfile = "p7mf2k.nam"
@@ -117,7 +117,7 @@ def test_mf2000_p07(tmpdir, mf2kmt3d_model_path):
     os.remove(os.path.join(cpth, ftlfile))
 
 
-@requires_exes(["mf2000", "mt3dms"])
+@requires_exe("mf2000", "mt3dms")
 def test_mf2000_HSSTest(tmpdir, mf2kmt3d_model_path):
     pth = str(mf2kmt3d_model_path / "HSSTest")
     namfile = "hsstest_mf2k.nam"
@@ -144,7 +144,7 @@ def test_mf2000_HSSTest(tmpdir, mf2kmt3d_model_path):
     os.remove(os.path.join(cpth, ftlfile))
 
 
-@requires_exes(["mf2000", "mt3dms"])
+@requires_exe("mf2000", "mt3dms")
 def test_mf2000_mnw(tmpdir, mf2kmt3d_model_path):
     # cannot run this model because it uses mnw1 and there is no load for mnw1
     # this model includes block format data in the btn file
@@ -163,7 +163,7 @@ def test_mf2000_mnw(tmpdir, mf2kmt3d_model_path):
     mt.write_input()
 
 
-@requires_exes(["mf2000", "mt3dms"])
+@requires_exe("mf2000", "mt3dms")
 def test_mf2000_MultiDiffusion(tmpdir, mf2kmt3d_model_path):
     pth = str(mf2kmt3d_model_path / "MultiDiffusion")
     namfile = "p7mf2k.nam"
@@ -188,7 +188,7 @@ def test_mf2000_MultiDiffusion(tmpdir, mf2kmt3d_model_path):
     os.remove(os.path.join(cpth, ftlfile))
 
 
-@requires_exes(["mf2000", "mt3dms"])
+@requires_exe("mf2000", "mt3dms")
 def test_mf2000_reinject(tmpdir, mf2kmt3d_model_path):
     pth = str(mf2kmt3d_model_path / "reinject")
     namfile = "p3mf2k.nam"
@@ -215,7 +215,7 @@ def test_mf2000_reinject(tmpdir, mf2kmt3d_model_path):
     os.remove(os.path.join(cpth, ftlfile))
 
 
-@requires_exes(["mf2000", "mt3dms"])
+@requires_exe("mf2000", "mt3dms")
 def test_mf2000_SState(tmpdir, mf2kmt3d_model_path):
     pth = str(mf2kmt3d_model_path / "SState")
     namfile = "SState_mf2k.nam"
@@ -242,7 +242,7 @@ def test_mf2000_SState(tmpdir, mf2kmt3d_model_path):
     os.remove(os.path.join(cpth, ftlfile))
 
 
-@requires_exes(["mf2000", "mt3dms"])
+@requires_exe("mf2000", "mt3dms")
 def test_mf2000_tob(tmpdir, mf2kmt3d_model_path):
     pth = str(mf2kmt3d_model_path / "tob")
     namfile = "p7mf2k.nam"
@@ -272,7 +272,7 @@ def test_mf2000_tob(tmpdir, mf2kmt3d_model_path):
     os.remove(os.path.join(cpth, ftlfile))
 
 
-@requires_exes(["mf2000", "mt3dms"])
+@requires_exe("mf2000", "mt3dms")
 def test_mf2000_zeroth(tmpdir, mf2kmt3d_model_path):
     pth = str(mf2kmt3d_model_path / "zeroth")
     namfile = "z0mf2k.nam"
@@ -299,7 +299,7 @@ def test_mf2000_zeroth(tmpdir, mf2kmt3d_model_path):
 
 
 @flaky
-@requires_exes(["mfnwt", "mt3dms"])
+@requires_exe("mfnwt", "mt3dms")
 @excludes_platform("Windows", ci_only=True)  # TODO remove once fixed in MT3D-USGS
 def test_mfnwt_CrnkNic(tmpdir, mfnwtmt3d_model_path):
     pth = str(mfnwtmt3d_model_path / "sft_crnkNic")
@@ -339,7 +339,7 @@ def test_mfnwt_CrnkNic(tmpdir, mfnwtmt3d_model_path):
 
 
 @pytest.mark.slow
-@requires_exes(["mfnwt", "mt3dusgs"])
+@requires_exe("mfnwt", "mt3dusgs")
 def test_mfnwt_LKT(tmpdir, mfnwtmt3d_model_path):
     pth = str(mfnwtmt3d_model_path / "lkt")
     namefile = "lkt_mf.nam"
@@ -387,7 +387,7 @@ def test_mfnwt_LKT(tmpdir, mfnwtmt3d_model_path):
 
 
 @pytest.mark.slow
-@requires_exes(["mfnwt", "mt3dusgs"])
+@requires_exe("mfnwt", "mt3dusgs")
 def test_mfnwt_keat_uzf(tmpdir, mfnwtmt3d_model_path):
     pth = str(mfnwtmt3d_model_path / "keat_uzf")
     namefile = "Keat_UZF_mf.nam"
@@ -656,7 +656,7 @@ def test_mt3d_multispecies(tmpdir):
     mt2.write_input()
 
 
-@requires_exes(["mfnwt", "mt3dusgs"])
+@requires_exe("mfnwt", "mt3dusgs")
 def test_lkt_with_multispecies(tmpdir):
     # Bug discovered in LKT with multi-species.  Adding test to check this functionality
 

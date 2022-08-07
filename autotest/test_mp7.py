@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import pytest
-from autotest.conftest import requires_exe
+from autotest.conftest import requires_exe, requires_pkg
 
 from flopy.mf6 import (
     MFSimulation,
@@ -230,7 +230,7 @@ def endpoint_compare(fpth0, epf):
             assert np.allclose(t0[name], t1[name]), msg
 
 
-@requires_exe("mp7")
+@requires_exe("mf6", "mp7")
 def test_default_modpath(ex01b_mf6_model):
     sim, tmpdir = ex01b_mf6_model
 
@@ -244,7 +244,8 @@ def test_default_modpath(ex01b_mf6_model):
     )
 
 
-@requires_exe("mp7")
+@requires_exe("mf6", "mp7")
+@requires_pkg("pandas")
 def test_faceparticles_is1(ex01b_mf6_model):
     sim, tmpdir = ex01b_mf6_model
 
@@ -302,7 +303,7 @@ def test_faceparticles_is1(ex01b_mf6_model):
     endpoint_compare(fpth0, epf)
 
 
-@requires_exe("mp7")
+@requires_exe("mf6", "mp7")
 def test_facenode_is3(ex01b_mf6_model):
     sim, tmpdir = ex01b_mf6_model
     grid = sim.get_model(ex01b_mf6_model_name).modelgrid
@@ -340,7 +341,7 @@ def test_facenode_is3(ex01b_mf6_model):
     )
 
 
-@requires_exe("mp7")
+@requires_exe("mf6", "mp7")
 def test_facenode_is3a(ex01b_mf6_model):
     sim, tmpdir = ex01b_mf6_model
     grid = sim.get_model(ex01b_mf6_model_name).modelgrid
@@ -383,7 +384,7 @@ def test_facenode_is3a(ex01b_mf6_model):
     )
 
 
-@requires_exe("mp7")
+@requires_exe("mf6", "mp7")
 def test_facenode_is2a(ex01b_mf6_model):
     sim, tmpdir = ex01b_mf6_model
     grid = sim.get_model(ex01b_mf6_model_name).modelgrid
@@ -418,7 +419,8 @@ def test_facenode_is2a(ex01b_mf6_model):
     )
 
 
-@requires_exe("mp7")
+@requires_exe("mf6", "mp7")
+@requires_pkg("pandas")
 def test_cellparticles_is1(ex01b_mf6_model):
     sim, tmpdir = ex01b_mf6_model
     grid = sim.get_model(ex01b_mf6_model_name).modelgrid
@@ -457,7 +459,7 @@ def test_cellparticles_is1(ex01b_mf6_model):
     endpoint_compare(fpth0, epf)
 
 
-@requires_exe("mp7")
+@requires_exe("mf6", "mp7")
 def test_cellparticleskij_is1(ex01b_mf6_model):
     sim, tmpdir = ex01b_mf6_model
     grid = sim.get_model(ex01b_mf6_model_name).modelgrid
@@ -482,7 +484,7 @@ def test_cellparticleskij_is1(ex01b_mf6_model):
     )
 
 
-@requires_exe("mp7")
+@requires_exe("mf6", "mp7")
 def test_cellnode_is3(ex01b_mf6_model):
     sim, tmpdir = ex01b_mf6_model
     grid = sim.get_model(ex01b_mf6_model_name).modelgrid
@@ -512,7 +514,7 @@ def test_cellnode_is3(ex01b_mf6_model):
     )
 
 
-@requires_exe("mp7")
+@requires_exe("mf6", "mp7")
 def test_cellnode_is3a(ex01b_mf6_model):
     sim, tmpdir = ex01b_mf6_model
     grid = sim.get_model(ex01b_mf6_model_name).modelgrid
@@ -556,7 +558,7 @@ def test_cellnode_is3a(ex01b_mf6_model):
     )
 
 
-@requires_exe("mp7")
+@requires_exe("mf6", "mp7")
 def test_cellnode_is2a(ex01b_mf6_model):
     sim, tmpdir = ex01b_mf6_model
     grid = sim.get_model(ex01b_mf6_model_name).modelgrid
@@ -686,7 +688,7 @@ def ex01_mf6_model(tmpdir):
 
 
 @pytest.mark.slow
-@requires_exe("mp7")
+@requires_exe("mf6", "mp7")
 def test_forward(ex01_mf6_model):
     sim, tmpdir = ex01_mf6_model
     # Run the simulation
@@ -719,7 +721,7 @@ def test_forward(ex01_mf6_model):
 
 
 @pytest.mark.slow
-@requires_exe("mp7")
+@requires_exe("mf6", "mp7")
 def test_backward(ex01_mf6_model):
     sim, tmpdir = ex01_mf6_model
     success, buff = sim.run_simulation()

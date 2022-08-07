@@ -15,14 +15,14 @@ dependencies:
 
   # test
   - coverage
-  - pytest
-  - pytest-cov
-  - pytest-xdist
-  - pytest-benchmark
   - flaky
   - filelock
   - jupyter
   - jupytext
+  - pytest
+  - pytest-cov
+  - pytest-xdist
+  - pytest-benchmark
 
   # optional
   - appdirs

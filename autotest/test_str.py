@@ -1,6 +1,6 @@
 import matplotlib
 
-from autotest.conftest import requires_exe
+from autotest.conftest import requires_exe, requires_pkg
 
 from flopy.modflow import Modflow
 from flopy.utils import MfListBudget
@@ -16,6 +16,7 @@ str_items = {
 
 
 @requires_exe("mf2005")
+@requires_pkg("pandas")
 def test_str_issue1164(tmpdir, example_data_path):
     mf2005_model_path = example_data_path / "mf2005_test"
     m = Modflow.load(
@@ -65,6 +66,5 @@ def test_str_plot(example_data_path):
         verbose=True,
         check=False,
     )
-    if matplotlib is not None:
-        assert isinstance(m.str.plot()[0], matplotlib.axes.Axes)
-        matplotlib.pyplot.close()
+    assert isinstance(m.str.plot()[0], matplotlib.axes.Axes)
+    matplotlib.pyplot.close()

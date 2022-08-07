@@ -7,7 +7,7 @@ from shutil import which
 import pytest
 from _pytest.config import ExitCode
 
-from autotest.conftest import get_project_root_path, get_example_data_path, requires_exe, requires_exes, requires_platform, excludes_platform
+from autotest.conftest import get_project_root_path, get_example_data_path, requires_exe, requires_pkg, requires_platform, excludes_platform
 
 
 # temporary directory fixtures
@@ -128,9 +128,22 @@ def test_mf6():
 
 exes = ["mfusg", "mfnwt"]
 
-@requires_exes(exes)
+@requires_exe(*exes)
 def test_mfusg_and_mfnwt():
     assert all(which(exe) for exe in exes)
+
+
+@requires_pkg("numpy")
+def test_numpy():
+    import numpy
+    assert numpy is not None
+
+
+@requires_pkg("numpy", "matplotlib")
+def test_numpy_and_matplotlib():
+    import numpy
+    import matplotlib
+    assert numpy is not None and matplotlib is not None
 
 
 @requires_platform("Windows")

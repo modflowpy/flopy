@@ -3,6 +3,8 @@ import os
 import numpy as np
 import pytest
 
+from autotest.conftest import requires_pkg
+
 from flopy.discretization import StructuredGrid
 from flopy.mf6 import (
     MFSimulation,
@@ -176,9 +178,8 @@ def test_base_run(tmpdir, example_data_path):
     )
 
 
+@requires_pkg("rasterio")
 def test_lake(tmpdir, example_data_path):
-    pytest.importorskip("rasterio")
-
     mpath = example_data_path / "mf6-freyberg"
     top = Raster.load(str(mpath / "top.asc"))
     bot = Raster.load(str(mpath / "bot.asc"))

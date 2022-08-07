@@ -342,9 +342,9 @@ def test_get_paths():
 
 #### Conditionally skipping tests
 
-Several `pytest` markers are provided to conditionally skip tests based on executable availability or operating system.
+Several `pytest` markers are provided to conditionally skip tests based on executable availability, Python package environment or operating system.
 
-To skip tests if an executable is not available on the path:
+To skip tests if one or more executables are not available on the path:
 
 ```python
 from shutil import which
@@ -353,19 +353,26 @@ from autotest.conftest import requires_exe
 @requires_exe("mf6")
 def test_mf6():
     assert which("mf6")
+
+@requires_exe("mf6", "mp7")
+def test_mf6_and_mp7():
+    assert which("mf6")
+    assert which("mp7")
 ```
 
-A variant for multiple executables is also provided:
+To skip tests if one or more Python packages are not available:
 
 ```python
-from shutil import which
-from autotest.conftest import requires_exes
+from autotest.conftest import requires_pkg
 
-exes = ["mfusg", "mfnwt"]
+@requires_pkg("pandas")
+def test_needs_pandas():
+    import pandas as pd
 
-@requires_exes(exes)
-def test_mfusg_and_mfnwt():
-    assert all(which(exe) for exe in exes)
+@requires_pkg("pandas", "shapefile")
+def test_needs_pandas():
+    import pandas as pd
+    from shapefile import Reader
 ```
 
 To mark tests requiring or incompatible with particular operating systems:

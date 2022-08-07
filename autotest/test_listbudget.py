@@ -4,6 +4,8 @@ import warnings
 import numpy as np
 import pytest
 
+from autotest.conftest import has_pkg, requires_pkg
+
 from flopy.utils import (
     Mf6ListBudget,
     MfListBudget,
@@ -52,11 +54,11 @@ def test_mflistfile(example_data_path):
     cum = mflist.get_cumulative(names="PERCENT_DISCREPANCY")
     assert isinstance(cum, np.ndarray)
 
-    # if pandas is installed
-    try:
-        import pandas
-    except:
+    if not has_pkg("pandas"):
         return
+
+    import pandas
+
     df_flx, df_vol = mflist.get_dataframes(start_datetime=None)
     assert isinstance(df_flx, pandas.DataFrame)
     assert isinstance(df_vol, pandas.DataFrame)
@@ -115,8 +117,8 @@ def test_mflist_reducedpumping_fail(example_data_path):
         mflist.get_reduced_pumping()
 
 
+@requires_pkg("pandas")
 def test_mtlist(example_data_path):
-    pytest.importorskip("pandas")
     import pandas as pd
 
     mt_dir = str(example_data_path / "mt3d_test")

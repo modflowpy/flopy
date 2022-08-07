@@ -1,6 +1,6 @@
 import pytest
 
-from autotest.conftest import requires_exe
+from autotest.conftest import requires_exe, requires_pkg
 from flopy.modflow import Modflow, ModflowStr, ModflowOc
 
 str_items = {
@@ -13,11 +13,12 @@ str_items = {
 
 
 @requires_exe("mf2005")
+@requires_pkg("pymake")
 @pytest.mark.regression
 def test_str_fixed_free(tmpdir, example_data_path):
-    mf2005_model_path = example_data_path / "mf2005_test"
-    pytest.importorskip("pymake")
     import pymake
+
+    mf2005_model_path = example_data_path / "mf2005_test"
 
     m = Modflow.load(
         str_items[0]["mfnam"],

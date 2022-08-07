@@ -150,7 +150,6 @@ jobs:
             ${{ runner.os }}-${{ hashFiles('flopy/utils/get_modflow.py') }}
 
       - name: Install Modflow executables
-        working-directory: ./autotest
         run: |
           mkdir -p $HOME/.local/bin
           get-modflow $HOME/.local/bin
@@ -241,7 +240,6 @@ jobs:
             ${{ runner.os }}-${{ hashFiles('flopy/utils/get_modflow.py') }}
 
       - name: Install Modflow executables
-        working-directory: ./autotest
         run: |
           mkdir -p $HOME/.local/bin
           get-modflow $HOME/.local/bin
