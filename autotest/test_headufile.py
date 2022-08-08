@@ -3,9 +3,9 @@ HeadUFile get_ts tests using t505_test.py
 """
 
 import os
-from shutil import which
 
 import pytest
+from autotest.conftest import requires_exe, requires_pkg
 
 from flopy.discretization import UnstructuredGrid
 from flopy.mfusg import MfUsg, MfUsgDisU, MfUsgLpf, MfUsgSms
@@ -20,12 +20,9 @@ from flopy.utils import HeadUFile
 from flopy.utils.gridgen import Gridgen
 
 
-@pytest.mark.skipif(
-    which("mfusg") is None or which("gridgen") is None,
-    reason=f"requires executables: {','.join(['mfusg', 'gridgen'])}",
-)
+@requires_exe("mfusg", "gridgen")
+@requires_pkg("shapely", "shapefile")
 def test_mfusg(tmpdir):
-    pytest.importorskip("shapely")
     from shapely.geometry import Polygon
 
     name = "dummy"

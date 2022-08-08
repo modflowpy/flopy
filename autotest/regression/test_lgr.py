@@ -5,18 +5,18 @@ from pathlib import Path
 import pytest
 
 import flopy
-from autotest.conftest import requires_exe
+from autotest.conftest import requires_exe, requires_pkg
 
 
 @requires_exe("mflgr")
+@requires_pkg("pymake")
 @pytest.mark.regression
 def test_simplelgr(tmpdir, example_data_path):
-    mflgr_v2_ex3_path = example_data_path / "mflgr_v2" / "ex3"
-
-    pytest.importorskip("pymake")
+    """Test load and write of distributed MODFLOW-LGR example problem."""
     import pymake
 
-    # Test load and write of distributed MODFLOW-LGR example problem
+    mflgr_v2_ex3_path = example_data_path / "mflgr_v2" / "ex3"
+
     ws = tmpdir / mflgr_v2_ex3_path.stem
     shutil.copytree(mflgr_v2_ex3_path, ws)
 

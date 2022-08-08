@@ -3,13 +3,12 @@ import io
 import os
 import shutil
 from pathlib import Path
-from shutil import which
 
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from autotest.conftest import get_example_data_path, requires_exe
+from autotest.conftest import get_example_data_path, requires_exe, requires_pkg
 
 from flopy.discretization import StructuredGrid
 from flopy.modflow import Modflow, ModflowDis, ModflowSfr2, ModflowStr
@@ -195,11 +194,10 @@ def test_sfr(tmpdir, mf2005_model_path, sfr_test_model_path):
         "UZFtest2.nam", "UZFtest2.sfr", mf2005_model_path, tmpdir
     )
 
-    if matplotlib is not None:
-        assert isinstance(
-            sfr.plot()[0], matplotlib.axes.Axes
-        )  # test the plot() method
-        matplotlib.pyplot.close()
+    assert isinstance(
+        sfr.plot()[0], matplotlib.axes.Axes
+    )  # test the plot() method
+    matplotlib.pyplot.close()
 
     def interpolate_to_reaches(sfr):
         reach_data = sfr.reach_data
@@ -374,9 +372,8 @@ def test_const(sfr_data):
     assert True
 
 
+@requires_pkg("pandas", "shapefile")
 def test_export(tmpdir, sfr_data):
-    pytest.importorskip("shapefile")
-
     m = Modflow()
     dis = ModflowDis(m, 1, 10, 10, lenuni=2, itmuni=4)
 
@@ -667,6 +664,7 @@ def test_assign_layers(tmpdir):
     assert np.array_equal(l, np.array([1, 1]))
 
 
+@requires_pkg("pandas")
 def test_SfrFile(tmpdir, sfr_examples_path, mf2005_model_path):
     common_names = [
         "layer",

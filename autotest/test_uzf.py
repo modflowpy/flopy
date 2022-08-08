@@ -1,11 +1,11 @@
-import glob
 import os
 import shutil
 from io import StringIO
-from shutil import which
 
 import numpy as np
 import pytest
+
+from autotest.conftest import requires_exe
 
 from flopy.modflow import (
     Modflow,
@@ -243,7 +243,7 @@ def test_create_uzf(tmpdir, mf2005_test_path, uzf_test_path):
     )
 
 
-@pytest.mark.skipif(which("mfnwt") is None, reason="requires mfnwt executable")
+@requires_exe("mfnwt")
 def test_uzf_surfk(tmpdir, uzf_test_path):
     ws = str(uzf_test_path)
     uzf_name = "UZFtest4.uzf"

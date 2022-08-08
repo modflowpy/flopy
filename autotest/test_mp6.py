@@ -1,11 +1,10 @@
 import os
 import shutil
-from shutil import which
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from autotest.conftest import get_example_data_path
+from autotest.conftest import get_example_data_path, requires_exe, requires_pkg
 
 from flopy.discretization import StructuredGrid
 from flopy.export.shapefile_utils import shp2recarray
@@ -157,9 +156,8 @@ def test_mpsim(tmpdir, mp6_test_path):
     assert stllines[6].strip().split()[-1] == "p2"
 
 
+@requires_pkg("pandas", "shapefile")
 def test_get_destination_data(tmpdir, mp6_test_path):
-    pytest.importorskip("shapefile")
-
     copy_modpath_files(str(mp6_test_path), str(tmpdir), "EXAMPLE.")
     copy_modpath_files(str(mp6_test_path), str(tmpdir), "EXAMPLE-3.")
 
@@ -332,6 +330,7 @@ def test_get_destination_data(tmpdir, mp6_test_path):
     pthobj.write_shapefile(shpname=fpth, direction="ending", mg=mg4)
 
 
+@requires_pkg("pandas")
 def test_loadtxt(tmpdir, mp6_test_path):
     copy_modpath_files(str(mp6_test_path), str(tmpdir), "EXAMPLE-3.")
 
@@ -347,9 +346,8 @@ def test_loadtxt(tmpdir, mp6_test_path):
     # epd = EndpointFile(epfilewithnans)
 
 
-@pytest.mark.skipif(
-    which("mf2005") is None, reason="requires mf2005 executable"
-)
+@requires_exe("mf2005")
+@requires_pkg("pandas")
 def test_modpath(tmpdir, example_data_path):
     pth = example_data_path / "freyberg"
     mfnam = "freyberg.nam"
@@ -751,10 +749,7 @@ def case_mf2005(tmpdir):
     return mp
 
 
-@pytest.mark.skipif(
-    any(which(exe) is None for exe in exe_names),
-    reason=f"requires executables: {exe_names}",
-)
+@requires_exe(*exe_names)
 def test_pathline_output(case_mf2005, case_mf6):
     success, buff = case_mf2005.run_model()
     assert success, f"modpath model ({case_mf2005.name}) did not run"
@@ -781,6 +776,7 @@ def test_pathline_output(case_mf2005, case_mf6):
     assert maxid0 == maxid1, msg
 
 
+@requires_pkg("pandas")
 def test_endpoint_output(case_mf2005, case_mf6):
     success, buff = case_mf2005.run_model()
     assert success, f"modpath model ({case_mf2005.name}) did not run"

@@ -1,7 +1,6 @@
 """Test scripts."""
 import sys
 import urllib
-from subprocess import PIPE, Popen
 from urllib.error import HTTPError
 
 import pytest
@@ -10,6 +9,7 @@ from flopy.utils import get_modflow_main
 from autotest.conftest import (
     get_project_root_path,
     requires_github,
+    run_py_script,
 )
 
 flopy_dir = get_project_root_path(__file__)
@@ -20,18 +20,6 @@ get_modflow_script = flopy_dir / "flopy" / "utils" / "get_modflow.py"
 def downloads_dir(tmp_path_factory):
     downloads_dir = tmp_path_factory.mktemp("Downloads")
     return downloads_dir
-
-
-def run_py_script(script, *args):
-    """Run a Python script, return tuple (stdout, stderr, returncode)."""
-    args = [sys.executable, str(script)] + [str(g) for g in args]
-    print("running: " + " ".join(args))
-    p = Popen(args, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = p.communicate()
-    stdout = stdout.decode()
-    stderr = stderr.decode()
-    returncode = p.returncode
-    return stdout, stderr, returncode
 
 
 def run_get_modflow_script(*args):

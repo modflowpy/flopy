@@ -1,4 +1,5 @@
 import pytest
+from autotest.conftest import requires_pkg
 
 from flopy.utils.geometry import (
     Collection,
@@ -152,6 +153,7 @@ def test_import_geospatial_utils():
     )
 
 
+@requires_pkg("shapely", "geojson")
 def test_polygon(polygon):
     poly = Shape.from_geojson(polygon)
     gi1 = poly.__geo_interface__
@@ -185,6 +187,7 @@ def test_polygon(polygon):
                 raise AssertionError("GeoSpatialUtil polygon conversion error")
 
 
+@requires_pkg("shapely", "geojson")
 def test_polygon_with_hole(poly_w_hole):
     from flopy.utils.geometry import Polygon, Shape
     from flopy.utils.geospatial_utils import GeoSpatialUtil
@@ -222,6 +225,7 @@ def test_polygon_with_hole(poly_w_hole):
                 raise AssertionError("GeoSpatialUtil polygon conversion error")
 
 
+@requires_pkg("shapely", "geojson")
 def test_multipolygon(multipolygon):
     poly = Shape.from_geojson(multipolygon)
     gi1 = poly.__geo_interface__
@@ -258,6 +262,7 @@ def test_multipolygon(multipolygon):
                 )
 
 
+@requires_pkg("shapely", "geojson")
 def test_point(point):
     pt = Shape.from_geojson(point)
     gi1 = pt.__geo_interface__
@@ -287,6 +292,7 @@ def test_point(point):
             raise AssertionError("GeoSpatialUtil point conversion error")
 
 
+@requires_pkg("shapely", "geojson")
 def test_multipoint(multipoint):
     mpt = Shape.from_geojson(multipoint)
     gi1 = mpt.__geo_interface__
@@ -316,6 +322,7 @@ def test_multipoint(multipoint):
             raise AssertionError("GeoSpatialUtil multipoint conversion error")
 
 
+@requires_pkg("shapely", "geojson")
 def test_linestring(linestring):
     lstr = Shape.from_geojson(linestring)
     gi1 = lstr.__geo_interface__
@@ -345,6 +352,7 @@ def test_linestring(linestring):
             raise AssertionError("GeoSpatialUtil linestring conversion error")
 
 
+@requires_pkg("shapely", "geojson")
 def test_multilinestring(multilinestring):
     mlstr = Shape.from_geojson(multilinestring)
     gi1 = mlstr.__geo_interface__
@@ -376,6 +384,7 @@ def test_multilinestring(multilinestring):
             )
 
 
+@requires_pkg("shapely", "geojson")
 def test_polygon_collection(polygon, poly_w_hole, multipolygon):
     col = [
         Shape.from_geojson(polygon),
@@ -417,6 +426,7 @@ def test_polygon_collection(polygon, poly_w_hole, multipolygon):
                     )
 
 
+@requires_pkg("shapely", "geojson")
 def test_point_collection(point, multipoint):
     col = [Shape.from_geojson(point), Shape.from_geojson(multipoint)]
 
@@ -448,6 +458,7 @@ def test_point_collection(point, multipoint):
                 )
 
 
+@requires_pkg("shapely", "geojson")
 def test_linestring_collection(linestring, multilinestring):
     col = [Shape.from_geojson(linestring), Shape.from_geojson(multilinestring)]
 
@@ -479,6 +490,7 @@ def test_linestring_collection(linestring, multilinestring):
                 )
 
 
+@requires_pkg("shapely", "geojson")
 def test_mixed_collection(
     polygon,
     poly_w_hole,

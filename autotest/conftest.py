@@ -1,11 +1,13 @@
 import os
+import pkg_resources
 import socket
-import subprocess
+import sys
 from os import environ
 from os.path import basename, normpath
 from pathlib import Path
 from platform import system
 from shutil import copytree, which
+from subprocess import PIPE, Popen
 from typing import List, Optional
 from urllib import request
 from warnings import warn
@@ -114,23 +116,12 @@ def get_current_branch() -> str:
         return basename(normpath(ref)).lower()
 
     # otherwise ask git about it
-    try:
-        b = subprocess.Popen(
-            ("git", "status"),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-        ).communicate()[0]
-
-        if isinstance(b, bytes):
-            b = b.decode("utf-8")
-
-        for line in b.splitlines():
-            if "On branch" in line:
-                return line.replace("On branch ", "").rstrip().lower()
-    except:
-        raise ValueError(
-            "Could not determine current branch. Is git installed?"
-        )
+    if not which("git"):
+        raise RuntimeError("'git' required to determine current branch")
+    stdout, stderr, code = run_cmd("git", "rev-parse", "--abbrev-ref", "HEAD")
+    if code == 0 and stdout:
+        return stdout.strip().lower()
+    raise ValueError(f"Could not determine current branch: {stderr}")
 
 
 def is_connected(hostname):
@@ -172,15 +163,39 @@ def is_github_rate_limited() -> Optional[bool]:
         return None
 
 
-def requires_exes(exes):
+_has_exe_cache = {}
+_has_pkg_cache = {}
+
+def has_exe(exe):
+    if exe not in _has_exe_cache:
+        _has_exe_cache[exe] = bool(which(exe))
+    return _has_exe_cache[exe]
+
+def has_pkg(pkg):
+    if pkg not in _has_pkg_cache:
+        try:
+            _has_pkg_cache[pkg] = bool(pkg_resources.get_distribution(pkg))
+        except pkg_resources.DistributionNotFound:
+            _has_pkg_cache[pkg] = False
+    return _has_pkg_cache[pkg]
+
+
+def requires_exe(*exes):
+    missing = {exe for exe in exes if not has_exe(exe)}
     return pytest.mark.skipif(
-        any(which(exe) is None for exe in exes),
-        reason=f"requires executables: {', '.join(exes)}",
+        missing,
+        reason=f"missing executable{'s' if len(missing) != 1 else ''}: " +
+        ", ".join(missing),
     )
 
 
-def requires_exe(exe):
-    return requires_exes([exe])
+def requires_pkg(*pkgs):
+    missing = {pkg for pkg in pkgs if not has_pkg(pkg)}
+    return pytest.mark.skipif(
+        missing,
+        reason=f"missing package{'s' if len(missing) != 1 else ''}: " +
+        ", ".join(missing),
+    )
 
 
 def requires_platform(platform, ci_only=False):
@@ -388,3 +403,62 @@ def pytest_runtest_setup(item):
     is_profiletest = any(item.iter_markers(name="profile"))
     if (is_profiletest and not should_profile) or (not is_profiletest and should_profile):
         pytest.skip()
+
+
+def pytest_report_header(config):
+    """Header for pytest to show versions of packages."""
+    processed = set()
+    flopy_pkg = pkg_resources.get_distribution("flopy")
+    lines = []
+    items = []
+    for pkg in flopy_pkg.requires():
+        name = pkg.name
+        processed.add(name)
+        try:
+            version = pkg_resources.get_distribution(name).version
+            items.append(f"{name}-{version}")
+        except pkg_resources.DistributionNotFound:
+            items.append(f"{name} (not found)")
+    lines.append("required packages: " + ", ".join(items))
+    installed = []
+    not_found = []
+    for pkg in flopy_pkg.requires(["optional"]):
+        name = pkg.name
+        if name in processed:
+            continue
+        processed.add(name)
+        try:
+            version = pkg_resources.get_distribution(name).version
+            installed.append(f"{name}-{version}")
+        except pkg_resources.DistributionNotFound:
+            not_found.append(name)
+    if installed:
+        lines.append("optional packages: " + ", ".join(installed))
+    if not_found:
+        lines.append("optional packages not found: " + ", ".join(not_found))
+    return "\n".join(lines)
+
+
+# functions to run commands and scripts
+
+def run_cmd(*args, verbose=False, **kwargs):
+    """Run any command, return tuple (stdout, stderr, returncode)."""
+    args = [str(g) for g in args]
+    if verbose:
+        print("running: " + " ".join(args))
+    p = Popen(args, stdout=PIPE, stderr=PIPE, **kwargs)
+    stdout, stderr = p.communicate()
+    stdout = stdout.decode()
+    stderr = stderr.decode()
+    returncode = p.returncode
+    if verbose:
+        print(f"stdout:\n{stdout}")
+        print(f"stderr:\n{stderr}")
+        print(f"returncode: {returncode}")
+    return stdout, stderr, returncode
+
+
+def run_py_script(script, *args, verbose=False):
+    """Run a Python script, return tuple (stdout, stderr, returncode)."""
+    return run_cmd(
+        sys.executable, script, *args, verbose=verbose, cwd=Path(script).parent)

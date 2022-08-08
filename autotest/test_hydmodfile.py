@@ -3,6 +3,8 @@ import os
 import numpy as np
 import pytest
 
+from autotest.conftest import has_pkg, requires_pkg
+
 from flopy.modflow import Modflow, ModflowHyd
 from flopy.utils import HydmodObs, Mf6Obs
 
@@ -116,7 +118,7 @@ def test_hydmodfile_read(hydmod_model_path):
         len(data.dtype.names) == nitems + 1
     ), f"data column length is not {len(nitems + 1)}"
 
-    try:
+    if has_pkg("pandas"):
         import pandas as pd
 
         for idx in range(ntimes):
@@ -132,13 +134,13 @@ def test_hydmodfile_read(hydmod_model_path):
         df = h.get_dataframe(timeunit="S")
         assert isinstance(df, pd.DataFrame), "A DataFrame was not returned"
         assert df.shape == (101, 9), "data shape is not (101, 9)"
-    except:
+    else:
         print("pandas not available...")
         pass
 
 
+@requires_pkg("pandas")
 def test_mf6obsfile_read(mf6_obs_model_path):
-    pytest.importorskip("pandas")
     import pandas as pd
 
     txt = "binary mf6 obs"

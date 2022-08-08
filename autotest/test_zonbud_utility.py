@@ -3,6 +3,8 @@ import os
 import numpy as np
 import pytest
 
+from autotest.conftest import requires_pkg
+
 from flopy.mf6 import MFSimulation
 from flopy.utils import ZoneBudget, ZoneBudget6, ZoneFile6
 
@@ -206,10 +208,8 @@ def test_zonbud_readwrite_zbarray(tmpdir):
     assert np.array_equal(x, z), "Input and output arrays do not match."
 
 
+@requires_pkg("pandas")
 def test_dataframes(cbc_f, zon_f):
-    pytest.importorskip("pandas")
-    import pandas as pd
-
     zon = ZoneBudget.read_zone_file(str(zon_f))
     cmd = ZoneBudget(str(cbc_f), zon, totim=1095.0)
     df = cmd.get_dataframes()
@@ -234,9 +234,9 @@ def test_get_model_shape(cbc_f, zon_f):
     ).get_model_shape()
 
 
+@requires_pkg("pandas")
 @pytest.mark.parametrize("rtol", [1e-2])
 def test_zonbud_active_areas_zone_zero(loadpth, cbc_f, rtol):
-    pytest.importorskip("pandas")
     import pandas as pd
 
     # Read ZoneBudget executable output and reformat
@@ -283,8 +283,8 @@ def test_read_zone_file(tmpdir):
         raise AssertionError("zone file read failed")
 
 
+@requires_pkg("pandas")
 def test_zonebudget_6(tmpdir, example_data_path):
-    pytest.importorskip("pandas")
     import pandas as pd
 
     exe_name = "mf6"

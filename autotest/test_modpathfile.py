@@ -10,7 +10,7 @@ from flopy.mf6 import MFSimulation, ModflowTdis, ModflowGwf, ModflowIms, Modflow
 from flopy.modpath import Modpath7
 from flopy.utils import PathlineFile, EndpointFile
 
-from autotest.conftest import requires_exes
+from autotest.conftest import requires_exe
 
 
 @pytest.fixture(scope="session")
@@ -170,7 +170,7 @@ def mp7_simulation(session_tmpdir):
 
 
 
-@requires_exes(["mf6", "mp7"])
+@requires_exe("mf6", "mp7")
 @pytest.mark.skip(reason="pending https://github.com/modflowpy/flopy/issues/1479")
 @pytest.mark.slow
 @pytest.mark.parametrize("direction", ["forward", "backward"])
@@ -195,7 +195,7 @@ def test_get_destination_pathline_data(tmpdir, mp7_simulation, direction, locati
     pathline_data = benchmark(lambda: pathline_file.get_destination_pathline_data(dest_cells=nodew if locations == "well" else nodesr))
 
 
-@requires_exes(["mf6", "mp7"])
+@requires_exe("mf6", "mp7")
 @pytest.mark.parametrize("direction", ["forward", "backward"])
 @pytest.mark.parametrize("locations", ["well", "river"])
 def test_get_destination_endpoint_data(tmpdir, mp7_simulation, direction, locations, benchmark):
@@ -226,7 +226,7 @@ def profile_outdir(request, project_root_path):
     return project_root_path / "autotest" / ".profile" if autosave else None
 
 
-@requires_exes(["mf6", "mp7"])
+@requires_exe("mf6", "mp7")
 @pytest.mark.profile
 @pytest.mark.parametrize("direction", ["forward", "backward"])
 @pytest.mark.parametrize("locations", ["well", "river"])
@@ -265,7 +265,7 @@ def test_profile_get_destination_pathline_data(tmpdir, profile_outdir, mp7_simul
             f.write(s.getvalue())
 
 
-@requires_exes(["mf6", "mp7"])
+@requires_exe("mf6", "mp7")
 @pytest.mark.profile
 @pytest.mark.parametrize("direction", ["forward", "backward"])
 @pytest.mark.parametrize("locations", ["well", "river"])

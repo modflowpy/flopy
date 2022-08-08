@@ -12,6 +12,8 @@ from matplotlib.collections import (
 import pytest
 from flaky import flaky
 
+from autotest.conftest import requires_pkg
+
 import flopy
 from flopy.discretization import StructuredGrid
 from flopy.mf6 import MFSimulation
@@ -293,6 +295,7 @@ def test_model_dot_plot(tmpdir, example_data_path):
     plt.close("all")
 
 
+@requires_pkg("pandas")
 def test_pathline_plot_xc(tmpdir, example_data_path):
     # test with multi-layer example
     load_ws = example_data_path / "mp6"

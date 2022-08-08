@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from autotest.conftest import get_example_data_path
+from autotest.conftest import get_example_data_path, requires_exe, requires_pkg
 from flopy.modflow import Modflow, ModflowUpw, ModflowNwt
 from flopy.utils import parsenamefile
 
@@ -26,11 +26,12 @@ def get_nfnwt_namfiles():
     return namfiles
 
 
+@requires_exe("mfnwt")
+@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 @pytest.mark.parametrize("namfile", get_nfnwt_namfiles())
 def test_run_mfnwt_model(tmpdir, namfile):
-    pytest.importorskip("pymake")
     import pymake
 
     # load a MODFLOW-2005 model, convert to a MFNWT model,

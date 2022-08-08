@@ -4,6 +4,8 @@ import shutil
 import numpy as np
 import pytest
 
+from autotest.conftest import requires_pkg
+
 from flopy.modflow import Mnw, Modflow, ModflowDis, ModflowMnw2
 
 """
@@ -292,12 +294,12 @@ def test_make_package(tmpdir):
     )
 
 
+@requires_pkg("pandas")
 def test_mnw2_create_file(tmpdir):
     """
     Test for issue #556, Mnw2 crashed if wells have
     multiple node lengths
     """
-    pytest.importorskip("pandas")
     import pandas as pd
 
     mf = Modflow("test_mfmnw2", exe_name="mf2005")
@@ -364,10 +366,10 @@ def test_mnw2_create_file(tmpdir):
     mnw2.write_file(os.path.join(ws, "ndata.mnw2"))
 
 
+@requires_pkg("netCDF4")
 @pytest.mark.slow
 def test_export(tmpdir, mnw2_examples_path):
     """t027 test export of MNW2 Package to netcdf files"""
-    pytest.importorskip("netCDF4")
     import netCDF4
 
     ws = str(tmpdir)

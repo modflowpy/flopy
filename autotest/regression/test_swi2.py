@@ -3,7 +3,7 @@ import shutil
 
 import pytest
 
-from autotest.conftest import requires_exe
+from autotest.conftest import requires_exe, requires_pkg
 from flopy.modflow import Modflow
 
 
@@ -13,11 +13,11 @@ def swi_path(example_data_path):
 
 
 @requires_exe("mf2005")
+@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 @pytest.mark.parametrize("namfile", ["swiex1.nam", "swiex2_strat.nam", "swiex3.nam"])
 def test_mf2005swi2(tmpdir, swi_path, namfile):
-    pytest.importorskip("pymake")
     import pymake
 
     name = namfile.replace(".nam", "")

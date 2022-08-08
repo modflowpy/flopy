@@ -1,7 +1,7 @@
 # Test SWR binary read functionality
-import os
-
 import pytest
+
+from autotest.conftest import has_pkg
 
 from flopy.utils import (
     SwrBudget,
@@ -447,7 +447,7 @@ def test_swr_binary_obs(swr_test_path, ipos):
         ), "SwrObs data does not have nobs + 1"
 
     # test get_dataframes()
-    try:
+    if has_pkg("pandas"):
         import pandas as pd
 
         for idx in range(ntimes):
@@ -463,5 +463,5 @@ def test_swr_binary_obs(swr_test_path, ipos):
         df = sobj.get_dataframe(timeunit="S")
         assert isinstance(df, pd.DataFrame), "A DataFrame was not returned"
         assert df.shape == (336, nobs + 1), "data shape is not (336, 10)"
-    except ImportError:
+    else:
         print("pandas not available...")

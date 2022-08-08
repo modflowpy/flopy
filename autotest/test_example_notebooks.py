@@ -1,8 +1,8 @@
-import os
+import re
 
 import pytest
 
-from autotest.conftest import get_project_root_path
+from autotest.conftest import get_project_root_path, run_cmd
 
 
 def get_example_notebooks(exclude=None):
@@ -17,5 +17,15 @@ def get_example_notebooks(exclude=None):
 @pytest.mark.example
 @pytest.mark.parametrize("notebook", get_example_notebooks(exclude=["mf6_lgr"]))  # TODO: figure out why this one fails
 def test_notebooks(notebook):
-    arg = ("jupytext", "--from ipynb", "--execute", notebook)
-    assert os.system(" ".join(arg)) == 0, f"could not run {notebook}"
+    args = ["jupytext", "--from", "ipynb", "--execute", notebook]
+    stdout, stderr, returncode = run_cmd(*args, verbose=True)
+
+    if returncode != 0:
+        if "Missing optional dependency" in stderr:
+            pkg = re.findall("Missing optional dependency '(.*)'", stderr)[0]
+            pytest.skip(f"notebook requires optional dependency {pkg!r}")
+        elif "No module named " in stderr:
+            pkg = re.findall("No module named '(.*)'", stderr)[0]
+            pytest.skip(f"notebook requires package {pkg!r}")
+
+    assert returncode == 0, f"could not run {notebook}"

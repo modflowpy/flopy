@@ -1,7 +1,6 @@
 import os
 import shutil
 from pathlib import Path
-from shutil import which
 from typing import List
 
 import math
@@ -13,6 +12,9 @@ import flopy
 from autotest.conftest import (
     SHAPEFILE_EXTENSIONS,
     get_example_data_path,
+    has_pkg,
+    requires_exe,
+    requires_pkg,
 )
 from flopy.discretization import StructuredGrid, UnstructuredGrid
 from flopy.export import NetCdf
@@ -60,8 +62,8 @@ def namfiles():
     return [str(p) for p in Path(mf2005_path).rglob("*.nam")]
 
 
+@requires_pkg("shapefile")
 def test_output_helper_shapefile_export(tmpdir, example_data_path):
-    pytest.importorskip("shapefile")
 
     ml = Modflow.load(
         "freyberg.nam",
@@ -79,9 +81,9 @@ def test_output_helper_shapefile_export(tmpdir, example_data_path):
     )
 
 
+@requires_pkg("pandas", "shapefile")
 @pytest.mark.slow
 def test_freyberg_export(tmpdir, example_data_path):
-    pytest.importorskip("shapefile")
 
     # steady state
     namfile = "freyberg.nam"
@@ -169,9 +171,8 @@ def test_freyberg_export(tmpdir, example_data_path):
         assert prjtxt == wkt
 
 
+@requires_pkg("netCDF4", "pyproj")
 def test_export_output(tmpdir, example_data_path):
-    pytest.importorskip("netCDF4")
-    pytest.importorskip("pyproj")
 
     ml = Modflow.load(
         "freyberg.nam", model_ws=str(example_data_path / "freyberg")
@@ -193,8 +194,8 @@ def test_export_output(tmpdir, example_data_path):
     nc.nc.close()
 
 
+@requires_pkg("shapefile", "shapely")
 def test_write_grid_shapefile(tmpdir):
-    pytest.importorskip("shapefile")
     from shapefile import Reader
 
     from flopy.discretization import StructuredGrid
@@ -239,8 +240,8 @@ def test_write_grid_shapefile(tmpdir):
         pass
 
 
+@requires_pkg("shapefile")
 def test_export_shapefile_polygon_closed(tmpdir):
-    pytest.importorskip("shapefile")
     from shapefile import Reader
 
     xll, yll = 468970, 3478635
@@ -271,10 +272,10 @@ def test_export_shapefile_polygon_closed(tmpdir):
     shp.close()
 
 
+@requires_pkg("rasterio", "shapefile", "scipy")
 def test_export_array(tmpdir, example_data_path):
-    pytest.importorskip("shapefile")
-    pytest.importorskip("scipy")
     from scipy.ndimage import rotate
+    import rasterio
 
     namfile = "freyberg.nam"
     model_ws = example_data_path / "freyberg"
@@ -321,9 +322,6 @@ def test_export_array(tmpdir, example_data_path):
     rotated = rotate(m.dis.top.array, m.modelgrid.angrot, cval=nodata)
     assert rotated.shape == arr.shape
 
-    pytest.importorskip("rasterio")
-    import rasterio
-
     export_array(
         m.modelgrid,
         os.path.join(tmpdir, "fb.tif"),
@@ -339,10 +337,8 @@ def test_export_array(tmpdir, example_data_path):
         pass
 
 
+@requires_pkg("netCDF4", "pyproj")
 def test_netcdf_classmethods(tmpdir, example_data_path):
-    pytest.importorskip("netCDF4")
-    pytest.importorskip("pyproj")
-
     namfile = "freyberg.nam"
     name = namfile.replace(".nam", "")
     model_ws = example_data_path / "freyberg_multilayer_transient"
@@ -402,8 +398,8 @@ def test_wkt_parse(example_shapefiles):
                         assert crsobj.__dict__[k] is not None
 
 
+@requires_pkg("shapefile")
 def test_shapefile_ibound(tmpdir, example_data_path):
-    pytest.importorskip("shapefile")
     from shapefile import Reader
 
     shape_name = os.path.join(tmpdir, "test.shp")
@@ -425,10 +421,10 @@ def test_shapefile_ibound(tmpdir, example_data_path):
     shape.close()
 
 
+@requires_pkg("pandas", "shapefile")
 @pytest.mark.slow
 @pytest.mark.parametrize("namfile", namfiles())
 def test_shapefile(tmpdir, namfile):
-    pytest.importorskip("shapefile")
     from shapefile import Reader
 
     model = flopy.modflow.Modflow.load(
@@ -450,10 +446,10 @@ def test_shapefile(tmpdir, namfile):
     ), f"wrong number of records in shapefile {fnc_name}"
 
 
+@requires_pkg("pandas", "shapefile")
 @pytest.mark.slow
 @pytest.mark.parametrize("namfile", namfiles())
 def test_shapefile_export_modelgrid_override(tmpdir, namfile):
-    pytest.importorskip("shapefile")
     from shapefile import Reader
 
     model = flopy.modflow.Modflow.load(
@@ -489,11 +485,10 @@ def test_shapefile_export_modelgrid_override(tmpdir, namfile):
     s.close()
 
 
+@requires_pkg("netCDF4", "pyproj")
 @pytest.mark.slow
 @pytest.mark.parametrize("namfile", namfiles())
 def test_export_netcdf(tmpdir, namfile):
-    pytest.importorskip("pyproj")
-    pytest.importorskip("netCDF4")
     from netCDF4 import Dataset
 
     model = flopy.modflow.Modflow.load(
@@ -519,9 +514,8 @@ def test_export_netcdf(tmpdir, namfile):
     nc.close()
 
 
+@requires_pkg("shapefile")
 def test_export_array2(tmpdir):
-    pytest.importorskip("shapefile")
-
     nrow = 7
     ncol = 11
     epsg = 4111
@@ -554,9 +548,8 @@ def test_export_array2(tmpdir):
     assert os.path.isfile(filename), "did not create array shapefile"
 
 
+@requires_pkg("shapefile", "shapely")
 def test_export_array_contours(tmpdir):
-    pytest.importorskip("shapefile")
-
     nrow = 7
     ncol = 11
     epsg = 4111
@@ -589,8 +582,8 @@ def test_export_array_contours(tmpdir):
     assert os.path.isfile(filename), "did not create contour shapefile"
 
 
+@requires_pkg("shapefile", "shapely")
 def test_export_contourf(tmpdir, example_data_path):
-    pytest.importorskip("shapefile")
     from shapefile import Reader
 
     filename = os.path.join(tmpdir, "myfilledcontours.shp")
@@ -619,6 +612,7 @@ def test_export_contourf(tmpdir, example_data_path):
             )
 
 
+@requires_pkg("shapely")
 def test_mf6_grid_shp_export(tmpdir):
     nlay = 2
     nrow = 10
@@ -717,7 +711,8 @@ def test_mf6_grid_shp_export(tmpdir):
         ), f"variable {k} is not equal"
         pass
 
-    pytest.importorskip("shapefile")
+    if not has_pkg("shapefile"):
+        return
 
     # rch6.export('{}/mf6.shp'.format(baseDir))
     m.export(str(tmpdir / "mfnwt.shp"))
@@ -749,10 +744,9 @@ def test_mf6_grid_shp_export(tmpdir):
                 assert np.abs(it - it6) < 1e-6
 
 
+@requires_pkg("shapefile")
 @pytest.mark.slow
 def test_export_huge_shapefile(tmpdir):
-    pytest.importorskip("shapefile")
-
     nlay = 2
     nrow = 200
     ncol = 200
@@ -781,6 +775,7 @@ def test_export_huge_shapefile(tmpdir):
     m.export(str(tmpdir / "huge.shp"))
 
 
+@requires_pkg("pyproj")
 def test_polygon_from_ij(tmpdir):
     """test creation of a polygon from an i, j location using get_vertices()."""
     ws = str(tmpdir)
@@ -877,9 +872,8 @@ def count_lines_in_file(filepath, binary=False):
     return n
 
 
+@requires_pkg("vtk")
 def test_vtk_export_array2d(tmpdir, example_data_path):
-    pytest.importorskip("vtk")
-
     # test mf 2005 freyberg
     mpath = str(example_data_path / "freyberg_multilayer_transient")
     namfile = "freyberg.nam"
@@ -902,9 +896,8 @@ def test_vtk_export_array2d(tmpdir, example_data_path):
     assert nlines1 == 17615
 
 
+@requires_pkg("vtk")
 def test_vtk_export_array3d(tmpdir, example_data_path):
-    pytest.importorskip("vtk")
-
     # test mf 2005 freyberg
     mpath = str(example_data_path / "freyberg_multilayer_transient")
     namfile = "freyberg.nam"
@@ -944,9 +937,8 @@ def test_vtk_export_array3d(tmpdir, example_data_path):
     assert os.path.exists(filetocheck)
 
 
+@requires_pkg("vtk")
 def test_vtk_transient_array_2d(tmpdir, example_data_path):
-    pytest.importorskip("vtk")
-
     # test mf 2005 freyberg
     ws = str(tmpdir)
     mpath = str(example_data_path / "freyberg_multilayer_transient")
@@ -978,10 +970,9 @@ def test_vtk_transient_array_2d(tmpdir, example_data_path):
     assert os.path.exists(filetocheck)
 
 
+@requires_pkg("vtk")
 @pytest.mark.slow
 def test_vtk_export_packages(tmpdir, example_data_path):
-    pytest.importorskip("vtk")
-
     # test mf 2005 freyberg
     ws = str(tmpdir)
     mpath = str(example_data_path / "freyberg_multilayer_transient")
@@ -1035,9 +1026,8 @@ def test_vtk_export_packages(tmpdir, example_data_path):
     assert os.path.exists(filetocheck)
 
 
+@requires_pkg("vtk")
 def test_vtk_mf6(tmpdir, example_data_path):
-    pytest.importorskip("vtk")
-
     # test mf6
     mf6expth = str(example_data_path / "mf6")
     mf6sims = [
@@ -1066,10 +1056,9 @@ def test_vtk_mf6(tmpdir, example_data_path):
     assert nlines == 9537
 
 
+@requires_pkg("vtk")
 @pytest.mark.slow
 def test_vtk_binary_head_export(tmpdir, example_data_path):
-    pytest.importorskip("vtk")
-
     # test mf 2005 freyberg
     ws = str(tmpdir)
     mpth = str(example_data_path / "freyberg_multilayer_transient")
@@ -1118,10 +1107,9 @@ def test_vtk_binary_head_export(tmpdir, example_data_path):
     assert nlines2 == 34
 
 
+@requires_pkg("vtk")
 @pytest.mark.slow
 def test_vtk_cbc(tmpdir, example_data_path):
-    pytest.importorskip("vtk")
-
     # test mf 2005 freyberg
 
     ws = str(tmpdir)
@@ -1151,10 +1139,9 @@ def test_vtk_cbc(tmpdir, example_data_path):
     assert os.path.exists(filetocheck)
 
 
+@requires_pkg("vtk")
 @pytest.mark.slow
 def test_vtk_vector(tmpdir, example_data_path):
-    pytest.importorskip("vtk")
-
     # test mf 2005 freyberg
     mpth = str(example_data_path / "freyberg_multilayer_transient")
     namfile = "freyberg.nam"
@@ -1213,8 +1200,8 @@ def test_vtk_vector(tmpdir, example_data_path):
     ), f"file (1) does not exist: {filetocheck}"
 
 
+@requires_pkg("vtk")
 def test_vtk_unstructured(tmpdir, example_data_path):
-    pytest.importorskip("vtk")
     from vtkmodules.util.numpy_support import vtk_to_numpy
     from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
 
@@ -1301,8 +1288,8 @@ def test_vtk_unstructured(tmpdir, example_data_path):
     assert np.allclose(np.ravel(top), top2), "Field data not properly written"
 
 
+@requires_pkg("vtk")
 def test_vtk_vertex(tmpdir, example_data_path):
-    pytest.importorskip("vtk")
     from vtkmodules.util.numpy_support import vtk_to_numpy
     from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
 
@@ -1336,11 +1323,9 @@ def test_vtk_vertex(tmpdir, example_data_path):
     ), "Field data not properly written"
 
 
-@pytest.mark.skipif(
-    which("mf2005") is None, reason="requires mf2005 executable"
-)
+@requires_exe("mf2005")
+@requires_pkg("vtk")
 def test_vtk_pathline(tmpdir, example_data_path):
-    pytest.importorskip("vtk")
     from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
 
     # pathline test for vtk
@@ -1461,8 +1446,8 @@ def load_iverts(fname, closed=False):
     return iverts, np.array(xc), np.array(yc)
 
 
+@requires_pkg("vtk")
 def test_vtk_export_model_without_packages_names(tmpdir):
-    pytest.importorskip("vtk")
     from vtkmodules.util.numpy_support import vtk_to_numpy
     from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
 
@@ -1518,8 +1503,8 @@ def test_vtk_export_model_without_packages_names(tmpdir):
     assert np.allclose(cell_types, cell_types_answer), errmsg
 
 
+@requires_pkg("vtk")
 def test_vtk_export_disv1_model(tmpdir):
-    pytest.importorskip("vtk")
     from vtkmodules.util.numpy_support import vtk_to_numpy
     from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
 
@@ -1590,8 +1575,8 @@ def test_vtk_export_disv1_model(tmpdir):
     assert np.allclose(cell_types, cell_types_answer), errmsg
 
 
+@requires_pkg("vtk")
 def test_vtk_export_disv2_model(tmpdir):
-    pytest.importorskip("vtk")
     from vtkmodules.util.numpy_support import vtk_to_numpy
     from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
 
@@ -1655,8 +1640,8 @@ def test_vtk_export_disv2_model(tmpdir):
     assert np.allclose(cell_types, cell_types_answer), errmsg
 
 
+@requires_pkg("vtk")
 def test_vtk_export_disu1_grid(tmpdir, example_data_path):
-    pytest.importorskip("vtk")
     from vtkmodules.util.numpy_support import vtk_to_numpy
     from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
 
@@ -1741,8 +1726,8 @@ def test_vtk_export_disu1_grid(tmpdir, example_data_path):
     assert np.allclose(cell_types, cell_types_answer), errmsg
 
 
+@requires_pkg("vtk")
 def test_vtk_export_disu2_grid(tmpdir, example_data_path):
-    pytest.importorskip("vtk")
     from vtkmodules.util.numpy_support import vtk_to_numpy
     from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
 
@@ -1827,8 +1812,8 @@ def test_vtk_export_disu2_grid(tmpdir, example_data_path):
     assert np.allclose(cell_types, cell_types_answer), errmsg
 
 
+@requires_pkg("vtk", "shapefile")
 def test_vtk_export_disu_model(tmpdir):
-    pytest.importorskip("vtk")
     from vtkmodules.util.numpy_support import vtk_to_numpy
 
     from flopy.export.vtk import Vtk

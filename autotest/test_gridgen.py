@@ -8,14 +8,14 @@ import pytest
 from matplotlib.collections import LineCollection, PathCollection, QuadMesh
 
 import flopy
-from autotest.conftest import requires_exes
+from autotest.conftest import has_pkg, requires_exe, requires_pkg
 from flopy.utils.gridgen import Gridgen
 
 
 @pytest.mark.slow
-@requires_exes(["mf6", "gridgen"])
+@requires_exe("mf6", "gridgen")
+@requires_pkg("shapely")
 def test_mf6disv(tmpdir):
-    pytest.importorskip("shapely")
     from shapely.geometry import Polygon
 
     name = "dummy"
@@ -149,9 +149,9 @@ def test_mf6disv(tmpdir):
 
 
 @pytest.mark.slow
-@requires_exes(["mf6", "gridgen"])
+@requires_exe("mf6", "gridgen")
+@requires_pkg("shapely", "shapefile")
 def test_mf6disu(tmpdir):
-    pytest.importorskip("shapely")
     from shapely.geometry import Polygon
 
     name = "dummy"
@@ -317,9 +317,9 @@ def test_mf6disu(tmpdir):
 
 
 @pytest.mark.slow
-@requires_exes(["mfusg", "gridgen"])
+@requires_exe("mfusg", "gridgen")
+@requires_pkg("shapely", "shapefile")
 def test_mfusg(tmpdir):
-    pytest.importorskip("shapely")
     from shapely.geometry import Polygon
 
     name = "dummy"
@@ -456,7 +456,8 @@ def test_mfusg(tmpdir):
 
 
 @pytest.mark.slow
-@requires_exes(["mfusg", "gridgen"])
+@requires_exe("mfusg", "gridgen")
+@requires_pkg("shapely")
 def test_gridgen(tmpdir):
     # define the base grid and then create a couple levels of nested
     # refinement
@@ -523,7 +524,8 @@ def test_gridgen(tmpdir):
     )
 
     # skip remainder if pyshp is not installed
-    pytest.importorskip("shapefile")
+    if not has_pkg("shapefile"):
+        return
 
     rf0shp = os.path.join(ws, "rf0")
     xmin = 7 * delr

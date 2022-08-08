@@ -1,9 +1,10 @@
 import os
 import shutil
-from shutil import which
 
 import numpy as np
 import pytest
+
+from autotest.conftest import requires_exe
 
 from flopy.modflow import (
     HeadObservation,
@@ -18,9 +19,7 @@ from flopy.modflow import (
 )
 
 
-@pytest.mark.skipif(
-    which("mf2005") is None, reason="requires mf2005 executable"
-)
+@requires_exe("mf2005")
 def test_hob_simple(tmpdir):
     """
     test041 create and run a simple MODFLOW-2005 OBS example
@@ -107,9 +106,7 @@ def test_hob_simple(tmpdir):
     assert success, "could not run simple MODFLOW-2005 model"
 
 
-@pytest.mark.skipif(
-    which("mf2005") is None, reason="requires mf2005 executable"
-)
+@requires_exe("mf2005")
 def test_obs_load_and_write(tmpdir, example_data_path):
     """
     test041 load and write of MODFLOW-2005 OBS example problem
