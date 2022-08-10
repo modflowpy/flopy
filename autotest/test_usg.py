@@ -312,9 +312,10 @@ def test_usg_lak(tmpdir, mfusg_rch_evt_model_path):
     assert success
 
 
+# occasional forrtl: error (72): floating overflow
+@flaky
 @requires_exe("mfusg")
 @pytest.mark.slow
-@flaky(max_runs=3)  # occasional forrtl: error (72): floating overflow
 def test_freyburg_usg(tmpdir, freyberg_usg_model_path):
     # test mfusg model with rch nrchop 3 / freyburg.usg
     print("testing usg nrchop 3: freyburg.usg.nam")

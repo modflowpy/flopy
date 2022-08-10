@@ -1,3 +1,5 @@
+import importlib
+import io
 import os
 import pkg_resources
 import socket
@@ -151,7 +153,7 @@ def is_github_rate_limited() -> Optional[bool]:
     """
     try:
         with request.urlopen(
-            "https://api.github.com/users/octocat"
+                "https://api.github.com/users/octocat"
         ) as response:
             remaining = int(response.headers["x-ratelimit-remaining"])
             if remaining < 10:
@@ -166,17 +168,27 @@ def is_github_rate_limited() -> Optional[bool]:
 _has_exe_cache = {}
 _has_pkg_cache = {}
 
+
 def has_exe(exe):
     if exe not in _has_exe_cache:
         _has_exe_cache[exe] = bool(which(exe))
     return _has_exe_cache[exe]
 
+
 def has_pkg(pkg):
     if pkg not in _has_pkg_cache:
+
+        # for some dependencies, package name and import name are different
+        # (e.g. pyshp/shapefile, mfpymake/pymake, python-dateutil/dateutil)
+        # pkg_resources expects package name, importlib expects import name
         try:
-            _has_pkg_cache[pkg] = bool(pkg_resources.get_distribution(pkg))
-        except pkg_resources.DistributionNotFound:
-            _has_pkg_cache[pkg] = False
+            _has_pkg_cache[pkg] = bool(importlib.import_module(pkg))
+        except ModuleNotFoundError:
+            try:
+                _has_pkg_cache[pkg] = bool(pkg_resources.get_distribution(pkg))
+            except pkg_resources.DistributionNotFound:
+                _has_pkg_cache[pkg] = False
+
     return _has_pkg_cache[pkg]
 
 
@@ -185,7 +197,7 @@ def requires_exe(*exes):
     return pytest.mark.skipif(
         missing,
         reason=f"missing executable{'s' if len(missing) != 1 else ''}: " +
-        ", ".join(missing),
+               ", ".join(missing),
     )
 
 
@@ -194,7 +206,7 @@ def requires_pkg(*pkgs):
     return pytest.mark.skipif(
         missing,
         reason=f"missing package{'s' if len(missing) != 1 else ''}: " +
-        ", ".join(missing),
+               ", ".join(missing),
     )
 
 
@@ -231,6 +243,12 @@ requires_github = pytest.mark.skipif(
     reason="github.com is required.")
 
 
+requires_spatial_reference = pytest.mark.skipif(
+    not is_connected("spatialreference.org"),
+    reason="spatialreference.org is required."
+)
+
+
 # example data fixtures
 
 @pytest.fixture(scope="session")
@@ -257,9 +275,9 @@ def example_shapefiles(example_data_path) -> List[Path]:
 
 @pytest.fixture(scope="function")
 def tmpdir(tmpdir_factory, request) -> Path:
-    node = request.node.name\
-        .replace("/", "_")\
-        .replace("\\", "_")\
+    node = request.node.name \
+        .replace("/", "_") \
+        .replace("\\", "_") \
         .replace(":", "_")
     temp = Path(tmpdir_factory.mktemp(node))
     yield Path(temp)
@@ -276,7 +294,7 @@ def tmpdir(tmpdir_factory, request) -> Path:
 @pytest.fixture(scope="class")
 def class_tmpdir(tmpdir_factory, request) -> Path:
     assert (
-        request.cls is not None
+            request.cls is not None
     ), "Class-scoped temp dir fixture must be used on class"
     temp = Path(tmpdir_factory.mktemp(request.cls.__name__))
     yield temp
@@ -329,9 +347,9 @@ def pytest_addoption(parser):
         action="store",
         default=None,
         help="Move the contents of temporary test directories to correspondingly named subdirectories at the given "
-        "location after tests complete. This option can be used to exclude test results from automatic cleanup, "
-        "e.g. for manual inspection. The provided path is created if it does not already exist. An error is "
-        "thrown if any matching files already exist.",
+             "location after tests complete. This option can be used to exclude test results from automatic cleanup, "
+             "e.g. for manual inspection. The provided path is created if it does not already exist. An error is "
+             "thrown if any matching files already exist.",
     )
 
     parser.addoption(
@@ -360,21 +378,6 @@ def pytest_addoption(parser):
         help="Run only smoke tests (should complete in <1 minute)."
     )
 
-    parser.addoption(
-        "-P",
-        "--profile",
-        action="store_true",
-        default=False,
-        help="Run performance profiling tests (skipped otherwise)."
-    )
-
-    parser.addoption(
-        "--profile-autosave",
-        action="store_true",
-        default=False,
-        help="Store performance profiling results in a folder called .profile in the current working directory",
-    )
-
 
 def pytest_configure(config):
     config.addinivalue_line(
@@ -398,15 +401,14 @@ def pytest_runtest_setup(item):
     if smoke and (slow or example or regression):
         pytest.skip()
 
-    # performance profiling mutually excludes normal tests
-    should_profile = item.config.getoption("--profile")
-    is_profiletest = any(item.iter_markers(name="profile"))
-    if (is_profiletest and not should_profile) or (not is_profiletest and should_profile):
-        pytest.skip()
-
 
 def pytest_report_header(config):
     """Header for pytest to show versions of packages."""
+
+    # if we ever drop support for python 3.7, could use importlib.metadata instead?
+    # or importlib_metadata backport: https://importlib-metadata.readthedocs.io/en/latest/
+    # pkg_resources discouraged: https://setuptools.pypa.io/en/latest/pkg_resources.html
+
     processed = set()
     flopy_pkg = pkg_resources.get_distribution("flopy")
     lines = []

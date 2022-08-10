@@ -255,7 +255,9 @@ def test_vertex_model_dot_plot(example_data_path):
     plt.close("all")
 
 
-@flaky  # occasional _tkinter.TclError: Can't find a usable tk.tcl
+# occasional _tkinter.TclError: Can't find a usable tk.tcl (or init.tcl)
+# similar: https://github.com/microsoft/azure-pipelines-tasks/issues/16426
+@flaky
 def test_model_dot_plot(tmpdir, example_data_path):
     import matplotlib.pyplot as plt
 

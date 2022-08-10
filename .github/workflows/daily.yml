@@ -25,6 +25,7 @@ jobs:
     defaults:
       run:
         shell: bash
+    timeout-minutes: 90
 
     steps:
       - name: Checkout repo
@@ -90,7 +91,6 @@ jobs:
           file: coverage.xml
 
   examples:
-
     name: Example scripts & notebooks
     runs-on: ${{ matrix.os }}
     strategy:
@@ -110,6 +110,7 @@ jobs:
     defaults:
       run:
         shell: bash
+    timeout-minutes: 90
 
     steps:
       - name: Checkout repo
@@ -194,6 +195,7 @@ jobs:
     defaults:
       run:
         shell: bash
+    timeout-minutes: 90
 
     steps:
       - name: Checkout repo
@@ -230,14 +232,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run tests
+      - name: Load cached benchmark results (for comparison)
+        uses: actions/cache@v2.1.0
+        with:
+          path: ./autotest/.benchmarks
+          key: benchmark-${{ matrix.os }}-${{ matrix.python-version }} }}
+
+      - name: Run benchmarks
         working-directory: ./autotest
         run: |
-          pytest -v --cov=flopy --cov-report=xml --durations=0 --benchmark-only --benchmark-autosave  --keep-failed=.failed
+          pytest -v --durations=0 \
+            --cov=flopy --cov-report=xml \
+            --benchmark-only --benchmark-autosave --benchmark-compare --benchmark-compare-fail=mean:25% \
+            --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload failed test outputs
+      - name: Upload failed benchmark outputs
         uses: actions/upload-artifact@v2
         if: failure()
         with:
@@ -279,6 +290,7 @@ jobs:
     defaults:
       run:
         shell: pwsh
+    timeout-minutes: 90
 
     steps:
       - name: Checkout repo
@@ -291,7 +303,7 @@ jobs:
         uses: actions/cache@v2.1.0
         with:
           path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.run-type }}-${{ hashFiles('etc/environment.yml', 'flopy') }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.run-type }}-${{ hashFiles('etc/environment.yml') }}
 
       # Standard python fails on windows without GDAL installation
       # Using custom bash shell ("shell: bash -l {0}") with Miniconda
@@ -362,6 +374,7 @@ jobs:
     defaults:
       run:
         shell: pwsh
+    timeout-minutes: 90
 
     steps:
       - name: Checkout repo
@@ -374,7 +387,7 @@ jobs:
         uses: actions/cache@v2.1.0
         with:
           path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.run-type }}-${{ hashFiles('etc/environment.yml', 'flopy') }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.run-type }}-${{ hashFiles('etc/environment.yml') }}
 
       # Standard python fails on windows without GDAL installation
       # Using custom bash shell ("shell: bash -l {0}") with Miniconda
@@ -409,7 +422,6 @@ jobs:
           pytest -v -n auto -m "example" --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
 
       - name: Upload failed test outputs
         uses: actions/upload-artifact@v2
@@ -446,6 +458,7 @@ jobs:
     defaults:
       run:
         shell: pwsh
+    timeout-minutes: 90
 
     steps:
       - name: Checkout repo
@@ -458,7 +471,7 @@ jobs:
         uses: actions/cache@v2.1.0
         with:
           path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.run-type }}-${{ hashFiles('etc/environment.yml', 'flopy') }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.run-type }}-${{ hashFiles('etc/environment.yml') }}
 
       # Standard python fails on windows without GDAL installation
       # Using custom bash shell ("shell: bash -l {0}") with Miniconda
@@ -487,14 +500,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run tests
+      - name: Load cached benchmark results (for comparison)
+        uses: actions/cache@v2.1.0
+        with:
+          path: ./autotest/.benchmarks
+          key: benchmark-${{ runner.os }}-${{ matrix.python-version }} }}
+
+      - name: Run benchmarks
         working-directory: ./autotest
         run: |
-          pytest -v --cov=flopy --cov-report=xml --durations=0 --benchmark-only --benchmark-autosave --keep-failed=.failed
+          pytest -v --durations=0 \
+            --cov=flopy --cov-report=xml \
+            --benchmark-only --benchmark-autosave --benchmark-compare --benchmark-compare-fail=mean:25% \
+            --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload failed test outputs
+      - name: Upload failed benchmark outputs
         uses: actions/upload-artifact@v2
         if: failure()
         with:
@@ -505,7 +527,7 @@ jobs:
       - name: Upload benchmark results
         uses: actions/upload-artifact@v2
         with:
-          name: benchmark-${{ matrix.os }}-${{ matrix.python-version }}
+          name: benchmark-${{ runner.os }}-${{ matrix.python-version }}
           path: |
             ./autotest/.benchmarks/**/*.json
 

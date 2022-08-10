@@ -350,7 +350,7 @@ def test_np001(tmpdir, example_data_path):
     sim.set_all_data_external()
     sim.write_simulation()
     assert (
-        sim.simulation_data.max_columns_of_data == dis_package.ncol.get_data()
+            sim.simulation_data.max_columns_of_data == dis_package.ncol.get_data()
     )
     # test package file with relative path to simulation path
     wel_path = os.path.join(ws, "well_folder", f"{model_name}.wel")
@@ -462,12 +462,12 @@ def test_np001(tmpdir, example_data_path):
     summary = ".".join(chk[0].summary_array.desc)
     assert "drn_1 package: invalid BC index" in summary
     assert (
-        "npf package: vertical hydraulic conductivity values below "
-        "checker threshold of 1e-11" in summary
+            "npf package: vertical hydraulic conductivity values below "
+            "checker threshold of 1e-11" in summary
     )
     assert (
-        "npf package: horizontal hydraulic conductivity values above "
-        "checker threshold of 100000.0" in summary
+            "npf package: horizontal hydraulic conductivity values above "
+            "checker threshold of 100000.0" in summary
     )
     data_invalid = False
     try:
@@ -502,10 +502,10 @@ def test_np001(tmpdir, example_data_path):
         for line in fd:
             line_lst = line.strip().split()
             if (
-                len(line) > 2
-                and line_lst[0] == "0"
-                and line_lst[1] == "0"
-                and line_lst[2] == "0"
+                    len(line) > 2
+                    and line_lst[0] == "0"
+                    and line_lst[1] == "0"
+                    and line_lst[2] == "0"
             ):
                 found_cellid = True
     assert found_cellid
@@ -810,12 +810,12 @@ def test_np002(tmpdir, example_data_path):
     chk = sim.check()
     summary = ".".join(chk[0].summary_array.desc)
     assert (
-        "sto package: specific storage values below "
-        "checker threshold of 1e-06" in summary
+            "sto package: specific storage values below "
+            "checker threshold of 1e-06" in summary
     )
     assert (
-        "sto package: specific yield values above "
-        "checker threshold of 0.5" in summary
+            "sto package: specific yield values above "
+            "checker threshold of 0.5" in summary
     )
     assert "Not a number" in summary
     model.remove_package("chd_2")
@@ -1471,10 +1471,10 @@ def test005_create_tests_advgw_tidal(tmpdir, example_data_path):
             col_max = 6
         for col in range(0, col_max):
             if (
-                (row == 3 and col == 5)
-                or (row == 2 and col == 4)
-                or (row == 1 and col == 3)
-                or (row == 0 and col == 2)
+                    (row == 3 and col == 5)
+                    or (row == 2 and col == 4)
+                    or (row == 1 and col == 3)
+                    or (row == 0 and col == 2)
             ):
                 mult = 0.5
             else:
@@ -1578,10 +1578,10 @@ def test005_create_tests_advgw_tidal(tmpdir, example_data_path):
             col_min = 6
         for col in range(col_min, 10):
             if (
-                (row == 0 and col == 9)
-                or (row == 1 and col == 8)
-                or (row == 2 and col == 7)
-                or (row == 3 and col == 6)
+                    (row == 0 and col == 9)
+                    or (row == 1 and col == 8)
+                    or (row == 2 and col == 7)
+                    or (row == 3 and col == 6)
             ):
                 mult = 0.5
             else:
@@ -1943,9 +1943,9 @@ def test035_create_tests_fhb(tmpdir, example_data_path):
     )
     time = model.modeltime
     assert (
-        time.steady_state[0] == False
-        and time.steady_state[1] == False
-        and time.steady_state[2] == False
+            time.steady_state[0] == False
+            and time.steady_state[1] == False
+            and time.steady_state[2] == False
     )
     wel_period = {0: [((0, 1, 0), "flow")]}
     wel_package = ModflowGwfwel(
@@ -3514,10 +3514,10 @@ def test005_advgw_tidal(tmpdir, example_data_path):
     model = sim.get_model(model_name)
     time = model.modeltime
     assert (
-        time.steady_state[0] == True
-        and time.steady_state[1] == False
-        and time.steady_state[2] == False
-        and time.steady_state[3] == False
+            time.steady_state[0] == True
+            and time.steady_state[1] == False
+            and time.steady_state[2] == False
+            and time.steady_state[3] == False
     )
     ghb = model.get_package("ghb")
     obs = ghb.obs
@@ -3976,14 +3976,14 @@ def test006_2models_mvr(tmpdir, example_data_path):
             model = sim.get_model(model_name)
             for package in model_package_check:
                 assert (
-                    package in model.package_type_dict
-                    or package in sim.package_type_dict
-                ) == (package in load_only or f"{package}6" in load_only)
+                               package in model.package_type_dict
+                               or package in sim.package_type_dict
+                       ) == (package in load_only or f"{package}6" in load_only)
         assert (len(sim._exchange_files) > 0) == (
-            "gwf6-gwf6" in load_only or "gwf-gwf" in load_only
+                "gwf6-gwf6" in load_only or "gwf-gwf" in load_only
         )
         assert (len(sim._ims_files) > 0) == (
-            "ims6" in load_only or "ims" in load_only
+                "ims6" in load_only or "ims" in load_only
         )
 
     # load package by name
@@ -4012,7 +4012,6 @@ def test006_2models_mvr(tmpdir, example_data_path):
 @pytest.mark.slow
 @pytest.mark.regression
 def test001e_uzf_3lay(tmpdir, example_data_path):
-
     # init paths
     test_ex_name = "test001e_UZF_3lay"
     model_name = "gwf_1"
@@ -4073,7 +4072,7 @@ def test001e_uzf_3lay(tmpdir, example_data_path):
         model = sim.get_model()
         for package in model_package_check:
             assert (package in model.package_type_dict) == (
-                package in load_only or f"{package}6" in load_only
+                    package in load_only or f"{package}6" in load_only
             )
     # test running a runnable load_only case
     sim = MFSimulation.load(
