@@ -169,7 +169,6 @@ def mp7_simulation(session_tmpdir):
     return sim, forward_model_name, backward_model_name, nodew, nodesr
 
 
-
 @requires_exe("mf6", "mp7")
 @pytest.mark.skip(reason="pending https://github.com/modflowpy/flopy/issues/1479")
 @pytest.mark.slow
@@ -192,7 +191,7 @@ def test_get_destination_pathline_data(tmpdir, mp7_simulation, direction, locati
     pathline_file = PathlineFile(str(backward_path) if direction == "backward" else str(forward_path))
 
     # run benchmark
-    pathline_data = benchmark(lambda: pathline_file.get_destination_pathline_data(dest_cells=nodew if locations == "well" else nodesr))
+    benchmark(lambda: pathline_file.get_destination_pathline_data(dest_cells=nodew if locations == "well" else nodesr))
 
 
 @requires_exe("mf6", "mp7")
@@ -215,93 +214,4 @@ def test_get_destination_endpoint_data(tmpdir, mp7_simulation, direction, locati
     endpoint_file = EndpointFile(str(backward_end) if direction == "backward" else str(forward_end))
 
     # run benchmark
-    endpoint_data = benchmark(lambda: endpoint_file.get_destination_endpoint_data(dest_cells=nodew if locations == "well" else nodesr))
-
-
-# performance profiling
-
-@pytest.fixture
-def profile_outdir(request, project_root_path):
-    autosave = request.config.getoption("--profile-autosave")
-    return project_root_path / "autotest" / ".profile" if autosave else None
-
-
-@requires_exe("mf6", "mp7")
-@pytest.mark.profile
-@pytest.mark.parametrize("direction", ["forward", "backward"])
-@pytest.mark.parametrize("locations", ["well", "river"])
-def test_profile_get_destination_pathline_data(tmpdir, profile_outdir, mp7_simulation, direction, locations):
-    import cProfile
-
-    sim, forward_model_name, backward_model_name, nodew, nodesr = mp7_simulation
-    ws = tmpdir / "ws"
-
-    # copy simulation data from fixture setup to temp workspace
-    copytree(sim.simulation_data.mfpath.get_sim_path(), ws)
-
-    # make sure we have pathline files
-    backward_path = ws / f"{backward_model_name}.mppth"
-    assert backward_path.is_file()
-
-    # get pathline file corresponding to parametrized direction
-    pathline_file = PathlineFile(str(backward_path))
-
-    # capture perf profile
-    with cProfile.Profile() as pr:
-        pathline_file.get_destination_pathline_data(nodesr)
-
-    # show perf profile
-    s = io.StringIO()
-    ps = pstats.Stats(pr, stream=s).sort_stats('tottime')
-    ps.print_stats()
-
-    # save perf profile to file
-    if profile_outdir:
-        profile_outdir.mkdir(exist_ok=True)
-
-        file_stem = f"{inspect.currentframe().f_code.co_name}.{direction}.{locations}".replace("test", "profile", 1)
-        pr.dump_stats(file=profile_outdir / f"{file_stem}.dmp")
-        with open(profile_outdir / f"{file_stem}.txt", 'w+') as f:
-            f.write(s.getvalue())
-
-
-@requires_exe("mf6", "mp7")
-@pytest.mark.profile
-@pytest.mark.parametrize("direction", ["forward", "backward"])
-@pytest.mark.parametrize("locations", ["well", "river"])
-def test_get_destination_endpoint_data(tmpdir, profile_outdir, mp7_simulation, direction, locations):
-    import cProfile
-
-    sim, forward_model_name, backward_model_name, nodew, nodesr = mp7_simulation
-    ws = tmpdir / "ws"
-
-    # copy simulation data from fixture setup to temp workspace
-    copytree(sim.simulation_data.mfpath.get_sim_path(), ws)
-
-    # make sure we have endpoint files
-    forward_end = ws / f"{forward_model_name}.mpend"
-    backward_end = ws / f"{backward_model_name}.mpend"
-    assert forward_end.is_file()
-    assert backward_end.is_file()
-
-    # get endpoint file corresponding to parametrized direction
-    endpoint_file = EndpointFile(str(backward_end) if direction == "backward" else str(forward_end))
-
-    # capture perf profile
-    with cProfile.Profile() as pr:
-        endpoint_file.get_destination_endpoint_data(dest_cells=nodew if locations == "well" else nodesr)
-
-    # show results
-    s = io.StringIO()
-    ps = pstats.Stats(pr, stream=s).sort_stats('tottime')
-    ps.print_stats()
-
-    # save results to file
-    if profile_outdir:
-        profile_outdir.mkdir(exist_ok=True)
-
-        file_stem = f"{inspect.currentframe().f_code.co_name}.{direction}.{locations}".replace("test", "profile", 1)
-        pr.dump_stats(file=profile_outdir / f"{file_stem}.dmp")
-        with open(profile_outdir / f"{file_stem}.txt", 'w+') as f:
-            f.write(s.getvalue())
-
+    benchmark(lambda: endpoint_file.get_destination_endpoint_data(dest_cells=nodew if locations == "well" else nodesr))

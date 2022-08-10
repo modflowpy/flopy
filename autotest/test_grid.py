@@ -894,8 +894,12 @@ def test_voronoi_grid(tmpdir, grid_info):
     voronoi_grid.plot(ax=ax)
     plt.savefig(os.path.join(str(tmpdir), f"{name}.png"))
 
+    # TODO: why does this sometimes happen on CI
+    #  could be a rounding error as described here:
+    #  https://github.com/modflowpy/flopy/issues/1492#issuecomment-1210596349
+
     # ensure proper number of cells
-    almost_right = (ncpl == 538 and gridprops["ncpl"] == 535)  # TODO: why does this sometimes happen on CI
+    almost_right = (ncpl == 538 and gridprops["ncpl"] == 535)
     assert ncpl == gridprops["ncpl"] or almost_right
 
     # ensure that all cells have 3 or more points

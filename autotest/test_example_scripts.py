@@ -1,7 +1,6 @@
 import re
 from functools import reduce
 from os import linesep
-from pathlib import Path
 
 import pytest
 

@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from flaky import flaky
 from autotest.conftest import requires_exe
 
 import flopy
@@ -160,6 +161,9 @@ def singleModel(
     return mf
 
 
+# occasional forrtl: error (65): floating invalid
+# https://github.com/w-bonelli/flopy/runs/7744805897?check_suite_focus=true#step:8:1832
+@flaky
 @requires_exe("mflgr")
 def test_simple_lgrmodel_from_scratch(tmpdir):
     # coordinates and extend Mother

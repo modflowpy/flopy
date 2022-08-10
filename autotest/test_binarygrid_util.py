@@ -3,6 +3,8 @@ import numpy as np
 import pytest
 from matplotlib import pyplot as plt
 
+from flaky import flaky
+
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 from flopy.mf6.utils import MfGrdFile
 
@@ -81,6 +83,7 @@ def test_mfgrddisv_MfGrdFile(mfgrd_test_path):
     assert isinstance(mg, VertexGrid), f"invalid grid type ({type(mg)})"
 
 
+@flaky
 def test_mfgrddisv_modelgrid(mfgrd_test_path):
     fn = mfgrd_test_path / "flow.disv.grb"
     mg = VertexGrid.from_binary_grid_file(fn, verbose=True)

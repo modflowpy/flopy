@@ -4,6 +4,7 @@ import urllib
 from urllib.error import HTTPError
 
 import pytest
+from flaky import flaky
 
 from flopy.utils import get_modflow_main
 from autotest.conftest import (
@@ -37,6 +38,7 @@ def test_script_usage():
 rate_limit_msg = "rate limit exceeded"
 
 
+@flaky
 @requires_github
 def test_get_modflow_script(tmp_path, downloads_dir):
     # exit if extraction directory does not exist
@@ -107,6 +109,7 @@ def test_get_modflow_script(tmp_path, downloads_dir):
     assert sorted(files) == ["mfnwt.exe", "mfnwtdbl.exe"]
 
 
+@flaky
 @requires_github
 def test_get_nightly_script(tmp_path, downloads_dir):
     bindir = tmp_path / "bin1"
@@ -125,6 +128,7 @@ def test_get_nightly_script(tmp_path, downloads_dir):
     assert len(files) >= 4
 
 
+@flaky
 @requires_github
 def test_get_modflow(tmpdir):
     try:
@@ -167,6 +171,7 @@ def test_get_modflow(tmpdir):
     assert all(exe in actual for exe in expected)
 
 
+@flaky
 @requires_github
 def test_get_nightly(tmpdir):
     try:
