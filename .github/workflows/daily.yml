@@ -31,13 +31,14 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2.3.4
 
-      - name: Cache python
-        uses: actions/cache@v3
-        with:
-          path: ${{ matrix.path }}
-          key: ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ hashFiles('setup.cfg') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.python-version }}-pip-
+      # Caching disabled until hashFiles issue resolved: https://github.com/actions/runner/issues/1840
+      # - name: Cache python
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ${{ matrix.path }}
+      #     key: ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ hashFiles('setup.cfg') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-${{ matrix.python-version }}-pip-
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -116,13 +117,14 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2.3.4
 
-      - name: Cache python
-        uses: actions/cache@v3
-        with:
-          path: ${{ matrix.path }}
-          key: ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ hashFiles('setup.cfg') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.python-version }}-pip-
+      # Caching disabled until hashFiles issue resolved: https://github.com/actions/runner/issues/1840
+      # - name: Cache python
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ${{ matrix.path }}
+      #     key: ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ hashFiles('setup.cfg') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-${{ matrix.python-version }}-pip-
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -201,13 +203,14 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2.3.4
 
-      - name: Cache python
-        uses: actions/cache@v3
-        with:
-          path: ${{ matrix.path }}
-          key: ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ hashFiles('setup.cfg') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.python-version }}-pip-
+      # Caching disabled until hashFiles issue resolved: https://github.com/actions/runner/issues/1840
+      # - name: Cache python
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ${{ matrix.path }}
+      #     key: ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ hashFiles('setup.cfg') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-${{ matrix.python-version }}-pip-
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -233,18 +236,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Load cached benchmark results (for comparison)
-        uses: actions/cache@v2.1.0
+        uses: actions/cache@v3
         with:
           path: ./autotest/.benchmarks
-          key: benchmark-${{ matrix.os }}-${{ matrix.python-version }} }}
+          key: benchmark-${{ matrix.os }}-${{ matrix.python-version }}
 
       - name: Run benchmarks
         working-directory: ./autotest
         run: |
-          pytest -v --durations=0 \
-            --cov=flopy --cov-report=xml \
-            --benchmark-only --benchmark-autosave --benchmark-compare --benchmark-compare-fail=mean:25% \
-            --keep-failed=.failed
+          pytest -v --durations=0 --cov=flopy --cov-report=xml --benchmark-only --benchmark-autosave --benchmark-compare --benchmark-compare-fail=mean:25% --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -299,11 +299,12 @@ jobs:
       - name: Get branch name
         uses: nelonoel/branch-name@v1.0.1
 
-      - name: Cache Miniconda
-        uses: actions/cache@v2.1.0
-        with:
-          path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.run-type }}-${{ hashFiles('etc/environment.yml') }}
+      # Caching disabled until hashFiles issue resolved: https://github.com/actions/runner/issues/1840
+      # - name: Cache Miniconda
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ~/conda_pkgs_dir
+      #     key: ${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.run-type }}-${{ hashFiles('etc/environment.yml') }}
 
       # Standard python fails on windows without GDAL installation
       # Using custom bash shell ("shell: bash -l {0}") with Miniconda
@@ -383,11 +384,12 @@ jobs:
       - name: Get branch name
         uses: nelonoel/branch-name@v1.0.1
 
-      - name: Cache Miniconda
-        uses: actions/cache@v2.1.0
-        with:
-          path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.run-type }}-${{ hashFiles('etc/environment.yml') }}
+      # Caching disabled until hashFiles issue resolved: https://github.com/actions/runner/issues/1840
+      # - name: Cache Miniconda
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ~/conda_pkgs_dir
+      #     key: ${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.run-type }}-${{ hashFiles('etc/environment.yml') }}
 
       # Standard python fails on windows without GDAL installation
       # Using custom bash shell ("shell: bash -l {0}") with Miniconda
@@ -467,11 +469,12 @@ jobs:
       - name: Get branch name
         uses: nelonoel/branch-name@v1.0.1
 
-      - name: Cache Miniconda
-        uses: actions/cache@v2.1.0
-        with:
-          path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.run-type }}-${{ hashFiles('etc/environment.yml') }}
+      # Caching disabled until hashFiles issue resolved: https://github.com/actions/runner/issues/1840
+      # - name: Cache Miniconda
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ~/conda_pkgs_dir
+      #     key: ${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.run-type }}-${{ hashFiles('etc/environment.yml') }}
 
       # Standard python fails on windows without GDAL installation
       # Using custom bash shell ("shell: bash -l {0}") with Miniconda
@@ -501,18 +504,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Load cached benchmark results (for comparison)
-        uses: actions/cache@v2.1.0
+        uses: actions/cache@v3
         with:
           path: ./autotest/.benchmarks
-          key: benchmark-${{ runner.os }}-${{ matrix.python-version }} }}
+          key: benchmark-${{ runner.os }}-${{ matrix.python-version }}
 
       - name: Run benchmarks
         working-directory: ./autotest
         run: |
-          pytest -v --durations=0 \
-            --cov=flopy --cov-report=xml \
-            --benchmark-only --benchmark-autosave --benchmark-compare --benchmark-compare-fail=mean:25% \
-            --keep-failed=.failed
+          pytest -v --durations=0 --cov=flopy --cov-report=xml --benchmark-only --benchmark-autosave --benchmark-compare --benchmark-compare-fail=mean:25% --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
