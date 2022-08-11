@@ -680,6 +680,11 @@ class Grid:
 
         Should be be removed after a couple of releases. Added in 3.3.5
 
+        Updated in 3.3.6 to raise an error and exit if intersect interface
+        is called incorrectly.
+
+        Should be removed in flopy 3.3.7
+
         Parameters
         ----------
         module : str
@@ -698,7 +703,8 @@ class Grid:
             "intersect(self, x, y, z=None, local=False, "
             "forgive=False) interface instead."
         )
-        warnings.warn_explicit(warning, UserWarning, module, lineno)
+
+        raise UserWarning(warning)
 
     def set_coord_info(
         self,
