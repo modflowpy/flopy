@@ -63,10 +63,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run tests
+      - name: Run regression tests
         working-directory: ./autotest
         run: |
-          pytest -v -m="regression" -n=auto --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
+          pytest -v -m="regression" -n=auto --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -77,19 +77,6 @@ jobs:
           name: failed-${{ matrix.os }}-${{ matrix.python-version }}
           path: |
             ./autotest/.failed/**
-
-      - name: Print coverage report
-        working-directory: ./autotest
-        run: |
-          coverage report
-
-      - name: Upload coverage
-        if:
-          github.repository_owner == 'modflowpy' && github.event_name == 'push'
-        uses: codecov/codecov-action@v2.1.0
-        with:
-          directory: ./autotest
-          file: coverage.xml
 
   examples:
     name: Example scripts & notebooks
@@ -149,10 +136,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run tests
+      - name: Run example tests
         working-directory: ./autotest
         run: |
-          pytest -v -m="example" -n=auto --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
+          pytest -v -m="example" -n=auto --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -163,19 +150,6 @@ jobs:
           name: failed-${{ matrix.os }}-${{ matrix.python-version }}
           path: |
             ./autotest/.failed/**
-
-      - name: Print coverage report
-        working-directory: ./autotest
-        run: |
-          coverage report
-
-      - name: Upload coverage
-        if:
-          github.repository_owner == 'modflowpy' && github.event_name == 'push'
-        uses: codecov/codecov-action@v2.1.0
-        with:
-          directory: ./autotest
-          file: coverage.xml
 
   benchmark:
     name: Benchmarks
@@ -244,7 +218,7 @@ jobs:
       - name: Run benchmarks
         working-directory: ./autotest
         run: |
-          pytest -v --durations=0 --cov=flopy --cov-report=xml --benchmark-only --benchmark-autosave --benchmark-compare --benchmark-compare-fail=mean:25% --keep-failed=.failed
+          pytest -v --durations=0 --benchmark-only --benchmark-autosave --benchmark-compare --benchmark-compare-fail=mean:25% --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -262,19 +236,6 @@ jobs:
           name: benchmark-${{ matrix.os }}-${{ matrix.python-version }}
           path: |
             ./autotest/.benchmarks/**/*.json
-
-      - name: Print coverage report
-        working-directory: ./autotest
-        run: |
-          coverage report
-
-      - name: Upload coverage
-        if:
-          github.repository_owner == 'modflowpy' && github.event_name == 'push'
-        uses: codecov/codecov-action@v2.1.0
-        with:
-          directory: ./autotest
-          file: coverage.xml
 
   regression_windows:
     name: Regression tests (Windows)
@@ -333,10 +294,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run tests
+      - name: Run regression tests
         working-directory: ./autotest
         run: |
-          pytest -v -n auto -m "regression" --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
+          pytest -v -n auto -m "regression" --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -347,19 +308,6 @@ jobs:
           name: failed-${{ matrix.os }}-${{ matrix.python-version }}
           path: |
             ./autotest/.failed/**
-
-      - name: Print coverage report
-        working-directory: ./autotest
-        run: |
-          coverage report
-
-      - name: Upload coverage
-        if:
-          github.repository_owner == 'modflowpy' && github.event_name == 'push'
-        uses: codecov/codecov-action@v2.1.0
-        with:
-          directory: ./autotest
-          file: coverage.xml
 
   examples_windows:
     name: Example scripts & notebooks (Windows)
@@ -418,10 +366,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run tests
+      - name: Run example tests
         working-directory: ./autotest
         run: |
-          pytest -v -n auto -m "example" --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
+          pytest -v -n auto -m "example" --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -432,19 +380,6 @@ jobs:
           name: failed-${{ matrix.os }}-${{ matrix.python-version }}
           path: |
             ./autotest/.failed/**
-
-      - name: Print coverage report
-        working-directory: ./autotest
-        run: |
-          coverage report
-
-      - name: Upload coverage
-        if:
-          github.repository_owner == 'modflowpy' && github.event_name == 'push'
-        uses: codecov/codecov-action@v2.1.0
-        with:
-          directory: ./autotest
-          file: coverage.xml
 
   benchmark_windows:
     name: Benchmarks (Windows)
@@ -512,7 +447,7 @@ jobs:
       - name: Run benchmarks
         working-directory: ./autotest
         run: |
-          pytest -v --durations=0 --cov=flopy --cov-report=xml --benchmark-only --benchmark-autosave --benchmark-compare --benchmark-compare-fail=mean:25% --keep-failed=.failed
+          pytest -v --durations=0 --benchmark-only --benchmark-autosave --benchmark-compare --benchmark-compare-fail=mean:25% --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -530,16 +465,3 @@ jobs:
           name: benchmark-${{ runner.os }}-${{ matrix.python-version }}
           path: |
             ./autotest/.benchmarks/**/*.json
-
-      - name: Print coverage report
-        working-directory: ./autotest
-        run: |
-          coverage report
-
-      - name: Upload coverage
-        if:
-          github.repository_owner == 'modflowpy' && github.event_name == 'push'
-        uses: codecov/codecov-action@v2.1.0
-        with:
-          directory: ./autotest
-          file: coverage.xml

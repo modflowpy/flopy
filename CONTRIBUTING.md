@@ -60,7 +60,7 @@ Before you submit your Pull Request (PR) consider the following guidelines:
    ```shell
    python pull_request_prepare.py
    ```
-   Note: Pull Requests must pass isort import and black format checks run on the [GitHub actions](https://github.com/modflowpy/flopy/actions) (*linting*) before they will be accepted. isort can be installed using [`pip`](https://pypi.org/project/isort/) and [`conda`](https://anaconda.org/conda-forge/isort). The black formatter can also be installed using [`pip`](https://pypi.org/project/black/) and [`conda`](https://anaconda.org/conda-forge/black). If the Pull Request fails the *linting* job in the [flopy continuous integration](https://github.com/modflowpy/flopy/actions/workflows/ci.yml) workflow, make sure the latest versions of isort and black are installed.
+   Note: Pull Requests must pass isort import and black format checks run on the [GitHub actions](https://github.com/modflowpy/flopy/actions) (*linting*) before they will be accepted. isort can be installed using [`pip`](https://pypi.org/project/isort/) and [`conda`](https://anaconda.org/conda-forge/isort). The black formatter can also be installed using [`pip`](https://pypi.org/project/black/) and [`conda`](https://anaconda.org/conda-forge/black). If the Pull Request fails the *linting* job in the [flopy continuous integration](https://github.com/modflowpy/flopy/actions/workflows/commit.yml) workflow, make sure the latest versions of isort and black are installed.
    
 6. Run the full FloPy test suite and ensure that all tests pass:
 

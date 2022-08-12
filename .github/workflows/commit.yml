@@ -164,7 +164,7 @@ jobs:
       - name: Run tests
         working-directory: ./autotest
         run: |
-          pytest -v -n=auto --smoke --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
+          pytest -v -n=auto --smoke --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -172,22 +172,9 @@ jobs:
         uses: actions/upload-artifact@v2
         if: failure()
         with:
-          name: failed-${{ matrix.os }}-${{ matrix.python-version }}
+          name: failed-smoke-${{ matrix.os }}-${{ matrix.python-version }}
           path: |
             ./autotest/.failed/**
-
-      - name: Print coverage
-        working-directory: ./autotest
-        run: |
-          coverage report
-
-      - name: Upload coverage
-        if:
-          github.repository_owner == 'modflowpy' && github.event_name == 'push'
-        uses: codecov/codecov-action@v2.1.0
-        with:
-          directory: ./autotest
-          file: coverage.xml
 
   test:
     name: Test
@@ -275,11 +262,11 @@ jobs:
 
       - name: Upload coverage
         if:
-          github.repository_owner == 'modflowpy' && github.event_name == 'push'
-        uses: codecov/codecov-action@v2.1.0
+          github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
+        uses: codecov/codecov-action@v3
         with:
-          directory: ./autotest
-          file: coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./autotest/coverage.xml
 
   test_windows:
     name: Test Windows
@@ -361,8 +348,8 @@ jobs:
 
       - name: Upload coverage
         if:
-          github.repository_owner == 'modflowpy' && github.event_name == 'push'
-        uses: codecov/codecov-action@v2.1.0
+          github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
+        uses: codecov/codecov-action@v3
         with:
-          directory: ./autotest
-          file: coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./autotest/coverage.xml
