@@ -147,7 +147,6 @@ class _ModpathSeries(object):
 
         """
         ra = self._data
-        ra.sort(order=["particleid", "time"])
         if totim is not None:
             if ge:
                 idx = np.where(
@@ -181,7 +180,6 @@ class _ModpathSeries(object):
 
         """
         ra = self._data
-        ra.sort(order=["particleid", "time"])
         if totim is not None:
             if ge:
                 idx = np.where(ra["time"] >= totim)[0]
@@ -469,6 +467,9 @@ class PathlineFile(_ModpathSeries):
 
         # set number of particle ids
         self.nid = np.unique(self._data["particleid"])
+
+        # sort data
+        self._data.sort(order=["particleid", "time"])
 
         # close the input file
         self.file.close()
@@ -1314,6 +1315,9 @@ class TimeseriesFile(_ModpathSeries):
 
         # set number of particle ids
         self.nid = np.unique(self._data["particleid"])
+
+        # sort data
+        self._data.sort(order=["particleid", "time"])
 
         # close the input file
         self.file.close()

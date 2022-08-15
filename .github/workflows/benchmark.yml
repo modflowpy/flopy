@@ -1,0 +1,231 @@
+name: FloPy benchmarks
+
+on:
+  schedule:
+    - cron: '0 8 * * *' # run at 8 AM UTC (12 am PST)
+
+jobs:
+  benchmark:
+    name: Benchmarks
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest ]
+        python-version: [ 3.7, 3.8, 3.9, "3.10" ]
+        exclude:
+          # avoid shutil.copytree infinite recursion bug
+          # https://github.com/python/cpython/pull/17098
+          - python-version: '3.8.0'
+        include:
+          - os: ubuntu-latest
+            path: ~/.cache/pip
+          - os: macos-latest
+            path: ~/Library/Caches/pip
+    defaults:
+      run:
+        shell: bash
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2.3.4
+
+      - name: Cache Python
+        uses: actions/cache@v3
+        with:
+          path: ${{ matrix.path }}
+          key: ${{ matrix.os }}-${{ matrix.python-version }}-pip-${{ hashFiles('setup.cfg') }}
+          restore-keys: |
+            ${{ matrix.os }}-${{ matrix.python-version }}-pip-
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Get branch name
+        uses: nelonoel/branch-name@v1.0.1
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+          pip install ".[test, optional]"
+
+      - name: Install Modflow executables
+        uses: ./.github/actions/cache_exes
+        with:
+          path: ~/.local/bin
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run benchmarks
+        working-directory: ./autotest
+        run: |
+          mkdir -p .benchmarks
+          pytest -v --durations=0 --benchmark-only --benchmark-json .benchmarks/${{ matrix.os }}_python${{ matrix.python-version }}.json --keep-failed=.failed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload failed benchmark artifact
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: failed-benchmark-${{ matrix.os }}-${{ matrix.python-version }}-${{ github.run_id }}
+          path: |
+            ./autotest/.failed/**
+
+      - name: Upload benchmark result artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: benchmarks-${{ matrix.os }}-${{ matrix.python-version }}-${{ github.run_id }}
+          path: |
+            ./autotest/.benchmarks/**/*.json
+
+  benchmark_windows:
+    name: Benchmarks (Windows)
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ 3.7, 3.8, 3.9, "3.10" ]
+        exclude:
+          # avoid shutil.copytree infinite recursion bug
+          # https://github.com/python/cpython/pull/17098
+          - python-version: '3.8.0'
+    defaults:
+      run:
+        shell: pwsh
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2.3.4
+
+      - name: Get branch name
+        uses: nelonoel/branch-name@v1.0.1
+
+      - name: Cache Miniconda
+        uses: actions/cache@v3
+        with:
+          path: ~/conda_pkgs_dir
+          key: ${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.run-type }}-${{ hashFiles('etc/environment.yml') }}
+
+      # Standard python fails on windows without GDAL installation
+      # Using custom bash shell ("shell: bash -l {0}") with Miniconda
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v2.1.1
+        with:
+          python-version: ${{ matrix.python-version }}
+          channels: conda-forge
+          auto-update-conda: true
+          activate-environment: flopy
+          use-only-tar-bz2: true
+
+      - name: Install Python dependencies
+        run: |
+          conda env update --name flopy --file etc/environment.yml
+          python -m pip install --upgrade pip
+          pip install https://github.com/modflowpy/pymake/zipball/master
+          pip install xmipy
+          pip install .
+
+      - name: Install Modflow executables
+        uses: ./.github/actions/cache_exes
+        with:
+          path: C:\Users\runneradmin\.local\bin
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run benchmarks
+        working-directory: ./autotest
+        run: |
+          md -Force .benchmarks
+          pytest -v --durations=0 --benchmark-only --benchmark-json .benchmarks/${{ runner.os }}_python${{ matrix.python-version }}.json --keep-failed=.failed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload failed benchmark artifact
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: failed-benchmark-${{ runner.os }}-${{ matrix.python-version }}-${{ github.run_id }}
+          path: |
+            ./autotest/.failed/**
+
+      - name: Upload benchmark result artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: benchmarks-${{ runner.os }}-${{ matrix.python-version }}-${{ github.run_id }}
+          path: |
+            ./autotest/.benchmarks/**/*.json
+
+  post_benchmark:
+    needs:
+      - benchmark
+      - benchmark_windows
+    name: Process benchmark results
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2.3.4
+
+      - name: Cache Python
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-3.7-pip-${{ hashFiles('setup.cfg') }}
+          restore-keys: |
+            ${{ runner.os }}-3.7-pip-
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.7
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pandas matplotlib seaborn
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: ./autotest/.benchmarks
+
+      - name: Process benchmark results
+        run: |
+          artifact_json=$(gh api -X GET -H "Accept: application/vnd.github+json" /repos/modflowpy/flopy/actions/artifacts)
+          get_artifact_ids="
+          import json
+          import sys
+          from os import linesep
+
+          artifacts = json.load(sys.stdin, strict=False)['artifacts']
+          artifacts = [a for a in artifacts if a['name'].startswith('benchmarks-') and a['name'].split('-')[-1].isdigit()]
+
+          print(linesep.join([str(a['id']) for a in artifacts]))
+          "
+          echo $artifact_json \
+            | python -c "$get_artifact_ids" \
+            | xargs -I@ bash -c "gh api -H 'Accept: application/vnd.github+json' /repos/modflowpy/flopy/actions/artifacts/@/zip >> ./autotest/.benchmarks/@.zip"
+          zipfiles=( ./autotest/.benchmarks/*.zip )
+          if (( ${#zipfiles[@]} )); then
+            unzip -o './autotest/.benchmarks/*.zip' -d ./autotest/.benchmarks
+          fi
+          python ./scripts/process_benchmarks.py ./autotest/.benchmarks ./autotest/.benchmarks
+        env:
+          ARTIFACTS: ${{steps.run_tests.outputs.artifact_ids}}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v2
+        with:
+          name: benchmarks-${{ github.run_id }}
+          path: |
+            ./autotest/.benchmarks/*.csv
+            ./autotest/.benchmarks/*.png
