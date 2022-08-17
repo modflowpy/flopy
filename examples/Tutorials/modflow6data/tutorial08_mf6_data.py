@@ -47,16 +47,18 @@
 
 # package import
 import os
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import numpy as np
 
 import flopy
 
 # set up where simulation workspace will be stored
-workspace = os.path.join("data", "mf6_working_with_data")
-name = "example_1"
-if not os.path.exists(workspace):
-    os.makedirs(workspace)
+temp_dir = TemporaryDirectory()
+workspace = temp_dir.name
+name = "tutorial08_mf6_data"
+
 # create the FloPy simulation and tdis objects
 sim = flopy.mf6.MFSimulation(
     sim_name=name, exe_name="mf6", version="mf6", sim_ws=workspace
@@ -162,3 +164,9 @@ a2 = {
 }
 botm = [a0, a1, a2]
 flopy.mf6.ModflowGwfdis(gwf, nlay=3, nrow=10, ncol=10, botm=botm)
+
+try:
+    temp_dir.cleanup()
+except PermissionError:
+    # can occur on windows: https://docs.python.org/3/library/tempfile.html#tempfile.TemporaryDirectory
+    pass

@@ -57,16 +57,17 @@
 
 # package import
 import os
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import numpy as np
 
 import flopy
 
 # set up where simulation workspace will be stored
-workspace = os.path.join("data", "mf6_working_with_data")
-name = "example_1"
-if not os.path.exists(workspace):
-    os.makedirs(workspace)
+temp_dir = TemporaryDirectory()
+workspace = temp_dir.name
+name = "tutorial05_mf6_data"
 
 # create the flopy simulation object
 sim = flopy.mf6.MFSimulation(
@@ -211,3 +212,9 @@ print(ims.complexity.get_file_entry())
 # the `get_file_entry` method.
 
 print(npf.xt3doptions.get_file_entry())
+
+try:
+    temp_dir.cleanup()
+except PermissionError:
+    # can occur on windows: https://docs.python.org/3/library/tempfile.html#tempfile.TemporaryDirectory
+    pass

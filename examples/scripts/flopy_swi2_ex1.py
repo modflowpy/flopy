@@ -1,3 +1,5 @@
+from tempfile import TemporaryDirectory
+
 import math
 import os
 import sys
@@ -21,9 +23,7 @@ updates = {
 plt.rcParams.update(updates)
 
 
-def run():
-    workspace = "swiex1"
-
+def run(workspace, quiet):
     cleanFiles = False
     fext = "png"
     narg = len(sys.argv)
@@ -118,7 +118,8 @@ def run():
     # create model files
     ml.write_input()
     # run the model
-    m = ml.run_model(silent=False)
+    m = ml.run_model(silent=quiet)
+
     # read model heads
     headfile = os.path.join(workspace, f"{modelname}.hds")
     hdobj = flopy.utils.HeadFile(headfile)
@@ -263,9 +264,24 @@ def run():
     fig.savefig(outfig, dpi=300)
     print("created...", outfig)
 
-    return 0
-
 
 if __name__ == "__main__":
-    success = run()
-    sys.exit(success)
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--keep", help="output directory")
+    parser.add_argument("--quiet", action="store_false", help="don't show model output")
+    args = vars(parser.parse_args())
+
+    workspace = args.get('keep', None)
+    quiet = args.get('quiet', False)
+
+    if workspace is not None:
+        run(workspace, quiet)
+    else:
+        try:
+            with TemporaryDirectory() as workspace:
+                run(workspace, quiet)
+        except PermissionError:
+            # can occur on windows: https://docs.python.org/3/library/tempfile.html#tempfile.TemporaryDirectory
+            pass

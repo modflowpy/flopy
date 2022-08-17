@@ -283,8 +283,9 @@ class VertexGrid(Grid):
             The CELL2D number
 
         """
-        frame_info = inspect.getframeinfo(inspect.currentframe())
-        self._warn_intersect(frame_info.filename, frame_info.lineno)
+        if isinstance(z, bool):
+            frame_info = inspect.getframeinfo(inspect.currentframe())
+            self._warn_intersect(frame_info.filename, frame_info.lineno)
 
         if local:
             # transform x and y to real-world coordinates

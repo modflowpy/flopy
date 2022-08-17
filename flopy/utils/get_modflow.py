@@ -40,10 +40,48 @@ def get_ostag():
     raise ValueError(f"platform {sys.platform!r} not supported")
 
 
+def get_request(url):
+    """Get urllib.request.Request, with headers.
+
+    This bears GITHUB_TOKEN if it is set as an environment variable.
+    """
+    headers = {}
+    github_token = os.environ.get("GITHUB_TOKEN")
+    if github_token:
+        headers["Authorization"] = f"Bearer {github_token}"
+    return urllib.request.Request(url, headers=headers)
+
+
 def get_avail_releases(api_url):
     """Get list of available releases."""
-    with urllib.request.urlopen(f"{api_url}/releases") as resp:
-        result = resp.read()
+    req_url = f"{api_url}/releases"
+    request = get_request(req_url)
+    num_tries = 0
+    while True:
+        num_tries += 1
+        try:
+            with urllib.request.urlopen(request, timeout=10) as resp:
+                result = resp.read()
+                break
+        except urllib.error.HTTPError as err:
+            if err.code == 401 and os.environ.get("GITHUB_TOKEN"):
+                raise ValueError("GITHUB_TOKEN env is invalid") from err
+            elif err.code == 403 and "rate limit exceeded" in err.reason:
+                raise ValueError(
+                    "use GITHUB_TOKEN env to bypass rate limit"
+                ) from err
+            elif err.code == 404:
+                if num_tries < 3:
+                    # GitHub sometimes returns 404 for valid URLs, so retry
+                    print(f"URL request {num_tries} did not work")
+                    continue
+                else:
+                    raise RuntimeError(
+                        f"cannot retrieve data from {req_url}"
+                    ) from err
+            else:
+                raise err
+
     releases = json.loads(result.decode())
     avail_releases = ["latest"]
     avail_releases.extend(release["tag_name"] for release in releases)
@@ -178,18 +216,48 @@ def run_main(
         req_url = f"{api_url}/releases/latest"
     else:
         req_url = f"{api_url}/releases/tags/{release_id}"
-    try:
-        with urllib.request.urlopen(req_url) as resp:
-            result = resp.read()
-    except urllib.error.HTTPError as err:
-        if err.code == 404:
-            avail_releases = get_avail_releases(api_url)
-            raise ValueError(
-                f"Release {release_id!r} not found -- "
-                f"choose from {avail_releases}"
-            )
-        else:
-            raise err
+    request = get_request(req_url)
+    avail_releases = None
+    num_tries = 0
+    while True:
+        num_tries += 1
+        try:
+            with urllib.request.urlopen(request, timeout=10) as resp:
+                result = resp.read()
+                remaining = int(resp.headers["x-ratelimit-remaining"])
+                if remaining <= 10:
+                    print(
+                        f"Only {remaining} GitHub API requests remaining "
+                        "before rate-limiting"
+                    )
+                break
+        except urllib.error.HTTPError as err:
+            if err.code == 401 and os.environ.get("GITHUB_TOKEN"):
+                raise ValueError("GITHUB_TOKEN env is invalid") from err
+            elif err.code == 403 and "rate limit exceeded" in err.reason:
+                raise ValueError(
+                    "use GITHUB_TOKEN env to bypass rate limit"
+                ) from err
+            elif err.code == 404:
+                if avail_releases is None:
+                    avail_releases = get_avail_releases(api_url)
+                if release_id in avail_releases:
+                    if num_tries < 3:
+                        # GitHub sometimes returns 404 for valid URLs, so retry
+                        print(f"URL request {num_tries} did not work")
+                        continue
+                    else:
+                        raise RuntimeError(
+                            f"cannot retrieve data from {req_url}"
+                        ) from err
+                else:
+                    raise ValueError(
+                        f"Release {release_id!r} not found -- "
+                        f"choose from {avail_releases}"
+                    ) from err
+            else:
+                raise err
+
     release = json.loads(result.decode())
     tag_name = release["tag_name"]
     if not quiet:
