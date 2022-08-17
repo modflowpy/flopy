@@ -109,7 +109,7 @@ def parse_shapely_ix_result(collection, ix_result, shptyps=None):
 
 
 class GridIntersect:
-    """Class for intersecting shapely geometries (Point, Linestring, Polygon, 
+    """Class for intersecting shapely geometries (Point, Linestring, Polygon,
     or their Multi variants) with MODFLOW grids. Contains optimized search
     routines for structured grids.
 
@@ -297,8 +297,7 @@ class GridIntersect:
 
     def _set_method_get_gridshapes(self):
         """internal method, set self._get_gridshapes to the appropriate method
-        for obtaining grid cell geometries.
-        """
+        for obtaining grid cell geometries."""
         # Set method for obtaining grid shapes
         if self.mfgrid.grid_type == "structured":
             self._get_gridshapes = self._rect_grid_to_geoms_cellids
@@ -470,8 +469,10 @@ class GridIntersect:
         prepared = import_optional_dependency("shapely.prepared")
         prepshp = prepared.prep(shp)
         # get only gridcells that intersect
-        qfiltered = filter(lambda tup: prepshp.intersects(tup[0]),
-                           zip(self.geoms[cellids], cellids))
+        qfiltered = filter(
+            lambda tup: prepshp.intersects(tup[0]),
+            zip(self.geoms[cellids], cellids),
+        )
         try:
             _, qcellids = zip(*qfiltered)
         except ValueError:
@@ -499,8 +500,12 @@ class GridIntersect:
             "`GridIntersect.geoms[sorted_cellids]`.",
             DeprecationWarning,
         )
-        return [igeom for _, igeom in
-                sorted(zip(cellids, geoms), key=lambda pair: pair[0])]
+        return [
+            igeom
+            for _, igeom in sorted(
+                zip(cellids, geoms), key=lambda pair: pair[0]
+            )
+        ]
 
     def _intersect_point_shapely(
         self, shp, sort_by_cellid=True, return_all_intersections=False
@@ -2021,8 +2026,11 @@ def _polygon_patch(polygon, **kwargs):
     patch = PathPatch(
         Path.make_compound_path(
             Path(np.asarray(polygon.exterior.coords)[:, :2]),
-            *[Path(np.asarray(ring.coords)[:, :2])
-              for ring in polygon.interiors],
-        ), **kwargs
+            *[
+                Path(np.asarray(ring.coords)[:, :2])
+                for ring in polygon.interiors
+            ],
+        ),
+        **kwargs,
     )
     return patch
