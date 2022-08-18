@@ -340,7 +340,7 @@ class GridIntersect:
             for j in range(self.mfgrid.ncol):
                 xy = self.mfgrid.get_cell_vertices(i, j)
                 geoms.append(shapely_geo.Polygon(xy))
-                cellids.append(self.mfgrid.get_node([0, i, j])[0])
+                cellids.append(self.mfgrid.get_node((0, i, j))[0])
         return geoms, cellids
 
     def _usg_grid_to_geoms_cellids(self):
