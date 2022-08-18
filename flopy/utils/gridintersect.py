@@ -18,6 +18,10 @@ else:
     SHAPELY_GE_20 = False
     SHAPELY_LT_18 = False
 
+# shapely > 1.8 required
+if SHAPELY_LT_18:
+    raise Exception("GridIntersect requires shapely>=1.8.")
+
 shapely_warning = None
 if shapely is not None:
     try:
@@ -45,15 +49,16 @@ if shapely_warning is not None and not SHAPELY_GE_20:
                 )
             yield
 
-elif SHAPELY_LT_18 and NUMPY_GE_121:
-
     @contextlib.contextmanager
-    def ignore_shapely_warnings_for_object_array():
+    def ignore_shapely2_strtree_warning():
         with warnings.catch_warnings():
             warnings.filterwarnings(
                 "ignore",
-                "An exception was ignored while fetching",
-                DeprecationWarning,
+                (
+                    "STRtree will be changed in 2.0.0 and "
+                    "will not be compatible with versions < 2."
+                ),
+                shapely_warning,
             )
             yield
 
@@ -61,6 +66,10 @@ else:
 
     @contextlib.contextmanager
     def ignore_shapely_warnings_for_object_array():
+        yield
+
+    @contextlib.contextmanager
+    def ignore_shapely2_strtree_warning():
         yield
 
 
@@ -166,8 +175,13 @@ class GridIntersect:
             # build list of geoms and cellids
             geoms, cellids = self._get_gridshapes()
             # convert to arrays for easy indexing
-            self.geoms = np.array(geoms, dtype="O")
+            self.geoms = np.empty(len(geoms), dtype=object)
+            self.geoms[:] = geoms
             self.cellids = np.array(cellids, dtype=int)
+            # TODO: check if this is necessary:
+            # check if cellids are ordered properly
+            if np.any(np.diff(self.cellids) < 0):
+                raise Exception("cellids not in order")
 
             # build STR-tree if specified
             if self.rtree:
@@ -175,7 +189,8 @@ class GridIntersect:
                     "shapely.strtree",
                     error_message="STRTree requires shapely",
                 )
-                self.strtree = strtree.STRtree(self.geoms, self.cellids)
+                with ignore_shapely2_strtree_warning():
+                    self.strtree = strtree.STRtree(self.geoms)
 
         elif self.method == "structured" and mfgrid.grid_type == "structured":
             # geoms and cellids do not need to be assigned for structured
