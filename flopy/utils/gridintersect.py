@@ -611,7 +611,7 @@ class GridIntersect:
                 vertices.append(tuple(cell_verts))
                 # if structured calculated (i, j) cell address
                 if self.mfgrid.grid_type == "structured":
-                    cid = self.mfgrid.get_lrc([cid])[1:]
+                    cid = self.mfgrid.get_lrc([cid])[0][1:]
                 cellids.append(cid)
 
         rec = np.recarray(
@@ -701,7 +701,7 @@ class GridIntersect:
                 vertices.append(verts)
                 # if structured calculate (i, j) cell address
                 if self.mfgrid.grid_type == "structured":
-                    cid = self.mfgrid.get_lrc([cid])[1:]
+                    cid = self.mfgrid.get_lrc([cid])[0][1:]
                 cellids.append(cid)
 
         rec = np.recarray(
@@ -799,7 +799,7 @@ class GridIntersect:
                 vertices.append(verts)
                 # if structured calculate (i, j) cell address
                 if self.mfgrid.grid_type == "structured":
-                    cid = self.mfgrid.get_lrc([cid])[1:]
+                    cid = self.mfgrid.get_lrc([cid])[0][1:]
                 cellids.append(cid)
 
         rec = np.recarray(
