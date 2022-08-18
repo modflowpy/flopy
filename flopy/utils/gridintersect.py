@@ -340,7 +340,7 @@ class GridIntersect:
             for j in range(self.mfgrid.ncol):
                 xy = self.mfgrid.get_cell_vertices(i, j)
                 geoms.append(shapely_geo.Polygon(xy))
-                cellids.append(i * self.mfgrid.ncol + j)
+                cellids.append(self.mfgrid.get_node([0, i, j])[0])
         return geoms, cellids
 
     def _usg_grid_to_geoms_cellids(self):
@@ -412,6 +412,10 @@ class GridIntersect:
     def _rect_grid_to_shape_list(self):
         """internal method, list of shapely polygons for structured grid cells.
 
+        .. deprecated:: 3.3.6
+            use _rect_grid_to_geoms_cellids() instead.
+
+
         Returns
         -------
         list :
@@ -426,6 +430,9 @@ class GridIntersect:
 
     def _vtx_grid_to_shape_list(self):
         """internal method, list of shapely polygons for vertex grids.
+
+        .. deprecated:: 3.3.6
+            use _vtx_grid_to_geoms_cellids() instead.
 
         Returns
         -------
@@ -498,6 +505,9 @@ class GridIntersect:
     @staticmethod
     def sort_gridshapes(geoms, cellids):
         """Sort geometries (from i.e. query result) by cell id.
+
+        .. deprecated:: 3.3.6
+            sorting is now performed on cellids.
 
         Parameters
         ----------
@@ -601,9 +611,7 @@ class GridIntersect:
                 vertices.append(tuple(cell_verts))
                 # if structured calculated (i, j) cell address
                 if self.mfgrid.grid_type == "structured":
-                    i = cid // self.mfgrid.ncol
-                    j = cid - i * self.mfgrid.ncol
-                    cid = (i, j)
+                    cid = self.mfgrid.get_lrc([cid])[1:]
                 cellids.append(cid)
 
         rec = np.recarray(
@@ -693,9 +701,7 @@ class GridIntersect:
                 vertices.append(verts)
                 # if structured calculate (i, j) cell address
                 if self.mfgrid.grid_type == "structured":
-                    i = cid // self.mfgrid.ncol
-                    j = cid - i * self.mfgrid.ncol
-                    cid = (i, j)
+                    cid = self.mfgrid.get_lrc([cid])[1:]
                 cellids.append(cid)
 
         rec = np.recarray(
@@ -793,9 +799,7 @@ class GridIntersect:
                 vertices.append(verts)
                 # if structured calculate (i, j) cell address
                 if self.mfgrid.grid_type == "structured":
-                    i = cid // self.mfgrid.ncol
-                    j = cid - i * self.mfgrid.ncol
-                    cid = (i, j)
+                    cid = self.mfgrid.get_lrc([cid])[1:]
                 cellids.append(cid)
 
         rec = np.recarray(
