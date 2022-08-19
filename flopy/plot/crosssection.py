@@ -145,18 +145,22 @@ class PlotCrossSection:
             xp, yp = self.mg.get_local_coords(xp, yp)
             if np.max(xp) - np.min(xp) > np.max(yp) - np.min(yp):
                 # this is x-projection and we should buffer x by small amount
-                idx0 = list(xp).index(np.max(xp))
-                idx1 = list(xp).index(np.min(xp))
+                idx0 = np.argmax(xp)
+                idx1 = np.argmin(xp)
+                idx2 = np.argmax(yp)
                 xp[idx0] += 1e-04
                 xp[idx1] -= 1e-04
+                yp[idx2] += 1e-03
                 self.direction = "x"
 
             else:
                 # this is y-projection and we should buffer y by small amount
-                idx0 = list(yp).index(np.max(yp))
-                idx1 = list(yp).index(np.min(yp))
+                idx0 = np.argmax(yp)
+                idx1 = np.argmin(yp)
+                idx2 = np.argmax(xp)
                 yp[idx0] += 1e-04
                 yp[idx1] -= 1e-04
+                xp[idx2] += 1e-03
                 self.direction = "y"
 
             pts = [(xt, yt) for xt, yt in zip(xp, yp)]
