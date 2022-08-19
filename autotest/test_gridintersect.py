@@ -483,7 +483,7 @@ def test_rect_grid_linestring_in_and_out_of_cell2():
 def test_rect_grid_linestrings_on_boundaries_return_all_ix():
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    x, y = ix._rect_grid_to_shape_list()[0].exterior.xy
+    x, y = ix._rect_grid_to_geoms_cellids()[0][0].exterior.xy
     n_intersections = [1, 2, 2, 1]
     for i in range(4):
         ls = LineString([(x[i], y[i]), (x[i + 1], y[i + 1])])
@@ -584,7 +584,7 @@ def test_rect_grid_linestring_in_and_out_of_cell_shapely(rtree):
 def test_rect_grid_linestrings_on_boundaries_return_all_ix_shapely(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="vertex", rtree=rtree)
-    x, y = ix._rect_grid_to_shape_list()[0].exterior.xy
+    x, y = ix._rect_grid_to_geoms_cellids()[0][0].exterior.xy
     n_intersections = [1, 2, 2, 1]
     for i in range(4):
         ls = LineString([(x[i], y[i]), (x[i + 1], y[i + 1])])
@@ -670,7 +670,7 @@ def test_tri_grid_multilinestring_in_one_cell(rtree):
 def test_tri_grid_linestrings_on_boundaries_return_all_ix(rtree):
     tgr = get_tri_grid()
     ix = GridIntersect(tgr, method="vertex", rtree=rtree)
-    x, y = ix._vtx_grid_to_shape_list()[0].exterior.xy
+    x, y = ix._vtx_grid_to_geoms_cellids()[0][0].exterior.xy
     n_intersections = [2, 1, 2]
     for i in range(len(x) - 1):
         ls = LineString([(x[i], y[i]), (x[i + 1], y[i + 1])])
@@ -1297,3 +1297,8 @@ def test_raster_sampling_methods(example_data_path):
             raise AssertionError(
                 f"{method} resampling returning incorrect values"
             )
+
+
+if __name__ == "__main__":
+
+    test_all_intersections_shapely_no_strtree()

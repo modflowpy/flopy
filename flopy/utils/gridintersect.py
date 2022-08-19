@@ -18,6 +18,10 @@ else:
     SHAPELY_GE_20 = False
     SHAPELY_LT_18 = False
 
+# shapely > 1.8 required
+if SHAPELY_LT_18:
+    raise Exception("GridIntersect requires shapely>=1.8.")
+
 shapely_warning = None
 if shapely is not None:
     try:
@@ -45,15 +49,16 @@ if shapely_warning is not None and not SHAPELY_GE_20:
                 )
             yield
 
-elif SHAPELY_LT_18 and NUMPY_GE_121:
-
     @contextlib.contextmanager
-    def ignore_shapely_warnings_for_object_array():
+    def ignore_shapely2_strtree_warning():
         with warnings.catch_warnings():
             warnings.filterwarnings(
                 "ignore",
-                "An exception was ignored while fetching",
-                DeprecationWarning,
+                (
+                    "STRtree will be changed in 2.0.0 and "
+                    "will not be compatible with versions < 2."
+                ),
+                shapely_warning,
             )
             yield
 
@@ -61,6 +66,10 @@ else:
 
     @contextlib.contextmanager
     def ignore_shapely_warnings_for_object_array():
+        yield
+
+    @contextlib.contextmanager
+    def ignore_shapely2_strtree_warning():
         yield
 
 
@@ -109,8 +118,8 @@ def parse_shapely_ix_result(collection, ix_result, shptyps=None):
 
 
 class GridIntersect:
-    """Class for intersecting shapely shapes (Point, Linestring, Polygon, or
-    their Multi variants) with MODFLOW grids. Contains optimized search
+    """Class for intersecting shapely geometries (Point, Linestring, Polygon,
+    or their Multi variants) with MODFLOW grids. Contains optimized search
     routines for structured grids.
 
     Notes
@@ -122,14 +131,12 @@ class GridIntersect:
        intersect each individual shape in a collection than it is to intersect
        with the whole collection at once.
      - Building the STR-tree can take a while for large grids. Once built the
-       intersect routines (for individual shapes) should be pretty fast. It
-       is possible to perform intersects without building the STR-tree by
-       setting `rtree=False`.
-     - The optimized routines for structured grids will often outperform
-       the shapely routines because of the reduced overhead of building and
-       parsing the STR-tree. However, for polygons the STR-tree implementation
-       is often faster than the optimized structured routines, especially
-       for larger grids.
+       intersect routines (for individual shapes) should be pretty fast.
+     - The optimized routines for structured grids can outperform the shapely
+       routines for point and linestring intersections because of the reduced
+       overhead of building and parsing the STR-tree. However, for polygons
+       the STR-tree implementation is often faster than the optimized
+       structured routines, especially for larger grids.
     """
 
     def __init__(self, mfgrid, method=None, rtree=True):
@@ -145,10 +152,9 @@ class GridIntersect:
             interesection operations or 'structured' which uses optimized
             methods that only work for structured grids
         rtree : bool, optional
-            whether to build an STR-Tree, default is True. If False no
-            STR-tree is built (which saves some time), but intersects will
-            loop through all model gridcells (which is generally slower).
-            Only read when `method='vertex'`.
+            whether to build an STR-Tree, default is True. If False no STR-tree
+            is built, but intersects will loop through all model gridcells
+            (which is generally slower). Only read when `method='vertex'`.
         """
 
         self.mfgrid = mfgrid
@@ -160,9 +166,22 @@ class GridIntersect:
             self.method = method
         self.rtree = rtree
 
+        # really only necessary for method=='vertex' as structured methods
+        # do not require a full list of shapely geometries, but useful to be
+        # able to obtain the grid shapes nonetheless
+        self._set_method_get_gridshapes()
+
         if self.method == "vertex":
-            # set method to get gridshapes depending on grid type
-            self._set_method_get_gridshapes()
+            # build list of geoms and cellids
+            geoms, cellids = self._get_gridshapes()
+            # convert to arrays for easy indexing
+            self.geoms = np.empty(len(geoms), dtype=object)
+            self.geoms[:] = geoms
+            self.cellids = np.array(cellids, dtype=int)
+            # TODO: check if this is necessary:
+            # check if cellids are ordered properly
+            if np.any(np.diff(self.cellids) < 0):
+                raise Exception("cellids not in order")
 
             # build STR-tree if specified
             if self.rtree:
@@ -170,10 +189,14 @@ class GridIntersect:
                     "shapely.strtree",
                     error_message="STRTree requires shapely",
                 )
-                self.strtree = strtree.STRtree(self._get_gridshapes())
+                with ignore_shapely2_strtree_warning():
+                    self.strtree = strtree.STRtree(self.geoms)
 
         elif self.method == "structured" and mfgrid.grid_type == "structured":
-            pass
+            # geoms and cellids do not need to be assigned for structured
+            # methods
+            self.geoms = None
+            self.cellids = None
 
         else:
             raise ValueError(
@@ -288,57 +311,67 @@ class GridIntersect:
         return rec
 
     def _set_method_get_gridshapes(self):
-        """internal method, set self._get_gridshapes to the certain method for
-        obtaining gridcells."""
+        """internal method, set self._get_gridshapes to the appropriate method
+        for obtaining grid cell geometries."""
         # Set method for obtaining grid shapes
         if self.mfgrid.grid_type == "structured":
-            self._get_gridshapes = self._rect_grid_to_shape_generator
+            self._get_gridshapes = self._rect_grid_to_geoms_cellids
         elif self.mfgrid.grid_type == "vertex":
-            self._get_gridshapes = self._vtx_grid_to_shape_generator
+            self._get_gridshapes = self._vtx_grid_to_geoms_cellids
         elif self.mfgrid.grid_type == "unstructured":
             raise NotImplementedError()
 
-    def _rect_grid_to_shape_generator(self):
-        """internal method, generator yielding shapely polygons for structured
+    def _rect_grid_to_geoms_cellids(self):
+        """internal method, return shapely polygons and cellids for structured
         grid cells.
 
         Returns
         -------
-        generator :
-            generator of shapely Polygons
+        geoms : list
+            list of shapely Polygons
+        cellids : list
+            list of cellids
         """
         shapely_geo = import_optional_dependency("shapely.geometry")
 
+        geoms = []
+        cellids = []
         for i in range(self.mfgrid.nrow):
             for j in range(self.mfgrid.ncol):
                 xy = self.mfgrid.get_cell_vertices(i, j)
-                p = shapely_geo.Polygon(xy)
-                p.name = (i, j)
-                yield p
+                geoms.append(shapely_geo.Polygon(xy))
+                cellids.append(self.mfgrid.get_node((0, i, j))[0])
+        return geoms, cellids
 
-    def _usg_grid_to_shape_generator(self):
-        """internal method, convert unstructred grid to list of shapely
-        polygons.
+    def _usg_grid_to_geoms_cellids(self):
+        """internal method, return shapely polygons and cellids for
+        unstructured grids.
 
         Returns
         -------
-        list
+        geoms : list
             list of shapely Polygons
+        cellids : list
+            list of cellids
         """
         raise NotImplementedError()
 
-    def _vtx_grid_to_shape_generator(self):
-        """internal method, generator yielding shapely polygons for vertex
+    def _vtx_grid_to_geoms_cellids(self):
+        """internal method, return shapely polygons and cellids for vertex
         grids.
 
         Returns
         -------
-        generator :
-            generator of shapely Polygons
+        geoms : list
+            list of shapely Polygons
+        cellids : list
+            list of cellids
         """
         shapely_geo = import_optional_dependency("shapely.geometry")
 
         # for cell2d rec-arrays
+        geoms = []
+        cellids = []
         if isinstance(self.mfgrid._cell2d, np.recarray):
             for icell in self.mfgrid._cell2d.icell2d:
                 points = []
@@ -356,9 +389,8 @@ class GridIntersect:
                 # close the polygon, if necessary
                 if points[0] != points[-1]:
                     points.append(points[0])
-                p = shapely_geo.Polygon(points)
-                p.name = icell
-                yield p
+                geoms.append(shapely_geo.Polygon(points))
+                cellids.append(icell)
         # for cell2d lists
         elif isinstance(self.mfgrid._cell2d, list):
             for icell in range(len(self.mfgrid._cell2d)):
@@ -373,40 +405,46 @@ class GridIntersect:
                 # close the polygon, if necessary
                 if points[0] != points[-1]:
                     points.append(points[0])
-                p = shapely_geo.Polygon(points)
-                p.name = icell
-                yield p
+                geoms.append(shapely_geo.Polygon(points))
+                cellids.append(icell)
+        return geoms, cellids
 
     def _rect_grid_to_shape_list(self):
         """internal method, list of shapely polygons for structured grid cells.
 
+        .. deprecated:: 3.3.6
+            use _rect_grid_to_geoms_cellids() instead.
+
+
         Returns
         -------
         list :
             list of shapely Polygons
         """
-        return list(self._rect_grid_to_shape_generator())
-
-    def _usg_grid_to_shape_list(self):
-        """internal method, convert unstructred grid to list of shapely
-        polygons.
-
-        Returns
-        -------
-        list
-            list of shapely Polygons
-        """
-        raise NotImplementedError()
+        warnings.warn(
+            "`_rect_grid_to_shape_list()` is deprecated, please"
+            "use `_rect_grid_to_geoms_cellids()` instead.",
+            DeprecationWarning,
+        )
+        return self._rect_grid_to_geoms_cellids()[0]
 
     def _vtx_grid_to_shape_list(self):
         """internal method, list of shapely polygons for vertex grids.
 
+        .. deprecated:: 3.3.6
+            use _vtx_grid_to_geoms_cellids() instead.
+
         Returns
         -------
         list :
             list of shapely Polygons
         """
-        return list(self._vtx_grid_to_shape_generator())
+        warnings.warn(
+            "`_vtx_grid_to_shape_list()` is deprecated, please"
+            "use `_vtx_grid_to_geoms_cellids()` instead.",
+            DeprecationWarning,
+        )
+        return self._vtx_grid_to_geoms_cellids()[0]
 
     def query_grid(self, shp):
         """Perform spatial query on grid with shapely geometry. If no spatial
@@ -419,26 +457,27 @@ class GridIntersect:
 
         Returns
         -------
-        list or generator expression
-            list or generator containing grid cells in query result
+        list or array
+            list or array containing cellids of grid cells in query result
         """
         if self.rtree:
-            result = self.strtree.query(shp)
+            result = self.strtree.query_items(shp)
         else:
             # no spatial query
-            result = self._get_gridshapes()
+            result = self.cellids
         return result
 
-    @staticmethod
-    def filter_query_result(qresult, shp):
-        """Filter query result to obtain grid cells that intersect with shape.
-        Used to (further) reduce query result to cells that definitely
-        intersect with shape.
+    def filter_query_result(self, cellids, shp):
+        """Filter list of geometries to obtain grid cells that intersect with
+        shape.
+
+        Used to (further) reduce query result to cells that intersect with
+        shape.
 
         Parameters
         ----------
-        qresult : iterable
-            query result, iterable of polygons
+        cellids : iterable
+            iterable of cellids, query result
         shp : shapely.geometry
             shapely geometry that is prepared and used to filter
             query result
@@ -452,33 +491,46 @@ class GridIntersect:
         prepared = import_optional_dependency("shapely.prepared")
         prepshp = prepared.prep(shp)
         # get only gridcells that intersect
-        qfiltered = filter(prepshp.intersects, qresult)
-        return qfiltered
+        qfiltered = filter(
+            lambda tup: prepshp.intersects(tup[0]),
+            zip(self.geoms[cellids], cellids),
+        )
+        try:
+            _, qcellids = zip(*qfiltered)
+        except ValueError:
+            # catch empty filter result (i.e. when rtree=False)
+            qcellids = []
+        return qcellids
 
     @staticmethod
-    def sort_gridshapes(shape_iter):
-        """Sort query result by node id.
+    def sort_gridshapes(geoms, cellids):
+        """Sort geometries (from i.e. query result) by cell id.
+
+        .. deprecated:: 3.3.6
+            sorting is now performed on cellids.
 
         Parameters
         ----------
-        shape_iter : iterable
-            list or iterable of gridcells
+        geoms : iterable
+            list or iterable of geometries
 
         Returns
         -------
         list
             sorted list of gridcells
         """
-        if not isinstance(shape_iter, list):
-            shapelist = list(shape_iter)
-        else:
-            shapelist = shape_iter
-
-        def sort_key(o):
-            return o.name
-
-        shapelist.sort(key=sort_key)
-        return shapelist
+        warnings.warn(
+            "`sort_gridshapes()` is deprecated, sort cellids"
+            " and use that to select geometries, i.e. "
+            "`GridIntersect.geoms[sorted_cellids]`.",
+            DeprecationWarning,
+        )
+        return [
+            igeom
+            for _, igeom in sorted(
+                zip(cellids, geoms), key=lambda pair: pair[0]
+            )
+        ]
 
     def _intersect_point_shapely(
         self, shp, sort_by_cellid=True, return_all_intersections=False
@@ -508,18 +560,18 @@ class GridIntersect:
             a record array containing information about the intersection
         """
         shapely_geo = import_optional_dependency("shapely.geometry")
-        prepared = import_optional_dependency("shapely.prepared")
 
         # query grid
-        qresult = self.query_grid(shp)
-        # prepare shape for efficient batch intersection check
-        prepshp = prepared.prep(shp)
-        # get only gridcells that intersect
-        qfiltered = filter(prepshp.intersects, qresult)
-
+        qcellids = self.query_grid(shp)  # returns cellids
+        if len(qcellids) > 0:
+            qfiltered = self.filter_query_result(qcellids, shp)
+        else:
+            # query result is empty
+            qfiltered = qcellids
         # sort cells to ensure lowest cell ids are returned
         if sort_by_cellid:
-            qfiltered = self.sort_gridshapes(qfiltered)
+            qfiltered = list(qfiltered)
+            qfiltered.sort()
 
         isectshp = []
         cellids = []
@@ -527,8 +579,8 @@ class GridIntersect:
         parsed_points = []  # for keeping track of points
 
         # loop over cells returned by filtered spatial query
-        for r in qfiltered:
-            name = r.name
+        for cid in qfiltered:
+            r = self.geoms[cid]
             # do intersection
             intersect = shp.intersection(r)
             # parse result per Point
@@ -557,7 +609,10 @@ class GridIntersect:
                     else cell_shps[0]
                 )
                 vertices.append(tuple(cell_verts))
-                cellids.append(name)
+                # if structured calculated (i, j) cell address
+                if self.mfgrid.grid_type == "structured":
+                    cid = self.mfgrid.get_lrc([cid])[0][1:]
+                cellids.append(cid)
 
         rec = np.recarray(
             len(isectshp),
@@ -602,12 +657,17 @@ class GridIntersect:
             a record array containing information about the intersection
         """
         # query grid
-        qresult = self.query_grid(shp)
-        # filter result further if possible (only strtree and filter methods)
-        qfiltered = self.filter_query_result(qresult, shp)
+        qcellids = self.query_grid(shp)
+        if len(qcellids) > 0:
+            # filter result further if possible (only strtree and filter methods)
+            qfiltered = self.filter_query_result(qcellids, shp)
+        else:
+            # query result is empty
+            qfiltered = qcellids
         # sort cells to ensure lowest cell ids are returned
         if sort_by_cellid:
-            qfiltered = self.sort_gridshapes(qfiltered)
+            qfiltered = list(qfiltered)
+            qfiltered.sort()
 
         # initialize empty lists for storing results
         isectshp = []
@@ -616,8 +676,8 @@ class GridIntersect:
         lengths = []
 
         # loop over cells returned by filtered spatial query
-        for r in qfiltered:
-            name = r.name
+        for cid in qfiltered:
+            r = self.geoms[cid]
             # do intersection
             intersect = shp.intersection(r)
             # parse result
@@ -639,7 +699,10 @@ class GridIntersect:
                 isectshp.append(c)
                 lengths.append(c.length)
                 vertices.append(verts)
-                cellids.append(name)
+                # if structured calculate (i, j) cell address
+                if self.mfgrid.grid_type == "structured":
+                    cid = self.mfgrid.get_lrc([cid])[0][1:]
+                cellids.append(cid)
 
         rec = np.recarray(
             len(isectshp),
@@ -686,12 +749,17 @@ class GridIntersect:
         shapely_geo = import_optional_dependency("shapely.geometry")
 
         # query grid
-        qresult = self.query_grid(shp)
-        # filter result further if possible (only strtree and filter methods)
-        qfiltered = self.filter_query_result(qresult, shp)
+        qcellids = self.query_grid(shp)
+        if len(qcellids) > 0:
+            # filter result further if possible (only strtree and filter methods)
+            qfiltered = self.filter_query_result(qcellids, shp)
+        else:
+            # query result is empty
+            qfiltered = qcellids
         # sort cells to ensure lowest cell ids are returned
         if sort_by_cellid:
-            qfiltered = self.sort_gridshapes(qfiltered)
+            qfiltered = list(qfiltered)
+            qfiltered.sort()
 
         isectshp = []
         cellids = []
@@ -699,8 +767,8 @@ class GridIntersect:
         areas = []
 
         # loop over cells returned by filtered spatial query
-        for r in qfiltered:
-            name = r.name
+        for cid in qfiltered:
+            r = self.geoms[cid]
             # do intersection
             intersect = shp.intersection(r)
             # parse result
@@ -729,7 +797,10 @@ class GridIntersect:
                 isectshp.append(c)
                 areas.append(c.area)
                 vertices.append(verts)
-                cellids.append(name)
+                # if structured calculate (i, j) cell address
+                if self.mfgrid.grid_type == "structured":
+                    cid = self.mfgrid.get_lrc([cid])[0][1:]
+                cellids.append(cid)
 
         rec = np.recarray(
             len(isectshp),
@@ -765,14 +836,16 @@ class GridIntersect:
         # query grid
         shp = GeoSpatialUtil(shp, shapetype=shapetype).shapely
 
-        qresult = self.query_grid(shp)
-        # filter result further if possible (only strtree and filter methods)
-        qfiltered = self.filter_query_result(qresult, shp)
-        # get cellids
-        cids = [cell.name for cell in qfiltered]
+        qcellids = self.query_grid(shp)
+        if len(qcellids) > 0:
+            # filter result further if possible (only strtree and filter methods)
+            qfiltered = self.filter_query_result(qcellids, shp)
+        else:
+            # query result is empty
+            qfiltered = qcellids
         # build rec-array
-        rec = np.recarray(len(cids), names=["cellids"], formats=["O"])
-        rec.cellids = cids
+        rec = np.recarray(len(qfiltered), names=["cellids"], formats=["O"])
+        rec.cellids = qfiltered
         return rec
 
     def _intersect_point_structured(self, shp, return_all_intersections=False):
@@ -1722,9 +1795,6 @@ class GridIntersect:
         import matplotlib.pyplot as plt
         from matplotlib.collections import PatchCollection
 
-        import_optional_dependency("descartes")
-        from descartes import PolygonPatch
-
         if ax is None:
             _, ax = plt.subplots()
 
@@ -1734,7 +1804,7 @@ class GridIntersect:
                 fc = kwargs.pop("facecolor")
             else:
                 fc = f"C{i % 10}"
-            ppi = PolygonPatch(ishp, facecolor=fc, **kwargs)
+            ppi = _polygon_patch(ishp, facecolor=fc, **kwargs)
             patches.append(ppi)
         pc = PatchCollection(patches, match_original=True)
         ax.add_collection(pc)
@@ -1789,7 +1859,7 @@ class GridIntersect:
                 else:
                     c = colors[i]
             if ishp.type == "MultiLineString":
-                for part in ishp:
+                for part in ishp.geoms:
                     ax.plot(part.xy[0], part.xy[1], ls="-", c=c, **kwargs)
             else:
                 ax.plot(ishp.xy[0], ishp.xy[1], ls="-", c=c, **kwargs)
@@ -1966,3 +2036,20 @@ class ModflowGridIndices:
         i = int((n - k * nrow * ncol) / ncol)
         j = n - k * nrow * ncol - i * ncol
         return (k, i, j)
+
+
+def _polygon_patch(polygon, **kwargs):
+    from matplotlib.patches import PathPatch
+    from matplotlib.path import Path
+
+    patch = PathPatch(
+        Path.make_compound_path(
+            Path(np.asarray(polygon.exterior.coords)[:, :2]),
+            *[
+                Path(np.asarray(ring.coords)[:, :2])
+                for ring in polygon.interiors
+            ],
+        ),
+        **kwargs,
+    )
+    return patch
