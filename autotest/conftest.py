@@ -1,7 +1,5 @@
 import importlib
-import io
 import os
-import pkg_resources
 import socket
 import sys
 from os import environ
@@ -14,6 +12,7 @@ from typing import List, Optional
 from urllib import request
 from warnings import warn
 
+import pkg_resources
 import pytest
 
 # constants
@@ -139,7 +138,9 @@ def is_connected(hostname):
 
 
 def is_in_ci():
-    return "CI" in os.environ
+    # if running in GitHub Actions CI, "CI" variable always set to true
+    # https://docs.github.com/en/actions/learn-github-actions/environment-variables#default-environment-variables
+    return bool(os.environ.get("CI", None))
 
 
 def is_github_rate_limited() -> Optional[bool]:
@@ -464,3 +465,12 @@ def run_py_script(script, *args, verbose=False):
     """Run a Python script, return tuple (stdout, stderr, returncode)."""
     return run_cmd(
         sys.executable, script, *args, verbose=verbose, cwd=Path(script).parent)
+
+
+# use noninteractive matplotlib backend if in Mac OS CI to avoid pytest-xdist node failure
+# e.g. https://github.com/modflowpy/flopy/runs/7748574375?check_suite_focus=true#step:9:57
+@pytest.fixture(scope="session", autouse=True)
+def patch_macos_ci_matplotlib():
+    if is_in_ci() and system().lower() == "darwin":
+        import matplotlib
+        matplotlib.use("agg")

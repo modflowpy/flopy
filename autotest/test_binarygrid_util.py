@@ -1,9 +1,8 @@
 import matplotlib
 import numpy as np
 import pytest
-from matplotlib import pyplot as plt
-
 from flaky import flaky
+from matplotlib import pyplot as plt
 
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 from flopy.mf6.utils import MfGrdFile

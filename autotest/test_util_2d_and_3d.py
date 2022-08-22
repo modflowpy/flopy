@@ -308,6 +308,7 @@ def test_util2d_external_fixed(tmpdir):
     stress_util2d(ws, ml, 10, 10, 10)
 
 
+@pytest.mark.slow
 def test_util2d_external_fixed_path(tmpdir):
     ws = str(tmpdir)
     ml = Modflow(model_ws=ws, external_path="ref")

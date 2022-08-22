@@ -283,9 +283,9 @@ def update_readme_markdown(vmajor, vminor, vmicro):
         elif "[flopy continuous integration]" in line:
             line = (
                 "[![flopy continuous integration](https://github.com/"
-                "modflowpy/flopy/actions/workflows/ci.yml/badge.svg?"
+                "modflowpy/flopy/actions/workflows/commit.yml/badge.svg?"
                 "branch={})](https://github.com/modflowpy/flopy/actions/"
-                "workflows/ci.yml)".format(branch)
+                "workflows/commit.yml)".format(branch)
             )
         elif "[Read the Docs]" in line:
             line = (

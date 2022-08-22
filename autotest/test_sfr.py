@@ -8,8 +8,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from autotest.conftest import get_example_data_path, requires_exe, requires_pkg
 
+from autotest.conftest import get_example_data_path, requires_exe, requires_pkg
 from flopy.discretization import StructuredGrid
 from flopy.modflow import Modflow, ModflowDis, ModflowSfr2, ModflowStr
 from flopy.modflow.mfsfr2 import check
@@ -796,11 +796,9 @@ def test_sfr_plot(mf2005_model_path):
     tv = sfr.plot(
         key="strtop",
     )
-    plt.show(block=False)
     assert issubclass(
         type(tv[0]), matplotlib.axes.SubplotBase
     ), "could not plot strtop"
-    plt.close("all")
 
 
 def get_test_matrix():

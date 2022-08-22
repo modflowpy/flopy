@@ -1,0 +1,108 @@
+name: Cache Modflow executables
+description: 'Cache MODFLOW executables from the MODFLOW-USGS/executables repository'
+inputs:
+  path:
+    description: 'The path to store the executables (e.g. a bin directory)'
+    required: true
+    default: 'bin'
+  github_token:
+    description: 'The GitHub API access token'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Make bin directory
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        mkdir -p ${{ inputs.path }}
+
+    - name: Make bin directory (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        md -Force ${{ inputs.path }}
+
+    - name: Check release
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        # get info for the executables repository's latest release
+        release_json=$(gh api -X GET -H "Accept: application/vnd.github+json" /repos/MODFLOW-USGS/executables/releases/latest)
+
+        # get asset ID of the release's metadata file, if one exists
+        get_asset_id="
+        import json
+        import sys
+        release = json.load(sys.stdin, strict=False)
+        metadata = next(iter([a for a in release['assets'] if a['name'] == 'code.json']), None)
+        print(dict(metadata)['id'] if metadata else '')
+        "
+        asset_id=$(echo "$release_json" | python -c "$get_asset_id")
+
+        # asset_id is empty if metadata file asset wasn't found
+        if [ ${#asset_id} -gt 0 ]; then
+           gh api -H "Accept: application/octet-stream" "/repos/MODFLOW-USGS/executables/releases/assets/$asset_id" >> executables.json
+        else
+          # give hashFiles an empty file to hash
+          touch executables.json
+        fi
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+
+    - name: Check release (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        # get info for the executables repository's latest release
+        $release_json=(gh api -X GET -H "Accept: application/vnd.github+json" /repos/MODFLOW-USGS/executables/releases/latest)
+
+        # get asset ID of the release's metadata file, if one exists
+        $pattern="code.json"
+        $release=(echo $release_json | ConvertFrom-Json)
+        $asset_id=($release.assets | Where-Object {$_.name -match "$pattern"} | % {echo $_.id})
+
+        # asset_id is empty if metadata file asset wasn't found
+        if ($asset_id.Length -gt 0) {
+          gh api -H "Accept: application/octet-stream" "/repos/MODFLOW-USGS/executables/releases/assets/$asset_id" >> executables.json
+        } else {
+          # give hashFiles an empty file to hash
+          New-Item -Name "executables.json" -ItemType File
+        }
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+
+    - name: Cache executables
+      id: cache_executables
+      uses: actions/cache@v3
+      with:
+        path: ${{ inputs.path }}
+        key: modflow-exes-${{ runner.os }}-${{ hashFiles('executables.json') }}
+
+    - name: Install executables
+      if: runner.os != 'Windows' && steps.cache_executables.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        get-modflow ${{ inputs.path }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+
+    - name: Install executables (Windows)
+      if: runner.os == 'Windows' && steps.cache_executables.outputs.cache-hit != 'true'
+      shell: pwsh
+      run: |
+        get-modflow ${{ inputs.path }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+
+    - name: Add executables to path
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        echo ${{ inputs.path }} >> $GITHUB_PATH
+
+    - name: Add executables to path (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        echo ${{ inputs.path }} | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
