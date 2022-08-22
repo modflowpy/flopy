@@ -298,7 +298,7 @@ def test_mf2000_zeroth(tmpdir, mf2kmt3d_model_path):
     os.remove(os.path.join(cpth, ftlfile))
 
 
-@flaky
+@flaky(max_runs=3)
 @requires_exe("mfnwt", "mt3dms")
 @excludes_platform("Windows", ci_only=True)  # TODO remove once fixed in MT3D-USGS
 def test_mfnwt_CrnkNic(tmpdir, mfnwtmt3d_model_path):
