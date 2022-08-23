@@ -3,7 +3,6 @@ import warnings
 
 import numpy as np
 import pytest
-
 from autotest.conftest import has_pkg, requires_pkg
 
 from flopy.utils import (

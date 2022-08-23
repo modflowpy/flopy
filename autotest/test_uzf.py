@@ -4,7 +4,6 @@ from io import StringIO
 
 import numpy as np
 import pytest
-
 from autotest.conftest import requires_exe
 
 from flopy.modflow import (

@@ -1,8 +1,4 @@
-"""
-HeadUFile get_ts tests using t505_test.py
-"""
-
-import os
+from pathlib import Path
 
 import pytest
 from autotest.conftest import requires_exe, requires_pkg
@@ -18,11 +14,11 @@ from flopy.modflow import (
 )
 from flopy.utils import HeadUFile
 from flopy.utils.gridgen import Gridgen
+from flopy.utils.gridutil import get_lni
 
 
-@requires_exe("mfusg", "gridgen")
-@requires_pkg("shapely", "shapefile")
-def test_mfusg(tmpdir):
+@pytest.fixture(scope="module")
+def mfusg_model(module_tmpdir):
     from shapely.geometry import Polygon
 
     name = "dummy"
@@ -36,7 +32,7 @@ def test_mfusg(tmpdir):
     botm = [top - k * dz for k in range(1, nlay + 1)]
 
     # create dummy model and dis package for gridgen
-    m = Modflow(modelname=name, model_ws=str(tmpdir))
+    m = Modflow(modelname=name, model_ws=str(module_tmpdir))
     dis = ModflowDis(
         m,
         nlay=nlay,
@@ -49,7 +45,7 @@ def test_mfusg(tmpdir):
     )
 
     # Create and build the gridgen model with a refined area in the middle
-    g = Gridgen(dis, model_ws=str(tmpdir))
+    g = Gridgen(dis, model_ws=str(module_tmpdir))
 
     polys = [Polygon([(4, 4), (6, 4), (6, 6), (4, 6)])]
     g.add_refinement_features(polys, "polygon", 3, layers=[0])
@@ -68,7 +64,7 @@ def test_mfusg(tmpdir):
     name = "mymodel"
     m = MfUsg(
         modelname=name,
-        model_ws=str(tmpdir),
+        model_ws=str(module_tmpdir),
         exe_name="mfusg",
         structured=False,
     )
@@ -89,72 +85,77 @@ def test_mfusg(tmpdir):
 
     m.run_model()
 
-    # head is returned as a list of head arrays for each layer
-    head_file = os.path.join(str(tmpdir), f"{name}.hds")
-    head = HeadUFile(head_file).get_data()
+    # head contains a list of head arrays for each layer
+    head_file_path = Path(module_tmpdir / f"{name}.hds")
+    return m, HeadUFile(str(head_file_path))
+
+
+@requires_exe("mfusg", "gridgen")
+@requires_pkg("shapely", "shapefile")
+def test_get_ts_single_node(mfusg_model):
+    model, head_file = mfusg_model
+    head = head_file.get_data()
 
     # test if single node idx works
-    one_hds = HeadUFile(head_file).get_ts(idx=300)
-    if one_hds[0, 1] != head[0][300]:
-        raise AssertionError(
-            "Error head from 'get_ts' != head from 'get_data'"
-        )
+    one_hds = head_file.get_ts(idx=300)
+    assert (
+        one_hds[0, 1] == head[0][300]
+    ), "head from 'get_ts' != head from 'get_data'"
+
+
+@requires_exe("mfusg", "gridgen")
+@requires_pkg("shapely", "shapefile")
+def test_get_ts_multiple_nodes(mfusg_model):
+    model, head_file = mfusg_model
+    grid = model.modelgrid
+    head = head_file.get_data()
 
     # test if list of nodes for idx works
-    nodes = [300, 182, 65]
-
-    multi_hds = HeadUFile(head_file).get_ts(idx=nodes)
+    nodes = [500, 300, 182, 65]
+    multi_hds = head_file.get_ts(idx=nodes)
     for i, node in enumerate(nodes):
-        if multi_hds[0, i + 1] != head[0][node]:
-            raise AssertionError(
-                "Error head from 'get_ts' != head from 'get_data'"
-            )
+        li, ni = get_lni(grid.ncpl, node)
+        assert (
+            multi_hds[0, i + 1] == head[li][ni]
+        ), "head from 'get_ts' != head from 'get_data'"
 
 
-def test_usg_iverts():
-    iverts = [
-        [4, 3, 2, 1, 0, None],
-        [7, 0, 1, 6, 5, None],
-        [11, 10, 9, 8, 2, 3],
-        [1, 6, 13, 12, 8, 2],
-        [15, 14, 13, 6, 5, None],
-        [10, 9, 18, 17, 16, None],
-        [8, 12, 20, 19, 18, 9],
-        [22, 14, 13, 12, 20, 21],
-        [24, 17, 18, 19, 23, None],
-        [21, 20, 19, 23, 25, None],
-    ]
-    verts = [
-        [0.0, 22.5],
-        [5.1072, 22.5],
-        [7.5, 24.0324],
-        [7.5, 30.0],
-        [0.0, 30.0],
-        [0.0, 7.5],
-        [4.684, 7.5],
-        [0.0, 15.0],
-        [14.6582, 21.588],
-        [22.5, 24.3766],
-        [22.5, 30.0],
-        [15.0, 30.0],
-        [15.3597, 8.4135],
-        [7.5, 5.6289],
-        [7.5, 0.0],
-        [0.0, 0.0],
-        [30.0, 30.0],
-        [30.0, 22.5],
-        [25.3285, 22.5],
-        [24.8977, 7.5],
-        [22.5, 5.9676],
-        [22.5, 0.0],
-        [15.0, 0.0],
-        [30.0, 7.5],
-        [30.0, 15.0],
-        [30.0, 0.0],
-    ]
+@requires_exe("mfusg", "gridgen")
+@requires_pkg("shapely", "shapefile")
+def test_get_ts_all_nodes(mfusg_model):
+    model, head_file = mfusg_model
+    grid = model.modelgrid
+    head = head_file.get_data()
 
-    grid = UnstructuredGrid(verts, iverts, ncpl=[len(iverts)])
+    # test if list of nodes for idx works
+    nodes = list(range(0, grid.nnodes))
+    multi_hds = head_file.get_ts(idx=nodes)
+    for node in nodes:
+        li, ni = get_lni(grid.ncpl, node)
+        assert (
+            multi_hds[0, node + 1] == head[li][ni]
+        ), "head from 'get_ts' != head from 'get_data'"
 
-    iverts = grid.iverts
-    if any(None in l for l in iverts):
-        raise ValueError("None type should not be returned in iverts list")
+
+@requires_exe("mfusg", "gridgen")
+@requires_pkg("shapely", "shapefile")
+def test_get_lni(mfusg_model):
+    # added to help reproduce https://github.com/modflowpy/flopy/issues/1503
+
+    model, head_file = mfusg_model
+    grid = model.modelgrid
+    head = head_file.get_data()
+
+    def get_expected():
+        exp = dict()
+        for l, ncpl in enumerate(list(grid.ncpl)):
+            exp[l] = dict()
+            for nn in range(ncpl):
+                exp[l][nn] = head[l][nn]
+        return exp
+
+    nodes = list(range(0, grid.nnodes))
+    expected = get_expected()
+    for node in nodes:
+        layer, nn = get_lni(grid.ncpl, node)
+        assert expected[layer][nn] == head[layer][nn]

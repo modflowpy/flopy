@@ -2,8 +2,8 @@ import os
 
 import numpy as np
 import pytest
-
 from autotest.conftest import requires_exe, requires_pkg
+
 from flopy.modflow import (
     Modflow,
     ModflowBas,
@@ -100,7 +100,9 @@ def test_binary_well(tmpdir):
 
     # compare the files
     fsum = os.path.join(str(tmpdir), f"{os.path.splitext(mfnam)[0]}.head.out")
-    assert pymake.compare_heads(fn0, fn1, outfile=fsum), "head comparison failure"
+    assert pymake.compare_heads(
+        fn0, fn1, outfile=fsum
+    ), "head comparison failure"
 
     fsum = os.path.join(
         str(tmpdir), f"{os.path.splitext(mfnam)[0]}.budget.out"

@@ -5,16 +5,49 @@ from shutil import copytree
 
 import numpy as np
 import pytest
-
-from flopy.mf6 import MFSimulation, ModflowTdis, ModflowGwf, ModflowIms, ModflowGwfic, ModflowGwfdis, ModflowGwfnpf, ModflowGwfrcha, ModflowGwfwel, \
-    ModflowGwfriv, ModflowGwfoc
-from flopy.modpath import Modpath7
-from flopy.utils import PathlineFile, EndpointFile
-
 from autotest.conftest import requires_exe
 
+from flopy.mf6 import (
+    MFSimulation,
+    ModflowGwf,
+    ModflowGwfdis,
+    ModflowGwfic,
+    ModflowGwfnpf,
+    ModflowGwfoc,
+    ModflowGwfrcha,
+    ModflowGwfriv,
+    ModflowGwfwel,
+    ModflowIms,
+    ModflowTdis,
+)
+from flopy.modpath import Modpath7
+from flopy.utils import EndpointFile, PathlineFile
 
-def __create_simulation(ws, name, nrow, ncol, perlen, nstp, tsmult, nper, nlay, delr, delc, top, botm, laytyp, kh, kv, rch, wel_loc, wel_q, riv_h, riv_c, riv_z):
+
+def __create_simulation(
+    ws,
+    name,
+    nrow,
+    ncol,
+    perlen,
+    nstp,
+    tsmult,
+    nper,
+    nlay,
+    delr,
+    delc,
+    top,
+    botm,
+    laytyp,
+    kh,
+    kv,
+    rch,
+    wel_loc,
+    wel_q,
+    riv_h,
+    riv_c,
+    riv_z,
+):
     def get_nodes(locs):
         nodes = []
         for k, i, j in locs:
@@ -22,9 +55,7 @@ def __create_simulation(ws, name, nrow, ncol, perlen, nstp, tsmult, nper, nlay, 
         return nodes
 
     # Create the Flopy simulation object
-    sim = MFSimulation(
-        sim_name=name, exe_name="mf6", version="mf6", sim_ws=ws
-    )
+    sim = MFSimulation(sim_name=name, exe_name="mf6", version="mf6", sim_ws=ws)
 
     # Create the Flopy temporal discretization object
     pd = (perlen, nstp, tsmult)
@@ -65,17 +96,13 @@ def __create_simulation(ws, name, nrow, ncol, perlen, nstp, tsmult, nper, nlay, 
     ic = ModflowGwfic(gwf, pname="ic", strt=top)
 
     # Create the node property flow package
-    npf = ModflowGwfnpf(
-        gwf, pname="npf", icelltype=laytyp, k=kh, k33=kv
-    )
+    npf = ModflowGwfnpf(gwf, pname="npf", icelltype=laytyp, k=kh, k33=kv)
 
     # recharge
     ModflowGwfrcha(gwf, recharge=rch)
     # wel
     wd = [(wel_loc, wel_q)]
-    ModflowGwfwel(
-        gwf, maxbound=1, stress_period_data={0: wd}
-    )
+    ModflowGwfwel(gwf, maxbound=1, stress_period_data={0: wd})
 
     # river
     rd = []
@@ -174,7 +201,8 @@ def mp7_small(module_tmpdir):
         rch=0.005,
         riv_h=320.0,
         riv_z=317.0,
-        riv_c=1.0e5)
+        riv_c=1.0e5,
+    )
 
 
 @pytest.fixture(scope="module")
@@ -201,7 +229,8 @@ def mp7_large(module_tmpdir):
         rch=0.005,
         riv_h=320.0,
         riv_z=317.0,
-        riv_c=1.0e5)
+        riv_c=1.0e5,
+    )
 
 
 def test_pathline_file_sorts_in_ctor(tmpdir, module_tmpdir, mp7_small):
@@ -215,14 +244,19 @@ def test_pathline_file_sorts_in_ctor(tmpdir, module_tmpdir, mp7_small):
     assert forward_path.is_file()
 
     pathline_file = PathlineFile(str(forward_path))
-    assert np.all(pathline_file._data[:-1]['particleid'] <= pathline_file._data[1:]['particleid'])
+    assert np.all(
+        pathline_file._data[:-1]["particleid"]
+        <= pathline_file._data[1:]["particleid"]
+    )
 
 
 @requires_exe("mf6", "mp7")
 @pytest.mark.slow
 @pytest.mark.parametrize("direction", ["forward", "backward"])
 @pytest.mark.parametrize("locations", ["well", "river"])
-def test_get_destination_pathline_data(tmpdir, mp7_large, direction, locations, benchmark):
+def test_get_destination_pathline_data(
+    tmpdir, mp7_large, direction, locations, benchmark
+):
     sim, forward_model_name, backward_model_name, nodew, nodesr = mp7_large
     ws = tmpdir / "ws"
 
@@ -233,15 +267,23 @@ def test_get_destination_pathline_data(tmpdir, mp7_large, direction, locations, 
     assert forward_path.is_file()
     assert backward_path.is_file()
 
-    pathline_file = PathlineFile(str(backward_path) if direction == "backward" else str(forward_path))
-    benchmark(lambda: pathline_file.get_destination_pathline_data(dest_cells=nodew if locations == "well" else nodesr))
+    pathline_file = PathlineFile(
+        str(backward_path) if direction == "backward" else str(forward_path)
+    )
+    benchmark(
+        lambda: pathline_file.get_destination_pathline_data(
+            dest_cells=nodew if locations == "well" else nodesr
+        )
+    )
 
 
 @requires_exe("mf6", "mp7")
 @pytest.mark.slow
 @pytest.mark.parametrize("direction", ["forward", "backward"])
 @pytest.mark.parametrize("locations", ["well", "river"])
-def test_get_destination_endpoint_data(tmpdir, mp7_large, direction, locations, benchmark):
+def test_get_destination_endpoint_data(
+    tmpdir, mp7_large, direction, locations, benchmark
+):
     sim, forward_model_name, backward_model_name, nodew, nodesr = mp7_large
     ws = tmpdir / "ws"
 
@@ -252,5 +294,11 @@ def test_get_destination_endpoint_data(tmpdir, mp7_large, direction, locations, 
     assert forward_end.is_file()
     assert backward_end.is_file()
 
-    endpoint_file = EndpointFile(str(backward_end) if direction == "backward" else str(forward_end))
-    benchmark(lambda: endpoint_file.get_destination_endpoint_data(dest_cells=nodew if locations == "well" else nodesr))
+    endpoint_file = EndpointFile(
+        str(backward_end) if direction == "backward" else str(forward_end)
+    )
+    benchmark(
+        lambda: endpoint_file.get_destination_endpoint_data(
+            dest_cells=nodew if locations == "well" else nodesr
+        )
+    )

@@ -1,6 +1,5 @@
 # Test SWR binary read functionality
 import pytest
-
 from autotest.conftest import has_pkg
 
 from flopy.utils import (

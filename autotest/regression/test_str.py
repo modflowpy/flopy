@@ -1,7 +1,7 @@
 import pytest
-
 from autotest.conftest import requires_exe, requires_pkg
-from flopy.modflow import Modflow, ModflowStr, ModflowOc
+
+from flopy.modflow import Modflow, ModflowOc, ModflowStr
 
 str_items = {
     0: {
@@ -91,7 +91,7 @@ def test_str_fixed_free(tmpdir, example_data_path):
         m2 = None
 
     assert (
-            m2 is not None
+        m2 is not None
     ), "could not load the fixed format model with aux variables"
 
     for p in tmpdir.glob("*"):
@@ -117,10 +117,12 @@ def test_str_fixed_free(tmpdir, example_data_path):
         m2 = None
 
     assert (
-            m2 is not None
+        m2 is not None
     ), "could not load the free format model with aux variables"
 
     # compare the fixed and free format head files
     fn1 = str(tmpdir / "str.nam")
     fn2 = str(tmpdir / "str.nam")
-    assert pymake.compare_heads(fn1, fn2, verbose=True), "fixed and free format input output head files are different"
+    assert pymake.compare_heads(
+        fn1, fn2, verbose=True
+    ), "fixed and free format input output head files are different"

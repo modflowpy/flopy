@@ -13,6 +13,7 @@ import warnings
 import numpy as np
 
 from ..utils.datafile import Header, LayerFile
+from .gridutil import get_lni
 
 
 class BinaryHeader(Header):
@@ -1892,7 +1893,6 @@ class HeadUFile(BinaryLayerFile):
             bintype="Head", precision=precision
         )
         super().__init__(filename, precision, verbose, kwargs)
-        return
 
     def _get_data_array(self, totim=0.0):
         """
@@ -1963,41 +1963,27 @@ class HeadUFile(BinaryLayerFile):
 
         """
         times = self.get_times()
-
-        # find node number in layer that node is in
         data = self.get_data(totim=times[0])
-        nodelay = [len(data[lay]) for lay in range(len(data))]
-        nodelay_cumsum = np.cumsum([0] + nodelay)
+        layers = len(data)
+        ncpl = [len(data[l]) for l in range(layers)]
+        result = []
 
         if isinstance(idx, int):
-            layer = np.searchsorted(nodelay_cumsum, idx)
-            nnode = idx - nodelay_cumsum[layer - 1]
-
-            result = []
+            layer, nn = get_lni(ncpl, idx)
             for i, time in enumerate(times):
                 data = self.get_data(totim=time)
-                result.append([time, data[layer - 1][nnode]])
-
-        elif isinstance(idx, list):
-
-            result = []
+                value = data[layer][nn]
+                result.append([time, value])
+        elif isinstance(idx, list) and all(isinstance(x, int) for x in idx):
             for i, time in enumerate(times):
                 data = self.get_data(totim=time)
                 row = [time]
-
                 for node in idx:
-                    if isinstance(node, int):
-                        layer = np.searchsorted(nodelay_cumsum, node)
-                        nnode = node - nodelay_cumsum[layer - 1]
-                        row += [data[layer - 1][nnode]]
-                    else:
-                        errmsg = "idx must be an integer or a list of integers"
-                        raise Exception(errmsg)
-
+                    layer, nn = get_lni(ncpl, node)
+                    value = data[layer][nn]
+                    row += [value]
                 result.append(row)
-
         else:
-            errmsg = "idx must be an integer or a list of integers"
-            raise Exception(errmsg)
+            raise ValueError("idx must be an integer or a list of integers")
 
         return np.array(result)

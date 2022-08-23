@@ -49,9 +49,12 @@ def get_project_root_path(path=None) -> Path:
         if is_in_ci():
             tries.append(2)
         for t in tries:
-            parts = cwd.parts[0: cwd.parts.index("flopy") + t]
+            parts = cwd.parts[0 : cwd.parts.index("flopy") + t]
             pth = Path(*parts)
-            if next(iter([p for p in pth.glob("setup.cfg")]), None) is not None:
+            if (
+                next(iter([p for p in pth.glob("setup.cfg")]), None)
+                is not None
+            ):
                 return pth
         raise Exception(
             f"Can't infer location of project root from {cwd} "
@@ -61,13 +64,17 @@ def get_project_root_path(path=None) -> Path:
     if cwd.name == "autotest":
         # we're in top-level autotest folder
         return cwd.parent
-    elif "autotest" in cwd.parts and cwd.parts.index("autotest") > cwd.parts.index("flopy"):
+    elif "autotest" in cwd.parts and cwd.parts.index(
+        "autotest"
+    ) > cwd.parts.index("flopy"):
         # we're somewhere inside autotests
-        parts = cwd.parts[0: cwd.parts.index("autotest")]
+        parts = cwd.parts[0 : cwd.parts.index("autotest")]
         return Path(*parts)
-    elif "examples" in cwd.parts and cwd.parts.index("examples") > cwd.parts.index("flopy"):
+    elif "examples" in cwd.parts and cwd.parts.index(
+        "examples"
+    ) > cwd.parts.index("flopy"):
         # we're somewhere inside examples folder
-        parts = cwd.parts[0: cwd.parts.index("examples")]
+        parts = cwd.parts[0 : cwd.parts.index("examples")]
         return Path(*parts)
     elif "flopy" in cwd.parts:
         if cwd.parts.count("flopy") >= 2:
@@ -154,7 +161,7 @@ def is_github_rate_limited() -> Optional[bool]:
     """
     try:
         with request.urlopen(
-                "https://api.github.com/users/octocat"
+            "https://api.github.com/users/octocat"
         ) as response:
             remaining = int(response.headers["x-ratelimit-remaining"])
             if remaining < 10:
@@ -197,8 +204,8 @@ def requires_exe(*exes):
     missing = {exe for exe in exes if not has_exe(exe)}
     return pytest.mark.skipif(
         missing,
-        reason=f"missing executable{'s' if len(missing) != 1 else ''}: " +
-               ", ".join(missing),
+        reason=f"missing executable{'s' if len(missing) != 1 else ''}: "
+        + ", ".join(missing),
     )
 
 
@@ -206,21 +213,23 @@ def requires_pkg(*pkgs):
     missing = {pkg for pkg in pkgs if not has_pkg(pkg)}
     return pytest.mark.skipif(
         missing,
-        reason=f"missing package{'s' if len(missing) != 1 else ''}: " +
-               ", ".join(missing),
+        reason=f"missing package{'s' if len(missing) != 1 else ''}: "
+        + ", ".join(missing),
     )
 
 
 def requires_platform(platform, ci_only=False):
     return pytest.mark.skipif(
-        system().lower() != platform.lower() and (is_in_ci() if ci_only else True),
+        system().lower() != platform.lower()
+        and (is_in_ci() if ci_only else True),
         reason=f"only compatible with platform: {platform.lower()}",
     )
 
 
 def excludes_platform(platform, ci_only=False):
     return pytest.mark.skipif(
-        system().lower() == platform.lower() and (is_in_ci() if ci_only else True),
+        system().lower() == platform.lower()
+        and (is_in_ci() if ci_only else True),
         reason=f"not compatible with platform: {platform.lower()}",
     )
 
@@ -240,17 +249,18 @@ def excludes_branch(branch):
 
 
 requires_github = pytest.mark.skipif(
-    not is_connected("github.com"),
-    reason="github.com is required.")
+    not is_connected("github.com"), reason="github.com is required."
+)
 
 
 requires_spatial_reference = pytest.mark.skipif(
     not is_connected("spatialreference.org"),
-    reason="spatialreference.org is required."
+    reason="spatialreference.org is required.",
 )
 
 
 # example data fixtures
+
 
 @pytest.fixture(scope="session")
 def project_root_path(request) -> Path:
@@ -274,12 +284,14 @@ def example_shapefiles(example_data_path) -> List[Path]:
 
 # keepable temporary directory fixtures for various scopes
 
+
 @pytest.fixture(scope="function")
 def tmpdir(tmpdir_factory, request) -> Path:
-    node = request.node.name \
-        .replace("/", "_") \
-        .replace("\\", "_") \
+    node = (
+        request.node.name.replace("/", "_")
+        .replace("\\", "_")
         .replace(":", "_")
+    )
     temp = Path(tmpdir_factory.mktemp(node))
     yield Path(temp)
 
@@ -295,7 +307,7 @@ def tmpdir(tmpdir_factory, request) -> Path:
 @pytest.fixture(scope="class")
 def class_tmpdir(tmpdir_factory, request) -> Path:
     assert (
-            request.cls is not None
+        request.cls is not None
     ), "Class-scoped temp dir fixture must be used on class"
     temp = Path(tmpdir_factory.mktemp(request.cls.__name__))
     yield temp
@@ -327,6 +339,7 @@ def session_tmpdir(tmpdir_factory, request) -> Path:
 
 # pytest configuration hooks
 
+
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)
 def pytest_runtest_makereport(item, call):
     # this is necessary so temp dir fixtures can
@@ -348,9 +361,9 @@ def pytest_addoption(parser):
         action="store",
         default=None,
         help="Move the contents of temporary test directories to correspondingly named subdirectories at the given "
-             "location after tests complete. This option can be used to exclude test results from automatic cleanup, "
-             "e.g. for manual inspection. The provided path is created if it does not already exist. An error is "
-             "thrown if any matching files already exist.",
+        "location after tests complete. This option can be used to exclude test results from automatic cleanup, "
+        "e.g. for manual inspection. The provided path is created if it does not already exist. An error is "
+        "thrown if any matching files already exist.",
     )
 
     parser.addoption(
@@ -358,9 +371,9 @@ def pytest_addoption(parser):
         action="store",
         default=None,
         help="Move the contents of temporary test directories to correspondingly named subdirectories at the given "
-             "location if the test case fails. This option automatically saves the outputs of failed tests in the "
-             "given location. The path is created if it doesn't already exist. An error is thrown if files with the "
-             "same names already exist in the given location.",
+        "location if the test case fails. This option automatically saves the outputs of failed tests in the "
+        "given location. The path is created if it doesn't already exist. An error is thrown if files with the "
+        "same names already exist in the given location.",
     )
 
     parser.addoption(
@@ -376,7 +389,7 @@ def pytest_addoption(parser):
         "--smoke",
         action="store_true",
         default=False,
-        help="Run only smoke tests (should complete in <1 minute)."
+        help="Run only smoke tests (should complete in <1 minute).",
     )
 
 
@@ -444,6 +457,7 @@ def pytest_report_header(config):
 
 # functions to run commands and scripts
 
+
 def run_cmd(*args, verbose=False, **kwargs):
     """Run any command, return tuple (stdout, stderr, returncode)."""
     args = [str(g) for g in args]
@@ -464,7 +478,8 @@ def run_cmd(*args, verbose=False, **kwargs):
 def run_py_script(script, *args, verbose=False):
     """Run a Python script, return tuple (stdout, stderr, returncode)."""
     return run_cmd(
-        sys.executable, script, *args, verbose=verbose, cwd=Path(script).parent)
+        sys.executable, script, *args, verbose=verbose, cwd=Path(script).parent
+    )
 
 
 # use noninteractive matplotlib backend if in Mac OS CI to avoid pytest-xdist node failure
@@ -473,4 +488,5 @@ def run_py_script(script, *args, verbose=False):
 def patch_macos_ci_matplotlib():
     if is_in_ci() and system().lower() == "darwin":
         import matplotlib
+
         matplotlib.use("agg")

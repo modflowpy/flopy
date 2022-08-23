@@ -3,9 +3,9 @@ from os.path import dirname, join
 from pathlib import Path
 
 import pytest
+from autotest.conftest import requires_exe, requires_pkg
 
 import flopy
-from autotest.conftest import requires_exe, requires_pkg
 
 
 @requires_exe("mflgr")
@@ -47,7 +47,7 @@ def test_simplelgr(tmpdir, example_data_path):
     # get the namefiles of the parent and child
     namefiles = lgr.get_namefiles()
     assert (
-            len(namefiles) == 2
+        len(namefiles) == 2
     ), f"get_namefiles returned {len(namefiles)} items instead of 2"
 
     tpth = dirname(namefiles[0])

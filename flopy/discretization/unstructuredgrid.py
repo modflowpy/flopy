@@ -6,6 +6,7 @@ import numpy as np
 from matplotlib.path import Path
 
 from ..utils.geometry import is_clockwise
+from ..utils.gridutil import get_lni
 from .grid import CachedData, Grid
 
 

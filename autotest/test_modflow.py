@@ -22,7 +22,8 @@ from flopy.modflow import (
     ModflowPcg,
     ModflowRch,
     ModflowRiv,
-    ModflowWel, ModflowSfr2,
+    ModflowSfr2,
+    ModflowWel,
 )
 from flopy.mt3d import Mt3dBtn, Mt3dms
 from flopy.plot import PlotMapView
@@ -140,10 +141,10 @@ def test_mt_modelgrid(tmpdir):
     )
 
     assert (
-            swt.modelgrid.xoffset == mt.modelgrid.xoffset == ml.modelgrid.xoffset
+        swt.modelgrid.xoffset == mt.modelgrid.xoffset == ml.modelgrid.xoffset
     )
     assert (
-            swt.modelgrid.yoffset == mt.modelgrid.yoffset == ml.modelgrid.yoffset
+        swt.modelgrid.yoffset == mt.modelgrid.yoffset == ml.modelgrid.yoffset
     )
     assert mt.modelgrid.epsg == ml.modelgrid.epsg == swt.modelgrid.epsg
     assert mt.modelgrid.angrot == ml.modelgrid.angrot == swt.modelgrid.angrot
@@ -174,10 +175,10 @@ def test_mt_modelgrid(tmpdir):
     )
 
     assert (
-            ml.modelgrid.xoffset == mt.modelgrid.xoffset == swt.modelgrid.xoffset
+        ml.modelgrid.xoffset == mt.modelgrid.xoffset == swt.modelgrid.xoffset
     )
     assert (
-            mt.modelgrid.yoffset == ml.modelgrid.yoffset == swt.modelgrid.yoffset
+        mt.modelgrid.yoffset == ml.modelgrid.yoffset == swt.modelgrid.yoffset
     )
     assert mt.modelgrid.epsg == ml.modelgrid.epsg == swt.modelgrid.epsg
     assert mt.modelgrid.angrot == ml.modelgrid.angrot == swt.modelgrid.angrot
@@ -299,12 +300,12 @@ def test_load_twri_grid(example_data_path):
     ), "modelgrid is not an StructuredGrid instance"
     shape = (3, 15, 15)
     assert (
-            mg.shape == shape
+        mg.shape == shape
     ), f"modelgrid shape {mg.shape} not equal to {shape}"
     thick = mg.thick
     shape = (5, 15, 15)
     assert (
-            thick.shape == shape
+        thick.shape == shape
     ), f"thickness shape {thick.shape} not equal to {shape}"
 
 
@@ -547,8 +548,8 @@ def parameters_model_namfiles():
 
 @requires_exe("mf2005")
 @pytest.mark.parametrize(
-    "namfile",
-    mf2005_model_namfiles() + parameters_model_namfiles())
+    "namfile", mf2005_model_namfiles() + parameters_model_namfiles()
+)
 def test_mf2005_test_models_load(example_data_path, namfile):
     assert not Modflow.load(
         namfile,
@@ -623,7 +624,9 @@ def test_write_irch(tmpdir, example_data_path):
         assert np.abs(d).sum() == 0
 
 
-@pytest.mark.xfail(reason="Pending https://github.com/modflowpy/flopy/issues/1472")
+@pytest.mark.xfail(
+    reason="Pending https://github.com/modflowpy/flopy/issues/1472"
+)
 def test_mflist_external(tmpdir):
     # TODO: fails if external path is absolute (not relative to model_ws), ideally support both?
 
@@ -632,7 +635,8 @@ def test_mflist_external(tmpdir):
         "mflist_test",
         model_ws=str(tmpdir),
         # external_path=str(ws),  # full path causes failure
-        external_path=ws.name)
+        external_path=ws.name,
+    )
 
     dis = ModflowDis(ml, 1, 10, 10, nper=3, perlen=1.0)
     wel_data = {
@@ -683,7 +687,9 @@ def test_mflist_external(tmpdir):
     # ml1.write_input()
 
 
-@pytest.mark.xfail(reason="Pending https://github.com/modflowpy/flopy/issues/1472")
+@pytest.mark.xfail(
+    reason="Pending https://github.com/modflowpy/flopy/issues/1472"
+)
 def test_single_mflist_entry_load(tmpdir, example_data_path):
     m = Modflow.load(
         "freyberg.nam",
@@ -734,11 +740,14 @@ def test_mflist_add_record():
 __mf2005_test_path = get_example_data_path(Path(__file__)) / "mf2005_test"
 
 
-@pytest.mark.parametrize("namfile", [
-    os.path.join(__mf2005_test_path, f)
-    for f in os.listdir(__mf2005_test_path)
-    if f.endswith(".nam")
-])
+@pytest.mark.parametrize(
+    "namfile",
+    [
+        os.path.join(__mf2005_test_path, f)
+        for f in os.listdir(__mf2005_test_path)
+        if f.endswith(".nam")
+    ],
+)
 def test_checker_on_load(namfile):
     # load all of the models in the mf2005_test folder
     # model level checks are performed by default on load()
@@ -765,9 +774,9 @@ def test_bcs_check(tmpdir):
     chk = bas.check()
     assert chk.summary_array["desc"][0] == "isolated cells in ibound array"
     assert (
-            chk.summary_array.i[0] == 1
-            and chk.summary_array.i[0] == 1
-            and chk.summary_array.j[0] == 1
+        chk.summary_array.i[0] == 1
+        and chk.summary_array.i[0] == 1
+        and chk.summary_array.j[0] == 1
     )
     assert len(chk.summary_array) == 1
 
@@ -841,29 +850,29 @@ def test_properties_check(tmpdir):
     ind3_errors = chk.summary_array[ind3]["desc"]
 
     assert (
-            "zero or negative horizontal hydraulic conductivity values"
-            in ind1_errors
+        "zero or negative horizontal hydraulic conductivity values"
+        in ind1_errors
     )
     assert (
-            "horizontal hydraulic conductivity values below checker threshold of 1e-11"
-            in ind1_errors
+        "horizontal hydraulic conductivity values below checker threshold of 1e-11"
+        in ind1_errors
     )
     assert "negative horizontal anisotropy values" in ind1_errors
     assert (
-            "vertical hydraulic conductivity values below checker threshold of 1e-11"
-            in ind1_errors
+        "vertical hydraulic conductivity values below checker threshold of 1e-11"
+        in ind1_errors
     )
     assert (
-            "horizontal hydraulic conductivity values above checker threshold of 100000.0"
-            in ind2_errors
+        "horizontal hydraulic conductivity values above checker threshold of 100000.0"
+        in ind2_errors
     )
     assert (
-            "zero or negative vertical hydraulic conductivity values"
-            in ind2_errors
+        "zero or negative vertical hydraulic conductivity values"
+        in ind2_errors
     )
     assert (
-            "vertical hydraulic conductivity values above checker threshold of 100000.0"
-            in ind3_errors
+        "vertical hydraulic conductivity values above checker threshold of 100000.0"
+        in ind3_errors
     )
 
 
@@ -1031,7 +1040,7 @@ def eval_timeseries(file):
     # get the all of the data
     tsd = ts.get_alldata()
     assert (
-            len(tsd) > 0
+        len(tsd) > 0
     ), f"could not load data using get_alldata() from {os.path.basename(file)}."
 
     # get the data for the last particleid
@@ -1266,7 +1275,7 @@ def get_basic_modflow_model(ws, name):
     size = 100
     nlay = 10
     nper = 10
-    nsfr = int((size ** 2) / 5)
+    nsfr = int((size**2) / 5)
 
     dis = ModflowDis(
         m,
@@ -1282,16 +1291,16 @@ def get_basic_modflow_model(ws, name):
         m, rech={k: 0.001 - np.cos(k) * 0.001 for k in range(nper)}
     )
 
-    ra = ModflowWel.get_empty(size ** 2)
+    ra = ModflowWel.get_empty(size**2)
     well_spd = {}
     for kper in range(nper):
         ra_per = ra.copy()
         ra_per["k"] = 1
         ra_per["i"] = (
             (np.ones((size, size)) * np.arange(size))
-                .transpose()
-                .ravel()
-                .astype(int)
+            .transpose()
+            .ravel()
+            .astype(int)
         )
         ra_per["j"] = list(range(size)) * size
         well_spd[kper] = ra
@@ -1326,4 +1335,6 @@ def test_model_load_time(tmpdir, benchmark):
     name = inspect.getframeinfo(inspect.currentframe()).function
     model = get_basic_modflow_model(ws=str(tmpdir), name=name)
     model.write_input()
-    benchmark(lambda: Modflow.load(f"{name}.nam", model_ws=str(tmpdir), check=False))
+    benchmark(
+        lambda: Modflow.load(f"{name}.nam", model_ws=str(tmpdir), check=False)
+    )

@@ -33,7 +33,7 @@ def get_mf6_examples_path() -> Path:
 
 def is_nested(namfile) -> bool:
     p = Path(namfile)
-    if not p.is_file() or not p.name.endswith('.nam'):
+    if not p.is_file() or not p.name.endswith(".nam"):
         raise ValueError(f"Expected a namfile path, got {p}")
 
     return p.parent.parent.name != __mf6_examples
@@ -43,7 +43,11 @@ def pytest_generate_tests(metafunc):
     # examples to skip:
     #   - ex-gwtgwt-mt3dms-p10: https://github.com/MODFLOW-USGS/modflow6/pull/1008
     exclude = ["ex-gwt-gwtgwt-mt3dms-p10"]
-    namfiles = [str(p) for p in get_mf6_examples_path().rglob("mfsim.nam") if not any(e in str(p) for e in exclude)]
+    namfiles = [
+        str(p)
+        for p in get_mf6_examples_path().rglob("mfsim.nam")
+        if not any(e in str(p) for e in exclude)
+    ]
 
     # parametrization by model
     #   - single namfile per test case
@@ -63,16 +67,27 @@ def pytest_generate_tests(metafunc):
             p = Path(p)
             return p.parent.parent.name if is_nested(p) else p.parent.name
 
-        for model_name, model_namfiles in groupby(namfiles, key=simulation_name_from_model_path):
-            models = sorted(list(model_namfiles))  # sort in alphabetical order (gwf < gwt)
+        for model_name, model_namfiles in groupby(
+            namfiles, key=simulation_name_from_model_path
+        ):
+            models = sorted(
+                list(model_namfiles)
+            )  # sort in alphabetical order (gwf < gwt)
             simulations.append(models)
-            print(f"Simulation {model_name} has {len(models)} model(s):\n"
-                  f"{linesep.join(model_namfiles)}")
+            print(
+                f"Simulation {model_name} has {len(models)} model(s):\n"
+                f"{linesep.join(model_namfiles)}"
+            )
 
         def simulation_name_from_model_namfiles(mnams):
             namfile = next(iter(mnams), None)
-            if namfile is None: pytest.skip("No namfiles (expected ordered collection)")
+            if namfile is None:
+                pytest.skip("No namfiles (expected ordered collection)")
             namfile = Path(namfile)
-            return (namfile.parent.parent if is_nested(namfile) else namfile.parent).name
+            return (
+                namfile.parent.parent if is_nested(namfile) else namfile.parent
+            ).name
 
-        metafunc.parametrize(key, simulations, ids=simulation_name_from_model_namfiles)
+        metafunc.parametrize(
+            key, simulations, ids=simulation_name_from_model_namfiles
+        )
