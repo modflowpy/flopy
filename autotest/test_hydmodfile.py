@@ -2,7 +2,6 @@ import os
 
 import numpy as np
 import pytest
-
 from autotest.conftest import has_pkg, requires_pkg
 
 from flopy.modflow import Modflow, ModflowHyd

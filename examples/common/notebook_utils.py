@@ -10,8 +10,8 @@ except:
     sys.path.append(fpth)
     import flopy
 
-
 from pathlib import Path
+
 
 def get_project_root_path(path=None):
     """
@@ -31,13 +31,17 @@ def get_project_root_path(path=None):
     if cwd.name == "autotest":
         # we're in top-level autotest folder
         return cwd.parent
-    elif "autotest" in cwd.parts and cwd.parts.index("autotest") > cwd.parts.index("flopy"):
+    elif "autotest" in cwd.parts and cwd.parts.index(
+        "autotest"
+    ) > cwd.parts.index("flopy"):
         # we're somewhere inside autotests
-        parts = cwd.parts[0: cwd.parts.index("autotest")]
+        parts = cwd.parts[0 : cwd.parts.index("autotest")]
         return Path(*parts)
-    elif "examples" in cwd.parts and cwd.parts.index("examples") > cwd.parts.index("flopy"):
+    elif "examples" in cwd.parts and cwd.parts.index(
+        "examples"
+    ) > cwd.parts.index("flopy"):
         # we're somewhere inside examples folder
-        parts = cwd.parts[0: cwd.parts.index("examples")]
+        parts = cwd.parts[0 : cwd.parts.index("examples")]
         return Path(*parts)
     elif cwd.parts.count("flopy") >= 2:
         # we're somewhere inside the project or flopy module

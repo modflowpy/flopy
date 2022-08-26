@@ -3,9 +3,9 @@ import os
 
 import numpy as np
 import pytest
+from autotest.conftest import requires_exe
 from matplotlib import pyplot as plt
 
-from autotest.conftest import requires_exe
 from flopy.modflow import (
     Modflow,
     ModflowBas,

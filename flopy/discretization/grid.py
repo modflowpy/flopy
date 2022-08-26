@@ -1,10 +1,10 @@
 import copy
 import os
-import warnings
 
 import numpy as np
 
 from ..utils import geometry
+from ..utils.gridutil import get_lni
 
 
 class CachedData:
@@ -361,6 +361,10 @@ class Grid:
         self._idomain = idomain
 
     @property
+    def nlay(self):
+        raise NotImplementedError("must define nlay in child class")
+
+    @property
     def ncpl(self):
         raise NotImplementedError("must define ncpl in child class")
 
@@ -602,6 +606,29 @@ class Grid:
     @property
     def map_polygons(self):
         raise NotImplementedError("must define map_polygons in child class")
+
+    def get_lni(self, *nodes):
+        """
+        Get the layer index and within-layer node index (both 0-based).
+        if no nodes are specified, all are returned in ascending order.
+
+        Parameters
+        ----------
+        nodes : the node numbers (zero or more ints)
+
+        Returns
+        -------
+            A tuple (layer index, node index), or a
+            list of such if multiple nodes provided
+        """
+
+        ncpl = (
+            [self.ncpl for _ in range(self.nlay)]
+            if isinstance(self.ncpl, int)
+            else list(self.ncpl)
+        )
+
+        return get_lni(ncpl, *nodes)
 
     def get_plottable_layer_array(self, plotarray, layer):
         raise NotImplementedError(

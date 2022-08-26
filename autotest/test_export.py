@@ -1,21 +1,23 @@
+import math
 import os
 import shutil
 from pathlib import Path
 from typing import List
 
-import math
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-
-import flopy
+from flaky import flaky
 from autotest.conftest import (
     SHAPEFILE_EXTENSIONS,
     get_example_data_path,
     has_pkg,
     requires_exe,
-    requires_pkg, requires_spatial_reference,
+    requires_pkg,
+    requires_spatial_reference,
 )
+
+import flopy
 from flopy.discretization import StructuredGrid, UnstructuredGrid
 from flopy.export import NetCdf
 from flopy.export.shapefile_utils import (
@@ -194,6 +196,7 @@ def test_export_output(tmpdir, example_data_path):
     nc.nc.close()
 
 
+@flaky
 @requires_pkg("shapefile", "shapely")
 def test_write_grid_shapefile(tmpdir):
     from shapefile import Reader
@@ -274,8 +277,8 @@ def test_export_shapefile_polygon_closed(tmpdir):
 
 @requires_pkg("rasterio", "shapefile", "scipy")
 def test_export_array(tmpdir, example_data_path):
-    from scipy.ndimage import rotate
     import rasterio
+    from scipy.ndimage import rotate
 
     namfile = "freyberg.nam"
     model_ws = example_data_path / "freyberg"
@@ -896,7 +899,7 @@ def test_polygon_from_ij_with_epsg(tmpdir):
     # 502s are also possible and possibly unavoidable)
     ep = EpsgReference()
     prj = ep.to_dict()
-    
+
     assert 26715 in prj
 
     fpth = os.path.join(ws, "test.prj")

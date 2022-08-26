@@ -3,7 +3,6 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-
 from autotest.conftest import has_pkg, requires_pkg
 
 import flopy.discretization as fgrid
@@ -15,7 +14,12 @@ from flopy.utils.triangle import Triangle
 
 if has_pkg("shapely"):
     from shapely.geometry import (
-        Point, LineString, Polygon, MultiPoint, MultiLineString, MultiPolygon
+        LineString,
+        MultiLineString,
+        MultiPoint,
+        MultiPolygon,
+        Point,
+        Polygon,
     )
 
 rtree_toggle = pytest.mark.parametrize("rtree", [True, False])

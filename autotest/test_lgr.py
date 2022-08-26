@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
-from flaky import flaky
 from autotest.conftest import requires_exe
+from flaky import flaky
 
 import flopy
 

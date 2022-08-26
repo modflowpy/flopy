@@ -8,8 +8,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-
 from autotest.conftest import get_example_data_path, requires_exe, requires_pkg
+
 from flopy.discretization import StructuredGrid
 from flopy.modflow import Modflow, ModflowDis, ModflowSfr2, ModflowStr
 from flopy.modflow.mfsfr2 import check

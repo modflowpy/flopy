@@ -1,15 +1,18 @@
 import os
+from warnings import warn
 
 import matplotlib
 import numpy as np
 import pytest
+from autotest.conftest import requires_pkg
+from autotest.test_dis_cases import case_dis, case_disv
+from autotest.test_grid_cases import GridCases
 from flaky import flaky
 from matplotlib import pyplot as plt
-
-from autotest.conftest import requires_pkg
+from pytest_cases import parametrize_with_cases
 
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
-from flopy.mf6 import MFSimulation, ModflowGwf, ModflowGwfdis, ModflowGwfdisv
+from flopy.mf6 import MFSimulation
 from flopy.modflow import Modflow, ModflowDis
 from flopy.utils.cvfdutil import gridlist_to_disv_gridprops, to_cvfd
 from flopy.utils.triangle import Triangle
@@ -149,90 +152,6 @@ def test_get_rc_from_node_coordinates():
             assert c == j, f"col {c} not equal {j} for xy ({x}, {y})"
 
 
-@pytest.fixture
-def dis_model():
-    sim = MFSimulation()
-    gwf = ModflowGwf(sim)
-    dis = ModflowGwfdis(
-        gwf,
-        nlay=3,
-        nrow=21,
-        ncol=20,
-        delr=500.0,
-        delc=500.0,
-        top=400.0,
-        botm=[220.0, 200.0, 0.0],
-        xorigin=3000,
-        yorigin=1000,
-        angrot=10,
-    )
-
-    return gwf
-
-
-@pytest.fixture
-def disv_model():
-    sim = MFSimulation()
-    gwf = ModflowGwf(sim)
-
-    nrow, ncol = 21, 20
-    delr, delc = 500.0, 500.0
-    ncpl = nrow * ncol
-    xv = np.linspace(0, delr * ncol, ncol + 1)
-    yv = np.linspace(delc * nrow, 0, nrow + 1)
-    xv, yv = np.meshgrid(xv, yv)
-    xv = xv.ravel()
-    yv = yv.ravel()
-
-    def get_vlist(i, j, nrow, ncol):
-        v1 = i * (ncol + 1) + j
-        v2 = v1 + 1
-        v3 = v2 + ncol + 1
-        v4 = v3 - 1
-        return [v1, v2, v3, v4]
-
-    iverts = []
-    for i in range(nrow):
-        for j in range(ncol):
-            iverts.append(get_vlist(i, j, nrow, ncol))
-
-    nvert = xv.shape[0]
-    verts = np.hstack((xv.reshape(nvert, 1), yv.reshape(nvert, 1)))
-
-    cellxy = np.empty((nvert, 2))
-    for icpl in range(ncpl):
-        iv = iverts[icpl]
-        cellxy[icpl, 0] = (xv[iv[0]] + xv[iv[1]]) / 2.0
-        cellxy[icpl, 1] = (yv[iv[1]] + yv[iv[2]]) / 2.0
-
-    # need to create cell2d, which is [[icpl, xc, yc, nv, iv1, iv2, iv3, iv4]]
-    cell2d = [
-        [icpl, cellxy[icpl, 0], cellxy[icpl, 1], 4] + iverts[icpl]
-        for icpl in range(ncpl)
-    ]
-    vertices = [
-        [ivert, verts[ivert, 0], verts[ivert, 1]] for ivert in range(nvert)
-    ]
-    xorigin = 3000
-    yorigin = 1000
-    angrot = 10
-    ModflowGwfdisv(
-        gwf,
-        nlay=3,
-        ncpl=ncpl,
-        top=400.0,
-        botm=[220.0, 200.0, 0.0],
-        nvert=nvert,
-        vertices=vertices,
-        cell2d=cell2d,
-        xorigin=xorigin,
-        yorigin=yorigin,
-        angrot=angrot,
-    )
-    gwf.modelgrid.set_coord_info(xoff=xorigin, yoff=yorigin, angrot=angrot)
-    return gwf
-
-
 def load_verts(fname):
     verts = np.genfromtxt(
         fname, dtype=[int, float, float], names=["iv", "x", "y"]
@@ -254,8 +173,17 @@ def load_iverts(fname):
     return iverts, np.array(xc), np.array(yc)
 
 
-def test_intersection(dis_model, disv_model):
+@pytest.fixture
+def dis_model():
+    return case_dis()
 
+
+@pytest.fixture
+def disv_model():
+    return case_disv()
+
+
+def test_intersection(dis_model, disv_model):
     for i in range(5):
         if i == 0:
             # inside a cell, in real-world coordinates
@@ -803,520 +731,182 @@ def test_voronoi_vertex_grid(tmpdir):
     assert len(gridprops["cell2d"]) == 43
 
 
-def __voronoi_grid_0():
-    name = "vor0"
-    ncpl = 3803
-    domain = [
-        [1831.381546, 6335.543757],
-        [4337.733475, 6851.136153],
-        [6428.747084, 6707.916043],
-        [8662.980804, 6493.085878],
-        [9350.437333, 5891.561415],
-        [9235.861245, 4717.156511],
-        [8963.743036, 3685.971717],
-        [8691.624826, 2783.685023],
-        [8047.13433, 2038.94045],
-        [7416.965845, 578.0953252],
-        [6414.425073, 105.4689614],
-        [5354.596258, 205.7230386],
-        [4624.173696, 363.2651598],
-        [3363.836725, 563.7733141],
-        [1330.11116, 1809.788273],
-        [399.1804436, 2998.515188],
-        [914.7728404, 5132.494831],
-        #        [1831.381546, 6335.543757],
-    ]
-    area_max = 100.0**2
-    poly = np.array(domain)
-    angle = 30
-    return name, poly, area_max, ncpl, angle
-
-
-@pytest.fixture
-def voronoi_grid_0():
-    return __voronoi_grid_0()
-
-
-def __voronoi_grid_1():
-    name = "vor1"
-    ncpl = 1679
-    xmin = 0.0
-    xmax = 2.0
-    ymin = 0.0
-    ymax = 1.0
-    area_max = 0.001
-    poly = np.array(((xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)))
-    angle = 30
-    return name, poly, area_max, ncpl, angle
-
-
-@pytest.fixture
-def voronoi_grid_1():
-    return __voronoi_grid_1()
-
-
-def __voronoi_grid_2():
-    name = "vor2"
-    ncpl = 538
-    theta = np.arange(0.0, 2 * np.pi, 0.2)
-    radius = 100.0
-    x = radius * np.cos(theta)
-    y = radius * np.sin(theta)
-    circle_poly = [(x, y) for x, y in zip(x, y)]
-    max_area = 50
-    angle = 30
-    return name, circle_poly, max_area, ncpl, angle
-
-
-@pytest.fixture
-def voronoi_grid_2():
-    return __voronoi_grid_2()
-
-
-@requires_pkg("shapely", "scipy")
 @flaky
-@pytest.mark.parametrize(
-    "grid_info", [__voronoi_grid_0(), __voronoi_grid_1(), __voronoi_grid_2()]
-)
-def test_voronoi_grid(tmpdir, grid_info):
-    name, poly, area_max, ncpl, angle = grid_info
-    tri = Triangle(maximum_area=area_max, angle=angle, model_ws=str(tmpdir))
-    tri.add_polygon(poly)
-    tri.build(verbose=False)
-    vor = VoronoiGrid(tri)
+@requires_pkg("shapely", "scipy")
+@parametrize_with_cases("grid_info", cases=GridCases, prefix="voronoi")
+def test_voronoi_grid(request, tmpdir, grid_info):
+    name = (
+        request.node.name.replace("/", "_")
+        .replace("\\", "_")
+        .replace(":", "_")
+    )
+    ncpl, vor, gridprops, grid = grid_info
 
-    gridprops = vor.get_gridprops_vertexgrid()
-    voronoi_grid = VertexGrid(**gridprops, nlay=1)
-
-    fig = plt.figure(figsize=(10, 10))
-    ax = fig.add_subplot()
-    ax.set_aspect("equal")
-    voronoi_grid.plot(ax=ax)
-    plt.savefig(os.path.join(str(tmpdir), f"{name}.png"))
-
-    # TODO: why does this sometimes happen on CI
+    # TODO: debug off-by-3 issue
     #  could be a rounding error as described here:
     #  https://github.com/modflowpy/flopy/issues/1492#issuecomment-1210596349
 
     # ensure proper number of cells
-    almost_right = (ncpl == 538 and gridprops["ncpl"] == 535)
-    assert ncpl == gridprops["ncpl"] or almost_right
+    almost_right = ncpl == 538 and gridprops["ncpl"] == 535
+    if almost_right:
+        warn(f"off-by-3")
 
     # ensure that all cells have 3 or more points
-    ninvalid_cells = []
-    for icell, ivts in enumerate(vor.iverts):
-        if len(ivts) < 3:
-            ninvalid_cells.append(icell)
-    errmsg = f"The following cells do not have 3 or more vertices.\n{ninvalid_cells}"
-    assert len(ninvalid_cells) == 0, errmsg
+    invalid_cells = [i for i, ivts in enumerate(vor.iverts) if len(ivts) < 3]
 
-
-@requires_pkg("shapely", "scipy")
-@flaky
-def test_voronoi_grid3(tmpdir):
-    name = "vor3"
-    answer_ncpl = 300
-
-    theta = np.arange(0.0, 2 * np.pi, 0.2)
-    radius = 100.0
-    x = radius * np.cos(theta)
-    y = radius * np.sin(theta)
-    circle_poly = [(x, y) for x, y in zip(x, y)]
-
-    theta = np.arange(0.0, 2 * np.pi, 0.2)
-    radius = 30.0
-    x = radius * np.cos(theta) + 25.0
-    y = radius * np.sin(theta) + 25.0
-    inner_circle_poly = [(x, y) for x, y in zip(x, y)]
-
-    tri = Triangle(maximum_area=100, angle=30, model_ws=str(tmpdir))
-    tri.add_polygon(circle_poly)
-    tri.add_polygon(inner_circle_poly)
-    tri.add_hole((25, 25))
-    tri.build(verbose=False)
-
-    vor = VoronoiGrid(tri)
-    gridprops = vor.get_gridprops_vertexgrid()
-    voronoi_grid = VertexGrid(**gridprops, nlay=1)
-
-    import matplotlib.pyplot as plt
-
+    # make a plot including invalid cells
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot()
     ax.set_aspect("equal")
-    voronoi_grid.plot(ax=ax)
-    plt.savefig(os.path.join(str(tmpdir), f"{name}.png"))
-
-    # ensure proper number of cells
-    ncpl = gridprops["ncpl"]
-    errmsg = f"Number of cells should be {answer_ncpl}. Found {ncpl}"
-    assert ncpl == answer_ncpl, errmsg
-
-    # ensure that all cells have 3 or more points
-    ninvalid_cells = []
-    for icell, ivts in enumerate(vor.iverts):
-        if len(ivts) < 3:
-            ninvalid_cells.append(icell)
-    errmsg = f"The following cells do not have 3 or more vertices.\n{ninvalid_cells}"
-    assert len(ninvalid_cells) == 0, errmsg
-
-
-@requires_pkg("shapely", "scipy")
-@flaky
-def test_voronoi_grid4(tmpdir):
-    name = "vor4"
-    answer_ncpl = 410
-    active_domain = [(0, 0), (100, 0), (100, 100), (0, 100)]
-    area1 = [(10, 10), (40, 10), (40, 40), (10, 40)]
-    area2 = [(60, 60), (80, 60), (80, 80), (60, 80)]
-    tri = Triangle(angle=30, model_ws=str(tmpdir))
-    tri.add_polygon(active_domain)
-    tri.add_polygon(area1)
-    tri.add_polygon(area2)
-    tri.add_region((1, 1), 0, maximum_area=100)  # point inside active domain
-    tri.add_region((11, 11), 1, maximum_area=10)  # point inside area1
-    tri.add_region((61, 61), 2, maximum_area=3)  # point inside area2
-    tri.build(verbose=False)
-
-    vor = VoronoiGrid(tri)
-    gridprops = vor.get_gridprops_vertexgrid()
-    voronoi_grid = VertexGrid(**gridprops, nlay=1)
-
-    fig = plt.figure(figsize=(10, 10))
-    ax = fig.add_subplot()
-    ax.set_aspect("equal")
-    voronoi_grid.plot(ax=ax)
-    plt.savefig(os.path.join(str(tmpdir), f"{name}.png"))
-
-    # ensure proper number of cells
-    ncpl = gridprops["ncpl"]
-    errmsg = f"Number of cells should be {answer_ncpl}. Found {ncpl}"
-    assert ncpl == answer_ncpl, errmsg
-
-    # ensure that all cells have 3 or more points
-    ninvalid_cells = []
-    for icell, ivts in enumerate(vor.iverts):
-        if len(ivts) < 3:
-            ninvalid_cells.append(icell)
-    errmsg = f"The following cells do not have 3 or more vertices.\n{ninvalid_cells}"
-    assert len(ninvalid_cells) == 0, errmsg
-
-
-@requires_pkg("shapely", "scipy")
-@flaky
-def test_voronoi_grid5(tmpdir):
-    name = "vor5"
-    answer_ncpl = 1305
-    active_domain = [(0, 0), (100, 0), (100, 100), (0, 100)]
-    area1 = [(10, 10), (40, 10), (40, 40), (10, 40)]
-    area2 = [(70, 70), (90, 70), (90, 90), (70, 90)]
-
-    tri = Triangle(angle=30, model_ws=str(tmpdir))
-
-    # requirement that active_domain is first polygon to be added
-    tri.add_polygon(active_domain)
-
-    # requirement that any holes be added next
-    theta = np.arange(0.0, 2 * np.pi, 0.2)
-    radius = 10.0
-    x = radius * np.cos(theta) + 50.0
-    y = radius * np.sin(theta) + 70.0
-    circle_poly0 = [(x, y) for x, y in zip(x, y)]
-    tri.add_polygon(circle_poly0)
-    tri.add_hole((50, 70))
-
-    # Add a polygon to force cells to conform to it
-    theta = np.arange(0.0, 2 * np.pi, 0.2)
-    radius = 10.0
-    x = radius * np.cos(theta) + 70.0
-    y = radius * np.sin(theta) + 20.0
-    circle_poly1 = [(x, y) for x, y in zip(x, y)]
-    tri.add_polygon(circle_poly1)
-    # tri.add_hole((70, 20))
-
-    # add line through domain to force conforming cells
-    line = [(x, x) for x in np.linspace(11, 89, 100)]
-    tri.add_polygon(line)
-
-    # then regions and other polygons should follow
-    tri.add_polygon(area1)
-    tri.add_polygon(area2)
-    tri.add_region((1, 1), 0, maximum_area=100)  # point inside active domain
-    tri.add_region((11, 11), 1, maximum_area=10)  # point inside area1
-    tri.add_region((70, 70), 2, maximum_area=1)  # point inside area2
-
-    tri.build(verbose=False)
-
-    vor = VoronoiGrid(tri)
-    gridprops = vor.get_gridprops_vertexgrid()
-    voronoi_grid = VertexGrid(**gridprops, nlay=1)
-
-    ninvalid_cells = []
-    for icell, ivts in enumerate(vor.iverts):
-        if len(ivts) < 3:
-            ninvalid_cells.append(icell)
-
-    fig = plt.figure(figsize=(10, 10))
-    ax = fig.add_subplot()
-    ax.set_aspect("equal")
-    voronoi_grid.plot(ax=ax)
-
-    # plot invalid cells
+    grid.plot(ax=ax)
     ax.plot(
-        voronoi_grid.xcellcenters[ninvalid_cells],
-        voronoi_grid.ycellcenters[ninvalid_cells],
+        grid.xcellcenters[invalid_cells],
+        grid.ycellcenters[invalid_cells],
         "ro",
     )
-
     plt.savefig(os.path.join(str(tmpdir), f"{name}.png"))
 
-    # ensure proper number of cells
-    ncpl = gridprops["ncpl"]
-    errmsg = f"Number of cells should be {answer_ncpl}. Found {ncpl}"
-    assert ncpl == answer_ncpl, errmsg
-
-    # ensure that all cells have 3 or more points
-    errmsg = f"The following cells do not have 3 or more vertices.\n{ninvalid_cells}"
-    assert len(ninvalid_cells) == 0, errmsg
-
-
-def test_structured_thick():
-    nlay, nrow, ncol = 3, 2, 3
-    delc = 1.0 * np.ones(nrow, dtype=float)
-    delr = 1.0 * np.ones(ncol, dtype=float)
-    top = 10.0 * np.ones((nrow, ncol), dtype=float)
-    botm = np.zeros((nlay, nrow, ncol), dtype=float)
-    botm[0, :, :] = 5.0
-    botm[1, :, :] = 0.0
-    botm[2, :, :] = -5.0
-    grid = StructuredGrid(
-        nlay=nlay,
-        nrow=nrow,
-        ncol=ncol,
-        delc=delc,
-        delr=delr,
-        top=top,
-        botm=botm,
-    )
-    thick = grid.thick
-    assert np.allclose(thick, 5.0), "thicknesses != 5."
-
-    sat_thick = grid.saturated_thick(grid.botm + 10.0)
-    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
-
-    sat_thick = grid.saturated_thick(grid.botm + 5.0)
-    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
-
-    sat_thick = grid.saturated_thick(grid.botm + 2.5)
-    assert np.allclose(sat_thick, 2.5), "saturated thicknesses != 2.5"
-
-    sat_thick = grid.saturated_thick(grid.botm)
-    assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
-
-    sat_thick = grid.saturated_thick(grid.botm - 100.0)
-    assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
-
-
-def test_vertices_thick():
-    nlay, ncpl = 3, 5
-    vertices = [
-        [0, 0.0, 3.0],
-        [1, 1.0, 3.0],
-        [2, 2.0, 3.0],
-        [3, 0.0, 2.0],
-        [4, 1.0, 2.0],
-        [5, 2.0, 2.0],
-        [6, 0.0, 1.0],
-        [7, 1.0, 1.0],
-        [8, 2.0, 1.0],
-        [9, 0.0, 0.0],
-        [10, 1.0, 0.0],
-    ]
-    iverts = [
-        [0, 0, 1, 4, 3],
-        [1, 1, 2, 5, 4],
-        [2, 3, 4, 7, 6],
-        [3, 4, 5, 8, 7],
-        [4, 6, 7, 10, 9],
-        [5, 0, 1, 4, 3],
-        [6, 1, 2, 5, 4],
-        [7, 3, 4, 7, 6],
-        [8, 4, 5, 8, 7],
-        [9, 6, 7, 10, 9],
-        [10, 0, 1, 4, 3],
-        [11, 1, 2, 5, 4],
-        [12, 3, 4, 7, 6],
-        [13, 4, 5, 8, 7],
-        [14, 6, 7, 10, 9],
-    ]
-    top = np.ones(ncpl, dtype=float) * 10.0
-    botm = np.zeros((nlay, ncpl), dtype=float)
-    botm[0, :] = 5.0
-    botm[1, :] = 0.0
-    botm[2, :] = -5.0
-    grid = VertexGrid(
-        nlay=nlay,
-        ncpl=ncpl,
-        vertices=vertices,
-        cell2d=iverts,
-        top=top,
-        botm=botm,
-    )
-    thick = grid.thick
-    assert np.allclose(thick, 5.0), "thicknesses != 5."
-
-    sat_thick = grid.saturated_thick(grid.botm + 10.0)
-    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
-
-    sat_thick = grid.saturated_thick(grid.botm + 5.0)
-    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
-
-    sat_thick = grid.saturated_thick(grid.botm + 2.5)
-    assert np.allclose(sat_thick, 2.5), "saturated thicknesses != 2.5"
-
-    sat_thick = grid.saturated_thick(grid.botm)
-    assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
-
-    sat_thick = grid.saturated_thick(grid.botm - 100.0)
-    assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
-
-
-def test_unstructured_thick():
-    nlay = 3
-    ncpl = [5, 5, 5]
-    vertices = [
-        [0, 0.0, 3.0],
-        [1, 1.0, 3.0],
-        [2, 2.0, 3.0],
-        [3, 0.0, 2.0],
-        [4, 1.0, 2.0],
-        [5, 2.0, 2.0],
-        [6, 0.0, 1.0],
-        [7, 1.0, 1.0],
-        [8, 2.0, 1.0],
-        [9, 0.0, 0.0],
-        [10, 1.0, 0.0],
-    ]
-    iverts = [
-        [0, 0, 1, 4, 3],
-        [1, 1, 2, 5, 4],
-        [2, 3, 4, 7, 6],
-        [3, 4, 5, 8, 7],
-        [4, 6, 7, 10, 9],
-        [5, 0, 1, 4, 3],
-        [6, 1, 2, 5, 4],
-        [7, 3, 4, 7, 6],
-        [8, 4, 5, 8, 7],
-        [9, 6, 7, 10, 9],
-        [10, 0, 1, 4, 3],
-        [11, 1, 2, 5, 4],
-        [12, 3, 4, 7, 6],
-        [13, 4, 5, 8, 7],
-        [14, 6, 7, 10, 9],
-    ]
-    xcenters = [
-        0.5,
-        1.5,
-        0.5,
-        1.5,
-        0.5,
-    ]
-    ycenters = [
-        2.5,
-        2.5,
-        1.5,
-        1.5,
-        0.5,
-    ]
-    top = np.ones((nlay, 5), dtype=float)
-    top[0, :] = 10.0
-    top[1, :] = 5.0
-    top[2, :] = 0.0
-    botm = np.zeros((nlay, 5), dtype=float)
-    botm[0, :] = 5.0
-    botm[1, :] = 0.0
-    botm[2, :] = -5.0
-
-    grid = UnstructuredGrid(
-        vertices=vertices,
-        iverts=iverts,
-        xcenters=xcenters,
-        ycenters=ycenters,
-        ncpl=ncpl,
-        top=top.flatten(),
-        botm=botm.flatten(),
-    )
-
-    thick = grid.thick
-    assert np.allclose(thick, 5.0), "thicknesses != 5."
-
-    sat_thick = grid.saturated_thick(grid.botm + 10.0)
-    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
-
-    sat_thick = grid.saturated_thick(grid.botm + 5.0)
-    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
-
-    sat_thick = grid.saturated_thick(grid.botm + 2.5)
-    assert np.allclose(sat_thick, 2.5), "saturated thicknesses != 2.5"
-
-    sat_thick = grid.saturated_thick(grid.botm)
-    assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
-
-    sat_thick = grid.saturated_thick(grid.botm - 100.0)
-    assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
-
-
-def test_ncb_thick():
-    nlay = 3
-    nrow = ncol = 15
-    laycbd = np.array([1, 2, 0], dtype=int)
-    ncb = np.count_nonzero(laycbd)
-    dx = dy = 150
-    delc = np.array(
-        [
-            dy,
-        ]
-        * nrow
-    )
-    delr = np.array(
-        [
-            dx,
-        ]
-        * ncol
-    )
-    top = np.ones((15, 15))
-    botm = np.ones((nlay + ncb, nrow, ncol))
-    elevations = np.array([-10, -20, -40, -50, -70])[:, np.newaxis]
-    botm *= elevations[:, None]
-
-    modelgrid = StructuredGrid(
-        delc=delc,
-        delr=delr,
-        top=top,
-        botm=botm,
-        nlay=nlay,
-        nrow=nrow,
-        ncol=ncol,
-        laycbd=laycbd,
-    )
-
-    thick = modelgrid.thick
-
+    assert ncpl == gridprops["ncpl"] or almost_right
     assert (
-        thick.shape[0] == nlay + ncb
+        len(invalid_cells) == 0
+    ), f"The following cells do not have 3 or more vertices.\n{invalid_cells}"
+
+
+@pytest.fixture
+def structured_grid():
+    return GridCases().structured_small()
+
+
+@pytest.fixture
+def vertex_grid():
+    return GridCases().vertex_small()
+
+
+@pytest.fixture
+def unstructured_grid():
+    return GridCases().unstructured_small()
+
+
+def test_structured_thick(structured_grid):
+    thick = structured_grid.thick
+    assert np.allclose(thick, 5.0), "thicknesses != 5."
+
+    sat_thick = structured_grid.saturated_thick(structured_grid.botm + 10.0)
+    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
+
+    sat_thick = structured_grid.saturated_thick(structured_grid.botm + 5.0)
+    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
+
+    sat_thick = structured_grid.saturated_thick(structured_grid.botm + 2.5)
+    assert np.allclose(sat_thick, 2.5), "saturated thicknesses != 2.5"
+
+    sat_thick = structured_grid.saturated_thick(structured_grid.botm)
+    assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
+
+    sat_thick = structured_grid.saturated_thick(structured_grid.botm - 100.0)
+    assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
+
+
+def test_vertices_thick(vertex_grid):
+    thick = vertex_grid.thick
+    assert np.allclose(thick, 5.0), "thicknesses != 5."
+
+    sat_thick = vertex_grid.saturated_thick(vertex_grid.botm + 10.0)
+    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
+
+    sat_thick = vertex_grid.saturated_thick(vertex_grid.botm + 5.0)
+    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
+
+    sat_thick = vertex_grid.saturated_thick(vertex_grid.botm + 2.5)
+    assert np.allclose(sat_thick, 2.5), "saturated thicknesses != 2.5"
+
+    sat_thick = vertex_grid.saturated_thick(vertex_grid.botm)
+    assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
+
+    sat_thick = vertex_grid.saturated_thick(vertex_grid.botm - 100.0)
+    assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
+
+
+def test_unstructured_thick(unstructured_grid):
+    thick = unstructured_grid.thick
+    assert np.allclose(thick, 5.0), "thicknesses != 5."
+
+    sat_thick = unstructured_grid.saturated_thick(
+        unstructured_grid.botm + 10.0
+    )
+    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
+
+    sat_thick = unstructured_grid.saturated_thick(unstructured_grid.botm + 5.0)
+    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
+
+    sat_thick = unstructured_grid.saturated_thick(unstructured_grid.botm + 2.5)
+    assert np.allclose(sat_thick, 2.5), "saturated thicknesses != 2.5"
+
+    sat_thick = unstructured_grid.saturated_thick(unstructured_grid.botm)
+    assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
+
+    sat_thick = unstructured_grid.saturated_thick(
+        unstructured_grid.botm - 100.0
+    )
+    assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
+
+
+@parametrize_with_cases("grid", cases=GridCases, prefix="structured_cbd")
+def test_structured_ncb_thick(grid):
+    thick = grid.thick
+
+    assert thick.shape[0] == grid.nlay + np.count_nonzero(
+        grid.laycbd
     ), "grid thick attribute returns incorrect shape"
 
-    thick = modelgrid.remove_confining_beds(modelgrid.thick)
+    thick = grid.remove_confining_beds(grid.thick)
     assert (
-        thick.shape == modelgrid.shape
+        thick.shape == grid.shape
     ), "quasi3d confining beds not properly removed"
 
-    sat_thick = modelgrid.saturated_thick(modelgrid.thick)
+    sat_thick = grid.saturated_thick(grid.thick)
     assert (
-        sat_thick.shape == modelgrid.shape
+        sat_thick.shape == grid.shape
     ), "saturated_thickness confining beds not removed"
 
-    if sat_thick[1, 0, 0] != 20:
-        raise AssertionError(
-            "saturated_thickness is not properly indexing confining beds"
+    assert (
+        sat_thick[1, 0, 0] == 20
+    ), "saturated_thickness is not properly indexing confining beds"
+
+
+@parametrize_with_cases("grid", cases=GridCases, prefix="unstructured")
+def test_unstructured_iverts(grid):
+    iverts = grid.iverts
+    assert not any(
+        None in l for l in iverts
+    ), "None type should not be returned in iverts list"
+
+
+@parametrize_with_cases("grid", cases=GridCases, prefix="structured")
+def test_get_lni_structured(grid):
+    for nn in range(0, grid.nnodes):
+        layer, i = grid.get_lni(nn)
+        assert layer * grid.ncpl + i == nn
+
+
+@parametrize_with_cases("grid", cases=GridCases, prefix="vertex")
+def test_get_lni_vertex(grid):
+    for nn in range(0, grid.nnodes):
+        layer, i = grid.get_lni(nn)
+        assert layer * grid.ncpl + i == nn
+
+
+@parametrize_with_cases("grid", cases=GridCases, prefix="unstructured")
+def test_get_lni_unstructured(grid):
+    for nn in range(0, grid.nnodes):
+        layer, i = grid.get_lni(nn)
+        csum = [0] + list(
+            np.cumsum(
+                (
+                    list(grid.ncpl)
+                    if not isinstance(grid.ncpl, int)
+                    else [grid.ncpl for _ in range(grid.nlay)]
+                )
+            )
         )
+        assert csum[layer] + i == nn

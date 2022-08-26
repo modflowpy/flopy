@@ -1,11 +1,11 @@
+import filecmp
 from os.path import join, splitext
 from pathlib import Path
 from shutil import copytree
-import filecmp
 
 import pytest
+from autotest.conftest import get_example_data_path, requires_exe, requires_pkg
 
-from autotest.conftest import requires_exe, requires_pkg, get_example_data_path
 from flopy.modflow import Modflow, ModflowOc
 
 
@@ -74,9 +74,7 @@ def test_uzf_unit_numbers(tmpdir, uzf_example_path):
     fn1 = join(model_ws2, mfnam)
 
     # compare budget terms
-    fsum = join(
-        str(tmpdir), f"{splitext(mfnam)[0]}.budget.out"
-    )
+    fsum = join(str(tmpdir), f"{splitext(mfnam)[0]}.budget.out")
     success = pymake.compare_budget(
         fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
     )
@@ -176,10 +174,13 @@ __example_data_path = get_example_data_path(Path(__file__))
 @requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
-@pytest.mark.parametrize("namfile", [
-    str(__example_data_path / "pcgn_test" / nf)
-    for nf in ["twri.nam", "MNW2.nam"]
-])
+@pytest.mark.parametrize(
+    "namfile",
+    [
+        str(__example_data_path / "pcgn_test" / nf)
+        for nf in ["twri.nam", "MNW2.nam"]
+    ],
+)
 def test_mf2005pcgn(tmpdir, namfile):
     import pymake
 
@@ -227,7 +228,9 @@ def test_mf2005pcgn(tmpdir, namfile):
 @requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
-@pytest.mark.parametrize("namfile", [str(__example_data_path / "secp" / nf) for nf in ["secp.nam"]])
+@pytest.mark.parametrize(
+    "namfile", [str(__example_data_path / "secp" / nf) for nf in ["secp.nam"]]
+)
 def test_mf2005gmg(tmpdir, namfile):
     import pymake
 
@@ -269,7 +272,10 @@ def test_mf2005gmg(tmpdir, namfile):
 @requires_exe("mf2005")
 @requires_pkg("pymake")
 @pytest.mark.regression
-@pytest.mark.parametrize("namfile", [str(__example_data_path / "freyberg" / nf) for nf in ["freyberg.nam"]])
+@pytest.mark.parametrize(
+    "namfile",
+    [str(__example_data_path / "freyberg" / nf) for nf in ["freyberg.nam"]],
+)
 def test_mf2005(tmpdir, namfile):
     """
     test045 load and write of MODFLOW-2005 GMG example problem
@@ -334,13 +340,16 @@ def test_mf2005(tmpdir, namfile):
     assert success, "budget comparison failure"
 
 
-mf2005_namfiles = [str(__example_data_path / "mf2005_test" / nf) for nf in [
-    "fhb.nam",
-    "l1a2k.nam",
-    "l1b2k.nam",
-    "l1b2k_bath.nam",
-    "lakeex3.nam",
-]]
+mf2005_namfiles = [
+    str(__example_data_path / "mf2005_test" / nf)
+    for nf in [
+        "fhb.nam",
+        "l1a2k.nam",
+        "l1b2k.nam",
+        "l1b2k_bath.nam",
+        "lakeex3.nam",
+    ]
+]
 
 
 @requires_exe("mf2005")
@@ -354,7 +363,9 @@ def test_mf2005fhb(tmpdir, namfile):
     ws = str(tmpdir / "ws")
     copytree(Path(namfile).parent, ws)
 
-    m = Modflow.load(Path(namfile).name, model_ws=ws, verbose=True, exe_name="mf2005")
+    m = Modflow.load(
+        Path(namfile).name, model_ws=ws, verbose=True, exe_name="mf2005"
+    )
     assert m.load_fail is False
 
     success, buff = m.run_model(silent=False)

@@ -2,7 +2,6 @@ import os
 
 import numpy as np
 import pytest
-
 from autotest.conftest import requires_pkg
 
 from flopy.mf6 import MFSimulation

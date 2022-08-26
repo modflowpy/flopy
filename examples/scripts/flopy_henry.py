@@ -145,10 +145,10 @@ def run(workspace, quiet):
 
     # Average flows to cell centers
     qx_avg = np.empty(qx.shape, dtype=qx.dtype)
-    qx_avg[:, :, 1:] = 0.5 * (qx[:, :, 0: ncol - 1] + qx[:, :, 1:ncol])
+    qx_avg[:, :, 1:] = 0.5 * (qx[:, :, 0 : ncol - 1] + qx[:, :, 1:ncol])
     qx_avg[:, :, 0] = 0.5 * qx[:, :, 0]
     qz_avg = np.empty(qz.shape, dtype=qz.dtype)
-    qz_avg[1:, :, :] = 0.5 * (qz[0: nlay - 1, :, :] + qz[1:nlay, :, :])
+    qz_avg[1:, :, :] = 0.5 * (qz[0 : nlay - 1, :, :] + qz[1:nlay, :, :])
     qz_avg[0, :, :] = 0.5 * qz[0, :, :]
 
     # Make the plot
@@ -202,11 +202,13 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--keep", help="output directory")
-    parser.add_argument("--quiet", action="store_false", help="don't show model output")
+    parser.add_argument(
+        "--quiet", action="store_false", help="don't show model output"
+    )
     args = vars(parser.parse_args())
 
-    workspace = args.get('keep', None)
-    quiet = args.get('quiet', False)
+    workspace = args.get("keep", None)
+    quiet = args.get("quiet", False)
 
     if workspace is not None:
         run(workspace, quiet)
