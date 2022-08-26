@@ -3,12 +3,9 @@ import warnings
 
 import numpy as np
 import pytest
+from autotest.conftest import excludes_platform, requires_exe
 from flaky import flaky
 
-from autotest.conftest import (
-    excludes_platform,
-    requires_exe,
-)
 from flopy.modflow import (
     Modflow,
     ModflowBas,
@@ -37,6 +34,7 @@ from flopy.mt3d import (
     Mt3dSsm,
     Mt3dTob,
 )
+
 # Test loading of MODFLOW and MT3D models that come with MT3D distribution
 from flopy.utils import UcnFile
 
@@ -300,7 +298,9 @@ def test_mf2000_zeroth(tmpdir, mf2kmt3d_model_path):
 
 @flaky(max_runs=3)
 @requires_exe("mfnwt", "mt3dms")
-@excludes_platform("Windows", ci_only=True)  # TODO remove once fixed in MT3D-USGS
+@excludes_platform(
+    "Windows", ci_only=True
+)  # TODO remove once fixed in MT3D-USGS
 def test_mfnwt_CrnkNic(tmpdir, mfnwtmt3d_model_path):
     pth = str(mfnwtmt3d_model_path / "sft_crnkNic")
     namefile = "CrnkNic.nam"

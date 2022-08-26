@@ -1,8 +1,7 @@
-from tempfile import TemporaryDirectory
-
 import math
 import os
 import sys
+from tempfile import TemporaryDirectory
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -270,11 +269,13 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--keep", help="output directory")
-    parser.add_argument("--quiet", action="store_false", help="don't show model output")
+    parser.add_argument(
+        "--quiet", action="store_false", help="don't show model output"
+    )
     args = vars(parser.parse_args())
 
-    workspace = args.get('keep', None)
-    quiet = args.get('quiet', False)
+    workspace = args.get("keep", None)
+    quiet = args.get("quiet", False)
 
     if workspace is not None:
         run(workspace, quiet)

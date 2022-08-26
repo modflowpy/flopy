@@ -1,6 +1,9 @@
+from flaky import flaky
+
 from flopy.export.shapefile_utils import CRS, EpsgReference
 
 
+@flaky
 def test_epsgreference():
     ep = EpsgReference()
     ep.reset()

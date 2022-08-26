@@ -2,10 +2,9 @@ import os
 
 import numpy as np
 import pytest
-
-import flopy
 from autotest.conftest import requires_exe
 
+import flopy
 from flopy.mf6 import (
     MFModel,
     MFSimulation,
@@ -20,6 +19,7 @@ from flopy.mf6 import (
     ModflowGwfghb,
     ModflowGwfgnc,
     ModflowGwfgwf,
+    ModflowGwfgwt,
     ModflowGwfhfb,
     ModflowGwfic,
     ModflowGwflak,
@@ -42,9 +42,13 @@ from flopy.mf6 import (
     ModflowGwtssm,
     ModflowIms,
     ModflowTdis,
-    ModflowUtllaktab, ModflowGwfgwt,
+    ModflowUtllaktab,
 )
-from flopy.mf6.coordinates.modeldimensions import ModelDimensions, PackageDimensions, DataDimensions
+from flopy.mf6.coordinates.modeldimensions import (
+    DataDimensions,
+    ModelDimensions,
+    PackageDimensions,
+)
 from flopy.mf6.data.mffileaccess import MFFileAccessArray
 from flopy.mf6.data.mfstructure import MFDataItemStructure, MFDataStructure
 from flopy.mf6.mfbase import MFFileMgmt
@@ -73,14 +77,14 @@ from flopy.utils.observationfile import CsvFile
 
 
 def write_head(
-        fbin,
-        data,
-        kstp=1,
-        kper=1,
-        pertim=1.0,
-        totim=1.0,
-        text="            HEAD",
-        ilay=1,
+    fbin,
+    data,
+    kstp=1,
+    kper=1,
+    pertim=1.0,
+    totim=1.0,
+    text="            HEAD",
+    ilay=1,
 ):
     dt = np.dtype(
         [
@@ -397,7 +401,7 @@ def test_mf6_subdir(tmpdir):
     )
     gwf_r = sim_r.get_model()
     assert (
-            gwf.dis.delc.get_file_entry() == gwf_r.dis.delc.get_file_entry()
+        gwf.dis.delc.get_file_entry() == gwf_r.dis.delc.get_file_entry()
     ), "Something wrong with model external paths"
 
     sim_r.set_all_data_internal()
@@ -412,7 +416,7 @@ def test_mf6_subdir(tmpdir):
     )
     gwf_r2 = sim_r.get_model()
     assert (
-            gwf_r.dis.delc.get_file_entry() == gwf_r2.dis.delc.get_file_entry()
+        gwf_r.dis.delc.get_file_entry() == gwf_r2.dis.delc.get_file_entry()
     ), "Something wrong with model external paths"
 
 

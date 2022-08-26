@@ -1,10 +1,8 @@
 import matplotlib
-
 from autotest.conftest import requires_exe, requires_pkg
 
 from flopy.modflow import Modflow
 from flopy.utils import MfListBudget
-
 
 str_items = {
     0: {

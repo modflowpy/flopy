@@ -5,10 +5,10 @@ from shutil import which
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from autotest.conftest import has_pkg, requires_exe, requires_pkg
 from matplotlib.collections import LineCollection, PathCollection, QuadMesh
 
 import flopy
-from autotest.conftest import has_pkg, requires_exe, requires_pkg
 from flopy.utils.gridgen import Gridgen
 
 

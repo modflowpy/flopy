@@ -4,14 +4,14 @@ import urllib
 from urllib.error import HTTPError
 
 import pytest
-from flaky import flaky
-
-from flopy.utils import get_modflow_main
 from autotest.conftest import (
     get_project_root_path,
     requires_github,
     run_py_script,
 )
+from flaky import flaky
+
+from flopy.utils import get_modflow_main
 
 flopy_dir = get_project_root_path(__file__)
 get_modflow_script = flopy_dir / "flopy" / "utils" / "get_modflow.py"
@@ -45,7 +45,8 @@ def test_get_modflow_script(tmp_path, downloads_dir):
     bindir = tmp_path / "bin1"
     assert not bindir.exists()
     stdout, stderr, returncode = run_get_modflow_script(bindir)
-    if rate_limit_msg in stderr: pytest.skip(f"GitHub {rate_limit_msg}")
+    if rate_limit_msg in stderr:
+        pytest.skip(f"GitHub {rate_limit_msg}")
     assert "does not exist" in stderr
     assert returncode == 1
 
@@ -57,7 +58,8 @@ def test_get_modflow_script(tmp_path, downloads_dir):
     stdout, stderr, returncode = run_get_modflow_script(
         bindir, "--release-id", "1.9", "--downloads-dir", downloads_dir
     )
-    if rate_limit_msg in stderr: pytest.skip(f"GitHub {rate_limit_msg}")
+    if rate_limit_msg in stderr:
+        pytest.skip(f"GitHub {rate_limit_msg}")
     assert "Release '1.9' not found" in stderr
     assert returncode == 1
 
@@ -65,7 +67,8 @@ def test_get_modflow_script(tmp_path, downloads_dir):
     stdout, stderr, returncode = run_get_modflow_script(
         bindir, "--downloads-dir", downloads_dir
     )
-    if rate_limit_msg in stderr: pytest.skip(f"GitHub {rate_limit_msg}")
+    if rate_limit_msg in stderr:
+        pytest.skip(f"GitHub {rate_limit_msg}")
     assert len(stderr) == returncode == 0
     files = [item.name for item in bindir.iterdir() if item.is_file()]
     assert len(files) > 20
@@ -76,14 +79,16 @@ def test_get_modflow_script(tmp_path, downloads_dir):
     stdout, stderr, returncode = run_get_modflow_script(
         bindir, "--subset", "mfnwt,mpx", "--downloads-dir", downloads_dir
     )
-    if rate_limit_msg in stderr: pytest.skip(f"GitHub {rate_limit_msg}")
+    if rate_limit_msg in stderr:
+        pytest.skip(f"GitHub {rate_limit_msg}")
     assert "subset item not found: mpx" in stderr
     assert returncode == 1
     # now valid subset
     stdout, stderr, returncode = run_get_modflow_script(
         bindir, "--subset", "mfnwt,mp6", "--downloads-dir", downloads_dir
     )
-    if rate_limit_msg in stderr: pytest.skip(f"GitHub {rate_limit_msg}")
+    if rate_limit_msg in stderr:
+        pytest.skip(f"GitHub {rate_limit_msg}")
     assert len(stderr) == returncode == 0
     files = [item.stem for item in bindir.iterdir() if item.is_file()]
     assert sorted(files) == ["mfnwt", "mfnwtdbl", "mp6"]
@@ -103,7 +108,8 @@ def test_get_modflow_script(tmp_path, downloads_dir):
         "--downloads-dir",
         downloads_dir,
     )
-    if rate_limit_msg in stderr: pytest.skip(f"GitHub {rate_limit_msg}")
+    if rate_limit_msg in stderr:
+        pytest.skip(f"GitHub {rate_limit_msg}")
     assert len(stderr) == returncode == 0
     files = [item.name for item in bindir.iterdir() if item.is_file()]
     assert sorted(files) == ["mfnwt.exe", "mfnwtdbl.exe"]
@@ -122,7 +128,8 @@ def test_get_nightly_script(tmp_path, downloads_dir):
         "--downloads-dir",
         downloads_dir,
     )
-    if rate_limit_msg in stderr: pytest.skip(f"GitHub {rate_limit_msg}")
+    if rate_limit_msg in stderr:
+        pytest.skip(f"GitHub {rate_limit_msg}")
     assert len(stderr) == returncode == 0
     files = [item.name for item in bindir.iterdir() if item.is_file()]
     assert len(files) >= 4

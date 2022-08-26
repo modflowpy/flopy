@@ -3,7 +3,6 @@ import shutil
 
 import numpy as np
 import pytest
-
 from autotest.conftest import requires_pkg
 
 from flopy.modflow import Mnw, Modflow, ModflowDis, ModflowMnw2
