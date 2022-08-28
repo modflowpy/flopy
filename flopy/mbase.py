@@ -9,6 +9,7 @@ import copy
 import os
 import queue as Queue
 import shutil
+import sys
 import threading
 import warnings
 from datetime import datetime
@@ -20,6 +21,13 @@ import numpy as np
 from . import discretization, utils
 from .discretization.grid import Grid
 from .version import __version__
+
+# Prepend flopy appdir bin directory to PATH to work with "get-modflow :flopy"
+if sys.platform.startswith("win"):
+    flopy_bin = os.path.expandvars(r"%LOCALAPPDATA%\flopy\bin")
+else:
+    flopy_bin = os.path.join(os.path.expanduser("~"), ".local/share/flopy/bin")
+os.environ["PATH"] = flopy_bin + os.path.pathsep + os.environ.get("PATH", "")
 
 ## Global variables
 # Multiplier for individual array elements in integer and real arrays read by
