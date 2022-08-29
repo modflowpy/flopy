@@ -1,4 +1,4 @@
-"""Test scripts."""
+"""Test get-modflow utility."""
 import sys
 import urllib
 from urllib.error import HTTPError
@@ -11,7 +11,7 @@ from autotest.conftest import (
 )
 from flaky import flaky
 
-from flopy.utils import get_modflow_main
+from flopy.utils import get_modflow
 
 flopy_dir = get_project_root_path(__file__)
 get_modflow_script = flopy_dir / "flopy" / "utils" / "get_modflow.py"
@@ -139,7 +139,7 @@ def test_get_nightly_script(tmp_path, downloads_dir):
 @requires_github
 def test_get_modflow(tmpdir):
     try:
-        get_modflow_main(tmpdir)
+        get_modflow(tmpdir)
     except HTTPError as err:
         if err.code == 403:
             pytest.skip(f"GitHub {rate_limit_msg}")
@@ -182,7 +182,7 @@ def test_get_modflow(tmpdir):
 @requires_github
 def test_get_nightly(tmpdir):
     try:
-        get_modflow_main(tmpdir, repo="modflow6-nightly-build")
+        get_modflow(tmpdir, repo="modflow6-nightly-build")
     except urllib.error.HTTPError as err:
         if err.code == 403:
             pytest.skip(f"GitHub {rate_limit_msg}")

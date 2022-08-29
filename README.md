@@ -39,6 +39,12 @@ or
 
 The release candidate version can also be installed from the git repository using the instructions provided [below](#relcand).
 
+After FloPy is installed, MODFLOW and related programs can be installed using the command:
+
+    get-modflow :flopy
+
+See documentation [get_modflow.md](https://github.com/modflowpy/flopy/blob/develop/docs/get_modflow.md) for more information.
+
 
 Documentation
 -----------------------------------------------
