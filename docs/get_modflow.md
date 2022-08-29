@@ -36,7 +36,24 @@ from pathlib import Path
 import flopy
 
 bindir = Path("/tmp/bin")
-bindir.mkdir()
-flopy.utils.get_modflow_main(bindir)
+bindir.mkdir(exist_ok=True)
+flopy.utils.get_modflow(bindir)
 list(bindir.iterdir())
+
+# Or use an auto-select option
+flopy.utils.get_modflow(":flopy")
 ```
+
+## Where to install?
+
+A required `bindir` parameter must be supplied to the utility, which specifies where to install the programs. This can be any existing directory, usually which is on the users' PATH environment variable.
+
+To assist the user, special values can be specified starting with the colon character. Use a single `:` to interactively select an option of paths.
+
+Other auto-select options are only available if the current user can write files (some may require `sudo` for Linux or macOS):
+ - `:prev` - if this utility was run by FloPy more than once, the first option will be the previously used `bindir` path selection
+ - `:flopy` - special option that will create and install programs for FloPy
+ - `:python` - use Python's bin (or Scripts) directory
+ - `:local` - use `$HOME/.local/bin`
+ - `:system` - use `/usr/local/bin`
+ - `:windowsapps` - use `%LOCALAPPDATA%\Microsoft\WindowsApps`

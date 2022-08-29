@@ -58,6 +58,14 @@ To install the bleeding edge version of FloPy from the git repository type:
 
     pip install git+https://github.com/modflowpy/flopy.git
 
+After FloPy is installed, MODFLOW and related programs can be installed using the command:
+
+.. code-block:: bash
+
+    get-modflow :flopy
+
+See documentation `get_modflow.md <https://github.com/modflowpy/flopy/blob/develop/docs/get_modflow.md>`_
+for more information.
 
 
 FloPy Resources
