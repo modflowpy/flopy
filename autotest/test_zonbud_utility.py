@@ -282,6 +282,7 @@ def test_read_zone_file(tmpdir):
         raise AssertionError("zone file read failed")
 
 
+@pytest.mark.mf6
 @requires_pkg("pandas")
 def test_zonebudget_6(tmpdir, example_data_path):
     import pandas as pd
@@ -341,6 +342,7 @@ def test_zonebudget_6(tmpdir, example_data_path):
     assert list(df)[0] == "test_alias", "Alias testing failed"
 
 
+@pytest.mark.mf6
 def test_zonebudget6_from_output_method(tmpdir, example_data_path):
     exe_name = "mf6"
     zb_exe_name = "zbud6"

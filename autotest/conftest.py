@@ -12,6 +12,7 @@ from typing import List, Optional
 from urllib import request
 from warnings import warn
 
+import matplotlib.pyplot as plt
 import pkg_resources
 import pytest
 
@@ -337,6 +338,22 @@ def session_tmpdir(tmpdir_factory, request) -> Path:
         copytree(temp, Path(keep) / temp.name)
 
 
+# fixture to automatically close any plots (or optionally show them)
+
+
+@pytest.fixture(autouse=True)
+def close_plot(request):
+    yield
+
+    # plots only shown if requested via CLI flag,
+    # figures are available, and we're not in CI
+    show = request.config.getoption("--show-plots")
+    if len(plt.get_fignums()) > 0 and not is_in_ci() and show:
+        plt.show()
+    else:
+        plt.close("all")
+
+
 # pytest configuration hooks
 
 
@@ -390,6 +407,14 @@ def pytest_addoption(parser):
         action="store_true",
         default=False,
         help="Run only smoke tests (should complete in <1 minute).",
+    )
+
+    parser.addoption(
+        "--show-plots",
+        action="store_true",
+        default=False,
+        help="Show any figure windows created by test cases. (Useful to display plots for visual inspection, "
+        "but automated tests should probably also check patch collections or figure & axis properties.)",
     )
 
 

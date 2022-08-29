@@ -30,6 +30,7 @@ def mf6_freyberg_path(example_data_path):
     return example_data_path / "mf6-freyberg"
 
 
+@pytest.mark.mf6
 def test_faceflows(tmpdir, mf6_freyberg_path):
     sim = MFSimulation.load(
         sim_name="freyberg",
@@ -96,6 +97,7 @@ def test_faceflows(tmpdir, mf6_freyberg_path):
     return
 
 
+@pytest.mark.mf6
 def test_flowja_residuals(tmpdir, mf6_freyberg_path):
     sim = MFSimulation.load(
         sim_name="freyberg",
@@ -142,6 +144,7 @@ def test_flowja_residuals(tmpdir, mf6_freyberg_path):
     plt.close("all")
 
 
+@pytest.mark.mf6
 def test_structured_faceflows_3d(tmpdir):
     name = "mymodel"
     sim = MFSimulation(sim_name=name, sim_ws=str(tmpdir), exe_name="mf6")

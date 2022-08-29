@@ -485,6 +485,7 @@ def specific_discharge_comprehensive(tmpdir):
     plt.close()
 
 
+@pytest.mark.mf6
 @pytest.mark.xfail(
     reason="occasional Unexpected collection type: <class 'matplotlib.collections.LineCollection'>"
 )

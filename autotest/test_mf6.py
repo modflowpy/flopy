@@ -75,6 +75,8 @@ from flopy.utils import (
 )
 from flopy.utils.observationfile import CsvFile
 
+pytestmark = pytest.mark.mf6
+
 
 def write_head(
     fbin,
@@ -233,8 +235,176 @@ def get_gwt_model(sim, gwtname, gwtpath, modelshape, sourcerecarray=None):
     return gwt
 
 
+def test_string_to_file_path():
+    import platform
+
+    if platform.system().lower() == "windows":
+        unc_path = r"\\server\path\path"
+        new_path = MFFileMgmt.string_to_file_path(unc_path)
+        assert unc_path == new_path, "UNC path error"
+
+        abs_path = r"C:\Users\some_user\path"
+        new_path = MFFileMgmt.string_to_file_path(abs_path)
+        assert abs_path == new_path, "Absolute path error"
+
+        rel_path = r"..\path\some_path"
+        new_path = MFFileMgmt.string_to_file_path(rel_path)
+        assert rel_path == new_path, "Relative path error"
+
+    else:
+        abs_path = "/mnt/c/some_user/path"
+        new_path = MFFileMgmt.string_to_file_path(abs_path)
+        assert abs_path == new_path, "Absolute path error"
+
+        rel_path = "../path/some_path"
+        new_path = MFFileMgmt.string_to_file_path(rel_path)
+        assert rel_path == new_path, "Relative path error"
+
+
+def test_subdir(tmpdir):
+    sim = MFSimulation(sim_ws=str(tmpdir))
+    tdis = ModflowTdis(sim)
+    gwf = ModflowGwf(sim, model_rel_path="level2")
+    ims = ModflowIms(sim)
+    sim.register_ims_package(ims, [])
+    dis = ModflowGwfdis(gwf)
+    sim.set_all_data_external(external_data_folder="dat")
+    sim.write_simulation()
+
+    sim_r = MFSimulation.load(
+        "mfsim.nam",
+        sim_ws=sim.simulation_data.mfpath.get_sim_path(),
+    )
+    gwf_r = sim_r.get_model()
+    assert (
+        gwf.dis.delc.get_file_entry() == gwf_r.dis.delc.get_file_entry()
+    ), "Something wrong with model external paths"
+
+    sim_r.set_all_data_internal()
+    sim_r.set_all_data_external(
+        external_data_folder=os.path.join("dat", "dat_l2")
+    )
+    sim_r.write_simulation()
+
+    sim_r2 = MFSimulation.load(
+        "mfsim.nam",
+        sim_ws=sim_r.simulation_data.mfpath.get_sim_path(),
+    )
+    gwf_r2 = sim_r.get_model()
+    assert (
+        gwf_r.dis.delc.get_file_entry() == gwf_r2.dis.delc.get_file_entry()
+    ), "Something wrong with model external paths"
+
+
+def test_binary_read(tmpdir):
+    test_ex_name = "binary_read"
+    nlay = 3
+    nrow = 10
+    ncol = 10
+
+    modelgrid = flopy.discretization.StructuredGrid(
+        nlay=nlay, nrow=nrow, ncol=ncol
+    )
+
+    arr = np.arange(nlay * nrow * ncol).astype(np.float64)
+    data_shape = (nlay, nrow, ncol)
+    data_size = nlay * nrow * ncol
+    arr.shape = data_shape
+
+    sim_data = MFSimulationData("integration", None)
+    dstruct = MFDataItemStructure()
+    dstruct.is_cellid = False
+    dstruct.name = "fake"
+    dstruct.data_items = [
+        None,
+    ]
+    mfstruct = MFDataStructure(dstruct, False, "ic", None)
+    mfstruct.data_item_structures = [
+        dstruct,
+    ]
+    mfstruct.path = [
+        "fake",
+    ]
+
+    md = ModelDimensions("test", None)
+    pd = PackageDimensions([md], None, "integration")
+    dd = DataDimensions(pd, mfstruct)
+
+    binfile = str(tmpdir / "structured_layered.hds")
+    with open(binfile, "wb") as foo:
+        for ix, a in enumerate(arr):
+            write_head(foo, a, ilay=ix)
+
+    fa = MFFileAccessArray(mfstruct, dd, sim_data, None, None)
+    arr2 = fa.read_binary_data_from_file(
+        binfile, data_shape, data_size, np.float64, modelgrid
+    )[0]
+
+    assert np.allclose(arr, arr2), "Binary read for layered Structured failed"
+
+    binfile = str(tmpdir / "structured_flat.hds")
+    with open(binfile, "wb") as foo:
+        a = np.expand_dims(np.ravel(arr), axis=0)
+        write_head(foo, a, ilay=1)
+
+    arr2 = fa.read_binary_data_from_file(
+        binfile, data_shape, data_size, np.float64, modelgrid
+    )[0]
+
+    assert np.allclose(arr, arr2), "Binary read for flat Structured failed"
+
+    ncpl = nrow * ncol
+    data_shape = (nlay, ncpl)
+    arr.shape = data_shape
+    modelgrid = flopy.discretization.VertexGrid(nlay=nlay, ncpl=ncpl)
+
+    fa = MFFileAccessArray(mfstruct, dd, sim_data, None, None)
+
+    binfile = str(tmpdir / "vertex_layered.hds")
+    with open(binfile, "wb") as foo:
+        tarr = arr.reshape((nlay, 1, ncpl))
+        for ix, a in enumerate(tarr):
+            write_head(foo, a, ilay=ix)
+
+    arr2 = fa.read_binary_data_from_file(
+        binfile, data_shape, data_size, np.float64, modelgrid
+    )[0]
+
+    assert np.allclose(arr, arr2), "Binary read for layered Vertex failed"
+
+    binfile = str(tmpdir / "vertex_flat.hds")
+    with open(binfile, "wb") as foo:
+        a = np.expand_dims(np.ravel(arr), axis=0)
+        write_head(foo, a, ilay=1)
+
+    arr2 = fa.read_binary_data_from_file(
+        binfile, data_shape, data_size, np.float64, modelgrid
+    )[0]
+
+    assert np.allclose(arr, arr2), "Binary read for flat Vertex failed"
+
+    nlay = 3
+    ncpl = [50, 100, 150]
+    data_shape = (np.sum(ncpl),)
+    arr.shape = data_shape
+    modelgrid = flopy.discretization.UnstructuredGrid(ncpl=ncpl)
+
+    fa = MFFileAccessArray(mfstruct, dd, sim_data, None, None)
+
+    binfile = str(tmpdir / "unstructured.hds")
+    with open(binfile, "wb") as foo:
+        a = np.expand_dims(arr, axis=0)
+        write_head(foo, a, ilay=1)
+
+    arr2 = fa.read_binary_data_from_file(
+        binfile, data_shape, data_size, np.float64, modelgrid
+    )[0]
+
+    assert np.allclose(arr, arr2), "Binary read for Unstructured failed"
+
+
 @requires_exe("mf6")
-def test_mf6(tmpdir):
+def test_write_simulation(tmpdir):
     sim = MFSimulation(sim_ws=str(tmpdir))
     assert isinstance(sim, MFSimulation)
 
@@ -355,69 +525,6 @@ def test_mf6(tmpdir):
     for ext in exts_sim:
         fname = os.path.join(str(tmpdir), f"sim.{ext}")
         assert os.path.isfile(fname), f"{fname} not found"
-
-    return
-
-
-def test_mf6_string_to_file_path():
-    import platform
-
-    if platform.system().lower() == "windows":
-        unc_path = r"\\server\path\path"
-        new_path = MFFileMgmt.string_to_file_path(unc_path)
-        assert unc_path == new_path, "UNC path error"
-
-        abs_path = r"C:\Users\some_user\path"
-        new_path = MFFileMgmt.string_to_file_path(abs_path)
-        assert abs_path == new_path, "Absolute path error"
-
-        rel_path = r"..\path\some_path"
-        new_path = MFFileMgmt.string_to_file_path(rel_path)
-        assert rel_path == new_path, "Relative path error"
-
-    else:
-        abs_path = "/mnt/c/some_user/path"
-        new_path = MFFileMgmt.string_to_file_path(abs_path)
-        assert abs_path == new_path, "Absolute path error"
-
-        rel_path = "../path/some_path"
-        new_path = MFFileMgmt.string_to_file_path(rel_path)
-        assert rel_path == new_path, "Relative path error"
-
-
-def test_mf6_subdir(tmpdir):
-    sim = MFSimulation(sim_ws=str(tmpdir))
-    tdis = ModflowTdis(sim)
-    gwf = ModflowGwf(sim, model_rel_path="level2")
-    ims = ModflowIms(sim)
-    sim.register_ims_package(ims, [])
-    dis = ModflowGwfdis(gwf)
-    sim.set_all_data_external(external_data_folder="dat")
-    sim.write_simulation()
-
-    sim_r = MFSimulation.load(
-        "mfsim.nam",
-        sim_ws=sim.simulation_data.mfpath.get_sim_path(),
-    )
-    gwf_r = sim_r.get_model()
-    assert (
-        gwf.dis.delc.get_file_entry() == gwf_r.dis.delc.get_file_entry()
-    ), "Something wrong with model external paths"
-
-    sim_r.set_all_data_internal()
-    sim_r.set_all_data_external(
-        external_data_folder=os.path.join("dat", "dat_l2")
-    )
-    sim_r.write_simulation()
-
-    sim_r2 = MFSimulation.load(
-        "mfsim.nam",
-        sim_ws=sim_r.simulation_data.mfpath.get_sim_path(),
-    )
-    gwf_r2 = sim_r.get_model()
-    assert (
-        gwf_r.dis.delc.get_file_entry() == gwf_r2.dis.delc.get_file_entry()
-    ), "Something wrong with model external paths"
 
 
 @requires_exe("mf6")
@@ -545,7 +652,7 @@ def test_create_and_run_model(tmpdir):
 
 
 @requires_exe("mf6")
-def test_mf6_output(tmpdir, example_data_path):
+def test_output(tmpdir, example_data_path):
     ex_name = "test001e_UZF_3lay"
     sim_ws = str(example_data_path / "mf6" / ex_name)
     sim = MFSimulation.load(sim_ws=sim_ws, exe_name="mf6")
@@ -600,7 +707,7 @@ def test_mf6_output(tmpdir, example_data_path):
 
 @requires_exe("mf6")
 @pytest.mark.slow
-def test_mf6_output_add_observation(tmpdir, example_data_path):
+def test_output_add_observation(tmpdir, example_data_path):
     model_name = "lakeex2a"
     sim_ws = str(example_data_path / "mf6" / "test045_lake2tr")
     sim = MFSimulation.load(sim_ws=sim_ws, exe_name="mf6")
@@ -1182,110 +1289,3 @@ def test_multi_model(tmpdir):
     # save and run updated model
     sim.write_simulation()
     sim.run_simulation()
-
-
-def test_binary_read(tmpdir):
-    test_ex_name = "binary_read"
-    nlay = 3
-    nrow = 10
-    ncol = 10
-
-    modelgrid = flopy.discretization.StructuredGrid(
-        nlay=nlay, nrow=nrow, ncol=ncol
-    )
-
-    arr = np.arange(nlay * nrow * ncol).astype(np.float64)
-    data_shape = (nlay, nrow, ncol)
-    data_size = nlay * nrow * ncol
-    arr.shape = data_shape
-
-    sim_data = MFSimulationData("integration", None)
-    dstruct = MFDataItemStructure()
-    dstruct.is_cellid = False
-    dstruct.name = "fake"
-    dstruct.data_items = [
-        None,
-    ]
-    mfstruct = MFDataStructure(dstruct, False, "ic", None)
-    mfstruct.data_item_structures = [
-        dstruct,
-    ]
-    mfstruct.path = [
-        "fake",
-    ]
-
-    md = ModelDimensions("test", None)
-    pd = PackageDimensions([md], None, "integration")
-    dd = DataDimensions(pd, mfstruct)
-
-    binfile = str(tmpdir / "structured_layered.hds")
-    with open(binfile, "wb") as foo:
-        for ix, a in enumerate(arr):
-            write_head(foo, a, ilay=ix)
-
-    fa = MFFileAccessArray(mfstruct, dd, sim_data, None, None)
-    arr2 = fa.read_binary_data_from_file(
-        binfile, data_shape, data_size, np.float64, modelgrid
-    )[0]
-
-    assert np.allclose(arr, arr2), "Binary read for layered Structured failed"
-
-    binfile = str(tmpdir / "structured_flat.hds")
-    with open(binfile, "wb") as foo:
-        a = np.expand_dims(np.ravel(arr), axis=0)
-        write_head(foo, a, ilay=1)
-
-    arr2 = fa.read_binary_data_from_file(
-        binfile, data_shape, data_size, np.float64, modelgrid
-    )[0]
-
-    assert np.allclose(arr, arr2), "Binary read for flat Structured failed"
-
-    ncpl = nrow * ncol
-    data_shape = (nlay, ncpl)
-    arr.shape = data_shape
-    modelgrid = flopy.discretization.VertexGrid(nlay=nlay, ncpl=ncpl)
-
-    fa = MFFileAccessArray(mfstruct, dd, sim_data, None, None)
-
-    binfile = str(tmpdir / "vertex_layered.hds")
-    with open(binfile, "wb") as foo:
-        tarr = arr.reshape((nlay, 1, ncpl))
-        for ix, a in enumerate(tarr):
-            write_head(foo, a, ilay=ix)
-
-    arr2 = fa.read_binary_data_from_file(
-        binfile, data_shape, data_size, np.float64, modelgrid
-    )[0]
-
-    assert np.allclose(arr, arr2), "Binary read for layered Vertex failed"
-
-    binfile = str(tmpdir / "vertex_flat.hds")
-    with open(binfile, "wb") as foo:
-        a = np.expand_dims(np.ravel(arr), axis=0)
-        write_head(foo, a, ilay=1)
-
-    arr2 = fa.read_binary_data_from_file(
-        binfile, data_shape, data_size, np.float64, modelgrid
-    )[0]
-
-    assert np.allclose(arr, arr2), "Binary read for flat Vertex failed"
-
-    nlay = 3
-    ncpl = [50, 100, 150]
-    data_shape = (np.sum(ncpl),)
-    arr.shape = data_shape
-    modelgrid = flopy.discretization.UnstructuredGrid(ncpl=ncpl)
-
-    fa = MFFileAccessArray(mfstruct, dd, sim_data, None, None)
-
-    binfile = str(tmpdir / "unstructured.hds")
-    with open(binfile, "wb") as foo:
-        a = np.expand_dims(arr, axis=0)
-        write_head(foo, a, ilay=1)
-
-    arr2 = fa.read_binary_data_from_file(
-        binfile, data_shape, data_size, np.float64, modelgrid
-    )[0]
-
-    assert np.allclose(arr, arr2), "Binary read for Unstructured failed"
