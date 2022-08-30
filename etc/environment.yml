@@ -26,7 +26,6 @@ dependencies:
   - pytest-benchmark
 
   # optional
-  - appdirs
   - python-dateutil>=2.4.0
   - affine
   - scipy
