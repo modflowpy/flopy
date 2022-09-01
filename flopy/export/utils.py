@@ -1611,7 +1611,6 @@ def export_array(
 
 
 def export_contours(
-    modelgrid,
     filename,
     contours,
     fieldname="level",
@@ -1624,8 +1623,6 @@ def export_contours(
 
     Parameters
     ----------
-    modelgrid : flopy.discretization.Grid
-        flopy modelgrid instance
     filename : str
         path of output shapefile
     contours : matplotlib.contour.QuadContourSet or list of them
@@ -1648,11 +1645,6 @@ def export_contours(
 
     if not isinstance(contours, list):
         contours = [contours]
-
-    if epsg is None:
-        epsg = modelgrid.epsg
-    if prj is None:
-        prj = modelgrid.proj4
 
     geoms = []
     level = []
@@ -1813,7 +1805,7 @@ def export_array_contours(
         levels = np.arange(imin, imax, interval)
     ax = plt.subplots()[-1]
     ctr = contour_array(modelgrid, ax, a, levels=levels)
-    export_contours(modelgrid, filename, ctr, fieldname, epsg, prj, **kwargs)
+    export_contours(filename, ctr, fieldname, epsg, prj, **kwargs)
     plt.close()
 
 

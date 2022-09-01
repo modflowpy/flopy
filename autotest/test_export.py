@@ -7,7 +7,6 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from flaky import flaky
 from autotest.conftest import (
     SHAPEFILE_EXTENSIONS,
     get_example_data_path,
@@ -16,6 +15,7 @@ from autotest.conftest import (
     requires_pkg,
     requires_spatial_reference,
 )
+from flaky import flaky
 
 import flopy
 from flopy.discretization import StructuredGrid, UnstructuredGrid
@@ -29,6 +29,7 @@ from flopy.export.utils import (
     export_array,
     export_array_contours,
     export_contourf,
+    export_contours,
 )
 from flopy.export.vtk import Vtk
 from flopy.mf6 import (
@@ -613,6 +614,33 @@ def test_export_contourf(tmpdir, example_data_path):
             raise AssertionError(
                 "multipolygons were skipped in contourf routine"
             )
+
+
+@requires_pkg("shapefile", "shapely")
+def test_export_contours(tmpdir, example_data_path):
+    from shapefile import Reader
+
+    filename = os.path.join(tmpdir, "mycontours.shp")
+    mpath = example_data_path / "freyberg"
+    ml = Modflow.load("freyberg.nam", model_ws=mpath)
+    hds_pth = os.path.join(ml.model_ws, "freyberg.githds")
+    hds = flopy.utils.HeadFile(hds_pth)
+    head = hds.get_data()
+    levels = np.arange(10, 30, 0.5)
+
+    mapview = flopy.plot.PlotMapView(model=ml)
+    contour_set = mapview.contour_array(
+        head, masked_values=[999.0], levels=levels
+    )
+
+    export_contours(filename, contour_set)
+    plt.close()
+    if not os.path.isfile(filename):
+        raise AssertionError("did not create contour shapefile")
+
+    with Reader(filename) as r:
+        shapes = r.shapes()
+        assert len(shapes) == 65
 
 
 @requires_pkg("shapely")
