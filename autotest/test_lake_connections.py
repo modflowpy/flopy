@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import pytest
-from autotest.conftest import requires_pkg
+from autotest.conftest import requires_exe, requires_pkg
 
 from flopy.discretization import StructuredGrid
 from flopy.mf6 import (
@@ -22,6 +22,8 @@ from flopy.mf6 import (
 from flopy.mf6.utils import get_lak_connections
 from flopy.modflow import Modflow
 from flopy.utils import Raster
+
+pytestmark = pytest.mark.mf6
 
 
 def export_ascii_grid(modelgrid, file_path, v, nodata=0.0):
@@ -136,6 +138,7 @@ def get_lake_connection_data(
     return lakeconnectiondata, nlakecon
 
 
+@requires_exe("mf6")
 def test_base_run(tmpdir, example_data_path):
     mpath = example_data_path / "mf6-freyberg"
     sim = MFSimulation().load(
@@ -177,6 +180,7 @@ def test_base_run(tmpdir, example_data_path):
     )
 
 
+@requires_exe("mf6")
 @requires_pkg("rasterio")
 def test_lake(tmpdir, example_data_path):
     mpath = example_data_path / "mf6-freyberg"
@@ -295,9 +299,8 @@ def test_lake(tmpdir, example_data_path):
 
     assert success, f"could not run {sim.name} with lake"
 
-    return
 
-
+@requires_exe("mf6")
 def test_embedded_lak_ex01(tmpdir, example_data_path):
     nper = 1
     nlay, nrow, ncol = 5, 17, 17
@@ -497,6 +500,7 @@ def test_embedded_lak_ex01(tmpdir, example_data_path):
     assert success, f"could not run {sim.name}"
 
 
+@requires_exe("mf6")
 def test_embedded_lak_prudic(example_data_path):
     lakebed_leakance = 1.0  # Lakebed leakance ($ft^{-1}$)
     nlay = 8  # Number of layers
@@ -599,6 +603,7 @@ def test_embedded_lak_prudic(example_data_path):
     ), "idomain not updated correctly with lakibd"
 
 
+@requires_exe("mf6")
 def test_embedded_lak_prudic_mixed(example_data_path):
     lakebed_leakance = 1.0  # Lakebed leakance ($ft^{-1}$)
     nlay = 8  # Number of layers

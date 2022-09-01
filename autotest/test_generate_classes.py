@@ -4,6 +4,7 @@ from autotest.conftest import excludes_branch
 from flopy.mf6.utils import generate_classes
 
 
+@pytest.mark.mf6
 @pytest.mark.skip(
     reason="TODO: use external copy of the repo, otherwise files are rewritten"
 )

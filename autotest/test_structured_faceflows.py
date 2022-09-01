@@ -3,6 +3,8 @@ import pytest
 
 from flopy.mf6.utils import get_residuals, get_structured_faceflows
 
+pytestmark = pytest.mark.mf6
+
 
 def test_get_faceflows_empty():
     flowja = np.zeros(10, dtype=np.float64)
