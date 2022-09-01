@@ -32,6 +32,8 @@ from flopy.modpath import (
 )
 from flopy.utils import EndpointFile
 
+pytestmark = pytest.mark.mf6
+
 ex01b_mf6_model_name = "ex01b_mf6"
 
 

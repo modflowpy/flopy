@@ -7,21 +7,21 @@ from autotest.regression.conftest import is_nested
 
 from flopy.mf6 import MFSimulation
 
+pytestmark = pytest.mark.mf6
+
 
 @requires_exe("mf6")
 @requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 def test_mf6_example_simulations(tmpdir, mf6_example_namfiles):
-    """
-    MF6 examples parametrized by simulation. Arg `mf6_example_namfiles` is a list
-    of models to run in order provided. Coupled models share the same workspace.
-
-    Parameters
-    ----------
-    tmpdir: function-scoped temporary directory fixture
-    mf6_example_namfiles: ordered list of namfiles for 1+ coupled models
-    """
+    # MF6 examples parametrized by simulation. `mf6_example_namfiles` is a list
+    # of models to run in order provided. Coupled models share the same tempdir
+    #
+    # Parameters
+    # ----------
+    # tmpdir: function-scoped temporary directory fixture
+    # mf6_example_namfiles: ordered list of namfiles for 1+ coupled models
 
     import pymake
 

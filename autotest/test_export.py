@@ -616,6 +616,7 @@ def test_export_contourf(tmpdir, example_data_path):
             )
 
 
+@pytest.mark.mf6
 @requires_pkg("shapefile", "shapely")
 def test_export_contours(tmpdir, example_data_path):
     from shapefile import Reader
@@ -643,6 +644,7 @@ def test_export_contours(tmpdir, example_data_path):
         assert len(shapes) == 65
 
 
+@pytest.mark.mf6
 @requires_pkg("shapely")
 def test_mf6_grid_shp_export(tmpdir):
     nlay = 2
@@ -1110,6 +1112,7 @@ def test_vtk_export_packages(tmpdir, example_data_path):
     assert os.path.exists(filetocheck)
 
 
+@pytest.mark.mf6
 @requires_pkg("vtk")
 def test_vtk_mf6(tmpdir, example_data_path):
     # test mf6
@@ -1372,6 +1375,7 @@ def test_vtk_unstructured(tmpdir, example_data_path):
     assert np.allclose(np.ravel(top), top2), "Field data not properly written"
 
 
+@pytest.mark.mf6
 @requires_pkg("vtk")
 def test_vtk_vertex(tmpdir, example_data_path):
     from vtkmodules.util.numpy_support import vtk_to_numpy
@@ -1530,6 +1534,7 @@ def load_iverts(fname, closed=False):
     return iverts, np.array(xc), np.array(yc)
 
 
+@pytest.mark.mf6
 @requires_pkg("vtk")
 def test_vtk_export_model_without_packages_names(tmpdir):
     from vtkmodules.util.numpy_support import vtk_to_numpy
@@ -1587,6 +1592,7 @@ def test_vtk_export_model_without_packages_names(tmpdir):
     assert np.allclose(cell_types, cell_types_answer), errmsg
 
 
+@pytest.mark.mf6
 @requires_pkg("vtk")
 def test_vtk_export_disv1_model(tmpdir):
     from vtkmodules.util.numpy_support import vtk_to_numpy
@@ -1659,6 +1665,7 @@ def test_vtk_export_disv1_model(tmpdir):
     assert np.allclose(cell_types, cell_types_answer), errmsg
 
 
+@pytest.mark.mf6
 @requires_pkg("vtk")
 def test_vtk_export_disv2_model(tmpdir):
     from vtkmodules.util.numpy_support import vtk_to_numpy
@@ -1896,6 +1903,7 @@ def test_vtk_export_disu2_grid(tmpdir, example_data_path):
     assert np.allclose(cell_types, cell_types_answer), errmsg
 
 
+@pytest.mark.mf6
 @requires_pkg("vtk", "shapefile")
 def test_vtk_export_disu_model(tmpdir):
     from vtkmodules.util.numpy_support import vtk_to_numpy
