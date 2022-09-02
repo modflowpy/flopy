@@ -28,6 +28,7 @@ from flopy.modflow import (
 from flopy.modpath import Modpath6, Modpath6Bas
 from flopy.plot import PlotCrossSection, PlotMapView
 from flopy.utils import CellBudgetFile, HeadFile, PathlineFile
+from flopy.utils.geometry import LineString
 
 
 def test_map_view():
@@ -523,3 +524,80 @@ def test_cross_section_with_quasi3d_layers(quasi3d_model):
     cs.plot_bc("wel")
     cs.plot_vector(frf, fff, flf, head=head)
     plt.savefig(os.path.join(str(quasi3d_model.model_ws), "plt02.png"))
+    plt.close()
+
+
+def structured_square_grid(side: int = 10, thick: int = 10):
+    """
+    Creates a basic 1-layer structured grid with the given thickness and number of cells per side
+    Parameters
+    ----------
+    side : The number of cells per side
+    thick : The thickness of the grid's single layer
+    Returns
+    -------
+    A single-layer StructuredGrid of the given size and thickness
+    """
+
+    from flopy.discretization.structuredgrid import StructuredGrid
+
+    delr = np.ones(side)
+    delc = np.ones(side)
+    top = np.ones((side, side)) * thick
+    botm = np.ones((side, side)) * (top - thick).reshape(1, side, side)
+    return StructuredGrid(delr=delr, delc=delc, top=top, botm=botm)
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        (0, 0),
+        [0, 0],
+    ],
+)
+def test_cross_section_line_as_point_fails(line):
+    grid = structured_square_grid(side=10)
+    with pytest.raises(ValueError):
+        flopy.plot.PlotCrossSection(modelgrid=grid, line={"line": line})
+
+
+@requires_pkg("shapely")
+@pytest.mark.parametrize(
+    "line",
+    [
+        # diagonal line
+        [(0, 0), (10, 10)],  # test list of tuples
+        ([0, 0], [10, 10]),  # and tuple of lists
+        # horizontal line
+        ([0, 5.5], [10, 5.5]),
+        [(0, 5.5), (10, 5.5)],
+        # vertical line
+        [(0, 5.5), (10, 5.5)],
+        ([0, 5.5], [10, 5.5]),
+        # line with multiple segments
+        [(0, 0), (4, 6), (10, 10)],
+        ([0, 0], [4, 6], [10, 10]),
+    ],
+)
+def test_cross_section_line_representations(line):
+    import shapely
+
+    grid = structured_square_grid(side=10)
+
+    fls = LineString(line)
+    sls = shapely.geometry.LineString(line)
+
+    # use raw, flopy.utils.geometry and shapely.geometry representations
+    lxc = flopy.plot.PlotCrossSection(modelgrid=grid, line={"line": line})
+    fxc = flopy.plot.PlotCrossSection(modelgrid=grid, line={"line": fls})
+    sxc = flopy.plot.PlotCrossSection(modelgrid=grid, line={"line": sls})
+
+    # make sure parsed points are identical for all line representations
+    assert np.allclose(lxc.pts, fxc.pts) and np.allclose(lxc.pts, sxc.pts)
+    assert (
+        set(lxc.xypts.keys()) == set(fxc.xypts.keys()) == set(sxc.xypts.keys())
+    )
+    for k in lxc.xypts.keys():
+        assert np.allclose(lxc.xypts[k], fxc.xypts[k]) and np.allclose(
+            lxc.xypts[k], sxc.xypts[k]
+        )
