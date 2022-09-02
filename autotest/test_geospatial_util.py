@@ -543,3 +543,10 @@ def test_mixed_collection(
                     raise AssertionError(
                         "GeoSpatialCollection conversion error"
                     )
+
+
+@requires_pkg("shapely", "geojson")
+def test_create_linestring_with_single_point_fails():
+    point = [0, 0]
+    with pytest.raises(ValueError):
+        GeoSpatialUtil(point, shapetype="linestring")

@@ -7,6 +7,7 @@ import numpy as np
 from matplotlib.patches import Polygon
 
 from ..utils import geometry
+from ..utils.geospatial_utils import GeoSpatialUtil
 from . import plotutil
 
 warnings.simplefilter("always", PendingDeprecationWarning)
@@ -135,7 +136,13 @@ class PlotCrossSection:
                     (xcenter[int(line[onkey])], yedge[-1] - eps),
                 ]
         else:
-            verts = line[onkey]
+            ln = line[onkey]
+            gu = GeoSpatialUtil(ln, shapetype="linestring")
+            assert (
+                gu.shapetype == "LineString"
+            )  # unnecessary if GSU guarantees shapetype is same as requested
+
+            verts = gu.points
             xp = []
             yp = []
             for [v1, v2] in verts:

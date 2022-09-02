@@ -75,6 +75,9 @@ class GeoSpatialUtil:
                 )
                 raise AssertionError(err)
 
+            if shapetype == "linestring" and len(np.array(obj).shape) == 1:
+                raise ValueError(f"linestring must have 2 or more coordinates")
+
             self.__geo_interface = {
                 "type": shape_types[shapetype],
                 "coordinates": list(obj),
