@@ -1969,7 +1969,7 @@ class HeadUFile(BinaryLayerFile):
         result = []
 
         if isinstance(idx, int):
-            layer, nn = get_lni(ncpl, idx)
+            layer, nn = get_lni(ncpl, [idx])[0]
             for i, time in enumerate(times):
                 data = self.get_data(totim=time)
                 value = data[layer][nn]
@@ -1978,8 +1978,8 @@ class HeadUFile(BinaryLayerFile):
             for i, time in enumerate(times):
                 data = self.get_data(totim=time)
                 row = [time]
-                for node in idx:
-                    layer, nn = get_lni(ncpl, node)
+                lni = get_lni(ncpl, idx)
+                for layer, nn in lni:
                     value = data[layer][nn]
                     row += [value]
                 result.append(row)

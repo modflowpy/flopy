@@ -114,9 +114,9 @@ def test_get_ts_multiple_nodes(mfusg_model):
     nodes = [500, 300, 182, 65]
     multi_hds = head_file.get_ts(idx=nodes)
     for i, node in enumerate(nodes):
-        li, ni = get_lni(grid.ncpl, node)
+        layer, nn = get_lni(grid.ncpl, [node])[0]
         assert (
-            multi_hds[0, i + 1] == head[li][ni]
+            multi_hds[0, i + 1] == head[layer][nn]
         ), "head from 'get_ts' != head from 'get_data'"
 
 
@@ -131,9 +131,9 @@ def test_get_ts_all_nodes(mfusg_model):
     nodes = list(range(0, grid.nnodes))
     multi_hds = head_file.get_ts(idx=nodes)
     for node in nodes:
-        li, ni = get_lni(grid.ncpl, node)
+        layer, nn = get_lni(grid.ncpl, [node])[0]
         assert (
-            multi_hds[0, node + 1] == head[li][ni]
+            multi_hds[0, node + 1] == head[layer][nn]
         ), "head from 'get_ts' != head from 'get_data'"
 
 
@@ -155,7 +155,7 @@ def test_get_lni(mfusg_model):
         return exp
 
     nodes = list(range(0, grid.nnodes))
+    lni = get_lni(grid.ncpl, nodes)
     expected = get_expected()
-    for node in nodes:
-        layer, nn = get_lni(grid.ncpl, node)
+    for layer, nn in lni:
         assert expected[layer][nn] == head[layer][nn]
