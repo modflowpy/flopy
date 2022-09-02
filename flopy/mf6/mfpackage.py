@@ -4,6 +4,7 @@ import errno
 import inspect
 import os
 import sys
+from re import S
 
 import numpy as np
 
@@ -2022,7 +2023,13 @@ class MFPackage(PackageContainer, PackageInterface):
                                 data = None
                             if data is not None:
                                 new_size = len(dataset.get_data())
-                        if size_def.get_data() != new_size >= 0:
+
+                        if size_def.get_data() is None:
+                            current_size = 0
+                        else:
+                            current_size = size_def.get_data()
+
+                        if new_size > current_size:
                             # store current size
                             size_def.set_data(new_size)
 
