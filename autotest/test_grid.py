@@ -340,7 +340,7 @@ def test_unstructured_xyz_intersect(example_data_path):
 
 
 @pytest.mark.parametrize("spc_file", ["grd.spc", "grdrot.spc"])
-def test_from_gridspec(example_data_path, spc_file):
+def test_structured_from_gridspec(example_data_path, spc_file):
     fn = str(example_data_path / "specfile" / spc_file)
     modelgrid = StructuredGrid.from_gridspec(fn)
     assert isinstance(modelgrid, StructuredGrid)
@@ -382,6 +382,112 @@ def test_from_gridspec(example_data_path, spc_file):
         f"number of vertex (x, y) pairs ({verts.shape[0]}) "
         f"does not equal {nvert}"
     )
+
+
+@requires_pkg("shapely")
+def test_unstructured_from_argus_mesh(example_data_path):
+    datapth = str(example_data_path / "unstructured")
+    fnames = [fname for fname in os.listdir(datapth) if fname.endswith(".exp")]
+    for fname in fnames:
+        fname = os.path.join(datapth, fname)
+        print(f"Loading Argus mesh ({fname}) into UnstructuredGrid")
+        g = UnstructuredGrid.from_argus_export(fname)
+        print(f"  Number of nodes: {g.nnodes}")
+
+
+def test_unstructured_from_verts_and_iverts(tmpdir, example_data_path):
+    datapth = str(example_data_path / "unstructured")
+
+    # simple functions to load vertices and incidence lists
+    def load_verts(fname):
+        print(f"Loading vertices from: {fname}")
+        verts = np.genfromtxt(
+            fname, dtype=[int, float, float], names=["iv", "x", "y"]
+        )
+        verts["iv"] -= 1  # zero based
+        return verts
+
+    def load_iverts(fname):
+        print(f"Loading iverts from: {fname}")
+        f = open(fname, "r")
+        iverts = []
+        xc = []
+        yc = []
+        for line in f:
+            ll = line.strip().split()
+            iverts.append([int(i) - 1 for i in ll[4:]])
+            xc.append(float(ll[1]))
+            yc.append(float(ll[2]))
+        return iverts, np.array(xc), np.array(yc)
+
+    # load vertices
+    fname = os.path.join(datapth, "ugrid_verts.dat")
+    verts = load_verts(fname)
+
+    # load the incidence list into iverts
+    fname = os.path.join(datapth, "ugrid_iverts.dat")
+    iverts, xc, yc = load_iverts(fname)
+
+    ncpl = np.array(5 * [len(iverts)])
+    g = UnstructuredGrid(verts, iverts, xc, yc, ncpl=ncpl)
+    assert isinstance(g.grid_lines, list)
+    assert np.allclose(g.ncpl, ncpl)
+    assert g.extent == (0.0, 700.0, 0.0, 700.0)
+    assert g._vertices.shape == (156,)
+    assert g.nnodes == g.ncpl.sum() == 1090
+
+
+def test_unstructured_from_gridspec(example_data_path):
+    model_path = example_data_path / "freyberg_usg"
+    spec_path = str(model_path / "freyberg.usg.gsf")
+    grid = UnstructuredGrid.from_gridspec(spec_path)
+
+    with open(spec_path, "r") as file:
+        lines = file.readlines()
+        split = [line.strip().split() for line in lines]
+
+        # check number of nodes
+        nnodes = int(split[1][0])
+        assert len(grid.iverts) == nnodes
+        assert len(split[1]) == 4
+
+        # check number of vertices
+        nverts = int(split[2][0])
+        assert len(grid.verts) == nverts
+        assert len(split[2]) == 1
+
+        # check vertices
+        expected_verts = [
+            (float(s[0]), float(s[1]), float(s[2]))
+            for s in split[3 : (3 + nverts)]
+        ]
+        for i, ev in enumerate(expected_verts[:10]):
+            assert grid.verts[i][0] == ev[0]
+            assert grid.verts[i][1] == ev[1]
+        for i, ev in enumerate(expected_verts[-10:-1]):
+            ii = nverts - 10 + i
+            assert grid.verts[ii][0] == ev[0]
+            assert grid.verts[ii][1] == ev[1]
+
+        # check nodes
+        expected_nodes = [
+            (
+                int(s[0]),
+                float(s[1]),
+                float(s[2]),
+                float(s[3]),
+                int(s[4]),
+                int(s[5]),
+            )
+            for s in split[(3 + nverts) : -1]
+        ]
+        for i, en in enumerate(expected_nodes):
+            assert any(xcc == en[1] for xcc in grid.xcellcenters)
+            assert any(ycc == en[2] for ycc in grid.ycellcenters)
+
+        # check elevation
+        assert max(grid.top) == max([xyz[2] for xyz in expected_verts])
+        assert min(grid.botm) == min([xyz[2] for xyz in expected_verts])
 
 
 def test_epsgs():
@@ -510,7 +616,7 @@ def test_unstructured_grid_dimensions():
     assert not g.grid_varies_by_layer
 
 
-def test_unstructured_minimal_grid():
+def test_unstructured_minimal_grid_ctor():
     # pass in simple 2 cell minimal grid to make grid valid
     vertices = [
         [0, 0.0, 1.0],
@@ -556,7 +662,7 @@ def test_unstructured_minimal_grid():
     assert zv is None
 
 
-def test_unstructured_complete_grid():
+def test_unstructured_complete_grid_ctor():
     # pass in simple 2 cell complete grid to make grid valid, and put each
     # cell in a different layer
     vertices = [
@@ -617,59 +723,6 @@ def test_unstructured_complete_grid():
     assert xv == [[0, 1, 1, 0], [1, 2, 2, 1]]
     assert yv == [[1, 1, 0, 0], [1, 1, 0, 0]]
     assert np.allclose(zv, np.array([[1, 0], [0, -1]]))
-
-
-@requires_pkg("shapely")
-def test_loading_argus_meshes(example_data_path):
-    datapth = str(example_data_path / "unstructured")
-    fnames = [fname for fname in os.listdir(datapth) if fname.endswith(".exp")]
-    for fname in fnames:
-        fname = os.path.join(datapth, fname)
-        print(f"Loading Argus mesh ({fname}) into UnstructuredGrid")
-        g = UnstructuredGrid.from_argus_export(fname)
-        print(f"  Number of nodes: {g.nnodes}")
-
-
-def test_create_unstructured_grid_from_verts(tmpdir, example_data_path):
-    datapth = str(example_data_path / "unstructured")
-
-    # simple functions to load vertices and incidence lists
-    def load_verts(fname):
-        print(f"Loading vertices from: {fname}")
-        verts = np.genfromtxt(
-            fname, dtype=[int, float, float], names=["iv", "x", "y"]
-        )
-        verts["iv"] -= 1  # zero based
-        return verts
-
-    def load_iverts(fname):
-        print(f"Loading iverts from: {fname}")
-        f = open(fname, "r")
-        iverts = []
-        xc = []
-        yc = []
-        for line in f:
-            ll = line.strip().split()
-            iverts.append([int(i) - 1 for i in ll[4:]])
-            xc.append(float(ll[1]))
-            yc.append(float(ll[2]))
-        return iverts, np.array(xc), np.array(yc)
-
-    # load vertices
-    fname = os.path.join(datapth, "ugrid_verts.dat")
-    verts = load_verts(fname)
-
-    # load the incidence list into iverts
-    fname = os.path.join(datapth, "ugrid_iverts.dat")
-    iverts, xc, yc = load_iverts(fname)
-
-    ncpl = np.array(5 * [len(iverts)])
-    g = UnstructuredGrid(verts, iverts, xc, yc, ncpl=ncpl)
-    assert isinstance(g.grid_lines, list)
-    assert np.allclose(g.ncpl, ncpl)
-    assert g.extent == (0.0, 700.0, 0.0, 700.0)
-    assert g._vertices.shape == (156,)
-    assert g.nnodes == g.ncpl.sum() == 1090
 
 
 @requires_pkg("shapely")
