@@ -885,21 +885,21 @@ def test_unstructured_iverts(grid):
 @parametrize_with_cases("grid", cases=GridCases, prefix="structured")
 def test_get_lni_structured(grid):
     for nn in range(0, grid.nnodes):
-        layer, i = grid.get_lni(nn)
+        layer, i = grid.get_lni([nn])[0]
         assert layer * grid.ncpl + i == nn
 
 
 @parametrize_with_cases("grid", cases=GridCases, prefix="vertex")
 def test_get_lni_vertex(grid):
     for nn in range(0, grid.nnodes):
-        layer, i = grid.get_lni(nn)
+        layer, i = grid.get_lni([nn])[0]
         assert layer * grid.ncpl + i == nn
 
 
 @parametrize_with_cases("grid", cases=GridCases, prefix="unstructured")
 def test_get_lni_unstructured(grid):
     for nn in range(0, grid.nnodes):
-        layer, i = grid.get_lni(nn)
+        layer, i = grid.get_lni([nn])[0]
         csum = [0] + list(
             np.cumsum(
                 (

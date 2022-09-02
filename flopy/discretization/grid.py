@@ -607,19 +607,17 @@ class Grid:
     def map_polygons(self):
         raise NotImplementedError("must define map_polygons in child class")
 
-    def get_lni(self, *nodes):
+    def get_lni(self, nodes):
         """
-        Get the layer index and within-layer node index (both 0-based).
-        if no nodes are specified, all are returned in ascending order.
+        Get the layer index and within-layer node index (both 0-based) for the given nodes
 
         Parameters
         ----------
-        nodes : the node numbers (zero or more ints)
+        nodes : node numbers (array-like)
 
         Returns
         -------
-            A tuple (layer index, node index), or a
-            list of such if multiple nodes provided
+            list of tuples (layer index, node index)
         """
 
         ncpl = (
@@ -628,7 +626,7 @@ class Grid:
             else list(self.ncpl)
         )
 
-        return get_lni(ncpl, *nodes)
+        return get_lni(ncpl, nodes)
 
     def get_plottable_layer_array(self, plotarray, layer):
         raise NotImplementedError(
