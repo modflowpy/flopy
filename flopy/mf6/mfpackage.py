@@ -97,7 +97,10 @@ class MFBlockHeader:
                 name,
                 "blk_trailing_comment",
             )
-            self.blk_post_comment_path = path + (name, "blk_post_comment",)
+            self.blk_post_comment_path = path + (
+                name,
+                "blk_post_comment",
+            )
             if self.blk_trailing_comment_path not in simulation_data.mfdata:
                 simulation_data.mfdata[
                     self.blk_trailing_comment_path
@@ -1200,7 +1203,12 @@ class MFBlock:
         file_path, file_name = os.path.split(file_location)
         dict_package_name = f"{package_type_found}_{self.path[-2]}"
         package_info_list.append(
-            (package_type_found, file_name, file_path, dict_package_name,)
+            (
+                package_type_found,
+                file_name,
+                file_path,
+                dict_package_name,
+            )
         )
 
     def _save_comments(self, arr_line, line, key, comments):
@@ -1296,9 +1304,11 @@ class MFBlock:
                     # get model relative path, if it exists
                     if isinstance(self._model_or_sim, ModelInterface):
                         name = self._model_or_sim.name
-                        rel_path = self._simulation_data.mfpath.model_relative_path[
-                            name
-                        ]
+                        rel_path = (
+                            self._simulation_data.mfpath.model_relative_path[
+                                name
+                            ]
+                        )
                         if rel_path is not None:
                             root_path = os.path.join(root_path, rel_path)
                     full_path = os.path.join(root_path, external_data_folder)
