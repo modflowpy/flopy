@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import pytest
-from autotest.conftest import is_in_ci, requires_pkg
+from autotest.conftest import requires_pkg
 from flaky import flaky
 from matplotlib import pyplot as plt
 from matplotlib import rcParams
@@ -28,7 +28,6 @@ from flopy.modflow import (
 from flopy.modpath import Modpath6, Modpath6Bas
 from flopy.plot import PlotCrossSection, PlotMapView
 from flopy.utils import CellBudgetFile, HeadFile, PathlineFile
-from flopy.utils.geometry import LineString
 
 
 def test_map_view():
@@ -297,8 +296,6 @@ def test_vertex_model_dot_plot(example_data_path):
 # similar: https://github.com/microsoft/azure-pipelines-tasks/issues/16426
 @flaky
 def test_model_dot_plot(tmpdir, example_data_path):
-    import matplotlib.pyplot as plt
-
     loadpth = example_data_path / "mf2005_test"
     ml = flopy.modflow.Modflow.load(
         "ibs2k.nam", "mf2k", model_ws=str(loadpth), check=False
@@ -309,8 +306,6 @@ def test_model_dot_plot(tmpdir, example_data_path):
 
 
 def test_dataset_dot_plot(tmpdir, example_data_path):
-    import matplotlib.pyplot as plt
-
     loadpth = example_data_path / "mf2005_test"
     ml = flopy.modflow.Modflow.load(
         "ibs2k.nam", "mf2k", model_ws=str(loadpth), check=False
@@ -550,12 +545,9 @@ def structured_square_grid(side: int = 10, thick: int = 10):
 
 @pytest.mark.parametrize(
     "line",
-    [
-        (0, 0),
-        [0, 0],
-    ],
+    [(), [], (()), [[]], (0, 0), [0, 0], [[0, 0]]],
 )
-def test_cross_section_line_as_point_fails(line):
+def test_cross_section_invalid_lines_raise_error(line):
     grid = structured_square_grid(side=10)
     with pytest.raises(ValueError):
         flopy.plot.PlotCrossSection(modelgrid=grid, line={"line": line})
@@ -565,27 +557,29 @@ def test_cross_section_line_as_point_fails(line):
 @pytest.mark.parametrize(
     "line",
     [
-        # diagonal line
-        [(0, 0), (10, 10)],  # test list of tuples
-        ([0, 0], [10, 10]),  # and tuple of lists
-        # horizontal line
+        # diagonal
+        [(0, 0), (10, 10)],
+        ([0, 0], [10, 10]),
+        # horizontal
         ([0, 5.5], [10, 5.5]),
         [(0, 5.5), (10, 5.5)],
-        # vertical line
-        [(0, 5.5), (10, 5.5)],
-        ([0, 5.5], [10, 5.5]),
-        # line with multiple segments
+        # vertical
+        [(5.5, 0), (5.5, 10)],
+        ([5.5, 0], [5.5, 10]),
+        # multiple segments
         [(0, 0), (4, 6), (10, 10)],
         ([0, 0], [4, 6], [10, 10]),
     ],
 )
-def test_cross_section_line_representations(line):
-    import shapely
+def test_cross_section_valid_line_representations(line):
+    from shapely.geometry import LineString as SLS
+
+    from flopy.utils.geometry import LineString as FLS
 
     grid = structured_square_grid(side=10)
 
-    fls = LineString(line)
-    sls = shapely.geometry.LineString(line)
+    fls = FLS(line)
+    sls = SLS(line)
 
     # use raw, flopy.utils.geometry and shapely.geometry representations
     lxc = flopy.plot.PlotCrossSection(modelgrid=grid, line={"line": line})
@@ -601,3 +595,21 @@ def test_cross_section_line_representations(line):
         assert np.allclose(lxc.xypts[k], fxc.xypts[k]) and np.allclose(
             lxc.xypts[k], sxc.xypts[k]
         )
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        0,
+        [0],
+        [0, 0],
+        (0, 0),
+        [(0, 0)],
+        ([0, 0]),
+    ],
+)
+@requires_pkg("shapely", "geojson")
+def test_cross_section_invalid_line_representations_fail(line):
+    grid = structured_square_grid(side=10)
+    with pytest.raises(ValueError):
+        flopy.plot.PlotCrossSection(modelgrid=grid, line={"line": line})

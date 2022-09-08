@@ -158,8 +158,7 @@ def test_polygon(polygon):
     poly = Shape.from_geojson(polygon)
     gi1 = poly.__geo_interface__
 
-    if not isinstance(poly, Polygon):
-        raise AssertionError()
+    assert isinstance(poly, Polygon)
 
     gu = GeoSpatialUtil(poly)
 
@@ -172,8 +171,6 @@ def test_polygon(polygon):
     geo_types = [shp, shply, points, geojson, fp_geo]
 
     for geo in geo_types:
-        if geo is None:  # if shapely or geojson is not installed
-            continue
         t = GeoSpatialUtil(geo, "polygon").flopy_geometry
         gi2 = t.__geo_interface__
 
@@ -183,8 +180,8 @@ def test_polygon(polygon):
             # pyshp < 2.2.0 sorts coordinates in opposite direction
             gi2["coordinates"] = (gi2["coordinates"][0][::-1],)
             is_equal = gi1 == gi2
-            if not is_equal:
-                raise AssertionError("GeoSpatialUtil polygon conversion error")
+
+        assert is_equal, "GeoSpatialUtil polygon conversion error"
 
 
 @requires_pkg("shapely", "geojson")
@@ -195,8 +192,7 @@ def test_polygon_with_hole(poly_w_hole):
     poly = Shape.from_geojson(poly_w_hole)
     gi1 = poly.__geo_interface__
 
-    if not isinstance(poly, Polygon):
-        raise AssertionError()
+    assert isinstance(poly, Polygon)
 
     gu = GeoSpatialUtil(poly)
 
@@ -209,8 +205,6 @@ def test_polygon_with_hole(poly_w_hole):
     geo_types = [shp, shply, points, geojson, fp_geo]
 
     for geo in geo_types:
-        if geo is None:  # if shapely or geojson is not installed
-            continue
         t = GeoSpatialUtil(geo, "polygon").flopy_geometry
         gi2 = t.__geo_interface__
 
@@ -221,8 +215,8 @@ def test_polygon_with_hole(poly_w_hole):
             t = reversed(t)
             gi2 = t.__geo_interface__
             is_equal = gi1 == gi2
-            if not is_equal:
-                raise AssertionError("GeoSpatialUtil polygon conversion error")
+
+        assert is_equal, "GeoSpatialUtil polygon conversion error"
 
 
 @requires_pkg("shapely", "geojson")
@@ -230,8 +224,7 @@ def test_multipolygon(multipolygon):
     poly = Shape.from_geojson(multipolygon)
     gi1 = poly.__geo_interface__
 
-    if not isinstance(poly, MultiPolygon):
-        raise AssertionError()
+    assert isinstance(poly, MultiPolygon)
 
     gu = GeoSpatialUtil(poly)
 
@@ -244,8 +237,6 @@ def test_multipolygon(multipolygon):
     geo_types = [shp, shply, points, geojson, fp_geo]
 
     for geo in geo_types:
-        if geo is None:  # if shapely or geojson is not installed
-            continue
         t = GeoSpatialUtil(geo, "multipolygon").flopy_geometry
         gi2 = t.__geo_interface__
 
@@ -256,10 +247,8 @@ def test_multipolygon(multipolygon):
             t = reversed(t)
             gi2 = t.__geo_interface__
             is_equal = gi1 == gi2
-            if not is_equal:
-                raise AssertionError(
-                    "GeoSpatialUtil multipolygon conversion error"
-                )
+
+        assert is_equal, "GeoSpatialUtil multipolygon conversion error"
 
 
 @requires_pkg("shapely", "geojson")
@@ -267,8 +256,7 @@ def test_point(point):
     pt = Shape.from_geojson(point)
     gi1 = pt.__geo_interface__
 
-    if not isinstance(pt, Point):
-        raise AssertionError()
+    assert isinstance(pt, Point)
 
     gu = GeoSpatialUtil(pt)
 
@@ -281,15 +269,10 @@ def test_point(point):
     geo_types = [shp, shply, points, geojson, fp_geo]
 
     for geo in geo_types:
-        if geo is None:  # if shapely or geojson is not installed
-            continue
         t = GeoSpatialUtil(geo, "point").flopy_geometry
         gi2 = t.__geo_interface__
 
-        is_equal = gi1 == gi2
-
-        if not is_equal:
-            raise AssertionError("GeoSpatialUtil point conversion error")
+        assert gi1 == gi2, "GeoSpatialUtil point conversion error"
 
 
 @requires_pkg("shapely", "geojson")
@@ -297,8 +280,7 @@ def test_multipoint(multipoint):
     mpt = Shape.from_geojson(multipoint)
     gi1 = mpt.__geo_interface__
 
-    if not isinstance(mpt, MultiPoint):
-        raise AssertionError()
+    assert isinstance(mpt, MultiPoint)
 
     gu = GeoSpatialUtil(mpt)
 
@@ -311,15 +293,10 @@ def test_multipoint(multipoint):
     geo_types = [shp, shply, points, geojson, fp_geo]
 
     for geo in geo_types:
-        if geo is None:  # if shapely or geojson is not installed
-            continue
         t = GeoSpatialUtil(geo, "multipoint").flopy_geometry
         gi2 = t.__geo_interface__
 
-        is_equal = gi1 == gi2
-
-        if not is_equal:
-            raise AssertionError("GeoSpatialUtil multipoint conversion error")
+        assert gi1 == gi2, "GeoSpatialUtil multipoint conversion error"
 
 
 @requires_pkg("shapely", "geojson")
@@ -327,8 +304,7 @@ def test_linestring(linestring):
     lstr = Shape.from_geojson(linestring)
     gi1 = lstr.__geo_interface__
 
-    if not isinstance(lstr, LineString):
-        raise AssertionError()
+    assert isinstance(lstr, LineString)
 
     gu = GeoSpatialUtil(lstr)
 
@@ -341,15 +317,10 @@ def test_linestring(linestring):
     geo_types = [shp, shply, points, geojson, fp_geo]
 
     for geo in geo_types:
-        if geo is None:  # if shapely or geojson is not installed
-            continue
         t = GeoSpatialUtil(geo, "linestring").flopy_geometry
         gi2 = t.__geo_interface__
 
-        is_equal = gi1 == gi2
-
-        if not is_equal:
-            raise AssertionError("GeoSpatialUtil linestring conversion error")
+        assert gi1 == gi2, "GeoSpatialUtil linestring conversion error"
 
 
 @requires_pkg("shapely", "geojson")
@@ -357,8 +328,7 @@ def test_multilinestring(multilinestring):
     mlstr = Shape.from_geojson(multilinestring)
     gi1 = mlstr.__geo_interface__
 
-    if not isinstance(mlstr, MultiLineString):
-        raise AssertionError()
+    assert isinstance(mlstr, MultiLineString)
 
     gu = GeoSpatialUtil(mlstr)
 
@@ -371,17 +341,10 @@ def test_multilinestring(multilinestring):
     geo_types = [shp, shply, points, geojson, fp_geo]
 
     for geo in geo_types:
-        if geo is None:  # if shapely or geojson is not installed
-            continue
         t = GeoSpatialUtil(geo, "multilinestring").flopy_geometry
         gi2 = t.__geo_interface__
 
-        is_equal = gi1 == gi2
-
-        if not is_equal:
-            raise AssertionError(
-                "GeoSpatialUtil multilinestring conversion error"
-            )
+        assert gi1 == gi2, "GeoSpatialUtil multilinestring conversion error"
 
 
 @requires_pkg("shapely", "geojson")
@@ -405,9 +368,6 @@ def test_polygon_collection(polygon, poly_w_hole, multipolygon):
 
     collections = [shp, shply, points, geojson, fp_geo]
     for col in collections:
-        if col is None:  # if geojson or shapely is not installed
-            continue
-
         gc2 = GeoSpatialCollection(col, shapetype)
 
         for ix, gi in enumerate(gc2):
@@ -420,10 +380,8 @@ def test_polygon_collection(polygon, poly_w_hole, multipolygon):
                 t = reversed(t)
                 gi2 = t.__geo_interface__
                 is_equal = gi2 == gi1[ix]
-                if not is_equal:
-                    raise AssertionError(
-                        "GeoSpatialCollection Polygon conversion error"
-                    )
+
+            assert is_equal, "GeoSpatialCollection Polygon conversion error"
 
 
 @requires_pkg("shapely", "geojson")
@@ -443,9 +401,6 @@ def test_point_collection(point, multipoint):
 
     collections = [shp, shply, points, geojson, fp_geo]
     for col in collections:
-        if col is None:  # if geojson or shapely is not installed
-            continue
-
         gc2 = GeoSpatialCollection(col, shapetype)
         gi2 = [i.flopy_geometry.__geo_interface__ for i in gc2]
 
@@ -475,9 +430,6 @@ def test_linestring_collection(linestring, multilinestring):
 
     collections = [shp, shply, points, geojson, fp_geo]
     for col in collections:
-        if col is None:  # if geojson or shapely is not installed
-            continue
-
         gc2 = GeoSpatialCollection(col, shapetype)
         gi2 = [i.flopy_geometry.__geo_interface__ for i in gc2]
 
@@ -523,9 +475,6 @@ def test_mixed_collection(
 
     collections = [shp, shply, points, geojson, fp_geo]
     for col in collections:
-        if col is None:  # if geojson or shapely is not installed
-            continue
-
         gc2 = GeoSpatialCollection(col, shapetype)
 
         for ix, gi in enumerate(gc2):
@@ -539,14 +488,4 @@ def test_mixed_collection(
                 gi2 = t.__geo_interface__
                 is_equal = gi2 == gi1[ix]
 
-                if not is_equal:
-                    raise AssertionError(
-                        "GeoSpatialCollection conversion error"
-                    )
-
-
-@requires_pkg("shapely", "geojson")
-def test_create_linestring_with_single_point_fails():
-    point = [0, 0]
-    with pytest.raises(ValueError):
-        GeoSpatialUtil(point, shapetype="linestring")
+            assert is_equal, "GeoSpatialCollection conversion error"

@@ -950,48 +950,6 @@ class StructuredGrid(Grid):
         mm = PlotMapView(modelgrid=self)
         return mm.plot_grid(**kwargs)
 
-    # Importing
-    @classmethod
-    def from_gridspec(cls, gridspec_file, lenuni=0):
-        f = open(gridspec_file, "r")
-        raw = f.readline().strip().split()
-        nrow = int(raw[0])
-        ncol = int(raw[1])
-        raw = f.readline().strip().split()
-        xul, yul, rot = float(raw[0]), float(raw[1]), float(raw[2])
-        delr = []
-        j = 0
-        while j < ncol:
-            raw = f.readline().strip().split()
-            for r in raw:
-                if "*" in r:
-                    rraw = r.split("*")
-                    for n in range(int(rraw[0])):
-                        delr.append(float(rraw[1]))
-                        j += 1
-                else:
-                    delr.append(float(r))
-                    j += 1
-        delc = []
-        i = 0
-        while i < nrow:
-            raw = f.readline().strip().split()
-            for r in raw:
-                if "*" in r:
-                    rraw = r.split("*")
-                    for n in range(int(rraw[0])):
-                        delc.append(float(rraw[1]))
-                        i += 1
-                else:
-                    delc.append(float(r))
-                    i += 1
-        f.close()
-        grd = cls(np.array(delc), np.array(delr), lenuni=lenuni)
-        xll = grd._xul_to_xll(xul, angrot=rot)
-        yll = grd._yul_to_yll(yul, angrot=rot)
-        grd.set_coord_info(xoff=xll, yoff=yll, angrot=rot)
-        return grd
-
     def array_at_verts_basic(self, a):
         """
         Computes values at cell vertices using neighbor averaging.
@@ -1617,6 +1575,8 @@ class StructuredGrid(Grid):
         )
         return
 
+    # Importing
+
     # initialize grid from a grb file
     @classmethod
     def from_binary_grid_file(cls, file_path, verbose=False):
@@ -1669,3 +1629,59 @@ class StructuredGrid(Grid):
             yoff=yorigin,
             angrot=angrot,
         )
+
+    @classmethod
+    def from_gridspec(cls, file_path, lenuni=0):
+        """
+        Instantiate a StructuredGrid from grid specification file.
+
+        Parameters
+        ----------
+        file_path: Path-like
+            Path to the grid specification file
+        lenuni: int
+            Length unit code
+
+        Returns
+        -------
+            A StructuredGrid
+        """
+
+        with open(file_path, "r") as f:
+            raw = f.readline().strip().split()
+            nrow = int(raw[0])
+            ncol = int(raw[1])
+            raw = f.readline().strip().split()
+            xul, yul, rot = float(raw[0]), float(raw[1]), float(raw[2])
+            delr = []
+            j = 0
+            while j < ncol:
+                raw = f.readline().strip().split()
+                for r in raw:
+                    if "*" in r:
+                        rraw = r.split("*")
+                        for n in range(int(rraw[0])):
+                            delr.append(float(rraw[1]))
+                            j += 1
+                    else:
+                        delr.append(float(r))
+                        j += 1
+            delc = []
+            i = 0
+            while i < nrow:
+                raw = f.readline().strip().split()
+                for r in raw:
+                    if "*" in r:
+                        rraw = r.split("*")
+                        for n in range(int(rraw[0])):
+                            delc.append(float(rraw[1]))
+                            i += 1
+                    else:
+                        delc.append(float(r))
+                        i += 1
+
+        grd = cls(np.array(delc), np.array(delr), lenuni=lenuni)
+        xll = grd._xul_to_xll(xul, angrot=rot)
+        yll = grd._yul_to_yll(yul, angrot=rot)
+        grd.set_coord_info(xoff=xll, yoff=yll, angrot=rot)
+        return grd
