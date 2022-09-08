@@ -179,10 +179,12 @@ class PlotCrossSection:
         )
 
         if len(self.xypts) < 2:
-            s = "cross-section cannot be created\n."
-            s += "   less than 2 points intersect the model grid\n"
-            s += f"   {len(self.xypts)} points intersect the grid."
-            raise Exception(s)
+            if len(list(self.xypts.values())[0]) < 2:
+                s = "cross-section cannot be created\n." \
+                    " less than 2 points intersect the model grid\n" \
+                    f" {len(self.xypts.values()[0])} points" \
+                    f" intersect the grid."
+                raise Exception(s)
 
         if self.geographic_coords:
             # transform back to geographic coordinates
