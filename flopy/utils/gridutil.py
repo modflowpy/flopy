@@ -17,8 +17,7 @@ def get_lni(ncpl, nodes) -> List[Tuple[int, int]]:
     grid is understood to have at least enough layers to contain them.
 
      | If ncpl is array-like it is understood to describe node count
-    per zero-indexed layer. If ncpl is array-like and no nodes are
-    specified, indices are returned for all nodes in ascending order.
+    per zero-indexed layer.
 
     Parameters
     ----------
