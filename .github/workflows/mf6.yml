@@ -49,17 +49,8 @@ jobs:
       run: |
         pip install .[test,optional]
 
-    - name: Setup symbolic links on Linux
-      run: |
-        sudo ln -fs /usr/bin/gfortran-10 /usr/local/bin/gfortran
-        sudo ln -fs /usr/bin/gcc-10 /usr/local/bin/gcc
-        sudo ln -fs /usr/bin/g++-10 /usr/local/bin/g++
-
-    - name: Print GNU compiler versions
-      run: |
-        gfortran --version
-        gcc --version
-        g++ --version
+    - name: Install gfortran
+      uses: modflowpy/install-gfortran-action@v1
 
     - name: Clone MODFLOW 6 repo
       run: |
