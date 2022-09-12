@@ -245,10 +245,7 @@ def test_np001(tmpdir, example_data_path):
         model,
         budget_filerecord=[("np001_mod 1.cbc",)],
         head_filerecord=[("np001_mod 1.hds",)],
-        saverecord={
-            0: [("HEAD", "ALL"), ("BUDGET", "ALL")],
-            1: [],
-        },
+        saverecord={0: [("HEAD", "ALL"), ("BUDGET", "ALL")], 1: [],},
         printrecord=[("HEAD", "ALL")],
     )
     empty_sp_text = oc_package.saverecord.get_file_entry(1)
@@ -575,11 +572,7 @@ def test_np001(tmpdir, example_data_path):
 
     # test loading and re-writing empty stress period
     test_sim = MFSimulation.load(
-        test_ex_name,
-        "mf6",
-        "mf6",
-        spath,
-        write_headers=False,
+        test_ex_name, "mf6", "mf6", spath, write_headers=False,
     )
     wel = test_sim.get_model().get_package("wel_2")
     wel._filename = "np001_spd_test.wel"
@@ -875,10 +868,7 @@ def test_np002(tmpdir, example_data_path):
     sim.write_simulation()
     sim.run_simulation()
     sim2 = MFSimulation.load(
-        sim_name=test_ex_name,
-        version="mf6",
-        exe_name="mf6",
-        sim_ws=ws,
+        sim_name=test_ex_name, version="mf6", exe_name="mf6", sim_ws=ws,
     )
     md2 = sim2.get_model()
     ghb2 = md2.get_package("ghb")
@@ -1459,15 +1449,7 @@ def test005_create_tests_advgw_tidal(tmpdir, example_data_path):
             ("rv2-upper", "RIV", "riv2_upper"),
             ("rv-2-7-4", "RIV", (0, 6, 3)),
             ("rv2-8-5", "RIV", (0, 6, 4)),
-            (
-                "rv-2-9-6",
-                "RIV",
-                (
-                    0,
-                    5,
-                    5,
-                ),
-            ),
+            ("rv-2-9-6", "RIV", (0, 5, 5,),),
         ],
         "riv_flowsA.csv": [
             ("riv1-3-1", "RIV", (0, 2, 0)),
@@ -1834,7 +1816,8 @@ def test004_create_tests_bcfss(tmpdir, example_data_path):
         saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
         printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
     )
-    aux = {0: [[50.0], [1.3]], 1: [[200.0], [1.5]]}
+    # include a bad aux value
+    aux = {0: [[50.0], [1.3]], 1: [[200.0], np.nan]}
     # aux = {0: [[100.0], [2.3]]}
     rch_package = ModflowGwfrcha(
         model,
@@ -1844,7 +1827,13 @@ def test004_create_tests_bcfss(tmpdir, example_data_path):
         recharge={0: 0.004},
         aux=aux,
     )  # *** test if aux works ***
+    chk = rch_package.check()
+    summary = ".".join(chk.summary_array.desc)
+    assert summary == "One or more nan values were found in auxiliary data."
 
+    # fix aux values
+    aux = {0: [[50.0], [1.3]], 1: [[200.0], [1.5]]}
+    rch_package.aux = aux
     # aux tests
     aux_out = rch_package.aux.get_data()
     assert aux_out[0][0][0, 0] == 50.0
@@ -1854,15 +1843,55 @@ def test004_create_tests_bcfss(tmpdir, example_data_path):
 
     riv_period = {}
     riv_period_array = []
+    aux_vals = [1.0, 5.0, 4.0, 8.0, 3.0, "bad value", 5.5, 6.3, 8.1, 18.3]
     for row in range(0, 10):
-        riv_period_array.append(((1, row, 14), 0.0, 10000.0, -5.0))
+        riv_period_array.append(
+            ((1, row, 14), 0.0, 10000.0, -5.0, aux_vals[row], 10.0)
+        )
     riv_period[0] = riv_period_array
     riv_package = ModflowGwfriv(
         model,
+        auxiliary=[("var1", "var2")],
         save_flows="bcf2ss.cbb",
         maxbound=10,
         stress_period_data=riv_period,
     )
+    chk = riv_package.check()
+    summary = ".".join(chk.summary_array.desc)
+    assert (
+        summary == "Invalid non-numeric value 'bad value' in auxiliary "
+        "data."
+    )
+    # test with boundnames
+    riv_package.boundnames = True
+    riv_period_array = []
+    for row in range(0, 10):
+        riv_period_array.append(
+            ((1, row, 14), 0.0, 10000.0, -5.0, aux_vals[row], 10.0)
+        )
+    riv_period[0] = riv_period_array
+    riv_package.stress_period_data = riv_period
+    chk = riv_package.check()
+    summary = ".".join(chk.summary_array.desc)
+    assert (
+        summary == "Invalid non-numeric value 'bad value' in auxiliary "
+        "data."
+    )
+
+    # fix aux variable
+    riv_package.boundnames = False
+    riv_period = {}
+    riv_period_array = []
+    aux_vals = [1.0, 5.0, 4.0, 8.0, 3.0, 5.0, 5.5, 6.3, 8.1, 18.3]
+    for row in range(0, 10):
+        riv_period_array.append(
+            ((1, row, 14), 0.0, 10000.0, -5.0, aux_vals[row], 10.0)
+        )
+    riv_period[0] = riv_period_array
+    riv_package.stress_period_data = riv_period
+    # check again
+    chk = riv_package.check()
+    assert len(chk.summary_array) == 0
 
     wel_period = {}
     stress_period_data = [
@@ -2367,14 +2396,10 @@ def test006_create_tests_2models_gnc(tmpdir, example_data_path):
         sim, time_units="DAYS", nper=1, perioddata=tdis_rc
     )
     model_1 = ModflowGwf(
-        sim,
-        modelname=model_name_1,
-        model_nam_file=f"{model_name_1}.nam",
+        sim, modelname=model_name_1, model_nam_file=f"{model_name_1}.nam",
     )
     model_2 = ModflowGwf(
-        sim,
-        modelname=model_name_2,
-        model_nam_file=f"{model_name_2}.nam",
+        sim, modelname=model_name_2, model_nam_file=f"{model_name_2}.nam",
     )
     ims_package = ModflowIms(
         sim,
@@ -3098,10 +3123,7 @@ def test_create_tests_transport(tmpdir, example_data_path):
 
     # build MODFLOW 6 files
     sim = MFSimulation(
-        sim_name=name,
-        version="mf6",
-        exe_name="mf6",
-        sim_ws=str(tmpdir),
+        sim_name=name, version="mf6", exe_name="mf6", sim_ws=str(tmpdir),
     )
     # create tdis package
     tdis = ModflowTdis(sim, time_units="DAYS", nper=nper, perioddata=tdis_rc)
@@ -3109,11 +3131,7 @@ def test_create_tests_transport(tmpdir, example_data_path):
     # create gwf model
     gwfname = f"gwf_{name}"
     newtonoptions = ["NEWTON", "UNDER_RELAXATION"]
-    gwf = ModflowGwf(
-        sim,
-        modelname=gwfname,
-        newtonoptions=newtonoptions,
-    )
+    gwf = ModflowGwf(sim, modelname=gwfname, newtonoptions=newtonoptions,)
 
     # create iterative model solution and register the gwf model with it
     imsgwf = ModflowIms(
@@ -3655,10 +3673,7 @@ def test006_gwf3(tmpdir, example_data_path):
     # compare output to expected results
     head_new = os.path.join(str(tmpdir), "flow.hds")
     assert pymake.compare_heads(
-        None,
-        None,
-        files1=expected_head_file_a,
-        files2=head_new,
+        None, None, files1=expected_head_file_a, files2=head_new,
     )
 
     budget_fjf = np.array(
@@ -3702,10 +3717,7 @@ def test006_gwf3(tmpdir, example_data_path):
     # compare output to expected results
     head_new = os.path.join(save_folder, "flow.hds")
     assert pymake.compare_heads(
-        None,
-        None,
-        files1=expected_head_file_b,
-        files2=head_new,
+        None, None, files1=expected_head_file_b, files2=head_new,
     )
 
     budget_fjf = np.array(
@@ -3737,10 +3749,7 @@ def test006_gwf3(tmpdir, example_data_path):
     assert success, f"simulation {sim.name} rerun(3) did not run"
 
     # get expected results
-    budget_obj = CellBudgetFile(
-        expected_cbc_file_b,
-        precision="double",
-    )
+    budget_obj = CellBudgetFile(expected_cbc_file_b, precision="double",)
     budget_fjf_valid = np.array(
         budget_obj.get_data(text="    FLOW JA FACE", full3D=True)
     )
@@ -3750,10 +3759,7 @@ def test006_gwf3(tmpdir, example_data_path):
     # compare output to expected results
     head_new = os.path.join(save_folder, "flow.hds")
     assert pymake.compare_heads(
-        None,
-        None,
-        files1=expected_head_file_b,
-        files2=head_new,
+        None, None, files1=expected_head_file_b, files2=head_new,
     )
 
     budget_fjf = np.array(
@@ -3796,10 +3802,7 @@ def test045_lake1ss_table(tmpdir, example_data_path):
 
     # load simulation
     sim = MFSimulation.load(
-        sim_name=model_name,
-        exe_name="mf6",
-        sim_ws=pth,
-        verify_data=True,
+        sim_name=model_name, exe_name="mf6", sim_ws=pth, verify_data=True,
     )
 
     # make temp folder to save simulation
@@ -3897,24 +3900,15 @@ def test006_2models_mvr(tmpdir, example_data_path):
     # compare output to expected results
     head_new = str(ws / "model1.hds")
     assert pymake.compare_heads(
-        None,
-        None,
-        files1=expected_head_file_a,
-        files2=head_new,
+        None, None, files1=expected_head_file_a, files2=head_new,
     )
 
     head_new = str(ws / "model2.hds")
     assert pymake.compare_heads(
-        None,
-        None,
-        files1=expected_head_file_aa,
-        files2=head_new,
+        None, None, files1=expected_head_file_aa, files2=head_new,
     )
 
-    budget_obj = CellBudgetFile(
-        expected_cbc_file_a,
-        precision="double",
-    )
+    budget_obj = CellBudgetFile(expected_cbc_file_a, precision="double",)
     budget_obj.list_records()
 
     # test getting models
@@ -3984,18 +3978,12 @@ def test006_2models_mvr(tmpdir, example_data_path):
     # compare output to expected results
     head_new = os.path.join(save_folder, "model1.hds")
     assert pymake.compare_heads(
-        None,
-        None,
-        files1=expected_head_file_b,
-        files2=head_new,
+        None, None, files1=expected_head_file_b, files2=head_new,
     )
 
     head_new = os.path.join(save_folder, "model2.hds")
     assert pymake.compare_heads(
-        None,
-        None,
-        files1=expected_head_file_bb,
-        files2=head_new,
+        None, None, files1=expected_head_file_bb, files2=head_new,
     )
 
     # test load_only
@@ -4132,10 +4120,7 @@ def test001e_uzf_3lay(tmpdir, example_data_path):
 
     ims = ModflowIms(sim, print_option="SUMMARY", complexity="COMPLEX")
     sim.register_ims_package(
-        ims,
-        [
-            "GwF_1",
-        ],
+        ims, ["GwF_1",],
     )
     sim.write_simulation()
 
@@ -4174,11 +4159,7 @@ def test045_lake2tr(tmpdir, example_data_path):
     # compare output to expected results
     head_new = str(tmpdir / "lakeex2a.hds")
     assert pymake.compare_heads(
-        None,
-        None,
-        files1=expected_head_file_a,
-        files2=head_new,
-        htol=10.0,
+        None, None, files1=expected_head_file_a, files2=head_new, htol=10.0,
     )
 
     # change some settings
@@ -4210,11 +4191,7 @@ def test045_lake2tr(tmpdir, example_data_path):
     # compare output to expected results
     head_new = str(save_folder / "lakeex2a.hds")
     assert pymake.compare_heads(
-        None,
-        None,
-        files1=expected_head_file_b,
-        files2=head_new,
-        htol=10.0,
+        None, None, files1=expected_head_file_b, files2=head_new, htol=10.0,
     )
 
 
@@ -4253,10 +4230,7 @@ def test036_twrihfb(tmpdir, example_data_path):
     # compare output to expected results
     head_new = str(tmpdir / "twrihfb2015_output.hds")
     assert pymake.compare_heads(
-        None,
-        None,
-        files1=expected_head_file_a,
-        files2=head_new,
+        None, None, files1=expected_head_file_a, files2=head_new,
     )
 
     # change some settings
@@ -4295,10 +4269,7 @@ def test036_twrihfb(tmpdir, example_data_path):
     # compare output to expected results
     head_new = str(save_folder / "twrihfb2015_output.hds")
     assert pymake.compare_heads(
-        None,
-        None,
-        files1=expected_head_file_b,
-        files2=head_new,
+        None, None, files1=expected_head_file_b, files2=head_new,
     )
 
 
@@ -4374,9 +4345,5 @@ def test027_timeseriestest(tmpdir, example_data_path):
     # compare output to expected results
     head_new = os.path.join(str(save_folder), "timeseriestest.hds")
     assert pymake.compare_heads(
-        None,
-        None,
-        files1=expected_head_file_b,
-        files2=head_new,
-        htol=10.0,
+        None, None, files1=expected_head_file_b, files2=head_new, htol=10.0,
     )

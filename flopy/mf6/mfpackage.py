@@ -1859,11 +1859,132 @@ class MFPackage(PackageContainer, PackageInterface):
                     return
         super()._add_package(package, path)
 
+    def _get_aux_data(self, aux_names):
+        if hasattr(self, "stress_period_data"):
+            spd = self.stress_period_data.get_data()
+            if 0 in spd and aux_names[0][1] in spd[0].dtype.names:
+                return spd
+        if hasattr(self, "packagedata"):
+            pd = self.packagedata.get_data()
+            if aux_names[0][1] in pd.dtype.names:
+                return pd
+        if hasattr(self, "perioddata"):
+            spd = self.perioddata.get_data()
+            if 0 in spd and aux_names[0][1] in spd[0].dtype.names:
+                return spd
+        if hasattr(self, "aux"):
+            return self.aux.get_data()
+        return None
+
+    def _boundnames_active(self):
+        if hasattr(self, "boundnames"):
+            if self.boundnames.get_data():
+                return True
+        return False
+
     def check(self, f=None, verbose=True, level=1, checktype=None):
         """Data check, returns True on success."""
         if checktype is None:
             checktype = mf6check
-        return super().check(f, verbose, level, checktype)
+        # do general checks
+        chk = super().check(f, verbose, level, checktype)
+
+        # do mf6 specific checks
+        if hasattr(self, "auxiliary"):
+            # auxiliary variable check
+            # check if auxiliary variables are defined
+            aux_names = self.auxiliary.get_data()
+            if aux_names is not None and len(aux_names[0]) > 1:
+                num_aux_names = len(aux_names[0]) - 1
+                # check for stress period data
+                aux_data = self._get_aux_data(aux_names)
+                if aux_data is not None and len(aux_data) > 0:
+                    # make sure the check object exists
+                    if chk is None:
+                        chk = self._get_check(f, verbose, level, checktype)
+                    if isinstance(aux_data, dict):
+                        aux_datasets = list(aux_data.values())
+                    else:
+                        aux_datasets = [aux_data]
+                    dataset_type = "unknown"
+                    for dataset in aux_datasets:
+                        if isinstance(dataset, np.recarray):
+                            dataset_type = "recarray"
+                            break
+                        elif isinstance(dataset, np.ndarray):
+                            dataset_type = "ndarray"
+                            break
+                    # if aux data is in a list
+                    if dataset_type == "recarray":
+                        # check for time series data
+                        time_series_name_dict = {}
+                        if hasattr(self, "ts") and hasattr(
+                            self.ts, "time_series_namerecord"
+                        ):
+                            # build dictionary of time series data variables
+                            ts_nr = self.ts.time_series_namerecord.get_data()
+                            if ts_nr is not None:
+                                for item in ts_nr:
+                                    if len(item) > 0 and item[0] is not None:
+                                        time_series_name_dict[item[0]] = True
+                        # auxiliary variables are last unless boundnames
+                        # defined, then second to last
+                        if self._boundnames_active():
+                            offset = 1
+                        else:
+                            offset = 0
+
+                        # loop through stress period datasets with aux data
+                        for data in aux_datasets:
+                            if isinstance(data, np.recarray):
+                                for row in data:
+                                    row_size = len(row)
+                                    aux_start_loc = (
+                                        row_size - num_aux_names - offset
+                                    )
+                                    # loop through auxiliary variables
+                                    for idx, var in enumerate(aux_names):
+                                        # get index of current aux variable
+                                        data_index = aux_start_loc + idx
+                                        # verify auxiliary value is either
+                                        # numeric or time series variable
+                                        if (
+                                            not datautil.DatumUtil.is_float(
+                                                row[data_index]
+                                            )
+                                            and not row[data_index]
+                                            in time_series_name_dict
+                                        ):
+                                            desc = (
+                                                f"Invalid non-numeric "
+                                                f"value "
+                                                f"'{row[data_index]}' "
+                                                f"in auxiliary data."
+                                            )
+                                            chk._add_to_summary(
+                                                "Error",
+                                                desc=desc,
+                                                package=self.package_name,
+                                            )
+                    # else if stress period data is arrays
+                    elif dataset_type == "ndarray":
+                        # loop through auxiliary stress period datasets
+                        for data in aux_datasets:
+                            # verify auxiliary value is either numeric or time
+                            # array series variable
+                            if isinstance(data, np.ndarray):
+                                val = np.isnan(np.sum(data))
+                                if val:
+                                    desc = (
+                                        f"One or more nan values were "
+                                        f"found in auxiliary data."
+                                    )
+                                    chk._add_to_summary(
+                                        "Warning",
+                                        desc=desc,
+                                        package=self.package_name,
+                                    )
+        return chk
 
     def _get_nan_exclusion_list(self):
         excl_list = []
