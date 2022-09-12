@@ -7,6 +7,8 @@ from matplotlib import pyplot as plt
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 from flopy.mf6.utils import MfGrdFile
 
+pytestmark = pytest.mark.mf6
+
 
 @pytest.fixture(scope="module")
 def mfgrd_test_path(example_data_path):

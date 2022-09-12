@@ -50,6 +50,8 @@ from flopy.mf6.utils import testutils
 from flopy.utils import CellBudgetFile
 from flopy.utils.datautil import PyListUtil
 
+pytestmark = pytest.mark.mf6
+
 
 @requires_exe("mf6")
 @requires_pkg("pymake")

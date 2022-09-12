@@ -48,6 +48,8 @@ from flopy.utils import EndpointFile, PathlineFile
 from flopy.utils.flopy_io import loadtxt
 from flopy.utils.recarray_utils import ra_slice
 
+pytestmark = pytest.mark.mf6
+
 MP6_TEST_PATH = get_example_data_path(__file__) / "mp6"
 
 

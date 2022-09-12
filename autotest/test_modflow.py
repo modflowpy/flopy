@@ -6,7 +6,12 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from autotest.conftest import get_example_data_path, requires_exe, requires_pkg
+from autotest.conftest import (
+    excludes_platform,
+    get_example_data_path,
+    requires_exe,
+    requires_pkg,
+)
 from matplotlib import pyplot as plt
 
 from flopy.discretization import StructuredGrid
@@ -624,18 +629,12 @@ def test_write_irch(tmpdir, example_data_path):
         assert np.abs(d).sum() == 0
 
 
-@pytest.mark.xfail(
-    reason="Pending https://github.com/modflowpy/flopy/issues/1472"
-)
 def test_mflist_external(tmpdir):
-    # TODO: fails if external path is absolute (not relative to model_ws), ideally support both?
-
-    ws = tmpdir / "ws"
+    ext = tmpdir / "ws"
     ml = Modflow(
         "mflist_test",
         model_ws=str(tmpdir),
-        # external_path=str(ws),  # full path causes failure
-        external_path=ws.name,
+        external_path=ext.name,
     )
 
     dis = ModflowDis(ml, 1, 10, 10, nper=3, perlen=1.0)
@@ -644,12 +643,12 @@ def test_mflist_external(tmpdir):
         1: [[0, 0, 0, -2], [1, 1, 1, -1]],
     }
     wel = ModflowWel(ml, stress_period_data=wel_data)
-    ml.change_model_ws(str(ws))
+    ml.change_model_ws(str(ext))
     ml.write_input()
 
     ml1 = Modflow.load(
         "mflist_test.nam",
-        model_ws=str(ws),
+        model_ws=str(ext),
         verbose=True,
         forgive=False,
         check=False,
@@ -687,9 +686,7 @@ def test_mflist_external(tmpdir):
     # ml1.write_input()
 
 
-@pytest.mark.xfail(
-    reason="Pending https://github.com/modflowpy/flopy/issues/1472"
-)
+@excludes_platform("windows", ci_only=True)
 def test_single_mflist_entry_load(tmpdir, example_data_path):
     m = Modflow.load(
         "freyberg.nam",
@@ -700,7 +697,7 @@ def test_single_mflist_entry_load(tmpdir, example_data_path):
     w = m.wel
     spd = w.stress_period_data
     ModflowWel(m, stress_period_data={0: [0, 0, 0, 0.0]})
-    m.external_path = "."  # changing this to anything else fails
+    m.external_path = "external"
     m.change_model_ws(str(tmpdir), reset_external=True)
     m.write_input()
 

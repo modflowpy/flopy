@@ -7,7 +7,6 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from flaky import flaky
 from autotest.conftest import (
     SHAPEFILE_EXTENSIONS,
     get_example_data_path,
@@ -16,6 +15,7 @@ from autotest.conftest import (
     requires_pkg,
     requires_spatial_reference,
 )
+from flaky import flaky
 
 import flopy
 from flopy.discretization import StructuredGrid, UnstructuredGrid
@@ -29,6 +29,7 @@ from flopy.export.utils import (
     export_array,
     export_array_contours,
     export_contourf,
+    export_contours,
 )
 from flopy.export.vtk import Vtk
 from flopy.mf6 import (
@@ -615,6 +616,35 @@ def test_export_contourf(tmpdir, example_data_path):
             )
 
 
+@pytest.mark.mf6
+@requires_pkg("shapefile", "shapely")
+def test_export_contours(tmpdir, example_data_path):
+    from shapefile import Reader
+
+    filename = os.path.join(tmpdir, "mycontours.shp")
+    mpath = example_data_path / "freyberg"
+    ml = Modflow.load("freyberg.nam", model_ws=mpath)
+    hds_pth = os.path.join(ml.model_ws, "freyberg.githds")
+    hds = flopy.utils.HeadFile(hds_pth)
+    head = hds.get_data()
+    levels = np.arange(10, 30, 0.5)
+
+    mapview = flopy.plot.PlotMapView(model=ml)
+    contour_set = mapview.contour_array(
+        head, masked_values=[999.0], levels=levels
+    )
+
+    export_contours(filename, contour_set)
+    plt.close()
+    if not os.path.isfile(filename):
+        raise AssertionError("did not create contour shapefile")
+
+    with Reader(filename) as r:
+        shapes = r.shapes()
+        assert len(shapes) == 65
+
+
+@pytest.mark.mf6
 @requires_pkg("shapely")
 def test_mf6_grid_shp_export(tmpdir):
     nlay = 2
@@ -1082,6 +1112,7 @@ def test_vtk_export_packages(tmpdir, example_data_path):
     assert os.path.exists(filetocheck)
 
 
+@pytest.mark.mf6
 @requires_pkg("vtk")
 def test_vtk_mf6(tmpdir, example_data_path):
     # test mf6
@@ -1344,6 +1375,7 @@ def test_vtk_unstructured(tmpdir, example_data_path):
     assert np.allclose(np.ravel(top), top2), "Field data not properly written"
 
 
+@pytest.mark.mf6
 @requires_pkg("vtk")
 def test_vtk_vertex(tmpdir, example_data_path):
     from vtkmodules.util.numpy_support import vtk_to_numpy
@@ -1502,6 +1534,7 @@ def load_iverts(fname, closed=False):
     return iverts, np.array(xc), np.array(yc)
 
 
+@pytest.mark.mf6
 @requires_pkg("vtk")
 def test_vtk_export_model_without_packages_names(tmpdir):
     from vtkmodules.util.numpy_support import vtk_to_numpy
@@ -1559,6 +1592,7 @@ def test_vtk_export_model_without_packages_names(tmpdir):
     assert np.allclose(cell_types, cell_types_answer), errmsg
 
 
+@pytest.mark.mf6
 @requires_pkg("vtk")
 def test_vtk_export_disv1_model(tmpdir):
     from vtkmodules.util.numpy_support import vtk_to_numpy
@@ -1631,6 +1665,7 @@ def test_vtk_export_disv1_model(tmpdir):
     assert np.allclose(cell_types, cell_types_answer), errmsg
 
 
+@pytest.mark.mf6
 @requires_pkg("vtk")
 def test_vtk_export_disv2_model(tmpdir):
     from vtkmodules.util.numpy_support import vtk_to_numpy
@@ -1868,6 +1903,7 @@ def test_vtk_export_disu2_grid(tmpdir, example_data_path):
     assert np.allclose(cell_types, cell_types_answer), errmsg
 
 
+@pytest.mark.mf6
 @requires_pkg("vtk", "shapefile")
 def test_vtk_export_disu_model(tmpdir):
     from vtkmodules.util.numpy_support import vtk_to_numpy

@@ -41,6 +41,7 @@ def load_mf2005(path, ws_out):
     return ml
 
 
+@pytest.mark.mf6
 def load_mf6(path, ws_out):
     sim = MFSimulation.load(
         sim_name=Path(path).name,
@@ -118,6 +119,7 @@ def cbc_eval(cbcobj, nnodes, shape3d, modelgrid):
     cobj_mg.close()
 
 
+@pytest.mark.mf6
 @pytest.mark.parametrize("path", mf6_paths)
 def test_cbc_full3D_mf6(tmpdir, path):
     sim = load_mf6(path, str(tmpdir))

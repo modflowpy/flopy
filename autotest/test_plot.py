@@ -47,12 +47,10 @@ def test_map_view():
     modelmap = flopy.plot.PlotMapView(model=m)
     pc = modelmap.plot_grid()
     check_vertices()
-    plt.close()
 
     modelmap = flopy.plot.PlotMapView(modelgrid=m.modelgrid)
     pc = modelmap.plot_grid()
     check_vertices()
-    plt.close()
 
     mf = flopy.modflow.Modflow()
 
@@ -73,11 +71,11 @@ def test_map_view():
     verts = [[101.0, 201.0], [119.0, 209.0]]
     modelxsect = flopy.plot.PlotCrossSection(model=mf, line={"line": verts})
     patchcollection = modelxsect.plot_grid()
-    plt.close()
 
 
+@pytest.mark.mf6
 @pytest.mark.xfail(reason="sometimes get wrong collection type")
-def test_map_view_boundary_conditions(example_data_path):
+def test_map_view_bc_gwfs_disv(example_data_path):
     mpath = example_data_path / "mf6" / "test003_gwfs_disv"
     sim = MFSimulation.load(sim_ws=str(mpath))
     ml6 = sim.get_model("gwf_1")
@@ -93,8 +91,11 @@ def test_map_view_boundary_conditions(example_data_path):
         assert isinstance(
             col, (QuadMesh, PathCollection)
         ), f"Unexpected collection type: {type(col)}"
-    plt.close()
 
+
+@pytest.mark.mf6
+@pytest.mark.xfail(reason="sometimes get wrong collection type")
+def test_map_view_bc_lake2tr(example_data_path):
     mpath = example_data_path / "mf6" / "test045_lake2tr"
     sim = MFSimulation.load(sim_ws=str(mpath))
     ml6 = sim.get_model("lakeex2a")
@@ -110,8 +111,11 @@ def test_map_view_boundary_conditions(example_data_path):
         assert isinstance(
             col, (QuadMesh, PathCollection)
         ), f"Unexpected collection type: {type(col)}"
-    plt.close()
 
+
+@pytest.mark.mf6
+@pytest.mark.xfail(reason="sometimes get wrong collection type")
+def test_map_view_bc_2models_mvr(example_data_path):
     mpath = example_data_path / "mf6" / "test006_2models_mvr"
     sim = MFSimulation.load(sim_ws=str(mpath))
     ml6 = sim.get_model("parent")
@@ -134,14 +138,18 @@ def test_map_view_boundary_conditions(example_data_path):
         assert isinstance(
             col, (QuadMesh, PathCollection)
         ), f"Unexpected collection type: {type(col)}"
-    plt.close()
 
+
+@pytest.mark.mf6
+@pytest.mark.xfail(reason="sometimes get wrong collection type")
+def test_map_view_bc_UZF_3lay(example_data_path):
     mpath = example_data_path / "mf6" / "test001e_UZF_3lay"
     sim = MFSimulation.load(sim_ws=str(mpath))
     ml6 = sim.get_model("gwf_1")
 
     mapview = flopy.plot.PlotMapView(model=ml6)
     mapview.plot_bc("UZF")
+    ax = mapview.ax
 
     if len(ax.collections) == 0:
         raise AssertionError("Boundary condition was not drawn")
@@ -150,13 +158,13 @@ def test_map_view_boundary_conditions(example_data_path):
         assert isinstance(
             col, (QuadMesh, PathCollection)
         ), f"Unexpected collection type: {type(col)}"
-    plt.close()
 
 
+@pytest.mark.mf6
 @pytest.mark.xfail(
     reason="sometimes get LineCollections instead of PatchCollections"
 )
-def test_cross_section_boundary_conditions(example_data_path):
+def test_cross_section_bc_gwfs_disv(example_data_path):
     mpath = example_data_path / "mf6" / "test003_gwfs_disv"
     sim = MFSimulation.load(sim_ws=str(mpath))
     ml6 = sim.get_model("gwf_1")
@@ -170,8 +178,13 @@ def test_cross_section_boundary_conditions(example_data_path):
         assert isinstance(
             col, PatchCollection
         ), f"Unexpected collection type: {type(col)}"
-    plt.close()
 
+
+@pytest.mark.mf6
+@pytest.mark.xfail(
+    reason="sometimes get LineCollections instead of PatchCollections"
+)
+def test_cross_section_bc_lake2tr(example_data_path):
     mpath = example_data_path / "mf6" / "test045_lake2tr"
     sim = MFSimulation.load(sim_ws=str(mpath))
     ml6 = sim.get_model("lakeex2a")
@@ -186,8 +199,13 @@ def test_cross_section_boundary_conditions(example_data_path):
         assert isinstance(
             col, PatchCollection
         ), f"Unexpected collection type: {type(col)}"
-    plt.close()
 
+
+@pytest.mark.mf6
+@pytest.mark.xfail(
+    reason="sometimes get LineCollections instead of PatchCollections"
+)
+def test_cross_section_bc_2models_mvr(example_data_path):
     mpath = example_data_path / "mf6" / "test006_2models_mvr"
     sim = MFSimulation.load(sim_ws=str(mpath))
     ml6 = sim.get_model("parent")
@@ -201,8 +219,13 @@ def test_cross_section_boundary_conditions(example_data_path):
         assert isinstance(
             col, PatchCollection
         ), f"Unexpected collection type: {type(col)}"
-    plt.close()
 
+
+@pytest.mark.mf6
+@pytest.mark.xfail(
+    reason="sometimes get LineCollections instead of PatchCollections"
+)
+def test_cross_section_bc_UZF_3lay(example_data_path):
     mpath = example_data_path / "mf6" / "test001e_UZF_3lay"
     sim = MFSimulation.load(sim_ws=str(mpath))
     ml6 = sim.get_model("gwf_1")
@@ -217,7 +240,6 @@ def test_cross_section_boundary_conditions(example_data_path):
         assert isinstance(
             col, PatchCollection
         ), f"Unexpected collection type: {type(col)}"
-    plt.close()
 
 
 def test_map_view_tricontour_nan():
@@ -255,9 +277,8 @@ def test_map_view_tricontour_nan():
         if not np.allclose(lev, levels[ix]):
             raise AssertionError("TriContour NaN catch Failed")
 
-    plt.close()
 
-
+@pytest.mark.mf6
 def test_vertex_model_dot_plot(example_data_path):
     rcParams["figure.max_open_warning"] = 36
 
@@ -269,15 +290,12 @@ def test_vertex_model_dot_plot(example_data_path):
     ax = disv_ml.plot()
     assert isinstance(ax, list)
     assert len(ax) == 36
-    plt.close("all")
 
 
 # occasional _tkinter.TclError: Can't find a usable tk.tcl (or init.tcl)
 # similar: https://github.com/microsoft/azure-pipelines-tasks/issues/16426
 @flaky
 def test_model_dot_plot(tmpdir, example_data_path):
-    import matplotlib.pyplot as plt
-
     loadpth = example_data_path / "mf2005_test"
     ml = flopy.modflow.Modflow.load(
         "ibs2k.nam", "mf2k", model_ws=str(loadpth), check=False
@@ -285,19 +303,39 @@ def test_model_dot_plot(tmpdir, example_data_path):
     ax = ml.plot()
     assert isinstance(ax, list), "ml.plot() ax is is not a list"
     assert len(ax) == 18, f"number of axes ({len(ax)}) is not equal to 18"
-    plt.close("all")
+
+
+def test_dataset_dot_plot(tmpdir, example_data_path):
+    loadpth = example_data_path / "mf2005_test"
+    ml = flopy.modflow.Modflow.load(
+        "ibs2k.nam", "mf2k", model_ws=str(loadpth), check=False
+    )
 
     # plot specific dataset
     ax = ml.bcf6.hy.plot()
     assert isinstance(ax, list), "ml.bcf6.hy.plot() ax is is not a list"
     assert len(ax) == 2, f"number of hy axes ({len(ax)}) is not equal to 2"
 
+
+def test_dataset_dot_plot_nlay_ne_plottable(tmpdir, example_data_path):
+    import matplotlib.pyplot as plt
+
+    loadpth = example_data_path / "mf2005_test"
+    ml = flopy.modflow.Modflow.load(
+        "ibs2k.nam", "mf2k", model_ws=str(loadpth), check=False
+    )
     # special case where nlay != plottable
     ax = ml.bcf6.vcont.plot()
     assert isinstance(
         ax, plt.Axes
     ), "ml.bcf6.vcont.plot() ax is is not of type plt.Axes"
-    plt.close("all")
+
+
+def test_model_dot_plot_export(tmpdir, example_data_path):
+    loadpth = example_data_path / "mf2005_test"
+    ml = flopy.modflow.Modflow.load(
+        "ibs2k.nam", "mf2k", model_ws=str(loadpth), check=False
+    )
 
     fh = os.path.join(tmpdir, "ibs2k")
     ml.plot(mflay=0, filename_base=fh, file_extension="png")
@@ -311,7 +349,6 @@ def test_model_dot_plot(tmpdir, example_data_path):
         t = f.split("_")
         if len(t) < 3:
             raise AssertionError("Plot filenames not written correctly")
-    plt.close("all")
 
 
 @requires_pkg("pandas")
@@ -363,10 +400,9 @@ def test_pathline_plot_xc(tmpdir, example_data_path):
     if len(pth._paths) != 6:
         raise AssertionError()
 
-    plt.close()
 
-
-def test_plotting_with_quasi3d_layers(tmpdir):
+@pytest.fixture
+def quasi3d_model(tmpdir):
     mf = Modflow("model_mf", model_ws=str(tmpdir), exe_name="mf2005")
 
     # Model domain and grid definition
@@ -429,34 +465,151 @@ def test_plotting_with_quasi3d_layers(tmpdir):
 
     assert success, "test_plotting_with_quasi3d_layers() failed"
 
+    return mf
+
+
+def test_map_plot_with_quasi3d_layers(quasi3d_model):
     # read output
-    hf = HeadFile(os.path.join(mf.model_ws, f"{mf.name}.hds"))
+    hf = HeadFile(
+        os.path.join(quasi3d_model.model_ws, f"{quasi3d_model.name}.hds")
+    )
     head = hf.get_data(totim=1.0)
-    cbb = CellBudgetFile(os.path.join(mf.model_ws, f"{mf.name}.cbc"))
+    cbb = CellBudgetFile(
+        os.path.join(quasi3d_model.model_ws, f"{quasi3d_model.name}.cbc")
+    )
     frf = cbb.get_data(text="FLOW RIGHT FACE", totim=1.0)[0]
     fff = cbb.get_data(text="FLOW FRONT FACE", totim=1.0)[0]
     flf = cbb.get_data(text="FLOW LOWER FACE", totim=1.0)[0]
 
     # plot a map
     plt.figure()
-    mv = PlotMapView(model=mf, layer=1)
+    mv = PlotMapView(model=quasi3d_model, layer=1)
     mv.plot_grid()
     mv.plot_array(head)
     mv.contour_array(head)
     mv.plot_ibound()
     mv.plot_bc("wel")
     mv.plot_vector(frf, fff)
-    plt.savefig(os.path.join(str(tmpdir), "plt01.png"))
-    plt.close()
+    plt.savefig(os.path.join(str(quasi3d_model.model_ws), "plt01.png"))
+
+
+def test_cross_section_with_quasi3d_layers(quasi3d_model):
+    # read output
+    hf = HeadFile(
+        os.path.join(quasi3d_model.model_ws, f"{quasi3d_model.name}.hds")
+    )
+    head = hf.get_data(totim=1.0)
+    cbb = CellBudgetFile(
+        os.path.join(quasi3d_model.model_ws, f"{quasi3d_model.name}.cbc")
+    )
+    frf = cbb.get_data(text="FLOW RIGHT FACE", totim=1.0)[0]
+    fff = cbb.get_data(text="FLOW FRONT FACE", totim=1.0)[0]
+    flf = cbb.get_data(text="FLOW LOWER FACE", totim=1.0)[0]
 
     # plot a cross-section
     plt.figure()
-    cs = PlotCrossSection(model=mf, line={"row": int((nrow - 1) / 2)})
+    cs = PlotCrossSection(
+        model=quasi3d_model,
+        line={"row": int((quasi3d_model.modelgrid.nrow - 1) / 2)},
+    )
     cs.plot_grid()
     cs.plot_array(head)
     cs.contour_array(head)
     cs.plot_ibound()
     cs.plot_bc("wel")
     cs.plot_vector(frf, fff, flf, head=head)
-    plt.savefig(os.path.join(str(tmpdir), "plt02.png"))
+    plt.savefig(os.path.join(str(quasi3d_model.model_ws), "plt02.png"))
     plt.close()
+
+
+def structured_square_grid(side: int = 10, thick: int = 10):
+    """
+    Creates a basic 1-layer structured grid with the given thickness and number of cells per side
+    Parameters
+    ----------
+    side : The number of cells per side
+    thick : The thickness of the grid's single layer
+    Returns
+    -------
+    A single-layer StructuredGrid of the given size and thickness
+    """
+
+    from flopy.discretization.structuredgrid import StructuredGrid
+
+    delr = np.ones(side)
+    delc = np.ones(side)
+    top = np.ones((side, side)) * thick
+    botm = np.ones((side, side)) * (top - thick).reshape(1, side, side)
+    return StructuredGrid(delr=delr, delc=delc, top=top, botm=botm)
+
+
+@pytest.mark.parametrize(
+    "line",
+    [(), [], (()), [[]], (0, 0), [0, 0], [[0, 0]]],
+)
+def test_cross_section_invalid_lines_raise_error(line):
+    grid = structured_square_grid(side=10)
+    with pytest.raises(ValueError):
+        flopy.plot.PlotCrossSection(modelgrid=grid, line={"line": line})
+
+
+@requires_pkg("shapely")
+@pytest.mark.parametrize(
+    "line",
+    [
+        # diagonal
+        [(0, 0), (10, 10)],
+        ([0, 0], [10, 10]),
+        # horizontal
+        ([0, 5.5], [10, 5.5]),
+        [(0, 5.5), (10, 5.5)],
+        # vertical
+        [(5.5, 0), (5.5, 10)],
+        ([5.5, 0], [5.5, 10]),
+        # multiple segments
+        [(0, 0), (4, 6), (10, 10)],
+        ([0, 0], [4, 6], [10, 10]),
+    ],
+)
+def test_cross_section_valid_line_representations(line):
+    from shapely.geometry import LineString as SLS
+
+    from flopy.utils.geometry import LineString as FLS
+
+    grid = structured_square_grid(side=10)
+
+    fls = FLS(line)
+    sls = SLS(line)
+
+    # use raw, flopy.utils.geometry and shapely.geometry representations
+    lxc = flopy.plot.PlotCrossSection(modelgrid=grid, line={"line": line})
+    fxc = flopy.plot.PlotCrossSection(modelgrid=grid, line={"line": fls})
+    sxc = flopy.plot.PlotCrossSection(modelgrid=grid, line={"line": sls})
+
+    # make sure parsed points are identical for all line representations
+    assert np.allclose(lxc.pts, fxc.pts) and np.allclose(lxc.pts, sxc.pts)
+    assert (
+        set(lxc.xypts.keys()) == set(fxc.xypts.keys()) == set(sxc.xypts.keys())
+    )
+    for k in lxc.xypts.keys():
+        assert np.allclose(lxc.xypts[k], fxc.xypts[k]) and np.allclose(
+            lxc.xypts[k], sxc.xypts[k]
+        )
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        0,
+        [0],
+        [0, 0],
+        (0, 0),
+        [(0, 0)],
+        ([0, 0]),
+    ],
+)
+@requires_pkg("shapely", "geojson")
+def test_cross_section_invalid_line_representations_fail(line):
+    grid = structured_square_grid(side=10)
+    with pytest.raises(ValueError):
+        flopy.plot.PlotCrossSection(modelgrid=grid, line={"line": line})

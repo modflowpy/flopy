@@ -23,6 +23,8 @@ from flopy.mf6 import (
 from flopy.modpath import Modpath7
 from flopy.utils import EndpointFile, PathlineFile
 
+pytestmark = pytest.mark.mf6
+
 
 def __create_simulation(
     ws,

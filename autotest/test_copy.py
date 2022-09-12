@@ -4,6 +4,7 @@ import copy
 import inspect
 
 import numpy as np
+import pytest
 
 from flopy.datbase import DataInterface, DataType
 from flopy.mbase import ModelInterface
@@ -226,6 +227,7 @@ def test_mf2005_copy(example_data_path):
     assert not model_is_copy(m, m_c)
 
 
+@pytest.mark.mf6
 def test_mf6_copy(example_data_path):
     sim = MFSimulation.load(
         "mfsim.nam",
