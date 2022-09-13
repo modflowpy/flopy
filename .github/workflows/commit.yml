@@ -143,7 +143,7 @@ jobs:
           pip install ".[test, optional]"
 
       - name: Install Modflow executables
-        uses: ./.github/actions/cache_exes
+        uses: modflowpy/install-modflow-action@v1
         with:
           path: ~/.local/bin
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -209,7 +209,7 @@ jobs:
           pip install ".[test, optional]"
 
       - name: Install Modflow executables
-        uses: ./.github/actions/cache_exes
+        uses: modflowpy/install-modflow-action@v1
         with:
           path: ~/.local/bin
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -292,7 +292,7 @@ jobs:
           pip install .
 
       - name: Install Modflow executables
-        uses: ./.github/actions/cache_exes
+        uses: modflowpy/install-modflow-action@v1
         with:
           path: C:\Users\runneradmin\.local\bin
           github_token: ${{ secrets.GITHUB_TOKEN }}
