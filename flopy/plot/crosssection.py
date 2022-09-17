@@ -1546,7 +1546,9 @@ class PlotCrossSection:
                 data.append(plotarray[cell])
 
         if len(rectcol) > 0:
-            patches = PatchCollection(rectcol, match_original, **kwargs)
+            patches = PatchCollection(
+                rectcol, match_original=match_original, **kwargs
+            )
             if not fill_between:
                 patches.set_array(np.array(data))
                 patches.set_clim(vmin, vmax)
