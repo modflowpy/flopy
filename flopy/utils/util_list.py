@@ -667,6 +667,15 @@ class MfList(DataInterface, DataListInterface):
             f, "read"
         ), "MfList.write() error: f argument must be a file handle"
         kpers = list(self.data.keys())
+        pak_name_str = self.package.__class__.__name__.lower()
+        if (len(kpers) == 0) and (
+            pak_name_str == "mfusgwel"
+        ):  # must be cln wels
+            kpers += [
+                kper
+                for kper in list(cln_data.data.keys())
+                if kper not in kpers
+            ]
         kpers.sort()
         first = kpers[0]
         if single_per is None:
@@ -678,7 +687,9 @@ class MfList(DataInterface, DataListInterface):
 
         for kper in loop_over_kpers:
             # Fill missing early kpers with 0
-            if kper < first:
+            if (kper < first) or not (
+                (kper in self.data.keys()) and (pak_name_str == "mfusgwel")
+            ):  # clause for mfusg cases with only CLN wels, not GWF wels
                 itmp = 0
                 kper_vtype = int
             elif kper in kpers:

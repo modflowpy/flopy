@@ -22,7 +22,7 @@ from .mfusg import MfUsg
 
 
 class MfUsgWel(ModflowWel):
-    """MODFLOW Well Package Class.
+    """MODFLOW-USG Well Package Class.
 
     Parameters
     ----------
@@ -229,7 +229,6 @@ class MfUsgWel(ModflowWel):
 
         # determine if any aux variables in cln_dtype
         options = self._check_for_aux(options, cln=True)
-
         self.cln_stress_period_data = MfList(
             self, cln_stress_period_data, binary=binary
         )
