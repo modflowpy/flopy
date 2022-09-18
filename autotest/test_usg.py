@@ -331,6 +331,30 @@ def test_freyburg_usg(tmpdir, freyberg_usg_model_path):
     assert success
 
 
+# occasional forrtl: error (72): floating overflow
+@flaky
+@requires_exe("mfusg")
+@pytest.mark.slow
+def test_freyburg_usg_external(tmpdir, freyberg_usg_model_path):
+    # test mfusg model after setting all files to external form
+    print("testing usg external files: freyburg.usg.nam")
+
+    nam = "freyberg.usg.nam"
+    m = MfUsg.load(
+        nam, model_ws=str(freyberg_usg_model_path), exe_name="mfusg"
+    )
+    # convert to all open/close
+    ext_model_ws = str(tmpdir)
+    m.external_path = "."
+    # reduce nper to speed this test up a bit
+    m.disu.nper = 3
+    # change dir and write
+    m.change_model_ws(ext_model_ws, reset_external=True)
+    m.write_input()
+    success, buff = m.run_model()
+    assert success
+
+
 @requires_exe("mfusg")
 def test_flat_array_to_util3d_usg(tmpdir, freyberg_usg_model_path):
     # test mfusg model package constructor with flat arrays
