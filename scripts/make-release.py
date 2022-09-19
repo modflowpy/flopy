@@ -2,36 +2,29 @@
 
 import datetime
 import json
-import os
 import subprocess
 import sys
-from importlib.machinery import SourceFileLoader
+import yaml
+from pathlib import Path
+from textwrap import dedent
 
-# file_paths dictionary has file names and the path to the file. Enter '.'
-# as the path if the file is in the root repository directory
-file_paths = {
-    "version.py": "../flopy",
-    "README.md": "../",
-    "PyPI_release.md": "../docs",
-    "code.json": "../",
-    "DISCLAIMER.md": "../flopy",
-    "notebook_examples.md": "../docs",
-}
+# file_paths_list has file names and the path to the file relative to
+# the repo root directory. The dictionary file_paths has keys for each file.
+repo_root = Path(__file__).parent.parent.resolve()
+file_paths_list = [
+    repo_root / "CITATION.cff",
+    repo_root / "code.json",
+    repo_root / "README.md",
+    repo_root / "docs" / "notebook_examples.md",
+    repo_root / "docs" / "PyPI_release.md",
+    repo_root / "flopy" / "version.py",
+    repo_root / "flopy" / "DISCLAIMER.md",
+]
+file_paths = {pth.name: pth for pth in file_paths_list}
+
+now = datetime.datetime.now()
 
 pak = "flopy"
-
-# local import of package variables in flopy/version.py
-loader = SourceFileLoader("version", os.path.join("..", "flopy", "version.py"))
-version_mod = loader.load_module()
-
-# build authors list for Software/Code citation for FloPy
-authors = []
-for key in version_mod.author_dict.keys():
-    t = key.split()
-    author = f"{t[-1]}"
-    for str in t[0:-1]:
-        author += f" {str}"
-    authors.append(author)
 
 approved = """Disclaimer
 ----------
@@ -107,40 +100,39 @@ def get_branch():
     return branch
 
 
-def get_version_str(v0, v1, v2):
-    version_type = (f"{v0}", f"{v1}", f"{v2}")
-    version = ".".join(version_type)
-    return version
-
-
-def get_tag(v0, v1, v2):
-    tag_type = (f"{v0}", f"{v1}", f"{v2}")
-    tag = ".".join(tag_type)
-    return tag
+def get_tag(*v):
+    return ".".join(str(vi) for vi in v)
 
 
 def get_software_citation(version, is_approved):
-    now = datetime.datetime.now()
+
+    # get data Software/Code citation for FloPy
+    citation = yaml.safe_load(file_paths["CITATION.cff"].read_text())
+
     sb = ""
     if not is_approved:
         sb = " &mdash; release candidate"
     # format author names
+    authors = []
+    for author in citation["authors"]:
+        tauthor = author["family-names"] + ", "
+        gnames = author["given-names"].split()
+        if len(gnames) > 1:
+            for gname in gnames:
+                tauthor += gname[0]
+                if len(gname) > 1:
+                    tauthor += "."
+                tauthor += " "
+        else:
+            tauthor += author["given-names"]
+        authors.append(tauthor.rstrip())
+
     line = "["
-    for ipos, author in enumerate(authors):
+    for ipos, tauthor in enumerate(authors):
         if ipos > 0:
             line += ", "
         if ipos == len(authors) - 1:
             line += "and "
-        sv = author.split()
-        tauthor = f"{sv[0]}"
-        if len(sv) < 3:
-            gname = sv[1]
-            if len(gname) > 1:
-                tauthor += f", {gname}"
-            else:
-                tauthor += f", {gname[0]}."
-        else:
-            tauthor += f", {sv[1][0]}. {sv[2][0]}."
         # add formatted author name to line
         line += tauthor
 
@@ -156,58 +148,40 @@ def get_software_citation(version, is_approved):
 
 
 def update_version():
-    name_pos = None
-    try:
-        file = "version.py"
-        fpth = os.path.join(file_paths[file], file)
+    fpth = file_paths["version.py"]
+    lines = fpth.read_text().rstrip().split("\n")
+    vmajor = 0
+    vminor = 0
+    vmicro = 0
+    for idx, line in enumerate(lines):
+        t = line.split()
+        if "major =" in line:
+            vmajor = int(t[2])
+        elif "minor =" in line:
+            vminor = int(t[2])
+        elif "micro =" in line:
+            vmicro = int(t[2])
 
-        vmajor = 0
-        vminor = 0
-        vmicro = 0
-        lines = [line.rstrip("\n") for line in open(fpth, "r")]
-        for idx, line in enumerate(lines):
-            t = line.split()
-            if "major =" in line:
-                vmajor = int(t[2])
-            elif "minor =" in line:
-                vminor = int(t[2])
-            elif "micro =" in line:
-                vmicro = int(t[2])
-            elif "__version__" in line:
-                name_pos = idx + 1
+    content = dedent(
+        f"""\
+    # {pak} version file automatically created using...{Path(__file__).name}
+    # created on...{now:%B %d, %Y %H:%M:%S}
 
-    except:
-        raise OSError("There was a problem updating the version file")
+    major = {vmajor}
+    minor = {vminor}
+    micro = {vmicro}
+    __version__ = f"{{major}}.{{minor}}.{{micro}}"
+    """
+    )
+    fpth.write_text(content)
 
-    try:
-        # write new version file
-        f = open(fpth, "w")
-        f.write(
-            (
-                f"# {pak} version file automatically created "
-                f"using...{os.path.basename(__file__)}\n"
-            )
-        )
-        f.write(
-            f"# created on...{datetime.datetime.now():%B %d, %Y %H:%M:%S}\n"
-        )
-        f.write("\n")
-        f.write(f"major = {vmajor}\n")
-        f.write(f"minor = {vminor}\n")
-        f.write(f"micro = {vmicro}\n")
-        f.write('__version__ = f"{major}.{minor}.{micro}"\n')
-
-        # write the remainder of the version file
-        if name_pos is not None:
-            for line in lines[name_pos:]:
-                f.write(f"{line}\n")
-        f.close()
-        print("Successfully updated version.py")
-    except:
-        raise OSError("There was a problem updating the version file")
+    print("Successfully updated version.py")
 
     # update README.md with new version information
     update_readme_markdown(vmajor, vminor, vmicro)
+
+    # update CITATION.cff with new version information
+    update_citation_cff(vmajor, vminor, vmicro)
 
     # update notebook_examples.md
     update_notebook_examples_markdown()
@@ -221,8 +195,7 @@ def update_version():
 
 def update_codejson(vmajor, vminor, vmicro):
     # define json filename
-    file = "code.json"
-    json_fname = os.path.join(file_paths[file], file)
+    json_fname = file_paths["code.json"]
 
     # get branch
     branch = get_branch()
@@ -231,13 +204,10 @@ def update_codejson(vmajor, vminor, vmicro):
     version = get_tag(vmajor, vminor, vmicro)
 
     # load and modify json file
-    with open(json_fname, "r") as f:
-        data = json.load(f)
+    data = json.loads(json_fname.read_text())
 
     # modify the json file data
-    now = datetime.datetime.now()
-    sdate = now.strftime("%Y-%m-%d")
-    data[0]["date"]["metadataLastUpdated"] = sdate
+    data[0]["date"]["metadataLastUpdated"] = now.strftime("%Y-%m-%d")
     if branch.lower().startswith("release") or "master" in branch.lower():
         data[0]["version"] = version
         data[0]["status"] = "Production"
@@ -267,10 +237,8 @@ def update_readme_markdown(vmajor, vminor, vmicro):
     version = get_tag(vmajor, vminor, vmicro)
 
     # read README.md into memory
-    file = "README.md"
-    fpth = os.path.join(file_paths[file], file)
-    with open(fpth, "r") as file:
-        lines = [line.rstrip() for line in file]
+    fpth = file_paths["README.md"]
+    lines = fpth.read_text().rstrip().split("\n")
 
     # rewrite README.md
     terminate = False
@@ -320,11 +288,32 @@ def update_readme_markdown(vmajor, vminor, vmicro):
     f.close()
 
     # write disclaimer markdown file
-    file = "DISCLAIMER.md"
-    fpth = os.path.join(file_paths[file], file)
-    f = open(fpth, "w")
-    f.write(disclaimer)
-    f.close()
+    file_paths["DISCLAIMER.md"].write_text(disclaimer)
+
+    return
+
+
+def update_citation_cff(vmajor, vminor, vmicro):
+    # read CITATION.cff to modify
+    fpth = file_paths["CITATION.cff"]
+    citation = yaml.safe_load(fpth.read_text())
+
+    # create version
+    version = get_tag(vmajor, vminor, vmicro)
+
+    # update version and date-released
+    citation["version"] = version
+    citation["date-released"] = now.strftime("%Y-%m-%d")
+
+    # write CITATION.cff
+    with open(fpth, "w") as f:
+        yaml.safe_dump(
+            citation,
+            f,
+            allow_unicode=True,
+            default_flow_style=False,
+            sort_keys=False,
+        )
 
     return
 
@@ -340,13 +329,10 @@ def update_notebook_examples_markdown():
         branch = "develop"
 
     # read notebook_examples.md into memory
-    file = "notebook_examples.md"
-    fpth = os.path.join(file_paths[file], file)
-    with open(fpth, "r") as file:
-        lines = [line.rstrip() for line in file]
+    fpth = file_paths["notebook_examples.md"]
+    lines = fpth.read_text().rstrip().split("\n")
 
     # rewrite notebook_examples.md
-    terminate = False
     f = open(fpth, "w")
     for line in lines:
         if "[Binder]" in line:
@@ -367,13 +353,11 @@ def update_PyPI_release(vmajor, vminor, vmicro):
     # create version
     version = get_tag(vmajor, vminor, vmicro)
 
-    # read README.md into memory
-    file = "PyPI_release.md"
-    fpth = os.path.join(file_paths[file], file)
-    with open(fpth, "r") as file:
-        lines = [line.rstrip() for line in file]
+    # read PyPI_release.md into memory
+    fpth = file_paths["PyPI_release.md"]
+    lines = fpth.read_text().rstrip().split("\n")
 
-    # rewrite README.md
+    # rewrite PyPI_release.md
     terminate = False
     f = open(fpth, "w")
     for line in lines:
