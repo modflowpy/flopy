@@ -136,7 +136,7 @@ def test_data_pass_no_modflow(tmpdir):
         dis_file=dis_file,
         head_file=hd_file,
         budget_file=bud_file,
-        model_ws=ws,
+        model_ws=str(tmpdir),
         external_path=None,
         verbose=False,
         load=True,

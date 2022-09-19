@@ -19,7 +19,6 @@ dependencies:
   - filelock
   - jupyter
   - jupytext
-  - mfpymake
   - pytest
   - pytest-cases
   - pytest-cov

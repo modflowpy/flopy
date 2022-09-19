@@ -312,7 +312,7 @@ def test_mp5_timeseries_load(example_data_path):
 def test_mp6_timeseries_load(example_data_path):
     pth = example_data_path / "mp6"
     files = [
-        str(pth, name)
+        str(pth / name)
         for name in sorted(os.listdir(str(pth)))
         if ".timeseries" in name
     ]
