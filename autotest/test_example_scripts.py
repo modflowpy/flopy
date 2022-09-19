@@ -42,7 +42,7 @@ def test_scripts(script):
 
     assert returncode == 0
 
-    allowed_patterns = ["findfont", "warning", "loose"]
+    allowed_patterns = ["findfont", "warning", "loose", "match_original"]
 
     assert (
         not stderr
