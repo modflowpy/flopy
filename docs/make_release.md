@@ -40,7 +40,7 @@ Instructions for making a FloPy release
 
 ## Update the Software/Code citation for FloPy
 
-1. Update the `author_dict` in `flopy/version.py` for the Software/Code citation for FloPy, if required.
+1. Update the authors in `CITATION.cff` for the Software/Code citation for FloPy, if required.
 
 
 ## Build USGS release notes
