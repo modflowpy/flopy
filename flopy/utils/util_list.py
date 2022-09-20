@@ -687,8 +687,8 @@ class MfList(DataInterface, DataListInterface):
 
         for kper in loop_over_kpers:
             # Fill missing early kpers with 0
-            if (kper < first) or not (
-                (kper in self.data.keys()) and (pak_name_str == "mfusgwel")
+            if (kper < first) or (
+                (kper not in self.data.keys()) and (pak_name_str == "mfusgwel")
             ):  # clause for mfusg cases with only CLN wels, not GWF wels
                 itmp = 0
                 kper_vtype = int

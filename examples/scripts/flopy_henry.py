@@ -216,6 +216,6 @@ if __name__ == "__main__":
         try:
             with TemporaryDirectory() as workspace:
                 run(workspace, quiet)
-        except PermissionError:
+        except (PermissionError, NotADirectoryError):
             # can occur on windows: https://docs.python.org/3/library/tempfile.html#tempfile.TemporaryDirectory
             pass

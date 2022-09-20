@@ -1,0 +1,85 @@
+cff-version: 1.2.0
+message: If you use this software, please cite both the article from preferred-citation
+  and the software itself.
+type: software
+title: FloPy
+version: 3.3.6
+date-released: '2022-03-08'
+doi: 10.5066/F7BK19FH
+abstract: A Python package to create, run, and post-process MODFLOW-based models.
+repository-artifact: https://pypi.org/project/flopy
+repository-code: https://github.com/modflowpy/flopy
+license: CC0-1.0
+authors:
+- family-names: Bakker
+  given-names: Mark
+  orcid: https://orcid.org/0000-0002-5629-2861
+- family-names: Post
+  given-names: Vincent
+  orcid: https://orcid.org/0000-0002-9463-3081
+- family-names: Hughes
+  given-names: Joseph D.
+  orcid: https://orcid.org/0000-0003-1311-2354
+- family-names: Langevin
+  given-names: Christian D.
+  orcid: https://orcid.org/0000-0001-5610-9759
+- family-names: White
+  given-names: Jeremy T.
+  orcid: https://orcid.org/0000-0002-4950-1469
+- family-names: Leaf
+  given-names: Andrew T.
+  orcid: https://orcid.org/0000-0001-8784-4924
+- family-names: Paulinski
+  given-names: Scott R.
+  orcid: https://orcid.org/0000-0001-6548-8164
+- family-names: Bellino
+  given-names: Jason C.
+  orcid: https://orcid.org/0000-0001-9046-9344
+- family-names: Morway
+  given-names: Eric D.
+  orcid: https://orcid.org/0000-0002-8553-6140
+- given-names: Michael W.
+  family-names: Toews
+  orcid: https://orcid.org/0000-0003-3657-7963
+- family-names: Larsen
+  given-names: Joshua D.
+  orcid: https://orcid.org/0000-0002-1218-800X
+- family-names: Fienen
+  given-names: Michael N.
+  orcid: https://orcid.org/0000-0002-7756-4651
+- family-names: Starn
+  given-names: Jon Jeffrey
+  orcid: https://orcid.org/0000-0001-5909-0010
+- family-names: Brakenhoff
+  given-names: Davíd
+preferred-citation:
+  type: article
+  authors:
+  - family-names: Bakker
+    given-names: Mark
+    orcid: https://orcid.org/0000-0002-5629-2861
+  - family-names: Post
+    given-names: Vincent
+    orcid: https://orcid.org/0000-0002-9463-3081
+  - family-names: Langevin
+    given-names: Christian D.
+    orcid: https://orcid.org/0000-0001-5610-9759
+  - family-names: Hughes
+    given-names: Joseph D.
+    orcid: https://orcid.org/0000-0003-1311-2354
+  - family-names: White
+    given-names: Jeremy T.
+    orcid: https://orcid.org/0000-0002-4950-1469
+  - family-names: Starn
+    given-names: Jon Jeffrey
+    orcid: https://orcid.org/0000-0001-5909-0010
+  - family-names: Fienen
+    given-names: Michael N.
+    orcid: https://orcid.org/0000-0002-7756-4651
+  title: Scripting MODFLOW Model Development Using Python and FloPy
+  doi: 10.1111/gwat.12413
+  journal: Groundwater
+  volume: 54
+  issue: 5
+  year: 2016
+  month: 9

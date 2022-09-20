@@ -327,13 +327,9 @@ if __name__ == "__main__":
     if workspace is not None:
         run(workspace, quiet)
     else:
-        temp_dir = TemporaryDirectory()
-        workspace = temp_dir.name
-
-        run(workspace, quiet)
-
         try:
-            temp_dir.cleanup()
-        except:
-            # prevent permission errors on windows
+            with TemporaryDirectory() as workspace:
+                run(workspace, quiet)
+        except (PermissionError, NotADirectoryError):
+            # can occur on windows: https://docs.python.org/3/library/tempfile.html#tempfile.TemporaryDirectory
             pass

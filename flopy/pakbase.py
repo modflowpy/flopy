@@ -1062,6 +1062,10 @@ class Package(PackageInterface):
             try:
                 itmpp = int(t[1])
             except:
+                if len(t) > 1:
+                    t = t[
+                        :2
+                    ]  # trap cases with text followed by digits (eg SP 5)
                 if model.verbose:
                     print(f"   implicit itmpp in {filename}")
             itmp_cln = 0
