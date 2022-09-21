@@ -162,10 +162,10 @@ class GeoSpatialUtil:
         """
         if self._points is None:
             self._points = self.__geo_interface["coordinates"]
-            if isinstance(self._points, tuple):
+            if isinstance(self._points, (tuple, np.ndarray)):
                 pts = []
                 for t in self._points:
-                    pts.append(t)
+                    pts.append(tuple(t))
                 self._points = pts
         return self._points
 
