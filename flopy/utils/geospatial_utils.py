@@ -162,10 +162,13 @@ class GeoSpatialUtil:
         """
         if self._points is None:
             pts = self.__geo_interface["coordinates"]
-            self._points = []
-            for t in pts:
-                tmp = [tuple(x) for x in t]
-                self._points.append(tuple(tmp))
+            if self.__geo_interface["type"] in ('Polygon', "MultiPolygon"):
+                self._points = []
+                for t in pts:
+                    tmp = [tuple(x) for x in t]
+                    self._points.append(tuple(tmp))
+            else:
+                self._points = pts
         return self._points
 
     @property
