@@ -7,7 +7,7 @@ MODFLOW Guide
 <https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/name_file.html>`_.
 
 """
-import os
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 
 class NamData:
@@ -95,7 +95,7 @@ def parsenamefile(namfilename, packages, verbose=True):
 
     Parameters
     ----------
-    namefilename : str
+    namefilename : str or Path
         Name of the MODFLOW namefile to parse.
     packages : dict
         Dictionary of package objects as defined in the `mfnam_packages`
@@ -123,14 +123,13 @@ def parsenamefile(namfilename, packages, verbose=True):
     if verbose:
         print(f"Parsing the namefile --> {namfilename}")
 
-    if not os.path.isfile(namfilename):
+    namfilename = Path(namfilename)
+    if not namfilename.is_file():
         # help diagnose the namfile and directory
         raise FileNotFoundError(
-            f"Could not find {namfilename} "
-            f"in directory {os.path.dirname(namfilename)}"
+            f"Could not find {namfilename} in directory {namfilename.parent}"
         )
-    with open(namfilename, "r") as fp:
-        lines = fp.readlines()
+    lines = namfilename.read_text().rstrip().split("\n")
 
     for ln, line in enumerate(lines, 1):
         line = line.strip()
@@ -152,33 +151,30 @@ def parsenamefile(namfilename, packages, verbose=True):
             fpath = fpath.replace("'", "")
 
         # need make filenames with paths system agnostic
-        if "/" in fpath:
-            raw = fpath.split("/")
-        elif "\\" in fpath:
-            raw = fpath.split("\\")
-        else:
-            raw = [fpath]
-        fpath = os.path.join(*raw)
+        if "\\" in fpath:
+            fpath = PureWindowsPath(fpath)
+        elif "/" in fpath:
+            fpath = PurePosixPath(fpath)
+        fpath = Path(fpath)
 
-        fname = os.path.join(os.path.dirname(namfilename), fpath)
-        if not os.path.isfile(fname) or not os.path.exists(fname):
-            # change to lower and make comparison (required for linux)
-            dn = os.path.dirname(fname)
-            fls = os.listdir(dn)
-            lownams = [f.lower() for f in fls]
-            bname = os.path.basename(fname)
-            if bname.lower() in lownams:
-                idx = lownams.index(bname.lower())
-                fname = os.path.join(dn, fls[idx])
+        fname = namfilename.parent / fpath
+        if not fname.is_file():
+            if fname.parent.is_dir():
+                # change to lower and make comparison (required for linux)
+                lname = fname.name.lower()
+                for pth in fname.parent.iterdir():
+                    if pth.is_file() and pth.name.lower() == lname:
+                        if verbose:
+                            print(f"correcting {fname.name} to {pth.name}")
+                        fname = pth
+                        break
+
         # open the file
-        kwargs = {}
-        if ftype == "DATA(BINARY)":
-            openmode = "rb"
-        else:
-            openmode = "r"
-            kwargs["errors"] = "replace"
         try:
-            filehandle = open(fname, openmode, **kwargs)
+            if ftype == "DATA(BINARY)":
+                filehandle = fname.open("rb")
+            else:
+                filehandle = fname.open("r", errors="replace")
         except OSError:
             if verbose:
                 print(f"could not set filehandle to {fpath}")
@@ -201,7 +197,7 @@ def parsenamefile(namfilename, packages, verbose=True):
                 key = packages[ftype_lower]._reservedunit()
             else:
                 key = ftype
-        ext_unit_dict[key] = NamData(ftype, fname, filehandle, packages)
+        ext_unit_dict[key] = NamData(ftype, str(fname), filehandle, packages)
     return ext_unit_dict
 
 

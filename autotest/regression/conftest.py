@@ -80,7 +80,10 @@ def pytest_generate_tests(metafunc):
             )
 
         def simulation_name_from_model_namfiles(mnams):
-            namfile = next(iter(mnams), None)
+            try:
+                namfile = next(iter(mnams), None)
+            except TypeError:
+                namfile = None
             if namfile is None:
                 pytest.skip("No namfiles (expected ordered collection)")
             namfile = Path(namfile)
