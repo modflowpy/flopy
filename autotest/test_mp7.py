@@ -758,7 +758,7 @@ def test_backward(ex01_mf6_model):
     assert success, f"mp7 model ({mp.name}) did not run"
 
 
-@requires_exe("mf2005", "mf6", "mp6", "mp7")
+@requires_exe("mf2005", "mf6", "mp7")
 def test_pathline_output(tmpdir):
     case_mf2005 = Mp7Cases.mf2005(tmpdir)
     case_mf6 = Mp7Cases.mf6(tmpdir)
@@ -789,7 +789,7 @@ def test_pathline_output(tmpdir):
 
 
 @requires_pkg("pandas")
-@requires_exe("mf2005", "mf6", "mp6", "mp7")
+@requires_exe("mf2005", "mf6", "mp7")
 def test_endpoint_output(tmpdir):
     case_mf2005 = Mp7Cases.mf2005(tmpdir)
     case_mf6 = Mp7Cases.mf6(tmpdir)

@@ -13,7 +13,7 @@ from autotest.conftest import (
     has_pkg,
     requires_exe,
     requires_pkg,
-    requires_spatial_reference,
+    requires_spatial_reference, excludes_platform,
 )
 from flaky import flaky
 
@@ -276,6 +276,7 @@ def test_export_shapefile_polygon_closed(tmpdir):
     shp.close()
 
 
+@excludes_platform("Windows")
 @requires_pkg("rasterio", "shapefile", "scipy")
 def test_export_array(tmpdir, example_data_path):
     import rasterio

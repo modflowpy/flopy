@@ -192,7 +192,7 @@ def has_pkg(pkg):
         # pkg_resources expects package name, importlib expects import name
         try:
             _has_pkg_cache[pkg] = bool(importlib.import_module(pkg))
-        except ModuleNotFoundError:
+        except (ImportError, ModuleNotFoundError):
             try:
                 _has_pkg_cache[pkg] = bool(pkg_resources.get_distribution(pkg))
             except pkg_resources.DistributionNotFound:
