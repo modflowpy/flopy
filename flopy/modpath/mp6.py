@@ -101,7 +101,11 @@ class Modpath6(BaseModel):
         if self.__mf is not None:
             # ensure that user-specified files are used
             iu = self.__mf.oc.iuhead
-            head_file = self.__mf.get_output(unit=iu)
+            head_file = (
+                self.__mf.get_output(unit=iu)
+                if head_file is None
+                else head_file
+            )
             p = self.__mf.get_package("LPF")
             if p is None:
                 p = self.__mf.get_package("BCF6")
@@ -113,11 +117,24 @@ class Modpath6(BaseModel):
                     "passed MODFLOW model"
                 )
             iu = p.ipakcb
-            budget_file = self.__mf.get_output(unit=iu)
+            budget_file = (
+                self.__mf.get_output(unit=iu)
+                if budget_file is None
+                else budget_file
+            )
             dis_file = (
                 self.__mf.dis.file_name[0] if dis_file is None else dis_file
             )
+
             dis_unit = self.__mf.dis.unit_number[0]
+            nper = self.__mf.dis.nper
+            nlay, nrow, ncol = (
+                self.__mf.dis.nlay,
+                self.__mf.dis.nrow,
+                self.__mf.dis.ncol,
+            )
+
+            self.nrow_ncol_nlay_nper = (nrow, ncol, nlay, nper)
         self.head_file = head_file
         self.budget_file = budget_file
         self.dis_file = dis_file
@@ -138,6 +155,24 @@ class Modpath6(BaseModel):
                 "the dis file in the MODFLOW model or passed "
                 "to __init__ cannot be None"
             )
+
+        if self.__mf is None:
+            # read from nper, lay, nrow, ncol from dis file, Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI
+            read_dis = dis_file
+            if not os.path.exists(read_dis):
+                # path doesn't exist, probably relative to model_ws
+                read_dis = os.path.join(self.model_ws, dis_file)
+            with open(read_dis, "r") as f:
+                line = f.readline()
+                while line[0] == "#":
+                    line = f.readline()
+                nlay, nrow, ncol, nper, itmuni, lennuni = line.split()
+                self.nrow_ncol_nlay_nper = (
+                    int(nrow),
+                    int(ncol),
+                    int(nlay),
+                    int(nper),
+                )
 
         # set the rest of the attributes
         self.__sim = None
@@ -230,7 +265,7 @@ class Modpath6(BaseModel):
             Keyword that defines the MODPATH particle tracking direction.
             Available trackdir's are 'backward' and 'forward'.
             (default is 'forward')
-        packages : str or list of strings
+        packages : None, str or list of strings
             Keyword defining the modflow packages used to create initial
             particle locations. Supported packages are 'WEL', 'MNW2' and 'RCH'.
             (default is 'WEL').
@@ -254,8 +289,15 @@ class Modpath6(BaseModel):
         mpsim : ModpathSim object
 
         """
+        if self.__mf is None:
+            raise ValueError(
+                "cannot create simulation by packages if the Modflow model is None"
+            )
+
         if isinstance(packages, str):
             packages = [packages]
+        if packages is None:
+            packages = []
         pak_list = self.__mf.get_package_list()
 
         # not sure if this is the best way to handle this
@@ -288,12 +330,7 @@ class Modpath6(BaseModel):
         ReleaseStartTime = 0.0
         ReleaseOption = 1
         CHeadOption = 1
-        nper = self.__mf.dis.nper
-        nlay, nrow, ncol = (
-            self.__mf.dis.nlay,
-            self.__mf.dis.nrow,
-            self.__mf.dis.ncol,
-        )
+        nrow, ncol, nlay, nper = self.nrow_ncol_nlay_nper
         arr = np.zeros((nlay, nrow, ncol), dtype=int)
         group_name = []
         group_region = []

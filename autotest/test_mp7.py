@@ -1,8 +1,11 @@
 import os
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from autotest.conftest import requires_exe, requires_pkg
+from autotest.test_mp7_cases import Mp7Cases
+from pytest_cases import parametrize_with_cases
 
 from flopy.mf6 import (
     MFSimulation,
@@ -30,7 +33,8 @@ from flopy.modpath import (
     ParticleGroupLRCTemplate,
     ParticleGroupNodeTemplate,
 )
-from flopy.utils import EndpointFile
+from flopy.plot import PlotMapView
+from flopy.utils import EndpointFile, PathlineFile
 
 pytestmark = pytest.mark.mf6
 
@@ -752,3 +756,110 @@ def test_backward(ex01_mf6_model):
     # run modpath
     success, buff = mp.run_model()
     assert success, f"mp7 model ({mp.name}) did not run"
+
+
+@requires_exe("mf2005", "mf6", "mp7")
+def test_pathline_output(tmpdir):
+    case_mf2005 = Mp7Cases.mf2005(tmpdir)
+    case_mf6 = Mp7Cases.mf6(tmpdir)
+
+    success, buff = case_mf2005.run_model()
+    assert success, f"modpath model ({case_mf2005.name}) did not run"
+
+    success, buff = case_mf6.run_model()
+    assert success, f"modpath model ({case_mf6.name}) did not run"
+
+    fpth0 = os.path.join(case_mf2005.model_ws, "ex01_mf2005_mp.mppth")
+    p = PathlineFile(fpth0)
+    maxtime0 = p.get_maxtime()
+    maxid0 = p.get_maxid()
+    p0 = p.get_alldata()
+    fpth1 = os.path.join(case_mf6.model_ws, "ex01_mf6_mp.mppth")
+    p = PathlineFile(fpth1)
+    maxtime1 = p.get_maxtime()
+    maxid1 = p.get_maxid()
+    p1 = p.get_alldata()
+
+    # check maxid
+    msg = (
+        f"pathline maxid ({maxid0}) in {os.path.basename(fpth0)} are not "
+        f"equal to the pathline maxid ({maxid1}) in {os.path.basename(fpth1)}"
+    )
+    assert maxid0 == maxid1, msg
+
+
+@requires_pkg("pandas")
+@requires_exe("mf2005", "mf6", "mp7")
+def test_endpoint_output(tmpdir):
+    case_mf2005 = Mp7Cases.mf2005(tmpdir)
+    case_mf6 = Mp7Cases.mf6(tmpdir)
+
+    success, buff = case_mf2005.run_model()
+    assert success, f"modpath model ({case_mf2005.name}) did not run"
+
+    success, buff = case_mf6.run_model()
+    assert success, f"modpath model ({case_mf6.name}) did not run"
+
+    # if models not run then there will be no output
+    fpth0 = os.path.join(case_mf2005.model_ws, "ex01_mf2005_mp.mpend")
+    e = EndpointFile(fpth0)
+    maxtime0 = e.get_maxtime()
+    maxid0 = e.get_maxid()
+    maxtravel0 = e.get_maxtraveltime()
+    e0 = e.get_alldata()
+    fpth1 = os.path.join(case_mf6.model_ws, "ex01_mf6_mp.mpend")
+    e = EndpointFile(fpth1)
+    maxtime1 = e.get_maxtime()
+    maxid1 = e.get_maxid()
+    maxtravel1 = e.get_maxtraveltime()
+    e1 = e.get_alldata()
+
+    # check maxid
+    msg = (
+        f"endpoint maxid ({maxid0}) in {os.path.basename(fpth0)} are not "
+        f"equal to the endpoint maxid ({maxid1}) in {os.path.basename(fpth1)}"
+    )
+    assert maxid0 == maxid1, msg
+
+    # check that endpoint data are approximately the same
+    names = ["x", "y", "z", "x0", "y0", "z0"]
+    dtype = np.dtype(
+        [
+            ("x", np.float32),
+            ("y", np.float32),
+            ("z", np.float32),
+            ("x0", np.float32),
+            ("y0", np.float32),
+            ("z0", np.float32),
+        ]
+    )
+    d = np.rec.fromarrays((e0[name] - e1[name] for name in names), dtype=dtype)
+    msg = (
+        f"endpoints in {os.path.basename(fpth0)} are not equal (within 1e-5) "
+        f"to the endpoints  in {os.path.basename(fpth1)}"
+    )
+    # assert not np.allclose(t0, t1), msg
+
+
+def test_pathline_plotting(tmpdir):
+    ml = Mp7Cases.mf6(tmpdir)
+    success, buff = ml.run_model()
+    assert success, f"modpath model ({ml.name}) did not run"
+
+    modelgrid = ml.flowmodel.modelgrid
+    nodes = list(range(modelgrid.nnodes))
+
+    fpth1 = os.path.join(ml.model_ws, "ex01_mf6_mp.mppth")
+    p = PathlineFile(fpth1)
+    p1 = p.get_alldata()
+    pls = p.get_destination_data(nodes)
+
+    pmv = PlotMapView(modelgrid=modelgrid, layer=0)
+    pmv.plot_grid()
+    linecol = pmv.plot_pathline(pls, layer="all")
+    linecol2 = pmv.plot_pathline(p1, layer="all")
+    if not len(linecol._paths) == len(linecol2._paths):
+        raise AssertionError(
+            "plot_pathline not properly splitting particles from recarray"
+        )
+    plt.close()

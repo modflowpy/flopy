@@ -366,9 +366,6 @@ def test_pathline_plot_xc(tmpdir, example_data_path):
         exe_name="mp6",
         modflowmodel=ml,
         model_ws=str(tmpdir),
-        dis_file=f"{ml.name}.DIS",
-        head_file=f"{ml.name}.hed",
-        budget_file=f"{ml.name}.bud",
     )
 
     mpb = Modpath6Bas(

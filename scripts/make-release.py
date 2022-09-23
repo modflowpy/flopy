@@ -4,9 +4,10 @@ import datetime
 import json
 import subprocess
 import sys
-import yaml
 from pathlib import Path
 from textwrap import dedent
+
+import yaml
 
 # file_paths_list has file names and the path to the file relative to
 # the repo root directory. The dictionary file_paths has keys for each file.
