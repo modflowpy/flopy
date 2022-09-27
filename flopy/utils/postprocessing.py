@@ -123,7 +123,7 @@ def get_transmissivities(
     return T
 
 
-def get_water_table(heads, nodata, per_idx=None):
+def get_water_table(heads, nodata, valid_min=-1e-4, valid_max=3e4):
     """
     Get a 2D array representing the water table elevation for each
     stress period in heads array.
@@ -134,9 +134,12 @@ def get_water_table(heads, nodata, per_idx=None):
         Heads array.
     nodata : real
         HDRY value indicating dry cells.
-    per_idx : int or sequence of ints
-        stress periods to return. If None,
-        returns all stress periods (default is None).
+    valid_min : float (optional)
+        The lowest value regarded as valid, regardless of nodata value.
+        By default, -1e4
+    valid_max : float (optional)
+        The highest value regarded as valid, regardless of nodata value.
+        By default, 3e4
 
     Returns
     -------
@@ -145,25 +148,14 @@ def get_water_table(heads, nodata, per_idx=None):
 
     """
     heads = np.array(heads, ndmin=4)
-    nper, nlay, nrow, ncol = heads.shape
-    if per_idx is None:
-        per_idx = list(range(nper))
-    elif np.isscalar(per_idx):
-        per_idx = [per_idx]
-    wt = []
-    for per in per_idx:
-        wt_per = []
-        for i in range(nrow):
-            for j in range(ncol):
-                for k in range(nlay):
-                    if heads[per, k, i, j] != nodata:
-                        wt_per.append(heads[per, k, i, j])
-                        break
-                    elif k == nlay - 1:
-                        wt_per.append(nodata)
-        assert len(wt_per) == nrow * ncol
-        wt.append(np.reshape(wt_per, (nrow, ncol)))
-    return np.squeeze(wt)
+    mask = (heads == nodata) | (heads < valid_min) | (heads > valid_max)
+    k = (~mask).argmax(axis=1)
+    per, i, j = np.indices(k.shape)
+    wt = heads[per.ravel(), k.ravel(), i.ravel(), j.ravel()].reshape(k.shape)
+    wt = np.squeeze(wt)
+    mask = (wt == nodata) | (wt < valid_min) | (wt > valid_max)
+    wt = np.ma.masked_array(wt, mask)
+    return wt
 
 
 def get_gradients(heads, m, nodata, per_idx=None):

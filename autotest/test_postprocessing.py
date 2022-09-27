@@ -258,11 +258,6 @@ def test_get_water_table():
     assert np.sum(wt[:, 1, 1]) == 2.0
     assert np.sum(wt) == 34.0
 
-    wt = get_water_table(hds2, nodata=nodata, per_idx=0)
-    assert wt.shape == (3, 3)
-    assert wt[1, 1] == 1.0
-    assert np.sum(wt) == 17.0
-
 
 def test_get_sat_thickness_gradients(tmpdir):
     nodata = -9999.0
