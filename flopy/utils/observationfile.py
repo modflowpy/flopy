@@ -100,7 +100,6 @@ class ObsFiles(FlopyBinaryData):
         >>> ts = hyd.get_data()
 
         """
-        print(self.data, self.data.dtype)
         i0 = 0
         i1 = self.data.shape[0]
         if totim is not None:
