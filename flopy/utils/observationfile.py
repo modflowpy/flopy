@@ -551,7 +551,9 @@ class CsvFile:
         -------
         np.recarray
         """
-        arr = np.genfromtxt(fobj, dtype=dtype, delimiter=delimiter, ndmin=1)
+        arr = np.genfromtxt(fobj, dtype=dtype, delimiter=delimiter)
+        if isinstance(arr.shape, tuple):
+            arr = arr.reshape((1,))
         return arr.view(np.recarray)
 
 
