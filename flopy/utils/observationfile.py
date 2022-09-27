@@ -100,6 +100,7 @@ class ObsFiles(FlopyBinaryData):
         >>> ts = hyd.get_data()
 
         """
+        print(self.data, self.data.dtype)
         i0 = 0
         i1 = self.data.shape[0]
         if totim is not None:
@@ -551,7 +552,7 @@ class CsvFile:
         -------
         np.recarray
         """
-        arr = np.genfromtxt(fobj, dtype=dtype, delimiter=delimiter)
+        arr = np.genfromtxt(fobj, dtype=dtype, delimiter=delimiter, ndmin=1)
         return arr.view(np.recarray)
 
 
