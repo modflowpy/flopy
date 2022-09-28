@@ -473,6 +473,11 @@ class Grid:
         """
         Method to get nearest neighbors of a cell
 
+        Parameters
+        ----------
+        node : int
+            model grid node number
+
         Returns
         -------
             list : list of cell node numbers

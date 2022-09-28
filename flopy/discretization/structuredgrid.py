@@ -745,14 +745,28 @@ class StructuredGrid(Grid):
     ###############
     def neighbors(self, *args, **kwargs):
         """
+        Method to get nearest neighbors for a cell
 
         Parameters
         ----------
-        cellid
+        *args
+            lay (int), row (int), column (int)
+            or
+            node (int)
+
+        **kwargs
+            k : int
+                layer number
+            i : int
+                row number
+            j : int
+                column number
+            as_node : bool
+                flag to return neighbors as node numbers
 
         Returns
         -------
-
+            list of neighboring cells
         """
         nn = None
         if kwargs:
