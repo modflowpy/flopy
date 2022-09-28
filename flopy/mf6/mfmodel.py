@@ -459,6 +459,9 @@ class MFModel(PackageContainer, ModelInterface):
                 xoff=self._modelgrid.xoffset,
                 yoff=self._modelgrid.yoffset,
                 angrot=self._modelgrid.angrot,
+                iac=dis.iac,
+                ja=dis.ja
+
             )
         elif self.get_grid_type() == DiscretizationType.DISL:
             dis = self.get_package("disl")
@@ -947,9 +950,7 @@ class MFModel(PackageContainer, ModelInterface):
                         continue
                     budget_array = np.array(
                         bud.get_data(
-                            kstpkper=kstp_kper,
-                            text=rec_name,
-                            full3D=True,
+                            kstpkper=kstp_kper, text=rec_name, full3D=True,
                         )[0]
                     )
                     if len(budget_array.shape) == 4:
@@ -1745,11 +1746,7 @@ class MFModel(PackageContainer, ModelInterface):
                 else:
                     package_rel_path = package.filename
                 self.name_file.packages.update_record(
-                    [
-                        f"{pkg_type}6",
-                        package_rel_path,
-                        package.package_name,
-                    ],
+                    [f"{pkg_type}6", package_rel_path, package.package_name,],
                     0,
                 )
         if package_struct is not None:

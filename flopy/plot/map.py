@@ -182,13 +182,13 @@ class PlotMapView:
 
         # workaround for tri-contour nan issue
         # use -2**31 to allow for 32 bit int arrays
-        plotarray[np.isnan(plotarray)] = -(2**31)
+        plotarray[np.isnan(plotarray)] = -(2 ** 31)
         if masked_values is None:
-            masked_values = [-(2**31)]
+            masked_values = [-(2 ** 31)]
         else:
             masked_values = list(masked_values)
-            if -(2**31) not in masked_values:
-                masked_values.append(-(2**31))
+            if -(2 ** 31) not in masked_values:
+                masked_values.append(-(2 ** 31))
 
         ismasked = None
         if masked_values is not None:
@@ -207,6 +207,7 @@ class PlotMapView:
 
         filled = kwargs.pop("filled", False)
         plot_triplot = kwargs.pop("plot_triplot", False)
+        tri_mask = kwargs.pop("tri_mask", False)
 
         # Get vertices for the selected layer
         xcentergrid = self.mg.get_xcellcenters_for_layer(self.layer)
@@ -229,13 +230,27 @@ class PlotMapView:
         xcentergrid = xcentergrid.flatten()
         ycentergrid = ycentergrid.flatten()
         triang = tri.Triangulation(xcentergrid, ycentergrid)
+        analyze = tri.TriAnalyzer(triang)
+        mask = analyze.get_flat_tri_mask(rescale=False)
+
+        # mask out holes, optional???
+        if tri_mask:
+            triangles = triang.triangles
+            for i in range(2):
+                for ix, nodes in enumerate(triangles):
+                    neighbors = self.mg.neighbors(nodes[i], as_nodes=True)
+                    isin = np.isin(nodes[i + 1:], neighbors)
+                    if not np.alltrue(isin):
+                        mask[ix] = True
 
         if ismasked is not None:
             ismasked = ismasked.flatten()
-            mask = np.any(
+            mask2 = np.any(
                 np.where(ismasked[triang.triangles], True, False), axis=1
             )
-            triang.set_mask(mask)
+            mask[mask2] = True
+
+        triang.set_mask(mask)
 
         if filled:
             contour_set = ax.tricontourf(triang, plotarray, **kwargs)
@@ -686,7 +701,7 @@ class PlotMapView:
 
         # normalize
         if normalize:
-            vmag = np.sqrt(u**2.0 + v**2.0)
+            vmag = np.sqrt(u ** 2.0 + v ** 2.0)
             idx = vmag > 0.0
             u[idx] /= vmag[idx]
             v[idx] /= vmag[idx]

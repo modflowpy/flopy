@@ -3,8 +3,8 @@ import os
 
 import numpy as np
 
+from ..plot.plotutil import UnstructuredPlotUtilities
 from ..utils import geometry
-from ..utils.gridutil import get_lni
 
 
 class CachedData:
@@ -184,6 +184,7 @@ class Grid:
         self._iverts = None
         self._verts = None
         self._laycbd = None
+        self._neighbors = None
 
     ###################################
     # access to basic grid properties
@@ -361,10 +362,6 @@ class Grid:
         self._idomain = idomain
 
     @property
-    def nlay(self):
-        raise NotImplementedError("must define nlay in child class")
-
-    @property
     def ncpl(self):
         raise NotImplementedError("must define ncpl in child class")
 
@@ -466,6 +463,51 @@ class Grid:
     @property
     def cross_section_vertices(self):
         return self.xyzvertices[0], self.xyzvertices[1]
+
+    def neighbors(self, node, **kwargs):
+        """
+        Method to get nearest neighbors of a cell
+
+        Returns
+        -------
+            list : list of cell node numbers
+        """
+        ncpl = self.ncpl
+        if isinstance(ncpl, list):
+            ncpl = self.nnodes
+
+        lay = 0
+        while node >= ncpl:
+            node -= ncpl
+            lay += 1
+
+        if self._neighbors is None:
+            neigh = {}
+            xverts, yverts = self.cross_section_vertices
+            xverts, yverts = UnstructuredPlotUtilities.irregular_shape_patch(
+                xverts, yverts
+            )
+            for nn in range(ncpl):
+                conn = []
+                verts = self.get_cell_vertices(nn)
+                for ix in range(0, len(verts)):
+                    xv0, yv0 = verts[ix - 1]
+                    xv1, yv1 = verts[ix]
+                    idx0 = np.unique(np.where((xverts == xv0) & (yverts == yv0))[0])
+                    idx1 = np.unique(np.where((xverts == xv1) & (yverts == yv1))[0])
+                    mask = np.isin(idx0, idx1)
+                    conn += [i for i in idx0[mask]]
+
+                conn = list(set(conn))
+                conn.pop(conn.index(nn))
+                neigh[nn] = conn
+            self._neighbors = neigh
+
+        neighbors = self._neighbors[node]
+        if lay > 0:
+            neighbors = [i + (ncpl * lay) for i in neighbors]
+
+        return neighbors
 
     def remove_confining_beds(self, array):
         """
@@ -606,27 +648,6 @@ class Grid:
     @property
     def map_polygons(self):
         raise NotImplementedError("must define map_polygons in child class")
-
-    def get_lni(self, nodes):
-        """
-        Get the layer index and within-layer node index (both 0-based) for the given nodes
-
-        Parameters
-        ----------
-        nodes : node numbers (array-like)
-
-        Returns
-        -------
-            list of tuples (layer index, node index)
-        """
-
-        ncpl = (
-            [self.ncpl for _ in range(self.nlay)]
-            if isinstance(self.ncpl, int)
-            else list(self.ncpl)
-        )
-
-        return get_lni(ncpl, nodes)
 
     def get_plottable_layer_array(self, plotarray, layer):
         raise NotImplementedError(
