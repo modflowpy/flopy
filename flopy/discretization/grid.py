@@ -493,8 +493,12 @@ class Grid:
                 for ix in range(0, len(verts)):
                     xv0, yv0 = verts[ix - 1]
                     xv1, yv1 = verts[ix]
-                    idx0 = np.unique(np.where((xverts == xv0) & (yverts == yv0))[0])
-                    idx1 = np.unique(np.where((xverts == xv1) & (yverts == yv1))[0])
+                    idx0 = np.unique(
+                        np.where((xverts == xv0) & (yverts == yv0))[0]
+                    )
+                    idx1 = np.unique(
+                        np.where((xverts == xv1) & (yverts == yv1))[0]
+                    )
                     mask = np.isin(idx0, idx1)
                     conn += [i for i in idx0[mask]]
 

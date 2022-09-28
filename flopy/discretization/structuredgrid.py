@@ -775,7 +775,7 @@ class StructuredGrid(Grid):
         if nn is None:
             nn = self.get_node([(k, i, j)])[0]
 
-        as_nodes = kwargs.pop('as_nodes', False)
+        as_nodes = kwargs.pop("as_nodes", False)
 
         neighbors = super().neighbors(nn)
         if not as_nodes:

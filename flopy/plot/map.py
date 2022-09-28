@@ -239,7 +239,7 @@ class PlotMapView:
             for i in range(2):
                 for ix, nodes in enumerate(triangles):
                     neighbors = self.mg.neighbors(nodes[i], as_nodes=True)
-                    isin = np.isin(nodes[i + 1:], neighbors)
+                    isin = np.isin(nodes[i + 1 :], neighbors)
                     if not np.alltrue(isin):
                         mask[ix] = True
 
