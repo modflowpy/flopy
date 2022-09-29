@@ -265,7 +265,7 @@ def test_obs_single_time(tmpdir):
     assert data.shape[0] == 1, "data shape != 1"
     assert data["totim"][0] == 1.0, "totim[0] != 1.0"
     assert data["obs01"][0] == 10.0, "obs01[0] != 10.0"
-    assert data["obs01"][0] == 10.0, "obs01[0] != 20.0"
+    assert data["obs02"][0] == 20.0, "obs02[0] != 20.0"
 
 
 def test_obs_create_and_write(tmpdir, example_data_path):
