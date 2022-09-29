@@ -1,5 +1,4 @@
 import os
-import platform
 import sys
 from tempfile import TemporaryDirectory
 
@@ -67,8 +66,6 @@ def run(workspace, quiet):
 
     # Set path and name of MODFLOW exe
     exe_name = "mf2005"
-    if platform.system() == "Windows":
-        exe_name = "mf2005"
 
     ncol = 61
     nrow = 61

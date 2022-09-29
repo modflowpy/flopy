@@ -162,7 +162,7 @@ class MfUsg(Modflow):
             Path to MODFLOW name file to load.
         version : str, default "mfusg"
             MODFLOW version. Must be "mfusg".
-        exe_name : str, default "mfusg.exe"
+        exe_name : str, default "mfusg"
             MODFLOW executable name.
         verbose : bool, default False
             Show messages that can be useful for debugging.

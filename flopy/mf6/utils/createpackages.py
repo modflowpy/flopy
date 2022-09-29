@@ -393,7 +393,7 @@ def build_model_load(model_type):
         "    @classmethod\n    def load(cls, simulation, structure, "
         "modelname='NewModel',\n             "
         "model_nam_file='modflowtest.nam', version='mf6',\n"
-        "             exe_name='mf6.exe', strict=True, "
+        "             exe_name='mf6', strict=True, "
         "model_rel_path='.',\n"
         "             load_only=None):\n        "
         "return mfmodel.MFModel.load_base(simulation, structure, "
@@ -860,7 +860,7 @@ def create_packages():
             init_vars = build_model_init_vars(model_param_list)
 
             model_param_list.insert(0, "model_rel_path='.'")
-            model_param_list.insert(0, "exe_name='mf6.exe'")
+            model_param_list.insert(0, "exe_name='mf6'")
             model_param_list.insert(0, "version='mf6'")
             model_param_list.insert(0, "model_nam_file=None")
             model_param_list.insert(0, "modelname='model'")

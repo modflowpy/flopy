@@ -39,7 +39,7 @@ class Modpath6(BaseModel):
     version : str, default "modpath"
         String that defines the MODPATH version. Valid versions are
         "modpath" (default).
-    exe_name : str, default "mp6.exe"
+    exe_name : str, default "mp6"
         The name of the executable to use.
     modflowmodel : flopy.modflow.Modflow
         MODFLOW model object with one of LPF, BCF6, or UPW packages.
@@ -71,7 +71,7 @@ class Modpath6(BaseModel):
         simfile_ext="mpsim",
         namefile_ext="mpnam",
         version="modpath",
-        exe_name="mp6.exe",
+        exe_name="mp6",
         modflowmodel=None,
         dis_file=None,
         dis_unit=87,
