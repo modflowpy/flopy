@@ -17,6 +17,8 @@ from flopy.modflow import (
     ModflowPcg,
 )
 
+from flopy.utils.observationfile import Mf6Obs
+
 
 @requires_exe("mf2005")
 def test_hob_simple(tmpdir):
@@ -246,6 +248,24 @@ def test_obs_load_and_write(tmpdir, example_data_path):
     assert np.array_equal(drob.row, m.drob.row), s
     s = f"column loaded from {m.drob.fn_path} read incorrectly"
     assert np.array_equal(drob.column, m.drob.column), s
+
+
+def test_obs_single_time(tmpdir):
+    """
+    test reading a mf6 observation file with a single time
+    """
+
+    pth = str(tmpdir / "single.csv")
+    with open(pth, "w") as file:
+        file.write("time,obs01,obs02\n1.0,10.0,20.0\n")
+
+    obs = Mf6Obs(pth)
+    data = obs.get_data()
+
+    assert data.shape[0] == 1, "data shape != 1"
+    assert data["totim"][0] == 1.0, "totim[0] != 1.0"
+    assert data["obs01"][0] == 10.0, "obs01[0] != 10.0"
+    assert data["obs02"][0] == 20.0, "obs02[0] != 20.0"
 
 
 def test_obs_create_and_write(tmpdir, example_data_path):
