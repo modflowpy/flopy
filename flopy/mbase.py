@@ -302,7 +302,7 @@ class BaseModel(ModelInterface):
         Name of the model, which is also used for model file names.
     namefile_ext : str, default "nam"
         Name file extension, without "."
-    exe_name : str, default "mf2k.exe"
+    exe_name : str, default "mf2005"
         Name of the modflow executable.
     model_ws : str, optional
         Path to the model workspace.  Model files will be created in this
@@ -326,7 +326,7 @@ class BaseModel(ModelInterface):
         self,
         modelname="modflowtest",
         namefile_ext="nam",
-        exe_name="mf2k.exe",
+        exe_name="mf2005",
         model_ws=None,
         structured=True,
         verbose=False,
@@ -1698,12 +1698,8 @@ def run_model(
     # Check to make sure that program and namefile exist
     exe = which(exe_name)
     if exe is None:
-        import platform
-
-        if platform.system() in "Windows":
-            if not exe_name.lower().endswith(".exe"):
-                exe = which(exe_name + ".exe")
-        elif exe_name.lower().endswith(".exe"):
+        if exe_name.lower().endswith(".exe"):
+            # try removing .exe suffix
             exe = which(exe_name[:-4])
     if exe is None:
         raise Exception(

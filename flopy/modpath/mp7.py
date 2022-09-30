@@ -53,7 +53,7 @@ class Modpath7(BaseModel):
     version : str, default "modpath7"
         String that defines the MODPATH version. Valid versions are
         "modpath7" (default).
-    exe_name : str, default "mp7.exe"
+    exe_name : str, default "mp7"
         The name of the executable to use.
     flowmodel : flopy.modflow.Modflow or flopy.mf6.MFModel object
         MODFLOW model object.
@@ -84,7 +84,7 @@ class Modpath7(BaseModel):
         simfile_ext="mpsim",
         namefile_ext="mpnam",
         version="modpath7",
-        exe_name="mp7.exe",
+        exe_name="mp7",
         flowmodel=None,
         headfilename=None,
         budgetfilename=None,

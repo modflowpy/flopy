@@ -69,7 +69,7 @@ class Modflow(BaseModel):
     version : str, default "mf2005"
         MODFLOW version. Choose one of: "mf2k", "mf2005" (default),
         "mfnwt", or "mfusg".
-    exe_name : str, default "mf2005.exe"
+    exe_name : str, default "mf2005"
         The name of the executable to use.
     structured : bool, default True
         Specify if model grid is structured (default) or unstructured.
@@ -107,7 +107,7 @@ class Modflow(BaseModel):
         modelname="modflowtest",
         namefile_ext="nam",
         version="mf2005",
-        exe_name="mf2005.exe",
+        exe_name="mf2005",
         structured=True,
         listunit=2,
         model_ws=".",
@@ -650,7 +650,7 @@ class Modflow(BaseModel):
         cls,
         f,
         version="mf2005",
-        exe_name="mf2005.exe",
+        exe_name="mf2005",
         verbose=False,
         model_ws=".",
         load_only=None,
@@ -668,7 +668,7 @@ class Modflow(BaseModel):
             MODFLOW version. Choose one of: "mf2k", "mf2005" (default),
             or "mfnwt". Note that this can be modified on loading
             packages unique to different MODFLOW versions.
-        exe_name : str, default "mf2005.exe"
+        exe_name : str, default "mf2005"
             MODFLOW executable name.
         verbose : bool, default False
             Show messages that can be useful for debugging.
