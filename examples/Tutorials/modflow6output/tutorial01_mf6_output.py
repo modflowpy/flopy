@@ -19,7 +19,6 @@
 # package object
 
 import os
-import platform
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -31,8 +30,6 @@ import flopy
 # ## Load a simple demonstration model
 
 exe_name = "mf6"
-if platform.system().lower() == "windows":
-    exe_name += ".exe"
 
 
 def get_project_root_path(path=None):
