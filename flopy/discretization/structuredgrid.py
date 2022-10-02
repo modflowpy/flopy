@@ -743,6 +743,59 @@ class StructuredGrid(Grid):
     ###############
     ### Methods ###
     ###############
+    def neighbors(self, *args, **kwargs):
+        """
+        Method to get nearest neighbors for a cell
+
+        Parameters
+        ----------
+        *args
+            lay (int), row (int), column (int)
+            or
+            node (int)
+
+        **kwargs
+            k : int
+                layer number
+            i : int
+                row number
+            j : int
+                column number
+            as_node : bool
+                flag to return neighbors as node numbers
+
+        Returns
+        -------
+            list of neighboring cells
+        """
+        nn = None
+        if kwargs:
+            if "node" in kwargs:
+                nn = kwargs.pop("node")
+            else:
+                k = kwargs.pop("k", 0)
+                i = kwargs.pop("i")
+                j = kwargs.pop("j")
+
+        if len(args) > 0:
+            if len(args) == 1:
+                nn = args[0]
+            elif len(args) == 2:
+                k = 0
+                i, j = args[0:2]
+            else:
+                k, i, j = args[0:3]
+
+        if nn is None:
+            nn = self.get_node([(k, i, j)])[0]
+
+        as_nodes = kwargs.pop("as_nodes", False)
+
+        neighbors = super().neighbors(nn)
+        if not as_nodes:
+            neighbors = self.get_lrc(neighbors)
+        return neighbors
+
     def intersect(self, x, y, z=None, local=False, forgive=False):
         """
         Get the row and column of a point with coordinates x and y
