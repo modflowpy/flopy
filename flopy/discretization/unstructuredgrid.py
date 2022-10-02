@@ -48,6 +48,10 @@ class UnstructuredGrid(Grid):
         top elevations for all cells in the grid.
     botm : list or ndarray
         bottom elevations for all cells in the grid.
+    iac : list or ndarray
+        optional number of connections per node array
+    ja : list or ndarray
+        optional jagged connection array
 
     Properties
     ----------
@@ -97,6 +101,8 @@ class UnstructuredGrid(Grid):
         xoff=0.0,
         yoff=0.0,
         angrot=0.0,
+        iac=None,
+        ja=None,
     ):
         super().__init__(
             "unstructured",
@@ -142,6 +148,9 @@ class UnstructuredGrid(Grid):
             else:
                 msg = f"Length of iverts must equal ncpl ({len(iverts)} {self.ncpl})"
                 assert np.all([cpl == len(iverts) for cpl in self.ncpl]), msg
+
+        self._iac = iac
+        self._ja = ja
 
         return
 
@@ -219,15 +228,11 @@ class UnstructuredGrid(Grid):
             return np.array([list(t)[1:] for t in self._vertices], dtype=float)
 
     @property
-    def ia(self):
-        if self._ia is None:
-            self._set_unstructured_iaja()
-        return self._ia
+    def iac(self):
+        return self._iac
 
     @property
     def ja(self):
-        if self._ja is None:
-            self._set_unstructured_iaja()
         return self._ja
 
     @property
@@ -349,6 +354,25 @@ class UnstructuredGrid(Grid):
             xv *= self.nlay
             yv *= self.nlay
         return xv, yv
+
+    def neighbors(self, node, **kwargs):
+        """
+        Method to get a list of nearest neighbors
+
+        Parameters
+        ----------
+        node : int
+            node number
+
+        Returns
+        -------
+            list of nearest neighbors
+        """
+        nrec = self.iac[node]
+        idx0 = np.sum(self.iac[:node])
+        idx1 = idx0 + nrec
+        neighbors = self.ja[idx0:idx1][1:]
+        return list(neighbors)
 
     def cross_section_lay_ncpl_ncb(self, ncb):
         """

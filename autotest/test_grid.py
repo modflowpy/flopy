@@ -339,6 +339,53 @@ def test_unstructured_xyz_intersect(example_data_path):
             raise AssertionError("Unstructured grid intersection failed")
 
 
+def test_structured_neighbors(example_data_path):
+    ws = str(example_data_path / "freyberg")
+    ml = Modflow.load("freyberg.nam", model_ws=ws)
+    modelgrid = ml.modelgrid
+    k, i, j = 0, 5, 5
+    neighbors = modelgrid.neighbors(k, i, j)
+    for neighbor in neighbors:
+        if (
+                neighbor != (k, i + 1, j)
+                and neighbor != (k, i - 1, j)
+                and neighbor != (k, i, j + 1)
+                and neighbor != (k, i, j - 1)
+        ):
+            raise AssertionError(
+                "modelgid.neighbors not returning proper values"
+            )
+
+def test_vertex_neighbors(example_data_path):
+    ws = str(example_data_path / "mf6" / "test003_gwfs_disv")
+    sim = MFSimulation.load(sim_ws=ws)
+    gwf = sim.get_model("gwf_1")
+    modelgrid = gwf.modelgrid
+    node = 63
+    neighbors = modelgrid.neighbors(node)
+    for neighbor in neighbors:
+        if (
+                neighbor != node + 1
+                and neighbor != node - 1
+                and neighbor != node + 10
+                and neighbor != node - 10
+        ):
+            raise AssertionError(
+                "modelgid.neighbors not returning proper values"
+            )
+
+
+def test_unstructured_neighbors(example_data_path):
+    ws = str(example_data_path / "mf6" / "test006_gwf3")
+    sim = MFSimulation.load(sim_ws=ws)
+    gwf = sim.get_model("gwf_1")
+    modelgrid = gwf.modelgrid
+    truth = [3, 5, 11]
+    neighbors = modelgrid.neighbors(4)
+    if not truth == neighbors:
+        raise AssertionError("modelgid.neighbors not returning proper values")
+
+
 @pytest.mark.parametrize("spc_file", ["grd.spc", "grdrot.spc"])
 def test_structured_from_gridspec(example_data_path, spc_file):
     fn = str(example_data_path / "specfile" / spc_file)
@@ -959,7 +1006,7 @@ def test_get_lni_unstructured(grid):
                     list(grid.ncpl)
                     if not isinstance(grid.ncpl, int)
                     else [grid.ncpl for _ in range(grid.nlay)]
-                )
+        )
             )
         )
         assert csum[layer] + i == nn
