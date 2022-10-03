@@ -230,7 +230,7 @@ class Gridgen:
                 "removed in version 3.3.7. Please supply StructuredGrid."
             )
             # this is actually a DIS file
-            self.modelgrid = self.modelgrid.parent.modelgrid
+            self.modelgrid = modelgrid.parent.modelgrid
 
         else:
             raise TypeError(
