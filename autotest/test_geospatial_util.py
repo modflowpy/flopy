@@ -469,7 +469,7 @@ def test_mixed_collection(
     shapetype = gc1.shapetype
     shp = gc1.shape
     shply = gc1.shapely
-    lshply = gc1.shapely
+    lshply = list(gc1.shapely)
     points = gc1.points
     geojson = gc1.geojson
     fp_geo = gc1.flopy_geometry
