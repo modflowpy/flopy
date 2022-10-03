@@ -260,6 +260,10 @@ class GeoSpatialCollection:
         self.__shapefile = import_optional_dependency(
             "shapefile", errors="silent"
         )
+        shapely_geo = import_optional_dependency(
+            "shapely.geometry", errors="silent"
+        )
+
         self.__obj = obj
         self.__collection = []
         self._geojson = None
@@ -280,6 +284,21 @@ class GeoSpatialCollection:
 
             elif self.__shapefile is not None:
                 if isinstance(obj[0], self.__shapefile.Shape):
+                    for shape in obj:
+                        self.__collection.append(GeoSpatialUtil(shape))
+
+            if shapely_geo is not None:
+                if isinstance(
+                    obj[0],
+                    (
+                        shapely_geo.Point,
+                        shapely_geo.MultiPoint,
+                        shapely_geo.Polygon,
+                        shapely_geo.MultiPolygon,
+                        shapely_geo.LineString,
+                        shapely_geo.MultiLineString,
+                    ),
+                ):
                     for shape in obj:
                         self.__collection.append(GeoSpatialUtil(shape))
 
@@ -324,7 +343,6 @@ class GeoSpatialCollection:
                 for geom in obj.geometries:
                     self.__collection.append(GeoSpatialUtil(geom))
 
-        shapely_geo = import_optional_dependency("shapely.geometry")
         if shapely_geo is not None:
             if isinstance(
                 obj,
