@@ -15,6 +15,7 @@ import urllib
 import urllib.request
 import zipfile
 from importlib.util import find_spec
+from os.path import splitext
 from pathlib import Path
 
 __all__ = ["run_main"]
@@ -23,6 +24,7 @@ __license__ = "CC0"
 owner = "MODFLOW-USGS"
 # key is the repo name, value is the renamed file prefix for the download
 renamed_prefix = {
+    "modflow6": "modflow6",
     "executables": "modflow_executables",
     "modflow6-nightly-build": "modflow6_nightly",
 }
@@ -129,8 +131,8 @@ def run_main(
         colon character. See error message or other documentation for further
         information on auto-select options.
     repo : str, default "executables"
-        Name of GitHub repository. Choose one of "executables" (default) or
-        "modflow6-nightly-build".
+        Name of GitHub repository. Choose one of "executables" (default),
+        "modflow6", or "modflow6-nightly-build".
     release_id : str, default "latest"
         GitHub release ID.
     ostag : str, optional
@@ -190,6 +192,7 @@ def run_main(
 
     if ostag is None:
         ostag = get_ostag()
+
     exe_suffix = ""
     if ostag in ["win32", "win64"]:
         exe_suffix = ".exe"
@@ -340,14 +343,19 @@ def run_main(
         print(f"fetched release {tag_name!r} from {owner}/{repo}")
 
     assets = release.get("assets", [])
-    for asset in assets:
-        if ostag in asset["name"]:
-            break
+
+    # Windows asset in modflow6 repo release has no OS tag
+    if repo == "modflow6" and "win" in ostag:
+        asset = list(sorted(assets, key=lambda a: len(a["name"])))[0]
     else:
-        raise ValueError(
-            f"could not find ostag {ostag!r} from release {tag_name!r}; "
-            f"see available assets here:\n{release['html_url']}"
-        )
+        for asset in assets:
+            if ostag in asset["name"]:
+                break
+        else:
+            raise ValueError(
+                f"could not find ostag {ostag!r} from release {tag_name!r}; "
+                f"see available assets here:\n{release['html_url']}"
+            )
     asset_name = asset["name"]
     download_url = asset["browser_download_url"]
     # change local download name so it is more unique
@@ -466,7 +474,9 @@ def run_main(
                         )
                     ):
                         add_item(key, fname, do_chmod=True)
-        else:  # release 1.0 did not have code.json
+        # executables release 1.0 did not have code.json
+        # neither do modflow6 or nightly build releases
+        else:
             for fname in sorted(files):
                 if nosub or (subset and fname in subset):
                     extract.add(fname)
@@ -476,9 +486,34 @@ def run_main(
         if not quiet:
             print(
                 f"extracting {len(extract)} "
-                f"file{'s' if len(extract) != 1 else ''} to '{bindir}'"
+                f"file{'s' if len(extract) != 1 else ''} to '{downloads_dir if repo == 'modflow6' else bindir}'"
             )
-        zipf.extractall(bindir, members=extract)
+
+        # modflow6 release contains the whole repo with an internal bindir
+        # executables & nightly build releases contain binaries themselves
+        if repo == "modflow6":
+            zipf.extractall(downloads_dir, members=extract)
+
+            inner = downloads_dir / splitext(asset_name)[0]
+            inner_bin = inner / "bin"
+
+            if not quiet:
+                print(
+                    f"copying {len(list(inner_bin.glob('*')))} files to '{bindir}'"
+                )
+
+            if sys.version_info[:3] < (3, 8):
+                from distutils.dir_util import copy_tree
+
+                copy_tree(str(inner_bin), str(bindir))
+            else:
+                from shutil import copytree
+
+                copytree(inner / "bin", bindir, dirs_exist_ok=True)
+
+            chmod = set(list(bindir.glob("*")))
+        else:
+            zipf.extractall(bindir, members=extract)
 
     # If this is a TemporaryDirectory, then delete the directory and files
     del tmpdir
@@ -490,7 +525,7 @@ def run_main(
             pth.chmod(pth.stat().st_mode | 0o111)
 
     # Show listing
-    if not quiet:
+    if code and not quiet:
         print(columns_str(items))
 
         if not subset:

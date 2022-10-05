@@ -1,6 +1,10 @@
 """Test get-modflow utility."""
 import sys
 import urllib
+from os.path import splitext
+from pathlib import Path
+from platform import system
+from typing import List
 from urllib.error import HTTPError
 
 import pytest
@@ -13,11 +17,12 @@ from flaky import flaky
 
 from flopy.utils import get_modflow
 
+rate_limit_msg = "rate limit exceeded"
 flopy_dir = get_project_root_path(__file__)
 get_modflow_script = flopy_dir / "flopy" / "utils" / "get_modflow.py"
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def downloads_dir(tmp_path_factory):
     downloads_dir = tmp_path_factory.mktemp("Downloads")
     return downloads_dir
@@ -25,6 +30,16 @@ def downloads_dir(tmp_path_factory):
 
 def run_get_modflow_script(*args):
     return run_py_script(get_modflow_script, *args)
+
+
+def assert_exts(paths: List[Path]):
+    exts = set([p.suffix for p in paths])
+    if system() == "Windows":
+        assert exts == {".exe", ".dll"}
+    elif system() == "Darwin":
+        assert exts == {"", ".dylib"}
+    elif system() == "Linux":
+        assert exts == {"", ".so"}
 
 
 def test_script_usage():
@@ -35,15 +50,12 @@ def test_script_usage():
     assert returncode == 0
 
 
-rate_limit_msg = "rate limit exceeded"
-
-
 @flaky
 @requires_github
-def test_get_modflow_script(tmp_path, downloads_dir):
-    # exit if extraction directory does not exist
-    bindir = tmp_path / "bin1"
+def test_script_executables(tmpdir, downloads_dir):
+    bindir = tmpdir / "bin1"
     assert not bindir.exists()
+
     stdout, stderr, returncode = run_get_modflow_script(bindir)
     if rate_limit_msg in stderr:
         pytest.skip(f"GitHub {rate_limit_msg}")
@@ -74,7 +86,7 @@ def test_get_modflow_script(tmp_path, downloads_dir):
     assert len(files) > 20
 
     # take only a few files using --subset, starting with invalid
-    bindir = tmp_path / "bin2"
+    bindir = tmpdir / "bin2"
     bindir.mkdir()
     stdout, stderr, returncode = run_get_modflow_script(
         bindir, "--subset", "mfnwt,mpx", "--downloads-dir", downloads_dir
@@ -94,7 +106,7 @@ def test_get_modflow_script(tmp_path, downloads_dir):
     assert sorted(files) == ["mfnwt", "mfnwtdbl", "mp6"]
 
     # similar as before, but also specify a ostag
-    bindir = tmp_path / "bin3"
+    bindir = tmpdir / "bin3"
     bindir.mkdir()
 
     stdout, stderr, returncode = run_get_modflow_script(
@@ -117,8 +129,8 @@ def test_get_modflow_script(tmp_path, downloads_dir):
 
 @flaky
 @requires_github
-def test_get_nightly_script(tmp_path, downloads_dir):
-    bindir = tmp_path / "bin1"
+def test_script_modflow6_nightly_build(tmpdir, downloads_dir):
+    bindir = tmpdir / "bin1"
     bindir.mkdir()
 
     stdout, stderr, returncode = run_get_modflow_script(
@@ -137,15 +149,41 @@ def test_get_nightly_script(tmp_path, downloads_dir):
 
 @flaky
 @requires_github
-def test_get_modflow(tmpdir):
+def test_script_modflow6(tmpdir, downloads_dir):
+    stdout, stderr, returncode = run_get_modflow_script(
+        tmpdir,
+        "--repo",
+        "modflow6",
+        "--downloads-dir",
+        downloads_dir,
+    )
+    if rate_limit_msg in stderr:
+        pytest.skip(f"GitHub {rate_limit_msg}")
+    assert len(stderr) == returncode == 0
+
+    downloads = [p.name for p in downloads_dir.glob("*")]
+    assert len(downloads) > 0
+    assert any(dl.endswith("zip") for dl in downloads)
+
+    actual_paths = list(tmpdir.glob("*"))
+    actual_stems = [p.stem for p in actual_paths]
+    expected_stems = ["mf6", "mf5to6", "zbud6", "libmf6"]
+    assert all(stem in expected_stems for stem in actual_stems)
+    assert_exts(actual_paths)
+
+
+@flaky
+@requires_github
+def test_python_api_executables(tmpdir):
     try:
         get_modflow(tmpdir)
     except HTTPError as err:
         if err.code == 403:
             pytest.skip(f"GitHub {rate_limit_msg}")
 
-    actual = [p.name for p in tmpdir.glob("*")]
-    expected = [
+    actual_paths = list(tmpdir.glob("*"))
+    actual_names = [p.name for p in actual_paths]
+    expected_names = [
         (exe + ".exe" if sys.platform.startswith("win") else exe)
         for exe in [
             "crt",
@@ -175,22 +213,45 @@ def test_get_modflow(tmpdir):
         ]
     ]
 
-    assert all(exe in actual for exe in expected)
+    assert all(name in actual_names for name in expected_names)
+    assert_exts(actual_paths)
 
 
 @flaky
 @requires_github
-def test_get_nightly(tmpdir):
+def test_python_api_modflow6_nightly_build(tmpdir, downloads_dir):
     try:
         get_modflow(tmpdir, repo="modflow6-nightly-build")
     except urllib.error.HTTPError as err:
         if err.code == 403:
             pytest.skip(f"GitHub {rate_limit_msg}")
 
-    actual = [p.name for p in tmpdir.glob("*")]
-    expected = [
+    actual_paths = list(tmpdir.glob("*"))
+    actual_names = [p.name for p in actual_paths]
+    expected_names = [
         (exe + ".exe" if sys.platform.startswith("win") else exe)
         for exe in ["mf6", "mf5to6", "zbud6"]
     ]
 
-    assert all(exe in actual for exe in expected)
+    assert all(name in actual_names for name in expected_names)
+    assert_exts(actual_paths)
+
+
+@flaky
+@requires_github
+def test_python_api_modflow6(tmpdir, downloads_dir):
+    try:
+        get_modflow(tmpdir, repo="modflow6", downloads_dir=downloads_dir)
+    except urllib.error.HTTPError as err:
+        if err.code == 403:
+            pytest.skip(f"GitHub {rate_limit_msg}")
+
+    downloads = [p.name for p in downloads_dir.glob("*")]
+    assert len(downloads) > 0
+    assert any(dl.endswith("zip") for dl in downloads)
+
+    actual_paths = list(tmpdir.glob("*"))
+    actual_stems = [p.stem for p in actual_paths]
+    expected_stems = ["mf6", "mf5to6", "zbud6", "libmf6"]
+    assert all(exe in actual_stems for exe in expected_stems)
+    assert_exts(actual_paths)
