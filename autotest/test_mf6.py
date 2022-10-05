@@ -652,6 +652,286 @@ def test_create_and_run_model(tmpdir):
 
 
 @requires_exe("mf6")
+def test_get_set_data_record(tmpdir):
+    # names
+    sim_name = "testrecordsim"
+    model_name = "testrecordmodel"
+    exe_name = "mf6"
+
+    # set up simulation
+    tdis_name = f"{sim_name}.tdis"
+    sim = MFSimulation(
+        sim_name=sim_name, version="mf6", exe_name=exe_name, sim_ws=str(tmpdir)
+    )
+    tdis_rc = [(10.0, 4, 1.0), (6.0, 3, 1.0)]
+    tdis = mftdis.ModflowTdis(
+        sim, time_units="DAYS", nper=2, perioddata=tdis_rc
+    )
+
+    # create model instance
+    model = mfgwf.ModflowGwf(
+        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
+    )
+
+    # create solution and add the model
+    ims_package = mfims.ModflowIms(
+        sim,
+        print_option="ALL",
+        complexity="SIMPLE",
+        outer_dvclose=0.00001,
+        outer_maximum=50,
+        under_relaxation="NONE",
+        inner_maximum=30,
+        inner_dvclose=0.00001,
+        linear_acceleration="CG",
+        preconditioner_levels=7,
+        preconditioner_drop_tolerance=0.01,
+        number_orthogonalizations=2,
+    )
+    sim.register_ims_package(ims_package, [model_name])
+
+    # add packages to model
+    dis_package = mfgwfdis.ModflowGwfdis(
+        model,
+        length_units="FEET",
+        nlay=3,
+        nrow=10,
+        ncol=10,
+        delr=500.0,
+        delc=500.0,
+        top=100.0,
+        botm=[50.0, 10.0, -50.0],
+        filename=f"{model_name}.dis",
+    )
+    ic_package = mfgwfic.ModflowGwfic(
+        model,
+        strt=[100.0, 90.0, 80.0],
+        filename=f"{model_name}.ic",
+    )
+    npf_package = mfgwfnpf.ModflowGwfnpf(
+        model, save_flows=True, icelltype=1, k=50.0, k33=1.0
+    )
+
+    sto_package = mfgwfsto.ModflowGwfsto(
+        model, save_flows=True, iconvert=1, ss=0.000001, sy=0.15
+    )
+    # wel packages
+    period_one = ModflowGwfwel.stress_period_data.empty(
+        model,
+        maxbound=3,
+        aux_vars=["var1", "var2", "var3"],
+        boundnames=True,
+        timeseries=True,
+    )
+    period_one[0][0] = ((0, 9, 2), -50.0, -1, -2, -3, None)
+    period_one[0][1] = ((1, 4, 7), -100.0, 1, 2, 3, "well_1")
+    period_one[0][2] = ((1, 3, 2), -20.0, 4, 5, 6, "well_2")
+    period_two = ModflowGwfwel.stress_period_data.empty(
+        model,
+        maxbound=2,
+        aux_vars=["var1", "var2", "var3"],
+        boundnames=True,
+        timeseries=True,
+    )
+    period_two[0][0] = ((2, 3, 2), -80.0, 1, 2, 3, "well_2")
+    period_two[0][1] = ((2, 4, 7), -10.0, 4, 5, 6, "well_1")
+    stress_period_data = {}
+    stress_period_data[0] = period_one[0]
+    stress_period_data[1] = period_two[0]
+    wel_package = ModflowGwfwel(
+        model,
+        print_input=True,
+        print_flows=True,
+        auxiliary=[("var1", "var2", "var3")],
+        maxbound=5,
+        stress_period_data=stress_period_data,
+        boundnames=True,
+        save_flows=True,
+    )
+    # rch package
+    rch_period_list = []
+    for row in range(0, 10):
+        for col in range(0, 10):
+            rch_amt = (1 + row / 10) * (1 + col / 10)
+            rch_period_list.append(((0, row, col), rch_amt, 0.5))
+    rch_period = {}
+    rch_period[0] = rch_period_list
+    rch_package = ModflowGwfrch(
+        model,
+        fixed_cell=True,
+        auxiliary="MULTIPLIER",
+        auxmultname="MULTIPLIER",
+        print_input=True,
+        print_flows=True,
+        save_flows=True,
+        maxbound=54,
+        stress_period_data=rch_period,
+    )
+
+    # write simulation to new location
+    sim.set_all_data_external()
+    sim.write_simulation()
+
+    # test get_record, set_record for list data
+    wel = model.get_package("wel")
+    spd_record = wel.stress_period_data.get_record()
+    well_sp_1 = spd_record[0]
+    assert (
+        well_sp_1["filename"] == "testrecordmodel.wel_stress_period_data_1.txt"
+    )
+    assert well_sp_1["binary"] is False
+    assert well_sp_1["data"][0][0] == (0, 9, 2)
+    assert well_sp_1["data"][0][1] == -50.0
+    # modify
+    del well_sp_1["filename"]
+    well_sp_1["data"][0][0] = (1, 9, 2)
+    well_sp_2 = spd_record[1]
+    del well_sp_2["filename"]
+    well_sp_2["data"][0][0] = (1, 1, 1)
+    # save
+    spd_record[0] = well_sp_1
+    spd_record[1] = well_sp_2
+    wel.stress_period_data.set_record(spd_record)
+    # verify changes
+    spd_record = wel.stress_period_data.get_record()
+    well_sp_1 = spd_record[0]
+    assert "filename" not in well_sp_1
+    assert well_sp_1["data"][0][0] == (1, 9, 2)
+    assert well_sp_1["data"][0][1] == -50.0
+    well_sp_2 = spd_record[1]
+    assert "filename" not in well_sp_2
+    assert well_sp_2["data"][0][0] == (1, 1, 1)
+    spd = wel.stress_period_data.get_data()
+    assert spd[0][0][0] == (1, 9, 2)
+    # change well_sp_2 back to external
+    well_sp_2["filename"] = "wel_spd_data_2.txt"
+    spd_record[1] = well_sp_2
+    wel.stress_period_data.set_record(spd_record)
+    # change well_sp_2 data
+    spd[1][0][0] = (1, 2, 2)
+    wel.stress_period_data.set_data(spd)
+    # verify changes
+    spd_record = wel.stress_period_data.get_record()
+    well_sp_2 = spd_record[1]
+    assert well_sp_2["filename"] == "wel_spd_data_2.txt"
+    assert well_sp_2["data"][0][0] == (1, 2, 2)
+
+    # test get_data/set_data vs get_record/set_record
+    dis = model.get_package("dis")
+    botm = dis.botm.get_record()
+    assert len(botm) == 3
+    layer_2 = botm[1]
+    layer_3 = botm[2]
+    # verify layer 2
+    assert layer_2["filename"] == "testrecordmodel.dis_botm_layer2.txt"
+    assert layer_2["binary"] is False
+    assert layer_2["factor"] == 1.0
+    assert layer_2["iprn"] is None
+    assert layer_2["data"][0][0] == 10.0
+    # change and set layer 2
+    layer_2["filename"] = "botm_layer2.txt"
+    layer_2["binary"] = True
+    layer_2["iprn"] = 3
+    layer_2["factor"] = 2.0
+    layer_2["data"] = layer_2["data"] * 0.5
+    botm[1] = layer_2
+    # change and set layer 3
+    del layer_3["filename"]
+    layer_3["factor"] = 0.5
+    layer_3["data"] = layer_3["data"] * 2.0
+    botm[2] = layer_3
+    dis.botm.set_record(botm)
+
+    # get botm in two different ways, verifying changes made
+    botm_record = dis.botm.get_record()
+    layer_1 = botm_record[0]
+    assert layer_1["filename"] == "testrecordmodel.dis_botm_layer1.txt"
+    assert layer_1["binary"] is False
+    assert layer_1["iprn"] is None
+    assert layer_1["data"][0][0] == 50.0
+    layer_2 = botm_record[1]
+    assert layer_2["filename"] == "botm_layer2.txt"
+    assert layer_2["binary"] is True
+    assert layer_2["factor"] == 2.0
+    assert layer_2["iprn"] == 3
+    assert layer_2["data"][0][0] == 5.0
+    layer_3 = botm_record[2]
+    assert "filename" not in layer_3
+    assert layer_3["factor"] == 0.5
+    assert layer_3["data"][0][0] == -100.0
+    botm_data = dis.botm.get_data(apply_mult=True)
+    assert botm_data[0][0][0] == 50.0
+    assert botm_data[1][0][0] == 10.0
+    assert botm_data[2][0][0] == -50.0
+    botm_data = dis.botm.get_data()
+    assert botm_data[0][0][0] == 50.0
+    assert botm_data[1][0][0] == 5.0
+    assert botm_data[2][0][0] == -100.0
+    # modify and set botm data with set_data
+    botm_data[0][0][0] = 6.0
+    botm_data[1][0][0] = -8.0
+    botm_data[2][0][0] = -205.0
+    dis.botm.set_data(botm_data)
+    # verify that data changed and metadata did not change
+    botm_record = dis.botm.get_record()
+    layer_1 = botm_record[0]
+    assert layer_1["filename"] == "testrecordmodel.dis_botm_layer1.txt"
+    assert layer_1["binary"] is False
+    assert layer_1["iprn"] is None
+    assert layer_1["data"][0][0] == 6.0
+    assert layer_1["data"][0][1] == 50.0
+    layer_2 = botm_record[1]
+    assert layer_2["filename"] == "botm_layer2.txt"
+    assert layer_2["binary"] is True
+    assert layer_2["factor"] == 2.0
+    assert layer_2["iprn"] == 3
+    assert layer_2["data"][0][0] == -8.0
+    assert layer_2["data"][0][1] == 5.0
+    layer_3 = botm_record[2]
+    assert "filename" not in layer_3
+    assert layer_3["factor"] == 0.5
+    assert layer_3["data"][0][0] == -205.0
+    botm_data = dis.botm.get_data()
+    assert botm_data[0][0][0] == 6.0
+    assert botm_data[1][0][0] == -8.0
+    assert botm_data[2][0][0] == -205.0
+
+    spd_record = rch_package.stress_period_data.get_record()
+    assert 0 in spd_record
+    assert isinstance(spd_record[0], dict)
+    assert "filename" in spd_record[0]
+    assert (
+        spd_record[0]["filename"]
+        == "testrecordmodel.rch_stress_period_data_1.txt"
+    )
+    assert "binary" in spd_record[0]
+    assert spd_record[0]["binary"] is False
+    assert "data" in spd_record[0]
+    assert spd_record[0]["data"][0][0] == (0, 0, 0)
+    spd_record[0]["data"][0][0] = (0, 0, 8)
+    rch_package.stress_period_data.set_record(spd_record)
+
+    spd_data = rch_package.stress_period_data.get_data()
+    assert spd_data[0][0][0] == (0, 0, 8)
+    spd_data[0][0][0] = (0, 0, 7)
+    rch_package.stress_period_data.set_data(spd_data)
+
+    spd_record = rch_package.stress_period_data.get_record()
+    assert isinstance(spd_record[0], dict)
+    assert "filename" in spd_record[0]
+    assert (
+        spd_record[0]["filename"]
+        == "testrecordmodel.rch_stress_period_data_1.txt"
+    )
+    assert "binary" in spd_record[0]
+    assert spd_record[0]["binary"] is False
+    assert "data" in spd_record[0]
+    assert spd_record[0]["data"][0][0] == (0, 0, 7)
+
+    sim.write_simulation()
+
+
+@requires_exe("mf6")
 def test_output(tmpdir, example_data_path):
     ex_name = "test001e_UZF_3lay"
     sim_ws = str(example_data_path / "mf6" / ex_name)

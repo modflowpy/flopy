@@ -2,7 +2,6 @@ import inspect
 import math
 import os
 import sys
-import warnings
 
 import numpy as np
 
@@ -595,12 +594,6 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 Whether to verify the data
 
         """
-        if isinstance(data, dict):
-            warnings.warn(
-                "Setting data and metadata in a dictionary using the set_data"
-                "method has been deprecated. Use set_record instead.",
-                category=DeprecationWarning,
-            )
         self._set_data(data, autofill, check_data=check_data)
 
     def set_record(self, data_record, autofill=False, check_data=True):

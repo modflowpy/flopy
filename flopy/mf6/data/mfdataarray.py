@@ -830,9 +830,9 @@ class MFArray(MFMultiDimVar):
         dictionary defining external file information
         2) {'data':data, 'factor':fct, 'iprn':print)}- dictionary defining
         internal information. Data that is layered can also be set by defining
-        For layered data data_record must be a dictionary of dictionaries
-        with zero-based layer numbers for the outer dictionary keys and the
-        inner dictionary as described above:
+        For layered data data_record must be a list of dictionaries or a
+        dictionary of dictionaries with zero-based layer numbers for the outer
+        dictionary keys and the inner dictionary as described above:
            {0: {'data':data_lay_0, 'factor':fct_lay_0, 'iprn':prn_lay_0)},
             1: {'data':data_lay_1, 'factor':fct_lay_1, 'iprn':prn_lay_1)},
             2: {'data':data_lay_2, 'factor':fct_lay_2, 'iprn':prn_lay_2)}}
@@ -844,12 +844,35 @@ class MFArray(MFMultiDimVar):
             layers (keys) with a dictionary of data record information for each
             layer (values).
         """
-        first_key = list(data_record.keys())[0]
-        if isinstance(first_key, int):
-            for layer, record in data_record.items():
+        if isinstance(data_record, dict):
+            first_key = list(data_record.keys())[0]
+            if isinstance(first_key, int):
+                for layer, record in data_record.items():
+                    self._set_data(record, layer=layer, preserve_record=False)
+            else:
+                self._set_data(data_record, preserve_record=False)
+        elif type(data_record) == list:
+            for layer, record in enumerate(data_record):
                 self._set_data(record, layer=layer, preserve_record=False)
         else:
-            self._set_data(data_record, preserve_record=False)
+            message = (
+                "Unable to set record.  The contents of data_record must be"
+                "a dictionary or a list."
+            )
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self._data_dimensions.structure.get_model(),
+                self._data_dimensions.structure.get_package(),
+                self._data_dimensions.structure.path,
+                "setting record",
+                self._data_dimensions.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                message,
+                self._simulation_data.debug,
+            )
 
     def set_data(self, data, multiplier=None, layer=None):
         """Sets the contents of the data at layer `layer` to `data` with
@@ -869,12 +892,6 @@ class MFArray(MFMultiDimVar):
             Data layer that is being set
 
         """
-        if isinstance(data, dict):
-            warnings.warn(
-                "Setting data and metadata in a dictionary using the set_data"
-                "method has been deprecated. Use set_record instead.",
-                category=DeprecationWarning,
-            )
         self._set_data(data, multiplier, layer)
 
     def _set_data(
@@ -1913,25 +1930,6 @@ class MFTransientArray(MFArray, MFTransient):
             for key in del_keys:
                 del data[key]
         else:
-            if is_record:
-                comment = (
-                    "Set record method requires that data_record is a "
-                    "dictionary."
-                )
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(
-                    self.structure.get_model(),
-                    self.structure.get_package(),
-                    self._path,
-                    "setting data record",
-                    self.structure.name,
-                    inspect.stack()[0][3],
-                    type_,
-                    value_,
-                    traceback_,
-                    comment,
-                    self._simulation_data.debug,
-                )
             if key is None:
                 # search for a key
                 new_key_index = self.structure.first_non_keyword_index()
