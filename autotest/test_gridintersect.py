@@ -1252,7 +1252,7 @@ def test_rasters(example_data_path):
 
 # %% test raster sampling methods
 
-
+@requires_pkg("rasterstats")
 @pytest.mark.slow
 def test_raster_sampling_methods(example_data_path):
     ws = str(example_data_path / "options")
@@ -1283,7 +1283,7 @@ def test_raster_sampling_methods(example_data_path):
     methods = {
         "min": 2088.52343,
         "max": 2103.54882,
-        "mean": 2097.05035,
+        "mean": 2097.05054,
         "median": 2097.36254,
         "mode": 2088.52343,
         "nearest": 2097.81079,
