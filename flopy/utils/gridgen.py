@@ -1,12 +1,15 @@
 import os
 import subprocess
+import warnings
 
 import numpy as np
 
+from ..discretization import StructuredGrid
 from ..export.shapefile_utils import shp2recarray
 from ..mbase import which
 from ..mf6.modflow import ModflowGwfdis
 from ..mfusg.mfusgdisu import MfUsgDisU
+from ..modflow import ModflowDis
 from ..utils import import_optional_dependency
 from .util_array import Util2d  # read1d,
 
@@ -172,8 +175,10 @@ class Gridgen:
 
     Parameters
     ----------
-    dis : flopy.modflow.ModflowDis
-        Flopy discretization object
+    modelgrid : flopy.discretization.StructuredGrid
+        Flopy StructuredGrid object. Note this also accepts ModflowDis and
+        ModflowGwfdis objects, however it is deprecated and support will be
+        removed in version 3.3.7
     model_ws : str
         workspace location for creating gridgen files (default is '.')
     exe_name : str
@@ -204,28 +209,41 @@ class Gridgen:
 
     def __init__(
         self,
-        dis,
+        modelgrid,
         model_ws=".",
         exe_name="gridgen",
         surface_interpolation="replicate",
         vertical_pass_through=False,
         **kwargs,
     ):
-        self.dis = dis
-        if isinstance(dis, ModflowGwfdis):
-            self.nlay = self.dis.nlay.get_data()
-            self.nrow = self.dis.nrow.get_data()
-            self.ncol = self.dis.ncol.get_data()
-            self.modelgrid = self.dis.parent.modelgrid
+        if isinstance(modelgrid, StructuredGrid):
+            if modelgrid.top is None or modelgrid.botm is None:
+                raise AssertionError(
+                    "A complete modelgrid must be supplied to use Gridgen"
+                )
+
+            self.modelgrid = modelgrid
+
+        elif isinstance(modelgrid, (ModflowGwfdis, ModflowDis)):
+            warnings.warn(
+                "Supplying a dis object is deprecated, and support will be "
+                "removed in version 3.3.7. Please supply StructuredGrid."
+            )
+            # this is actually a DIS file
+            self.modelgrid = modelgrid.parent.modelgrid
+
         else:
-            self.nlay = self.dis.nlay
-            self.nrow = self.dis.nrow
-            self.ncol = self.dis.ncol
-            self.modelgrid = self.dis.parent.modelgrid
+            raise TypeError(
+                "A StructuredGrid object must be supplied to Gridgen"
+            )
+
+        self.nlay = self.modelgrid.nlay
+        self.nrow = self.modelgrid.nrow
+        self.ncol = self.modelgrid.ncol
 
         self.nodes = 0
         self.nja = 0
-        self.nodelay = np.zeros((self.nlay), dtype=int)
+        self.nodelay = np.zeros((self.nlay,), dtype=int)
         self._vertdict = {}
         self.model_ws = model_ws
         exe_name = which(exe_name)
@@ -1674,6 +1692,8 @@ class Gridgen:
         gridprops["ycenters"] = ycenters
         gridprops["top"] = top
         gridprops["botm"] = bot
+        gridprops["iac"] = self.get_iac()
+        gridprops["ja"] = self.get_ja()
 
         return gridprops
 
@@ -1783,7 +1803,7 @@ class Gridgen:
         s += f"  NCOL = {self.ncol}\n"
 
         # delr
-        delr = self.dis.delr.array
+        delr = self.modelgrid.delr
         if delr.min() == delr.max():
             s += f"  DELR = CONSTANT {delr.min()}\n"
         else:
@@ -1792,7 +1812,7 @@ class Gridgen:
             np.savetxt(fname, np.atleast_2d(delr))
 
         # delc
-        delc = self.dis.delc.array
+        delc = self.modelgrid.delc
         if delc.min() == delc.max():
             s += f"  DELC = CONSTANT {delc.min()}\n"
         else:
@@ -1801,7 +1821,7 @@ class Gridgen:
             np.savetxt(fname, np.atleast_2d(delc))
 
         # top
-        top = self.dis.top.array
+        top = self.modelgrid.top
         if top.min() == top.max():
             s += f"  TOP = CONSTANT {top.min()}\n"
         else:
@@ -1810,12 +1830,9 @@ class Gridgen:
             np.savetxt(fname, top)
 
         # bot
-        botm = self.dis.botm.array
+        botm = self.modelgrid.botm
         for k in range(self.nlay):
-            if isinstance(self.dis, ModflowGwfdis):
-                bot = botm[k]
-            else:
-                bot = botm[k]
+            bot = botm[k]
             if bot.min() == bot.max():
                 s += f"  BOTTOM LAYER {k + 1} = CONSTANT {bot.min()}\n"
             else:

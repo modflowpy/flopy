@@ -46,7 +46,7 @@ def test_mf6disv(tmpdir):
     )
 
     # Create and build the gridgen model with a refined area in the middle
-    g = Gridgen(dis, model_ws=str(tmpdir))
+    g = Gridgen(gwf.modelgrid, model_ws=str(tmpdir))
     polys = [Polygon([(4, 4), (6, 4), (6, 6), (4, 6)])]
     g.add_refinement_features(polys, "polygon", 3, range(nlay))
     g.build()
@@ -182,7 +182,7 @@ def test_mf6disu(tmpdir):
     )
 
     # Create and build the gridgen model with a refined area in the middle
-    g = Gridgen(dis, model_ws=str(tmpdir))
+    g = Gridgen(gwf.modelgrid, model_ws=str(tmpdir))
     polys = [Polygon([(4, 4), (6, 4), (6, 6), (4, 6)])]
     g.add_refinement_features(polys, "polygon", 3, layers=[0])
     g.build()
@@ -346,7 +346,7 @@ def test_mfusg(tmpdir):
     )
 
     # Create and build the gridgen model with a refined area in the middle
-    g = Gridgen(dis, model_ws=str(tmpdir))
+    g = Gridgen(m.modelgrid, model_ws=str(tmpdir))
     polys = [Polygon([(4, 4), (6, 4), (6, 6), (4, 6)])]
     g.add_refinement_features(polys, "polygon", 3, layers=[0])
     g.build()
@@ -514,10 +514,10 @@ def test_gridgen(tmpdir):
 
     gridgen = Path(which("gridgen")).name
     ws = str(tmpdir)
-    g = Gridgen(dis5, model_ws=ws, exe_name=gridgen)
-    g6 = Gridgen(dis6, model_ws=ws, exe_name=gridgen)
+    g = Gridgen(ms.modelgrid, model_ws=ws, exe_name=gridgen)
+    g6 = Gridgen(gwf.modelgrid, model_ws=ws, exe_name=gridgen)
     gu = Gridgen(
-        dis_usg,
+        ms_u.modelgrid,
         model_ws=ws,
         exe_name=gridgen,
         vertical_pass_through=True,

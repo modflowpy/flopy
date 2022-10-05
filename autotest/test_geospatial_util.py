@@ -469,11 +469,12 @@ def test_mixed_collection(
     shapetype = gc1.shapetype
     shp = gc1.shape
     shply = gc1.shapely
+    lshply = list(gc1.shapely)
     points = gc1.points
     geojson = gc1.geojson
     fp_geo = gc1.flopy_geometry
 
-    collections = [shp, shply, points, geojson, fp_geo]
+    collections = [shp, shply, lshply, points, geojson, fp_geo]
     for col in collections:
         gc2 = GeoSpatialCollection(col, shapetype)
 
@@ -489,3 +490,4 @@ def test_mixed_collection(
                 is_equal = gi2 == gi1[ix]
 
             assert is_equal, "GeoSpatialCollection conversion error"
+

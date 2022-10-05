@@ -1936,7 +1936,7 @@ def test_vtk_export_disu_model(tmpdir):
         botm=botm,
     )
 
-    g = Gridgen(dis5, model_ws=str(tmpdir))
+    g = Gridgen(ml5.modelgrid, model_ws=str(tmpdir))
 
     rf0shp = os.path.join(str(tmpdir), "rf0")
     xmin = 7 * delr
