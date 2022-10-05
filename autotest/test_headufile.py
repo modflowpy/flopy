@@ -45,7 +45,7 @@ def mfusg_model(module_tmpdir):
     )
 
     # Create and build the gridgen model with a refined area in the middle
-    g = Gridgen(dis, model_ws=str(module_tmpdir))
+    g = Gridgen(m.modelgrid, model_ws=str(module_tmpdir))
 
     polys = [Polygon([(4, 4), (6, 4), (6, 6), (4, 6)])]
     g.add_refinement_features(polys, "polygon", 3, layers=[0])
