@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import pytest
-from autotest.conftest import requires_pkg
+from autotest.conftest import requires_pkg, requires_exe
 
 from flopy.mf6 import MFSimulation
 from flopy.utils import ZoneBudget, ZoneBudget6, ZoneFile6
@@ -283,6 +283,7 @@ def test_read_zone_file(tmpdir):
 
 
 @pytest.mark.mf6
+@requires_exe("mf6")
 @requires_pkg("pandas")
 def test_zonebudget_6(tmpdir, example_data_path):
     import pandas as pd
@@ -343,6 +344,7 @@ def test_zonebudget_6(tmpdir, example_data_path):
 
 
 @pytest.mark.mf6
+@requires_exe("mf6")
 def test_zonebudget6_from_output_method(tmpdir, example_data_path):
     exe_name = "mf6"
     zb_exe_name = "zbud6"

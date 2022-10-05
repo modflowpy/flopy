@@ -1905,6 +1905,7 @@ def test_vtk_export_disu2_grid(tmpdir, example_data_path):
 
 
 @pytest.mark.mf6
+@requires_exe("mf6", "gridgen")
 @requires_pkg("vtk", "shapefile")
 def test_vtk_export_disu_model(tmpdir):
     from vtkmodules.util.numpy_support import vtk_to_numpy

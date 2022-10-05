@@ -664,6 +664,7 @@ def test_assign_layers(tmpdir):
     assert np.array_equal(l, np.array([1, 1]))
 
 
+@requires_exe("mf2005")
 @requires_pkg("pandas")
 def test_SfrFile(tmpdir, sfr_examples_path, mf2005_model_path):
     common_names = [
@@ -894,6 +895,7 @@ def test_sfrloadcheck(tmpdir, mf2005_model_path, i, case):
         assert "segment elevations vs. model grid" in chk.warnings
 
 
+@requires_exe("mfnwt")
 @pytest.mark.parametrize("isfropt, icalc", get_test_matrix())
 def test_isfropt_icalc(tmpdir, example_data_path, isfropt, icalc):
     pth = example_data_path / "sfr_test"

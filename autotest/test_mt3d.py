@@ -17923,6 +17923,7 @@ def test_mt3dms_load_when_nam_dne():
         Mt3dms.load("nonexistent.nam")
 
 
+@requires_exe("mf2005")
 def test_mt3d_ssm_with_nodata_in_1st_sp(tmpdir):
     nlay, nrow, ncol = 3, 5, 5
     perlen = np.zeros((10), dtype=float) + 10
@@ -18032,6 +18033,7 @@ def test_mt3d_ssm_with_nodata_in_1st_sp(tmpdir):
     assert np.allclose(conca, concb)
 
 
+@requires_exe("mf2005")
 def test_none_spdtype(tmpdir):
     # ensure that -1 and None work as valid list entries in the
     # stress period dictionary
