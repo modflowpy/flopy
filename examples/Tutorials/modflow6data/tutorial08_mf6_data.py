@@ -145,25 +145,72 @@ a2 = {
 }
 
 # A list containing data for the three specified layers is then passed in to
-# the `botm` object's `set_data` method.
+# the `botm` object's `set_record` method.
 
-dis.botm.set_data([a0, a1, a2])
+dis.botm.set_record([a0, a1, a2])
 print(dis.botm.get_file_entry())
 
-# Note that we could have also specified `botm` this way as part of the
-# original `flopy.mf6.ModflowGwfdis` constructor:
+# The botm data and its attributes (filename, binary, factor, iprn) can be
+# retrieved as a dictionary of dictionaries using get_record.
 
-a0 = {"factor": 0.5, "iprn": 1, "data": np.ones((10, 10))}
-a1 = -100
-a2 = {
-    "filename": "dis.botm.3.bin",
-    "factor": 2.0,
-    "iprn": 1,
-    "data": -100 * np.ones((4, 5)),
-    "binary": True,
+botm_record = dis.botm.get_record()
+print("botm layer 1 record:")
+print(botm_record[0])
+print("\nbotm layer 2 record:")
+print(botm_record[1])
+print("\nbotm layer 3 record:")
+print(botm_record[2])
+
+# The botm record retrieved can be modified and then saved with set_record.
+# For example, the array data's "factor" can be modified and saved.
+
+botm_record[0]["factor"] = 0.6
+dis.botm.set_record(botm_record)
+
+# The updated value can then be retrieved.
+
+botm_record = dis.botm.get_record()
+print(f"botm layer 1 factor:  {botm_record[0]['factor']}")
+
+# The get_record and set_record methods can also be used with list data to get
+# and set the data and its "filename" and "binary" attributes. This is
+# demonstrated with the wel package.  First, a wel package is constructed.
+
+welspdict = {
+    0: {"filename": "well_sp1.txt", "data": [[(0, 0, 0), 0.25]]},
+    1: [[(0, 0, 0), 0.1]],
 }
-botm = [a0, a1, a2]
-flopy.mf6.ModflowGwfdis(gwf, nlay=3, nrow=10, ncol=10, botm=botm)
+wel = flopy.mf6.ModflowGwfwel(
+    gwf,
+    print_input=True,
+    print_flows=True,
+    stress_period_data=welspdict,
+    save_flows=False,
+)
+
+# The wel stress period data and associated "filename" and "binary" attributes
+# can be retrieved with get_record.
+
+spd_record = wel.stress_period_data.get_record()
+print("Stress period 1 record:")
+print(spd_record[0])
+print("\nStress period 2 record:")
+print(spd_record[1])
+
+# The wel data and associated attributes can be changed by modifying the
+# record and then saving it with the set_record method.
+
+spd_record[0]["filename"] = "well_package_sp1.txt"
+spd_record[0]["binary"] = True
+spd_record[1]["filename"] = "well_package_sp2.txt"
+wel.stress_period_data.set_record(spd_record)
+
+# The changes can be verified by calling get_record again.
+
+spd_record = wel.stress_period_data.get_record()
+print(f"New filename for stress period 1:  {spd_record[0]['filename']}")
+print(f"New binary flag for stress period 1:  {spd_record[0]['binary']}")
+print(f"New filename for stress period 2:  {spd_record[1]['filename']}")
 
 try:
     temp_dir.cleanup()
