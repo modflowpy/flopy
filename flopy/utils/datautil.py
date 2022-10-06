@@ -582,6 +582,8 @@ class MultiList:
         return shape_size
 
     def in_shape(self, indexes):
+        if isinstance(indexes, int):
+            indexes = [indexes]
         for index, item in zip(indexes, self.list_shape):
             if index > item:
                 return False

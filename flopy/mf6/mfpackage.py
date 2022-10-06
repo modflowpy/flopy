@@ -1299,6 +1299,7 @@ class MFBlock:
                 and dataset.enabled
             ):
                 file_path = f"{base_name}_{dataset.structure.name}.txt"
+                replace_existing_external = False
                 if external_data_folder is not None:
                     # get simulation root path
                     root_path = self._simulation_data.mfpath.get_sim_path()
@@ -1317,9 +1318,10 @@ class MFBlock:
                         # create new external data folder
                         os.makedirs(full_path)
                     file_path = os.path.join(external_data_folder, file_path)
+                    replace_existing_external = True
                 dataset.store_as_external_file(
                     file_path,
-                    replace_existing_external=False,
+                    replace_existing_external=replace_existing_external,
                     check_data=check_data,
                 )
 

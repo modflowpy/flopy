@@ -318,7 +318,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 internal_data = {
                     "data": data,
                 }
-                self._set_data(internal_data, check_data=check_data)
+                self._set_record(internal_data, check_data=check_data)
 
     def has_data(self, key=None):
         """Returns whether this MFList has any data associated with it."""
@@ -383,6 +383,36 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         """
         return self._get_data(apply_mult, **kwargs)
 
+    def get_record(self):
+        """Returns the list's data and metadata in a dictionary.  Data is in
+        key "data" and metadata in keys "filename" and "binary".
+
+        Returns
+        -------
+            data_record : dict
+
+        """
+        try:
+            if self._get_storage_obj() is None:
+                return None
+            return self._get_storage_obj().get_record()
+        except Exception as ex:
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self._path,
+                "getting record",
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                None,
+                self._simulation_data.debug,
+                ex,
+            )
+
     def _get_min_record_entries(self, data=None):
         try:
             if isinstance(data, dict) and "data" in data:
@@ -410,7 +440,9 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             )
         return len(type_list)
 
-    def _set_data(self, data, autofill=False, check_data=True):
+    def _set_data(
+        self, data, autofill=False, check_data=True, preserve_record=True
+    ):
         # set data
         self._resync()
         try:
@@ -418,7 +450,10 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 self._data_storage = self._new_storage()
             # store data
             self._get_storage_obj().set_data(
-                data, autofill=autofill, check_data=check_data
+                data,
+                autofill=autofill,
+                check_data=check_data,
+                preserve_record=preserve_record,
             )
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
@@ -539,13 +574,11 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             )
 
     def set_data(self, data, autofill=False, check_data=True):
-        """Sets the contents of the data to "data" with.  Data can have the
+        """Sets the contents of the data to "data".  Data can have the
         following formats:
             1) recarray - recarray containing the datalist
             2) [(line_one), (line_two), ...] - list where each line of the
                datalist is a tuple within the list
-            3) {'filename':filename, factor=fct, iprn=print_code, data=data}
-               - dictionary defining the external file containing the datalist.
         If the data is transient, a dictionary can be used to specify each
         stress period where the dictionary key is <stress period> - 1 and
         the dictionary value is the datalist data defined above:
@@ -562,6 +595,44 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
 
         """
         self._set_data(data, autofill, check_data=check_data)
+
+    def set_record(self, data_record, autofill=False, check_data=True):
+        """Sets the contents of the data and metadata to "data_record".
+        Data_record is a dictionary with has the following format:
+            {'filename':filename, 'binary':True/False, 'data'=data}
+        To store to file include 'filename' in the dictionary.
+
+        Parameters
+        ----------
+            data_record : ndarray/list/dict
+                Data and metadata to set
+            autofill : bool
+                Automatically correct data
+            check_data : bool
+                Whether to verify the data
+
+        """
+        self._set_record(data_record, autofill, check_data)
+
+    def _set_record(self, data_record, autofill=False, check_data=True):
+        """Sets the contents of the data and metadata to "data_record".
+        Data_record is a dictionary with has the following format:
+            {'filename':filename, 'data'=data}
+        To store to file include 'filename' in the dictionary.
+
+        Parameters
+        ----------
+            data_record : ndarray/list/dict
+                Data and metadata to set
+            autofill : bool
+                Automatically correct data
+            check_data : bool
+                Whether to verify the data
+
+        """
+        self._set_data(
+            data_record, autofill, check_data=check_data, preserve_record=False
+        )
 
     def append_data(self, data):
         """Appends "data" to the end of this list.  Assumes data is in a format
@@ -1587,10 +1658,10 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         for sp in self._data_storage.keys():
             self._current_key = sp
             layer_storage = self._get_storage_obj().layer_storage
-            if (
-                layer_storage.get_total_size() > 0
-                and self._get_storage_obj().layer_storage[0].data_storage_type
+            if layer_storage.get_total_size() > 0 and (
+                self._get_storage_obj().layer_storage[0].data_storage_type
                 != DataStorageType.external_file
+                or replace_existing_external
             ):
                 fname, ext = os.path.splitext(external_file_path)
                 if datautil.DatumUtil.is_int(sp):
@@ -1643,6 +1714,34 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             self.get_data_prep(key)
             return super().has_data()
 
+    def get_record(self, key=None):
+        """Returns the data for stress period `key`.  If no key is specified
+        returns all records in a dictionary with zero-based stress period
+        numbers as keys.  See MFList's get_record documentation for more
+        information on the format of each record returned.
+
+        Parameters
+        ----------
+            key : int
+                Zero-based stress period to return data from.
+
+        Returns
+        -------
+            data_record : dict
+
+        """
+        if self._data_storage is not None and len(self._data_storage) > 0:
+            if key is None:
+                output = {}
+                for key in self._data_storage.keys():
+                    self.get_data_prep(key)
+                    output[key] = super().get_record()
+                return output
+            self.get_data_prep(key)
+            return super().get_record()
+        else:
+            return None
+
     def get_data(self, key=None, apply_mult=False, **kwargs):
         """Returns the data for stress period `key`.
 
@@ -1686,6 +1785,29 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         else:
             return None
 
+    def set_record(self, data_record, autofill=False, check_data=True):
+        """Sets the contents of the data based on the contents of
+        'data_record`.
+
+        Parameters
+        ----------
+        data_record : dict
+            Data_record being set.  Data_record must be a dictionary with
+            keys as zero-based stress periods and values as dictionaries
+            containing the data and metadata.  See MFList's set_record
+            documentation for more information on the format of the values.
+        autofill : bool
+            Automatically correct data
+        check_data : bool
+            Whether to verify the data
+        """
+        self._set_data_record(
+            data_record,
+            autofill=autofill,
+            check_data=check_data,
+            is_record=True,
+        )
+
     def set_data(self, data, key=None, autofill=False):
         """Sets the contents of the data at time `key` to `data`.
 
@@ -1694,7 +1816,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         data : dict, recarray, list
             Data being set.  Data can be a dictionary with keys as
             zero-based stress periods and values as the data.  If data is
-            an recarray or list of tuples, it will be assigned to the the
+            a recarray or list of tuples, it will be assigned to the
             stress period specified in `key`.  If any is set to None, that
             stress period of data will be removed.
         key : int
@@ -1703,9 +1825,14 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         autofill : bool
             Automatically correct data.
         """
+        self._set_data_record(data, key, autofill)
+
+    def _set_data_record(
+        self, data, key=None, autofill=False, check_data=False, is_record=False
+    ):
         self._cache_model_grid = True
         if isinstance(data, dict):
-            if "filename" not in data:
+            if "filename" not in data and "data" not in data:
                 # each item in the dictionary is a list for one stress period
                 # the dictionary key is the stress period the list is for
                 del_keys = []
@@ -1726,9 +1853,12 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                         else:
                             check = True
                         self._set_data_prep(list_item, key)
-                        super().set_data(
-                            list_item, autofill=autofill, check_data=check
-                        )
+                        if is_record:
+                            super().set_record(list_item, autofill, check_data)
+                        else:
+                            super().set_data(
+                                list_item, autofill=autofill, check_data=check
+                            )
                 for key in del_keys:
                     del data[key]
             else:
@@ -1736,6 +1866,25 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                 self._set_data_prep(data["data"], key)
                 super().set_data(data, autofill)
         else:
+            if is_record:
+                comment = (
+                    "Set record method requires that data_record is a "
+                    "dictionary."
+                )
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    self.structure.get_model(),
+                    self.structure.get_package(),
+                    self._path,
+                    "setting data record",
+                    self.structure.name,
+                    inspect.stack()[0][3],
+                    type_,
+                    value_,
+                    traceback_,
+                    comment,
+                    self._simulation_data.debug,
+                )
             if key is None:
                 # search for a key
                 new_key_index = self.structure.first_non_keyword_index()
