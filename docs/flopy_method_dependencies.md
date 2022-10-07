@@ -25,7 +25,7 @@ Additional dependencies to use optional FloPy helper methods are listed below.
 | `.generate_classes()` in `flopy.mf6.utils`                                           | [**pymake**](https://github.com/modflowpy/pymake)                  |
 | `GridIntersect()` in `flopy.utils.gridintersect`                                     | **shapely**                                                        |
 | `GridIntersect().plot_polygon()` in `flopy.utils.gridintersect`                      | **shapely** and **descartes**                                      |
-| `Raster()` in `flopy.utils.Raster`                                                   | **rasterio**, **affine**, and **scipy**                            |
+| `Raster()` in `flopy.utils.Raster`                                                   | **rasterio**, **rasterstats**, **affine**, and **scipy**                            |
 | `Raster().sample_polygon()` in `flopy.utils.Raster`                                  | **shapely**                                                        |
 | `Raster().crop()` in `flopy.utils.Raster`                                            | **shapely**                                                        |
 | `.array_at_verts()` in `flopy.discretization.structuredgrid` `StructuredGrid` class  | **scipy.interpolate**                                              |

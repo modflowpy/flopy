@@ -134,6 +134,9 @@ class PlotMapView:
         vmin = kwargs.pop("vmin", None)
         vmax = kwargs.pop("vmax", None)
 
+        if "cmap" not in kwargs:
+            kwargs["cmap"] = "viridis"
+
         # set matplotlib kwargs
         collection.set_clim(vmin=vmin, vmax=vmax)
         collection.set(**kwargs)
@@ -560,64 +563,6 @@ class PlotMapView:
         ax = kwargs.pop("ax", self.ax)
         patch_collection = plotutil.plot_shapefile(obj, ax, **kwargs)
         return patch_collection
-
-    def plot_cvfd(self, verts, iverts, **kwargs):
-        """
-        Plot a cvfd grid.  The vertices must be in the same
-        coordinates as the rotated and offset grid.
-
-        Parameters
-        ----------
-        verts : ndarray
-            2d array of x and y points.
-        iverts : list of lists
-            should be of len(ncells) with a list of vertex number for each cell
-
-        kwargs : dictionary
-            Keyword arguments passed to plotutil.plot_cvfd()
-
-        """
-        warnings.warn(
-            "plot_cvfd will be deprecated and will be removed in version "
-            "3.3.5. Use plot_grid or plot_array",
-            PendingDeprecationWarning,
-        )
-        a = kwargs.pop("a", None)
-        if a is None:
-            return self.plot_grid(**kwargs)
-        else:
-            return self.plot_array(a, **kwargs)
-
-    def contour_array_cvfd(self, vertc, a, masked_values=None, **kwargs):
-        """
-        Contour a cvfd array.  If the array is three-dimensional,
-        then the method will contour the layer tied to this class (self.layer).
-        The vertices must be in the same coordinates as the rotated and
-        offset grid.
-
-        Parameters
-        ----------
-        vertc : np.ndarray
-            Array with of size (nc, 2) with centroid location of cvfd
-        a : numpy.ndarray
-            Array to plot.
-        masked_values : iterable of floats, ints
-            Values to mask.
-        **kwargs : dictionary
-            keyword arguments passed to matplotlib.pyplot.pcolormesh
-
-        Returns
-        -------
-        contour_set : matplotlib.pyplot.contour
-
-        """
-        warnings.warn(
-            "contour_cvfd will be deprecated and removed in version 3.3.5. "
-            " Use contour_array",
-            PendingDeprecationWarning,
-        )
-
-        return self.contour_array(a, masked_values=masked_values, **kwargs)
 
     def plot_vector(
         self,
