@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
+from autotest.conftest import requires_exe
 from flopy.mf6 import (
     MFSimulation,
     ModflowGwf,
@@ -31,6 +32,7 @@ def mf6_freyberg_path(example_data_path):
 
 
 @pytest.mark.mf6
+@requires_exe("mf6")
 def test_faceflows(tmpdir, mf6_freyberg_path):
     sim = MFSimulation.load(
         sim_name="freyberg",
@@ -98,6 +100,7 @@ def test_faceflows(tmpdir, mf6_freyberg_path):
 
 
 @pytest.mark.mf6
+@requires_exe("mf6")
 def test_flowja_residuals(tmpdir, mf6_freyberg_path):
     sim = MFSimulation.load(
         sim_name="freyberg",
@@ -145,6 +148,7 @@ def test_flowja_residuals(tmpdir, mf6_freyberg_path):
 
 
 @pytest.mark.mf6
+@requires_exe("mf6")
 def test_structured_faceflows_3d(tmpdir):
     name = "mymodel"
     sim = MFSimulation(sim_name=name, sim_ws=str(tmpdir), exe_name="mf6")

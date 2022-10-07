@@ -583,6 +583,7 @@ def test_load_write_wel_option_line(tmpdir, options_path):
     assert wel.iunitramp == 20
 
 
+@requires_exe("mfnwt")
 def test_uzf_negative_iuzfopt(tmpdir):
     ml = Modflow(
         modelname="uzf_neg",

@@ -809,6 +809,7 @@ def make_mp_model(nm, m, ws, use_pandas):
     return mp
 
 
+@requires_exe("mf2005")
 @parametrize_with_cases("ml", cases=Mp6Cases2)
 def test_mp_wpandas_wo_pandas(ml):
     """

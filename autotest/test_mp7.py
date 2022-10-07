@@ -841,6 +841,7 @@ def test_endpoint_output(tmpdir):
     # assert not np.allclose(t0, t1), msg
 
 
+@requires_exe("mf6")
 def test_pathline_plotting(tmpdir):
     ml = Mp7Cases.mf6(tmpdir)
     success, buff = ml.run_model()

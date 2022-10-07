@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import pytest
-from autotest.conftest import requires_pkg
+from autotest.conftest import requires_pkg, requires_exe
 from flaky import flaky
 from matplotlib import pyplot as plt
 from matplotlib import rcParams
@@ -352,6 +352,7 @@ def test_model_dot_plot_export(tmpdir, example_data_path):
 
 
 @requires_pkg("pandas")
+@requires_exe("mf2005")
 def test_pathline_plot_xc(tmpdir, example_data_path):
     # test with multi-layer example
     load_ws = example_data_path / "mp6"
@@ -465,6 +466,7 @@ def quasi3d_model(tmpdir):
     return mf
 
 
+@requires_exe("mf2005")
 def test_map_plot_with_quasi3d_layers(quasi3d_model):
     # read output
     hf = HeadFile(
@@ -490,6 +492,7 @@ def test_map_plot_with_quasi3d_layers(quasi3d_model):
     plt.savefig(os.path.join(str(quasi3d_model.model_ws), "plt01.png"))
 
 
+@requires_exe("mf2005")
 def test_cross_section_with_quasi3d_layers(quasi3d_model):
     # read output
     hf = HeadFile(
