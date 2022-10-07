@@ -235,6 +235,7 @@ def mp7_large(module_tmpdir):
     )
 
 
+@requires_exe("mf6")
 def test_pathline_file_sorts_in_ctor(tmpdir, module_tmpdir, mp7_small):
     sim, forward_model_name, backward_model_name, nodew, nodesr = mp7_small
     ws = tmpdir / "ws"

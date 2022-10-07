@@ -268,6 +268,7 @@ def test_obs_single_time(tmpdir):
     assert data["obs02"][0] == 20.0, "obs02[0] != 20.0"
 
 
+@requires_exe("mf2005")
 def test_obs_create_and_write(tmpdir, example_data_path):
     """
     test041 create and write of MODFLOW-2005 OBS example problem
