@@ -23,6 +23,7 @@ __license__ = "CC0"
 owner = "MODFLOW-USGS"
 # key is the repo name, value is the renamed file prefix for the download
 renamed_prefix = {
+    "modflow6": "modflow6",
     "executables": "modflow_executables",
     "modflow6-nightly-build": "modflow6_nightly",
 }
@@ -97,6 +98,8 @@ def columns_str(items, line_chars=79):
     """Return str of columns of items, similar to 'ls' command."""
     item_chars = max(len(item) for item in items)
     num_cols = line_chars // item_chars
+    if num_cols == 0:
+        num_cols = 1
     num_rows = len(items) // num_cols
     if len(items) % num_cols != 0:
         num_rows += 1
@@ -129,8 +132,8 @@ def run_main(
         colon character. See error message or other documentation for further
         information on auto-select options.
     repo : str, default "executables"
-        Name of GitHub repository. Choose one of "executables" (default) or
-        "modflow6-nightly-build".
+        Name of GitHub repository. Choose one of "executables" (default),
+        "modflow6", or "modflow6-nightly-build".
     release_id : str, default "latest"
         GitHub release ID.
     ostag : str, optional
@@ -190,6 +193,7 @@ def run_main(
 
     if ostag is None:
         ostag = get_ostag()
+
     exe_suffix = ""
     if ostag in ["win32", "win64"]:
         exe_suffix = ".exe"
@@ -340,18 +344,29 @@ def run_main(
         print(f"fetched release {tag_name!r} from {owner}/{repo}")
 
     assets = release.get("assets", [])
-    for asset in assets:
-        if ostag in asset["name"]:
-            break
+
+    # Windows 64-bit asset in modflow6 repo release has no OS tag
+    if repo == "modflow6" and ostag == "win64":
+        asset = list(sorted(assets, key=lambda a: len(a["name"])))[0]
     else:
-        raise ValueError(
-            f"could not find ostag {ostag!r} from release {tag_name!r}; "
-            f"see available assets here:\n{release['html_url']}"
-        )
+        for asset in assets:
+            if ostag in asset["name"]:
+                break
+        else:
+            raise ValueError(
+                f"could not find ostag {ostag!r} from release {tag_name!r}; "
+                f"see available assets here:\n{release['html_url']}"
+            )
     asset_name = asset["name"]
     download_url = asset["browser_download_url"]
-    # change local download name so it is more unique
-    dst_fname = "-".join([renamed_prefix[repo], tag_name, asset_name])
+    if repo == "modflow6":
+        asset_pth = Path(asset_name)
+        asset_stem = asset_pth.stem
+        asset_suffix = asset_pth.suffix
+        dst_fname = "-".join([repo, tag_name, ostag]) + asset_suffix
+    else:
+        # change local download name so it is more unique
+        dst_fname = "-".join([renamed_prefix[repo], tag_name, asset_name])
     tmpdir = None
     if downloads_dir is None:
         downloads_dir = Path.home() / "Downloads"
@@ -390,6 +405,7 @@ def run_main(
     extract = set()
     chmod = set()
     items = []
+    full_path = {}
     if meta_path:
         from datetime import datetime
 
@@ -405,7 +421,17 @@ def run_main(
         if subset:
             meta["subset"] = sorted(subset)
     with zipfile.ZipFile(download_pth, "r") as zipf:
-        files = set(zipf.namelist())
+        if repo == "modflow6":
+            # modflow6 release contains the whole repo with an internal bindir
+            inner_bin = asset_stem + "/bin"
+            for pth in zipf.namelist():
+                if pth.startswith(inner_bin) and not pth.endswith("bin/"):
+                    full_path[Path(pth).name] = pth
+            files = set(full_path.keys())
+        else:
+            # assume all files to be extracted
+            files = set(zipf.namelist())
+
         code = False
         if "code.json" in files:
             # don't extract this file
@@ -466,10 +492,15 @@ def run_main(
                         )
                     ):
                         add_item(key, fname, do_chmod=True)
-        else:  # release 1.0 did not have code.json
+
+        else:
+            # releases without code.json
             for fname in sorted(files):
                 if nosub or (subset and fname in subset):
-                    extract.add(fname)
+                    if full_path:
+                        extract.add(full_path[fname])
+                    else:
+                        extract.add(fname)
                     items.append(fname)
                     if not fname.endswith(lib_suffix):
                         chmod.add(fname)
@@ -478,10 +509,29 @@ def run_main(
                 f"extracting {len(extract)} "
                 f"file{'s' if len(extract) != 1 else ''} to '{bindir}'"
             )
+
         zipf.extractall(bindir, members=extract)
 
     # If this is a TemporaryDirectory, then delete the directory and files
     del tmpdir
+
+    if full_path:
+        # move files that used a full path to bindir
+        rmdirs = set()
+        for fpath in extract:
+            fpath = Path(fpath)
+            bindir_path = bindir / fpath
+            bindir_path.rename(bindir / fpath.name)
+            rmdirs.add(fpath.parent)
+        # clean up directories, starting with the longest
+        for rmdir in reversed(sorted(rmdirs)):
+            bindir_path = bindir / rmdir
+            bindir_path.rmdir()
+            for subdir in rmdir.parents:
+                bindir_path = bindir / subdir
+                if bindir_path == bindir:
+                    break
+                bindir_path.rmdir()
 
     if ostag in ["linux", "mac"]:
         # similar to "chmod +x fname" for each executable
@@ -494,6 +544,8 @@ def run_main(
         print(columns_str(items))
 
         if not subset:
+            if full_path:
+                extract = {Path(fpth).name for fpth in extract}
             unexpected = extract.difference(files)
             if unexpected:
                 print(f"unexpected remaining {len(unexpected)} files:")
