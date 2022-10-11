@@ -15,7 +15,6 @@ import urllib
 import urllib.request
 import zipfile
 from importlib.util import find_spec
-from os.path import splitext
 from pathlib import Path
 
 __all__ = ["run_main"]
@@ -99,6 +98,8 @@ def columns_str(items, line_chars=79):
     """Return str of columns of items, similar to 'ls' command."""
     item_chars = max(len(item) for item in items)
     num_cols = line_chars // item_chars
+    if num_cols == 0:
+        num_cols = 1
     num_rows = len(items) // num_cols
     if len(items) % num_cols != 0:
         num_rows += 1
@@ -344,8 +345,8 @@ def run_main(
 
     assets = release.get("assets", [])
 
-    # Windows asset in modflow6 repo release has no OS tag
-    if repo == "modflow6" and "win" in ostag:
+    # Windows 64-bit asset in modflow6 repo release has no OS tag
+    if repo == "modflow6" and ostag == "win64":
         asset = list(sorted(assets, key=lambda a: len(a["name"])))[0]
     else:
         for asset in assets:
@@ -358,8 +359,14 @@ def run_main(
             )
     asset_name = asset["name"]
     download_url = asset["browser_download_url"]
-    # change local download name so it is more unique
-    dst_fname = "-".join([renamed_prefix[repo], tag_name, asset_name])
+    if repo == "modflow6":
+        asset_pth = Path(asset_name)
+        asset_stem = asset_pth.stem
+        asset_suffix = asset_pth.suffix
+        dst_fname = "-".join([repo, tag_name, ostag]) + asset_suffix
+    else:
+        # change local download name so it is more unique
+        dst_fname = "-".join([renamed_prefix[repo], tag_name, asset_name])
     tmpdir = None
     if downloads_dir is None:
         downloads_dir = Path.home() / "Downloads"
@@ -398,6 +405,7 @@ def run_main(
     extract = set()
     chmod = set()
     items = []
+    full_path = {}
     if meta_path:
         from datetime import datetime
 
@@ -413,7 +421,17 @@ def run_main(
         if subset:
             meta["subset"] = sorted(subset)
     with zipfile.ZipFile(download_pth, "r") as zipf:
-        files = set(zipf.namelist())
+        if repo == "modflow6":
+            # modflow6 release contains the whole repo with an internal bindir
+            inner_bin = asset_stem + "/bin"
+            for pth in zipf.namelist():
+                if pth.startswith(inner_bin) and not pth.endswith("bin/"):
+                    full_path[Path(pth).name] = pth
+            files = set(full_path.keys())
+        else:
+            # assume all files to be extracted
+            files = set(zipf.namelist())
+
         code = False
         if "code.json" in files:
             # don't extract this file
@@ -474,49 +492,46 @@ def run_main(
                         )
                     ):
                         add_item(key, fname, do_chmod=True)
-        # executables release 1.0 did not have code.json
-        # neither do modflow6 or nightly build releases
+
         else:
+            # releases without code.json
             for fname in sorted(files):
                 if nosub or (subset and fname in subset):
-                    extract.add(fname)
+                    if full_path:
+                        extract.add(full_path[fname])
+                    else:
+                        extract.add(fname)
                     items.append(fname)
                     if not fname.endswith(lib_suffix):
                         chmod.add(fname)
         if not quiet:
             print(
                 f"extracting {len(extract)} "
-                f"file{'s' if len(extract) != 1 else ''} to '{downloads_dir if repo == 'modflow6' else bindir}'"
+                f"file{'s' if len(extract) != 1 else ''} to '{bindir}'"
             )
 
-        # modflow6 release contains the whole repo with an internal bindir
-        # executables & nightly build releases contain binaries themselves
-        if repo == "modflow6":
-            zipf.extractall(downloads_dir, members=extract)
-
-            inner = downloads_dir / splitext(asset_name)[0]
-            inner_bin = inner / "bin"
-
-            if not quiet:
-                print(
-                    f"copying {len(list(inner_bin.glob('*')))} files to '{bindir}'"
-                )
-
-            if sys.version_info[:3] < (3, 8):
-                from distutils.dir_util import copy_tree
-
-                copy_tree(str(inner_bin), str(bindir))
-            else:
-                from shutil import copytree
-
-                copytree(inner / "bin", bindir, dirs_exist_ok=True)
-
-            chmod = set(list(bindir.glob("*")))
-        else:
-            zipf.extractall(bindir, members=extract)
+        zipf.extractall(bindir, members=extract)
 
     # If this is a TemporaryDirectory, then delete the directory and files
     del tmpdir
+
+    if full_path:
+        # move files that used a full path to bindir
+        rmdirs = set()
+        for fpath in extract:
+            fpath = Path(fpath)
+            bindir_path = bindir / fpath
+            bindir_path.rename(bindir / fpath.name)
+            rmdirs.add(fpath.parent)
+        # clean up directories, starting with the longest
+        for rmdir in reversed(sorted(rmdirs)):
+            bindir_path = bindir / rmdir
+            bindir_path.rmdir()
+            for subdir in rmdir.parents:
+                bindir_path = bindir / subdir
+                if bindir_path == bindir:
+                    break
+                bindir_path.rmdir()
 
     if ostag in ["linux", "mac"]:
         # similar to "chmod +x fname" for each executable
@@ -525,10 +540,12 @@ def run_main(
             pth.chmod(pth.stat().st_mode | 0o111)
 
     # Show listing
-    if code and not quiet:
+    if not quiet:
         print(columns_str(items))
 
         if not subset:
+            if full_path:
+                extract = {Path(fpth).name for fpth in extract}
             unexpected = extract.difference(files)
             if unexpected:
                 print(f"unexpected remaining {len(unexpected)} files:")

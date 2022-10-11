@@ -1,7 +1,6 @@
 """Test get-modflow utility."""
 import sys
 import urllib
-from os.path import splitext
 from pathlib import Path
 from platform import system
 from typing import List
