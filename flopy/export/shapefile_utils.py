@@ -4,10 +4,10 @@ Module for exporting and importing flopy model attributes
 """
 import copy
 import json
-import os
 import shutil
 import sys
 import warnings
+from os.path import expandvars
 from pathlib import Path
 
 import numpy as np
@@ -26,7 +26,7 @@ def write_gridlines_shapefile(filename, mg):
 
     Parameters
     ----------
-    filename : string
+    filename : Path or str
         name of the shapefile to write
     mg : model grid
 
@@ -36,7 +36,7 @@ def write_gridlines_shapefile(filename, mg):
 
     """
     shapefile = import_optional_dependency("shapefile")
-    wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
+    wr = shapefile.Writer(str(filename), shapeType=shapefile.POLYLINE)
     wr.field("number", "N", 18, 0)
     if mg.__class__.__name__ == "SpatialReference":
         grid_lines = mg.get_grid_lines()
@@ -52,6 +52,7 @@ def write_gridlines_shapefile(filename, mg):
         wr.record(i)
 
     wr.close()
+    write_prj(filename, mg=mg)
     return
 
 
@@ -68,7 +69,7 @@ def write_grid_shapefile(
 
     Parameters
     ----------
-    path : str
+    path : Path or str
         shapefile file path
     mg : flopy.discretization.Grid object
         flopy model grid
@@ -78,7 +79,7 @@ def write_grid_shapefile(
         value to fill nans
     epsg : str, int
         epsg code
-    prj : str
+    prj : Path or str
         projection file name path
 
     Returns
@@ -87,7 +88,7 @@ def write_grid_shapefile(
 
     """
     shapefile = import_optional_dependency("shapefile")
-    w = shapefile.Writer(path, shapeType=shapefile.POLYGON)
+    w = shapefile.Writer(str(path), shapeType=shapefile.POLYGON)
     w.autoBalance = 1
 
     if mg.__class__.__name__ == "SpatialReference":
@@ -214,7 +215,7 @@ def model_attributes_to_shapefile(
 
     Parameters
     ----------
-    path : string
+    path : Path or str
         path to write the shapefile to
     ml : flopy.mbase
         model instance
@@ -230,7 +231,7 @@ def model_attributes_to_shapefile(
             of the modelgrid attached to the modflow model object
         epsg : int
             epsg projection information
-        prj : str
+        prj : Path or str
             user supplied prj file
 
     Returns
@@ -388,7 +389,7 @@ def shape_attr_name(name, length=6, keep_layer=False):
 
     Parameters
     ----------
-    name : string
+    name : str
         data array name
     length : int
         maximum length of string to return. Value passed to function is
@@ -400,7 +401,7 @@ def shape_attr_name(name, length=6, keep_layer=False):
 
     Returns
     -------
-    String
+    str
 
     Examples
     --------
@@ -442,7 +443,8 @@ def enforce_10ch_limit(names):
 
     Returns
     -------
-    names : list of unique strings of len <= 10.
+    list
+        list of unique strings of len <= 10.
     """
     names = [n[:5] + n[-4:] + "_" if len(n) > 10 else n for n in names]
     dups = {x: names.count(x) for x in names}
@@ -488,19 +490,19 @@ def shp2recarray(shpname):
 
     Parameters
     ----------
-    shpname : str
+    shpname : Path or str
         ESRI Shapefile.
 
     Returns
     -------
-    recarray : np.recarray
+    np.recarray
 
     """
     from ..utils.geospatial_utils import GeoSpatialCollection
 
     sf = import_optional_dependency("shapefile")
 
-    sfobj = sf.Reader(shpname)
+    sfobj = sf.Reader(str(shpname))
     dtype = [
         (str(f[0]), get_pyshp_field_dtypes(f[1])) for f in sfobj.fields[1:]
     ]
@@ -540,11 +542,11 @@ def recarray2shp(
             list of shapefile.Shape objects, or geojson geometry collection
         The number of geometries in geoms must equal the number of records in
         recarray.
-    shpname : str
+    shpname : Path or str, default "recarray.shp"
         Path for the output shapefile
     epsg : int
         EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
-    prj : str
+    prj : Path or str
         Existing projection file to be used with new shapefile.
 
     Notes
@@ -578,7 +580,7 @@ def recarray2shp(
 
     # set up for pyshp 2
     shapefile = import_optional_dependency("shapefile")
-    w = shapefile.Writer(shpname, shapeType=geomtype)
+    w = shapefile.Writer(str(shpname), shapeType=geomtype)
     w.autoBalance = 1
 
     # set up the attribute fields
@@ -615,7 +617,7 @@ def recarray2shp(
 
 def write_prj(shpname, mg=None, epsg=None, prj=None, wkt_string=None):
     # projection file name
-    prjname = shpname.replace(".shp", ".prj")
+    prjname = Path(shpname).with_suffix(".prj")
 
     # figure which CRS option to use
     # prioritize args over grid reference
@@ -626,10 +628,10 @@ def write_prj(shpname, mg=None, epsg=None, prj=None, wkt_string=None):
         prjtxt = CRS.getprj(epsg)
     # copy a supplied prj file
     elif prj is not None:
-        if os.path.exists(prjname):
-            print(".prj file {} already exists ".format(prjname))
+        if prjname.exists():
+            print(f".prj file {prjname} already exists")
         else:
-            shutil.copy(prj, prjname)
+            shutil.copy(str(prj), str(prjname))
 
     elif mg is not None:
         if mg.epsg is not None:
@@ -643,8 +645,7 @@ def write_prj(shpname, mg=None, epsg=None, prj=None, wkt_string=None):
             "(writing .prj files from proj4 strings not supported)"
         )
     if prjtxt is not None:
-        with open(prjname, "w") as output:
-            output.write(prjtxt)
+        prjname.write_text(prjtxt)
 
 
 class CRS:
@@ -868,9 +869,10 @@ class CRS:
         addlocalreference : boolean
             adds the projection file text associated with epsg to a local
             database, epsgref.json, located in the user's data directory.
+
         Returns
         -------
-        prj : str
+        str
             text for a projection (*.prj) file.
 
         """
@@ -896,9 +898,10 @@ class CRS:
             epsg code for coordinate system
         text : str
             string added to url
+
         Returns
         -------
-        url : str
+        str
 
         """
         from ..utils.flopy_io import get_url_text
@@ -938,9 +941,10 @@ class CRS:
         ----------
         epsg : int
             epsg code for coordinate system
+
         Returns
         -------
-        prj : str
+        str
             text for a projection (*.prj) file.
         """
         return CRS.get_spatialreference(epsg, text="proj4")
@@ -957,22 +961,21 @@ class EpsgReference:
 
     def __init__(self):
         if sys.platform.startswith("win"):
-            flopy_appdata = Path(os.path.expandvars(r"%LOCALAPPDATA%\flopy"))
+            flopy_appdata = Path(expandvars(r"%LOCALAPPDATA%\flopy"))
         else:
             flopy_appdata = Path.home() / ".local" / "share" / "flopy"
         if not flopy_appdata.exists():
             flopy_appdata.mkdir(parents=True, exist_ok=True)
         dbname = "epsgref.json"
-        self.location = str(flopy_appdata / dbname)
+        self.location = flopy_appdata / dbname
 
     def to_dict(self):
         """
         returns dict with EPSG code integer key, and WKT CRS text
         """
         data = {}
-        if os.path.exists(self.location):
-            with open(self.location, "r") as f:
-                loaded_data = json.load(f)
+        if self.location.exists():
+            loaded_data = json.loads(self.location.read_text())
             # convert JSON key from str to EPSG integer
             for key, value in loaded_data.items():
                 try:
@@ -982,15 +985,15 @@ class EpsgReference:
         return data
 
     def _write(self, data):
-        with open(self.location, "w") as f:
+        with self.location.open("w") as f:
             json.dump(data, f, indent=0)
             f.write("\n")
 
     def reset(self, verbose=True):
-        if os.path.exists(self.location):
+        if self.location.exists():
             if verbose:
                 print(f"Resetting {self.location}")
-            os.remove(self.location)
+            self.location.unlink()
         elif verbose:
             print(f"{self.location} does not exist, no reset required")
 
