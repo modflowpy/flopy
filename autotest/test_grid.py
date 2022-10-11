@@ -4,7 +4,7 @@ from warnings import warn
 import matplotlib
 import numpy as np
 import pytest
-from autotest.conftest import requires_pkg, requires_exe
+from autotest.conftest import requires_exe, requires_pkg
 from autotest.test_dis_cases import case_dis, case_disv
 from autotest.test_grid_cases import GridCases
 from flaky import flaky
@@ -347,14 +347,15 @@ def test_structured_neighbors(example_data_path):
     neighbors = modelgrid.neighbors(k, i, j)
     for neighbor in neighbors:
         if (
-                neighbor != (k, i + 1, j)
-                and neighbor != (k, i - 1, j)
-                and neighbor != (k, i, j + 1)
-                and neighbor != (k, i, j - 1)
+            neighbor != (k, i + 1, j)
+            and neighbor != (k, i - 1, j)
+            and neighbor != (k, i, j + 1)
+            and neighbor != (k, i, j - 1)
         ):
             raise AssertionError(
                 "modelgid.neighbors not returning proper values"
             )
+
 
 def test_vertex_neighbors(example_data_path):
     ws = str(example_data_path / "mf6" / "test003_gwfs_disv")
@@ -365,10 +366,10 @@ def test_vertex_neighbors(example_data_path):
     neighbors = modelgrid.neighbors(node)
     for neighbor in neighbors:
         if (
-                neighbor != node + 1
-                and neighbor != node - 1
-                and neighbor != node + 10
-                and neighbor != node - 10
+            neighbor != node + 1
+            and neighbor != node - 1
+            and neighbor != node + 10
+            and neighbor != node - 10
         ):
             raise AssertionError(
                 "modelgid.neighbors not returning proper values"
@@ -1009,7 +1010,7 @@ def test_get_lni_unstructured(grid):
                     list(grid.ncpl)
                     if not isinstance(grid.ncpl, int)
                     else [grid.ncpl for _ in range(grid.nlay)]
-        )
+                )
             )
         )
         assert csum[layer] + i == nn
