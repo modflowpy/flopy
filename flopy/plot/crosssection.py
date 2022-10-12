@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Polygon
 
-from ..utils import geometry
+from ..utils import geometry, import_optional_dependency
+from ..utils.geospatial_utils import GeoSpatialUtil
 from . import plotutil
 
 warnings.simplefilter("always", PendingDeprecationWarning)
@@ -135,7 +136,13 @@ class PlotCrossSection:
                     (xcenter[int(line[onkey])], yedge[-1] - eps),
                 ]
         else:
-            verts = line[onkey]
+            ln = line[onkey]
+
+            if not PlotCrossSection._is_valid(ln):
+                raise ValueError(f"Invalid line representation")
+
+            gu = GeoSpatialUtil(ln, shapetype="linestring")
+            verts = gu.points
             xp = []
             yp = []
             for [v1, v2] in verts:
@@ -145,18 +152,22 @@ class PlotCrossSection:
             xp, yp = self.mg.get_local_coords(xp, yp)
             if np.max(xp) - np.min(xp) > np.max(yp) - np.min(yp):
                 # this is x-projection and we should buffer x by small amount
-                idx0 = list(xp).index(np.max(xp))
-                idx1 = list(xp).index(np.min(xp))
+                idx0 = np.argmax(xp)
+                idx1 = np.argmin(xp)
+                idx2 = np.argmax(yp)
                 xp[idx0] += 1e-04
                 xp[idx1] -= 1e-04
+                yp[idx2] += 1e-03
                 self.direction = "x"
 
             else:
                 # this is y-projection and we should buffer y by small amount
-                idx0 = list(yp).index(np.max(yp))
-                idx1 = list(yp).index(np.min(yp))
+                idx0 = np.argmax(yp)
+                idx1 = np.argmin(yp)
+                idx2 = np.argmax(xp)
                 yp[idx0] += 1e-04
                 yp[idx1] -= 1e-04
+                xp[idx2] += 1e-03
                 self.direction = "y"
 
             pts = [(xt, yt) for xt, yt in zip(xp, yp)]
@@ -168,10 +179,14 @@ class PlotCrossSection:
         )
 
         if len(self.xypts) < 2:
-            s = "cross-section cannot be created\n."
-            s += "   less than 2 points intersect the model grid\n"
-            s += f"   {len(self.xypts)} points intersect the grid."
-            raise Exception(s)
+            if len(list(self.xypts.values())[0]) < 2:
+                s = (
+                    "cross-section cannot be created\n."
+                    " less than 2 points intersect the model grid\n"
+                    f" {len(self.xypts.values()[0])} points"
+                    " intersect the grid."
+                )
+                raise Exception(s)
 
         if self.geographic_coords:
             # transform back to geographic coordinates
@@ -245,6 +260,32 @@ class PlotCrossSection:
         # Set axis limits
         self.ax.set_xlim(self.extent[0], self.extent[1])
         self.ax.set_ylim(self.extent[2], self.extent[3])
+
+    @staticmethod
+    def _is_valid(line):
+        shapely_geo = import_optional_dependency("shapely.geometry")
+
+        if isinstance(
+            line,
+            (
+                list,
+                tuple,
+                np.ndarray,
+            ),
+        ):
+            a = np.array(line)
+            if (len(a.shape) < 2 or a.shape[0] < 2) or a.shape[1] != 2:
+                return False
+        elif not isinstance(
+            line,
+            (
+                geometry.LineString,
+                shapely_geo.LineString,
+            ),
+        ):
+            return False
+
+        return True
 
     @property
     def polygons(self):
@@ -1505,7 +1546,9 @@ class PlotCrossSection:
                 data.append(plotarray[cell])
 
         if len(rectcol) > 0:
-            patches = PatchCollection(rectcol, match_original, **kwargs)
+            patches = PatchCollection(
+                rectcol, match_original=match_original, **kwargs
+            )
             if not fill_between:
                 patches.set_array(np.array(data))
                 patches.set_clim(vmin, vmax)

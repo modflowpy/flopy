@@ -40,18 +40,18 @@ Instructions for making a FloPy release
 
 ## Update the Software/Code citation for FloPy
 
-1. Update the `author_dict` in `flopy/version.py` for the Software/Code citation for FloPy, if required.
+1. Update the authors in `CITATION.cff` for the Software/Code citation for FloPy, if required.
 
 
 ## Build USGS release notes
 
-1.  Manually run `make-release.py` in the `release/` directory to update version information using:
+1.  Manually run `make-release.py` in the `scripts/` directory to update version information using:
 
     ```
     python make-release.py
     ```
 
-2.  Manually run `update-version_changes.py` in the `release/` directory to update version changes information using:
+2.  Manually run `update-version_changes.py` in the `scripts/` directory to update version changes information using:
 
     ```
     python update-version_changes.py
@@ -151,7 +151,7 @@ Use `run_notebooks.py` in the `release` directory to rerun all of the notebooks 
 
 2.  Increment `major`, `minor`, and/or `micro` numbers in `flopy/version.py`, as appropriate.
 
-3.  Manually run `make-release.py` in the `release/` directory to update version information using:
+3.  Manually run `make-release.py` in the `scripts/` directory to update version information using:
 
     ```
     python make-release.py

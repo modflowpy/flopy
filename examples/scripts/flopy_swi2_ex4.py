@@ -1,6 +1,6 @@
 import os
-import platform
 import sys
+from tempfile import TemporaryDirectory
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,9 +31,7 @@ def LegBar(ax, x0, y0, t0, dx, dy, dt, cc):
     return
 
 
-def run():
-    workspace = "swiex4"
-
+def run(workspace, quiet):
     cleanFiles = False
     skipRuns = False
     fext = "png"
@@ -68,8 +66,6 @@ def run():
 
     # Set path and name of MODFLOW exe
     exe_name = "mf2005"
-    if platform.system() == "Windows":
-        exe_name = "mf2005"
 
     ncol = 61
     nrow = 61
@@ -234,7 +230,7 @@ def run():
         # create model files
         ml.write_input()
         # run the model
-        m = ml.run_model(silent=False)
+        m = ml.run_model(silent=quiet)
 
     # model with saltwater wells
     modelname2 = "swiex4_s2"
@@ -291,7 +287,7 @@ def run():
         # create model files
         ml2.write_input()
         # run the model
-        m = ml2.run_model(silent=False)
+        m = ml2.run_model(silent=quiet)
 
     # Load the simulation 1 `ZETA` data and `ZETA` observations.
     # read base model zeta
@@ -583,8 +579,26 @@ def run():
     fig.savefig(outfig, dpi=300)
     print("created...", outfig)
 
-    return 0
-
 
 if __name__ == "__main__":
-    success = run()
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--keep", help="output directory")
+    parser.add_argument(
+        "--quiet", action="store_false", help="don't show model output"
+    )
+    args = vars(parser.parse_args())
+
+    workspace = args.get("keep", None)
+    quiet = args.get("quiet", False)
+
+    if workspace is not None:
+        run(workspace, quiet)
+    else:
+        try:
+            with TemporaryDirectory() as workspace:
+                run(workspace, quiet)
+        except (PermissionError, NotADirectoryError):
+            # can occur on windows: https://docs.python.org/3/library/tempfile.html#tempfile.TemporaryDirectory
+            pass

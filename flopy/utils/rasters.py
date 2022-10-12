@@ -1,9 +1,11 @@
-import queue
-import threading
+import warnings
 
 import numpy as np
 
+from .geometry import Polygon
 from .utl_import import import_optional_dependency
+
+warnings.simplefilter("always", DeprecationWarning)
 
 
 class Raster:
@@ -341,7 +343,7 @@ class Raster:
         band : int
             raster band to re-sample
         method : str
-            scipy interpolation methods
+            resampling methods
 
             ``linear`` for bi-linear interpolation
 
@@ -357,11 +359,13 @@ class Raster:
 
             ``max`` for maximum sampling
 
+            `'mode'` for majority sampling
+
         multithread : bool
-            boolean flag indicating if multithreading should be used with
-            the ``mean`` and ``median`` sampling methods
+            DEPRECATED boolean flag indicating if multithreading should be
+            used with the ``mean`` and ``median`` sampling methods
         thread_pool : int
-            number of threads to use for mean and median sampling
+            DEPRECATED number of threads to use for mean and median sampling
         extrapolate_edges : bool
             boolean flag indicating if areas without data should be filled
             using the ``nearest`` interpolation method. This option
@@ -371,9 +375,15 @@ class Raster:
         -------
             np.array
         """
+        if multithread:
+            warnings.warn(
+                "multithread option has been deprecated and will be removed "
+                "in flopy version 3.3.8"
+            )
+
         import_optional_dependency("scipy")
+        rasterstats = import_optional_dependency("rasterstats")
         from scipy.interpolate import griddata
-        from scipy.stats import mode
 
         method = method.lower()
         if method in ("linear", "nearest", "cubic"):
@@ -407,82 +417,24 @@ class Raster:
             )
 
         elif method in ("median", "mean", "min", "max", "mode"):
-            # these methods are slow and could use a speed up
-            ncpl = modelgrid.ncpl
+            # these methods are slow and could use speed ups
             data_shape = modelgrid.xcellcenters.shape
-            if isinstance(ncpl, (list, np.ndarray)):
-                ncpl = ncpl[0]
 
-            data = np.zeros((ncpl,), dtype=float)
+            if method == "mode":
+                method = "majority"
+            xv, yv = modelgrid.cross_section_vertices
+            polygons = [list(zip(x, yv[ix])) for ix, x in enumerate(xv)]
+            polygons = [Polygon(p) for p in polygons]
+            rstr = self.get_array(band, masked=False)
+            affine = self._meta["transform"]
+            nodata = self.nodatavals[0]
+            zs = rasterstats.zonal_stats(
+                polygons, rstr, affine=affine, stats=[method], nodata=nodata
+            )
+            data = np.array(
+                [z[method] if z[method] is not None else np.nan for z in zs]
+            )
 
-            if multithread:
-                q = queue.Queue()
-                container = threading.BoundedSemaphore(thread_pool)
-
-                # determine the number of thread pairs required to
-                # fill the grid
-                nthreadpairs = int(ncpl / thread_pool)
-                if ncpl % thread_pool != 0:
-                    nthreadpairs += 1
-
-                # iterate over the tread pairs
-                for idx in range(nthreadpairs):
-                    i0 = idx * thread_pool
-                    nthreads = thread_pool
-                    if i0 + thread_pool > ncpl:
-                        nthreads = ncpl - i0
-                    i1 = i0 + nthreads
-                    threads = []
-                    for node in range(i0, i1):
-                        t = threading.Thread(
-                            target=self.__threaded_resampling,
-                            args=(modelgrid, node, band, method, container, q),
-                        )
-                        threads.append(t)
-
-                    # start the threads
-                    for thread in threads:
-                        thread.daemon = True
-                        thread.start()
-
-                    # wait until all threads are terminated
-                    for thread in threads:
-                        thread.join()
-
-                    for idx in range(nthreads):
-                        node, val = q.get()
-                        data[node] = val
-
-            else:
-                for node in range(ncpl):
-                    verts = modelgrid.get_cell_vertices(node)
-                    rstr_data = self.sample_polygon(
-                        verts, band, convert=False
-                    ).astype(float)
-                    msk = np.in1d(rstr_data, self.nodatavals)
-                    rstr_data[msk] = np.nan
-
-                    if rstr_data.size == 0:
-                        val = self.nodatavals[0]
-                    else:
-                        if method == "median":
-                            val = np.nanmedian(rstr_data)
-                        elif method == "mean":
-                            val = np.nanmean(rstr_data)
-                        elif method == "max":
-                            val = np.nanmax(rstr_data)
-                        elif method == "mode":
-                            val = mode(
-                                rstr_data, axis=None, nan_policy="omit"
-                            ).mode
-                            if len(val) == 0:
-                                val = np.nan
-                            else:
-                                val = val[0]
-                        else:
-                            val = np.nanmin(rstr_data)
-
-                    data[node] = val
         else:
             raise TypeError(f"{method} method not supported")
 
@@ -525,63 +477,6 @@ class Raster:
         data[np.isnan(data)] = self.nodatavals[0]
 
         return data
-
-    def __threaded_resampling(
-        self, modelgrid, node, band, method, container, q
-    ):
-        """
-        Threaded resampling handler to speed up bottlenecks
-
-        Parameters
-        ----------
-        modelgrid : flopy.discretization.Grid object
-            flopy grid to sample to
-        node : int
-            node number
-        band : int
-            raster band to sample from
-        method : str
-            resampling method
-        container : threading.BoundedSemaphore
-        q : queue.Queue
-
-        Returns
-        -------
-            None
-        """
-        container.acquire()
-
-        import_optional_dependency("scipy")
-        from scipy.stats import mode
-
-        verts = modelgrid.get_cell_vertices(node)
-        rstr_data = self.sample_polygon(verts, band, convert=False).astype(
-            float
-        )
-        msk = np.in1d(rstr_data, self.nodatavals)
-        rstr_data[msk] = np.nan
-
-        if rstr_data.size == 0:
-            val = self.nodatavals[0]
-
-        else:
-            if method == "median":
-                val = np.nanmedian(rstr_data)
-            elif method == "mean":
-                val = np.nanmean(rstr_data)
-            elif method == "max":
-                val = np.nanmax(rstr_data)
-            elif method == "mode":
-                val = mode(rstr_data, axis=None, nan_policy="omit").mode
-                if len(val) == 0:
-                    val = np.nan
-                else:
-                    val = val[0]
-            else:
-                val = np.nanmin(rstr_data)
-
-        q.put((node, val))
-        container.release()
 
     def crop(self, polygon, invert=False):
         """
@@ -774,7 +669,7 @@ class Raster:
 
             geom = GeoSpatialUtil(polygon, shapetype="Polygon")
 
-            polygon = geom.points[0]
+            polygon = list(geom.points[0])
 
         # step 2: create a grid of centoids
         xc = self.xcenters

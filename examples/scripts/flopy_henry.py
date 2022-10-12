@@ -1,5 +1,6 @@
 import os
 import sys
+from tempfile import TemporaryDirectory
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,12 +8,7 @@ import numpy as np
 import flopy
 
 
-def run():
-    workspace = os.path.join("henry")
-    # make sure workspace directory exists
-    if not os.path.exists(workspace):
-        os.makedirs(workspace)
-
+def run(workspace, quiet):
     fext = "png"
     narg = len(sys.argv)
     iarg = 0
@@ -39,7 +35,7 @@ def run():
     hk = 864.0  # m/day
 
     # Create the basic MODFLOW model data
-    modelname = "henry"
+    modelname = "flopy_henry"
     m = flopy.seawat.Seawat(modelname, exe_name="swtv4", model_ws=workspace)
 
     # Add DIS package to the MODFLOW model
@@ -130,7 +126,7 @@ def run():
         pass
 
     # run the model
-    m.run_model()
+    m.run_model(silent=quiet)
 
     # Post-process the results
 
@@ -141,7 +137,7 @@ def run():
     times = ucnobj.get_times()
     concentration = ucnobj.get_data(totim=times[-1])
     cbbobj = flopy.utils.binaryfile.CellBudgetFile(
-        os.path.join(workspace, "henry.cbc")
+        os.path.join(workspace, f"{modelname}.cbc")
     )
     times = cbbobj.get_times()
     qx = cbbobj.get_data(text="flow right face", totim=times[-1])[0]
@@ -183,7 +179,7 @@ def run():
     print("created...", outfig)
 
     # Extract the heads
-    fname = os.path.join(workspace, "henry.hds")
+    fname = os.path.join(workspace, f"{modelname}.hds")
     headobj = flopy.utils.binaryfile.HeadFile(fname)
     times = headobj.get_times()
     head = headobj.get_data(totim=times[-1])
@@ -200,8 +196,26 @@ def run():
     fig.savefig(outfig, dpi=300)
     print("created...", outfig)
 
-    return 0
-
 
 if __name__ == "__main__":
-    success = run()
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--keep", help="output directory")
+    parser.add_argument(
+        "--quiet", action="store_false", help="don't show model output"
+    )
+    args = vars(parser.parse_args())
+
+    workspace = args.get("keep", None)
+    quiet = args.get("quiet", False)
+
+    if workspace is not None:
+        run(workspace, quiet)
+    else:
+        try:
+            with TemporaryDirectory() as workspace:
+                run(workspace, quiet)
+        except (PermissionError, NotADirectoryError):
+            # can occur on windows: https://docs.python.org/3/library/tempfile.html#tempfile.TemporaryDirectory
+            pass

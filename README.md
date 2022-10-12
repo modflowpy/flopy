@@ -2,7 +2,7 @@
 <img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
 ### Version 3.3.6 &mdash; release candidate
-[![flopy continuous integration](https://github.com/modflowpy/flopy/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/modflowpy/flopy/actions/workflows/ci.yml)
+[![flopy continuous integration](https://github.com/modflowpy/flopy/actions/workflows/commit.yml/badge.svg?branch=develop)](https://github.com/modflowpy/flopy/actions/workflows/commit.yml)
 [![Read the Docs](https://github.com/modflowpy/flopy/actions/workflows/rtd.yml/badge.svg?branch=develop)](https://github.com/modflowpy/flopy/actions/workflows/rtd.yml)
 
 [![codecov](https://codecov.io/gh/modflowpy/flopy/branch/develop/graph/badge.svg)](https://codecov.io/gh/modflowpy/flopy)
@@ -38,6 +38,12 @@ or
 
 
 The release candidate version can also be installed from the git repository using the instructions provided [below](#relcand).
+
+After FloPy is installed, MODFLOW and related programs can be installed using the command:
+
+    get-modflow :flopy
+
+See documentation [get_modflow.md](https://github.com/modflowpy/flopy/blob/develop/docs/get_modflow.md) for more information.
 
 
 Documentation

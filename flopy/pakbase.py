@@ -977,6 +977,12 @@ class Package(PackageInterface):
                     options.append(" ".join(t[it : it + 2]))
                     aux_names.append(t[it + 1].lower())
                     it += 1
+                if "mfusgwel" in pak_type_str:
+                    if toption.lower() == "autoflowreduce":
+                        options.append(toption.lower())
+                    elif toption.lower() == "iunitafr":
+                        options.append(f"{toption.lower()} {t[it+1]}")
+                        it += 1
                 it += 1
 
         # add auxillary information to nwt options
@@ -1040,6 +1046,9 @@ class Package(PackageInterface):
         bnd_output = None
         stress_period_data = {}
         current = None
+        bnd_output_cln = None
+        stress_period_data_cln = {}
+        current_cln = None
         for iper in range(nper):
             if model.verbose:
                 msg = f"   loading {pak_type} for kper {iper + 1:5d}"
@@ -1053,8 +1062,18 @@ class Package(PackageInterface):
             try:
                 itmpp = int(t[1])
             except:
+                if len(t) > 1:
+                    t = t[
+                        :2
+                    ]  # trap cases with text followed by digits (eg SP 5)
                 if model.verbose:
                     print(f"   implicit itmpp in {filename}")
+            itmp_cln = 0
+            try:
+                itmp_cln = int(t[2])
+            except:
+                if model.verbose:
+                    print(f"   implicit itmp_cln in {filename}")
 
             if itmp == 0:
                 bnd_output = None
@@ -1080,6 +1099,31 @@ class Package(PackageInterface):
                     bnd_output = None
                 else:
                     bnd_output = np.recarray.copy(current)
+
+            if itmp_cln == 0:
+                bnd_output_cln = None
+                current_cln = pak_type.get_empty(
+                    itmp_cln, aux_names=aux_names, structured=False
+                )
+            elif itmp_cln > 0:
+                current_cln = pak_type.get_empty(
+                    itmp_cln, aux_names=aux_names, structured=False
+                )
+                current_cln = ulstrd(
+                    f,
+                    itmp_cln,
+                    current_cln,
+                    model,
+                    sfac_columns,
+                    ext_unit_dict,
+                )
+                current_cln["node"] -= 1
+                bnd_output_cln = np.recarray.copy(current_cln)
+            else:
+                if current_cln is None:
+                    bnd_output_cln = None
+                else:
+                    bnd_output_cln = np.recarray.copy(current_cln)
 
             for iparm in range(itmpp):
                 line = f.readline()
@@ -1147,6 +1191,11 @@ class Package(PackageInterface):
             else:
                 stress_period_data[iper] = bnd_output
 
+            if bnd_output_cln is None:
+                stress_period_data_cln[iper] = itmp_cln
+            else:
+                stress_period_data_cln[iper] = bnd_output_cln
+
         dtype = pak_type.get_empty(
             0, aux_names=aux_names, structured=model.structured
         ).dtype
@@ -1166,15 +1215,31 @@ class Package(PackageInterface):
                 )
                 model.add_pop_key_list(ipakcb)
 
-        pak = pak_type(
-            model,
-            ipakcb=ipakcb,
-            stress_period_data=stress_period_data,
-            dtype=dtype,
-            options=options,
-            unitnumber=unitnumber,
-            filenames=filenames,
-        )
+        if "mfusgwel" in pak_type_str:
+            cln_dtype = pak_type.get_empty(
+                0, aux_names=aux_names, structured=False
+            ).dtype
+            pak = pak_type(
+                model,
+                ipakcb=ipakcb,
+                stress_period_data=stress_period_data,
+                cln_stress_period_data=stress_period_data_cln,
+                dtype=dtype,
+                cln_dtype=cln_dtype,
+                options=options,
+                unitnumber=unitnumber,
+                filenames=filenames,
+            )
+        else:
+            pak = pak_type(
+                model,
+                ipakcb=ipakcb,
+                stress_period_data=stress_period_data,
+                dtype=dtype,
+                options=options,
+                unitnumber=unitnumber,
+                filenames=filenames,
+            )
         if check:
             pak.check(
                 f=f"{pak.name[0]}.chk",

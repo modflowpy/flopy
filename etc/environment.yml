@@ -7,18 +7,25 @@ dependencies:
   - numpy>=1.15.0
   - matplotlib>=1.4.0
 
-  # testing
-  - pylint
-  - flake8
+  # lint
   - black
+  - flake8
   - isort
+  - pylint
+
+  # test
   - coverage
+  - flaky
+  - filelock
+  - jupyter
+  - jupytext
   - pytest
-  - pytest-xdist
+  - pytest-cases
   - pytest-cov
+  - pytest-xdist
+  - pytest-benchmark
 
   # optional
-  - appdirs
   - python-dateutil>=2.4.0
   - affine
   - scipy
@@ -33,6 +40,7 @@ dependencies:
   - geos
   - geojson
   - vtk
+  - rasterstats
 
   # MODFLOW API dependencies
   - bmipy

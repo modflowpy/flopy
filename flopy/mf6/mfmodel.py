@@ -75,7 +75,7 @@ class MFModel(PackageContainer, ModelInterface):
         modelname="model",
         model_nam_file=None,
         version="mf6",
-        exe_name="mf6.exe",
+        exe_name="mf6",
         add_to_simulation=True,
         structure=None,
         model_rel_path=".",
@@ -459,6 +459,8 @@ class MFModel(PackageContainer, ModelInterface):
                 xoff=self._modelgrid.xoffset,
                 yoff=self._modelgrid.yoffset,
                 angrot=self._modelgrid.angrot,
+                iac=dis.iac,
+                ja=dis.ja,
             )
         elif self.get_grid_type() == DiscretizationType.DISL:
             dis = self.get_package("disl")
@@ -686,7 +688,7 @@ class MFModel(PackageContainer, ModelInterface):
         model_nam_file="modflowtest.nam",
         mtype="gwf",
         version="mf6",
-        exe_name="mf6.exe",
+        exe_name="mf6",
         strict=True,
         model_rel_path=".",
         load_only=None,
@@ -865,7 +867,7 @@ class MFModel(PackageContainer, ModelInterface):
         --------
 
         >>> import flopy
-        >>> sim = flopy.mf6.MFSimulation.load("name", "mf6", "mf6.exe", ".")
+        >>> sim = flopy.mf6.MFSimulation.load("name", "mf6", "mf6", ".")
         >>> model = sim.get_model()
         >>> inspect_list = [(2, 3, 2), (0, 4, 2), (0, 2, 4)]
         >>> out_file = os.path.join("temp", "inspect_AdvGW_tidal.csv")

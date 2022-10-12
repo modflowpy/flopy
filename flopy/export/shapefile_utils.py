@@ -6,7 +6,9 @@ import copy
 import json
 import os
 import shutil
+import sys
 import warnings
+from pathlib import Path
 
 import numpy as np
 
@@ -945,26 +947,23 @@ class CRS:
 
 
 class EpsgReference:
-    """
+    r"""
     Sets up a local database of text representations of coordinate reference
     systems, keyed by EPSG code.
 
-    The database is epsgref.json, located in the user's data directory. If
-    optional 'appdirs' package is available, this is in the platform-dependent
-    user directory, otherwise in the user's 'HOME/.flopy' directory.
+    The database is epsgref.json, located in either "%LOCALAPPDATA%\flopy"
+    for Windows users, or $HOME/.local/share/flopy for others.
     """
 
     def __init__(self):
-        appdirs = import_optional_dependency("appdirs", errors="silent")
-        if appdirs is not None:
-            datadir = appdirs.user_data_dir("flopy")
+        if sys.platform.startswith("win"):
+            flopy_appdata = Path(os.path.expandvars(r"%LOCALAPPDATA%\flopy"))
         else:
-            # if appdirs is not installed, use user's home directory
-            datadir = os.path.join(os.path.expanduser("~"), ".flopy")
-        if not os.path.isdir(datadir):
-            os.makedirs(datadir)
+            flopy_appdata = Path.home() / ".local" / "share" / "flopy"
+        if not flopy_appdata.exists():
+            flopy_appdata.mkdir(parents=True, exist_ok=True)
         dbname = "epsgref.json"
-        self.location = os.path.join(datadir, dbname)
+        self.location = str(flopy_appdata / dbname)
 
     def to_dict(self):
         """

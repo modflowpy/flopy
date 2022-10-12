@@ -678,24 +678,27 @@ class Mt3dBtn(Package):
 
         # A3; Keywords
         # Build a string of the active keywords
-        str1 = ""
-        if self.MFStyleArr:
-            str1 += " MODFLOWSTYLEARRAYS"
-        if self.DRYCell:
-            str1 += " DRYCELL"
-        if self.Legacy99Stor:
-            str1 += " LEGACY99STORAGE"
-        if self.FTLPrint:
-            str1 += " FTLPRINT"
-        if self.NoWetDryPrint:
-            str1 += " NOWETDRYPRINT"
-        if self.OmitDryBud:
-            str1 += " OMITDRYCELLBUDGET"
-        if self.AltWTSorb:
-            str1 += " ALTWTSORB"
+        if (
+            self.parent.version == "mt3d-usgs"
+        ):  # Keywords not supported by MT3Dms
+            str1 = ""
+            if self.MFStyleArr:
+                str1 += " MODFLOWSTYLEARRAYS"
+            if self.DRYCell:
+                str1 += " DRYCELL"
+            if self.Legacy99Stor:
+                str1 += " LEGACY99STORAGE"
+            if self.FTLPrint:
+                str1 += " FTLPRINT"
+            if self.NoWetDryPrint:
+                str1 += " NOWETDRYPRINT"
+            if self.OmitDryBud:
+                str1 += " OMITDRYCELLBUDGET"
+            if self.AltWTSorb:
+                str1 += " ALTWTSORB"
 
-        if str1 != "":
-            f_btn.write(str1 + "\n")
+            if str1 != "":
+                f_btn.write(str1 + "\n")
 
         # A3
         f_btn.write(

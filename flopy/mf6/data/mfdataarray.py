@@ -2,6 +2,7 @@ import copy
 import inspect
 import os
 import sys
+import warnings
 
 import numpy as np
 
@@ -640,12 +641,12 @@ class MFArray(MFMultiDimVar):
                     )
                 factor = storage.layer_storage[current_layer].factor
                 internal_data = {
-                    "data": self._get_data(current_layer, True),
-                    "factor": factor,
+                    current_layer[0]: {
+                        "data": self._get_data(current_layer, True),
+                        "factor": factor,
+                    }
                 }
-                self._set_data(
-                    internal_data, layer=current_layer, check_data=False
-                )
+                self._set_record(internal_data)
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(
@@ -703,12 +704,12 @@ class MFArray(MFMultiDimVar):
             )
 
     def get_data(self, layer=None, apply_mult=False, **kwargs):
-        """Returns the data associated with layer "layer_num".  If "layer_num"
+        """Returns the data associated with layer "layer".  If "layer"
         is None, returns all data.
 
         Parameters
         ----------
-            layer_num : int
+            layer : int
 
         Returns
         -------
@@ -753,6 +754,126 @@ class MFArray(MFMultiDimVar):
                 )
         return None
 
+    def get_record(self, layer=None):
+        """Returns the data record associated with layer "layer".  If "layer"
+        is None, returns all data.
+
+        Parameters
+        ----------
+            layer : int
+
+        Returns
+        -------
+            data_record : dict
+                Dictionary containing data record for specified layer or
+                dictionary containing layer numbers (keys) and data record
+                for that layer (values).
+
+        """
+        if self._get_storage_obj() is None:
+            self._data_storage = self._new_storage(False)
+        if isinstance(layer, int):
+            layer = (layer,)
+        storage = self._get_storage_obj()
+        if storage is not None:
+            try:
+                return storage.get_record(layer)
+            except Exception as ex:
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    self.structure.get_model(),
+                    self.structure.get_package(),
+                    self._path,
+                    "getting record",
+                    self.structure.name,
+                    inspect.stack()[0][3],
+                    type_,
+                    value_,
+                    traceback_,
+                    None,
+                    self._simulation_data.debug,
+                    ex,
+                )
+        return None
+
+    def set_record(self, data_record):
+        """Sets the contents of the data and metadata to the contents of
+        'data_record`.  For unlayered data do not pass in `layer`.  For
+        unlayered data 'data_record' is a dictionary with either of the
+        following key/value pairs:
+        1) {'filename':filename, 'factor':fct, 'iprn':print, 'data':data} -
+        dictionary defining external file information
+        2) {'data':data, 'factor':fct, 'iprn':print)}- dictionary defining
+        internal information. Data that is layered can also be set by defining
+        For layered data data_record must be a dictionary of dictionaries
+        with zero-based layer numbers for the outer dictionary keys and the
+        inner dictionary as described above:
+           {0: {'data':data_lay_0, 'factor':fct_lay_0, 'iprn':prn_lay_0)},
+            1: {'data':data_lay_1, 'factor':fct_lay_1, 'iprn':prn_lay_1)},
+            2: {'data':data_lay_2, 'factor':fct_lay_2, 'iprn':prn_lay_2)}}
+
+        Parameters
+        ----------
+        data_record : dict
+            An dictionary of data record information or a dictionary of
+            layers (keys) with a dictionary of data record information for each
+            layer (values).
+        """
+        self._set_record(data_record)
+
+    def _set_record(self, data_record):
+        """Sets the contents of the data and metadata to the contents of
+        'data_record`.  For unlayered data do not pass in `layer`.  For
+        unlayered data 'data_record' is a dictionary with either of the
+        following key/value pairs:
+        1) {'filename':filename, 'factor':fct, 'iprn':print, 'data':data} -
+        dictionary defining external file information
+        2) {'data':data, 'factor':fct, 'iprn':print)}- dictionary defining
+        internal information. Data that is layered can also be set by defining
+        For layered data data_record must be a list of dictionaries or a
+        dictionary of dictionaries with zero-based layer numbers for the outer
+        dictionary keys and the inner dictionary as described above:
+           {0: {'data':data_lay_0, 'factor':fct_lay_0, 'iprn':prn_lay_0)},
+            1: {'data':data_lay_1, 'factor':fct_lay_1, 'iprn':prn_lay_1)},
+            2: {'data':data_lay_2, 'factor':fct_lay_2, 'iprn':prn_lay_2)}}
+
+        Parameters
+        ----------
+        data_record : dict
+            An dictionary of data record information or a dictionary of
+            layers (keys) with a dictionary of data record information for each
+            layer (values).
+        """
+        if isinstance(data_record, dict):
+            first_key = list(data_record.keys())[0]
+            if isinstance(first_key, int):
+                for layer, record in data_record.items():
+                    self._set_data(record, layer=layer, preserve_record=False)
+            else:
+                self._set_data(data_record, preserve_record=False)
+        elif type(data_record) == list:
+            for layer, record in enumerate(data_record):
+                self._set_data(record, layer=layer, preserve_record=False)
+        else:
+            message = (
+                "Unable to set record.  The contents of data_record must be"
+                "a dictionary or a list."
+            )
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self._data_dimensions.structure.get_model(),
+                self._data_dimensions.structure.get_package(),
+                self._data_dimensions.structure.path,
+                "setting record",
+                self._data_dimensions.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                message,
+                self._simulation_data.debug,
+            )
+
     def set_data(self, data, multiplier=None, layer=None):
         """Sets the contents of the data at layer `layer` to `data` with
         multiplier `multiplier`. For unlayered data do not pass in
@@ -760,15 +881,6 @@ class MFArray(MFMultiDimVar):
         1) ndarray - numpy ndarray containing all of the data
         2) [data] - python list containing all of the data
         3) val - a single constant value to be used for all of the data
-        4) {'filename':filename, 'factor':fct, 'iprn':print, 'data':data} -
-        dictionary defining external file information
-        5) {'data':data, 'factor':fct, 'iprn':print) - dictionary defining
-        internal information. Data that is layered can also be set by defining
-        a list with a length equal to the number of layers in the model.
-        Each layer in the list contains the data as defined in the
-        formats above:
-            [layer_1_val, [layer_2_array_vals],
-            {'filename':file_with_layer_3_data, 'factor':fct, 'iprn':print}]
 
         Parameters
         ----------
@@ -782,12 +894,17 @@ class MFArray(MFMultiDimVar):
         """
         self._set_data(data, multiplier, layer)
 
-    def _set_data(self, data, multiplier=None, layer=None, check_data=True):
+    def _set_data(
+        self,
+        data,
+        multiplier=None,
+        layer=None,
+        check_data=True,
+        preserve_record=True,
+    ):
         self._resync()
         if self._get_storage_obj() is None:
             self._data_storage = self._new_storage(False)
-        if multiplier is None:
-            multiplier = [self._get_storage_obj().get_default_mult()]
         if isinstance(layer, int):
             layer = (layer,)
         if isinstance(data, str):
@@ -833,7 +950,11 @@ class MFArray(MFMultiDimVar):
                         layer_data = aux_var_data
                     try:
                         storage.set_data(
-                            layer_data, [layer], multiplier, self._current_key
+                            layer_data,
+                            [layer],
+                            multiplier,
+                            self._current_key,
+                            preserve_record=preserve_record,
                         )
                     except Exception as ex:
                         type_, value_, traceback_ = sys.exc_info()
@@ -874,7 +995,11 @@ class MFArray(MFMultiDimVar):
         else:
             try:
                 storage.set_data(
-                    data, layer, multiplier, key=self._current_key
+                    data,
+                    layer,
+                    multiplier,
+                    key=self._current_key,
+                    preserve_record=preserve_record,
                 )
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
@@ -1662,20 +1787,50 @@ class MFTransientArray(MFArray, MFTransient):
             self.get_data_prep(layer)
             return super().has_data()
 
-    def get_data(self, layer=None, apply_mult=True, **kwargs):
-        """Returns the data associated with stress period key `layer`.
-        If `layer` is None, returns all data for time `layer`.
+    def get_record(self, key=None):
+        """Returns the data record (data and metadata) associated with stress
+        period key `layer`.  If `layer` is None, returns all data for
+        time `layer`.
 
         Parameters
         ----------
-            layer : int
+            key : int
+                Zero-based stress period of data to return
+
+        """
+        if self._data_storage is not None and len(self._data_storage) > 0:
+            if key is None:
+                sim_time = self._data_dimensions.package_dim.model_dim[
+                    0
+                ].simulation_time
+                num_sp = sim_time.get_num_stress_periods()
+                return self._build_period_data(num_sp, get_record=True)
+            else:
+                self.get_data_prep(key)
+                return super().get_record()
+
+    def get_data(self, key=None, apply_mult=True, **kwargs):
+        """Returns the data associated with stress period key `key`.
+        If `layer` is None, returns all data for time `key`.
+
+        Parameters
+        ----------
+            key : int
                 Zero-based stress period of data to return
             apply_mult : bool
                 Whether to apply multiplier to data prior to returning it
 
         """
+        if "layer" in kwargs:
+            warnings.warn(
+                "The 'layer' parameter has been deprecated, use 'key' "
+                "instead.",
+                category=DeprecationWarning,
+            )
+            key = kwargs["layer"]
+
         if self._data_storage is not None and len(self._data_storage) > 0:
-            if layer is None:
+            if key is None:
                 sim_time = self._data_dimensions.package_dim.model_dim[
                     0
                 ].simulation_time
@@ -1683,30 +1838,53 @@ class MFTransientArray(MFArray, MFTransient):
                 if "array" in kwargs:
                     return self._get_array(num_sp, apply_mult, **kwargs)
                 else:
-                    output = None
-                    for sp in range(0, num_sp):
-                        data = None
-                        if sp in self._data_storage:
-                            self.get_data_prep(sp)
-                            data = super().get_data(
-                                apply_mult=apply_mult, **kwargs
-                            )
-                        if output is None:
-                            if "array" in kwargs:
-                                output = [data]
-                            else:
-                                output = {sp: data}
-                        else:
-                            if "array" in kwargs:
-                                output.append(data)
-                            else:
-                                output[sp] = data
-                    return output
+                    return self._build_period_data(
+                        num_sp, apply_mult, **kwargs
+                    )
             else:
-                self.get_data_prep(layer)
+                self.get_data_prep(key)
                 return super().get_data(apply_mult=apply_mult)
         else:
             return None
+
+    def _build_period_data(
+        self, num_sp, apply_mult=False, get_record=False, **kwargs
+    ):
+        output = None
+        for sp in range(0, num_sp):
+            data = None
+            if sp in self._data_storage:
+                self.get_data_prep(sp)
+                if get_record:
+                    data = super().get_record()
+                else:
+                    data = super().get_data(apply_mult=apply_mult, **kwargs)
+            if output is None:
+                if "array" in kwargs:
+                    output = [data]
+                else:
+                    output = {sp: data}
+            else:
+                if "array" in kwargs:
+                    output.append(data)
+                else:
+                    output[sp] = data
+        return output
+
+    def set_record(self, data_record):
+        """Sets data and metadata at layer `layer` and time `key` to
+        `data_record`.  For unlayered data do not pass in `layer`.
+
+        Parameters
+        ----------
+            data_record : dict
+                Data record being set.  Data must be a dictionary with keys as
+                zero-based stress periods and values as a dictionary of data
+                and metadata (factor, iprn, filename, binary, data) for a given
+                stress period.  How to define the dictionary of data and
+                metadata is described in the MFData class's set_record method.
+        """
+        self._set_data_record(data_record, is_record=True)
 
     def set_data(self, data, multiplier=None, layer=None, key=None):
         """Sets the contents of the data at layer `layer` and time `key` to
@@ -1730,7 +1908,11 @@ class MFTransientArray(MFArray, MFTransient):
                 Zero based stress period to assign data too.  Does not apply
                 if `data` is a dictionary.
         """
+        self._set_data_record(data, multiplier, layer, key)
 
+    def _set_data_record(
+        self, data, multiplier=None, layer=None, key=None, is_record=False
+    ):
         if isinstance(data, dict):
             # each item in the dictionary is a list for one stress period
             # the dictionary key is the stress period the list is for
@@ -1741,7 +1923,10 @@ class MFTransientArray(MFArray, MFTransient):
                     del_keys.append(key)
                 else:
                     self._set_data_prep(list_item, key)
-                    super().set_data(list_item, multiplier, layer)
+                    if is_record:
+                        super().set_record(list_item)
+                    else:
+                        super().set_data(list_item, multiplier, layer)
             for key in del_keys:
                 del data[key]
         else:

@@ -12,12 +12,14 @@
 #     name: python3
 # ---
 
-# # SEAWAT Tutorial 1: Henry Saltwater Intrusion Problem
+# # SEAWAT Tutorial 1: HenryuSaltwater Intrusion Problem
 #
 # In this tutorial, we will use Flopy to create, run, and post process the
 # Henry saltwater intrusion problem using SEAWAT Version 4.
 
 # ## Getting Started
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import numpy as np
 
@@ -41,8 +43,10 @@ hk = 864.0  # m/day
 
 # ### Create the basic MODFLOW model structure
 
-modelname = "henry"
-swt = flopy.seawat.Seawat(modelname, exe_name="swtv4")
+temp_dir = TemporaryDirectory()
+workspace = temp_dir.name
+name = "seawat_henry"
+swt = flopy.seawat.Seawat(name, exe_name="swtv4", model_ws=workspace)
 print(swt.namefile)
 
 # save cell fluxes to unit 53
@@ -105,7 +109,6 @@ wel_data[0] = wel_sp1
 ssm_data[0] = ssm_sp1
 wel = flopy.modflow.ModflowWel(swt, stress_period_data=wel_data, ipakcb=ipakcb)
 
-
 # ### Create the basic MT3DMS model structure
 
 btn = flopy.mt3d.Mt3dBtn(
@@ -143,8 +146,7 @@ swt.write_input()
 # ## Run the model
 
 success, buff = swt.run_model(silent=True, report=True)
-if not success:
-    raise Exception("SEAWAT did not terminate normally.")
+assert success, "SEAWAT did not terminate normally."
 
 # ## Post-process the results
 
@@ -154,13 +156,13 @@ import flopy.utils.binaryfile as bf
 
 # ### Load the concentration data
 
-ucnobj = bf.UcnFile("MT3D001.UCN", model=swt)
+ucnobj = bf.UcnFile(Path(workspace) / "MT3D001.UCN", model=swt)
 times = ucnobj.get_times()
 concentration = ucnobj.get_data(totim=times[-1])
 
 # ### Load the cell-by-cell flow data
 
-cbbobj = bf.CellBudgetFile("henry.cbc")
+cbbobj = bf.CellBudgetFile(Path(workspace) / f"{name}.cbc")
 times = cbbobj.get_times()
 qx = cbbobj.get_data(text="flow right face", totim=times[-1])[0]
 qy = np.zeros((nlay, nrow, ncol), dtype=float)
@@ -180,10 +182,9 @@ ax.set_title("Simulated Concentrations")
 
 # ### Load the head data
 
-headobj = bf.HeadFile("henry.hds")
+headobj = bf.HeadFile(Path(workspace) / f"{name}.hds")
 times = headobj.get_times()
 head = headobj.get_data(totim=times[-1])
-
 
 # ### Create a plot with heads
 
@@ -195,3 +196,9 @@ contours = pmv.contour_array(head, colors="white")
 ax.clabel(contours, fmt="%2.2f")
 plt.colorbar(arr, shrink=0.5, ax=ax)
 ax.set_title("Simulated Heads")
+
+try:
+    temp_dir.cleanup()
+except:
+    # prevent windows permission error
+    pass
