@@ -1799,10 +1799,11 @@ class GridIntersect:
             _, ax = plt.subplots()
 
         patches = []
+        if "facecolor" in kwargs:
+            use_facecolor = True
+            fc = kwargs.pop("facecolor")
         for i, ishp in enumerate(rec.ixshapes):
-            if "facecolor" in kwargs:
-                fc = kwargs.pop("facecolor")
-            else:
+            if not use_facecolor:
                 fc = f"C{i % 10}"
             ppi = _polygon_patch(ishp, facecolor=fc, **kwargs)
             patches.append(ppi)
