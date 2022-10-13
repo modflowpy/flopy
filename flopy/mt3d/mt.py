@@ -61,7 +61,7 @@ class Mt3dms(BaseModel):
         (False, default).
     version : str, default "mt3dms"
         Mt3d version. Choose one of: "mt3dms" (default) or "mt3d-usgs".
-    exe_name : str, default "mt3dms.exe"
+    exe_name : str, default "mt3dms"
         The name of the executable to use.
     structured : bool, default True
         Specify if model grid is structured (default) or unstructured.
@@ -109,7 +109,7 @@ class Mt3dms(BaseModel):
         ftlfilename="mt3d_link.ftl",
         ftlfree=False,
         version="mt3dms",
-        exe_name="mt3dms.exe",
+        exe_name="mt3dms",
         structured=True,
         listunit=16,
         ftlunit=10,
@@ -444,7 +444,7 @@ class Mt3dms(BaseModel):
         cls,
         f,
         version="mt3dms",
-        exe_name="mt3dms.exe",
+        exe_name="mt3dms",
         verbose=False,
         model_ws=".",
         load_only=None,
@@ -460,7 +460,7 @@ class Mt3dms(BaseModel):
             Path to MT3D name file to load.
         version : str, default "mt3dms"
             Mt3d version. Choose one of: "mt3dms" (default) or "mt3d-usgs".
-        exe_name : str, default "mt3dms.exe"
+        exe_name : str, default "mt3dms"
             The name of the executable to use.
         verbose : bool, default False
             Print information on the load process if True.

@@ -9,11 +9,12 @@ import numpy as np
 import pytest
 from autotest.conftest import (
     SHAPEFILE_EXTENSIONS,
+    excludes_platform,
     get_example_data_path,
     has_pkg,
     requires_exe,
     requires_pkg,
-    requires_spatial_reference, excludes_platform,
+    requires_spatial_reference,
 )
 from flaky import flaky
 
@@ -197,13 +198,12 @@ def test_export_output(tmpdir, example_data_path):
     nc.nc.close()
 
 
-@flaky
-@requires_pkg("shapefile", "shapely")
-def test_write_grid_shapefile(tmpdir):
-    from shapefile import Reader
+@requires_pkg("shapefile")
+def test_write_gridlines_shapefile(tmpdir):
+    import shapefile
 
     from flopy.discretization import StructuredGrid
-    from flopy.export.shapefile_utils import shp2recarray, write_grid_shapefile
+    from flopy.export.shapefile_utils import write_gridlines_shapefile
 
     sg = StructuredGrid(
         delr=np.ones(10) * 1.1,
@@ -212,14 +212,43 @@ def test_write_grid_shapefile(tmpdir):
         # cell spacing along model columns
         epsg=26715,
     )
-    outshp = os.path.join(tmpdir, "junk.shp")
+    outshp = tmpdir / "gridlines.shp"
+    write_gridlines_shapefile(outshp, sg)
+
+    for suffix in [".dbf", ".prj", ".shp", ".shx"]:
+        assert outshp.with_suffix(suffix).exists()
+
+    with shapefile.Reader(str(outshp)) as sf:
+        assert sf.shapeType == shapefile.POLYLINE
+        assert len(sf) == 22
+
+
+@flaky
+@requires_pkg("shapefile", "shapely")
+def test_write_grid_shapefile(tmpdir):
+    from shapefile import Reader
+
+    from flopy.discretization import StructuredGrid
+    from flopy.export.shapefile_utils import write_grid_shapefile
+
+    sg = StructuredGrid(
+        delr=np.ones(10) * 1.1,
+        # cell spacing along model rows
+        delc=np.ones(10) * 1.1,
+        # cell spacing along model columns
+        epsg=26715,
+    )
+    outshp = tmpdir / "junk.shp"
     write_grid_shapefile(outshp, sg, array_dict={})
+
+    for suffix in [".dbf", ".prj", ".shp", ".shx"]:
+        assert outshp.with_suffix(suffix).exists()
 
     # test that vertices aren't getting altered by writing shapefile
     # check that pyshp reads integers
     # this only check that row/column were recorded as "N"
     # not how they will be cast by python or numpy
-    sfobj = Reader(outshp)
+    sfobj = Reader(str(outshp))
     for f in sfobj.fields:
         if f[0] == "row" or f[0] == "column":
             assert f[1] == "N"
@@ -240,7 +269,7 @@ def test_write_grid_shapefile(tmpdir):
             meta = src.meta
             assert "int" in meta["schema"]["properties"]["row"]
             assert "int" in meta["schema"]["properties"]["column"]
-    except:
+    except ImportError:
         pass
 
 
