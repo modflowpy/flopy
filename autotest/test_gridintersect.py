@@ -1190,6 +1190,7 @@ def test_all_intersections_shapely_no_strtree():
 # %% test rasters
 
 
+@requires_pkg("rasterstats")
 def test_rasters(example_data_path):
     ws = str(example_data_path / "options")
     raster_name = "dem.img"
