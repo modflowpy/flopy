@@ -505,7 +505,9 @@ class CsvFile:
 
     """
 
-    def __init__(self, csvfile, delimiter=",", deletechars="", replace_space=""):
+    def __init__(
+        self, csvfile, delimiter=",", deletechars="", replace_space=""
+    ):
 
         self.file = open(csvfile, "r")
         self.delimiter = delimiter
@@ -518,7 +520,9 @@ class CsvFile:
         self.floattype = "f8"
         self.dtype = _build_dtype(self._header, self.floattype)
 
-        self.data = self.read_csv(self.file, self.dtype, delimiter, replace_space)
+        self.data = self.read_csv(
+            self.file, self.dtype, delimiter, replace_space
+        )
 
     @property
     def obsnames(self):
@@ -570,7 +574,7 @@ class CsvFile:
             dtype=dtype,
             delimiter=delimiter,
             deletechars=deletechars,
-            replace_space=replace_space
+            replace_space=replace_space,
         )
         if len(arr.shape) == 0:
             arr = arr.reshape((1,))
