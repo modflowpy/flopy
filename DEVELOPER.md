@@ -321,35 +321,23 @@ def test_with_data(tmpdir, example_data_path):
 
 This is preferable to manually handling relative paths as if the location of the example data changes in the future, only a single fixture in `conftest.py` will need to be updated rather than every test case individually.
 
-An equivalent function `get_example_data_path(path=None)` is also provided in `conftest.py`. This is useful to dynamically generate data for test parametrization. (Due to a [longstanding `pytest` limitation](https://github.com/pytest-dev/pytest/issues/349), fixtures cannot be used to generate test parameters.) This function accepts a path hint, taken as the path to the current test file, but will try to locate the example data even if the current file is not provided.
-
-```python
-import pytest
-from autotest.conftest import get_example_data_path
-
-# current test script can be provided (or not)
-
-@pytest.mark.parametrize("current_path", [__file__, None])
-def test_get_example_data_path(current_path):
-    parts = get_example_data_path(current_path).parts
-    assert (parts[-1] == "data" and
-            parts[-2] == "examples" and
-            parts[-3] == "flopy")
-```
+An equivalent function `get_example_data_path()` is also provided in `conftest.py`. This is useful to dynamically generate data for test parametrization. (Due to a [longstanding `pytest` limitation](https://github.com/pytest-dev/pytest/issues/349), fixtures cannot be used to generate test parameters.) 
 
 #### Locating the project root
 
-A similar `get_project_root_path(path=None)` function is also provided, doing what it says on the tin:
+A similar `get_project_root_path()` function is also provided, doing what it says on the tin:
 
 ```python
 from autotest.conftest import get_project_root_path, get_example_data_path
 
 def test_get_paths():
-    example_data = get_example_data_path(__file__)
-    project_root = get_project_root_path(__file__)
+    example_data = get_example_data_path()
+    project_root = get_project_root_path()
 
     assert example_data.parent.parent == project_root
 ```
+
+Note that this function expects tests to be run from the `autotest` directory, as mentioned above.
 
 #### Conditionally skipping tests
 

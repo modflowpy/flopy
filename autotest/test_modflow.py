@@ -538,12 +538,12 @@ def test_read_usgs_model_reference(tmpdir, model_reference_path):
 
 
 def mf2005_model_namfiles():
-    path = get_example_data_path(Path(__file__)) / "mf2005_test"
+    path = get_example_data_path() / "mf2005_test"
     return [str(p) for p in path.glob("*.nam")]
 
 
 def parameters_model_namfiles():
-    path = get_example_data_path(Path(__file__)) / "parameters"
+    path = get_example_data_path() / "parameters"
     skip = ["twrip.nam", "twrip_upw.nam"]  # TODO: why do these fail?
     return [str(p) for p in path.glob("*.nam") if p.name not in skip]
 
@@ -731,7 +731,7 @@ def test_mflist_add_record():
     np.testing.assert_array_equal(wel.stress_period_data[1], check1)
 
 
-__mf2005_test_path = get_example_data_path(Path(__file__)) / "mf2005_test"
+__mf2005_test_path = get_example_data_path() / "mf2005_test"
 
 
 @pytest.mark.parametrize(

@@ -167,7 +167,7 @@ def test_gage(tmpdir, example_data_path):
         ), f'new and original gage file "{f}" are not binary equal.'
 
 
-__example_data_path = get_example_data_path(Path(__file__))
+__example_data_path = get_example_data_path()
 
 
 @requires_exe("mf2005")

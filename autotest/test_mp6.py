@@ -35,7 +35,7 @@ def copy_modpath_files(source, model_ws, baseName):
         and os.path.isfile(os.path.join(source, file))
     ]
     for file in files:
-        src = str(get_example_data_path(__file__) / "mp6" / file)
+        src = str(get_example_data_path() / "mp6" / file)
         dst = os.path.join(model_ws, file)
         print(f"copying {src} -> {dst}")
         shutil.copy(src, dst)

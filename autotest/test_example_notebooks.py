@@ -5,7 +5,7 @@ from autotest.conftest import get_project_root_path, run_cmd
 
 
 def get_example_notebooks(exclude=None):
-    prjroot = get_project_root_path(__file__)
+    prjroot = get_project_root_path()
     nbpaths = [str(p) for p in (prjroot / "examples" / "FAQ").glob("*.ipynb")]
     nbpaths += [
         str(p) for p in (prjroot / "examples" / "Notebooks").glob("*.ipynb")

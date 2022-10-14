@@ -62,7 +62,7 @@ def shp_paths(d) -> List[Path]:
 
 
 def namfiles():
-    mf2005_path = get_example_data_path(__file__) / "mf2005_test"
+    mf2005_path = get_example_data_path() / "mf2005_test"
     return [str(p) for p in Path(mf2005_path).rglob("*.nam")]
 
 

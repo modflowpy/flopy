@@ -196,7 +196,7 @@ def test_seawat2_henry(tmpdir):
 def swt4_namfiles():
     return [
         str(p)
-        for p in (get_example_data_path(__file__) / "swtv4_test").rglob(
+        for p in (get_example_data_path() / "swtv4_test").rglob(
             "*.nam"
         )
     ]

@@ -7,7 +7,7 @@ from autotest.conftest import get_project_root_path, run_py_script
 
 
 def get_example_scripts(exclude=None):
-    prjroot = get_project_root_path(__file__)
+    prjroot = get_project_root_path()
 
     # sort to appease pytest-xdist: all workers must collect identically ordered sets of tests
     return sorted(

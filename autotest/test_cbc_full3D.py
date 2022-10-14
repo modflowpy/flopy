@@ -9,7 +9,7 @@ from flopy.mf6 import MFSimulation, ModflowGwfoc
 from flopy.modflow import Modflow
 from flopy.utils import CellBudgetFile
 
-example_data_path = get_example_data_path(Path(__file__))
+example_data_path = get_example_data_path()
 mf2005_paths = [
     str(example_data_path / "freyberg"),
 ]

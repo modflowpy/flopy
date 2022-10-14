@@ -9,7 +9,7 @@ from flopy.utils import parsenamefile
 
 def get_nfnwt_namfiles():
     # build list of name files to try and load
-    nwtpth = get_example_data_path(__file__) / "mf2005_test"
+    nwtpth = get_example_data_path() / "mf2005_test"
     namfiles = []
     m = Modflow("test", version="mfnwt")
     for namfile in nwtpth.rglob("*.nam"):
