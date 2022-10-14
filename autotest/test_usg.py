@@ -389,7 +389,7 @@ def test_flat_array_to_util3d_usg(tmpdir, freyberg_usg_model_path):
     "fpth",
     [
         str(p)
-        for p in (get_example_data_path(Path(__file__)) / "mfusg_test").rglob(
+        for p in (get_example_data_path() / "mfusg_test").rglob(
             "*.nam"
         )
     ],

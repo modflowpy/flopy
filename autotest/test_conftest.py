@@ -80,62 +80,27 @@ def test_session_scoped_tmpdir(session_tmpdir):
 # misc utilities
 
 
-def test_get_project_root_path_from_autotest():
-    cwd = Path(__file__).parent
-    root = get_project_root_path(cwd)
+def test_get_project_root_path():
+    root = get_project_root_path()
 
     assert root.is_dir()
-    assert root.name == "flopy"
 
     contents = [p.name for p in root.glob("*")]
     assert (
         "autotest" in contents
-        and "examples" in contents
-        and "README.md" in contents
-    )
-
-
-def test_get_project_root_path_from_project_root():
-    cwd = Path(__file__).parent.parent
-    root = get_project_root_path(cwd)
-
-    assert root.is_dir()
-    assert root.name == "flopy"
-
-    contents = [p.name for p in root.glob("*")]
-    assert (
-        "autotest" in contents
-        and "examples" in contents
-        and "README.md" in contents
-    )
-
-
-@pytest.mark.parametrize("relative_path", ["", "utils", "mf6/utils"])
-def test_get_project_root_path_from_within_flopy_module(relative_path):
-    cwd = Path(__file__).parent.parent / "flopy" / Path(relative_path)
-    root = get_project_root_path(cwd)
-
-    assert root.is_dir()
-    assert root.name == "flopy"
-
-    contents = [p.name for p in root.glob("*")]
-    assert (
-        "autotest" in contents
-        and "examples" in contents
         and "README.md" in contents
     )
 
 
 def test_get_paths():
-    example_data = get_example_data_path(__file__)
-    project_root = get_project_root_path(__file__)
+    example_data = get_example_data_path()
+    project_root = get_project_root_path()
 
     assert example_data.parent.parent == project_root
 
 
-@pytest.mark.parametrize("current_path", [__file__, None])
-def test_get_example_data_path(current_path):
-    parts = get_example_data_path(current_path).parts
+def test_get_example_data_path():
+    parts = get_example_data_path().parts
     assert (
         parts[-3] == "flopy"
         and parts[-2] == "examples"

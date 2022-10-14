@@ -13,59 +13,8 @@ except:
 from pathlib import Path
 
 
-def get_project_root_path(path=None):
-    """
-    Infers the path to the project root given the path to the current working directory.
-    The current working location must be somewhere in the project, i.e. below the root.
-
-    Parameters
-    ----------
-    path : the path to the current working directory
-
-    Returns
-    -------
-        The path to the project root
-    """
-
-    cwd = Path(path) if path is not None else Path(os.getcwd())
-    if cwd.name == "autotest":
-        # we're in top-level autotest folder
-        return cwd.parent
-    elif "autotest" in cwd.parts and cwd.parts.index(
-        "autotest"
-    ) > cwd.parts.index("flopy"):
-        # we're somewhere inside autotests
-        parts = cwd.parts[0 : cwd.parts.index("autotest")]
-        return Path(*parts)
-    elif "examples" in cwd.parts and cwd.parts.index(
-        "examples"
-    ) > cwd.parts.index("flopy"):
-        # we're somewhere inside examples folder
-        parts = cwd.parts[0 : cwd.parts.index("examples")]
-        return Path(*parts)
-    elif cwd.parts.count("flopy") >= 2:
-        # we're somewhere inside the project or flopy module
-        tries = [1]
-        for t in tries:
-            parts = cwd.parts[0 : cwd.parts.index("flopy") + (t)]
-            pth = Path(*parts)
-            if (
-                next(iter([p for p in pth.glob("setup.cfg")]), None)
-                is not None
-            ):
-                return pth
-        raise Exception(
-            f"Can't infer location of project root from {cwd}"
-            f"(run from project root, flopy module, examples, or autotest)"
-        )
-    elif cwd.parts.count("flopy") == 1 and cwd.name == "flopy":
-        # we're in project root
-        return cwd
-    else:
-        raise Exception(
-            f"Can't infer location of project root from {cwd}"
-            f"(run from project root, flopy module, examples, or autotest)"
-        )
+def get_project_root_path() -> Path:
+    return Path(os.getcwd()).parent.parent
 
 
 def run(ws):
