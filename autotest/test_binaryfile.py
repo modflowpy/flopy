@@ -160,7 +160,7 @@ def test_get_headfile_precision(example_data_path):
     assert precision == 'double'
 
 
-_example_data_path = get_example_data_path(__file__)
+_example_data_path = get_example_data_path()
 
 
 @pytest.mark.parametrize("path", [str(p) for p in [

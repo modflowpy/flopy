@@ -17,7 +17,7 @@ from flaky import flaky
 from flopy.utils import get_modflow
 
 rate_limit_msg = "rate limit exceeded"
-flopy_dir = get_project_root_path(__file__)
+flopy_dir = get_project_root_path()
 get_modflow_script = flopy_dir / "flopy" / "utils" / "get_modflow.py"
 
 

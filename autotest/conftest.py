@@ -24,98 +24,16 @@ SHAPEFILE_EXTENSIONS = ["prj", "shx", "dbf"]
 # misc utilities
 
 
-def get_project_root_path(path=None) -> Path:
-    """
-    Infers the path to the project root given the path to the current working directory.
-    The current working location must be somewhere in the project, below the project root.
-
-    This function aims to work whether invoked from the autotests directory, the examples
-    directory, the flopy module directory, or any subdirectories of these. GitHub Actions
-    CI runners, local `act` runners for GitHub CI, and local environments are supported.
-    This function can be modified to support other flopy testing environments if needed.
-
-    Parameters
-    ----------
-    path : the path to the current working directory
-
-    Returns
-    -------
-        The absolute path to the project root
-    """
-
-    cwd = Path(path) if path is not None else Path(os.getcwd())
-
-    def backtrack_or_raise():
-        tries = [1]
-        if is_in_ci():
-            tries.append(2)
-        for t in tries:
-            parts = cwd.parts[0 : cwd.parts.index("flopy") + t]
-            pth = Path(*parts)
-            if (
-                next(iter([p for p in pth.glob("setup.cfg")]), None)
-                is not None
-            ):
-                return pth
-        raise Exception(
-            f"Can't infer location of project root from {cwd} "
-            f"(run from project root, flopy module, examples, or autotest)"
-        )
-
-    if cwd.name == "autotest":
-        # we're in top-level autotest folder
-        return cwd.parent
-    elif "autotest" in cwd.parts and cwd.parts.index(
-        "autotest"
-    ) > cwd.parts.index("flopy"):
-        # we're somewhere inside autotests
-        parts = cwd.parts[0 : cwd.parts.index("autotest")]
-        return Path(*parts)
-    elif "examples" in cwd.parts and cwd.parts.index(
-        "examples"
-    ) > cwd.parts.index("flopy"):
-        # we're somewhere inside examples folder
-        parts = cwd.parts[0 : cwd.parts.index("examples")]
-        return Path(*parts)
-    elif "flopy" in cwd.parts:
-        if cwd.parts.count("flopy") >= 2:
-            # we're somewhere inside the project or flopy module
-            return backtrack_or_raise()
-        elif cwd.parts.count("flopy") == 1:
-            if cwd.name == "flopy":
-                # we're in project root
-                return cwd
-            elif cwd.name == ".working":
-                # we're in local `act` github actions runner
-                return backtrack_or_raise()
-            else:
-                raise Exception(
-                    f"Can't infer location of project root from {cwd}"
-                    f"(run from project root, flopy module, examples, or autotest)"
-                )
-    else:
-        raise Exception(
-            f"Can't infer location of project root from {cwd}"
-            f"(run from project root, flopy module, examples, or autotest)"
-        )
+def get_project_root_path() -> Path:
+    return Path(__file__).parent.parent
 
 
-def get_example_data_path(path=None) -> Path:
-    """
-    Gets the absolute path to example models and data.
-    The path argument is a hint, interpreted as
-    the current working location.
-    """
-    return get_project_root_path(path) / "examples" / "data"
+def get_example_data_path() -> Path:
+    return get_project_root_path() / "examples" / "data"
 
 
-def get_flopy_data_path(path=None) -> Path:
-    """
-    Gets the absolute path to flopy module data.
-    The path argument is a hint, interpreted as
-    the current working location.
-    """
-    return get_project_root_path(path) / "flopy" / "data"
+def get_flopy_data_path() -> Path:
+    return get_project_root_path() / "flopy" / "data"
 
 
 def get_current_branch() -> str:
@@ -264,18 +182,18 @@ requires_spatial_reference = pytest.mark.skipif(
 
 
 @pytest.fixture(scope="session")
-def project_root_path(request) -> Path:
-    return get_project_root_path(request.session.path)
+def project_root_path() -> Path:
+    return get_project_root_path()
 
 
 @pytest.fixture(scope="session")
-def example_data_path(request) -> Path:
-    return get_example_data_path(request.session.path)
+def example_data_path() -> Path:
+    return get_example_data_path()
 
 
 @pytest.fixture(scope="session")
-def flopy_data_path(request) -> Path:
-    return get_flopy_data_path(request.session.path)
+def flopy_data_path() -> Path:
+    return get_flopy_data_path()
 
 
 @pytest.fixture(scope="session")
