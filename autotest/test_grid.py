@@ -100,27 +100,36 @@ def test_get_vertices():
 
 def test_get_lrc_get_node():
     nlay, nrow, ncol = 3, 4, 5
+    nnodes = nlay * nrow * ncol
     ml = Modflow()
     dis = ModflowDis(
         ml, nlay=nlay, nrow=nrow, ncol=ncol, top=50, botm=[0, -1, -2]
     )
-    nodes = list(range(nlay * nrow * ncol))
+    nodes = list(range(nnodes))
     indices = np.indices((nlay, nrow, ncol))
     layers = indices[0].flatten()
     rows = indices[1].flatten()
     cols = indices[2].flatten()
     for node, (l, r, c) in enumerate(zip(layers, rows, cols)):
         # ensure get_lrc returns zero-based layer row col
-        lrc = dis.get_lrc(node)[0]
-        assert lrc == (
-            l,
-            r,
-            c,
-        ), f"get_lrc() returned {lrc}, expecting {l, r, c}"
+        assert dis.get_lrc(node)[0] == (l, r, c)
         # ensure get_node returns zero-based node number
-        n = dis.get_node((l, r, c))[0]
-        assert node == n, f"get_node() returned {n}, expecting {node}"
-    return
+        assert dis.get_node((l, r, c))[0] == node
+
+    # check full list
+    lrc_list = list(zip(layers, rows, cols))
+    assert dis.get_lrc(nodes) == lrc_list
+    assert dis.get_node(lrc_list) == nodes
+
+    # check array-like input
+    assert dis.get_lrc(np.arange(nnodes)) == lrc_list
+    # dis.get_node does not accept array-like inputs, just tuple or list
+
+    # check out of bounds errors
+    with pytest.raises(ValueError, match="index 60 is out of bounds for"):
+        dis.get_lrc(nnodes)
+    with pytest.raises(ValueError, match="invalid entry in coordinates array"):
+        dis.get_node((4, 4, 4))
 
 
 def test_get_rc_from_node_coordinates():
