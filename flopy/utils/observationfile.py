@@ -509,20 +509,20 @@ class CsvFile:
         self, csvfile, delimiter=",", deletechars="", replace_space=""
     ):
 
-        self.file = open(csvfile, "r")
-        self.delimiter = delimiter
-        self.deletechars = deletechars
-        self.replace_space = replace_space
+        with open(csvfile, "r") as self.file:
+            self.delimiter = delimiter
+            self.deletechars = deletechars
+            self.replace_space = replace_space
 
-        # read header line
-        line = self.file.readline()
-        self._header = line.rstrip().split(delimiter)
-        self.floattype = "f8"
-        self.dtype = _build_dtype(self._header, self.floattype)
+            # read header line
+            line = self.file.readline()
+            self._header = line.rstrip().split(delimiter)
+            self.floattype = "f8"
+            self.dtype = _build_dtype(self._header, self.floattype)
 
-        self.data = self.read_csv(
-            self.file, self.dtype, delimiter, replace_space
-        )
+            self.data = self.read_csv(
+                self.file, self.dtype, delimiter, deletechars, replace_space
+            )
 
     @property
     def obsnames(self):
