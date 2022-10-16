@@ -945,6 +945,7 @@ def test_output(tmpdir, example_data_path):
 
     bud = ml.oc.output.budget()
     budcsv = ml.oc.output.budgetcsv()
+    assert budcsv.file.closed
     hds = ml.oc.output.head()
     lst = ml.oc.output.list()
 
