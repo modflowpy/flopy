@@ -1,5 +1,6 @@
 import contextlib
 import warnings
+from itertools import product
 
 import numpy as np
 
@@ -12,15 +13,13 @@ NUMPY_GE_121 = Version(np.__version__) >= Version("1.21")
 
 shapely = import_optional_dependency("shapely", errors="silent")
 if shapely is not None:
-    SHAPELY_GE_20 = Version(shapely.__version__) >= Version("2.0")
-    SHAPELY_LT_18 = Version(shapely.__version__) < Version("1.8")
+    SHAPELY_GE_20 = Version(shapely.__version__) >= Version("2.0a1")
+    # shapely > 1.8 required
+    if Version(shapely.__version__) < Version("1.8"):
+        warnings.warn("GridIntersect requires shapely>=1.8.")
+        shapely = None
 else:
     SHAPELY_GE_20 = False
-    SHAPELY_LT_18 = False
-
-# shapely > 1.8 required
-if SHAPELY_LT_18:
-    raise Exception("GridIntersect requires shapely>=1.8.")
 
 shapely_warning = None
 if shapely is not None:
@@ -75,7 +74,7 @@ else:
 
 def parse_shapely_ix_result(collection, ix_result, shptyps=None):
     """Recursive function for parsing shapely intersection results. Returns a
-    list of shapely shapes matching shptyp.
+    list of shapely shapes matching shptyps.
 
     Parameters
     ----------
@@ -84,15 +83,15 @@ def parse_shapely_ix_result(collection, ix_result, shptyps=None):
         an empty list
     ix_result : shapely.geometry type
         any shapely intersection result
-    shptyp : str, list of str, or None, optional
+    shptyps : str, list of str, or None, optional
         if None (default), return all types of shapes.
         if str, return shapes of that type, if list of str,
         return all types in list
 
     Returns
     -------
-    collection : list
-        list containing shapely geometries of type shptyp
+    list
+        list containing shapely geometries of type shptyps
     """
     # convert shptyps to list if needed
     if isinstance(shptyps, str):
@@ -156,7 +155,6 @@ class GridIntersect:
             is built, but intersects will loop through all model gridcells
             (which is generally slower). Only read when `method='vertex'`.
         """
-
         self.mfgrid = mfgrid
         if method is None:
             # determine method from grid_type
@@ -172,16 +170,8 @@ class GridIntersect:
         self._set_method_get_gridshapes()
 
         if self.method == "vertex":
-            # build list of geoms and cellids
-            geoms, cellids = self._get_gridshapes()
-            # convert to arrays for easy indexing
-            self.geoms = np.empty(len(geoms), dtype=object)
-            self.geoms[:] = geoms
-            self.cellids = np.array(cellids, dtype=int)
-            # TODO: check if this is necessary:
-            # check if cellids are ordered properly
-            if np.any(np.diff(self.cellids) < 0):
-                raise Exception("cellids not in order")
+            # build arrays of geoms and cellids
+            self.geoms, self.cellids = self._get_gridshapes()
 
             # build STR-tree if specified
             if self.rtree:
@@ -200,11 +190,8 @@ class GridIntersect:
 
         else:
             raise ValueError(
-                "Method '{0}' not recognized or "
-                "not supported "
-                "for grid_type '{1}'!".format(
-                    self.method, self.mfgrid.grid_type
-                )
+                f"Method '{self.method}' not recognized or not supported "
+                f"for grid_type '{self.mfgrid.grid_type}'!"
             )
 
     def intersect(
@@ -305,8 +292,7 @@ class GridIntersect:
                     min_area_fraction=min_area_fraction,
                 )
         else:
-            err = f"Shapetype {gu.shapetype} is not supported"
-            raise TypeError(err)
+            raise TypeError(f"Shapetype {gu.shapetype} is not supported")
 
         return rec
 
@@ -327,20 +313,56 @@ class GridIntersect:
 
         Returns
         -------
-        geoms : list
-            list of shapely Polygons
-        cellids : list
-            list of cellids
+        geoms : array_like
+            array of shapely Polygons
+        cellids : array_like
+            array of cellids
         """
-        shapely_geo = import_optional_dependency("shapely.geometry")
+        shapely = import_optional_dependency("shapely")
 
-        geoms = []
-        cellids = []
-        for i in range(self.mfgrid.nrow):
-            for j in range(self.mfgrid.ncol):
-                xy = self.mfgrid.get_cell_vertices(i, j)
-                geoms.append(shapely_geo.Polygon(xy))
-                cellids.append(self.mfgrid.get_node((0, i, j))[0])
+        nrow = self.mfgrid.nrow
+        ncol = self.mfgrid.ncol
+        ncells = nrow * ncol
+        cellids = np.arange(ncells)
+        xvertices = self.mfgrid.xvertices
+        yvertices = self.mfgrid.yvertices
+
+        # arrays of coordinates for rectangle cells
+        I, J = np.ogrid[0:nrow, 0:ncol]
+        xverts = np.stack(
+            [
+                xvertices[I, J],
+                xvertices[I, J + 1],
+                xvertices[I + 1, J + 1],
+                xvertices[I + 1, J],
+            ]
+        ).transpose((1, 2, 0))
+        yverts = np.stack(
+            [
+                yvertices[I, J],
+                yvertices[I, J + 1],
+                yvertices[I + 1, J + 1],
+                yvertices[I + 1, J],
+            ]
+        ).transpose((1, 2, 0))
+
+        if SHAPELY_GE_20:
+            # use array-based methods for speed
+            geoms = shapely.polygons(
+                shapely.linearrings(
+                    xverts.flatten(),
+                    y=yverts.flatten(),
+                    indices=np.repeat(cellids, 4),
+                )
+            )
+        else:
+            from shapely.geometry import Polygon
+
+            geoms = []
+            for i, j in product(range(nrow), range(ncol)):
+                geoms.append(Polygon(zip(xverts[i, j], yverts[i, j])))
+            geoms = np.array(geoms)
+
         return geoms, cellids
 
     def _usg_grid_to_geoms_cellids(self):
@@ -349,10 +371,10 @@ class GridIntersect:
 
         Returns
         -------
-        geoms : list
-            list of shapely Polygons
-        cellids : list
-            list of cellids
+        geoms : array_like
+            array of shapely Polygons
+        cellids : array_like
+            array of cellids
         """
         raise NotImplementedError()
 
@@ -362,10 +384,10 @@ class GridIntersect:
 
         Returns
         -------
-        geoms : list
-            list of shapely Polygons
-        cellids : list
-            list of cellids
+        geoms : array_like
+            array of shapely Polygons
+        cellids : array_like
+            array of cellids
         """
         shapely_geo = import_optional_dependency("shapely.geometry")
 
@@ -407,7 +429,7 @@ class GridIntersect:
                     points.append(points[0])
                 geoms.append(shapely_geo.Polygon(points))
                 cellids.append(icell)
-        return geoms, cellids
+        return np.array(geoms), np.array(cellids)
 
     def _rect_grid_to_shape_list(self):
         """internal method, list of shapely polygons for structured grid cells.
@@ -415,10 +437,9 @@ class GridIntersect:
         .. deprecated:: 3.3.6
             use _rect_grid_to_geoms_cellids() instead.
 
-
         Returns
         -------
-        list :
+        list
             list of shapely Polygons
         """
         warnings.warn(
@@ -426,7 +447,7 @@ class GridIntersect:
             "use `_rect_grid_to_geoms_cellids()` instead.",
             DeprecationWarning,
         )
-        return self._rect_grid_to_geoms_cellids()[0]
+        return self._rect_grid_to_geoms_cellids()[0].tolist()
 
     def _vtx_grid_to_shape_list(self):
         """internal method, list of shapely polygons for vertex grids.
@@ -436,7 +457,7 @@ class GridIntersect:
 
         Returns
         -------
-        list :
+        list
             list of shapely Polygons
         """
         warnings.warn(
@@ -444,7 +465,7 @@ class GridIntersect:
             "use `_vtx_grid_to_geoms_cellids()` instead.",
             DeprecationWarning,
         )
-        return self._vtx_grid_to_geoms_cellids()[0]
+        return self._vtx_grid_to_geoms_cellids()[0].tolist()
 
     def query_grid(self, shp):
         """Perform spatial query on grid with shapely geometry. If no spatial
@@ -457,18 +478,21 @@ class GridIntersect:
 
         Returns
         -------
-        list or array
-            list or array containing cellids of grid cells in query result
+        array_like
+            array containing cellids of grid cells in query result
         """
         if self.rtree:
-            result = self.strtree.query_items(shp)
+            if SHAPELY_GE_20:
+                result = self.strtree.query(shp)
+            else:
+                result = np.array(self.strtree.query_items(shp))
         else:
             # no spatial query
             result = self.cellids
         return result
 
     def filter_query_result(self, cellids, shp):
-        """Filter list of geometries to obtain grid cells that intersect with
+        """Filter array of geometries to obtain grid cells that intersect with
         shape.
 
         Used to (further) reduce query result to cells that intersect with
@@ -484,22 +508,28 @@ class GridIntersect:
 
         Returns
         -------
-        qfiltered
+        array_like
             filter or generator containing polygons that intersect with shape
         """
-        # prepare shape for efficient batch intersection check
-        prepared = import_optional_dependency("shapely.prepared")
-        prepshp = prepared.prep(shp)
         # get only gridcells that intersect
-        qfiltered = filter(
-            lambda tup: prepshp.intersects(tup[0]),
-            zip(self.geoms[cellids], cellids),
-        )
-        try:
-            _, qcellids = zip(*qfiltered)
-        except ValueError:
-            # catch empty filter result (i.e. when rtree=False)
-            qcellids = []
+        if SHAPELY_GE_20:
+            if not shapely.is_prepared(shp):
+                shapely.prepare(shp)
+            qcellids = cellids[shapely.intersects(self.geoms[cellids], shp)]
+        else:
+            # prepare shape for efficient batch intersection check
+            prepared = import_optional_dependency("shapely.prepared")
+            prepshp = prepared.prep(shp)
+            qfiltered = filter(
+                lambda tup: prepshp.intersects(tup[0]),
+                zip(self.geoms[cellids], cellids),
+            )
+            try:
+                _, qcellids = zip(*qfiltered)
+                qcellids = np.array(qcellids)
+            except ValueError:
+                # catch empty filter result (i.e. when rtree=False)
+                qcellids = np.empty(0, dtype=int)
         return qcellids
 
     @staticmethod
@@ -570,7 +600,6 @@ class GridIntersect:
             qfiltered = qcellids
         # sort cells to ensure lowest cell ids are returned
         if sort_by_cellid:
-            qfiltered = list(qfiltered)
             qfiltered.sort()
 
         isectshp = []
@@ -666,7 +695,6 @@ class GridIntersect:
             qfiltered = qcellids
         # sort cells to ensure lowest cell ids are returned
         if sort_by_cellid:
-            qfiltered = list(qfiltered)
             qfiltered.sort()
 
         # initialize empty lists for storing results
@@ -758,7 +786,6 @@ class GridIntersect:
             qfiltered = qcellids
         # sort cells to ensure lowest cell ids are returned
         if sort_by_cellid:
-            qfiltered = list(qfiltered)
             qfiltered.sort()
 
         isectshp = []
@@ -827,9 +854,10 @@ class GridIntersect:
             type of shape (i.e. "point", "linestring", "polygon" or
             their multi-variants), used by GeoSpatialUtil if shp is
             passed as a list of vertices, default is None
+
         Returns
         -------
-        rec : numpy.recarray
+        numpy.recarray
             a record array containing cell IDs of the gridcells
             the shape intersects with
         """
@@ -1788,7 +1816,7 @@ class GridIntersect:
 
         Returns
         -------
-        ax: matplotlib.pyplot.axes
+        matplotlib.pyplot.axes
             returns the axes handle
         """
 
@@ -1832,7 +1860,7 @@ class GridIntersect:
 
         Returns
         -------
-        ax: matplotlib.pyplot.axes
+        matplotlib.pyplot.axes
             returns the axes handle
         """
         import matplotlib.pyplot as plt
@@ -1858,7 +1886,7 @@ class GridIntersect:
                     c = f"C{i % 10}"
                 else:
                     c = colors[i]
-            if ishp.type == "MultiLineString":
+            if ishp.geom_type == "MultiLineString":
                 for part in ishp.geoms:
                     ax.plot(part.xy[0], part.xy[1], ls="-", c=c, **kwargs)
             else:
@@ -1884,7 +1912,7 @@ class GridIntersect:
 
         Returns
         -------
-        ax: matplotlib.pyplot.axes
+        matplotlib.pyplot.axes
             returns the axes handle
         """
         import matplotlib.pyplot as plt
