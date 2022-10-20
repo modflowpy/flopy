@@ -490,4 +490,3 @@ def test_mixed_collection(
                 is_equal = gi2 == gi1[ix]
 
             assert is_equal, "GeoSpatialCollection conversion error"
-

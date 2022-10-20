@@ -2,8 +2,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-
 from autotest.conftest import requires_exe
+
 from flopy.mf6 import (
     MFSimulation,
     ModflowGwf,

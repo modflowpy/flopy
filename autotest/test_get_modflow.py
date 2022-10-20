@@ -1,9 +1,9 @@
 """Test get-modflow utility."""
+import os
 import sys
-import urllib
+from os.path import expandvars
 from pathlib import Path
 from platform import system
-from typing import List
 from urllib.error import HTTPError
 
 import pytest
@@ -15,10 +15,57 @@ from autotest.conftest import (
 from flaky import flaky
 
 from flopy.utils import get_modflow
+from flopy.utils.get_modflow import get_release, get_releases, select_bindir
 
 rate_limit_msg = "rate limit exceeded"
 flopy_dir = get_project_root_path()
 get_modflow_script = flopy_dir / "flopy" / "utils" / "get_modflow.py"
+bindir_options = {
+    "flopy": Path(expandvars(r"%LOCALAPPDATA%\flopy")) / "bin"
+    if system() == "Windows"
+    else Path.home() / ".local" / "share" / "flopy" / "bin",
+    "python": Path(sys.prefix)
+    / ("Scripts" if system() == "Windows" else "bin"),
+    "home": Path.home() / ".local" / "bin",
+}
+repo_options = {
+    "executables": [
+        "crt",
+        "gridgen",
+        "gsflow",
+        "mf2000",
+        "mf2005",
+        "mf2005dbl",
+        "mf6",
+        "mflgr",
+        "mflgrdbl",
+        "mfnwt",
+        "mfnwtdbl",
+        "mfusg",
+        "mfusgdbl",
+        "mp6",
+        "mp7",
+        "mt3dms",
+        "mt3dusgs",
+        "sutra",
+        "swtv4",
+        "triangle",
+        "vs2dt",
+        "zbud6",
+        "zonbud3",
+        "zonbudusg",
+        "libmf6",
+    ],
+    "modflow6": ["mf6", "mf5to6", "zbud6", "libmf6"],
+    "modflow6-nightly-build": ["mf6", "mf5to6", "zbud6", "libmf6"],
+}
+
+if system() == "Windows":
+    bindir_options["windowsapps"] = Path(
+        expandvars(r"%LOCALAPPDATA%\Microsoft\WindowsApps")
+    )
+else:
+    bindir_options["system"] = Path("/usr") / "local" / "bin"
 
 
 @pytest.fixture
@@ -27,21 +74,74 @@ def downloads_dir(tmp_path_factory):
     return downloads_dir
 
 
+@pytest.fixture(autouse=True)
+def create_home_local_bin():
+    # make sure $HOME/.local/bin exists for :home option
+    home_local = Path.home() / ".local" / "bin"
+    home_local.mkdir(parents=True, exist_ok=True)
+
+
 def run_get_modflow_script(*args):
-    return run_py_script(get_modflow_script, *args)
+    return run_py_script(get_modflow_script, *args, verbose=True)
 
 
-def assert_exts(paths: List[Path]):
-    exts = set([p.suffix for p in paths])
+def append_ext(path: str):
     if system() == "Windows":
-        assert exts == {".exe", ".dll"}
+        return f"{path}{'.dll' if 'libmf6' in path else '.exe'}"
     elif system() == "Darwin":
-        assert exts == {"", ".dylib"}
+        return f"{path}{'.dylib' if 'libmf6' in path else ''}"
     elif system() == "Linux":
-        assert exts == {"", ".so"}
+        return f"{path}{'.so' if 'libmf6' in path else ''}"
 
 
-def test_script_usage():
+@pytest.mark.parametrize("per_page", [-1, 0, 101, 1000])
+def test_get_releases_bad_page_size(per_page):
+    with pytest.raises(ValueError):
+        get_releases("executables", per_page=per_page)
+
+
+@flaky
+@requires_github
+@pytest.mark.parametrize("repo", repo_options.keys())
+def test_get_releases(repo):
+    releases = get_releases(repo)
+    assert "latest" in releases
+
+    # test page size option
+    if repo == "modflow6-nightly-build":
+        assert len(releases) == 31  # last 30 releases +1 for "latest"
+
+
+@flaky
+@requires_github
+@pytest.mark.parametrize("repo", repo_options.keys())
+def test_get_release(repo):
+    tag = "latest"
+    release = get_release(repo, tag)
+    assets = release["assets"]
+
+    expected_assets = ["linux.zip", "mac.zip", "win64.zip"]
+    actual_assets = [asset["name"] for asset in assets]
+
+    if repo == "modflow6":
+        # can remove if modflow6 releases follow asset name conventions followed in executables and nightly build repos
+        assert set([a.rpartition("_")[2] for a in actual_assets]) >= set(
+            [a for a in expected_assets if not a.startswith("win")]
+        )
+    else:
+        assert set(actual_assets) >= set(expected_assets)
+
+
+@pytest.mark.parametrize("bindir", bindir_options.keys())
+def test_select_bindir(bindir, tmpdir):
+    expected_path = bindir_options[bindir]
+    if not os.access(expected_path, os.W_OK):
+        pytest.skip(f"{expected_path} is not writable")
+    selected = select_bindir(f":{bindir}")
+    assert selected == expected_path
+
+
+def test_script_help():
     assert get_modflow_script.exists()
     stdout, stderr, returncode = run_get_modflow_script("-h")
     assert "usage" in stdout
@@ -51,7 +151,7 @@ def test_script_usage():
 
 @flaky
 @requires_github
-def test_script_executables(tmpdir, downloads_dir):
+def test_script_options(tmpdir, downloads_dir):
     bindir = tmpdir / "bin1"
     assert not bindir.exists()
 
@@ -71,7 +171,7 @@ def test_script_executables(tmpdir, downloads_dir):
     )
     if rate_limit_msg in stderr:
         pytest.skip(f"GitHub {rate_limit_msg}")
-    assert "Release '1.9' not found" in stderr
+    assert "Release 1.9 not found" in stderr
     assert returncode == 1
 
     # fetch latest
@@ -128,129 +228,37 @@ def test_script_executables(tmpdir, downloads_dir):
 
 @flaky
 @requires_github
-def test_script_modflow6_nightly_build(tmpdir, downloads_dir):
-    bindir = tmpdir / "bin1"
-    bindir.mkdir()
-
+@pytest.mark.parametrize("repo", repo_options.keys())
+def test_script(tmpdir, repo, downloads_dir):
+    bindir = str(tmpdir)
     stdout, stderr, returncode = run_get_modflow_script(
         bindir,
         "--repo",
-        "modflow6-nightly-build",
+        repo,
         "--downloads-dir",
         downloads_dir,
     )
     if rate_limit_msg in stderr:
         pytest.skip(f"GitHub {rate_limit_msg}")
-    assert len(stderr) == returncode == 0
-    files = [item.name for item in bindir.iterdir() if item.is_file()]
-    assert len(files) >= 4
+
+    paths = list(tmpdir.glob("*"))
+    names = [p.name for p in paths]
+    expected_names = [append_ext(p) for p in repo_options[repo]]
+    assert set(names) >= set(expected_names)
 
 
 @flaky
 @requires_github
-def test_script_modflow6(tmpdir, downloads_dir):
-    stdout, stderr, returncode = run_get_modflow_script(
-        tmpdir,
-        "--repo",
-        "modflow6",
-        "--downloads-dir",
-        downloads_dir,
-    )
-    if rate_limit_msg in stderr:
-        pytest.skip(f"GitHub {rate_limit_msg}")
-    assert len(stderr) == returncode == 0
-
-    downloads = [p.name for p in downloads_dir.glob("*")]
-    assert len(downloads) > 0
-    assert any(dl.endswith("zip") for dl in downloads)
-
-    actual_paths = list(tmpdir.glob("*"))
-    actual_stems = [p.stem for p in actual_paths]
-    expected_stems = ["mf6", "mf5to6", "zbud6", "libmf6"]
-    assert all(stem in expected_stems for stem in actual_stems)
-    assert_exts(actual_paths)
-
-
-@flaky
-@requires_github
-def test_python_api_executables(tmpdir):
+@pytest.mark.parametrize("repo", repo_options.keys())
+def test_python_api(tmpdir, repo, downloads_dir):
+    bindir = str(tmpdir)
     try:
-        get_modflow(tmpdir)
+        get_modflow(bindir, repo=repo, downloads_dir=downloads_dir)
     except HTTPError as err:
         if err.code == 403:
             pytest.skip(f"GitHub {rate_limit_msg}")
 
-    actual_paths = list(tmpdir.glob("*"))
-    actual_names = [p.name for p in actual_paths]
-    expected_names = [
-        (exe + ".exe" if sys.platform.startswith("win") else exe)
-        for exe in [
-            "crt",
-            "gridgen",
-            "gsflow",
-            "mf2000",
-            "mf2005",
-            "mf2005dbl",
-            "mf6",
-            "mflgr",
-            "mflgrdbl",
-            "mfnwt",
-            "mfnwtdbl",
-            "mfusg",
-            "mfusgdbl",
-            "mp6",
-            "mp7",
-            "mt3dms",
-            "mt3dusgs",
-            "sutra",
-            "swtv4",
-            "triangle",
-            "vs2dt",
-            "zbud6",
-            "zonbud3",
-            "zonbudusg",
-        ]
-    ]
-
-    assert all(name in actual_names for name in expected_names)
-    assert_exts(actual_paths)
-
-
-@flaky
-@requires_github
-def test_python_api_modflow6_nightly_build(tmpdir, downloads_dir):
-    try:
-        get_modflow(tmpdir, repo="modflow6-nightly-build")
-    except urllib.error.HTTPError as err:
-        if err.code == 403:
-            pytest.skip(f"GitHub {rate_limit_msg}")
-
-    actual_paths = list(tmpdir.glob("*"))
-    actual_names = [p.name for p in actual_paths]
-    expected_names = [
-        (exe + ".exe" if sys.platform.startswith("win") else exe)
-        for exe in ["mf6", "mf5to6", "zbud6"]
-    ]
-
-    assert all(name in actual_names for name in expected_names)
-    assert_exts(actual_paths)
-
-
-@flaky
-@requires_github
-def test_python_api_modflow6(tmpdir, downloads_dir):
-    try:
-        get_modflow(tmpdir, repo="modflow6", downloads_dir=downloads_dir)
-    except urllib.error.HTTPError as err:
-        if err.code == 403:
-            pytest.skip(f"GitHub {rate_limit_msg}")
-
-    downloads = [p.name for p in downloads_dir.glob("*")]
-    assert len(downloads) > 0
-    assert any(dl.endswith("zip") for dl in downloads)
-
-    actual_paths = list(tmpdir.glob("*"))
-    actual_stems = [p.stem for p in actual_paths]
-    expected_stems = ["mf6", "mf5to6", "zbud6", "libmf6"]
-    assert all(exe in actual_stems for exe in expected_stems)
-    assert_exts(actual_paths)
+    paths = list(tmpdir.glob("*"))
+    names = [p.name for p in paths]
+    expected_names = [append_ext(p) for p in repo_options[repo]]
+    assert set(names) >= set(expected_names)

@@ -1250,6 +1250,7 @@ def test_rasters(example_data_path):
 
 # %% test raster sampling methods
 
+
 @pytest.mark.slow
 @requires_pkg("rasterstats")
 def test_raster_sampling_methods(example_data_path):
