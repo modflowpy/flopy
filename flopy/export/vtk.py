@@ -353,9 +353,10 @@ class Vtk:
         for k, d in graph.items():
             for _, pt in enumerate(d["vtk_points"]):
                 for ixx, value in enumerate(d["idx"]):
-                    numpy_graph[ixx, pt] = value
-                    xvert[ixx, pt] = d["xv"][ixx]
-                    yvert[ixx, pt] = d["yv"][ixx]
+                    if self.idomain[value] > 0:
+                        numpy_graph[ixx, pt] = value
+                        xvert[ixx, pt] = d["xv"][ixx]
+                        yvert[ixx, pt] = d["yv"][ixx]
 
         # now create the IDW weights for point scalars
         xc = np.ravel(self.modelgrid.xcellcenters)
@@ -647,16 +648,22 @@ class Vtk:
                 for ix, pt in enumerate(value["vtk_points"]):
                     ps_array[pt] = array[value["idx"][ix]]
         else:
-            ps_graph = self._point_scalar_numpy_graph
+            ps_graph = self._point_scalar_numpy_graph.copy()
+            idxs = np.where(np.isnan(array))
+            not_graphed = np.isin(ps_graph, idxs[0])
+            ps_graph[not_graphed] = -1
             ps_array = np.where(ps_graph >= 0, array[ps_graph], np.nan)
 
             # do inverse distance weighting and apply mask to retain
             # nan valued cells because numpy returns 0 when all vals are nan
-            weighted_vals = self._idw_weight_graph * ps_array
+            weight_graph = self._idw_weight_graph.copy()
+            weight_graph[not_graphed] = np.nan
+            weighted_vals = weight_graph * ps_array
             mask = np.isnan(weighted_vals).all(axis=0)
             weighted_vals = np.nansum(weighted_vals, axis=0)
             weighted_vals[mask] = np.nan
-            ps_array = weighted_vals / self._idw_total_weight_graph
+            total_weight_graph = np.nansum(weight_graph, axis=0)
+            ps_array = weighted_vals / total_weight_graph
 
         return ps_array
 
