@@ -9,9 +9,13 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/3f44f457aa474a8f83ad60c1842f7be2)](https://www.codacy.com/gh/modflowpy/flopy/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=modflowpy/flopy&amp;utm_campaign=Badge_Grade)
 [![Documentation Status](https://readthedocs.org/projects/flopy/badge/?version=latest)](https://flopy.readthedocs.io/en/latest/?badge=latest)
 
-[![Anaconda-Server Badge](https://anaconda.org/conda-forge/flopy/badges/installer/conda.svg)](https://conda.anaconda.org/conda-forge)
-[![Anaconda-Server Badge](https://anaconda.org/conda-forge/flopy/badges/version.svg)](https://anaconda.org/conda-forge/flopy)
+[![Anaconda Version](https://anaconda.org/conda-forge/flopy/badges/version.svg)](https://anaconda.org/conda-forge/flopy)
+[![Anaconda Updated](https://anaconda.org/conda-forge/flopy/badges/latest_release_date.svg)](https://anaconda.org/conda-forge/flopy)
+[![Anaconda Platforms](https://anaconda.org/conda-forge/flopy/badges/platforms.svg)](https://anaconda.org/conda-forge/flopy)
+
 [![PyPI Version](https://img.shields.io/pypi/v/flopy.png)](https://pypi.python.org/pypi/flopy)
+[![PyPI Status](https://img.shields.io/pypi/status/flopy.png)](https://pypi.python.org/pypi/flopy)
+[![PyPI Versions](https://img.shields.io/pypi/pyversions/flopy.png)](https://pypi.python.org/pypi/flopy)
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/modflowpy/flopy.git/develop)
 
