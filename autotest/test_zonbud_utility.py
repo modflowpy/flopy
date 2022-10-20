@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import pytest
-from autotest.conftest import requires_pkg, requires_exe
+from autotest.conftest import requires_exe, requires_pkg
 
 from flopy.mf6 import MFSimulation
 from flopy.utils import ZoneBudget, ZoneBudget6, ZoneFile6

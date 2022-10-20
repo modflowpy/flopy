@@ -387,12 +387,7 @@ def test_flat_array_to_util3d_usg(tmpdir, freyberg_usg_model_path):
 @pytest.mark.slow
 @pytest.mark.parametrize(
     "fpth",
-    [
-        str(p)
-        for p in (get_example_data_path() / "mfusg_test").rglob(
-            "*.nam"
-        )
-    ],
+    [str(p) for p in (get_example_data_path() / "mfusg_test").rglob("*.nam")],
 )
 def test_load_usg(tmpdir, fpth):
     namfile = Path(fpth)

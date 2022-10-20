@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import pytest
-from autotest.conftest import requires_pkg, requires_exe
+from autotest.conftest import requires_exe, requires_pkg
 from flaky import flaky
 from matplotlib import pyplot as plt
 from matplotlib import rcParams
