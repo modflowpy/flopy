@@ -2414,6 +2414,17 @@ class MFPackage(PackageContainer, PackageInterface):
         setattr(self, pkg_type, child_pkgs)
         self._child_package_groups[pkg_type] = child_pkgs
 
+    def _get_dfn_name_dict(self):
+        dfn_name_dict = {}
+        item_num = 0
+        for item in self.structure.dfn_list:
+            if len(item) > 1:
+                item_name = item[1].split()
+                if len(item_name) > 1 and item_name[0] == "name":
+                    dfn_name_dict[item_name[1]] = item_num
+                    item_num += 1
+        return dfn_name_dict
+
     def build_child_package(self, pkg_type, data, parameter_name, filerecord):
         """Builds a child package.  This method is only intended for FloPy
         internal use."""
@@ -2433,9 +2444,23 @@ class MFPackage(PackageContainer, PackageInterface):
             assert hasattr(package, parameter_name)
 
             if isinstance(data, dict):
+                # order data correctly
+                dfn_name_dict = package._get_dfn_name_dict()
+                ordered_data_items = []
+                for key, value in data.items():
+                    if key in dfn_name_dict:
+                        ordered_data_items.append(
+                            [dfn_name_dict[key], key, value]
+                        )
+                    else:
+                        ordered_data_items.append([999999, key, value])
+                ordered_data_items = sorted(
+                    ordered_data_items, key=lambda x: x[0]
+                )
+
                 # evaluate and add data to package
                 unused_data = {}
-                for key, value in data.items():
+                for order, key, value in ordered_data_items:
                     # if key is an attribute of the child package
                     if isinstance(key, str) and hasattr(package, key):
                         # set child package attribute
