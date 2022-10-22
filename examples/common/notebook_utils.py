@@ -1,20 +1,18 @@
 import os
 import sys
+from pathlib import Path
 
 import numpy as np
 
 try:
     import flopy
-except:
+except ImportError:
     fpth = os.path.abspath(os.path.join("..", "..", ".."))
     sys.path.append(fpth)
     import flopy
 
-from pathlib import Path
-
-
 def get_project_root_path() -> Path:
-    return Path(os.getcwd()).parent.parent
+    return Path.cwd().parent.parent
 
 
 def run(ws):
