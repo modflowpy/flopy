@@ -5,6 +5,7 @@ outputs to VTK.
 
 import os
 import warnings
+from pathlib import Path
 
 import numpy as np
 
@@ -50,15 +51,14 @@ class Pvd:
 
         Parameters
         ----------
-        file : str
+        file : Path or str
             vtu file name
         timevalue : float
             time step value in model time
         """
+        file = Path(file).name
         if not file.endswith(".vtu"):
             raise AssertionError("File name must end with .vtu ")
-
-        file = os.path.split(file)[-1]
 
         record = (
             f'<DataSet timestep="{timevalue}" group="" '
@@ -68,18 +68,19 @@ class Pvd:
 
     def write(self, f):
         """
-        Method to write a pvd file from the PVD object
+        Method to write a pvd file from the PVD object.
 
-        Paramaters
+        Parameters
         ----------
-        f : str
+        f : Path or str
             PVD file name
 
         """
-        if not f.endswith(".pvd"):
-            f += ".pvd"
+        f = Path(f)
+        if f.suffix != ".pvd":
+            f = f.parent / f"{f.name}.pvd"
 
-        with open(f, "w") as foo:
+        with f.open("w") as foo:
             foo.writelines(self.__data)
             foo.write("</Collection>\n")
             foo.write("</VTKFile>")
@@ -90,7 +91,7 @@ class Vtk:
     Class that builds VTK objects and exports models to VTK files
 
 
-    Parameters:
+    Parameters
     ----------
     model : flopy.ModelInterface object
         any flopy model object, example flopy.modflow.Modflow() object
@@ -249,7 +250,8 @@ class Vtk:
 
         Returns
         -------
-            dict : {vertex number: elevation}
+        dict
+            Key is vertex number, value is elevation
 
         """
         elevations = {}
@@ -634,7 +636,8 @@ class Vtk:
 
         Returns
         -------
-            np.ndarray of shape n vtk points
+        np.ndarray
+            array with shape n vtk points
         """
         isint = False
         if np.issubdtype(array[0], np.dtype(int)):
@@ -675,7 +678,7 @@ class Vtk:
         ----------
         index : int, tuple
             integer representing kper or a tuple of (kstp, kper)
-        fname : str
+        fname : Path or str
             path to the vtu file
 
         """
@@ -702,7 +705,7 @@ class Vtk:
 
         Returns
         -------
-            numpy array
+        np.ndarray
         """
         if masked_values is not None:
             try:
@@ -783,7 +786,7 @@ class Vtk:
 
         Returns
         -------
-
+        None
         """
         if self.__transient_output_data:
             raise AssertionError(
@@ -935,8 +938,8 @@ class Vtk:
         """
         Method to add transient vector data to vtk
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         d : dict
             dictionary of vectors
         name : str
@@ -1079,12 +1082,11 @@ class Vtk:
         Method to add Modpath output from a pathline or timeseries file
         to the grid. Colors will be representative of totim.
 
-        Parameters:
+        Parameters
         ----------
         pathlines : np.recarray or list
             pathlines accepts a numpy recarray of a particle pathline or
             a list of numpy reccarrays associated with pathlines
-
         timeseries : bool
             method to plot data as a series of vtk timeseries files for
             animation or as a single static vtk file. Default is false
@@ -1309,7 +1311,7 @@ class Vtk:
 
         Parameters
         ----------
-        f : str
+        f : Path or str
             vtk file name
         kpers : int, list, tuple
             stress period or list of stress periods to write to vtk. This
@@ -1324,9 +1326,8 @@ class Vtk:
             self.pvd = Pvd()
             extension = ".vtu"
 
-        fpth, _ = os.path.split(f)
-        if not os.path.exists(fpth):
-            os.mkdir(fpth)
+        f = Path(f)
+        f.parent.mkdir(exist_ok=True, parents=True)
 
         if kper is not None:
             if isinstance(kper, (int, float)):
@@ -1336,10 +1337,10 @@ class Vtk:
             if grid is None:
                 continue
 
-            if not f.endswith(".vtk") and not f.endswith(".vtu"):
-                foo = f"{f}{suffix[ix]}{extension}"
+            if f.suffix not in (".vtk", ".vtu"):
+                foo = f.parent / f"{f.name}{suffix[ix]}{extension}"
             else:
-                foo = f"{f[:-4]}{suffix[ix]}{f[-4:]}"
+                foo = f.parent / f"{f.stem}{suffix[ix]}{f.suffix}"
 
             if not self.xml:
                 w = self.__vtk.vtkUnstructuredGridWriter()
@@ -1358,7 +1359,7 @@ class Vtk:
                     self._set_modpath_point_data(points, d)
 
                     w.SetInputData(self.vtk_pathlines)
-                    w.SetFileName(tf)
+                    w.SetFileName(str(tf))
                     w.Update()
                     stp += 1
 
@@ -1388,7 +1389,7 @@ class Vtk:
                                 for name, vector in d.items():
                                     self.add_vector(vector, name)
 
-                            w.SetFileName(tf)
+                            w.SetFileName(str(tf))
                             w.Update()
                             cnt += 1
                     else:
@@ -1406,18 +1407,18 @@ class Vtk:
                             for name, vector in d.items():
                                 self.add_vector(vector, name)
 
-                            w.SetFileName(tf)
+                            w.SetFileName(str(tf))
                             w.update()
                             cnt += 1
                 else:
-                    w.SetFileName(foo)
+                    w.SetFileName(str(foo))
                     w.Update()
 
         if not type(self.pvd) == bool:
-            if not f.endswith(".vtu") or f.endswith(".vtk"):
-                pvdfile = f"{f}.pvd"
+            if f.suffix not in (".vtk", ".vtu"):
+                pvdfile = f.parent / f"{f.name}.pvd"
             else:
-                pvdfile = f"{f[:-4]}.pvd"
+                pvdfile = f.parent / f"{f.stem}.pvd"
 
             self.pvd.write(pvdfile)
 
@@ -1427,21 +1428,18 @@ class Vtk:
 
         Parameters
         ----------
-        path : str
+        path : Path
             vtk file path
         kper : int
             zero based stress period number
 
         Returns
         -------
+        Path
             updated vtk file path of format <filebase>_{:06d}.vtk where
             {:06d} represents the six zero padded stress period time
         """
-        pth = ".".join(path.split(".")[:-1])
-        if pth.endswith("_"):
-            pth = pth[:-1]
-        extension = path.split(".")[-1]
-        return f"{pth}_{kper :06d}.{extension}"
+        return path.parent / f"{path.stem.rstrip('_')}_{kper:06d}{path.suffix}"
 
 
 def export_model(
@@ -1457,11 +1455,13 @@ def export_model(
     kpers=None,
 ):
     """
-    DEPRECATED method to export model to vtk
+    Export model to vtk
+
+    .. deprecated:: 3.3.5
+        Use :meth:`Vtk.add_model`
 
     Parameters
     ----------
-
     model : flopy model instance
         flopy model
     otfolder : str
@@ -1535,11 +1535,13 @@ def export_package(
     kpers=None,
 ):
     """
-    DEPRECATED method to export package to vtk
+    Export package to vtk
+
+    .. deprecated:: 3.3.5
+        Use :meth:`Vtk.add_package`
 
     Parameters
     ----------
-
     pak_model : flopy model instance
         the model of the package
     pak_name : str
@@ -1620,11 +1622,13 @@ def export_transient(
     kpers=None,
 ):
     """
-    DEPRECATED method to export transient arrays and lists to vtk
+    Export transient arrays and lists to vtk
+
+    .. deprecated:: 3.3.5
+        Use :meth:`Vtk.add_transient_array` or :meth:`Vtk.add_transient_list`
 
     Parameters
     ----------
-
     model : MFModel
         the flopy model instance
     array : Transient instance
@@ -1717,11 +1721,13 @@ def export_array(
     binary=True,
 ):
     """
-    DEPRECATED method to export array to vtk
+    Export array to vtk
+
+    .. deprecated:: 3.3.5
+        Use :meth:`Vtk.add_array`
 
     Parameters
     ----------
-
     model : flopy model instance
         the flopy model instance
     array : flopy array
@@ -1803,13 +1809,13 @@ def export_heads(
     binary=True,
 ):
     """
-    DEPRECATED method
-
     Exports binary head file to vtk
+
+    .. deprecated:: 3.3.5
+        Use :meth:`Vtk.add_heads`
 
     Parameters
     ----------
-
     model : MFModel
         the flopy model instance
     hdsfile : str, HeadFile object
@@ -1892,13 +1898,13 @@ def export_cbc(
     binary=True,
 ):
     """
-    DEPRECATED method
-
     Exports cell by cell file to vtk
+
+    .. deprecated:: 3.3.5
+        Use :meth:`Vtk.add_cell_budget`
 
     Parameters
     ----------
-
     model : flopy model instance
         the flopy model instance
     cbcfile : str

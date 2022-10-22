@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from autotest.conftest import (
-    SHAPEFILE_EXTENSIONS,
     excludes_platform,
     get_example_data_path,
     has_pkg,
@@ -57,13 +56,9 @@ from flopy.utils import postprocessing as pp
 from flopy.utils.geometry import Polygon
 
 
-def shp_paths(d) -> List[Path]:
-    return [p for p in Path(d).glob("*") if p.suffix in SHAPEFILE_EXTENSIONS]
-
-
-def namfiles():
+def namfiles() -> List[Path]:
     mf2005_path = get_example_data_path() / "mf2005_test"
-    return [str(p) for p in Path(mf2005_path).rglob("*.nam")]
+    return list(mf2005_path.rglob("*.nam"))
 
 
 @requires_pkg("shapefile")
@@ -90,8 +85,9 @@ def test_output_helper_shapefile_export(tmpdir, example_data_path):
 def test_freyberg_export(tmpdir, example_data_path):
 
     # steady state
-    namfile = "freyberg.nam"
-    ws = str(example_data_path / "freyberg")
+    name = "freyberg"
+    namfile = f"{name}.nam"
+    ws = str(example_data_path / name)
     m = flopy.modflow.Modflow.load(
         namfile, model_ws=ws, check=False, verbose=False
     )
@@ -113,20 +109,23 @@ def test_freyberg_export(tmpdir, example_data_path):
         load_only=["DIS", "BAS6", "NWT", "OC", "RCH", "WEL", "DRN", "UPW"],
     )
     # test export without instantiating an sr
-    shape = os.path.join(tmpdir, f"{namfile[:-4]}_drn_sparse.shp")
-    m.drn.stress_period_data.export(shape, sparse=True)
-    assert os.path.exists(shape)
-    for p in shp_paths(tmpdir):
-        p.unlink()
+    shape = tmpdir / f"{name}_drn_sparse.shp"
+    m.drn.stress_period_data.export(str(shape), sparse=True)
+    for suffix in [".dbf", ".shp", ".shx"]:
+        part = shape.with_suffix(suffix)
+        assert part.exists()
+        part.unlink()
+    assert not shape.with_suffix(".prj").exists()
 
     m.modelgrid = StructuredGrid(
         delc=m.dis.delc.array, delr=m.dis.delr.array, epsg=3070
     )
     # test export with an sr, regardless of whether or not wkt was found
-    m.drn.stress_period_data.export(shape, sparse=True)
-    assert os.path.exists(shape)
-    for p in shp_paths(tmpdir):
-        p.unlink()
+    m.drn.stress_period_data.export(str(shape), sparse=True)
+    for suffix in [".dbf", ".prj", ".shp", ".shx"]:
+        part = shape.with_suffix(suffix)
+        assert part.exists()
+        part.unlink()
 
     m.modelgrid = StructuredGrid(
         delc=m.dis.delc.array, delr=m.dis.delr.array, epsg=3070
@@ -146,33 +145,25 @@ def test_freyberg_export(tmpdir, example_data_path):
     # if wkt text was fetched from spatialreference.org
     if wkt is not None:
         # test default package export
-        shape = os.path.join(tmpdir, f"{namfile[:-4]}_dis.shp")
-        m.dis.export(shape)
-        prjfile = shape.replace(".shp", ".prj")
-        with open(prjfile) as src:
-            prjtxt = src.read()
-        assert prjtxt == wkt
-        for p in shp_paths(tmpdir):
-            p.unlink()
+        shape = tmpdir / f"{name}_dis.shp"
+        m.dis.export(str(shape))
+        for suffix in [".dbf", ".prj", ".shp", ".shx"]:
+            part = shape.with_suffix(suffix)
+            assert part.exists()
+            if suffix == ".prj":
+                assert part.read_text() == wkt
+            part.unlink()
 
-        # test default package export to higher level dir
-        shape = os.path.join(tmpdir, f"{namfile[:-4]}_dis.shp")
-        m.dis.export(shape)
-        prjfile = shape.replace(".shp", ".prj")
-        with open(prjfile) as src:
-            prjtxt = src.read()
-        assert prjtxt == wkt
-        for p in shp_paths(tmpdir):
-            p.unlink()
+        # test default package export to higher level dir ?
 
         # test sparse package export
-        shape = os.path.join(tmpdir, f"{namfile[:-4]}_drn_sparse.shp")
-        m.drn.stress_period_data.export(shape, sparse=True)
-        prjfile = shape.replace(".shp", ".prj")
-        assert os.path.exists(prjfile)
-        with open(prjfile) as src:
-            prjtxt = src.read()
-        assert prjtxt == wkt
+        shape = tmpdir / f"{name}_drn_sparse.shp"
+        m.drn.stress_period_data.export(str(shape), sparse=True)
+        for suffix in [".dbf", ".prj", ".shp", ".shx"]:
+            part = shape.with_suffix(suffix)
+            assert part.exists()
+            if suffix == ".prj":
+                assert part.read_text() == wkt
 
 
 @requires_pkg("netCDF4", "pyproj")
@@ -462,7 +453,7 @@ def test_shapefile(tmpdir, namfile):
     from shapefile import Reader
 
     model = flopy.modflow.Modflow.load(
-        Path(namfile).name, model_ws=str(Path(namfile).parent), verbose=False
+        namfile.name, model_ws=str(namfile.parent), verbose=False
     )
     assert model, f"Could not load namefile {namfile}"
 
@@ -487,7 +478,7 @@ def test_shapefile_export_modelgrid_override(tmpdir, namfile):
     from shapefile import Reader
 
     model = flopy.modflow.Modflow.load(
-        Path(namfile).name, model_ws=str(Path(namfile).parent), verbose=False
+        namfile.name, model_ws=str(namfile.parent), verbose=False
     )
     grid = model.modelgrid
     modelgrid = StructuredGrid(
@@ -526,7 +517,7 @@ def test_export_netcdf(tmpdir, namfile):
     from netCDF4 import Dataset
 
     model = flopy.modflow.Modflow.load(
-        Path(namfile).name, model_ws=Path(namfile).parent, verbose=False
+        namfile.name, model_ws=str(namfile.parent), verbose=False
     )
     if model.dis.lenuni == 0:
         model.dis.lenuni = 1
@@ -794,8 +785,8 @@ def test_mf6_grid_shp_export(tmpdir):
         f for f in different_fields if "thick" not in f and "rech" not in f
     ]
     assert len(different_fields) == 0
-    for l in np.arange(m.nlay) + 1:
-        assert np.sum(np.abs(ra[f"rech_{l}"] - ra6[f"rechar{l}"])) < 1e-6
+    for lay in np.arange(m.nlay) + 1:
+        assert np.sum(np.abs(ra[f"rech_{lay}"] - ra6[f"rechar{lay}"])) < 1e-6
     common_fields = set(ra.dtype.names).intersection(ra6.dtype.names)
     common_fields.remove("geometry")
     # array values
@@ -818,7 +809,7 @@ def test_export_huge_shapefile(tmpdir):
     perlen = 1
     nstp = 1
     tsmult = 1
-    perioddata = [[perlen, nstp, tsmult]] * 2
+    # perioddata = [[perlen, nstp, tsmult]] * 2
     botm = np.zeros((nlay, nrow, ncol))
 
     m = flopy.modflow.Modflow("junk", version="mfnwt", model_ws=str(tmpdir))
@@ -838,7 +829,7 @@ def test_export_huge_shapefile(tmpdir):
     m.export(str(tmpdir / "huge.shp"))
 
 
-@requires_pkg("pyproj")
+@requires_pkg("netCDF4", "pyproj")
 def test_polygon_from_ij(tmpdir):
     """test creation of a polygon from an i, j location using get_vertices()."""
     ws = str(tmpdir)
@@ -896,7 +887,7 @@ def test_polygon_from_ij(tmpdir):
     assert np.abs(geoms[0].bounds[-1] - 5169292.893203464) < 1e-4
 
 
-@requires_pkg("pyproj")
+@requires_pkg("netCDF4", "pyproj")
 @requires_spatial_reference
 def test_polygon_from_ij_with_epsg(tmpdir):
     ws = str(tmpdir)
@@ -977,15 +968,21 @@ def test_polygon_from_ij_with_epsg(tmpdir):
     assert "object" in ra.dtype["stf"].name
 
 
-def count_lines_in_file(filepath, binary=False):
-    if binary:
-        f = open(filepath, "rb")
-    else:
-        f = open(filepath, "r")
-    # note this does not mean much for a binary file but still allows for check
-    n = len(f.readlines())
-    f.close()
+def count_lines_in_file(filepath):
+    with open(filepath) as f:
+        n = sum(1 for _ in f)
     return n
+
+
+def is_binary_file(filepath):
+    is_binary = False
+    with open(filepath) as f:
+        try:
+            for _ in f:
+                pass
+        except UnicodeDecodeError:
+            is_binary = True
+    return is_binary
 
 
 @requires_pkg("vtk")
@@ -999,17 +996,13 @@ def test_vtk_export_array2d(tmpdir, example_data_path):
 
     # export and check
     m.dis.top.export(str(tmpdir), name="top", fmt="vtk", binary=False)
-    filetocheck = os.path.join(str(tmpdir), "top.vtk")
-    nlines = count_lines_in_file(filetocheck)
-    assert nlines == 17615
+    assert count_lines_in_file(tmpdir / "top.vtk") == 17615
 
     # with smoothing
     m.dis.top.export(
         str(tmpdir), fmt="vtk", name="top_smooth", binary=False, smooth=True
     )
-    filetocheck = os.path.join(str(tmpdir), "top_smooth.vtk")
-    nlines1 = count_lines_in_file(filetocheck)
-    assert nlines1 == 17615
+    assert count_lines_in_file(tmpdir / "top_smooth.vtk") == 17615
 
 
 @requires_pkg("vtk")
@@ -1026,9 +1019,7 @@ def test_vtk_export_array3d(tmpdir, example_data_path):
 
     # export and check
     m.upw.hk.export(str(tmpdir), fmt="vtk", name="hk", binary=False)
-    filetocheck = os.path.join(str(tmpdir), "hk.vtk")
-    nlines = count_lines_in_file(filetocheck)
-    assert nlines == 17615
+    assert count_lines_in_file(tmpdir / "hk.vtk") == 17615
 
     # with point scalars
     m.upw.hk.export(
@@ -1038,9 +1029,7 @@ def test_vtk_export_array3d(tmpdir, example_data_path):
         point_scalars=True,
         binary=False,
     )
-    filetocheck = os.path.join(str(tmpdir), "hk_points.vtk")
-    nlines1 = count_lines_in_file(filetocheck)
-    assert nlines1 == 19482
+    assert count_lines_in_file(tmpdir / "hk_points.vtk") == 19482
 
     # with point scalars and binary
     m.upw.hk.export(
@@ -1049,8 +1038,7 @@ def test_vtk_export_array3d(tmpdir, example_data_path):
         name="hk_points_bin",
         point_scalars=True,
     )
-    filetocheck = os.path.join(str(tmpdir), "hk_points_bin.vtk")
-    assert os.path.exists(filetocheck)
+    assert is_binary_file(tmpdir / "hk_points_bin.vtk")
 
 
 @requires_pkg("vtk")
@@ -1070,20 +1058,14 @@ def test_vtk_transient_array_2d(tmpdir, example_data_path):
 
     # export and check
     m.rch.rech.export(ws, fmt="vtk", kpers=kpers, binary=False, xml=True)
-    filetocheck = os.path.join(ws, "rech_000001.vtk")
-    nlines = count_lines_in_file(filetocheck)
-    assert nlines == 26837
-    filetocheck = os.path.join(ws, "rech_001096.vtk")
-    nlines1 = count_lines_in_file(filetocheck)
-    assert nlines1 == 26837
+    assert count_lines_in_file(tmpdir / "rech_000001.vtk") == 26837
+    assert count_lines_in_file(tmpdir / "rech_001096.vtk") == 26837
 
     # with binary
 
     m.rch.rech.export(ws, fmt="vtk", binary=True, kpers=kpers)
-    filetocheck = os.path.join(ws, "rech_000001.vtk")
-    assert os.path.exists(filetocheck)
-    filetocheck = os.path.join(ws, "rech_001096.vtk")
-    assert os.path.exists(filetocheck)
+    assert is_binary_file(tmpdir / "rech_000001.vtk")
+    assert is_binary_file(tmpdir / "rech_001096.vtk")
 
 
 @requires_pkg("vtk")
@@ -1103,43 +1085,32 @@ def test_vtk_export_packages(tmpdir, example_data_path):
     # dis export and check
     # todo: pakbase.export() for vtk!!!!
     m.dis.export(ws, fmt="vtk", xml=True, binary=False)
-    filetocheck = os.path.join(ws, "DIS.vtk")
+    filetocheck = tmpdir / "DIS.vtk"
     # totalbytes = os.path.getsize(filetocheck)
     # assert(totalbytes==1019857)
-    nlines = count_lines_in_file(filetocheck)
-    assert nlines == 27239, f"nlines ({nlines}) not equal to 27239"
+    assert count_lines_in_file(filetocheck) == 27239
 
     # upw with point scalar output
     m.upw.export(ws, fmt="vtk", xml=True, binary=False, point_scalars=True)
-    filetocheck = os.path.join(ws, "UPW.vtk")
-    nlines1 = count_lines_in_file(filetocheck)
-    assert nlines1 == 42445, f"nlines ({nlines}) not equal to 42445"
+    assert count_lines_in_file(tmpdir / "UPW.vtk") == 42445
 
     # bas with smoothing on
     m.bas6.export(ws, fmt="vtk", binary=False, smooth=True)
-    filetocheck = os.path.join(ws, "BAS6.vtk")
-    nlines2 = count_lines_in_file(filetocheck)
-    assert nlines2 == 17883
+    assert count_lines_in_file(tmpdir / "BAS6.vtk") == 17883
 
     # transient package drain
     kpers = [0, 1, 1096]
     m.drn.export(ws, fmt="vtk", binary=False, xml=True, kpers=kpers, pvd=True)
-    filetocheck = os.path.join(ws, "DRN_000001.vtu")
-    nlines3 = count_lines_in_file(filetocheck)
-    assert nlines3 == 27239
-    filetocheck = os.path.join(ws, "DRN_001096.vtu")
-    nlines4 = count_lines_in_file(filetocheck)
-    assert nlines4 == 27239
+    assert count_lines_in_file(tmpdir / "DRN_000001.vtu") == 27239
+    assert count_lines_in_file(tmpdir / "DRN_001096.vtu") == 27239
 
     # dis with binary
     m.dis.export(ws, fmt="vtk", binary=True)
-    filetocheck = os.path.join(ws, "DIS.vtk")
-    assert os.path.exists(filetocheck)
+    assert is_binary_file(tmpdir / "DIS.vtk")
 
     # upw with point scalars and binary
     m.upw.export(ws, fmt="vtk", point_scalars=True, binary=True)
-    filetocheck = os.path.join(ws, "UPW.vtk")
-    assert os.path.exists(filetocheck)
+    assert is_binary_file(tmpdir / "UPW.vtk")
 
 
 @pytest.mark.mf6
@@ -1166,18 +1137,16 @@ def test_vtk_mf6(tmpdir, example_data_path):
             m.export(str(tmpdir), fmt="vtk", binary=False)
 
     # check one
-    filetocheck = os.path.join(str(tmpdir), "twrihfb2015_000000.vtk")
+    filetocheck = tmpdir / "twrihfb2015_000000.vtk"
     # totalbytes = os.path.getsize(filetocheck)
     # assert(totalbytes==21609)
-    nlines = count_lines_in_file(filetocheck)
-    assert nlines == 9537
+    assert count_lines_in_file(filetocheck) == 9537
 
 
 @requires_pkg("vtk")
 @pytest.mark.slow
 def test_vtk_binary_head_export(tmpdir, example_data_path):
     # test mf 2005 freyberg
-    ws = str(tmpdir)
     mpth = str(example_data_path / "freyberg_multilayer_transient")
     namfile = "freyberg.nam"
     hdsfile = os.path.join(mpth, "freyberg.hds")
@@ -1185,7 +1154,7 @@ def test_vtk_binary_head_export(tmpdir, example_data_path):
     m = Modflow.load(
         namfile, model_ws=mpth, verbose=False, load_only=["dis", "bas6"]
     )
-    filenametocheck = "freyberg_head_000003.vtu"
+    filetocheck = tmpdir / "freyberg_head_000003.vtu"
 
     # export and check
 
@@ -1193,11 +1162,10 @@ def test_vtk_binary_head_export(tmpdir, example_data_path):
     vtkobj.add_heads(
         heads, kstpkper=[(0, 0), (0, 199), (0, 354), (0, 454), (0, 1089)]
     )
-    vtkobj.write(os.path.join(ws, "freyberg_head"))
+    vtkobj.write(tmpdir / "freyberg_head")
 
-    filetocheck = os.path.join(ws, filenametocheck)
-    nlines = count_lines_in_file(filetocheck)
-    assert nlines == 34
+    assert count_lines_in_file(filetocheck) == 34
+    filetocheck.unlink()
 
     # with point scalars
 
@@ -1205,11 +1173,10 @@ def test_vtk_binary_head_export(tmpdir, example_data_path):
     vtkobj.add_heads(
         heads, kstpkper=[(0, 0), (0, 199), (0, 354), (0, 454), (0, 1089)]
     )
-    vtkobj.write(os.path.join(ws, "freyberg_head"))
+    vtkobj.write(tmpdir / "freyberg_head")
 
-    filetocheck = os.path.join(ws, filenametocheck)
-    nlines1 = count_lines_in_file(filetocheck)
-    assert nlines1 == 34
+    assert count_lines_in_file(filetocheck) == 34
+    filetocheck.unlink()
 
     # with smoothing
 
@@ -1217,11 +1184,9 @@ def test_vtk_binary_head_export(tmpdir, example_data_path):
     vtkobj.add_heads(
         heads, kstpkper=[(0, 0), (0, 199), (0, 354), (0, 454), (0, 1089)]
     )
-    vtkobj.write(os.path.join(ws, "freyberg_head"))
+    vtkobj.write(tmpdir / "freyberg_head")
 
-    filetocheck = os.path.join(ws, filenametocheck)
-    nlines2 = count_lines_in_file(filetocheck)
-    assert nlines2 == 34
+    assert count_lines_in_file(filetocheck) == 34
 
 
 @requires_pkg("vtk")
@@ -1237,23 +1202,19 @@ def test_vtk_cbc(tmpdir, example_data_path):
     m = Modflow.load(
         namfile, model_ws=mpth, verbose=False, load_only=["dis", "bas6"]
     )
-    filenametocheck = "freyberg_CBC_000000.vtu"
 
     # export and check with point scalar
     vtkobj = Vtk(m, binary=False, xml=True, pvd=True, point_scalars=True)
     vtkobj.add_cell_budget(cbc, kstpkper=[(0, 0), (0, 1), (0, 2)])
-    vtkobj.write(os.path.join(ws, "freyberg_CBC"))
+    vtkobj.write(tmpdir / "freyberg_CBC")
 
-    filetocheck = os.path.join(ws, filenametocheck)
-    nlines = count_lines_in_file(filetocheck)
-    assert nlines == 39243
+    assert count_lines_in_file(tmpdir / "freyberg_CBC_000000.vtu") == 39243
 
     # with point scalars and binary
     vtkobj = Vtk(m, xml=True, pvd=True, point_scalars=True)
     vtkobj.add_cell_budget(cbc, kstpkper=[(0, 0), (0, 1), (0, 2)])
-    vtkobj.write(os.path.join(ws, "freyberg_CBC"))
-    filetocheck = os.path.join(ws, filenametocheck)
-    assert os.path.exists(filetocheck)
+    vtkobj.write(tmpdir / "freyberg_CBC")
+    assert count_lines_in_file(tmpdir / "freyberg_CBC_000000.vtu") == 28
 
 
 @requires_pkg("vtk")
@@ -1274,47 +1235,38 @@ def test_vtk_vector(tmpdir, example_data_path):
     )
     q = pp.get_specific_discharge(vectors, m, head)
 
-    filenametocheck = "discharge.vtu"
+    filenametocheck = tmpdir / "discharge.vtu"
 
     # export and check with point scalar
     vtkobj = Vtk(m, xml=True, binary=False, point_scalars=True)
     vtkobj.add_vector(q, "discharge")
-    vtkobj.write(os.path.join(str(tmpdir), filenametocheck))
+    vtkobj.write(filenametocheck)
 
-    filetocheck = os.path.join(str(tmpdir), filenametocheck)
-    nlines = count_lines_in_file(filetocheck)
-    assert nlines == 36045
+    assert count_lines_in_file(filenametocheck) == 36045
 
     # with point scalars and binary
     vtkobj = Vtk(m, point_scalars=True)
     vtkobj.add_vector(q, "discharge")
-    vtkobj.write(os.path.join(str(tmpdir), filenametocheck))
-    filetocheck = os.path.join(str(tmpdir), filenametocheck)
-    assert os.path.exists(
-        filetocheck
-    ), f"file (0) does not exist: {filetocheck}"
+    vtkobj.write(filenametocheck)
+
+    assert is_binary_file(filenametocheck)
 
     # test at cell centers
     q = pp.get_specific_discharge(vectors, m, head)
 
-    filenametocheck = "discharge_verts.vtu"
+    filenametocheck = tmpdir / "discharge_verts.vtu"
     vtkobj = Vtk(m, xml=True, binary=False)
     vtkobj.add_vector(q, "discharge")
-    vtkobj.write(os.path.join(str(tmpdir), filenametocheck))
+    vtkobj.write(filenametocheck)
 
-    filetocheck = os.path.join(str(tmpdir), filenametocheck)
-    nlines2 = count_lines_in_file(filetocheck)
-    assert nlines2 == 27645, f"nlines != 10598 ({nlines2})"
+    assert count_lines_in_file(filenametocheck) == 27645
 
     # with values directly given at vertices and binary
-    vtkobj = Vtk(m, xml=True, binary=False)
+    vtkobj = Vtk(m, xml=True, binary=True)
     vtkobj.add_vector(q, "discharge")
-    vtkobj.write(os.path.join(str(tmpdir), filenametocheck))
+    vtkobj.write(filenametocheck)
 
-    filetocheck = os.path.join(str(tmpdir), filenametocheck)
-    assert os.path.exists(
-        filetocheck
-    ), f"file (1) does not exist: {filetocheck}"
+    assert count_lines_in_file(filenametocheck) == 25
 
 
 @requires_pkg("vtk")
@@ -1322,45 +1274,20 @@ def test_vtk_unstructured(tmpdir, example_data_path):
     from vtkmodules.util.numpy_support import vtk_to_numpy
     from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
 
-    def load_verts(fname):
-        verts = np.genfromtxt(
-            fname, dtype=[int, float, float], names=["iv", "x", "y"]
-        )
-        verts["iv"] -= 1  # zero based
-        return verts
-
-    def load_iverts(fname):
-        f = open(fname, "r")
-        iverts = []
-        xc = []
-        yc = []
-        for line in f:
-            ll = line.strip().split()
-            iverts.append([int(i) - 1 for i in ll[4:]])
-            xc.append(float(ll[1]))
-            yc.append(float(ll[2]))
-        return iverts, np.array(xc), np.array(yc)
-
-    u_data_ws = str(example_data_path / "unstructured")
+    u_data_ws = example_data_path / "unstructured"
 
     # load vertices
-    fname = os.path.join(u_data_ws, "ugrid_verts.dat")
-    verts = load_verts(fname)
+    verts = load_verts(u_data_ws / "ugrid_verts.dat")
 
     # load the index list into iverts, xc, and yc
-    fname = os.path.join(u_data_ws, "ugrid_iverts.dat")
-    iverts, xc, yc = load_iverts(fname)
+    iverts, xc, yc = load_iverts(u_data_ws / "ugrid_iverts.dat", closed=True)
 
     # create a 3 layer model grid
     ncpl = np.array(3 * [len(iverts)])
     nnodes = np.sum(ncpl)
 
-    top = np.ones(
-        (nnodes),
-    )
-    botm = np.ones(
-        (nnodes),
-    )
+    top = np.ones(nnodes)
+    botm = np.ones(nnodes)
 
     # set top and botm elevations
     i0 = 0
@@ -1383,7 +1310,7 @@ def test_vtk_unstructured(tmpdir, example_data_path):
         ncpl=ncpl,
     )
 
-    outfile = os.path.join(str(tmpdir), "disu_grid.vtu")
+    outfile = tmpdir / "disu_grid.vtu"
     vtkobj = Vtk(
         modelgrid=modelgrid, vertical_exageration=2, binary=True, smooth=False
     )
@@ -1391,10 +1318,10 @@ def test_vtk_unstructured(tmpdir, example_data_path):
     vtkobj.add_array(modelgrid.botm, "botm")
     vtkobj.write(outfile)
 
-    assert os.path.exists(outfile), "VTK DISU test file not written"
+    assert is_binary_file(outfile)
 
     reader = vtkUnstructuredGridReader()
-    reader.SetFileName(outfile)
+    reader.SetFileName(str(outfile))
     reader.ReadAllFieldsOn()
     reader.Update()
 
@@ -1417,16 +1344,16 @@ def test_vtk_vertex(tmpdir, example_data_path):
     sim = MFSimulation.load(sim_ws=workspace)
     gwf = sim.get_model("gwf_1")
 
-    outfile = os.path.join(str(tmpdir), "disv.vtk")
+    outfile = tmpdir / "disv.vtk"
     vtkobj = Vtk(model=gwf, binary=True, smooth=False)
     vtkobj.add_model(gwf)
     vtkobj.write(outfile)
 
-    outfile = outfile.split(".")[0] + "_000000.vtk"
-    assert os.path.exists(outfile), "Vertex VTK File was not written"
+    outfile = outfile.parent / f"{outfile.stem}_000000.vtk"
+    assert outfile.exists(), "Vertex VTK File was not written"
 
     reader = vtkUnstructuredGridReader()
-    reader.SetFileName(outfile)
+    reader.SetFileName(str(outfile))
     reader.ReadAllFieldsOn()
     reader.Update()
 
@@ -1442,7 +1369,7 @@ def test_vtk_vertex(tmpdir, example_data_path):
 
 
 @requires_exe("mf2005")
-@requires_pkg("vtk")
+@requires_pkg("pandas", "vtk")
 def test_vtk_pathline(tmpdir, example_data_path):
     from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
 
@@ -1471,24 +1398,23 @@ def test_vtk_pathline(tmpdir, example_data_path):
     mpp.write_input()
     mpp.run_model()
 
-    pthfile = os.path.join(str(tmpdir), mpp.sim.pathline_file)
+    pthfile = os.path.join(tmpdir, mpp.sim.pathline_file)
     pthobj = PathlineFile(pthfile)
     travel_time_max = 200.0 * 365.25 * 24.0 * 60.0 * 60.0
     plines = pthobj.get_alldata(totim=travel_time_max, ge=False)
 
-    outfile = os.path.join(str(tmpdir), "pathline.vtk")
+    outfile = tmpdir / "pathline.vtk"
 
     vtkobj = Vtk(model=ml, binary=True, vertical_exageration=50, smooth=False)
     vtkobj.add_model(ml)
     vtkobj.add_pathline_points(plines)
     vtkobj.write(outfile)
 
-    outfile = outfile.split(".")[0] + "_pathline.vtk"
-    if not os.path.exists(outfile):
-        raise FileNotFoundError("Pathline VTK file not properly written")
+    outfile = outfile.parent / f"{outfile.stem}_pathline.vtk"
+    assert outfile.exists(), "Pathline VTK file not properly written"
 
     reader = vtkUnstructuredGridReader()
-    reader.SetFileName(outfile)
+    reader.SetFileName(str(outfile))
     reader.ReadAllFieldsOn()
     reader.Update()
 
@@ -1549,18 +1475,18 @@ def load_verts(fname):
 
 
 def load_iverts(fname, closed=False):
-    f = open(fname, "r")
     iverts = []
     xc = []
     yc = []
-    for line in f:
-        ll = line.strip().split()
-        if not closed:
-            iverts.append([int(i) - 1 for i in ll[4:-1]])
-        else:
-            iverts.append([int(i) - 1 for i in ll[4:]])
-        xc.append(float(ll[1]))
-        yc.append(float(ll[2]))
+    with open(fname) as f:
+        for line in f:
+            ll = line.strip().split()
+            if not closed:
+                iverts.append([int(i) - 1 for i in ll[4:-1]])
+            else:
+                iverts.append([int(i) - 1 for i in ll[4:]])
+            xc.append(float(ll[1]))
+            yc.append(float(ll[2]))
     return iverts, np.array(xc), np.array(yc)
 
 
@@ -1590,14 +1516,11 @@ def test_vtk_export_model_without_packages_names(tmpdir):
     gwf = sim.get_model()
     vtkobj = Vtk(gwf, binary=False)
     vtkobj.add_model(gwf)
-    f = os.path.join(str(tmpdir), "gwf.vtk")
-    vtkobj.write(f)
+    vtkobj.write(tmpdir / "gwf.vtk")
 
     # load the output using the vtk standard library
-    f = os.path.join(str(tmpdir), "gwf_000000.vtk")
-
     gridreader = vtkUnstructuredGridReader()
-    gridreader.SetFileName(f)
+    gridreader.SetFileName(str(tmpdir / "gwf_000000.vtk"))
     gridreader.Update()
     grid = gridreader.GetOutput()
 
@@ -1611,14 +1534,14 @@ def test_vtk_export_model_without_packages_names(tmpdir):
     cell_locations_answer = np.array([0, 8, 16, 24, 32, 40, 48, 56, 64])
     print(f"Found cell locations {cell_locations} in vtk file.")
     print(f"Expecting cell locations {cell_locations_answer}")
-    errmsg = f"vtk cell locations do not match expected result."
+    errmsg = "vtk cell locations do not match expected result."
     assert np.allclose(cell_locations, cell_locations_answer), errmsg
 
     cell_types = vtk_to_numpy(grid.GetCellTypesArray())
     cell_types_answer = np.array(9 * [42])
     print(f"Found cell types {cell_types} in vtk file.")
     print(f"Expecting cell types {cell_types_answer}")
-    errmsg = f"vtk cell types do not match expected result."
+    errmsg = "vtk cell types do not match expected result."
     assert np.allclose(cell_types, cell_types_answer), errmsg
 
 
@@ -1663,13 +1586,12 @@ def test_vtk_export_disv1_model(tmpdir):
     gwf = sim.get_model()
     vtkobj = Vtk(gwf, binary=False)
     vtkobj.add_model(gwf)
-    f = os.path.join(str(tmpdir), "gwf.vtk")
+    f = tmpdir / "gwf.vtk"
     vtkobj.write(f)
 
     # load the output using the vtk standard library
-    f = os.path.join(str(tmpdir), "gwf.vtk")
     gridreader = vtkUnstructuredGridReader()
-    gridreader.SetFileName(f)
+    gridreader.SetFileName(str(f))
     gridreader.Update()
     grid = gridreader.GetOutput()
 
@@ -1684,14 +1606,14 @@ def test_vtk_export_disv1_model(tmpdir):
     cell_locations_answer = np.array([0, 8, 16, 24, 32, 40, 48, 56, 64])
     print(f"Found cell locations {cell_locations} in vtk file.")
     print(f"Expecting cell locations {cell_locations_answer}")
-    errmsg = f"vtk cell locations do not match expected result."
+    errmsg = "vtk cell locations do not match expected result."
     assert np.allclose(cell_locations, cell_locations_answer), errmsg
 
     cell_types = vtk_to_numpy(grid.GetCellTypesArray())
     cell_types_answer = np.array(9 * [42])
     print(f"Found cell types {cell_types} in vtk file.")
     print(f"Expecting cell types {cell_types_answer}")
-    errmsg = f"vtk cell types do not match expected result."
+    errmsg = "vtk cell types do not match expected result."
     assert np.allclose(cell_types, cell_types_answer), errmsg
 
 
@@ -1729,13 +1651,12 @@ def test_vtk_export_disv2_model(tmpdir):
     gwf = sim.get_model()
     vtkobj = Vtk(gwf, binary=False)
     vtkobj.add_model(gwf)
-    f = os.path.join(str(tmpdir), "gwf.vtk")
+    f = tmpdir / "gwf.vtk"
     vtkobj.write(f)
 
     # load the output using the vtk standard library
-    f = os.path.join(str(tmpdir), "gwf.vtk")
     gridreader = vtkUnstructuredGridReader()
-    gridreader.SetFileName(f)
+    gridreader.SetFileName(str(f))
     gridreader.Update()
     grid = gridreader.GetOutput()
 
@@ -1750,14 +1671,14 @@ def test_vtk_export_disv2_model(tmpdir):
     cell_locations_answer = np.array([0, 8, 16, 24, 32, 40, 48, 56, 64])
     print(f"Found cell locations {cell_locations} in vtk file.")
     print(f"Expecting cell locations {cell_locations_answer}")
-    errmsg = f"vtk cell locations do not match expected result."
+    errmsg = "vtk cell locations do not match expected result."
     assert np.allclose(cell_locations, cell_locations_answer), errmsg
 
     cell_types = vtk_to_numpy(grid.GetCellTypesArray())
     cell_types_answer = np.array(9 * [42])
     print(f"Found cell types {cell_types} in vtk file.")
     print(f"Expecting cell types {cell_types_answer}")
-    errmsg = f"vtk cell types do not match expected result."
+    errmsg = "vtk cell types do not match expected result."
     assert np.allclose(cell_types, cell_types_answer), errmsg
 
 
@@ -1768,26 +1689,21 @@ def test_vtk_export_disu1_grid(tmpdir, example_data_path):
 
     from flopy.export.vtk import Vtk
 
+    u_data_ws = example_data_path / "unstructured"
+
     # test exporting open cell vertices
     # load vertices
-    u_data_ws = str(example_data_path / "unstructured")
-    fname = os.path.join(u_data_ws, "ugrid_verts.dat")
-    verts = load_verts(fname)
+    verts = load_verts(u_data_ws / "ugrid_verts.dat")
 
     # load the index list into iverts, xc, and yc
-    fname = os.path.join(u_data_ws, "ugrid_iverts.dat")
-    iverts, xc, yc = load_iverts(fname)
+    iverts, xc, yc = load_iverts(u_data_ws / "ugrid_iverts.dat")
 
     # create a 3 layer model grid
     ncpl = np.array(3 * [len(iverts)])
     nnodes = np.sum(ncpl)
 
-    top = np.ones(
-        (nnodes),
-    )
-    botm = np.ones(
-        (nnodes),
-    )
+    top = np.ones(nnodes)
+    botm = np.ones(nnodes)
 
     # set top and botm elevations
     i0 = 0
@@ -1810,7 +1726,7 @@ def test_vtk_export_disu1_grid(tmpdir, example_data_path):
         ncpl=ncpl,
     )
 
-    outfile = os.path.join(str(tmpdir), "disu_grid.vtu")
+    outfile = tmpdir / "disu_grid.vtu"
     vtkobj = Vtk(
         modelgrid=modelgrid,
         vertical_exageration=2,
@@ -1822,7 +1738,7 @@ def test_vtk_export_disu1_grid(tmpdir, example_data_path):
     vtkobj.write(outfile)
 
     gridreader = vtkUnstructuredGridReader()
-    gridreader.SetFileName(outfile)
+    gridreader.SetFileName(str(outfile))
     gridreader.Update()
     grid = gridreader.GetOutput()
 
@@ -1836,14 +1752,14 @@ def test_vtk_export_disu1_grid(tmpdir, example_data_path):
     cell_locations_answer = np.array([0, 8, 16, 24, 32, 40, 48, 56, 64])
     print(f"Found cell locations {cell_locations} in vtk file.")
     print(f"Expecting cell locations {cell_locations_answer}")
-    errmsg = f"vtk cell locations do not match expected result."
+    errmsg = "vtk cell locations do not match expected result."
     assert np.allclose(cell_locations, cell_locations_answer), errmsg
 
     cell_types = vtk_to_numpy(grid.GetCellTypesArray())
     cell_types_answer = np.array(654 * [42])
     print(f"Found cell types {cell_types[0:9]} in vtk file.")
     print(f"Expecting cell types {cell_types_answer[0:9]}")
-    errmsg = f"vtk cell types do not match expected result."
+    errmsg = "vtk cell types do not match expected result."
     assert np.allclose(cell_types, cell_types_answer), errmsg
 
 
@@ -1854,26 +1770,21 @@ def test_vtk_export_disu2_grid(tmpdir, example_data_path):
 
     from flopy.export.vtk import Vtk
 
+    u_data_ws = example_data_path / "unstructured"
+
     # test exporting closed cell vertices
     # load vertices
-    u_data_ws = str(example_data_path / "unstructured")
-    fname = os.path.join(u_data_ws, "ugrid_verts.dat")
-    verts = load_verts(fname)
+    verts = load_verts(u_data_ws / "ugrid_verts.dat")
 
     # load the index list into iverts, xc, and yc
-    fname = os.path.join(u_data_ws, "ugrid_iverts.dat")
-    iverts, xc, yc = load_iverts(fname, closed=True)
+    iverts, xc, yc = load_iverts(u_data_ws / "ugrid_iverts.dat", closed=True)
 
     # create a 3 layer model grid
     ncpl = np.array(3 * [len(iverts)])
     nnodes = np.sum(ncpl)
 
-    top = np.ones(
-        (nnodes),
-    )
-    botm = np.ones(
-        (nnodes),
-    )
+    top = np.ones(nnodes)
+    botm = np.ones(nnodes)
 
     # set top and botm elevations
     i0 = 0
@@ -1896,7 +1807,7 @@ def test_vtk_export_disu2_grid(tmpdir, example_data_path):
         ncpl=ncpl,
     )
 
-    outfile = os.path.join(str(tmpdir), "disu_grid.vtu")
+    outfile = tmpdir / "disu_grid.vtu"
     vtkobj = Vtk(
         modelgrid=modelgrid,
         vertical_exageration=2,
@@ -1908,7 +1819,7 @@ def test_vtk_export_disu2_grid(tmpdir, example_data_path):
     vtkobj.write(outfile)
 
     gridreader = vtkUnstructuredGridReader()
-    gridreader.SetFileName(outfile)
+    gridreader.SetFileName(str(outfile))
     gridreader.Update()
     grid = gridreader.GetOutput()
 
@@ -1922,14 +1833,14 @@ def test_vtk_export_disu2_grid(tmpdir, example_data_path):
     cell_locations_answer = np.array([0, 8, 16, 24, 32, 40, 48, 56, 64])
     print(f"Found cell locations {cell_locations} in vtk file.")
     print(f"Expecting cell locations {cell_locations_answer}")
-    errmsg = f"vtk cell locations do not match expected result."
+    errmsg = "vtk cell locations do not match expected result."
     assert np.allclose(cell_locations, cell_locations_answer), errmsg
 
     cell_types = vtk_to_numpy(grid.GetCellTypesArray())
     cell_types_answer = np.array(654 * [42])
     print(f"Found cell types {cell_types[0:9]} in vtk file.")
     print(f"Expecting cell types {cell_types_answer[0:9]}")
-    errmsg = f"vtk cell types do not match expected result."
+    errmsg = "vtk cell types do not match expected result."
     assert np.allclose(cell_types, cell_types_answer), errmsg
 
 
@@ -1968,7 +1879,6 @@ def test_vtk_export_disu_model(tmpdir):
 
     g = Gridgen(ml5.modelgrid, model_ws=str(tmpdir))
 
-    rf0shp = os.path.join(str(tmpdir), "rf0")
     xmin = 7 * delr
     xmax = 12 * delr
     ymin = 8 * delc
@@ -2014,13 +1924,12 @@ def test_vtk_export_disu_model(tmpdir):
 
     vtkobj = Vtk(gwf, binary=False)
     vtkobj.add_model(gwf)
-    f = os.path.join(str(tmpdir), "gwf.vtk")
+    f = tmpdir / "gwf.vtk"
     vtkobj.write(f)
 
     # load the output using the vtk standard library
-    f = os.path.join(str(tmpdir), "gwf.vtk")
     gridreader = vtk.vtkUnstructuredGridReader()
-    gridreader.SetFileName(f)
+    gridreader.SetFileName(str(f))
     gridreader.Update()
     grid = gridreader.GetOutput()
 
@@ -2035,14 +1944,14 @@ def test_vtk_export_disu_model(tmpdir):
     cell_locations_answer = np.array([0, 8, 16, 24, 32, 40, 48, 56, 64])
     print(f"First nine cell locations {cell_locations} in vtk file.")
     print(f"Expecting first nine cell locations {cell_locations_answer}")
-    errmsg = f"vtk cell locations do not match expected result."
+    errmsg = "vtk cell locations do not match expected result."
     assert np.allclose(cell_locations, cell_locations_answer), errmsg
 
     cell_types = vtk_to_numpy(grid.GetCellTypesArray())
     cell_types_answer = np.array(1770 * [42])
     print(f"First nine cell types {cell_types[0:9]} in vtk file.")
     print(f"Expecting fist nine cell types {cell_types_answer[0:9]}")
-    errmsg = f"vtk cell types do not match expected result."
+    errmsg = "vtk cell types do not match expected result."
     assert np.allclose(cell_types, cell_types_answer), errmsg
 
     # now check that the data is consistent with that in npf and ic
