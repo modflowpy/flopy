@@ -51,18 +51,18 @@ class Pvd:
 
         Parameters
         ----------
-        file : Path or str
+        file : os.PathLike or str
             vtu file name
         timevalue : float
             time step value in model time
         """
-        file = Path(file).name
-        if not file.endswith(".vtu"):
-            raise AssertionError("File name must end with .vtu ")
+        file = Path(file)
+        if file.suffix != ".vtu":
+            file = file.with_suffix(".vtu")
 
         record = (
             f'<DataSet timestep="{timevalue}" group="" '
-            f'part="0" file="{file}"/>\n'
+            f'part="0" file="{file.name}"/>\n'
         )
         self.__data.append(record)
 
@@ -72,13 +72,13 @@ class Pvd:
 
         Parameters
         ----------
-        f : Path or str
+        f : os.PathLike or str
             PVD file name
 
         """
         f = Path(f)
         if f.suffix != ".pvd":
-            f = f.parent / f"{f.name}.pvd"
+            f = f.with_suffix(".pvd")
 
         with f.open("w") as foo:
             foo.writelines(self.__data)
@@ -678,7 +678,7 @@ class Vtk:
         ----------
         index : int, tuple
             integer representing kper or a tuple of (kstp, kper)
-        fname : Path or str
+        fname : os.PathLike or str
             path to the vtu file
 
         """
@@ -1311,7 +1311,7 @@ class Vtk:
 
         Parameters
         ----------
-        f : Path or str
+        f : os.PathLike or str
             vtk file name
         kpers : int, list, tuple
             stress period or list of stress periods to write to vtk. This
@@ -1418,7 +1418,7 @@ class Vtk:
             if f.suffix not in (".vtk", ".vtu"):
                 pvdfile = f.parent / f"{f.name}.pvd"
             else:
-                pvdfile = f.parent / f"{f.stem}.pvd"
+                pvdfile = f.with_suffix(".pvd")
 
             self.pvd.write(pvdfile)
 
