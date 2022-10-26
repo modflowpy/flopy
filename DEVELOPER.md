@@ -62,9 +62,9 @@ Alternatively, with Anaconda or Miniconda:
     conda env create -f etc/environment.yml
     conda activate flopy
 
-Note that `flopy` has a number of [optional dependencies](docs/flopy_method_dependencies.md), as well as dependencies required for linting, testing, and building documentation. All required, linting, testing and optional dependencies are included in the Conda environment in `etc/environment.yml`. Only core dependencies are included in the PyPI package &mdash; to install extra testing, linting and optional packages with pip, use
+The `flopy` package has a number of [optional dependencies](docs/flopy_method_dependencies.md), as well as extra dependencies required for linting, testing, and building documentation. Extra dependencies are listed in the `test`, `lint`, `optional`, and `doc` groups under the `options.extras_require` section in `setup.cfg`. Core, linting, testing and optional dependencies are included in the Conda environment in `etc/environment.yml`. Only core dependencies are included in the PyPI package &mdash; to install extra dependency groups with pip, use `pip install ".[<group>]"`. For instance, to install all extra dependency groups:
 
-    pip install ".[test, lint, optional]"
+    pip install ".[test, lint, optional, doc]"
 
 #### Python IDEs
 

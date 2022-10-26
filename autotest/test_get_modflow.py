@@ -1,5 +1,6 @@
 """Test get-modflow utility."""
 import os
+import platform
 import sys
 from os.path import expandvars
 from pathlib import Path
@@ -138,7 +139,17 @@ def test_select_bindir(bindir, tmpdir):
     if not os.access(expected_path, os.W_OK):
         pytest.skip(f"{expected_path} is not writable")
     selected = select_bindir(f":{bindir}")
-    assert selected == expected_path
+
+    if system() != 'Darwin':
+        assert selected == expected_path
+    else:
+        # for some reason sys.prefix can return different python
+        # installs when invoked here and get_modflow.py on macOS
+        #   https://github.com/modflowpy/flopy/actions/runs/3331965840/jobs/5512345032#step:8:1835
+        #
+        # work around by just comparing the end of the bin path
+        # should be .../Python.framework/Versions/<version>/bin
+        assert selected.parts[-4:] == expected_path.parts[-4:]
 
 
 def test_script_help():
