@@ -68,11 +68,21 @@ with open(rst_name, "w") as f:
                 "post-processing.  Members of the team\n"
                 "currently include:\n\n"
             )
+            image_directives = ""
+            orcid_image = "_images/orcid_16x16.png"
             parts = ["given-names", "name-particle", "family-names", "name"]
             for author in citation["authors"]:
                 name = " ".join([author[pt] for pt in parts if pt in author])
-                line += f" * {name}\n"
+                line += f" * {name}"
+                if "orcid" in author:
+                    tag = "orcid_" + name.replace(" ", "_").replace(".", "")
+                    line += f" |{tag}|"
+                    image_directives += f".. |{tag}| image:: {orcid_image}\n"
+                    image_directives += f"   :target: {author['orcid']}\n"
+                line += "\n"
             line += " * and others\n\n"
+            line += image_directives
+            line += "\n"
             f.write(line)
         elif line.startswith(tag_end):
             write_line = True

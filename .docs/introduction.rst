@@ -85,21 +85,48 @@ FloPy is developed by a team of MODFLOW users that have switched over to using
 Python for model development and post-processing.  Members of the team
 currently include:
 
- * Mark Bakker
- * Vincent Post
- * Joseph D. Hughes
- * Christian D. Langevin
- * Jeremy T. White
- * Andrew T. Leaf
- * Scott R. Paulinski
- * Jason C. Bellino
- * Eric D. Morway
- * Michael W. Toews
- * Joshua D. Larsen
- * Michael N. Fienen
- * Jon Jeffrey Starn
+ * Mark Bakker |orcid_Mark_Bakker|
+ * Vincent Post |orcid_Vincent_Post|
+ * Joseph D. Hughes |orcid_Joseph_D_Hughes|
+ * Christian D. Langevin |orcid_Christian_D_Langevin|
+ * Jeremy T. White |orcid_Jeremy_T_White|
+ * Andrew T. Leaf |orcid_Andrew_T_Leaf|
+ * Scott R. Paulinski |orcid_Scott_R_Paulinski|
+ * Jason C. Bellino |orcid_Jason_C_Bellino|
+ * Eric D. Morway |orcid_Eric_D_Morway|
+ * Michael W. Toews |orcid_Michael_W_Toews|
+ * Joshua D. Larsen |orcid_Joshua_D_Larsen|
+ * Michael N. Fienen |orcid_Michael_N_Fienen|
+ * Jon Jeffrey Starn |orcid_Jon_Jeffrey_Starn|
  * Davíd Brakenhoff
  * and others
+
+.. |orcid_Mark_Bakker| image:: _images/orcid_16x16.png
+   :target: https://orcid.org/0000-0002-5629-2861
+.. |orcid_Vincent_Post| image:: _images/orcid_16x16.png
+   :target: https://orcid.org/0000-0002-9463-3081
+.. |orcid_Joseph_D_Hughes| image:: _images/orcid_16x16.png
+   :target: https://orcid.org/0000-0003-1311-2354
+.. |orcid_Christian_D_Langevin| image:: _images/orcid_16x16.png
+   :target: https://orcid.org/0000-0001-5610-9759
+.. |orcid_Jeremy_T_White| image:: _images/orcid_16x16.png
+   :target: https://orcid.org/0000-0002-4950-1469
+.. |orcid_Andrew_T_Leaf| image:: _images/orcid_16x16.png
+   :target: https://orcid.org/0000-0001-8784-4924
+.. |orcid_Scott_R_Paulinski| image:: _images/orcid_16x16.png
+   :target: https://orcid.org/0000-0001-6548-8164
+.. |orcid_Jason_C_Bellino| image:: _images/orcid_16x16.png
+   :target: https://orcid.org/0000-0001-9046-9344
+.. |orcid_Eric_D_Morway| image:: _images/orcid_16x16.png
+   :target: https://orcid.org/0000-0002-8553-6140
+.. |orcid_Michael_W_Toews| image:: _images/orcid_16x16.png
+   :target: https://orcid.org/0000-0003-3657-7963
+.. |orcid_Joshua_D_Larsen| image:: _images/orcid_16x16.png
+   :target: https://orcid.org/0000-0002-1218-800X
+.. |orcid_Michael_N_Fienen| image:: _images/orcid_16x16.png
+   :target: https://orcid.org/0000-0002-7756-4651
+.. |orcid_Jon_Jeffrey_Starn| image:: _images/orcid_16x16.png
+   :target: https://orcid.org/0000-0001-5909-0010
 
 How to Cite
 ===========
