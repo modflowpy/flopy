@@ -386,12 +386,12 @@ class _ModpathSeries(object):
             sdata = []
             for pid in particles:
                 ra = series[series.particleid == pid]
-                if isinstance(mg, StructuredGrid):
+                if mg is not None:
                     x, y = geometry.transform(
                         ra.x, ra.y, mg.xoffset, mg.yoffset, mg.angrot_radians
                     )
                 else:
-                    x, y = mg.transform(ra.x, ra.y)
+                    x, y = geometry.transform(ra.x, ra.y, 0, 0, 0)
                 z = ra.z
                 geoms += [
                     LineString(
