@@ -602,7 +602,7 @@ class PlotCrossSection:
         if masked_values is not None:
             self._masked_values.extend(list(masked_values))
 
-        for mval in masked_values:
+        for mval in self._masked_values:
             if ismasked is None:
                 ismasked = np.isclose(plotarray, mval)
             else:
