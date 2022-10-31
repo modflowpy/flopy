@@ -175,56 +175,27 @@ class PlotMapView:
         """
         import matplotlib.tri as tri
 
+        # coerce array to ndarray of floats
         a = np.copy(a)
         if not isinstance(a, np.ndarray):
             a = np.array(a)
-
         a = a.astype(float)
+
         # Use the model grid to pass back an array of the correct shape
         plotarray = self.mg.get_plottable_layer_array(a, self.layer)
-
-        # work around for tri-contour ignore vmin & vmax
-        # necessary block for tri-contour NaN issue
-        if "levels" not in kwargs:
-            vmin = kwargs.pop("vmin", np.nanmin(plotarray))
-            vmax = kwargs.pop("vmax", np.nanmax(plotarray))
-            levels = np.linspace(vmin, vmax, 7)
-            kwargs["levels"] = levels
-
-        # workaround for tri-contour nan issue
-        # use -2**31 to allow for 32 bit int arrays
-        plotarray[np.isnan(plotarray)] = -(2**31)
-        if masked_values is None:
-            masked_values = [-(2**31)]
-        else:
-            masked_values = list(masked_values)
-            if -(2**31) not in masked_values:
-                masked_values.append(-(2**31))
-
-        ismasked = None
-        if masked_values is not None:
-            self._masked_values.extend(list(masked_values))
-
-        for mval in self._masked_values:
-            if ismasked is None:
-                ismasked = np.isclose(plotarray, mval)
-            else:
-                t = np.isclose(plotarray, mval)
-                ismasked += t
-
-        ax = kwargs.pop("ax", self.ax)
-
-        if "colors" in kwargs.keys():
-            if "cmap" in kwargs.keys():
-                kwargs.pop("cmap")
-
-        filled = kwargs.pop("filled", False)
-        plot_triplot = kwargs.pop("plot_triplot", False)
-        tri_mask = kwargs.pop("tri_mask", False)
 
         # Get vertices for the selected layer
         xcentergrid = self.mg.get_xcellcenters_for_layer(self.layer)
         ycentergrid = self.mg.get_ycellcenters_for_layer(self.layer)
+
+        ax = kwargs.pop("ax", self.ax)
+        filled = kwargs.pop("filled", False)
+        plot_triplot = kwargs.pop("plot_triplot", False)
+        tri_mask = kwargs.pop("tri_mask", False)
+
+        if "colors" in kwargs.keys():
+            if "cmap" in kwargs.keys():
+                kwargs.pop("cmap")
 
         if "extent" in kwargs:
             extent = kwargs.pop("extent")
@@ -239,39 +210,77 @@ class PlotMapView:
             xcentergrid = xcentergrid[idx]
             ycentergrid = ycentergrid[idx]
 
-        plotarray = plotarray.flatten()
-        xcentergrid = xcentergrid.flatten()
-        ycentergrid = ycentergrid.flatten()
-        triang = tri.Triangulation(xcentergrid, ycentergrid)
-        analyze = tri.TriAnalyzer(triang)
-        mask = analyze.get_flat_tri_mask(rescale=False)
-
-        # mask out holes, optional???
-        if tri_mask:
-            triangles = triang.triangles
-            for i in range(2):
-                for ix, nodes in enumerate(triangles):
-                    neighbors = self.mg.neighbors(nodes[i], as_nodes=True)
-                    isin = np.isin(nodes[i + 1 :], neighbors)
-                    if not np.alltrue(isin):
-                        mask[ix] = True
-
-        if ismasked is not None:
-            ismasked = ismasked.flatten()
-            mask2 = np.any(
-                np.where(ismasked[triang.triangles], True, False), axis=1
+        # use standard contours for structured grid, otherwise tricontours
+        if self.mg.grid_type == "structured":
+            contour_set = (
+                ax.contourf(xcentergrid, ycentergrid, plotarray, **kwargs)
+                if filled
+                else ax.contour(xcentergrid, ycentergrid, plotarray, **kwargs)
             )
-            mask[mask2] = True
-
-        triang.set_mask(mask)
-
-        if filled:
-            contour_set = ax.tricontourf(triang, plotarray, **kwargs)
         else:
-            contour_set = ax.tricontour(triang, plotarray, **kwargs)
+            # work around for tri-contour ignore vmin & vmax
+            # necessary block for tri-contour NaN issue
+            if "levels" not in kwargs:
+                vmin = kwargs.pop("vmin", np.nanmin(plotarray))
+                vmax = kwargs.pop("vmax", np.nanmax(plotarray))
+                levels = np.linspace(vmin, vmax, 7)
+                kwargs["levels"] = levels
 
-        if plot_triplot:
-            ax.triplot(triang, color="black", marker="o", lw=0.75)
+            # workaround for tri-contour nan issue
+            # use -2**31 to allow for 32 bit int arrays
+            plotarray[np.isnan(plotarray)] = -(2**31)
+            if masked_values is None:
+                masked_values = [-(2**31)]
+            else:
+                masked_values = list(masked_values)
+                if -(2**31) not in masked_values:
+                    masked_values.append(-(2**31))
+
+            ismasked = None
+            if masked_values is not None:
+                self._masked_values.extend(list(masked_values))
+
+            for mval in self._masked_values:
+                if ismasked is None:
+                    ismasked = np.isclose(plotarray, mval)
+                else:
+                    t = np.isclose(plotarray, mval)
+                    ismasked += t
+
+            plotarray = plotarray.flatten()
+            xcentergrid = xcentergrid.flatten()
+            ycentergrid = ycentergrid.flatten()
+            triang = tri.Triangulation(xcentergrid, ycentergrid)
+            analyze = tri.TriAnalyzer(triang)
+            mask = analyze.get_flat_tri_mask(rescale=False)
+
+            # mask out holes, optional???
+            if tri_mask:
+                triangles = triang.triangles
+                for i in range(2):
+                    for ix, nodes in enumerate(triangles):
+                        neighbors = self.mg.neighbors(nodes[i], as_nodes=True)
+                        isin = np.isin(nodes[i + 1 :], neighbors)
+                        if not np.alltrue(isin):
+                            mask[ix] = True
+
+            if ismasked is not None:
+                ismasked = ismasked.flatten()
+                mask2 = np.any(
+                    np.where(ismasked[triang.triangles], True, False), axis=1
+                )
+                mask[mask2] = True
+
+            triang.set_mask(mask)
+
+            contour_set = (
+                ax.tricontourf(triang, plotarray.flatten(), **kwargs)
+                if filled
+                else ax.tricontour(triang, plotarray.flatten(), **kwargs)
+            )
+
+            if plot_triplot:
+                ax.triplot(triang, color="black", marker="o", lw=0.75)
 
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])

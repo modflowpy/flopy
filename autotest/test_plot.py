@@ -242,7 +242,7 @@ def test_cross_section_bc_UZF_3lay(example_data_path):
         ), f"Unexpected collection type: {type(col)}"
 
 
-def test_map_view_tricontour_nan():
+def test_map_view_contour(tmpdir):
     arr = np.random.rand(10, 10) * 100
     arr[-1, :] = np.nan
     delc = np.array([10] * 10, dtype=float)
@@ -272,10 +272,12 @@ def test_map_view_tricontour_nan():
 
     pmv = PlotMapView(modelgrid=grid, layer=0)
     contours = pmv.contour_array(a=arr)
+    plt.savefig(tmpdir / "map_view_contour.png")
 
-    for ix, lev in enumerate(contours.levels):
-        if not np.allclose(lev, levels[ix]):
-            raise AssertionError("TriContour NaN catch Failed")
+    # if we ever revert from standard contours to tricontours, restore this nan check
+    # for ix, lev in enumerate(contours.levels):
+    #     if not np.allclose(lev, levels[ix]):
+    #         raise AssertionError("TriContour NaN catch Failed")
 
 
 @pytest.mark.mf6
