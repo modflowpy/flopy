@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Checkout flopy repo
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v3
 
       - name: Output repo information
         run: |
@@ -33,9 +33,11 @@ jobs:
           echo $GITHUB_EVENT_NAME
 
       - name: Setup Python
-        uses: actions/setup-python@v2.2.2
+        uses: actions/setup-python@v4
         with:
           python-version: 3.8
+          cache: 'pip'
+          cache-dependency-path: setup.cfg
 
       - name: Upgrade pip
         run: |
@@ -49,13 +51,8 @@ jobs:
         run: |
           pip install .[doc]
 
-      - name: Install executables and add to PATH
-        run: |
-          mkdir -p $HOME/.local/bin
-          get-modflow $HOME/.local/bin
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install MODFLOW executables
+        uses: modflowpy/install-modflow-action@v1
 
       - name: Run jupytext on tutorials
         working-directory: ./.docs

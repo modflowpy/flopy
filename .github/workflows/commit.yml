@@ -20,20 +20,14 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.3.4
-
-      - name: Cache Python
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-3.7-pip-${{ hashFiles('setup.cfg') }}
-          restore-keys: |
-            ${{ runner.os }}-3.7-pip-
+        uses: actions/checkout@v3
 
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.7
+          cache: 'pip'
+          cache-dependency-path: setup.cfg
 
       - name: Install Python dependencies
         run: |
@@ -59,20 +53,14 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.3.4
-
-      - name: Cache Python
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-3.7-pip-${{ hashFiles('setup.cfg') }}
-          restore-keys: |
-            ${{ runner.os }}-3.7-pip-
+        uses: actions/checkout@v3
 
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.7
+          cache: 'pip'
+          cache-dependency-path: setup.cfg
 
       - name: Install Python dependencies
         run: |
@@ -121,23 +109,14 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.3.4
-
-      - name: Cache Python
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-3.7-pip-${{ hashFiles('setup.cfg') }}
-          restore-keys: |
-            ${{ runner.os }}-3.7-pip-
+        uses: actions/checkout@v3
 
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.7
-
-      - name: Get branch name
-        uses: nelonoel/branch-name@v1.0.1
+          cache: 'pip'
+          cache-dependency-path: setup.cfg
 
       - name: Install Python dependencies
         run: |
@@ -147,9 +126,6 @@ jobs:
 
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
-        with:
-          path: ~/.local/bin
-          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run smoke tests
         working-directory: ./autotest
@@ -173,49 +149,57 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macos-latest ]
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
         python-version: [ 3.7, 3.8, 3.9, "3.10" ]
         exclude:
           # avoid shutil.copytree infinite recursion bug
           # https://github.com/python/cpython/pull/17098
           - python-version: '3.8.0'
-        include:
-          - os: ubuntu-latest
-            path: ~/.cache/pip
-          - os: macos-latest
-            path: ~/Library/Caches/pip
+    defaults:
+      run:
+        shell: bash -l {0}
     timeout-minutes: 45
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v2.3.4
 
-      - name: Cache Python
-        uses: actions/cache@v3
-        with:
-          path: ${{ matrix.path }}
-          key: ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ hashFiles('setup.cfg') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.python-version }}-pip-
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
       - name: Setup Python
+        if: runner.os != 'Windows'
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Get branch name
-        uses: nelonoel/branch-name@v1.0.1
+          cache: 'pip'
+          cache-dependency-path: setup.cfg
 
       - name: Install Python dependencies
+        if: runner.os != 'Windows'
         run: |
           python -m pip install --upgrade pip
-          pip install .
-          pip install ".[test, optional]"
+          pip3 install .
+          pip3 install ".[test, optional]"
+
+      - name: Setup Micromamba
+        if: runner.os == 'Windows'
+        uses: mamba-org/provision-with-micromamba@main
+        with:
+          environment-file: etc/environment.yml
+          extra-specs: |
+            python=${{ matrix.python-version }}
+          channels: conda-forge
+          cache-downloads: true
+          cache-env: true
+
+      - name: Install Python dependencies
+        if: runner.os == 'Windows'
+        run: |
+          python -m pip install --upgrade pip
+          pip3 install https://github.com/modflowpy/pymake/zipball/master
+          pip3 install xmipy
+          pip3 install .
 
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
-        with:
-          path: ~/.local/bin
-          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run tests
         working-directory: ./autotest
@@ -233,89 +217,6 @@ jobs:
             ./autotest/.failed/**
 
       - name: Print coverage
-        working-directory: ./autotest
-        run: |
-          coverage report
-
-      - name: Upload coverage
-        if:
-          github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./autotest/coverage.xml
-
-  test_windows:
-    name: Test Windows
-    needs: smoke
-    runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: [ 3.7, 3.8, 3.9, "3.10" ]
-        exclude:
-          # avoid shutil.copytree infinite recursion bug
-          # https://github.com/python/cpython/pull/17098
-          - python-version: '3.8.0'
-    defaults:
-      run:
-        shell: pwsh
-    timeout-minutes: 45
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v2.3.4
-
-      - name: Get branch name
-        uses: nelonoel/branch-name@v1.0.1
-
-      - name: Cache Miniconda
-        uses: actions/cache@v3
-        with:
-          path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-${{ matrix.python-version }}-miniconda-${{ hashFiles('etc/environment.yml') }}
-
-      # Standard python fails on windows without GDAL installation
-      # Using custom bash shell ("shell: bash -l {0}") with Miniconda
-      - name: Setup Miniconda
-        uses: conda-incubator/setup-miniconda@v2.1.1
-        with:
-          python-version: ${{ matrix.python-version }}
-          channels: conda-forge
-          auto-update-conda: true
-          activate-environment: flopy
-          use-only-tar-bz2: true
-
-      - name: Install Python dependencies
-        run: |
-          conda env update --name flopy --file etc/environment.yml
-          python -m pip install --upgrade pip
-          pip install https://github.com/modflowpy/pymake/zipball/master
-          pip install xmipy
-          pip install .
-
-      - name: Install Modflow executables
-        uses: modflowpy/install-modflow-action@v1
-        with:
-          path: C:\Users\runneradmin\.local\bin
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Run tests
-        working-directory: ./autotest
-        run: |
-          pytest -v -m "not regression and not example" -n=auto --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload failed test outputs
-        uses: actions/upload-artifact@v2
-        if: failure()
-        with:
-          name: failed-${{ runner.os }}-${{ matrix.python-version }}
-          path: |
-            ./autotest/.failed/**
-
-      - name: Print coverage report
         working-directory: ./autotest
         run: |
           coverage report
