@@ -7,9 +7,12 @@ on:
     branches:
       - master
       - develop
-      - 'release*'
+      - release*
+      - ci-diagnose*
   pull_request:
-    branches: [master, develop]
+    branches:
+      - master
+      - develop
 
 jobs:
 
@@ -35,11 +38,11 @@ jobs:
 
     - name: Install Python dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip3 install https://github.com/modflowpy/pymake/zipball/master
-        pip3 install https://github.com/Deltares/xmipy/zipball/develop
-        pip3 install https://github.com/MODFLOW-USGS/modflowapi/zipball/develop
-        pip3 install .[test,optional]
+        pip install --upgrade pip
+        pip install https://github.com/modflowpy/pymake/zipball/master
+        pip install https://github.com/Deltares/xmipy/zipball/develop
+        pip install https://github.com/MODFLOW-USGS/modflowapi/zipball/develop
+        pip install .[test,optional]
 
     - name: Install gfortran
       uses: modflowpy/install-gfortran-action@v1

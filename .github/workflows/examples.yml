@@ -36,9 +36,9 @@ jobs:
       - name: Install Python dependencies
         if: runner.os != 'Windows'
         run: |
-          python -m pip install --upgrade pip
-          pip3 install .
-          pip3 install ".[test, optional]"
+          python3 -m pip install --upgrade pip
+          python3 -m pip install .
+          python3 -m pip install ".[test, optional]"
 
       - name: Setup Micromamba
         if: runner.os == 'Windows'
@@ -54,10 +54,10 @@ jobs:
       - name: Install extra Python dependencies
         if: runner.os == 'Windows'
         run: |
-          python -m pip install --upgrade pip
-          pip3 install https://github.com/modflowpy/pymake/zipball/master
-          pip3 install xmipy
-          pip3 install .
+          pip install --upgrade pip
+          pip install https://github.com/modflowpy/pymake/zipball/master
+          pip install xmipy
+          pip install .
 
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
