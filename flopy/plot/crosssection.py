@@ -257,6 +257,11 @@ class PlotCrossSection:
 
         self._polygons = {}
 
+        if model is None:
+            self._masked_values = [1e30, -1e-30]
+        else:
+            self._masked_values = [model.hnoflo, model.hdry]
+
         # Set axis limits
         self.ax.set_xlim(self.extent[0], self.extent[1])
         self.ax.set_ylim(self.extent[2], self.extent[3])
@@ -380,9 +385,12 @@ class PlotCrossSection:
         if a.ndim > 1:
             a = np.ravel(a)
 
+        a = a.astype(float)
+
         if masked_values is not None:
-            for mval in masked_values:
-                a = np.ma.masked_values(a, mval)
+            self._masked_values.extend(list(masked_values))
+        for mval in self._masked_values:
+            a = np.ma.masked_values(a, mval)
 
         if isinstance(head, np.ndarray):
             projpts = self.set_zpts(np.ravel(head))
@@ -425,12 +433,15 @@ class PlotCrossSection:
         if a.ndim > 1:
             a = np.ravel(a)
 
+        a = a.astype(float)
+
         if a.size % self._ncpl != 0:
             raise AssertionError("Array size must be a multiple of ncpl")
 
         if masked_values is not None:
-            for mval in masked_values:
-                a = np.ma.masked_values(a, mval)
+            self._masked_values.extend(list(masked_values))
+        for mval in self._masked_values:
+            a = np.ma.masked_values(a, mval)
 
         d = {
             i: (np.min(np.array(v).T[0]), np.max(np.array(v).T[0]))
@@ -493,11 +504,12 @@ class PlotCrossSection:
         if not isinstance(a, np.ndarray):
             a = np.array(a)
 
-        a = np.ravel(a)
+        a = np.ravel(a).astype(float)
 
         if masked_values is not None:
-            for mval in masked_values:
-                a = np.ma.masked_values(a, mval)
+            self._masked_values.extend(list(masked_values))
+        for mval in self._masked_values:
+            a = np.ma.masked_values(a, mval)
 
         if isinstance(head, np.ndarray):
             projpts = self.set_zpts(head)
@@ -588,12 +600,14 @@ class PlotCrossSection:
 
         ismasked = None
         if masked_values is not None:
-            for mval in masked_values:
-                if ismasked is None:
-                    ismasked = np.isclose(plotarray, mval)
-                else:
-                    t = np.isclose(plotarray, mval)
-                    ismasked += t
+            self._masked_values.extend(list(masked_values))
+
+        for mval in self._masked_values:
+            if ismasked is None:
+                ismasked = np.isclose(plotarray, mval)
+            else:
+                t = np.isclose(plotarray, mval)
+                ismasked += t
 
         filled = kwargs.pop("filled", False)
         plot_triplot = kwargs.pop("plot_triplot", False)

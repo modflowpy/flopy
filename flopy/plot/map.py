@@ -69,6 +69,11 @@ class PlotMapView:
         else:
             self._extent = None
 
+        if model is None:
+            self._masked_values = [1e30, -1e-30]
+        else:
+            self._masked_values = [model.hnoflo, model.hdry]
+
     @property
     def extent(self):
         if self._extent is None:
@@ -99,13 +104,15 @@ class PlotMapView:
         if not isinstance(a, np.ndarray):
             a = np.array(a)
 
+        a = a.astype(float)
         # Use the model grid to pass back an array of the correct shape
         plotarray = self.mg.get_plottable_layer_array(a, self.layer)
 
         # if masked_values are provided mask the plotting array
         if masked_values is not None:
-            for mval in masked_values:
-                plotarray = np.ma.masked_values(plotarray, mval)
+            self._masked_values.extend(list(masked_values))
+        for mval in self._masked_values:
+            plotarray = np.ma.masked_values(plotarray, mval)
 
         # add NaN values to mask
         plotarray = np.ma.masked_where(np.isnan(plotarray), plotarray)
@@ -172,6 +179,7 @@ class PlotMapView:
         if not isinstance(a, np.ndarray):
             a = np.array(a)
 
+        a = a.astype(float)
         # Use the model grid to pass back an array of the correct shape
         plotarray = self.mg.get_plottable_layer_array(a, self.layer)
 
@@ -195,12 +203,14 @@ class PlotMapView:
 
         ismasked = None
         if masked_values is not None:
-            for mval in masked_values:
-                if ismasked is None:
-                    ismasked = np.isclose(plotarray, mval)
-                else:
-                    t = np.isclose(plotarray, mval)
-                    ismasked += t
+            self._masked_values.extend(list(masked_values))
+
+        for mval in self._masked_values:
+            if ismasked is None:
+                ismasked = np.isclose(plotarray, mval)
+            else:
+                t = np.isclose(plotarray, mval)
+                ismasked += t
 
         ax = kwargs.pop("ax", self.ax)
 
