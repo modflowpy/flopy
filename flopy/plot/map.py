@@ -70,7 +70,7 @@ class PlotMapView:
             self._extent = None
 
         if model is None:
-            self._masked_values = [1e30, -1e-30]
+            self._masked_values = [1e30, -1e30]
         else:
             self._masked_values = [model.hnoflo, model.hdry]
 

@@ -4,8 +4,8 @@ on:
     branches:
       - master
       - develop
-      - 'release*'
-      - 'ci-diagnose'
+      - release*
+      - ci-diagnose*
   pull_request:
     branches:
       - master
@@ -31,7 +31,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
+          pip install --upgrade pip
           pip install build twine
           pip install .
           python -c "import flopy; print(f'{flopy.__version__}')"
@@ -120,7 +120,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
+          pip install --upgrade pip
           pip install .
           pip install ".[test, optional]"
 
@@ -157,7 +157,7 @@ jobs:
           - python-version: '3.8.0'
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash
     timeout-minutes: 45
     steps:
 
@@ -175,9 +175,9 @@ jobs:
       - name: Install Python dependencies
         if: runner.os != 'Windows'
         run: |
-          python -m pip install --upgrade pip
-          pip3 install .
-          pip3 install ".[test, optional]"
+          pip install --upgrade pip
+          pip install .
+          pip install ".[test, optional]"
 
       - name: Setup Micromamba
         if: runner.os == 'Windows'
@@ -191,20 +191,33 @@ jobs:
           cache-env: true
 
       - name: Install Python dependencies
+        shell: bash -l {0}
         if: runner.os == 'Windows'
         run: |
-          python -m pip install --upgrade pip
-          pip3 install https://github.com/modflowpy/pymake/zipball/master
-          pip3 install xmipy
-          pip3 install .
+          pip install --upgrade pip
+          pip install https://github.com/modflowpy/pymake/zipball/master
+          pip install xmipy
+          pip install .
 
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
 
       - name: Run tests
+        if: runner.os != 'Windows'
         working-directory: ./autotest
         run: |
           pytest -v -m="not example and not regression" -n=auto --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
+          coverage report
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run tests
+        if: runner.os == 'Windows'
+        shell: bash -l {0}
+        working-directory: ./autotest
+        run: |
+          pytest -v -m="not example and not regression" -n=auto --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
+          coverage report
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -215,11 +228,6 @@ jobs:
           name: failed-${{ matrix.os }}-${{ matrix.python-version }}
           path: |
             ./autotest/.failed/**
-
-      - name: Print coverage
-        working-directory: ./autotest
-        run: |
-          coverage report
 
       - name: Upload coverage
         if:

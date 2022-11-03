@@ -5,10 +5,12 @@ on:
     branches:
       - master
       - develop
-      - 'release*'
-      - 'ci-pytest'
+      - release*
+      - ci-diagnose*
   pull_request:
-    branches: [master, develop]
+    branches:
+      - master
+      - develop
 
 jobs:
 
@@ -41,7 +43,7 @@ jobs:
 
       - name: Upgrade pip
         run: |
-          python -m pip install --upgrade pip
+          pip install --upgrade pip
 
       - name: Install prerequisites
         run: |
