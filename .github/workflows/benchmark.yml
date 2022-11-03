@@ -1,6 +1,7 @@
 name: FloPy benchmarks
 
 on:
+  push:
   schedule:
     - cron: '0 8 * * *' # run at 8 AM UTC (12 am PST)
 
@@ -19,7 +20,7 @@ jobs:
           - python-version: '3.8.0'
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash
     timeout-minutes: 90
 
     steps:
@@ -37,9 +38,9 @@ jobs:
       - name: Install Python dependencies
         if: runner.os != 'Windows'
         run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install .
-          python3 -m pip install ".[test, optional]"
+          pip install --upgrade pip
+          pip install .
+          pip install ".[test, optional]"
 
       - name: Setup Micromamba
         if: runner.os == 'Windows'
@@ -54,6 +55,7 @@ jobs:
 
       - name: Install extra Python dependencies
         if: runner.os == 'Windows'
+        shell: bash -l {0}
         run: |
           pip install --upgrade pip
           pip install https://github.com/modflowpy/pymake/zipball/master
@@ -64,6 +66,17 @@ jobs:
         uses: modflowpy/install-modflow-action@v1
 
       - name: Run benchmarks
+        if: runner.os != 'Windows'
+        working-directory: ./autotest
+        run: |
+          mkdir -p .benchmarks
+          pytest -v --durations=0 --benchmark-only --benchmark-json .benchmarks/${{ matrix.os }}_python${{ matrix.python-version }}.json --keep-failed=.failed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run benchmarks
+        if: runner.os == 'Windows'
+        shell: bash -l {0}
         working-directory: ./autotest
         run: |
           mkdir -p .benchmarks
