@@ -887,6 +887,7 @@ def test_polygon_from_ij(tmpdir):
     assert np.abs(geoms[0].bounds[-1] - 5169292.893203464) < 1e-4
 
 
+@flaky
 @requires_pkg("netCDF4", "pyproj")
 @requires_spatial_reference
 def test_polygon_from_ij_with_epsg(tmpdir):
