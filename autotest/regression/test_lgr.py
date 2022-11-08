@@ -2,12 +2,14 @@ import shutil
 from os.path import dirname, join
 from pathlib import Path
 
+from flaky import flaky
 import pytest
 from autotest.conftest import requires_exe, requires_pkg
 
 import flopy
 
 
+@flaky
 @requires_exe("mflgr")
 @requires_pkg("pymake")
 @pytest.mark.regression
