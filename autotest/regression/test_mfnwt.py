@@ -1,7 +1,8 @@
 import os
 
 import pytest
-from autotest.conftest import get_example_data_path, requires_exe, requires_pkg
+from autotest.conftest import get_example_data_path
+from modflow_devtools.markers import requires_exe, requires_pkg
 
 from flopy.modflow import Modflow, ModflowNwt, ModflowUpw
 from flopy.utils import parsenamefile
@@ -31,7 +32,7 @@ def get_nfnwt_namfiles():
 @pytest.mark.slow
 @pytest.mark.regression
 @pytest.mark.parametrize("namfile", get_nfnwt_namfiles())
-def test_run_mfnwt_model(tmpdir, namfile):
+def test_run_mfnwt_model(function_tmpdir, namfile):
     import pymake
 
     # load a MODFLOW-2005 model, convert to a MFNWT model,
@@ -108,16 +109,16 @@ def test_run_mfnwt_model(tmpdir, namfile):
     wel.iunitramp = 2
 
     # change workspace and write MODFLOW-NWT model
-    m.change_model_ws(str(tmpdir))
+    m.change_model_ws(str(function_tmpdir))
     m.write_input()
     success, buff = m.run_model(silent=False)
     assert success, "base model run did not terminate successfully"
-    fn0 = str(tmpdir / namfile)
+    fn0 = str(function_tmpdir / namfile)
 
     # reload the model just written
     m = Modflow.load(
         namfile,
-        model_ws=str(tmpdir),
+        model_ws=str(function_tmpdir),
         version="mfnwt",
         verbose=True,
         check=False,
@@ -127,19 +128,19 @@ def test_run_mfnwt_model(tmpdir, namfile):
     assert m.load_fail is False
 
     # change workspace and write MODFLOW-NWT model
-    pthf = str(tmpdir / "flopy")
+    pthf = str(function_tmpdir / "flopy")
     m.change_model_ws(pthf)
     m.write_input()
     success, buff = m.run_model(silent=False)
     assert success, "base model run did not terminate successfully"
     fn1 = os.path.join(pthf, namfile)
 
-    fsum = str(tmpdir / f"{base_name}.head.out")
+    fsum = str(function_tmpdir / f"{base_name}.head.out")
     assert pymake.compare_heads(
         fn0, fn1, outfile=fsum
     ), "head comparison failure"
 
-    fsum = str(tmpdir / f"{base_name}.budget.out")
+    fsum = str(function_tmpdir / f"{base_name}.budget.out")
     assert pymake.compare_budget(
         fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
     ), "budget comparison failure"

@@ -3,7 +3,8 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from autotest.conftest import has_pkg, requires_pkg
+from modflow_devtools.markers import requires_pkg
+from modflow_devtools.misc import has_pkg
 
 import flopy.discretization as fgrid
 import flopy.plot as fplot

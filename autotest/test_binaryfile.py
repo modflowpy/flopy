@@ -1,3 +1,5 @@
+from pprint import pprint
+
 import numpy as np
 import pytest
 from autotest.conftest import get_example_data_path
@@ -21,11 +23,11 @@ def nwt_model_path(example_data_path):
     return example_data_path / "nwt_test"
 
 
-def test_binaryfile_writeread(tmpdir, nwt_model_path):
+def test_binaryfile_writeread(function_tmpdir, nwt_model_path):
     model = "Pr3_MFNWT_lower.nam"
     ml = Modflow.load(model, version="mfnwt", model_ws=str(nwt_model_path))
     # change the model work space
-    ml.change_model_ws(str(tmpdir))
+    ml.change_model_ws(str(function_tmpdir))
     #
     ncol = ml.dis.ncol
     nrow = ml.dis.nrow
@@ -46,7 +48,7 @@ def test_binaryfile_writeread(tmpdir, nwt_model_path):
         kper=1,
     )
     b = ml.dis.botm.array[0, :, :].astype(np.float64)
-    pth = str(tmpdir / "bottom.hds")
+    pth = str(function_tmpdir / "bottom.hds")
     Util2d.write_bin(b.shape, pth, b, header_data=header)
 
     bo = HeadFile(pth, precision=precision)
@@ -76,7 +78,7 @@ def test_binaryfile_writeread(tmpdir, nwt_model_path):
         kper=1,
     )
     b = ml.dis.botm.array[0, :, :].astype(np.float32)
-    pth = str(tmpdir / "bottom_single.hds")
+    pth = str(function_tmpdir / "bottom_single.hds")
     Util2d.write_bin(b.shape, pth, b, header_data=header)
 
     bo = HeadFile(pth, precision=precision)
@@ -117,7 +119,7 @@ def test_plot_binary_head_file(example_data_path):
     plt.close()
 
 
-def test_headu_file(tmpdir, example_data_path):
+def test_headu_file_data(function_tmpdir, example_data_path):
     fname = str(example_data_path / "unstructured" / "headu.githds")
     headobj = HeadUFile(fname)
     assert isinstance(headobj, HeadUFile)
@@ -125,6 +127,7 @@ def test_headu_file(tmpdir, example_data_path):
 
     # ensure recordarray is has correct data
     ra = headobj.recordarray
+    nnodes = 19479
     assert ra["kstp"].min() == 1
     assert ra["kstp"].max() == 1
     assert ra["kper"].min() == 1
@@ -132,7 +135,7 @@ def test_headu_file(tmpdir, example_data_path):
     assert ra["ncol"].min() == 1
     assert ra["ncol"].max() == 14001
     assert ra["nrow"].min() == 7801
-    assert ra["nrow"].max() == 19479
+    assert ra["nrow"].max() == nnodes
 
     # read the heads for the last time and make sure they are correct
     data = headobj.get_data()
@@ -146,7 +149,38 @@ def test_headu_file(tmpdir, example_data_path):
         t1 = np.array([d.min(), d.max()])
         assert np.allclose(t1, minmaxtrue[i])
 
-    return
+
+@pytest.mark.slow
+def test_headufile_get_ts(example_data_path):
+    heads = HeadUFile(example_data_path / "unstructured" / "headu.githds")
+    nnodes = 19479
+
+    # make sure timeseries can be retrieved for each node
+    for i in range(0, nnodes, 100):
+        heads.get_ts(idx=i)
+    with pytest.raises(IndexError):
+        heads.get_ts(idx=i + 100)
+
+    # ...and retrieved in groups
+    for i in range(10):
+        heads.get_ts([i, i + 1, i + 2])
+
+    heads = HeadUFile(
+        example_data_path
+        / "mfusg_test"
+        / "01A_nestedgrid_nognc"
+        / "output"
+        / "flow.hds"
+    )
+    nnodes = 121
+    for i in range(nnodes):
+        heads.get_ts(idx=i)
+    with pytest.raises(IndexError):
+        heads.get_ts(idx=i + 1)
+
+    # ...and retrieved in groups
+    for i in range(10):
+        heads.get_ts([i, i + 1, i + 2])
 
 
 def test_get_headfile_precision(example_data_path):

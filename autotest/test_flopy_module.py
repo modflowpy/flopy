@@ -39,10 +39,10 @@ def test_modflow():
     assert isinstance(pcg, flopy.modflow.ModflowPcg)
 
 
-def test_modflow_unstructured(tmpdir):
+def test_modflow_unstructured(function_tmpdir):
     import flopy
 
-    mf = flopy.mfusg.MfUsg(structured=False, model_ws=str(tmpdir))
+    mf = flopy.mfusg.MfUsg(structured=False, model_ws=str(function_tmpdir))
     assert isinstance(mf, flopy.mfusg.MfUsg)
 
     disu = flopy.mfusg.MfUsgDisU(
@@ -72,19 +72,19 @@ def test_modflow_unstructured(tmpdir):
 
     # write well file
     wel.write_file()
-    wel_path = Path(tmpdir / f"{mf.name}.wel")
+    wel_path = Path(function_tmpdir / f"{mf.name}.wel")
     assert wel_path.is_file()
     wel2 = flopy.mfusg.MfUsgWel.load(str(wel_path), mf)
     assert wel2.stress_period_data[0] == wel.stress_period_data[0]
 
     # write ghb file
     ghb.write_file(check=False)
-    ghb_path = Path(tmpdir / f"{mf.name}.ghb")
+    ghb_path = Path(function_tmpdir / f"{mf.name}.ghb")
     assert ghb_path.is_file() is True
     ghb2 = flopy.modflow.ModflowGhb.load(str(ghb_path), mf)
 
 
-def test_mflist_reference(tmpdir):
+def test_mflist_reference(function_tmpdir):
     # make the model
     ml = flopy.modflow.Modflow()
     assert isinstance(ml, flopy.modflow.Modflow)
@@ -136,7 +136,7 @@ def test_mflist_reference(tmpdir):
     assert isinstance(ghb, flopy.modflow.ModflowGhb)
 
     # TODO: test separately
-    # shp_path = str(tmpdir / "test3.shp")
+    # shp_path = str(function_tmpdir / "test3.shp")
     # ml.export(shp_path, kper=0)
     # shp = shapefile.Reader(shp_path)
     # assert shp.numRecords == nrow * ncol

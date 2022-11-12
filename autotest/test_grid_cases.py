@@ -215,7 +215,7 @@ class GridCases:
 
         return UnstructuredGrid(verts, iverts, ncpl=[len(iverts)])
 
-    def voronoi_polygon(self, tmpdir):
+    def voronoi_polygon(self, function_tmpdir):
         ncpl = 3803
         domain = [
             [1831.381546, 6335.543757],
@@ -242,7 +242,7 @@ class GridCases:
         angle = 30
 
         tri = Triangle(
-            maximum_area=max_area, angle=angle, model_ws=str(tmpdir)
+            maximum_area=max_area, angle=angle, model_ws=str(function_tmpdir)
         )
         tri.add_polygon(poly)
         tri.build(verbose=False)
@@ -252,7 +252,7 @@ class GridCases:
 
         return ncpl, vor, gridprops, grid
 
-    def voronoi_rectangle(self, tmpdir):
+    def voronoi_rectangle(self, function_tmpdir):
         ncpl = 1679
         xmin = 0.0
         xmax = 2.0
@@ -265,7 +265,7 @@ class GridCases:
         angle = 30
 
         tri = Triangle(
-            maximum_area=max_area, angle=angle, model_ws=str(tmpdir)
+            maximum_area=max_area, angle=angle, model_ws=str(function_tmpdir)
         )
         tri.add_polygon(poly)
         tri.build(verbose=False)
@@ -275,7 +275,7 @@ class GridCases:
 
         return ncpl, vor, gridprops, grid
 
-    def voronoi_circle(self, tmpdir):
+    def voronoi_circle(self, function_tmpdir):
         ncpl = 538
         theta = np.arange(0.0, 2 * np.pi, 0.2)
         radius = 100.0
@@ -286,7 +286,7 @@ class GridCases:
         angle = 30
 
         tri = Triangle(
-            maximum_area=max_area, angle=angle, model_ws=str(tmpdir)
+            maximum_area=max_area, angle=angle, model_ws=str(function_tmpdir)
         )
         tri.add_polygon(poly)
         tri.build(verbose=False)
@@ -296,7 +296,7 @@ class GridCases:
 
         return ncpl, vor, gridprops, grid
 
-    def voronoi_nested_circles(self, tmpdir):
+    def voronoi_nested_circles(self, function_tmpdir):
         ncpl = 300
 
         theta = np.arange(0.0, 2 * np.pi, 0.2)
@@ -316,7 +316,7 @@ class GridCases:
         angle = 30
 
         tri = Triangle(
-            maximum_area=max_area, angle=angle, model_ws=str(tmpdir)
+            maximum_area=max_area, angle=angle, model_ws=str(function_tmpdir)
         )
         for poly in polys:
             tri.add_polygon(poly)
@@ -328,12 +328,12 @@ class GridCases:
 
         return ncpl, vor, gridprops, grid
 
-    def voronoi_polygons(self, tmpdir):
+    def voronoi_polygons(self, function_tmpdir):
         ncpl = 410
         active_domain = [(0, 0), (100, 0), (100, 100), (0, 100)]
         area1 = [(10, 10), (40, 10), (40, 40), (10, 40)]
         area2 = [(60, 60), (80, 60), (80, 80), (60, 80)]
-        tri = Triangle(angle=30, model_ws=str(tmpdir))
+        tri = Triangle(angle=30, model_ws=str(function_tmpdir))
         tri.add_polygon(active_domain)
         tri.add_polygon(area1)
         tri.add_polygon(area2)
@@ -349,13 +349,13 @@ class GridCases:
 
         return ncpl, vor, gridprops, grid
 
-    def voronoi_many_polygons(self, tmpdir):
+    def voronoi_many_polygons(self, function_tmpdir):
         ncpl = 1305
         active_domain = [(0, 0), (100, 0), (100, 100), (0, 100)]
         area1 = [(10, 10), (40, 10), (40, 40), (10, 40)]
         area2 = [(70, 70), (90, 70), (90, 90), (70, 90)]
 
-        tri = Triangle(angle=30, model_ws=str(tmpdir))
+        tri = Triangle(angle=30, model_ws=str(function_tmpdir))
 
         # requirement that active_domain is first polygon to be added
         tri.add_polygon(active_domain)

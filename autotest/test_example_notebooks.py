@@ -1,7 +1,8 @@
 import re
 
 import pytest
-from autotest.conftest import get_project_root_path, run_cmd
+from autotest.conftest import get_project_root_path
+from modflow_devtools.misc import run_cmd
 
 
 def get_example_notebooks(exclude=None):

@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import pytest
-from autotest.conftest import requires_exe, requires_pkg
+from modflow_devtools.markers import requires_exe, requires_pkg
 
 from flopy.discretization import StructuredGrid
 from flopy.mf6 import (
@@ -139,7 +139,7 @@ def get_lake_connection_data(
 
 
 @requires_exe("mf6")
-def test_base_run(tmpdir, example_data_path):
+def test_base_run(function_tmpdir, example_data_path):
     mpath = example_data_path / "mf6-freyberg"
     sim = MFSimulation().load(
         sim_name="freyberg",
@@ -147,7 +147,7 @@ def test_base_run(tmpdir, example_data_path):
         exe_name="mf6",
         verbosity_level=0,
     )
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
 
     # remove the well package
     gwf = sim.get_model("freyberg")
@@ -162,27 +162,27 @@ def test_base_run(tmpdir, example_data_path):
     bot = gwf.dis.botm.array.squeeze()
     export_ascii_grid(
         gwf.modelgrid,
-        str(tmpdir / "bot.asc"),
+        str(function_tmpdir / "bot.asc"),
         bot,
     )
     top = gwf.output.head().get_data().squeeze() + 2.0
     top = np.where(gwf.dis.idomain.array.squeeze() < 1.0, 0.0, top)
     export_ascii_grid(
         gwf.modelgrid,
-        str(tmpdir / "top.asc"),
+        str(function_tmpdir / "top.asc"),
         top,
     )
     k11 = gwf.npf.k.array.squeeze()
     export_ascii_grid(
         gwf.modelgrid,
-        str(tmpdir / "k11.asc"),
+        str(function_tmpdir / "k11.asc"),
         k11,
     )
 
 
 @requires_exe("mf6")
 @requires_pkg("rasterio", "rasterstats")
-def test_lake(tmpdir, example_data_path):
+def test_lake(function_tmpdir, example_data_path):
     mpath = example_data_path / "mf6-freyberg"
     top = Raster.load(str(mpath / "top.asc"))
     bot = Raster.load(str(mpath / "bot.asc"))
@@ -196,7 +196,7 @@ def test_lake(tmpdir, example_data_path):
     )
 
     # change the workspace
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
 
     # get groundwater flow model
     gwf = sim.get_model("freyberg")
@@ -301,7 +301,7 @@ def test_lake(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-def test_embedded_lak_ex01(tmpdir, example_data_path):
+def test_embedded_lak_ex01(function_tmpdir, example_data_path):
     nper = 1
     nlay, nrow, ncol = 5, 17, 17
     shape3d = (nlay, nrow, ncol)
@@ -395,7 +395,7 @@ def test_embedded_lak_ex01(tmpdir, example_data_path):
     sim = MFSimulation(
         sim_name=name,
         exe_name="mf6",
-        sim_ws=str(tmpdir),
+        sim_ws=str(function_tmpdir),
     )
     tdis = ModflowTdis(
         sim,

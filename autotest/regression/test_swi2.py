@@ -2,7 +2,7 @@ import os
 import shutil
 
 import pytest
-from autotest.conftest import requires_exe, requires_pkg
+from modflow_devtools.markers import requires_exe, requires_pkg
 
 from flopy.modflow import Modflow
 
@@ -19,11 +19,11 @@ def swi_path(example_data_path):
 @pytest.mark.parametrize(
     "namfile", ["swiex1.nam", "swiex2_strat.nam", "swiex3.nam"]
 )
-def test_mf2005swi2(tmpdir, swi_path, namfile):
+def test_mf2005swi2(function_tmpdir, swi_path, namfile):
     import pymake
 
     name = namfile.replace(".nam", "")
-    ws = str(tmpdir / "ws")
+    ws = str(function_tmpdir / "ws")
     shutil.copytree(swi_path, ws)
 
     m = Modflow.load(namfile, model_ws=ws, verbose=True, exe_name="mf2005")

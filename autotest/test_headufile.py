@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pytest
-from autotest.conftest import requires_exe, requires_pkg
+from modflow_devtools.markers import requires_exe, requires_pkg
 
 from flopy.discretization import UnstructuredGrid
 from flopy.mfusg import MfUsg, MfUsgDisU, MfUsgLpf, MfUsgSms
