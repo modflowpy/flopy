@@ -329,6 +329,7 @@ class PyListUtil:
                 if alt_split_len > max_split_size:
                     max_split_size = len(alt_split)
                     max_split_type = delimiter
+                    max_split_list = alt_split
                 elif alt_split_len == max_split_size:
                     if (
                         max_split_type not in PyListUtil.delimiter_list
