@@ -1,0 +1,83 @@
+# --------------------- gwe mst options ---------------------
+
+block options
+name save_flows
+type keyword
+reader urword
+optional true
+longname save calculated flows to budget file
+description REPLACE save_flows {'{#1}': 'MST'}
+
+block options
+name first_order_decay
+type keyword
+reader urword
+optional true
+longname activate first-order decay
+description is a text keyword to indicate that first-order decay will occur.  Use of this keyword requires that DECAY and DECAY\_SORBED (if sorption is active) are specified in the GRIDDATA block.
+
+block options
+name zero_order_decay
+type keyword
+reader urword
+optional true
+longname activate zero-order decay
+description is a text keyword to indicate that zero-order decay will occur.  Use of this keyword requires that DECAY and DECAY\_SORBED (if sorption is active) are specified in the GRIDDATA block.
+
+# --------------------- gwe mst griddata ---------------------
+
+block griddata
+name porosity
+type double precision
+shape (nodes)
+reader readarray
+layered true
+longname porosity
+description is the aquifer porosity.
+
+block griddata
+name decay
+type double precision
+shape (nodes)
+reader readarray
+layered true
+optional true
+longname aqueous phase decay rate coefficient
+description is the rate coefficient for first or zero-order decay for the aqueous phase of the mobile domain.  A negative value indicates solute production.  The dimensions of decay for first-order decay is one over time.  The dimensions of decay for zero-order decay is mass per length cubed per time.  decay will have no effect on simulation results unless either first- or zero-order decay is specified in the options block.
+
+block griddata
+name cpw
+type double precision
+shape (nodes)
+reader readarray
+layered true
+longname heat capacity of water
+description is the mass-based heat capacity of water. Thus, enter value in units of J/kg/C. 
+
+block griddata
+name cps
+type double precision
+shape (nodes)
+reader readarray
+layered true
+longname heat capacity of the aquifer material
+description is the mass-based heat capacity of dry solids (aquifer material). Thus, enter value in units of J/kg/C
+
+block griddata
+name rhow
+type double precision
+shape (nodes)
+reader readarray
+layered true
+longname density of water
+description is a user-specified value of the density of water. Value will remain fixed for the entire simulation.  For now, enter the value in SI units: kg/m3
+
+block griddata
+name rhos
+type double precision
+shape (nodes)
+reader readarray
+layered true
+longname density of aquifer material
+description is a user-specified value of the density of aquifer material no considering the voids. Value will remain fixed for the entire simulation.  For now, enter the value in SI units: kg/m3.  Bulk density is calculated from this value.
+

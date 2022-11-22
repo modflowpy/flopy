@@ -1,0 +1,11 @@
+# --------------------- gwe ic griddata ---------------------
+
+block griddata
+name strt
+type double precision
+shape (nodes)
+reader readarray
+layered true
+longname starting temperature
+description is the initial (starting) temperature---that is, the temperature at the beginning of the GWE Model simulation.  STRT must be specified for all GWE Model simulations. One value is read for every model cell.
+default_value 0.0
