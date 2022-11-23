@@ -123,7 +123,7 @@ Questions
 ------------------------------------------------
 FloPy usage has been growing rapidly, and as the number of users has increased, so has the number of questions about how to use FloPy.  We ask our users to carefully consider the nature of their problem and seek help in the appropriate manner.
 
-Do not open issues for general support questions as we want to keep GitHub issues for bug reports and feature requests. You've got much better chances of getting your question answered in the [Discussions](https://github.com/modflowpy/flopy/discussions) on the FloPy GitHub repository. [Stack Overflow](https://stackoverflow.com/questions/tagged/flopy) and the [MODFLOW google group](https://groups.google.com/forum/#!forum/modflow) are other options but currently neither of these are as active as Discussions on the FloPy GitHub repository. If using Stack Overflow, questions should be tagged with tag `flopy`.
+Do not open issues for general support questions.  We want to keep GitHub issues for bug reports and feature requests. General support questions are better answered in the [Discussions](https://github.com/modflowpy/flopy/discussions) on the FloPy GitHub repository. [Stack Overflow](https://stackoverflow.com/questions/tagged/flopy) and the [MODFLOW google group](https://groups.google.com/forum/#!forum/modflow) are other options but currently neither of these are as active as Discussions on the FloPy GitHub repository. If using Stack Overflow, questions should be tagged with tag `flopy`.
 
 To save your and our time, **we will systematically close all issues that are requests for general support and redirect people to Stack Overflow or the MODFLOW google group**.
 
