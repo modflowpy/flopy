@@ -140,7 +140,7 @@ def test_select_bindir(bindir, tmpdir):
         pytest.skip(f"{expected_path} is not writable")
     selected = select_bindir(f":{bindir}")
 
-    if system() != 'Darwin':
+    if system() != "Darwin":
         assert selected == expected_path
     else:
         # for some reason sys.prefix can return different python
@@ -162,6 +162,7 @@ def test_script_help():
 
 @flaky
 @requires_github
+@pytest.mark.slow
 def test_script_options(tmpdir, downloads_dir):
     bindir = tmpdir / "bin1"
     assert not bindir.exists()
@@ -213,7 +214,7 @@ def test_script_options(tmpdir, downloads_dir):
         pytest.skip(f"GitHub {rate_limit_msg}")
     assert len(stderr) == returncode == 0
     files = [item.stem for item in bindir.iterdir() if item.is_file()]
-    assert sorted(files) == ["mfnwt", "mfnwtdbl", "mp6"]
+    assert sorted(files) == ["mfnwt", "mp6"]
 
     # similar as before, but also specify a ostag
     bindir = tmpdir / "bin3"
@@ -234,11 +235,12 @@ def test_script_options(tmpdir, downloads_dir):
         pytest.skip(f"GitHub {rate_limit_msg}")
     assert len(stderr) == returncode == 0
     files = [item.name for item in bindir.iterdir() if item.is_file()]
-    assert sorted(files) == ["mfnwt.exe", "mfnwtdbl.exe"]
+    assert sorted(files) == ["mfnwt.exe"]
 
 
 @flaky
 @requires_github
+@pytest.mark.slow
 @pytest.mark.parametrize("repo", repo_options.keys())
 def test_script(tmpdir, repo, downloads_dir):
     bindir = str(tmpdir)
@@ -260,6 +262,7 @@ def test_script(tmpdir, repo, downloads_dir):
 
 @flaky
 @requires_github
+@pytest.mark.slow
 @pytest.mark.parametrize("repo", repo_options.keys())
 def test_python_api(tmpdir, repo, downloads_dir):
     bindir = str(tmpdir)

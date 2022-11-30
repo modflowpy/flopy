@@ -452,6 +452,16 @@ def run_main(
             subset = set(subset.replace(",", " ").split())
         elif not isinstance(subset, set):
             subset = set(subset)
+        subset = set(
+            [
+                (
+                    f"{e}{lib_suffix}"
+                    if e.startswith("lib")
+                    else f"{e}{exe_suffix}"
+                )
+                for e in subset
+            ]
+        )
 
     # Open archive and extract files
     extract = set()
