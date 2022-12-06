@@ -1594,6 +1594,10 @@ class MFPackage(PackageContainer, PackageInterface):
         else:
             self.model_or_sim = parent
             self.parent_file = None
+        if "_internal_package" in kwargs and kwargs["_internal_package"]:
+            self.internal_package = True
+        else:
+            self.internal_package = False
         self._data_list = []
         self._package_type = package_type
         if self.model_or_sim.type == "Model" and package_type.lower() != "nam":

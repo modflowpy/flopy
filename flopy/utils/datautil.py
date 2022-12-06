@@ -358,8 +358,8 @@ class PyListUtil:
                 if item and item[0] in PyListUtil.quote_list:
                     # starts with a quote, handle quoted text
                     if item[-1] in PyListUtil.quote_list:
-                        # if quoted on both ends, keep quotes
-                        arr_fixed_line.append(item)
+                        # if quoted on both ends, remove quotes
+                        arr_fixed_line.append(item[1:-1])
                     else:
                         arr_fixed_line.append(item[1:])
                         # loop until trailing quote found
