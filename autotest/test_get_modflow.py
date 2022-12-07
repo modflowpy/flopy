@@ -33,7 +33,6 @@ repo_options = {
     "executables": [
         "crt",
         "gridgen",
-        "gsflow",
         "mf2000",
         "mf2005",
         "mf2005dbl",
