@@ -123,13 +123,7 @@ Questions
 ------------------------------------------------
 FloPy usage has been growing rapidly, and as the number of users has increased, so has the number of questions about how to use FloPy.  We ask our users to carefully consider the nature of their problem and seek help in the appropriate manner.
 
-Do not open issues for general support questions as we want to keep GitHub issues for bug reports and feature requests. You've got much better chances of getting your question answered on [Stack Overflow](https://stackoverflow.com/questions/tagged/flopy) where the questions should be tagged with tag `flopy` or the [MODFLOW google group](https://groups.google.com/forum/#!forum/modflow).
-
-Stack Overflow is a much better place to ask questions since:
-
-- there are thousands of people willing to help on Stack Overflow and the MODFLOW google group
-- questions and answers stay available for public viewing so your question / answer might help someone else
-- Stack Overflow's voting system assures that the best answers are prominently visible.
+Do not open issues for general support questions.  We want to keep GitHub issues for bug reports and feature requests. General support questions are better answered in the [Discussions](https://github.com/modflowpy/flopy/discussions) on the FloPy GitHub repository. [Stack Overflow](https://stackoverflow.com/questions/tagged/flopy) and the [MODFLOW google group](https://groups.google.com/forum/#!forum/modflow) are other options but currently neither of these are as active as Discussions on the FloPy GitHub repository. If using Stack Overflow, questions should be tagged with tag `flopy`.
 
 To save your and our time, **we will systematically close all issues that are requests for general support and redirect people to Stack Overflow or the MODFLOW google group**.
 
@@ -160,6 +154,16 @@ How to Cite
 [Bakker, Mark, Post, Vincent, Hughes, J. D., Langevin, C. D., White, J. T., Leaf, A. T., Paulinski, S. R., Bellino, J. C., Morway, E. D., Toews, M. W., Larsen, J. D., Fienen, M. N., Starn, J. J., and Brakenhoff, Davíd, 2022, FloPy v3.3.6 &mdash; release candidate: U.S. Geological Survey Software Release, 08 March 2022, https://doi.org/10.5066/F7BK19FH](https://doi.org/10.5066/F7BK19FH)
 
 
+Additional FloPy Related Publications
+-----------------------------------------------
+
+[Leaf A.T, and Fienen M. N., 2022, Flopy&mdash;The Python Interface for MODFLOW: Groundwater, v. 60, no. 6, p. 710-712. doi:10.1111/gwat.13259.](https://doi.org/10.1111/gwat.13259)
+
+[Leaf, A.T. and M.N. Fienen, 2022, Modflow-setup&mdash;Robust automation of groundwater model construction: Frontiers in Earth Science, v. 10, 903965, doi:10.3389/feart.2022.903965.](https://doi.org/10.3389/feart.2022.903965)
+
+[Leaf, A.T., Fienen, M.N. and Reeves, H.W., 2021, SFRmaker and Linesink-Maker&mdash;Rapid Construction of Streamflow Routing Networks from Hydrography Data: Groundwater, v. 59, no. 5, p. 761-771. doi:10.1111/gwat.13095.](https://doi.org/10.1111/gwat.13095)
+
+
 MODFLOW Resources
 -----------------------------------------------
 
@@ -172,12 +176,13 @@ MODFLOW Resources
 Disclaimer
 ----------
 
-This software is preliminary or provisional and is subject to revision. It is
-being provided to meet the need for timely best science. The software has not
-received final approval by the U.S. Geological Survey (USGS). No warranty,
-expressed or implied, is made by the USGS or the U.S. Government as to the
-functionality of the software and related material nor shall the fact of release
-constitute any such warranty. The software is provided on the condition that
-neither the USGS nor the U.S. Government shall be held liable for any damages
-resulting from the authorized or unauthorized use of the software.
+This software is preliminary or provisional and is subject to revision. It is 
+being provided to meet the need for timely best science. This software is 
+provided "as is" and "as-available", and makes no representations or warranties 
+of any kind concerning the software, whether express, implied, statutory, or 
+other. This includes, without limitation, warranties of title, 
+merchantability, fitness for a particular purpose, non-infringement, absence 
+of latent or other defects, accuracy, or the presence or absence of errors, 
+whether or not known or discoverable.
+
 
