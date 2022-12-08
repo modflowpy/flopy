@@ -1379,7 +1379,7 @@ def test005_create_tests_advgw_tidal(tmpdir, example_data_path):
 
     obs_dict = {
         ("ghb_obs.csv", "binary"): [
-            ("ghb-2-6-10", "GHB", (1, 5, 9)),
+            ("ghb- 2-6-10", "GHB", (1, 5, 9)),
             ("ghb-3-6-10", "GHB", (2, 5, 9)),
         ],
         "ghb_flows.csv": [
@@ -1743,6 +1743,7 @@ def test005_create_tests_advgw_tidal(tmpdir, example_data_path):
             # there should be only one
             assert not found_obs
             found_obs = True
+            assert value[0][0] == "ghb- 2-6-10"
     assert found_flows and found_obs
 
     # clean up

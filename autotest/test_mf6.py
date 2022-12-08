@@ -25,6 +25,7 @@ from flopy.mf6 import (
     ModflowGwflak,
     ModflowGwfmaw,
     ModflowGwfmvr,
+    ModflowGwfnam,
     ModflowGwfnpf,
     ModflowGwfoc,
     ModflowGwfrch,
@@ -41,6 +42,7 @@ from flopy.mf6 import (
     ModflowGwtoc,
     ModflowGwtssm,
     ModflowIms,
+    ModflowNam,
     ModflowTdis,
     ModflowUtllaktab,
 )
@@ -1570,3 +1572,55 @@ def test_multi_model(tmpdir):
     # save and run updated model
     sim.write_simulation()
     sim.run_simulation()
+
+
+@requires_exe("mf6")
+def test_namefile_creation(tmpdir):
+    test_ex_name = "test_namefile"
+    # build MODFLOW 6 files
+    sim = MFSimulation(
+        sim_name=test_ex_name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=str(tmpdir),
+    )
+
+    tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0), (6.0, 3, 1.0), (6.0, 3, 1.0)]
+    tdis = ModflowTdis(sim, time_units="DAYS", nper=4, perioddata=tdis_rc)
+    ims_package = ModflowIms(
+        sim,
+        pname="my_ims_file",
+        filename=f"{test_ex_name}.ims",
+        print_option="ALL",
+        complexity="SIMPLE",
+        outer_dvclose=0.0001,
+        outer_maximum=50,
+        under_relaxation="NONE",
+        inner_maximum=30,
+        inner_dvclose=0.0001,
+        linear_acceleration="CG",
+        preconditioner_levels=7,
+        preconditioner_drop_tolerance=0.01,
+        number_orthogonalizations=2,
+    )
+    model = ModflowGwf(
+        sim,
+        modelname=test_ex_name,
+        model_nam_file="{}.nam".format(test_ex_name),
+    )
+
+    # try to create simulation name file
+    ex_happened = False
+    try:
+        nam = ModflowNam(sim)
+    except flopy.mf6.mfbase.FlopyException:
+        ex_happened = True
+    assert ex_happened
+
+    # try to create model name file
+    ex_happened = False
+    try:
+        nam = ModflowGwfnam(model)
+    except flopy.mf6.mfbase.FlopyException:
+        ex_happened = True
+    assert ex_happened
