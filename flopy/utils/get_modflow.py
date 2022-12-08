@@ -179,7 +179,7 @@ def get_release(repo, tag="latest", quiet=False) -> dict:
     release = json.loads(result.decode())
     tag_name = release["tag_name"]
     if not quiet:
-        print(f"fetched release {tag_name!r} from {owner}/{repo}")
+        print(f"fetched release {tag_name!r} info from {owner}/{repo}")
 
     return release
 
@@ -444,7 +444,7 @@ def run_main(
             )
     else:
         if not quiet:
-            print(f"downloading to '{download_pth}'")
+            print(f"downloading '{download_url}' to '{download_pth}'")
         urllib.request.urlretrieve(download_url, download_pth)
 
     if subset:
@@ -452,6 +452,16 @@ def run_main(
             subset = set(subset.replace(",", " ").split())
         elif not isinstance(subset, set):
             subset = set(subset)
+        subset = set(
+            [
+                (
+                    f"{e}{lib_suffix}"
+                    if e.startswith("lib")
+                    else f"{e}{exe_suffix}"
+                )
+                for e in subset
+            ]
+        )
 
     # Open archive and extract files
     extract = set()
@@ -475,10 +485,10 @@ def run_main(
     with zipfile.ZipFile(download_pth, "r") as zipf:
         if repo == "modflow6":
             # modflow6 release contains the whole repo with an internal bindir
-            inner_bin = asset_stem + "/bin"
             for pth in zipf.namelist():
-                if pth.startswith(inner_bin) and not pth.endswith("bin/"):
-                    full_path[Path(pth).name] = pth
+                p = Path(pth)
+                if p.parent.name == "bin":
+                    full_path[p.name] = pth
             files = set(full_path.keys())
         else:
             # assume all files to be extracted
