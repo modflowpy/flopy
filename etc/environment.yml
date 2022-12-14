@@ -20,10 +20,12 @@ dependencies:
   - jupyter
   - jupytext
   - pytest
+  - pytest-benchmark
   - pytest-cases
   - pytest-cov
+  - pytest-dotenv
   - pytest-xdist
-  - pytest-benchmark
+
 
   # optional
   - python-dateutil>=2.4.0

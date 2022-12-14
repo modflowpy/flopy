@@ -1,0 +1,45 @@
+# configuration file for git-cliff (0.1.0)
+
+[changelog]
+body = """
+{% if version %}\
+    ### Version {{ version | trim_start_matches(pat="v") }}
+{% else %}\
+    ### [unreleased]
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+    #### {{ group | upper_first }}
+    {% for commit in commits %}
+        * [{{ commit.group }}{% if commit.scope %}({{ commit.scope }}){% endif %}](https://github.com/modflowpy/flopy/commit/{{ commit.id }}): {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message | upper_first }}. Committed by {{ commit.author.name }} on {{ commit.author.timestamp | date(format="%Y-%m-%d") }}.\
+    {% endfor %}
+{% endfor %}\n
+"""
+trim = true
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+split_commits = false
+commit_parsers = [
+    { message = "^[fF]eat", group = "feat"},
+    { message = "^[fF]ix", group = "fix"},
+    { message = "^[bB]ug", group = "fix"},
+    { message = "^[pP]erf", group = "perf"},
+    { message = "^[rR]efactor", group = "refactor"},
+    { message = "^[uU]pdate", group = "refactor"},
+    { message = "^[dD]oc.*", group = "docs", skip = true},
+    { message = "^[bB]inder", group = "docs", skip = true},
+    { message = "^[nN]otebook.*", group = "docs", skip = true},
+    { message = "^[rR][eE][aA][dD].*", group = "docs", skip = true},
+    { message = "^[sS]tyl.*", group = "style", skip = true},
+    { message = "^[tT]est.*", group = "test", skip = true},
+    { message = "^[cC][iI]", skip = true},
+    { message = "^[cC][iI]\\(release\\):", skip = true},
+    { message = "^[rR]elease", skip = true},
+    { message = "^[cC]hore", group = "chore", skip = true},
+]
+protect_breaking_commits = false
+filter_commits = false
+tag_pattern = "[0-9].[0-9].[0-9]"
+ignore_tags = ""
+sort_commits = "oldest"
