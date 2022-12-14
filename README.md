@@ -1,7 +1,7 @@
 
 <img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
-### Version 3.3.6 &mdash; release candidate
+### Version 3.3.6
 [![flopy continuous integration](https://github.com/modflowpy/flopy/actions/workflows/commit.yml/badge.svg?branch=develop)](https://github.com/modflowpy/flopy/actions/workflows/commit.yml)
 [![Read the Docs](https://github.com/modflowpy/flopy/actions/workflows/rtd.yml/badge.svg?branch=develop)](https://github.com/modflowpy/flopy/actions/workflows/rtd.yml)
 
@@ -151,7 +151,7 @@ How to Cite
 
 ##### ***Software/Code citation for FloPy:***
 
-[Bakker, Mark, Post, Vincent, Hughes, J. D., Langevin, C. D., White, J. T., Leaf, A. T., Paulinski, S. R., Bellino, J. C., Morway, E. D., Toews, M. W., Larsen, J. D., Fienen, M. N., Starn, J. J., and Brakenhoff, Davíd, 2022, FloPy v3.3.6 &mdash; release candidate: U.S. Geological Survey Software Release, 08 March 2022, https://doi.org/10.5066/F7BK19FH](https://doi.org/10.5066/F7BK19FH)
+[Bakker, Mark, Post, Vincent, Hughes, J. D., Langevin, C. D., White, J. T., Leaf, A. T., Paulinski, S. R., Bellino, J. C., Morway, E. D., Toews, M. W., Larsen, J. D., Fienen, M. N., Starn, J. J., and Brakenhoff, Davíd, 2022, FloPy v3.3.6: U.S. Geological Survey Software Release, 14 December 2022, https://doi.org/10.5066/F7BK19FH](https://doi.org/10.5066/F7BK19FH)
 
 
 Additional FloPy Related Publications
@@ -176,13 +176,10 @@ MODFLOW Resources
 Disclaimer
 ----------
 
-This software is preliminary or provisional and is subject to revision. It is 
-being provided to meet the need for timely best science. This software is 
-provided "as is" and "as-available", and makes no representations or warranties 
-of any kind concerning the software, whether express, implied, statutory, or 
-other. This includes, without limitation, warranties of title, 
-merchantability, fitness for a particular purpose, non-infringement, absence 
-of latent or other defects, accuracy, or the presence or absence of errors, 
-whether or not known or discoverable.
-
+This software is provided "as is" and "as-available", and makes no 
+representations or warranties of any kind concerning the software, whether 
+express, implied, statutory, or other. This includes, without limitation, 
+warranties of title, merchantability, fitness for a particular purpose, 
+non-infringement, absence of latent or other defects, accuracy, or the 
+presence or absence of errors, whether or not known or discoverable.
 

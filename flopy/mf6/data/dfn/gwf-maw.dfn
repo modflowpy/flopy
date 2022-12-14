@@ -202,6 +202,39 @@ longname shutdown kappa
 description value that defines the weight applied to discharge rate for wells that limit the water level in a discharging well (defined using the HEAD\_LIMIT keyword in the stress period data). SHUTDOWN\_KAPPA is used to control discharge rate oscillations when the flow rate from the aquifer is less than the specified flow rate from the aquifer to the well. Values range between 0.0 and 1.0, and larger values increase the weight applied to the well discharge rate. The HEAD\_LIMIT option has been included to facilitate backward compatibility with previous versions of MODFLOW but use of the RATE\_SCALING option instead of the HEAD\_LIMIT option is recommended. By default, SHUTDOWN\_KAPPA is 0.0001.
 
 block options
+name mfrcsv_filerecord
+type record maw_flow_reduce_csv fileout mfrcsvfile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name maw_flow_reduce_csv
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname budget keyword
+description keyword to specify that record corresponds to the output option in which a new record is written for each multi-aquifer well and for each time step in which the user-requested extraction or injection rate is reduced by the program.
+
+block options
+name mfrcsvfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the comma-separated value (CSV) output file to write information about multi-aquifer well extraction or injection rates that have been reduced by the program. Entries are only written if the extraction or injection rates are reduced.
+
+block options
 name ts_filerecord
 type record ts6 filein ts6_filename
 shape
