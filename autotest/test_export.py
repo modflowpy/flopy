@@ -632,8 +632,9 @@ def test_export_contourf(tmpdir, example_data_path):
     with Reader(filename) as r:
         shapes = r.shapes()
         # expect 65 with standard mpl contours (structured grids), 86 with tricontours
-        assert len(shapes) >= 65, "multipolygons were skipped in contourf routine"
-
+        assert (
+            len(shapes) >= 65
+        ), "multipolygons were skipped in contourf routine"
 
 
 @pytest.mark.mf6
@@ -663,7 +664,6 @@ def test_export_contours(tmpdir, example_data_path):
         shapes = r.shapes()
         # expect 65 with standard mpl contours (structured grids), 86 with tricontours
         assert len(shapes) >= 65
-
 
 
 @pytest.mark.mf6

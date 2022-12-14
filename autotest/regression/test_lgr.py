@@ -2,9 +2,9 @@ import shutil
 from os.path import dirname, join
 from pathlib import Path
 
-from flaky import flaky
 import pytest
 from autotest.conftest import requires_exe, requires_pkg
+from flaky import flaky
 
 import flopy
 

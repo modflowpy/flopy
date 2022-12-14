@@ -1,0 +1,391 @@
+name: FloPy release
+on:
+  push:
+    branches:
+      - master
+      - v*
+  release:
+    types:
+      - published
+jobs:
+  prep:
+    name: Prepare release
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' && github.ref_name != 'master' }}
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: bash
+    steps:
+
+      - name: Checkout release branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.7
+          cache: 'pip'
+          cache-dependency-path: setup.cfg
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install build twine
+          pip install .
+          pip install ".[lint, test, optional]"
+
+      - name: Install MODFLOW
+        run: |
+          mkdir -p ~/.local/bin
+          get-modflow ~/.local/bin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update FloPy version
+        id: version
+        run: |
+          # extract version from branch name
+          ref="${{ github.ref_name }}"
+          ver="${ref#"v"}"
+          
+          # update version files
+          if [[ "$ver" == *"rc"* ]]; then
+            python scripts/update_version.py -v "${ref%"rc"}"
+          else
+            python scripts/update_version.py -v "$ver" --approve
+          fi
+          
+          # show version and set output
+          python -c "import flopy; print(f'FloPy version: {flopy.__version__}')"
+          echo "version=${ver#"v"}" >> $GITHUB_OUTPUT
+
+      - name: Update FloPy plugins
+        run: python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="master", backup=False)'
+
+      - name: Lint Python files
+        run: python scripts/pull_request_prepare.py
+
+      - name: Run tests
+        working-directory: autotest
+        run: pytest -v -m="not example and not regression" -n=auto --durations=0 --keep-failed=.failed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload failed test outputs
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: failed-${{ matrix.os }}-${{ matrix.python-version }}
+          path: |
+            ./autotest/.failed/**
+
+      - name: Run notebooks
+        working-directory: scripts
+        run: python run_notebooks.py
+
+      - name: Generate changelog
+        id: cliff
+        uses: orhun/git-cliff-action@v1
+        with:
+          config: cliff.toml
+          args: --verbose --unreleased --tag ${{ steps.version.outputs.version }}
+        env:
+          OUTPUT: CHANGELOG.md
+
+      - name: Update changelog
+        run: |
+          # move changelog
+          sudo cp ${{ steps.cliff.outputs.changelog }} CHANGELOG.md
+          
+          # show changelog
+          cat CHANGELOG.md
+          
+          # substitute full group names
+          sed -i 's/#### Ci/#### Continuous integration/' CHANGELOG.md
+          sed -i 's/#### Feat/#### New features/' CHANGELOG.md
+          sed -i 's/#### Fix/#### Bug fixes/' CHANGELOG.md
+          sed -i 's/#### Refactor/#### Refactoring/' CHANGELOG.md
+          sed -i 's/#### Test/#### Testing/' CHANGELOG.md
+          
+          # prepend changelog to docs/version_changes.md
+          cat CHANGELOG.md | cat - docs/version_changes.md | tee docs/version_changes.md
+
+      - name: Upload changelog
+        uses: actions/upload-artifact@v3
+        with:
+          name: changelog
+          path: CHANGELOG.md
+
+      - name: Push release branch
+        run: |
+          git config core.sharedRepository true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "ci(release): set version to ${{ steps.version.outputs.version }}, update plugins from DFN files, update changelog"
+          git push origin "${{ github.ref_name }}"
+
+  pr:
+    name: Draft release PR
+    needs: prep
+    if: ${{ github.event_name == 'push' && !(contains(github.ref_name, 'rc')) }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      pull-requests: write
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+
+      - name: Checkout release branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Draft pull request
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          ref="${{ github.ref_name }}"
+          ver="${ref#"v"}"
+          title="Release $ver"
+          body='
+          # FloPy '$ver'
+          
+          The release can be approved by merging this pull request into `master`. This will trigger a final job to publish the release to PyPI.
+          '
+          gh pr create -B "master" -H "$ref" --title "$title" --draft --body "$body"
+
+  release:
+    name: Draft release
+    # runs only when changes are merged to master
+    if: ${{ github.event_name == 'push' && github.ref_name == 'master' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+
+      - name: Checkout master branch
+        uses: actions/checkout@v3
+        with:
+          ref: master
+
+      # actions/download-artifact won't look at previous workflow runs but we need to in order to get changelog
+      - name: Download artifacts
+        uses: dawidd6/action-download-artifact@v2
+
+      - name: Draft release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          version=$(cat version.txt)
+          title="FloPy $version"
+          notes=$(cat changelog/CHANGELOG.md)
+          gh release create "$version" \
+            --target master \
+            --title "$title" \
+            --notes "$notes" \
+            --draft \
+            --latest
+
+  publish:
+    name: Publish package
+    # runs only after release is published (manually promoted from draft)
+    if: ${{ github.event_name == 'release' }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+
+      - name: Checkout master branch
+        uses: actions/checkout@v3
+        with:
+          ref: master
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.7
+          cache: 'pip'
+          cache-dependency-path: setup.cfg
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install build twine
+          pip install .
+          pip install ".[lint, test, optional]"     
+
+      - name: Build package
+        run: python -m build
+
+      - name: Check package
+        run: twine check --strict dist/*
+
+      - name: Upload package
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: dist
+
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: python -m twine upload dist/*
+
+      # TODO: only need if regro-cf-autotick-bot doesn't autodetect release and open PR on conda-forge/flopy-feedstock
+
+      # - name: Setup Micromamba
+      #   uses: mamba-org/provision-with-micromamba@main
+      #   with:
+      #     environment-file: flopy/etc/environment.yml
+      #     cache-downloads: true
+      #     cache-env: true
+
+      # - name: Install dependencies
+      #   run: |
+      #     conda install -c conda-forge conda-smithy
+      #     pip install --upgrade pip
+      #     pip install build twine
+
+      # - name: Download release assets
+      #   uses: robinraju/release-downloader@v1.6
+      #   with:
+      #     latest: true
+      #     tarBall: true
+      #     zipBall: false
+
+      # - name: Calculate checksum
+      #   id: checksum
+      #   run: |
+      #     sha256=$(openssl sha256 "Source code (tar.gz).tar.gz")
+      #     echo "SHA256: $sha256"
+      #     echo "sha256=$sha256" >> $GITHUB_OUTPUT
+
+      # - name: Checkout feedstock
+      #   uses: actions/checkout@v3
+      #   with:
+      #     repository: w-bonelli/flopy-feedstock
+      #     path: flopy-feedstock
+      #     ref: master
+
+      # - name: Get version
+      #   working-directory: flopy
+      #   id: version
+      #   run: |
+      #     version=$(python scripts/update_version.py --get)
+      #     echo "version: $version"
+      #     echo "version=$version" >> $GITHUB_OUTPUT
+
+      # - name: Update feedstock
+      #   working-directory: flopy-feedstock
+      #   run: |
+      #     git remote add upstream https://github.com/conda-forge/flopy-feedstock.git
+      #     git fetch upstream
+      #     git checkout master
+      #     git reset --hard upstream/master
+      #     # git push origin master --force
+      #     git switch -c "v${{ steps.version.outputs.version }}-update-conda"
+
+      # - name: Rerender feedstock
+      #   working-directory: flopy-feedstock
+      #   run: |
+      #     conda smithy rerender
+
+      # - name: Update feedstock recipe
+      #   working-directory: flopy-feedstock
+      #   run: |
+      #     sed -i '1s/.*/{% set version = "'${{ steps.version.outputs.version }}'" %}/' recipe/meta.yaml
+      #     sed -i 's/sha256:.*/sha256: ${{ steps.checksum.outputs.sha256 }}/g' recipe/meta.yaml
+      #     git add recipe/meta.yaml
+      #     git commit -m "ci(release): update recipe"
+      #     # git push -u origin "v${{ steps.version.outputs.version }}-update-conda"
+
+      # - name: Draft feedstock PR
+      #   working-directory: flopy-feedstock
+      #   env:
+      #     GITHUB_TOKEN: ${{ github.token }}
+      #   run: |
+      #     body='
+      #     # FloPy '$ver' release
+      #
+      #     This release can be approved by merging this pull request into `master`. This will trigger a final job to publish the release to PyPI and open a PR to update the [Conda feedstock](https://github.com/jdhughes-usgs/flopy-feedstock).
+      #     '
+      #     gh pr create -B "master" -H "$ref" --title "Release version $ver" --draft --latest --body "$body"
+
+  reset:
+    name: Draft reset PR
+    if: ${{ github.event_name == 'release' }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      pull-requests: write
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+
+      - name: Checkout master branch
+        uses: actions/checkout@v3
+        with:
+          ref: master
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.7
+          cache: 'pip'
+          cache-dependency-path: setup.cfg
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install build twine
+          pip install .
+          pip install ".[lint, test, optional]"
+
+      - name: Get release tag
+        uses: oprypin/find-latest-tag@v1
+        id: latest_tag
+        with:
+          repository: ${{ github.repository }}
+          releases-only: true
+
+      - name: Draft pull request
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          # create reset branch from master
+          reset_branch="post-release-${{ steps.latest_tag.outputs.tag }}-reset"
+          git switch -c $reset_branch
+          
+          # increment patch version
+          major_version=$(echo "${{ steps.latest_tag.outputs.tag }}" | cut -d. -f1)
+          minor_version=$(echo "${{ steps.latest_tag.outputs.tag }}" | cut -d. -f2)
+          patch_version=$(echo "${{ steps.latest_tag.outputs.tag }}" | cut -d. -f3)
+          version="$major_version.$minor_version.$((patch_version + 1))"
+          python scripts/update_version.py -v "$version"
+          
+          # commit and push reset branch
+          git config core.sharedRepository true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "ci(release): update to development version $version"
+          git push -u origin $reset_branch
+          
+          # create PR into develop
+          body='
+          # Reinitialize for development
+          
+          Updates the `develop` branch from `master` following a successful release. Increments the patch version number.
+          '
+          gh pr create -B "develop" -H "$reset_branch" --title "Reinitialize develop branch" --draft --body "$body"

@@ -11,6 +11,7 @@ except ImportError:
     sys.path.append(fpth)
     import flopy
 
+
 def get_project_root_path() -> Path:
     return Path.cwd().parent.parent
 
