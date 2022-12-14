@@ -29,6 +29,7 @@ from .mfgwfriv import ModflowGwfriv
 from .mfgwfsfr import ModflowGwfsfr
 from .mfgwfsto import ModflowGwfsto
 from .mfgwfuzf import ModflowGwfuzf
+from .mfgwfvsc import ModflowGwfvsc
 from .mfgwfwel import ModflowGwfwel
 from .mfgwt import ModflowGwt
 from .mfgwtadv import ModflowGwtadv

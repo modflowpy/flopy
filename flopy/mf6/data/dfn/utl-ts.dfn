@@ -115,7 +115,7 @@ description  xxx
 block attributes
 name sfacval
 type double precision
-shape time_series_names
+shape <time_series_name
 tagged false
 reader urword
 optional false

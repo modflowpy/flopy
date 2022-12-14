@@ -60,7 +60,7 @@ longname keyword to save GWFGWF flows
 description keyword to indicate that cell-by-cell flow terms will be written to the budget file for each model provided that the Output Control for the models are set up with the ``BUDGET SAVE FILE'' option.
 
 block options
-name advscheme
+name adv_scheme
 type string
 valid upstream central tvd
 reader urword
@@ -69,22 +69,22 @@ longname advective scheme
 description scheme used to solve the advection term.  Can be upstream, central, or TVD.  If not specified, upstream weighting is the default weighting scheme.
 
 block options
-name xt3d_off
+name dsp_xt3d_off
 type keyword
 shape
 reader urword
 optional true
 longname deactivate xt3d
-description deactivate the xt3d method and use the faster and less accurate approximation for this exchange.
+description deactivate the xt3d method for the dispersive flux and use the faster and less accurate approximation for this exchange.
 
 block options
-name xt3d_rhs
+name dsp_xt3d_rhs
 type keyword
 shape
 reader urword
 optional true
 longname xt3d on right-hand side
-description add xt3d terms to right-hand side, when possible, for this exchange.
+description add xt3d dispersion terms to right-hand side, when possible, for this exchange.
 
 block options
 name filein
