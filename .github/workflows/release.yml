@@ -54,7 +54,7 @@ jobs:
           
           # update version files
           if [[ "$ver" == *"rc"* ]]; then
-            python scripts/update_version.py -v "${ref%"rc"}"
+            python scripts/update_version.py -v "${ver%"rc"}"
           else
             python scripts/update_version.py -v "$ver" --approve
           fi
