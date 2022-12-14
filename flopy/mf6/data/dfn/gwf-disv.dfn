@@ -79,7 +79,7 @@ description is the top elevation for each cell in the top model layer.
 block griddata
 name botm
 type double precision
-shape (nlay, ncpl)
+shape (ncpl, nlay)
 reader readarray
 layered true
 longname model bottom elevation
@@ -88,7 +88,7 @@ description is the bottom elevation for each cell.
 block griddata
 name idomain
 type integer
-shape (nlay, ncpl)
+shape (ncpl, nlay)
 reader readarray
 layered true
 optional true
@@ -101,6 +101,7 @@ description is an optional array that characterizes the existence status of a ce
 block vertices
 name vertices
 type recarray iv xv yv
+shape (nvert)
 reader urword
 optional false
 longname vertices data
@@ -143,6 +144,7 @@ description is the y-coordinate for the vertex.
 block cell2d
 name cell2d
 type recarray icell2d xc yc ncvert icvert
+shape (ncpl)
 reader urword
 optional false
 longname cell2d data

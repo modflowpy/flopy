@@ -22,7 +22,7 @@ type keyword
 reader urword
 optional true
 longname keyword to indicate specific storage only applied under confined conditions
-description keyword to indicate that specific storage is only calculated when a cell is under confined conditions (head greater than or equal to the top of the cell). This option is identical to the approach used to calculate storage changes under confined conditions in MODFLOW-2005.
+description keyword to indicate that compressible storage is only calculated for a convertible cell (ICONVERT>0) when the cell is under confined conditions (head greater than or equal to the top of the cell). This option has no effect on cells that are marked as being always confined (ICONVERT=0).  This option is identical to the approach used to calculate storage changes under confined conditions in MODFLOW-2005.
 
 block options
 name tvs_filerecord
