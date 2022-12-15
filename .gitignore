@@ -93,3 +93,5 @@ autotest/.noseids
 *.bak
 
 **.env
+venv
+app
