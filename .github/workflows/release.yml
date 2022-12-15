@@ -112,7 +112,8 @@ jobs:
           sed -i 's/#### Test/#### Testing/' CHANGELOG.md
           
           # prepend changelog to docs/version_changes.md
-          cat CHANGELOG.md | cat - docs/version_changes.md | tee docs/version_changes.md
+          cat CHANGELOG.md docs/version_changes.md > version_changes.md
+          sudo mv version_changes.md docs/version_changes.md
 
       - name: Upload changelog
         uses: actions/upload-artifact@v3
@@ -122,6 +123,7 @@ jobs:
 
       - name: Push release branch
         run: |
+          rm CHANGELOG.md
           git config core.sharedRepository true
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
