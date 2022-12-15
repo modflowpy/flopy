@@ -376,6 +376,9 @@ jobs:
           version="$major_version.$minor_version.$((patch_version + 1))"
           python scripts/update_version.py -v "$version"
           
+          # lint Python files
+          python scripts/pull_request_prepare.py
+          
           # commit and push reset branch
           git config core.sharedRepository true
           git config user.name "github-actions[bot]"
