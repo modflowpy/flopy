@@ -1,8 +1,10 @@
 import numpy as np
 import pytest
+from autotest.conftest import get_example_data_path
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 
+import flopy
 from flopy.modflow import Modflow
 from flopy.utils import (
     BinaryHeader,
@@ -11,6 +13,7 @@ from flopy.utils import (
     HeadUFile,
     Util2d,
 )
+from flopy.utils.binaryfile import get_headfile_precision
 
 
 @pytest.fixture
@@ -144,3 +147,63 @@ def test_headu_file(tmpdir, example_data_path):
         assert np.allclose(t1, minmaxtrue[i])
 
     return
+
+
+def test_get_headfile_precision(example_data_path):
+    precision = get_headfile_precision(
+        str(example_data_path / "freyberg" / "freyberg.githds")
+    )
+    assert precision == "single"
+
+    precision = get_headfile_precision(
+        str(
+            example_data_path
+            / "mf6"
+            / "create_tests"
+            / "test005_advgw_tidal"
+            / "expected_output"
+            / "AdvGW_tidal.hds"
+        )
+    )
+    assert precision == "double"
+
+
+_example_data_path = get_example_data_path()
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        str(p)
+        for p in [
+            _example_data_path / "mf2005_test" / "swiex1.gitzta",
+            _example_data_path / "mp6" / "EXAMPLE.BUD",
+            _example_data_path
+            / "mfusg_test"
+            / "01A_nestedgrid_nognc"
+            / "output"
+            / "flow.cbc",
+        ]
+    ],
+)
+def test_budgetfile_detect_precision_single(path):
+    file = CellBudgetFile(path, precision="auto")
+    assert file.realtype == np.float32
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        str(p)
+        for p in [
+            _example_data_path
+            / "mf6"
+            / "test006_gwf3"
+            / "expected_output"
+            / "flow_adj.cbc",
+        ]
+    ],
+)
+def test_budgetfile_detect_precision_double(path):
+    file = CellBudgetFile(path, precision="auto")
+    assert file.realtype == np.float64

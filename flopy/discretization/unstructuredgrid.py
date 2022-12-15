@@ -5,8 +5,7 @@ import os
 import numpy as np
 from matplotlib.path import Path
 
-from ..utils.geometry import is_clockwise
-from ..utils.gridutil import get_lni
+from ..utils.geometry import is_clockwise, transform
 from .grid import CachedData, Grid
 
 
@@ -225,7 +224,17 @@ class UnstructuredGrid(Grid):
         if self._vertices is None:
             return self._vertices
         else:
-            return np.array([list(t)[1:] for t in self._vertices], dtype=float)
+            verts = np.array(
+                [list(t)[1:] for t in self._vertices], dtype=float
+            ).T
+            x, y = transform(
+                verts[0],
+                verts[1],
+                self.xoffset,
+                self.yoffset,
+                self.angrot_radians,
+            )
+            return np.array(list(zip(x, y)))
 
     @property
     def iac(self):

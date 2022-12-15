@@ -568,13 +568,26 @@ class MFFileAccessArray(MFFileAccess):
         data_raw = []
         line = " "
         PyListUtil.reset_delimiter_used()
-        while line != "" and len(data_raw) < data_size:
-            line = fd.readline()
-            arr_line = PyListUtil.split_data_line(line, True)
-            if not MFComment.is_comment(arr_line, True):
-                data_raw += arr_line
-            else:
-                PyListUtil.reset_delimiter_used()
+        if data_size < 0:
+            # data size is not defined, load data until an end of data
+            # indicator is found
+            while True:
+                line = fd.readline()
+                arr_line = PyListUtil.split_data_line(line, True)
+                if line == "" or arr_line[0].upper() == "END":
+                    break
+                if not MFComment.is_comment(arr_line, True):
+                    data_raw += arr_line
+                else:
+                    PyListUtil.reset_delimiter_used()
+        else:
+            while line != "" and len(data_raw) < data_size:
+                line = fd.readline()
+                arr_line = PyListUtil.split_data_line(line, True)
+                if not MFComment.is_comment(arr_line, True):
+                    data_raw += arr_line
+                else:
+                    PyListUtil.reset_delimiter_used()
 
         if len(data_raw) < data_size:
             message = (
@@ -609,12 +622,16 @@ class MFFileAccessArray(MFFileAccess):
         elif data_type == DatumType.integer:
             data_type = np.int32
 
-        data_out = np.fromiter(data_raw, dtype=data_type, count=data_size)
+        if data_size < 0:
+            data_out = np.fromiter(data_raw, dtype=data_type)
+        else:
+            data_out = np.fromiter(data_raw, dtype=data_type, count=data_size)
         data_out = self._resolve_cellid_numbers_from_file(data_out)
         if close_file:
             fd.close()
 
-        data_out = np.reshape(data_out, data_dim)
+        if data_size >= 0:
+            data_out = np.reshape(data_out, data_dim)
         return data_out, current_size
 
     def load_from_package(

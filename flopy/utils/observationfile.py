@@ -496,21 +496,33 @@ class CsvFile:
     delimiter : str
         optional delimiter for the csv or formatted text file,
         defaults to ","
+    deletechars : str
+        optional string containing characters that should be deleted
+        from the column names, defaults to ""
+    replace_space : str
+        optional string containing the character that will be used to replace
+        the space with in any column names, defaults to ""
 
     """
 
-    def __init__(self, csvfile, delimiter=","):
+    def __init__(
+        self, csvfile, delimiter=",", deletechars="", replace_space=""
+    ):
 
-        self.file = open(csvfile, "r")
-        self.delimiter = delimiter
+        with open(csvfile, "r") as self.file:
+            self.delimiter = delimiter
+            self.deletechars = deletechars
+            self.replace_space = replace_space
 
-        # read header line
-        line = self.file.readline()
-        self._header = line.rstrip().split(delimiter)
-        self.floattype = "f8"
-        self.dtype = _build_dtype(self._header, self.floattype)
+            # read header line
+            line = self.file.readline()
+            self._header = line.rstrip().split(delimiter)
+            self.floattype = "f8"
+            self.dtype = _build_dtype(self._header, self.floattype)
 
-        self.data = self.read_csv(self.file, self.dtype, delimiter)
+            self.data = self.read_csv(
+                self.file, self.dtype, delimiter, deletechars, replace_space
+            )
 
     @property
     def obsnames(self):
@@ -535,7 +547,7 @@ class CsvFile:
         return len(self.obsnames)
 
     @staticmethod
-    def read_csv(fobj, dtype, delimiter=","):
+    def read_csv(fobj, dtype, delimiter=",", deletechars="", replace_space=""):
         """
 
         Parameters
@@ -546,12 +558,24 @@ class CsvFile:
         delimiter : str
             optional delimiter for the csv or formatted text file,
             defaults to ","
+        deletechars : str
+            optional string containing characters that should be deleted
+            from the column names, defaults to ""
+        replace_space : str
+            optional string containing the character that will be used to replace
+            the space with in any column names, defaults to ""
 
         Returns
         -------
         np.recarray
         """
-        arr = np.genfromtxt(fobj, dtype=dtype, delimiter=delimiter)
+        arr = np.genfromtxt(
+            fobj,
+            dtype=dtype,
+            delimiter=delimiter,
+            deletechars=deletechars,
+            replace_space=replace_space,
+        )
         if len(arr.shape) == 0:
             arr = arr.reshape((1,))
         return arr.view(np.recarray)

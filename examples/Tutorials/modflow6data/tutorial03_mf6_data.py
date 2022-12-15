@@ -102,7 +102,9 @@ ghb_spd_ts[0] = ghb_period
 
 # Next the time series data is built.  The time series data is constructed as
 # a list of tuples, with each tuple containing a time and the value (or values)
-# at that time.
+# at that time.  The time series data is put in a dictionary along with
+# additional time series information including filename,
+# time_series_namerecord, interpolation_methodrecord, and sfacrecord.
 
 # build ts data
 ts_data = []
@@ -110,6 +112,13 @@ for n in range(0, 365):
     time = float(n / 11.73)
     val = float(n / 60.0)
     ts_data.append((time, val))
+ts_dict = {
+    "filename": "tides.ts",
+    "time_series_namerecord": "tide",
+    "timeseries": ts_data,
+    "interpolation_methodrecord": "linearend",
+    "sfacrecord": 1.1,
+}
 
 # The `GHB` package is then constructed, passing the time series data into the
 # `timeseries` parameter.
@@ -121,14 +130,14 @@ ghb = flopy.mf6.modflow.mfgwfghb.ModflowGwfghb(
     print_flows=True,
     save_flows=True,
     boundnames=True,
-    timeseries=ts_data,
+    timeseries=ts_dict,
     pname="ghb",
     maxbound=30,
     stress_period_data=ghb_spd_ts,
 )
 
-# Time series attributes, like `time_series_namerecord`, can be set using
-# the `ghb.ts` object.
+# Time series attributes, like `time_series_namerecord`, can be modified
+# using the `ghb.ts` object.
 
 # set required time series attributes
 ghb.ts.time_series_namerecord = "tides"

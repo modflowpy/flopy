@@ -181,7 +181,7 @@ def test_base_run(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("rasterio")
+@requires_pkg("rasterio", "rasterstats")
 def test_lake(tmpdir, example_data_path):
     mpath = example_data_path / "mf6-freyberg"
     top = Raster.load(str(mpath / "top.asc"))

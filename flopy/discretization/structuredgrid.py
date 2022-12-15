@@ -944,45 +944,68 @@ class StructuredGrid(Grid):
 
     def get_lrc(self, nodes):
         """
-        Get layer, row, column from a list of zero based
+        Get layer, row, column from a list of zero-based
         MODFLOW node numbers.
+
+        Parameters
+        ----------
+        nodes : int, list or array_like
+            Zero-based node number
 
         Returns
         -------
-        v : list of tuples containing the layer (k), row (i),
+        list
+            list of tuples containing the layer (k), row (i),
             and column (j) for each node in the input list
-        """
-        if not isinstance(nodes, list):
-            nodes = [nodes]
-        ncpl = self.ncpl
-        v = []
-        for node in nodes:
-            k = int(np.floor(node / ncpl))
-            ij = int((node) - (ncpl * k))
-            i = int(np.floor(ij / self.__ncol))
-            j = int(ij - (i * self.__ncol))
 
-            v.append((k, i, j))
-        return v
+        Examples
+        --------
+        >>> import flopy
+        >>> sg = flopy.discretization.StructuredGrid(nlay=20, nrow=30, ncol=40)
+        >>> sg.get_lrc(100)
+        [(0, 2, 20)]
+        >>> sg.get_lrc([100, 1000, 10_000])
+        [(0, 2, 20), (0, 25, 0), (8, 10, 0)]
+        """
+        if isinstance(nodes, int):
+            nodes = [nodes]
+        shape = self.shape
+        if shape[0] is None:
+            shape = tuple(dim or 1 for dim in shape)
+        return list(zip(*np.unravel_index(nodes, shape)))
 
     def get_node(self, lrc_list):
         """
-        Get node number from a list of zero based MODFLOW
+        Get node number from a list of zero-based MODFLOW
         layer, row, column tuples.
+
+        Parameters
+        ----------
+        lrc_list : tuple of int or list of tuple of int
+            Zero-based layer, row, column tuples
 
         Returns
         -------
-        v : list of MODFLOW nodes for each layer (k), row (i),
+        list
+            list of MODFLOW nodes for each layer (k), row (i),
             and column (j) tuple in the input list
+
+        Examples
+        --------
+        >>> import flopy
+        >>> sg = flopy.discretization.StructuredGrid(nlay=20, nrow=30, ncol=40)
+        >>> sg.get_node((0, 2, 20))
+        [100]
+        >>> sg.get_node([(0, 2, 20), (0, 25, 0), (8, 10, 0)])
+        [100, 1000, 10000]
         """
         if not isinstance(lrc_list, list):
             lrc_list = [lrc_list]
-        nrc = self.__nrow * self.__ncol
-        v = []
-        for [k, i, j] in lrc_list:
-            node = int(((k) * nrc) + ((i) * self.__ncol) + j)
-            v.append(node)
-        return v
+        multi_index = tuple(np.array(lrc_list).T)
+        shape = self.shape
+        if shape[0] is None:
+            shape = tuple(dim or 1 for dim in shape)
+        return np.ravel_multi_index(multi_index, shape).tolist()
 
     def plot(self, **kwargs):
         """

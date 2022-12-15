@@ -16,7 +16,6 @@ from flopy.modflow import (
     ModflowLpf,
     ModflowPcg,
 )
-
 from flopy.utils.observationfile import Mf6Obs
 
 

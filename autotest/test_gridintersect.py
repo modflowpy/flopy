@@ -1190,14 +1190,12 @@ def test_all_intersections_shapely_no_strtree():
 # %% test rasters
 
 
+@requires_pkg("rasterstats")
 def test_rasters(example_data_path):
     ws = str(example_data_path / "options")
     raster_name = "dem.img"
 
-    try:
-        rio = Raster.load(os.path.join(ws, "dem", raster_name))
-    except:
-        return
+    rio = Raster.load(os.path.join(ws, "dem", raster_name))
 
     ml = Modflow.load(
         "sagehen.nam", version="mfnwt", model_ws=os.path.join(ws, "sagehen")
@@ -1252,15 +1250,14 @@ def test_rasters(example_data_path):
 
 # %% test raster sampling methods
 
+
 @pytest.mark.slow
+@requires_pkg("rasterstats")
 def test_raster_sampling_methods(example_data_path):
     ws = str(example_data_path / "options")
     raster_name = "dem.img"
 
-    try:
-        rio = Raster.load(os.path.join(ws, "dem", raster_name))
-    except:
-        return
+    rio = Raster.load(os.path.join(ws, "dem", raster_name))
 
     ml = Modflow.load(
         "sagehen.nam", version="mfnwt", model_ws=os.path.join(ws, "sagehen")

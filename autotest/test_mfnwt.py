@@ -33,7 +33,7 @@ def analytical_water_table_solution(h1, h2, z, R, K, L, x):
 
 
 def fnwt_model_files(pattern):
-    path = get_example_data_path(Path(__file__)) / "nwt_test"
+    path = get_example_data_path() / "nwt_test"
     return [
         os.path.join(path, f) for f in os.listdir(path) if f.endswith(pattern)
     ]

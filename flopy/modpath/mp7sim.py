@@ -650,7 +650,7 @@ class Modpath7Sim(Package):
         f.write(f"{self.stoptimeoption}\n")
         if self.stoptimeoption == 3:
             # item 15
-            f.write(f"{self.stoptime + 1:g}\n")
+            f.write(f"{self.stoptime:g}\n")
 
         # item 16
         if self.simulationtype == 3 or self.simulationtype == 4:

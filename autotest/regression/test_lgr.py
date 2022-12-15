@@ -4,10 +4,12 @@ from pathlib import Path
 
 import pytest
 from autotest.conftest import requires_exe, requires_pkg
+from flaky import flaky
 
 import flopy
 
 
+@flaky
 @requires_exe("mflgr")
 @requires_pkg("pymake")
 @pytest.mark.regression

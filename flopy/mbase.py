@@ -480,7 +480,7 @@ class BaseModel(ModelInterface):
             return self.get_package("BCF6").hdry
         if self.get_package("UPW") is not None:
             return self.get_package("UPW").hdry
-        return None
+        return -1e30
 
     @property
     def hnoflo(self):
@@ -488,7 +488,7 @@ class BaseModel(ModelInterface):
             bas6 = self.get_package("BAS6")
             return bas6.hnoflo
         except AttributeError:
-            return None
+            return 1e30
 
     @property
     def laycbd(self):
@@ -1701,6 +1701,9 @@ def run_model(
         if exe_name.lower().endswith(".exe"):
             # try removing .exe suffix
             exe = which(exe_name[:-4])
+    if exe is None:
+        # try abspath
+        exe = which(os.path.abspath(exe_name))
     if exe is None:
         raise Exception(
             f"The program {exe_name} does not exist or is not executable."

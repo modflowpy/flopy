@@ -46,7 +46,7 @@ def get_project_root_path(path=None):
         The path to the project root
     """
 
-    cwd = Path(path) if path is not None else Path(os.getcwd())
+    cwd = Path(path) if path is not None else Path.cwd()
     if cwd.name == "autotest":
         # we're in top-level autotest folder
         return cwd.parent
@@ -62,7 +62,7 @@ def get_project_root_path(path=None):
         # we're somewhere inside examples folder
         parts = cwd.parts[0 : cwd.parts.index("examples")]
         return Path(*parts)
-    elif cwd.parts.count("flopy") >= 2:
+    elif cwd.parts.count("flopy") >= 1:
         # we're somewhere inside the project or flopy module
         tries = [1]
         if "CI" in os.environ:

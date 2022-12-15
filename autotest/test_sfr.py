@@ -916,7 +916,7 @@ def test_isfropt_icalc(tmpdir, example_data_path, isfropt, icalc):
         )
 
 
-__example_data_path = get_example_data_path(Path(__file__))
+__example_data_path = get_example_data_path()
 
 
 @requires_exe("mf2005dbl")

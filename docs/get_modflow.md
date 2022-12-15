@@ -67,23 +67,21 @@ Other auto-select options are only available if the current user can write files
  - `:prev` - if this utility was run by FloPy more than once, the first option will be the previously used `bindir` path selection
  - `:flopy` - special option that will create and install programs for FloPy
  - `:python` - use Python's bin (or Scripts) directory
- - `:local` - use `$HOME/.local/bin`
+ - `:home` - use `$HOME/.local/bin`
  - `:system` - use `/usr/local/bin`
  - `:windowsapps` - use `%LOCALAPPDATA%\Microsoft\WindowsApps`
 
 ## Selecting a distribution
 
-By default the distribution from the [executables repository](https://github.com/MODFLOW-USGS/executables) is installed. This includes the MODFLOW 6 binary `mf6` and over 20 other related programs. The utility can also install from the main [MODFLOW 6 repo](https://github.com/MODFLOW-USGS/modflow6) or the [nightly build](https://github.com/MODFLOW-USGS/modflow6-nightly-build). To select a distribution, specify a repository name with the `--repo` command line option or the `repo` function argument. Valid names are:
-
-- `executables` (default)
-- `modflow6`
-- `modflow6-nightly-build`
-
-The `modflow6-nightly-build` distribution contains only:
+By default the distribution from the [executables repository](https://github.com/MODFLOW-USGS/executables) is installed. This includes the MODFLOW 6 binary `mf6` and over 20 other related programs. The utility can also install from the main [MODFLOW 6 repo](https://github.com/MODFLOW-USGS/modflow6) or the [nightly build](https://github.com/MODFLOW-USGS/modflow6-nightly-build) distributions, which contain only:
 
 - `mf6`
 - `mf5to6`
 - `zbud6`
 - `libmf6.dylib`
 
-The `modflow6` release archive contains the entire repository with an internal `bin` directory, whose contents are as above. These are copied to the selected `bindir` after the archive is unzipped in the download location.
+To select a distribution, specify a repository name with the `--repo` command line option or the `repo` function argument. Valid names are:
+
+- `executables` (default)
+- `modflow6`
+- `modflow6-nightly-build`
