@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on April 11, 2022 18:22:41 UTC
+# FILE created on December 15, 2022 12:49:36 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -188,7 +188,7 @@ class ModflowGwfdisv(mfpackage.MFPackage):
             "block griddata",
             "name botm",
             "type double precision",
-            "shape (nlay, ncpl)",
+            "shape (ncpl, nlay)",
             "reader readarray",
             "layered true",
         ],
@@ -196,7 +196,7 @@ class ModflowGwfdisv(mfpackage.MFPackage):
             "block griddata",
             "name idomain",
             "type integer",
-            "shape (nlay, ncpl)",
+            "shape (ncpl, nlay)",
             "reader readarray",
             "layered true",
             "optional true",
@@ -205,6 +205,7 @@ class ModflowGwfdisv(mfpackage.MFPackage):
             "block vertices",
             "name vertices",
             "type recarray iv xv yv",
+            "shape (nvert)",
             "reader urword",
             "optional false",
         ],
@@ -240,6 +241,7 @@ class ModflowGwfdisv(mfpackage.MFPackage):
             "block cell2d",
             "name cell2d",
             "type recarray icell2d xc yc ncvert icvert",
+            "shape (ncpl)",
             "reader urword",
             "optional false",
         ],
