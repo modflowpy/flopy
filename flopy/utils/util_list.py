@@ -651,7 +651,14 @@ class MfList(DataInterface, DataListInterface):
     def binary(self):
         return bool(self.__binary)
 
-    def write_transient(self, f, single_per=None, forceInternal=False):
+    def write_transient(
+        self,
+        f,
+        single_per=None,
+        forceInternal=False,
+        write_header=True,
+        cln_data=None,
+    ):
         # forceInternal overrides isExternal (set below) for cases where
         # external arrays are not supported (oh hello MNW1!)
         # write the transient sequence described by the data dict
@@ -660,6 +667,15 @@ class MfList(DataInterface, DataListInterface):
             f, "read"
         ), "MfList.write() error: f argument must be a file handle"
         kpers = list(self.data.keys())
+        pak_name_str = self.package.__class__.__name__.lower()
+        if (len(kpers) == 0) and (
+            pak_name_str == "mfusgwel"
+        ):  # must be cln wels
+            kpers += [
+                kper
+                for kper in list(cln_data.data.keys())
+                if kper not in kpers
+            ]
         kpers.sort()
         first = kpers[0]
         if single_per is None:
@@ -671,7 +687,9 @@ class MfList(DataInterface, DataListInterface):
 
         for kper in loop_over_kpers:
             # Fill missing early kpers with 0
-            if kper < first:
+            if (kper < first) or (
+                (kper not in self.data.keys()) and (pak_name_str == "mfusgwel")
+            ):  # clause for mfusg cases with only CLN wels, not GWF wels
                 itmp = 0
                 kper_vtype = int
             elif kper in kpers:
@@ -691,7 +709,16 @@ class MfList(DataInterface, DataListInterface):
                 itmp = -1
                 kper_vtype = int
 
-            f.write(f" {itmp:9d} {0:9d} # stress period {kper + 1}\n")
+            if write_header:
+                if cln_data is None:
+                    f.write(f" {itmp:9d} {0:9d} # stress period {kper + 1}\n")
+                elif cln_data.get_itmp(kper) is None:
+                    f.write(f" {itmp:9d} {0:9d} # stress period {kper + 1}\n")
+                else:
+                    itmpcln = cln_data.get_itmp(kper)
+                    f.write(
+                        f" {itmp:9d} {0:9d} {itmpcln:9d} # stress period {kper + 1}\n"
+                    )
 
             isExternal = False
             if (
@@ -738,6 +765,12 @@ class MfList(DataInterface, DataListInterface):
                 if self.__binary:
                     f.write(" (BINARY)")
                 f.write("\n")
+
+            if cln_data is not None:
+                if cln_data.get_itmp(kper) is not None:
+                    cln_data.write_transient(
+                        f, single_per=kper, write_header=False
+                    )
 
     def __tofile(self, f, data):
         # Write the recarray (data) to the file (or file handle) f

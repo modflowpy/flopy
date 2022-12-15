@@ -1,4 +1,6 @@
 # --------------------- gwt mvt options ---------------------
+# flopy subpackage mvt_filerecord mvt perioddata perioddata
+# flopy parent_name_type parent_model_or_package MFModel/MFPackage
 
 block options
 name print_input

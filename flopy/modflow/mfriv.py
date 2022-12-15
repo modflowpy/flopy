@@ -4,7 +4,7 @@ the ModflowRiv class as `flopy.modflow.ModflowRiv`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?riv.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/riv.html>`_.
 
 """
 import numpy as np
@@ -150,7 +150,7 @@ class ModflowRiv(Package):
         )
 
         self._generate_heading()
-        self.url = "riv.htm"
+        self.url = "riv.html"
 
         self.ipakcb = ipakcb
         self.mxactr = 0

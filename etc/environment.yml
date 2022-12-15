@@ -7,35 +7,42 @@ dependencies:
   - numpy>=1.15.0
   - matplotlib>=1.4.0
 
-  # testing
-  - pylint
-  - flake8
+  # lint
   - black
+  - flake8
   - isort
+  - pylint
+
+  # test
   - coverage
+  - flaky
+  - filelock
+  - jupyter
+  - jupytext
   - pytest
-  - pytest-xdist
+  - pytest-benchmark
+  - pytest-cases
   - pytest-cov
+  - pytest-dotenv
+  - pytest-xdist
+
 
   # optional
-  - appdirs
   - python-dateutil>=2.4.0
   - affine
   - scipy
   - pandas
   - netcdf4
-  - pyshp<2.2.0
+  - pyshp
   - rasterio
   - fiona
   - descartes
   - pyproj
-  - shapely
+  - shapely>=1.8
   - geos
   - geojson
   - vtk
-
-  # external dependencies
-  - requests
+  - rasterstats
 
   # MODFLOW API dependencies
   - bmipy

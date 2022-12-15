@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 07, 2022 16:59:43 UTC
+# FILE created on December 15, 2022 12:49:36 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -11,9 +11,9 @@ class ModflowGwtmvt(mfpackage.MFPackage):
 
     Parameters
     ----------
-    model : MFModel
-        Model that this package is a part of.  Package is automatically
-        added to model when it is initialized.
+    parent_model_or_package : MFModel/MFPackage
+        Parent_model_or_package that this package is a part of. Package is automatically
+        added to parent_model_or_package when it is initialized.
     loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
@@ -159,7 +159,7 @@ class ModflowGwtmvt(mfpackage.MFPackage):
 
     def __init__(
         self,
-        model,
+        parent_model_or_package,
         loading_package=False,
         print_input=None,
         print_flows=None,
@@ -168,10 +168,15 @@ class ModflowGwtmvt(mfpackage.MFPackage):
         budgetcsv_filerecord=None,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            model, "mvt", filename, pname, loading_package, parent_file
+            parent_model_or_package,
+            "mvt",
+            filename,
+            pname,
+            loading_package,
+            **kwargs,
         )
 
         # set up variables
@@ -185,3 +190,67 @@ class ModflowGwtmvt(mfpackage.MFPackage):
             "budgetcsv_filerecord", budgetcsv_filerecord
         )
         self._init_complete = True
+
+
+class GwtmvtPackages(mfpackage.MFChildPackages):
+    """
+    GwtmvtPackages is a container class for the ModflowGwtmvt class.
+
+    Methods
+    ----------
+    initialize
+        Initializes a new ModflowGwtmvt package removing any sibling child
+        packages attached to the same parent package. See ModflowGwtmvt init
+        documentation for definition of parameters.
+    append_package
+        Adds a new ModflowGwtmvt package to the container. See ModflowGwtmvt
+        init documentation for definition of parameters.
+    """
+
+    package_abbr = "gwtmvtpackages"
+
+    def initialize(
+        self,
+        print_input=None,
+        print_flows=None,
+        save_flows=None,
+        budget_filerecord=None,
+        budgetcsv_filerecord=None,
+        filename=None,
+        pname=None,
+    ):
+        new_package = ModflowGwtmvt(
+            self._cpparent,
+            print_input=print_input,
+            print_flows=print_flows,
+            save_flows=save_flows,
+            budget_filerecord=budget_filerecord,
+            budgetcsv_filerecord=budgetcsv_filerecord,
+            filename=filename,
+            pname=pname,
+            child_builder_call=True,
+        )
+        self.init_package(new_package, filename)
+
+    def append_package(
+        self,
+        print_input=None,
+        print_flows=None,
+        save_flows=None,
+        budget_filerecord=None,
+        budgetcsv_filerecord=None,
+        filename=None,
+        pname=None,
+    ):
+        new_package = ModflowGwtmvt(
+            self._cpparent,
+            print_input=print_input,
+            print_flows=print_flows,
+            save_flows=save_flows,
+            budget_filerecord=budget_filerecord,
+            budgetcsv_filerecord=budgetcsv_filerecord,
+            filename=filename,
+            pname=pname,
+            child_builder_call=True,
+        )
+        self._append_package(new_package, filename)

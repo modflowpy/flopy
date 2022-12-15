@@ -69,7 +69,7 @@ class ModflowLgr(BaseModel):
         Extension for the namefile.
     version : str, default "mflgr".
         Version of MODFLOW-LGR to use.
-    exe_name : str, default "mflgr.exe"
+    exe_name : str, default "mflgr"
         The name of the executable to use.
     iupbhsv : int, default 0
         Unit number with boundary heads.
@@ -114,7 +114,7 @@ class ModflowLgr(BaseModel):
         modelname="modflowlgrtest",
         namefile_ext="lgr",
         version="mflgr",
-        exe_name="mflgr.exe",
+        exe_name="mflgr",
         iupbhsv=0,
         iupbfsv=0,
         parent=None,
@@ -466,7 +466,7 @@ class ModflowLgr(BaseModel):
         cls,
         f,
         version="mflgr",
-        exe_name="mflgr.exe",
+        exe_name="mflgr",
         verbose=False,
         model_ws=".",
         load_only=None,
@@ -482,7 +482,7 @@ class ModflowLgr(BaseModel):
             Path to MODFLOW-LGR name file to load.
         version : str, default "mflgr".
             Version of MODFLOW-LGR to use.
-        exe_name : str, default "mflgr.exe"
+        exe_name : str, default "mflgr"
             The name of the executable to use.
         verbose : bool, default False
             Print additional information to the screen.

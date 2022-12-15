@@ -13,6 +13,8 @@
 import os
 import sys
 
+import yaml
+
 # add flopy root directory to the python path
 sys.path.insert(0, os.path.abspath(".."))
 from flopy import __author__, __version__
@@ -29,6 +31,10 @@ for line in lines:
         if "release candidate" in line:
             rc_text = "release candidate"
         break
+
+# -- get authors
+with open("../CITATION.cff") as f:
+    citation = yaml.safe_load(f.read())
 
 # -- update version number in main.rst
 rst_name = "main.rst"
@@ -62,10 +68,21 @@ with open(rst_name, "w") as f:
                 "post-processing.  Members of the team\n"
                 "currently include:\n\n"
             )
-            authors = __author__.split(sep=",")
-            for author in authors:
-                line += f" * {author.strip()}\n"
+            image_directives = ""
+            orcid_image = "_images/orcid_16x16.png"
+            parts = ["given-names", "name-particle", "family-names", "name"]
+            for author in citation["authors"]:
+                name = " ".join([author[pt] for pt in parts if pt in author])
+                line += f" * {name}"
+                if "orcid" in author:
+                    tag = "orcid_" + name.replace(" ", "_").replace(".", "")
+                    line += f" |{tag}|"
+                    image_directives += f".. |{tag}| image:: {orcid_image}\n"
+                    image_directives += f"   :target: {author['orcid']}\n"
+                line += "\n"
             line += " * and others\n\n"
+            line += image_directives
+            line += "\n"
             f.write(line)
         elif line.startswith(tag_end):
             write_line = True
@@ -90,14 +107,14 @@ if not on_rtd:
     os.system(" ".join(cmd))
 
 # -- Project information -----------------------------------------------------
-project = "flopy Documentation"
-copyright = f"2021, {__author__}"
+project = "FloPy Documentation"
+copyright = f"2022, {__author__}"
 author = __author__
 
 # The version.
 version = __version__
 release = __version__
-language = None
+language = "en"
 
 # -- General configuration ---------------------------------------------------
 

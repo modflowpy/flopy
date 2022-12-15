@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 07, 2022 16:59:43 UTC
+# FILE created on December 15, 2022 12:49:36 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -28,10 +28,11 @@ class ModflowTdis(mfpackage.MFPackage):
           simulation list file. The value has no effect on the simulation. The
           recommended format for the starting date and time is described at
           https://www.w3.org/TR/NOTE-datetime.
-    ats_filerecord : [ats6_filename]
-        * ats6_filename (string) defines an adaptive time step (ATS) input file
-          defining ATS controls. Records in the ATS file can be used to
-          override the time step behavior for selected stress periods.
+    ats_perioddata : {varname:data} or perioddata data
+        * Contains data for the ats package. Data can be stored in a dictionary
+          containing data for the ats package with variable names as keys and
+          package data as values. Data just for the ats_perioddata variable is
+          also acceptable. See ats package documentation for more information.
     nper : integer
         * nper (integer) is the number of stress periods for the simulation.
     perioddata : [perlen, nstp, tsmult]
@@ -88,6 +89,9 @@ class ModflowTdis(mfpackage.MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "construct_package ats",
+            "construct_data perioddata",
+            "parameter_name ats_perioddata",
         ],
         [
             "block options",
@@ -170,15 +174,15 @@ class ModflowTdis(mfpackage.MFPackage):
         loading_package=False,
         time_units=None,
         start_date_time=None,
-        ats_filerecord=None,
+        ats_perioddata=None,
         nper=1,
         perioddata=((1.0, 1, 1.0),),
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            simulation, "tdis", filename, pname, loading_package, parent_file
+            simulation, "tdis", filename, pname, loading_package, **kwargs
         )
 
         # set up variables
@@ -186,8 +190,9 @@ class ModflowTdis(mfpackage.MFPackage):
         self.start_date_time = self.build_mfdata(
             "start_date_time", start_date_time
         )
-        self.ats_filerecord = self.build_mfdata(
-            "ats_filerecord", ats_filerecord
+        self._ats_filerecord = self.build_mfdata("ats_filerecord", None)
+        self._ats_package = self.build_child_package(
+            "ats", ats_perioddata, "perioddata", self._ats_filerecord
         )
         self.nper = self.build_mfdata("nper", nper)
         self.perioddata = self.build_mfdata("perioddata", perioddata)

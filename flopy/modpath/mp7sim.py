@@ -4,7 +4,7 @@ the ModpathSim class as `flopy.modpath.ModpathSim`.
 
 Additional information for this MODFLOW/MODPATH package can be found at the
 `Online MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?dis.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/dis.html>`_.
 
 """
 from enum import Enum
@@ -498,6 +498,14 @@ class Modpath7Sim(Package):
         self.timepointoption = timepointoption
         self.timepointdata = timepointdata
 
+        shape = self.parent.shape
+        if len(shape) == 3:
+            shape3d = shape
+        elif len(shape) == 2:
+            shape3d = (shape[0], 1, shape[1])
+        else:
+            shape3d = (1, 1, shape[0])
+
         # zonedataoption
         try:
             self.zonedataoption = onoffOpt[zonedataoption.lower()].value
@@ -517,7 +525,7 @@ class Modpath7Sim(Package):
                 )
             self.zones = Util3d(
                 model,
-                self.parent.shape,
+                shape3d,
                 np.int32,
                 zones,
                 name="zones",
@@ -541,7 +549,7 @@ class Modpath7Sim(Package):
                 )
             self.retardation = Util3d(
                 model,
-                self.parent.shape,
+                shape3d,
                 np.float32,
                 retardation,
                 name="retardation",
@@ -642,7 +650,7 @@ class Modpath7Sim(Package):
         f.write(f"{self.stoptimeoption}\n")
         if self.stoptimeoption == 3:
             # item 15
-            f.write(f"{self.stoptime + 1:g}\n")
+            f.write(f"{self.stoptime:g}\n")
 
         # item 16
         if self.simulationtype == 3 or self.simulationtype == 4:

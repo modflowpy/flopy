@@ -965,14 +965,13 @@ class PlotUtilities:
         if "mflay" in kwargs:
             kwargs.pop("mflay")
 
+        name = transient2d.name.replace("_", "").upper()
         axes = []
         for idx, kper in enumerate(range(k0, k1)):
-            title = "{} stress period {:d}".format(
-                transient2d.name.replace("_", "").upper(), kper + 1
-            )
+            title = f"{name} stress period {kper + 1 :d}"
 
             if filename_base is not None:
-                filename = f"{filename_base}_{kper + 1:05d}.{fext}"
+                filename = f"{filename_base}_{name}_{kper + 1:05d}.{fext}"
             else:
                 filename = None
 
@@ -1742,7 +1741,7 @@ class UnstructuredPlotUtilities:
             numa = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)
             numb = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)
             denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
-            ua = np.zeros(denom.shape, dtype=denom.dtype)
+            ua = np.ones(denom.shape, dtype=denom.dtype) * np.nan
             idx = np.where(denom != 0.0)
             ua[idx] = numa[idx] / denom[idx]
             # ub = numb / denom
@@ -2790,6 +2789,8 @@ def reproject_modpath_to_crosssection(
             while tcell >= ncpl:
                 tcell -= ncpl
             line = xypts[tcell]
+            if len(line) < 2:
+                continue
             if projection == "x":
                 d0 = np.min([i[0] for i in projpts[cell]])
             else:

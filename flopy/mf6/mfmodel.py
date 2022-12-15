@@ -19,6 +19,7 @@ from .mfbase import (
     ExtFileAction,
     FlopyException,
     MFDataException,
+    MFFileMgmt,
     PackageContainer,
     PackageContainerType,
     ReadAsArraysException,
@@ -74,7 +75,7 @@ class MFModel(PackageContainer, ModelInterface):
         modelname="model",
         model_nam_file=None,
         version="mf6",
-        exe_name="mf6.exe",
+        exe_name="mf6",
         add_to_simulation=True,
         structure=None,
         model_rel_path=".",
@@ -145,7 +146,10 @@ class MFModel(PackageContainer, ModelInterface):
             raise FlopyException(excpt_str)
 
         self.name_file = package_obj(
-            self, filename=self.model_nam_file, pname=self.name
+            self,
+            filename=self.model_nam_file,
+            pname=self.name,
+            _internal_package=True,
         )
 
     def __init_subclass__(cls):
@@ -458,6 +462,8 @@ class MFModel(PackageContainer, ModelInterface):
                 xoff=self._modelgrid.xoffset,
                 yoff=self._modelgrid.yoffset,
                 angrot=self._modelgrid.angrot,
+                iac=dis.iac,
+                ja=dis.ja,
             )
         elif self.get_grid_type() == DiscretizationType.DISL:
             dis = self.get_package("disl")
@@ -685,7 +691,7 @@ class MFModel(PackageContainer, ModelInterface):
         model_nam_file="modflowtest.nam",
         mtype="gwf",
         version="mf6",
-        exe_name="mf6.exe",
+        exe_name="mf6",
         strict=True,
         model_rel_path=".",
         load_only=None,
@@ -864,7 +870,7 @@ class MFModel(PackageContainer, ModelInterface):
         --------
 
         >>> import flopy
-        >>> sim = flopy.mf6.MFSimulation.load("name", "mf6", "mf6.exe", ".")
+        >>> sim = flopy.mf6.MFSimulation.load("name", "mf6", "mf6", ".")
         >>> model = sim.get_model()
         >>> inspect_list = [(2, 3, 2), (0, 4, 2), (0, 2, 4)]
         >>> out_file = os.path.join("temp", "inspect_AdvGW_tidal.csv")
@@ -1550,7 +1556,14 @@ class MFModel(PackageContainer, ModelInterface):
         for package in self.packagelist:
             if package.package_type not in package_type_count:
                 base_filename, leaf = os.path.split(package.filename)
-                new_fileleaf = f"{name}.{package.package_type}"
+                lleaf = leaf.split(".")
+                if len(lleaf) > 1:
+                    # keep existing extension
+                    ext = lleaf[-1]
+                else:
+                    # no extension found, create a new one
+                    ext = package.package_type
+                new_fileleaf = f"{name}.{ext}"
                 if base_filename != "":
                     package.filename = os.path.join(
                         base_filename, new_fileleaf
@@ -1634,7 +1647,10 @@ class MFModel(PackageContainer, ModelInterface):
             package.package_type
         )
         if add_to_package_list and path in self._package_paths:
-            if not package_struct.multi_package_support:
+            if (
+                package_struct is not None
+                and not package_struct.multi_package_support
+            ):
                 # package of this type already exists, replace it
                 self.remove_package(package.package_type)
                 if (
@@ -1675,8 +1691,18 @@ class MFModel(PackageContainer, ModelInterface):
         self._package_paths[path] = 1
 
         if package.package_type.lower() == "nam":
+            if not package.internal_package:
+                excpt_str = (
+                    "Unable to register nam file.  Do not create your own nam "
+                    "files.  Nam files are automatically created and managed "
+                    "for you by FloPy."
+                )
+                print(excpt_str)
+                raise FlopyException(excpt_str)
+
             return path, self.structure.name_file_struct_obj
 
+        package_extension = package.package_type
         if set_package_name:
             # produce a default package name
             if (
@@ -1688,12 +1714,31 @@ class MFModel(PackageContainer, ModelInterface):
                 for package_name in name_iter:
                     if package_name not in self.package_name_dict:
                         package.package_name = package_name
+                        suffix = package_name.split("_")
+                        if (
+                            len(suffix) > 1
+                            and datautil.DatumUtil.is_int(suffix[-1])
+                            and suffix[-1] != "0"
+                        ):
+                            # update file extension to make unique
+                            package_extension = (
+                                f"{package_extension}_{suffix[-1]}"
+                            )
                         break
             else:
                 package.package_name = package.package_type
 
         if set_package_filename:
-            package._filename = f"{self.name}.{package.package_type}"
+            # filename uses model base name
+            package._filename = MFFileMgmt.string_to_file_path(
+                f"{self.name}.{package.package_type}"
+            )
+            if package._filename in self.package_filename_dict:
+                # auto generate a unique file name and register it
+                file_name = MFFileMgmt.unique_file_name(
+                    package._filename, self.package_filename_dict
+                )
+                package._filename = file_name
 
         if add_to_package_list:
             self._add_package(package, path)
@@ -1710,9 +1755,12 @@ class MFModel(PackageContainer, ModelInterface):
                 # recarray
                 file_mgr = self.simulation_data.mfpath
                 model_rel_path = file_mgr.model_relative_path[self.name]
-                package_rel_path = os.path.join(
-                    model_rel_path, package.filename
-                )
+                if model_rel_path != ".":
+                    package_rel_path = os.path.join(
+                        model_rel_path, package.filename
+                    )
+                else:
+                    package_rel_path = package.filename
                 self.name_file.packages.update_record(
                     [
                         f"{pkg_type}6",
@@ -1820,6 +1868,7 @@ class MFModel(PackageContainer, ModelInterface):
             pname=dict_package_name,
             loading_package=True,
             parent_file=parent_package,
+            _internal_package=True,
         )
         try:
             package.load(strict)
@@ -1832,6 +1881,7 @@ class MFModel(PackageContainer, ModelInterface):
                 pname=dict_package_name,
                 loading_package=True,
                 parent_file=parent_package,
+                _internal_package=True,
             )
             package.load(strict)
 

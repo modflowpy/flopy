@@ -743,6 +743,59 @@ class StructuredGrid(Grid):
     ###############
     ### Methods ###
     ###############
+    def neighbors(self, *args, **kwargs):
+        """
+        Method to get nearest neighbors for a cell
+
+        Parameters
+        ----------
+        *args
+            lay (int), row (int), column (int)
+            or
+            node (int)
+
+        **kwargs
+            k : int
+                layer number
+            i : int
+                row number
+            j : int
+                column number
+            as_node : bool
+                flag to return neighbors as node numbers
+
+        Returns
+        -------
+            list of neighboring cells
+        """
+        nn = None
+        if kwargs:
+            if "node" in kwargs:
+                nn = kwargs.pop("node")
+            else:
+                k = kwargs.pop("k", 0)
+                i = kwargs.pop("i")
+                j = kwargs.pop("j")
+
+        if len(args) > 0:
+            if len(args) == 1:
+                nn = args[0]
+            elif len(args) == 2:
+                k = 0
+                i, j = args[0:2]
+            else:
+                k, i, j = args[0:3]
+
+        if nn is None:
+            nn = self.get_node([(k, i, j)])[0]
+
+        as_nodes = kwargs.pop("as_nodes", False)
+
+        neighbors = super().neighbors(nn)
+        if not as_nodes:
+            neighbors = self.get_lrc(neighbors)
+        return neighbors
+
     def intersect(self, x, y, z=None, local=False, forgive=False):
         """
         Get the row and column of a point with coordinates x and y
@@ -773,9 +826,10 @@ class StructuredGrid(Grid):
             The column number
 
         """
-        # trigger interface change warning
-        frame_info = inspect.getframeinfo(inspect.currentframe())
-        self._warn_intersect(frame_info.filename, frame_info.lineno)
+        if isinstance(z, bool):
+            # trigger interface change warning
+            frame_info = inspect.getframeinfo(inspect.currentframe())
+            self._warn_intersect(frame_info.filename, frame_info.lineno)
 
         # transform x and y to local coordinates
         x, y = super().intersect(x, y, local, forgive)
@@ -890,45 +944,68 @@ class StructuredGrid(Grid):
 
     def get_lrc(self, nodes):
         """
-        Get layer, row, column from a list of zero based
+        Get layer, row, column from a list of zero-based
         MODFLOW node numbers.
+
+        Parameters
+        ----------
+        nodes : int, list or array_like
+            Zero-based node number
 
         Returns
         -------
-        v : list of tuples containing the layer (k), row (i),
+        list
+            list of tuples containing the layer (k), row (i),
             and column (j) for each node in the input list
-        """
-        if not isinstance(nodes, list):
-            nodes = [nodes]
-        ncpl = self.ncpl
-        v = []
-        for node in nodes:
-            k = int(np.floor(node / ncpl))
-            ij = int((node) - (ncpl * k))
-            i = int(np.floor(ij / self.__ncol))
-            j = int(ij - (i * self.__ncol))
 
-            v.append((k, i, j))
-        return v
+        Examples
+        --------
+        >>> import flopy
+        >>> sg = flopy.discretization.StructuredGrid(nlay=20, nrow=30, ncol=40)
+        >>> sg.get_lrc(100)
+        [(0, 2, 20)]
+        >>> sg.get_lrc([100, 1000, 10_000])
+        [(0, 2, 20), (0, 25, 0), (8, 10, 0)]
+        """
+        if isinstance(nodes, int):
+            nodes = [nodes]
+        shape = self.shape
+        if shape[0] is None:
+            shape = tuple(dim or 1 for dim in shape)
+        return list(zip(*np.unravel_index(nodes, shape)))
 
     def get_node(self, lrc_list):
         """
-        Get node number from a list of zero based MODFLOW
+        Get node number from a list of zero-based MODFLOW
         layer, row, column tuples.
+
+        Parameters
+        ----------
+        lrc_list : tuple of int or list of tuple of int
+            Zero-based layer, row, column tuples
 
         Returns
         -------
-        v : list of MODFLOW nodes for each layer (k), row (i),
+        list
+            list of MODFLOW nodes for each layer (k), row (i),
             and column (j) tuple in the input list
+
+        Examples
+        --------
+        >>> import flopy
+        >>> sg = flopy.discretization.StructuredGrid(nlay=20, nrow=30, ncol=40)
+        >>> sg.get_node((0, 2, 20))
+        [100]
+        >>> sg.get_node([(0, 2, 20), (0, 25, 0), (8, 10, 0)])
+        [100, 1000, 10000]
         """
         if not isinstance(lrc_list, list):
             lrc_list = [lrc_list]
-        nrc = self.__nrow * self.__ncol
-        v = []
-        for [k, i, j] in lrc_list:
-            node = int(((k) * nrc) + ((i) * self.__ncol) + j)
-            v.append(node)
-        return v
+        multi_index = tuple(np.array(lrc_list).T)
+        shape = self.shape
+        if shape[0] is None:
+            shape = tuple(dim or 1 for dim in shape)
+        return np.ravel_multi_index(multi_index, shape).tolist()
 
     def plot(self, **kwargs):
         """
@@ -948,48 +1025,6 @@ class StructuredGrid(Grid):
 
         mm = PlotMapView(modelgrid=self)
         return mm.plot_grid(**kwargs)
-
-    # Importing
-    @classmethod
-    def from_gridspec(cls, gridspec_file, lenuni=0):
-        f = open(gridspec_file, "r")
-        raw = f.readline().strip().split()
-        nrow = int(raw[0])
-        ncol = int(raw[1])
-        raw = f.readline().strip().split()
-        xul, yul, rot = float(raw[0]), float(raw[1]), float(raw[2])
-        delr = []
-        j = 0
-        while j < ncol:
-            raw = f.readline().strip().split()
-            for r in raw:
-                if "*" in r:
-                    rraw = r.split("*")
-                    for n in range(int(rraw[0])):
-                        delr.append(float(rraw[1]))
-                        j += 1
-                else:
-                    delr.append(float(r))
-                    j += 1
-        delc = []
-        i = 0
-        while i < nrow:
-            raw = f.readline().strip().split()
-            for r in raw:
-                if "*" in r:
-                    rraw = r.split("*")
-                    for n in range(int(rraw[0])):
-                        delc.append(float(rraw[1]))
-                        i += 1
-                else:
-                    delc.append(float(r))
-                    i += 1
-        f.close()
-        grd = cls(np.array(delc), np.array(delr), lenuni=lenuni)
-        xll = grd._xul_to_xll(xul)
-        yll = grd._yul_to_yll(yul)
-        cls.set_coord_info(xoff=xll, yoff=yll, angrot=rot)
-        return cls
 
     def array_at_verts_basic(self, a):
         """
@@ -1571,11 +1606,9 @@ class StructuredGrid(Grid):
 
         """
         iverts = []
-        inode = 0
         for i in range(self.nrow):
             for j in range(self.ncol):
-                iverts.append([inode] + self._build_structured_iverts(i, j))
-                inode += 1
+                iverts.append(self._build_structured_iverts(i, j))
         self._iverts = iverts
         return
 
@@ -1617,6 +1650,8 @@ class StructuredGrid(Grid):
             (self.xvertices.flatten(), self.yvertices.flatten())
         )
         return
+
+    # Importing
 
     # initialize grid from a grb file
     @classmethod
@@ -1670,3 +1705,59 @@ class StructuredGrid(Grid):
             yoff=yorigin,
             angrot=angrot,
         )
+
+    @classmethod
+    def from_gridspec(cls, file_path, lenuni=0):
+        """
+        Instantiate a StructuredGrid from grid specification file.
+
+        Parameters
+        ----------
+        file_path: Path-like
+            Path to the grid specification file
+        lenuni: int
+            Length unit code
+
+        Returns
+        -------
+            A StructuredGrid
+        """
+
+        with open(file_path, "r") as f:
+            raw = f.readline().strip().split()
+            nrow = int(raw[0])
+            ncol = int(raw[1])
+            raw = f.readline().strip().split()
+            xul, yul, rot = float(raw[0]), float(raw[1]), float(raw[2])
+            delr = []
+            j = 0
+            while j < ncol:
+                raw = f.readline().strip().split()
+                for r in raw:
+                    if "*" in r:
+                        rraw = r.split("*")
+                        for n in range(int(rraw[0])):
+                            delr.append(float(rraw[1]))
+                            j += 1
+                    else:
+                        delr.append(float(r))
+                        j += 1
+            delc = []
+            i = 0
+            while i < nrow:
+                raw = f.readline().strip().split()
+                for r in raw:
+                    if "*" in r:
+                        rraw = r.split("*")
+                        for n in range(int(rraw[0])):
+                            delc.append(float(rraw[1]))
+                            i += 1
+                    else:
+                        delc.append(float(r))
+                        i += 1
+
+        grd = cls(np.array(delc), np.array(delr), lenuni=lenuni)
+        xll = grd._xul_to_xll(xul, angrot=rot)
+        yll = grd._yul_to_yll(yul, angrot=rot)
+        grd.set_coord_info(xoff=xll, yoff=yll, angrot=rot)
+        return grd

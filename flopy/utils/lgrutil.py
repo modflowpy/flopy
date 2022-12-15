@@ -1,7 +1,97 @@
 import numpy as np
 
+from ..discretization import StructuredGrid
 from ..modflow import Modflow
 from .util_array import Util2d, Util3d
+
+
+class SimpleRegularGrid:
+    """
+    Simple object for representing regular MODFLOW grid information.
+
+    Parameters
+    ----------
+    nlay : int
+        number of layers
+    nrow : int
+        number of rows
+    ncol : int
+        number of columns
+    delr : ndarray
+        delr array
+    delc : ndarray
+        delc array
+    top : ndarray
+        top array (nrow, ncol)
+    botm : ndarray
+        botm array (nlay, nrow, ncol)
+    idomain : ndarray
+        idomain array (nlay, nrow, ncol)
+    xorigin : float
+        x location of grid lower left corner
+    yorigin : float
+        y location of grid lower left corner
+    """
+
+    def __init__(
+        self,
+        nlay,
+        nrow,
+        ncol,
+        delr,
+        delc,
+        top,
+        botm,
+        idomain,
+        xorigin,
+        yorigin,
+    ):
+        # enforce compliance
+        assert delr.shape == (ncol,)
+        assert delc.shape == (nrow,)
+        assert top.shape == (nrow, ncol)
+        assert botm.shape == (nlay, nrow, ncol)
+        assert idomain.shape == (nlay, nrow, ncol)
+
+        self.nlay = nlay
+        self.nrow = nrow
+        self.ncol = ncol
+        self.delr = delr
+        self.delc = delc
+        self.top = top
+        self.botm = botm
+        self.idomain = idomain
+        self.xorigin = xorigin
+        self.yorigin = yorigin
+        return
+
+    @property
+    def modelgrid(self):
+        mg = StructuredGrid(
+            delc=self.delc,
+            delr=self.delr,
+            top=self.top,
+            botm=self.botm,
+            idomain=self.idomain,
+            xoff=self.xorigin,
+            yoff=self.yorigin,
+        )
+        return mg
+
+    def get_gridprops_dis6(self):
+        gridprops = {
+            "xorigin": self.xorigin,
+            "yorigin": self.yorigin,
+            "nlay": self.nlay,
+            "nrow": self.nrow,
+            "ncol": self.ncol,
+            "delr": self.delr,
+            "delc": self.delc,
+            "top": self.top,
+            "botm": self.botm,
+            "idomain": self.idomain,
+        }
+        return gridprops
 
 
 class Lgr:
@@ -24,8 +114,6 @@ class Lgr:
 
         Parameters
         ----------
-        parent : flopy.modflow.Modflow
-            parent model
         nlayp : int
             parent layers
         nrowp : int
@@ -144,13 +232,13 @@ class Lgr:
         jstart = 0
         jend = self.ncpp
         for j in range(self.npcbeg, self.npcend + 1):
-            delr[jstart:jend] = self.delrp[j - 1] / self.ncpp
+            delr[jstart:jend] = self.delrp[j] / self.ncpp
             jstart = jend
             jend = jstart + self.ncpp
         istart = 0
         iend = self.ncpp
         for i in range(self.nprbeg, self.nprend + 1):
-            delc[istart:iend] = self.delcp[i - 1] / self.ncpp
+            delc[istart:iend] = self.delcp[i] / self.ncpp
             istart = iend
             iend = istart + self.ncpp
         return delr, delc
@@ -433,3 +521,63 @@ class Lgr:
                             exg.append(cd)
                         exglist.append(exg)
         return exglist
+
+    @property
+    def parent(self):
+        """
+        Return a SimpleRegularGrid object for the parent model
+
+        Returns
+        -------
+            simple_regular_grid : SimpleRegularGrid
+                simple grid object containing grid information for the parent
+
+        """
+        simple_regular_grid = SimpleRegularGrid(
+            self.nlayp,
+            self.nrowp,
+            self.ncolp,
+            self.delrp,
+            self.delcp,
+            self.topp,
+            self.botmp,
+            self.idomain,
+            self.xllp,
+            self.yllp,
+        )
+        return simple_regular_grid
+
+    @property
+    def child(self):
+        """
+        Return a SimpleRegularGrid object for the child model
+
+        Returns
+        -------
+            simple_regular_grid : SimpleRegularGrid
+                simple grid object containing grid information for the child
+
+        """
+        delrc, delcc = self.get_delr_delc()
+        idomainc = self.get_idomain()  # child idomain
+        topc = self.top
+        botmc = self.botm
+        child_dis_shp = self.get_shape()
+        nlayc = child_dis_shp[0]
+        nrowc = child_dis_shp[1]
+        ncolc = child_dis_shp[2]
+        xorigin = self.xll
+        yorigin = self.yll
+        simple_regular_grid = SimpleRegularGrid(
+            nlayc,
+            nrowc,
+            ncolc,
+            delrc,
+            delcc,
+            topc,
+            botmc,
+            idomainc,
+            xorigin,
+            yorigin,
+        )
+        return simple_regular_grid

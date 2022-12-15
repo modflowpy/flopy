@@ -4,7 +4,7 @@ the ModflowSor class as `flopy.modflow.ModflowSor`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/sor.htm>`_.
+<https://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/sor.html>`_.
 
 """
 from ..pakbase import Package
@@ -98,7 +98,7 @@ class ModflowSor(Package):
             )
 
         self._generate_heading()
-        self.url = "sor.htm"
+        self.url = "sor.html"
         self.mxiter = mxiter
         self.accl = accl
         self.hclose = hclose

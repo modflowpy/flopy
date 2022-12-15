@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 07, 2022 16:59:43 UTC
+# FILE created on December 15, 2022 12:49:36 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -261,10 +261,10 @@ class ModflowNam(mfpackage.MFPackage):
         solutiongroup=None,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            simulation, "nam", filename, pname, loading_package, parent_file
+            simulation, "nam", filename, pname, loading_package, **kwargs
         )
 
         # set up variables

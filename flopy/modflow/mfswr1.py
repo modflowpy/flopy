@@ -4,7 +4,7 @@ the ModflowSwr1 class as `flopy.modflow.ModflowSwr1`.
 
 Additional information for this MODFLOW process can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/swr.htm>`_.
+<https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/swr.html>`_.
 
 """
 from ..pakbase import Package
@@ -78,7 +78,7 @@ class ModflowSwr1(Package):
             raise Exception(err)
 
         self._generate_heading()
-        self.url = "swr1.htm"
+        self.url = "swr.html"
 
         self.parent.add_package(self)
 

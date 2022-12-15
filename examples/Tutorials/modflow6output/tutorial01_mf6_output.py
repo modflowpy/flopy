@@ -19,7 +19,8 @@
 # package object
 
 import os
-import platform
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import numpy as np
 
@@ -27,16 +28,72 @@ import numpy as np
 import flopy
 
 # ## Load a simple demonstration model
+
 exe_name = "mf6"
-if platform.system().lower() == "windows":
-    exe_name += ".exe"
+
+
+def get_project_root_path(path=None):
+    """
+    Infers the path to the project root given the path to the current working directory.
+    The current working location must be somewhere in the project, i.e. below the root.
+
+    Parameters
+    ----------
+    path : the path to the current working directory
+
+    Returns
+    -------
+        The path to the project root
+    """
+
+    cwd = Path(path) if path is not None else Path.cwd()
+    if cwd.name == "autotest":
+        # we're in top-level autotest folder
+        return cwd.parent
+    elif "autotest" in cwd.parts and cwd.parts.index(
+        "autotest"
+    ) > cwd.parts.index("flopy"):
+        # we're somewhere inside autotests
+        parts = cwd.parts[0 : cwd.parts.index("autotest")]
+        return Path(*parts)
+    elif "examples" in cwd.parts and cwd.parts.index(
+        "examples"
+    ) > cwd.parts.index("flopy"):
+        # we're somewhere inside examples folder
+        parts = cwd.parts[0 : cwd.parts.index("examples")]
+        return Path(*parts)
+    elif cwd.parts.count("flopy") >= 1:
+        # we're somewhere inside the project or flopy module
+        tries = [1]
+        if "CI" in os.environ:
+            tries.append(2)
+        for t in tries:
+            parts = cwd.parts[0 : cwd.parts.index("flopy") + (t)]
+            pth = Path(*parts)
+            if (
+                next(iter([p for p in pth.glob("setup.cfg")]), None)
+                is not None
+            ):
+                return pth
+        raise Exception(
+            f"Can't infer location of project root from {cwd}"
+            f"(run from project root, flopy module, examples, or autotest)"
+        )
+    elif cwd.parts.count("flopy") == 1 and cwd.name == "flopy":
+        # we're in project root
+        return cwd
+    else:
+        raise Exception(
+            f"Can't infer location of project root from {cwd}"
+            f"(run from project root, flopy module, examples, or autotest)"
+        )
+
+
 ws = os.path.abspath(os.path.dirname(""))
-if os.path.split(ws)[-1] == "modflow6output":
-    sim_ws = os.path.join(ws, "..", "..", "data", "mf6", "test001e_UZF_3lay")
-else:
-    sim_ws = os.path.join(
-        ws, "..", "..", "examples", "data", "mf6", "test001e_UZF_3lay"
-    )
+sim_ws = str(
+    get_project_root_path() / "examples" / "data" / "mf6" / "test001e_UZF_3lay"
+)
+
 # load the model
 sim = flopy.mf6.MFSimulation.load(
     sim_ws=sim_ws,
@@ -44,7 +101,8 @@ sim = flopy.mf6.MFSimulation.load(
     verbosity_level=0,
 )
 # change the simulation path, rewrite the files, and run the model
-sim_ws = os.path.join("..", "..", "autotest", "temp", "mf6_output")
+temp_dir = TemporaryDirectory()
+sim_ws = temp_dir.name
 sim.set_sim_path(sim_ws)
 sim.write_simulation(silent=True)
 sim.run_simulation(silent=True)
@@ -177,3 +235,9 @@ zonbud.run_model()
 df = zonbud.get_dataframes(net=True)
 df = df.reset_index()
 df
+
+try:
+    temp_dir.cleanup()
+except:
+    # prevent windows permission error
+    pass

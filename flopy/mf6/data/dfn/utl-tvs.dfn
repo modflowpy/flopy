@@ -1,4 +1,6 @@
 # --------------------- gwf tvs options ---------------------
+# flopy subpackage tvs_filerecord tvs tvs_perioddata perioddata
+# flopy parent_name_type parent_package MFPackage
 
 block options
 name disable_storage_change_integration

@@ -4,7 +4,7 @@ the ModflowBas class as `flopy.modflow.ModflowBas`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?bas6.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/bas6.html>`_.
 
 """
 
@@ -117,7 +117,7 @@ class ModflowBas(Package):
             filenames=self._prepare_filenames(filenames),
         )
 
-        self.url = "bas6.htm"
+        self.url = "bas6.html"
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         self.ibound = Util3d(

@@ -147,7 +147,6 @@ class _ModpathSeries(object):
 
         """
         ra = self._data
-        ra.sort(order=["particleid", "time"])
         if totim is not None:
             if ge:
                 idx = np.where(
@@ -181,7 +180,6 @@ class _ModpathSeries(object):
 
         """
         ra = self._data
-        ra.sort(order=["particleid", "time"])
         if totim is not None:
             if ge:
                 idx = np.where(ra["time"] >= totim)[0]
@@ -388,12 +386,12 @@ class _ModpathSeries(object):
             sdata = []
             for pid in particles:
                 ra = series[series.particleid == pid]
-                if isinstance(mg, StructuredGrid):
+                if mg is not None:
                     x, y = geometry.transform(
                         ra.x, ra.y, mg.xoffset, mg.yoffset, mg.angrot_radians
                     )
                 else:
-                    x, y = mg.transform(ra.x, ra.y)
+                    x, y = geometry.transform(ra.x, ra.y, 0, 0, 0)
                 z = ra.z
                 geoms += [
                     LineString(
@@ -469,6 +467,9 @@ class PathlineFile(_ModpathSeries):
 
         # set number of particle ids
         self.nid = np.unique(self._data["particleid"])
+
+        # sort data
+        self._data.sort(order=["particleid", "time"])
 
         # close the input file
         self.file.close()
@@ -1314,6 +1315,9 @@ class TimeseriesFile(_ModpathSeries):
 
         # set number of particle ids
         self.nid = np.unique(self._data["particleid"])
+
+        # sort data
+        self._data.sort(order=["particleid", "time"])
 
         # close the input file
         self.file.close()

@@ -5,7 +5,7 @@ import os
 import numpy as np
 from matplotlib.path import Path
 
-from ..utils.geometry import is_clockwise
+from ..utils.geometry import is_clockwise, transform
 from .grid import CachedData, Grid
 
 
@@ -127,9 +127,9 @@ class VertexGrid(Grid):
     @property
     def iverts(self):
         if self._cell2d is not None:
-            return [[t[0]] + list(t)[4:] for t in self.cell2d]
+            return [list(t)[4:] for t in self.cell2d]
         elif self._cell1d is not None:
-            return [[t[0]] + list(t)[3:] for t in self.cell1d]
+            return [list(t)[3:] for t in self.cell1d]
 
     @property
     def cell1d(self):
@@ -147,7 +147,11 @@ class VertexGrid(Grid):
 
     @property
     def verts(self):
-        return np.array([list(t)[1:] for t in self._vertices], dtype=float)
+        verts = np.array([list(t)[1:] for t in self._vertices], dtype=float).T
+        x, y = transform(
+            verts[0], verts[1], self.xoffset, self.yoffset, self.angrot_radians
+        )
+        return np.array(list(zip(x, y)))
 
     @property
     def shape(self):
@@ -283,8 +287,9 @@ class VertexGrid(Grid):
             The CELL2D number
 
         """
-        frame_info = inspect.getframeinfo(inspect.currentframe())
-        self._warn_intersect(frame_info.filename, frame_info.lineno)
+        if isinstance(z, bool):
+            frame_info = inspect.getframeinfo(inspect.currentframe())
+            self._warn_intersect(frame_info.filename, frame_info.lineno)
 
         if local:
             # transform x and y to real-world coordinates

@@ -4,7 +4,7 @@ the ModflowStr class as `flopy.modflow.ModflowPcgn`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/pcgn.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/pcgn.html>`_.
 
 """
 from ..pakbase import Package
@@ -259,7 +259,7 @@ class ModflowPcgn(Package):
             )
 
         self._generate_heading()
-        self.url = "pcgn.htm"
+        self.url = "pcgn.html"
         self.iter_mo = iter_mo
         self.iter_mi = iter_mi
         self.close_h = close_h

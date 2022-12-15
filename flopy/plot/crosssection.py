@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Polygon
 
-from ..utils import geometry
+from ..utils import geometry, import_optional_dependency
+from ..utils.geospatial_utils import GeoSpatialUtil
 from . import plotutil
 
 warnings.simplefilter("always", PendingDeprecationWarning)
@@ -135,7 +136,13 @@ class PlotCrossSection:
                     (xcenter[int(line[onkey])], yedge[-1] - eps),
                 ]
         else:
-            verts = line[onkey]
+            ln = line[onkey]
+
+            if not PlotCrossSection._is_valid(ln):
+                raise ValueError(f"Invalid line representation")
+
+            gu = GeoSpatialUtil(ln, shapetype="linestring")
+            verts = gu.points
             xp = []
             yp = []
             for [v1, v2] in verts:
@@ -145,18 +152,22 @@ class PlotCrossSection:
             xp, yp = self.mg.get_local_coords(xp, yp)
             if np.max(xp) - np.min(xp) > np.max(yp) - np.min(yp):
                 # this is x-projection and we should buffer x by small amount
-                idx0 = list(xp).index(np.max(xp))
-                idx1 = list(xp).index(np.min(xp))
+                idx0 = np.argmax(xp)
+                idx1 = np.argmin(xp)
+                idx2 = np.argmax(yp)
                 xp[idx0] += 1e-04
                 xp[idx1] -= 1e-04
+                yp[idx2] += 1e-03
                 self.direction = "x"
 
             else:
                 # this is y-projection and we should buffer y by small amount
-                idx0 = list(yp).index(np.max(yp))
-                idx1 = list(yp).index(np.min(yp))
+                idx0 = np.argmax(yp)
+                idx1 = np.argmin(yp)
+                idx2 = np.argmax(xp)
                 yp[idx0] += 1e-04
                 yp[idx1] -= 1e-04
+                xp[idx2] += 1e-03
                 self.direction = "y"
 
             pts = [(xt, yt) for xt, yt in zip(xp, yp)]
@@ -168,10 +179,14 @@ class PlotCrossSection:
         )
 
         if len(self.xypts) < 2:
-            s = "cross-section cannot be created\n."
-            s += "   less than 2 points intersect the model grid\n"
-            s += f"   {len(self.xypts)} points intersect the grid."
-            raise Exception(s)
+            if len(list(self.xypts.values())[0]) < 2:
+                s = (
+                    "cross-section cannot be created\n."
+                    " less than 2 points intersect the model grid\n"
+                    f" {len(self.xypts.values()[0])} points"
+                    " intersect the grid."
+                )
+                raise Exception(s)
 
         if self.geographic_coords:
             # transform back to geographic coordinates
@@ -242,9 +257,40 @@ class PlotCrossSection:
 
         self._polygons = {}
 
+        if model is None:
+            self._masked_values = [1e30, -1e30]
+        else:
+            self._masked_values = [model.hnoflo, model.hdry]
+
         # Set axis limits
         self.ax.set_xlim(self.extent[0], self.extent[1])
         self.ax.set_ylim(self.extent[2], self.extent[3])
+
+    @staticmethod
+    def _is_valid(line):
+        shapely_geo = import_optional_dependency("shapely.geometry")
+
+        if isinstance(
+            line,
+            (
+                list,
+                tuple,
+                np.ndarray,
+            ),
+        ):
+            a = np.array(line)
+            if (len(a.shape) < 2 or a.shape[0] < 2) or a.shape[1] != 2:
+                return False
+        elif not isinstance(
+            line,
+            (
+                geometry.LineString,
+                shapely_geo.LineString,
+            ),
+        ):
+            return False
+
+        return True
 
     @property
     def polygons(self):
@@ -339,9 +385,12 @@ class PlotCrossSection:
         if a.ndim > 1:
             a = np.ravel(a)
 
+        a = a.astype(float)
+
         if masked_values is not None:
-            for mval in masked_values:
-                a = np.ma.masked_values(a, mval)
+            self._masked_values.extend(list(masked_values))
+        for mval in self._masked_values:
+            a = np.ma.masked_values(a, mval)
 
         if isinstance(head, np.ndarray):
             projpts = self.set_zpts(np.ravel(head))
@@ -384,12 +433,15 @@ class PlotCrossSection:
         if a.ndim > 1:
             a = np.ravel(a)
 
+        a = a.astype(float)
+
         if a.size % self._ncpl != 0:
             raise AssertionError("Array size must be a multiple of ncpl")
 
         if masked_values is not None:
-            for mval in masked_values:
-                a = np.ma.masked_values(a, mval)
+            self._masked_values.extend(list(masked_values))
+        for mval in self._masked_values:
+            a = np.ma.masked_values(a, mval)
 
         d = {
             i: (np.min(np.array(v).T[0]), np.max(np.array(v).T[0]))
@@ -452,11 +504,12 @@ class PlotCrossSection:
         if not isinstance(a, np.ndarray):
             a = np.array(a)
 
-        a = np.ravel(a)
+        a = np.ravel(a).astype(float)
 
         if masked_values is not None:
-            for mval in masked_values:
-                a = np.ma.masked_values(a, mval)
+            self._masked_values.extend(list(masked_values))
+        for mval in self._masked_values:
+            a = np.ma.masked_values(a, mval)
 
         if isinstance(head, np.ndarray):
             projpts = self.set_zpts(head)
@@ -547,12 +600,14 @@ class PlotCrossSection:
 
         ismasked = None
         if masked_values is not None:
-            for mval in masked_values:
-                if ismasked is None:
-                    ismasked = np.isclose(plotarray, mval)
-                else:
-                    t = np.isclose(plotarray, mval)
-                    ismasked += t
+            self._masked_values.extend(list(masked_values))
+
+        for mval in self._masked_values:
+            if ismasked is None:
+                ismasked = np.isclose(plotarray, mval)
+            else:
+                t = np.isclose(plotarray, mval)
+                ismasked += t
 
         filled = kwargs.pop("filled", False)
         plot_triplot = kwargs.pop("plot_triplot", False)
@@ -1038,7 +1093,11 @@ class PlotCrossSection:
 
         # make sure pathlines is a list
         if not isinstance(pl, list):
-            pl = [pl]
+            pids = np.unique(pl["particleid"])
+            if len(pids) > 1:
+                pl = [pl[pl["particleid"] == pid] for pid in pids]
+            else:
+                pl = [pl]
 
         marker = kwargs.pop("marker", None)
         markersize = kwargs.pop("markersize", None)
@@ -1501,7 +1560,9 @@ class PlotCrossSection:
                 data.append(plotarray[cell])
 
         if len(rectcol) > 0:
-            patches = PatchCollection(rectcol, match_original, **kwargs)
+            patches = PatchCollection(
+                rectcol, match_original=match_original, **kwargs
+            )
             if not fill_between:
                 patches.set_array(np.array(data))
                 patches.set_clim(vmin, vmax)

@@ -1474,12 +1474,16 @@ class ZoneBudget:
         # The number of values to read before placing
         # them into the zone array
         datalen = nrow * ncol
+        totaldatalen = nlay * nrow * ncol
 
         # List of valid values for LOCAT
         locats = ["CONSTANT", "INTERNAL", "EXTERNAL"]
 
         # ITERATE OVER THE ROWS
         for line in lines:
+            if totlen == totaldatalen:
+                break
+
             rowitems = line.strip().split()
 
             # Skip blank lines

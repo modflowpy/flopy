@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 07, 2022 16:59:43 UTC
+# FILE created on December 15, 2022 12:49:36 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -12,7 +12,7 @@ class ModflowGwfbuy(mfpackage.MFPackage):
     Parameters
     ----------
     model : MFModel
-        Model that this package is a part of.  Package is automatically
+        Model that this package is a part of. Package is automatically
         added to model when it is initialized.
     loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
@@ -38,9 +38,8 @@ class ModflowGwfbuy(mfpackage.MFPackage):
           aquifer conditions and should generally not be used.
     nrhospecies : integer
         * nrhospecies (integer) number of species used in density equation of
-          state. This value must be one or greater. The value must be one if
-          concentrations are specified using the CONCENTRATION keyword in the
-          PERIOD block below.
+          state. This value must be one or greater if the BUY package is
+          activated.
     packagedata : [irhospec, drhodc, crhoref, modelname, auxspeciesname]
         * irhospec (integer) integer value that defines the species number
           associated with the specified PACKAGEDATA data on the line.
@@ -235,10 +234,10 @@ class ModflowGwfbuy(mfpackage.MFPackage):
         packagedata=None,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            model, "buy", filename, pname, loading_package, parent_file
+            model, "buy", filename, pname, loading_package, **kwargs
         )
 
         # set up variables

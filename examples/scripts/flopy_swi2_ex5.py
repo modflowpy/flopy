@@ -1,6 +1,7 @@
 import math
 import os
 import sys
+from tempfile import TemporaryDirectory
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,11 +22,7 @@ updates = {
 plt.rcParams.update(updates)
 
 
-def run(silent=False):
-    workspace = "swiex5"
-    if not os.path.isdir(workspace):
-        os.mkdir(workspace)
-
+def run(workspace, quiet):
     cleanFiles = False
     skipRuns = False
     fext = "png"
@@ -236,7 +233,7 @@ def run(silent=False):
         )
         # --write the modflow files
         ml.write_input()
-        m = ml.run_model(silent=silent)
+        m = ml.run_model(silent=quiet)
 
     # --read model zeta
     get_stp = [364, 729, 1094, 1459, 364, 729, 1094, 1459]
@@ -414,7 +411,7 @@ def run(silent=False):
         m.write_input()
 
         # Run SEAWAT
-        m = m.run_model(silent=silent)
+        m = m.run_model(silent=quiet)
 
     # plot the results
     # read seawat model data
@@ -625,8 +622,26 @@ def run(silent=False):
     xsf.savefig(outfig, dpi=300)
     print("created...", outfig)
 
-    return 0
-
 
 if __name__ == "__main__":
-    success = run(silent=False)
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--keep", help="output directory")
+    parser.add_argument(
+        "--quiet", action="store_false", help="don't show model output"
+    )
+    args = vars(parser.parse_args())
+
+    workspace = args.get("keep", None)
+    quiet = args.get("quiet", False)
+
+    if workspace is not None:
+        run(workspace, quiet)
+    else:
+        try:
+            with TemporaryDirectory() as workspace:
+                run(workspace, quiet)
+        except (PermissionError, NotADirectoryError):
+            # can occur on windows: https://docs.python.org/3/library/tempfile.html#tempfile.TemporaryDirectory
+            pass

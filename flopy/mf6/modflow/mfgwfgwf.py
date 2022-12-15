@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 07, 2022 16:59:43 UTC
+# FILE created on December 15, 2022 12:49:36 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -77,27 +77,16 @@ class ModflowGwfgwf(mfpackage.MFPackage):
     xt3d : boolean
         * xt3d (boolean) keyword that activates the XT3D formulation between
           the cells connected with this GWF-GWF Exchange.
-    gnc_filerecord : [gnc6_filename]
-        * gnc6_filename (string) is the file name for ghost node correction
-          input file. Information for the ghost nodes are provided in the file
-          provided with these keywords. The format for specifying the ghost
-          nodes is the same as described for the GNC Package of the GWF Model.
-          This includes specifying OPTIONS, DIMENSIONS, and GNCDATA blocks. The
-          order of the ghost nodes must follow the same order as the order of
-          the cells in the EXCHANGEDATA block. For the GNCDATA, noden and all
-          of the nodej values are assumed to be located in model 1, and nodem
-          is assumed to be in model 2.
-    mvr_filerecord : [mvr6_filename]
-        * mvr6_filename (string) is the file name of the water mover input file
-          to apply to this exchange. Information for the water mover are
-          provided in the file provided with these keywords. The format for
-          specifying the water mover information is the same as described for
-          the Water Mover (MVR) Package of the GWF Model, with two exceptions.
-          First, in the PACKAGES block, the model name must be included as a
-          separate string before each package. Second, the appropriate model
-          name must be included before package name 1 and package name 2 in the
-          BEGIN PERIOD block. This allows providers and receivers to be located
-          in both models listed as part of this exchange.
+    gncdata : {varname:data} or gncdata data
+        * Contains data for the gnc package. Data can be stored in a dictionary
+          containing data for the gnc package with variable names as keys and
+          package data as values. Data just for the gncdata variable is also
+          acceptable. See gnc package documentation for more information.
+    perioddata : {varname:data} or perioddata data
+        * Contains data for the mvr package. Data can be stored in a dictionary
+          containing data for the mvr package with variable names as keys and
+          package data as values. Data just for the perioddata variable is also
+          acceptable. See mvr package documentation for more information.
     observations : {varname:data} or continuous data
         * Contains data for the obs package. Data can be stored in a dictionary
           containing data for the obs package with variable names as keys and
@@ -274,6 +263,9 @@ class ModflowGwfgwf(mfpackage.MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "construct_package gnc",
+            "construct_data gncdata",
+            "parameter_name gncdata",
         ],
         [
             "block options",
@@ -313,6 +305,9 @@ class ModflowGwfgwf(mfpackage.MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "construct_package mvr",
+            "construct_data perioddata",
+            "parameter_name perioddata",
         ],
         [
             "block options",
@@ -481,18 +476,18 @@ class ModflowGwfgwf(mfpackage.MFPackage):
         cvoptions=None,
         newton=None,
         xt3d=None,
-        gnc_filerecord=None,
-        mvr_filerecord=None,
+        gncdata=None,
+        perioddata=None,
         observations=None,
         dev_interfacemodel_on=None,
         nexg=None,
         exchangedata=None,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            simulation, "gwfgwf", filename, pname, loading_package, parent_file
+            simulation, "gwfgwf", filename, pname, loading_package, **kwargs
         )
 
         # set up variables
@@ -515,11 +510,13 @@ class ModflowGwfgwf(mfpackage.MFPackage):
         self.cvoptions = self.build_mfdata("cvoptions", cvoptions)
         self.newton = self.build_mfdata("newton", newton)
         self.xt3d = self.build_mfdata("xt3d", xt3d)
-        self.gnc_filerecord = self.build_mfdata(
-            "gnc_filerecord", gnc_filerecord
+        self._gnc_filerecord = self.build_mfdata("gnc_filerecord", None)
+        self._gnc_package = self.build_child_package(
+            "gnc", gncdata, "gncdata", self._gnc_filerecord
         )
-        self.mvr_filerecord = self.build_mfdata(
-            "mvr_filerecord", mvr_filerecord
+        self._mvr_filerecord = self.build_mfdata("mvr_filerecord", None)
+        self._mvr_package = self.build_child_package(
+            "mvr", perioddata, "perioddata", self._mvr_filerecord
         )
         self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
         self._obs_package = self.build_child_package(

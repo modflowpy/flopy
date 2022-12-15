@@ -87,6 +87,8 @@ class Triangle:
 
         geom = GeoSpatialUtil(polygon, shapetype="Polygon")
         polygon = geom.points
+        if polygon[0][0] == polygon[0][-1]:
+            polygon[0] = polygon[0][:-1]
         self._polygons.append(polygon[0])
         if len(polygon) > 1:
             for hole in polygon[1:]:

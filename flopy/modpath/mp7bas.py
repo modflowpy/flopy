@@ -55,24 +55,14 @@ class Modpath7Bas(Package):
 
         self._generate_heading()
 
-        if model.flowmodel.version == "mf6":
-            self.laytyp = Util2d(
-                self.parent,
-                (shape[0],),
-                np.int32,
-                model.laytyp,
-                name="bas - laytype",
-                locat=self.unit_number[0],
-            )
-        else:
-            self.laytyp = Util2d(
-                self.parent,
-                (shape[0],),
-                np.int32,
-                model.laytyp,
-                name="bas - laytype",
-                locat=self.unit_number[0],
-            )
+        self.laytyp = Util2d(
+            self.parent,
+            (shape[0],),
+            np.int32,
+            model.laytyp,
+            name="bas - laytype",
+            locat=self.unit_number[0],
+        )
         if model.flowmodel.version != "mf6":
             self.ibound = Util3d(
                 model,

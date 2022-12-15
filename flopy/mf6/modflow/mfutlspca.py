@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 07, 2022 16:59:43 UTC
+# FILE created on December 15, 2022 12:49:36 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -12,7 +12,7 @@ class ModflowUtlspca(mfpackage.MFPackage):
     Parameters
     ----------
     model : MFModel
-        Model that this package is a part of.  Package is automatically
+        Model that this package is a part of. Package is automatically
         added to model when it is initialized.
     loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
@@ -149,10 +149,10 @@ class ModflowUtlspca(mfpackage.MFPackage):
         concentration=0.0,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            model, "spca", filename, pname, loading_package, parent_file
+            model, "spca", filename, pname, loading_package, **kwargs
         )
 
         # set up variables
@@ -164,63 +164,3 @@ class ModflowUtlspca(mfpackage.MFPackage):
         )
         self.concentration = self.build_mfdata("concentration", concentration)
         self._init_complete = True
-
-
-class UtlspcaPackages(mfpackage.MFChildPackages):
-    """
-    UtlspcaPackages is a container class for the ModflowUtlspca class.
-
-    Methods
-    ----------
-    initialize
-        Initializes a new ModflowUtlspca package removing any sibling child
-        packages attached to the same parent package. See ModflowUtlspca init
-        documentation for definition of parameters.
-    append_package
-        Adds a new ModflowUtlspca package to the container. See ModflowUtlspca
-        init documentation for definition of parameters.
-    """
-
-    package_abbr = "utlspcapackages"
-
-    def initialize(
-        self,
-        readasarrays=True,
-        print_input=None,
-        timearrayseries=None,
-        concentration=0.0,
-        filename=None,
-        pname=None,
-    ):
-        new_package = ModflowUtlspca(
-            self._model,
-            readasarrays=readasarrays,
-            print_input=print_input,
-            timearrayseries=timearrayseries,
-            concentration=concentration,
-            filename=filename,
-            pname=pname,
-            parent_file=self._cpparent,
-        )
-        self._init_package(new_package, filename)
-
-    def append_package(
-        self,
-        readasarrays=True,
-        print_input=None,
-        timearrayseries=None,
-        concentration=0.0,
-        filename=None,
-        pname=None,
-    ):
-        new_package = ModflowUtlspca(
-            self._model,
-            readasarrays=readasarrays,
-            print_input=print_input,
-            timearrayseries=timearrayseries,
-            concentration=concentration,
-            filename=filename,
-            pname=pname,
-            parent_file=self._cpparent,
-        )
-        self._append_package(new_package, filename)

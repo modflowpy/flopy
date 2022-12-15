@@ -1,14 +1,16 @@
-name: Read the Docs
+name: FloPy documentation
 
 on:
   push:
     branches:
       - master
       - develop
-      - 'release*'
-      - 'ci-pytest'
+      - release*
+      - ci-diagnose*
   pull_request:
-    branches: [master, develop]
+    branches:
+      - master
+      - develop
 
 jobs:
 
@@ -23,7 +25,7 @@ jobs:
 
     steps:
       - name: Checkout flopy repo
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v3
 
       - name: Output repo information
         run: |
@@ -33,36 +35,26 @@ jobs:
           echo $GITHUB_EVENT_NAME
 
       - name: Setup Python
-        uses: actions/setup-python@v2.2.2
+        uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: 3.8
+          cache: 'pip'
+          cache-dependency-path: setup.cfg
 
       - name: Upgrade pip
         run: |
-          python -m pip install --upgrade pip
+          pip install --upgrade pip
 
-      - name: Install Python packages
-        run: |
-          pip install -r etc/requirements.full.pip.txt
-
-      - name: Add jupyter and jupytext to scripts run
+      - name: Install prerequisites
         run: |
           pip install jupyter jupytext
 
-      - name: Install pymake, xmipy, and flopy
+      - name: Install flopy and dependencies
         run: |
-          pip install https://github.com/modflowpy/pymake/zipball/master
-          pip install xmipy
-          pip install .
+          pip install .[doc]
 
-      - name: Prepare for the autotests
-        working-directory: ./autotest
-        run: |
-          pytest -v ci_prepare.py
-
-      - name: Add executables directory to path
-        run: |
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Install MODFLOW executables
+        uses: modflowpy/install-modflow-action@v1
 
       - name: Run jupytext on tutorials
         working-directory: ./.docs

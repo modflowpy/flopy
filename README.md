@@ -1,19 +1,23 @@
 
 <img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
-### Version 3.3.5
-[![flopy continuous integration](https://github.com/modflowpy/flopy/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/modflowpy/flopy/actions/workflows/ci.yml)
-[![Read the Docs](https://github.com/modflowpy/flopy/actions/workflows/rtd.yml/badge.svg?branch=master)](https://github.com/modflowpy/flopy/actions/workflows/rtd.yml)
+### Version 3.3.6
+[![flopy continuous integration](https://github.com/modflowpy/flopy/actions/workflows/commit.yml/badge.svg?branch=develop)](https://github.com/modflowpy/flopy/actions/workflows/commit.yml)
+[![Read the Docs](https://github.com/modflowpy/flopy/actions/workflows/rtd.yml/badge.svg?branch=develop)](https://github.com/modflowpy/flopy/actions/workflows/rtd.yml)
 
 [![codecov](https://codecov.io/gh/modflowpy/flopy/branch/develop/graph/badge.svg)](https://codecov.io/gh/modflowpy/flopy)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/3f44f457aa474a8f83ad60c1842f7be2)](https://www.codacy.com/gh/modflowpy/flopy/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=modflowpy/flopy&amp;utm_campaign=Badge_Grade)
 [![Documentation Status](https://readthedocs.org/projects/flopy/badge/?version=latest)](https://flopy.readthedocs.io/en/latest/?badge=latest)
 
-[![Anaconda-Server Badge](https://anaconda.org/conda-forge/flopy/badges/installer/conda.svg)](https://conda.anaconda.org/conda-forge)
-[![Anaconda-Server Badge](https://anaconda.org/conda-forge/flopy/badges/version.svg)](https://anaconda.org/conda-forge/flopy)
-[![PyPI Version](https://img.shields.io/pypi/v/flopy.png)](https://pypi.python.org/pypi/flopy)
+[![Anaconda Version](https://anaconda.org/conda-forge/flopy/badges/version.svg)](https://anaconda.org/conda-forge/flopy)
+[![Anaconda Updated](https://anaconda.org/conda-forge/flopy/badges/latest_release_date.svg)](https://anaconda.org/conda-forge/flopy)
+[![Anaconda Platforms](https://anaconda.org/conda-forge/flopy/badges/platforms.svg)](https://anaconda.org/conda-forge/flopy)
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/modflowpy/flopy.git/master)
+[![PyPI Version](https://img.shields.io/pypi/v/flopy.png)](https://pypi.python.org/pypi/flopy)
+[![PyPI Status](https://img.shields.io/pypi/status/flopy.png)](https://pypi.python.org/pypi/flopy)
+[![PyPI Versions](https://img.shields.io/pypi/pyversions/flopy.png)](https://pypi.python.org/pypi/flopy)
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/modflowpy/flopy.git/develop)
 
 Introduction
 -----------------------------------------------
@@ -38,6 +42,12 @@ or
 
 
 The release candidate version can also be installed from the git repository using the instructions provided [below](#relcand).
+
+After FloPy is installed, MODFLOW and related programs can be installed using the command:
+
+    get-modflow :flopy
+
+See documentation [get_modflow.md](https://github.com/modflowpy/flopy/blob/develop/docs/get_modflow.md) for more information.
 
 
 Documentation
@@ -113,13 +123,7 @@ Questions
 ------------------------------------------------
 FloPy usage has been growing rapidly, and as the number of users has increased, so has the number of questions about how to use FloPy.  We ask our users to carefully consider the nature of their problem and seek help in the appropriate manner.
 
-Do not open issues for general support questions as we want to keep GitHub issues for bug reports and feature requests. You've got much better chances of getting your question answered on [Stack Overflow](https://stackoverflow.com/questions/tagged/flopy) where the questions should be tagged with tag `flopy` or the [MODFLOW google group](https://groups.google.com/forum/#!forum/modflow).
-
-Stack Overflow is a much better place to ask questions since:
-
-- there are thousands of people willing to help on Stack Overflow and the MODFLOW google group
-- questions and answers stay available for public viewing so your question / answer might help someone else
-- Stack Overflow's voting system assures that the best answers are prominently visible.
+Do not open issues for general support questions.  We want to keep GitHub issues for bug reports and feature requests. General support questions are better answered in the [Discussions](https://github.com/modflowpy/flopy/discussions) on the FloPy GitHub repository. [Stack Overflow](https://stackoverflow.com/questions/tagged/flopy) and the [MODFLOW google group](https://groups.google.com/forum/#!forum/modflow) are other options but currently neither of these are as active as Discussions on the FloPy GitHub repository. If using Stack Overflow, questions should be tagged with tag `flopy`.
 
 To save your and our time, **we will systematically close all issues that are requests for general support and redirect people to Stack Overflow or the MODFLOW google group**.
 
@@ -127,7 +131,7 @@ To save your and our time, **we will systematically close all issues that are re
 Contributing
 ------------------------------------------------
 
-Bug reports, code contributions, or improvements to the documentation are welcome from the community. Prior to contributing, please read up on our guidelines for [contributing](CONTRIBUTING.md) and then check out one of our issues in the [hotlist: community-help](https://github.com/modflowpy/flopy/labels/hotlist%3A%20community%20help).
+Bug reports, code contributions, or improvements to the documentation are welcome from the community. See the [developer docs](DEVELOPER.md) to begin. Please also read up on our guidelines for [contributing](CONTRIBUTING.md) and check out our issues in the [hotlist: community-help](https://github.com/modflowpy/flopy/labels/hotlist%3A%20community%20help).
 
 
 <a name="relcand"></a>Installing the latest FloPy release candidate
@@ -143,32 +147,39 @@ How to Cite
 
 ##### ***Citation for FloPy:***
 
-[Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Starn, J. J. and Fienen, M. N., 2016, Scripting MODFLOW Model Development Using Python and FloPy: Groundwater, v. 54, p. 733–739, doi:10.1111/gwat.12413.](http://dx.doi.org/10.1111/gwat.12413)
+[Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Starn, J. J. and Fienen, M. N., 2016, Scripting MODFLOW Model Development Using Python and FloPy: Groundwater, v. 54, p. 733–739, doi:10.1111/gwat.12413.](https://doi.org/10.1111/gwat.12413)
 
 ##### ***Software/Code citation for FloPy:***
 
-[Bakker, Mark, Post, Vincent, Hughes, J. D., Langevin, C. D., White, J. T., Leaf, A. T., Paulinski, S. R., Bellino, J. C., Morway, E. D., Toews, M. W., Larsen, J. D., Fienen, M. N., Starn, J. J., and Brakenhoff, Davíd, 2022, FloPy v3.3.5: U.S. Geological Survey Software Release, 07 March 2022, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, Mark, Post, Vincent, Hughes, J. D., Langevin, C. D., White, J. T., Leaf, A. T., Paulinski, S. R., Bellino, J. C., Morway, E. D., Toews, M. W., Larsen, J. D., Fienen, M. N., Starn, J. J., and Brakenhoff, Davíd, 2022, FloPy v3.3.6: U.S. Geological Survey Software Release, 15 December 2022, https://doi.org/10.5066/F7BK19FH](https://doi.org/10.5066/F7BK19FH)
+
+
+Additional FloPy Related Publications
+-----------------------------------------------
+
+[Leaf A.T, and Fienen M. N., 2022, Flopy&mdash;The Python Interface for MODFLOW: Groundwater, v. 60, no. 6, p. 710-712. doi:10.1111/gwat.13259.](https://doi.org/10.1111/gwat.13259)
+
+[Leaf, A.T. and M.N. Fienen, 2022, Modflow-setup&mdash;Robust automation of groundwater model construction: Frontiers in Earth Science, v. 10, 903965, doi:10.3389/feart.2022.903965.](https://doi.org/10.3389/feart.2022.903965)
+
+[Leaf, A.T., Fienen, M.N. and Reeves, H.W., 2021, SFRmaker and Linesink-Maker&mdash;Rapid Construction of Streamflow Routing Networks from Hydrography Data: Groundwater, v. 59, no. 5, p. 761-771. doi:10.1111/gwat.13095.](https://doi.org/10.1111/gwat.13095)
 
 
 MODFLOW Resources
 -----------------------------------------------
 
-+ [MODFLOW and Related Programs](http://water.usgs.gov/ogw/modflow/)
-+ [Online guide for MODFLOW-2000](http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/index.html)
-+ [Online guide for MODFLOW-2005](http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/)
-+ [Online guide for MODFLOW-NWT](http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/)
++ [MODFLOW and Related Programs](https://water.usgs.gov/ogw/modflow/)
++ [Online guide for MODFLOW-2000](https://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/)
++ [Online guide for MODFLOW-2005](https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/)
++ [Online guide for MODFLOW-NWT](https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/)
 
 
 Disclaimer
 ----------
 
-This software has been approved for release by the U.S. Geological Survey
-(USGS). Although the software has been subjected to rigorous review, the USGS
-reserves the right to update the software as needed pursuant to further analysis
-and review. No warranty, expressed or implied, is made by the USGS or the U.S.
-Government as to the functionality of the software and related material nor
-shall the fact of release constitute any such warranty. Furthermore, the
-software is released on condition that neither the USGS nor the U.S. Government
-shall be held liable for any damages resulting from its authorized or
-unauthorized use.
+This software is provided "as is" and "as-available", and makes no 
+representations or warranties of any kind concerning the software, whether 
+express, implied, statutory, or other. This includes, without limitation, 
+warranties of title, merchantability, fitness for a particular purpose, 
+non-infringement, absence of latent or other defects, accuracy, or the 
+presence or absence of errors, whether or not known or discoverable.
 

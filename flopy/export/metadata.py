@@ -22,8 +22,8 @@ class acdd:
     ----------
 
     https://www.sciencebase.gov/catalog/
-    http://cfconventions.org/cf-conventions/v1.6.0/cf-conventions.html#description-of-file-contents
-    http://wiki.esipfed.org/index.php/Attribute_Convention_for_Data_Discovery
+    https://cfconventions.org/cf-conventions/v1.6.0/cf-conventions.html#description-of-file-contents
+    https://wiki.esipfed.org/Attribute_Convention_for_Data_Discovery
 
     """
 
@@ -56,7 +56,7 @@ class acdd:
             self.__dict__[k] = self.sb.get(k, None)
 
         # highly recommended global attributes
-        # http://wiki.esipfed.org/index.php/Attribute_Convention_for_Data_Discovery
+        # https://wiki.esipfed.org/Attribute_Convention_for_Data_Discovery
         self.keywords = [t["name"] for t in self.sb["tags"]]
 
         # recommended global attributes

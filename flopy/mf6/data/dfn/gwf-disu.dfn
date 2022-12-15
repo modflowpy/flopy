@@ -48,6 +48,7 @@ optional true
 default_value 0.0
 longname vertical length dimension for top and bottom checking
 description checks are performed to ensure that the top of a cell is not higher than the bottom of an overlying cell.  This option can be used to specify the tolerance that is used for checking.  If top of a cell is above the bottom of an overlying cell by a value less than this tolerance, then the program will not terminate with an error.  The default value is zero.  This option should generally not be used.
+mf6internal voffsettol
 
 # --------------------- gwf disu dimensions ---------------------
 
@@ -173,6 +174,7 @@ jagged_array iac
 block vertices
 name vertices
 type recarray iv xv yv
+shape (nvert)
 reader urword
 optional false
 longname vertices data
@@ -215,6 +217,7 @@ description is the y-coordinate for the vertex.
 block cell2d
 name cell2d
 type recarray icell2d xc yc ncvert icvert
+shape (nodes)
 reader urword
 optional false
 longname cell2d data

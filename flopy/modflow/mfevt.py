@@ -4,7 +4,7 @@ the ModflowEvt class as `flopy.modflow.ModflowEvt`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?evt.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/evt.html>`_.
 
 """
 import numpy as np
@@ -124,7 +124,7 @@ class ModflowEvt(Package):
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         self._generate_heading()
-        self.url = "evt.htm"
+        self.url = "evt.html"
         self.nevtop = nevtop
         self.ipakcb = ipakcb
         self.external = external
@@ -182,22 +182,36 @@ class ModflowEvt(Package):
             f_evt = open(self.fn_path, "w")
         f_evt.write(f"{self.heading}\n")
         f_evt.write(f"{self.nevtop:10d}{self.ipakcb:10d}\n")
-        if self.nevtop == 2 and not self.parent.structured:
-            mxndevt = np.max(
-                [
-                    u2d.array.size
-                    for kper, u2d in self.ievt.transient_2ds.items()
-                ]
+
+        if self.nevtop == 2:
+            ievt = {}
+            for kper, u2d in self.ievt.transient_2ds.items():
+                ievt[kper] = u2d.array + 1
+            ievt = Transient2d(
+                self.parent,
+                self.ievt.shape,
+                self.ievt.dtype,
+                ievt,
+                self.ievt.name,
             )
-            f_evt.write(f"{mxndevt:10d}\n")
+            if not self.parent.structured:
+                mxndevt = np.max(
+                    [
+                        u2d.array.size
+                        for kper, u2d in self.ievt.transient_2ds.items()
+                    ]
+                )
+                f_evt.write(f"{mxndevt:10d}\n")
 
         for n in range(nper):
             insurf, surf = self.surf.get_kper_entry(n)
             inevtr, evtr = self.evtr.get_kper_entry(n)
             inexdp, exdp = self.exdp.get_kper_entry(n)
-            inievt, ievt = self.ievt.get_kper_entry(n)
-            if self.nevtop == 2 and not self.parent.structured:
-                inievt = self.ievt[n].array.size
+            inievt = 0
+            if self.nevtop == 2:
+                inievt, file_entry_ievt = ievt.get_kper_entry(n)
+                if inievt >= 0 and not self.parent.structured:
+                    inievt = self.ievt[n].array.size
             comment = f"Evapotranspiration dataset 5 for stress period {n + 1}"
             f_evt.write(
                 f"{insurf:10d}{inevtr:10d}{inexdp:10d}{inievt:10d} # {comment}\n"
@@ -209,7 +223,7 @@ class ModflowEvt(Package):
             if inexdp >= 0:
                 f_evt.write(exdp)
             if self.nevtop == 2 and inievt >= 0:
-                f_evt.write(ievt)
+                f_evt.write(file_entry_ievt)
         f_evt.close()
 
     @classmethod
@@ -291,6 +305,8 @@ class ModflowEvt(Package):
         else:
             nrow, ncol, nlay, _ = model.get_nrow_ncol_nlay_nper()
 
+        u2d_shape = (nrow, ncol)
+
         # Read data for every stress period
         surf = {}
         evtr = {}
@@ -306,16 +322,13 @@ class ModflowEvt(Package):
             insurf = int(t[0])
             inevtr = int(t[1])
             inexdp = int(t[2])
+
             if nevtop == 2:
                 inievt = int(t[3])
+                if (not model.structured) and (inievt >= 0):
+                    u2d_shape = (1, inievt)
             elif not model.structured:
-                # usg uses only layer 1 nodes for options 1 and 3. ncol is nodelay for mfusg models.
-                inievt = ncol[0]
-
-            if model.structured:
-                u2d_shape = (nrow, ncol)
-            else:
-                u2d_shape = (1, inievt)
+                u2d_shape = (1, ncol[0])
 
             if insurf >= 0:
                 if model.verbose:
@@ -382,7 +395,9 @@ class ModflowEvt(Package):
                     t = Util2d.load(
                         f, model, u2d_shape, np.int32, "ievt", ext_unit_dict
                     )
-                    current_ievt = t
+                    current_ievt = Util2d(
+                        model, u2d_shape, np.int32, t.array - 1, "ievt"
+                    )
                 ievt[iper] = current_ievt
 
         if openfile:

@@ -120,7 +120,7 @@ class ModflowMnw1(Package):
             filenames=filenames[0],
         )
 
-        self.url = "mnw1.htm"
+        self.url = "mnw.html"
         self.nper = self.parent.nrow_ncol_nlay_nper[-1]
         self._generate_heading()
         self.mxmnw = (

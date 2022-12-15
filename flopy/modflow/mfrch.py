@@ -4,7 +4,7 @@ the ModflowRch class as `flopy.modflow.ModflowRch`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?rch.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/rch.html>`_.
 
 """
 import numpy as np
@@ -128,7 +128,7 @@ class ModflowRch(Package):
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         self._generate_heading()
-        self.url = "rch.htm"
+        self.url = "rch.html"
 
         self.nrchop = nrchop
         self.ipakcb = ipakcb
@@ -443,6 +443,9 @@ class ModflowRch(Package):
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         else:
             nrow, ncol, nlay, _ = model.get_nrow_ncol_nlay_nper()
+
+        u2d_shape = (nrow, ncol)
+
         # read data for every stress period
         rech = {}
         irch = None
@@ -457,14 +460,10 @@ class ModflowRch(Package):
 
             if nrchop == 2:
                 inirch = int(t[1])
+                if (not model.structured) and (inirch >= 0):
+                    u2d_shape = (1, inirch)
             elif not model.structured:
-                # usg uses only layer 1 nodes for options 1 and 3. ncol is nodelay for mfusg models.
-                inirch = ncol[0]
-
-            if model.structured:
-                u2d_shape = (nrow, ncol)
-            else:
-                u2d_shape = (1, inirch)
+                u2d_shape = (1, ncol[0])
 
             if inrech >= 0:
                 if npar == 0:
@@ -502,6 +501,7 @@ class ModflowRch(Package):
 
                 current_rech = t
             rech[iper] = current_rech
+
             if nrchop == 2:
                 if inirch >= 0:
                     if model.verbose:

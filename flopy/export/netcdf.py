@@ -627,7 +627,7 @@ class NetCdf:
         ), "NetCdf._initialize_attributes() error: nc attribute already set"
 
         self.nc_epsg_str = "epsg:4326"
-        self.nc_crs_longname = "http://www.opengis.net/def/crs/EPSG/0/4326"
+        self.nc_crs_longname = "https://www.opengis.net/def/crs/EPSG/0/4326"
         self.nc_semi_major = float(6378137.0)
         self.nc_inverse_flat = float(298.257223563)
 

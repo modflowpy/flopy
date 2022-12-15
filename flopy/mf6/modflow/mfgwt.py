@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 07, 2022 16:59:43 UTC
+# FILE created on December 15, 2022 12:49:36 UTC
 from .. import mfmodel
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -78,7 +78,7 @@ class ModflowGwt(mfmodel.MFModel):
         modelname="model",
         model_nam_file=None,
         version="mf6",
-        exe_name="mf6.exe",
+        exe_name="mf6",
         model_rel_path=".",
         list=None,
         print_input=None,
@@ -112,7 +112,7 @@ class ModflowGwt(mfmodel.MFModel):
         modelname="NewModel",
         model_nam_file="modflowtest.nam",
         version="mf6",
-        exe_name="mf6.exe",
+        exe_name="mf6",
         strict=True,
         model_rel_path=".",
         load_only=None,

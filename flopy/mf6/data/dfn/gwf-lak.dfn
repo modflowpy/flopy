@@ -448,7 +448,7 @@ description character string that defines the lake-GWF connection type for the l
 
 block connectiondata
 name bedleak
-type double precision
+type string
 shape
 tagged false
 in_record true

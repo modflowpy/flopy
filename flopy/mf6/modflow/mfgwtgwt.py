@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 07, 2022 16:59:43 UTC
+# FILE created on December 15, 2022 12:49:36 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -69,23 +69,25 @@ class ModflowGwtgwt(mfpackage.MFPackage):
           will be written to the budget file for each model provided that the
           Output Control for the models are set up with the "BUDGET SAVE FILE"
           option.
-    advscheme : string
-        * advscheme (string) scheme used to solve the advection term. Can be
+    adv_scheme : string
+        * adv_scheme (string) scheme used to solve the advection term. Can be
           upstream, central, or TVD. If not specified, upstream weighting is
           the default weighting scheme.
-    xt3d_off : boolean
-        * xt3d_off (boolean) deactivate the xt3d method and use the faster and
-          less accurate approximation for this exchange.
-    xt3d_rhs : boolean
-        * xt3d_rhs (boolean) add xt3d terms to right-hand side, when possible,
-          for this exchange.
+    dsp_xt3d_off : boolean
+        * dsp_xt3d_off (boolean) deactivate the xt3d method for the dispersive
+          flux and use the faster and less accurate approximation for this
+          exchange.
+    dsp_xt3d_rhs : boolean
+        * dsp_xt3d_rhs (boolean) add xt3d dispersion terms to right-hand side,
+          when possible, for this exchange.
     filein : boolean
         * filein (boolean) keyword to specify that an input filename is
           expected next.
-    mvt_filerecord : [mvt6_filename]
-        * mvt6_filename (string) is the file name of the transport mover input
-          file to apply to this exchange. Information for the transport mover
-          are provided in the file provided with these keywords.
+    perioddata : {varname:data} or perioddata data
+        * Contains data for the mvt package. Data can be stored in a dictionary
+          containing data for the mvt package with variable names as keys and
+          package data as values. Data just for the perioddata variable is also
+          acceptable. See mvt package documentation for more information.
     observations : {varname:data} or continuous data
         * Contains data for the obs package. Data can be stored in a dictionary
           containing data for the obs package with variable names as keys and
@@ -223,7 +225,7 @@ class ModflowGwtgwt(mfpackage.MFPackage):
         ],
         [
             "block options",
-            "name advscheme",
+            "name adv_scheme",
             "type string",
             "valid upstream central tvd",
             "reader urword",
@@ -231,7 +233,7 @@ class ModflowGwtgwt(mfpackage.MFPackage):
         ],
         [
             "block options",
-            "name xt3d_off",
+            "name dsp_xt3d_off",
             "type keyword",
             "shape",
             "reader urword",
@@ -239,7 +241,7 @@ class ModflowGwtgwt(mfpackage.MFPackage):
         ],
         [
             "block options",
-            "name xt3d_rhs",
+            "name dsp_xt3d_rhs",
             "type keyword",
             "shape",
             "reader urword",
@@ -263,6 +265,9 @@ class ModflowGwtgwt(mfpackage.MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "construct_package mvt",
+            "construct_data perioddata",
+            "parameter_name perioddata",
         ],
         [
             "block options",
@@ -429,21 +434,21 @@ class ModflowGwtgwt(mfpackage.MFPackage):
         print_input=None,
         print_flows=None,
         save_flows=None,
-        advscheme=None,
-        xt3d_off=None,
-        xt3d_rhs=None,
+        adv_scheme=None,
+        dsp_xt3d_off=None,
+        dsp_xt3d_rhs=None,
         filein=None,
-        mvt_filerecord=None,
+        perioddata=None,
         observations=None,
         dev_interfacemodel_on=None,
         nexg=None,
         exchangedata=None,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            simulation, "gwtgwt", filename, pname, loading_package, parent_file
+            simulation, "gwtgwt", filename, pname, loading_package, **kwargs
         )
 
         # set up variables
@@ -462,12 +467,13 @@ class ModflowGwtgwt(mfpackage.MFPackage):
         self.print_input = self.build_mfdata("print_input", print_input)
         self.print_flows = self.build_mfdata("print_flows", print_flows)
         self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self.advscheme = self.build_mfdata("advscheme", advscheme)
-        self.xt3d_off = self.build_mfdata("xt3d_off", xt3d_off)
-        self.xt3d_rhs = self.build_mfdata("xt3d_rhs", xt3d_rhs)
+        self.adv_scheme = self.build_mfdata("adv_scheme", adv_scheme)
+        self.dsp_xt3d_off = self.build_mfdata("dsp_xt3d_off", dsp_xt3d_off)
+        self.dsp_xt3d_rhs = self.build_mfdata("dsp_xt3d_rhs", dsp_xt3d_rhs)
         self.filein = self.build_mfdata("filein", filein)
-        self.mvt_filerecord = self.build_mfdata(
-            "mvt_filerecord", mvt_filerecord
+        self._mvt_filerecord = self.build_mfdata("mvt_filerecord", None)
+        self._mvt_package = self.build_child_package(
+            "mvt", perioddata, "perioddata", self._mvt_filerecord
         )
         self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
         self._obs_package = self.build_child_package(

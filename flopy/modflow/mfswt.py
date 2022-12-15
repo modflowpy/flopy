@@ -4,7 +4,7 @@ the ModflowSub class as `flopy.modflow.ModflowSwt`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/swt.htm>`_.
+<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/swt.html>`_.
 
 """
 import numpy as np
@@ -418,7 +418,7 @@ class ModflowSwt(Package):
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
 
         self._generate_heading()
-        self.url = "swt.htm"
+        self.url = "swt.html"
 
         self.ipakcb = ipakcb
         self.iswtoc = iswtoc

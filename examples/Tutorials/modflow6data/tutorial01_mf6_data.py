@@ -39,11 +39,17 @@
 # functionality in FloPy.
 
 # package import
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
 import flopy
 
+temp_dir = TemporaryDirectory()
+workspace = temp_dir.name
+name = "tutorial01_mf6_data"
+
 # set up simulation and basic packages
-name = "tutorial02_mf6"
-sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=".")
+sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=workspace)
 flopy.mf6.ModflowTdis(
     sim, nper=10, perioddata=[[365.0, 1, 1.0] for _ in range(10)]
 )
@@ -165,7 +171,7 @@ for mname in model_names:
 # For this simple case here with only one `GWF` model, we can very easily get
 # the FloPy representation of the `GWF` model as
 
-gwf = sim.get_model("tutorial02_mf6")
+gwf = sim.get_model(name)
 
 # Now that we have the `GWF` object, we can print it, and see what's it
 # contains.
@@ -192,3 +198,9 @@ print(dis)
 # The Python type for this dis package is simply
 
 print(type(dis))
+
+try:
+    temp_dir.cleanup()
+except PermissionError:
+    # can occur on windows: https://docs.python.org/3/library/tempfile.html#tempfile.TemporaryDirectory
+    pass

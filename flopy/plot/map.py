@@ -69,6 +69,11 @@ class PlotMapView:
         else:
             self._extent = None
 
+        if model is None:
+            self._masked_values = [1e30, -1e30]
+        else:
+            self._masked_values = [model.hnoflo, model.hdry]
+
     @property
     def extent(self):
         if self._extent is None:
@@ -99,13 +104,15 @@ class PlotMapView:
         if not isinstance(a, np.ndarray):
             a = np.array(a)
 
+        a = a.astype(float)
         # Use the model grid to pass back an array of the correct shape
         plotarray = self.mg.get_plottable_layer_array(a, self.layer)
 
         # if masked_values are provided mask the plotting array
         if masked_values is not None:
-            for mval in masked_values:
-                plotarray = np.ma.masked_values(plotarray, mval)
+            self._masked_values.extend(list(masked_values))
+        for mval in self._masked_values:
+            plotarray = np.ma.masked_values(plotarray, mval)
 
         # add NaN values to mask
         plotarray = np.ma.masked_where(np.isnan(plotarray), plotarray)
@@ -133,6 +140,9 @@ class PlotMapView:
         # set max and min
         vmin = kwargs.pop("vmin", None)
         vmax = kwargs.pop("vmax", None)
+
+        if "cmap" not in kwargs:
+            kwargs["cmap"] = "viridis"
 
         # set matplotlib kwargs
         collection.set_clim(vmin=vmin, vmax=vmax)
@@ -165,52 +175,27 @@ class PlotMapView:
         """
         import matplotlib.tri as tri
 
+        # coerce array to ndarray of floats
         a = np.copy(a)
         if not isinstance(a, np.ndarray):
             a = np.array(a)
+        a = a.astype(float)
 
         # Use the model grid to pass back an array of the correct shape
         plotarray = self.mg.get_plottable_layer_array(a, self.layer)
 
-        # work around for tri-contour ignore vmin & vmax
-        # necessary block for tri-contour NaN issue
-        if "levels" not in kwargs:
-            vmin = kwargs.pop("vmin", np.nanmin(plotarray))
-            vmax = kwargs.pop("vmax", np.nanmax(plotarray))
-            levels = np.linspace(vmin, vmax, 7)
-            kwargs["levels"] = levels
-
-        # workaround for tri-contour nan issue
-        # use -2**31 to allow for 32 bit int arrays
-        plotarray[np.isnan(plotarray)] = -(2**31)
-        if masked_values is None:
-            masked_values = [-(2**31)]
-        else:
-            masked_values = list(masked_values)
-            if -(2**31) not in masked_values:
-                masked_values.append(-(2**31))
-
-        ismasked = None
-        if masked_values is not None:
-            for mval in masked_values:
-                if ismasked is None:
-                    ismasked = np.isclose(plotarray, mval)
-                else:
-                    t = np.isclose(plotarray, mval)
-                    ismasked += t
+        # Get vertices for the selected layer
+        xcentergrid = self.mg.get_xcellcenters_for_layer(self.layer)
+        ycentergrid = self.mg.get_ycellcenters_for_layer(self.layer)
 
         ax = kwargs.pop("ax", self.ax)
+        filled = kwargs.pop("filled", False)
+        plot_triplot = kwargs.pop("plot_triplot", False)
+        tri_mask = kwargs.pop("tri_mask", False)
 
         if "colors" in kwargs.keys():
             if "cmap" in kwargs.keys():
                 kwargs.pop("cmap")
-
-        filled = kwargs.pop("filled", False)
-        plot_triplot = kwargs.pop("plot_triplot", False)
-
-        # Get vertices for the selected layer
-        xcentergrid = self.mg.get_xcellcenters_for_layer(self.layer)
-        ycentergrid = self.mg.get_ycellcenters_for_layer(self.layer)
 
         if "extent" in kwargs:
             extent = kwargs.pop("extent")
@@ -225,25 +210,77 @@ class PlotMapView:
             xcentergrid = xcentergrid[idx]
             ycentergrid = ycentergrid[idx]
 
-        plotarray = plotarray.flatten()
-        xcentergrid = xcentergrid.flatten()
-        ycentergrid = ycentergrid.flatten()
-        triang = tri.Triangulation(xcentergrid, ycentergrid)
-
-        if ismasked is not None:
-            ismasked = ismasked.flatten()
-            mask = np.any(
-                np.where(ismasked[triang.triangles], True, False), axis=1
+        # use standard contours for structured grid, otherwise tricontours
+        if self.mg.grid_type == "structured":
+            contour_set = (
+                ax.contourf(xcentergrid, ycentergrid, plotarray, **kwargs)
+                if filled
+                else ax.contour(xcentergrid, ycentergrid, plotarray, **kwargs)
             )
+        else:
+            # work around for tri-contour ignore vmin & vmax
+            # necessary block for tri-contour NaN issue
+            if "levels" not in kwargs:
+                vmin = kwargs.pop("vmin", np.nanmin(plotarray))
+                vmax = kwargs.pop("vmax", np.nanmax(plotarray))
+                levels = np.linspace(vmin, vmax, 7)
+                kwargs["levels"] = levels
+
+            # workaround for tri-contour nan issue
+            # use -2**31 to allow for 32 bit int arrays
+            plotarray[np.isnan(plotarray)] = -(2**31)
+            if masked_values is None:
+                masked_values = [-(2**31)]
+            else:
+                masked_values = list(masked_values)
+                if -(2**31) not in masked_values:
+                    masked_values.append(-(2**31))
+
+            ismasked = None
+            if masked_values is not None:
+                self._masked_values.extend(list(masked_values))
+
+            for mval in self._masked_values:
+                if ismasked is None:
+                    ismasked = np.isclose(plotarray, mval)
+                else:
+                    t = np.isclose(plotarray, mval)
+                    ismasked += t
+
+            plotarray = plotarray.flatten()
+            xcentergrid = xcentergrid.flatten()
+            ycentergrid = ycentergrid.flatten()
+            triang = tri.Triangulation(xcentergrid, ycentergrid)
+            analyze = tri.TriAnalyzer(triang)
+            mask = analyze.get_flat_tri_mask(rescale=False)
+
+            # mask out holes, optional???
+            if tri_mask:
+                triangles = triang.triangles
+                for i in range(2):
+                    for ix, nodes in enumerate(triangles):
+                        neighbors = self.mg.neighbors(nodes[i], as_nodes=True)
+                        isin = np.isin(nodes[i + 1 :], neighbors)
+                        if not np.alltrue(isin):
+                            mask[ix] = True
+
+            if ismasked is not None:
+                ismasked = ismasked.flatten()
+                mask2 = np.any(
+                    np.where(ismasked[triang.triangles], True, False), axis=1
+                )
+                mask[mask2] = True
+
             triang.set_mask(mask)
 
-        if filled:
-            contour_set = ax.tricontourf(triang, plotarray, **kwargs)
-        else:
-            contour_set = ax.tricontour(triang, plotarray, **kwargs)
+            contour_set = (
+                ax.tricontourf(triang, plotarray.flatten(), **kwargs)
+                if filled
+                else ax.tricontour(triang, plotarray.flatten(), **kwargs)
+            )
 
-        if plot_triplot:
-            ax.triplot(triang, color="black", marker="o", lw=0.75)
+            if plot_triplot:
+                ax.triplot(triang, color="black", marker="o", lw=0.75)
 
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
@@ -546,64 +583,6 @@ class PlotMapView:
         patch_collection = plotutil.plot_shapefile(obj, ax, **kwargs)
         return patch_collection
 
-    def plot_cvfd(self, verts, iverts, **kwargs):
-        """
-        Plot a cvfd grid.  The vertices must be in the same
-        coordinates as the rotated and offset grid.
-
-        Parameters
-        ----------
-        verts : ndarray
-            2d array of x and y points.
-        iverts : list of lists
-            should be of len(ncells) with a list of vertex number for each cell
-
-        kwargs : dictionary
-            Keyword arguments passed to plotutil.plot_cvfd()
-
-        """
-        warnings.warn(
-            "plot_cvfd will be deprecated and will be removed in version "
-            "3.3.5. Use plot_grid or plot_array",
-            PendingDeprecationWarning,
-        )
-        a = kwargs.pop("a", None)
-        if a is None:
-            return self.plot_grid(**kwargs)
-        else:
-            return self.plot_array(a, **kwargs)
-
-    def contour_array_cvfd(self, vertc, a, masked_values=None, **kwargs):
-        """
-        Contour a cvfd array.  If the array is three-dimensional,
-        then the method will contour the layer tied to this class (self.layer).
-        The vertices must be in the same coordinates as the rotated and
-        offset grid.
-
-        Parameters
-        ----------
-        vertc : np.ndarray
-            Array with of size (nc, 2) with centroid location of cvfd
-        a : numpy.ndarray
-            Array to plot.
-        masked_values : iterable of floats, ints
-            Values to mask.
-        **kwargs : dictionary
-            keyword arguments passed to matplotlib.pyplot.pcolormesh
-
-        Returns
-        -------
-        contour_set : matplotlib.pyplot.contour
-
-        """
-        warnings.warn(
-            "contour_cvfd will be deprecated and removed in version 3.3.5. "
-            " Use contour_array",
-            PendingDeprecationWarning,
-        )
-
-        return self.contour_array(a, masked_values=masked_values, **kwargs)
-
     def plot_vector(
         self,
         vx,
@@ -735,7 +714,11 @@ class PlotMapView:
 
         # make sure pathlines is a list
         if not isinstance(pl, list):
-            pl = [pl]
+            pids = np.unique(pl["particleid"])
+            if len(pids) > 1:
+                pl = [pl[pl["particleid"] == pid] for pid in pids]
+            else:
+                pl = [pl]
 
         if "layer" in kwargs:
             kon = kwargs.pop("layer")
@@ -805,6 +788,9 @@ class PlotMapView:
                     color=markercolor,
                     ms=markersize,
                 )
+
+        ax.set_xlim(self.extent[0], self.extent[1])
+        ax.set_ylim(self.extent[2], self.extent[3])
         return lc
 
     def plot_timeseries(self, ts, travel_time=None, **kwargs):

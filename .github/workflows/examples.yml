@@ -1,0 +1,89 @@
+name: FloPy example script & notebook tests
+
+on:
+  schedule:
+    - cron: '0 8 * * *' # run at 8 AM UTC (12 am PST)
+
+jobs:
+  examples:
+    name: Example scripts & notebooks
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        python-version: [ 3.7, 3.8, 3.9, "3.10" ]
+        exclude:
+          # avoid shutil.copytree infinite recursion bug
+          # https://github.com/python/cpython/pull/17098
+          - python-version: '3.8.0'
+    defaults:
+      run:
+        shell: bash
+    timeout-minutes: 90
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        if: runner.os != 'Windows'
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: setup.cfg
+
+      - name: Install Python dependencies
+        if: runner.os != 'Windows'
+        run: |
+          pip install --upgrade pip
+          pip install .
+          pip install ".[test, optional]"
+
+      - name: Setup Micromamba
+        if: runner.os == 'Windows'
+        uses: mamba-org/provision-with-micromamba@main
+        with:
+          environment-file: etc/environment.yml
+          extra-specs: |
+            python=${{ matrix.python-version }}
+          channels: conda-forge
+          cache-downloads: true
+          cache-env: true
+
+      - name: Install extra Python dependencies
+        if: runner.os == 'Windows'
+        shell: bash -l {0}
+        run: |
+          pip install --upgrade pip
+          pip install https://github.com/modflowpy/pymake/zipball/master
+          pip install xmipy
+          pip install .
+
+      - name: Install Modflow executables
+        uses: modflowpy/install-modflow-action@v1
+
+      - name: Run example tests
+        if: runner.os != 'Windows'
+        working-directory: ./autotest
+        run: |
+          pytest -v -m="example" -n=auto --durations=0 --keep-failed=.failed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run example tests
+        if: runner.os == 'Windows'
+        shell: bash -l {0}
+        working-directory: ./autotest
+        run: |
+          pytest -v -m="example" -n=auto --durations=0 --keep-failed=.failed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload failed test outputs
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: failed-example-${{ matrix.os }}-${{ matrix.python-version }}
+          path: |
+            ./autotest/.failed/**

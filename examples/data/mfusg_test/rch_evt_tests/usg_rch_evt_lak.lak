@@ -1,0 +1,16 @@
+ 1 50
+ 0.5
+ 1.0
+ 1 1 0 # stress period 1
+INTERNAL  1  (FREE)  -1  # LKARR1
+ 0 0 0 0 1 0 0 0 0
+INTERNAL  1  (FREE)  -1  # LKARR2
+ 0 0 0 0 1 0 0 0 0
+INTERNAL  1  (FREE)  -1  # LKARR3
+ 0 0 0 0 0 0 0 0 0
+ CONSTANT  0.01           # BDLKNC1
+ CONSTANT  0.01           # BDLKNC2
+ CONSTANT  0.01           # BDLKNC3
+0   # Data set 7
+0.005 0.0 0.0 0.0        # PRCPLK EVAPLK RNF WTHDRW
+ -1 -1 0 # stress period 2

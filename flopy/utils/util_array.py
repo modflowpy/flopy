@@ -795,6 +795,17 @@ class Util3d(DataInterface):
         ):
             self.__value = [self.__value] * self.shape[0]
 
+        # if this is a flat array for an unstructured mfusg model,
+        # convert to a (possibly jagged) list of layer arrays
+        if (
+            self.shape[1] is None
+            and isinstance(self.shape[2], (np.ndarray, list))
+            and len(self.__value) == np.sum(self.shape[2])
+        ):
+            self.__value = np.split(
+                self.__value, np.cumsum(self.shape[2])[:-1]
+            )
+
         # if this is a list or 1-D array with constant values per layer
         if isinstance(self.__value, list) or (
             isinstance(self.__value, np.ndarray) and (self.__value.ndim == 1)
@@ -1146,7 +1157,7 @@ class Transient3d(DataInterface):
                 s += self.transient_3ds[kper][k].get_file_entry()
             return 1, s
         elif kper < min(self.transient_3ds.keys()):
-            t = self.get_zero_3d(kper).get_file_entry()
+            t = self.get_zero_3d(kper)
             s = ""
             for k in range(self.shape[0]):
                 s += t[k].get_file_entry()

@@ -9,6 +9,7 @@ import copy
 import os
 import queue as Queue
 import shutil
+import sys
 import threading
 import warnings
 from datetime import datetime
@@ -20,6 +21,13 @@ import numpy as np
 from . import discretization, utils
 from .discretization.grid import Grid
 from .version import __version__
+
+# Prepend flopy appdir bin directory to PATH to work with "get-modflow :flopy"
+if sys.platform.startswith("win"):
+    flopy_bin = os.path.expandvars(r"%LOCALAPPDATA%\flopy\bin")
+else:
+    flopy_bin = os.path.join(os.path.expanduser("~"), ".local/share/flopy/bin")
+os.environ["PATH"] = flopy_bin + os.path.pathsep + os.environ.get("PATH", "")
 
 ## Global variables
 # Multiplier for individual array elements in integer and real arrays read by
@@ -294,7 +302,7 @@ class BaseModel(ModelInterface):
         Name of the model, which is also used for model file names.
     namefile_ext : str, default "nam"
         Name file extension, without "."
-    exe_name : str, default "mf2k.exe"
+    exe_name : str, default "mf2005"
         Name of the modflow executable.
     model_ws : str, optional
         Path to the model workspace.  Model files will be created in this
@@ -318,7 +326,7 @@ class BaseModel(ModelInterface):
         self,
         modelname="modflowtest",
         namefile_ext="nam",
-        exe_name="mf2k.exe",
+        exe_name="mf2005",
         model_ws=None,
         structured=True,
         verbose=False,
@@ -472,7 +480,7 @@ class BaseModel(ModelInterface):
             return self.get_package("BCF6").hdry
         if self.get_package("UPW") is not None:
             return self.get_package("UPW").hdry
-        return None
+        return -1e30
 
     @property
     def hnoflo(self):
@@ -480,7 +488,7 @@ class BaseModel(ModelInterface):
             bas6 = self.get_package("BAS6")
             return bas6.hnoflo
         except AttributeError:
-            return None
+            return 1e30
 
     @property
     def laycbd(self):
@@ -670,7 +678,11 @@ class BaseModel(ModelInterface):
 
         # return self.get_package(item)
         # to avoid infinite recursion
-        if item == "_packagelist" or item == "packagelist":
+        if (
+            item == "_packagelist"
+            or item == "packagelist"
+            or item == "mfnam_packages"
+        ):
             raise AttributeError(item)
         pckg = self.get_package(item)
         if pckg is not None or item in self.mfnam_packages:
@@ -1686,13 +1698,12 @@ def run_model(
     # Check to make sure that program and namefile exist
     exe = which(exe_name)
     if exe is None:
-        import platform
-
-        if platform.system() in "Windows":
-            if not exe_name.lower().endswith(".exe"):
-                exe = which(exe_name + ".exe")
-        elif exe_name.lower().endswith(".exe"):
+        if exe_name.lower().endswith(".exe"):
+            # try removing .exe suffix
             exe = which(exe_name[:-4])
+    if exe is None:
+        # try abspath
+        exe = which(os.path.abspath(exe_name))
     if exe is None:
         raise Exception(
             f"The program {exe_name} does not exist or is not executable."

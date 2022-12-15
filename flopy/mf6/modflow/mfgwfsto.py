@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on March 07, 2022 16:59:43 UTC
+# FILE created on December 15, 2022 12:49:36 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -12,7 +12,7 @@ class ModflowGwfsto(mfpackage.MFPackage):
     Parameters
     ----------
     model : MFModel
-        Model that this package is a part of.  Package is automatically
+        Model that this package is a part of. Package is automatically
         added to model when it is initialized.
     loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
@@ -25,15 +25,18 @@ class ModflowGwfsto(mfpackage.MFPackage):
         * storagecoefficient (boolean) keyword to indicate that the SS array is
           read as storage coefficient rather than specific storage.
     ss_confined_only : boolean
-        * ss_confined_only (boolean) keyword to indicate that specific storage
-          is only calculated when a cell is under confined conditions (head
-          greater than or equal to the top of the cell). This option is
+        * ss_confined_only (boolean) keyword to indicate that compressible
+          storage is only calculated for a convertible cell (ICONVERT>0) when
+          the cell is under confined conditions (head greater than or equal to
+          the top of the cell). This option has no effect on cells that are
+          marked as being always confined (ICONVERT=0). This option is
           identical to the approach used to calculate storage changes under
           confined conditions in MODFLOW-2005.
-    tvs_filerecord : [tvs_filename]
-        * tvs_filename (string) defines a time-varying storage (TVS) input
-          file. Records in the TVS file can be used to change specific storage
-          and specific yield properties at specified times or stress periods.
+    perioddata : {varname:data} or tvs_perioddata data
+        * Contains data for the tvs package. Data can be stored in a dictionary
+          containing data for the tvs package with variable names as keys and
+          package data as values. Data just for the perioddata variable is also
+          acceptable. See tvs package documentation for more information.
     iconvert : [integer]
         * iconvert (integer) is a flag for each cell that specifies whether or
           not a cell is convertible for the storage calculation. 0 indicates
@@ -114,6 +117,9 @@ class ModflowGwfsto(mfpackage.MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "construct_package tvs",
+            "construct_data tvs_perioddata",
+            "parameter_name perioddata",
         ],
         [
             "block options",
@@ -217,7 +223,7 @@ class ModflowGwfsto(mfpackage.MFPackage):
         save_flows=None,
         storagecoefficient=None,
         ss_confined_only=None,
-        tvs_filerecord=None,
+        perioddata=None,
         iconvert=0,
         ss=1.0e-5,
         sy=0.15,
@@ -225,10 +231,10 @@ class ModflowGwfsto(mfpackage.MFPackage):
         transient=None,
         filename=None,
         pname=None,
-        parent_file=None,
+        **kwargs,
     ):
         super().__init__(
-            model, "sto", filename, pname, loading_package, parent_file
+            model, "sto", filename, pname, loading_package, **kwargs
         )
 
         # set up variables
@@ -239,8 +245,9 @@ class ModflowGwfsto(mfpackage.MFPackage):
         self.ss_confined_only = self.build_mfdata(
             "ss_confined_only", ss_confined_only
         )
-        self.tvs_filerecord = self.build_mfdata(
-            "tvs_filerecord", tvs_filerecord
+        self._tvs_filerecord = self.build_mfdata("tvs_filerecord", None)
+        self._tvs_package = self.build_child_package(
+            "tvs", perioddata, "tvs_perioddata", self._tvs_filerecord
         )
         self.iconvert = self.build_mfdata("iconvert", iconvert)
         self.ss = self.build_mfdata("ss", ss)

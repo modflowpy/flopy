@@ -1,4 +1,6 @@
 # --------------------- gwf tvk options ---------------------
+# flopy subpackage tvk_filerecord tvk tvk_perioddata perioddata
+# flopy parent_name_type parent_package MFPackage
 
 block options
 name print_input
