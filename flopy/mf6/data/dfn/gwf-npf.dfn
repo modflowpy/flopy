@@ -7,6 +7,16 @@ reader urword
 optional true
 longname keyword to save NPF flows
 description keyword to indicate that budget flow terms will be written to the file specified with ``BUDGET SAVE FILE'' in Output Control.
+mf6internal ipakcb
+
+block options
+name print_flows
+type keyword
+reader urword
+optional true
+longname keyword to print NPF flows to listing file
+description keyword to indicate that calculated flows between cells will be printed to the listing file for every stress period time step in which ``BUDGET PRINT'' is specified in Output Control. If there is no Output Control option and ``PRINT\_FLOWS'' is specified, then flow rates are printed for the last time step of each stress period.  This option can produce extremely large list files because all cell-by-cell flows are printed.  It should only be used with the NPF Package for models that have a small number of cells.
+mf6internal iprflow
 
 block options
 name alternative_cell_averaging
@@ -16,6 +26,7 @@ reader urword
 optional true
 longname conductance weighting option
 description is a text keyword to indicate that an alternative method will be used for calculating the conductance for horizontal cell connections.  The text value for ALTERNATIVE\_CELL\_AVERAGING can be ``LOGARITHMIC'', ``AMT-LMK'', or ``AMT-HMK''.  ``AMT-LMK'' signifies that the conductance will be calculated using arithmetic-mean thickness and logarithmic-mean hydraulic conductivity.  ``AMT-HMK'' signifies that the conductance will be calculated using arithmetic-mean thickness and harmonic-mean hydraulic conductivity. If the user does not specify a value for ALTERNATIVE\_CELL\_AVERAGING, then the harmonic-mean method will be used.  This option cannot be used if the XT3D option is invoked.
+mf6internal cellavg
 
 block options
 name thickstrt
@@ -24,6 +35,7 @@ reader urword
 optional true
 longname keyword to activate THICKSTRT option
 description indicates that cells having a negative ICELLTYPE are confined, and their cell thickness for conductance calculations will be computed as STRT-BOT rather than TOP-BOT.
+mf6internal ithickstrt
 
 block options
 name cvoptions
@@ -40,6 +52,7 @@ type keyword
 reader urword
 longname keyword to activate VARIABLECV option
 description keyword to indicate that the vertical conductance will be calculated using the saturated thickness and properties of the overlying cell and the thickness and properties of the underlying cell.  If the DEWATERED keyword is also specified, then the vertical conductance is calculated using only the saturated thickness and properties of the overlying cell if the head in the underlying cell is below its top.  If these keywords are not specified, then the default condition is to calculate the vertical conductance at the start of the simulation using the initial head and the cell properties.  The vertical conductance remains constant for the entire simulation.
+mf6internal ivarcv
 
 block options
 name dewatered
@@ -49,6 +62,7 @@ reader urword
 optional true
 longname keyword to activate DEWATERED option
 description If the DEWATERED keyword is specified, then the vertical conductance is calculated using only the saturated thickness and properties of the overlying cell if the head in the underlying cell is below its top.
+mf6internal idewatcv
 
 block options
 name perched
@@ -57,6 +71,7 @@ reader urword
 optional true
 longname keyword to activate PERCHED option
 description keyword to indicate that when a cell is overlying a dewatered convertible cell, the head difference used in Darcy's Law is equal to the head in the overlying cell minus the bottom elevation of the overlying cell.  If not specified, then the default is to use the head difference between the two cells.
+mf6internal iperched
 
 block options
 name rewet_record
@@ -74,6 +89,7 @@ reader urword
 optional false
 longname keyword to activate rewetting
 description activates model rewetting.  Rewetting is off by default.
+mf6internal irewet
 
 block options
 name wetfct
@@ -117,6 +133,7 @@ type keyword
 reader urword
 longname keyword to activate XT3D
 description keyword indicating that the XT3D formulation will be used.  If the RHS keyword is also included, then the XT3D additional terms will be added to the right-hand side.  If the RHS keyword is excluded, then the XT3D terms will be put into the coefficient matrix.  Use of XT3D will substantially increase the computational effort, but will result in improved accuracy for anisotropic conductivity fields and for unstructured grids in which the CVFD requirement is violated.  XT3D requires additional information about the shapes of grid cells.  If XT3D is active and the DISU Package is used, then the user will need to provide in the DISU Package the angldegx array in the CONNECTIONDATA block and the VERTICES and CELL2D blocks.
+mf6internal ixt3d
 
 block options
 name rhs
@@ -126,6 +143,7 @@ reader urword
 optional true
 longname keyword to XT3D on right hand side
 description If the RHS keyword is also included, then the XT3D additional terms will be added to the right-hand side.  If the RHS keyword is excluded, then the XT3D terms will be put into the coefficient matrix.
+mf6internal ixt3drhs
 
 block options
 name save_specific_discharge
@@ -134,6 +152,7 @@ reader urword
 optional true
 longname keyword to save specific discharge
 description keyword to indicate that x, y, and z components of specific discharge will be calculated at cell centers and written to the budget file, which is specified with ``BUDGET SAVE FILE'' in Output Control.  If this option is activated, then additional information may be required in the discretization packages and the GWF Exchange package (if GWF models are coupled).  Specifically, ANGLDEGX must be specified in the CONNECTIONDATA block of the DISU Package; ANGLDEGX must also be specified for the GWF Exchange as an auxiliary variable.
+mf6internal isavspdis
 
 block options
 name save_saturation
@@ -142,6 +161,7 @@ reader urword
 optional true
 longname keyword to save saturation
 description keyword to indicate that cell saturation will be written to the budget file, which is specified with ``BUDGET SAVE FILE'' in Output Control.  Saturation will be saved to the budget file as an auxiliary variable saved with the DATA-SAT text label.  Saturation is a cell variable that ranges from zero to one and can be used by post processing programs to determine how much of a cell volume is saturated.  If ICELLTYPE is 0, then saturation is always one.
+mf6internal isavsat
 
 block options
 name k22overk
@@ -150,6 +170,7 @@ reader urword
 optional true
 longname keyword to indicate that specified K22 is a ratio
 description keyword to indicate that specified K22 is a ratio of K22 divided by K.  If this option is specified, then the K22 array entered in the NPF Package will be multiplied by K after being read.
+mf6internal ik22overk
 
 block options
 name k33overk
@@ -158,10 +179,11 @@ reader urword
 optional true
 longname keyword to indicate that specified K33 is a ratio
 description keyword to indicate that specified K33 is a ratio of K33 divided by K.  If this option is specified, then the K33 array entered in the NPF Package will be multiplied by K after being read.
+mf6internal ik33overk
 
 block options
 name tvk_filerecord
-type record tvk6 filein tvk_filename
+type record tvk6 filein tvk6_filename
 shape
 reader urword
 tagged true
@@ -192,7 +214,7 @@ longname file keyword
 description keyword to specify that an input filename is expected next.
 
 block options
-name tvk_filename
+name tvk6_filename
 type string
 preserve_case true
 in_record true
@@ -202,6 +224,52 @@ tagged false
 longname file name of TVK information
 description defines a time-varying hydraulic conductivity (TVK) input file.  Records in the TVK file can be used to change hydraulic conductivity properties at specified times or stress periods.
 
+# dev options
+
+block options
+name dev_no_newton
+type keyword
+reader urword
+optional true
+longname turn off Newton for unconfined cells
+description turn off Newton for unconfined cells
+mf6internal inewton
+
+block options
+name dev_modflowusg_upstream_weighted_saturation
+type keyword
+reader urword
+optional true
+longname use MODFLOW-USG upstream-weighted saturation approach
+description use MODFLOW-USG upstream-weighted saturation approach
+mf6internal iusgnrhc
+
+block options
+name dev_modflownwt_upstream_weighting
+type keyword
+reader urword
+optional true
+longname use MODFLOW-NWT approach for upstream weighting
+description use MODFLOW-NWT approach for upstream weighting
+mf6internal inwtupw
+
+block options
+name dev_minimum_saturated_thickness
+type double precision
+reader urword
+optional true
+longname set minimum allowed saturated thickness
+description set minimum allowed saturated thickness
+mf6internal satmin
+
+block options
+name dev_omega
+type double precision
+reader urword
+optional true
+longname set saturation omega value
+description set saturation omega value
+mf6internal satomega
 
 # --------------------- gwf npf griddata ---------------------
 
@@ -294,4 +362,3 @@ layered true
 optional true
 longname wetdry threshold and factor
 description is a combination of the wetting threshold and a flag to indicate which neighboring cells can cause a cell to become wet. If WETDRY $<$ 0, only a cell below a dry cell can cause the cell to become wet. If WETDRY $>$ 0, the cell below a dry cell and horizontally adjacent cells can cause a cell to become wet. If WETDRY is 0, the cell cannot be wetted. The absolute value of WETDRY is the wetting threshold. When the sum of BOT and the absolute value of WETDRY at a dry cell is equaled or exceeded by the head at an adjacent cell, the cell is wetted.  WETDRY must be specified if ``REWET'' is specified in the OPTIONS block.  If ``REWET'' is not specified in the options block, then WETDRY can be entered, and memory will be allocated for it, even though it is not used.
-

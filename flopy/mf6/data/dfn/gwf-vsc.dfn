@@ -1,0 +1,174 @@
+# --------------------- gwf vsc options ---------------------
+
+block options
+name viscref
+type double
+reader urword
+optional true
+longname reference viscosity
+description fluid reference viscosity used in the equation of state.  This value is set to 1.0 if not specified as an option.
+default_value 1.0
+
+block options
+name temperature_species_name
+type string
+shape
+reader urword
+optional true
+longname auxspeciesname that corresponds to temperature
+description string used to identify the auxspeciesname in PACKAGEDATA that corresponds to the temperature species.  There can be only one occurrence of this temperature species name in the PACKAGEDATA block or the program will terminate with an error.  This value has no effect if viscosity does not depend on temperature.
+
+block options
+name thermal_formulation
+type string
+shape
+reader urword
+optional true
+valid linear nonlinear
+longname keyword to specify viscosity formulation for the temperature species
+description may be used for specifying which viscosity formulation to use for the temperature species. Can be either LINEAR or NONLINEAR. The LINEAR viscosity formulation is the default.
+
+block options
+name thermal_a2
+type double 
+reader urword
+optional true
+longname coefficient used in nonlinear viscosity function
+description is an empirical parameter specified by the user for calculating viscosity using a nonlinear formulation.  If A2 is not specified, a default value of 10.0 is assigned (Voss, 1984). 
+default_value 10.
+
+block options
+name thermal_a3
+type double 
+reader urword
+optional true
+longname coefficient used in nonlinear viscosity function
+description is an empirical parameter specified by the user for calculating viscosity using a nonlinear formulation.  If A3 is not specified, a default value of 248.37 is assigned (Voss, 1984). 
+default_value 248.37
+
+block options
+name thermal_a4
+type double precision
+reader urword
+optional true
+longname coefficient used in nonlinear viscosity function
+description is an empirical parameter specified by the user for calculating viscosity using a nonlinear formulation.  If A4 is not specified, a default value of 133.15 is assigned (Voss, 1984). 
+default_value 133.15
+
+block options
+name viscosity_filerecord
+type record viscosity fileout viscosityfile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name viscosity
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname viscosity keyword
+description keyword to specify that record corresponds to viscosity.
+
+block options
+name fileout
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an output filename is expected next.
+
+block options
+name viscosityfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the binary output file to write viscosity information.  The viscosity file has the same format as the head file.  Viscosity values will be written to the viscosity file whenever heads are written to the binary head file.  The settings for controlling head output are contained in the Output Control option.
+
+
+# --------------------- gwf vsc dimensions ---------------------
+
+block dimensions
+name nviscspecies
+type integer
+reader urword
+optional false
+longname number of species used in viscosity equation of state
+description number of species used in the viscosity equation of state.  If either concentrations or temperature (or both) are used to update viscosity then then nrhospecies needs to be at least one.
+
+
+# --------------------- gwf vsc packagedata ---------------------
+
+block packagedata
+name packagedata
+type recarray iviscspec dviscdc cviscref modelname auxspeciesname
+shape (nrhospecies)
+reader urword
+longname
+description
+
+block packagedata
+name iviscspec
+type integer
+shape
+tagged false
+in_record true
+reader urword
+longname species number for this entry
+description integer value that defines the species number associated with the specified PACKAGEDATA data entered on each line. IVISCSPECIES must be greater than zero and less than or equal to NVISCSPECIES. Information must be specified for each of the NVISCSPECIES species or the program will terminate with an error.  The program will also terminate with an error if information for a species is specified more than once.
+numeric_index true
+
+block packagedata
+name dviscdc
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+longname slope of the line that defines the linear relationship between viscosity and temperature or between viscosity and concentration, depending on the type of species entered on each line.
+description real value that defines the slope of the line defining the linear relationship between viscosity and temperature or between viscosity and concentration, depending on the type of species entered on each line.  If the value of AUXSPECIESNAME entered on a line corresponds to TEMPERATURE\_SPECIES\_NAME (in the OPTIONS block), this value will be used when VISCOSITY\_FUNC is equal to LINEAR (the default) in the OPTIONS block.  When VISCOSITY\_FUNC is set to NONLINEAR, a value for DVISCDC must be specified though it is not used.
+
+block packagedata
+name cviscref
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+longname reference temperature value or reference concentration value
+description real value that defines the reference temperature or reference concentration value used for this species in the viscosity equation of state.  If AUXSPECIESNAME entered on a line corresponds to TEMPERATURE\_SPECIES\_NAME (in the OPTIONS block), then CVISCREF refers to a reference temperature, otherwise it refers to a reference concentration.
+
+block packagedata
+name modelname
+type string
+in_record true
+tagged false
+shape
+reader urword
+longname modelname
+description name of a GWT model used to simulate a species that will be used in the viscosity equation of state.  This name will have no effect if the simulation does not include a GWT model that corresponds to this GWF model.
+
+block packagedata
+name auxspeciesname
+type string
+in_record true
+tagged false
+shape
+reader urword
+longname auxspeciesname
+description name of an auxiliary variable in a GWF stress package that will be used for this species to calculate the viscosity values.  If a viscosity value is needed by the Viscosity Package then it will use the temperature or concentration values associated with this AUXSPECIESNAME in the viscosity equation of state.  For advanced stress packages (LAK, SFR, MAW, and UZF) that have an associated advanced transport package (LKT, SFT, MWT, and UZT), the FLOW\_PACKAGE\_AUXILIARY\_NAME option in the advanced transport package can be used to transfer simulated temperature or concentration(s) into the flow package auxiliary variable.  In this manner, the Viscosity Package can calculate viscosity values for lakes, streams, multi-aquifer wells, and unsaturated zone flow cells using simulated concentrations.
+
