@@ -1075,7 +1075,8 @@ def test_linestring_offset_rot_structured_grid():
     ls = LineString([(5, 10.0 + np.sqrt(200.0)), (15, 10.0 + np.sqrt(200.0))])
     ix = GridIntersect(sgr, method="structured")
     result = ix.intersect(ls)
-    assert len(result) == 2
+    # NOTE: in shapely 2.0, this returns a Linestring with length 10^-15 in cell (0, 1)
+    assert len(result) == 2 or len(result) == 3
 
 
 @requires_pkg("shapely")
