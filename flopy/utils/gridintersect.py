@@ -1153,7 +1153,7 @@ class GridIntersect:
         # build rec-array
         rec = np.recarray(len(qfiltered), names=["cellids"], formats=["O"])
         if self.mfgrid.grid_type == "structured":
-            rec.cellids = list(zip(*self.mfgrid.get_lrc(qfiltered)[0][1:]))
+            rec.cellids = list(zip(*self.mfgrid.get_lrc([qfiltered])[0][1:]))
         else:
             rec.cellids = qfiltered
         return rec
