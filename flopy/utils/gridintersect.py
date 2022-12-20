@@ -1015,7 +1015,7 @@ class GridIntersect:
                 )
                 # update intersection result if necessary
                 if len(diff) > 0:
-                    ixresult[idxs][i] = diff[0]
+                    ixresult[idxs[i]] = diff[0]
 
             # mask out empty results
             mask_keep = ~shapely.is_empty(ixresult)
