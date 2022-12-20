@@ -19,6 +19,8 @@ dependencies:
   - filelock
   - jupyter
   - jupytext
+  - pip:
+      - modflow-devtools
   - pytest
   - pytest-benchmark
   - pytest-cases

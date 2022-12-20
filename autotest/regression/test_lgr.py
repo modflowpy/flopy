@@ -3,8 +3,8 @@ from os.path import dirname, join
 from pathlib import Path
 
 import pytest
-from autotest.conftest import requires_exe, requires_pkg
 from flaky import flaky
+from modflow_devtools.markers import requires_exe, requires_pkg
 
 import flopy
 
@@ -13,13 +13,13 @@ import flopy
 @requires_exe("mflgr")
 @requires_pkg("pymake")
 @pytest.mark.regression
-def test_simplelgr(tmpdir, example_data_path):
+def test_simplelgr(function_tmpdir, example_data_path):
     """Test load and write of distributed MODFLOW-LGR example problem."""
     import pymake
 
     mflgr_v2_ex3_path = example_data_path / "mflgr_v2" / "ex3"
 
-    ws = tmpdir / mflgr_v2_ex3_path.stem
+    ws = function_tmpdir / mflgr_v2_ex3_path.stem
     shutil.copytree(mflgr_v2_ex3_path, ws)
 
     # load the lgr model

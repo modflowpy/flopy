@@ -3,8 +3,8 @@ import warnings
 
 import numpy as np
 import pytest
-from autotest.conftest import excludes_platform, requires_exe
 from flaky import flaky
+from modflow_devtools.markers import excludes_platform, requires_exe
 
 from flopy.modflow import (
     Modflow,
@@ -60,11 +60,11 @@ def mfnwtmt3d_model_path(mt3d_test_model_path):
 
 
 @requires_exe("mf2005", "mt3dms")
-def test_mf2005_p07(tmpdir, mf2005mt3d_model_path):
+def test_mf2005_p07(function_tmpdir, mf2005mt3d_model_path):
     pth = str(mf2005mt3d_model_path / "P07")
     namfile = "p7mf2005.nam"
     mf = Modflow.load(namfile, model_ws=pth, verbose=True, exe_name="mf2005")
-    cpth = str(tmpdir / "P07")
+    cpth = str(function_tmpdir / "P07")
     mf.model_ws = cpth
 
     mf.write_input()
@@ -91,12 +91,12 @@ def test_mf2005_p07(tmpdir, mf2005mt3d_model_path):
 
 
 @requires_exe("mf2000", "mt3dms")
-def test_mf2000_p07(tmpdir, mf2kmt3d_model_path):
+def test_mf2000_p07(function_tmpdir, mf2kmt3d_model_path):
     pth = str(mf2kmt3d_model_path / "P07")
     namfile = "p7mf2k.nam"
     mf = Modflow.load(namfile, model_ws=pth, verbose=True, exe_name="mf2000")
 
-    cpth = str(tmpdir / "P07_2K")
+    cpth = str(function_tmpdir / "P07_2K")
     mf.model_ws = cpth
 
     mf.write_input()
@@ -116,14 +116,14 @@ def test_mf2000_p07(tmpdir, mf2kmt3d_model_path):
 
 
 @requires_exe("mf2000", "mt3dms")
-def test_mf2000_HSSTest(tmpdir, mf2kmt3d_model_path):
+def test_mf2000_HSSTest(function_tmpdir, mf2kmt3d_model_path):
     pth = str(mf2kmt3d_model_path / "HSSTest")
     namfile = "hsstest_mf2k.nam"
     mf = Modflow.load(
         namfile, model_ws=pth, version="mf2k", verbose=True, exe_name="mf2000"
     )
 
-    cpth = str(tmpdir / "HSSTest")
+    cpth = str(function_tmpdir / "HSSTest")
     mf.model_ws = cpth
 
     mf.write_input()
@@ -143,7 +143,7 @@ def test_mf2000_HSSTest(tmpdir, mf2kmt3d_model_path):
 
 
 @requires_exe("mf2000", "mt3dms")
-def test_mf2000_mnw(tmpdir, mf2kmt3d_model_path):
+def test_mf2000_mnw(function_tmpdir, mf2kmt3d_model_path):
     # cannot run this model because it uses mnw1 and there is no load for mnw1
     # this model includes block format data in the btn file
 
@@ -151,7 +151,7 @@ def test_mf2000_mnw(tmpdir, mf2kmt3d_model_path):
     namfile = "t5mf2k.nam"
     mf = Modflow.load(namfile, model_ws=pth, verbose=True)
 
-    cpth = str(tmpdir / "MNW")
+    cpth = str(function_tmpdir / "MNW")
     mf.model_ws = cpth
 
     namfile = "t5mt.nam"
@@ -162,14 +162,14 @@ def test_mf2000_mnw(tmpdir, mf2kmt3d_model_path):
 
 
 @requires_exe("mf2000", "mt3dms")
-def test_mf2000_MultiDiffusion(tmpdir, mf2kmt3d_model_path):
+def test_mf2000_MultiDiffusion(function_tmpdir, mf2kmt3d_model_path):
     pth = str(mf2kmt3d_model_path / "MultiDiffusion")
     namfile = "p7mf2k.nam"
     mf = Modflow.load(
         namfile, model_ws=pth, version="mf2k", verbose=True, exe_name="mf2000"
     )
 
-    cpth = str(tmpdir / "MultiDiffusion")
+    cpth = str(function_tmpdir / "MultiDiffusion")
     mf.model_ws = cpth
 
     mf.write_input()
@@ -187,14 +187,14 @@ def test_mf2000_MultiDiffusion(tmpdir, mf2kmt3d_model_path):
 
 
 @requires_exe("mf2000", "mt3dms")
-def test_mf2000_reinject(tmpdir, mf2kmt3d_model_path):
+def test_mf2000_reinject(function_tmpdir, mf2kmt3d_model_path):
     pth = str(mf2kmt3d_model_path / "reinject")
     namfile = "p3mf2k.nam"
     mf = Modflow.load(
         namfile, model_ws=pth, version="mf2k", verbose=True, exe_name="mf2000"
     )
 
-    cpth = str(tmpdir / "reinject")
+    cpth = str(function_tmpdir / "reinject")
     mf.model_ws = cpth
 
     mf.write_input()
@@ -214,14 +214,14 @@ def test_mf2000_reinject(tmpdir, mf2kmt3d_model_path):
 
 
 @requires_exe("mf2000", "mt3dms")
-def test_mf2000_SState(tmpdir, mf2kmt3d_model_path):
+def test_mf2000_SState(function_tmpdir, mf2kmt3d_model_path):
     pth = str(mf2kmt3d_model_path / "SState")
     namfile = "SState_mf2k.nam"
     mf = Modflow.load(
         namfile, model_ws=pth, version="mf2k", verbose=True, exe_name="mf2000"
     )
 
-    cpth = str(tmpdir / "SState")
+    cpth = str(function_tmpdir / "SState")
     mf.model_ws = cpth
 
     mf.write_input()
@@ -241,14 +241,14 @@ def test_mf2000_SState(tmpdir, mf2kmt3d_model_path):
 
 
 @requires_exe("mf2000", "mt3dms")
-def test_mf2000_tob(tmpdir, mf2kmt3d_model_path):
+def test_mf2000_tob(function_tmpdir, mf2kmt3d_model_path):
     pth = str(mf2kmt3d_model_path / "tob")
     namfile = "p7mf2k.nam"
     mf = Modflow.load(
         namfile, model_ws=pth, version="mf2k", verbose=True, exe_name="mf2000"
     )
 
-    cpth = str(tmpdir / "tob")
+    cpth = str(function_tmpdir / "tob")
     mf.model_ws = cpth
 
     mf.lmt6.output_file_header = "extended"
@@ -271,14 +271,14 @@ def test_mf2000_tob(tmpdir, mf2kmt3d_model_path):
 
 
 @requires_exe("mf2000", "mt3dms")
-def test_mf2000_zeroth(tmpdir, mf2kmt3d_model_path):
+def test_mf2000_zeroth(function_tmpdir, mf2kmt3d_model_path):
     pth = str(mf2kmt3d_model_path / "zeroth")
     namfile = "z0mf2k.nam"
     mf = Modflow.load(
         namfile, model_ws=pth, version="mf2k", verbose=True, exe_name="mf2000"
     )
 
-    cpth = str(tmpdir / "zeroth")
+    cpth = str(function_tmpdir / "zeroth")
     mf.model_ws = cpth
 
     mf.write_input()
@@ -301,7 +301,7 @@ def test_mf2000_zeroth(tmpdir, mf2kmt3d_model_path):
 @excludes_platform(
     "Windows", ci_only=True
 )  # TODO remove once fixed in MT3D-USGS
-def test_mfnwt_CrnkNic(tmpdir, mfnwtmt3d_model_path):
+def test_mfnwt_CrnkNic(function_tmpdir, mfnwtmt3d_model_path):
     pth = str(mfnwtmt3d_model_path / "sft_crnkNic")
     namefile = "CrnkNic.nam"
     mf = Modflow.load(
@@ -312,7 +312,7 @@ def test_mfnwt_CrnkNic(tmpdir, mfnwtmt3d_model_path):
         exe_name="mfnwt",
     )
 
-    cpth = str(tmpdir / "SFT_CRNKNIC")
+    cpth = str(function_tmpdir / "SFT_CRNKNIC")
     mf.model_ws = cpth
 
     mf.write_input()
@@ -340,7 +340,7 @@ def test_mfnwt_CrnkNic(tmpdir, mfnwtmt3d_model_path):
 
 @pytest.mark.slow
 @requires_exe("mfnwt", "mt3dusgs")
-def test_mfnwt_LKT(tmpdir, mfnwtmt3d_model_path):
+def test_mfnwt_LKT(function_tmpdir, mfnwtmt3d_model_path):
     pth = str(mfnwtmt3d_model_path / "lkt")
     namefile = "lkt_mf.nam"
     mf = Modflow.load(
@@ -354,7 +354,7 @@ def test_mfnwt_LKT(tmpdir, mfnwtmt3d_model_path):
 
     assert not mf.load_fail, "MODFLOW model did not load"
 
-    cpth = str(tmpdir / "LKT")
+    cpth = str(function_tmpdir / "LKT")
     mf.model_ws = cpth
 
     # write modflow-nwt files
@@ -388,7 +388,7 @@ def test_mfnwt_LKT(tmpdir, mfnwtmt3d_model_path):
 
 @pytest.mark.slow
 @requires_exe("mfnwt", "mt3dusgs")
-def test_mfnwt_keat_uzf(tmpdir, mfnwtmt3d_model_path):
+def test_mfnwt_keat_uzf(function_tmpdir, mfnwtmt3d_model_path):
     pth = str(mfnwtmt3d_model_path / "keat_uzf")
     namefile = "Keat_UZF_mf.nam"
     mf = Modflow.load(
@@ -399,7 +399,7 @@ def test_mfnwt_keat_uzf(tmpdir, mfnwtmt3d_model_path):
         exe_name="mfnwt",
     )
 
-    cpth = str(tmpdir / "KEAT_UZF")
+    cpth = str(function_tmpdir / "KEAT_UZF")
     mf.model_ws = cpth
 
     mf.write_input()
@@ -430,8 +430,8 @@ def test_mfnwt_keat_uzf(tmpdir, mfnwtmt3d_model_path):
     os.remove(os.path.join(cpth, ftlfile))
 
 
-def test_mt3d_create_withmfmodel(tmpdir):
-    model_ws = str(tmpdir)
+def test_mt3d_create_withmfmodel(function_tmpdir):
+    model_ws = str(function_tmpdir)
 
     # Create a MODFLOW model
     mf = Modflow(model_ws=model_ws)
@@ -484,8 +484,8 @@ def test_mt3d_create_withmfmodel(tmpdir):
     return
 
 
-def test_mt3d_create_woutmfmodel(tmpdir):
-    model_ws = str(tmpdir)
+def test_mt3d_create_woutmfmodel(function_tmpdir):
+    model_ws = str(function_tmpdir)
 
     # Create MT3D model
     mt = Mt3dms(model_ws=model_ws)
@@ -567,9 +567,9 @@ def test_mt3d_create_woutmfmodel(tmpdir):
     return
 
 
-def test_mt3d_pht3d(tmpdir):
+def test_mt3d_pht3d(function_tmpdir):
     # Note: this test is incomplete!
-    model_ws = str(tmpdir)
+    model_ws = str(function_tmpdir)
 
     # Create MT3D model
     mt = Mt3dms(model_ws=model_ws)
@@ -584,7 +584,7 @@ def test_mt3d_pht3d(tmpdir):
     )
 
 
-def test_mt3d_multispecies(tmpdir):
+def test_mt3d_multispecies(function_tmpdir):
 
     # modflow model
     modelname = "multispecies"
@@ -594,7 +594,7 @@ def test_mt3d_multispecies(tmpdir):
     nper = 10
     mf = Modflow(
         modelname=modelname,
-        model_ws=str(tmpdir),
+        model_ws=str(function_tmpdir),
     )
     dis = ModflowDis(mf, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper)
     lpf = ModflowLpf(mf)
@@ -607,7 +607,7 @@ def test_mt3d_multispecies(tmpdir):
     mt = Mt3dms(
         modelname=modelname,
         modflowmodel=mf,
-        model_ws=str(tmpdir),
+        model_ws=str(function_tmpdir),
         verbose=True,
     )
     sconc3 = np.random.random((nrow, ncol))
@@ -639,7 +639,7 @@ def test_mt3d_multispecies(tmpdir):
     modelname2 = "multispecies2"
     mf2 = Modflow(
         modelname=modelname2,
-        model_ws=str(tmpdir),
+        model_ws=str(function_tmpdir),
     )
     dis2 = ModflowDis(mf2, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper)
 
@@ -647,7 +647,7 @@ def test_mt3d_multispecies(tmpdir):
     fname = f"{modelname}.nam"
     mt2 = Mt3dms.load(
         fname,
-        model_ws=str(tmpdir),
+        model_ws=str(function_tmpdir),
         verbose=True,
     )
     # check obs I/O
@@ -657,14 +657,14 @@ def test_mt3d_multispecies(tmpdir):
 
 
 @requires_exe("mfnwt", "mt3dusgs")
-def test_lkt_with_multispecies(tmpdir):
+def test_lkt_with_multispecies(function_tmpdir):
     # Bug discovered in LKT with multi-species.  Adding test to check this functionality
 
     modelname = "lkttest"
     mf = Modflow(
         modelname=modelname,
         exe_name="mfnwt",
-        model_ws=str(tmpdir),
+        model_ws=str(function_tmpdir),
         version="mfnwt",
     )
 
@@ -17782,7 +17782,7 @@ def test_lkt_with_multispecies(tmpdir):
     mt = Mt3dms(
         modflowmodel=mf,
         modelname=modelname,
-        model_ws=str(tmpdir),
+        model_ws=str(function_tmpdir),
         version="mt3d-usgs",
         namefile_ext="mtnam",
         exe_name="mt3dusgs",
@@ -17903,7 +17903,7 @@ def test_lkt_with_multispecies(tmpdir):
     namfile = f"{modelname}.nam"
     mf = Modflow.load(
         namfile,
-        model_ws=str(tmpdir),
+        model_ws=str(function_tmpdir),
         version="mfnwt",
         verbose=True,
         exe_name="mfnwt",
@@ -17911,7 +17911,7 @@ def test_lkt_with_multispecies(tmpdir):
     namfile = f"{modelname}.mtnam"
     mt = Mt3dms.load(
         namfile,
-        model_ws=str(tmpdir),
+        model_ws=str(function_tmpdir),
         verbose=True,
         version="mt3d-usgs",
         exe_name="mt3dusgs",
@@ -17924,7 +17924,7 @@ def test_mt3dms_load_when_nam_dne():
 
 
 @requires_exe("mf2005")
-def test_mt3d_ssm_with_nodata_in_1st_sp(tmpdir):
+def test_mt3d_ssm_with_nodata_in_1st_sp(function_tmpdir):
     nlay, nrow, ncol = 3, 5, 5
     perlen = np.zeros((10), dtype=float) + 10
     nper = len(perlen)
@@ -17936,7 +17936,7 @@ def test_mt3d_ssm_with_nodata_in_1st_sp(tmpdir):
 
     # creating MODFLOW model
     modelname = "model_mf"
-    mf = Modflow(modelname, model_ws=str(tmpdir), exe_name="mf2005")
+    mf = Modflow(modelname, model_ws=str(function_tmpdir), exe_name="mf2005")
     dis = ModflowDis(
         mf,
         nlay=nlay,
@@ -17995,7 +17995,7 @@ def test_mt3d_ssm_with_nodata_in_1st_sp(tmpdir):
     mt = Mt3dms(
         modflowmodel=mf,
         modelname=modelname,
-        model_ws=str(tmpdir),
+        model_ws=str(function_tmpdir),
         exe_name="mt3dms",
     )
     btn = Mt3dBtn(mt, sconc=0, ncomp=2, sconc2=50.0)
@@ -18013,11 +18013,16 @@ def test_mt3d_ssm_with_nodata_in_1st_sp(tmpdir):
     success, buff = mt.run_model(report=True, normal_msg="Program completed.")
     assert success, "MT3D did not run"
 
-    ws = str(tmpdir / "ws2")
-    mf2 = Modflow.load("model_mf.nam", model_ws=str(tmpdir), exe_name="mf2005")
+    ws = str(function_tmpdir / "ws2")
+    mf2 = Modflow.load(
+        "model_mf.nam", model_ws=str(function_tmpdir), exe_name="mf2005"
+    )
     mf2.change_model_ws(ws)
     mt2 = Mt3dms.load(
-        "model_mt.nam", model_ws=str(tmpdir), verbose=True, exe_name="mt3dms"
+        "model_mt.nam",
+        model_ws=str(function_tmpdir),
+        verbose=True,
+        exe_name="mt3dms",
     )
     mt2.change_model_ws(ws)
     mf2.write_input()
@@ -18027,18 +18032,20 @@ def test_mt3d_ssm_with_nodata_in_1st_sp(tmpdir):
     success, buff = mt2.run_model(report=True, normal_msg="Program completed.")
     assert success, "MT3D did not run"
 
-    conca = UcnFile(os.path.join(str(tmpdir), "MT3D001.UCN")).get_alldata()
+    conca = UcnFile(
+        os.path.join(str(function_tmpdir), "MT3D001.UCN")
+    ).get_alldata()
     concb = UcnFile(os.path.join(ws, "MT3D001.UCN")).get_alldata()
 
     assert np.allclose(conca, concb)
 
 
 @requires_exe("mf2005")
-def test_none_spdtype(tmpdir):
+def test_none_spdtype(function_tmpdir):
     # ensure that -1 and None work as valid list entries in the
     # stress period dictionary
 
-    mf = Modflow(model_ws=str(tmpdir), exe_name="mf2005")
+    mf = Modflow(model_ws=str(function_tmpdir), exe_name="mf2005")
     dis = ModflowDis(mf, nper=2)
     bas = ModflowBas(mf)
     lpf = ModflowLpf(mf)
@@ -18046,12 +18053,14 @@ def test_none_spdtype(tmpdir):
     wel = ModflowWel(mf, stress_period_data=spd)
     pcg = ModflowPcg(mf)
     mf.write_input()
-    mf2 = Modflow.load("modflowtest.nam", model_ws=str(tmpdir), verbose=True)
+    mf2 = Modflow.load(
+        "modflowtest.nam", model_ws=str(function_tmpdir), verbose=True
+    )
     success, buff = mf.run_model(report=True)
     assert success
 
 
-def test_ssm_readwrite(tmpdir, example_data_path):
+def test_ssm_readwrite(function_tmpdir, example_data_path):
     # Instantiate MODFLOW model
     mf = Modflow()
 
@@ -18073,7 +18082,7 @@ def test_ssm_readwrite(tmpdir, example_data_path):
     # (file comes from: https://github.com/modflowpy/flopy/issues/743)
     ssm = Mt3dSsm.load(fl, mt)
 
-    mt.change_model_ws(str(tmpdir))
+    mt.change_model_ws(str(function_tmpdir))
 
     # Ensure file is writeable
     ssm.write_file()

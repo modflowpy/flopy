@@ -49,16 +49,13 @@ def list_files(pth, exts=["py"]):
 
 
 def download_dfn(branch, new_dfn_pth):
-    pymake = None
     try:
-        import pymake
+        from modflow_devtools.download import download_and_unzip
     except:
-        pass
-    if pymake is None:
         msg = (
-            "Error.  The pymake package must be installed in order to "
-            "generate the MODFLOW 6 classes.  pymake can be installed using "
-            "pip install pymake.  Stopping."
+            "Error.  The modflow-devtools package must be installed in order to "
+            "generate the MODFLOW 6 classes. modflow-devtools can be installed using "
+            "pip install modflow-devtools.  Stopping."
         )
         print(msg)
         return
@@ -67,7 +64,7 @@ def download_dfn(branch, new_dfn_pth):
     mf6url = mf6url.format(branch)
     print(f"  Downloading MODFLOW 6 repository from {mf6url}")
     with tempfile.TemporaryDirectory() as tmpdirname:
-        pymake.download_and_unzip(mf6url, tmpdirname)
+        download_and_unzip(mf6url, tmpdirname, verbose=True)
         downloaded_dfn_pth = os.path.join(tmpdirname, f"modflow6-{branch}")
         downloaded_dfn_pth = os.path.join(
             downloaded_dfn_pth, "doc", "mf6io", "mf6ivar", "dfn"
