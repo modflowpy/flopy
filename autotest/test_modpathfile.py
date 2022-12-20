@@ -5,7 +5,7 @@ from shutil import copytree
 
 import numpy as np
 import pytest
-from autotest.conftest import requires_exe
+from modflow_devtools.markers import requires_exe
 
 from flopy.mf6 import (
     MFSimulation,
@@ -236,9 +236,11 @@ def mp7_large(module_tmpdir):
 
 
 @requires_exe("mf6")
-def test_pathline_file_sorts_in_ctor(tmpdir, module_tmpdir, mp7_small):
+def test_pathline_file_sorts_in_ctor(
+    function_tmpdir, module_tmpdir, mp7_small
+):
     sim, forward_model_name, backward_model_name, nodew, nodesr = mp7_small
-    ws = tmpdir / "ws"
+    ws = function_tmpdir / "ws"
 
     # copytree(sim.simulation_data.mfpath.get_sim_path(), ws)
     copytree(str(module_tmpdir / "mp7_small"), ws)
@@ -258,10 +260,10 @@ def test_pathline_file_sorts_in_ctor(tmpdir, module_tmpdir, mp7_small):
 @pytest.mark.parametrize("direction", ["forward", "backward"])
 @pytest.mark.parametrize("locations", ["well", "river"])
 def test_get_destination_pathline_data(
-    tmpdir, mp7_large, direction, locations, benchmark
+    function_tmpdir, mp7_large, direction, locations, benchmark
 ):
     sim, forward_model_name, backward_model_name, nodew, nodesr = mp7_large
-    ws = tmpdir / "ws"
+    ws = function_tmpdir / "ws"
 
     copytree(sim.simulation_data.mfpath.get_sim_path(), ws)
 
@@ -285,10 +287,10 @@ def test_get_destination_pathline_data(
 @pytest.mark.parametrize("direction", ["forward", "backward"])
 @pytest.mark.parametrize("locations", ["well", "river"])
 def test_get_destination_endpoint_data(
-    tmpdir, mp7_large, direction, locations, benchmark
+    function_tmpdir, mp7_large, direction, locations, benchmark
 ):
     sim, forward_model_name, backward_model_name, nodew, nodesr = mp7_large
-    ws = tmpdir / "ws"
+    ws = function_tmpdir / "ws"
 
     copytree(sim.simulation_data.mfpath.get_sim_path(), ws)
 

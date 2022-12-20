@@ -8,12 +8,10 @@ from platform import system
 from urllib.error import HTTPError
 
 import pytest
-from autotest.conftest import (
-    get_project_root_path,
-    requires_github,
-    run_py_script,
-)
+from autotest.conftest import get_project_root_path
 from flaky import flaky
+from modflow_devtools.markers import requires_github
+from modflow_devtools.misc import run_py_script
 
 from flopy.utils import get_modflow
 from flopy.utils.get_modflow import get_release, get_releases, select_bindir
@@ -133,7 +131,7 @@ def test_get_release(repo):
 
 
 @pytest.mark.parametrize("bindir", bindir_options.keys())
-def test_select_bindir(bindir, tmpdir):
+def test_select_bindir(bindir, function_tmpdir):
     expected_path = bindir_options[bindir]
     if not os.access(expected_path, os.W_OK):
         pytest.skip(f"{expected_path} is not writable")
@@ -162,9 +160,9 @@ def test_script_help():
 @flaky
 @requires_github
 @pytest.mark.slow
-def test_script_invalid_options(tmpdir, downloads_dir):
+def test_script_invalid_options(function_tmpdir, downloads_dir):
     # try with bindir that doesn't exist
-    bindir = tmpdir / "bin1"
+    bindir = function_tmpdir / "bin1"
     assert not bindir.exists()
     stdout, stderr, returncode = run_get_modflow_script(bindir)
     if rate_limit_msg in stderr:
@@ -184,7 +182,7 @@ def test_script_invalid_options(tmpdir, downloads_dir):
     assert returncode == 1
 
     # try to select an invalid --subset
-    bindir = tmpdir / "bin2"
+    bindir = function_tmpdir / "bin2"
     bindir.mkdir()
     stdout, stderr, returncode = run_get_modflow_script(
         bindir, "--subset", "mfnwt,mpx", "--downloads-dir", downloads_dir
@@ -198,9 +196,9 @@ def test_script_invalid_options(tmpdir, downloads_dir):
 @flaky
 @requires_github
 @pytest.mark.slow
-def test_script_valid_options(tmpdir, downloads_dir):
+def test_script_valid_options(function_tmpdir, downloads_dir):
     # fetch latest
-    bindir = tmpdir / "bin1"
+    bindir = function_tmpdir / "bin1"
     bindir.mkdir()
     stdout, stderr, returncode = run_get_modflow_script(
         bindir, "--downloads-dir", downloads_dir
@@ -212,7 +210,7 @@ def test_script_valid_options(tmpdir, downloads_dir):
     assert len(files) > 20
 
     # valid subset
-    bindir = tmpdir / "bin2"
+    bindir = function_tmpdir / "bin2"
     bindir.mkdir()
     stdout, stderr, returncode = run_get_modflow_script(
         bindir, "--subset", "mfnwt,mp6", "--downloads-dir", downloads_dir
@@ -224,7 +222,7 @@ def test_script_valid_options(tmpdir, downloads_dir):
     assert sorted(files) == ["mfnwt", "mfnwtdbl", "mp6"]
 
     # similar as before, but also specify a ostag
-    bindir = tmpdir / "bin3"
+    bindir = function_tmpdir / "bin3"
     bindir.mkdir()
     stdout, stderr, returncode = run_get_modflow_script(
         bindir,
@@ -248,8 +246,8 @@ def test_script_valid_options(tmpdir, downloads_dir):
 @requires_github
 @pytest.mark.slow
 @pytest.mark.parametrize("repo", repo_options.keys())
-def test_script(tmpdir, repo, downloads_dir):
-    bindir = str(tmpdir)
+def test_script(function_tmpdir, repo, downloads_dir):
+    bindir = str(function_tmpdir)
     stdout, stderr, returncode = run_get_modflow_script(
         bindir,
         "--repo",
@@ -260,7 +258,7 @@ def test_script(tmpdir, repo, downloads_dir):
     if rate_limit_msg in stderr:
         pytest.skip(f"GitHub {rate_limit_msg}")
 
-    paths = list(tmpdir.glob("*"))
+    paths = list(function_tmpdir.glob("*"))
     names = [p.name for p in paths]
     expected_names = [append_ext(p) for p in repo_options[repo]]
     assert set(names) >= set(expected_names)
@@ -270,15 +268,15 @@ def test_script(tmpdir, repo, downloads_dir):
 @requires_github
 @pytest.mark.slow
 @pytest.mark.parametrize("repo", repo_options.keys())
-def test_python_api(tmpdir, repo, downloads_dir):
-    bindir = str(tmpdir)
+def test_python_api(function_tmpdir, repo, downloads_dir):
+    bindir = str(function_tmpdir)
     try:
         get_modflow(bindir, repo=repo, downloads_dir=downloads_dir)
     except HTTPError as err:
         if err.code == 403:
             pytest.skip(f"GitHub {rate_limit_msg}")
 
-    paths = list(tmpdir.glob("*"))
+    paths = list(function_tmpdir.glob("*"))
     names = [p.name for p in paths]
     expected_names = [append_ext(p) for p in repo_options[repo]]
     assert set(names) >= set(expected_names)

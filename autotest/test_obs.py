@@ -3,7 +3,7 @@ import shutil
 
 import numpy as np
 import pytest
-from autotest.conftest import requires_exe
+from modflow_devtools.markers import requires_exe
 
 from flopy.modflow import (
     HeadObservation,
@@ -20,12 +20,12 @@ from flopy.utils.observationfile import Mf6Obs
 
 
 @requires_exe("mf2005")
-def test_hob_simple(tmpdir):
+def test_hob_simple(function_tmpdir):
     """
     test041 create and run a simple MODFLOW-2005 OBS example
     """
     modelname = "hob_simple"
-    ws = str(tmpdir)
+    ws = str(function_tmpdir)
     nlay, nrow, ncol = 1, 11, 11
     shape3d = (nlay, nrow, ncol)
     shape2d = (nrow, ncol)
@@ -107,13 +107,13 @@ def test_hob_simple(tmpdir):
 
 
 @requires_exe("mf2005")
-def test_obs_load_and_write(tmpdir, example_data_path):
+def test_obs_load_and_write(function_tmpdir, example_data_path):
     """
     test041 load and write of MODFLOW-2005 OBS example problem
     """
 
     pth = str(example_data_path / "mf2005_obs")
-    ws = str(tmpdir)
+    ws = str(function_tmpdir)
 
     # copy the original files
     files = os.listdir(pth)
@@ -249,12 +249,12 @@ def test_obs_load_and_write(tmpdir, example_data_path):
     assert np.array_equal(drob.column, m.drob.column), s
 
 
-def test_obs_single_time(tmpdir):
+def test_obs_single_time(function_tmpdir):
     """
     test reading a mf6 observation file with a single time
     """
 
-    pth = str(tmpdir / "single.csv")
+    pth = str(function_tmpdir / "single.csv")
     with open(pth, "w") as file:
         file.write("time,obs01,obs02\n1.0,10.0,20.0\n")
 
@@ -268,13 +268,13 @@ def test_obs_single_time(tmpdir):
 
 
 @requires_exe("mf2005")
-def test_obs_create_and_write(tmpdir, example_data_path):
+def test_obs_create_and_write(function_tmpdir, example_data_path):
     """
     test041 create and write of MODFLOW-2005 OBS example problem
     """
 
     pth = str(example_data_path / "mf2005_obs")
-    ws = str(tmpdir)
+    ws = str(function_tmpdir)
 
     # copy the original files
     files = os.listdir(pth)

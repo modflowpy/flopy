@@ -2,7 +2,8 @@ import os
 
 import numpy as np
 import pytest
-from autotest.conftest import has_pkg, requires_pkg
+from modflow_devtools.markers import requires_pkg
+from modflow_devtools.misc import has_pkg
 
 from flopy.modflow import Modflow, ModflowHyd
 from flopy.utils import HydmodObs, Mf6Obs
@@ -18,11 +19,11 @@ def hydmod_model_path(example_data_path):
     return example_data_path / "hydmod_test"
 
 
-def test_hydmodfile_create(tmpdir):
-    m = Modflow("test", model_ws=str(tmpdir))
+def test_hydmodfile_create(function_tmpdir):
+    m = Modflow("test", model_ws=str(function_tmpdir))
     hyd = ModflowHyd(m)
     m.hyd.write_file()
-    pth = str(tmpdir / "test.hyd")
+    pth = str(function_tmpdir / "test.hyd")
     hydload = ModflowHyd.load(pth, m)
     assert np.array_equal(
         hyd.obsdata, hydload.obsdata
@@ -51,7 +52,7 @@ def test_hydmodfile_create(tmpdir):
     hyd = ModflowHyd(m, obsdata=obsdata)
 
 
-def test_hydmodfile_load(tmpdir, hydmod_model_path):
+def test_hydmodfile_load(function_tmpdir, hydmod_model_path):
     model = "test1tr.nam"
     m = Modflow.load(
         model, version="mf2005", model_ws=str(hydmod_model_path), verbose=True
@@ -61,7 +62,7 @@ def test_hydmodfile_load(tmpdir, hydmod_model_path):
         hydref, ModflowHyd
     ), "Did not load hydmod package...test1tr.hyd"
 
-    m.change_model_ws(str(tmpdir))
+    m.change_model_ws(str(function_tmpdir))
     m.hyd.write_file()
 
     pth = str(hydmod_model_path / "test1tr.hyd")

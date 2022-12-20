@@ -31,13 +31,13 @@ class Mp6Cases1:
     botm = np.concatenate((bt1, bt2), axis=0)
     ipakcb = 740
 
-    def case_1(self, tmpdir):
+    def case_1(self, function_tmpdir):
         m = flopy.modflow.Modflow(
             modelname="mf1",
             namefile_ext="nam",
             version="mf2005",
             exe_name="mf2005",
-            model_ws=str(tmpdir),
+            model_ws=str(function_tmpdir),
         )
 
         # dis
@@ -111,13 +111,13 @@ class Mp6Cases1:
         assert success
         return m
 
-    def case_2(self, tmpdir):
+    def case_2(self, function_tmpdir):
         m = flopy.modflow.Modflow(
             modelname="mf2",
             namefile_ext="nam",
             version="mf2005",
             exe_name="mf2005",
-            model_ws=str(tmpdir),
+            model_ws=str(function_tmpdir),
         )
 
         # dis
@@ -219,13 +219,13 @@ class Mp6Cases2:
     botm = np.concatenate((bt1, bt2), axis=0)
     ipakcb = 740
 
-    def case_1(self, tmpdir):
+    def case_1(self, function_tmpdir):
         m = flopy.modflow.Modflow(
             modelname=f"mf1",
             namefile_ext="nam",
             version="mf2005",
             exe_name="mf2005",
-            model_ws=str(tmpdir),
+            model_ws=str(function_tmpdir),
         )
 
         # dis

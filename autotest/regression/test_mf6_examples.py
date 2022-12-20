@@ -2,8 +2,8 @@ from pathlib import Path
 from shutil import copytree
 
 import pytest
-from autotest.conftest import requires_exe, requires_pkg
 from autotest.regression.conftest import is_nested
+from modflow_devtools.markers import requires_exe, requires_pkg
 
 from flopy.mf6 import MFSimulation
 
@@ -14,13 +14,13 @@ pytestmark = pytest.mark.mf6
 @requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
-def test_mf6_example_simulations(tmpdir, mf6_example_namfiles):
+def test_mf6_example_simulations(function_tmpdir, mf6_example_namfiles):
     # MF6 examples parametrized by simulation. `mf6_example_namfiles` is a list
     # of models to run in order provided. Coupled models share the same tempdir
     #
     # Parameters
     # ----------
-    # tmpdir: function-scoped temporary directory fixture
+    # function_tmpdir: function-scoped temporary directory fixture
     # mf6_example_namfiles: ordered list of namfiles for 1+ coupled models
 
     import pymake
@@ -33,14 +33,15 @@ def test_mf6_example_simulations(tmpdir, mf6_example_namfiles):
     # coupled models have nested dirs (e.g., 'mf6gwf' and 'mf6gwt') under model directory
     # TODO: are there multiple types of couplings? e.g. besides GWF-GWT, mt3dms?
     nested = is_nested(namfile)
-    tmpdir = Path(
-        tmpdir / "workspace"
+    function_tmpdir = Path(
+        function_tmpdir / "workspace"
     )  # working directory (must not exist for copytree)
-    cmpdir = tmpdir / "compare"  # comparison directory
+    cmpdir = function_tmpdir / "compare"  # comparison directory
 
     # copy model files into working directory
     copytree(
-        src=namfile.parent.parent if nested else namfile.parent, dst=tmpdir
+        src=namfile.parent.parent if nested else namfile.parent,
+        dst=function_tmpdir,
     )
 
     def run_models():
@@ -52,7 +53,11 @@ def test_mf6_example_simulations(tmpdir, mf6_example_namfiles):
 
             # working directory must be named according to the name file's parent (e.g.
             # 'mf6gwf') because coupled models refer to each other with relative paths
-            wrkdir = Path(tmpdir / model_path.name) if nested else tmpdir
+            wrkdir = (
+                Path(function_tmpdir / model_path.name)
+                if nested
+                else function_tmpdir
+            )
 
             # load simulation
             sim = MFSimulation.load(

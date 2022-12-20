@@ -3,7 +3,7 @@ import shutil
 
 import numpy as np
 import pytest
-from autotest.conftest import requires_pkg
+from modflow_devtools.markers import requires_pkg
 
 from flopy.modflow import Mnw, Modflow, ModflowDis, ModflowMnw2
 
@@ -22,7 +22,7 @@ def mnw1_path(example_data_path):
     return example_data_path / "mf2005_test"
 
 
-def test_load(tmpdir, example_data_path, mnw2_examples_path):
+def test_load(function_tmpdir, example_data_path, mnw2_examples_path):
     """t027 test load of MNW2 Package"""
     # load in the test problem (1 well, 3 stress periods)
     m = Modflow.load(
@@ -31,7 +31,7 @@ def test_load(tmpdir, example_data_path, mnw2_examples_path):
         verbose=True,
         forgive=False,
     )
-    ws = str(tmpdir)
+    ws = str(function_tmpdir)
     m.change_model_ws(ws)
     assert m.has_package("MNW2")
     assert m.has_package("MNWI")
@@ -59,7 +59,7 @@ def test_load(tmpdir, example_data_path, mnw2_examples_path):
     )
 
 
-def test_mnw1_load_write(tmpdir, mnw1_path):
+def test_mnw1_load_write(function_tmpdir, mnw1_path):
     m = Modflow.load(
         "mnw1.nam",
         model_ws=mnw1_path,
@@ -67,7 +67,7 @@ def test_mnw1_load_write(tmpdir, mnw1_path):
         verbose=True,
         forgive=False,
     )
-    ws = str(tmpdir)
+    ws = str(function_tmpdir)
     assert m.has_package("MNW1")
     assert m.mnw1.mxmnw == 120
     for i in range(3):
@@ -93,9 +93,9 @@ def test_mnw1_load_write(tmpdir, mnw1_path):
         assert np.array_equal(v, m2.mnw1.stress_period_data[k])
 
 
-def test_make_package(tmpdir):
+def test_make_package(function_tmpdir):
     """t027 test make MNW2 Package"""
-    ws = str(tmpdir)
+    ws = str(function_tmpdir)
     m4 = Modflow("mnw2example", model_ws=ws)
     dis = ModflowDis(nrow=5, ncol=5, nlay=3, nper=3, top=10, botm=0, model=m4)
 
@@ -294,7 +294,7 @@ def test_make_package(tmpdir):
 
 
 @requires_pkg("pandas")
-def test_mnw2_create_file(tmpdir):
+def test_mnw2_create_file(function_tmpdir):
     """
     Test for issue #556, Mnw2 crashed if wells have
     multiple node lengths
@@ -302,7 +302,7 @@ def test_mnw2_create_file(tmpdir):
     import pandas as pd
 
     mf = Modflow("test_mfmnw2", exe_name="mf2005")
-    ws = str(tmpdir)
+    ws = str(function_tmpdir)
     wellids = [1, 2]
     nlayers = [2, 4]
     stress_period_data = pd.DataFrame([[0, 1]], columns=["per", "qdes"])
@@ -367,11 +367,11 @@ def test_mnw2_create_file(tmpdir):
 
 @requires_pkg("netCDF4")
 @pytest.mark.slow
-def test_export(tmpdir, mnw2_examples_path):
+def test_export(function_tmpdir, mnw2_examples_path):
     """t027 test export of MNW2 Package to netcdf files"""
     import netCDF4
 
-    ws = str(tmpdir)
+    ws = str(function_tmpdir)
     m = Modflow.load(
         "MNW2-Fig28.nam",
         model_ws=mnw2_examples_path,
@@ -398,7 +398,7 @@ def test_export(tmpdir, mnw2_examples_path):
     # TODO need to add shapefile test
 
 
-def test_blank_lines(tmpdir):
+def test_blank_lines(function_tmpdir):
     mnw2str = """3 50 0
 EB-33 -3
 SKIN -1 0 0 0
@@ -428,7 +428,7 @@ EB-35 -534.72
 eb-36 -534.72
 
 """
-    ws = str(tmpdir)
+    ws = str(function_tmpdir)
     fpth = os.path.join(ws, "mymnw2.mnw2")
     f = open(fpth, "w")
     f.write(mnw2str)

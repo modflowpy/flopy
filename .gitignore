@@ -92,6 +92,7 @@ autotest/.noseids
 
 *.bak
 
+# environment files
 **.env
 venv
 app
