@@ -15,7 +15,12 @@ from flopy.utils import (
     HeadUFile,
     Util2d,
 )
-from flopy.utils.binaryfile import get_headfile_precision
+from flopy.utils.binaryfile import (
+    get_headfile_precision,
+    write_budget,
+    write_head,
+)
+from flopy.utils.gridutil import uniform_flow_field
 
 
 @pytest.fixture
@@ -241,3 +246,40 @@ def test_budgetfile_detect_precision_single(path):
 def test_budgetfile_detect_precision_double(path):
     file = CellBudgetFile(path, precision="auto")
     assert file.realtype == np.float64
+
+
+def test_write_head(function_tmpdir):
+    file_path = function_tmpdir / "headfile"
+    head_data = np.random.random((10, 10))
+
+    write_head(file_path, head_data)
+
+    assert file_path.is_file()
+    content = np.fromfile(file_path)
+    assert np.array_equal(head_data.ravel(), content)
+
+    # TODO: what else needs to be checked here?
+
+
+def test_write_budget(function_tmpdir):
+    file_path = function_tmpdir / "budgetfile"
+
+    nlay = 3
+    nrow = 3
+    ncol = 3
+    qx = 1.0
+    qy = 0.0
+    qz = 0.0
+    shape = (nlay, nrow, ncol)
+    spdis, flowja = uniform_flow_field(qx, qy, qz, shape)
+
+    write_budget(file_path, flowja, kstp=0)
+    assert file_path.is_file()
+    content1 = np.fromfile(file_path)
+
+    write_budget(file_path, flowja, kstp=1, kper=1, text="text")
+    assert file_path.is_file()
+    content2 = np.fromfile(file_path)
+
+    # TODO: why are these the same?
+    assert np.array_equal(content1, content2)
