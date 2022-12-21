@@ -1,7 +1,9 @@
 import importlib
 import os
+import re
 import socket
 import sys
+from importlib import metadata
 from os import environ
 from os.path import basename, normpath
 from pathlib import Path
@@ -13,7 +15,6 @@ from urllib import request
 from warnings import warn
 
 import matplotlib.pyplot as plt
-import pkg_resources
 import pytest
 from modflow_devtools.misc import is_in_ci
 
@@ -121,34 +122,40 @@ def pytest_addoption(parser):
 def pytest_report_header(config):
     """Header for pytest to show versions of packages."""
 
-    # if we ever drop support for python 3.7, could use importlib.metadata instead?
-    # or importlib_metadata backport: https://importlib-metadata.readthedocs.io/en/latest/
-    # pkg_resources discouraged: https://setuptools.pypa.io/en/latest/pkg_resources.html
+    required = []
+    extra = {}
+    for item in metadata.requires("flopy"):
+        pkg_name = re.findall(r"[a-z0-9_\-]+", item, re.IGNORECASE)[0]
+        if res := re.findall("extra == ['\"](.+)['\"]", item):
+            assert len(res) == 1, item
+            pkg_extra = res[0]
+            if pkg_extra not in extra:
+                extra[pkg_extra] = []
+            extra[pkg_extra].append(pkg_name)
+        else:
+            required.append(pkg_name)
 
     processed = set()
-    flopy_pkg = pkg_resources.get_distribution("flopy")
     lines = []
     items = []
-    for pkg in flopy_pkg.requires():
-        name = pkg.name
+    for name in required:
         processed.add(name)
         try:
-            version = pkg_resources.get_distribution(name).version
+            version = metadata.version(name)
             items.append(f"{name}-{version}")
-        except pkg_resources.DistributionNotFound:
+        except metadata.PackageNotFoundError:
             items.append(f"{name} (not found)")
     lines.append("required packages: " + ", ".join(items))
     installed = []
     not_found = []
-    for pkg in flopy_pkg.requires(["optional"]):
-        name = pkg.name
+    for name in extra["optional"]:
         if name in processed:
             continue
         processed.add(name)
         try:
-            version = pkg_resources.get_distribution(name).version
+            version = metadata.version(name)
             installed.append(f"{name}-{version}")
-        except pkg_resources.DistributionNotFound:
+        except metadata.PackageNotFoundError:
             not_found.append(name)
     if installed:
         lines.append("optional packages: " + ", ".join(installed))
