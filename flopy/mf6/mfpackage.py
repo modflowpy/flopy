@@ -1736,6 +1736,11 @@ class MFPackage(PackageContainer, PackageInterface):
             chld_pkg_grp = self.parent_file._child_package_groups[package_type]
             chld_pkg_grp.init_package(self, self._filename)
 
+        # remove any remaining valid kwargs
+        key_list = list(kwargs.keys())
+        for key in key_list:
+            if hasattr(self, f"_{key}"):
+                kwargs.pop(f"_{key}")
         # check for extraneous kwargs
         if len(kwargs) > 0:
             kwargs_str = ", ".join(kwargs.keys())
