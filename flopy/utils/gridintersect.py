@@ -729,6 +729,7 @@ class GridIntersect:
         isectshp = []
         cellids = []
         vertices = []
+        vertices_check = []
         lengths = []
 
         # loop over cells returned by filtered spatial query
@@ -746,7 +747,7 @@ class GridIntersect:
                 # test if linestring was already processed (if on boundary),
                 # ignore if return_all_intersections is True
                 if not return_all_intersections:
-                    if verts in vertices:
+                    if verts in vertices_check:
                         continue
                 # if keep zero don't check length
                 if not keepzerolengths:
@@ -755,6 +756,11 @@ class GridIntersect:
                 isectshp.append(c)
                 lengths.append(c.length)
                 vertices.append(verts)
+                # unpack mutlilinestring for checking if linestring already parsed
+                if c.geom_type.startswith("Multi"):
+                    vertices_check += [iv for iv in verts]
+                else:
+                    vertices_check.append(verts)
                 # if structured calculate (i, j) cell address
                 if self.mfgrid.grid_type == "structured":
                     cid = self.mfgrid.get_lrc([cid])[0][1:]
