@@ -6,12 +6,12 @@ from autotest.regression.conftest import is_nested
 from modflow_devtools.markers import requires_exe, requires_pkg
 
 from flopy.mf6 import MFSimulation
+from flopy.utils.compare import compare_heads
 
 pytestmark = pytest.mark.mf6
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 def test_mf6_example_simulations(function_tmpdir, mf6_example_namfiles):
@@ -22,8 +22,6 @@ def test_mf6_example_simulations(function_tmpdir, mf6_example_namfiles):
     # ----------
     # function_tmpdir: function-scoped temporary directory fixture
     # mf6_example_namfiles: ordered list of namfiles for 1+ coupled models
-
-    import pymake
 
     # make sure we have at least 1 name file
     if len(mf6_example_namfiles) == 0:
@@ -82,7 +80,7 @@ def test_mf6_example_simulations(function_tmpdir, mf6_example_namfiles):
             headfiles2 = [p for p in cmpdir.glob("*.hds")]
 
             # compare heads
-            assert pymake.compare_heads(
+            assert compare_heads(
                 None,
                 None,
                 precision="double",

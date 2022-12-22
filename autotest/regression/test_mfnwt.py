@@ -2,10 +2,11 @@ import os
 
 import pytest
 from autotest.conftest import get_example_data_path
-from modflow_devtools.markers import requires_exe, requires_pkg
+from modflow_devtools.markers import requires_exe
 
 from flopy.modflow import Modflow, ModflowNwt, ModflowUpw
 from flopy.utils import parsenamefile
+from flopy.utils.compare import compare_budget, compare_heads
 
 
 def get_nfnwt_namfiles():
@@ -28,13 +29,10 @@ def get_nfnwt_namfiles():
 
 
 @requires_exe("mfnwt")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 @pytest.mark.parametrize("namfile", get_nfnwt_namfiles())
 def test_run_mfnwt_model(function_tmpdir, namfile):
-    import pymake
-
     # load a MODFLOW-2005 model, convert to a MFNWT model,
     # write it back out, run the MFNWT model, load the MFNWT model,
     # and compare the results.
@@ -136,11 +134,9 @@ def test_run_mfnwt_model(function_tmpdir, namfile):
     fn1 = os.path.join(pthf, namfile)
 
     fsum = str(function_tmpdir / f"{base_name}.head.out")
-    assert pymake.compare_heads(
-        fn0, fn1, outfile=fsum
-    ), "head comparison failure"
+    assert compare_heads(fn0, fn1, outfile=fsum), "head comparison failure"
 
     fsum = str(function_tmpdir / f"{base_name}.budget.out")
-    assert pymake.compare_budget(
+    assert compare_budget(
         fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
     ), "budget comparison failure"

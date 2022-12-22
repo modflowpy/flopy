@@ -7,16 +7,14 @@ from flaky import flaky
 from modflow_devtools.markers import requires_exe, requires_pkg
 
 import flopy
+from flopy.utils.compare import compare_heads
 
 
 @flaky
 @requires_exe("mflgr")
-@requires_pkg("pymake")
 @pytest.mark.regression
 def test_simplelgr(function_tmpdir, example_data_path):
     """Test load and write of distributed MODFLOW-LGR example problem."""
-    import pymake
-
     mflgr_v2_ex3_path = example_data_path / "mflgr_v2" / "ex3"
 
     ws = function_tmpdir / mflgr_v2_ex3_path.stem
@@ -66,12 +64,12 @@ def test_simplelgr(function_tmpdir, example_data_path):
     print("compare parent results")
     pth0 = join(ws, "ex3_parent.nam")
     pth1 = join(model_ws2, "ex3_parent.nam")
-    success = pymake.compare_heads(pth0, pth1)
+    success = compare_heads(pth0, pth1)
     assert success, "parent heads do not match"
 
     # compare child results
     print("compare child results")
     pth0 = join(ws, "ex3_child.nam")
     pth1 = join(model_ws2, "ex3_child.nam")
-    success = pymake.compare_heads(pth0, pth1)
+    success = compare_heads(pth0, pth1)
     assert success, "child heads do not match"

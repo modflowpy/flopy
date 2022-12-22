@@ -13,14 +13,12 @@ from flopy.modflow import (
     ModflowPcg,
     ModflowWel,
 )
+from flopy.utils.compare import compare_budget, compare_heads
 
 
 @requires_exe("mf2005")
-@requires_pkg("pymake")
 @pytest.mark.regression
 def test_binary_well(function_tmpdir):
-    import pymake
-
     nlay = 3
     nrow = 3
     ncol = 3
@@ -102,13 +100,11 @@ def test_binary_well(function_tmpdir):
     fsum = os.path.join(
         str(function_tmpdir), f"{os.path.splitext(mfnam)[0]}.head.out"
     )
-    assert pymake.compare_heads(
-        fn0, fn1, outfile=fsum
-    ), "head comparison failure"
+    assert compare_heads(fn0, fn1, outfile=fsum), "head comparison failure"
 
     fsum = os.path.join(
         str(function_tmpdir), f"{os.path.splitext(mfnam)[0]}.budget.out"
     )
-    assert pymake.compare_budget(
+    assert compare_budget(
         fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
     ), "budget comparison failure"

@@ -48,17 +48,15 @@ from flopy.mf6.data.mfdatastorage import DataStorageType
 from flopy.mf6.mfbase import FlopyException, MFDataException
 from flopy.mf6.utils import testutils
 from flopy.utils import CellBudgetFile
+from flopy.utils.compare import compare_concentrations, compare_heads
 from flopy.utils.datautil import PyListUtil
 
 pytestmark = pytest.mark.mf6
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
 def test_np001(function_tmpdir, example_data_path):
-    import pymake
-
     # init paths
     test_ex_name = "np001"
     model_name = "np001_mod"
@@ -407,7 +405,7 @@ def test_np001(function_tmpdir, example_data_path):
     # compare output to expected results
     head_new = os.path.join(ws, "np001_mod 1.hds")
     outfile = os.path.join(ws, "head_compare.dat")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -451,7 +449,7 @@ def test_np001(function_tmpdir, example_data_path):
     # compare output to expected results
     head_new = os.path.join(run_folder_new, "np001_mod 1.hds")
     outfile = os.path.join(run_folder_new, "head_compare.dat")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -626,11 +624,8 @@ def test_np001(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
 def test_np002(function_tmpdir, example_data_path):
-    import pymake
-
     # init paths
     test_ex_name = "np002"
     model_name = "np002_mod"
@@ -811,7 +806,7 @@ def test_np002(function_tmpdir, example_data_path):
     # compare output to expected results
     head_new = os.path.join(ws, "np002_mod.hds")
     outfile = os.path.join(ws, "head_compare.dat")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -903,11 +898,8 @@ def test_np002(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
 def test021_twri(function_tmpdir, example_data_path):
-    import pymake
-
     # init paths
     test_ex_name = "test021_twri"
     model_name = "twri"
@@ -1116,7 +1108,7 @@ def test021_twri(function_tmpdir, example_data_path):
     # compare output to expected results
     head_new = os.path.join(ws, "twri.hds")
     outfile = os.path.join(ws, "head_compare.dat")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -1129,12 +1121,9 @@ def test021_twri(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 def test005_create_tests_advgw_tidal(function_tmpdir, example_data_path):
-    import pymake
-
     # init paths
     test_ex_name = "test005_advgw_tidal"
     model_name = "AdvGW_tidal"
@@ -1674,7 +1663,7 @@ def test005_create_tests_advgw_tidal(function_tmpdir, example_data_path):
     # compare output to expected results
     head_new = str(function_tmpdir / "AdvGW_tidal.hds")
     outfile = str(function_tmpdir / "head_compare.dat")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -1758,11 +1747,8 @@ def test005_create_tests_advgw_tidal(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
 def test004_create_tests_bcfss(function_tmpdir, example_data_path):
-    import pymake
-
     # init paths
     test_ex_name = "test004_bcfss"
     model_name = "bcf2ss"
@@ -1943,7 +1929,7 @@ def test004_create_tests_bcfss(function_tmpdir, example_data_path):
     # compare output to expected results
     head_new = os.path.join(str(function_tmpdir), "bcf2ss.hds")
     outfile = os.path.join(str(function_tmpdir), "head_compare.dat")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -1956,11 +1942,8 @@ def test004_create_tests_bcfss(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
 def test035_create_tests_fhb(function_tmpdir, example_data_path):
-    import pymake
-
     # init paths
     test_ex_name = "test035_fhb"
     model_name = "fhb2015"
@@ -2086,7 +2069,7 @@ def test035_create_tests_fhb(function_tmpdir, example_data_path):
     # compare output to expected results
     head_new = str(function_tmpdir / "fhb2015_fhb.hds")
     outfile = str(function_tmpdir / "head_compare.dat")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -2099,11 +2082,9 @@ def test035_create_tests_fhb(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake", "shapefile")
+@requires_pkg("shapefile")
 @pytest.mark.regression
 def test006_create_tests_gwf3_disv(function_tmpdir, example_data_path):
-    import pymake
-
     # init paths
     test_ex_name = "test006_gwf3_disv"
     model_name = "flow"
@@ -2374,7 +2355,7 @@ def test006_create_tests_gwf3_disv(function_tmpdir, example_data_path):
     # compare output to expected results
     head_new = str(function_tmpdir / "flow.hds")
     outfile = str(function_tmpdir / "head_compare.dat")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -2393,11 +2374,8 @@ def test006_create_tests_gwf3_disv(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
 def test006_create_tests_2models_gnc(function_tmpdir, example_data_path):
-    import pymake
-
     # init paths
     test_ex_name = "test006_2models_gnc"
     model_name_1 = "model1"
@@ -2682,7 +2660,7 @@ def test006_create_tests_2models_gnc(function_tmpdir, example_data_path):
     # compare output to expected results
     head_new = str(function_tmpdir / "model1.hds")
     outfile = str(function_tmpdir / "head_compare.dat")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_1,
@@ -2693,7 +2671,7 @@ def test006_create_tests_2models_gnc(function_tmpdir, example_data_path):
     # compare output to expected results
     head_new = str(function_tmpdir / "model2.hds")
     outfile = str(function_tmpdir / "head_compare.dat")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_2,
@@ -2733,12 +2711,9 @@ def test006_create_tests_2models_gnc(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 def test050_create_tests_circle_island(function_tmpdir, example_data_path):
-    import pymake
-
     # init paths
     test_ex_name = "test050_circle_island"
     model_name = "ci"
@@ -2821,7 +2796,7 @@ def test050_create_tests_circle_island(function_tmpdir, example_data_path):
     # compare output to expected results
     head_new = str(function_tmpdir / "ci.output.hds")
     outfile = str(function_tmpdir / "head_compare.dat")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -2834,15 +2809,12 @@ def test050_create_tests_circle_island(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.xfail(
     reason="possible python3.7/windows incompatibilities in testutils.read_std_array "
     "https://github.com/modflowpy/flopy/runs/7581629193?check_suite_focus=true#step:11:1753"
 )
 @pytest.mark.regression
 def test028_create_tests_sfr(function_tmpdir, example_data_path):
-    import pymake
-
     # init paths
     test_ex_name = "test028_sfr"
     model_name = "test1tr"
@@ -3095,7 +3067,7 @@ def test028_create_tests_sfr(function_tmpdir, example_data_path):
     # compare output to expected results
     head_new = str(function_tmpdir / "test1tr.hds")
     outfile = str(function_tmpdir / "head_compare.dat")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -3109,11 +3081,8 @@ def test028_create_tests_sfr(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
 def test_create_tests_transport(function_tmpdir, example_data_path):
-    import pymake
-
     # init paths
     test_ex_name = "test_transport"
     name = "mst03"
@@ -3328,7 +3297,7 @@ def test_create_tests_transport(function_tmpdir, example_data_path):
     # compare output to expected results
     head_new = str(function_tmpdir / "gwf_mst03.hds")
     outfile = str(function_tmpdir / "head_compare.dat")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -3336,7 +3305,7 @@ def test_create_tests_transport(function_tmpdir, example_data_path):
         outfile=outfile,
     )
     conc_new = str(function_tmpdir / "gwt_mst03.ucn")
-    assert pymake.compare_concs(
+    assert compare_concentrations(
         None,
         None,
         files1=expected_conc_file,
@@ -3349,12 +3318,10 @@ def test_create_tests_transport(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake", "shapely")
+@requires_pkg("shapely")
 @pytest.mark.slow
 @pytest.mark.regression
 def test001a_tharmonic(function_tmpdir, example_data_path):
-    import pymake
-
     # init paths
     test_ex_name = "test001a_Tharmonic"
     model_name = "flow15"
@@ -3416,7 +3383,7 @@ def test001a_tharmonic(function_tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = str(function_tmpdir / "flow15_flow.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None, None, files1=expected_head_file_a, files2=head_new
     )
 
@@ -3470,7 +3437,7 @@ def test001a_tharmonic(function_tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = os.path.join(str(save_folder), "flow15_flow.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None, None, files1=expected_head_file_b, files2=head_new
     )
 
@@ -3481,11 +3448,8 @@ def test001a_tharmonic(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
 def test003_gwfs_disv(function_tmpdir, example_data_path):
-    import pymake
-
     # init paths
     test_ex_name = "test003_gwfs_disv"
     model_name = "gwf_1"
@@ -3521,7 +3485,7 @@ def test003_gwfs_disv(function_tmpdir, example_data_path):
     )
 
     head_new = os.path.join(str(function_tmpdir), "model.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None, None, files1=expected_head_file_a, files2=head_new
     )
 
@@ -3563,7 +3527,7 @@ def test003_gwfs_disv(function_tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = os.path.join(str(save_folder), "model.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None, None, files1=expected_head_file_b, files2=head_new
     )
 
@@ -3574,12 +3538,9 @@ def test003_gwfs_disv(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 def test005_advgw_tidal(function_tmpdir, example_data_path):
-    import pymake
-
     # init paths
     test_ex_name = "test005_advgw_tidal"
     model_name = "gwf_1"
@@ -3632,7 +3593,7 @@ def test005_advgw_tidal(function_tmpdir, example_data_path):
     # compare output to expected results
     head_new = os.path.join(str(function_tmpdir), "advgw_tidal.hds")
     outfile = os.path.join(str(function_tmpdir), "head_compare.dat")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_a,
@@ -3642,11 +3603,8 @@ def test005_advgw_tidal(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
 def test006_gwf3(function_tmpdir, example_data_path):
-    import pymake
-
     # init paths
     test_ex_name = "test006_gwf3"
     model_name = "gwf_1"
@@ -3704,7 +3662,7 @@ def test006_gwf3(function_tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = os.path.join(str(function_tmpdir), "flow.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_a,
@@ -3751,7 +3709,7 @@ def test006_gwf3(function_tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = os.path.join(save_folder, "flow.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_b,
@@ -3799,7 +3757,7 @@ def test006_gwf3(function_tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = os.path.join(save_folder, "flow.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_b,
@@ -3827,11 +3785,8 @@ def test006_gwf3(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
 def test045_lake1ss_table(function_tmpdir, example_data_path):
-    import pymake
-
     # init paths
     test_ex_name = "test045_lake1ss_table"
     model_name = "lakeex1b"
@@ -3865,7 +3820,7 @@ def test045_lake1ss_table(function_tmpdir, example_data_path):
     # compare output to expected results
     head_new = str(function_tmpdir / "lakeex1b.hds")
     outfile = str(function_tmpdir / "headcompare_a.txt")
-    success = pymake.compare_heads(
+    success = compare_heads(
         None,
         None,
         files1=expected_head_file_a,
@@ -3895,7 +3850,7 @@ def test045_lake1ss_table(function_tmpdir, example_data_path):
     # compare output to expected results
     head_new = str(save_folder / "lakeex1b.hds")
     outfile = str(function_tmpdir / "headcompare_b.txt")
-    success = pymake.compare_heads(
+    success = compare_heads(
         None,
         None,
         files1=expected_head_file_b,
@@ -3906,12 +3861,9 @@ def test045_lake1ss_table(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 def test006_2models_mvr(function_tmpdir, example_data_path):
-    import pymake
-
     # init paths
     test_ex_name = "test006_2models_mvr"
     sim_name = "test006_2models_mvr"
@@ -3946,7 +3898,7 @@ def test006_2models_mvr(function_tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = str(ws / "model1.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_a,
@@ -3954,7 +3906,7 @@ def test006_2models_mvr(function_tmpdir, example_data_path):
     )
 
     head_new = str(ws / "model2.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_aa,
@@ -4033,7 +3985,7 @@ def test006_2models_mvr(function_tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = os.path.join(save_folder, "model1.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_b,
@@ -4041,7 +3993,7 @@ def test006_2models_mvr(function_tmpdir, example_data_path):
     )
 
     head_new = os.path.join(save_folder, "model2.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_bb,
@@ -4095,7 +4047,6 @@ def test006_2models_mvr(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 def test001e_uzf_3lay(function_tmpdir, example_data_path):
@@ -4196,12 +4147,9 @@ def test001e_uzf_3lay(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 def test045_lake2tr(function_tmpdir, example_data_path):
-    import pymake
-
     # init paths
     test_ex_name = "test045_lake2tr"
     model_name = "lakeex2a"
@@ -4225,7 +4173,7 @@ def test045_lake2tr(function_tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = str(function_tmpdir / "lakeex2a.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_a,
@@ -4261,7 +4209,7 @@ def test045_lake2tr(function_tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = str(save_folder / "lakeex2a.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_b,
@@ -4271,11 +4219,8 @@ def test045_lake2tr(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
 def test036_twrihfb(function_tmpdir, example_data_path):
-    import pymake
-
     # init paths
     test_ex_name = "test036_twrihfb"
     model_name = "twrihfb2015"
@@ -4304,7 +4249,7 @@ def test036_twrihfb(function_tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = str(function_tmpdir / "twrihfb2015_output.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_a,
@@ -4346,7 +4291,7 @@ def test036_twrihfb(function_tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = str(save_folder / "twrihfb2015_output.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_b,
@@ -4355,12 +4300,9 @@ def test036_twrihfb(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 def test027_timeseriestest(function_tmpdir, example_data_path):
-    import pymake
-
     # init paths
     test_ex_name = "test027_TimeseriesTest"
     model_name = "gwf_1"
@@ -4396,7 +4338,7 @@ def test027_timeseriestest(function_tmpdir, example_data_path):
     # compare output to expected results
     head_new = str(function_tmpdir / "timeseriestest.hds")
     outfile = str(function_tmpdir / "head_compare.dat")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_a,
@@ -4425,7 +4367,7 @@ def test027_timeseriestest(function_tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = os.path.join(str(save_folder), "timeseriestest.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_b,

@@ -166,7 +166,6 @@ def compare_budget(
     # Open output file
     if outfile is not None:
         f = open(outfile, "w")
-        f.write("Created by pymake.autotest.compare\n")
 
     # Initialize SWR budget objects
     lst1obj = flopy.utils.MfusgListBudget(lst_file1)
@@ -388,7 +387,6 @@ def compare_swrbudget(
     # Open output file
     if outfile is not None:
         f = open(outfile, "w")
-        f.write("Created by pymake.autotest.compare\n")
 
     # Process cumulative and incremental
     for idx in range(2):
@@ -656,7 +654,6 @@ def compare_heads(
     # Open output file
     if outfile is not None:
         f = open(outfile, "w")
-        f.write("Created by pymake.autotest.compare\n")
         f.write(f"Performing {text.upper()} to {text2.upper()} comparison\n")
 
         if exfile is not None:
@@ -1006,7 +1003,6 @@ def compare_concentrations(
     # Open output file
     if outfile is not None:
         f = open(outfile, "w")
-        f.write("Created by pymake.autotest.compare_concs\n")
 
     # Get stage objects
     uobj1 = flopy.utils.UcnFile(ufpth1, precision=precision, verbose=verbose)
@@ -1225,7 +1221,6 @@ def compare_stages(
     # Open output file
     if outfile is not None:
         f = open(outfile, "w")
-        f.write("Created by pymake.autotest.compare_stages\n")
 
     # Get stage objects
     sobj1 = flopy.utils.SwrStage(sfpth1, verbose=verbose)
