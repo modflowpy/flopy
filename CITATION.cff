@@ -51,8 +51,11 @@ authors:
   given-names: Jon Jeffrey
   orcid: https://orcid.org/0000-0001-5909-0010
 - family-names: Brakenhoff
-  given-names: Davíd
+  given-names: Davíd A.
   orcid: https://orcid.org/0000-0002-2993-2202
+- family-names: Bonelli
+  given-names: Wesley P.
+  orcid: https://orcid.org/0000-0002-2665-5078
 preferred-citation:
   type: article
   authors:
