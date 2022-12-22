@@ -1579,7 +1579,11 @@ def test_multi_model(function_tmpdir):
     sim.write_simulation()
     sim.run_simulation()
 
-    try:
+    with pytest.raises(
+        flopy.mf6.mfbase.FlopyException,
+        match='Extraneous kwargs "param_does_not_exist" '
+        "provided to MFPackage.",
+    ):
         # test kwargs error checking
         wel = ModflowGwfwel(
             gwf2,
@@ -1591,10 +1595,6 @@ def test_multi_model(function_tmpdir):
             pname="WEL-1",
             param_does_not_exist=True,
         )
-        ex = False
-    except flopy.mf6.mfbase.FlopyException:
-        ex = True
-    assert ex
 
 
 @requires_exe("mf6")
