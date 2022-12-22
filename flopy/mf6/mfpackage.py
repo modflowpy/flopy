@@ -1739,8 +1739,8 @@ class MFPackage(PackageContainer, PackageInterface):
         # remove any remaining valid kwargs
         key_list = list(kwargs.keys())
         for key in key_list:
-            if hasattr(self, f"_{key}"):
-                kwargs.pop(f"_{key}")
+            if "filerecord" in key and hasattr(self, f"{key}"):
+                kwargs.pop(f"{key}")
         # check for extraneous kwargs
         if len(kwargs) > 0:
             kwargs_str = ", ".join(kwargs.keys())
