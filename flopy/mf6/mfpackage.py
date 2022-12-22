@@ -1585,16 +1585,18 @@ class MFPackage(PackageContainer, PackageInterface):
         loading_package=False,
         **kwargs,
     ):
+        parent_file = kwargs.pop("parent_file", None)
         if isinstance(parent, MFPackage):
             self.model_or_sim = parent.model_or_sim
             self.parent_file = parent
-        elif "parent_file" in kwargs:
+        elif parent_file is not None:
             self.model_or_sim = parent
-            self.parent_file = kwargs["parent_file"]
+            self.parent_file = parent_file
         else:
             self.model_or_sim = parent
             self.parent_file = None
-        if "_internal_package" in kwargs and kwargs["_internal_package"]:
+        _internal_package = kwargs.pop("_internal_package", False)
+        if _internal_package:
             self.internal_package = True
         else:
             self.internal_package = False
@@ -1724,14 +1726,28 @@ class MFPackage(PackageContainer, PackageInterface):
         self.bc_color = "black"
         self.__inattr = False
         self._child_package_groups = {}
+        child_builder_call = kwargs.pop("child_builder_call", None)
         if (
             self.parent_file is not None
-            and "child_builder_call" not in kwargs
+            and child_builder_call is None
             and package_type in self.parent_file._child_package_groups
         ):
             # initialize as part of the parent's child package group
             chld_pkg_grp = self.parent_file._child_package_groups[package_type]
             chld_pkg_grp.init_package(self, self._filename)
+
+        # remove any remaining valid kwargs
+        key_list = list(kwargs.keys())
+        for key in key_list:
+            if "filerecord" in key and hasattr(self, f"{key}"):
+                kwargs.pop(f"{key}")
+        # check for extraneous kwargs
+        if len(kwargs) > 0:
+            kwargs_str = ", ".join(kwargs.keys())
+            excpt_str = (
+                f'Extraneous kwargs "{kwargs_str}" provided to MFPackage.'
+            )
+            raise FlopyException(excpt_str)
 
     def __init_subclass__(cls):
         """Register package type"""
