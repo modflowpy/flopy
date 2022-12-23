@@ -131,7 +131,7 @@ def compare_budget(
     lst_file1 = None
     if files1 is None:
         lst_file = get_entries_from_namefile(namefile1, "list")
-        lst_file1 = lst_file[0][0]
+        lst_file1 = lst_file[0][0] if any(lst_file) else None
     else:
         if isinstance(files1, str):
             files1 = [files1]
@@ -145,7 +145,7 @@ def compare_budget(
     lst_file2 = None
     if files2 is None:
         lst_file = get_entries_from_namefile(namefile2, "list")
-        lst_file2 = lst_file[0][0]
+        lst_file2 = lst_file[0][0] if any(lst_file) else None
     else:
         if isinstance(files2, str):
             files2 = [files2]
@@ -336,7 +336,7 @@ def compare_swrbudget(
     list1 = None
     if files1 is None:
         lst = get_entries_from_namefile(namefile1, "list")
-        list1 = lst[0][0]
+        list1 = lst[0][0] if any(lst) else None
     else:
         for file in files1:
             if (
@@ -348,7 +348,7 @@ def compare_swrbudget(
     list2 = None
     if files2 is None:
         lst = get_entries_from_namefile(namefile2, "list")
-        list2 = lst[0][0]
+        list2 = lst[0][0] if any(lst) else None
     else:
         for file in files2:
             if (
@@ -558,7 +558,7 @@ def compare_heads(
     if files1 is None:
         # Get oc info, and return if OC not included in models
         ocf1 = get_entries_from_namefile(namefile1, "OC")
-        if ocf1[0][0] is None:
+        if not any(ocf1) is None:
             return True
 
         hu1, hfpth1, du1, _ = flopy.modflow.ModflowOc.get_ocoutput_units(
@@ -570,7 +570,8 @@ def compare_heads(
             iut = du1
         if iut != 0:
             entries = get_entries_from_namefile(namefile1, unit=abs(iut))
-            hfpth1, status1 = entries[0][0], entries[0][1]
+            hfpth1 = entries[0][0] if any(entries) else None
+            status1 = entries[0][1] if any(entries) else None
 
     else:
         if isinstance(files1, str):
@@ -601,7 +602,7 @@ def compare_heads(
     if files2 is None:
         # Get oc info, and return if OC not included in models
         ocf2 = get_entries_from_namefile(namefile2, "OC")
-        if ocf2[0][0] is None:
+        if not any(ocf2):
             return True
 
         hu2, hfpth2, du2, dfpth2 = flopy.modflow.ModflowOc.get_ocoutput_units(
@@ -613,7 +614,8 @@ def compare_heads(
             iut = du2
         if iut != 0:
             entries = get_entries_from_namefile(namefile2, unit=abs(iut))
-            hfpth2, status2 = entries[0][0], entries[0][1]
+            hfpth2 = entries[0][0] if any(entries) else None
+            status2 = entries[0][1] if any(entries) else None
     else:
         if isinstance(files2, str):
             files2 = [files2]
@@ -950,7 +952,7 @@ def compare_concentrations(
     if files1 is None:
         for ext in valid_ext:
             ucn = get_entries_from_namefile(namefile1, extension=ext)
-            ufpth = ucn[0][0]
+            ufpth = ucn[0][0] if any(ucn) else None
             if ufpth is not None:
                 ufpth1 = ufpth
                 break
@@ -970,7 +972,7 @@ def compare_concentrations(
     if files2 is None:
         for ext in valid_ext:
             ucn = get_entries_from_namefile(namefile2, extension=ext)
-            ufpth = ucn[0][0]
+            ufpth = ucn[0][0] if any(ucn) else None
             if ufpth is not None:
                 ufpth2 = ufpth
                 break
@@ -1174,7 +1176,7 @@ def compare_stages(
     if namefile1 is not None:
         for ext in valid_ext:
             stg = get_entries_from_namefile(namefile1, extension=ext)
-            sfpth = stg[0][0]
+            sfpth = stg[0][0] if any(stg) else None
             if sfpth is not None:
                 sfpth1 = sfpth
                 break
@@ -1192,7 +1194,7 @@ def compare_stages(
     if namefile2 is not None:
         for ext in valid_ext:
             stg = get_entries_from_namefile(namefile2, extension=ext)
-            sfpth = stg[0][0]
+            sfpth = stg[0][0] if any(stg) else None
             if sfpth is not None:
                 sfpth2 = sfpth
                 break
