@@ -292,9 +292,7 @@ def get_entries_from_namefile(
     -------
     entries : list of tuples
         list of tuples containing FTYPE, UNIT, FNAME, STATUS for each
-        namefile entry that meets a user-specified value. if no entries
-        are found, a single-element list containing a None-valued tuple is returned.
-
+        namefile entry that meets a user-specified value.
     """
     entries = []
     with open(path, "r") as f:
