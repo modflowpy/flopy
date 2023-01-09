@@ -4374,3 +4374,168 @@ def test027_timeseriestest(function_tmpdir, example_data_path):
         files2=head_new,
         htol=10.0,
     )
+
+
+@pytest.mark.regression
+def test099_create_tests_int_ext(function_tmpdir, example_data_path):
+    # init paths
+    test_ex_name = "test099_int_ext"
+    model_name = "test099_int_ext"
+    pth = example_data_path / "mf6" / "create_tests" / test_ex_name
+
+    # create simulation
+    sim = MFSimulation(
+        sim_name=test_ex_name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=str(function_tmpdir),
+    )
+    sim.name_file.continue_.set_data(True)
+    tdis_rc = [(1577889000, 50, 1.1), (1577889000, 50, 1.1)]
+    tdis_package = ModflowTdis(
+        sim,
+        time_units="SECONDS",
+        nper=2,
+        perioddata=tdis_rc,
+        filename="simulation.tdis",
+    )
+    model = ModflowGwf(
+        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
+    )
+    model.name_file.save_flows.set_data(True)
+    ims_package = ModflowIms(
+        sim,
+        print_option="SUMMARY",
+        outer_dvclose=0.00001,
+        outer_maximum=100,
+        under_relaxation="DBD",
+        under_relaxation_theta=0.85,
+        under_relaxation_kappa=0.0001,
+        under_relaxation_gamma=0.0,
+        under_relaxation_momentum=0.1,
+        backtracking_number=0,
+        backtracking_tolerance=1.1,
+        backtracking_reduction_factor=0.7,
+        backtracking_residual_limit=1.0,
+        inner_dvclose=0.00001,
+        rcloserecord=0.1,
+        inner_maximum=100,
+        linear_acceleration="CG",
+        scaling_method="NONE",
+        reordering_method="NONE",
+        relaxation_factor=0.99,
+        filename="model.ims",
+    )
+    sim.register_ims_package(ims_package, [model.name])
+    top = 100.0
+    botm = np.zeros((15, 10), float)
+    idomain = 1
+    dis_package = ModflowGwfdis(
+        model,
+        length_units="FEET",
+        nlay=1,
+        nrow=15,
+        ncol=10,
+        delr=5000.0,
+        delc=5000.0,
+        top=top,
+        botm=botm,
+        idomain=idomain,
+        filename=f"{model_name}.dis",
+    )
+    strt = np.ones((15, 10), float) * 50.0
+    strt_int = {"filename": "strt.txt", "factor": 0.8, "iprn": 0, "data": strt}
+    ic_package = ModflowGwfic(
+        model, strt=strt_int, filename=f"{model_name}.ic"
+    )
+
+    k_vals = np.ones((15, 10), float) * 10.0
+    assert k_vals[0, 0] == 10.0
+    k = {"filename": "k.txt", "factor": 3.000e-03, "iprn": 0, "data": k_vals}
+    npf_package = ModflowGwfnpf(model, icelltype=1, k=k, k33=1.0)
+    npf_package.k.factor = 2.000e-04
+
+    oc_package = ModflowGwfoc(
+        model,
+        budget_filerecord="test1tr.cbc",
+        head_filerecord="test1tr.hds",
+        saverecord={0: [("HEAD", "FREQUENCY", 5), ("BUDGET", "FREQUENCY", 5)]},
+        printrecord={
+            0: [("HEAD", "FREQUENCY", 5), ("BUDGET", "FREQUENCY", 5)]
+        },
+    )
+
+    sy_vals = np.ones((15, 10), float) * 0.1
+    sy = {"factor": 0.2, "iprn": 0, "data": sy_vals}
+    sto_package = ModflowGwfsto(model, iconvert=1, ss=1.0e-6, sy=sy)
+
+    sim.write_simulation()
+    sim_2 = MFSimulation.load(
+        sim_name=test_ex_name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=str(function_tmpdir),
+    )
+    sim_2.set_sim_path(os.path.join(function_tmpdir, "sim_2"))
+    model = sim_2.get_model(model_name)
+    npf_package = model.get_package("npf")
+    k_record = npf_package.k.get_record()
+    assert k_record["factor"] == 2.000e-04
+    assert k_record["data"][0, 0, 0] == 10.0
+
+    ic_package = model.get_package("ic")
+    strt_record = ic_package.strt.get_record()
+    assert strt_record["factor"] == 0.8
+    assert strt_record["data"][0, 0, 0] == 50.0
+
+    sim_3 = MFSimulation.load(
+        sim_name=test_ex_name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=str(function_tmpdir),
+    )
+    model = sim_3.get_model(model_name)
+    npf_package = model.get_package("npf")
+    k_record = npf_package.k.get_record()
+    assert k_record["factor"] == 2.000e-04
+    assert k_record["data"][0, 0, 0] == 10.0
+
+    ic_package = model.get_package("ic")
+    strt_record = ic_package.strt.get_record()
+    assert strt_record["factor"] == 0.8
+    assert strt_record["data"][0, 0, 0] == 50.0
+
+    sim_3.set_all_data_external()
+    sim_3.write_simulation()
+
+    sim_4 = MFSimulation.load(
+        sim_name=test_ex_name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=str(function_tmpdir),
+    )
+    model = sim_4.get_model(model_name)
+    npf_package = model.get_package("npf")
+    k_record = npf_package.k.get_record()
+    assert "filename" in k_record
+    assert k_record["factor"] == 2.000e-04
+    assert k_record["data"][0, 0, 0] == 10.0
+
+    ic_package = model.get_package("ic")
+    strt_record = ic_package.strt.get_record()
+    assert "filename" in strt_record
+    assert strt_record["factor"] == 0.8
+    assert strt_record["data"][0, 0, 0] == 50.0
+
+    k_record["factor"] = 4.000e-04
+    npf_package.k.set_record(k_record)
+    k_record = npf_package.k.get_record()
+    assert k_record["factor"] == 4.000e-04
+    assert k_record["data"][0, 0, 0] == 10.0
+
+    k_vals = np.ones((15, 10), float) * 50.0
+    k_record["data"] = k_vals
+    npf_package.k.set_record(k_record)
+    k_record = npf_package.k.get_record()
+    assert k_record["factor"] == 4.000e-04
+    assert k_record["data"][0, 0, 0] == 50.0
