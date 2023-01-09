@@ -621,7 +621,7 @@ class MFArray(MFMultiDimVar):
             if isinstance(current_layer, int):
                 current_layer = (current_layer,)
             # get the layer's data
-            data = self._get_data(current_layer, True)
+            data = self._get_data(current_layer, False)
 
             if data is None:
                 # do not write empty data to an internal file
@@ -642,7 +642,7 @@ class MFArray(MFMultiDimVar):
                 factor = storage.layer_storage[current_layer].factor
                 internal_data = {
                     current_layer[0]: {
-                        "data": self._get_data(current_layer, True),
+                        "data": self._get_data(current_layer, False),
                         "factor": factor,
                     }
                 }
