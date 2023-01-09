@@ -1650,6 +1650,7 @@ class MFModel(PackageContainer, ModelInterface):
             if (
                 package_struct is not None
                 and not package_struct.multi_package_support
+                and not isinstance(package.parent_file, MFPackage)
             ):
                 # package of this type already exists, replace it
                 self.remove_package(package.package_type)

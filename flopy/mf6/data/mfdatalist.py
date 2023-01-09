@@ -1329,19 +1329,21 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             first_line, file_handle, block_header, pre_data_comments=None
         )
         self._resync()
-        file_access = MFFileAccessList(
-            self.structure,
-            self._data_dimensions,
-            self._simulation_data,
-            self._path,
-            self._current_key,
-        )
         storage = self._get_storage_obj()
-        result = file_access.load_from_package(
-            first_line, file_handle, storage, pre_data_comments
-        )
         if external_file_info is not None:
             storage.point_to_existing_external_file(external_file_info, 0)
+            result = [False, None]
+        else:
+            file_access = MFFileAccessList(
+                self.structure,
+                self._data_dimensions,
+                self._simulation_data,
+                self._path,
+                self._current_key,
+            )
+            result = file_access.load_from_package(
+                first_line, file_handle, storage, pre_data_comments
+            )
         return result
 
     def _new_storage(self, stress_period=0):
