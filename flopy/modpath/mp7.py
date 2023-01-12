@@ -128,7 +128,9 @@ class Modpath7(BaseModel):
         # set flowmodel and flow_version attributes
         self.flowmodel = flowmodel
         self.flow_version = self.flowmodel.version
-        self._flowmodel_ws = flowmodel.model_ws
+        self._flowmodel_ws = os.path.relpath(
+            flowmodel.model_ws, self._model_ws
+        )
 
         if self.flow_version == "mf6":
             # get discretization package
