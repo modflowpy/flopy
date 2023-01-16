@@ -21,6 +21,9 @@ description keyword to indicate that the list of {#1} {#2} will be printed to th
 name print_concentration
 description keyword to indicate that the list of {#1} {#2} will be printed to the listing file for every stress period in which ``CONCENTRATION PRINT'' is specified in Output Control.  If there is no Output Control option and PRINT\_{#3} is specified, then {#2} are printed for the last time step of each stress period.
 
+name print_temperature
+description keyword to indicate that the list of {#1} {#2} will be printed to the listing file for every stress period in which ``TEMPERATURE PRINT'' is specified in Output Control.  If there is no Output Control option and PRINT\_{#3} is specified, then {#2} are printed for the last time step of each stress period.
+
 name print_flows
 description keyword to indicate that the list of {#1} flow rates will be printed to the listing file for every stress period time step in which ``BUDGET PRINT'' is specified in Output Control.  If there is no Output Control option and ``PRINT\_FLOWS'' is specified, then flow rates are printed for the last time step of each stress period.
 
