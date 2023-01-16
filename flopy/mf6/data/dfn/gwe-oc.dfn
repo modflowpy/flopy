@@ -78,8 +78,8 @@ longname file keyword
 description name of the comma-separated value (CSV) output file to write budget summary information.  A budget summary record will be written to this file for each time step of the simulation.
 
 block options
-name concentration_filerecord
-type record concentration fileout concentrationfile
+name temperature_filerecord
+type record temperature fileout temperaturefile
 shape
 reader urword
 tagged true
@@ -88,18 +88,18 @@ longname
 description
 
 block options
-name concentration
+name temperature
 type keyword
 shape
 in_record true
 reader urword
 tagged true
 optional false
-longname concentration keyword
-description keyword to specify that record corresponds to concentration.
+longname temperature keyword
+description keyword to specify that record corresponds to temperature.
 
 block options
-name concentrationfile
+name temperaturefile
 type string
 preserve_case true
 shape
@@ -111,8 +111,8 @@ longname file keyword
 description name of the output file to write conc information.
 
 block options
-name concentrationprintrecord
-type record concentration print_format formatrecord
+name temperatureprintrecord
+type record temperature print_format formatrecord
 shape
 reader urword
 optional true
@@ -252,7 +252,7 @@ reader urword
 tagged false
 optional false
 longname record type
-description type of information to save or print.  Can be BUDGET or CONCENTRATION.
+description type of information to save or print.  Can be BUDGET or TEMPERATURE.
 
 block period
 name ocsetting

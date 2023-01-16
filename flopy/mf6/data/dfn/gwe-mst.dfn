@@ -24,6 +24,14 @@ optional true
 longname activate zero-order decay
 description is a text keyword to indicate that zero-order decay will occur.  Use of this keyword requires that DECAY and DECAY\_SORBED (if sorption is active) are specified in the GRIDDATA block.
 
+block options
+name latent_heat_vaporization
+type keyword
+reader urword
+optional true
+longname activate cooling associated with evaporation
+description is a text keyword to indicate that cooling associated with evaporation will occur.  Use of this keyword requires that LATHEATVAP are specified in the GRIDDATA block.  While the MST package does not simulate evaporation, multiple other packages in a GWE simulation may.  For example, evaporation may occur from the surface of streams or lakes.  Owing to the energy consumed by the phase change, the latent heat of vaporization is required.
+
 # --------------------- gwe mst griddata ---------------------
 
 block griddata
@@ -79,5 +87,14 @@ shape (nodes)
 reader readarray
 layered true
 longname density of aquifer material
-description is a user-specified value of the density of aquifer material no considering the voids. Value will remain fixed for the entire simulation.  For now, enter the value in SI units: kg/m3.  Bulk density is calculated from this value.
+description is a user-specified value of the density of aquifer material not considering the voids. Value will remain fixed for the entire simulation.  For now, enter the value in SI units: kg/m3.  Bulk density is calculated from this value.
+
+block griddata
+name latheatvap
+type double precision
+shape (nodes)
+reader readarray
+layered true
+longname latent heat of vaporization
+description is the user-specified value for the latent heat of vaporization.  Currently, it may be specified spatially to facilitate temperature-dependent alterations in its value, though this functionality needs to be re-thought (perhaps its needs something like the VSC package approach).  Typical units are kJ/kg (which is the same as J/g).
 
