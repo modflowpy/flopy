@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
-from autotest.conftest import requires_exe
 from flaky import flaky
+from modflow_devtools.markers import requires_exe
 
 import flopy
 
@@ -165,7 +165,7 @@ def singleModel(
 # https://github.com/w-bonelli/flopy/runs/7744805897?check_suite_focus=true#step:8:1832
 @flaky
 @requires_exe("mflgr")
-def test_simple_lgrmodel_from_scratch(tmpdir):
+def test_simple_lgrmodel_from_scratch(function_tmpdir):
     # coordinates and extend Mother
     Lx_m = 1500.0
     Ly_m = 2500.0
@@ -238,7 +238,7 @@ def test_simple_lgrmodel_from_scratch(tmpdir):
         yul_c,
         proj4_str,
         "mflgr",
-        rundir=str(tmpdir),
+        rundir=str(function_tmpdir),
         welInfo=welInfo,
         startingHead=-2.0,
     )
@@ -268,7 +268,7 @@ def test_simple_lgrmodel_from_scratch(tmpdir):
         yul_m,
         proj4_str,
         "mflgr",
-        rundir=str(tmpdir),
+        rundir=str(function_tmpdir),
         welInfo=welInfo,
         startingHead=-2.0,
     )
@@ -310,7 +310,7 @@ def test_simple_lgrmodel_from_scratch(tmpdir):
         parent=mother,
         children=[child],
         children_data=childData,
-        model_ws=str(tmpdir),
+        model_ws=str(function_tmpdir),
         external_path=None,
         verbose=False,
     )

@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on April 11, 2022 18:22:41 UTC
+# FILE created on December 15, 2022 12:49:36 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -25,9 +25,11 @@ class ModflowGwfsto(mfpackage.MFPackage):
         * storagecoefficient (boolean) keyword to indicate that the SS array is
           read as storage coefficient rather than specific storage.
     ss_confined_only : boolean
-        * ss_confined_only (boolean) keyword to indicate that specific storage
-          is only calculated when a cell is under confined conditions (head
-          greater than or equal to the top of the cell). This option is
+        * ss_confined_only (boolean) keyword to indicate that compressible
+          storage is only calculated for a convertible cell (ICONVERT>0) when
+          the cell is under confined conditions (head greater than or equal to
+          the top of the cell). This option has no effect on cells that are
+          marked as being always confined (ICONVERT=0). This option is
           identical to the approach used to calculate storage changes under
           confined conditions in MODFLOW-2005.
     perioddata : {varname:data} or tvs_perioddata data

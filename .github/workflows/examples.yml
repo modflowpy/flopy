@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python-version: [ 3.7, 3.8, 3.9, "3.10" ]
+        python-version: [ 3.8, 3.9, "3.10", "3.11" ]
         exclude:
           # avoid shutil.copytree infinite recursion bug
           # https://github.com/python/cpython/pull/17098
@@ -56,7 +56,6 @@ jobs:
         shell: bash -l {0}
         run: |
           pip install --upgrade pip
-          pip install https://github.com/modflowpy/pymake/zipball/master
           pip install xmipy
           pip install .
 

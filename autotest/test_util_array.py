@@ -136,10 +136,10 @@ def test_load_block():
         assert fa.dtype == a.dtype
 
 
-def test_load_bin(tmpdir):
+def test_load_bin(function_tmpdir):
     def temp_file(data):
         # writable file that is destroyed as soon as it is closed
-        f = TemporaryFile(dir=tmpdir)
+        f = TemporaryFile(dir=function_tmpdir)
         f.write(data)
         f.seek(0)
         return f

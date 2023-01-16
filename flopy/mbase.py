@@ -1702,6 +1702,9 @@ def run_model(
             # try removing .exe suffix
             exe = which(exe_name[:-4])
     if exe is None:
+        # try abspath
+        exe = which(os.path.abspath(exe_name))
+    if exe is None:
         raise Exception(
             f"The program {exe_name} does not exist or is not executable."
         )

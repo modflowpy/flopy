@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on April 11, 2022 18:22:41 UTC
+# FILE created on December 15, 2022 12:49:36 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -192,7 +192,7 @@ class ModflowGwflak(mfpackage.MFPackage):
           CELLID in the NPF package. Embedded lakes can only be connected to a
           single cell (NLAKECONN = 1) and there must be a lake table associated
           with each embedded lake.
-        * bedleak (double) character string or real value that defines the bed
+        * bedleak (string) character string or real value that defines the bed
           leakance for the lake-GWF connection. BEDLEAK must be greater than or
           equal to zero or specified to be NONE. If BEDLEAK is specified to be
           NONE, the lake-GWF connection conductance is solely a function of
@@ -858,7 +858,7 @@ class ModflowGwflak(mfpackage.MFPackage):
         [
             "block connectiondata",
             "name bedleak",
-            "type double precision",
+            "type string",
             "shape",
             "tagged false",
             "in_record true",

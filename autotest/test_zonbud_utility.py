@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import pytest
-from autotest.conftest import requires_exe, requires_pkg
+from modflow_devtools.markers import requires_exe, requires_pkg
 
 from flopy.mf6 import MFSimulation
 from flopy.utils import ZoneBudget, ZoneBudget6, ZoneFile6
@@ -159,13 +159,13 @@ def test_zonbud_aliases(cbc_f, zon_f):
     assert bud[bud["name"] == "FROM_Mike"].shape[0] > 0, "No records returned."
 
 
-def test_zonbud_to_csv(tmpdir, cbc_f, zon_f):
+def test_zonbud_to_csv(function_tmpdir, cbc_f, zon_f):
     """
     t039 Test zonbud export to csv file method
     """
     zon = ZoneBudget.read_zone_file(str(zon_f))
     zb = ZoneBudget(str(cbc_f), zon, kstpkper=[(0, 1094), (0, 1096)])
-    f_out = os.path.join(str(tmpdir), "test.csv")
+    f_out = os.path.join(str(function_tmpdir), "test.csv")
     zb.to_csv(f_out)
     with open(f_out, "r") as f:
         lines = f.readlines()
@@ -194,16 +194,20 @@ def test_zonbud_copy(cbc_f, zon_f):
     assert cfd is not cfd2, "Copied object is a shallow copy."
 
 
-def test_zonbud_readwrite_zbarray(tmpdir):
+def test_zonbud_readwrite_zbarray(function_tmpdir):
     """
     t039 Test zonbud read write
     """
     x = np.random.randint(100, 200, size=(5, 150, 200))
-    ZoneBudget.write_zone_file(os.path.join(str(tmpdir), "randint"), x)
     ZoneBudget.write_zone_file(
-        os.path.join(str(tmpdir), "randint"), x, fmtin=35, iprn=2
+        os.path.join(str(function_tmpdir), "randint"), x
     )
-    z = ZoneBudget.read_zone_file(os.path.join(str(tmpdir), "randint"))
+    ZoneBudget.write_zone_file(
+        os.path.join(str(function_tmpdir), "randint"), x, fmtin=35, iprn=2
+    )
+    z = ZoneBudget.read_zone_file(
+        os.path.join(str(function_tmpdir), "randint")
+    )
     assert np.array_equal(x, z), "Input and output arrays do not match."
 
 
@@ -263,7 +267,7 @@ def test_zonbud_active_areas_zone_zero(loadpth, cbc_f, rtol):
     assert allclose, s
 
 
-def test_read_zone_file(tmpdir):
+def test_read_zone_file(function_tmpdir):
     zf = (
         "2    2    4\n"
         "INTERNAL     (4I3)\n"
@@ -274,7 +278,7 @@ def test_read_zone_file(tmpdir):
         "  0  1  1  1\n"
         "  0"
     )
-    name = os.path.join(str(tmpdir), "zonefiletest.txt")
+    name = os.path.join(str(function_tmpdir), "zonefiletest.txt")
     with open(name, "w") as foo:
         foo.write(zf)
     zones = ZoneBudget.read_zone_file(name)
@@ -285,7 +289,7 @@ def test_read_zone_file(tmpdir):
 @pytest.mark.mf6
 @requires_exe("mf6")
 @requires_pkg("pandas")
-def test_zonebudget_6(tmpdir, example_data_path):
+def test_zonebudget_6(function_tmpdir, example_data_path):
     import pandas as pd
 
     exe_name = "mf6"
@@ -293,17 +297,17 @@ def test_zonebudget_6(tmpdir, example_data_path):
 
     sim_ws = example_data_path / "mf6" / "test001e_UZF_3lay"
     sim = MFSimulation.load(sim_ws=str(sim_ws), exe_name=exe_name)
-    sim.simulation_data.mfpath.set_sim_path(str(tmpdir))
+    sim.simulation_data.mfpath.set_sim_path(str(function_tmpdir))
     sim.write_simulation()
     success, _ = sim.run_simulation()
 
-    grb_file = os.path.join(str(tmpdir), "test001e_UZF_3lay.dis.grb")
-    cbc_file = os.path.join(str(tmpdir), "test001e_UZF_3lay.cbc")
+    grb_file = os.path.join(str(function_tmpdir), "test001e_UZF_3lay.dis.grb")
+    cbc_file = os.path.join(str(function_tmpdir), "test001e_UZF_3lay.cbc")
 
     ml = sim.get_model("gwf_1")
     idomain = np.ones(ml.modelgrid.shape, dtype=int)
 
-    zb = ZoneBudget6(model_ws=str(tmpdir), exe_name=zb_exe_name)
+    zb = ZoneBudget6(model_ws=str(function_tmpdir), exe_name=zb_exe_name)
     zf = ZoneFile6(zb, idomain)
     zb.grb = grb_file
     zb.cbc = cbc_file
@@ -317,7 +321,7 @@ def test_zonebudget_6(tmpdir, example_data_path):
     assert isinstance(df, pd.DataFrame)
 
     zb_pkg = ml.uzf.output.zonebudget(idomain)
-    zb_pkg.change_model_ws(str(tmpdir))
+    zb_pkg.change_model_ws(str(function_tmpdir))
     zb_pkg.name = "uzf_zonebud"
     zb_pkg.write_input()
     success, _ = zb_pkg.run_model(exe_name=zb_exe_name)
@@ -329,7 +333,7 @@ def test_zonebudget_6(tmpdir, example_data_path):
     assert isinstance(df, pd.DataFrame)
 
     # test aliases
-    zb = ZoneBudget6(model_ws=str(tmpdir), exe_name=zb_exe_name)
+    zb = ZoneBudget6(model_ws=str(function_tmpdir), exe_name=zb_exe_name)
     zf = ZoneFile6(zb, idomain, aliases={1: "test alias", 2: "test pop"})
     zb.grb = grb_file
     zb.cbc = cbc_file
@@ -345,13 +349,13 @@ def test_zonebudget_6(tmpdir, example_data_path):
 
 @pytest.mark.mf6
 @requires_exe("mf6")
-def test_zonebudget6_from_output_method(tmpdir, example_data_path):
+def test_zonebudget6_from_output_method(function_tmpdir, example_data_path):
     exe_name = "mf6"
     zb_exe_name = "zbud6"
 
     sim_ws = example_data_path / "mf6" / "test001e_UZF_3lay"
     sim = MFSimulation.load(sim_ws=str(sim_ws), exe_name=exe_name)
-    sim.simulation_data.mfpath.set_sim_path(str(tmpdir))
+    sim.simulation_data.mfpath.set_sim_path(str(function_tmpdir))
     sim.write_simulation()
     success, _ = sim.run_simulation()
 

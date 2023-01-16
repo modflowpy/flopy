@@ -4,11 +4,11 @@ from warnings import warn
 import matplotlib
 import numpy as np
 import pytest
-from autotest.conftest import requires_exe, requires_pkg
 from autotest.test_dis_cases import case_dis, case_disv
 from autotest.test_grid_cases import GridCases
 from flaky import flaky
 from matplotlib import pyplot as plt
+from modflow_devtools.markers import requires_exe, requires_pkg
 from pytest_cases import parametrize_with_cases
 
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
@@ -452,7 +452,9 @@ def test_unstructured_from_argus_mesh(example_data_path):
         print(f"  Number of nodes: {g.nnodes}")
 
 
-def test_unstructured_from_verts_and_iverts(tmpdir, example_data_path):
+def test_unstructured_from_verts_and_iverts(
+    function_tmpdir, example_data_path
+):
     datapth = str(example_data_path / "unstructured")
 
     # simple functions to load vertices and incidence lists
@@ -784,7 +786,7 @@ def test_unstructured_complete_grid_ctor():
 
 @requires_pkg("shapely")
 @requires_exe("triangle")
-def test_triangle_unstructured_grid(tmpdir):
+def test_triangle_unstructured_grid(function_tmpdir):
     maximum_area = 30000.0
     extent = (214270.0, 221720.0, 4366610.0, 4373510.0)
     domainpoly = [
@@ -796,7 +798,7 @@ def test_triangle_unstructured_grid(tmpdir):
     tri = Triangle(
         maximum_area=maximum_area,
         angle=30,
-        model_ws=str(tmpdir),
+        model_ws=str(function_tmpdir),
     )
     tri.add_polygon(domainpoly)
     tri.build(verbose=False)
@@ -817,13 +819,15 @@ def test_triangle_unstructured_grid(tmpdir):
 
 @requires_pkg("shapely", "scipy")
 @requires_exe("triangle")
-def test_voronoi_vertex_grid(tmpdir):
+def test_voronoi_vertex_grid(function_tmpdir):
     xmin = 0.0
     xmax = 2.0
     ymin = 0.0
     ymax = 1.0
     area_max = 0.05
-    tri = Triangle(maximum_area=area_max, angle=30, model_ws=str(tmpdir))
+    tri = Triangle(
+        maximum_area=area_max, angle=30, model_ws=str(function_tmpdir)
+    )
     poly = np.array(((xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)))
     tri.add_polygon(poly)
     tri.build(verbose=False)
@@ -847,7 +851,7 @@ def test_voronoi_vertex_grid(tmpdir):
 @requires_exe("triangle")
 @requires_pkg("shapely", "scipy")
 @parametrize_with_cases("grid_info", cases=GridCases, prefix="voronoi")
-def test_voronoi_grid(request, tmpdir, grid_info):
+def test_voronoi_grid(request, function_tmpdir, grid_info):
     name = (
         request.node.name.replace("/", "_")
         .replace("\\", "_")
@@ -877,7 +881,7 @@ def test_voronoi_grid(request, tmpdir, grid_info):
         grid.ycellcenters[invalid_cells],
         "ro",
     )
-    plt.savefig(os.path.join(str(tmpdir), f"{name}.png"))
+    plt.savefig(os.path.join(str(function_tmpdir), f"{name}.png"))
 
     assert ncpl == gridprops["ncpl"] or almost_right
     assert (

@@ -336,8 +336,7 @@ class MFSimulation(PackageContainer):
     version : str
         Version of MODFLOW 6 executable
     exe_name : str
-        Relative path to MODFLOW 6 executable from the simulation
-        working folder.
+        Path to MODFLOW 6 executable
     sim_ws : str
         Path to MODFLOW 6 simulation working folder.  This is the folder
         containing the simulation name file.
@@ -432,6 +431,7 @@ class MFSimulation(PackageContainer):
             continue_=continue_,
             nocheck=nocheck,
             memory_print_option=memory_print_option,
+            _internal_package=True,
         )
 
         # try to build directory structure
@@ -1902,6 +1902,14 @@ class MFSimulation(PackageContainer):
                 # added during ims package registration
                 self._add_package(package, path)
         if package.package_type.lower() == "nam":
+            if not package.internal_package:
+                excpt_str = (
+                    "Unable to register nam file.  Do not create your own nam "
+                    "files.  Nam files are automatically created and managed "
+                    "for you by FloPy."
+                )
+                print(excpt_str)
+                raise FlopyException(excpt_str)
             return path, self.structure.name_file_struct_obj
         elif package.package_type.lower() == "tdis":
             self._tdis_file = package

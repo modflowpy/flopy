@@ -329,6 +329,7 @@ class PyListUtil:
                 if alt_split_len > max_split_size:
                     max_split_size = len(alt_split)
                     max_split_type = delimiter
+                    max_split_list = alt_split
                 elif alt_split_len == max_split_size:
                     if (
                         max_split_type not in PyListUtil.delimiter_list
@@ -357,8 +358,8 @@ class PyListUtil:
                 if item and item[0] in PyListUtil.quote_list:
                     # starts with a quote, handle quoted text
                     if item[-1] in PyListUtil.quote_list:
-                        # if quoted on both ends, keep quotes
-                        arr_fixed_line.append(item)
+                        # if quoted on both ends, remove quotes
+                        arr_fixed_line.append(item[1:-1])
                     else:
                         arr_fixed_line.append(item[1:])
                         # loop until trailing quote found

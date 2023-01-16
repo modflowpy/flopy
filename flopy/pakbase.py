@@ -1059,21 +1059,18 @@ class Package(PackageInterface):
             t = line.strip().split()
             itmp = int(t[0])
             itmpp = 0
-            try:
+            if nppak > 0:
                 itmpp = int(t[1])
-            except:
-                if len(t) > 1:
-                    t = t[
-                        :2
-                    ]  # trap cases with text followed by digits (eg SP 5)
-                if model.verbose:
-                    print(f"   implicit itmpp in {filename}")
+
+            if len(t) > 1:
+                t = t[:2]  # trap cases with text followed by digits (eg SP 5)
             itmp_cln = 0
-            try:
-                itmp_cln = int(t[2])
-            except:
-                if model.verbose:
-                    print(f"   implicit itmp_cln in {filename}")
+            if "mfusgwel" in pak_type_str:
+                try:
+                    itmp_cln = int(t[2])
+                except:
+                    if model.verbose:
+                        print(f"   implicit itmp_cln of 0 in {filename}")
 
             if itmp == 0:
                 bnd_output = None

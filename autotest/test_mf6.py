@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import pytest
-from autotest.conftest import requires_exe
+from modflow_devtools.markers import requires_exe
 
 import flopy
 from flopy.mf6 import (
@@ -25,6 +25,7 @@ from flopy.mf6 import (
     ModflowGwflak,
     ModflowGwfmaw,
     ModflowGwfmvr,
+    ModflowGwfnam,
     ModflowGwfnpf,
     ModflowGwfoc,
     ModflowGwfrch,
@@ -41,6 +42,7 @@ from flopy.mf6 import (
     ModflowGwtoc,
     ModflowGwtssm,
     ModflowIms,
+    ModflowNam,
     ModflowTdis,
     ModflowUtllaktab,
 )
@@ -261,8 +263,8 @@ def test_string_to_file_path():
         assert rel_path == new_path, "Relative path error"
 
 
-def test_subdir(tmpdir):
-    sim = MFSimulation(sim_ws=str(tmpdir))
+def test_subdir(function_tmpdir):
+    sim = MFSimulation(sim_ws=str(function_tmpdir))
     tdis = ModflowTdis(sim)
     gwf = ModflowGwf(sim, model_rel_path="level2")
     ims = ModflowIms(sim)
@@ -296,7 +298,7 @@ def test_subdir(tmpdir):
     ), "Something wrong with model external paths"
 
 
-def test_binary_read(tmpdir):
+def test_binary_read(function_tmpdir):
     test_ex_name = "binary_read"
     nlay = 3
     nrow = 10
@@ -330,7 +332,7 @@ def test_binary_read(tmpdir):
     pd = PackageDimensions([md], None, "integration")
     dd = DataDimensions(pd, mfstruct)
 
-    binfile = str(tmpdir / "structured_layered.hds")
+    binfile = str(function_tmpdir / "structured_layered.hds")
     with open(binfile, "wb") as foo:
         for ix, a in enumerate(arr):
             write_head(foo, a, ilay=ix)
@@ -342,7 +344,7 @@ def test_binary_read(tmpdir):
 
     assert np.allclose(arr, arr2), "Binary read for layered Structured failed"
 
-    binfile = str(tmpdir / "structured_flat.hds")
+    binfile = str(function_tmpdir / "structured_flat.hds")
     with open(binfile, "wb") as foo:
         a = np.expand_dims(np.ravel(arr), axis=0)
         write_head(foo, a, ilay=1)
@@ -360,7 +362,7 @@ def test_binary_read(tmpdir):
 
     fa = MFFileAccessArray(mfstruct, dd, sim_data, None, None)
 
-    binfile = str(tmpdir / "vertex_layered.hds")
+    binfile = str(function_tmpdir / "vertex_layered.hds")
     with open(binfile, "wb") as foo:
         tarr = arr.reshape((nlay, 1, ncpl))
         for ix, a in enumerate(tarr):
@@ -372,7 +374,7 @@ def test_binary_read(tmpdir):
 
     assert np.allclose(arr, arr2), "Binary read for layered Vertex failed"
 
-    binfile = str(tmpdir / "vertex_flat.hds")
+    binfile = str(function_tmpdir / "vertex_flat.hds")
     with open(binfile, "wb") as foo:
         a = np.expand_dims(np.ravel(arr), axis=0)
         write_head(foo, a, ilay=1)
@@ -391,7 +393,7 @@ def test_binary_read(tmpdir):
 
     fa = MFFileAccessArray(mfstruct, dd, sim_data, None, None)
 
-    binfile = str(tmpdir / "unstructured.hds")
+    binfile = str(function_tmpdir / "unstructured.hds")
     with open(binfile, "wb") as foo:
         a = np.expand_dims(arr, axis=0)
         write_head(foo, a, ilay=1)
@@ -404,8 +406,8 @@ def test_binary_read(tmpdir):
 
 
 @requires_exe("mf6")
-def test_write_simulation(tmpdir):
-    sim = MFSimulation(sim_ws=str(tmpdir))
+def test_write_simulation(function_tmpdir):
+    sim = MFSimulation(sim_ws=str(function_tmpdir))
     assert isinstance(sim, MFSimulation)
 
     tdis = ModflowTdis(sim)
@@ -493,7 +495,7 @@ def test_write_simulation(tmpdir):
     sim.write_simulation()
 
     # Verify files were written
-    assert os.path.isfile(os.path.join(str(tmpdir), "mfsim.nam"))
+    assert os.path.isfile(os.path.join(str(function_tmpdir), "mfsim.nam"))
     exts_model = [
         "nam",
         "dis",
@@ -520,15 +522,15 @@ def test_write_simulation(tmpdir):
     ]
     exts_sim = ["gwfgwf", "ims", "tdis"]
     for ext in exts_model:
-        fname = os.path.join(str(tmpdir), f"model.{ext}")
+        fname = os.path.join(str(function_tmpdir), f"model.{ext}")
         assert os.path.isfile(fname), f"{fname} not found"
     for ext in exts_sim:
-        fname = os.path.join(str(tmpdir), f"sim.{ext}")
+        fname = os.path.join(str(function_tmpdir), f"sim.{ext}")
         assert os.path.isfile(fname), f"{fname} not found"
 
 
 @requires_exe("mf6")
-def test_create_and_run_model(tmpdir):
+def test_create_and_run_model(function_tmpdir):
     # names
     sim_name = "testsim"
     model_name = "testmodel"
@@ -537,7 +539,10 @@ def test_create_and_run_model(tmpdir):
     # set up simulation
     tdis_name = f"{sim_name}.tdis"
     sim = MFSimulation(
-        sim_name=sim_name, version="mf6", exe_name=exe_name, sim_ws=str(tmpdir)
+        sim_name=sim_name,
+        version="mf6",
+        exe_name=exe_name,
+        sim_ws=str(function_tmpdir),
     )
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis = mftdis.ModflowTdis(
@@ -652,7 +657,7 @@ def test_create_and_run_model(tmpdir):
 
 
 @requires_exe("mf6")
-def test_get_set_data_record(tmpdir):
+def test_get_set_data_record(function_tmpdir):
     # names
     sim_name = "testrecordsim"
     model_name = "testrecordmodel"
@@ -661,7 +666,10 @@ def test_get_set_data_record(tmpdir):
     # set up simulation
     tdis_name = f"{sim_name}.tdis"
     sim = MFSimulation(
-        sim_name=sim_name, version="mf6", exe_name=exe_name, sim_ws=str(tmpdir)
+        sim_name=sim_name,
+        version="mf6",
+        exe_name=exe_name,
+        sim_ws=str(function_tmpdir),
     )
     tdis_rc = [(10.0, 4, 1.0), (6.0, 3, 1.0)]
     tdis = mftdis.ModflowTdis(
@@ -932,11 +940,11 @@ def test_get_set_data_record(tmpdir):
 
 
 @requires_exe("mf6")
-def test_output(tmpdir, example_data_path):
+def test_output(function_tmpdir, example_data_path):
     ex_name = "test001e_UZF_3lay"
     sim_ws = str(example_data_path / "mf6" / ex_name)
     sim = MFSimulation.load(sim_ws=sim_ws, exe_name="mf6")
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
     sim.write_simulation()
     success, buff = sim.run_simulation()
     assert success, f"simulation {sim.name} did not run"
@@ -988,7 +996,7 @@ def test_output(tmpdir, example_data_path):
 
 @requires_exe("mf6")
 @pytest.mark.slow
-def test_output_add_observation(tmpdir, example_data_path):
+def test_output_add_observation(function_tmpdir, example_data_path):
     model_name = "lakeex2a"
     sim_ws = str(example_data_path / "mf6" / "test045_lake2tr")
     sim = MFSimulation.load(sim_ws=sim_ws, exe_name="mf6")
@@ -1010,7 +1018,7 @@ def test_output_add_observation(tmpdir, example_data_path):
         filename=obs_file, digits=10, print_input=True, continuous=obs_dict
     )
 
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
     sim.write_simulation()
 
     success, buff = sim.run_simulation()
@@ -1025,7 +1033,7 @@ def test_output_add_observation(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-def test_array(tmpdir):
+def test_array(function_tmpdir):
     # get_data
     # empty data in period block vs data repeating
     # array
@@ -1035,7 +1043,7 @@ def test_array(tmpdir):
 
     sim_name = "test_array"
     model_name = "test_array"
-    out_dir = str(tmpdir)
+    out_dir = str(function_tmpdir)
     tdis_name = "{}.tdis".format(sim_name)
     sim = MFSimulation(
         sim_name=sim_name, version="mf6", exe_name="mf6", sim_ws=out_dir
@@ -1342,7 +1350,7 @@ def test_array(tmpdir):
 
 
 @requires_exe("mf6")
-def test_multi_model(tmpdir):
+def test_multi_model(function_tmpdir):
     # init paths
     test_ex_name = "test_multi_model"
     model_names = ["gwf_model_1", "gwf_model_2", "gwt_model_1", "gwt_model_2"]
@@ -1361,7 +1369,7 @@ def test_multi_model(tmpdir):
         sim_name=test_ex_name,
         version="mf6",
         exe_name="mf6",
-        sim_ws=str(tmpdir),
+        sim_ws=str(function_tmpdir),
     )
     # create tdis package
     tdis = ModflowTdis(
@@ -1536,7 +1544,7 @@ def test_multi_model(tmpdir):
     sim.run_simulation()
 
     # reload simulation
-    sim2 = MFSimulation.load(sim_ws=str(tmpdir))
+    sim2 = MFSimulation.load(sim_ws=str(function_tmpdir))
 
     # check ims registration
     solution_recarray = sim2.name_file.solutiongroup
@@ -1570,3 +1578,72 @@ def test_multi_model(tmpdir):
     # save and run updated model
     sim.write_simulation()
     sim.run_simulation()
+
+    with pytest.raises(
+        flopy.mf6.mfbase.FlopyException,
+        match='Extraneous kwargs "param_does_not_exist" '
+        "provided to MFPackage.",
+    ):
+        # test kwargs error checking
+        wel = ModflowGwfwel(
+            gwf2,
+            print_input=True,
+            print_flows=True,
+            stress_period_data=welspd,
+            save_flows=False,
+            auxiliary="CONCENTRATION",
+            pname="WEL-1",
+            param_does_not_exist=True,
+        )
+
+
+@requires_exe("mf6")
+def test_namefile_creation(tmpdir):
+    test_ex_name = "test_namefile"
+    # build MODFLOW 6 files
+    sim = MFSimulation(
+        sim_name=test_ex_name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=str(tmpdir),
+    )
+
+    tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0), (6.0, 3, 1.0), (6.0, 3, 1.0)]
+    tdis = ModflowTdis(sim, time_units="DAYS", nper=4, perioddata=tdis_rc)
+    ims_package = ModflowIms(
+        sim,
+        pname="my_ims_file",
+        filename=f"{test_ex_name}.ims",
+        print_option="ALL",
+        complexity="SIMPLE",
+        outer_dvclose=0.0001,
+        outer_maximum=50,
+        under_relaxation="NONE",
+        inner_maximum=30,
+        inner_dvclose=0.0001,
+        linear_acceleration="CG",
+        preconditioner_levels=7,
+        preconditioner_drop_tolerance=0.01,
+        number_orthogonalizations=2,
+    )
+    model = ModflowGwf(
+        sim,
+        modelname=test_ex_name,
+        model_nam_file="{}.nam".format(test_ex_name),
+    )
+
+    # try to create simulation name file
+    ex_happened = False
+    try:
+        nam = ModflowNam(sim)
+    except flopy.mf6.mfbase.FlopyException:
+        ex_happened = True
+    assert ex_happened
+
+    # try to create model name file
+    ex_happened = False
+    try:
+        nam = ModflowGwfnam(model)
+    except flopy.mf6.mfbase.FlopyException:
+        ex_happened = True
+    assert ex_happened

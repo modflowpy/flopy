@@ -1,5 +1,5 @@
 import pytest
-from autotest.conftest import requires_pkg
+from modflow_devtools.markers import requires_pkg
 
 from flopy.utils.geometry import (
     Collection,

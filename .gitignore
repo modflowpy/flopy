@@ -91,3 +91,8 @@ autotest/.noseids
 .docs/_notebooks
 
 *.bak
+
+# environment files
+**.env
+venv
+app
