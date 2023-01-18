@@ -1,14 +1,118 @@
 [build-system]
-# Minimum requirements for the build system to execute
 requires = [
-    "setuptools>45",
-    "wheel",
+    "setuptools >=61",
 ]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "flopy"
+description = "FloPy is a Python package to create, run, and post-process MODFLOW-based models"
+authors = [
+    {name = "FloPy Team", email = "modflow@usgs.gov"},
+]
+maintainers = [
+    {name = "Joseph D. Hughes", email = "jdhughes@usgs.gov"},
+]
+keywords = ["MODFLOW", "groundwater", "hydrogeology"]
+license = {text = "CC0"}
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Hydrology",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "numpy >=1.15.0",
+    "matplotlib >=1.4.0",
+]
+dynamic = ["version", "readme"]
+
+[project.optional-dependencies]
+lint = [
+    "black",
+    "cffconvert",
+    "flake8",
+    "isort",
+    "pylint",
+]
+test = [
+    "flopy[lint]",
+    "coverage",
+    "flaky",
+    "filelock",
+    "jupyter",
+    "jupytext",
+    "modflow-devtools",
+    "pytest",
+    "pytest-benchmark",
+    "pytest-cases",
+    "pytest-cov",
+    "pytest-dotenv",
+    "pytest-xdist",
+]
+optional = [
+    "affine",
+    "descartes",
+    "fiona",
+    "geojson",
+    "netcdf4",
+    "pandas",
+    "pyproj",
+    "pyshp",
+    "python-dateutil >=2.4.0",
+    "rasterio",
+    "rasterstats",
+    "scipy",
+    "shapely >=1.8",
+    "vtk",
+    "xmipy",
+]
+doc = [
+    "flopy[optional]",
+    "ipython[kernel]",
+    "jupytext",
+    "nbsphinx",
+    "nbsphinx-link",
+    "pydata-sphinx-theme",
+    "PyYAML",
+    "recommonmark",
+    "rtds-action",
+    "sphinx-rtd-theme",
+]
+
+[project.scripts]
+get-modflow = "flopy.utils.get_modflow:cli_main"
+
+[project.urls]
+Documentation = "https://flopy.readthedocs.io"
+"Release Notes" = "https://github.com/modflowpy/flopy/blob/develop/docs/version_changes.md"
+"Bug Tracker" = "https://github.com/modflowpy/flopy/issues"
+"Source Code" = "https://github.com/modflowpy/flopy"
+
+[tool.setuptools]
+include-package-data = true
+zip-safe = false
+
+[tool.setuptools.dynamic]
+version = {attr = "flopy.version.__version__"}
+readme = {file = ["docs/PyPI_release.md", "LICENSE.md"], content-type = "text/markdown"}
+
+[tool.setuptools.packages.find]
+include = ["flopy", "flopy.*"]
+
+[tool.setuptools.package-data]
+"flopy.mf6.data" = ["dfn/*.dfn"]
+"flopy.plot" = ["mplstyle/*.mplstyle"]
+
 [tool.black]
 line-length = 79
-target_version = ["py37"]
+target_version = ["py38"]
 
 [tool.isort]
 profile = "black"

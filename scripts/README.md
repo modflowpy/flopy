@@ -27,7 +27,7 @@ Input JSON files are expected to be named according to the `pytest-benchmark` fo
 
 For instance, `e689af57e7439b9005749d806248897ad550eab5_20150811_041632_uncommitted-changes.json`.
 
-**Note**: the `process_benchmarks.py` script depends on `seaborn`, which is not included as a dependency in either `etc/environment.yml` or in any of the optional groups in `setup.cfg`, since this is the only place it is used in this repository.
+**Note**: the `process_benchmarks.py` script depends on `seaborn`, which is not included as a dependency in either `etc/environment.yml` or in any of the optional groups in `pyproject.toml`, since this is the only place it is used in this repository.
 
 ## Preparing for PRs
 
