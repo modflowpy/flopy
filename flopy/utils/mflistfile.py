@@ -507,12 +507,12 @@ class ListBudget:
         if start_datetime is not None:
             try:
                 totim = totim_to_datetime(
-                totim,
-                start=pd.to_datetime(start_datetime),
-                timeunit=self.timeunit,
-            )
+                    totim,
+                    start=pd.to_datetime(start_datetime),
+                    timeunit=self.timeunit,
+                )
             except:
-                pass # if totim can't be cast to pd.datetime return in native units
+                pass  # if totim can't be cast to pd.datetime return in native units
 
         df_flux = pd.DataFrame(self.inc, index=totim).loc[:, self.entries]
         df_vol = pd.DataFrame(self.cum, index=totim).loc[:, self.entries]
