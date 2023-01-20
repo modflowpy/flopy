@@ -128,6 +128,9 @@ class Modpath7(BaseModel):
         # set flowmodel and flow_version attributes
         self.flowmodel = flowmodel
         self.flow_version = self.flowmodel.version
+        self._flowmodel_ws = os.path.relpath(
+            flowmodel.model_ws, self._model_ws
+        )
 
         if self.flow_version == "mf6":
             # get discretization package
@@ -380,13 +383,21 @@ class Modpath7(BaseModel):
         if self.dis_file is not None:
             f.write(f"DIS        {self.dis_file}\n")
         if self.grbdis_file is not None:
-            f.write(f"{self.grbtag:10s} {self.grbdis_file}\n")
+            f.write(
+                f"{self.grbtag:10s} {os.path.join(self._flowmodel_ws, self.grbdis_file)}\n"
+            )
         if self.tdis_file is not None:
-            f.write(f"TDIS       {self.tdis_file}\n")
+            f.write(
+                f"TDIS       {os.path.join(self._flowmodel_ws, self.tdis_file)}\n"
+            )
         if self.headfilename is not None:
-            f.write(f"HEAD       {self.headfilename}\n")
+            f.write(
+                f"HEAD       {os.path.join(self._flowmodel_ws, self.headfilename)}\n"
+            )
         if self.budgetfilename is not None:
-            f.write(f"BUDGET     {self.budgetfilename}\n")
+            f.write(
+                f"BUDGET     {os.path.join(self._flowmodel_ws, self.budgetfilename)}\n"
+            )
         f.close()
 
     @classmethod
