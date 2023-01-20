@@ -363,7 +363,7 @@ class ModflowGmg(Package):
         line = f.readline()
         t = line.strip().split()
         relax = 1.0
-        if ism==4:
+        if ism == 4:
             relax = float(t[0])
 
         if openfile:
