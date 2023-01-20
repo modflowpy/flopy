@@ -598,8 +598,10 @@ class MfGrdFile(FlopyBinaryData):
     @property
     def ia(self):
         """
-        index array that defines indexes for `.ja`. Indexes represent the
-        number of connections + 1 per cell. See `.ja` property documentation
+        index array that defines indexes for `.ja`. Each ia value is the
+        starting position of data for a cell. [ia[n]:ia[n+1]] would give you
+        all data for a cell. ia[n] is also the location of data for the
+        diagonal position. See `.ja` property documentation
         for an example of getting a cell's number and connected cells
 
         Returns
@@ -611,9 +613,9 @@ class MfGrdFile(FlopyBinaryData):
     @property
     def ja(self):
         """
-        Flat jagged connection array for a model. ja lists the cell number and
-        the cells connected to it. Indexes for cells are stored in the `.ia`
-        variable.
+        Flat jagged connection array for a model. `.ja` for a cell includes the
+        cell number and the cell number for all connected cells. Indexes for
+        cells are stored in the `.ia` variable.
 
         Returns
         -------
@@ -635,11 +637,12 @@ class MfGrdFile(FlopyBinaryData):
     @property
     def iavert(self):
         """
-        index array that defines indexes for `.javart`. Indexes represent the
-        number of connections + 1 per cell. See `.javert` property
-        documentation for an example of getting cell number and it's vertex
-        numbers. Alternatively, the `.iverts` property can be used to get
-        this information
+        index array that defines indexes for `.javart`. Each ia value is the
+        starting position of data for a cell. [iavert[n]:iavert[n+1]] would
+        give you all data for a cell. See `.javert` property documentation for
+        an example of getting cell number and it's vertex numbers.
+        Alternatively, the `.iverts` property can be used to get this
+        information
 
         Returns
         -------
