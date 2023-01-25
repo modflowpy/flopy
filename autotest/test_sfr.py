@@ -8,7 +8,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from autotest.conftest import get_example_data_path, requires_exe, requires_pkg
+from autotest.conftest import get_example_data_path
+from modflow_devtools.markers import requires_exe, requires_pkg
 
 from flopy.discretization import StructuredGrid
 from flopy.modflow import Modflow, ModflowDis, ModflowSfr2, ModflowStr
@@ -129,7 +130,7 @@ def test_load_sfr(case, mf2005_model_path):
     sfr = ModflowSfr2.load(str(mf2005_model_path / case["sfrfile"]), m)
 
 
-def test_sfr(tmpdir, mf2005_model_path, sfr_test_model_path):
+def test_sfr(function_tmpdir, mf2005_model_path, sfr_test_model_path):
     def sfr_process(mfnam, sfrfile, model_ws, outfolder):
         m = Modflow.load(mfnam, model_ws=model_ws, verbose=False)
         sfr = m.get_package("SFR")
@@ -154,11 +155,11 @@ def test_sfr(tmpdir, mf2005_model_path, sfr_test_model_path):
         return m, sfr
 
     m, sfr = sfr_process(
-        "test1ss.nam", "test1ss.sfr", mf2005_model_path, tmpdir
+        "test1ss.nam", "test1ss.sfr", mf2005_model_path, function_tmpdir
     )
 
     m, sfr = sfr_process(
-        "test1tr.nam", "test1tr.sfr", mf2005_model_path, tmpdir
+        "test1tr.nam", "test1tr.sfr", mf2005_model_path, function_tmpdir
     )
 
     # assert list(sfr.dataset_5.keys()) == [0, 1]
@@ -167,7 +168,7 @@ def test_sfr(tmpdir, mf2005_model_path, sfr_test_model_path):
         "testsfr2_tab.nam",
         "testsfr2_tab_ICALC1.sfr",
         mf2005_model_path,
-        tmpdir,
+        function_tmpdir,
     )
 
     assert list(sfr.dataset_5.keys()) == list(range(0, 50))
@@ -176,7 +177,7 @@ def test_sfr(tmpdir, mf2005_model_path, sfr_test_model_path):
         "testsfr2_tab.nam",
         "testsfr2_tab_ICALC2.sfr",
         mf2005_model_path,
-        tmpdir,
+        function_tmpdir,
     )
 
     assert sfr.channel_geometry_data[0][1] == [
@@ -185,13 +186,13 @@ def test_sfr(tmpdir, mf2005_model_path, sfr_test_model_path):
     ]
 
     m, sfr = sfr_process(
-        "testsfr2.nam", "testsfr2.sfr", mf2005_model_path, tmpdir
+        "testsfr2.nam", "testsfr2.sfr", mf2005_model_path, function_tmpdir
     )
 
     assert round(sum(sfr.segment_data[49][0]), 7) == 3.9700007
 
     m, sfr = sfr_process(
-        "UZFtest2.nam", "UZFtest2.sfr", mf2005_model_path, tmpdir
+        "UZFtest2.nam", "UZFtest2.sfr", mf2005_model_path, function_tmpdir
     )
 
     assert isinstance(
@@ -373,29 +374,31 @@ def test_const(sfr_data):
 
 
 @requires_pkg("pandas", "shapefile")
-def test_export(tmpdir, sfr_data):
+def test_export(function_tmpdir, sfr_data):
     m = Modflow()
     dis = ModflowDis(m, 1, 10, 10, lenuni=2, itmuni=4)
 
-    m.export(str(tmpdir / "grid.shp"))
+    m.export(str(function_tmpdir / "grid.shp"))
     r, d = sfr_data
     sfr = ModflowSfr2(m, reach_data=r, segment_data={0: d})
     sfr.segment_data[0]["flow"][-1] = 1e4
-    sfr.stress_period_data.export(str(tmpdir / "sfr.shp"), sparse=True)
-    sfr.export_linkages(str(tmpdir / "linkages.shp"))
-    sfr.export_outlets(str(tmpdir / "outlets.shp"))
-    sfr.export_transient_variable(str(tmpdir / "inlets.shp"), "flow")
+    sfr.stress_period_data.export(
+        str(function_tmpdir / "sfr.shp"), sparse=True
+    )
+    sfr.export_linkages(str(function_tmpdir / "linkages.shp"))
+    sfr.export_outlets(str(function_tmpdir / "outlets.shp"))
+    sfr.export_transient_variable(str(function_tmpdir / "inlets.shp"), "flow")
 
     from flopy.export.shapefile_utils import shp2recarray
 
-    ra = shp2recarray(str(tmpdir / "inlets.shp"))
+    ra = shp2recarray(str(function_tmpdir / "inlets.shp"))
     assert ra.flow0[0] == 1e4
-    ra = shp2recarray(str(tmpdir / "outlets.shp"))
+    ra = shp2recarray(str(function_tmpdir / "outlets.shp"))
     assert ra.iseg[0] + ra.ireach[0] == 5
-    ra = shp2recarray(str(tmpdir / "linkages.shp"))
+    ra = shp2recarray(str(function_tmpdir / "linkages.shp"))
     crds = np.array(list(ra.geometry[2].coords))
     assert np.array_equal(crds, np.array([[2.5, 4.5], [3.5, 5.5]]))
-    ra = shp2recarray(str(tmpdir / "sfr.shp"))
+    ra = shp2recarray(str(function_tmpdir / "sfr.shp"))
     assert ra.iseg.sum() == sfr.reach_data.iseg.sum()
     assert ra.ireach.sum() == sfr.reach_data.ireach.sum()
     y = np.concatenate([np.array(g.exterior)[:, 1] for g in ra.geometry])
@@ -525,7 +528,7 @@ def test_example(mf2005_model_path):
         assert sfr2.dataset_5[i][0] == -1
 
 
-def test_no_ds_6bc(tmpdir):
+def test_no_ds_6bc(function_tmpdir):
     """Test case where datasets 6b and 6c aren't read
     (e.g., see table at https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/sfr.htm)
     """
@@ -543,7 +546,7 @@ def test_no_ds_6bc(tmpdir):
         "2.77 1.11 0.83 0 0.28 0.83 1.11 2.77\n"
     )
     sfrfile = io.StringIO(sfrfiletxt)
-    m = Modflow("junk", model_ws=str(tmpdir))
+    m = Modflow("junk", model_ws=str(function_tmpdir))
     sfr = ModflowSfr2.load(sfrfile, model=m)
     assert len(sfr.segment_data[0]) == 2
     assert len(sfr.channel_geometry_data[0]) == 2
@@ -552,7 +555,7 @@ def test_no_ds_6bc(tmpdir):
         assert len(sfr.channel_geometry_data[0][1][i]) == 8
         assert sum(sfr.channel_geometry_data[0][1][i]) > 0.0
 
-    sfrfile2 = str(tmpdir / "junk.sfr")
+    sfrfile2 = str(function_tmpdir / "junk.sfr")
     sfr.write_file()
     sfr = ModflowSfr2.load(sfrfile2, model=m)
     assert len(sfr.segment_data[0]) == 2
@@ -563,12 +566,12 @@ def test_no_ds_6bc(tmpdir):
         assert sum(sfr.channel_geometry_data[0][1][i]) > 0.0
 
 
-def test_ds_6d_6e_disordered(tmpdir, hydmod_model_path):
+def test_ds_6d_6e_disordered(function_tmpdir, hydmod_model_path):
     m = Modflow.load("test1tr2.nam", model_ws=str(hydmod_model_path))
-    m.change_model_ws(str(tmpdir))
+    m.change_model_ws(str(function_tmpdir))
     m.write_input()
 
-    m2 = Modflow.load("test1tr2.nam", model_ws=str(tmpdir))
+    m2 = Modflow.load("test1tr2.nam", model_ws=str(function_tmpdir))
 
     sfr = m.get_package("SFR")
     sfr2 = m2.get_package("SFR")
@@ -590,7 +593,7 @@ def test_ds_6d_6e_disordered(tmpdir, hydmod_model_path):
                 raise AssertionError
 
 
-def test_disordered_reachdata_fields(tmpdir, hydmod_model_path):
+def test_disordered_reachdata_fields(function_tmpdir, hydmod_model_path):
     m = Modflow.load("test1tr2.nam", model_ws=str(hydmod_model_path))
     sfr = m.get_package("SFR")
     orig_reach_data = sfr.reach_data
@@ -605,28 +608,28 @@ def test_disordered_reachdata_fields(tmpdir, hydmod_model_path):
         formats.append(orig_reach_data.dtype[field].str)
     reach_data = np.rec.fromarrays(data, names=names, formats=formats)
     m.sfr.reach_data = reach_data
-    m.change_model_ws(str(tmpdir))
+    m.change_model_ws(str(function_tmpdir))
     m.write_input()
 
 
-def test_transient_example(tmpdir, mf2005_model_path):
+def test_transient_example(function_tmpdir, mf2005_model_path):
     gpth = str(mf2005_model_path / "testsfr2.*")
     for f in glob.glob(gpth):
-        shutil.copy(f, tmpdir)
-    m = Modflow.load("testsfr2.nam", model_ws=str(tmpdir))
+        shutil.copy(f, function_tmpdir)
+    m = Modflow.load("testsfr2.nam", model_ws=str(function_tmpdir))
 
     # test handling of unformatted output file
     m.sfr.istcb2 = -49
     m.set_output_attribute(unit=abs(m.sfr.istcb2), attr={"binflag": True})
     m.write_input()
-    m2 = Modflow.load("testsfr2.nam", model_ws=str(tmpdir))
+    m2 = Modflow.load("testsfr2.nam", model_ws=str(function_tmpdir))
     assert m2.sfr.istcb2 == -49
     assert m2.get_output_attribute(unit=abs(m2.sfr.istcb2), attr="binflag")
 
 
 @pytest.mark.skip("Pending https://github.com/modflowpy/flopy/issues/1471")
-def test_assign_layers(tmpdir):
-    m = Modflow(model_ws=str(tmpdir))
+def test_assign_layers(function_tmpdir):
+    m = Modflow(model_ws=str(function_tmpdir))
     m.dis = ModflowDis(
         nrow=1,
         ncol=6,
@@ -666,7 +669,7 @@ def test_assign_layers(tmpdir):
 
 @requires_exe("mf2005")
 @requires_pkg("pandas")
-def test_SfrFile(tmpdir, sfr_examples_path, mf2005_model_path):
+def test_SfrFile(function_tmpdir, sfr_examples_path, mf2005_model_path):
     common_names = [
         "layer",
         "row",
@@ -744,11 +747,11 @@ def test_SfrFile(tmpdir, sfr_examples_path, mf2005_model_path):
     ml = Modflow.load(
         "test1tr.nam", model_ws=str(mf2005_model_path), exe_name="mf2005"
     )
-    ml.change_model_ws(str(tmpdir))
+    ml.change_model_ws(str(function_tmpdir))
     ml.write_input()
     ml.run_model()
 
-    sfrout = SfrFile(str(tmpdir / "test1tr.flw"))
+    sfrout = SfrFile(str(function_tmpdir / "test1tr.flw"))
     assert sfrout.ncol == 16, sfrout.ncol
     assert sfrout.names == common_names + ["gradient"], sfrout.names
     expected_times = [
@@ -810,13 +813,13 @@ def get_test_matrix():
     return t
 
 
-def test_sfrcheck(tmpdir, mf2005_model_path):
+def test_sfrcheck(function_tmpdir, mf2005_model_path):
     m = Modflow.load(
         "test1tr.nam", model_ws=str(mf2005_model_path), verbose=False
     )
 
     # run level=0 check
-    m.model_ws = str(tmpdir)
+    m.model_ws = str(function_tmpdir)
     fpth = "SFRchecker_results.txt"
     m.sfr.check(fpth, level=0)
 
@@ -882,10 +885,12 @@ def test_sfrcheck(tmpdir, mf2005_model_path):
 
 
 @pytest.mark.parametrize("i, case", list(sfr_models().items()))
-def test_sfrloadcheck(tmpdir, mf2005_model_path, i, case):
+def test_sfrloadcheck(function_tmpdir, mf2005_model_path, i, case):
     m = Modflow.load(case["mfnam"], model_ws=str(mf2005_model_path))
-    m.model_ws = str(tmpdir)
-    checker_outfile = os.path.join(str(tmpdir), f"SFRcheck_{m.name}.txt")
+    m.model_ws = str(function_tmpdir)
+    checker_outfile = os.path.join(
+        str(function_tmpdir), f"SFRcheck_{m.name}.txt"
+    )
 
     chk = m.sfr.check(checker_outfile, level=1)
 
@@ -897,7 +902,7 @@ def test_sfrloadcheck(tmpdir, mf2005_model_path, i, case):
 
 @requires_exe("mfnwt")
 @pytest.mark.parametrize("isfropt, icalc", get_test_matrix())
-def test_isfropt_icalc(tmpdir, example_data_path, isfropt, icalc):
+def test_isfropt_icalc(function_tmpdir, example_data_path, isfropt, icalc):
     pth = example_data_path / "sfr_test"
     nam = f"sfrtest{isfropt}{icalc}.nam"
     ml = Modflow.load(nam, check=False, model_ws=pth, exe_name="mfnwt")
@@ -905,7 +910,7 @@ def test_isfropt_icalc(tmpdir, example_data_path, isfropt, icalc):
     if sfr is None:
         raise AssertionError()
 
-    ws = os.path.join(str(tmpdir), f"sfrtest{isfropt}{icalc}")
+    ws = os.path.join(str(function_tmpdir), f"sfrtest{isfropt}{icalc}")
     ml.change_model_ws(ws)
     ml.write_input()
     success = ml.run_model()[0]
@@ -935,7 +940,7 @@ __example_data_path = get_example_data_path()
         ),
     ],
 )
-def test_mf2005(tmpdir, namfile):
+def test_mf2005(function_tmpdir, namfile):
     m = Modflow.load(
         namfile,
         exe_name="mf2005dbl",
@@ -947,7 +952,7 @@ def test_mf2005(tmpdir, namfile):
     assert m.load_fail is False
 
     # rewrite files
-    ws = tmpdir / "ws"
+    ws = function_tmpdir / "ws"
     m.model_ws = str(ws)
     m.write_input()
 

@@ -3,8 +3,9 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from autotest.conftest import get_example_data_path, requires_exe
+from autotest.conftest import get_example_data_path
 from matplotlib import pyplot as plt
+from modflow_devtools.markers import requires_exe
 
 from flopy.modflow import (
     Modflow,
@@ -40,7 +41,7 @@ def fnwt_model_files(pattern):
 
 
 @pytest.mark.parametrize("nwtfile", fnwt_model_files(".nwt"))
-def test_nwt_pack_load(tmpdir, nwtfile):
+def test_nwt_pack_load(function_tmpdir, nwtfile):
     ws = os.path.dirname(nwtfile)
     ml = Modflow(model_ws=ws, version="mfnwt")
     if "fmt." in nwtfile.lower():
@@ -53,14 +54,14 @@ def test_nwt_pack_load(tmpdir, nwtfile):
     assert isinstance(nwt, ModflowNwt), msg
 
     # write the new file in the working directory
-    ml.change_model_ws(str(tmpdir))
+    ml.change_model_ws(str(function_tmpdir))
     nwt.write_file()
 
-    fn = os.path.join(str(tmpdir), ml.name + ".nwt")
+    fn = os.path.join(str(function_tmpdir), ml.name + ".nwt")
     msg = f"{os.path.basename(nwtfile)} write unsuccessful"
     assert os.path.isfile(fn), msg
 
-    ml2 = Modflow(model_ws=str(tmpdir), version="mfnwt")
+    ml2 = Modflow(model_ws=str(function_tmpdir), version="mfnwt")
     nwt2 = ModflowNwt.load(fn, ml2)
     lst = [
         a
@@ -76,7 +77,7 @@ def test_nwt_pack_load(tmpdir, nwtfile):
 
 
 @pytest.mark.parametrize("namfile", fnwt_model_files(".nam"))
-def test_nwt_model_load(tmpdir, namfile):
+def test_nwt_model_load(function_tmpdir, namfile):
     f = os.path.basename(namfile)
     model_ws = os.path.dirname(namfile)
     ml = Modflow.load(f, model_ws=model_ws)
@@ -84,11 +85,11 @@ def test_nwt_model_load(tmpdir, namfile):
     assert isinstance(ml, Modflow), msg
 
     # change the model work space and rewrite the files
-    ml.change_model_ws(str(tmpdir))
+    ml.change_model_ws(str(function_tmpdir))
     ml.write_input()
 
     # reload the model that was just written
-    ml2 = Modflow.load(f, model_ws=str(tmpdir))
+    ml2 = Modflow.load(f, model_ws=str(function_tmpdir))
 
     # check that the data are the same
     for pn in ml.get_package_list():
@@ -102,13 +103,13 @@ def test_nwt_model_load(tmpdir, namfile):
         for l in lst:
             msg = (
                 "{}.{} data instantiated from {} load  is not the same as "
-                "written to {}".format(pn, l, model_ws, str(tmpdir))
+                "written to {}".format(pn, l, model_ws, str(function_tmpdir))
             )
             assert p[l] == p2[l], msg
 
 
 @requires_exe("mfnwt")
-def test_mfnwt_run(tmpdir):
+def test_mfnwt_run(function_tmpdir):
     modelname = "watertable"
 
     # model dimensions
@@ -175,7 +176,7 @@ def test_mfnwt_run(tmpdir):
     mf = Modflow(
         modelname=modelname,
         exe_name="mfnwt",
-        model_ws=str(tmpdir),
+        model_ws=str(function_tmpdir),
         version="mfnwt",
     )
     dis = ModflowDis(
@@ -201,7 +202,7 @@ def test_mfnwt_run(tmpdir):
 
     # remove existing heads results, if necessary
     try:
-        Path(tmpdir / f"{modelname}.hds").unlink()
+        Path(function_tmpdir / f"{modelname}.hds").unlink()
     except:
         pass
 
@@ -210,7 +211,7 @@ def test_mfnwt_run(tmpdir):
 
     # Read the simulated MODFLOW-2005 model results
     # Create the headfile object
-    headfile = str(tmpdir / f"{modelname}.hds")
+    headfile = str(function_tmpdir / f"{modelname}.hds")
     headobj = HeadFile(headfile, precision="single")
     times = headobj.get_times()
     head = headobj.get_data(totim=times[-1])
@@ -239,4 +240,4 @@ def test_mfnwt_run(tmpdir):
         ax.set_xlabel("Horizontal distance, in m")
         ax.set_ylabel("Percent Error")
 
-        fig.savefig(str(tmpdir / f"{modelname}.png"))
+        fig.savefig(str(function_tmpdir / f"{modelname}.png"))

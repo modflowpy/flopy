@@ -71,7 +71,7 @@ def get_project_root_path(path=None):
             parts = cwd.parts[0 : cwd.parts.index("flopy") + (t)]
             pth = Path(*parts)
             if (
-                next(iter([p for p in pth.glob("setup.cfg")]), None)
+                next(iter([p for p in pth.glob("pyproject.toml")]), None)
                 is not None
             ):
                 return pth

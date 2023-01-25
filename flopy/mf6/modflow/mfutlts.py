@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on October 19, 2022 17:43:37 UTC
+# FILE created on December 15, 2022 12:49:36 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -177,7 +177,7 @@ class ModflowUtlts(mfpackage.MFPackage):
             "block attributes",
             "name sfacval",
             "type double precision",
-            "shape time_series_names",
+            "shape <time_series_name",
             "tagged false",
             "reader urword",
             "optional false",

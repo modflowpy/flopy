@@ -3,8 +3,8 @@ import os
 
 import numpy as np
 import pytest
-from autotest.conftest import requires_exe
 from matplotlib import pyplot as plt
+from modflow_devtools.markers import requires_exe
 
 from flopy.modflow import (
     Modflow,
@@ -26,8 +26,8 @@ def ibound_path(example_data_path):
 
 @pytest.mark.slow
 @requires_exe("mf2005")
-def test_subwt(tmpdir, ibound_path):
-    ws = str(tmpdir)
+def test_subwt(function_tmpdir, ibound_path):
+    ws = str(function_tmpdir)
     ml = Modflow("subwt_mf2005", model_ws=ws, exe_name="mf2005")
     perlen = [1.0, 60.0 * 365.25, 60 * 365.25]
     nstp = [1, 60, 60]
@@ -111,24 +111,24 @@ def test_subwt(tmpdir, ibound_path):
 
     ml.run_model()
 
-    # contents = [f for f in tmpdir.glob("*.hds")]
+    # contents = [f for f in function_tmpdir.glob("*.hds")]
 
     hds_geo = HeadFile(
-        str(tmpdir / f"{ml.name}.swt_geostatic_stress.hds"),
+        str(function_tmpdir / f"{ml.name}.swt_geostatic_stress.hds"),
         text="stress",
     ).get_alldata()
     hds_eff = HeadFile(
-        str(tmpdir / f"{ml.name}.swt_eff_stress.hds"),
+        str(function_tmpdir / f"{ml.name}.swt_eff_stress.hds"),
         text="effective stress",
     ).get_alldata()
 
     hds_sub = HeadFile(
-        str(tmpdir / f"{ml.name}.swt_subsidence.hds"),
+        str(function_tmpdir / f"{ml.name}.swt_subsidence.hds"),
         text="subsidence",
     ).get_alldata()
 
     hds_comp = HeadFile(
-        str(tmpdir / f"{ml.name}.swt_total_comp.hds"),
+        str(function_tmpdir / f"{ml.name}.swt_total_comp.hds"),
         text="layer compaction",
     ).get_alldata()
 

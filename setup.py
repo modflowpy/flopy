@@ -1,3 +1,4 @@
 from setuptools import setup
 
-setup()
+# See pyproject.toml for project metadata
+setup(name="flopy")

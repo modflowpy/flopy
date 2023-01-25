@@ -6,14 +6,14 @@ from flopy.modflow import Modflow, ModflowDis, ModflowLpf
 from flopy.pest import Params, TemplateWriter, zonearray2params
 
 
-def test_tpl_constant(tmpdir):
+def test_tpl_constant(function_tmpdir):
     # Define the model dimensions
     nlay = 3
     nrow = 20
     ncol = 20
 
     # Create the flopy model object and add the dis and lpf packages
-    m = Modflow(modelname="tpl1", model_ws=str(tmpdir))
+    m = Modflow(modelname="tpl1", model_ws=str(function_tmpdir))
     dis = ModflowDis(m, nlay, nrow, ncol)
     lpf = ModflowLpf(m, hk=10.0)
 
@@ -38,17 +38,17 @@ def test_tpl_constant(tmpdir):
     tw = TemplateWriter(m, [p])
     tw.write_template()
 
-    tplfile = str(tmpdir / "tpl1.lpf.tpl")
+    tplfile = str(function_tmpdir / "tpl1.lpf.tpl")
     assert os.path.isfile(tplfile)
 
 
-def test_tpl_layered(tmpdir):
+def test_tpl_layered(function_tmpdir):
     nlay = 3
     nrow = 20
     ncol = 20
 
     # Create the flopy model object and add the dis and lpf packages
-    m = Modflow(modelname="tpl2", model_ws=str(tmpdir))
+    m = Modflow(modelname="tpl2", model_ws=str(function_tmpdir))
     dis = ModflowDis(m, nlay, nrow, ncol)
     lpf = ModflowLpf(m, hk=10.0)
 
@@ -69,17 +69,17 @@ def test_tpl_layered(tmpdir):
     tw = TemplateWriter(m, [p])
     tw.write_template()
 
-    tplfile = str(tmpdir / "tpl2.lpf.tpl")
+    tplfile = str(function_tmpdir / "tpl2.lpf.tpl")
     assert os.path.isfile(tplfile)
 
 
-def test_tpl_zoned(tmpdir):
+def test_tpl_zoned(function_tmpdir):
     nlay = 3
     nrow = 20
     ncol = 20
 
     # Create the flopy model object and add the dis and lpf packages
-    m = Modflow(modelname="tpl3", model_ws=str(tmpdir))
+    m = Modflow(modelname="tpl3", model_ws=str(function_tmpdir))
     dis = ModflowDis(m, nlay, nrow, ncol)
     lpf = ModflowLpf(m, hk=10.0)
 
@@ -130,5 +130,5 @@ def test_tpl_zoned(tmpdir):
     tw = TemplateWriter(m, plist)
     tw.write_template()
 
-    tplfile = str(tmpdir / "tpl3.lpf.tpl")
+    tplfile = str(function_tmpdir / "tpl3.lpf.tpl")
     assert os.path.isfile(tplfile)

@@ -3,7 +3,8 @@ import warnings
 
 import numpy as np
 import pytest
-from autotest.conftest import has_pkg, requires_pkg
+from modflow_devtools.markers import requires_pkg
+from modflow_devtools.misc import has_pkg
 
 from flopy.utils import (
     Mf6ListBudget,

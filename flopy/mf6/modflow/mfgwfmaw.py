@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on April 11, 2022 18:22:41 UTC
+# FILE created on December 15, 2022 12:49:36 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -102,6 +102,11 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           compatibility with previous versions of MODFLOW but use of the
           RATE_SCALING option instead of the HEAD_LIMIT option is recommended.
           By default, SHUTDOWN_KAPPA is 0.0001.
+    mfrcsv_filerecord : [mfrcsvfile]
+        * mfrcsvfile (string) name of the comma-separated value (CSV) output
+          file to write information about multi-aquifer well extraction or
+          injection rates that have been reduced by the program. Entries are
+          only written if the extraction or injection rates are reduced.
     timeseries : {varname:data} or timeseries data
         * Contains data for the ts package. Data can be stored in a dictionary
           containing data for the ts package with variable names as keys and
@@ -369,6 +374,9 @@ class ModflowGwfmaw(mfpackage.MFPackage):
     budgetcsv_filerecord = ListTemplateGenerator(
         ("gwf6", "maw", "options", "budgetcsv_filerecord")
     )
+    mfrcsv_filerecord = ListTemplateGenerator(
+        ("gwf6", "maw", "options", "mfrcsv_filerecord")
+    )
     ts_filerecord = ListTemplateGenerator(
         ("gwf6", "maw", "options", "ts_filerecord")
     )
@@ -569,6 +577,36 @@ class ModflowGwfmaw(mfpackage.MFPackage):
             "type double precision",
             "reader urword",
             "optional true",
+        ],
+        [
+            "block options",
+            "name mfrcsv_filerecord",
+            "type record maw_flow_reduce_csv fileout mfrcsvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name maw_flow_reduce_csv",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name mfrcsvfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
         ],
         [
             "block options",
@@ -1062,6 +1100,7 @@ class ModflowGwfmaw(mfpackage.MFPackage):
         flowing_wells=None,
         shutdown_theta=None,
         shutdown_kappa=None,
+        mfrcsv_filerecord=None,
         timeseries=None,
         observations=None,
         mover=None,
@@ -1105,6 +1144,9 @@ class ModflowGwfmaw(mfpackage.MFPackage):
         )
         self.shutdown_kappa = self.build_mfdata(
             "shutdown_kappa", shutdown_kappa
+        )
+        self.mfrcsv_filerecord = self.build_mfdata(
+            "mfrcsv_filerecord", mfrcsv_filerecord
         )
         self._ts_filerecord = self.build_mfdata("ts_filerecord", None)
         self._ts_package = self.build_child_package(

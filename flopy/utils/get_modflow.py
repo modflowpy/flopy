@@ -450,18 +450,8 @@ def run_main(
     if subset:
         if isinstance(subset, str):
             subset = set(subset.replace(",", " ").split())
-        elif not isinstance(subset, set):
+        else:
             subset = set(subset)
-        subset = set(
-            [
-                (
-                    f"{e}{lib_suffix}"
-                    if e.startswith("lib")
-                    else f"{e}{exe_suffix}"
-                )
-                for e in subset
-            ]
-        )
 
     # Open archive and extract files
     extract = set()
@@ -495,7 +485,7 @@ def run_main(
             files = set(zipf.namelist())
 
         code = False
-        if "code.json" in files:
+        if "code.json" in files and repo == "executables":
             # don't extract this file
             files.remove("code.json")
             code_bytes = zipf.read("code.json")
@@ -505,6 +495,7 @@ def run_main(
 
                 code_md5 = hashlib.md5(code_bytes).hexdigest()
                 meta["code_json_md5"] = code_md5
+
         if subset:
             nosub = False
             subset_keys = files
@@ -534,14 +525,17 @@ def run_main(
                 return
 
             for key in sorted(code):
-                key_in_sub = key in subset
                 if code[key].get("shared_object"):
                     fname = f"{key}{lib_suffix}"
-                    if nosub or (subset and (key_in_sub or fname in subset)):
+                    if nosub or (
+                        subset and (key in subset or fname in subset)
+                    ):
                         add_item(key, fname, do_chmod=False)
                 else:
                     fname = f"{key}{exe_suffix}"
-                    if nosub or (subset and (key_in_sub or fname in subset)):
+                    if nosub or (
+                        subset and (key in subset or fname in subset)
+                    ):
                         add_item(key, fname, do_chmod=True)
                     # check if double version exists
                     fname = f"{key}dbl{exe_suffix}"
@@ -550,7 +544,7 @@ def run_main(
                         and fname in files
                         and (
                             nosub
-                            or (subset and (key_in_sub or fname in subset))
+                            or (subset and (key in subset or fname in subset))
                         )
                     ):
                         add_item(key, fname, do_chmod=True)
@@ -603,7 +597,8 @@ def run_main(
 
     # Show listing
     if not quiet:
-        print(columns_str(items))
+        if any(items):
+            print(columns_str(items))
 
         if not subset:
             if full_path:

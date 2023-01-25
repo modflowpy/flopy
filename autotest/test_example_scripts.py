@@ -3,7 +3,8 @@ from functools import reduce
 from os import linesep
 
 import pytest
-from autotest.conftest import get_project_root_path, run_py_script
+from autotest.conftest import get_project_root_path
+from modflow_devtools.misc import run_py_script
 
 
 def get_example_scripts(exclude=None):

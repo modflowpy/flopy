@@ -4,8 +4,9 @@ import shutil
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from autotest.conftest import get_example_data_path, requires_exe, requires_pkg
+from autotest.conftest import get_example_data_path
 from autotest.test_mp6_cases import Mp6Cases1, Mp6Cases2
+from modflow_devtools.markers import requires_exe, requires_pkg
 from pytest_cases import parametrize_with_cases
 
 import flopy
@@ -41,17 +42,17 @@ def copy_modpath_files(source, model_ws, baseName):
         shutil.copy(src, dst)
 
 
-def test_mpsim(tmpdir, mp6_test_path):
-    copy_modpath_files(str(mp6_test_path), str(tmpdir), "EXAMPLE.")
+def test_mpsim(function_tmpdir, mp6_test_path):
+    copy_modpath_files(str(mp6_test_path), str(function_tmpdir), "EXAMPLE.")
 
-    m = Modflow.load("EXAMPLE.nam", model_ws=str(tmpdir))
+    m = Modflow.load("EXAMPLE.nam", model_ws=str(function_tmpdir))
     m.get_package_list()
 
     mp = Modpath6(
         modelname="ex6",
         exe_name="mp6",
         modflowmodel=m,
-        model_ws=str(tmpdir),
+        model_ws=str(function_tmpdir),
         dis_file=f"{m.name}.dis",
         head_file=f"{m.name}.hed",
         budget_file=f"{m.name}.bud",
@@ -121,18 +122,18 @@ def test_mpsim(tmpdir, mp6_test_path):
     stldata[1]["yloc0"] = 0.2
     stl.data = stldata
     mp.write_input()
-    stllines = open(os.path.join(str(tmpdir), "ex6.loc")).readlines()
+    stllines = open(os.path.join(str(function_tmpdir), "ex6.loc")).readlines()
     assert stllines[3].strip() == "group1"
     assert int(stllines[4].strip()) == 2
     assert stllines[6].strip().split()[-1] == "p2"
 
 
 @requires_pkg("pandas", "shapefile")
-def test_get_destination_data(tmpdir, mp6_test_path):
-    copy_modpath_files(str(mp6_test_path), str(tmpdir), "EXAMPLE.")
-    copy_modpath_files(str(mp6_test_path), str(tmpdir), "EXAMPLE-3.")
+def test_get_destination_data(function_tmpdir, mp6_test_path):
+    copy_modpath_files(str(mp6_test_path), str(function_tmpdir), "EXAMPLE.")
+    copy_modpath_files(str(mp6_test_path), str(function_tmpdir), "EXAMPLE-3.")
 
-    m = Modflow.load("EXAMPLE.nam", model_ws=str(tmpdir))
+    m = Modflow.load("EXAMPLE.nam", model_ws=str(function_tmpdir))
 
     mg1 = m.modelgrid
     mg1.set_coord_info(
@@ -149,10 +150,10 @@ def test_get_destination_data(tmpdir, mp6_test_path):
     )
 
     # test deprecation
-    m.dis.export(str(tmpdir / "dis.shp"))
+    m.dis.export(str(function_tmpdir / "dis.shp"))
 
-    pthld = PathlineFile(str(tmpdir / "EXAMPLE-3.pathline"))
-    epd = EndpointFile(str(tmpdir / "EXAMPLE-3.endpoint"))
+    pthld = PathlineFile(str(function_tmpdir / "EXAMPLE-3.pathline"))
+    epd = EndpointFile(str(function_tmpdir / "EXAMPLE-3.endpoint"))
 
     well_epd = epd.get_destination_endpoint_data(dest_cells=[(4, 12, 12)])
     well_pthld = pthld.get_destination_pathline_data(
@@ -177,12 +178,12 @@ def test_get_destination_data(tmpdir, mp6_test_path):
     epd.write_shapefile(
         well_epd,
         direction="starting",
-        shpname=str(tmpdir / "starting_locs.shp"),
+        shpname=str(function_tmpdir / "starting_locs.shp"),
         mg=m.modelgrid,
     )
 
     # test writing shapefile of pathlines
-    fpth = str(tmpdir / "pathlines_1per.shp")
+    fpth = str(function_tmpdir / "pathlines_1per.shp")
     pthld.write_shapefile(
         well_pthld,
         one_per_particle=True,
@@ -190,7 +191,7 @@ def test_get_destination_data(tmpdir, mp6_test_path):
         mg=m.modelgrid,
         shpname=fpth,
     )
-    fpth = str(tmpdir / "pathlines_1per_end.shp")
+    fpth = str(function_tmpdir / "pathlines_1per_end.shp")
     pthld.write_shapefile(
         well_pthld,
         one_per_particle=True,
@@ -199,7 +200,7 @@ def test_get_destination_data(tmpdir, mp6_test_path):
         shpname=fpth,
     )
     # test writing shapefile of pathlines
-    fpth = str(tmpdir / "pathlines_1per2.shp")
+    fpth = str(function_tmpdir / "pathlines_1per2.shp")
     pthld.write_shapefile(
         well_pthld,
         one_per_particle=True,
@@ -208,7 +209,7 @@ def test_get_destination_data(tmpdir, mp6_test_path):
         shpname=fpth,
     )
     # test writing shapefile of pathlines
-    fpth = str(tmpdir / "pathlines_1per2_ll.shp")
+    fpth = str(function_tmpdir / "pathlines_1per2_ll.shp")
     pthld.write_shapefile(
         well_pthld,
         one_per_particle=True,
@@ -216,13 +217,13 @@ def test_get_destination_data(tmpdir, mp6_test_path):
         mg=mg,
         shpname=fpth,
     )
-    fpth = str(tmpdir / "pathlines.shp")
+    fpth = str(function_tmpdir / "pathlines.shp")
     pthld.write_shapefile(
         well_pthld, one_per_particle=False, mg=m.modelgrid, shpname=fpth
     )
 
     # test that endpoints were rotated and written correctly
-    ra = shp2recarray(str(tmpdir / "starting_locs.shp"))
+    ra = shp2recarray(str(function_tmpdir / "starting_locs.shp"))
     p3 = ra.geometry[ra.particleid == 4][0]
     xorig, yorig = m.modelgrid.get_coords(well_epd.x0[0], well_epd.y0[0])
     assert p3.x - xorig + p3.y - yorig < 1e-4
@@ -232,16 +233,16 @@ def test_get_destination_data(tmpdir, mp6_test_path):
     )  # this also checks for 1-based
 
     # test that particle attribute information is consistent with pathline file
-    ra = shp2recarray(str(tmpdir / "pathlines.shp"))
+    ra = shp2recarray(str(function_tmpdir / "pathlines.shp"))
     inds = (ra.particleid == 8) & (ra.i == 12) & (ra.j == 12)
     assert ra.time[inds][0] - 20181.7 < 0.1
     assert ra.xloc[inds][0] - 0.933 < 0.01
 
     # test that k, i, j are correct for single geometry pathlines, forwards
     # and backwards
-    ra = shp2recarray(str(tmpdir / "pathlines_1per.shp"))
+    ra = shp2recarray(str(function_tmpdir / "pathlines_1per.shp"))
     assert ra.i[0] == 4, ra.j[0] == 5
-    ra = shp2recarray(str(tmpdir / "pathlines_1per_end.shp"))
+    ra = shp2recarray(str(function_tmpdir / "pathlines_1per_end.shp"))
     assert ra.i[0] == 13, ra.j[0] == 13
 
     # test use of arbitrary spatial reference and offset
@@ -252,7 +253,7 @@ def test_get_destination_data(tmpdir, mp6_test_path):
         epsg=mg.epsg,
         proj4=mg.proj4,
     )
-    ra = shp2recarray(str(tmpdir / "pathlines_1per2.shp"))
+    ra = shp2recarray(str(function_tmpdir / "pathlines_1per2.shp"))
     p3_2 = ra.geometry[ra.particleid == 4][0]
     test1 = mg1.xcellcenters[3, 4]
     test2 = mg1.ycellcenters[3, 4]
@@ -267,7 +268,7 @@ def test_get_destination_data(tmpdir, mp6_test_path):
     )
 
     # arbitrary spatial reference with ll specified instead of ul
-    ra = shp2recarray(str(tmpdir / "pathlines_1per2_ll.shp"))
+    ra = shp2recarray(str(function_tmpdir / "pathlines_1per2_ll.shp"))
     p3_2 = ra.geometry[ra.particleid == 4][0]
     mg.set_coord_info(xoff=mg.xoffset, yoff=mg.yoffset, angrot=30.0)
     assert (
@@ -283,7 +284,7 @@ def test_get_destination_data(tmpdir, mp6_test_path):
     xul = 3628793
     yul = 21940389
 
-    m = Modflow.load("EXAMPLE.nam", model_ws=str(tmpdir))
+    m = Modflow.load("EXAMPLE.nam", model_ws=str(function_tmpdir))
 
     mg4 = m.modelgrid
     mg4.set_coord_info(
@@ -294,18 +295,18 @@ def test_get_destination_data(tmpdir, mp6_test_path):
         proj4=mg4.proj4,
     )
 
-    fpth = str(tmpdir / "dis2.shp")
+    fpth = str(function_tmpdir / "dis2.shp")
     m.dis.export(fpth)
-    pthobj = PathlineFile(str(tmpdir / "EXAMPLE-3.pathline"))
-    fpth = str(tmpdir / "pathlines_1per3.shp")
+    pthobj = PathlineFile(str(function_tmpdir / "EXAMPLE-3.pathline"))
+    fpth = str(function_tmpdir / "pathlines_1per3.shp")
     pthobj.write_shapefile(shpname=fpth, direction="ending", mg=mg4)
 
 
 @requires_pkg("pandas")
-def test_loadtxt(tmpdir, mp6_test_path):
-    copy_modpath_files(str(mp6_test_path), str(tmpdir), "EXAMPLE-3.")
+def test_loadtxt(function_tmpdir, mp6_test_path):
+    copy_modpath_files(str(mp6_test_path), str(function_tmpdir), "EXAMPLE-3.")
 
-    pthfile = str(tmpdir / "EXAMPLE-3.pathline")
+    pthfile = str(function_tmpdir / "EXAMPLE-3.pathline")
     pthld = PathlineFile(pthfile)
     ra = loadtxt(pthfile, delimiter=" ", skiprows=3, dtype=pthld.dtype)
     ra2 = loadtxt(
@@ -319,7 +320,7 @@ def test_loadtxt(tmpdir, mp6_test_path):
 
 @requires_exe("mf2005")
 @requires_pkg("pandas")
-def test_modpath(tmpdir, example_data_path):
+def test_modpath(function_tmpdir, example_data_path):
     pth = example_data_path / "freyberg"
     mfnam = "freyberg.nam"
 
@@ -332,7 +333,7 @@ def test_modpath(tmpdir, example_data_path):
     )
     assert m.load_fail is False
 
-    m.change_model_ws(str(tmpdir))
+    m.change_model_ws(str(function_tmpdir))
     m.write_input()
 
     success, buff = m.run_model(silent=False)
@@ -344,7 +345,7 @@ def test_modpath(tmpdir, example_data_path):
         mpnam,
         exe_name="mp6",
         modflowmodel=m,
-        model_ws=str(tmpdir),
+        model_ws=str(function_tmpdir),
     )
     mpbas = Modpath6Bas(
         mp,
@@ -372,7 +373,7 @@ def test_modpath(tmpdir, example_data_path):
         mpnam,
         exe_name="mp6",
         modflowmodel=m,
-        model_ws=str(tmpdir),
+        model_ws=str(function_tmpdir),
     )
     mpbas = Modpath6Bas(
         mpp,
@@ -397,8 +398,8 @@ def test_modpath(tmpdir, example_data_path):
 
     # load modpath output files
     if success:
-        endfile = os.path.join(str(tmpdir), mp.sim.endpoint_file)
-        pthfile = os.path.join(str(tmpdir), mpp.sim.pathline_file)
+        endfile = os.path.join(str(function_tmpdir), mp.sim.endpoint_file)
+        pthfile = os.path.join(str(function_tmpdir), mpp.sim.pathline_file)
 
         # load the endpoint data
         try:
@@ -422,14 +423,14 @@ def test_modpath(tmpdir, example_data_path):
         mfnam = "freyberg.nam"
         m = Modflow.load(
             mfnam,
-            model_ws=str(tmpdir),
+            model_ws=str(function_tmpdir),
             verbose=True,
             forgive=False,
             exe_name="mf2005",
         )
 
         # load modpath output files
-        pthfile = os.path.join(str(tmpdir), "freybergmpp.mppth")
+        pthfile = os.path.join(str(function_tmpdir), "freybergmpp.mppth")
 
         # load the pathline data
         pthobj = PathlineFile(pthfile)
@@ -447,7 +448,7 @@ def test_modpath(tmpdir, example_data_path):
         # plot the grid and ibound array
         mm.plot_grid()
         mm.plot_ibound()
-        fpth = os.path.join(str(tmpdir), "pathline.png")
+        fpth = os.path.join(str(function_tmpdir), "pathline.png")
         plt.savefig(fpth)
         plt.close()
 
@@ -458,7 +459,7 @@ def test_modpath(tmpdir, example_data_path):
         mm.plot_grid()
         mm.plot_ibound()
 
-        fpth = os.path.join(str(tmpdir), "pathline2.png")
+        fpth = os.path.join(str(function_tmpdir), "pathline2.png")
         plt.savefig(fpth)
         plt.close()
 
@@ -469,7 +470,7 @@ def test_modpath(tmpdir, example_data_path):
         mm.plot_grid()
         mm.plot_ibound()
 
-        fpth = os.path.join(str(tmpdir), "pathline3.png")
+        fpth = os.path.join(str(function_tmpdir), "pathline3.png")
         plt.savefig(fpth)
         plt.close()
 
