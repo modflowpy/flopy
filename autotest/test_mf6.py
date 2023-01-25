@@ -1034,13 +1034,13 @@ def test_output_add_observation(function_tmpdir, example_data_path):
 def test_sfr_connections(function_tmpdir, example_data_path):
     '''MODFLOW just warns if any reaches are unconnected
     flopy fails to load model if reach 1 is unconnected, fine with other unconnected'''
-    sim_ws = str(function_tmpdir)
+    data_path = str(example_data_path / "mf6" / "test666_sfrconnections")
     for test in ['sfr0', 'sfr1']:
         sim_name = "test_sfr"
         model_name = "test_sfr"
         tdis_name = "{}.tdis".format(sim_name)
         sim = MFSimulation(
-            sim_name=sim_name, version="mf6", exe_name="mf6", sim_ws=sim_ws
+            sim_name=sim_name, version="mf6", exe_name="mf6", sim_ws=function_tmpdir
         )
         tdis_rc = [(1.0, 1, 1.0)]
         tdis = ModflowTdis(sim, time_units="DAYS", nper=1, perioddata=tdis_rc)
@@ -1080,24 +1080,26 @@ def test_sfr_connections(function_tmpdir, example_data_path):
         cnfile = f'mf6_{test}_connection.txt'
         pkfile = f'mf6_{test}_package.txt'
 
-        with open(os.path.join(example_data_path, pkfile), 'r') as f:
+        with open(os.path.join(data_path, pkfile), 'r') as f:
             nreaches = len(f.readlines())
         sfr = ModflowGwfsfr(model,
-                            packagedata={'filename': os.path.join(example_data_path, pkfile)},
-                            connectiondata={'filename': os.path.join(example_data_path, cnfile)},
+                            packagedata={'filename': os.path.join(data_path, pkfile)},
+                            connectiondata={'filename': os.path.join(data_path, cnfile)},
                             nreaches=nreaches,
                             pname='sfr',
                             unit_conversion=86400
                             )
         sim.set_all_data_external()
         sim.write_simulation()
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} did not run"
 
         #reload simulation
-        sim2 = MFSimulation.load(sim_ws=str(example_data_path))
+        sim2 = MFSimulation.load(sim_ws=str(function_tmpdir))
         sim.set_all_data_external()
         sim.write_simulation()
-        sim.run_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} did not run after being reloaded"
         
         
 @requires_exe("mf6")
