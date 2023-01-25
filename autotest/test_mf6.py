@@ -1031,17 +1031,16 @@ def test_output_add_observation(function_tmpdir, example_data_path):
         sfr_obs, Mf6Obs
     ), "remove and add observation test (Mf6Output) failed"
 
-def test_sfr_connections(tmpdir):
+def test_sfr_connections(function_tmpdir, example_data_path):
     '''MODFLOW just warns if any reaches are unconnected
     flopy fails to load model if reach 1 is unconnected, fine with other unconnected'''
-
+    sim_ws = str(example_data_path / "mf6" / "test_sfr_connections")
     for test in ['sfr0', 'sfr1']:
         sim_name = "test_sfr"
         model_name = "test_sfr"
-        out_dir = str(tmpdir)
         tdis_name = "{}.tdis".format(sim_name)
         sim = MFSimulation(
-            sim_name=sim_name, version="mf6", exe_name="mf6", sim_ws=out_dir
+            sim_name=sim_name, version="mf6", exe_name="mf6", sim_ws=sim_ws
         )
         tdis_rc = [(1.0, 1, 1.0)]
         tdis = ModflowTdis(sim, time_units="DAYS", nper=1, perioddata=tdis_rc)
@@ -1077,15 +1076,15 @@ def test_sfr_connections(tmpdir):
             icelltype=1,
             k=50.0,
         )
-        ddir = example_data_path
+        
         cnfile = f'mf6_{test}_connection.txt'
         pkfile = f'mf6_{test}_package.txt'
 
-        with open(os.path.join(ddir, pkfile), 'r') as f:
+        with open(os.path.join(sim_ws, pkfile), 'r') as f:
             nreaches = len(f.readlines())
         sfr = ModflowGwfsfr(model,
-                            packagedata={'filename': os.path.join(ddir, pkfile)},
-                            connectiondata={'filename': os.path.join(ddir, cnfile)},
+                            packagedata={'filename': os.path.join(sim_ws, pkfile)},
+                            connectiondata={'filename': os.path.join(sim_ws, cnfile)},
                             nreaches=nreaches,
                             pname='sfr',
                             unit_conversion=86400
@@ -1095,7 +1094,7 @@ def test_sfr_connections(tmpdir):
         sim.run_simulation()
 
         #reload simulation
-        sim2 = MFSimulation.load(sim_ws=str(tmpdir))
+        sim2 = MFSimulation.load(sim_ws=str(sim_ws))
         sim.set_all_data_external()
         sim.write_simulation()
         sim.run_simulation()
