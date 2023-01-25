@@ -1070,7 +1070,7 @@ def test_sfr_connections(tmpdir):
             icelltype=1,
             k=50.0,
         )
-        ddir = ('../examples/data/sfr_test/')
+        ddir = example_data_path
         cnfile = f'mf6_{test}_connection.txt'
         pkfile = f'mf6_{test}_package.txt'
 
