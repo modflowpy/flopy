@@ -1034,7 +1034,7 @@ def test_output_add_observation(function_tmpdir, example_data_path):
 def test_sfr_connections(function_tmpdir, example_data_path):
     '''MODFLOW just warns if any reaches are unconnected
     flopy fails to load model if reach 1 is unconnected, fine with other unconnected'''
-    sim_ws = str(example_data_path / "mf6" / "test_sfr_connections")
+    sim_ws = str(function_tmpdir)
     for test in ['sfr0', 'sfr1']:
         sim_name = "test_sfr"
         model_name = "test_sfr"
@@ -1080,11 +1080,11 @@ def test_sfr_connections(function_tmpdir, example_data_path):
         cnfile = f'mf6_{test}_connection.txt'
         pkfile = f'mf6_{test}_package.txt'
 
-        with open(os.path.join(sim_ws, pkfile), 'r') as f:
+        with open(os.path.join(example_data_path, pkfile), 'r') as f:
             nreaches = len(f.readlines())
         sfr = ModflowGwfsfr(model,
-                            packagedata={'filename': os.path.join(sim_ws, pkfile)},
-                            connectiondata={'filename': os.path.join(sim_ws, cnfile)},
+                            packagedata={'filename': os.path.join(example_data_path, pkfile)},
+                            connectiondata={'filename': os.path.join(example_data_path, cnfile)},
                             nreaches=nreaches,
                             pname='sfr',
                             unit_conversion=86400
@@ -1094,7 +1094,7 @@ def test_sfr_connections(function_tmpdir, example_data_path):
         sim.run_simulation()
 
         #reload simulation
-        sim2 = MFSimulation.load(sim_ws=str(sim_ws))
+        sim2 = MFSimulation.load(sim_ws=str(example_data_path))
         sim.set_all_data_external()
         sim.write_simulation()
         sim.run_simulation()
