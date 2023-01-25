@@ -1035,12 +1035,13 @@ def test_sfr_connections(function_tmpdir, example_data_path):
     '''MODFLOW just warns if any reaches are unconnected
     flopy fails to load model if reach 1 is unconnected, fine with other unconnected'''
     data_path = str(example_data_path / "mf6" / "test666_sfrconnections")
+    sim_ws = str(function_tmpdir)
     for test in ['sfr0', 'sfr1']:
         sim_name = "test_sfr"
         model_name = "test_sfr"
         tdis_name = "{}.tdis".format(sim_name)
         sim = MFSimulation(
-            sim_name=sim_name, version="mf6", exe_name="mf6", sim_ws=function_tmpdir
+            sim_name=sim_name, version="mf6", exe_name="mf6", sim_ws=sim_ws
         )
         tdis_rc = [(1.0, 1, 1.0)]
         tdis = ModflowTdis(sim, time_units="DAYS", nper=1, perioddata=tdis_rc)
@@ -1095,7 +1096,7 @@ def test_sfr_connections(function_tmpdir, example_data_path):
         assert success, f"simulation {sim.name} did not run"
 
         #reload simulation
-        sim2 = MFSimulation.load(sim_ws=str(function_tmpdir))
+        sim2 = MFSimulation.load(sim_ws=sim_ws)
         sim.set_all_data_external()
         sim.write_simulation()
         success, buff = sim.run_simulation()
