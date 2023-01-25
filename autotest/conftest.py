@@ -1,7 +1,9 @@
 import importlib
 import os
+import re
 import socket
 import sys
+from importlib import metadata
 from os import environ
 from os.path import basename, normpath
 from pathlib import Path
@@ -13,8 +15,13 @@ from urllib import request
 from warnings import warn
 
 import matplotlib.pyplot as plt
-import pkg_resources
 import pytest
+from modflow_devtools.misc import is_in_ci
+
+# import modflow-devtools fixtures
+
+pytest_plugins = ["modflow_devtools.fixtures"]
+
 
 # constants
 
@@ -36,149 +43,7 @@ def get_flopy_data_path() -> Path:
     return get_project_root_path() / "flopy" / "data"
 
 
-def get_current_branch() -> str:
-    # check if on GitHub Actions CI
-    ref = environ.get("GITHUB_REF")
-    if ref is not None:
-        return basename(normpath(ref)).lower()
-
-    # otherwise ask git about it
-    if not which("git"):
-        raise RuntimeError("'git' required to determine current branch")
-    stdout, stderr, code = run_cmd("git", "rev-parse", "--abbrev-ref", "HEAD")
-    if code == 0 and stdout:
-        return stdout.strip().lower()
-    raise ValueError(f"Could not determine current branch: {stderr}")
-
-
-def is_connected(hostname):
-    """See https://stackoverflow.com/a/20913928/ to test hostname."""
-    try:
-        host = socket.gethostbyname(hostname)
-        s = socket.create_connection((host, 80), 2)
-        s.close()
-        return True
-    except Exception:
-        pass
-    return False
-
-
-def is_in_ci():
-    # if running in GitHub Actions CI, "CI" variable always set to true
-    # https://docs.github.com/en/actions/learn-github-actions/environment-variables#default-environment-variables
-    return bool(os.environ.get("CI", None))
-
-
-def is_github_rate_limited() -> Optional[bool]:
-    """
-    Determines if a GitHub API rate limit is applied to the current IP.
-    Note that running this function will consume an API request!
-
-    Returns
-    -------
-        True if rate-limiting is applied, otherwise False (or None if the connection fails).
-    """
-    try:
-        with request.urlopen(
-            "https://api.github.com/users/octocat"
-        ) as response:
-            remaining = int(response.headers["x-ratelimit-remaining"])
-            if remaining < 10:
-                warn(
-                    f"Only {remaining} GitHub API requests remaining before rate-limiting"
-                )
-            return remaining > 0
-    except:
-        return None
-
-
-_has_exe_cache = {}
-_has_pkg_cache = {}
-
-
-def has_exe(exe):
-    if exe not in _has_exe_cache:
-        _has_exe_cache[exe] = bool(which(exe))
-    return _has_exe_cache[exe]
-
-
-def has_pkg(pkg):
-    if pkg not in _has_pkg_cache:
-
-        # for some dependencies, package name and import name are different
-        # (e.g. pyshp/shapefile, mfpymake/pymake, python-dateutil/dateutil)
-        # pkg_resources expects package name, importlib expects import name
-        try:
-            _has_pkg_cache[pkg] = bool(importlib.import_module(pkg))
-        except (ImportError, ModuleNotFoundError):
-            try:
-                _has_pkg_cache[pkg] = bool(pkg_resources.get_distribution(pkg))
-            except pkg_resources.DistributionNotFound:
-                _has_pkg_cache[pkg] = False
-
-    return _has_pkg_cache[pkg]
-
-
-def requires_exe(*exes):
-    missing = {exe for exe in exes if not has_exe(exe)}
-    return pytest.mark.skipif(
-        missing,
-        reason=f"missing executable{'s' if len(missing) != 1 else ''}: "
-        + ", ".join(missing),
-    )
-
-
-def requires_pkg(*pkgs):
-    missing = {pkg for pkg in pkgs if not has_pkg(pkg)}
-    return pytest.mark.skipif(
-        missing,
-        reason=f"missing package{'s' if len(missing) != 1 else ''}: "
-        + ", ".join(missing),
-    )
-
-
-def requires_platform(platform, ci_only=False):
-    return pytest.mark.skipif(
-        system().lower() != platform.lower()
-        and (is_in_ci() if ci_only else True),
-        reason=f"only compatible with platform: {platform.lower()}",
-    )
-
-
-def excludes_platform(platform, ci_only=False):
-    return pytest.mark.skipif(
-        system().lower() == platform.lower()
-        and (is_in_ci() if ci_only else True),
-        reason=f"not compatible with platform: {platform.lower()}",
-    )
-
-
-def requires_branch(branch):
-    current = get_current_branch()
-    return pytest.mark.skipif(
-        current != branch, reason=f"must run on branch: {branch}"
-    )
-
-
-def excludes_branch(branch):
-    current = get_current_branch()
-    return pytest.mark.skipif(
-        current == branch, reason=f"can't run on branch: {branch}"
-    )
-
-
-requires_github = pytest.mark.skipif(
-    not is_connected("github.com"), reason="github.com is required."
-)
-
-
-requires_spatial_reference = pytest.mark.skipif(
-    not is_connected("spatialreference.org"),
-    reason="spatialreference.org is required.",
-)
-
-
-# example data fixtures
+# path fixtures
 
 
 @pytest.fixture(scope="session")
@@ -201,61 +66,6 @@ def example_shapefiles(example_data_path) -> List[Path]:
     return [f.resolve() for f in (example_data_path / "prj_test").glob("*")]
 
 
-# keepable temporary directory fixtures for various scopes
-
-
-@pytest.fixture(scope="function")
-def tmpdir(tmpdir_factory, request) -> Path:
-    node = (
-        request.node.name.replace("/", "_")
-        .replace("\\", "_")
-        .replace(":", "_")
-    )
-    temp = Path(tmpdir_factory.mktemp(node))
-    yield Path(temp)
-
-    keep = request.config.getoption("--keep")
-    if keep:
-        copytree(temp, Path(keep) / temp.name)
-
-    keep_failed = request.config.getoption("--keep-failed")
-    if keep_failed and request.node.rep_call.failed:
-        copytree(temp, Path(keep_failed) / temp.name)
-
-
-@pytest.fixture(scope="class")
-def class_tmpdir(tmpdir_factory, request) -> Path:
-    assert (
-        request.cls is not None
-    ), "Class-scoped temp dir fixture must be used on class"
-    temp = Path(tmpdir_factory.mktemp(request.cls.__name__))
-    yield temp
-
-    keep = request.config.getoption("--keep")
-    if keep:
-        copytree(temp, Path(keep) / temp.name)
-
-
-@pytest.fixture(scope="module")
-def module_tmpdir(tmpdir_factory, request) -> Path:
-    temp = Path(tmpdir_factory.mktemp(request.module.__name__))
-    yield temp
-
-    keep = request.config.getoption("--keep")
-    if keep:
-        copytree(temp, Path(keep) / temp.name)
-
-
-@pytest.fixture(scope="session")
-def session_tmpdir(tmpdir_factory, request) -> Path:
-    temp = Path(tmpdir_factory.mktemp(request.session.name))
-    yield temp
-
-    keep = request.config.getoption("--keep")
-    if keep:
-        copytree(temp, Path(keep) / temp.name)
-
-
 # fixture to automatically close any plots (or optionally show them)
 
 
@@ -270,6 +80,16 @@ def close_plot(request):
         plt.show()
     else:
         plt.close("all")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def patch_macos_ci_matplotlib():
+    # use noninteractive matplotlib backend if in Mac OS CI to avoid pytest-xdist node failure
+    # e.g. https://github.com/modflowpy/flopy/runs/7748574375?check_suite_focus=true#step:9:57
+    if is_in_ci() and system().lower() == "darwin":
+        import matplotlib
+
+        matplotlib.use("agg")
 
 
 # pytest configuration hooks
@@ -291,43 +111,6 @@ def pytest_runtest_makereport(item, call):
 
 def pytest_addoption(parser):
     parser.addoption(
-        "-K",
-        "--keep",
-        action="store",
-        default=None,
-        help="Move the contents of temporary test directories to correspondingly named subdirectories at the given "
-        "location after tests complete. This option can be used to exclude test results from automatic cleanup, "
-        "e.g. for manual inspection. The provided path is created if it does not already exist. An error is "
-        "thrown if any matching files already exist.",
-    )
-
-    parser.addoption(
-        "--keep-failed",
-        action="store",
-        default=None,
-        help="Move the contents of temporary test directories to correspondingly named subdirectories at the given "
-        "location if the test case fails. This option automatically saves the outputs of failed tests in the "
-        "given location. The path is created if it doesn't already exist. An error is thrown if files with the "
-        "same names already exist in the given location.",
-    )
-
-    parser.addoption(
-        "-M",
-        "--meta",
-        action="store",
-        metavar="NAME",
-        help="Marker indicating a test is only run by other tests (e.g., the test framework testing itself).",
-    )
-
-    parser.addoption(
-        "-S",
-        "--smoke",
-        action="store_true",
-        default=False,
-        help="Run only smoke tests (should complete in <1 minute).",
-    )
-
-    parser.addoption(
         "--show-plots",
         action="store_true",
         default=False,
@@ -336,100 +119,46 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_configure(config):
-    config.addinivalue_line(
-        "markers",
-        "meta(name): mark test to run only inside other groups of tests.",
-    )
-
-
-def pytest_runtest_setup(item):
-    # apply meta-test option
-    meta = item.config.getoption("--meta")
-    metagroups = [mark.args[0] for mark in item.iter_markers(name="meta")]
-    if metagroups and meta not in metagroups:
-        pytest.skip()
-
-    # smoke tests are \ {slow U example U regression}
-    smoke = item.config.getoption("--smoke")
-    slow = list(item.iter_markers(name="slow"))
-    example = list(item.iter_markers(name="example"))
-    regression = list(item.iter_markers(name="regression"))
-    if smoke and (slow or example or regression):
-        pytest.skip()
-
-
 def pytest_report_header(config):
     """Header for pytest to show versions of packages."""
 
-    # if we ever drop support for python 3.7, could use importlib.metadata instead?
-    # or importlib_metadata backport: https://importlib-metadata.readthedocs.io/en/latest/
-    # pkg_resources discouraged: https://setuptools.pypa.io/en/latest/pkg_resources.html
+    required = []
+    extra = {}
+    for item in metadata.requires("flopy"):
+        pkg_name = re.findall(r"[a-z0-9_\-]+", item, re.IGNORECASE)[0]
+        if res := re.findall("extra == ['\"](.+)['\"]", item):
+            assert len(res) == 1, item
+            pkg_extra = res[0]
+            if pkg_extra not in extra:
+                extra[pkg_extra] = []
+            extra[pkg_extra].append(pkg_name)
+        else:
+            required.append(pkg_name)
 
     processed = set()
-    flopy_pkg = pkg_resources.get_distribution("flopy")
     lines = []
     items = []
-    for pkg in flopy_pkg.requires():
-        name = pkg.name
+    for name in required:
         processed.add(name)
         try:
-            version = pkg_resources.get_distribution(name).version
+            version = metadata.version(name)
             items.append(f"{name}-{version}")
-        except pkg_resources.DistributionNotFound:
+        except metadata.PackageNotFoundError:
             items.append(f"{name} (not found)")
     lines.append("required packages: " + ", ".join(items))
     installed = []
     not_found = []
-    for pkg in flopy_pkg.requires(["optional"]):
-        name = pkg.name
+    for name in extra["optional"]:
         if name in processed:
             continue
         processed.add(name)
         try:
-            version = pkg_resources.get_distribution(name).version
+            version = metadata.version(name)
             installed.append(f"{name}-{version}")
-        except pkg_resources.DistributionNotFound:
+        except metadata.PackageNotFoundError:
             not_found.append(name)
     if installed:
         lines.append("optional packages: " + ", ".join(installed))
     if not_found:
         lines.append("optional packages not found: " + ", ".join(not_found))
     return "\n".join(lines)
-
-
-# functions to run commands and scripts
-
-
-def run_cmd(*args, verbose=False, **kwargs):
-    """Run any command, return tuple (stdout, stderr, returncode)."""
-    args = [str(g) for g in args]
-    if verbose:
-        print("running: " + " ".join(args))
-    p = Popen(args, stdout=PIPE, stderr=PIPE, **kwargs)
-    stdout, stderr = p.communicate()
-    stdout = stdout.decode()
-    stderr = stderr.decode()
-    returncode = p.returncode
-    if verbose:
-        print(f"stdout:\n{stdout}")
-        print(f"stderr:\n{stderr}")
-        print(f"returncode: {returncode}")
-    return stdout, stderr, returncode
-
-
-def run_py_script(script, *args, verbose=False):
-    """Run a Python script, return tuple (stdout, stderr, returncode)."""
-    return run_cmd(
-        sys.executable, script, *args, verbose=verbose, cwd=Path(script).parent
-    )
-
-
-# use noninteractive matplotlib backend if in Mac OS CI to avoid pytest-xdist node failure
-# e.g. https://github.com/modflowpy/flopy/runs/7748574375?check_suite_focus=true#step:9:57
-@pytest.fixture(scope="session", autouse=True)
-def patch_macos_ci_matplotlib():
-    if is_in_ci() and system().lower() == "darwin":
-        import matplotlib
-
-        matplotlib.use("agg")

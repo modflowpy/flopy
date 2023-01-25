@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on April 11, 2022 18:22:41 UTC
+# FILE created on December 15, 2022 12:49:36 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -74,10 +74,11 @@ class ModflowGwfevt(mfpackage.MFPackage):
           any stress period.
     nseg : integer
         * nseg (integer) number of ET segments. Default is one. When NSEG is
-          greater than 1, PXDP and PETM arrays must be specified NSEG - 1 times
-          each, in order from the uppermost segment down. PXDP defines the
-          extinction-depth proportion at the bottom of a segment. PETM defines
-          the proportion of the maximum ET flux rate at the bottom of a
+          greater than 1, the PXDP and PETM arrays must be of size NSEG - 1 and
+          be listed in order from the uppermost segment down. Values for PXDP
+          must be listed first followed by the values for PETM. PXDP defines
+          the extinction-depth proportion at the bottom of a segment. PETM
+          defines the proportion of the maximum ET flux rate at the bottom of a
           segment.
     stress_period_data : [cellid, surface, rate, depth, pxdp, petm, petm0, aux,
       boundname]
@@ -104,15 +105,17 @@ class ModflowGwfevt(mfpackage.MFPackage):
           section), values can be obtained from a time series by entering the
           time-series name in place of a numeric value.
         * pxdp (double) is the proportion of the ET extinction depth at the
-          bottom of a segment (dimensionless). If the Options block includes a
-          TIMESERIESFILE entry (see the "Time-Variable Input" section), values
-          can be obtained from a time series by entering the time-series name
-          in place of a numeric value.
+          bottom of a segment (dimensionless). pxdp is an array of size (nseg -
+          1). Values in pxdp must be greater than 0.0 and less than 1.0. pxdp
+          values for a cell must increase monotonically. If the Options block
+          includes a TIMESERIESFILE entry (see the "Time-Variable Input"
+          section), values can be obtained from a time series by entering the
+          time-series name in place of a numeric value.
         * petm (double) is the proportion of the maximum ET flux rate at the
-          bottom of a segment (dimensionless). If the Options block includes a
-          TIMESERIESFILE entry (see the "Time-Variable Input" section), values
-          can be obtained from a time series by entering the time-series name
-          in place of a numeric value.
+          bottom of a segment (dimensionless). petm is an array of size (nseg -
+          1). If the Options block includes a TIMESERIESFILE entry (see the
+          "Time-Variable Input" section), values can be obtained from a time
+          series by entering the time-series name in place of a numeric value.
         * petm0 (double) is the proportion of the maximum ET flux rate that
           will apply when head is at or above the ET surface (dimensionless).
           PETM0 is read only when the SURF_RATE_SPECIFIED option is used. If

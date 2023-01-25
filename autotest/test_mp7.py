@@ -3,8 +3,8 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from autotest.conftest import requires_exe, requires_pkg
 from autotest.test_mp7_cases import Mp7Cases
+from modflow_devtools.markers import requires_exe, requires_pkg
 from pytest_cases import parametrize_with_cases
 
 from flopy.mf6 import (
@@ -42,7 +42,7 @@ ex01b_mf6_model_name = "ex01b_mf6"
 
 
 @pytest.fixture
-def ex01b_mf6_model(tmpdir):
+def ex01b_mf6_model(function_tmpdir):
     """
     MODPATH 7 example 1 for MODFLOW 6
     """
@@ -68,7 +68,7 @@ def ex01b_mf6_model(tmpdir):
         sim_name=ex01b_mf6_model_name,
         exe_name="mf6",
         version="mf6",
-        sim_ws=str(tmpdir),
+        sim_ws=str(function_tmpdir),
     )
 
     # Create the Flopy temporal discretization object
@@ -134,7 +134,7 @@ def ex01b_mf6_model(tmpdir):
 
     # Write the datasets
     sim.write_simulation()
-    return sim, tmpdir
+    return sim, function_tmpdir
 
 
 def build_modpath(ws, mpn, particlegroups, grid):
@@ -238,7 +238,7 @@ def endpoint_compare(fpth0, epf):
 
 @requires_exe("mf6", "mp7")
 def test_default_modpath(ex01b_mf6_model):
-    sim, tmpdir = ex01b_mf6_model
+    sim, function_tmpdir = ex01b_mf6_model
 
     success, buff = sim.run_simulation()
     assert success, "mf6 model did not run"
@@ -246,14 +246,17 @@ def test_default_modpath(ex01b_mf6_model):
     mpnam = f"{ex01b_mf6_model_name}_mp_default"
     pg = ParticleGroup(particlegroupname="DEFAULT")
     build_modpath(
-        str(tmpdir), mpnam, pg, sim.get_model(ex01b_mf6_model_name).modelgrid
+        str(function_tmpdir),
+        mpnam,
+        pg,
+        sim.get_model(ex01b_mf6_model_name).modelgrid,
     )
 
 
 @requires_exe("mf6", "mp7")
 @requires_pkg("pandas")
 def test_faceparticles_is1(ex01b_mf6_model):
-    sim, tmpdir = ex01b_mf6_model
+    sim, function_tmpdir = ex01b_mf6_model
 
     local = np.array(
         [
@@ -292,16 +295,21 @@ def test_faceparticles_is1(ex01b_mf6_model):
         particlegroupname="T1NODEPG", particledata=p, filename=fpth
     )
     build_modpath(
-        str(tmpdir), mpnam, pg, sim.get_model(ex01b_mf6_model_name).modelgrid
+        str(function_tmpdir),
+        mpnam,
+        pg,
+        sim.get_model(ex01b_mf6_model_name).modelgrid,
     )
 
     # set base file name
-    fpth0 = os.path.join(str(tmpdir), "ex01b_mf6_mp_face_t1node.mpend")
+    fpth0 = os.path.join(
+        str(function_tmpdir), "ex01b_mf6_mp_face_t1node.mpend"
+    )
 
     # get list of node endpath files
     epf = [
-        os.path.join(str(tmpdir), name)
-        for name in os.listdir(str(tmpdir))
+        os.path.join(str(function_tmpdir), name)
+        for name in os.listdir(str(function_tmpdir))
         if ".mpend" in name and "_face_" in name and "_t2a" not in name
     ]
     epf.remove(fpth0)
@@ -311,7 +319,7 @@ def test_faceparticles_is1(ex01b_mf6_model):
 
 @requires_exe("mf6", "mp7")
 def test_facenode_is3(ex01b_mf6_model):
-    sim, tmpdir = ex01b_mf6_model
+    sim, function_tmpdir = ex01b_mf6_model
     grid = sim.get_model(ex01b_mf6_model_name).modelgrid
     success, buff = sim.run_simulation()
     assert success, "mf6 model did not run"
@@ -343,13 +351,16 @@ def test_facenode_is3(ex01b_mf6_model):
         particlegroupname="T3NODEPG", particledata=p, filename=fpth
     )
     build_modpath(
-        str(tmpdir), mpnam, pg, sim.get_model(ex01b_mf6_model_name).modelgrid
+        str(function_tmpdir),
+        mpnam,
+        pg,
+        sim.get_model(ex01b_mf6_model_name).modelgrid,
     )
 
 
 @requires_exe("mf6", "mp7")
 def test_facenode_is3a(ex01b_mf6_model):
-    sim, tmpdir = ex01b_mf6_model
+    sim, function_tmpdir = ex01b_mf6_model
     grid = sim.get_model(ex01b_mf6_model_name).modelgrid
     success, buff = sim.run_simulation()
     assert success, "mf6 model did not run"
@@ -386,13 +397,16 @@ def test_facenode_is3a(ex01b_mf6_model):
         particlegroupname="T3ANODEPG", particledata=p, filename=fpth
     )
     build_modpath(
-        str(tmpdir), mpnam, pg, sim.get_model(ex01b_mf6_model_name).modelgrid
+        str(function_tmpdir),
+        mpnam,
+        pg,
+        sim.get_model(ex01b_mf6_model_name).modelgrid,
     )
 
 
 @requires_exe("mf6", "mp7")
 def test_facenode_is2a(ex01b_mf6_model):
-    sim, tmpdir = ex01b_mf6_model
+    sim, function_tmpdir = ex01b_mf6_model
     grid = sim.get_model(ex01b_mf6_model_name).modelgrid
     success, buff = sim.run_simulation()
     assert success, "mf6 model did not run"
@@ -421,14 +435,17 @@ def test_facenode_is2a(ex01b_mf6_model):
         particlegroupname="T2ANODEPG", particledata=p, filename=fpth
     )
     build_modpath(
-        str(tmpdir), mpnam, pg, sim.get_model(ex01b_mf6_model_name).modelgrid
+        str(function_tmpdir),
+        mpnam,
+        pg,
+        sim.get_model(ex01b_mf6_model_name).modelgrid,
     )
 
 
 @requires_exe("mf6", "mp7")
 @requires_pkg("pandas")
 def test_cellparticles_is1(ex01b_mf6_model):
-    sim, tmpdir = ex01b_mf6_model
+    sim, function_tmpdir = ex01b_mf6_model
     grid = sim.get_model(ex01b_mf6_model_name).modelgrid
     success, buff = sim.run_simulation()
     assert success, "mf6 model did not run"
@@ -448,16 +465,21 @@ def test_cellparticles_is1(ex01b_mf6_model):
         particlegroupname="T1NODEPG", particledata=p, filename=fpth
     )
     build_modpath(
-        str(tmpdir), mpnam, pg, sim.get_model(ex01b_mf6_model_name).modelgrid
+        str(function_tmpdir),
+        mpnam,
+        pg,
+        sim.get_model(ex01b_mf6_model_name).modelgrid,
     )
 
     # set base file name
-    fpth0 = os.path.join(str(tmpdir), "ex01b_mf6_mp_cell_t1node.mpend")
+    fpth0 = os.path.join(
+        str(function_tmpdir), "ex01b_mf6_mp_cell_t1node.mpend"
+    )
 
     # get list of node endpath files
     epf = [
-        os.path.join(str(tmpdir), name)
-        for name in os.listdir(str(tmpdir))
+        os.path.join(str(function_tmpdir), name)
+        for name in os.listdir(str(function_tmpdir))
         if ".mpend" in name and "_cell_" in name and "_t2a" not in name
     ]
     epf.remove(fpth0)
@@ -467,7 +489,7 @@ def test_cellparticles_is1(ex01b_mf6_model):
 
 @requires_exe("mf6", "mp7")
 def test_cellparticleskij_is1(ex01b_mf6_model):
-    sim, tmpdir = ex01b_mf6_model
+    sim, function_tmpdir = ex01b_mf6_model
     grid = sim.get_model(ex01b_mf6_model_name).modelgrid
     success, buff = sim.run_simulation()
     assert success, "mf6 model did not run"
@@ -486,13 +508,16 @@ def test_cellparticleskij_is1(ex01b_mf6_model):
         particlegroupname="T1KIJPG", particledata=p, filename=fpth
     )
     build_modpath(
-        str(tmpdir), mpnam, pg, sim.get_model(ex01b_mf6_model_name).modelgrid
+        str(function_tmpdir),
+        mpnam,
+        pg,
+        sim.get_model(ex01b_mf6_model_name).modelgrid,
     )
 
 
 @requires_exe("mf6", "mp7")
 def test_cellnode_is3(ex01b_mf6_model):
-    sim, tmpdir = ex01b_mf6_model
+    sim, function_tmpdir = ex01b_mf6_model
     grid = sim.get_model(ex01b_mf6_model_name).modelgrid
     success, buff = sim.run_simulation()
     assert success, "mf6 model did not run"
@@ -516,13 +541,16 @@ def test_cellnode_is3(ex01b_mf6_model):
         particlegroupname="T3CELLPG", particledata=p, filename=fpth
     )
     build_modpath(
-        str(tmpdir), mpnam, pg, sim.get_model(ex01b_mf6_model_name).modelgrid
+        str(function_tmpdir),
+        mpnam,
+        pg,
+        sim.get_model(ex01b_mf6_model_name).modelgrid,
     )
 
 
 @requires_exe("mf6", "mp7")
 def test_cellnode_is3a(ex01b_mf6_model):
-    sim, tmpdir = ex01b_mf6_model
+    sim, function_tmpdir = ex01b_mf6_model
     grid = sim.get_model(ex01b_mf6_model_name).modelgrid
     success, buff = sim.run_simulation()
     assert success, "mf6 model did not run"
@@ -560,13 +588,16 @@ def test_cellnode_is3a(ex01b_mf6_model):
         particlegroupname="T3ACELLPG", particledata=p, filename=fpth
     )
     build_modpath(
-        str(tmpdir), mpnam, pg, sim.get_model(ex01b_mf6_model_name).modelgrid
+        str(function_tmpdir),
+        mpnam,
+        pg,
+        sim.get_model(ex01b_mf6_model_name).modelgrid,
     )
 
 
 @requires_exe("mf6", "mp7")
 def test_cellnode_is2a(ex01b_mf6_model):
-    sim, tmpdir = ex01b_mf6_model
+    sim, function_tmpdir = ex01b_mf6_model
     grid = sim.get_model(ex01b_mf6_model_name).modelgrid
 
     success, buff = sim.run_simulation()
@@ -590,14 +621,14 @@ def test_cellnode_is2a(ex01b_mf6_model):
         particlegroupname="T2ACELLPG", particledata=p, filename=fpth
     )
 
-    build_modpath(str(tmpdir), mpnam, pg, grid)
+    build_modpath(str(function_tmpdir), mpnam, pg, grid)
 
 
 ex01_mf6_model_name = "ex01_mf6"
 
 
 @pytest.fixture
-def ex01_mf6_model(tmpdir):
+def ex01_mf6_model(function_tmpdir):
     """
     MODPATH 7 example 1 for MODFLOW 6
     """
@@ -607,7 +638,7 @@ def ex01_mf6_model(tmpdir):
         sim_name=ex01_mf6_model_name,
         exe_name="mf6",
         version="mf6",
-        sim_ws=str(tmpdir),
+        sim_ws=str(function_tmpdir),
     )
 
     # model data
@@ -690,13 +721,13 @@ def ex01_mf6_model(tmpdir):
     # Write the datasets
     sim.write_simulation()
 
-    return sim, tmpdir
+    return sim, function_tmpdir
 
 
 @pytest.mark.slow
 @requires_exe("mf6", "mp7")
 def test_forward(ex01_mf6_model):
-    sim, tmpdir = ex01_mf6_model
+    sim, function_tmpdir = ex01_mf6_model
     # Run the simulation
     success, buff = sim.run_simulation()
     assert success, "mf6 model did not run"
@@ -704,7 +735,7 @@ def test_forward(ex01_mf6_model):
     mpnam = f"{ex01_mf6_model_name}_mp_forward"
 
     # load the MODFLOW 6 model
-    sim = MFSimulation.load("mf6mod", "mf6", "mf6", str(tmpdir))
+    sim = MFSimulation.load("mf6mod", "mf6", "mf6", str(function_tmpdir))
     gwf = sim.get_model(ex01_mf6_model_name)
 
     mp = Modpath7.create_mp7(
@@ -712,7 +743,7 @@ def test_forward(ex01_mf6_model):
         trackdir="forward",
         flowmodel=gwf,
         exe_name="mp7",
-        model_ws=str(tmpdir),
+        model_ws=str(function_tmpdir),
         rowcelldivisions=1,
         columncelldivisions=1,
         layercelldivisions=1,
@@ -729,14 +760,14 @@ def test_forward(ex01_mf6_model):
 @pytest.mark.slow
 @requires_exe("mf6", "mp7")
 def test_backward(ex01_mf6_model):
-    sim, tmpdir = ex01_mf6_model
+    sim, function_tmpdir = ex01_mf6_model
     success, buff = sim.run_simulation()
     assert success, "mf6 model did not run"
 
     mpnam = f"{ex01_mf6_model_name}_mp_backward"
 
     # load the MODFLOW 6 model
-    sim = MFSimulation.load("mf6mod", "mf6", "mf6", str(tmpdir))
+    sim = MFSimulation.load("mf6mod", "mf6", "mf6", str(function_tmpdir))
     gwf = sim.get_model(ex01_mf6_model_name)
 
     mp = Modpath7.create_mp7(
@@ -744,7 +775,7 @@ def test_backward(ex01_mf6_model):
         trackdir="backward",
         flowmodel=gwf,
         exe_name="mp7",
-        model_ws=str(tmpdir),
+        model_ws=str(function_tmpdir),
         rowcelldivisions=1,
         columncelldivisions=1,
         layercelldivisions=1,
@@ -759,9 +790,9 @@ def test_backward(ex01_mf6_model):
 
 
 @requires_exe("mf2005", "mf6", "mp7")
-def test_pathline_output(tmpdir):
-    case_mf2005 = Mp7Cases.mf2005(tmpdir)
-    case_mf6 = Mp7Cases.mf6(tmpdir)
+def test_pathline_output(function_tmpdir):
+    case_mf2005 = Mp7Cases.mf2005(function_tmpdir)
+    case_mf6 = Mp7Cases.mf6(function_tmpdir)
 
     success, buff = case_mf2005.run_model()
     assert success, f"modpath model ({case_mf2005.name}) did not run"
@@ -790,9 +821,9 @@ def test_pathline_output(tmpdir):
 
 @requires_pkg("pandas")
 @requires_exe("mf2005", "mf6", "mp7")
-def test_endpoint_output(tmpdir):
-    case_mf2005 = Mp7Cases.mf2005(tmpdir)
-    case_mf6 = Mp7Cases.mf6(tmpdir)
+def test_endpoint_output(function_tmpdir):
+    case_mf2005 = Mp7Cases.mf2005(function_tmpdir)
+    case_mf6 = Mp7Cases.mf6(function_tmpdir)
 
     success, buff = case_mf2005.run_model()
     assert success, f"modpath model ({case_mf2005.name}) did not run"
@@ -842,8 +873,8 @@ def test_endpoint_output(tmpdir):
 
 
 @requires_exe("mf6")
-def test_pathline_plotting(tmpdir):
-    ml = Mp7Cases.mf6(tmpdir)
+def test_pathline_plotting(function_tmpdir):
+    ml = Mp7Cases.mf6(function_tmpdir)
     success, buff = ml.run_model()
     assert success, f"modpath model ({ml.name}) did not run"
 

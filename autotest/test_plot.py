@@ -2,7 +2,6 @@ import os
 
 import numpy as np
 import pytest
-from autotest.conftest import requires_exe, requires_pkg
 from flaky import flaky
 from matplotlib import pyplot as plt
 from matplotlib import rcParams
@@ -12,6 +11,7 @@ from matplotlib.collections import (
     PathCollection,
     QuadMesh,
 )
+from modflow_devtools.markers import requires_exe, requires_pkg
 
 import flopy
 from flopy.discretization import StructuredGrid
@@ -242,7 +242,7 @@ def test_cross_section_bc_UZF_3lay(example_data_path):
         ), f"Unexpected collection type: {type(col)}"
 
 
-def test_map_view_contour(tmpdir):
+def test_map_view_contour(function_tmpdir):
     arr = np.random.rand(10, 10) * 100
     arr[-1, :] = np.nan
     delc = np.array([10] * 10, dtype=float)
@@ -272,7 +272,7 @@ def test_map_view_contour(tmpdir):
 
     pmv = PlotMapView(modelgrid=grid, layer=0)
     contours = pmv.contour_array(a=arr)
-    plt.savefig(tmpdir / "map_view_contour.png")
+    plt.savefig(function_tmpdir / "map_view_contour.png")
 
     # if we ever revert from standard contours to tricontours, restore this nan check
     # for ix, lev in enumerate(contours.levels):
@@ -297,7 +297,7 @@ def test_vertex_model_dot_plot(example_data_path):
 # occasional _tkinter.TclError: Can't find a usable tk.tcl (or init.tcl)
 # similar: https://github.com/microsoft/azure-pipelines-tasks/issues/16426
 @flaky
-def test_model_dot_plot(tmpdir, example_data_path):
+def test_model_dot_plot(function_tmpdir, example_data_path):
     loadpth = example_data_path / "mf2005_test"
     ml = flopy.modflow.Modflow.load(
         "ibs2k.nam", "mf2k", model_ws=str(loadpth), check=False
@@ -307,7 +307,7 @@ def test_model_dot_plot(tmpdir, example_data_path):
     assert len(ax) == 18, f"number of axes ({len(ax)}) is not equal to 18"
 
 
-def test_dataset_dot_plot(tmpdir, example_data_path):
+def test_dataset_dot_plot(function_tmpdir, example_data_path):
     loadpth = example_data_path / "mf2005_test"
     ml = flopy.modflow.Modflow.load(
         "ibs2k.nam", "mf2k", model_ws=str(loadpth), check=False
@@ -319,7 +319,9 @@ def test_dataset_dot_plot(tmpdir, example_data_path):
     assert len(ax) == 2, f"number of hy axes ({len(ax)}) is not equal to 2"
 
 
-def test_dataset_dot_plot_nlay_ne_plottable(tmpdir, example_data_path):
+def test_dataset_dot_plot_nlay_ne_plottable(
+    function_tmpdir, example_data_path
+):
     import matplotlib.pyplot as plt
 
     loadpth = example_data_path / "mf2005_test"
@@ -333,15 +335,15 @@ def test_dataset_dot_plot_nlay_ne_plottable(tmpdir, example_data_path):
     ), "ml.bcf6.vcont.plot() ax is is not of type plt.Axes"
 
 
-def test_model_dot_plot_export(tmpdir, example_data_path):
+def test_model_dot_plot_export(function_tmpdir, example_data_path):
     loadpth = example_data_path / "mf2005_test"
     ml = flopy.modflow.Modflow.load(
         "ibs2k.nam", "mf2k", model_ws=str(loadpth), check=False
     )
 
-    fh = os.path.join(tmpdir, "ibs2k")
+    fh = os.path.join(function_tmpdir, "ibs2k")
     ml.plot(mflay=0, filename_base=fh, file_extension="png")
-    files = [f for f in os.listdir(tmpdir) if f.endswith(".png")]
+    files = [f for f in os.listdir(function_tmpdir) if f.endswith(".png")]
     if len(files) < 10:
         raise AssertionError(
             "ml.plot did not properly export all supported data types"
@@ -355,12 +357,12 @@ def test_model_dot_plot_export(tmpdir, example_data_path):
 
 @requires_pkg("pandas")
 @requires_exe("mf2005")
-def test_pathline_plot_xc(tmpdir, example_data_path):
+def test_pathline_plot_xc(function_tmpdir, example_data_path):
     # test with multi-layer example
     load_ws = example_data_path / "mp6"
 
     ml = Modflow.load("EXAMPLE.nam", model_ws=str(load_ws), exe_name="mf2005")
-    ml.change_model_ws(str(tmpdir))
+    ml.change_model_ws(str(function_tmpdir))
     ml.write_input()
     ml.run_model()
 
@@ -368,7 +370,7 @@ def test_pathline_plot_xc(tmpdir, example_data_path):
         modelname="ex6",
         exe_name="mp6",
         modflowmodel=ml,
-        model_ws=str(tmpdir),
+        model_ws=str(function_tmpdir),
     )
 
     mpb = Modpath6Bas(
@@ -385,7 +387,7 @@ def test_pathline_plot_xc(tmpdir, example_data_path):
 
     mp.run_model(silent=False)
 
-    pthobj = PathlineFile(os.path.join(str(tmpdir), "ex6.mppth"))
+    pthobj = PathlineFile(os.path.join(str(function_tmpdir), "ex6.mppth"))
     well_pathlines = pthobj.get_destination_pathline_data(
         dest_cells=[(4, 12, 12)]
     )
@@ -402,8 +404,8 @@ def test_pathline_plot_xc(tmpdir, example_data_path):
 
 
 @pytest.fixture
-def quasi3d_model(tmpdir):
-    mf = Modflow("model_mf", model_ws=str(tmpdir), exe_name="mf2005")
+def quasi3d_model(function_tmpdir):
+    mf = Modflow("model_mf", model_ws=str(function_tmpdir), exe_name="mf2005")
 
     # Model domain and grid definition
     Lx = 1000.0

@@ -179,7 +179,7 @@ def get_release(repo, tag="latest", quiet=False) -> dict:
     release = json.loads(result.decode())
     tag_name = release["tag_name"]
     if not quiet:
-        print(f"fetched release {tag_name!r} from {owner}/{repo}")
+        print(f"fetched release {tag_name!r} info from {owner}/{repo}")
 
     return release
 
@@ -444,13 +444,13 @@ def run_main(
             )
     else:
         if not quiet:
-            print(f"downloading to '{download_pth}'")
+            print(f"downloading '{download_url}' to '{download_pth}'")
         urllib.request.urlretrieve(download_url, download_pth)
 
     if subset:
         if isinstance(subset, str):
             subset = set(subset.replace(",", " ").split())
-        elif not isinstance(subset, set):
+        else:
             subset = set(subset)
 
     # Open archive and extract files
@@ -475,17 +475,17 @@ def run_main(
     with zipfile.ZipFile(download_pth, "r") as zipf:
         if repo == "modflow6":
             # modflow6 release contains the whole repo with an internal bindir
-            inner_bin = asset_stem + "/bin"
             for pth in zipf.namelist():
-                if pth.startswith(inner_bin) and not pth.endswith("bin/"):
-                    full_path[Path(pth).name] = pth
+                p = Path(pth)
+                if p.parent.name == "bin":
+                    full_path[p.name] = pth
             files = set(full_path.keys())
         else:
             # assume all files to be extracted
             files = set(zipf.namelist())
 
         code = False
-        if "code.json" in files:
+        if "code.json" in files and repo == "executables":
             # don't extract this file
             files.remove("code.json")
             code_bytes = zipf.read("code.json")
@@ -495,6 +495,7 @@ def run_main(
 
                 code_md5 = hashlib.md5(code_bytes).hexdigest()
                 meta["code_json_md5"] = code_md5
+
         if subset:
             nosub = False
             subset_keys = files
@@ -524,14 +525,17 @@ def run_main(
                 return
 
             for key in sorted(code):
-                key_in_sub = key in subset
                 if code[key].get("shared_object"):
                     fname = f"{key}{lib_suffix}"
-                    if nosub or (subset and (key_in_sub or fname in subset)):
+                    if nosub or (
+                        subset and (key in subset or fname in subset)
+                    ):
                         add_item(key, fname, do_chmod=False)
                 else:
                     fname = f"{key}{exe_suffix}"
-                    if nosub or (subset and (key_in_sub or fname in subset)):
+                    if nosub or (
+                        subset and (key in subset or fname in subset)
+                    ):
                         add_item(key, fname, do_chmod=True)
                     # check if double version exists
                     fname = f"{key}dbl{exe_suffix}"
@@ -540,7 +544,7 @@ def run_main(
                         and fname in files
                         and (
                             nosub
-                            or (subset and (key_in_sub or fname in subset))
+                            or (subset and (key in subset or fname in subset))
                         )
                     ):
                         add_item(key, fname, do_chmod=True)
@@ -593,7 +597,8 @@ def run_main(
 
     # Show listing
     if not quiet:
-        print(columns_str(items))
+        if any(items):
+            print(columns_str(items))
 
         if not subset:
             if full_path:

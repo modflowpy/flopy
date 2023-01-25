@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from autotest.conftest import requires_exe, requires_pkg
+from modflow_devtools.markers import requires_exe, requires_pkg
 
 import flopy
 from flopy.mf6 import (
@@ -48,22 +48,20 @@ from flopy.mf6.data.mfdatastorage import DataStorageType
 from flopy.mf6.mfbase import FlopyException, MFDataException
 from flopy.mf6.utils import testutils
 from flopy.utils import CellBudgetFile
+from flopy.utils.compare import compare_concentrations, compare_heads
 from flopy.utils.datautil import PyListUtil
 
 pytestmark = pytest.mark.mf6
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
-def test_np001(tmpdir, example_data_path):
-    import pymake
-
+def test_np001(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "np001"
     model_name = "np001_mod"
     data_path = example_data_path / "mf6" / "create_tests" / test_ex_name
-    ws = str(tmpdir / "ws")
+    ws = str(function_tmpdir / "ws")
     # copy example data into working directory
     shutil.copytree(data_path, ws)
 
@@ -397,7 +395,7 @@ def test_np001(tmpdir, example_data_path):
 
     # inspect cells
     cell_list = [(0, 0, 0), (0, 0, 4), (0, 0, 9)]
-    out_file = str(tmpdir / "inspect_test_np001.csv")
+    out_file = str(function_tmpdir / "inspect_test_np001.csv")
     model.inspect_cells(cell_list, output_file_path=out_file, stress_period=0)
 
     # get expected results
@@ -407,7 +405,7 @@ def test_np001(tmpdir, example_data_path):
     # compare output to expected results
     head_new = os.path.join(ws, "np001_mod 1.hds")
     outfile = os.path.join(ws, "head_compare.dat")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -426,14 +424,16 @@ def test_np001(tmpdir, example_data_path):
     model.set_model_relative_path(md_folder)
     run_folder_new = os.path.join(ws, md_folder)
     # set all data external
-    sim.set_all_data_external(external_data_folder=tmpdir / "data")
+    sim.set_all_data_external(external_data_folder=function_tmpdir / "data")
     sim.write_simulation()
 
     # test file with relative path to model relative path
     wel_path = os.path.join(ws, md_folder, "well_folder", f"{model_name}.wel")
     assert os.path.exists(wel_path)
     # test data file was recreated by set_all_data_external
-    riv_path = str(tmpdir / "data" / "np001_mod.riv_stress_period_data_1.txt")
+    riv_path = str(
+        function_tmpdir / "data" / "np001_mod.riv_stress_period_data_1.txt"
+    )
     assert os.path.exists(riv_path)
 
     assert (
@@ -449,7 +449,7 @@ def test_np001(tmpdir, example_data_path):
     # compare output to expected results
     head_new = os.path.join(run_folder_new, "np001_mod 1.hds")
     outfile = os.path.join(run_folder_new, "head_compare.dat")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -624,16 +624,13 @@ def test_np001(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
-def test_np002(tmpdir, example_data_path):
-    import pymake
-
+def test_np002(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "np002"
     model_name = "np002_mod"
     data_folder = example_data_path / "mf6" / "create_tests" / test_ex_name
-    ws = str(tmpdir / "ws")
+    ws = str(function_tmpdir / "ws")
     # copy example data into working directory
     shutil.copytree(data_folder, ws)
     expected_output_folder = data_folder / "expected_output"
@@ -798,7 +795,7 @@ def test_np002(tmpdir, example_data_path):
     sim.run_simulation()
 
     cell_list = [(0, 0, 0), (0, 0, 3), (0, 0, 4), (0, 0, 9)]
-    out_file = str(tmpdir / "inspect_test_np002.csv")
+    out_file = str(function_tmpdir / "inspect_test_np002.csv")
     model.inspect_cells(cell_list, output_file_path=out_file)
 
     sim2 = MFSimulation.load(sim_ws=ws)
@@ -809,7 +806,7 @@ def test_np002(tmpdir, example_data_path):
     # compare output to expected results
     head_new = os.path.join(ws, "np002_mod.hds")
     outfile = os.path.join(ws, "head_compare.dat")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -901,18 +898,15 @@ def test_np002(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
-def test021_twri(tmpdir, example_data_path):
-    import pymake
-
+def test021_twri(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test021_twri"
     model_name = "twri"
     data_folder = str(
         example_data_path / "mf6" / "create_tests" / test_ex_name
     )
-    ws = str(tmpdir / "ws")
+    ws = str(function_tmpdir / "ws")
 
     # copy example data into working directory
     shutil.copytree(data_folder, ws)
@@ -927,7 +921,7 @@ def test021_twri(tmpdir, example_data_path):
         exe_name="mf6",
         sim_ws=data_folder,
     )
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
     tdis_rc = [(86400.0, 1, 1.0)]
     tdis_package = ModflowTdis(
         sim, time_units="SECONDS", nper=1, perioddata=tdis_rc
@@ -1114,7 +1108,7 @@ def test021_twri(tmpdir, example_data_path):
     # compare output to expected results
     head_new = os.path.join(ws, "twri.hds")
     outfile = os.path.join(ws, "head_compare.dat")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -1127,12 +1121,9 @@ def test021_twri(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
-def test005_create_tests_advgw_tidal(tmpdir, example_data_path):
-    import pymake
-
+def test005_create_tests_advgw_tidal(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test005_advgw_tidal"
     model_name = "AdvGW_tidal"
@@ -1379,7 +1370,7 @@ def test005_create_tests_advgw_tidal(tmpdir, example_data_path):
 
     obs_dict = {
         ("ghb_obs.csv", "binary"): [
-            ("ghb-2-6-10", "GHB", (1, 5, 9)),
+            ("ghb- 2-6-10", "GHB", (1, 5, 9)),
             ("ghb-3-6-10", "GHB", (2, 5, 9)),
         ],
         "ghb_flows.csv": [
@@ -1651,14 +1642,14 @@ def test005_create_tests_advgw_tidal(tmpdir, example_data_path):
     )
 
     # change folder to save simulation
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
 
     # write simulation to new location
     sim.set_all_data_external()
     sim.write_simulation()
 
     # test time series data file with relative path to simulation path
-    ts_path = str(tmpdir / "well-rates" / "well-rates.ts")
+    ts_path = str(function_tmpdir / "well-rates" / "well-rates.ts")
     assert os.path.exists(ts_path)
 
     # run simulation
@@ -1666,13 +1657,13 @@ def test005_create_tests_advgw_tidal(tmpdir, example_data_path):
 
     # inspect cells
     cell_list = [(2, 3, 2), (0, 4, 2), (0, 2, 4), (0, 5, 5), (0, 9, 9)]
-    out_file = str(tmpdir / "inspect_AdvGW_tidal.csv")
+    out_file = str(function_tmpdir / "inspect_AdvGW_tidal.csv")
     model.inspect_cells(cell_list, output_file_path=out_file)
 
     # compare output to expected results
-    head_new = str(tmpdir / "AdvGW_tidal.hds")
-    outfile = str(tmpdir / "head_compare.dat")
-    assert pymake.compare_heads(
+    head_new = str(function_tmpdir / "AdvGW_tidal.hds")
+    outfile = str(function_tmpdir / "head_compare.dat")
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -1690,12 +1681,12 @@ def test005_create_tests_advgw_tidal(tmpdir, example_data_path):
             assert filename == f"new_name.{package.package_type}"
             package_type_dict[package.package_type] = 1
     sim.write_simulation()
-    name_file = str(tmpdir / "new_name.nam")
+    name_file = str(function_tmpdir / "new_name.nam")
     assert os.path.exists(name_file)
-    dis_file = str(tmpdir / "new_name.dis")
+    dis_file = str(function_tmpdir / "new_name.dis")
     assert os.path.exists(dis_file)
     # test time series data file with relative path to simulation path
-    ts_path = str(tmpdir / "well-rates" / "new_name.ts")
+    ts_path = str(function_tmpdir / "well-rates" / "new_name.ts")
     assert os.path.exists(ts_path)
 
     sim.rename_all_packages("all_files_same_name")
@@ -1709,14 +1700,14 @@ def test005_create_tests_advgw_tidal(tmpdir, example_data_path):
     for ims_file in sim._ims_files.values():
         assert ims_file.filename == "all_files_same_name.ims"
     sim.write_simulation()
-    name_file = str(tmpdir / "all_files_same_name.nam")
+    name_file = str(function_tmpdir / "all_files_same_name.nam")
     assert os.path.exists(name_file)
-    dis_file = str(tmpdir / "all_files_same_name.dis")
+    dis_file = str(function_tmpdir / "all_files_same_name.dis")
     assert os.path.exists(dis_file)
-    tdis_file = str(tmpdir / "all_files_same_name.tdis")
+    tdis_file = str(function_tmpdir / "all_files_same_name.tdis")
     assert os.path.exists(tdis_file)
     # test time series data file with relative path to simulation path
-    ts_path = str(tmpdir / "well-rates" / "all_files_same_name.ts")
+    ts_path = str(function_tmpdir / "well-rates" / "all_files_same_name.ts")
     assert os.path.exists(ts_path)
 
     # load simulation
@@ -1743,6 +1734,7 @@ def test005_create_tests_advgw_tidal(tmpdir, example_data_path):
             # there should be only one
             assert not found_obs
             found_obs = True
+            assert value[0][0] == "ghb- 2-6-10"
     assert found_flows and found_obs
 
     # clean up
@@ -1755,11 +1747,8 @@ def test005_create_tests_advgw_tidal(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
-def test004_create_tests_bcfss(tmpdir, example_data_path):
-    import pymake
-
+def test004_create_tests_bcfss(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test004_bcfss"
     model_name = "bcf2ss"
@@ -1928,7 +1917,7 @@ def test004_create_tests_bcfss(tmpdir, example_data_path):
     )
 
     # change folder to save simulation
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
 
     # write simulation to new location
     sim.set_all_data_external()
@@ -1938,9 +1927,9 @@ def test004_create_tests_bcfss(tmpdir, example_data_path):
     sim.run_simulation()
 
     # compare output to expected results
-    head_new = os.path.join(str(tmpdir), "bcf2ss.hds")
-    outfile = os.path.join(str(tmpdir), "head_compare.dat")
-    assert pymake.compare_heads(
+    head_new = os.path.join(str(function_tmpdir), "bcf2ss.hds")
+    outfile = os.path.join(str(function_tmpdir), "head_compare.dat")
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -1953,11 +1942,8 @@ def test004_create_tests_bcfss(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
-def test035_create_tests_fhb(tmpdir, example_data_path):
-    import pymake
-
+def test035_create_tests_fhb(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test035_fhb"
     model_name = "fhb2015"
@@ -2071,7 +2057,7 @@ def test035_create_tests_fhb(tmpdir, example_data_path):
     )
 
     # change folder to save simulation
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
 
     # write simulation to new location
     sim.set_all_data_external()
@@ -2081,9 +2067,9 @@ def test035_create_tests_fhb(tmpdir, example_data_path):
     sim.run_simulation()
 
     # compare output to expected results
-    head_new = str(tmpdir / "fhb2015_fhb.hds")
-    outfile = str(tmpdir / "head_compare.dat")
-    assert pymake.compare_heads(
+    head_new = str(function_tmpdir / "fhb2015_fhb.hds")
+    outfile = str(function_tmpdir / "head_compare.dat")
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -2096,11 +2082,9 @@ def test035_create_tests_fhb(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake", "shapefile")
+@requires_pkg("shapefile")
 @pytest.mark.regression
-def test006_create_tests_gwf3_disv(tmpdir, example_data_path):
-    import pymake
-
+def test006_create_tests_gwf3_disv(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test006_gwf3_disv"
     model_name = "flow"
@@ -2115,7 +2099,7 @@ def test006_create_tests_gwf3_disv(tmpdir, example_data_path):
         exe_name="mf6",
         sim_ws=str(data_path),
     )
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
     tdis_rc = [(1.0, 1, 1.0)]
     tdis_package = ModflowTdis(
         sim, time_units="DAYS", nper=1, perioddata=tdis_rc
@@ -2355,7 +2339,7 @@ def test006_create_tests_gwf3_disv(tmpdir, example_data_path):
     )
 
     # change folder to save simulation
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
 
     # write simulation to new location
     sim.write_simulation()
@@ -2365,13 +2349,13 @@ def test006_create_tests_gwf3_disv(tmpdir, example_data_path):
 
     # inspect cells
     cell_list = [(0, 0), (0, 7), (0, 17)]
-    out_file = str(tmpdir / "inspect_test_gwf3_disv.csv")
+    out_file = str(function_tmpdir / "inspect_test_gwf3_disv.csv")
     model.inspect_cells(cell_list, output_file_path=out_file)
 
     # compare output to expected results
-    head_new = str(tmpdir / "flow.hds")
-    outfile = str(tmpdir / "head_compare.dat")
-    assert pymake.compare_heads(
+    head_new = str(function_tmpdir / "flow.hds")
+    outfile = str(function_tmpdir / "head_compare.dat")
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -2383,18 +2367,15 @@ def test006_create_tests_gwf3_disv(tmpdir, example_data_path):
     # model.export(os.path.join(run_folder, "test006_gwf3.nc"))
     # export to shape file
 
-    model.export(str(tmpdir / "test006_gwf3.shp"))
+    model.export(str(function_tmpdir / "test006_gwf3.shp"))
 
     # clean up
     sim.delete_output_files()
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
-def test006_create_tests_2models_gnc(tmpdir, example_data_path):
-    import pymake
-
+def test006_create_tests_2models_gnc(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test006_2models_gnc"
     model_name_1 = "model1"
@@ -2664,22 +2645,22 @@ def test006_create_tests_2models_gnc(tmpdir, example_data_path):
     )
 
     # change folder to save simulation
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
 
     # write simulation to new location
     sim.write_simulation()
 
     # test gnc file was created in correct location
-    gnc_full_path = str(tmpdir / gnc_path)
+    gnc_full_path = str(function_tmpdir / gnc_path)
     assert os.path.exists(gnc_full_path)
 
     # run simulation
     sim.run_simulation()
 
     # compare output to expected results
-    head_new = str(tmpdir / "model1.hds")
-    outfile = str(tmpdir / "head_compare.dat")
-    assert pymake.compare_heads(
+    head_new = str(function_tmpdir / "model1.hds")
+    outfile = str(function_tmpdir / "head_compare.dat")
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_1,
@@ -2688,9 +2669,9 @@ def test006_create_tests_2models_gnc(tmpdir, example_data_path):
     )
 
     # compare output to expected results
-    head_new = str(tmpdir / "model2.hds")
-    outfile = str(tmpdir / "head_compare.dat")
-    assert pymake.compare_heads(
+    head_new = str(function_tmpdir / "model2.hds")
+    outfile = str(function_tmpdir / "head_compare.dat")
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_2,
@@ -2699,15 +2680,15 @@ def test006_create_tests_2models_gnc(tmpdir, example_data_path):
     )
 
     # test external file paths
-    sim_path = str(tmpdir / "path_test")
+    sim_path = str(function_tmpdir / "path_test")
     sim.set_sim_path(sim_path)
     model_1.set_model_relative_path("model1")
     model_2.set_model_relative_path("model2")
-    sim.set_all_data_external(external_data_folder=tmpdir / "data")
+    sim.set_all_data_external(external_data_folder=function_tmpdir / "data")
     sim.write_simulation()
-    ext_file_path_1 = str(tmpdir / "data" / "model1.dis_botm.txt")
+    ext_file_path_1 = str(function_tmpdir / "data" / "model1.dis_botm.txt")
     assert os.path.exists(ext_file_path_1)
-    ext_file_path_2 = str(tmpdir / "data" / "model2.dis_botm.txt")
+    ext_file_path_2 = str(function_tmpdir / "data" / "model2.dis_botm.txt")
     assert os.path.exists(ext_file_path_2)
     # test gnc file was created in correct location
     gnc_full_path = os.path.join(sim_path, gnc_path)
@@ -2717,7 +2698,7 @@ def test006_create_tests_2models_gnc(tmpdir, example_data_path):
     sim.delete_output_files()
 
     # test rename all packages
-    rename_folder = str(tmpdir / "rename")
+    rename_folder = str(function_tmpdir / "rename")
     sim.rename_all_packages("file_rename")
     sim.set_sim_path(rename_folder)
     sim.write_simulation()
@@ -2730,12 +2711,9 @@ def test006_create_tests_2models_gnc(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
-def test050_create_tests_circle_island(tmpdir, example_data_path):
-    import pymake
-
+def test050_create_tests_circle_island(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test050_circle_island"
     model_name = "ci"
@@ -2806,7 +2784,7 @@ def test050_create_tests_circle_island(tmpdir, example_data_path):
     )
 
     # change folder to save simulation
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
 
     # write simulation to new location
     sim.set_all_data_external()
@@ -2816,9 +2794,9 @@ def test050_create_tests_circle_island(tmpdir, example_data_path):
     sim.run_simulation()
 
     # compare output to expected results
-    head_new = str(tmpdir / "ci.output.hds")
-    outfile = str(tmpdir / "head_compare.dat")
-    assert pymake.compare_heads(
+    head_new = str(function_tmpdir / "ci.output.hds")
+    outfile = str(function_tmpdir / "head_compare.dat")
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -2831,15 +2809,12 @@ def test050_create_tests_circle_island(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.xfail(
     reason="possible python3.7/windows incompatibilities in testutils.read_std_array "
     "https://github.com/modflowpy/flopy/runs/7581629193?check_suite_focus=true#step:11:1753"
 )
 @pytest.mark.regression
-def test028_create_tests_sfr(tmpdir, example_data_path):
-    import pymake
-
+def test028_create_tests_sfr(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test028_sfr"
     model_name = "test1tr"
@@ -3016,13 +2991,13 @@ def test028_create_tests_sfr(tmpdir, example_data_path):
     assert sfr_package.connectiondata.get_data()[2][1] == 1.0
     assert sfr_package.packagedata.get_data()[1][1].lower() == "none"
 
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
     sim.write_simulation()
     sim.load(
         sim_name=test_ex_name,
         version="mf6",
         exe_name="mf6",
-        sim_ws=str(tmpdir),
+        sim_ws=str(function_tmpdir),
     )
     model = sim.get_model(model_name)
     sfr_package = model.get_package("sfr")
@@ -3086,13 +3061,13 @@ def test028_create_tests_sfr(tmpdir, example_data_path):
 
     # inspect cells
     cell_list = [(0, 2, 3), (0, 3, 4), (0, 4, 5)]
-    out_file = str(tmpdir / "inspect_test028_sfr.csv")
+    out_file = str(function_tmpdir / "inspect_test028_sfr.csv")
     model.inspect_cells(cell_list, output_file_path=out_file)
 
     # compare output to expected results
-    head_new = str(tmpdir / "test1tr.hds")
-    outfile = str(tmpdir / "head_compare.dat")
-    assert pymake.compare_heads(
+    head_new = str(function_tmpdir / "test1tr.hds")
+    outfile = str(function_tmpdir / "head_compare.dat")
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
@@ -3106,11 +3081,8 @@ def test028_create_tests_sfr(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
-def test_create_tests_transport(tmpdir, example_data_path):
-    import pymake
-
+def test_create_tests_transport(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test_transport"
     name = "mst03"
@@ -3148,7 +3120,7 @@ def test_create_tests_transport(tmpdir, example_data_path):
         sim_name=name,
         version="mf6",
         exe_name="mf6",
-        sim_ws=str(tmpdir),
+        sim_ws=str(function_tmpdir),
     )
     # create tdis package
     tdis = ModflowTdis(sim, time_units="DAYS", nper=nper, perioddata=tdis_rc)
@@ -3317,23 +3289,23 @@ def test_create_tests_transport(tmpdir, example_data_path):
     cell_list = [
         (0, 0, 0),
     ]
-    out_file = str(tmpdir / "inspect_transport_gwf.csv")
+    out_file = str(function_tmpdir / "inspect_transport_gwf.csv")
     gwf.inspect_cells(cell_list, output_file_path=out_file)
-    out_file = str(tmpdir / "inspect_transport_gwt.csv")
+    out_file = str(function_tmpdir / "inspect_transport_gwt.csv")
     gwt.inspect_cells(cell_list, output_file_path=out_file)
 
     # compare output to expected results
-    head_new = str(tmpdir / "gwf_mst03.hds")
-    outfile = str(tmpdir / "head_compare.dat")
-    assert pymake.compare_heads(
+    head_new = str(function_tmpdir / "gwf_mst03.hds")
+    outfile = str(function_tmpdir / "head_compare.dat")
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file,
         files2=head_new,
         outfile=outfile,
     )
-    conc_new = str(tmpdir / "gwt_mst03.ucn")
-    assert pymake.compare_concs(
+    conc_new = str(function_tmpdir / "gwt_mst03.ucn")
+    assert compare_concentrations(
         None,
         None,
         files1=expected_conc_file,
@@ -3346,12 +3318,10 @@ def test_create_tests_transport(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake", "shapely")
+@requires_pkg("shapely")
 @pytest.mark.slow
 @pytest.mark.regression
-def test001a_tharmonic(tmpdir, example_data_path):
-    import pymake
-
+def test001a_tharmonic(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test001a_Tharmonic"
     model_name = "flow15"
@@ -3383,13 +3353,13 @@ def test001a_tharmonic(tmpdir, example_data_path):
         verify_data=True,
         write_headers=False,
     )
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
 
     # write simulation to new location
     sim.set_all_data_external(external_data_folder="data")
     sim.write_simulation(silent=True)
     # verify external data written to correct location
-    data_folder = str(tmpdir / "data" / "flow15.dis_botm.txt")
+    data_folder = str(function_tmpdir / "data" / "flow15.dis_botm.txt")
     assert os.path.exists(data_folder)
     # model export test
     model = sim.get_model(model_name)
@@ -3412,8 +3382,8 @@ def test001a_tharmonic(tmpdir, example_data_path):
     )
 
     # compare output to expected results
-    head_new = str(tmpdir / "flow15_flow.hds")
-    assert pymake.compare_heads(
+    head_new = str(function_tmpdir / "flow15_flow.hds")
+    assert compare_heads(
         None, None, files1=expected_head_file_a, files2=head_new
     )
 
@@ -3450,7 +3420,7 @@ def test001a_tharmonic(tmpdir, example_data_path):
     )
 
     # write simulation again
-    save_folder = tmpdir / "save"
+    save_folder = function_tmpdir / "save"
     save_folder.mkdir()
     sim.set_sim_path(str(save_folder))
     sim.write_simulation()
@@ -3467,7 +3437,7 @@ def test001a_tharmonic(tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = os.path.join(str(save_folder), "flow15_flow.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None, None, files1=expected_head_file_b, files2=head_new
     )
 
@@ -3478,11 +3448,8 @@ def test001a_tharmonic(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
-def test003_gwfs_disv(tmpdir, example_data_path):
-    import pymake
-
+def test003_gwfs_disv(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test003_gwfs_disv"
     model_name = "gwf_1"
@@ -3501,7 +3468,7 @@ def test003_gwfs_disv(tmpdir, example_data_path):
     )
 
     # make temp folder to save simulation
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
 
     # write simulation to new location
     sim.simulation_data.max_columns_of_data = 10
@@ -3517,8 +3484,8 @@ def test003_gwfs_disv(tmpdir, example_data_path):
         budget_obj.get_data(text="    FLOW JA FACE", full3D=True)
     )
 
-    head_new = os.path.join(str(tmpdir), "model.hds")
-    assert pymake.compare_heads(
+    head_new = os.path.join(str(function_tmpdir), "model.hds")
+    assert compare_heads(
         None, None, files1=expected_head_file_a, files2=head_new
     )
 
@@ -3528,7 +3495,7 @@ def test003_gwfs_disv(tmpdir, example_data_path):
     assert array_util.array_comp(budget_fjf_valid, budget_frf)
 
     model = sim.get_model(model_name)
-    model.export(str(tmpdir / f"{test_ex_name}.shp"))
+    model.export(str(function_tmpdir / f"{test_ex_name}.shp"))
 
     # change some settings
     chd_head_left = model.get_package("CHD_LEFT")
@@ -3543,7 +3510,7 @@ def test003_gwfs_disv(tmpdir, example_data_path):
     chd_right_period.set_data(chd_right_data_slice, 0)
 
     # write simulation again
-    save_folder = tmpdir / "save"
+    save_folder = function_tmpdir / "save"
     save_folder.mkdir()
     sim.set_sim_path(str(save_folder))
     sim.write_simulation()
@@ -3560,7 +3527,7 @@ def test003_gwfs_disv(tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = os.path.join(str(save_folder), "model.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None, None, files1=expected_head_file_b, files2=head_new
     )
 
@@ -3571,12 +3538,9 @@ def test003_gwfs_disv(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
-def test005_advgw_tidal(tmpdir, example_data_path):
-    import pymake
-
+def test005_advgw_tidal(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test005_advgw_tidal"
     model_name = "gwf_1"
@@ -3616,7 +3580,7 @@ def test005_advgw_tidal(tmpdir, example_data_path):
     ghb.stress_period_data.set_data(spd)
 
     # make temp folder to save simulation
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
 
     # write simulation to new location
     sim.set_all_data_external()
@@ -3627,9 +3591,9 @@ def test005_advgw_tidal(tmpdir, example_data_path):
     assert success, f"simulation {sim.name} did not run"
 
     # compare output to expected results
-    head_new = os.path.join(str(tmpdir), "advgw_tidal.hds")
-    outfile = os.path.join(str(tmpdir), "head_compare.dat")
-    assert pymake.compare_heads(
+    head_new = os.path.join(str(function_tmpdir), "advgw_tidal.hds")
+    outfile = os.path.join(str(function_tmpdir), "head_compare.dat")
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_a,
@@ -3639,11 +3603,8 @@ def test005_advgw_tidal(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
-def test006_gwf3(tmpdir, example_data_path):
-    import pymake
-
+def test006_gwf3(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test006_gwf3"
     model_name = "gwf_1"
@@ -3660,7 +3621,7 @@ def test006_gwf3(tmpdir, example_data_path):
     sim = MFSimulation.load(
         model_name, "mf6", "mf6", str(pth), verify_data=True
     )
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
     model = sim.get_model()
     disu = model.get_package("disu")
     # test switching disu array to internal array
@@ -3678,7 +3639,7 @@ def test006_gwf3(tmpdir, example_data_path):
     }
 
     # make temp folder to save simulation
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
     # write simulation to new location
     sim.set_all_data_external()
     sim.write_simulation()
@@ -3689,7 +3650,7 @@ def test006_gwf3(tmpdir, example_data_path):
 
     # inspect cells
     cell_list = [(0,), (7,), (14,)]
-    out_file = str(tmpdir / "inspect_test006_gwf3.csv")
+    out_file = str(function_tmpdir / "inspect_test006_gwf3.csv")
     model.inspect_cells(cell_list, output_file_path=out_file)
 
     budget_obj = CellBudgetFile(expected_cbc_file_a, precision="double")
@@ -3700,8 +3661,8 @@ def test006_gwf3(tmpdir, example_data_path):
     budget_fjf_valid.shape = (-1, jaentries)
 
     # compare output to expected results
-    head_new = os.path.join(str(tmpdir), "flow.hds")
-    assert pymake.compare_heads(
+    head_new = os.path.join(str(function_tmpdir), "flow.hds")
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_a,
@@ -3729,7 +3690,7 @@ def test006_gwf3(tmpdir, example_data_path):
     assert ex_happened
 
     # write simulation again
-    save_folder = tmpdir / "save"
+    save_folder = function_tmpdir / "save"
     save_folder.mkdir()
     sim.set_sim_path(str(save_folder))
     sim.write_simulation()
@@ -3748,7 +3709,7 @@ def test006_gwf3(tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = os.path.join(save_folder, "flow.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_b,
@@ -3763,7 +3724,7 @@ def test006_gwf3(tmpdir, example_data_path):
     )
 
     # confirm that files did move
-    save_folder = tmpdir / "save02"
+    save_folder = function_tmpdir / "save02"
     save_folder.mkdir()
     sim.set_sim_path(str(save_folder))
 
@@ -3796,7 +3757,7 @@ def test006_gwf3(tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = os.path.join(save_folder, "flow.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_b,
@@ -3824,11 +3785,8 @@ def test006_gwf3(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
-def test045_lake1ss_table(tmpdir, example_data_path):
-    import pymake
-
+def test045_lake1ss_table(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test045_lake1ss_table"
     model_name = "lakeex1b"
@@ -3850,7 +3808,7 @@ def test045_lake1ss_table(tmpdir, example_data_path):
     )
 
     # make temp folder to save simulation
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
 
     # write simulation to new location
     sim.write_simulation()
@@ -3860,9 +3818,9 @@ def test045_lake1ss_table(tmpdir, example_data_path):
     assert success, f"simulation {sim.name} did not run"
 
     # compare output to expected results
-    head_new = str(tmpdir / "lakeex1b.hds")
-    outfile = str(tmpdir / "headcompare_a.txt")
-    success = pymake.compare_heads(
+    head_new = str(function_tmpdir / "lakeex1b.hds")
+    outfile = str(function_tmpdir / "headcompare_a.txt")
+    success = compare_heads(
         None,
         None,
         files1=expected_head_file_a,
@@ -3880,7 +3838,7 @@ def test045_lake1ss_table(tmpdir, example_data_path):
     laktbl_data[-1][0] = 700.0
     laktbl.set_data(laktbl_data)
     # write simulation again
-    save_folder = tmpdir / "save"
+    save_folder = function_tmpdir / "save"
     save_folder.mkdir()
     sim.set_sim_path(str(save_folder))
     sim.write_simulation()
@@ -3891,8 +3849,8 @@ def test045_lake1ss_table(tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = str(save_folder / "lakeex1b.hds")
-    outfile = str(tmpdir / "headcompare_b.txt")
-    success = pymake.compare_heads(
+    outfile = str(function_tmpdir / "headcompare_b.txt")
+    success = compare_heads(
         None,
         None,
         files1=expected_head_file_b,
@@ -3903,19 +3861,16 @@ def test045_lake1ss_table(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
-def test006_2models_mvr(tmpdir, example_data_path):
-    import pymake
-
+def test006_2models_mvr(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test006_2models_mvr"
     sim_name = "test006_2models_mvr"
     model_names = ["parent", "child"]
     data_folder = example_data_path / "mf6" / test_ex_name
     # copy example data into working directory
-    ws = tmpdir / "ws"
+    ws = function_tmpdir / "ws"
     shutil.copytree(data_folder, ws)
 
     expected_output_folder = ws / "expected_output"
@@ -3943,7 +3898,7 @@ def test006_2models_mvr(tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = str(ws / "model1.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_a,
@@ -3951,7 +3906,7 @@ def test006_2models_mvr(tmpdir, example_data_path):
     )
 
     head_new = str(ws / "model2.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_aa,
@@ -4015,7 +3970,7 @@ def test006_2models_mvr(tmpdir, example_data_path):
     pkg_dict["dis"].nlay = old_val
 
     # write simulation again
-    save_folder = tmpdir / "save"
+    save_folder = function_tmpdir / "save"
     save_folder.mkdir()
     sim.set_sim_path(str(save_folder))
     sim.write_simulation()
@@ -4030,7 +3985,7 @@ def test006_2models_mvr(tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = os.path.join(save_folder, "model1.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_b,
@@ -4038,7 +3993,7 @@ def test006_2models_mvr(tmpdir, example_data_path):
     )
 
     head_new = os.path.join(save_folder, "model2.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_bb,
@@ -4092,10 +4047,9 @@ def test006_2models_mvr(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
-def test001e_uzf_3lay(tmpdir, example_data_path):
+def test001e_uzf_3lay(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test001e_UZF_3lay"
     model_name = "gwf_1"
@@ -4107,7 +4061,7 @@ def test001e_uzf_3lay(tmpdir, example_data_path):
     )
 
     # make temp folder to save simulation
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
 
     # write simulation to new location
     sim.write_simulation()
@@ -4126,7 +4080,7 @@ def test001e_uzf_3lay(tmpdir, example_data_path):
     uzf_data.set_data(uzf_array)
 
     # write simulation again
-    save_folder = tmpdir / "save"
+    save_folder = function_tmpdir / "save"
     save_folder.mkdir()
     sim.set_sim_path(str(save_folder))
     sim.write_simulation()
@@ -4137,7 +4091,7 @@ def test001e_uzf_3lay(tmpdir, example_data_path):
 
     # inspect cells
     cell_list = [(0, 0, 1), (0, 0, 2), (2, 0, 8)]
-    out_file = str(tmpdir / "inspect_test001e_uzf_3lay.csv")
+    out_file = str(function_tmpdir / "inspect_test001e_uzf_3lay.csv")
     model.inspect_cells(cell_list, output_file_path=out_file)
 
     # test load_only
@@ -4152,7 +4106,7 @@ def test001e_uzf_3lay(tmpdir, example_data_path):
         sim = MFSimulation.load(
             model_name, "mf6", "mf6", str(pth), load_only=load_only
         )
-        sim.set_sim_path(str(tmpdir))
+        sim.set_sim_path(str(function_tmpdir))
         model = sim.get_model()
         for package in model_package_check:
             assert (package in model.package_type_dict) == (
@@ -4162,17 +4116,19 @@ def test001e_uzf_3lay(tmpdir, example_data_path):
     sim = MFSimulation.load(
         model_name, "mf6", "mf6", str(pth), load_only=load_only_lists[0]
     )
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
     success, buff = sim.run_simulation()
     assert success, f"simulation {sim.name} from load did not run"
 
     cbc = CellBudgetFile(
-        str(tmpdir / "test001e_UZF_3lay.uzf.cbc"), precision="auto"
+        str(function_tmpdir / "test001e_UZF_3lay.uzf.cbc"), precision="auto"
     )
     data = cbc.get_data(text="GWF", full3D=False)
     assert data[2].node[0] == 1, "Budget precision error for imeth 6"
 
-    sim = MFSimulation.load("mfsim", sim_ws=str(tmpdir), exe_name="mf6")
+    sim = MFSimulation.load(
+        "mfsim", sim_ws=str(function_tmpdir), exe_name="mf6"
+    )
 
     ims = sim.ims
     sim.remove_package(ims)
@@ -4191,12 +4147,9 @@ def test001e_uzf_3lay(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
-def test045_lake2tr(tmpdir, example_data_path):
-    import pymake
-
+def test045_lake2tr(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test045_lake2tr"
     model_name = "lakeex2a"
@@ -4211,7 +4164,7 @@ def test045_lake2tr(tmpdir, example_data_path):
     )
 
     # write simulation to new location
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
     sim.write_simulation()
 
     # run simulation
@@ -4219,8 +4172,8 @@ def test045_lake2tr(tmpdir, example_data_path):
     assert success, f"simulation {sim.name} did not run"
 
     # compare output to expected results
-    head_new = str(tmpdir / "lakeex2a.hds")
-    assert pymake.compare_heads(
+    head_new = str(function_tmpdir / "lakeex2a.hds")
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_a,
@@ -4240,7 +4193,7 @@ def test045_lake2tr(tmpdir, example_data_path):
     lak_period.set_data(lak_period_data[0], 0)
 
     # write simulation again
-    save_folder = tmpdir / "save"
+    save_folder = function_tmpdir / "save"
     save_folder.mkdir()
     sim.set_sim_path(str(save_folder))
     sim.write_simulation()
@@ -4251,12 +4204,12 @@ def test045_lake2tr(tmpdir, example_data_path):
 
     # inspect cells
     cell_list = [(0, 6, 5), (0, 8, 5), (1, 18, 6)]
-    out_file = str(tmpdir / "inspect_test045_lake2tr.csv")
+    out_file = str(function_tmpdir / "inspect_test045_lake2tr.csv")
     model.inspect_cells(cell_list, output_file_path=out_file)
 
     # compare output to expected results
     head_new = str(save_folder / "lakeex2a.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_b,
@@ -4266,11 +4219,8 @@ def test045_lake2tr(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.regression
-def test036_twrihfb(tmpdir, example_data_path):
-    import pymake
-
+def test036_twrihfb(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test036_twrihfb"
     model_name = "twrihfb2015"
@@ -4287,7 +4237,7 @@ def test036_twrihfb(tmpdir, example_data_path):
     sim = MFSimulation.load(model_name, "mf6", "mf6", pth, verify_data=True)
 
     # make temp folder to save simulation
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
 
     # write simulation to new location
     sim.set_all_data_external()
@@ -4298,8 +4248,8 @@ def test036_twrihfb(tmpdir, example_data_path):
     assert success, f"simulation {sim.name} did not run"
 
     # compare output to expected results
-    head_new = str(tmpdir / "twrihfb2015_output.hds")
-    assert pymake.compare_heads(
+    head_new = str(function_tmpdir / "twrihfb2015_output.hds")
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_a,
@@ -4330,7 +4280,7 @@ def test036_twrihfb(tmpdir, example_data_path):
     assert rch_data[0][5, 1] == 0.00000003
 
     # write simulation again
-    save_folder = tmpdir / "save"
+    save_folder = function_tmpdir / "save"
     save_folder.mkdir()
     sim.set_sim_path(str(save_folder))
     sim.write_simulation()
@@ -4341,7 +4291,7 @@ def test036_twrihfb(tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = str(save_folder / "twrihfb2015_output.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_b,
@@ -4350,12 +4300,9 @@ def test036_twrihfb(tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
-def test027_timeseriestest(tmpdir, example_data_path):
-    import pymake
-
+def test027_timeseriestest(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test027_TimeseriesTest"
     model_name = "gwf_1"
@@ -4372,7 +4319,7 @@ def test027_timeseriestest(tmpdir, example_data_path):
     sim = MFSimulation.load(model_name, "mf6", "mf6", pth, verify_data=True)
 
     # make temp folder to save simulation
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(str(function_tmpdir))
 
     # write simulation to new location
     sim.set_all_data_external()
@@ -4380,7 +4327,7 @@ def test027_timeseriestest(tmpdir, example_data_path):
 
     # reload sim
     sim = MFSimulation.load(
-        model_name, "mf6", "mf6", str(tmpdir), verify_data=True
+        model_name, "mf6", "mf6", str(function_tmpdir), verify_data=True
     )
     sim.write_simulation()
 
@@ -4389,9 +4336,9 @@ def test027_timeseriestest(tmpdir, example_data_path):
     assert success, f"simulation {sim.name} did not run"
 
     # compare output to expected results
-    head_new = str(tmpdir / "timeseriestest.hds")
-    outfile = str(tmpdir / "head_compare.dat")
-    assert pymake.compare_heads(
+    head_new = str(function_tmpdir / "timeseriestest.hds")
+    outfile = str(function_tmpdir / "head_compare.dat")
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_a,
@@ -4409,7 +4356,7 @@ def test027_timeseriestest(tmpdir, example_data_path):
     tas_rch.tas_array.set_data(tas_array_data, key=12.0)
 
     # write simulation again
-    save_folder = tmpdir / "save"
+    save_folder = function_tmpdir / "save"
     save_folder.mkdir()
     sim.set_sim_path(str(save_folder))
     sim.write_simulation()
@@ -4420,10 +4367,175 @@ def test027_timeseriestest(tmpdir, example_data_path):
 
     # compare output to expected results
     head_new = os.path.join(str(save_folder), "timeseriestest.hds")
-    assert pymake.compare_heads(
+    assert compare_heads(
         None,
         None,
         files1=expected_head_file_b,
         files2=head_new,
         htol=10.0,
     )
+
+
+@pytest.mark.regression
+def test099_create_tests_int_ext(function_tmpdir, example_data_path):
+    # init paths
+    test_ex_name = "test099_int_ext"
+    model_name = "test099_int_ext"
+    pth = example_data_path / "mf6" / "create_tests" / test_ex_name
+
+    # create simulation
+    sim = MFSimulation(
+        sim_name=test_ex_name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=str(function_tmpdir),
+    )
+    sim.name_file.continue_.set_data(True)
+    tdis_rc = [(1577889000, 50, 1.1), (1577889000, 50, 1.1)]
+    tdis_package = ModflowTdis(
+        sim,
+        time_units="SECONDS",
+        nper=2,
+        perioddata=tdis_rc,
+        filename="simulation.tdis",
+    )
+    model = ModflowGwf(
+        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
+    )
+    model.name_file.save_flows.set_data(True)
+    ims_package = ModflowIms(
+        sim,
+        print_option="SUMMARY",
+        outer_dvclose=0.00001,
+        outer_maximum=100,
+        under_relaxation="DBD",
+        under_relaxation_theta=0.85,
+        under_relaxation_kappa=0.0001,
+        under_relaxation_gamma=0.0,
+        under_relaxation_momentum=0.1,
+        backtracking_number=0,
+        backtracking_tolerance=1.1,
+        backtracking_reduction_factor=0.7,
+        backtracking_residual_limit=1.0,
+        inner_dvclose=0.00001,
+        rcloserecord=0.1,
+        inner_maximum=100,
+        linear_acceleration="CG",
+        scaling_method="NONE",
+        reordering_method="NONE",
+        relaxation_factor=0.99,
+        filename="model.ims",
+    )
+    sim.register_ims_package(ims_package, [model.name])
+    top = 100.0
+    botm = np.zeros((15, 10), float)
+    idomain = 1
+    dis_package = ModflowGwfdis(
+        model,
+        length_units="FEET",
+        nlay=1,
+        nrow=15,
+        ncol=10,
+        delr=5000.0,
+        delc=5000.0,
+        top=top,
+        botm=botm,
+        idomain=idomain,
+        filename=f"{model_name}.dis",
+    )
+    strt = np.ones((15, 10), float) * 50.0
+    strt_int = {"filename": "strt.txt", "factor": 0.8, "iprn": 0, "data": strt}
+    ic_package = ModflowGwfic(
+        model, strt=strt_int, filename=f"{model_name}.ic"
+    )
+
+    k_vals = np.ones((15, 10), float) * 10.0
+    assert k_vals[0, 0] == 10.0
+    k = {"filename": "k.txt", "factor": 3.000e-03, "iprn": 0, "data": k_vals}
+    npf_package = ModflowGwfnpf(model, icelltype=1, k=k, k33=1.0)
+    npf_package.k.factor = 2.000e-04
+
+    oc_package = ModflowGwfoc(
+        model,
+        budget_filerecord="test1tr.cbc",
+        head_filerecord="test1tr.hds",
+        saverecord={0: [("HEAD", "FREQUENCY", 5), ("BUDGET", "FREQUENCY", 5)]},
+        printrecord={
+            0: [("HEAD", "FREQUENCY", 5), ("BUDGET", "FREQUENCY", 5)]
+        },
+    )
+
+    sy_vals = np.ones((15, 10), float) * 0.1
+    sy = {"factor": 0.2, "iprn": 0, "data": sy_vals}
+    sto_package = ModflowGwfsto(model, iconvert=1, ss=1.0e-6, sy=sy)
+
+    sim.write_simulation()
+    sim_2 = MFSimulation.load(
+        sim_name=test_ex_name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=str(function_tmpdir),
+    )
+    sim_2.set_sim_path(os.path.join(function_tmpdir, "sim_2"))
+    model = sim_2.get_model(model_name)
+    npf_package = model.get_package("npf")
+    k_record = npf_package.k.get_record()
+    assert k_record["factor"] == 2.000e-04
+    assert k_record["data"][0, 0, 0] == 10.0
+
+    ic_package = model.get_package("ic")
+    strt_record = ic_package.strt.get_record()
+    assert strt_record["factor"] == 0.8
+    assert strt_record["data"][0, 0, 0] == 50.0
+
+    sim_3 = MFSimulation.load(
+        sim_name=test_ex_name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=str(function_tmpdir),
+    )
+    model = sim_3.get_model(model_name)
+    npf_package = model.get_package("npf")
+    k_record = npf_package.k.get_record()
+    assert k_record["factor"] == 2.000e-04
+    assert k_record["data"][0, 0, 0] == 10.0
+
+    ic_package = model.get_package("ic")
+    strt_record = ic_package.strt.get_record()
+    assert strt_record["factor"] == 0.8
+    assert strt_record["data"][0, 0, 0] == 50.0
+
+    sim_3.set_all_data_external()
+    sim_3.write_simulation()
+
+    sim_4 = MFSimulation.load(
+        sim_name=test_ex_name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=str(function_tmpdir),
+    )
+    model = sim_4.get_model(model_name)
+    npf_package = model.get_package("npf")
+    k_record = npf_package.k.get_record()
+    assert "filename" in k_record
+    assert k_record["factor"] == 2.000e-04
+    assert k_record["data"][0, 0, 0] == 10.0
+
+    ic_package = model.get_package("ic")
+    strt_record = ic_package.strt.get_record()
+    assert "filename" in strt_record
+    assert strt_record["factor"] == 0.8
+    assert strt_record["data"][0, 0, 0] == 50.0
+
+    k_record["factor"] = 4.000e-04
+    npf_package.k.set_record(k_record)
+    k_record = npf_package.k.get_record()
+    assert k_record["factor"] == 4.000e-04
+    assert k_record["data"][0, 0, 0] == 10.0
+
+    k_vals = np.ones((15, 10), float) * 50.0
+    k_record["data"] = k_vals
+    npf_package.k.set_record(k_record)
+    k_record = npf_package.k.get_record()
+    assert k_record["factor"] == 4.000e-04
+    assert k_record["data"][0, 0, 0] == 50.0

@@ -76,12 +76,12 @@ class Mp7Cases:
     particlegroups = [pg0, pg1]
 
     @staticmethod
-    def mf6(tmpdir):
+    def mf6(function_tmpdir):
         """
         MODPATH 7 example 1 for MODFLOW 6
         """
 
-        ws = join(str(tmpdir), "mf6")
+        ws = join(str(function_tmpdir), "mf6")
         nm = "ex01_mf6"
 
         # Create the Flopy simulation object
@@ -213,12 +213,12 @@ class Mp7Cases:
         return mp
 
     @staticmethod
-    def mf2005(tmpdir):
+    def mf2005(function_tmpdir):
         """
         MODPATH 7 example 1 for MODFLOW-2005
         """
 
-        ws = join(str(tmpdir), "mf2005")
+        ws = join(str(function_tmpdir), "mf2005")
         nm = "ex01_mf2005"
         iu_cbc = 130
         m = Modflow(nm, model_ws=ws, exe_name="mf2005")
@@ -307,8 +307,8 @@ class Mp7Cases:
         mp.write_input()
         return mp
 
-    def case_mf6(self, tmpdir):
-        return Mp7Cases.mf6(tmpdir)
+    def case_mf6(self, function_tmpdir):
+        return Mp7Cases.mf6(function_tmpdir)
 
-    def case_mf2005(self, tmpdir):
-        return Mp7Cases.mf2005(tmpdir)
+    def case_mf2005(self, function_tmpdir):
+        return Mp7Cases.mf2005(function_tmpdir)

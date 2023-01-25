@@ -29,7 +29,7 @@ def test_formattedfile_reference(example_data_path):
     plt.close()
 
 
-def test_formattedfile_read(tmpdir, example_data_path):
+def test_formattedfile_read(function_tmpdir, example_data_path):
     mf2005_model_path = example_data_path / "mf2005_test"
     h = FormattedHeadFile(str(mf2005_model_path / "test1tr.githds"))
     assert isinstance(h, FormattedHeadFile)
@@ -58,14 +58,14 @@ def test_formattedfile_read(tmpdir, example_data_path):
     h.close()
 
     # Check error when reading empty file
-    fname = str(tmpdir / "empty.githds")
+    fname = str(function_tmpdir / "empty.githds")
     with open(fname, "w"):
         pass
     with pytest.raises(ValueError):
         FormattedHeadFile(fname)
 
 
-def test_binaryfile_read(tmpdir, freyberg_model_path):
+def test_binaryfile_read(function_tmpdir, freyberg_model_path):
     h = HeadFile(str(freyberg_model_path / "freyberg.githds"))
     assert isinstance(h, HeadFile)
 
@@ -93,7 +93,7 @@ def test_binaryfile_read(tmpdir, freyberg_model_path):
     h.close()
 
     # Check error when reading empty file
-    fname = str(tmpdir / "empty.githds")
+    fname = str(function_tmpdir / "empty.githds")
     with open(fname, "w"):
         pass
     with pytest.raises(ValueError):
@@ -151,7 +151,7 @@ def test_cellbudgetfile_read(example_data_path):
     v.close()
 
 
-def test_cellbudgetfile_position(tmpdir, zonbud_model_path):
+def test_cellbudgetfile_position(function_tmpdir, zonbud_model_path):
     fpth = str(zonbud_model_path / "freyberg.gitcbc")
     v = CellBudgetFile(fpth)
     assert isinstance(v, CellBudgetFile)
@@ -177,7 +177,7 @@ def test_cellbudgetfile_position(tmpdir, zonbud_model_path):
     length = os.path.getsize(fpth) - ipos
 
     buffsize = 32
-    opth = str(tmpdir / "end.cbc")
+    opth = str(function_tmpdir / "end.cbc")
     with open(opth, "wb") as fout:
         while length:
             chunk = min(buffsize, length)
@@ -205,7 +205,7 @@ def test_cellbudgetfile_position(tmpdir, zonbud_model_path):
         assert np.array_equal(d1, d2), msg
 
     # Check error when reading empty file
-    fname = str(tmpdir / "empty.gitcbc")
+    fname = str(function_tmpdir / "empty.gitcbc")
     with open(fname, "w"):
         pass
     with pytest.raises(ValueError):

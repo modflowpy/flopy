@@ -41,10 +41,10 @@ def get_namefile_entries(fpth):
     return data
 
 
-def test_gage(tmpdir):
+def test_gage(function_tmpdir):
     mnam = "gage_test"
 
-    m = Modflow(modelname=mnam, model_ws=str(tmpdir))
+    m = Modflow(modelname=mnam, model_ws=str(function_tmpdir))
     dis = ModflowDis(m)
     spd = {
         (0, 0): ["print head"],
@@ -65,7 +65,7 @@ def test_gage(tmpdir):
     m.write_input()
 
     # check that the gage output units entries are in the name file
-    fpth = os.path.join(str(tmpdir), f"{mnam}.nam")
+    fpth = os.path.join(str(function_tmpdir), f"{mnam}.nam")
     entries = get_namefile_entries(fpth)
     for idx, g in enumerate(gages):
         if g[0] < 0:
@@ -82,10 +82,10 @@ def test_gage(tmpdir):
         assert found, f"{iu} not in name file entries"
 
 
-def test_gage_files(tmpdir):
+def test_gage_files(function_tmpdir):
     mnam = "gage_test_files"
 
-    m = Modflow(modelname=mnam, model_ws=str(tmpdir))
+    m = Modflow(modelname=mnam, model_ws=str(function_tmpdir))
     dis = ModflowDis(m)
     spd = {
         (0, 0): ["print head"],
@@ -107,7 +107,7 @@ def test_gage_files(tmpdir):
     m.write_input()
 
     # check that the gage output file entries are in the name file
-    fpth = os.path.join(str(tmpdir), f"{mnam}.nam")
+    fpth = os.path.join(str(function_tmpdir), f"{mnam}.nam")
     entries = get_namefile_entries(fpth)
     for idx, f in enumerate(files):
         found = False
@@ -126,10 +126,10 @@ def test_gage_files(tmpdir):
         ), f"{f} unit not equal to {iu} - name file unit = {iun}"
 
 
-def test_gage_filenames0(tmpdir):
+def test_gage_filenames0(function_tmpdir):
     mnam = "gage_test_filenames0"
 
-    m = Modflow(modelname=mnam, model_ws=str(tmpdir))
+    m = Modflow(modelname=mnam, model_ws=str(function_tmpdir))
     dis = ModflowDis(m)
     spd = {
         (0, 0): ["print head"],
@@ -151,7 +151,7 @@ def test_gage_filenames0(tmpdir):
     m.write_input()
 
     # check that the gage output units entries are in the name file
-    fpth = os.path.join(str(tmpdir), f"{mnam}.nam")
+    fpth = os.path.join(str(function_tmpdir), f"{mnam}.nam")
     entries = get_namefile_entries(fpth)
     for idx, g in enumerate(gages):
         if g[0] < 0:
@@ -168,10 +168,10 @@ def test_gage_filenames0(tmpdir):
         assert found, f"{iu} not in name file entries"
 
 
-def test_gage_filenames(tmpdir):
+def test_gage_filenames(function_tmpdir):
     mnam = "gage_test_filenames"
 
-    m = Modflow(modelname=mnam, model_ws=str(tmpdir))
+    m = Modflow(modelname=mnam, model_ws=str(function_tmpdir))
     dis = ModflowDis(m)
     spd = {
         (0, 0): ["print head"],
@@ -193,7 +193,7 @@ def test_gage_filenames(tmpdir):
     m.write_input()
 
     # check that the gage output file entries are in the name file
-    fpth = os.path.join(str(tmpdir), f"{mnam}.nam")
+    fpth = os.path.join(str(function_tmpdir), f"{mnam}.nam")
     entries = get_namefile_entries(fpth)
     for idx, f in enumerate(filenames[1:]):
         found = False

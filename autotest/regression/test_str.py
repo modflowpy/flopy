@@ -1,7 +1,8 @@
 import pytest
-from autotest.conftest import requires_exe, requires_pkg
+from modflow_devtools.markers import requires_exe, requires_pkg
 
 from flopy.modflow import Modflow, ModflowOc, ModflowStr
+from flopy.utils.compare import compare_heads
 
 str_items = {
     0: {
@@ -13,11 +14,8 @@ str_items = {
 
 
 @requires_exe("mf2005")
-@requires_pkg("pymake")
 @pytest.mark.regression
-def test_str_fixed_free(tmpdir, example_data_path):
-    import pymake
-
+def test_str_fixed_free(function_tmpdir, example_data_path):
     mf2005_model_path = example_data_path / "mf2005_test"
 
     m = Modflow.load(
@@ -27,7 +25,7 @@ def test_str_fixed_free(tmpdir, example_data_path):
         verbose=False,
         check=False,
     )
-    m.change_model_ws(str(tmpdir))
+    m.change_model_ws(str(function_tmpdir))
 
     # get pointer to str package
     mstr = m.str
@@ -94,10 +92,10 @@ def test_str_fixed_free(tmpdir, example_data_path):
         m2 is not None
     ), "could not load the fixed format model with aux variables"
 
-    for p in tmpdir.glob("*"):
+    for p in function_tmpdir.glob("*"):
         p.unlink()
 
-    m.change_model_ws(str(tmpdir))
+    m.change_model_ws(str(function_tmpdir))
     m.set_ifrefm()
     m.write_input()
 
@@ -109,7 +107,7 @@ def test_str_fixed_free(tmpdir, example_data_path):
         m2 = Modflow.load(
             str_items[0]["mfnam"],
             exe_name="mf2005",
-            model_ws=str(tmpdir),
+            model_ws=str(function_tmpdir),
             verbose=False,
             check=False,
         )
@@ -121,8 +119,8 @@ def test_str_fixed_free(tmpdir, example_data_path):
     ), "could not load the free format model with aux variables"
 
     # compare the fixed and free format head files
-    fn1 = str(tmpdir / "str.nam")
-    fn2 = str(tmpdir / "str.nam")
-    assert pymake.compare_heads(
+    fn1 = str(function_tmpdir / "str.nam")
+    fn2 = str(function_tmpdir / "str.nam")
+    assert compare_heads(
         fn1, fn2, verbose=True
     ), "fixed and free format input output head files are different"

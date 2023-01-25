@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on April 11, 2022 18:22:41 UTC
+# FILE created on December 15, 2022 12:49:36 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -69,16 +69,17 @@ class ModflowGwtgwt(mfpackage.MFPackage):
           will be written to the budget file for each model provided that the
           Output Control for the models are set up with the "BUDGET SAVE FILE"
           option.
-    advscheme : string
-        * advscheme (string) scheme used to solve the advection term. Can be
+    adv_scheme : string
+        * adv_scheme (string) scheme used to solve the advection term. Can be
           upstream, central, or TVD. If not specified, upstream weighting is
           the default weighting scheme.
-    xt3d_off : boolean
-        * xt3d_off (boolean) deactivate the xt3d method and use the faster and
-          less accurate approximation for this exchange.
-    xt3d_rhs : boolean
-        * xt3d_rhs (boolean) add xt3d terms to right-hand side, when possible,
-          for this exchange.
+    dsp_xt3d_off : boolean
+        * dsp_xt3d_off (boolean) deactivate the xt3d method for the dispersive
+          flux and use the faster and less accurate approximation for this
+          exchange.
+    dsp_xt3d_rhs : boolean
+        * dsp_xt3d_rhs (boolean) add xt3d dispersion terms to right-hand side,
+          when possible, for this exchange.
     filein : boolean
         * filein (boolean) keyword to specify that an input filename is
           expected next.
@@ -224,7 +225,7 @@ class ModflowGwtgwt(mfpackage.MFPackage):
         ],
         [
             "block options",
-            "name advscheme",
+            "name adv_scheme",
             "type string",
             "valid upstream central tvd",
             "reader urword",
@@ -232,7 +233,7 @@ class ModflowGwtgwt(mfpackage.MFPackage):
         ],
         [
             "block options",
-            "name xt3d_off",
+            "name dsp_xt3d_off",
             "type keyword",
             "shape",
             "reader urword",
@@ -240,7 +241,7 @@ class ModflowGwtgwt(mfpackage.MFPackage):
         ],
         [
             "block options",
-            "name xt3d_rhs",
+            "name dsp_xt3d_rhs",
             "type keyword",
             "shape",
             "reader urword",
@@ -433,9 +434,9 @@ class ModflowGwtgwt(mfpackage.MFPackage):
         print_input=None,
         print_flows=None,
         save_flows=None,
-        advscheme=None,
-        xt3d_off=None,
-        xt3d_rhs=None,
+        adv_scheme=None,
+        dsp_xt3d_off=None,
+        dsp_xt3d_rhs=None,
         filein=None,
         perioddata=None,
         observations=None,
@@ -466,9 +467,9 @@ class ModflowGwtgwt(mfpackage.MFPackage):
         self.print_input = self.build_mfdata("print_input", print_input)
         self.print_flows = self.build_mfdata("print_flows", print_flows)
         self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self.advscheme = self.build_mfdata("advscheme", advscheme)
-        self.xt3d_off = self.build_mfdata("xt3d_off", xt3d_off)
-        self.xt3d_rhs = self.build_mfdata("xt3d_rhs", xt3d_rhs)
+        self.adv_scheme = self.build_mfdata("adv_scheme", adv_scheme)
+        self.dsp_xt3d_off = self.build_mfdata("dsp_xt3d_off", dsp_xt3d_off)
+        self.dsp_xt3d_rhs = self.build_mfdata("dsp_xt3d_rhs", dsp_xt3d_rhs)
         self.filein = self.build_mfdata("filein", filein)
         self._mvt_filerecord = self.build_mfdata("mvt_filerecord", None)
         self._mvt_package = self.build_child_package(
