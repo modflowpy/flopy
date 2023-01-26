@@ -4,6 +4,7 @@ import inspect
 import os
 import sys
 import traceback
+import warnings
 from collections.abc import Iterable
 from enum import Enum
 from shutil import copyfile
@@ -466,8 +467,6 @@ class PackageContainer:
         Dictionary of packages by package type
     package_name_dict : dictionary
         Dictionary of packages by package name
-    package_key_dict : dictionary
-        Dictionary of packages by package key
 
     """
 
@@ -484,7 +483,15 @@ class PackageContainer:
         self.package_type_dict = {}
         self.package_name_dict = {}
         self.package_filename_dict = {}
-        self.package_key_dict = {}
+
+    @property
+    def package_key_dict(self):
+        warnings.warn(
+            "package_key_dict has been deprecated, use "
+            "package_type_dict instead",
+            category=DeprecationWarning,
+        )
+        return self.package_type_dict
 
     @staticmethod
     def package_list():
@@ -575,7 +582,6 @@ class PackageContainer:
             self.package_name_dict[package.package_name.lower()] = package
         if package.filename is not None:
             self.package_filename_dict[package.filename.lower()] = package
-        self.package_key_dict[path[-1].lower()] = package
         if package.package_type not in self.package_type_dict:
             self.package_type_dict[package.package_type.lower()] = []
         self.package_type_dict[package.package_type.lower()].append(package)
@@ -592,7 +598,6 @@ class PackageContainer:
             and package.filename.lower() in self.package_filename_dict
         ):
             del self.package_filename_dict[package.filename.lower()]
-        del self.package_key_dict[package.path[-1].lower()]
         package_list = self.package_type_dict[package.package_type.lower()]
         package_list.remove(package)
         if len(package_list) == 0:
@@ -621,10 +626,6 @@ class PackageContainer:
         ):
             del self.package_name_dict[package.package_name.lower()]
         self.package_name_dict[new_name.lower()] = package
-        # fix package_key_dict key
-        new_package_path = package.path[:-1] + (new_name,)
-        del self.package_key_dict[package.path[-1].lower()]
-        self.package_key_dict[new_package_path.lower()] = package
         # get keys to fix in main dictionary
         main_dict = self.simulation_data.mfdata
         items_to_fix = []
@@ -675,10 +676,6 @@ class PackageContainer:
                 return self.package_type_dict[name.lower()][0]
             else:
                 return self.package_type_dict[name.lower()]
-
-        # search for package key
-        if name.lower() in self.package_key_dict:
-            return self.package_key_dict[name.lower()]
 
         # search for file name
         if name.lower() in self.package_filename_dict:
