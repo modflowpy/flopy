@@ -6,9 +6,9 @@ mfstructure module.  Contains classes related to package structure
 import ast
 import keyword
 import os
+import warnings
 from enum import Enum
 from textwrap import TextWrapper
-import warnings
 
 import numpy as np
 
