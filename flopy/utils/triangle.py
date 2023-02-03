@@ -619,7 +619,6 @@ class Triangle:
         return
 
     def _load_results(self):
-
         # node file
         ext = "node"
         dt = [("ivert", int), ("x", float), ("y", float)]

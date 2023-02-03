@@ -152,7 +152,6 @@ class NetCdf:
         forgive=False,
         **kwargs,
     ):
-
         assert output_filename.lower().endswith(".nc")
         if verbose is None:
             verbose = model.verbose
@@ -1046,7 +1045,6 @@ class NetCdf:
                         f"{dim} information must be supplied to dimension data"
                     )
                 else:
-
                     self.nc.groups[group].createDimension(
                         dim, len(dimension_data[dim])
                     )

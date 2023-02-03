@@ -159,7 +159,6 @@ class ModflowUpw(Package):
         unitnumber=None,
         filenames=None,
     ):
-
         if model.version != "mfnwt":
             raise Exception(
                 "Error: model version must be mfnwt to use "
@@ -456,7 +455,6 @@ class ModflowUpw(Package):
         vkcb = [0] * nlay
         # load by layer
         for k in range(nlay):
-
             # hk
             if model.verbose:
                 print(f"   loading hk layer {k + 1:3d}...")
@@ -510,7 +508,6 @@ class ModflowUpw(Package):
 
             # storage properties
             if transient:
-
                 # ss
                 if model.verbose:
                     print(f"   loading ss layer {k + 1:3d}...")

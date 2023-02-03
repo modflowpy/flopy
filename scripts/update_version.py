@@ -164,7 +164,6 @@ def update_version_py(
 def get_software_citation(
     release_type: ReleaseType, timestamp: datetime, version: Version
 ):
-
     # get data Software/Code citation for FloPy
     citation = yaml.safe_load(file_paths["CITATION.cff"].read_text())
 

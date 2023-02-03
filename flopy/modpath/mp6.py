@@ -339,7 +339,6 @@ class Modpath6(BaseModel):
         face_ct = []
         strt_file = None
         for package in packages:
-
             if package.upper() == "WEL":
                 ParticleGenerationOption = 1
                 if "WEL" not in pak_list:

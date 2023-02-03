@@ -213,7 +213,6 @@ class ModflowLpf(Package):
         filenames=None,
         add_package=True,
     ):
-
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowLpf._defaultunit()
@@ -567,7 +566,6 @@ class ModflowLpf(Package):
 
         # load by layer
         for k in range(nlay):
-
             # allow for unstructured changing nodes per layer
             if nr is None:
                 nrow = 1
@@ -632,7 +630,6 @@ class ModflowLpf(Package):
 
             # storage properties
             if transient:
-
                 # ss
                 if model.verbose:
                     print(f"   loading ss layer {k + 1:3d}...")

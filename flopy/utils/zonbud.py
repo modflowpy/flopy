@@ -544,7 +544,6 @@ class ZoneBudget:
 
         """
         try:
-
             if kstpkper is not None:
                 for rn, cn, flux in zip(rownames, colnames, fluxes):
                     rowidx = np.where(
@@ -998,7 +997,6 @@ class ZoneBudget:
         return
 
     def _accumulate_flow_ssst(self, recname, kstpkper, totim):
-
         # NOT AN INTERNAL FLOW TERM, SO MUST BE A SOURCE TERM OR STORAGE
         # ACCUMULATE THE FLOW BY ZONE
 
@@ -2613,7 +2611,6 @@ def _read_zb_zblst(fname):
         np.recarray
     """
     with open(fname) as foo:
-
         data = {}
         read_data = False
         flow_budget = False
@@ -2757,7 +2754,6 @@ def _read_zb_csv(fname):
                 read_data = True
 
             elif read_data:
-
                 t = line.split(",")
                 if "IN" in t[1]:
                     prefix = "FROM_"

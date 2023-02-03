@@ -88,7 +88,6 @@ class ModflowGage(Package):
         filenames=None,
         **kwargs,
     ):
-
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowGage._defaultunit()
