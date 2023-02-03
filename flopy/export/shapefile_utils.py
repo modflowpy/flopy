@@ -655,7 +655,6 @@ class CRS:
     """
 
     def __init__(self, prj=None, esri_wkt=None, epsg=None):
-
         self.wktstr = None
         if prj is not None:
             with open(prj) as prj_input:
@@ -789,7 +788,6 @@ class CRS:
         return None
 
     def parse_wkt(self):
-
         self.projcs = self._gettxt('PROJCS["', '"')
         self.utm_zone = None
         if self.projcs is not None and "utm" in self.projcs.lower():

@@ -256,7 +256,6 @@ class GeoSpatialCollection:
     """
 
     def __init__(self, obj, shapetype=None):
-
         self.__shapefile = import_optional_dependency(
             "shapefile", errors="silent"
         )

@@ -75,7 +75,6 @@ class ArrayFormat:
     """
 
     def __init__(self, u2d, python=None, fortran=None, array_free_format=None):
-
         assert isinstance(
             u2d, Util2d
         ), f"ArrayFormat only supports Util2d, not {type(u2d)}"
@@ -283,7 +282,6 @@ class ArrayFormat:
         return self._get_python_format()
 
     def _get_python_format(self):
-
         if self.format == "I":
             fmt = "d"
         else:
@@ -810,7 +808,6 @@ class Util3d(DataInterface):
         if isinstance(self.__value, list) or (
             isinstance(self.__value, np.ndarray) and (self.__value.ndim == 1)
         ):
-
             assert (
                 len(self.__value) == self.shape[0]
             ), "length of 3d enumerable: {} != to shape[0]: {}".format(
@@ -1043,7 +1040,6 @@ class Transient3d(DataInterface):
         bin=False,
         array_free_format=None,
     ):
-
         if isinstance(value, Transient3d):
             for attr in value.__dict__.items():
                 setattr(self, attr[0], attr[1])
@@ -1320,7 +1316,6 @@ class Transient2d(DataInterface):
         bin=False,
         array_free_format=None,
     ):
-
         if isinstance(value, Transient2d):
             for attr in value.__dict__.items():
                 setattr(self, attr[0], attr[1])
@@ -2192,7 +2187,6 @@ class Util2d(DataInterface):
         return model_file_path
 
     def get_constant_cr(self, value):
-
         if self.format.array_free_format:
             lay_space = " " * 27
             if self.vtype in [int, np.int32]:
@@ -2282,7 +2276,6 @@ class Util2d(DataInterface):
             return self._get_fixed_cr(locat)
 
     def get_file_entry(self, how=None):
-
         if how is not None:
             how = how.lower()
         else:

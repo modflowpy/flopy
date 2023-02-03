@@ -237,7 +237,6 @@ def to_cvfd(
             for ivert, cell_list in vertex_cell_dict.items():
                 for icell1 in cell_list:
                     for icell2 in cell_list:
-
                         # skip if same cell
                         if icell1 == icell2:
                             continue

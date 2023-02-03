@@ -168,7 +168,6 @@ class Mt3dSsm(Package):
         filenames=None,
         **kwargs,
     ):
-
         if unitnumber is None:
             unitnumber = Mt3dSsm._defaultunit()
         elif unitnumber == 0:
@@ -273,7 +272,6 @@ class Mt3dSsm(Package):
                 print("   explicit crcg in file")
 
         if crch is not None:
-
             self.crch = []
             t2d = Transient2d(
                 model,
@@ -664,7 +662,6 @@ class Mt3dSsm(Package):
         stress_period_data = {}
 
         for iper in range(nper):
-
             if model.verbose:
                 print(f"   loading ssm for kper {iper + 1:5d}")
 

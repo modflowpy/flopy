@@ -51,7 +51,6 @@ class PlotCrossSection:
         extent=None,
         geographic_coords=False,
     ):
-
         self.ax = ax
         self.geographic_coords = geographic_coords
         self.model = model
@@ -1365,7 +1364,6 @@ class PlotCrossSection:
 
         cbcnt = 0
         for k in range(1, nlay + 1):
-
             if not self.active[k - 1]:
                 cbcnt += 1
                 continue
@@ -1539,7 +1537,6 @@ class PlotCrossSection:
                     rectcol.append(polygon)
 
                 elif fill_between:
-
                     x = list(set(np.array(polygon).T[0]))
                     y1 = np.max(np.array(polygon).T[1])
                     y = np.min(np.array(polygon).T[1])

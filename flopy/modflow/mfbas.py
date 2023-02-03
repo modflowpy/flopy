@@ -104,7 +104,6 @@ class ModflowBas(Package):
         unitnumber=None,
         filenames=None,
     ):
-
         if unitnumber is None:
             unitnumber = ModflowBas._defaultunit()
 

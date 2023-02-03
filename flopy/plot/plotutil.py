@@ -1598,7 +1598,6 @@ class PlotUtilities:
         qz = None
 
         if Qx is not None:
-
             nlay, nrow, ncol = Qx.shape
             qx = np.zeros(Qx.shape, dtype=Qx.dtype)
 
@@ -1616,7 +1615,6 @@ class PlotUtilities:
             qx[:, :, 0] = 0.5 * qx[:, :, 0]
 
         if Qy is not None:
-
             nlay, nrow, ncol = Qy.shape
             qy = np.zeros(Qy.shape, dtype=Qy.dtype)
 
