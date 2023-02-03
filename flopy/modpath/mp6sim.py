@@ -88,7 +88,6 @@ class Modpath6Sim(Package):
         strt_file=None,
         extension="mpsim",
     ):
-
         # call base package constructor
         super().__init__(model, extension, "MPSIM", 32)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
@@ -430,7 +429,6 @@ class StartingLocationsFile(Package):
         verbose=False,
         use_pandas=True,
     ):
-
         super().__init__(model, extension, "LOC", 33)
 
         self.model = model
@@ -495,7 +493,6 @@ class StartingLocationsFile(Package):
         return d
 
     def write_file(self, data=None, float_format="{:.8f}"):
-
         if data is None:
             data = self.data
         if len(data) == 0:

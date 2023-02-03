@@ -255,7 +255,11 @@ def test_lake(function_tmpdir, example_data_path):
     # mm = flopy.plot.PlotMapView(modelgrid=gwf.modelgrid)
     # mm.plot_array(k11_tm)
 
-    (idomain, pakdata_dict, connectiondata,) = get_lak_connections(
+    (
+        idomain,
+        pakdata_dict,
+        connectiondata,
+    ) = get_lak_connections(
         gwf.modelgrid,
         lakes,
         bedleak=5e-9,
@@ -455,7 +459,11 @@ def test_embedded_lak_ex01(function_tmpdir, example_data_path):
         printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
     )
 
-    (idomain, pakdata_dict, connectiondata,) = get_lak_connections(
+    (
+        idomain,
+        pakdata_dict,
+        connectiondata,
+    ) = get_lak_connections(
         gwf.modelgrid,
         lake_map,
         bedleak=0.1,
@@ -551,7 +559,11 @@ def test_embedded_lak_prudic(example_data_path):
     )
 
     # flopy test
-    (idomain_rev, pakdata_dict, connectiondata,) = get_lak_connections(
+    (
+        idomain_rev,
+        pakdata_dict,
+        connectiondata,
+    ) = get_lak_connections(
         model_grid,
         lake_map,
         idomain=idomain,
@@ -656,7 +668,11 @@ def test_embedded_lak_prudic_mixed(example_data_path):
     )
 
     # test mixed lakebed leakance list
-    (_, _, connectiondata,) = get_lak_connections(
+    (
+        _,
+        _,
+        connectiondata,
+    ) = get_lak_connections(
         model_grid,
         lake_map,
         idomain=idomain,

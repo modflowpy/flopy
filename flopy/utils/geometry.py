@@ -867,7 +867,6 @@ def point_in_polygon(xc, yc, polygon):
     num = len(polygon)
     j = num - 1
     for i in range(num):
-
         tmp = polygon[i][0] + (polygon[j][0] - polygon[i][0]) * (
             yc - polygon[i][1]
         ) / (polygon[j][1] - polygon[i][1])

@@ -1127,7 +1127,6 @@ class ModflowMnw2(Package):
                 ]
 
     def _sort_node_data(self):
-
         node_data = self.node_data
         node_data_list = []
         wells = sorted(np.unique(node_data["wellid"]).tolist())
@@ -1798,7 +1797,6 @@ class ModflowMnw2(Package):
         for per in range(self.nper):
             f_mnw.write(f"{self.itmp[per]:.0f}  Stress Period {per + 1}\n")
             if self.itmp[per] > 0:
-
                 for n in range(self.itmp[per]):
                     # dataset 4
                     wellid = self.stress_period_data[per].wellid[n]

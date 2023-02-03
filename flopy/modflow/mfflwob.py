@@ -131,7 +131,6 @@ class ModflowFlwob(Package):
         filenames=None,
         unitnumber=None,
     ):
-
         if nqobfb is None:
             nqobfb = []
         if nqclfb is None:
@@ -446,7 +445,6 @@ class ModflowFlwob(Package):
         # of cells
         nobs = 0
         while True:
-
             # read dataset 3 -- NQOBFB NQCLFB
             line = f.readline()
             t = line.strip().split()

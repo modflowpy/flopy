@@ -219,7 +219,6 @@ class ObsFiles(FlopyBinaryData):
         return df
 
     def _read_data(self):
-
         if self.data is not None:
             return
 
@@ -508,7 +507,6 @@ class CsvFile:
     def __init__(
         self, csvfile, delimiter=",", deletechars="", replace_space=""
     ):
-
         with open(csvfile, "r") as self.file:
             self.delimiter = delimiter
             self.deletechars = deletechars

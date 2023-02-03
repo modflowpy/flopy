@@ -63,7 +63,6 @@ class MfList(DataInterface, DataListInterface):
         list_free_format=None,
         binary=False,
     ):
-
         if isinstance(data, MfList):
             for attr in data.__dict__.items():
                 setattr(self, attr[0], attr[1])
@@ -883,7 +882,6 @@ class MfList(DataInterface, DataListInterface):
         kpers.sort()
         values = []
         for kper in range(0, max(self._model.nper, max(kpers))):
-
             if kper < min(kpers):
                 values.append(0)
             elif kper > max(kpers) or kper not in kpers:

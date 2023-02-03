@@ -119,7 +119,6 @@ class ModflowDrn(Package):
         filenames=None,
         **kwargs,
     ):
-
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowDrn._defaultunit()
