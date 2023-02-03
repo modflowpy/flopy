@@ -209,6 +209,7 @@ class ModflowAg(Package):
         filenames=None,
         nper=0,
     ):
+
         if "nwt" not in model.version:
             raise AssertionError(
                 "Model version must be mfnwt to use the AG package"

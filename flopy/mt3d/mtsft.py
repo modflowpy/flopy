@@ -206,6 +206,7 @@ class Mt3dSft(Package):
         extension="sft",
         **kwargs,
     ):
+
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = Mt3dSft._defaultunit()
@@ -717,6 +718,7 @@ class Mt3dSft(Package):
         sf_stress_period_data = {}
 
         for iper in range(nper):
+
             # Item 7 NTMP (Transient data)
             if model.verbose:
                 print(f"   loading NTMP...stress period {iper + 1} of {nper}")

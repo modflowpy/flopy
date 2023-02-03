@@ -37,6 +37,7 @@ class TemplateWriter:
         for p in self.plist:
             ftype = p.mfpackage.upper()
             if ftype not in ftypelist:
+
                 # Verify package exists in model
                 try:
                     pak = self.model.get_package(ftype)
@@ -64,6 +65,7 @@ class TemplateWriter:
             paktpl = copy.copy(pak)
 
             for p in self.plist:
+
                 # Skip if parameter doesn't apply to this package
                 if p.mfpackage.upper() != ftype:
                     continue

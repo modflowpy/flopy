@@ -565,6 +565,7 @@ class Modflow(BaseModel):
         return
 
     def load_results(self, **kwargs):
+
         # remove model if passed as a kwarg
         if "model" in kwargs:
             kwargs.pop("model")
@@ -622,6 +623,7 @@ class Modflow(BaseModel):
         # get subsidence, if written
         subObj = None
         try:
+
             if self.sub is not None and "subsidence.hds" in self.sub.extension:
                 idx = self.sub.extension.index("subsidence.hds")
                 subObj = head_const(

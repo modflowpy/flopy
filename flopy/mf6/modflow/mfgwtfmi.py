@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 15, 2022 12:49:36 UTC
+# FILE created on January 27, 2023 18:36:16 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -47,91 +47,43 @@ class ModflowGwtfmi(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have
+        utility packages (mfutl*). For example, mfutllaktab package must have 
         a mfgwflak package parent_file.
 
     """
-
-    packagedata = ListTemplateGenerator(
-        ("gwt6", "fmi", "packagedata", "packagedata")
-    )
+    packagedata = ListTemplateGenerator(('gwt6', 'fmi', 'packagedata',
+                                         'packagedata'))
     package_abbr = "gwtfmi"
     _package_type = "fmi"
     dfn_file_name = "gwt-fmi.dfn"
 
     dfn = [
-        [
-            "header",
-        ],
-        [
-            "block options",
-            "name save_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name flow_imbalance_correction",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block packagedata",
-            "name packagedata",
-            "type recarray flowtype filein fname",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block packagedata",
-            "name flowtype",
-            "in_record true",
-            "type string",
-            "tagged false",
-            "reader urword",
-        ],
-        [
-            "block packagedata",
-            "name filein",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block packagedata",
-            "name fname",
-            "in_record true",
-            "type string",
-            "preserve_case true",
-            "tagged false",
-            "reader urword",
-        ],
-    ]
+           ["header", ],
+           ["block options", "name save_flows", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name flow_imbalance_correction",
+            "type keyword", "reader urword", "optional true"],
+           ["block packagedata", "name packagedata",
+            "type recarray flowtype filein fname", "reader urword",
+            "optional false"],
+           ["block packagedata", "name flowtype", "in_record true",
+            "type string", "tagged false", "reader urword"],
+           ["block packagedata", "name filein", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block packagedata", "name fname", "in_record true",
+            "type string", "preserve_case true", "tagged false",
+            "reader urword"]]
 
-    def __init__(
-        self,
-        model,
-        loading_package=False,
-        save_flows=None,
-        flow_imbalance_correction=None,
-        packagedata=None,
-        filename=None,
-        pname=None,
-        **kwargs,
-    ):
-        super().__init__(
-            model, "fmi", filename, pname, loading_package, **kwargs
-        )
+    def __init__(self, model, loading_package=False, save_flows=None,
+                 flow_imbalance_correction=None, packagedata=None,
+                 filename=None, pname=None, **kwargs):
+        super().__init__(model, "fmi", filename, pname,
+                         loading_package, **kwargs)
 
         # set up variables
         self.save_flows = self.build_mfdata("save_flows", save_flows)
         self.flow_imbalance_correction = self.build_mfdata(
-            "flow_imbalance_correction", flow_imbalance_correction
-        )
+            "flow_imbalance_correction", flow_imbalance_correction)
         self.packagedata = self.build_mfdata("packagedata", packagedata)
         self._init_complete = True

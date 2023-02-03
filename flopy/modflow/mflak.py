@@ -281,6 +281,7 @@ class ModflowLak(Package):
         lwrt=0,
         **kwargs,
     ):
+
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowLak._defaultunit()

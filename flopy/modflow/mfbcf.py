@@ -115,6 +115,7 @@ class ModflowBcf(Package):
         filenames=None,
         add_package=True,
     ):
+
         if unitnumber is None:
             unitnumber = ModflowBcf._defaultunit()
 
@@ -428,6 +429,7 @@ class ModflowBcf(Package):
         wetdry = [0] * nlay
 
         for k in range(nlay):
+
             # allow for unstructured changing nodes per layer
             if nr is None:
                 nrow = 1

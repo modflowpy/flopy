@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 15, 2022 12:49:36 UTC
+# FILE created on January 27, 2023 18:36:16 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -53,86 +53,37 @@ class ModflowUtlsfrtab(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have
+        utility packages (mfutl*). For example, mfutllaktab package must have 
         a mfgwflak package parent_file.
 
     """
-
-    table = ListTemplateGenerator(("sfrtab", "table", "table"))
+    table = ListTemplateGenerator(('sfrtab', 'table', 'table'))
     package_abbr = "utlsfrtab"
     _package_type = "sfrtab"
     dfn_file_name = "utl-sfrtab.dfn"
 
     dfn = [
-        [
-            "header",
-            "multi-package",
-        ],
-        [
-            "block dimensions",
-            "name nrow",
-            "type integer",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block dimensions",
-            "name ncol",
-            "type integer",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block table",
-            "name table",
-            "type recarray xfraction height manfraction",
-            "shape (nrow)",
-            "reader urword",
-        ],
-        [
-            "block table",
-            "name xfraction",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block table",
-            "name height",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block table",
-            "name manfraction",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "optional true",
-        ],
-    ]
+           ["header", 
+            "multi-package", ],
+           ["block dimensions", "name nrow", "type integer",
+            "reader urword", "optional false"],
+           ["block dimensions", "name ncol", "type integer",
+            "reader urword", "optional false"],
+           ["block table", "name table",
+            "type recarray xfraction height manfraction", "shape (nrow)",
+            "reader urword"],
+           ["block table", "name xfraction", "type double precision",
+            "shape", "tagged false", "in_record true", "reader urword"],
+           ["block table", "name height", "type double precision", "shape",
+            "tagged false", "in_record true", "reader urword"],
+           ["block table", "name manfraction", "type double precision",
+            "shape", "tagged false", "in_record true", "reader urword",
+            "optional true"]]
 
-    def __init__(
-        self,
-        model,
-        loading_package=False,
-        nrow=None,
-        ncol=None,
-        table=None,
-        filename=None,
-        pname=None,
-        **kwargs,
-    ):
-        super().__init__(
-            model, "sfrtab", filename, pname, loading_package, **kwargs
-        )
+    def __init__(self, model, loading_package=False, nrow=None, ncol=None,
+                 table=None, filename=None, pname=None, **kwargs):
+        super().__init__(model, "sfrtab", filename, pname,
+                         loading_package, **kwargs)
 
         # set up variables
         self.nrow = self.build_mfdata("nrow", nrow)

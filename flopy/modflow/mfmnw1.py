@@ -197,6 +197,7 @@ class ModflowMnw1(Package):
 
     @classmethod
     def load(cls, f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
+
         if model.verbose:
             print("loading mnw1 package file...")
 
@@ -247,6 +248,7 @@ class ModflowMnw1(Package):
             add = True if "add" in line.lower() else False
             itmp = int(line_parse(line)[0])
             if itmp > 0:
+
                 # dataset 5
                 data, qfrcmn_default, qfrcmx_default, qcut_default = _parse_5(
                     f, itmp, qfrcmn_default, qfrcmx_default, qcut_default
@@ -411,6 +413,7 @@ def _parse_5(
     multi = False
     label = ""
     for n in range(itmp):
+
         linetxt = skipcomments(next(f), f).lower()
         line = line_parse(linetxt)
 

@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 15, 2022 12:49:36 UTC
+# FILE created on January 27, 2023 18:36:16 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -148,308 +148,109 @@ class ModflowGwtgwt(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have
+        utility packages (mfutl*). For example, mfutllaktab package must have 
         a mfgwflak package parent_file.
 
     """
-
-    auxiliary = ListTemplateGenerator(("gwtgwt", "options", "auxiliary"))
-    mvt_filerecord = ListTemplateGenerator(
-        ("gwtgwt", "options", "mvt_filerecord")
-    )
-    obs_filerecord = ListTemplateGenerator(
-        ("gwtgwt", "options", "obs_filerecord")
-    )
-    exchangedata = ListTemplateGenerator(
-        ("gwtgwt", "exchangedata", "exchangedata")
-    )
+    auxiliary = ListTemplateGenerator(('gwtgwt', 'options', 'auxiliary'))
+    mvt_filerecord = ListTemplateGenerator(('gwtgwt', 'options',
+                                            'mvt_filerecord'))
+    obs_filerecord = ListTemplateGenerator(('gwtgwt', 'options',
+                                            'obs_filerecord'))
+    exchangedata = ListTemplateGenerator(('gwtgwt', 'exchangedata',
+                                          'exchangedata'))
     package_abbr = "gwtgwt"
     _package_type = "gwtgwt"
     dfn_file_name = "exg-gwtgwt.dfn"
 
     dfn = [
-        [
-            "header",
-            "multi-package",
-        ],
-        [
-            "block options",
-            "name gwfmodelname1",
-            "type string",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name gwfmodelname2",
-            "type string",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name auxiliary",
-            "type string",
-            "shape (naux)",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name boundnames",
-            "type keyword",
-            "shape",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name print_input",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name print_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name save_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name adv_scheme",
-            "type string",
-            "valid upstream central tvd",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name dsp_xt3d_off",
-            "type keyword",
-            "shape",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name dsp_xt3d_rhs",
-            "type keyword",
-            "shape",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name filein",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name mvt_filerecord",
-            "type record mvt6 filein mvt6_filename",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "construct_package mvt",
-            "construct_data perioddata",
-            "parameter_name perioddata",
-        ],
-        [
-            "block options",
-            "name mvt6",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name mvt6_filename",
-            "type string",
-            "preserve_case true",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name obs_filerecord",
-            "type record obs6 filein obs6_filename",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "construct_package obs",
-            "construct_data continuous",
-            "parameter_name observations",
-        ],
-        [
-            "block options",
-            "name obs6",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name obs6_filename",
-            "type string",
-            "preserve_case true",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name dev_interfacemodel_on",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block dimensions",
-            "name nexg",
-            "type integer",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block exchangedata",
-            "name exchangedata",
+           ["header", 
+            "multi-package", ],
+           ["block options", "name gwfmodelname1", "type string",
+            "reader urword", "optional false"],
+           ["block options", "name gwfmodelname2", "type string",
+            "reader urword", "optional false"],
+           ["block options", "name auxiliary", "type string",
+            "shape (naux)", "reader urword", "optional true"],
+           ["block options", "name boundnames", "type keyword", "shape",
+            "reader urword", "optional true"],
+           ["block options", "name print_input", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name print_flows", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name save_flows", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name adv_scheme", "type string",
+            "valid upstream central tvd", "reader urword", "optional true"],
+           ["block options", "name dsp_xt3d_off", "type keyword", "shape",
+            "reader urword", "optional true"],
+           ["block options", "name dsp_xt3d_rhs", "type keyword", "shape",
+            "reader urword", "optional true"],
+           ["block options", "name filein", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name mvt_filerecord",
+            "type record mvt6 filein mvt6_filename", "shape", "reader urword",
+            "tagged true", "optional true", "construct_package mvt",
+            "construct_data perioddata", "parameter_name perioddata"],
+           ["block options", "name mvt6", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name mvt6_filename", "type string",
+            "preserve_case true", "in_record true", "tagged false",
+            "reader urword", "optional false"],
+           ["block options", "name obs_filerecord",
+            "type record obs6 filein obs6_filename", "shape", "reader urword",
+            "tagged true", "optional true", "construct_package obs",
+            "construct_data continuous", "parameter_name observations"],
+           ["block options", "name obs6", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name obs6_filename", "type string",
+            "preserve_case true", "in_record true", "tagged false",
+            "reader urword", "optional false"],
+           ["block options", "name dev_interfacemodel_on", "type keyword",
+            "reader urword", "optional true"],
+           ["block dimensions", "name nexg", "type integer",
+            "reader urword", "optional false"],
+           ["block exchangedata", "name exchangedata",
             "type recarray cellidm1 cellidm2 ihc cl1 cl2 hwva aux boundname",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block exchangedata",
-            "name cellidm1",
-            "type integer",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-            "numeric_index true",
-        ],
-        [
-            "block exchangedata",
-            "name cellidm2",
-            "type integer",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-            "numeric_index true",
-        ],
-        [
-            "block exchangedata",
-            "name ihc",
-            "type integer",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block exchangedata",
-            "name cl1",
-            "type double precision",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block exchangedata",
-            "name cl2",
-            "type double precision",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block exchangedata",
-            "name hwva",
-            "type double precision",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block exchangedata",
-            "name aux",
-            "type double precision",
-            "in_record true",
-            "tagged false",
-            "shape (naux)",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block exchangedata",
-            "name boundname",
-            "type string",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "optional true",
-        ],
-    ]
+            "reader urword", "optional false"],
+           ["block exchangedata", "name cellidm1", "type integer",
+            "in_record true", "tagged false", "reader urword",
+            "optional false", "numeric_index true"],
+           ["block exchangedata", "name cellidm2", "type integer",
+            "in_record true", "tagged false", "reader urword",
+            "optional false", "numeric_index true"],
+           ["block exchangedata", "name ihc", "type integer",
+            "in_record true", "tagged false", "reader urword",
+            "optional false"],
+           ["block exchangedata", "name cl1", "type double precision",
+            "in_record true", "tagged false", "reader urword",
+            "optional false"],
+           ["block exchangedata", "name cl2", "type double precision",
+            "in_record true", "tagged false", "reader urword",
+            "optional false"],
+           ["block exchangedata", "name hwva", "type double precision",
+            "in_record true", "tagged false", "reader urword",
+            "optional false"],
+           ["block exchangedata", "name aux", "type double precision",
+            "in_record true", "tagged false", "shape (naux)", "reader urword",
+            "optional true"],
+           ["block exchangedata", "name boundname", "type string", "shape",
+            "tagged false", "in_record true", "reader urword",
+            "optional true"]]
 
-    def __init__(
-        self,
-        simulation,
-        loading_package=False,
-        exgtype=None,
-        exgmnamea=None,
-        exgmnameb=None,
-        gwfmodelname1=None,
-        gwfmodelname2=None,
-        auxiliary=None,
-        boundnames=None,
-        print_input=None,
-        print_flows=None,
-        save_flows=None,
-        adv_scheme=None,
-        dsp_xt3d_off=None,
-        dsp_xt3d_rhs=None,
-        filein=None,
-        perioddata=None,
-        observations=None,
-        dev_interfacemodel_on=None,
-        nexg=None,
-        exchangedata=None,
-        filename=None,
-        pname=None,
-        **kwargs,
-    ):
-        super().__init__(
-            simulation, "gwtgwt", filename, pname, loading_package, **kwargs
-        )
+    def __init__(self, simulation, loading_package=False, exgtype=None,
+                 exgmnamea=None, exgmnameb=None, gwfmodelname1=None,
+                 gwfmodelname2=None, auxiliary=None, boundnames=None,
+                 print_input=None, print_flows=None, save_flows=None,
+                 adv_scheme=None, dsp_xt3d_off=None, dsp_xt3d_rhs=None,
+                 filein=None, perioddata=None, observations=None,
+                 dev_interfacemodel_on=None, nexg=None, exchangedata=None,
+                 filename=None, pname=None, **kwargs):
+        super().__init__(simulation, "gwtgwt", filename, pname,
+                         loading_package, **kwargs)
 
         # set up variables
         self.exgtype = exgtype
@@ -471,17 +272,18 @@ class ModflowGwtgwt(mfpackage.MFPackage):
         self.dsp_xt3d_off = self.build_mfdata("dsp_xt3d_off", dsp_xt3d_off)
         self.dsp_xt3d_rhs = self.build_mfdata("dsp_xt3d_rhs", dsp_xt3d_rhs)
         self.filein = self.build_mfdata("filein", filein)
-        self._mvt_filerecord = self.build_mfdata("mvt_filerecord", None)
-        self._mvt_package = self.build_child_package(
-            "mvt", perioddata, "perioddata", self._mvt_filerecord
-        )
-        self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
-        self._obs_package = self.build_child_package(
-            "obs", observations, "continuous", self._obs_filerecord
-        )
-        self.dev_interfacemodel_on = self.build_mfdata(
-            "dev_interfacemodel_on", dev_interfacemodel_on
-        )
+        self._mvt_filerecord = self.build_mfdata("mvt_filerecord",
+                                                 None)
+        self._mvt_package = self.build_child_package("mvt", perioddata,
+                                                     "perioddata",
+                                                     self._mvt_filerecord)
+        self._obs_filerecord = self.build_mfdata("obs_filerecord",
+                                                 None)
+        self._obs_package = self.build_child_package("obs", observations,
+                                                     "continuous",
+                                                     self._obs_filerecord)
+        self.dev_interfacemodel_on = self.build_mfdata("dev_interfacemodel_on",
+                                                       dev_interfacemodel_on)
         self.nexg = self.build_mfdata("nexg", nexg)
         self.exchangedata = self.build_mfdata("exchangedata", exchangedata)
         self._init_complete = True

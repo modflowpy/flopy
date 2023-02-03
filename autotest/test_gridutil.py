@@ -28,7 +28,7 @@ def test_get_lni(ncpl, nn, expected_layer, expected_ni):
     lni = get_lni(ncpl, nodes)
     assert isinstance(lni, list)
     i = 0
-    for actual_layer, actual_ni in lni:
+    for (actual_layer, actual_ni) in lni:
         assert actual_layer == expected_layer
         assert actual_ni == expected_ni + (i * t)
         i += 1

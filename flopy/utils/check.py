@@ -94,6 +94,7 @@ class check:
         level=1,
         property_threshold_values={},
     ):
+
         # allow for instantiation with model or package
         # if isinstance(package, BaseModel): didn't work
         if hasattr(package, "parent"):
@@ -543,6 +544,7 @@ class check:
         return np.ndarray(arr.shape, dtype2, arr, 0, arr.strides)
 
     def summarize(self):
+
         # write the summary array to text file (all levels)
         if self.f is not None:
             self.f.write(self.print_summary())

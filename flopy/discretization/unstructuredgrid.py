@@ -671,6 +671,7 @@ class UnstructuredGrid(Grid):
 
         # build xy vertex and cell center info
         for iverts in self.iverts:
+
             xcellvert = []
             ycellvert = []
             for ix in iverts:

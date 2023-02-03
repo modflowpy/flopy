@@ -3559,7 +3559,14 @@ def test005_advgw_tidal(function_tmpdir, example_data_path):
     )
 
     # test obs/ts package interface
+
+    # temporary code
     model = sim.get_model(model_name)
+    a = np.ones((model.dis.nlay.get_data(), model.dis.nrow.get_data(), model.dis.ncol.get_data())).astype(int)
+    model.dis.idomain.set_data(a)
+    # temporary code
+
+
     time = model.modeltime
     assert (
         time.steady_state[0] == True
@@ -4440,9 +4447,15 @@ def test099_create_tests_int_ext(function_tmpdir, example_data_path):
         delc=5000.0,
         top=top,
         botm=botm,
-        idomain=idomain,
         filename=f"{model_name}.dis",
     )
+
+    # temporary code
+    model = sim.get_model(model_name)
+    a = np.ones((1, 15, 10)).astype(int)
+    model.dis.idomain.set_data(a)
+    # temporary code
+
     strt = np.ones((15, 10), float) * 50.0
     strt_int = {"filename": "strt.txt", "factor": 0.8, "iprn": 0, "data": strt}
     ic_package = ModflowGwfic(
@@ -4539,3 +4552,86 @@ def test099_create_tests_int_ext(function_tmpdir, example_data_path):
     k_record = npf_package.k.get_record()
     assert k_record["factor"] == 4.000e-04
     assert k_record["data"][0, 0, 0] == 50.0
+
+
+"""
+@pytest.mark.regression
+def test_bug(function_tmpdir, example_data_path):
+    # init paths
+    test_ex_name = "test099_int_ext"
+    model_name = "test099_int_ext"
+    pth = example_data_path / "mf6" / "create_tests" / test_ex_name
+
+    # create simulation
+    sim = MFSimulation(
+        sim_name=test_ex_name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=str(function_tmpdir),
+    )
+    sim.name_file.continue_.set_data(True)
+    tdis_rc = [(1577889000, 50, 1.1), (1577889000, 50, 1.1)]
+    tdis_package = ModflowTdis(
+        sim,
+        time_units="SECONDS",
+        nper=2,
+        perioddata=tdis_rc,
+        filename="simulation.tdis",
+    )
+    model = ModflowGwf(
+        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
+    )
+    model.name_file.save_flows.set_data(True)
+    ims_package = ModflowIms(
+        sim,
+        print_option="SUMMARY",
+        outer_dvclose=0.00001,
+        outer_maximum=100,
+        under_relaxation="DBD",
+        under_relaxation_theta=0.85,
+        under_relaxation_kappa=0.0001,
+        under_relaxation_gamma=0.0,
+        under_relaxation_momentum=0.1,
+        backtracking_number=0,
+        backtracking_tolerance=1.1,
+        backtracking_reduction_factor=0.7,
+        backtracking_residual_limit=1.0,
+        inner_dvclose=0.00001,
+        rcloserecord=0.1,
+        inner_maximum=100,
+        linear_acceleration="CG",
+        scaling_method="NONE",
+        reordering_method="NONE",
+        relaxation_factor=0.99,
+        filename="model.ims",
+    )
+    sim.register_ims_package(ims_package, [model.name])
+    top = 100.0
+    botm = np.zeros((3, 15, 10), float)
+    idomain = 1
+    dis_package = ModflowGwfdis(
+        model,
+        length_units="FEET",
+        nlay=3,
+        nrow=15,
+        ncol=10,
+        delr=5000.0,
+        delc=5000.0,
+        top=top,
+        botm=botm,
+        idomain=[1, 1, 0],
+        filename=f"{model_name}.dis",
+    )
+
+    sim.set_all_data_external()
+    #dis_package.write()
+
+    # temporary code
+    model = sim.get_model(model_name)
+    a = np.ones((3, 15, 10)).astype(int)
+    a[0, 1, 1] = 0
+    a[2, 5, 5] = 0
+    model.dis.idomain.set_data(a)
+    model.dis.write()
+    # temporary
+"""

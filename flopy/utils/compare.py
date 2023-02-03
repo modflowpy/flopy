@@ -201,11 +201,13 @@ def compare_budget(
 
         # Process each time step
         for jdx in range(kper.shape[0]):
+
             err[:] = 0.0
             t0 = lst1[idx][jdx]
             t1 = lst2[idx][jdx]
 
             if outfile is not None:
+
                 maxcolname = 0
                 for colname in t0.dtype.names:
                     maxcolname = max(maxcolname, len(colname))
@@ -397,11 +399,13 @@ def compare_swrbudget(
 
         # Process each time step
         for jdx in range(kper.shape[0]):
+
             err[:] = 0.0
             t0 = lst1[idx][jdx]
             t1 = lst2[idx][jdx]
 
             if outfile is not None:
+
                 maxcolname = 0
                 for colname in t0.dtype.names:
                     maxcolname = max(maxcolname, len(colname))
@@ -747,7 +751,7 @@ def compare_heads(
     # get times
     times1 = headobj1.get_times()
     times2 = headobj2.get_times()
-    for t1, t2 in zip(times1, times2):
+    for (t1, t2) in zip(times1, times2):
         if not np.allclose([t1], [t2]):
             msg = "times in two head files are not " + f"equal ({t1},{t2})"
             raise ValueError(msg)
@@ -1013,7 +1017,7 @@ def compare_concentrations(
     nt2 = len(times2)
     nt = min(nt1, nt2)
 
-    for t1, t2 in zip(times1, times2):
+    for (t1, t2) in zip(times1, times2):
         if not np.allclose([t1], [t2]):
             msg = f"times in two ucn files are not equal ({t1},{t2})"
             raise ValueError(msg)

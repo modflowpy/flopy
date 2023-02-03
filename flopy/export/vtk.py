@@ -136,6 +136,7 @@ class Vtk:
         smooth=False,
         point_scalars=False,
     ):
+
         vtk = import_optional_dependency("vtk")
 
         if model is None and modelgrid is None:

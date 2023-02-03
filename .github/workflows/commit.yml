@@ -193,6 +193,7 @@ jobs:
         shell: bash -l {0}
         if: runner.os == 'Windows'
         run: |
+          pip install --upgrade pip
           pip install xmipy
           pip install .
 

@@ -397,6 +397,7 @@ class ModflowUzf1(Package):
         options=None,
         surfk=0.1,
     ):
+
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowUzf1._defaultunit()
@@ -695,6 +696,7 @@ class ModflowUzf1(Package):
         return nrow * ncol
 
     def _write_1a(self, f_uzf):
+
         # the nwt_11_fmt code is slated for removal (deprecated!)
         if not self.nwt_11_fmt:
             specify_temp = ""

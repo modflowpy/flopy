@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 15, 2022 12:49:36 UTC
+# FILE created on January 27, 2023 18:36:16 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -104,359 +104,140 @@ class ModflowGwtist(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have
+        utility packages (mfutl*). For example, mfutllaktab package must have 
         a mfgwflak package parent_file.
 
     """
-
-    budget_filerecord = ListTemplateGenerator(
-        ("gwt6", "ist", "options", "budget_filerecord")
-    )
-    budgetcsv_filerecord = ListTemplateGenerator(
-        ("gwt6", "ist", "options", "budgetcsv_filerecord")
-    )
-    cim_filerecord = ListTemplateGenerator(
-        ("gwt6", "ist", "options", "cim_filerecord")
-    )
-    cimprintrecord = ListTemplateGenerator(
-        ("gwt6", "ist", "options", "cimprintrecord")
-    )
-    cim = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "cim"))
-    thetaim = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "thetaim"))
-    zetaim = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "zetaim"))
-    decay = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "decay"))
-    decay_sorbed = ArrayTemplateGenerator(
-        ("gwt6", "ist", "griddata", "decay_sorbed")
-    )
-    bulk_density = ArrayTemplateGenerator(
-        ("gwt6", "ist", "griddata", "bulk_density")
-    )
-    distcoef = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "distcoef"))
+    budget_filerecord = ListTemplateGenerator(('gwt6', 'ist', 'options',
+                                               'budget_filerecord'))
+    budgetcsv_filerecord = ListTemplateGenerator(('gwt6', 'ist',
+                                                  'options',
+                                                  'budgetcsv_filerecord'))
+    cim_filerecord = ListTemplateGenerator(('gwt6', 'ist', 'options',
+                                            'cim_filerecord'))
+    cimprintrecord = ListTemplateGenerator(('gwt6', 'ist', 'options',
+                                            'cimprintrecord'))
+    cim = ArrayTemplateGenerator(('gwt6', 'ist', 'griddata', 'cim'))
+    thetaim = ArrayTemplateGenerator(('gwt6', 'ist', 'griddata',
+                                      'thetaim'))
+    zetaim = ArrayTemplateGenerator(('gwt6', 'ist', 'griddata',
+                                     'zetaim'))
+    decay = ArrayTemplateGenerator(('gwt6', 'ist', 'griddata', 'decay'))
+    decay_sorbed = ArrayTemplateGenerator(('gwt6', 'ist', 'griddata',
+                                           'decay_sorbed'))
+    bulk_density = ArrayTemplateGenerator(('gwt6', 'ist', 'griddata',
+                                           'bulk_density'))
+    distcoef = ArrayTemplateGenerator(('gwt6', 'ist', 'griddata',
+                                       'distcoef'))
     package_abbr = "gwtist"
     _package_type = "ist"
     dfn_file_name = "gwt-ist.dfn"
 
     dfn = [
-        [
-            "header",
-        ],
-        [
-            "block options",
-            "name save_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name budget_filerecord",
-            "type record budget fileout budgetfile",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name budget",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name fileout",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name budgetfile",
-            "type string",
-            "preserve_case true",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged false",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name budgetcsv_filerecord",
-            "type record budgetcsv fileout budgetcsvfile",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name budgetcsv",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name budgetcsvfile",
-            "type string",
-            "preserve_case true",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged false",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name sorption",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name first_order_decay",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name zero_order_decay",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name cim_filerecord",
-            "type record cim fileout cimfile",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name cim",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name fileout",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name cimfile",
-            "type string",
-            "preserve_case true",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged false",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name cimprintrecord",
-            "type record cim print_format formatrecord",
-            "shape",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name print_format",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name formatrecord",
-            "type record columns width digits format",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name columns",
-            "type integer",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional",
-        ],
-        [
-            "block options",
-            "name width",
-            "type integer",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional",
-        ],
-        [
-            "block options",
-            "name digits",
-            "type integer",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional",
-        ],
-        [
-            "block options",
-            "name format",
-            "type string",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged false",
-            "optional false",
-        ],
-        [
-            "block griddata",
-            "name cim",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "optional true",
-            "layered true",
-        ],
-        [
-            "block griddata",
-            "name thetaim",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-        ],
-        [
-            "block griddata",
-            "name zetaim",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-        ],
-        [
-            "block griddata",
-            "name decay",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-            "optional true",
-        ],
-        [
-            "block griddata",
-            "name decay_sorbed",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "optional true",
-            "layered true",
-        ],
-        [
-            "block griddata",
-            "name bulk_density",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-        ],
-        [
-            "block griddata",
-            "name distcoef",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-        ],
-    ]
+           ["header", ],
+           ["block options", "name save_flows", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name budget_filerecord",
+            "type record budget fileout budgetfile", "shape", "reader urword",
+            "tagged true", "optional true"],
+           ["block options", "name budget", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name fileout", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name budgetfile", "type string",
+            "preserve_case true", "shape", "in_record true", "reader urword",
+            "tagged false", "optional false"],
+           ["block options", "name budgetcsv_filerecord",
+            "type record budgetcsv fileout budgetcsvfile", "shape",
+            "reader urword", "tagged true", "optional true"],
+           ["block options", "name budgetcsv", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name budgetcsvfile", "type string",
+            "preserve_case true", "shape", "in_record true", "reader urword",
+            "tagged false", "optional false"],
+           ["block options", "name sorption", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name first_order_decay", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name zero_order_decay", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name cim_filerecord",
+            "type record cim fileout cimfile", "shape", "reader urword",
+            "tagged true", "optional true"],
+           ["block options", "name cim", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name fileout", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name cimfile", "type string",
+            "preserve_case true", "shape", "in_record true", "reader urword",
+            "tagged false", "optional false"],
+           ["block options", "name cimprintrecord",
+            "type record cim print_format formatrecord", "shape",
+            "reader urword", "optional true"],
+           ["block options", "name print_format", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name formatrecord",
+            "type record columns width digits format", "shape",
+            "in_record true", "reader urword", "tagged", "optional false"],
+           ["block options", "name columns", "type integer", "shape",
+            "in_record true", "reader urword", "tagged true", "optional"],
+           ["block options", "name width", "type integer", "shape",
+            "in_record true", "reader urword", "tagged true", "optional"],
+           ["block options", "name digits", "type integer", "shape",
+            "in_record true", "reader urword", "tagged true", "optional"],
+           ["block options", "name format", "type string", "shape",
+            "in_record true", "reader urword", "tagged false",
+            "optional false"],
+           ["block griddata", "name cim", "type double precision",
+            "shape (nodes)", "reader readarray", "optional true",
+            "layered true"],
+           ["block griddata", "name thetaim", "type double precision",
+            "shape (nodes)", "reader readarray", "layered true"],
+           ["block griddata", "name zetaim", "type double precision",
+            "shape (nodes)", "reader readarray", "layered true"],
+           ["block griddata", "name decay", "type double precision",
+            "shape (nodes)", "reader readarray", "layered true",
+            "optional true"],
+           ["block griddata", "name decay_sorbed", "type double precision",
+            "shape (nodes)", "reader readarray", "optional true",
+            "layered true"],
+           ["block griddata", "name bulk_density", "type double precision",
+            "shape (nodes)", "reader readarray", "layered true"],
+           ["block griddata", "name distcoef", "type double precision",
+            "shape (nodes)", "reader readarray", "layered true"]]
 
-    def __init__(
-        self,
-        model,
-        loading_package=False,
-        save_flows=None,
-        budget_filerecord=None,
-        budgetcsv_filerecord=None,
-        sorption=None,
-        first_order_decay=None,
-        zero_order_decay=None,
-        cim_filerecord=None,
-        fileout=None,
-        cimprintrecord=None,
-        cim=None,
-        thetaim=None,
-        zetaim=None,
-        decay=None,
-        decay_sorbed=None,
-        bulk_density=None,
-        distcoef=None,
-        filename=None,
-        pname=None,
-        **kwargs,
-    ):
-        super().__init__(
-            model, "ist", filename, pname, loading_package, **kwargs
-        )
+    def __init__(self, model, loading_package=False, save_flows=None,
+                 budget_filerecord=None, budgetcsv_filerecord=None,
+                 sorption=None, first_order_decay=None, zero_order_decay=None,
+                 cim_filerecord=None, fileout=None, cimprintrecord=None,
+                 cim=None, thetaim=None, zetaim=None, decay=None,
+                 decay_sorbed=None, bulk_density=None, distcoef=None,
+                 filename=None, pname=None, **kwargs):
+        super().__init__(model, "ist", filename, pname,
+                         loading_package, **kwargs)
 
         # set up variables
         self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self.budget_filerecord = self.build_mfdata(
-            "budget_filerecord", budget_filerecord
-        )
-        self.budgetcsv_filerecord = self.build_mfdata(
-            "budgetcsv_filerecord", budgetcsv_filerecord
-        )
+        self.budget_filerecord = self.build_mfdata("budget_filerecord",
+                                                   budget_filerecord)
+        self.budgetcsv_filerecord = self.build_mfdata("budgetcsv_filerecord",
+                                                      budgetcsv_filerecord)
         self.sorption = self.build_mfdata("sorption", sorption)
-        self.first_order_decay = self.build_mfdata(
-            "first_order_decay", first_order_decay
-        )
-        self.zero_order_decay = self.build_mfdata(
-            "zero_order_decay", zero_order_decay
-        )
-        self.cim_filerecord = self.build_mfdata(
-            "cim_filerecord", cim_filerecord
-        )
+        self.first_order_decay = self.build_mfdata("first_order_decay",
+                                                   first_order_decay)
+        self.zero_order_decay = self.build_mfdata("zero_order_decay",
+                                                  zero_order_decay)
+        self.cim_filerecord = self.build_mfdata("cim_filerecord",
+                                                cim_filerecord)
         self.fileout = self.build_mfdata("fileout", fileout)
-        self.cimprintrecord = self.build_mfdata(
-            "cimprintrecord", cimprintrecord
-        )
+        self.cimprintrecord = self.build_mfdata("cimprintrecord",
+                                                cimprintrecord)
         self.cim = self.build_mfdata("cim", cim)
         self.thetaim = self.build_mfdata("thetaim", thetaim)
         self.zetaim = self.build_mfdata("zetaim", zetaim)

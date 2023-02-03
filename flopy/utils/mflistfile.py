@@ -44,6 +44,7 @@ class ListBudget:
     """
 
     def __init__(self, file_name, budgetkey=None, timeunit="days"):
+
         # Set up file reading
         assert os.path.exists(file_name), f"file_name {file_name} not found"
         self.file_name = file_name
@@ -793,6 +794,7 @@ class ListBudget:
         cumdict = {}
         entrydict = {}
         while True:
+
             if line == "":
                 print(
                     "end of file found while seeking budget "
@@ -852,6 +854,7 @@ class ListBudget:
         return incdict, cumdict
 
     def _parse_budget_line(self, line):
+
         # get the budget item name
         entry = line.strip().split("=")[0].strip()
 

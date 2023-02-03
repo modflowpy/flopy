@@ -423,6 +423,7 @@ class SwrFile(FlopyBinaryData):
             return 0.0, 0.0, 0, 0, 0, False
 
     def _get_ts(self, irec=0):
+
         # create array
         gage_record = np.zeros(self._ntimes, dtype=self.out_dtype)
 
@@ -441,6 +442,7 @@ class SwrFile(FlopyBinaryData):
         return gage_record.view(dtype=self.out_dtype)
 
     def _get_ts_qm(self, irec=0, iconn=0):
+
         # create array
         gage_record = np.zeros(self._ntimes, dtype=self.out_dtype)
 
@@ -466,6 +468,7 @@ class SwrFile(FlopyBinaryData):
         return gage_record.view(dtype=self.out_dtype)
 
     def _get_ts_qaq(self, irec=0, klay=0):
+
         # create array
         gage_record = np.zeros(self._ntimes, dtype=self.out_dtype)
 
@@ -494,6 +497,7 @@ class SwrFile(FlopyBinaryData):
         return gage_record.view(dtype=self.out_dtype)
 
     def _get_ts_structure(self, irec=0, istr=0):
+
         # create array
         gage_record = np.zeros(self._ntimes, dtype=self.out_dtype)
 
@@ -530,6 +534,7 @@ class SwrFile(FlopyBinaryData):
             return self.read_record(count=self.nrecord)
 
     def _read_qaq(self):
+
         # read qaq data using standard record reader
         bd = self.read_record(count=self.nitems)
         bd["layer"] -= 1
@@ -556,6 +561,7 @@ class SwrFile(FlopyBinaryData):
         return r
 
     def _read_structure(self):
+
         # read qaq data using standard record reader
         bd = self.read_record(count=self.nitems)
 

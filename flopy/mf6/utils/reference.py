@@ -599,6 +599,7 @@ class VertexSpatialReference:
         proj4_str=None,
         **kwargs,
     ):
+
         assert len(xvdict) == len(
             yvdict
         ), f"len(xvdict): {len(xvdict)} != len(yvdict): {len(yvdict)}"
@@ -896,6 +897,7 @@ class SpatialReference:
         proj4_str=None,
         distype="structured",
     ):
+
         if distype == "structured":
             new = object.__new__(StructuredSpatialReference)
             new.__init__(

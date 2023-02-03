@@ -470,6 +470,7 @@ class ModelDimensions:
                             data_item_struct, repeating_key=repeating_key
                         )
                     else:
+
                         (
                             dim,
                             shape_rule,

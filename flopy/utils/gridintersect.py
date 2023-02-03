@@ -902,7 +902,7 @@ class GridIntersect:
             keep_cid = []
             keep_pts = []
             parsed = []
-            for ishp, cid in zip(ixresult, qcellids):
+            for (ishp, cid) in zip(ixresult, qcellids):
                 points = []
                 for pnt in shapely.get_parts(ishp):
                     if tuple(pnt.coords)[0] not in parsed:
@@ -1925,7 +1925,7 @@ class GridIntersect:
         rectangle = ((minx, miny), (maxx, maxy))
         nodes = self._intersect_rectangle_structured(rectangle)
 
-        for i, j in nodes:
+        for (i, j) in nodes:
             if (
                 self.mfgrid.angrot != 0.0
                 or self.mfgrid.xoffset != 0.0
@@ -1942,16 +1942,17 @@ class GridIntersect:
                 ]
             else:
                 cell_coords = self.mfgrid.get_cell_vertices(i, j)
-            cell_polygon = shapely_geo.Polygon(cell_coords)
-            if shp.intersects(cell_polygon):
-                intersect = shp.intersection(cell_polygon)
+            node_polygon = shapely_geo.Polygon(cell_coords)
+            if shp.intersects(node_polygon):
+                intersect = shp.intersection(node_polygon)
+
                 collection = parse_shapely_ix_result(
                     [], intersect, shptyps=["Polygon", "MultiPolygon"]
                 )
                 if len(collection) == 0:
                     continue
                 if len(collection) > 1:
-                    intersect = shapely_geo.MultiPolygon(collection)
+                    intersect = shapely_geo.MultiPolgon(collection)
                 else:
                     intersect = collection[0]
 
@@ -1961,13 +1962,13 @@ class GridIntersect:
                 # option: only store result if cell centroid is contained
                 # within intersection result
                 if contains_centroid:
-                    if not intersect.intersects(cell_polygon.centroid):
+                    if not intersect.intersects(node_polygon.centroid):
                         continue
                 # option: min_area_fraction, only store if intersected area
                 # is larger than fraction * cell_area
                 if min_area_fraction:
                     if intersect.area < (
-                        min_area_fraction * cell_polygon.area
+                        min_area_fraction * node_polygon.area
                     ):
                         continue
 
@@ -1983,7 +1984,7 @@ class GridIntersect:
                 ):
                     v_realworld = []
                     if intersect.geom_type.startswith("Multi"):
-                        for ipoly in intersect.geoms:
+                        for ipoly in intersect:
                             v_realworld += (
                                 self._transform_geo_interface_polygon(ipoly)
                             )
@@ -2119,20 +2120,11 @@ class GridIntersect:
             fc = kwargs.pop("facecolor")
         else:
             use_facecolor = None
-
-        def add_poly_patch(poly):
+        for i, ishp in enumerate(rec.ixshapes):
             if not use_facecolor:
                 fc = f"C{i % 10}"
-            ppi = _polygon_patch(poly, facecolor=fc, **kwargs)
+            ppi = _polygon_patch(ishp, facecolor=fc, **kwargs)
             patches.append(ppi)
-
-        for i, ishp in enumerate(rec.ixshapes):
-            if hasattr(ishp, "geoms"):
-                for geom in ishp.geoms:
-                    add_poly_patch(geom)
-            else:
-                add_poly_patch(ishp)
-
         pc = PatchCollection(patches, match_original=True)
         ax.add_collection(pc)
 

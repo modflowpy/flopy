@@ -793,6 +793,7 @@ class MfUsgLpf(ModflowLpf):
 
         # load by layer
         for layer in range(nlay):
+
             util2d_shape = get_util2d_shape_for_layer(model, layer=layer)
 
             if ikcflag == 0:

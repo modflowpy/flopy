@@ -127,6 +127,7 @@ class ModflowDe4(Package):
         unitnumber=None,
         filenames=None,
     ):
+
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowDe4._defaultunit()

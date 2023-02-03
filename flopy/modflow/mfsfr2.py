@@ -340,6 +340,7 @@ class ModflowSfr2(Package):
         filenames=None,
         options=None,
     ):
+
         # set default unit number of one is not specified
         if unit_number is None:
             unit_number = ModflowSfr2._defaultunit()
@@ -786,6 +787,7 @@ class ModflowSfr2(Package):
 
     @classmethod
     def load(cls, f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
+
         if model.verbose:
             print("loading sfr2 package file...")
 
@@ -1413,6 +1415,7 @@ class ModflowSfr2(Package):
             # for each outseg key, for each upseg, check for more upsegs,
             # append until headwaters has been reached
             for outseg in outsegs:
+
                 up = True
                 upsegslist = upsegs[outseg]
                 while up:
@@ -1433,6 +1436,7 @@ class ModflowSfr2(Package):
         return all_upsegs
 
     def get_variable_by_stress_period(self, varname):
+
         dtype = []
         all_data = np.zeros((self.nss, self.nper), dtype=float)
         for per in range(self.nper):
@@ -1724,6 +1728,7 @@ class ModflowSfr2(Package):
         return np.array(reach_values)
 
     def _write_1c(self, f_sfr):
+
         # NSTRM NSS NSFRPAR NPARSEG CONST DLEAK ipakcb  ISTCB2
         # [ISFROPT] [NSTRAIL] [ISUZN] [NSFRSETS] [IRTFLG] [NUMTIM] [WEIGHT] [FLWTOL]
         f_sfr.write(
@@ -1762,6 +1767,7 @@ class ModflowSfr2(Package):
         f_sfr.write("\n")
 
     def _write_reach_data(self, f_sfr):
+
         # Write the recarray (data) to the file (or file handle) f
         assert isinstance(
             self.reach_data, np.recarray
@@ -2006,12 +2012,15 @@ class ModflowSfr2(Package):
         # items 3 and 4 are skipped (parameters not supported)
 
         for i in range(0, self.nper):
+
             # item 5
             itmp = self.dataset_5[i][0]
             f_sfr.write(" ".join(map(str, self.dataset_5[i])) + "\n")
             if itmp > 0:
+
                 # Item 6
                 for j in range(itmp):
+
                     # write datasets 6a, 6b and 6c
                     self._write_segment_data(i, j, f_sfr)
 
@@ -2574,6 +2583,7 @@ class check:
 
         nodes_with_multiple_conductance = set()
         for node in shared_cells:
+
             # select the collocated reaches for this cell
             conductances = Cond[reach_data["node"] == node].copy()
             conductances.sort()
@@ -2811,6 +2821,7 @@ class check:
             or self.sfr.reachinput
             and self.sfr.isfropt in [1, 2, 3]
         ):  # see SFR input instructions
+
             # compute outreaches if they aren't there already
             if np.diff(self.sfr.reach_data.outreach).max() == 0:
                 self.sfr.set_outreaches()

@@ -85,6 +85,7 @@ def backup_existing_dfns(flopy_dfn_path):
 
 
 def replace_dfn_files(new_dfn_pth, flopy_dfn_path):
+
     # remove the old files, unless the file is protected
     filenames = os.listdir(flopy_dfn_path)
     delete_files(filenames, flopy_dfn_path, exclude=protected_dfns)

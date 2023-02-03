@@ -1647,3 +1647,336 @@ def test_namefile_creation(tmpdir):
     except flopy.mf6.mfbase.FlopyException:
         ex_happened = True
     assert ex_happened
+
+@requires_exe("mf6")
+def test_solver_ems(tmpdir):
+    # path to MODFLOW 6 executable
+    mf6_exe_name = "mf6"
+
+    # base model name and workspace
+    model_name_base = "mp7ex01"
+    ws_base = os.path.join(tmpdir, f"t507_{model_name_base}")
+
+    # nper, nstp, perlen, tsmult = 1, 1, 1.0, 1.0
+    # issue(mf6): particle location output is currently only at the end of each time step
+    nper, nstp, perlen, tsmult = 1, 54, 54000.0, 1.0
+    nlay, nrow, ncol = 3, 21, 20
+    delr = delc = 500.0
+    top = 400.0
+    botm = [220.0, 200.0, 0.0]
+    laytyp = [1, 0, 0]
+    kh = [50.0, 0.01, 200.0]
+    kv = [10.0, 0.01, 20.0]
+    wel_loc = (2, 10, 9)
+    wel_q = -150000.0
+    rch = 0.005
+    rch_iface = 6
+    rch_iflowface = -1
+    riv_h = 320.0
+    riv_z = 317.0
+    riv_c = 1.0e5
+    riv_iface = 6
+    riv_iflowface = -1
+
+    # porosity
+    porosity = 0.1
+
+    # starting location template size for example 1B;
+    # in the original example, there is initially a
+    # 3x3 array of particles in each cell in layer 1;
+    # in this flopy notebook, there is initially one
+    # particle in each cell in layer 1; the original
+    # 3x3 particle arrays can be restored simply by
+    # setting sloc_tmpl_size below to 3 instead of 1.
+    sloc_tmpl_size = 1
+
+    # create particle release point data for example 1A
+    releasepts = {}
+    releasepts["1A"] = []
+    zrpt = top
+    k = 0
+    j = 2
+    for i in range(nrow):
+        nrpt = i
+        xrpt = (j + 0.5) * delr
+        yrpt = (nrow - i - 0.5) * delc
+        rpt = [nrpt, k, i, j, xrpt, yrpt, zrpt]
+        releasepts["1A"].append(rpt)
+
+    # create particle release point data for example 1B
+    releasepts["1B"] = []
+    ndivc = sloc_tmpl_size
+    ndivr = sloc_tmpl_size
+    deldivc = delc / ndivc
+    deldivr = delr / ndivr
+    k = 0
+    zrpt = top
+    nrpt = -1
+    for i in range(nrow):
+        y0 = (nrow - i - 1) * delc
+        for j in range(ncol):
+            x0 = j * delr
+            for idiv in range(ndivc):
+                dy = (idiv + 0.5) * deldivc
+                yrpt = y0 + dy
+                for jdiv in range(ndivr):
+                    dx = (jdiv + 0.5) * deldivr
+                    xrpt = x0 + dx
+                    nrpt += 1
+                    rpt = [nrpt, k, i, j, xrpt, yrpt, zrpt]
+                    releasepts["1B"].append(rpt)
+
+    ws_mf6 = os.path.join(ws_base, "mf6")
+    nm_mf6 = "mf6_" + model_name_base
+
+    # create the simulation object
+    sim = flopy.mf6.MFSimulation(
+        sim_name=nm_mf6, exe_name=mf6_exe_name, version="mf6", sim_ws=ws_mf6
+    )
+
+    # create the temporal discretization package
+    pd = (perlen, nstp, tsmult)
+    tdis = flopy.mf6.modflow.mftdis.ModflowTdis(
+        sim, pname="tdis", time_units="DAYS", nper=nper, perioddata=[pd]
+    )
+
+    # create the groundwater-flow (gwf) model
+    model_nam_file = "{}.nam".format(nm_mf6)
+    gwf = flopy.mf6.ModflowGwf(
+        sim, modelname=nm_mf6, model_nam_file=model_nam_file, save_flows=True
+    )
+
+    # create the discretization package
+    dis = flopy.mf6.modflow.mfgwfdis.ModflowGwfdis(
+        gwf,
+        pname="dis",
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        length_units="FEET",
+        delr=delr,
+        delc=delc,
+        top=top,
+        botm=botm,
+    )
+
+    # create the initial conditions package
+    ic = flopy.mf6.modflow.mfgwfic.ModflowGwfic(gwf, pname="ic", strt=top)
+
+    # create the node property flow package
+    npf = flopy.mf6.modflow.mfgwfnpf.ModflowGwfnpf(
+        gwf,
+        pname="npf",
+        icelltype=laytyp,
+        k=kh,
+        k33=kv,
+        save_saturation=True,
+        save_specific_discharge=True,
+    )
+
+    # create the recharge package
+    flopy.mf6.modflow.mfgwfrcha.ModflowGwfrcha(
+        gwf,
+        recharge=rch,
+        auxiliary=["iface", "iflowface"],
+        aux=[rch_iface, rch_iflowface],
+    )
+
+    # create the well package
+    wd = [(wel_loc, wel_q)]
+    flopy.mf6.modflow.mfgwfwel.ModflowGwfwel(
+        gwf, maxbound=1, stress_period_data={0: wd}
+    )
+
+    # create the river package
+    rd = []
+    for i in range(nrow):
+        rd.append(
+            [(0, i, ncol - 1), riv_h, riv_c, riv_z, riv_iface, riv_iflowface]
+        )
+    flopy.mf6.modflow.mfgwfriv.ModflowGwfriv(
+        gwf, auxiliary=["iface", "iflowface"], stress_period_data={0: rd}
+    )
+
+    # create the output control package
+    headfile = "{}.hds".format(nm_mf6)
+    head_record = [headfile]
+    budgetfile = "{}.cbb".format(nm_mf6)
+    budget_record = [budgetfile]
+    saverecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
+    oc = flopy.mf6.modflow.mfgwfoc.ModflowGwfoc(
+        gwf,
+        pname="oc",
+        saverecord=saverecord,
+        head_filerecord=head_record,
+        budget_filerecord=budget_record,
+    )
+
+    # create the prt model
+    nm_prt = nm_mf6 + "_prt"
+    prt = flopy.mf6.ModflowPrt(
+        sim, modelname=nm_prt, model_nam_file="{}.nam".format(nm_prt)
+    )
+
+    # create the prt discretization package
+    dis = flopy.mf6.modflow.mfgwfdis.ModflowGwfdis(
+        prt,
+        pname="dis",
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        length_units="FEET",
+        delr=delr,
+        delc=delc,
+        top=top,
+        botm=botm,
+    )
+
+    # create the prt model input package
+    mip = flopy.mf6.ModflowPrtmip(prt, pname="mip", porosity=porosity)
+
+    # create the prt particle release point (prp) package
+    # for example 1A
+    nreleasepts1a = len(releasepts["1A"])
+    pd = {
+        0: ["FIRST"],
+    }
+    prp1a = flopy.mf6.ModflowPrtprp(
+        prt,
+        pname="prp1a",  # filename="{}_1a.prp".format(nm_prt),
+        nreleasepts=nreleasepts1a,
+        packagedata=releasepts["1A"],
+        perioddata=pd,
+    )
+
+    # create the prt particle release point (prp) package
+    # for example 1B
+    nreleasepts1b = len(releasepts["1B"])
+    pd = {
+        0: ["FIRST"],
+    }
+    prp1b = flopy.mf6.ModflowPrtprp(
+        prt,
+        pname="prp1b",  # filename="{}_1b.prp".format(nm_prt),
+        nreleasepts=nreleasepts1b,
+        packagedata=releasepts["1B"],
+        perioddata=pd,
+    )
+
+    # create the prt output control package
+    budgetfile_prt = "{}.cbb".format(nm_prt)
+    budget_record = [budgetfile_prt]
+    oc = flopy.mf6.ModflowPrtoc(
+        prt,
+        pname="oc",
+        budget_filerecord=budget_record,
+        saverecord=[("BUDGET", "ALL")],
+    )
+
+    # create the prt flow model interface
+    fmi = flopy.mf6.ModflowPrtfmi(prt)
+
+    # create the gwf-prt model exchange
+    gwfprt = flopy.mf6.ModflowGwfprt(
+        sim,
+        exgtype="GWF6-PRT6",
+        exgmnamea=nm_mf6,
+        exgmnameb=nm_prt,
+        filename="{}.gwfprt".format(nm_mf6),
+    )
+
+    # set up an iterative model solution (IMS) for the flow model
+    ims = flopy.mf6.ModflowIms(
+        sim,
+        pname="ims",
+        complexity="SIMPLE",
+        outer_dvclose=1e-6,
+        inner_dvclose=1e-6,
+        rcloserecord=1e-6,
+    )
+
+    # set up an explicit model solution (EMS) for the particle-tracking model
+    # issue(flopy): using IMS until mfsimulation.py is updated for EMS by Scott
+    # issue(mf6): code is kluged to create EMS if first model in IMS is a PRT
+    ems = flopy.mf6.ModflowEms(
+        sim,
+        pname="ems",
+        filename="{}.ems".format(nm_prt),
+    )
+    sim.register_solution_package(ems, [prt.name])
+
+    # write the datasets
+    sim.write_simulation()
+
+"""
+def test_sfr_connections(function_tmpdir, example_data_path):
+    '''MODFLOW just warns if any reaches are unconnected
+    flopy fails to load model if reach 1 is unconnected, fine with other unconnected'''
+    data_path = str(example_data_path / "mf6" / "test666_sfrconnections")
+    sim_ws = str(function_tmpdir)
+    for test in ['sfr0', 'sfr1']:
+        sim_name = "test_sfr"
+        model_name = "test_sfr"
+        tdis_name = "{}.tdis".format(sim_name)
+        sim = MFSimulation(
+            sim_name=sim_name, version="mf6", exe_name="mf6", sim_ws=sim_ws
+        )
+        tdis_rc = [(1.0, 1, 1.0)]
+        tdis = ModflowTdis(sim, time_units="DAYS", nper=1, perioddata=tdis_rc)
+        ims_package = ModflowIms(
+            sim,
+            pname="my_ims_file",
+            filename=f"{sim_name}.ims",
+            print_option="ALL",
+            complexity="SIMPLE",
+        )
+        model = ModflowGwf(
+            sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+        )
+
+        dis = ModflowGwfdis(
+            model,
+            length_units="FEET",
+            nlay=1,
+            nrow=5,
+            ncol=5,
+            delr=5000.0,
+            delc=5000.0,
+            top=100.0,
+            botm=-100.0,
+            filename=f"{model_name}.dis",
+        )
+        ic_package = ModflowGwfic(model, filename=f"{model_name}.ic")
+        npf_package = ModflowGwfnpf(
+            model,
+            pname="npf",
+            save_flows=True,
+            alternative_cell_averaging="logarithmic",
+            icelltype=1,
+            k=50.0,
+        )
+
+        cnfile = f'mf6_{test}_connection.txt'
+        pkfile = f'mf6_{test}_package.txt'
+
+        with open(os.path.join(data_path, pkfile), 'r') as f:
+            nreaches = len(f.readlines())
+        sfr = ModflowGwfsfr(model,
+                            packagedata={'filename': os.path.join(data_path, pkfile)},
+                            connectiondata={'filename': os.path.join(data_path, cnfile)},
+                            nreaches=nreaches,
+                            pname='sfr',
+                            unit_conversion=86400
+                            )
+        sim.set_all_data_external()
+        sim.write_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} did not run"
+
+        #reload simulation
+        sim2 = MFSimulation.load(sim_ws=sim_ws)
+        sim.set_all_data_external()
+        sim.write_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} did not run after being reloaded"
+"""
