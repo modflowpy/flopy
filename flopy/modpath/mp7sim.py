@@ -270,7 +270,6 @@ class Modpath7Sim(Package):
         particlegroups=None,
         extension="mpsim",
     ):
-
         unitnumber = model.next_unit()
 
         # call base package constructor

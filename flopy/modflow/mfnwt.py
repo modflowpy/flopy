@@ -236,7 +236,6 @@ class ModflowNwt(Package):
         unitnumber=None,
         filenames=None,
     ):
-
         if model.version != "mfnwt":
             err = "Error: model version must be mfnwt to use NWT package"
             raise Exception(err)
@@ -463,7 +462,7 @@ class ModflowNwt(Package):
         }
         ipos = len(kwargs)
         if kwargs["options"].lower().strip() == "specified":
-            for (k, c) in specdict.items():
+            for k, c in specdict.items():
                 if ifrfm:
                     kwargs[k] = c(t[ipos].strip())
                 else:

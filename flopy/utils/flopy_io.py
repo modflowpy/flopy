@@ -290,7 +290,6 @@ def flux_to_wel(cbc_file, text, precision="single", model=None, verbose=False):
     # process the records in the cell budget file
     iper = -1
     for kstpkper in cbf.kstpkper:
-
         kstpkper = (kstpkper[0] - 1, kstpkper[1] - 1)
         kper = kstpkper[1]
         # if we haven't visited this kper yet
@@ -480,9 +479,7 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
 
     # else, read ascii
     else:
-
         for ii in range(nlist):
-
             # first line was already read
             if ii != 0:
                 line = file_handle.readline()

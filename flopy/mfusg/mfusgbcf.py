@@ -590,7 +590,6 @@ class MfUsgBcf(ModflowBcf):
         kv = [0] * nlay  # mfusg
 
         for layer in range(nlay):
-
             util2d_shape = get_util2d_shape_for_layer(model, layer=layer)
 
             # sf1

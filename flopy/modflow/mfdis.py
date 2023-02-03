@@ -144,7 +144,6 @@ class ModflowDis(Package):
         proj4_str=None,
         start_datetime=None,
     ):
-
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowDis._defaultunit()

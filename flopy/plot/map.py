@@ -42,7 +42,6 @@ class PlotMapView:
     def __init__(
         self, model=None, modelgrid=None, ax=None, layer=0, extent=None
     ):
-
         self.model = model
         self.layer = layer
         self.mg = None
