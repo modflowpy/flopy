@@ -112,7 +112,6 @@ class ModflowChd(Package):
         filenames=None,
         **kwargs,
     ):
-
         # set default unit number if one is not specified
         if unitnumber is None:
             unitnumber = ModflowChd._defaultunit()

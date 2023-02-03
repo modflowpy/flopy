@@ -505,7 +505,6 @@ def output_helper(f, ml, oudic, **kwargs):
     elif isinstance(f, str) and f.endswith(".shp"):
         attrib_dict = {}
         for _, out_obj in oudic.items():
-
             if (
                 isinstance(out_obj, HeadFile)
                 or isinstance(out_obj, FormattedHeadFile)
@@ -604,7 +603,6 @@ def model_export(f, ml, fmt=None, **kwargs):
         )
 
     elif isinstance(f, NetCdf):
-
         for pak in ml.packagelist:
             if pak.name[0] in package_names:
                 f = package_export(f, pak, **kwargs)
@@ -1350,7 +1348,6 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
         return
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
-
         # try to mask the array - assume layer 1 ibound is a good mask
         # f.log("getting 2D array for {0}".format(u2d.name))
         array = u2d.array
@@ -1421,7 +1418,6 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
         return f
 
     elif fmt == "vtk":
-
         name = kwargs.get("name", u2d.name)
         xml = kwargs.get("xml", False)
         masked_values = kwargs.get("masked_values", None)

@@ -902,7 +902,7 @@ class GridIntersect:
             keep_cid = []
             keep_pts = []
             parsed = []
-            for (ishp, cid) in zip(ixresult, qcellids):
+            for ishp, cid in zip(ixresult, qcellids):
                 points = []
                 for pnt in shapely.get_parts(ishp):
                     if tuple(pnt.coords)[0] not in parsed:
@@ -1925,7 +1925,7 @@ class GridIntersect:
         rectangle = ((minx, miny), (maxx, maxy))
         nodes = self._intersect_rectangle_structured(rectangle)
 
-        for (i, j) in nodes:
+        for i, j in nodes:
             if (
                 self.mfgrid.angrot != 0.0
                 or self.mfgrid.xoffset != 0.0

@@ -281,7 +281,6 @@ class ModflowWel(Package):
             isinstance(self.options, OptionBlock)
             and self.parent.version == "mfnwt"
         ):
-
             self.options.update_from_package(self)
             if self.options.block:
                 self.options.write_options(f_wel)

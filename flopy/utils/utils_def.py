@@ -19,7 +19,6 @@ class FlopyBinaryData:
     """
 
     def __init__(self):
-
         self.integer = np.int32
         self.integerbyte = self.integer(1).nbytes
 

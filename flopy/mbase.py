@@ -1381,7 +1381,6 @@ class BaseModel(ModelInterface):
         )
 
     def load_results(self):
-
         print("load_results not implemented")
 
         return None

@@ -118,7 +118,6 @@ class Mt3dLkt(Package):
         iprn=-1,
         **kwargs,
     ):
-
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = Mt3dLkt._reservedunit()

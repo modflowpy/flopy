@@ -207,7 +207,6 @@ class SeawatVdf(Package):
         filenames=None,
         **kwargs,
     ):
-
         if unitnumber is None:
             unitnumber = SeawatVdf._defaultunit()
 
@@ -308,10 +307,8 @@ class SeawatVdf(Package):
 
         # Transient DENSE array
         if self.mtdnconc == 0:
-
             nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
             for kper in range(nper):
-
                 itmp, file_entry_dense = self.dense.get_kper_entry(kper)
 
                 # item 6 (and possibly 7)
@@ -467,12 +464,10 @@ class SeawatVdf(Package):
         indense = None
         dense = None
         if mt3drhoflg == 0:
-
             # Create dense as a Transient3D record
             dense = {}
 
             for iper in range(nper):
-
                 if model.verbose:
                     print(
                         f"   loading INDENSE for stress period {iper + 1}..."
