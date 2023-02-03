@@ -1695,23 +1695,38 @@ def run_model(
         normal_msg[idx] = s.lower()
 
     # Check to make sure that program and namefile exist
-    exe = which(exe_name)
-    if exe is None:
-        if exe_name.lower().endswith(".exe"):
-            # try removing .exe suffix
-            exe = which(exe_name[:-4])
-    if exe is None:
-        # try abspath
-        exe = which(os.path.abspath(exe_name))
-    if exe is None:
-        raise Exception(
-            f"The program {exe_name} does not exist or is not executable."
-        )
-    else:
-        if not silent:
-            print(
-                f"FloPy is using the following executable to run the model: {exe}"
+    if os.path.dirname(exe_name) == "":
+        exe = which(exe_name)
+        if exe is None:
+            if exe_name.lower().endswith(".exe"):
+                # try removing .exe suffix
+                exe = which(exe_name[:-4])
+                if exe is not None:
+                    exe_name = exe_name[:-4]
+        if exe is None:
+            raise Exception(
+                f"The program {exe_name} does not exist or is not executable."
             )
+        else:
+            if not silent:
+                print(
+                    f"FloPy is using the following executable to run the "
+                    f"model: {exe}"
+                )
+    else:
+        exe_name = os.path.abspath(exe_name)
+        if not os.path.exists(exe_name) and not os.path.exists(
+            f"{exe_name}.exe"
+        ):
+            raise Exception(
+                f"The program {exe_name} does not exist or is not executable."
+            )
+        else:
+            if not silent:
+                print(
+                    f"FloPy is using the following executable to run the "
+                    f"model: {exe_name}"
+                )
 
     if namefile is not None:
         if not os.path.isfile(os.path.join(model_ws, namefile)):
