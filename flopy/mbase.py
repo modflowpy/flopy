@@ -1218,7 +1218,9 @@ class BaseModel(ModelInterface):
             new_pth = os.getcwd()
         if not os.path.exists(new_pth):
             try:
-                print(f"\ncreating model workspace...\n   {new_pth}")
+                print(
+                    f"\ncreating model workspace...\n   {os.path.relpath(new_pth)}"
+                )
                 os.makedirs(new_pth)
             except:
                 raise OSError(f"{new_pth} not valid, workspace-folder")
@@ -1231,7 +1233,9 @@ class BaseModel(ModelInterface):
         old_pth = self._model_ws
         self._model_ws = new_pth
         if self.verbose:
-            print(f"\nchanging model workspace...\n   {new_pth}")
+            print(
+                f"\nchanging model workspace...\n   {os.path.relpath(new_pth)}"
+            )
         # reset the paths for each package
         for pp in self.packagelist:
             pp.fn_path = os.path.join(self.model_ws, pp.file_name[0])
@@ -1710,7 +1714,7 @@ def run_model(
     else:
         if not silent:
             print(
-                f"FloPy is using the following executable to run the model: {exe}"
+                f"FloPy is using the following executable to run the model: {os.path.relpath(exe, model_ws)}"
             )
 
     if namefile is not None:

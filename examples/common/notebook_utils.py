@@ -49,7 +49,7 @@ def run(ws):
     model_name = "mp7p2"
     model_ws = os.path.join(ws, "mp7_ex2", "mf6")
     gridgen_ws = os.path.join(model_ws, "gridgen")
-    g = Gridgen(dis5, model_ws=gridgen_ws)
+    g = Gridgen(ms.modelgrid, model_ws=gridgen_ws)
 
     rf0shp = os.path.join(gridgen_ws, "rf0")
     xmin = 7 * delr

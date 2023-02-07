@@ -7,7 +7,7 @@ import json
 import shutil
 import sys
 import warnings
-from os.path import expandvars
+from os.path import expandvars, relpath
 from pathlib import Path
 
 import numpy as np
@@ -199,7 +199,7 @@ def write_grid_shapefile(
 
     # close
     w.close()
-    print(f"wrote {path}")
+    print(f"wrote {relpath(path)}")
     # write the projection file
     write_prj(path, mg, epsg, prj)
     return
@@ -611,7 +611,7 @@ def recarray2shp(
 
     w.close()
     write_prj(shpname, mg, epsg, prj)
-    print(f"wrote {shpname}")
+    print(f"wrote {relpath(shpname)}")
     return
 
 
@@ -629,7 +629,7 @@ def write_prj(shpname, mg=None, epsg=None, prj=None, wkt_string=None):
     # copy a supplied prj file
     elif prj is not None:
         if prjname.exists():
-            print(f".prj file {prjname} already exists")
+            print(f".prj file {relpath(prjname)} already exists")
         else:
             shutil.copy(str(prj), str(prjname))
 
@@ -990,10 +990,12 @@ class EpsgReference:
     def reset(self, verbose=True):
         if self.location.exists():
             if verbose:
-                print(f"Resetting {self.location}")
+                print(f"Resetting {relpath(self.location)}")
             self.location.unlink()
         elif verbose:
-            print(f"{self.location} does not exist, no reset required")
+            print(
+                f"{relpath(self.location)} does not exist, no reset required"
+            )
 
     def add(self, epsg, prj):
         """
