@@ -1,7 +1,7 @@
 import numpy as np
 
-from ..utils.flopy_io import line_strip
 from ..pakbase import Package
+from ..utils.flopy_io import line_strip
 from ..utils.recarray_utils import create_empty_recarray
 
 
