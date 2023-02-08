@@ -18,10 +18,9 @@ from subprocess import PIPE, STDOUT, Popen
 
 import numpy as np
 
-from .utils import flopy_io
-
 from . import discretization, utils
 from .discretization.grid import Grid
+from .utils import flopy_io
 from .version import __version__
 
 # Prepend flopy appdir bin directory to PATH to work with "get-modflow :flopy"
