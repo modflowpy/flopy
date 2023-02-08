@@ -18,6 +18,8 @@ from subprocess import PIPE, STDOUT, Popen
 
 import numpy as np
 
+from utils import flopy_io
+
 from . import discretization, utils
 from .discretization.grid import Grid
 from .version import __version__
@@ -1219,7 +1221,7 @@ class BaseModel(ModelInterface):
         if not os.path.exists(new_pth):
             try:
                 print(
-                    f"\ncreating model workspace...\n   {os.path.relpath(new_pth)}"
+                    f"\ncreating model workspace...\n   {flopy_io.relpath_printstr(os.getcwd(), new_pth)}"
                 )
                 os.makedirs(new_pth)
             except:
@@ -1234,7 +1236,7 @@ class BaseModel(ModelInterface):
         self._model_ws = new_pth
         if self.verbose:
             print(
-                f"\nchanging model workspace...\n   {os.path.relpath(new_pth)}"
+                f"\nchanging model workspace...\n   {flopy_io.relpath_printstr(os.getcwd(), new_pth)}"
             )
         # reset the paths for each package
         for pp in self.packagelist:
@@ -1714,7 +1716,7 @@ def run_model(
     else:
         if not silent:
             print(
-                f"FloPy is using the following executable to run the model: {os.path.relpath(exe, model_ws)}"
+                f"FloPy is using the following executable to run the model: {flopy_io.relpath_printstr(model_ws, exe)}"
             )
 
     if namefile is not None:

@@ -11,6 +11,7 @@ from ..utils import (
     HeadFile,
     UcnFile,
     ZBNetOutput,
+    flopy_io,
     import_optional_dependency,
 )
 from . import NetCdf, netcdf, shapefile_utils, vtk
@@ -1530,7 +1531,7 @@ def export_array(
             output.write(txt)
         with open(filename, "ab") as output:
             np.savetxt(output, a, **kwargs)
-        print(f"wrote {os.path.relpath(filename)}")
+        print(f"wrote {flopy_io.relpath_printstr(os.getcwd(), filename)}")
 
     elif filename.lower().endswith(".tif"):
         if (
@@ -1585,7 +1586,7 @@ def export_array(
         meta.update(kwargs)
         with rasterio.open(filename, "w", **meta) as dst:
             dst.write(a)
-        print(f"wrote {os.path.relpath(filename)}")
+        print(f"wrote {flopy_io.relpath_printstr(os.getcwd(), filename)}")
 
     elif filename.lower().endswith(".shp"):
         from ..export.shapefile_utils import write_grid_shapefile
