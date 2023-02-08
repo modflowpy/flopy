@@ -5,6 +5,7 @@ import numpy as np
 
 from ..plot.plotutil import UnstructuredPlotUtilities
 from ..utils import geometry
+from ..utils.crs import get_crs
 from ..utils.gridutil import get_lni
 
 
@@ -42,12 +43,15 @@ class Grid:
         ibound/idomain value for each cell
     lenuni : ndarray(int)
         model length units
-    espg : str, int
-        optional espg projection code
-    proj4 : str
-        optional proj4 projection string code
-    prj : str
-        optional projection file name path
+    crs : pyproj.CRS, optional if `prj` is specified
+        Coordinate reference system (CRS) for the model grid
+        (must be projected; geographic CRS are not supported).
+        The value can be anything accepted by
+        :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+        such as an authority string (eg "EPSG:26916") or a WKT string.
+    prjfile : str or pathlike, optional if `crs` is specified
+        ESRI-style projection file with well-known text defining the CRS
+        for the model grid (must be projected; geographic CRS are not supported).
     xoff : float
         x coordinate of the origin point (lower left corner of model grid)
         in the spatial reference coordinate system
@@ -67,10 +71,8 @@ class Grid:
         bottom elevations of all cells
     idomain : ndarray(int)
         ibound/idomain value for each cell
-    proj4 : proj4 SpatialReference
-        spatial reference locates the grid in a coordinate system
-    epsg : epsg SpatialReference
-        spatial reference locates the grid in a coordinate system
+    crs : pyproj.CRS
+        Coordinate reference system (CRS) for the model grid
     lenuni : int
         modflow lenuni parameter
     xoffset : float
@@ -144,9 +146,11 @@ class Grid:
         botm=None,
         idomain=None,
         lenuni=None,
+        crs=None,
         epsg=None,
         proj4=None,
         prj=None,
+        prjfile=None,
         xoff=0.0,
         yoff=0.0,
         angrot=0.0,
@@ -170,9 +174,13 @@ class Grid:
         self._lenuni = lenuni
 
         self._units = lenunits[self._lenuni]
+        self._crs = get_crs(
+            prjfile=prjfile, prj=prj, epsg=epsg, proj4=proj4, crs=crs
+        )
         self._epsg = epsg
         self._proj4 = proj4
         self._prj = prj
+        self._prjfile = prjfile
         self._xoff = xoff
         self._yoff = yoff
         if angrot is None:
@@ -245,31 +253,30 @@ class Grid:
         return self._angrot * np.pi / 180.0
 
     @property
+    def crs(self):
+        return self._crs
+
+    @crs.setter
+    def crs(self, crs):
+        self._crs = get_crs(crs=crs)
+
+    @property
     def epsg(self):
-        return self._epsg
+        return self._crs.to_epsg()
 
     @epsg.setter
     def epsg(self, epsg):
-        self._epsg = epsg
+        self._crs = get_crs(epsg=epsg)
+        self._epsg = self._crs.to_epsg()
 
     @property
     def proj4(self):
-        proj4 = None
-        if self._proj4 is not None:
-            if "epsg" in self._proj4.lower():
-                proj4 = self._proj4
-                # set the epsg if proj4 specifies it
-                tmp = [i for i in self._proj4.split() if "epsg" in i.lower()]
-                self._epsg = int(tmp[0].split(":")[1])
-            else:
-                proj4 = self._proj4
-        elif self.epsg is not None:
-            proj4 = f"epsg:{self.epsg}"
-        return proj4
+        return self._crs.to_proj4()
 
     @proj4.setter
     def proj4(self, proj4):
-        self._proj4 = proj4
+        self._crs = get_crs(proj4=proj4)
+        self._proj4 = self._crs.to_proj4()
 
     @property
     def prj(self):
@@ -277,7 +284,17 @@ class Grid:
 
     @prj.setter
     def prj(self, prj):
-        self._proj4 = prj
+        self._crs = get_crs(prj=prj)
+        self._prj = prj
+
+    @property
+    def prjfile(self):
+        return self._prjfile
+
+    @prjfile.setter
+    def prjfile(self, prjfile):
+        self._crs = get_crs(prjfile=prjfile)
+        self._prjfile = prjfile
 
     @property
     def top(self):
