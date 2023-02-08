@@ -18,7 +18,7 @@ from subprocess import PIPE, STDOUT, Popen
 
 import numpy as np
 
-from utils import flopy_io
+from .utils import flopy_io
 
 from . import discretization, utils
 from .discretization.grid import Grid
