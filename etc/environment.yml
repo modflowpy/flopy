@@ -45,6 +45,7 @@ dependencies:
   - geojson
   - vtk
   - rasterstats
+  - pre-commit
 
   # MODFLOW API dependencies
   - bmipy

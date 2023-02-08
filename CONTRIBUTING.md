@@ -9,6 +9,7 @@ Contributions to FloPy are welcome from the community. As a contributor, here ar
  - [Submission Guidelines](#submit)
  - [Coding Rules](#rules)
  - [Commit Message Guidelines](#commit)
+ - [Pre-commit hooks](#precommithooks)
 
 ## <a name="coc"></a> Code of Conduct
 Help us keep FloPy open and inclusive. Please read and follow our [Code of Conduct][coc].
@@ -54,21 +55,23 @@ Before you submit your Pull Request (PR) consider the following guidelines:
      git checkout -b my-fix-branch develop
      ```
 
-4. Create your patch, **including appropriate test cases**. See [DEVELOPER,md](DEVELOPER.md#running-tests) for guidelines for constructing autotests. 
+4. Create your patch, **including appropriate test cases**. See [DEVELOPER,md](DEVELOPER.md#running-tests) for guidelines for constructing autotests.
 5. Run the [isort import sorter](https://github.com/PyCQA/isort) and [black formatter](https://github.com/psf/black). There is a utility script to do this in the `scripts` directory:
 
    ```shell
    python ./scripts/pull_request_prepare.py
    ```
+   Alternatively, [Pre-commit hooks](#precommithooks) can be installed to do this automatically every time you make a commit.
+
    Note: Pull Requests must pass isort import and black format checks run on the [GitHub actions](https://github.com/modflowpy/flopy/actions) (*linting*) before they will be accepted. isort can be installed using [`pip`](https://pypi.org/project/isort/) and [`conda`](https://anaconda.org/conda-forge/isort). The black formatter can also be installed using [`pip`](https://pypi.org/project/black/) and [`conda`](https://anaconda.org/conda-forge/black). If the Pull Request fails the *linting* job in the [flopy continuous integration](https://github.com/modflowpy/flopy/actions/workflows/commit.yml) workflow, make sure the latest versions of isort and black are installed.
-   
+
 6. Run the full FloPy test suite and ensure that all tests pass:
 
     ```shell
     cd autotest
     pytest -v -n auto
     ```
-   
+
    **Note**: the FloPy test suite requires the [pytest](https://pypi.org/project/pytest/) and [modflow-devtools](https://github.com/MODFLOW-USGS/modflow-devtools) python packages. Be sure to install all optional dependencies as described in the [developer docs](DEVELOPER.md), as tests will be skipped if optional dependencies are not found.
 
     **Note:** you will either need to exclude notebooks when checking in your changeset or restore them after running the full test suite, to avoid including large volumes of execution metadata with your PR.
@@ -219,3 +222,14 @@ The footer should contain any information about **Breaking Changes** and is also
 [coc]: https://github.com/modflowpy/flopy/blob/develop/CODE_OF_CONDUCT.md
 [github]: https://github.com/modflowpy/flopy
 [stackoverflow]: https://stackoverflow.com/questions/tagged/flopy
+
+## <a name="coc"></a> Pre-commit hooks
+Pre-commit hooks can automatically perform the code formatting done (in Step 5) by `pull_request_prepare.py`, so that the code is correctly formatted with every commit. You can read more about them [https://medium.com/staqu-dev-logs/keeping-python-code-clean-with-pre-commit-hooks-black-flake8-and-isort-cac8b01e0ea1]. To set up pre-commit hooks locally:
+
+```
+pip install pre-commit
+pre-commit install
+```
+Make a commit!
+
+Pre-commit hooks can be added, removed or edited via `.pre-commit-config.yaml` at the top level of this repository.
