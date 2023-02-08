@@ -2,6 +2,7 @@
 import copy
 import inspect
 import os
+from pathlib import Path
 import sys
 import traceback
 import warnings
@@ -418,6 +419,9 @@ class MFFileMgmt:
                 return
         # recalculate paths for everything
         # resolve path type
+        path = Path(path)
+        self._sim_path = path.absolute()
+        return
         path = self.string_to_file_path(path)
         if os.path.isabs(path):
             self._sim_path = path
