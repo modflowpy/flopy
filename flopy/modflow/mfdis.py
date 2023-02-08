@@ -13,6 +13,7 @@ import numpy as np
 
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
+from ..utils.crs import get_crs
 from ..utils.flopy_io import line_parse
 from ..utils.reference import TemporalReference
 
@@ -87,10 +88,15 @@ class ModflowDis(Package):
     rotation : float
         counter-clockwise rotation (in degrees) of the grid about the lower-
         left corner. default is 0.0
-    proj4_str : str
-        PROJ4 string that defines the projected coordinate system
-        (e.g. '+proj=utm +zone=14 +datum=WGS84 +units=m +no_defs ').
-        Can be an EPSG code (e.g. 'EPSG:32614'). Default is None.
+    crs : pyproj.CRS, optional if `prj` is specified
+        Coordinate reference system (CRS) for the model grid
+        (must be projected; geographic CRS are not supported).
+        The value can be anything accepted by
+        :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+        such as an authority string (eg "EPSG:26916") or a WKT string.
+    prjfile : str or pathlike, optional if `crs` is specified
+        ESRI-style projection file with well-known text defining the CRS
+        for the model grid (must be projected; geographic CRS are not supported).
     start_datetime : str
         starting datetime of the simulation. default is '1/1/1970'
 
@@ -142,6 +148,8 @@ class ModflowDis(Package):
         yul=None,
         rotation=None,
         proj4_str=None,
+        crs=None,
+        prjfile=None,
         start_datetime=None,
     ):
         # set default unit number of one is not specified
@@ -240,8 +248,9 @@ class ModflowDis(Package):
             yul = model._yul
         if rotation is None:
             rotation = model._rotation
-        if proj4_str is None:
-            proj4_str = model._proj4_str
+        crs = get_crs(prjfile=prjfile, proj4=proj4_str, crs=crs)
+        if crs is None:
+            crs = model._crs
         if start_datetime is None:
             start_datetime = model._start_datetime
 
@@ -255,7 +264,7 @@ class ModflowDis(Package):
             xll = mg._xul_to_xll(xul)
         if yul is not None:
             yll = mg._yul_to_yll(yul)
-        mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation, proj4=proj4_str)
+        mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation, crs=crs)
 
         self.tr = TemporalReference(
             itmuni=self.itmuni, start_datetime=start_datetime
@@ -927,7 +936,7 @@ class ModflowDis(Package):
             xul=xul,
             yul=yul,
             rotation=rotation,
-            proj4_str=proj4_str,
+            crs=proj4_str,
             start_datetime=start_datetime,
             unitnumber=unitnumber,
             filenames=filenames,

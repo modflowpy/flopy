@@ -813,6 +813,8 @@ class Grid:
         xoff=None,
         yoff=None,
         angrot=None,
+        crs=None,
+        prjfile=None,
         epsg=None,
         proj4=None,
         merge_coord_info=True,
@@ -839,6 +841,7 @@ class Grid:
         self._xoff = xoff
         self._yoff = yoff
         self._angrot = angrot
+        self._crs = get_crs(prjfile=prjfile, epsg=epsg, proj4=proj4, crs=crs)
         self._epsg = epsg
         self._proj4 = proj4
         self._require_cache_updates()

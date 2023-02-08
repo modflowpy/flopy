@@ -81,14 +81,14 @@ def get_crs(prjfile=None, prj=None, epsg=None, proj4=None, crs=None):
     if prj is not None:
         warnings.warn(
             "the prj argument will be deprecated and will be removed in version "
-            "3.3.7. Use prjfile instead.",
+            "3.4. Use prjfile instead.",
             PendingDeprecationWarning,
         )
         prjfile = prj
     if epsg is not None:
         warnings.warn(
             "the epsg argument will be deprecated and will be removed in version "
-            "3.3.7. Use crs instead.",
+            "3.4. Use crs instead.",
             PendingDeprecationWarning,
         )
         if crs is None:
@@ -106,7 +106,7 @@ def get_crs(prjfile=None, prj=None, epsg=None, proj4=None, crs=None):
     elif proj4 is not None:
         warnings.warn(
             "the proj4 argument will be deprecated and will be removed in version "
-            "3.3.7. Use crs instead.",
+            "3.4. Use crs instead.",
             PendingDeprecationWarning,
         )
         if crs is None:

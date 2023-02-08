@@ -641,6 +641,7 @@ def test_grid_crs(
             "+proj=tmerc +lat_0=0 +lon_0=-90 +k=0.9996 +x_0=520000 +y_0=-4480000 +datum=NAD83 +units=m +no_defs ",
             "EPSG:3070",
         ),
+        ("ESRI:102733", "ESRI:102733"),
         pytest.param(4269, None, marks=pytest.mark.xfail),
     ),
 )
@@ -694,40 +695,6 @@ def test_grid_set_crs(crs, expected_srs, function_tmpdir):
                 assert isinstance(sg.crs, pyproj.CRS)
             assert getattr(sg.crs, "srs", None) == expected_srs
             assert sg.prj == prjfile
-
-
-def test_epsgs():
-    import flopy.export.shapefile_utils as shp
-
-    # test setting a geographic (lat/lon) coordinate reference
-    # (also tests shapefile_utils.CRS parsing of geographic crs info)
-    delr = np.ones(10)
-    delc = np.ones(10)
-    mg = StructuredGrid(delr=delr, delc=delc)
-
-    mg.epsg = 102733
-    assert mg.epsg == 102733, f"mg.epsg is not 102733 ({mg.epsg})"
-
-    t_value = mg.__repr__()
-    if not "proj4_str:epsg:102733" in t_value:
-        raise AssertionError(
-            f"proj4_str:epsg:102733 not in mg.__repr__(): ({t_value})"
-        )
-
-    mg.epsg = 4326  # WGS 84
-    crs = shp.CRS(epsg=4326)
-    if crs.grid_mapping_attribs is not None:
-        assert crs.crs["proj"] == "longlat"
-        t_value = crs.grid_mapping_attribs["grid_mapping_name"]
-        assert (
-            t_value == "latitude_longitude"
-        ), f"grid_mapping_name is not latitude_longitude: {t_value}"
-
-    t_value = mg.__repr__()
-    if not "proj4_str:epsg:4326" in t_value:
-        raise AssertionError(
-            f"proj4_str:epsg:4326 not in sr.__repr__(): ({t_value})"
-        )
 
 
 def test_tocvfd1():
