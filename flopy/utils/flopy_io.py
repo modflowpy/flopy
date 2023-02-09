@@ -557,8 +557,9 @@ def relpath_printstr(ws_from, ws_to):
 
     Returns
     -------
-        str : returns the relative path from ws to ws2, if ws2 is not on
-    the same drive as ws the function returns the absolute path of ws2
+        str : returns the relative path from ws_from to ws_to, if ws_from is
+        not on the same drive as ws_to the function returns the absolute path
+        of ws_to
     """
     if platform.system().lower() == "windows":
         ws = os.path.abspath(ws_from)
