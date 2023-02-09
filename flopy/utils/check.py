@@ -3,6 +3,7 @@ import os
 import numpy as np
 from numpy.lib import recfunctions
 
+from ..utils.flopy_io import relpath_printstr
 from ..utils.recarray_utils import recarray
 from ..utils.util_array import Util3d
 
@@ -584,7 +585,7 @@ class check:
             and self.verbose
             and self.summary_array.shape[0] > 0
         ):
-            txt += f"  see {self.summaryfile} for details.\n"
+            txt += f"  see {relpath_printstr(os.getcwd(), self.summaryfile)} for details.\n"
 
         # print checks that passed for higher levels
         if len(self.passed) > 0 and self.level > 0:
@@ -608,7 +609,9 @@ class check:
         elif self.summary_array.shape[0] > 0 and self.level > 0:
             print("Errors and/or Warnings encountered.")
             if self.f is not None:
-                print(f"  see {self.summaryfile} for details.\n")
+                print(
+                    f"  see {relpath_printstr(os.getcwd(), self.summaryfile)} for details.\n"
+                )
 
     # start of older model specific code
     def _has_cell_indices(self, stress_period_data):
