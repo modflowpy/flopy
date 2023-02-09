@@ -273,6 +273,21 @@ class MFSimulationData:
         self.referenced_files = {}
 
     @property
+    def lazy_io(self):
+        if not self.auto_set_sizes and not self.verify_data:
+            return True
+        return False
+
+    @lazy_io.setter
+    def lazy_io(self, val):
+        if val:
+            self.auto_set_sizes = False
+            self.verify_data = False
+        else:
+            self.auto_set_sizes = True
+            self.verify_data = True
+
+    @property
     def max_columns_of_data(self):
         return self._max_columns_of_data
 
@@ -408,7 +423,11 @@ class MFSimulation(PackageContainer):
     write_headers: bool
         When true flopy writes a header to each package file indicating that
         it was created by flopy.
-
+    lazy_io: bool
+        When true flopy only reads external data when the data is requested
+        and only writes external data if the data has changed.  This option
+        automatically overrides the verify_data and auto_set_sizes, turning
+        both off.
     Examples
     --------
     >>> s = MFSimulation.load('my simulation', 'simulation.nam')
@@ -433,12 +452,16 @@ class MFSimulation(PackageContainer):
         nocheck=None,
         memory_print_option=None,
         write_headers=True,
+        lazy_io=False,
     ):
         super().__init__(MFSimulationData(sim_ws, self), sim_name)
         self.simulation_data.verbosity_level = self._resolve_verbosity_level(
             verbosity_level
         )
         self.simulation_data.write_headers = write_headers
+        if lazy_io:
+            self.simulation_data.lazy_io = True
+
         # verify metadata
         fpdata = mfstructure.MFStructure()
         if not fpdata.valid:
@@ -642,7 +665,7 @@ class MFSimulation(PackageContainer):
         load_only=None,
         verify_data=False,
         write_headers=True,
-        auto_set_sizes=True,
+        lazy_io=False,
     ):
         """
         Load an existing model.
@@ -679,9 +702,11 @@ class MFSimulation(PackageContainer):
         write_headers: bool
             When true flopy writes a header to each package file indicating
             that it was created by flopy
-        auto_set_sizes : bool
-            Automatically calculate the maximum size of arrays and use that
-            number to populate the maxbound fields
+        lazy_io: bool
+            When true flopy only reads external data when the data is requested
+            and only writes external data if the data has changed.  This option
+            automatically overrides the verify_data and auto_set_sizes, turning
+            both off.
         Returns
         -------
         sim : MFSimulation object
@@ -701,8 +726,10 @@ class MFSimulation(PackageContainer):
             write_headers=write_headers,
         )
         verbosity_level = instance.simulation_data.verbosity_level
+
         instance.simulation_data.verify_data = verify_data
-        instance.simulation_data.auto_set_sizes = auto_set_sizes
+        if lazy_io:
+            instance.simulation_data.lazy_io = True
 
         if verbosity_level.value >= VerbosityLevel.normal.value:
             print("loading simulation...")

@@ -12,7 +12,7 @@
 #     name: python3
 # ---
 
-# # MODFLOW 6: Data Storage Information - How and Where to Store MODFLOW-6 Data
+# # MODFLOW 6: Data Storage Information and Performance Optimization
 #
 # This tutorial shows the different options for storing MODFLOW data in FloPy.
 # Interaction with a FloPy MODFLOW 6 model is different from other models,
@@ -31,7 +31,8 @@
 # >       Simulation --> Model --> Package (--> Package) --> DATA
 #
 #
-# This tutorial focuses on the different storage options for MODFLOW data.
+# This tutorial focuses on the different storage options for MODFLOW data and
+# how to optimize data storage read/write speed.
 
 # ## Introduction to Data Storage Information
 # MODFLOW array and list data can either be stored internally or externally in
@@ -222,21 +223,27 @@ print(f"New filename for stress period 2:  {spd_record[1]['filename']}")
 # steps will help you optimize FloPy's performance for large datasets.
 #
 # 1) Turn off FloPy verification checks and FloPy's option to automatically
-# update "maxbound" to match your data.  This can be turned off on an existing
-# simulation.
+# update "maxbound".  This can be turned off on an existing
+# simulation by either individually turning off each of these settings.
 
 sim.simulation_data.auto_set_sizes = False
 sim.simulation_data.verify_data = False
 sim.write_simulation()
 
+# or by setting lazy_io to True.
+
+sim.simulation_data.lazy_io = True
+sim.write_simulation()
+
 # These options can also be turned off when loading an existing simulation
-# from files.
+# or creating a new simulation by setting lazy_io to True.
 
 sim2 = flopy.mf6.MFSimulation.load(
     sim_ws=workspace,
-    auto_set_sizes=False,
-    verify_data=False,
+    lazy_io=True,
 )
+
+sim3 = flopy.mf6.MFSimulation(lazy_io=True)
 
 # 2) Whenever possible save large datasets to external binary files.  Binary
 # files are more compact and the data will be read and written significantly
