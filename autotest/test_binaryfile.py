@@ -513,6 +513,16 @@ def test_cellbudgetfile_readrecord_waux(example_data_path):
     t = v.get_data(text="WELLS")
     assert len(t) == 30, "length of well data != 30"
     assert t[0].shape[0] == 10, "wel budget data does not have 10 well entries"
+    assert t[0].dtype.names == ("node", "q", "IFACE")
+    np.testing.assert_array_equal(
+        t[0]["node"],
+        [54, 55, 64, 65, 74, 75, 84, 85, 94, 95],
+    )
+    np.testing.assert_array_equal(t[0]["q"], np.repeat(np.float32(-10.0), 10))
+    np.testing.assert_array_equal(
+        t[0]["IFACE"],
+        np.array([1, 2, 3, 4, 5, 6, 0, 0, 0, 0], np.float32),
+    )
 
     t = v.get_data(text="WELLS", full3D=True)
     assert t[0].shape == (1, 15, 10), (
