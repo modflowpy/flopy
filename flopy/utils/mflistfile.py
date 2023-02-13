@@ -306,11 +306,10 @@ class ListBudget:
             and not units == "minutes"
             and not units == "hours"
         ):
-            err = (
+            raise AssertionError(
                 '"units" input variable must be "minutes", "hours", '
-                'or "seconds": {0} was specified'.format(units)
+                f'or "seconds": {units} was specified'
             )
-            raise AssertionError(err)
         try:
             seekpoint = self._seek_to_string("Elapsed run time:")
         except:

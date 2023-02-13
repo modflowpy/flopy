@@ -341,7 +341,6 @@ class ModflowFlwob(Package):
                 line = f"{self.layer[i, j] + 1:10d}"
                 line += f"{self.row[i, j] + 1:10d}"
                 line += f"{self.column[i, j] + 1:10d}"
-                line += " ".format(self.factor[i, j])
                 # note is 10f good enough here?
                 line += f"{self.factor[i, j]:10f}\n"
                 f_fbob.write(line)

@@ -93,7 +93,7 @@ class StructuredSpatialReference:
     def from_namfile_header(cls, namefile):
         # check for reference info in the nam file header
         header = []
-        with open(namefile, "r") as f:
+        with open(namefile) as f:
             for line in f:
                 if not line.startswith("#"):
                     break
@@ -625,7 +625,7 @@ class VertexSpatialReference:
     def from_namfile_header(cls, namefile):
         # check for reference info in the nam file header
         header = []
-        with open(namefile, "r") as f:
+        with open(namefile) as f:
             for line in f:
                 if not line.startswith("#"):
                     break

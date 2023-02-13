@@ -173,8 +173,8 @@ def get_gwf_model(sim, gwfname, gwfpath, modelshape, chdspd=None, welspd=None):
     # output control
     oc = ModflowGwfoc(
         gwf,
-        budget_filerecord="{}.cbc".format(gwfname),
-        head_filerecord="{}.hds".format(gwfname),
+        budget_filerecord=f"{gwfname}.cbc",
+        head_filerecord=f"{gwfname}.hds",
         headprintrecord=[("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "GENERAL")],
         saverecord=[("HEAD", "LAST"), ("BUDGET", "LAST")],
         printrecord=[("HEAD", "LAST"), ("BUDGET", "LAST")],
@@ -226,8 +226,8 @@ def get_gwt_model(sim, gwtname, gwtpath, modelshape, sourcerecarray=None):
     # output control
     oc = ModflowGwtoc(
         gwt,
-        budget_filerecord="{}.cbc".format(gwtname),
-        concentration_filerecord="{}.ucn".format(gwtname),
+        budget_filerecord=f"{gwtname}.cbc",
+        concentration_filerecord=f"{gwtname}.ucn",
         concentrationprintrecord=[
             ("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "GENERAL")
         ],
@@ -1031,6 +1031,7 @@ def test_output_add_observation(function_tmpdir, example_data_path):
         sfr_obs, Mf6Obs
     ), "remove and add observation test (Mf6Output) failed"
 
+@requires_exe("mf6")
 def test_sfr_connections(function_tmpdir, example_data_path):
     '''MODFLOW just warns if any reaches are unconnected
     flopy fails to load model if reach 1 is unconnected, fine with other unconnected'''
@@ -1039,7 +1040,7 @@ def test_sfr_connections(function_tmpdir, example_data_path):
     for test in ['sfr0', 'sfr1']:
         sim_name = "test_sfr"
         model_name = "test_sfr"
-        tdis_name = "{}.tdis".format(sim_name)
+        tdis_name = f"{sim_name}.tdis"
         sim = MFSimulation(
             sim_name=sim_name, version="mf6", exe_name="mf6", sim_ws=sim_ws
         )
@@ -1053,7 +1054,7 @@ def test_sfr_connections(function_tmpdir, example_data_path):
             complexity="SIMPLE",
         )
         model = ModflowGwf(
-            sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+            sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
         )
 
         dis = ModflowGwfdis(
@@ -1077,7 +1078,7 @@ def test_sfr_connections(function_tmpdir, example_data_path):
             icelltype=1,
             k=50.0,
         )
-        
+
         cnfile = f'mf6_{test}_connection.txt'
         pkfile = f'mf6_{test}_package.txt'
 
@@ -1115,7 +1116,7 @@ def test_array(function_tmpdir):
     sim_name = "test_array"
     model_name = "test_array"
     out_dir = function_tmpdir
-    tdis_name = "{}.tdis".format(sim_name)
+    tdis_name = f"{sim_name}.tdis"
     sim = MFSimulation(
         sim_name=sim_name, version="mf6", exe_name="mf6", sim_ws=out_dir
     )
@@ -1138,7 +1139,7 @@ def test_array(function_tmpdir):
         number_orthogonalizations=2,
     )
     model = ModflowGwf(
-        sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
     )
 
     dis = ModflowGwfdis(
@@ -1700,7 +1701,7 @@ def test_namefile_creation(tmpdir):
     model = ModflowGwf(
         sim,
         modelname=test_ex_name,
-        model_nam_file="{}.nam".format(test_ex_name),
+        model_nam_file=f"{test_ex_name}.nam",
     )
 
     # try to create simulation name file

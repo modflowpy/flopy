@@ -501,7 +501,7 @@ def test_unstructured_from_gridspec(example_data_path):
     spec_path = str(model_path / "freyberg.usg.gsf")
     grid = UnstructuredGrid.from_gridspec(spec_path)
 
-    with open(spec_path, "r") as file:
+    with open(spec_path) as file:
         lines = file.readlines()
         split = [line.strip().split() for line in lines]
 
@@ -1019,11 +1019,9 @@ def test_get_lni_unstructured(grid):
         layer, i = grid.get_lni([nn])[0]
         csum = [0] + list(
             np.cumsum(
-                (
-                    list(grid.ncpl)
-                    if not isinstance(grid.ncpl, int)
-                    else [grid.ncpl for _ in range(grid.nlay)]
-                )
+                list(grid.ncpl)
+                if not isinstance(grid.ncpl, int)
+                else [grid.ncpl for _ in range(grid.nlay)]
             )
         )
         assert csum[layer] + i == nn

@@ -96,9 +96,7 @@ class MtListBudget:
                         except Exception as e:
                             warnings.warn(
                                 "error parsing GW mass budget "
-                                "starting on line {0}: {1} ".format(
-                                    self.lcount, str(e)
-                                )
+                                f"starting on line {self.lcount}: {e!s}"
                             )
                             break
                     else:
@@ -109,10 +107,8 @@ class MtListBudget:
                             self._parse_sw(f, line)
                         except Exception as e:
                             warnings.warn(
-                                "error parsing SW mass budget"
-                                " starting on line {0}: {1} ".format(
-                                    self.lcount, str(e)
-                                )
+                                "error parsing SW mass budget "
+                                f"starting on line {self.lcount}: {e!s}"
                             )
                             break
                     else:
@@ -474,7 +470,7 @@ class MtListBudget:
 
     def _add_to_sw_data(self, inout, item, cval, fval, comp):
         item += f"_{comp}"
-        if inout.lower() in set(["in", "out"]):
+        if inout.lower() in {"in", "out"}:
             item += f"_{inout}"
         if fval is None:
             lab_val = zip([""], [cval])

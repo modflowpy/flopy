@@ -99,12 +99,10 @@ nrow2 = nrow // nstep
 ncol2 = ncol // nstep
 
 # open summary file
-fs = open(
-    os.path.join("data", "uspb", "uspb_capture_{}.out".format(nstep)), "w", 0
-)
+fs = open(os.path.join("data", "uspb", f"uspb_capture_{nstep}.out"), "w", 0)
 
 # write some summary information
-fs.write("Problem size: {} rows and {} columns.\n".format(nrow, ncol))
+fs.write(f"Problem size: {nrow} rows and {ncol} columns.\n")
 fs.write(
     "Capture fraction analysis performed every {} rows and columns.\n".format(
         nstep
@@ -141,7 +139,7 @@ for i in range(0, nrow, nstep):
             s0 = time.time()
             cf = cf_model(ml, 3, i, j, baseQ)
             s1 = time.time()
-            line = "  model {} run time: {} seconds\n".format(idx, s1 - s0)
+            line = f"  model {idx} run time: {s1 - s0} seconds\n"
             fs.write(line)
             sys.stdout.write(line)
             idx += 1
@@ -158,9 +156,9 @@ end = time.time()
 ets = end - start
 line = (
     "\n"
-    + "streamflow capture analysis took {} seconds.\n".format(ets)
-    + "streamflow capture analysis took {} minutes.\n".format(ets / 60.0)
-    + "streamflow capture analysis took {} hours.\n".format(ets / 3600.0)
+    + f"streamflow capture analysis took {ets} seconds.\n"
+    + f"streamflow capture analysis took {ets / 60.0} minutes.\n"
+    + f"streamflow capture analysis took {ets / 3600.0} hours.\n"
 )
 fs.write(line)
 sys.stdout.write(line)
@@ -179,7 +177,7 @@ if not os.path.exists(res_pth):
 for idx in range(10):
     fn = os.path.join(
         res_pth,
-        "USPB_capture_fraction_{:02d}_{:02d}.dat".format(nstep, idx + 1),
+        f"USPB_capture_fraction_{nstep:02d}_{idx + 1:02d}.dat",
     )
-    print("saving capture fraction data to...{}".format(os.path.basename(fn)))
+    print(f"saving capture fraction data to...{os.path.basename(fn)}")
     np.savetxt(fn, cf_array[idx, :, :], delimiter=" ")

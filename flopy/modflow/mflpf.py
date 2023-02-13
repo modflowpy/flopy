@@ -379,7 +379,7 @@ class ModflowLpf(Package):
         # Item 1: IBCFCB, HDRY, NPLPF, <IKCFLAG>, OPTIONS
         if self.parent.version == "mfusg" and self.parent.structured == False:
             f.write(
-                "{0:10d}{1:10.6G}{2:10d}{3:10d} {4:s}\n".format(
+                "{:10d}{:10.6G}{:10d}{:10d} {:s}\n".format(
                     self.ipakcb,
                     self.hdry,
                     self.nplpf,

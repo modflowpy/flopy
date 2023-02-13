@@ -834,8 +834,8 @@ def test_mp_wpandas_wo_pandas(ml):
     assert success
 
     # read the two files and ensure they are identical
-    with open(mp_pandas.get_package("loc").fn_path, "r") as f:
+    with open(mp_pandas.get_package("loc").fn_path) as f:
         particles_pandas = f.readlines()
-    with open(mp_no_pandas.get_package("loc").fn_path, "r") as f:
+    with open(mp_no_pandas.get_package("loc").fn_path) as f:
         particles_no_pandas = f.readlines()
     assert particles_pandas == particles_no_pandas

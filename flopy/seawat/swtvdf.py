@@ -269,7 +269,7 @@ class SeawatVdf(Package):
         )
 
         # item 2
-        f_vdf.write("%10.4f%10.4f\n" % (self.densemin, self.densemax))
+        f_vdf.write(f"{self.densemin:10.4f}{self.densemax:10.4f}\n")
 
         # item 3
         if self.nswtcpl > 1 or self.nswtcpl == -1:
@@ -278,11 +278,9 @@ class SeawatVdf(Package):
         # item 4
         if self.mtdnconc >= 0:
             if self.nsrhoeos == 1:
-                f_vdf.write("%10.4f%10.4f\n" % (self.denseref, self.denseslp))
+                f_vdf.write(f"{self.denseref:10.4f}{self.denseslp:10.4f}\n")
             else:
-                f_vdf.write(
-                    "%10.4f%10.4f\n" % (self.denseref, self.denseslp[0])
-                )
+                f_vdf.write(f"{self.denseref:10.4f}{self.denseslp[0]:10.4f}\n")
 
         elif self.mtdnconc == -1:
             f_vdf.write(

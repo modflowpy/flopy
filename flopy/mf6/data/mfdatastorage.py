@@ -1986,7 +1986,7 @@ class DataStorage:
                 )
                 data_out = self._build_recarray(data, layer, False)
             else:
-                with open(read_file, "r") as fd_read_file:
+                with open(read_file) as fd_read_file:
                     data_out = file_access.read_list_data_from_file(
                         fd_read_file,
                         self,

@@ -843,7 +843,7 @@ class Grid:
             return False
         xul, yul = None, None
         header = []
-        with open(namefile, "r") as f:
+        with open(namefile) as f:
             for line in f:
                 if not line.startswith("#"):
                     break

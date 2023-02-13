@@ -525,7 +525,7 @@ class PackageContainer:
         package_abbr = f"{model_type}{package_type}"
         factory = PackageContainer.packages_by_abbr.get(package_abbr)
         if factory is None:
-            package_utl_abbr = "utl{}".format(package_type)
+            package_utl_abbr = f"utl{package_type}"
             factory = PackageContainer.packages_by_abbr.get(package_utl_abbr)
         return factory
 

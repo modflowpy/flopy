@@ -16,7 +16,7 @@ from ..utils.flopy_io import loadtxt
 from ..utils.recarray_utils import ra_slice
 
 
-class _ModpathSeries(object):
+class _ModpathSeries:
     """
     Base class for PathlineFile and TimeseriesFile objects.
 

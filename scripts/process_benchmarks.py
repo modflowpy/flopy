@@ -24,7 +24,7 @@ def get_benchmarks(paths):
     num_benchmarks = 0
 
     for path in paths:
-        with open(path, "r") as file:
+        with open(path) as file:
             jsn = json.load(file)
             system = jsn["machine_info"]["system"]
             python = jsn["machine_info"]["python_version"]

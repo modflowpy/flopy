@@ -533,7 +533,7 @@ def test_np001(function_tmpdir, example_data_path):
     mpath = sim.simulation_data.mfpath.get_model_path(model.name)
     spath = sim.simulation_data.mfpath.get_sim_path()
     found_cellid = False
-    with open(os.path.join(mpath, "np001_mod.wel"), "r") as fd:
+    with open(os.path.join(mpath, "np001_mod.wel")) as fd:
         for line in fd:
             line_lst = line.strip().split()
             if (
@@ -561,7 +561,7 @@ def test_np001(function_tmpdir, example_data_path):
     found_begin = False
     found_end = False
     text_between_begin_and_end = False
-    with open(os.path.join(mpath, "file_rename.wel"), "r") as fd:
+    with open(os.path.join(mpath, "file_rename.wel")) as fd:
         for line in fd:
             if line.strip().lower() == "begin period  2":
                 found_begin = True
@@ -587,7 +587,7 @@ def test_np001(function_tmpdir, example_data_path):
     found_begin = False
     found_end = False
     text_between_begin_and_end = False
-    with open(os.path.join(mpath, "np001_spd_test.wel"), "r") as fd:
+    with open(os.path.join(mpath, "np001_spd_test.wel")) as fd:
         for line in fd:
             if line.strip().lower() == "begin period  2":
                 found_begin = True

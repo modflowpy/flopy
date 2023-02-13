@@ -494,7 +494,7 @@ class Mt3dSsm(Package):
             if self.stress_period_data is not None:
                 self.stress_period_data.write_transient(f_ssm, single_per=kper)
             else:
-                f_ssm.write("{}\n".format(0))
+                f_ssm.write(f"0\n")
 
         f_ssm.close()
         return

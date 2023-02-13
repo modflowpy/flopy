@@ -1829,7 +1829,7 @@ class ModflowSfr2(Package):
             fdpth,
             awdth,
             bwdth,
-        ) = [0 if v == self.default_value else v for v in seg_dat]
+        ) = (0 if v == self.default_value else v for v in seg_dat)
 
         f_sfr.write(
             " ".join(fmts[0:4]).format(nseg, icalc, outseg, iupseg) + " "
@@ -1893,9 +1893,9 @@ class ModflowSfr2(Package):
         icalc = self.segment_data[i][j][1]
         seg_dat = np.array(self.segment_data[i])[cols][j]
         fmts = _fmt_string_list(seg_dat)
-        hcond, thickm, elevupdn, width, depth, thts, thti, eps, uhc = [
+        hcond, thickm, elevupdn, width, depth, thts, thti, eps, uhc = (
             0 if v == self.default_value else v for v in seg_dat
-        ]
+        )
 
         if self.isfropt in [0, 4, 5] and icalc <= 0:
             f_sfr.write(
@@ -2439,7 +2439,7 @@ class check:
         # simpler check method using paths from routing graph
         circular_segs = [k for k, v in self.sfr.paths.items() if v is None]
         if len(circular_segs) > 0:
-            txt += "{0} instances where an outlet was not found after {1} consecutive segments!\n".format(
+            txt += "{} instances where an outlet was not found after {} consecutive segments!\n".format(
                 len(circular_segs), self.sfr.nss
             )
             if self.level == 1:

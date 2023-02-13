@@ -428,7 +428,7 @@ class ModflowSwi2(Package):
         # write SWI2 options
         if self.options != None:
             for o in self.options:
-                f.write(" {}".format(o))
+                f.write(f" {o}")
         f.write("\n")
 
         # write dataset 2a
