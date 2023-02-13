@@ -9,6 +9,7 @@ This document describes how to set up a FloPy development environment, run the e
 - [Requirements & installation](#requirements--installation)
   - [Git](#git)
   - [Python](#python)
+    - [Pre-commit hooks](#pre-commit-hooks)
     - [Python IDEs](#python-ides)
       - [Visual Studio Code](#visual-studio-code)
       - [PyCharm](#pycharm)
@@ -17,6 +18,7 @@ This document describes how to set up a FloPy development environment, run the e
     - [Manually installing executables](#manually-installing-executables)
       - [Linux](#linux)
       - [Mac](#mac)
+
 - [Examples](#examples)
   - [Scripts](#scripts)
   - [Notebooks](#notebooks)
@@ -63,6 +65,20 @@ Alternatively, with Anaconda or Miniconda:
 The `flopy` package has a number of [optional dependencies](docs/flopy_method_dependencies.md), as well as extra dependencies required for linting, testing, and building documentation. Extra dependencies are listed in the `test`, `lint`, `optional`, and `doc` groups under the `[project.optional-dependencies]` section in `pyproject.toml`. Core, linting, testing and optional dependencies are included in the Conda environment in `etc/environment.yml`. Only core dependencies are included in the PyPI package &mdash; to install extra dependency groups with pip, use `pip install ".[<group>]"`. For instance, to install all extra dependency groups:
 
     pip install ".[test, lint, optional, doc]"
+
+#### Pre-commit hooks
+(optional)
+Contributions to Flopy must pass [certain formatting checks](https://github.com/modflowpy/flopy/blob/develop/CONTRIBUTING.md#submit-pr). Pre-commit hooks can format code automatically with each commit. To set up pre-commit hooks locally:
+
+```
+pip install pre-commit
+pre-commit install
+```
+You are now ready to make a commit.
+
+Pre-commit hooks can be added, removed or edited via `.pre-commit-config.yaml` at the top level of this repository.
+
+**Note:** [By design, package versions for pre-commit hooks are static](https://pre-commit.com/#using-the-latest-version-for-a-repository). This means that, for example, the version of `black` that runs locally when you commit (specified in `.pre-commit-config.yaml`) may differ from the version being run through GitHub Actions when your pull request is checked. The package versions specified in `.pre-commit-config.yaml` can be updated by running [pre-commit autoupdate](https://pre-commit.com/#pre-commit-autoupdate) at the command line. Note that this will result in a change to `.pre-commit-config.yaml` that should be committed.
 
 #### Python IDEs
 
@@ -252,7 +268,7 @@ def test_benchmark(benchmark):
         import time
         time.sleep(1)
         return True
-        
+
     assert benchmark(sleep_1s)
 ```
 
@@ -264,7 +280,7 @@ def test_benchmark(benchmark):
         import time
         time.sleep(s)
         return True
-        
+
     assert benchmark(sleep_s, 1)
 ```
 
@@ -276,7 +292,7 @@ def test_benchmark(benchmark):
         import time
         time.sleep(s)
         return True
-        
+
     assert benchmark(lambda: sleep_s(1))
 ```
 

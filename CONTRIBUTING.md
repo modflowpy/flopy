@@ -219,17 +219,12 @@ The footer should contain any information about **Breaking Changes** and is also
 **Breaking Changes** should start with the word `BREAKING CHANGE:` with a space or two newlines. The rest of the commit message is then used for this.
 
 
+## <a name="coc"></a> Pre-commit hooks
+Pre-commit hooks can automatically perform the code formatting done (in Step 5) by `pull_request_prepare.py`, so that the code is correctly formatted with every commit. You can read more about them [here](https://medium.com/staqu-dev-logs/keeping-python-code-clean-with-pre-commit-hooks-black-flake8-and-isort-cac8b01e0ea1). To set up pre-commit hooks locally, see the instructions in [DEVELOPER.md](DEVELOPER.md#pre-commit-hooks).
+
+
+
+
 [coc]: https://github.com/modflowpy/flopy/blob/develop/CODE_OF_CONDUCT.md
 [github]: https://github.com/modflowpy/flopy
 [stackoverflow]: https://stackoverflow.com/questions/tagged/flopy
-
-## <a name="coc"></a> Pre-commit hooks
-Pre-commit hooks can automatically perform the code formatting done (in Step 5) by `pull_request_prepare.py`, so that the code is correctly formatted with every commit. You can read more about them [https://medium.com/staqu-dev-logs/keeping-python-code-clean-with-pre-commit-hooks-black-flake8-and-isort-cac8b01e0ea1]. To set up pre-commit hooks locally:
-
-```
-pip install pre-commit
-pre-commit install
-```
-Make a commit!
-
-Pre-commit hooks can be added, removed or edited via `.pre-commit-config.yaml` at the top level of this repository.
