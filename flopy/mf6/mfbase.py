@@ -7,6 +7,7 @@ import traceback
 import warnings
 from collections.abc import Iterable
 from enum import Enum
+from pathlib import Path
 from shutil import copyfile
 
 
@@ -416,14 +417,9 @@ class MFFileMgmt:
             if self.simulation is not None:
                 self.simulation.set_sim_path(path)
                 return
-        # recalculate paths for everything
-        # resolve path type
-        path = self.string_to_file_path(path)
-        if os.path.isabs(path):
-            self._sim_path = path
-        else:
-            # assume path is relative to working directory
-            self._sim_path = os.path.join(os.getcwd(), path)
+        # ensure that _sim_path is absolute
+        path = Path(path)
+        self._sim_path = path.absolute()
 
     def resolve_path(
         self, path, model_name, last_loaded_path=False, move_abs_paths=False

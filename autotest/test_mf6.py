@@ -264,7 +264,7 @@ def test_string_to_file_path():
 
 
 def test_subdir(function_tmpdir):
-    sim = MFSimulation(sim_ws=str(function_tmpdir))
+    sim = MFSimulation(sim_ws=function_tmpdir)
     tdis = ModflowTdis(sim)
     gwf = ModflowGwf(sim, model_rel_path="level2")
     ims = ModflowIms(sim)
@@ -942,7 +942,7 @@ def test_get_set_data_record(function_tmpdir):
 @requires_exe("mf6")
 def test_output(function_tmpdir, example_data_path):
     ex_name = "test001e_UZF_3lay"
-    sim_ws = str(example_data_path / "mf6" / ex_name)
+    sim_ws = example_data_path / "mf6" / ex_name
     sim = MFSimulation.load(sim_ws=sim_ws, exe_name="mf6")
     sim.set_sim_path(str(function_tmpdir))
     sim.write_simulation()
@@ -1034,8 +1034,8 @@ def test_output_add_observation(function_tmpdir, example_data_path):
 def test_sfr_connections(function_tmpdir, example_data_path):
     '''MODFLOW just warns if any reaches are unconnected
     flopy fails to load model if reach 1 is unconnected, fine with other unconnected'''
-    data_path = str(example_data_path / "mf6" / "test666_sfrconnections")
-    sim_ws = str(function_tmpdir)
+    data_path = example_data_path / "mf6" / "test666_sfrconnections"
+    sim_ws = function_tmpdir
     for test in ['sfr0', 'sfr1']:
         sim_name = "test_sfr"
         model_name = "test_sfr"
@@ -1081,11 +1081,11 @@ def test_sfr_connections(function_tmpdir, example_data_path):
         cnfile = f'mf6_{test}_connection.txt'
         pkfile = f'mf6_{test}_package.txt'
 
-        with open(os.path.join(data_path, pkfile), 'r') as f:
+        with open(data_path / pkfile, 'r') as f:
             nreaches = len(f.readlines())
         sfr = ModflowGwfsfr(model,
-                            packagedata={'filename': os.path.join(data_path, pkfile)},
-                            connectiondata={'filename': os.path.join(data_path, cnfile)},
+                            packagedata={'filename': str(data_path / pkfile)},
+                            connectiondata={'filename': str(data_path / cnfile)},
                             nreaches=nreaches,
                             pname='sfr',
                             unit_conversion=86400
@@ -1114,7 +1114,7 @@ def test_array(function_tmpdir):
 
     sim_name = "test_array"
     model_name = "test_array"
-    out_dir = str(function_tmpdir)
+    out_dir = function_tmpdir
     tdis_name = "{}.tdis".format(sim_name)
     sim = MFSimulation(
         sim_name=sim_name, version="mf6", exe_name="mf6", sim_ws=out_dir
