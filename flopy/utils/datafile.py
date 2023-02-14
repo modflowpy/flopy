@@ -422,7 +422,7 @@ class LayerFile:
         """
 
         if totim >= 0.0:
-            keyindices = np.where((self.recordarray["totim"] == totim))[0]
+            keyindices = np.where(self.recordarray["totim"] == totim)[0]
             if len(keyindices) == 0:
                 msg = f"totim value ({totim}) not found in file..."
                 raise Exception(msg)

@@ -81,7 +81,6 @@ files, the package classes, and updated init.py that createpackages.py created.
 
 """
 import datetime
-import io
 import os
 import textwrap
 from enum import Enum
@@ -485,7 +484,7 @@ def create_packages():
             )
 
     util_path, tail = os.path.split(os.path.realpath(__file__))
-    init_file = io.open(
+    init_file = open(
         os.path.join(util_path, "..", "modflow", "__init__.py"),
         "w",
         newline="\n",
@@ -749,7 +748,7 @@ def create_packages():
         )
 
         # open new Packages file
-        pb_file = io.open(
+        pb_file = open(
             os.path.join(util_path, "..", "modflow", f"mf{package_name}.py"),
             "w",
             newline="\n",
@@ -918,7 +917,7 @@ def create_packages():
                 init_vars,
                 load_txt,
             )
-            md_file = io.open(
+            md_file = open(
                 os.path.join(util_path, "..", "modflow", f"mf{model_name}.py"),
                 "w",
                 newline="\n",

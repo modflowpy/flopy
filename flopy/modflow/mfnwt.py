@@ -318,7 +318,7 @@ class ModflowNwt(Package):
         )
         isspecified = False
         for option in self.options:
-            f.write("{0:>10s}".format(option.upper()))
+            f.write(f"{option.upper():>10s}")
             if option.lower() == "specified":
                 isspecified = True
         if isspecified:

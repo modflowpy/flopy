@@ -123,9 +123,9 @@ def test_get_release(repo):
 
     if repo == "modflow6":
         # can remove if modflow6 releases follow asset name conventions followed in executables and nightly build repos
-        assert set([a.rpartition("_")[2] for a in actual_assets]) >= set(
-            [a for a in expected_assets if not a.startswith("win")]
-        )
+        assert {a.rpartition("_")[2] for a in actual_assets} >= {
+            a for a in expected_assets if not a.startswith("win")
+        }
     else:
         assert set(actual_assets) >= set(expected_assets)
 

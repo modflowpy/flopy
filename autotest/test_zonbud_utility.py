@@ -29,7 +29,7 @@ def zbud_f(loadpth):
 
 
 def read_zonebudget_file(fname):
-    with open(fname, "r") as f:
+    with open(fname) as f:
         lines = f.readlines()
 
     rows = []
@@ -112,8 +112,8 @@ def test_compare2zonebudget(cbc_f, zon_f, zbud_f, rtol):
         zb_arr = zba[zba["totim"] == time]
         fp_arr = fpa[fpa["totim"] == time]
         for name in fp_arr["name"]:
-            r1 = np.where((zb_arr["name"] == name))
-            r2 = np.where((fp_arr["name"] == name))
+            r1 = np.where(zb_arr["name"] == name)
+            r2 = np.where(fp_arr["name"] == name)
             if r1[0].shape[0] < 1 or r2[0].shape[0] < 1:
                 continue
             if r1[0].shape[0] != r2[0].shape[0]:
@@ -167,7 +167,7 @@ def test_zonbud_to_csv(function_tmpdir, cbc_f, zon_f):
     zb = ZoneBudget(str(cbc_f), zon, kstpkper=[(0, 1094), (0, 1096)])
     f_out = os.path.join(str(function_tmpdir), "test.csv")
     zb.to_csv(f_out)
-    with open(f_out, "r") as f:
+    with open(f_out) as f:
         lines = f.readlines()
     assert len(lines) > 0, "No data written to csv file."
 

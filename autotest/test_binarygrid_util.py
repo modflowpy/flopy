@@ -116,7 +116,7 @@ def test_mfgrddisv_modelgrid(mfgrd_test_path):
         f"does not equal {nvert}"
     )
 
-    cellxy = np.column_stack((mg.xyzcellcenters[:2]))
+    cellxy = np.column_stack(mg.xyzcellcenters[:2])
     errmsg = (
         f"shape of flow.disv centroids {cellxy.shape} not equal to (218, 2)."
     )

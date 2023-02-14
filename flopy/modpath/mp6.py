@@ -162,7 +162,7 @@ class Modpath6(BaseModel):
             if not os.path.exists(read_dis):
                 # path doesn't exist, probably relative to model_ws
                 read_dis = os.path.join(self.model_ws, dis_file)
-            with open(read_dis, "r") as f:
+            with open(read_dis) as f:
                 line = f.readline()
                 while line[0] == "#":
                     line = f.readline()

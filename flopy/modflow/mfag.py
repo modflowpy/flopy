@@ -540,17 +540,17 @@ class ModflowAg(Package):
                                     if rec[f"fracsupmax{i}"] != -1e10:
                                         foo.write(
                                             "{:d}   {:f}   {:f}\n".format(
-                                                rec["segid{}".format(i)],
-                                                rec["fracsup{}".format(i)],
-                                                rec["fracsupmax{}".format(i)],
+                                                rec[f"segid{i}"],
+                                                rec[f"fracsup{i}"],
+                                                rec[f"fracsupmax{i}"],
                                             )
                                         )
 
                                     else:
                                         foo.write(
                                             "{:d}   {:f}\n".format(
-                                                rec["segid{}".format(i)],
-                                                rec["fracsup{}".format(i)],
+                                                rec[f"segid{i}"],
+                                                rec[f"fracsup{i}"],
                                             )
                                         )
 

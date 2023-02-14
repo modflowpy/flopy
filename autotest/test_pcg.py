@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This simple script tests that the pcg load function works for both free-
 and fixed-format pcg files for mf2005 models.

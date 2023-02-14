@@ -185,7 +185,7 @@ class ModflowHfb(Package):
         f_hfb.write(f"{self.heading}\n")
         f_hfb.write(f"{self.nphfb:10d}{self.mxfb:10d}{self.nhfbnp:10d}")
         for option in self.options:
-            f_hfb.write("  {}".format(option))
+            f_hfb.write(f"  {option}")
         f_hfb.write("\n")
         for a in self.hfb_data:
             f_hfb.write(

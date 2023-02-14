@@ -245,7 +245,7 @@ class SeawatVsc(Package):
             if self.mutempopt > 0:
                 s = f"{self.mtmutempspec} "
                 for a in tuple(self.amucoeff):
-                    s += "{} ".format(a)
+                    s += f"{a} "
                 f_vsc.write(s + "\n")
 
         # items 4 and 5, transient visc array

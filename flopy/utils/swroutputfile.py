@@ -309,10 +309,10 @@ class SwrFile(FlopyBinaryData):
         """
 
         if irec + 1 > self.nrecord:
-            err = "Error: specified irec ({}) ".format(
-                irec
-            ) + "exceeds the total number of records ()".format(self.nrecord)
-            raise Exception(err)
+            raise Exception(
+                f"specified irec ({irec}) exceeds the "
+                f"total number of records ({self.nrecord})"
+            )
 
         gage_record = None
         if self.type == "stage" or self.type == "budget":

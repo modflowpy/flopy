@@ -244,7 +244,7 @@ class Mt3dLkt(Package):
 
         # Item 1
         f_lkt.write(
-            "{0:10d}{1:10d}{2:10}{3:10}          ".format(
+            "{:10d}{:10d}{:10}{:10}          ".format(
                 self.nlkinit, self.mxlkbc, self.icbclk, self.ietlak
             )
             + "# NLKINIT, MXLKBC, ICBCLK, IETLAK\n"

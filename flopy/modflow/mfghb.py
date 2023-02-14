@@ -199,7 +199,7 @@ class ModflowGhb(Package):
         f_ghb.write(f"{self.heading}\n")
         f_ghb.write(f"{self.stress_period_data.mxact:10d}{self.ipakcb:10d}")
         for option in self.options:
-            f_ghb.write("  {}".format(option))
+            f_ghb.write(f"  {option}")
         f_ghb.write("\n")
         self.stress_period_data.write_transient(f_ghb)
         f_ghb.close()

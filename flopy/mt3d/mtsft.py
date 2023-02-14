@@ -302,9 +302,8 @@ class Mt3dSft(Package):
                         val = kwargs.pop(name)
                     else:
                         print(
-                            "SFT: setting {0} for component {1} to zero, kwarg name {2}".format(
-                                base_name, icomp, name
-                            )
+                            f"SFT: setting {base_name} for component {icomp} "
+                            f"to zero, kwarg name {name}"
                         )
                         val = 0.0
                     u2d = Util2d(
@@ -382,7 +381,7 @@ class Mt3dSft(Package):
 
         # Item 1
         f.write(
-            "{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}".format(
+            "{:10d}{:10d}{:10d}{:10d}{:10d}".format(
                 self.nsfinit,
                 self.mxsfbc,
                 self.icbcsf,
@@ -395,7 +394,7 @@ class Mt3dSft(Package):
 
         # Item 2
         f.write(
-            "{0:10d}{1:10.5f}{2:10.5f}{3:10.7f}{4:10d}{5:10.5f}{6:10d}".format(
+            "{:10d}{:10.5f}{:10.5f}{:10.7f}{:10d}{:10.5f}{:10d}".format(
                 self.isfsolv,
                 self.wimp,
                 self.wups,

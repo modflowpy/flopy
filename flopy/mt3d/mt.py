@@ -693,16 +693,15 @@ class Mt3dms(BaseModel):
         # write message indicating packages that were successfully loaded
         if mt.verbose:
             print(
-                "\n   The following {0} packages were "
+                "\n   The following {} packages were "
                 "successfully loaded.".format(len(files_successfully_loaded))
             )
             for fname in files_successfully_loaded:
                 print(f"      {os.path.basename(fname)}")
             if len(files_not_loaded) > 0:
                 print(
-                    "   The following {0} packages were not loaded.".format(
-                        len(files_not_loaded)
-                    )
+                    f"   The following {len(files_not_loaded)} packages "
+                    "were not loaded."
                 )
                 for fname in files_not_loaded:
                     print(f"      {os.path.basename(fname)}")
@@ -765,7 +764,7 @@ class Mt3dms(BaseModel):
 
         if not os.path.isfile(fname):
             raise Exception(f"Could not find file: {fname}")
-        with open(fname, "r") as f:
+        with open(fname) as f:
             line = f.readline()
             if line.strip() != firstline:
                 raise Exception(

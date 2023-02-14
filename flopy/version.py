@@ -3,4 +3,4 @@
 major = 3
 minor = 3
 micro = 7
-__version__ = "{}.{}.{}".format(major, minor, micro)
+__version__ = f"{major}.{minor}.{micro}"

@@ -762,7 +762,7 @@ class ModflowUzf1(Package):
         if self.iuzfopt > 0:
             comment = " #NUZTOP IUZFOPT IRUNFLG IETFLG ipakcb IUZFCB2 NTRAIL NSETS NUZGAGES"
             f_uzf.write(
-                "{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}{6:10d}{7:10d}{8:10d}{9:15.6E}{10:100s}\n".format(
+                "{:10d}{:10d}{:10d}{:10d}{:10d}{:10d}{:10d}{:10d}{:10d}{:15.6E}{:100s}\n".format(
                     self.nuztop,
                     self.iuzfopt,
                     self.irunflg,
@@ -779,7 +779,7 @@ class ModflowUzf1(Package):
         else:
             comment = " #NUZTOP IUZFOPT IRUNFLG IETFLG ipakcb IUZFCB2 NUZGAGES"
             f_uzf.write(
-                "{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}{6:10d}{7:15.6E}{8:100s}\n".format(
+                "{:10d}{:10d}{:10d}{:10d}{:10d}{:10d}{:10d}{:15.6E}{:100s}\n".format(
                     self.nuztop,
                     self.iuzfopt,
                     self.irunflg,

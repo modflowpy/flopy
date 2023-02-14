@@ -2471,7 +2471,7 @@ class MFStructure:
                 dfn_path, tail = os.path.split(os.path.realpath(__file__))
                 dfn_path = os.path.join(dfn_path, "dfn")
                 dfn_file = os.path.join(dfn_path, file)
-                with open(dfn_file, "r") as fd_dfn:
+                with open(dfn_file) as fd_dfn:
                     for line in fd_dfn:
                         if len(line) < 1 or line[0] != "#":
                             break

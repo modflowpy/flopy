@@ -1204,7 +1204,7 @@ class MFSimulation(PackageContainer):
 
     def _set_timing_block(self, file_name):
         struct_root = mfstructure.MFStructure()
-        tdis_pkg = "tdis{}".format(struct_root.get_version_string())
+        tdis_pkg = f"tdis{struct_root.get_version_string()}"
         tdis_attr = getattr(self.name_file, tdis_pkg)
         try:
             tdis_attr.set_data(file_name)

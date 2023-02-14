@@ -225,7 +225,7 @@ class BinaryHeader(Header):
                     text = ttext[0:16]
                 # pad a short string
                 elif len(ttext) < 16:
-                    text = "{:<16}".format(ttext)
+                    text = f"{ttext:<16}"
                 # the string is just right
                 else:
                     text = ttext
@@ -1317,7 +1317,7 @@ class CellBudgetFile:
         # check and make sure that text is in file
         if text is not None:
             text16 = self._find_text(text)
-            select_indices = np.where((self.recordarray["text"] == text16))
+            select_indices = np.where(self.recordarray["text"] == text16)
             if isinstance(select_indices, tuple):
                 select_indices = select_indices[0]
         else:
@@ -1449,7 +1449,7 @@ class CellBudgetFile:
 
         elif totim is not None:
             if text is None and paknam is None:
-                select_indices = np.where((self.recordarray["totim"] == totim))
+                select_indices = np.where(self.recordarray["totim"] == totim)
             else:
                 if paknam is None and text is not None:
                     select_indices = np.where(
@@ -1477,7 +1477,7 @@ class CellBudgetFile:
 
         # case where only text is entered
         elif text is not None:
-            select_indices = np.where((self.recordarray["text"] == text16))
+            select_indices = np.where(self.recordarray["text"] == text16)
 
         else:
             raise TypeError(
@@ -1906,7 +1906,7 @@ class CellBudgetFile:
         residual = np.zeros((nlay, nrow, ncol), dtype=float)
         if scaled:
             inflow = np.zeros((nlay, nrow, ncol), dtype=float)
-        select_indices = np.where((self.recordarray["totim"] == totim))[0]
+        select_indices = np.where(self.recordarray["totim"] == totim)[0]
 
         for i in select_indices:
             text = self.recordarray[i]["text"].decode()
@@ -2046,7 +2046,7 @@ class HeadUFile(BinaryLayerFile):
         """
 
         if totim >= 0.0:
-            keyindices = np.where((self.recordarray["totim"] == totim))[0]
+            keyindices = np.where(self.recordarray["totim"] == totim)[0]
             if len(keyindices) == 0:
                 msg = f"totim value ({totim}) not found in file..."
                 raise Exception(msg)

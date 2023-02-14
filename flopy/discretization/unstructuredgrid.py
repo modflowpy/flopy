@@ -857,7 +857,7 @@ class UnstructuredGrid(Grid):
 
         from ..utils.geometry import get_polygon_centroid
 
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             line = f.readline()
             ll = line.split()
             ncells, nverts = ll[0:2]
@@ -966,7 +966,7 @@ class UnstructuredGrid(Grid):
             An UnstructuredGrid
         """
 
-        with open(file_path, "r") as file:
+        with open(file_path) as file:
 
             def split_line():
                 return file.readline().strip().split()

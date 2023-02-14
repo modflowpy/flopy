@@ -169,12 +169,8 @@ def _add_output_nc_variable(
                     else:
                         a = out_obj.get_data(totim=t)
                 except Exception as e:
-                    estr = (
-                        "error getting data for {0} at time"
-                        " {1}:{2}".format(
-                            var_name + text.decode().strip().lower(), t, str(e)
-                        )
-                    )
+                    nme = var_name + text.decode().strip().lower()
+                    estr = f"error getting data for {nme} at time {t}:{e!s}"
                     if logger:
                         logger.warn(estr)
                     else:
@@ -185,12 +181,8 @@ def _add_output_nc_variable(
                 try:
                     array[i, :, :, :] = a.astype(np.float32)
                 except Exception as e:
-                    estr = (
-                        "error assigning {0} data to array for time"
-                        " {1}:{2}".format(
-                            var_name + text.decode().strip().lower(), t, str(e)
-                        )
-                    )
+                    nme = var_name + text.decode().strip().lower()
+                    estr = f"error assigning {nme} data to array for time {t}:{e!s}"
                     if logger:
                         logger.warn(estr)
                     else:

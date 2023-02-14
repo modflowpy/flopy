@@ -66,7 +66,7 @@ def __create_simulation(
     )
 
     # Create the Flopy groundwater flow (gwf) model object
-    model_nam_file = "{}.nam".format(name)
+    model_nam_file = f"{name}.nam"
     gwf = ModflowGwf(
         sim, modelname=name, model_nam_file=model_nam_file, save_flows=True
     )
@@ -113,9 +113,9 @@ def __create_simulation(
     ModflowGwfriv(gwf, stress_period_data={0: rd})
 
     # Create the output control package
-    headfile = "{}.hds".format(name)
+    headfile = f"{name}.hds"
     head_record = [headfile]
-    budgetfile = "{}.cbb".format(name)
+    budgetfile = f"{name}.cbb"
     budget_record = [budgetfile]
     saverecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
     oc = ModflowGwfoc(

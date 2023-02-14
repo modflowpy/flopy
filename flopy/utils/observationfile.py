@@ -507,7 +507,7 @@ class CsvFile:
     def __init__(
         self, csvfile, delimiter=",", deletechars="", replace_space=""
     ):
-        with open(csvfile, "r") as self.file:
+        with open(csvfile) as self.file:
             self.delimiter = delimiter
             self.deletechars = deletechars
             self.replace_space = replace_space

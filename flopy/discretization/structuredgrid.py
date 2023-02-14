@@ -1723,7 +1723,7 @@ class StructuredGrid(Grid):
             A StructuredGrid
         """
 
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             raw = f.readline().strip().split()
             nrow = int(raw[0])
             ncol = int(raw[1])
