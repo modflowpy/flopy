@@ -1020,12 +1020,6 @@ class MFSimulation(PackageContainer):
         return package
 
     def register_ims_package(self, solution_file, model_list):
-        warnings.warn(
-            "register_ims_package() has been deprecated and will be "
-            "removed in version 3.3.7. Use "
-            "register_solution_package() instead.",
-            DeprecationWarning,
-        )
         self.register_solution_package(solution_file, model_list)
 
     def register_solution_package(self, solution_file, model_list):
