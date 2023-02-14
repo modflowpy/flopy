@@ -1356,8 +1356,7 @@ class MFFileAccessList(MFFileAccess):
                             return data_rec
             self.simple_line = (
                 self.simple_line
-                and self.structure.package_type != "sfr"
-                and self.structure.package_type != "uzf"
+                and not self.structure.parent_block.parent_package.advanced_package()
             )
             if self.simple_line:
                 line_len = len(self._last_line_info)

@@ -198,7 +198,7 @@ class DfnPackage(Dfn):
         )
         self.dfn_list = package.dfn
 
-    def get_block_structure_dict(self, path, common, model_file):
+    def get_block_structure_dict(self, path, common, model_file, block_parent):
         block_dict = {}
         dataset_items_in_block = {}
         self.dataset_items_needed_dict = {}
@@ -222,7 +222,10 @@ class DfnPackage(Dfn):
             ):
                 # create block
                 current_block = MFBlockStructure(
-                    new_data_item_struct.block_name, path, model_file
+                    new_data_item_struct.block_name,
+                    path,
+                    model_file,
+                    block_parent,
                 )
                 # put block in block_dict
                 block_dict[current_block.name] = current_block
@@ -479,7 +482,7 @@ class DfnFile(Dfn):
         dfn_fp.close()
         return name_dict
 
-    def get_block_structure_dict(self, path, common, model_file):
+    def get_block_structure_dict(self, path, common, model_file, block_parent):
         self.dfn_list = []
         block_dict = {}
         dataset_items_in_block = {}
@@ -525,7 +528,10 @@ class DfnFile(Dfn):
                 ):
                     # create block
                     current_block = MFBlockStructure(
-                        new_data_item_struct.block_name, path, model_file
+                        new_data_item_struct.block_name,
+                        path,
+                        model_file,
+                        block_parent,
                     )
                     # put block in block_dict
                     block_dict[current_block.name] = current_block
@@ -1982,13 +1988,14 @@ class MFBlockStructure:
 
     """
 
-    def __init__(self, name, path, model_block):
+    def __init__(self, name, path, model_block, parent_package):
         # initialize
         self.data_structures = {}
         self.block_header_structure = []
         self.name = name
         self.path = path + (self.name,)
         self.model_block = model_block
+        self.parent_package = parent_package
 
     def repeating(self):
         if len(self.block_header_structure) > 0:
@@ -2093,11 +2100,19 @@ class MFInputFileStructure:
         self.read_as_arrays = False
 
         self.blocks, self.header = dfn_file.get_block_structure_dict(
-            self.path, common, model_file
+            self.path,
+            common,
+            model_file,
+            self,
         )
+        self.has_packagedata = "packagedata" in self.blocks
+        self.has_perioddata = "period" in self.blocks
         self.multi_package_support = "multi-package" in self.header
         self.dfn_list = dfn_file.dfn_list
         self.sub_package = self._sub_package()
+
+    def advanced_package(self):
+        return self.has_packagedata and self.has_perioddata
 
     def _sub_package(self):
         mfstruct = MFStructure()
