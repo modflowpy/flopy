@@ -313,6 +313,22 @@ def test_usg_lak(function_tmpdir, mfusg_rch_evt_model_path):
     assert success
 
 
+@requires_exe("mfusg")
+def test_usg_hfb(function_tmpdir, mfusg_rch_evt_model_path):
+    # test mfusg model with hfb package
+    print("testing unstructured mfusg with HFB6: usg_rch_evt_hfb.nam")
+
+    nam = "usg_rch_evt_hfb.nam"
+    m = MfUsg.load(
+        nam, model_ws=str(mfusg_rch_evt_model_path), exe_name="mfusg"
+    )
+
+    m.model_ws = str(function_tmpdir)
+    m.write_input()
+    success, buff = m.run_model()
+    assert success
+
+
 # occasional forrtl: error (72): floating overflow
 @flaky
 @requires_exe("mfusg")
