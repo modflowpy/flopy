@@ -215,9 +215,9 @@ class MFSimulationData:
     wrap_multidim_arrays : bool
         Whether to wrap line for multi-dimensional arrays at the end of a
         row/column/layer
-    float_precision : int
+    _float_precision : int
         Number of decimal points to write for a floating point number
-    float_characters : int
+    _float_characters : int
         Number of characters a floating point number takes up
     write_headers: bool
         When true flopy writes a header to each package file indicating that
@@ -241,8 +241,8 @@ class MFSimulationData:
         self.constant_formatting = ["constant", ""]
         self._max_columns_of_data = 20
         self.wrap_multidim_arrays = True
-        self.float_precision = 8
-        self.float_characters = 15
+        self._float_precision = 8
+        self._float_characters = 15
         self.write_headers = True
         self._sci_note_upper_thres = 100000
         self._sci_note_lower_thres = 0.001
@@ -273,6 +273,21 @@ class MFSimulationData:
         self.referenced_files = {}
 
     @property
+    def lazy_io(self):
+        if not self.auto_set_sizes and not self.verify_data:
+            return True
+        return False
+
+    @lazy_io.setter
+    def lazy_io(self, val):
+        if val:
+            self.auto_set_sizes = False
+            self.verify_data = False
+        else:
+            self.auto_set_sizes = True
+            self.verify_data = True
+
+    @property
     def max_columns_of_data(self):
         return self._max_columns_of_data
 
@@ -283,6 +298,48 @@ class MFSimulationData:
         ):
             self._max_columns_of_data = val
             self.max_columns_user_set = True
+
+    @property
+    def float_precision(self):
+        """
+        Gets precision of floating point numbers.
+        """
+        return self._float_precision
+
+    @float_precision.setter
+    def float_precision(self, value):
+        """
+        Sets precision of floating point numbers.
+
+        Parameters
+        ----------
+            value: float
+                floating point precision
+
+        """
+        self._float_precision = value
+        self._update_str_format()
+
+    @property
+    def float_characters(self):
+        """
+        Gets max characters used in floating point numbers.
+        """
+        return self._float_characters
+
+    @float_characters.setter
+    def float_characters(self, value):
+        """
+        Sets max characters used in floating point numbers.
+
+        Parameters
+        ----------
+            value: float
+                floating point max characters
+
+        """
+        self._float_characters = value
+        self._update_str_format()
 
     def set_sci_note_upper_thres(self, value):
         """
@@ -315,9 +372,9 @@ class MFSimulationData:
     def _update_str_format(self):
         """
         Update floating point formatting strings."""
-        self.reg_format_str = f"{{:.{self.float_precision}E}}"
+        self.reg_format_str = f"{{:.{self._float_precision}E}}"
         self.sci_format_str = (
-            f"{{:{self.float_characters}.{self.float_precision}f}}"
+            f"{{:{self._float_characters}.{self._float_precision}f}}"
         )
 
 
@@ -366,7 +423,11 @@ class MFSimulation(PackageContainer):
     write_headers: bool
         When true flopy writes a header to each package file indicating that
         it was created by flopy.
-
+    lazy_io: bool
+        When true flopy only reads external data when the data is requested
+        and only writes external data if the data has changed.  This option
+        automatically overrides the verify_data and auto_set_sizes, turning
+        both off.
     Examples
     --------
     >>> s = MFSimulation.load('my simulation', 'simulation.nam')
@@ -391,12 +452,16 @@ class MFSimulation(PackageContainer):
         nocheck=None,
         memory_print_option=None,
         write_headers=True,
+        lazy_io=False,
     ):
         super().__init__(MFSimulationData(sim_ws, self), sim_name)
         self.simulation_data.verbosity_level = self._resolve_verbosity_level(
             verbosity_level
         )
         self.simulation_data.write_headers = write_headers
+        if lazy_io:
+            self.simulation_data.lazy_io = True
+
         # verify metadata
         fpdata = mfstructure.MFStructure()
         if not fpdata.valid:
@@ -600,6 +665,7 @@ class MFSimulation(PackageContainer):
         load_only=None,
         verify_data=False,
         write_headers=True,
+        lazy_io=False,
     ):
         """
         Load an existing model.
@@ -636,7 +702,11 @@ class MFSimulation(PackageContainer):
         write_headers: bool
             When true flopy writes a header to each package file indicating
             that it was created by flopy
-
+        lazy_io: bool
+            When true flopy only reads external data when the data is requested
+            and only writes external data if the data has changed.  This option
+            automatically overrides the verify_data and auto_set_sizes, turning
+            both off.
         Returns
         -------
         sim : MFSimulation object
@@ -656,7 +726,10 @@ class MFSimulation(PackageContainer):
             write_headers=write_headers,
         )
         verbosity_level = instance.simulation_data.verbosity_level
+
         instance.simulation_data.verify_data = verify_data
+        if lazy_io:
+            instance.simulation_data.lazy_io = True
 
         if verbosity_level.value >= VerbosityLevel.normal.value:
             print("loading simulation...")

@@ -1092,25 +1092,27 @@ class MFArray(MFMultiDimVar):
                 self._set_storage_obj(
                     self._new_storage(shape_ml.get_total_size() != 1, True)
                 )
-        file_access = MFFileAccessArray(
-            self.structure,
-            self._data_dimensions,
-            self._simulation_data,
-            self._path,
-            self._current_key,
-        )
         storage = self._get_storage_obj()
-        self._layer_shape, return_val = file_access.load_from_package(
-            first_line,
-            file_handle,
-            self._layer_shape,
-            storage,
-            self._keyword,
-            pre_data_comments=None,
-        )
         if external_file_info is not None:
             storage.point_to_existing_external_file(
                 external_file_info, storage.layer_storage.get_total_size() - 1
+            )
+            return_val = [False, None]
+        else:
+            file_access = MFFileAccessArray(
+                self.structure,
+                self._data_dimensions,
+                self._simulation_data,
+                self._path,
+                self._current_key,
+            )
+            self._layer_shape, return_val = file_access.load_from_package(
+                first_line,
+                file_handle,
+                self._layer_shape,
+                storage,
+                self._keyword,
+                pre_data_comments=None,
             )
 
         return return_val
