@@ -141,7 +141,7 @@ def clean_class_string(name):
     return name
 
 
-def build_dfn_string(dfn_list, header):
+def build_dfn_string(dfn_list, header, package_abbr, flopy_dict):
     dfn_string = "    dfn = ["
     line_length = len(dfn_string)
     leading_spaces = " " * line_length
@@ -152,6 +152,15 @@ def build_dfn_string(dfn_list, header):
     for key, value in header.items():
         if key == "multi-package":
             dfn_string = f'{dfn_string}\n{leading_spaces} "multi-package", '
+    # process solution packages
+    if package_abbr in flopy_dict["solution_packages"]:
+        model_types = '", "'.join(
+            flopy_dict["solution_packages"][package_abbr]
+        )
+        dfn_string = (
+            f"{dfn_string}\n{leading_spaces} "
+            f'["solution_package", "{model_types}"], '
+        )
     dfn_string = f"{dfn_string}],\n{leading_spaces}"
 
     # process all data items
@@ -397,7 +406,7 @@ def build_model_load(model_type):
         "             load_only=None):\n        "
         "return mfmodel.MFModel.load_base(simulation, structure, "
         "modelname,\n                                         "
-        "model_nam_file, '{}', version,\n"
+        "model_nam_file, '{}6', version,\n"
         "                                         exe_name, strict, "
         "model_rel_path,\n"
         "                                         load_only)"
@@ -498,6 +507,7 @@ def create_packages():
 
     # loop through packages list
     init_file_imports = []
+    flopy_dict = file_structure.flopy_dict
     for package in package_list:
         data_structure_dict = {}
         package_properties = []
@@ -506,10 +516,12 @@ def create_packages():
         set_param_list = []
         class_vars = []
         template_gens = []
-        dfn_string = build_dfn_string(package[3], package[5])
         package_abbr = clean_class_string(
             f"{clean_class_string(package[2])}{package[0].file_type}"
         ).lower()
+        dfn_string = build_dfn_string(
+            package[3], package[5], package_abbr, flopy_dict
+        )
         package_name = clean_class_string(
             "{}{}{}".format(
                 clean_class_string(package[2]),

@@ -6,6 +6,7 @@ mfstructure module.  Contains classes related to package structure
 import ast
 import keyword
 import os
+import warnings
 from enum import Enum
 from textwrap import TextWrapper
 
@@ -2473,6 +2474,9 @@ class MFStructure:
         # set up structure classes
         self.sim_struct = MFSimulationStructure()
 
+        # initialize flopy dict keys
+        MFStructure().flopy_dict["solution_packages"] = {}
+
         if self.load_from_dfn_files:
             mf_dfn = Dfn()
             dfn_files = mf_dfn.get_file_list()
@@ -2503,7 +2507,20 @@ class MFStructure:
                                     "parameter_name": line_lst[6],
                                 }
                                 MFStructure().flopy_dict[line_lst[3]] = sp_dict
-
+                            elif line_lst[2] == "solution_package":
+                                MFStructure().flopy_dict["solution_packages"][
+                                    line_lst[3]
+                                ] = line_lst[4:]
+            if len(MFStructure().flopy_dict["solution_packages"]) == 0:
+                MFStructure().flopy_dict["solution_packages"]["ims"] = ["*"]
+                warnings.warn(
+                    "Package definition files (dfn) do not define a solution "
+                    "package.  This can happen if your dfn files are out of "
+                    "sync.  Auto-loaded default IMS solution package metadata."
+                    "  In the future auto-loading default metadata will be "
+                    "deprecated.",
+                    DeprecationWarning,
+                )
             # process each file
             for file in dfn_files:
                 self.sim_struct.process_dfn(DfnFile(file))
@@ -2511,6 +2528,16 @@ class MFStructure:
         else:
             package_list = PackageContainer.package_list()
             for package in package_list:
+                # process header
+                for entry in package.dfn[0][1:]:
+                    if (
+                        isinstance(entry, list)
+                        and entry[0] == "solution_package"
+                    ):
+                        MFStructure().flopy_dict["solution_packages"][
+                            package.package_abbr
+                        ] = entry[1:]
+                # process each package
                 self.sim_struct.process_dfn(DfnPackage(package))
             self.sim_struct.tag_read_as_arrays()
 
