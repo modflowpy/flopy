@@ -2,6 +2,7 @@
 Module for input/output utilities
 """
 import os
+import platform
 import sys
 
 import numpy as np
@@ -540,3 +541,34 @@ def get_ts_sp(line):
     sp = int(ll[0])
 
     return ts, sp
+
+
+def relpath_printstr(ws_from, ws_to):
+    """
+    Method to work around Python issue 7195, no relative path exists between
+    drives on Windows
+
+    Parameters
+    ----------
+    ws_from : str
+        path from
+    ws_to : str
+        path to
+
+    Returns
+    -------
+        str : returns the relative path from ws_from to ws_to, if ws_from is
+        not on the same drive as ws_to the function returns the absolute path
+        of ws_to
+    """
+    if platform.system().lower() == "windows":
+        ws = os.path.abspath(ws_from)
+        ws2 = os.path.abspath(ws_to)
+        d0 = os.path.splitdrive(ws)[0].lower()
+        d1 = os.path.splitdrive(ws2)[0].lower()
+        if d0 != d1:
+            return ws2
+        else:
+            return os.path.relpath(ws2, ws)
+    else:
+        return os.path.relpath(ws_from, ws_to)

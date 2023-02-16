@@ -11,6 +11,7 @@ from ..utils import (
     HeadFile,
     UcnFile,
     ZBNetOutput,
+    flopy_io,
     import_optional_dependency,
 )
 from . import NetCdf, netcdf, shapefile_utils, vtk
@@ -634,8 +635,6 @@ def model_export(f, ml, fmt=None, **kwargs):
 
     else:
         raise NotImplementedError(f"unrecognized export argument:{f}")
-
-    return f
 
 
 def package_export(f, pak, fmt=None, **kwargs):
@@ -1524,7 +1523,7 @@ def export_array(
             output.write(txt)
         with open(filename, "ab") as output:
             np.savetxt(output, a, **kwargs)
-        print(f"wrote {filename}")
+        print(f"wrote {flopy_io.relpath_printstr(os.getcwd(), filename)}")
 
     elif filename.lower().endswith(".tif"):
         if (
@@ -1579,7 +1578,7 @@ def export_array(
         meta.update(kwargs)
         with rasterio.open(filename, "w", **meta) as dst:
             dst.write(a)
-        print(f"wrote {filename}")
+        print(f"wrote {flopy_io.relpath_printstr(os.getcwd(), filename)}")
 
     elif filename.lower().endswith(".shp"):
         from ..export.shapefile_utils import write_grid_shapefile

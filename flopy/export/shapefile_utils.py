@@ -4,16 +4,16 @@ Module for exporting and importing flopy model attributes
 """
 import copy
 import json
+import os
 import shutil
 import sys
 import warnings
-from os.path import expandvars
 from pathlib import Path
 
 import numpy as np
 
 from ..datbase import DataInterface, DataType
-from ..utils import Util3d, import_optional_dependency
+from ..utils import Util3d, flopy_io, import_optional_dependency
 
 # web address of spatial reference dot org
 srefhttp = "https://spatialreference.org"
@@ -199,7 +199,7 @@ def write_grid_shapefile(
 
     # close
     w.close()
-    print(f"wrote {path}")
+    print(f"wrote {flopy_io.relpath_printstr(os.getcwd(), path)}")
     # write the projection file
     write_prj(path, mg, epsg, prj)
     return
@@ -611,7 +611,7 @@ def recarray2shp(
 
     w.close()
     write_prj(shpname, mg, epsg, prj)
-    print(f"wrote {shpname}")
+    print(f"wrote {flopy_io.relpath_printstr(os.getcwd(), shpname)}")
     return
 
 
@@ -629,7 +629,9 @@ def write_prj(shpname, mg=None, epsg=None, prj=None, wkt_string=None):
     # copy a supplied prj file
     elif prj is not None:
         if prjname.exists():
-            print(f".prj file {prjname} already exists")
+            print(
+                f".prj file {flopy_io.relpath_printstr(os.getcwd(), prjname)} already exists"
+            )
         else:
             shutil.copy(str(prj), str(prjname))
 
@@ -959,7 +961,7 @@ class EpsgReference:
 
     def __init__(self):
         if sys.platform.startswith("win"):
-            flopy_appdata = Path(expandvars(r"%LOCALAPPDATA%\flopy"))
+            flopy_appdata = Path(os.path.expandvars(r"%LOCALAPPDATA%\flopy"))
         else:
             flopy_appdata = Path.home() / ".local" / "share" / "flopy"
         if not flopy_appdata.exists():
@@ -990,10 +992,14 @@ class EpsgReference:
     def reset(self, verbose=True):
         if self.location.exists():
             if verbose:
-                print(f"Resetting {self.location}")
+                print(
+                    f"Resetting {flopy_io.relpath_printstr(os.getcwd(), self.location)}"
+                )
             self.location.unlink()
         elif verbose:
-            print(f"{self.location} does not exist, no reset required")
+            print(
+                f"{flopy_io.relpath_printstr(os.getcwd(), self.location)} does not exist, no reset required"
+            )
 
     def add(self, epsg, prj):
         """
