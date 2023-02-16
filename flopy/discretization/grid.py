@@ -391,6 +391,14 @@ class Grid:
         raise NotImplementedError("must define shape in child class")
 
     @property
+    def size(self):
+        size = self.shape[0]
+        if len(self.shape) > 1:
+            for dim in self.shape[1:]:
+                size *= dim
+        return size
+
+    @property
     def extent(self):
         raise NotImplementedError("must define extent in child class")
 
