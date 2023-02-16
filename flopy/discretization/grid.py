@@ -392,11 +392,7 @@ class Grid:
 
     @property
     def size(self):
-        size = self.shape[0]
-        if len(self.shape) > 1:
-            for dim in self.shape[1:]:
-                size *= dim
-        return size
+        return np.prod(self.shape)
 
     @property
     def extent(self):
