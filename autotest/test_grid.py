@@ -259,6 +259,9 @@ def test_structured_xyz_intersect(example_data_path):
         model_ws=str(example_data_path / "freyberg_multilayer_transient"),
     )
     mg = ml.modelgrid
+
+    assert mg.size == np.prod((mg.nlay, mg.nrow, mg.ncol))
+
     top_botm = ml.modelgrid.top_botm
     xc, yc, zc = mg.xyzcellcenters
 
@@ -280,6 +283,8 @@ def test_vertex_xyz_intersect(example_data_path):
     )
     ml = sim.get_model(list(sim.model_names)[0])
     mg = ml.modelgrid
+
+    assert mg.size == np.prod((mg.nlay, mg.ncpl))
 
     xc, yc, zc = mg.xyzcellcenters
     for _ in range(10):
@@ -333,6 +338,8 @@ def test_unstructured_xyz_intersect(example_data_path):
         botm=botm,
         ncpl=ncpl,
     )
+
+    assert mg.size == mg.nnodes
 
     xc, yc, zc = mg.xyzcellcenters
     zc = zc[0].reshape(mg.nlay, mg.ncpl[0])

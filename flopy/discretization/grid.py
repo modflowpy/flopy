@@ -391,6 +391,10 @@ class Grid:
         raise NotImplementedError("must define shape in child class")
 
     @property
+    def size(self):
+        return np.prod(self.shape)
+
+    @property
     def extent(self):
         raise NotImplementedError("must define extent in child class")
 
