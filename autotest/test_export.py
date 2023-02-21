@@ -536,7 +536,9 @@ def test_export_netcdf(function_tmpdir, namfile):
 def test_export_array2(function_tmpdir):
     nrow = 7
     ncol = 11
-    epsg = 4111
+    # epsg = 4111  # this may not be a valid EPSG code
+    # (raises an error with pyproj)
+    crs = 3070
 
     # no epsg code
     modelgrid = StructuredGrid(
@@ -549,7 +551,7 @@ def test_export_array2(function_tmpdir):
 
     # with modelgrid epsg code
     modelgrid = StructuredGrid(
-        delr=np.ones(ncol) * 1.1, delc=np.ones(nrow) * 1.1, epsg=epsg
+        delr=np.ones(ncol) * 1.1, delc=np.ones(nrow) * 1.1, crs=crs
     )
     filename = os.path.join(function_tmpdir, "myarray2.shp")
     a = np.arange(nrow * ncol).reshape((nrow, ncol))
@@ -562,7 +564,7 @@ def test_export_array2(function_tmpdir):
     )
     filename = os.path.join(function_tmpdir, "myarray3.shp")
     a = np.arange(nrow * ncol).reshape((nrow, ncol))
-    export_array(modelgrid, filename, a, epsg=epsg)
+    export_array(modelgrid, filename, a, crs=crs)
     assert os.path.isfile(filename), "did not create array shapefile"
 
 
@@ -570,7 +572,9 @@ def test_export_array2(function_tmpdir):
 def test_export_array_contours(function_tmpdir):
     nrow = 7
     ncol = 11
-    epsg = 4111
+    # epsg = 4111  # this may not be a valid EPSG code
+    # (raises an error with pyproj)
+    crs = 3070
 
     # no epsg code
     modelgrid = StructuredGrid(
@@ -581,22 +585,24 @@ def test_export_array_contours(function_tmpdir):
     export_array_contours(modelgrid, filename, a)
     assert os.path.isfile(filename), "did not create contour shapefile"
 
-    # with modelgrid epsg code
+    # with modelgrid coordinate reference
     modelgrid = StructuredGrid(
-        delr=np.ones(ncol) * 1.1, delc=np.ones(nrow) * 1.1, epsg=epsg
+        delr=np.ones(ncol) * 1.1,
+        delc=np.ones(nrow) * 1.1,
+        crs=crs,
     )
     filename = function_tmpdir / "myarraycontours2.shp"
     a = np.arange(nrow * ncol).reshape((nrow, ncol))
     export_array_contours(modelgrid, filename, a)
     assert os.path.isfile(filename), "did not create contour shapefile"
 
-    # with passing in epsg code
+    # with passing in coordinate reference
     modelgrid = StructuredGrid(
         delr=np.ones(ncol) * 1.1, delc=np.ones(nrow) * 1.1
     )
     filename = function_tmpdir / "myarraycontours3.shp"
     a = np.arange(nrow * ncol).reshape((nrow, ncol))
-    export_array_contours(modelgrid, filename, a, epsg=epsg)
+    export_array_contours(modelgrid, filename, a, crs=crs)
     assert os.path.isfile(filename), "did not create contour shapefile"
 
 
@@ -889,7 +895,6 @@ def test_polygon_from_ij(function_tmpdir):
 
 @flaky
 @requires_pkg("netCDF4", "pyproj")
-@requires_spatial_reference
 def test_polygon_from_ij_with_epsg(function_tmpdir):
     ws = function_tmpdir
     m = Modflow("toy_model", model_ws=ws)
@@ -917,7 +922,7 @@ def test_polygon_from_ij_with_epsg(function_tmpdir):
         xoff=mg._xul_to_xll(600000.0, -45.0),
         yoff=mg._yul_to_yll(5170000, -45.0),
         angrot=-45.0,
-        proj4="EPSG:26715",
+        crs="EPSG:26715",
     )
 
     recarray = np.array(
@@ -943,16 +948,7 @@ def test_polygon_from_ij_with_epsg(function_tmpdir):
     ]
 
     fpth = os.path.join(ws, "test.shp")
-    recarray2shp(recarray, geoms, fpth, epsg=26715)
-
-    # tries to connect to https://spatialreference.org,
-    # might fail with CERTIFICATE_VERIFY_FAILED (on Mac,
-    # run Python Install Certificates) but intermittent
-    # 502s are also possible and possibly unavoidable)
-    ep = EpsgReference()
-    prj = ep.to_dict()
-
-    assert 26715 in prj
+    recarray2shp(recarray, geoms, fpth, crs=26715)
 
     fpth = os.path.join(ws, "test.prj")
     fpth2 = os.path.join(ws, "26715.prj")

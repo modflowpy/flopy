@@ -71,7 +71,9 @@ def get_shapefile_crs(shapefile):
             return get_authority_crs(crs)
 
 
-def get_crs(prjfile=None, prj=None, epsg=None, proj4=None, crs=None):
+def get_crs(
+    prjfile=None, prj=None, epsg=None, proj4=None, crs=None, wkt_string=None
+):
     """Helper function to produce a pyproj.CRS object from
     various input. Longer-term, this would just handle the ``crs``
     and ``prjfile`` arguments, but in the near term, we need to
@@ -111,6 +113,9 @@ def get_crs(prjfile=None, prj=None, epsg=None, proj4=None, crs=None):
         )
         if crs is None:
             crs = get_authority_crs(proj4)
+    elif wkt_string is not None:
+        if crs is None:
+            crs = get_authority_crs(wkt_string)
     if crs is not None and not crs.is_projected:
         raise ValueError(
             f"Only projected coordinate reference systems are supported.\n{crs}"

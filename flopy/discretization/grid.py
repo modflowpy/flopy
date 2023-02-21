@@ -262,7 +262,8 @@ class Grid:
 
     @property
     def epsg(self):
-        return self._crs.to_epsg()
+        if self._crs is not None:
+            return self._crs.to_epsg()
 
     @epsg.setter
     def epsg(self, epsg):
@@ -271,7 +272,8 @@ class Grid:
 
     @property
     def proj4(self):
-        return self._crs.to_proj4()
+        if self._crs is not None:
+            return self._crs.to_proj4()
 
     @proj4.setter
     def proj4(self, proj4):

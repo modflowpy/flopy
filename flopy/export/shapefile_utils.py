@@ -16,6 +16,7 @@ import numpy as np
 
 from ..datbase import DataInterface, DataType
 from ..utils import Util3d, flopy_io, import_optional_dependency
+from ..utils.crs import get_crs
 
 # web address of spatial reference dot org
 srefhttp = "https://spatialreference.org"
@@ -54,7 +55,8 @@ def write_gridlines_shapefile(filename: Union[str, os.PathLike], mg):
         wr.record(i)
 
     wr.close()
-    write_prj(filename, mg=mg)
+    write_prj(filename, modelgrid=mg)
+    return
 
 
 def write_grid_shapefile(
@@ -62,6 +64,8 @@ def write_grid_shapefile(
     mg,
     array_dict,
     nan_val=np.nan,
+    crs=None,
+    prjfile=None,
     epsg=None,
     prj: Optional[Union[str, os.PathLike]] = None,
     verbose=False,
@@ -79,12 +83,15 @@ def write_grid_shapefile(
         dictionary of model input arrays
     nan_val : float
         value to fill nans
-    epsg : str, int
-        epsg code
-    prj : str or PathLike, optional, default None
-        projection file path
-    verbose : bool, default False
-        whether to print verbose output
+    crs : pyproj.CRS, optional if `prj` is specified
+        Coordinate reference system (CRS) for the model grid
+        (must be projected; geographic CRS are not supported).
+        The value can be anything accepted by
+        :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+        such as an authority string (eg "EPSG:26916") or a WKT string.
+    prjfile : str or pathlike, optional if `crs` is specified
+        ESRI-style projection file with well-known text defining the CRS
+        for the model grid (must be projected; geographic CRS are not supported).
 
     Returns
     -------
@@ -207,7 +214,8 @@ def write_grid_shapefile(
         print(f"wrote {flopy_io.relpath_safe(path)}")
 
     # write the projection file
-    write_prj(path, mg, epsg, prj, verbose=verbose)
+    write_prj(path, mg, crs=crs, epsg=epsg, prj=prj, prjfile=prjfile)
+    return
 
 
 def model_attributes_to_shapefile(
@@ -240,10 +248,15 @@ def model_attributes_to_shapefile(
         modelgrid : fp.modflow.Grid object
             if modelgrid is supplied, user supplied modelgrid is used in lieu
             of the modelgrid attached to the modflow model object
-        epsg : int
-            epsg projection information
-        prj : str or PathLike
-            prj file path
+        crs : pyproj.CRS, optional if `prj` is specified
+            Coordinate reference system (CRS) for the model grid
+            (must be projected; geographic CRS are not supported).
+            The value can be anything accepted by
+            :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+            such as an authority string (eg "EPSG:26916") or a WKT string.
+        prjfile : str or pathlike, optional if `crs` is specified
+            ESRI-style projection file with well-known text defining the CRS
+            for the model grid (must be projected; geographic CRS are not supported).
 
     Returns
     -------
@@ -387,10 +400,10 @@ def model_attributes_to_shapefile(
                                 array_dict[name] = arr
 
     # write data arrays to a shapefile
-    write_grid_shapefile(path, grid, array_dict, verbose=verbose)
-    epsg = kwargs.get("epsg", None)
-    prj = kwargs.get("prj", None)
-    write_prj(path, grid, epsg, prj, verbose=verbose)
+    write_grid_shapefile(path, grid, array_dict)
+    crs = kwargs.get("crs", None)
+    prjfile = kwargs.get("prjfile", None)
+    write_prj(path, grid, crs=crs, prjfile=prjfile)
 
 
 def shape_attr_name(name, length=6, keep_layer=False):
@@ -533,6 +546,8 @@ def recarray2shp(
     geoms,
     shpname: Union[str, os.PathLike] = "recarray.shp",
     mg=None,
+    crs=None,
+    prjfile=None,
     epsg=None,
     prj: Optional[Union[str, os.PathLike]] = None,
     verbose=False,
@@ -556,21 +571,19 @@ def recarray2shp(
         recarray.
     shpname : str or PathLike, default "recarray.shp"
         Path for the output shapefile
-    epsg : int
-        EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
-    prj : str or PathLike, optional, default None
-        Existing projection file to be used with new shapefile.
-    verbose : bool
-        Whether to print verbose output
+    crs : pyproj.CRS, optional if `prj` is specified
+        Coordinate reference system (CRS) for the model grid
+        (must be projected; geographic CRS are not supported).
+        The value can be anything accepted by
+        :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+        such as an authority string (eg "EPSG:26916") or a WKT string.
+    prjfile : str or pathlike, optional if `crs` is specified
+        ESRI-style projection file with well-known text defining the CRS
+        for the model grid (must be projected; geographic CRS are not supported).
 
     Notes
     -----
     Uses pyshp.
-    epsg code requires an internet connection the first time to get the
-    projection file text from spatialreference.org, but then stashes the text
-    in the file epsgref.json (located in the user's data directory) for
-    subsequent use. See flopy.reference for more details.
-
     """
     from ..utils.geospatial_utils import GeoSpatialCollection
 
@@ -624,52 +637,38 @@ def recarray2shp(
             w.record(*r)
 
     w.close()
-    write_prj(shpname, mg, epsg, prj)
-    if verbose:
-        print(f"wrote {flopy_io.relpath_safe(shpname)}")
+    write_prj(shpname, mg, crs=crs, epsg=epsg, prj=prj, prjfile=prjfile)
+    print(f"wrote {flopy_io.relpath_printstr(os.getcwd(), shpname)}")
+    return
 
 
 def write_prj(
-    shpname: Union[str, os.PathLike],
-    mg=None,
+    shpname,
+    modelgrid=None,
+    crs=None,
     epsg=None,
-    prj: Optional[Union[str, os.PathLike]] = None,
+    prj=None,
+    prjfile=None,
     wkt_string=None,
-    verbose=False,
 ):
     # projection file name
-    prjname = Path(shpname).with_suffix(".prj")
+    output_projection_file = Path(shpname).with_suffix(".prj")
 
-    # figure which CRS option to use
-    # prioritize args over grid reference
-    # no proj4 option because it is too difficult
-    # to create prjfile from proj4 string without OGR
-    prjtxt = wkt_string
-    if epsg is not None:
-        prjtxt = CRS.getprj(epsg)
-    # copy a supplied prj file
-    elif prj is not None:
-        if prjname.exists():
-            if verbose:
-                print(
-                    f".prj file {flopy_io.relpath_safe(prjname)} already exists"
-                )
-        else:
-            shutil.copy(str(prj), str(prjname))
-
-    elif mg is not None:
-        if mg.epsg is not None:
-            prjtxt = CRS.getprj(mg.epsg)
+    crs = get_crs(
+        prjfile=prjfile, prj=prj, epsg=epsg, crs=crs, wkt_string=wkt_string
+    )
+    if crs is None and modelgrid is not None:
+        crs = modelgrid.crs
+    if crs is not None:
+        with open(output_projection_file, "w") as dest:
+            dest.write(crs.to_wkt())
 
     else:
         print(
             "No CRS information for writing a .prj file.\n"
-            "Supply an epsg code or .prj file path to the "
-            "model spatial reference or .export() method."
-            "(writing .prj files from proj4 strings not supported)"
+            "Supply an valid coordinate system reference to the attached modelgrid object "
+            "or .export() method."
         )
-    if prjtxt is not None:
-        prjname.write_text(prjtxt)
 
 
 class CRS:
