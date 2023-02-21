@@ -663,7 +663,6 @@ def write_prj(
         with open(output_projection_file, "w", encoding="utf-8") as dest:
             write_text = crs.to_wkt()
             dest.write(write_text)
-
     else:
         print(
             "No CRS information for writing a .prj file.\n"
