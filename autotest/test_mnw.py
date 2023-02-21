@@ -353,9 +353,7 @@ def test_mnw2_create_file(function_tmpdir):
         mnwmax=len(wells),
         mnw=wells,
         itmp=list(
-            (np.ones(len(stress_period_data.index)) * len(wellids)).astype(
-                int
-            )
+            (np.ones(len(stress_period_data.index)) * len(wellids)).astype(int)
         ),
     )
 

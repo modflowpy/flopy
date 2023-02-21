@@ -263,8 +263,10 @@ wel.stress_period_data.set_record(spd_record)
 # unless either the data or the file path has changed.
 
 # store lak period data in external text files
-period = {0: {"filename": "lak_sp1.txt", "data": [(0, "STAGE", 10.0)]},
-          1: {"filename": "lak_sp2.txt", "data": [(0, "STAGE", 15.0)]}}
+period = {
+    0: {"filename": "lak_sp1.txt", "data": [(0, "STAGE", 10.0)]},
+    1: {"filename": "lak_sp2.txt", "data": [(0, "STAGE", 15.0)]},
+}
 lakpd = [(0, -2.0, 1)]
 lakecn = [(0, 0, (0, 1, 0), "HORIZONTAL", 1.0, -5.0, 0.0, 10.0, 10.0)]
 lak = flopy.mf6.ModflowGwflak(

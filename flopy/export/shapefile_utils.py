@@ -9,6 +9,7 @@ import shutil
 import sys
 import warnings
 from pathlib import Path
+from warnings import warn
 
 import numpy as np
 
@@ -199,7 +200,7 @@ def write_grid_shapefile(
 
     # close
     w.close()
-    print(f"wrote {flopy_io.relpath_printstr(os.getcwd(), path)}")
+    print(f"wrote {flopy_io.relpath_safe(path)}")
     # write the projection file
     write_prj(path, mg, epsg, prj)
     return
@@ -524,6 +525,7 @@ def recarray2shp(
     mg=None,
     epsg=None,
     prj=None,
+    verbose=False,
     **kwargs,
 ):
     """
@@ -548,6 +550,8 @@ def recarray2shp(
         EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
     prj : Path or str
         Existing projection file to be used with new shapefile.
+    verbose : bool
+        Whether to print verbose output
 
     Notes
     -----
@@ -611,11 +615,13 @@ def recarray2shp(
 
     w.close()
     write_prj(shpname, mg, epsg, prj)
-    print(f"wrote {flopy_io.relpath_printstr(os.getcwd(), shpname)}")
-    return
+    if verbose:
+        print(f"wrote {flopy_io.relpath_safe(shpname)}")
 
 
-def write_prj(shpname, mg=None, epsg=None, prj=None, wkt_string=None):
+def write_prj(
+    shpname, mg=None, epsg=None, prj=None, wkt_string=None, verbose=False
+):
     # projection file name
     prjname = Path(shpname).with_suffix(".prj")
 
@@ -629,9 +635,10 @@ def write_prj(shpname, mg=None, epsg=None, prj=None, wkt_string=None):
     # copy a supplied prj file
     elif prj is not None:
         if prjname.exists():
-            print(
-                f".prj file {flopy_io.relpath_printstr(os.getcwd(), prjname)} already exists"
-            )
+            if verbose:
+                print(
+                    f".prj file {flopy_io.relpath_safe(prjname)} already exists"
+                )
         else:
             shutil.copy(str(prj), str(prjname))
 
@@ -992,13 +999,11 @@ class EpsgReference:
     def reset(self, verbose=True):
         if self.location.exists():
             if verbose:
-                print(
-                    f"Resetting {flopy_io.relpath_printstr(os.getcwd(), self.location)}"
-                )
+                print(f"Resetting {flopy_io.relpath_safe(self.location)}")
             self.location.unlink()
         elif verbose:
             print(
-                f"{flopy_io.relpath_printstr(os.getcwd(), self.location)} does not exist, no reset required"
+                f"{flopy_io.relpath_safe(self.location)} does not exist, no reset required"
             )
 
     def add(self, epsg, prj):

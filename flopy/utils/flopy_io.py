@@ -543,32 +543,66 @@ def get_ts_sp(line):
     return ts, sp
 
 
-def relpath_printstr(ws_from, ws_to):
+def relpath_safe(
+    path: os.PathLike, start=os.curdir, scrub: bool = False
+) -> str:
     """
-    Method to work around Python issue 7195, no relative path exists between
-    drives on Windows
+    Return a relative version of the path starting at the given start path.
+    This is impossible on Windows if the paths are on different drives, in
+    which case the absolute path is returned. The builtin os.path.relpath
+    raises a ValueError, this method is a workaround to avoid interrupting
+    normal control flow (background at https://bugs.python.org/issue7195).
+
+    This method also truncates/obfuscates absolute paths with usernames.
 
     Parameters
     ----------
-    ws_from : str
-        path from
-    ws_to : str
-        path to
+    path : PathLike
+        the path to truncate relative to the start path
+    start : PathLike
+        the starting path
+    scrub : bool
+        whether to remove the current login name from paths
+    Returns
+    -------
+        str : the relative path, unless the platform is Windows and the `path`
+        is not on the same drive as `start`, in which case the absolute path,
+        with elements before and including usernames removed and obfuscated
+    """
+
+    if start == os.curdir:
+        start = os.getcwd()
+
+    if platform.system() == "Windows":
+        pa = os.path.abspath(path)
+        sa = os.path.abspath(start)
+        pd = os.path.splitdrive(pa)[0].lower()
+        sd = os.path.splitdrive(sa)[0].lower()
+        p = os.path.abspath(path) if pd != sd else os.path.relpath(pa, sa)
+    else:
+        p = os.path.relpath(path, start)
+
+    return scrub_login(p) if scrub else p
+
+
+def scrub_login(s: str) -> str:
+    """
+    Remove the current login name from the given string,
+    replacing any occurences with "***".
+
+    Parameters
+    ----------
+    s : str
+        the input string
 
     Returns
     -------
-        str : returns the relative path from ws_from to ws_to, if ws_from is
-        not on the same drive as ws_to the function returns the absolute path
-        of ws_to
+        the string with login name obfuscated
     """
-    if platform.system().lower() == "windows":
-        ws = os.path.abspath(ws_from)
-        ws2 = os.path.abspath(ws_to)
-        d0 = os.path.splitdrive(ws)[0].lower()
-        d1 = os.path.splitdrive(ws2)[0].lower()
-        if d0 != d1:
-            return ws2
-        else:
-            return os.path.relpath(ws2, ws)
-    else:
-        return os.path.relpath(ws_from, ws_to)
+
+    try:
+        login = os.getlogin()
+        return s.replace(login, "***")
+    except OSError:
+        # OSError is possible in CI, e.g. 'No such device or address'
+        return s
