@@ -212,6 +212,7 @@ def attribs_from_namfile_header(namefile):
         "xul": None,
         "yul": None,
         "rotation": 0.0,
+        "crs": None,
         "proj4_str": None,
     }
     if namefile is None:
@@ -259,7 +260,15 @@ def attribs_from_namfile_header(namefile):
                 proj4 = ":".join(item.split(":")[1:]).strip()
                 if proj4.lower() == "none":
                     proj4 = None
-                defaults["proj4_str"] = proj4
+                defaults["crs"] = proj4
+            except:
+                print(f"   could not parse proj4_str in {namefile}")
+        elif "crs" in item.lower():
+            try:
+                crs = ":".join(item.split(":")[1:]).strip()
+                if crs.lower() == "none":
+                    proj4 = None
+                defaults["crs"] = crs
             except:
                 print(f"   could not parse proj4_str in {namefile}")
         elif "start" in item.lower():
