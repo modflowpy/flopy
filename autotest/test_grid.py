@@ -621,8 +621,9 @@ def test_grid_crs(
 
         # test input of projection file
         prjfile = function_tmpdir / "grid_crs.prj"
-        with open(prjfile, "w") as dest:
-            dest.write(sg.crs.to_wkt())
+        with open(prjfile, "w", encoding="utf-8") as dest:
+            write_text = sg.crs.to_wkt()
+            dest.write(write_text)
 
         sg3 = StructuredGrid(delr=delr, delc=delc, prjfile=prjfile)
         if crs is not None:
@@ -659,8 +660,9 @@ def test_grid_set_crs(crs, expected_srs, function_tmpdir):
     # test input of projection file
     if crs is not None:
         prjfile = function_tmpdir / "grid_crs.prj"
-        with open(prjfile, "w") as dest:
-            dest.write(sg.crs.to_wkt())
+        with open(prjfile, "w", encoding="utf-8") as dest:
+            write_text = sg.crs.to_wkt()
+            dest.write(write_text)
         sg = StructuredGrid(delr=delr, delc=delc)
         sg.prjfile = prjfile
         if crs is not None:

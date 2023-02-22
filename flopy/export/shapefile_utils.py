@@ -660,8 +660,9 @@ def write_prj(
     if crs is None and modelgrid is not None:
         crs = modelgrid.crs
     if crs is not None:
-        with open(output_projection_file, "w") as dest:
-            dest.write(crs.to_wkt())
+        with open(output_projection_file, "w", encoding="utf-8") as dest:
+            write_text = crs.to_wkt()
+            dest.write(write_text)
 
     else:
         print(

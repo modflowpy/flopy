@@ -65,7 +65,7 @@ def get_shapefile_crs(shapefile):
     shapefile = Path(shapefile)
     prjfile = shapefile.with_suffix(".prj")
     if prjfile.exists():
-        with open(prjfile) as src:
+        with open(prjfile, encoding="utf-8") as src:
             wkt = src.read()
             crs = pyproj.crs.CRS.from_wkt(wkt)
             return get_authority_crs(crs)
