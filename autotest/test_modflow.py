@@ -110,7 +110,7 @@ def test_mt_modelgrid(function_tmpdir):
     ml = Modflow(
         modelname="test",
         xll=500.0,
-        proj4_str="epsg:2193",
+        crs="epsg:2193",
         rotation=12.5,
         start_datetime="1/1/2016",
     )
@@ -131,7 +131,7 @@ def test_mt_modelgrid(function_tmpdir):
 
     assert mt.modelgrid.xoffset == ml.modelgrid.xoffset
     assert mt.modelgrid.yoffset == ml.modelgrid.yoffset
-    assert mt.modelgrid.epsg == ml.modelgrid.epsg
+    assert mt.modelgrid.crs == ml.modelgrid.crs
     assert mt.modelgrid.angrot == ml.modelgrid.angrot
     assert np.array_equal(mt.modelgrid.idomain, ml.modelgrid.idomain)
 
@@ -160,7 +160,7 @@ def test_mt_modelgrid(function_tmpdir):
     assert (
         swt.modelgrid.yoffset == mt.modelgrid.yoffset == ml.modelgrid.yoffset
     )
-    assert mt.modelgrid.epsg == ml.modelgrid.epsg == swt.modelgrid.epsg
+    assert mt.modelgrid.crs == ml.modelgrid.crs == swt.modelgrid.crs
     assert mt.modelgrid.angrot == ml.modelgrid.angrot == swt.modelgrid.angrot
     assert np.array_equal(mt.modelgrid.idomain, ml.modelgrid.idomain)
     assert np.array_equal(swt.modelgrid.idomain, ml.modelgrid.idomain)
@@ -194,7 +194,7 @@ def test_mt_modelgrid(function_tmpdir):
     assert (
         mt.modelgrid.yoffset == ml.modelgrid.yoffset == swt.modelgrid.yoffset
     )
-    assert mt.modelgrid.epsg == ml.modelgrid.epsg == swt.modelgrid.epsg
+    assert mt.modelgrid.crs == ml.modelgrid.crs == swt.modelgrid.crs
     assert mt.modelgrid.angrot == ml.modelgrid.angrot == swt.modelgrid.angrot
     assert np.array_equal(mt.modelgrid.idomain, ml.modelgrid.idomain)
     assert np.array_equal(swt.modelgrid.idomain, ml.modelgrid.idomain)
@@ -251,7 +251,7 @@ def test_sr(function_tmpdir):
         model_ws=ws,
         xll=12345,
         yll=12345,
-        proj4_str="test test test",
+        crs=26916,
     )
     ModflowDis(m, 10, 10, 10)
     m.write_input()
@@ -261,7 +261,7 @@ def test_sr(function_tmpdir):
         raise AssertionError()
     if extents[3] != 12355:
         raise AssertionError()
-    if mm.modelgrid.proj4 != "test test test":
+    if mm.modelgrid.crs.srs != "EPSG:26916":
         raise AssertionError()
 
     mm.dis.top = 5000
@@ -511,7 +511,7 @@ def test_read_usgs_model_reference(function_tmpdir, model_reference_path):
     )
     m.write_input()
 
-    # test reading of SR information from usgs.model.reference
+    # test reading of proj4 string from usgs.model.reference
     m2 = Modflow.load("junk.nam", model_ws=ws)
     from flopy.discretization import StructuredGrid
 
@@ -527,21 +527,21 @@ def test_read_usgs_model_reference(function_tmpdir, model_reference_path):
     assert m2.modelgrid.xoffset == mg.xoffset
     assert m2.modelgrid.yoffset == mg.yoffset
     assert m2.modelgrid.angrot == mg.angrot
-    assert m2.modelgrid.epsg == mg.epsg
+    assert m2.modelgrid.crs == mg.crs
 
-    # test reading non-default units from usgs.model.reference
+    # test reading epsg code from usgs.model.reference
     shutil.copy(mrf_path, f"{mrf_path}_copy")
     with open(f"{mrf_path}_copy") as src:
         with open(mrf_path, "w") as dst:
             for line in src:
                 if "epsg" in line:
-                    line = line.replace("102733", "4326")
+                    line = "epsg 26916\n"
                 dst.write(line)
 
     m2 = Modflow.load("junk.nam", model_ws=ws)
     m2.modelgrid.read_usgs_model_reference_file(mrf_path)
 
-    assert m2.modelgrid.epsg == 4326
+    assert m2.modelgrid.crs.to_epsg() == 26916
     # have to delete this, otherwise it will mess up other tests
     to_del = glob.glob(f"{mrf_path}*")
     for f in to_del:
