@@ -210,8 +210,8 @@ class Grid:
                 f"yll:{self.yoffset!s}",
                 f"rotation:{self.angrot!s}",
             ]
-        if self.proj4 is not None:
-            items.append(f"proj4_str:{self.proj4}")
+        if self.crs is not None:
+            items.append(f"crs:{self.crs.srs}")
         if self.units is not None:
             items.append(f"units:{self.units}")
         if self.lenuni is not None:
@@ -939,7 +939,7 @@ class Grid:
                         if line.strip()[0] != "#":
                             info = line.strip().split("#")[0].split()
                             if len(info) > 1:
-                                data = " ".join(info[1:])
+                                data = " ".join(info[1:]).strip("'").strip('"')
                                 if info[0] == "xll":
                                     self._xoff = float(data)
                                 elif info[0] == "yll":
