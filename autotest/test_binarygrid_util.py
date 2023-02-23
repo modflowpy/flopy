@@ -16,7 +16,7 @@ def mfgrd_test_path(example_data_path):
 
 
 def test_mfgrddis_MfGrdFile(mfgrd_test_path):
-    grb = MfGrdFile(str(mfgrd_test_path / "nwtp3.dis.grb"), verbose=True)
+    grb = MfGrdFile(mfgrd_test_path / "nwtp3.dis.grb", verbose=True)
     nodes = grb.nodes
     ia = grb.ia
     shape = ia.shape[0]
@@ -32,7 +32,7 @@ def test_mfgrddis_MfGrdFile(mfgrd_test_path):
 
 
 def test_mfgrddis_modelgrid(mfgrd_test_path):
-    fn = str(mfgrd_test_path / "nwtp3.dis.grb")
+    fn = mfgrd_test_path / "nwtp3.dis.grb"
     modelgrid = StructuredGrid.from_binary_grid_file(fn, verbose=True)
     assert isinstance(modelgrid, StructuredGrid), "invalid grid type"
 
@@ -67,7 +67,7 @@ def test_mfgrddis_modelgrid(mfgrd_test_path):
 
 
 def test_mfgrddisv_MfGrdFile(mfgrd_test_path):
-    fn = str(mfgrd_test_path / "flow.disv.grb")
+    fn = mfgrd_test_path / "flow.disv.grb"
     grb = MfGrdFile(fn, verbose=True)
 
     nodes = grb.nodes
@@ -124,7 +124,7 @@ def test_mfgrddisv_modelgrid(mfgrd_test_path):
 
 
 def test_mfgrddisu_MfGrdFile(mfgrd_test_path):
-    fn = str(mfgrd_test_path / "keating.disu.grb")
+    fn = mfgrd_test_path / "keating.disu.grb"
     grb = MfGrdFile(fn, verbose=True)
 
     nodes = grb.nodes
@@ -142,13 +142,13 @@ def test_mfgrddisu_MfGrdFile(mfgrd_test_path):
 
 
 def test_mfgrddisu_modelgrid_fail(mfgrd_test_path):
-    fn = str(mfgrd_test_path / "flow.disu.grb")
+    fn = mfgrd_test_path / "flow.disu.grb"
     with pytest.raises(TypeError):
         mg = UnstructuredGrid.from_binary_grid_file(fn, verbose=True)
 
 
 def test_mfgrddisu_modelgrid(mfgrd_test_path):
-    fn = str(mfgrd_test_path / "keating.disu.grb")
+    fn = mfgrd_test_path / "keating.disu.grb"
     mg = UnstructuredGrid.from_binary_grid_file(fn, verbose=True)
     assert isinstance(mg, UnstructuredGrid), f"invalid grid type ({type(mg)})"
 

@@ -2745,9 +2745,9 @@ class Util2d(DataInterface):
                 raise Exception(
                     "Util2d:value type is bool, but dtype not set as bool"
                 )
-        elif isinstance(value, str):
+        elif isinstance(value, (str, os.PathLike)):
             if os.path.exists(value):
-                self.__value = value
+                self.__value = str(value)
                 return
             elif self.dtype == np.int32:
                 try:

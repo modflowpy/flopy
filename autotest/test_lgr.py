@@ -237,7 +237,7 @@ def test_simple_lgrmodel_from_scratch(function_tmpdir):
         yul_c,
         proj4_str,
         "mflgr",
-        rundir=str(function_tmpdir),
+        rundir=function_tmpdir,
         welInfo=welInfo,
         startingHead=-2.0,
     )
@@ -267,7 +267,7 @@ def test_simple_lgrmodel_from_scratch(function_tmpdir):
         yul_m,
         proj4_str,
         "mflgr",
-        rundir=str(function_tmpdir),
+        rundir=function_tmpdir,
         welInfo=welInfo,
         startingHead=-2.0,
     )
@@ -309,7 +309,7 @@ def test_simple_lgrmodel_from_scratch(function_tmpdir):
         parent=mother,
         children=[child],
         children_data=childData,
-        model_ws=str(function_tmpdir),
+        model_ws=function_tmpdir,
         external_path=None,
         verbose=False,
     )

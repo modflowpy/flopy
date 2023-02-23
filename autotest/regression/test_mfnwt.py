@@ -24,7 +24,7 @@ def get_nfnwt_namfiles():
             if "WEL" in value.filetype:
                 wel = True
         if lpf and wel:
-            namfiles.append(str(namfile))
+            namfiles.append(namfile)
     return namfiles
 
 
@@ -107,16 +107,16 @@ def test_run_mfnwt_model(function_tmpdir, namfile):
     wel.iunitramp = 2
 
     # change workspace and write MODFLOW-NWT model
-    m.change_model_ws(str(function_tmpdir))
+    m.change_model_ws(function_tmpdir)
     m.write_input()
     success, buff = m.run_model(silent=False)
     assert success, "base model run did not terminate successfully"
-    fn0 = str(function_tmpdir / namfile)
+    fn0 = function_tmpdir / namfile
 
     # reload the model just written
     m = Modflow.load(
         namfile,
-        model_ws=str(function_tmpdir),
+        model_ws=function_tmpdir,
         version="mfnwt",
         verbose=True,
         check=False,
@@ -126,17 +126,17 @@ def test_run_mfnwt_model(function_tmpdir, namfile):
     assert m.load_fail is False
 
     # change workspace and write MODFLOW-NWT model
-    pthf = str(function_tmpdir / "flopy")
+    pthf = function_tmpdir / "flopy"
     m.change_model_ws(pthf)
     m.write_input()
     success, buff = m.run_model(silent=False)
     assert success, "base model run did not terminate successfully"
     fn1 = os.path.join(pthf, namfile)
 
-    fsum = str(function_tmpdir / f"{base_name}.head.out")
+    fsum = function_tmpdir / f"{base_name}.head.out"
     assert compare_heads(fn0, fn1, outfile=fsum), "head comparison failure"
 
-    fsum = str(function_tmpdir / f"{base_name}.budget.out")
+    fsum = function_tmpdir / f"{base_name}.budget.out"
     assert compare_budget(
         fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
     ), "budget comparison failure"

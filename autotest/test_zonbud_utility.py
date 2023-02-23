@@ -100,12 +100,12 @@ def test_compare2zonebudget(cbc_f, zon_f, zbud_f, rtol):
     t039 Compare output from zonbud.exe to the budget calculated by zonbud
     utility using the multilayer transient freyberg model.
     """
-    zba = read_zonebudget_file(str(zbud_f))
+    zba = read_zonebudget_file(zbud_f)
     zonenames = [n for n in zba.dtype.names if "ZONE" in n]
     times = np.unique(zba["totim"])
 
-    zon = ZoneBudget.read_zone_file(str(zon_f))
-    zb = ZoneBudget(str(cbc_f), zon, totim=times, verbose=False)
+    zon = ZoneBudget.read_zone_file(zon_f)
+    zb = ZoneBudget(cbc_f, zon, totim=times, verbose=False)
     fpa = zb.get_budget()
 
     for time in times:
@@ -138,8 +138,8 @@ def test_zonbud_get_record_names(cbc_f, zon_f):
     """
     t039 Test zonbud get_record_names method
     """
-    zon = ZoneBudget.read_zone_file(str(zon_f))
-    zb = ZoneBudget(str(cbc_f), zon, kstpkper=(0, 0))
+    zon = ZoneBudget.read_zone_file(zon_f)
+    zb = ZoneBudget(cbc_f, zon, kstpkper=(0, 0))
     recnames = zb.get_record_names()
     assert len(recnames) > 0, "No record names returned."
     recnames = zb.get_record_names(stripped=True)
@@ -150,10 +150,10 @@ def test_zonbud_aliases(cbc_f, zon_f):
     """
     t039 Test zonbud aliases
     """
-    zon = ZoneBudget.read_zone_file(str(zon_f))
+    zon = ZoneBudget.read_zone_file(zon_f)
     aliases = {1: "Trey", 2: "Mike", 4: "Wilson", 0: "Carini"}
     zb = ZoneBudget(
-        str(cbc_f), zon, kstpkper=(0, 1096), aliases=aliases, verbose=True
+        cbc_f, zon, kstpkper=(0, 1096), aliases=aliases, verbose=True
     )
     bud = zb.get_budget()
     assert bud[bud["name"] == "FROM_Mike"].shape[0] > 0, "No records returned."
@@ -163,9 +163,9 @@ def test_zonbud_to_csv(function_tmpdir, cbc_f, zon_f):
     """
     t039 Test zonbud export to csv file method
     """
-    zon = ZoneBudget.read_zone_file(str(zon_f))
-    zb = ZoneBudget(str(cbc_f), zon, kstpkper=[(0, 1094), (0, 1096)])
-    f_out = os.path.join(str(function_tmpdir), "test.csv")
+    zon = ZoneBudget.read_zone_file(zon_f)
+    zb = ZoneBudget(cbc_f, zon, kstpkper=[(0, 1094), (0, 1096)])
+    f_out = function_tmpdir / "test.csv"
     zb.to_csv(f_out)
     with open(f_out) as f:
         lines = f.readlines()
@@ -176,8 +176,8 @@ def test_zonbud_math(cbc_f, zon_f):
     """
     t039 Test zonbud math methods
     """
-    zon = ZoneBudget.read_zone_file(str(zon_f))
-    cmd = ZoneBudget(str(cbc_f), zon, kstpkper=(0, 1096))
+    zon = ZoneBudget.read_zone_file(zon_f)
+    cmd = ZoneBudget(cbc_f, zon, kstpkper=(0, 1096))
     cmd / 35.3147
     cmd * 12.0
     cmd + 1e6
@@ -188,8 +188,8 @@ def test_zonbud_copy(cbc_f, zon_f):
     """
     t039 Test zonbud copy
     """
-    zon = ZoneBudget.read_zone_file(str(zon_f))
-    cfd = ZoneBudget(str(cbc_f), zon, kstpkper=(0, 1096))
+    zon = ZoneBudget.read_zone_file(zon_f)
+    cfd = ZoneBudget(cbc_f, zon, kstpkper=(0, 1096))
     cfd2 = cfd.copy()
     assert cfd is not cfd2, "Copied object is a shallow copy."
 
@@ -199,30 +199,26 @@ def test_zonbud_readwrite_zbarray(function_tmpdir):
     t039 Test zonbud read write
     """
     x = np.random.randint(100, 200, size=(5, 150, 200))
+    ZoneBudget.write_zone_file(function_tmpdir / "randint", x)
     ZoneBudget.write_zone_file(
-        os.path.join(str(function_tmpdir), "randint"), x
+        function_tmpdir / "randint", x, fmtin=35, iprn=2
     )
-    ZoneBudget.write_zone_file(
-        os.path.join(str(function_tmpdir), "randint"), x, fmtin=35, iprn=2
-    )
-    z = ZoneBudget.read_zone_file(
-        os.path.join(str(function_tmpdir), "randint")
-    )
+    z = ZoneBudget.read_zone_file(function_tmpdir / "randint")
     assert np.array_equal(x, z), "Input and output arrays do not match."
 
 
 @requires_pkg("pandas")
 def test_dataframes(cbc_f, zon_f):
-    zon = ZoneBudget.read_zone_file(str(zon_f))
-    cmd = ZoneBudget(str(cbc_f), zon, totim=1095.0)
+    zon = ZoneBudget.read_zone_file(zon_f)
+    cmd = ZoneBudget(cbc_f, zon, totim=1095.0)
     df = cmd.get_dataframes()
     assert len(df) > 0, "Output DataFrames empty."
 
 
 def test_get_budget(cbc_f, zon_f):
-    zon = ZoneBudget.read_zone_file(str(zon_f))
+    zon = ZoneBudget.read_zone_file(zon_f)
     aliases = {1: "Trey", 2: "Mike", 4: "Wilson", 0: "Carini"}
-    zb = ZoneBudget(str(cbc_f), zon, kstpkper=(0, 0), aliases=aliases)
+    zb = ZoneBudget(cbc_f, zon, kstpkper=(0, 0), aliases=aliases)
     zb.get_budget(names="FROM_CONSTANT_HEAD", zones=1)
     zb.get_budget(names=["FROM_CONSTANT_HEAD"], zones=[1, 2])
     zb.get_budget(net=True)
@@ -230,8 +226,8 @@ def test_get_budget(cbc_f, zon_f):
 
 def test_get_model_shape(cbc_f, zon_f):
     ZoneBudget(
-        str(cbc_f),
-        ZoneBudget.read_zone_file(str(zon_f)),
+        cbc_f,
+        ZoneBudget.read_zone_file(zon_f),
         kstpkper=(0, 0),
         verbose=True,
     ).get_model_shape()
@@ -243,7 +239,7 @@ def test_zonbud_active_areas_zone_zero(loadpth, cbc_f, rtol):
     import pandas as pd
 
     # Read ZoneBudget executable output and reformat
-    zbud_f = os.path.join(str(loadpth), "zonef_mlt_active_zone_0.2.csv")
+    zbud_f = loadpth / "zonef_mlt_active_zone_0.2.csv"
     zbud = pd.read_csv(zbud_f)
     zbud.columns = [c.strip() for c in zbud.columns]
     zbud.columns = ["_".join(c.split()) for c in zbud.columns]
@@ -252,9 +248,9 @@ def test_zonbud_active_areas_zone_zero(loadpth, cbc_f, rtol):
     zbud = zbud[cols]
 
     # Run ZoneBudget utility and reformat output
-    zon_f = os.path.join(str(loadpth), "zonef_mlt_active_zone_0.zbr")
+    zon_f = loadpth / "zonef_mlt_active_zone_0.zbr"
     zon = ZoneBudget.read_zone_file(zon_f)
-    zb = ZoneBudget(str(cbc_f), zon, kstpkper=(0, 1096))
+    zb = ZoneBudget(cbc_f, zon, kstpkper=(0, 1096))
     fpbud = zb.get_dataframes().reset_index()
     fpbud = fpbud[["name"] + [c for c in fpbud.columns if "ZONE" in c]]
     fpbud = fpbud.set_index("name").T
@@ -278,7 +274,7 @@ def test_read_zone_file(function_tmpdir):
         "  0  1  1  1\n"
         "  0"
     )
-    name = os.path.join(str(function_tmpdir), "zonefiletest.txt")
+    name = function_tmpdir / "zonefiletest.txt"
     with open(name, "w") as foo:
         foo.write(zf)
     zones = ZoneBudget.read_zone_file(name)
@@ -296,21 +292,21 @@ def test_zonebudget_6(function_tmpdir, example_data_path):
     zb_exe_name = "zbud6"
 
     sim_ws = example_data_path / "mf6" / "test001e_UZF_3lay"
-    sim = MFSimulation.load(sim_ws=str(sim_ws), exe_name=exe_name)
-    sim.simulation_data.mfpath.set_sim_path(str(function_tmpdir))
+    sim = MFSimulation.load(sim_ws=sim_ws, exe_name=exe_name)
+    sim.simulation_data.mfpath.set_sim_path(function_tmpdir)
     sim.write_simulation()
     success, _ = sim.run_simulation()
 
-    grb_file = os.path.join(str(function_tmpdir), "test001e_UZF_3lay.dis.grb")
-    cbc_file = os.path.join(str(function_tmpdir), "test001e_UZF_3lay.cbc")
+    grb_file = function_tmpdir / "test001e_UZF_3lay.dis.grb"
+    cbc_file = function_tmpdir / "test001e_UZF_3lay.cbc"
 
     ml = sim.get_model("gwf_1")
     idomain = np.ones(ml.modelgrid.shape, dtype=int)
 
-    zb = ZoneBudget6(model_ws=str(function_tmpdir), exe_name=zb_exe_name)
+    zb = ZoneBudget6(model_ws=function_tmpdir, exe_name=zb_exe_name)
     zf = ZoneFile6(zb, idomain)
-    zb.grb = grb_file
-    zb.cbc = cbc_file
+    zb.grb = str(grb_file)
+    zb.cbc = str(cbc_file)
     zb.write_input(line_length=21)
     success, _ = zb.run_model()
 
@@ -321,7 +317,7 @@ def test_zonebudget_6(function_tmpdir, example_data_path):
     assert isinstance(df, pd.DataFrame)
 
     zb_pkg = ml.uzf.output.zonebudget(idomain)
-    zb_pkg.change_model_ws(str(function_tmpdir))
+    zb_pkg.change_model_ws(function_tmpdir)
     zb_pkg.name = "uzf_zonebud"
     zb_pkg.write_input()
     success, _ = zb_pkg.run_model(exe_name=zb_exe_name)
@@ -333,10 +329,10 @@ def test_zonebudget_6(function_tmpdir, example_data_path):
     assert isinstance(df, pd.DataFrame)
 
     # test aliases
-    zb = ZoneBudget6(model_ws=str(function_tmpdir), exe_name=zb_exe_name)
+    zb = ZoneBudget6(model_ws=function_tmpdir, exe_name=zb_exe_name)
     zf = ZoneFile6(zb, idomain, aliases={1: "test alias", 2: "test pop"})
-    zb.grb = grb_file
-    zb.cbc = cbc_file
+    zb.grb = str(grb_file)
+    zb.cbc = str(cbc_file)
     zb.write_input(line_length=5)
     success, _ = zb.run_model()
 
@@ -354,8 +350,8 @@ def test_zonebudget6_from_output_method(function_tmpdir, example_data_path):
     zb_exe_name = "zbud6"
 
     sim_ws = example_data_path / "mf6" / "test001e_UZF_3lay"
-    sim = MFSimulation.load(sim_ws=str(sim_ws), exe_name=exe_name)
-    sim.simulation_data.mfpath.set_sim_path(str(function_tmpdir))
+    sim = MFSimulation.load(sim_ws=sim_ws, exe_name=exe_name)
+    sim.simulation_data.mfpath.set_sim_path(function_tmpdir)
     sim.write_simulation()
     success, _ = sim.run_simulation()
 

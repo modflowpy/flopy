@@ -9,7 +9,7 @@ import numpy as np
 import flopy
 
 
-def run(workspace, quiet):
+def run(workspace: Path, quiet=False):
     fext = "png"
     narg = len(sys.argv)
     iarg = 0
@@ -79,7 +79,7 @@ def run(workspace, quiet):
 
     # create external ibound array and starting head files
     files = []
-    hfile = str(Path(workspace) / f"{name}_strt.ref")
+    hfile = workspace / f"{name}_strt.ref"
     np.savetxt(hfile, start)
     hfiles = []
     for kdx in range(Nlay):
@@ -107,14 +107,14 @@ def run(workspace, quiet):
     # specifying, in this case, the step number and period number for which we want to retrieve data.
     # A three-dimensional array is returned of size `nlay, nrow, ncol`. Matplotlib contouring functions
     # are used to make contours of the layers or a cross-section.
-    hds = flopy.utils.HeadFile(os.path.join(workspace, f"{name}.hds"))
+    hds = flopy.utils.HeadFile(workspace / f"{name}.hds")
     h = hds.get_data(kstpkper=(0, 0))
     x = y = np.linspace(0, L, N)
     c = plt.contour(x, y, h[0], np.arange(90, 100.1, 0.2))
     plt.clabel(c, fmt="%2.1f")
     plt.axis("scaled")
 
-    outfig = os.path.join(workspace, f"lake1.{fext}")
+    outfig = workspace / f"lake1.{fext}"
     fig = plt.gcf()
     fig.savefig(outfig, dpi=300)
     print("created...", outfig)
@@ -124,7 +124,7 @@ def run(workspace, quiet):
     plt.clabel(c, fmt="%1.1f")
     plt.axis("scaled")
 
-    outfig = os.path.join(workspace, f"lake2.{fext}")
+    outfig = workspace / f"lake2.{fext}"
     fig = plt.gcf()
     fig.savefig(outfig, dpi=300)
     print("created...", outfig)
@@ -133,7 +133,7 @@ def run(workspace, quiet):
     c = plt.contour(x, z, h[:, 50, :], np.arange(90, 100.1, 0.2))
     plt.axis("scaled")
 
-    outfig = os.path.join(workspace, f"lake3.{fext}")
+    outfig = workspace / f"lake3.{fext}"
     fig = plt.gcf()
     fig.savefig(outfig, dpi=300)
     print("created...", outfig)
@@ -153,11 +153,11 @@ if __name__ == "__main__":
     quiet = args.get("quiet", False)
 
     if workspace is not None:
-        run(workspace, quiet)
+        run(Path(workspace), quiet)
     else:
         try:
             with TemporaryDirectory() as workspace:
-                run(workspace, quiet)
+                run(Path(workspace), quiet)
         except (PermissionError, NotADirectoryError):
             # can occur on windows: https://docs.python.org/3/library/tempfile.html#tempfile.TemporaryDirectory
             pass

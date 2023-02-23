@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 import numpy as np
 
 from ..utils import import_optional_dependency
@@ -238,7 +241,8 @@ class GeoSpatialCollection:
     obj : collection object
         obj can accept the following types
 
-        str : shapefile name
+        str : shapefile path
+        PathLike : shapefile path
         shapefile.Reader object
         list of [shapefile.Shape, shapefile.Shape,]
         shapefile.Shapes object
@@ -315,8 +319,10 @@ class GeoSpatialCollection:
                     )
 
         elif self.__shapefile is not None:
-            if isinstance(obj, str):
-                with self.__shapefile.Reader(obj) as r:
+            if isinstance(obj, (str, os.PathLike)):
+                with self.__shapefile.Reader(
+                    str(Path(obj).expanduser().absolute())
+                ) as r:
                     for shape in r.shapes():
                         self.__collection.append(GeoSpatialUtil(shape))
 

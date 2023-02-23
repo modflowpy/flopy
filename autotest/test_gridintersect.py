@@ -1222,10 +1222,10 @@ def test_polygon_offset_rot_structured_grid_shapely(rtree):
 
 @requires_pkg("rasterstats", "scipy")
 def test_rasters(example_data_path):
-    ws = str(example_data_path / "options")
+    ws = example_data_path / "options"
     raster_name = "dem.img"
 
-    rio = Raster.load(os.path.join(ws, "dem", raster_name))
+    rio = Raster.load(ws / "dem" / raster_name)
 
     ml = Modflow.load(
         "sagehen.nam", version="mfnwt", model_ws=os.path.join(ws, "sagehen")
@@ -1284,14 +1284,12 @@ def test_rasters(example_data_path):
 @pytest.mark.slow
 @requires_pkg("rasterstats")
 def test_raster_sampling_methods(example_data_path):
-    ws = str(example_data_path / "options")
+    ws = example_data_path / "options"
     raster_name = "dem.img"
 
-    rio = Raster.load(os.path.join(ws, "dem", raster_name))
+    rio = Raster.load(ws / "dem" / raster_name)
 
-    ml = Modflow.load(
-        "sagehen.nam", version="mfnwt", model_ws=os.path.join(ws, "sagehen")
-    )
+    ml = Modflow.load("sagehen.nam", version="mfnwt", model_ws=ws / "sagehen")
     xoff = 214110
     yoff = 4366620
     ml.modelgrid.set_coord_info(xoff, yoff)

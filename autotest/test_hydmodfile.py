@@ -20,10 +20,10 @@ def hydmod_model_path(example_data_path):
 
 
 def test_hydmodfile_create(function_tmpdir):
-    m = Modflow("test", model_ws=str(function_tmpdir))
+    m = Modflow("test", model_ws=function_tmpdir)
     hyd = ModflowHyd(m)
     m.hyd.write_file()
-    pth = str(function_tmpdir / "test.hyd")
+    pth = function_tmpdir / "test.hyd"
     hydload = ModflowHyd.load(pth, m)
     assert np.array_equal(
         hyd.obsdata, hydload.obsdata
@@ -55,17 +55,17 @@ def test_hydmodfile_create(function_tmpdir):
 def test_hydmodfile_load(function_tmpdir, hydmod_model_path):
     model = "test1tr.nam"
     m = Modflow.load(
-        model, version="mf2005", model_ws=str(hydmod_model_path), verbose=True
+        model, version="mf2005", model_ws=hydmod_model_path, verbose=True
     )
     hydref = m.hyd
     assert isinstance(
         hydref, ModflowHyd
     ), "Did not load hydmod package...test1tr.hyd"
 
-    m.change_model_ws(str(function_tmpdir))
+    m.change_model_ws(function_tmpdir)
     m.hyd.write_file()
 
-    pth = str(hydmod_model_path / "test1tr.hyd")
+    pth = hydmod_model_path / "test1tr.hyd"
     hydload = ModflowHyd.load(pth, m)
     assert np.array_equal(
         hydref.obsdata, hydload.obsdata
@@ -73,7 +73,7 @@ def test_hydmodfile_load(function_tmpdir, hydmod_model_path):
 
 
 def test_hydmodfile_read(hydmod_model_path):
-    pth = str(hydmod_model_path / "test1tr.hyd.gitbin")
+    pth = hydmod_model_path / "test1tr.hyd.gitbin"
     h = HydmodObs(pth)
     assert isinstance(h, HydmodObs)
 
@@ -148,7 +148,7 @@ def test_mf6obsfile_read(mf6_obs_model_path):
     binfile = [True, False]
 
     for idx in range(len(files)):
-        pth = str(mf6_obs_model_path / files[idx])
+        pth = mf6_obs_model_path / files[idx]
         h = Mf6Obs(pth, isBinary=binfile[idx])
         assert isinstance(h, Mf6Obs)
 

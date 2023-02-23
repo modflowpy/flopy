@@ -42,7 +42,7 @@ def test_modflow():
 def test_modflow_unstructured(function_tmpdir):
     import flopy
 
-    mf = flopy.mfusg.MfUsg(structured=False, model_ws=str(function_tmpdir))
+    mf = flopy.mfusg.MfUsg(structured=False, model_ws=function_tmpdir)
     assert isinstance(mf, flopy.mfusg.MfUsg)
 
     disu = flopy.mfusg.MfUsgDisU(
@@ -74,14 +74,14 @@ def test_modflow_unstructured(function_tmpdir):
     wel.write_file()
     wel_path = Path(function_tmpdir / f"{mf.name}.wel")
     assert wel_path.is_file()
-    wel2 = flopy.mfusg.MfUsgWel.load(str(wel_path), mf)
+    wel2 = flopy.mfusg.MfUsgWel.load(wel_path, mf)
     assert wel2.stress_period_data[0] == wel.stress_period_data[0]
 
     # write ghb file
     ghb.write_file(check=False)
     ghb_path = Path(function_tmpdir / f"{mf.name}.ghb")
     assert ghb_path.is_file() is True
-    ghb2 = flopy.modflow.ModflowGhb.load(str(ghb_path), mf)
+    ghb2 = flopy.modflow.ModflowGhb.load(ghb_path, mf)
 
 
 def test_mflist_reference(function_tmpdir):
@@ -162,7 +162,7 @@ def test_pyinstaller_flopy_runs_without_dfn_folder(
         # run built executable
         sim_path = example_data_path / "mf6" / "test006_gwf3"
 
-        flopy.mf6.MFSimulation.load(sim_ws=str(sim_path))
+        flopy.mf6.MFSimulation.load(sim_ws=sim_path)
     finally:
         if exists and rename_path.exists():
             os.rename(rename_path, dfn_path)

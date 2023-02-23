@@ -59,7 +59,9 @@ class ZoneBudget:
 
         if isinstance(cbc_file, CellBudgetFile):
             self.cbc = cbc_file
-        elif isinstance(cbc_file, str) and os.path.isfile(cbc_file):
+        elif isinstance(cbc_file, (str, os.PathLike)) and os.path.isfile(
+            cbc_file
+        ):
             self.cbc = CellBudgetFile(cbc_file)
         else:
             raise Exception(f"Cannot load cell budget file: {cbc_file}.")

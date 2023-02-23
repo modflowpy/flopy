@@ -1,6 +1,8 @@
 import os
 import subprocess
 import warnings
+from pathlib import Path
+from typing import Union
 
 import numpy as np
 
@@ -35,7 +37,9 @@ def read1d(f, a):
     return a
 
 
-def features_to_shapefile(features, featuretype, filename):
+def features_to_shapefile(
+    features, featuretype, filename: Union[str, os.PathLike]
+):
     """
     Write a shapefile for the features of type featuretype.
 
@@ -52,8 +56,8 @@ def features_to_shapefile(features, featuretype, filename):
              shapefile.Shapes object
     featuretype : str
         Must be 'point', 'line', 'linestring', or 'polygon'
-    filename : string
-        name of the shapefile to write
+    filename : str or PathLike
+        Path of the shapefile to write
 
     Returns
     -------
@@ -78,31 +82,32 @@ def features_to_shapefile(features, featuretype, filename):
         raise Exception(f"Unrecognized feature type: {featuretype}")
 
     if featuretype.lower() in ("line", "linestring"):
-        wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
+        wr = shapefile.Writer(str(filename), shapeType=shapefile.POLYLINE)
         wr.field("SHAPEID", "N", 20, 0)
         for i, line in enumerate(features):
             wr.line([line.__geo_interface__["coordinates"]])
             wr.record(i)
 
     elif featuretype.lower() == "point":
-        wr = shapefile.Writer(filename, shapeType=shapefile.POINT)
+        wr = shapefile.Writer(str(filename), shapeType=shapefile.POINT)
         wr.field("SHAPEID", "N", 20, 0)
         for i, point in enumerate(features):
             wr.point(*point.__geo_interface__["coordinates"])
             wr.record(i)
 
     elif featuretype.lower() == "polygon":
-        wr = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
+        wr = shapefile.Writer(str(filename), shapeType=shapefile.POLYGON)
         wr.field("SHAPEID", "N", 20, 0)
         for i, polygon in enumerate(features):
             wr.poly(polygon.__geo_interface__["coordinates"])
             wr.record(i)
 
     wr.close()
-    return
 
 
-def ndarray_to_asciigrid(fname, a, extent, nodata=1.0e30):
+def ndarray_to_asciigrid(
+    fname: Union[str, os.PathLike], a, extent, nodata=1.0e30
+):
     # extent info
     xmin, xmax, ymin, ymax = extent
     ncol, nrow = a.shape
@@ -122,7 +127,6 @@ def ndarray_to_asciigrid(fname, a, extent, nodata=1.0e30):
     with open(fname, "wb") as f:
         f.write(header.encode("ascii"))
         np.savetxt(f, a, fmt="%15.6e")
-    return
 
 
 def get_ia_from_iac(iac):
@@ -179,7 +183,7 @@ class Gridgen:
         Flopy StructuredGrid object. Note this also accepts ModflowDis and
         ModflowGwfdis objects, however it is deprecated and support will be
         removed in version 3.3.7
-    model_ws : str
+    model_ws : str or PathLike
         workspace location for creating gridgen files (default is '.')
     exe_name : str
         path and name of the gridgen program. (default is gridgen)
@@ -210,8 +214,8 @@ class Gridgen:
     def __init__(
         self,
         modelgrid,
-        model_ws=".",
-        exe_name="gridgen",
+        model_ws: Union[str, os.PathLike] = os.curdir,
+        exe_name: Union[str, os.PathLike] = "gridgen",
         surface_interpolation="replicate",
         vertical_pass_through=False,
         **kwargs,
@@ -245,7 +249,7 @@ class Gridgen:
         self.nja = 0
         self.nodelay = np.zeros((self.nlay,), dtype=int)
         self._vertdict = {}
-        self.model_ws = model_ws
+        self.model_ws = Path(model_ws).expanduser().absolute()
         exe_name = which(exe_name)
         if exe_name is None:
             raise Exception("Cannot find gridgen binary executable")
@@ -289,8 +293,6 @@ class Gridgen:
 
         # Set up blank _elev and _elev_extent dictionaries
         self._asciigrid_dict = {}
-
-        return
 
     def set_surface_interpolation(
         self, isurf, type, elev=None, elev_extent=None
@@ -342,7 +344,7 @@ class Gridgen:
                     )
 
                 nm = f"_gridgen.lay{isurf}.asc"
-                fname = os.path.join(self.model_ws, nm)
+                fname = self.model_ws / nm
                 ndarray_to_asciigrid(fname, elev, elev_extent)
                 self._asciigrid_dict[isurf] = nm
 
@@ -359,7 +361,6 @@ class Gridgen:
                     "elev was not specified as a numpy ndarray or"
                     "valid asciigrid file."
                 )
-        return
 
     def add_active_domain(self, feature, layers):
         """
@@ -403,8 +404,6 @@ class Gridgen:
 
         for k in layers:
             self._active_domain[k] = adname
-
-        return
 
     def add_refinement_features(self, features, featuretype, level, layers):
         """
@@ -452,8 +451,6 @@ class Gridgen:
 
         for k in layers:
             self._refinement_features[k].append(rfname)
-
-        return
 
     def build(self, verbose=False):
         """
@@ -519,8 +516,6 @@ class Gridgen:
         # Create a recarray of the grid polygon shapefile
         shapename = os.path.join(self.model_ws, "qtgrid")
         self.qtra = shp2recarray(shapename)
-
-        return
 
     def get_vertices(self, nodenumber):
         """

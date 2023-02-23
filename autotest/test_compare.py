@@ -33,7 +33,7 @@ def test_eval_bud_diff(example_data_path):
     # get ia from grdfile
     mfgrd_test_path = example_data_path / "mfgrd_test"
     grb_path = mfgrd_test_path / "nwtp3.dis.grb"
-    grb = MfGrdFile(str(grb_path), verbose=True)
+    grb = MfGrdFile(grb_path, verbose=True)
     ia = grb._datadict["IA"] - 1
 
     # TODO: create/run minimal model, then compare budget files

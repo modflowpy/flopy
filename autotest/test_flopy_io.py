@@ -27,7 +27,9 @@ def test_relpath_safe(function_tmpdir, scrub):
         platform.system() == "Windows"
         and splitdrive(function_tmpdir)[0] != splitdrive(getcwd())[0]
     ):
-        assert Path(relpath_safe(function_tmpdir)) == function_tmpdir.absolute()
+        assert (
+            Path(relpath_safe(function_tmpdir)) == function_tmpdir.absolute()
+        )
         assert relpath_safe(which("mf6")) == str(Path(which("mf6")).absolute())
     else:
         assert Path(

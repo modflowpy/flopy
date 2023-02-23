@@ -21,7 +21,7 @@ def swi_path(example_data_path):
 )
 def test_mf2005swi2(function_tmpdir, swi_path, namfile):
     name = namfile.replace(".nam", "")
-    ws = str(function_tmpdir / "ws")
+    ws = function_tmpdir / "ws"
     shutil.copytree(swi_path, ws)
 
     m = Modflow.load(namfile, model_ws=ws, verbose=True, exe_name="mf2005")

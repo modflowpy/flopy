@@ -1,6 +1,7 @@
 """Mfusg module."""
 import os
 from inspect import getfullargspec
+from typing import Union
 
 import flopy
 
@@ -56,7 +57,7 @@ class MfUsg(Modflow):
         self,
         modelname="modflowusgtest",
         structured=True,
-        model_ws=".",
+        model_ws: Union[str, os.PathLike] = os.curdir,
         **kwargs,
     ):
         """Constructs the MfUsg object. Overrides the parent Modflow object."""
@@ -149,7 +150,7 @@ class MfUsg(Modflow):
         version="mfusg",
         exe_name="mfusg",
         verbose=False,
-        model_ws=".",
+        model_ws: Union[str, os.PathLike] = os.curdir,
         load_only=None,
         forgive=False,
         check=True,

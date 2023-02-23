@@ -15,8 +15,8 @@ from flopy.utils import (
 
 
 def test_mflistfile(example_data_path):
-    pth = str(example_data_path / "freyberg")
-    list_file = os.path.join(pth, "freyberg.gitlist")
+    pth = example_data_path / "freyberg"
+    list_file = pth / "freyberg.gitlist"
     assert os.path.exists(list_file)
     mflist = MfListBudget(list_file)
 
@@ -72,19 +72,17 @@ def test_mflist_reducedpumping(example_data_path):
     """
     test reading reduced pumping data from list file
     """
-    pth = str(
+    pth = (
         example_data_path / "mfusg_test" / "03B_conduit_unconfined" / "output"
     )
-    list_file = os.path.join(pth, "ex3B.lst")
+    list_file = pth / "ex3B.lst"
     mflist = MfusgListBudget(list_file)
     assert isinstance(mflist.get_reduced_pumping(), np.recarray)
 
 
 def test_mf6listfile(example_data_path):
-    pth = str(
-        example_data_path / "mf6" / "test005_advgw_tidal" / "expected_output"
-    )
-    list_file = os.path.join(pth, "AdvGW_tidal.gitlist")
+    pth = example_data_path / "mf6" / "test005_advgw_tidal" / "expected_output"
+    list_file = pth / "AdvGW_tidal.gitlist"
     assert os.path.exists(list_file)
     mflist = Mf6ListBudget(list_file)
     names = mflist.get_record_names()
@@ -105,10 +103,10 @@ def test_mflist_reducedpumping_fail(example_data_path):
     """
     test failure for reading reduced pumping data from list file
     """
-    pth = str(
+    pth = (
         example_data_path / "mfusg_test" / "03A_conduit_unconfined" / "output"
     )
-    list_file = os.path.join(pth, "ex3A.lst")
+    list_file = pth / "ex3A.lst"
     # Catch before flopy to avoid masking file not found assert
     if not os.path.isfile(list_file):
         raise FileNotFoundError(f"{list_file} not found")
@@ -121,31 +119,31 @@ def test_mflist_reducedpumping_fail(example_data_path):
 def test_mtlist(example_data_path):
     import pandas as pd
 
-    mt_dir = str(example_data_path / "mt3d_test")
-    mt = MtListBudget(os.path.join(mt_dir, "mcomp.list"))
+    mt_dir = example_data_path / "mt3d_test"
+    mt = MtListBudget(mt_dir / "mcomp.list")
     df_gw, df_sw = mt.parse(forgive=False, diff=False, start_datetime=None)
 
-    mt_dir = str(example_data_path / "mt3d_test")
-    mt = MtListBudget(os.path.join(mt_dir, "CrnkNic.mt3d.list"))
+    mt_dir = example_data_path / "mt3d_test"
+    mt = MtListBudget(mt_dir / "CrnkNic.mt3d.list")
     df_gw, df_sw = mt.parse(forgive=False, diff=True, start_datetime=None)
 
-    mt_dir = str(example_data_path / "mt3d_test")
-    mt = MtListBudget(os.path.join(mt_dir, "mcomp.list"))
+    mt_dir = example_data_path / "mt3d_test"
+    mt = MtListBudget(mt_dir / "mcomp.list")
     df_gw, df_sw = mt.parse(forgive=False, start_datetime=None)
 
-    mt_dir = str(example_data_path / "mt3d_test")
-    mt = MtListBudget(os.path.join(mt_dir, "mcomp.list"))
+    mt_dir = example_data_path / "mt3d_test"
+    mt = MtListBudget(mt_dir / "mcomp.list")
     df_gw, df_sw = mt.parse(forgive=False, start_datetime="1-1-1970")
 
-    mt_dir = str(example_data_path / "mt3d_test")
-    mt = MtListBudget(os.path.join(mt_dir, "mt3d_imm_sor.list"))
+    mt_dir = example_data_path / "mt3d_test"
+    mt = MtListBudget(mt_dir / "mt3d_imm_sor.list")
     df_gw, df_sw = mt.parse(forgive=False, start_datetime="1-1-1970")
 
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
 
-        mt_dir = str(example_data_path / "mt3d_test")
-        mt = MtListBudget(os.path.join(mt_dir, "mcomp_fail1.list"))
+        mt_dir = example_data_path / "mt3d_test"
+        mt = MtListBudget(mt_dir / "mcomp_fail1.list")
         df_gw, df_sw = mt.parse(forgive=True, start_datetime="1-1-1970")
 
         assert len(w) == 1, len(w)
@@ -155,8 +153,8 @@ def test_mtlist(example_data_path):
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
 
-        mt_dir = str(example_data_path / "mt3d_test")
-        mt = MtListBudget(os.path.join(mt_dir, "mcomp_fail2.list"))
+        mt_dir = example_data_path / "mt3d_test"
+        mt = MtListBudget(mt_dir / "mcomp_fail2.list")
         df_gw, df_sw = mt.parse(forgive=True, start_datetime="1-1-1970")
 
         assert len(w) == 1, len(w)

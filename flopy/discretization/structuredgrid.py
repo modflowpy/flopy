@@ -1,6 +1,7 @@
 import copy
 import inspect
 import os.path
+from typing import Union
 
 import numpy as np
 
@@ -1707,13 +1708,13 @@ class StructuredGrid(Grid):
         )
 
     @classmethod
-    def from_gridspec(cls, file_path, lenuni=0):
+    def from_gridspec(cls, file_path: Union[str, os.PathLike], lenuni=0):
         """
         Instantiate a StructuredGrid from grid specification file.
 
         Parameters
         ----------
-        file_path: Path-like
+        file_path: str or PathLike
             Path to the grid specification file
         lenuni: int
             Length unit code

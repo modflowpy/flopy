@@ -58,12 +58,11 @@ q = -1000.0
 # an iterative model solution (`IMS`), which controls how the GWF model is
 # solved.
 
-# ### Create the FloPy simulation object
+# ### Create a temporary workspace, then the FloPy simulation object
 
 temp_dir = TemporaryDirectory()
-workspace = temp_dir.name
+workspace = Path(temp_dir.name)
 name = "tutorial01_mf6"
-
 sim = flopy.mf6.MFSimulation(
     sim_name=name, exe_name="mf6", version="mf6", sim_ws=workspace
 )
@@ -326,7 +325,7 @@ flowja = gwf.oc.output.budget().get_data(text="FLOW-JA-FACE", kstpkper=(0, 0))[
 # into the function because it contains the ia array that defines
 # the location of the diagonal position in the `FLOW-JA-FACE` array.
 
-grb_file = str(Path(workspace) / f"{name}.dis.grb")
+grb_file = workspace / f"{name}.dis.grb"
 residual = flopy.mf6.utils.get_residuals(flowja, grb_file=grb_file)
 
 # ### Plot a Map of the flow error in Layer 10
@@ -344,6 +343,8 @@ contours = modelmap.contour_array(
 )
 ax.clabel(contours, fmt="%2.1f")
 plt.colorbar(pa, shrink=0.5)
+
+# Clean up the temporary directory
 
 try:
     temp_dir.cleanup()

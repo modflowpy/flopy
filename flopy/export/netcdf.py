@@ -5,6 +5,7 @@ import platform
 import socket
 import time
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 
@@ -152,6 +153,10 @@ class NetCdf:
         forgive=False,
         **kwargs,
     ):
+        if isinstance(output_filename, os.PathLike):
+            output_filename = str(
+                Path(output_filename).expanduser().absolute()
+            )
         assert output_filename.lower().endswith(".nc")
         if verbose is None:
             verbose = model.verbose

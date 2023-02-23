@@ -1,6 +1,7 @@
 import copy
 import inspect
 import os
+from typing import Union
 
 import numpy as np
 from matplotlib.path import Path
@@ -952,13 +953,13 @@ class UnstructuredGrid(Grid):
             )
 
     @classmethod
-    def from_gridspec(cls, file_path):
+    def from_gridspec(cls, file_path: Union[str, os.PathLike]):
         """
         Create an UnstructuredGrid from a grid specification file.
 
         Parameters
         ----------
-        file_path : Path-like
+        file_path : str or PathLike
             Path to the grid specification file
 
         Returns

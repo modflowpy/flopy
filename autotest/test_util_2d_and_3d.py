@@ -73,7 +73,7 @@ def test_transient3d():
 
 
 def test_util2d(function_tmpdir):
-    ml = Modflow(model_ws=str(function_tmpdir))
+    ml = Modflow(model_ws=function_tmpdir)
     u2d = Util2d(ml, (10, 10), np.float32, 10.0, "test")
     a1 = u2d.array
     a2 = np.ones((10, 10), dtype=np.float32) * 10.0
@@ -82,40 +82,40 @@ def test_util2d(function_tmpdir):
     # test external filenames - ascii and binary
     ascii = function_tmpdir / "test_a.dat"
     bin = function_tmpdir / "test_b.dat"
-    np.savetxt(str(ascii), a1, fmt="%15.6E")
-    u2d.write_bin(a1.shape, str(bin), a1, bintype="head")
+    np.savetxt(ascii, a1, fmt="%15.6E")
+    u2d.write_bin(a1.shape, bin, a1, bintype="head")
     dis = ModflowDis(ml, 2, 10, 10)
-    lpf = ModflowLpf(ml, hk=[str(ascii), str(bin)])
+    lpf = ModflowLpf(ml, hk=[ascii, bin])
     ml.lpf.hk[1].fmtin = "(BINARY)"
     assert np.array_equal(lpf.hk[0].array, a1)
     assert np.array_equal(lpf.hk[1].array, a1)
 
     # test external filenames - ascii and binary with model_ws and external_path
     ml = Modflow(
-        model_ws=str(function_tmpdir),
-        external_path=str(function_tmpdir / "ref"),
+        model_ws=function_tmpdir,
+        external_path=function_tmpdir / "ref",
     )
     u2d = Util2d(ml, (10, 10), np.float32, 10.0, "test")
     ascii = function_tmpdir / "test_a.dat"
     bin = function_tmpdir / "test_b.dat"
-    np.savetxt(str(ascii), a1, fmt="%15.6E")
-    u2d.write_bin(a1.shape, str(bin), a1, bintype="head")
+    np.savetxt(ascii, a1, fmt="%15.6E")
+    u2d.write_bin(a1.shape, bin, a1, bintype="head")
     dis = ModflowDis(ml, 2, 10, 10)
-    lpf = ModflowLpf(ml, hk=[str(ascii), str(bin)])
+    lpf = ModflowLpf(ml, hk=[ascii, bin])
     ml.lpf.hk[1].fmtin = "(BINARY)"
     assert np.array_equal(lpf.hk[0].array, a1)
     assert np.array_equal(lpf.hk[1].array, a1)
 
     # bin read write test
     bin = function_tmpdir / "test.bin"
-    u2d.write_bin((10, 10), str(bin), u2d.array)
-    a3 = u2d.load_bin((10, 10), str(bin), u2d.dtype)[1]
+    u2d.write_bin((10, 10), bin, u2d.array)
+    a3 = u2d.load_bin((10, 10), bin, u2d.dtype)[1]
     assert np.array_equal(a3, a1)
 
     # ascii read write test
     ascii = function_tmpdir / "text.dat"
-    u2d.write_txt((10, 10), str(ascii), u2d.array)
-    a4 = u2d.load_txt((10, 10), str(ascii), u2d.dtype, "(FREE)")
+    u2d.write_txt((10, 10), ascii, u2d.array)
+    a4 = u2d.load_txt((10, 10), ascii, u2d.dtype, "(FREE)")
     assert np.array_equal(a1, a4)
 
     # fixed format read/write with touching numbers - yuck!
@@ -256,7 +256,7 @@ def stress_util2d_for_joe_the_file_king(ml, nlay, nrow, ncol):
 
 
 def test_util2d_external_free(function_tmpdir):
-    ws = str(function_tmpdir)
+    ws = function_tmpdir
     ml = Modflow(model_ws=ws)
     stress_util2d(ws, ml, 1, 1, 1)
     stress_util2d(ws, ml, 10, 1, 1)
@@ -269,7 +269,7 @@ def test_util2d_external_free(function_tmpdir):
 
 
 def test_util2d_external_free_path(function_tmpdir):
-    ws = str(function_tmpdir)
+    ws = function_tmpdir
     ml = Modflow(model_ws=ws, external_path="ref")
 
     stress_util2d(ws, ml, 1, 1, 1)
@@ -283,7 +283,7 @@ def test_util2d_external_free_path(function_tmpdir):
 
 
 def test_util2d_external_free_path_a(function_tmpdir):
-    ml = Modflow(model_ws=str(function_tmpdir), external_path="ref")
+    ml = Modflow(model_ws=function_tmpdir, external_path="ref")
 
     stress_util2d_for_joe_the_file_king(ml, 1, 1, 1)
     stress_util2d_for_joe_the_file_king(ml, 10, 1, 1)
@@ -296,7 +296,7 @@ def test_util2d_external_free_path_a(function_tmpdir):
 
 
 def test_util2d_external_fixed(function_tmpdir):
-    ws = str(function_tmpdir)
+    ws = function_tmpdir
     ml = Modflow(model_ws=ws)
     ml.array_free_format = False
 
@@ -312,7 +312,7 @@ def test_util2d_external_fixed(function_tmpdir):
 
 @pytest.mark.slow
 def test_util2d_external_fixed_path(function_tmpdir):
-    ws = str(function_tmpdir)
+    ws = function_tmpdir
     ml = Modflow(model_ws=ws, external_path="ref")
     ml.array_free_format = False
 
@@ -327,7 +327,7 @@ def test_util2d_external_fixed_path(function_tmpdir):
 
 
 def test_util3d(function_tmpdir):
-    ml = Modflow(model_ws=str(function_tmpdir))
+    ml = Modflow(model_ws=function_tmpdir)
     u3d = Util3d(ml, (10, 10, 10), np.float32, 10.0, "test")
     a1 = u3d.array
     a2 = np.ones((10, 10, 10), dtype=np.float32) * 10.0
@@ -347,7 +347,7 @@ def test_util3d(function_tmpdir):
 
 
 def test_arrayformat(function_tmpdir):
-    ml = Modflow(model_ws=str(function_tmpdir))
+    ml = Modflow(model_ws=function_tmpdir)
     u2d = Util2d(ml, (15, 2), np.float32, np.ones((15, 2)), "test")
 
     fmt_fort = u2d.format.fortran
@@ -402,7 +402,7 @@ def test_arrayformat(function_tmpdir):
 
 
 def test_new_get_file_entry(function_tmpdir):
-    ml = Modflow(model_ws=str(function_tmpdir))
+    ml = Modflow(model_ws=function_tmpdir)
     u2d = Util2d(ml, (5, 2), np.float32, np.ones((5, 2)), "test", locat=99)
     print(u2d.get_file_entry(how="internal"))
     print(u2d.get_file_entry(how="constant"))
@@ -424,7 +424,7 @@ def test_new_get_file_entry(function_tmpdir):
 
 
 def test_append_mflist(function_tmpdir):
-    ml = Modflow(model_ws=str(function_tmpdir))
+    ml = Modflow(model_ws=function_tmpdir)
     dis = ModflowDis(ml, 10, 10, 10, 10)
     sp_data1 = {3: [1, 1, 1, 1.0], 5: [1, 2, 4, 4.0]}
     sp_data2 = {0: [1, 1, 3, 3.0], 8: [9, 2, 4, 4.0]}
@@ -441,7 +441,7 @@ def test_append_mflist(function_tmpdir):
 
 @requires_pkg("pandas")
 def test_mflist(function_tmpdir, example_data_path):
-    model = Modflow(model_ws=str(function_tmpdir))
+    model = Modflow(model_ws=function_tmpdir)
     dis = ModflowDis(model, 10, 10, 10, 10)
     sp_data = {
         0: [[1, 1, 1, 1.0], [1, 1, 2, 2.0], [1, 1, 3, 3.0]],
@@ -486,7 +486,7 @@ def test_mflist(function_tmpdir, example_data_path):
     assert np.array_equal(sp_data[9], model.wel.stress_period_data[1])
 
     model = Modflow.load(
-        str(example_data_path / "mf2005_test" / "swi2ex4sww.nam"),
+        example_data_path / "mf2005_test" / "swi2ex4sww.nam",
         check=False,
         verbose=True,
     )
@@ -587,7 +587,7 @@ def test_mflist(function_tmpdir, example_data_path):
 
 
 def test_how(function_tmpdir):
-    ml = Modflow(model_ws=str(function_tmpdir))
+    ml = Modflow(model_ws=function_tmpdir)
     ml.array_free_format = False
     dis = ModflowDis(ml, nlay=2, nrow=10, ncol=10)
 
@@ -630,7 +630,7 @@ def test_mflist_fromfile(function_tmpdir):
     nwt_model = Modflow(
         "nwt_testmodel",
         verbose=True,
-        model_ws=str(function_tmpdir),
+        model_ws=function_tmpdir,
     )
     dis = ModflowDis(
         nwt_model,

@@ -59,7 +59,7 @@ def test_mf6_example_simulations(function_tmpdir, mf6_example_namfiles):
 
             # load simulation
             sim = MFSimulation.load(
-                namfile_name, version="mf6", exe_name="mf6", sim_ws=str(wrkdir)
+                namfile_name, version="mf6", exe_name="mf6", sim_ws=wrkdir
             )
             assert isinstance(sim, MFSimulation)
 
@@ -68,7 +68,7 @@ def test_mf6_example_simulations(function_tmpdir, mf6_example_namfiles):
             assert success
 
             # change to comparison workspace
-            sim.simulation_data.mfpath.set_sim_path(str(cmpdir))
+            sim.simulation_data.mfpath.set_sim_path(cmpdir)
 
             # write simulation files and rerun
             sim.write_simulation()
@@ -87,7 +87,7 @@ def test_mf6_example_simulations(function_tmpdir, mf6_example_namfiles):
                 text="head",
                 files1=[str(p) for p in headfiles1],
                 files2=[str(p) for p in headfiles2],
-                outfile=str(cmpdir / "head_compare.dat"),
+                outfile=cmpdir / "head_compare.dat",
             )
 
     run_models()

@@ -16,6 +16,7 @@ from datetime import datetime
 from pathlib import Path
 from shutil import which
 from subprocess import PIPE, STDOUT, Popen
+from typing import Optional, Union
 
 import numpy as np
 
@@ -220,14 +221,7 @@ class ModelInterface:
 
         Parameters
         ----------
-        f : str or file handle
-            String defining file name or file handle for summary file
-            of check method output. If a string is passed a file handle
-            is created. If f is None, check method does not write
-            results to a summary file. (default is None)
-        verbose : bool
-            Boolean flag used to determine if check method results are
-            written to the screen
+        chk : the check object
         level : int
             Check method analysis level. If level=0, summary checks are
             performed. If level=1, full checks are performed.
@@ -237,7 +231,7 @@ class ModelInterface:
 
         Returns
         -------
-        None
+        Check object
 
         Examples
         --------
@@ -304,9 +298,9 @@ class BaseModel(ModelInterface):
         Name of the model, which is also used for model file names.
     namefile_ext : str, default "nam"
         Name file extension, without "."
-    exe_name : str, default "mf2005"
-        Name of the modflow executable.
-    model_ws : str, optional
+    exe_name : str or PathLike, default "mf2005"
+        Path of the modflow executable.
+    model_ws : str or PathLike, optional
         Path to the model workspace.  Model files will be created in this
         directory.  Default is None, in which case model_ws is assigned
         to the current working directory.
@@ -328,8 +322,8 @@ class BaseModel(ModelInterface):
         self,
         modelname="modflowtest",
         namefile_ext="nam",
-        exe_name="mf2005",
-        model_ws=None,
+        exe_name: Union[str, os.PathLike] = "mf2005",
+        model_ws: Optional[Union[str, os.PathLike]] = None,
         structured=True,
         verbose=False,
         **kwargs,
@@ -347,16 +341,16 @@ class BaseModel(ModelInterface):
         self.external_extension = "ref"
         if model_ws is None:
             model_ws = os.getcwd()
-        if not os.path.exists(model_ws):
-            try:
-                os.makedirs(model_ws)
-            except:
-                print(
-                    f"\n{model_ws} not valid, "
-                    f"workspace-folder was changed to {os.getcwd()}\n"
-                )
-                model_ws = os.getcwd()
-        self._model_ws = model_ws
+        model_ws = Path(model_ws).expanduser().absolute()
+        try:
+            model_ws.mkdir(exist_ok=True)
+        except:
+            print(
+                f"\n{model_ws} not valid, "
+                f"workspace-folder was changed to {os.getcwd()}\n"
+            )
+            model_ws = os.getcwd()
+        self._model_ws = str(model_ws)
         self.structured = structured
         self.pop_key_list = []
         self.cl_params = ""
@@ -547,15 +541,15 @@ class BaseModel(ModelInterface):
         self._next_ext_unit += 1
         return next_unit
 
-    def export(self, f, **kwargs):
+    def export(self, f: Union[str, os.PathLike], **kwargs):
         """
         Method to export a model to netcdf or shapefile based on the
         extension of the file name (.shp for shapefile, .nc for netcdf)
 
         Parameters
         ----------
-        f : str
-            filename
+        f : str or PathLike
+            The file path
         kwargs : keyword arguments
             modelgrid : flopy.discretization.Grid instance
                 user supplied modelgrid which can be used for exporting
@@ -694,7 +688,11 @@ class BaseModel(ModelInterface):
         raise AttributeError(item)
 
     def get_ext_dict_attr(
-        self, ext_unit_dict=None, unit=None, filetype=None, pop_key=True
+        self,
+        ext_unit_dict: Union[str, os.PathLike] = None,
+        unit=None,
+        filetype=None,
+        pop_key=True,
     ):
         iu = None
         fname = None
@@ -725,7 +723,12 @@ class BaseModel(ModelInterface):
         )
 
     def add_output_file(
-        self, unit, fname=None, extension="cbc", binflag=True, package=None
+        self,
+        unit,
+        fname: Union[str, os.PathLike] = None,
+        extension="cbc",
+        binflag=True,
+        package=None,
     ):
         """
         Add an ascii or binary output file for a package
@@ -733,18 +736,16 @@ class BaseModel(ModelInterface):
         Parameters
         ----------
         unit : int
-            unit number of external array
-        fname : str
-            filename of external array. (default is None)
+            Unit number of external array
+        fname : str or PathLike, optional
+            Path of external array, default is None
         extension : str
-            extension to use for the cell-by-cell file. Only used if fname
-            is None. (default is cbc)
+            Extension to use for the cell-by-cell file. Only used if fname
+            is None, default is cbc
         binflag : bool
-            boolean flag indicating if the output file is a binary file.
-            Default is True
+            Whether the output file is a binary file, efault is True
         package : str
-            string that defines the package the output file is attached to.
-            Default is None
+            The package the output file is attached to, default is None
 
         """
         add_cbc = False
@@ -788,9 +789,10 @@ class BaseModel(ModelInterface):
             else:
                 fname = os.path.basename(fname)
             self.add_output(fname, unit, binflag=binflag, package=package)
-        return
 
-    def add_output(self, fname, unit, binflag=False, package=None):
+    def add_output(
+        self, fname: Union[str, os.PathLike], unit, binflag=False, package=None
+    ):
         """
         Assign an external array so that it will be listed as a DATA or
         DATA(BINARY) entry in the name file.  This will allow an outside
@@ -831,20 +833,19 @@ class BaseModel(ModelInterface):
         if self.verbose:
             self._output_msg(-1, add=True)
 
-        return
-
-    def remove_output(self, fname=None, unit=None):
+    def remove_output(
+        self, fname: Union[str, os.PathLike, None] = None, unit=None
+    ):
         """
         Remove an output file from the model by specifying either the
         file name or the unit number.
 
         Parameters
         ----------
-        fname : str
-            filename of output array
-        unit : int
-            unit number of output array
-
+        fname : str or PathLike, optional
+            Path of output array
+        unit : int, optional
+            Unit number of output array
         """
         if fname is not None:
             for i, e in enumerate(self.output_fnames):
@@ -867,20 +868,20 @@ class BaseModel(ModelInterface):
         else:
             msg = " either fname or unit must be passed to remove_output()"
             raise Exception(msg)
-        return
 
-    def get_output(self, fname=None, unit=None):
+    def get_output(
+        self, fname: Optional[Union[str, os.PathLike]] = None, unit=None
+    ):
         """
         Get an output file from the model by specifying either the
         file name or the unit number.
 
         Parameters
         ----------
-        fname : str
-            filename of output array
-        unit : int
-            unit number of output array
-
+        fname : str or PathLike, optional
+            Path of output array
+        unit : int, optional
+            Unit number of output array
         """
         if fname is not None:
             for i, e in enumerate(self.output_fnames):
@@ -895,9 +896,13 @@ class BaseModel(ModelInterface):
         else:
             msg = " either fname or unit must be passed to get_output()"
             raise Exception(msg)
-        return
 
-    def set_output_attribute(self, fname=None, unit=None, attr=None):
+    def set_output_attribute(
+        self,
+        fname: Optional[Union[str, os.PathLike]] = None,
+        unit=None,
+        attr=None,
+    ):
         """
         Set a variable in an output file from the model by specifying either
         the file name or the unit number and a dictionary with attributes
@@ -905,11 +910,10 @@ class BaseModel(ModelInterface):
 
         Parameters
         ----------
-        fname : str
-            filename of output array
-        unit : int
-            unit number of output array
-
+        fname : str or PathLike, optional
+            Path of output array
+        unit : int, optional
+            Unit number of output array
         """
         idx = None
         if fname is not None:
@@ -938,20 +942,23 @@ class BaseModel(ModelInterface):
                         self.output_fnames[idx] = value
                     elif key == "unit":
                         self.output_units[idx] = value
-        return
 
-    def get_output_attribute(self, fname=None, unit=None, attr=None):
+    def get_output_attribute(
+        self,
+        fname: Optional[Union[str, os.PathLike]] = None,
+        unit=None,
+        attr=None,
+    ):
         """
-        Get a attribute for an output file from the model by specifying either
+        Get an attribute of a model output file by specifying either
         the file name or the unit number.
 
         Parameters
         ----------
-        fname : str
-            filename of output array
-        unit : int
-            unit number of output array
-
+        fname : str or PathLike, optional
+            path of output array
+        unit : int, optional
+            Unit number of output array
         """
         idx = None
         if fname is not None:
@@ -981,21 +988,22 @@ class BaseModel(ModelInterface):
                     v = self.output_units[idx]
         return v
 
-    def add_external(self, fname, unit, binflag=False, output=False):
+    def add_external(
+        self, fname: Union[str, os.PathLike], unit, binflag=False, output=False
+    ):
         """
         Assign an external array so that it will be listed as a DATA or
-        DATA(BINARY) entry in the name file.  This will allow an outside
+        DATA(BINARY) entry in the name file. This will allow an outside
         file package to refer to it.
 
         Parameters
         ----------
-        fname : str
-            filename of external array
+        fname : str or PathLike
+            Path of external array
         unit : int
-            unit number of external array
-        binflag : boolean
-            binary or not. (default is False)
-
+            Unit number of external array
+        binflag : boolean, optional
+            Binary or not, default is False
         """
         if fname in self.external_fnames:
             if self.verbose:
@@ -1022,20 +1030,20 @@ class BaseModel(ModelInterface):
         self.external_units.append(unit)
         self.external_binflag.append(binflag)
         self.external_output.append(output)
-        return
 
-    def remove_external(self, fname=None, unit=None):
+    def remove_external(
+        self, fname: Optional[Union[str, os.PathLike]] = None, unit=None
+    ):
         """
         Remove an external file from the model by specifying either the
         file name or the unit number.
 
         Parameters
         ----------
-        fname : str
-            filename of external array
-        unit : int
-            unit number of external array
-
+        fname : str or PathLike, optional
+            Path of external array
+        unit : int, optional
+            Unit number of external array
         """
         plist = []
         if fname is not None:
@@ -1058,10 +1066,12 @@ class BaseModel(ModelInterface):
             self.external_binflag.pop(ipos)
             self.external_output.pop(ipos)
             j += 1
-        return
 
     def add_existing_package(
-        self, filename, ptype=None, copy_to_model_ws=True
+        self,
+        filename: Union[str, os.PathLike],
+        ptype=None,
+        copy_to_model_ws=True,
     ):
         """
         Add an existing package to a model instance.
@@ -1069,13 +1079,13 @@ class BaseModel(ModelInterface):
         Parameters
         ----------
 
-        filename : str
-            the name of the file to add as a package
+        filename : str or PathLike
+            Path of the file to add as a package
         ptype : optional
-            the model package type (e.g. "lpf", "wel", etc).  If None,
+            Model package type (e.g. "lpf", "wel", etc). If None
             then the file extension of the filename arg is used
         copy_to_model_ws : bool
-            flag to copy the package file into the model_ws directory.
+            Copy the package file into the model workspace.
 
         Returns
         -------
@@ -1198,16 +1208,20 @@ class BaseModel(ModelInterface):
 
         return None
 
-    def change_model_ws(self, new_pth=None, reset_external=False):
+    def change_model_ws(
+        self,
+        new_pth: Optional[Union[str, os.PathLike]] = os.curdir,
+        reset_external=False,
+    ):
         """
         Change the model work space.
 
         Parameters
         ----------
-        new_pth : str
-            Location of new model workspace.  If this path does not exist,
-            it will be created. (default is None, which will be assigned to
-            the present working directory).
+        new_pth : str or PathLike
+            Path of the new model workspace. If this path does not exist,
+            it will be created. If no value (None) is given, the default
+            is the present working directory.
 
         Returns
         -------
@@ -1217,7 +1231,7 @@ class BaseModel(ModelInterface):
 
         """
         if new_pth is None:
-            new_pth = os.getcwd()
+            new_pth = os.curdir
         if not os.path.exists(new_pth):
             try:
                 print(
@@ -1443,7 +1457,6 @@ class BaseModel(ModelInterface):
         # write name file
         self.write_name_file()
         # os.chdir(org_dir)
-        return
 
     def write_name_file(self):
         """
@@ -1496,13 +1509,15 @@ class BaseModel(ModelInterface):
         if key not in self.pop_key_list:
             self.pop_key_list.append(key)
 
-    def check(self, f=None, verbose=True, level=1):
+    def check(
+        self, f: Union[str, os.PathLike, None] = None, verbose=True, level=1
+    ):
         """
         Check model data for common errors.
 
         Parameters
         ----------
-        f : str or file handle
+        f : str or PathLike
             String defining file name or file handle for summary file
             of check method output. If a string is passed a file handle
             is created. If f is None, check method does not write
@@ -1605,7 +1620,9 @@ class BaseModel(ModelInterface):
         )
         return axes
 
-    def to_shapefile(self, filename, package_names=None, **kwargs):
+    def to_shapefile(
+        self, filename: Union[str, os.PathLike], package_names=None, **kwargs
+    ):
         """
         Wrapper function for writing a shapefile for the model grid.  If
         package_names is not None, then search through the requested packages
@@ -1613,8 +1630,8 @@ class BaseModel(ModelInterface):
 
         Parameters
         ----------
-        filename : string
-            name of the shapefile to write
+        filename : str or PathLike
+            Path of the shapefile to write
         package_names : list of package names (e.g. ["dis","lpf"])
             Packages to export data arrays to shapefile. (default is None)
 
@@ -1631,7 +1648,6 @@ class BaseModel(ModelInterface):
         """
         warnings.warn("to_shapefile() is deprecated. use .export()")
         self.export(filename, package_names=package_names)
-        return
 
 
 def resolve_exe_name(model_ws, exe_name, silent):
@@ -1674,10 +1690,9 @@ def resolve_exe_name(model_ws, exe_name, silent):
 
 
 def run_model(
-    exe_name,
-    namefile,
-    model_ws="./",
-    scrub=False,
+    exe_name: Union[str, os.PathLike],
+    namefile: Union[str, os.PathLike],
+    model_ws: Union[str, os.PathLike] = os.curdir,
     silent=False,
     pause=False,
     report=False,
@@ -1692,16 +1707,16 @@ def run_model(
 
     Parameters
     ----------
-    exe_name : str
-        Executable name (with path, if necessary) to run.
-    namefile : str
-        Namefile of model to run. The namefile must be the
+    exe_name : str or PathLike
+        Executable name (or path, if necessary) to run.
+    namefile : str or PathLike
+        Path to the namefile of model to run. The namefile must be the
         filename of the namefile without the path. Namefile can be None
         to allow programs that do not require a control file (name file)
         to be passed as a command line argument.
-    model_ws : str
-        Path to the location of the namefile. (default is the
-        current working directory - './')
+    model_ws : str or PathLike
+        Path to the parent directory of the namefile. (default is the
+        current working directory '.')
     silent : boolean
         Echo run information to screen (default is True).
     pause : boolean, optional
@@ -1755,7 +1770,7 @@ def run_model(
     # create a list of arguments to pass to Popen
     argv = [exe_name]
     if namefile is not None:
-        argv.append(namefile)
+        argv.append(str(namefile))
 
     # add additional arguments to Popen arguments
     if cargs is not None:
