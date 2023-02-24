@@ -79,6 +79,8 @@ jobs:
 
     - name: Get executables
       working-directory: modflow6/autotest
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
       run: |
         pytest -v --durations=0 get_exes.py
 
