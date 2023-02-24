@@ -2571,10 +2571,19 @@ def advanced_package_bc_helper(pkg, modelgrid, kper):
 
 def filter_modpath_by_travel_time(recarray, travel_time):
     """
+    Helper method for filtering particles by travel time. Used in modpath
+    plotting routines
 
-    :param recarray:
-    :param travel_time:
-    :return:
+    Parameters
+    ----------
+    recarray : np.recarray
+        recarray of modpath particle information
+    travel_time : str, float
+        travel time logical argument to filter modpath output
+
+    Returns
+    -------
+        np.recarray
     """
     if travel_time is None:
         tp = recarray.copy()
@@ -2583,6 +2592,7 @@ def filter_modpath_by_travel_time(recarray, travel_time):
             funcs = {
                 "<=": lambda a, b: a["time"] <= b,
                 ">=": lambda a, b: a["time"] >= b,
+                "==": lambda a, b: a["time"] == b,
                 "<": lambda a, b: a["time"] < b,
                 ">": lambda a, b: a["time"] > b,
             }
@@ -2600,7 +2610,7 @@ def filter_modpath_by_travel_time(recarray, travel_time):
                     raise Exception(
                         "flopy.map.plot_pathline travel_time variable cannot "
                         "be parsed. Acceptable logical variables are , "
-                        "<=, <, >=, and >. "
+                        "<=, <, ==, >=, and >. "
                         "You passed {}".format(travel_time)
                     )
         else:
