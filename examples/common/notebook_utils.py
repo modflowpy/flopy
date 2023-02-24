@@ -214,7 +214,12 @@ def run(ws):
     )
 
     sim.write_simulation()
-    sim.run_simulation()
+    success, buff = sim.run_simulation(silent=True, report=True)
+    if success:
+        for line in buff:
+            print(line)
+    else:
+        raise ValueError("Failed to run.")
 
     mp_namea = f"{model_name}a_mp"
     mp_nameb = f"{model_name}b_mp"
@@ -301,7 +306,12 @@ def run(ws):
     mp.write_input()
 
     # run modpath
-    mp.run_model()
+    success, buff = mp.run_model(silent=True, report=True)
+    if success:
+        for line in buff:
+            print(line)
+    else:
+        raise ValueError("Failed to run.")
 
     # create modpath files
     mp = flopy.modpath.Modpath7(
@@ -323,8 +333,12 @@ def run(ws):
     mp.write_input()
 
     # run modpath
-    mp.run_model()
-    return
+    success, buff = mp.run_model(silent=True, report=True)
+    if success:
+        for line in buff:
+            print(line)
+    else:
+        raise ValueError("Failed to run.")
 
 
 example_name = "ex-gwt-keating"

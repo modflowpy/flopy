@@ -1220,7 +1220,7 @@ class BaseModel(ModelInterface):
         if not os.path.exists(new_pth):
             try:
                 print(
-                    f"\ncreating model workspace...\n   {flopy_io.relpath_printstr(os.getcwd(), new_pth)}"
+                    f"\ncreating model workspace...\n   {flopy_io.relpath_safe(new_pth)}"
                 )
                 os.makedirs(new_pth)
             except:
@@ -1235,7 +1235,7 @@ class BaseModel(ModelInterface):
         self._model_ws = new_pth
         if self.verbose:
             print(
-                f"\nchanging model workspace...\n   {flopy_io.relpath_printstr(os.getcwd(), new_pth)}"
+                f"\nchanging model workspace...\n   {flopy_io.relpath_safe(new_pth)}"
             )
         # reset the paths for each package
         for pp in self.packagelist:
@@ -1641,6 +1641,7 @@ def run_model(
     exe_name,
     namefile,
     model_ws="./",
+    scrub=False,
     silent=False,
     pause=False,
     report=False,
@@ -1715,7 +1716,7 @@ def run_model(
     else:
         if not silent:
             print(
-                f"FloPy is using the following executable to run the model: {flopy_io.relpath_printstr(model_ws, exe)}"
+                f"FloPy is using the following executable to run the model: {flopy_io.relpath_safe(exe, model_ws)}"
             )
 
     if namefile is not None:
