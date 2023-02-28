@@ -155,7 +155,6 @@ class ModflowFhb(Package):
         unitnumber=None,
         filenames=None,
     ):
-
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowFhb._defaultunit()
@@ -550,7 +549,7 @@ class ModflowFhb(Package):
                 structured=model.structured,
             )
             for n in range(nflw):
-                tds5 = read1d(f, np.zeros((nbdtim + 4)))
+                tds5 = read1d(f, np.zeros((nbdtim + 4,)))
                 ds5[n] = tuple(tds5)
 
             if model.structured:
@@ -627,7 +626,7 @@ class ModflowFhb(Package):
                 structured=model.structured,
             )
             for n in range(nhed):
-                tds7 = read1d(f, np.empty((nbdtim + 4)))
+                tds7 = read1d(f, np.empty((nbdtim + 4,)))
                 ds7[n] = tuple(tds7)
 
             if model.structured:

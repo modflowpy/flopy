@@ -512,11 +512,9 @@ class MfUsgCln(Package):
             f_cln.write("\n")
 
         f_cln.write(
-            (
-                f" {self.ncln:9d} {self.iclnnds:9d} {self.iclncb:9d}"
-                f" {self.iclnhd:9d} {self.iclndd:9d} {self.iclnib:9d}"
-                f" {self.nclngwc:9d} {self.nconduityp:9d}"
-            )
+            f" {self.ncln:9d} {self.iclnnds:9d} {self.iclncb:9d}"
+            f" {self.iclnhd:9d} {self.iclndd:9d} {self.iclnib:9d}"
+            f" {self.nclngwc:9d} {self.nconduityp:9d}"
         )
 
         if self.nrectyp > 0:

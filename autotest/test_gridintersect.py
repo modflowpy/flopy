@@ -6,6 +6,7 @@ import pytest
 from modflow_devtools.markers import requires_pkg
 from modflow_devtools.misc import has_pkg
 
+import flopy
 import flopy.discretization as fgrid
 import flopy.plot as fplot
 from flopy.modflow import Modflow
@@ -747,6 +748,89 @@ def test_rect_grid_polygon_on_inner_boundary():
     assert len(result) == 2
     assert result.areas.sum() == 50.0
 
+    fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+    gr.plot(ax=ax)
+    ix.plot_polygon(result, ax=ax)
+    # plt.show()
+
+
+def test_rect_grid_polygon_multiple_polygons():
+    gr = get_rect_grid()
+    p = Polygon(
+        [
+            (0, 0),
+            (0, 10),
+            (4, 10),
+            (4, 0),
+            (6, 0),
+            (6, 10),
+            (9, 10),
+            (9, -1),
+            (0, -1),
+            (0, 0),
+        ]
+    )
+
+    ix = GridIntersect(gr, method="structured")
+    result = ix.intersect(p)
+
+    fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+    gr.plot(ax=ax)
+    ix.plot_polygon(result, ax=ax)
+    # plt.show()
+
+
+@requires_pkg("shapely")
+def test_rect_grid_multiple_disjoint_polygons_on_inner_boundaries():
+    gr = get_rect_grid()
+    ix = GridIntersect(gr, method="structured")
+    p1 = Polygon([(5.0, 10.0), (15.0, 10.0), (15.0, 5.0), (5.0, 5.0)])
+    p2 = Polygon([(5.0, 17.5), (15.0, 17.5), (15.0, 12.5), (5.0, 12.5)])
+    result = ix.intersect(MultiPolygon([p1, p2]))
+
+    assert len(result) == 4
+    assert result.areas.sum() == 100.0
+
+    fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+    gr.plot(ax=ax)
+    ix.plot_polygon(result, ax=ax)
+    # plt.show()
+
+
+@requires_pkg("shapely")
+@pytest.mark.parametrize("transform", [True, False])
+def test_rect_grid_polygon_reintersects_cell(transform):
+    gr = get_rect_grid()
+    if transform:
+        gr.set_coord_info(xoff=1, yoff=1, angrot=10.5)
+
+    ix = GridIntersect(gr, method="structured")
+    p1 = Polygon(
+        [
+            (x, y + 3)
+            for x, y in [
+                (2.5, 2.5),
+                (2.5, 10.0),
+                (10.0, 10.0),
+                (10.0, 2.5),
+                (7.5, 2.5),
+                (7.5, 7.5),
+                (5.0, 7.5),
+                (5.0, 2.5),
+            ]
+        ]
+    )
+    p2 = Polygon([(1, 1), (1, 2), (2, 2), (2, 1)])
+    result = ix.intersect(MultiPolygon([p1, p2]))
+
+    assert len(result) == 4 if transform else 2
+    assert np.isclose(result.areas.sum(), 44.65733 if transform else 44.75)
+
+    fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+    gr.plot(ax=ax)
+    ix.plot_polygon(result, ax=ax)
+    # plt.show()
+
 
 @requires_pkg("shapely")
 def test_rect_grid_multipolygon_in_one_cell():
@@ -1136,7 +1220,7 @@ def test_polygon_offset_rot_structured_grid_shapely(rtree):
 # %% test rasters
 
 
-@requires_pkg("rasterstats")
+@requires_pkg("rasterstats", "scipy")
 def test_rasters(example_data_path):
     ws = str(example_data_path / "options")
     raster_name = "dem.img"

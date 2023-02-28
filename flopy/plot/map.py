@@ -42,7 +42,6 @@ class PlotMapView:
     def __init__(
         self, model=None, modelgrid=None, ax=None, layer=0, extent=None
     ):
-
         self.model = model
         self.layer = layer
         self.mg = None
@@ -696,7 +695,7 @@ class PlotMapView:
             less than or equal to the passed time are plotted. If a
             string is passed a variety logical constraints can be added
             in front of a time value to select pathlines for a select
-            period of time. Valid logical constraints are <=, <, >=, and
+            period of time. Valid logical constraints are <=, <, ==, >=, and
             >. For example, to select all pathlines less than 10000 days
             travel_time='< 10000' would be passed to plot_pathline.
             (default is None)
@@ -810,7 +809,7 @@ class PlotMapView:
             less than or equal to the passed time are plotted. If a
             string is passed a variety logical constraints can be added
             in front of a time value to select pathlines for a select
-            period of time. Valid logical constraints are <=, <, >=, and
+            period of time. Valid logical constraints are <=, <, ==, >=, and
             >. For example, to select all pathlines less than 10000 days
             travel_time='< 10000' would be passed to plot_pathline.
             (default is None)

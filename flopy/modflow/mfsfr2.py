@@ -340,7 +340,6 @@ class ModflowSfr2(Package):
         filenames=None,
         options=None,
     ):
-
         # set default unit number of one is not specified
         if unit_number is None:
             unit_number = ModflowSfr2._defaultunit()
@@ -787,7 +786,6 @@ class ModflowSfr2(Package):
 
     @classmethod
     def load(cls, f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
-
         if model.verbose:
             print("loading sfr2 package file...")
 
@@ -1415,7 +1413,6 @@ class ModflowSfr2(Package):
             # for each outseg key, for each upseg, check for more upsegs,
             # append until headwaters has been reached
             for outseg in outsegs:
-
                 up = True
                 upsegslist = upsegs[outseg]
                 while up:
@@ -1436,7 +1433,6 @@ class ModflowSfr2(Package):
         return all_upsegs
 
     def get_variable_by_stress_period(self, varname):
-
         dtype = []
         all_data = np.zeros((self.nss, self.nper), dtype=float)
         for per in range(self.nper):
@@ -1728,7 +1724,6 @@ class ModflowSfr2(Package):
         return np.array(reach_values)
 
     def _write_1c(self, f_sfr):
-
         # NSTRM NSS NSFRPAR NPARSEG CONST DLEAK ipakcb  ISTCB2
         # [ISFROPT] [NSTRAIL] [ISUZN] [NSFRSETS] [IRTFLG] [NUMTIM] [WEIGHT] [FLWTOL]
         f_sfr.write(
@@ -1767,7 +1762,6 @@ class ModflowSfr2(Package):
         f_sfr.write("\n")
 
     def _write_reach_data(self, f_sfr):
-
         # Write the recarray (data) to the file (or file handle) f
         assert isinstance(
             self.reach_data, np.recarray
@@ -1835,7 +1829,7 @@ class ModflowSfr2(Package):
             fdpth,
             awdth,
             bwdth,
-        ) = [0 if v == self.default_value else v for v in seg_dat]
+        ) = (0 if v == self.default_value else v for v in seg_dat)
 
         f_sfr.write(
             " ".join(fmts[0:4]).format(nseg, icalc, outseg, iupseg) + " "
@@ -1899,9 +1893,9 @@ class ModflowSfr2(Package):
         icalc = self.segment_data[i][j][1]
         seg_dat = np.array(self.segment_data[i])[cols][j]
         fmts = _fmt_string_list(seg_dat)
-        hcond, thickm, elevupdn, width, depth, thts, thti, eps, uhc = [
+        hcond, thickm, elevupdn, width, depth, thts, thti, eps, uhc = (
             0 if v == self.default_value else v for v in seg_dat
-        ]
+        )
 
         if self.isfropt in [0, 4, 5] and icalc <= 0:
             f_sfr.write(
@@ -2012,15 +2006,12 @@ class ModflowSfr2(Package):
         # items 3 and 4 are skipped (parameters not supported)
 
         for i in range(0, self.nper):
-
             # item 5
             itmp = self.dataset_5[i][0]
             f_sfr.write(" ".join(map(str, self.dataset_5[i])) + "\n")
             if itmp > 0:
-
                 # Item 6
                 for j in range(itmp):
-
                     # write datasets 6a, 6b and 6c
                     self._write_segment_data(i, j, f_sfr)
 
@@ -2448,7 +2439,7 @@ class check:
         # simpler check method using paths from routing graph
         circular_segs = [k for k, v in self.sfr.paths.items() if v is None]
         if len(circular_segs) > 0:
-            txt += "{0} instances where an outlet was not found after {1} consecutive segments!\n".format(
+            txt += "{} instances where an outlet was not found after {} consecutive segments!\n".format(
                 len(circular_segs), self.sfr.nss
             )
             if self.level == 1:
@@ -2583,7 +2574,6 @@ class check:
 
         nodes_with_multiple_conductance = set()
         for node in shared_cells:
-
             # select the collocated reaches for this cell
             conductances = Cond[reach_data["node"] == node].copy()
             conductances.sort()
@@ -2821,7 +2811,6 @@ class check:
             or self.sfr.reachinput
             and self.sfr.isfropt in [1, 2, 3]
         ):  # see SFR input instructions
-
             # compute outreaches if they aren't there already
             if np.diff(self.sfr.reach_data.outreach).max() == 0:
                 self.sfr.set_outreaches()

@@ -159,7 +159,6 @@ class ModflowUpw(Package):
         unitnumber=None,
         filenames=None,
     ):
-
         if model.version != "mfnwt":
             raise Exception(
                 "Error: model version must be mfnwt to use "
@@ -297,7 +296,7 @@ class ModflowUpw(Package):
         f_upw.write(f"{self.heading}\n")
         # Item 1: IBCFCB, HDRY, NPLPF
         f_upw.write(
-            "{0:10d}{1:10.3G}{2:10d}{3:10d}{4:s}\n".format(
+            "{:10d}{:10.3G}{:10d}{:10d}{:s}\n".format(
                 self.ipakcb, self.hdry, self.npupw, self.iphdry, self.options
             )
         )
@@ -456,7 +455,6 @@ class ModflowUpw(Package):
         vkcb = [0] * nlay
         # load by layer
         for k in range(nlay):
-
             # hk
             if model.verbose:
                 print(f"   loading hk layer {k + 1:3d}...")
@@ -510,7 +508,6 @@ class ModflowUpw(Package):
 
             # storage properties
             if transient:
-
                 # ss
                 if model.verbose:
                     print(f"   loading ss layer {k + 1:3d}...")

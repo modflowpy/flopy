@@ -281,7 +281,6 @@ class ModflowLak(Package):
         lwrt=0,
         **kwargs,
     ):
-
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowLak._defaultunit()
@@ -491,7 +490,7 @@ class ModflowLak(Package):
         # dataset 1a
         if len(self.options) > 0:
             for option in self.options:
-                f.write("{} ".format(option))
+                f.write(f"{option} ")
             f.write("\n")
 
         # dataset 1b

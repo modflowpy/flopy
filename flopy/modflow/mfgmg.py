@@ -205,7 +205,6 @@ class ModflowGmg(Package):
         unitnumber=None,
         filenames=None,
     ):
-
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowGmg._defaultunit()
@@ -362,7 +361,9 @@ class ModflowGmg(Package):
         # dataset 3
         line = f.readline()
         t = line.strip().split()
-        relax = float(t[0])
+        relax = 1.0
+        if ism == 4:
+            relax = float(t[0])
 
         if openfile:
             f.close()

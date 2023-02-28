@@ -16,7 +16,7 @@ from ..utils.flopy_io import loadtxt
 from ..utils.recarray_utils import ra_slice
 
 
-class _ModpathSeries(object):
+class _ModpathSeries:
     """
     Base class for PathlineFile and TimeseriesFile objects.
 
@@ -256,7 +256,6 @@ class _ModpathSeries(object):
             series.sort(order=["particleid", "time"])
             series = series.view(np.recarray)
         else:
-
             # get list of unique particleids in selection
             partids = np.unique(epdest["particleid"])
 
@@ -348,7 +347,6 @@ class _ModpathSeries(object):
 
         # 1 geometry for each path
         if one_per_particle:
-
             loc_inds = 0
             if direction == "ending":
                 loc_inds = -1
@@ -1000,7 +998,6 @@ class EndpointFile:
         return np.dtype(dtype)
 
     def _add_particleid(self):
-
         # add particle ids for earlier version of MODPATH
         if self.version < 6:
             # create particle ids

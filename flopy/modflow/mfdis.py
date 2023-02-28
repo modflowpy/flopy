@@ -144,7 +144,6 @@ class ModflowDis(Package):
         proj4_str=None,
         start_datetime=None,
     ):
-
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowDis._defaultunit()
@@ -605,7 +604,7 @@ class ModflowDis(Package):
         f_dis.write(f"{self.heading}\n")
         # Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI
         f_dis.write(
-            "{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}\n".format(
+            "{:10d}{:10d}{:10d}{:10d}{:10d}{:10d}\n".format(
                 self.nlay,
                 self.nrow,
                 self.ncol,
@@ -633,9 +632,9 @@ class ModflowDis(Package):
                 f"{self.perlen[t]:14f}{self.nstp[t]:14d}{self.tsmult[t]:10f} "
             )
             if self.steady[t]:
-                f_dis.write(" {0:3s}\n".format("SS"))
+                f_dis.write(" SS\n")
             else:
-                f_dis.write(" {0:3s}\n".format("TR"))
+                f_dis.write(" TR\n")
         f_dis.close()
 
     def check(self, f=None, verbose=True, level=1, checktype=None):

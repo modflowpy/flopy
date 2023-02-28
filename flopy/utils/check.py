@@ -3,6 +3,7 @@ import os
 import numpy as np
 from numpy.lib import recfunctions
 
+from ..utils.flopy_io import relpath_safe
 from ..utils.recarray_utils import recarray
 from ..utils.util_array import Util3d
 
@@ -94,7 +95,6 @@ class check:
         level=1,
         property_threshold_values={},
     ):
-
         # allow for instantiation with model or package
         # if isinstance(package, BaseModel): didn't work
         if hasattr(package, "parent"):
@@ -543,8 +543,7 @@ class check:
         dtype2 = np.dtype({name: arr.dtype.fields[name] for name in fields})
         return np.ndarray(arr.shape, dtype2, arr, 0, arr.strides)
 
-    def summarize(self):
-
+    def summarize(self, scrub: bool = False):
         # write the summary array to text file (all levels)
         if self.f is not None:
             self.f.write(self.print_summary())
@@ -586,7 +585,7 @@ class check:
             and self.verbose
             and self.summary_array.shape[0] > 0
         ):
-            txt += f"  see {self.summaryfile} for details.\n"
+            txt += f"  see {relpath_safe(self.summaryfile, scrub=scrub)} for details.\n"
 
         # print checks that passed for higher levels
         if len(self.passed) > 0 and self.level > 0:
@@ -610,7 +609,9 @@ class check:
         elif self.summary_array.shape[0] > 0 and self.level > 0:
             print("Errors and/or Warnings encountered.")
             if self.f is not None:
-                print(f"  see {self.summaryfile} for details.\n")
+                print(
+                    f"  see {relpath_safe(self.summaryfile, scrub=scrub)} for details.\n"
+                )
 
     # start of older model specific code
     def _has_cell_indices(self, stress_period_data):

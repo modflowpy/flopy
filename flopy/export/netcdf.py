@@ -152,7 +152,6 @@ class NetCdf:
         forgive=False,
         **kwargs,
     ):
-
         assert output_filename.lower().endswith(".nc")
         if verbose is None:
             verbose = model.verbose
@@ -329,7 +328,7 @@ class NetCdf:
                         continue
                 assert (
                     new_vname not in self.nc.variables.keys()
-                ), "var already exists:{0} in {1}".format(
+                ), "var already exists:{} in {}".format(
                     new_vname, ",".join(self.nc.variables.keys())
                 )
                 attrs["max"] = var[:].max()
@@ -1046,7 +1045,6 @@ class NetCdf:
                         f"{dim} information must be supplied to dimension data"
                     )
                 else:
-
                     self.nc.groups[group].createDimension(
                         dim, len(dimension_data[dim])
                     )
@@ -1265,7 +1263,7 @@ class NetCdf:
         self.log(f"creating variable: {name}")
         assert (
             precision_str in PRECISION_STRS
-        ), "netcdf.create_variable() error: precision string {0} not in {1}".format(
+        ), "netcdf.create_variable() error: precision string {} not in {}".format(
             precision_str, PRECISION_STRS
         )
 

@@ -12,7 +12,7 @@
 #     name: python3
 # ---
 
-# # MODFLOW 6: Data Storage Information - How and Where to Store MODFLOW-6 Data
+# # MODFLOW 6: Data Storage Information and Performance Optimization
 #
 # This tutorial shows the different options for storing MODFLOW data in FloPy.
 # Interaction with a FloPy MODFLOW 6 model is different from other models,
@@ -31,7 +31,8 @@
 # >       Simulation --> Model --> Package (--> Package) --> DATA
 #
 #
-# This tutorial focuses on the different storage options for MODFLOW data.
+# This tutorial focuses on the different storage options for MODFLOW data and
+# how to optimize data storage read/write speed.
 
 # ## Introduction to Data Storage Information
 # MODFLOW array and list data can either be stored internally or externally in
@@ -202,7 +203,7 @@ print(spd_record[1])
 
 spd_record[0]["filename"] = "well_package_sp1.txt"
 spd_record[0]["binary"] = True
-spd_record[1]["filename"] = "well_package_sp2.txt"
+spd_record[1]["filename"] = "well_package_sp2.bin"
 wel.stress_period_data.set_record(spd_record)
 
 # The changes can be verified by calling get_record again.
@@ -211,6 +212,73 @@ spd_record = wel.stress_period_data.get_record()
 print(f"New filename for stress period 1:  {spd_record[0]['filename']}")
 print(f"New binary flag for stress period 1:  {spd_record[0]['binary']}")
 print(f"New filename for stress period 2:  {spd_record[1]['filename']}")
+
+# ## Optimizing FloPy Performance
+#
+# By default FloPy will perform a number of verification checks on your data
+# when FloPy loads or saves that data.  For large datasets turning these
+# verification checks off can significantly improve FloPy's performance.
+# Additionally, storing files externally can help minimize the amount of data
+# FloPy reads/writes when loading and saving a simulation.  The following
+# steps will help you optimize FloPy's performance for large datasets.
+#
+# 1) Turn off FloPy verification checks and FloPy's option to automatically
+# update "maxbound".  This can be turned off on an existing
+# simulation by either individually turning off each of these settings.
+
+sim.simulation_data.auto_set_sizes = False
+sim.simulation_data.verify_data = False
+sim.write_simulation()
+
+# or by setting lazy_io to True.
+
+sim.simulation_data.lazy_io = True
+sim.write_simulation()
+
+# These options can also be turned off when loading an existing simulation
+# or creating a new simulation by setting lazy_io to True.
+
+sim2 = flopy.mf6.MFSimulation.load(
+    sim_ws=workspace,
+    lazy_io=True,
+)
+
+sim3 = flopy.mf6.MFSimulation(lazy_io=True)
+
+# 2) Whenever possible save large datasets to external binary files.  Binary
+# files are more compact and the data will be read and written significantly
+# faster.  See MODFLOW-6 documentation for which packages and data support
+# binary files.
+
+# store all well period data in external binary files
+spd_record[0]["binary"] = True
+spd_record[1]["binary"] = True
+wel.stress_period_data.set_record(spd_record)
+
+# 3) For datasets that do not support binary files, save them to
+# external text files.  When loading a simulation, FloPy will always parse
+# MODFLOW-6 package files, but will not parse external text files when
+# auto_set_sizes and verify data are both set to False.  Additionally, if
+# write_simulation is later called, external files will not be re-written
+# unless either the data or the file path has changed.
+
+# store lak period data in external text files
+period = {
+    0: {"filename": "lak_sp1.txt", "data": [(0, "STAGE", 10.0)]},
+    1: {"filename": "lak_sp2.txt", "data": [(0, "STAGE", 15.0)]},
+}
+lakpd = [(0, -2.0, 1)]
+lakecn = [(0, 0, (0, 1, 0), "HORIZONTAL", 1.0, -5.0, 0.0, 10.0, 10.0)]
+lak = flopy.mf6.ModflowGwflak(
+    gwf,
+    pname="lak-1",
+    nlakes=1,
+    noutlets=0,
+    ntables=0,
+    packagedata=lakpd,
+    connectiondata=lakecn,
+    perioddata=period,
+)
 
 try:
     temp_dir.cleanup()

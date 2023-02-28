@@ -93,7 +93,7 @@ class StructuredSpatialReference:
     def from_namfile_header(cls, namefile):
         # check for reference info in the nam file header
         header = []
-        with open(namefile, "r") as f:
+        with open(namefile) as f:
             for line in f:
                 if not line.startswith("#"):
                     break
@@ -599,7 +599,6 @@ class VertexSpatialReference:
         proj4_str=None,
         **kwargs,
     ):
-
         assert len(xvdict) == len(
             yvdict
         ), f"len(xvdict): {len(xvdict)} != len(yvdict): {len(yvdict)}"
@@ -626,7 +625,7 @@ class VertexSpatialReference:
     def from_namfile_header(cls, namefile):
         # check for reference info in the nam file header
         header = []
-        with open(namefile, "r") as f:
+        with open(namefile) as f:
             for line in f:
                 if not line.startswith("#"):
                     break
@@ -897,7 +896,6 @@ class SpatialReference:
         proj4_str=None,
         distype="structured",
     ):
-
         if distype == "structured":
             new = object.__new__(StructuredSpatialReference)
             new.__init__(

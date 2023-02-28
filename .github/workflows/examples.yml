@@ -31,7 +31,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
-          cache-dependency-path: setup.cfg
+          cache-dependency-path: pyproject.toml
 
       - name: Install Python dependencies
         if: runner.os != 'Windows'
@@ -55,7 +55,6 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash -l {0}
         run: |
-          pip install --upgrade pip
           pip install xmipy
           pip install .
 

@@ -88,7 +88,6 @@ class Modpath6Sim(Package):
         strt_file=None,
         extension="mpsim",
     ):
-
         # call base package constructor
         super().__init__(model, extension, "MPSIM", 32)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
@@ -278,7 +277,7 @@ class Modpath6Sim(Package):
                     CHeadOption,
                 ) = self.group_placement[i]
                 f_sim.write(
-                    "{0:d} {1:d} {2:d} {3:f} {4:d} {5:d}\n".format(
+                    "{:d} {:d} {:d} {:f} {:d} {:d}\n".format(
                         Grid,
                         GridCellRegionOption,
                         PlacementOption,
@@ -307,7 +306,7 @@ class Modpath6Sim(Package):
                         MaxColumn,
                     ) = self.group_region[i]
                     f_sim.write(
-                        "{0:d} {1:d} {2:d} {3:d} {4:d} {5:d}\n".format(
+                        "{:d} {:d} {:d} {:d} {:d} {:d}\n".format(
                             MinLayer + 1,
                             MinRow + 1,
                             MinColumn + 1,
@@ -345,7 +344,7 @@ class Modpath6Sim(Package):
                         ParticleColumnCount,
                     ) = self.particle_cell_cnt[i]
                     f_sim.write(
-                        "{0:d} {1:d} {2:d} \n".format(
+                        "{:d} {:d} {:d} \n".format(
                             ParticleLayerCount,
                             ParticleRowCount,
                             ParticleColumnCount,
@@ -430,7 +429,6 @@ class StartingLocationsFile(Package):
         verbose=False,
         use_pandas=True,
     ):
-
         super().__init__(model, extension, "LOC", 33)
 
         self.model = model
@@ -495,7 +493,6 @@ class StartingLocationsFile(Package):
         return d
 
     def write_file(self, data=None, float_format="{:.8f}"):
-
         if data is None:
             data = self.data
         if len(data) == 0:
@@ -556,9 +553,9 @@ class StartingLocationsFile(Package):
             groups[["groupname", "count"]].astype(str).values.flatten()
         )
         with open(loc_path, "w") as f:
-            f.write("{}\n".format(self.heading))
-            f.write("{:d}\n".format(self.input_style))
-            f.write("{}\n".format(group_count))
+            f.write(f"{self.heading}\n")
+            f.write(f"{self.input_style:d}\n")
+            f.write(f"{group_count}\n")
 
         groups.to_csv(loc_path, sep=" ", index=False, header=False, mode="a")
 

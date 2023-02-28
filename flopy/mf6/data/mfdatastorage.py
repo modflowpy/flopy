@@ -1986,7 +1986,7 @@ class DataStorage:
                 )
                 data_out = self._build_recarray(data, layer, False)
             else:
-                with open(read_file, "r") as fd_read_file:
+                with open(read_file) as fd_read_file:
                     data_out = file_access.read_list_data_from_file(
                         fd_read_file,
                         self,
@@ -2433,11 +2433,16 @@ class DataStorage:
             dimensions = [self.layer_storage.get_total_size()]
         all_none = True
         np_data_type = self.data_dimensions.structure.get_datum_type()
-        full_data = np.full(
-            dimensions,
-            np.nan,
-            self.data_dimensions.structure.get_datum_type(True),
-        )
+        np_full_data_type = self.data_dimensions.structure.get_datum_type(True)
+        if np.issubdtype(np_full_data_type, np.floating):
+            fill_value = np.nan
+        elif np.issubdtype(np_full_data_type, np.integer):
+            fill_value = 0
+        elif np.issubdtype(np_full_data_type, np.bool_):
+            fill_value = False
+        else:
+            fill_value = None
+        full_data = np.full(dimensions, fill_value, np_full_data_type)
         is_aux = self.data_dimensions.structure.name == "aux"
         if is_aux:
             aux_data = []

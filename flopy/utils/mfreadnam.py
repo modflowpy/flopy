@@ -217,7 +217,7 @@ def attribs_from_namfile_header(namefile):
     if namefile is None:
         return defaults
     header = []
-    with open(namefile, "r") as f:
+    with open(namefile) as f:
         for line in f:
             if not line.startswith("#"):
                 break
@@ -295,7 +295,7 @@ def get_entries_from_namefile(
         namefile entry that meets a user-specified value.
     """
     entries = []
-    with open(path, "r") as f:
+    with open(path) as f:
         for line in f:
             if line.strip() == "":
                 continue
@@ -357,7 +357,7 @@ def get_input_files(namefile):
     srcdir = os.path.dirname(namefile)
     filelist = []
     fname = os.path.join(srcdir, namefile)
-    with open(fname, "r") as f:
+    with open(fname) as f:
         lines = f.readlines()
 
     for line in lines:
@@ -382,7 +382,6 @@ def get_input_files(namefile):
         try:
             f = open(fname, "r")
             for line in f:
-
                 # Skip invalid lines
                 ll = line.strip().split()
                 if len(ll) < 2:
@@ -454,7 +453,7 @@ def get_mf6_nper(tdisfile):
     nper : int
         number of stress periods in the simulation
     """
-    with open(tdisfile, "r") as f:
+    with open(tdisfile) as f:
         lines = f.readlines()
     line = [line for line in lines if "NPER" in line.upper()][0]
     nper = line.strip().split()[1]
@@ -472,12 +471,11 @@ def get_mf6_mshape(disfile):
     mshape : tuple
         tuple with the shape of the MODFLOW 6 model.
     """
-    with open(disfile, "r") as f:
+    with open(disfile) as f:
         lines = f.readlines()
 
     d = {}
     for line in lines:
-
         # Skip over blank and commented lines
         ll = line.strip().split()
         if len(ll) < 2:
@@ -524,12 +522,10 @@ def get_mf6_files(mfnamefile):
     namefiles = []
 
     with open(mfnamefile) as f:
-
         # Read line and skip comments
         lines = f.readlines()
 
     for line in lines:
-
         # Skip over blank and commented lines
         ll = line.strip().split()
         if len(ll) < 2:
@@ -550,7 +546,7 @@ def get_mf6_files(mfnamefile):
     # Go through name files and get files
     for namefile in namefiles:
         fname = os.path.join(srcdir, namefile)
-        with open(fname, "r") as f:
+        with open(fname) as f:
             lines = f.readlines()
         insideblock = False
 
@@ -614,7 +610,6 @@ def _get_mf6_external_files(srcdir, outplist, files):
         try:
             f = open(fname, "r")
             for line in f:
-
                 # Skip invalid lines
                 ll = line.strip().split()
                 if len(ll) < 2:
@@ -704,12 +699,11 @@ def get_mf6_ftypes(namefile, ftypekeys):
     ftypes : list
         list of FTYPES that match ftypekeys in namefile
     """
-    with open(namefile, "r") as f:
+    with open(namefile) as f:
         lines = f.readlines()
 
     ftypes = []
     for line in lines:
-
         # Skip over blank and commented lines
         ll = line.strip().split()
         if len(ll) < 2:

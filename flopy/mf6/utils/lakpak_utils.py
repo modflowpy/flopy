@@ -176,7 +176,7 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
                     connwidths = []
 
             # iterate through each cellid
-            for (cellid, claktype, belev, telev, connlen, connwidth) in zip(
+            for cellid, claktype, belev, telev, connlen, connwidth in zip(
                 cellids, claktypes, belevs, televs, connlens, connwidths
             ):
                 connectiondata.append(

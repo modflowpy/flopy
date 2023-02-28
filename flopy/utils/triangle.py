@@ -619,7 +619,6 @@ class Triangle:
         return
 
     def _load_results(self):
-
         # node file
         ext = "node"
         dt = [("ivert", int), ("x", float), ("y", float)]
@@ -731,7 +730,7 @@ class Triangle:
         f = open(fname, "w")
 
         # vertices, write zero to indicate read from node file
-        s = "{} {} {} {}\n".format(0, 0, 0, 0)
+        s = "0 0 0 0\n"
         f.write(s)
 
         # segments

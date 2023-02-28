@@ -259,6 +259,9 @@ def test_structured_xyz_intersect(example_data_path):
         model_ws=str(example_data_path / "freyberg_multilayer_transient"),
     )
     mg = ml.modelgrid
+
+    assert mg.size == np.prod((mg.nlay, mg.nrow, mg.ncol))
+
     top_botm = ml.modelgrid.top_botm
     xc, yc, zc = mg.xyzcellcenters
 
@@ -280,6 +283,8 @@ def test_vertex_xyz_intersect(example_data_path):
     )
     ml = sim.get_model(list(sim.model_names)[0])
     mg = ml.modelgrid
+
+    assert mg.size == np.prod((mg.nlay, mg.ncpl))
 
     xc, yc, zc = mg.xyzcellcenters
     for _ in range(10):
@@ -333,6 +338,8 @@ def test_unstructured_xyz_intersect(example_data_path):
         botm=botm,
         ncpl=ncpl,
     )
+
+    assert mg.size == mg.nnodes
 
     xc, yc, zc = mg.xyzcellcenters
     zc = zc[0].reshape(mg.nlay, mg.ncpl[0])
@@ -501,7 +508,7 @@ def test_unstructured_from_gridspec(example_data_path):
     spec_path = str(model_path / "freyberg.usg.gsf")
     grid = UnstructuredGrid.from_gridspec(spec_path)
 
-    with open(spec_path, "r") as file:
+    with open(spec_path) as file:
         lines = file.readlines()
         split = [line.strip().split() for line in lines]
 
@@ -1019,11 +1026,9 @@ def test_get_lni_unstructured(grid):
         layer, i = grid.get_lni([nn])[0]
         csum = [0] + list(
             np.cumsum(
-                (
-                    list(grid.ncpl)
-                    if not isinstance(grid.ncpl, int)
-                    else [grid.ncpl for _ in range(grid.nlay)]
-                )
+                list(grid.ncpl)
+                if not isinstance(grid.ncpl, int)
+                else [grid.ncpl for _ in range(grid.nlay)]
             )
         )
         assert csum[layer] + i == nn

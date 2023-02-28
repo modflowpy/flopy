@@ -1,0 +1,14 @@
+LIST 7 usg_rch_evt_hfb.lst
+BAS6  1 usg_rch_evt.bas
+SMS  19 usg_rch_evt.sms
+DISU  29 usg_rch_evt.disu
+OC  22 usg_rch_evt.oc
+RCH  18 usg_rch_evt.rch
+evt  17 usg_rch_evt.evt
+riv  16 usg_rch_evt.riv
+CHD  199 usg_rch_evt.chd
+LPF 11 usg_rch_evt.lpf
+HFB6 26 usg_rch_evt.hfb
+DATA(BINARY) 50 usg_rch_evt_hfb.cbb
+DATA(BINARY) 30 usg_rch_evt_hfb.hds
+DATA(BINARY) 31 usg_rch_evt_hfb.ddn

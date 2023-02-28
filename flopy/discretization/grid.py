@@ -391,6 +391,10 @@ class Grid:
         raise NotImplementedError("must define shape in child class")
 
     @property
+    def size(self):
+        return np.prod(self.shape)
+
+    @property
     def extent(self):
         raise NotImplementedError("must define extent in child class")
 
@@ -843,7 +847,7 @@ class Grid:
             return False
         xul, yul = None, None
         header = []
-        with open(namefile, "r") as f:
+        with open(namefile) as f:
             for line in f:
                 if not line.startswith("#"):
                     break

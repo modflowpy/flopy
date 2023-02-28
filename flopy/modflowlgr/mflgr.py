@@ -402,7 +402,6 @@ class ModflowLgr(BaseModel):
         f.close()
 
     def change_model_ws(self, new_pth=None, reset_external=False):
-
         """
         Change the model work space.
 

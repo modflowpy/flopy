@@ -856,11 +856,6 @@ class MFBlock:
                             f'        opening external file "{file_name}"...'
                         )
                     external_file_info = arr_line
-                    file_name = datautil.clean_filename(arr_line[1])
-                    fd_block = open(os.path.join(root_path, file_name), "r")
-                    # read first line of external file
-                    line = fd_block.readline()
-                    arr_line = datautil.PyListUtil.split_data_line(line)
                 except:
                     type_, value_, traceback_ = sys.exc_info()
                     message = f'Error reading external file specified in line "{line}"'
@@ -1252,8 +1247,8 @@ class MFBlock:
 
     def _add_missing_block_headers(self, repeating_dataset):
         for key in repeating_dataset.get_active_key_list():
-            data = repeating_dataset.get_data(key)
-            if not self.header_exists(key[0]) and data is not None:
+            has_data = repeating_dataset.has_data(key)
+            if not self.header_exists(key[0]) and has_data:
                 self._build_repeating_header([key[0]])
 
     def header_exists(self, key, data_path=None):

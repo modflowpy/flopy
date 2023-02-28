@@ -49,7 +49,7 @@ def run(ws):
     model_name = "mp7p2"
     model_ws = os.path.join(ws, "mp7_ex2", "mf6")
     gridgen_ws = os.path.join(model_ws, "gridgen")
-    g = Gridgen(dis5, model_ws=gridgen_ws)
+    g = Gridgen(ms.modelgrid, model_ws=gridgen_ws)
 
     rf0shp = os.path.join(gridgen_ws, "rf0")
     xmin = 7 * delr
@@ -214,7 +214,12 @@ def run(ws):
     )
 
     sim.write_simulation()
-    sim.run_simulation()
+    success, buff = sim.run_simulation(silent=True, report=True)
+    if success:
+        for line in buff:
+            print(line)
+    else:
+        raise ValueError("Failed to run.")
 
     mp_namea = f"{model_name}a_mp"
     mp_nameb = f"{model_name}b_mp"
@@ -301,7 +306,12 @@ def run(ws):
     mp.write_input()
 
     # run modpath
-    mp.run_model()
+    success, buff = mp.run_model(silent=True, report=True)
+    if success:
+        for line in buff:
+            print(line)
+    else:
+        raise ValueError("Failed to run.")
 
     # create modpath files
     mp = flopy.modpath.Modpath7(
@@ -323,8 +333,12 @@ def run(ws):
     mp.write_input()
 
     # run modpath
-    mp.run_model()
-    return
+    success, buff = mp.run_model(silent=True, report=True)
+    if success:
+        for line in buff:
+            print(line)
+    else:
+        raise ValueError("Failed to run.")
 
 
 example_name = "ex-gwt-keating"

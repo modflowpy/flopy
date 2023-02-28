@@ -34,7 +34,7 @@ jobs:
       with:
         python-version: 3.9
         cache: 'pip'
-        cache-dependency-path: setup.cfg
+        cache-dependency-path: pyproject.toml
 
     - name: Install Python dependencies
       run: |
@@ -79,6 +79,8 @@ jobs:
 
     - name: Get executables
       working-directory: modflow6/autotest
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
       run: |
         pytest -v --durations=0 get_exes.py
 

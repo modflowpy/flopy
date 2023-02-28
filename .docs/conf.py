@@ -23,7 +23,7 @@ from flopy import __author__, __version__
 on_rtd = os.environ.get("READTHEDOCS") == "True"
 
 # -- determine if this version is a release candidate
-with open("../README.md", "r") as f:
+with open("../README.md") as f:
     lines = f.readlines()
 rc_text = ""
 for line in lines:
@@ -38,7 +38,7 @@ with open("../CITATION.cff") as f:
 
 # -- update version number in main.rst
 rst_name = "main.rst"
-with open(rst_name, "r") as f:
+with open(rst_name) as f:
     lines = f.readlines()
 with open(rst_name, "w") as f:
     for line in lines:
@@ -51,7 +51,7 @@ with open(rst_name, "w") as f:
 
 # -- update authors in introduction.rst
 rst_name = "introduction.rst"
-with open(rst_name, "r") as f:
+with open(rst_name) as f:
     lines = f.readlines()
 tag_start = "FloPy Development Team"
 tag_end = "How to Cite"

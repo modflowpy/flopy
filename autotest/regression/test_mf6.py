@@ -533,7 +533,7 @@ def test_np001(function_tmpdir, example_data_path):
     mpath = sim.simulation_data.mfpath.get_model_path(model.name)
     spath = sim.simulation_data.mfpath.get_sim_path()
     found_cellid = False
-    with open(os.path.join(mpath, "np001_mod.wel"), "r") as fd:
+    with open(os.path.join(mpath, "np001_mod.wel")) as fd:
         for line in fd:
             line_lst = line.strip().split()
             if (
@@ -561,7 +561,7 @@ def test_np001(function_tmpdir, example_data_path):
     found_begin = False
     found_end = False
     text_between_begin_and_end = False
-    with open(os.path.join(mpath, "file_rename.wel"), "r") as fd:
+    with open(os.path.join(mpath, "file_rename.wel")) as fd:
         for line in fd:
             if line.strip().lower() == "begin period  2":
                 found_begin = True
@@ -587,7 +587,7 @@ def test_np001(function_tmpdir, example_data_path):
     found_begin = False
     found_end = False
     text_between_begin_and_end = False
-    with open(os.path.join(mpath, "np001_spd_test.wel"), "r") as fd:
+    with open(os.path.join(mpath, "np001_spd_test.wel")) as fd:
         for line in fd:
             if line.strip().lower() == "begin period  2":
                 found_begin = True
@@ -1697,7 +1697,7 @@ def test005_create_tests_advgw_tidal(function_tmpdir, example_data_path):
             assert filename == f"all_files_same_name.{package.package_type}"
             package_type_dict[package.package_type] = 1
     assert sim._tdis_file.filename == "all_files_same_name.tdis"
-    for ims_file in sim._ims_files.values():
+    for ims_file in sim._solution_files.values():
         assert ims_file.filename == "all_files_same_name.ims"
     sim.write_simulation()
     name_file = str(function_tmpdir / "all_files_same_name.nam")
@@ -3929,12 +3929,12 @@ def test006_2models_mvr(function_tmpdir, example_data_path):
     for name in names:
         assert name in model_names
         model = sim.get_model(name)
-        assert model.model_type == "gwf"
+        assert model.model_type == "gwf6"
     models = sim.gwf
     assert len(models) == 2
     for model in models:
         assert model.name in model_names
-        assert model.model_type == "gwf"
+        assert model.model_type == "gwf6"
 
     # change some settings
     parent_model = sim.get_model(model_names[0])
@@ -4021,7 +4021,7 @@ def test006_2models_mvr(function_tmpdir, example_data_path):
         assert (len(sim._exchange_files) > 0) == (
             "gwf6-gwf6" in load_only or "gwf-gwf" in load_only
         )
-        assert (len(sim._ims_files) > 0) == (
+        assert (len(sim._solution_files) > 0) == (
             "ims6" in load_only or "ims" in load_only
         )
 

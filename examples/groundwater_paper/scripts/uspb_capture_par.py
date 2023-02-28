@@ -23,7 +23,6 @@ if platform.system() == "Windows":
 
 # functions that do all of the work
 def load_base_model(klay):
-
     # paths
     base_pth = os.path.join("data", "uspb", "flopy")
 
@@ -48,7 +47,7 @@ def get_baseQ(model):
         "\nrunning base model to get base head-dependent flow\n\n"
     )
     success, report = model.run_model(silent=True, report=True)
-    sys.stdout.write("Base model run: {}\n".format(report[-3]))
+    sys.stdout.write(f"Base model run: {report[-3]}\n")
 
     # get base model results
     cbcObj = flopy.utils.CellBudgetFile(
@@ -69,7 +68,7 @@ def copy_files(ml, nproc):
     exclude = ["hds", "cbc", "list", "ddn"]
     cf_pths = []
     for idx in range(nproc):
-        cf_pths.append(os.path.join(cf_base, "cf{:02d}".format(idx)))
+        cf_pths.append(os.path.join(cf_base, f"cf{idx:02d}"))
         # create base model in each directory
         if idx == 0:
             ml.model_ws = cf_pths[idx]
@@ -144,13 +143,13 @@ def make_well(pth, k, i, j, Qt):
     f.write("         1         0\n")
     f.write("         0         0 # stress period 0\n")
     f.write("         1         0 # stress period 1\n")
-    f.write("{:10d}{:10d}{:10d}{:10.2f}\n".format(k + 1, i + 1, j + 1, Qt))
+    f.write(f"{k + 1:10d}{i + 1:10d}{j + 1:10d}{Qt:10.2f}\n")
     f.close()
 
 
 def run_model(pth):
     proc = sp.Popen([exe_name, "DG.nam"], stdout=sp.PIPE, cwd=pth)
-    sys.stdout.write("  running {} in {}\n".format(exe_name, pth))
+    sys.stdout.write(f"  running {exe_name} in {pth}\n")
     success = False
     buff = []
     elt = "Normal model termination did not occur"
@@ -174,19 +173,17 @@ def run_model(pth):
 
 # function to create well file, run model, and extract results
 def cf_model(imod, ion, nmax, k, i, j, Qt, base, hdry):
-    pth = os.path.join("data", "uspb", "cf{:02d}".format(imod))
-    sys.stdout.write("\nRunning model number: {}\n".format(imod))
-    sys.stdout.write("  model run: {} of {}\n".format(ion + 1, nmax))
-    sys.stdout.write(
-        "  model number {} working directory: {}\n".format(imod, pth)
-    )
+    pth = os.path.join("data", "uspb", f"cf{imod:02d}")
+    sys.stdout.write(f"\nRunning model number: {imod}\n")
+    sys.stdout.write(f"  model run: {ion + 1} of {nmax}\n")
+    sys.stdout.write(f"  model number {imod} working directory: {pth}\n")
     make_well(pth, k, i, j, Qt)
     success, elt = run_model(pth)
     line = "\nModel run: {} of {} (model number {})\n".format(
         ion + 1, nmax, imod
     )
-    line += "  row {} - col {}\n".format(i + 1, j + 1)
-    line += "  {}\n".format(elt)
+    line += f"  row {i + 1} - col {j + 1}\n"
+    line += f"  {elt}\n"
     # get the results
     v = np.zeros((10), dtype=float)
     if success:
@@ -259,7 +256,7 @@ def doit():
 
     # run first model created to get base model results
     baseQ = get_baseQ(ml)
-    sys.stdout.write("Base head-dependent flux = {}".format(baseQ))
+    sys.stdout.write(f"Base head-dependent flux = {baseQ}")
 
     # modify oc file copy model files
     ml, cf_pths = copy_files(ml, nproc)
@@ -270,13 +267,13 @@ def doit():
 
     # open summary file
     fs = open(
-        os.path.join("data", "uspb", "uspb_capture_{}.out".format(nstep)),
+        os.path.join("data", "uspb", f"uspb_capture_{nstep}.out"),
         "w",
         0,
     )
 
     # write some summary information
-    fs.write("Problem size: {} rows and {} columns.\n".format(nrow, ncol))
+    fs.write(f"Problem size: {nrow} rows and {ncol} columns.\n")
     fs.write(
         "Capture fraction analysis performed every {} rows and columns.\n".format(
             nstep
@@ -342,9 +339,9 @@ def doit():
     ets = end - start
     line = (
         "\n"
-        + "streamflow capture analysis took {} seconds.\n".format(ets)
-        + "streamflow capture analysis took {} minutes.\n".format(ets / 60.0)
-        + "streamflow capture analysis took {} hours.\n".format(ets / 3600.0)
+        + f"streamflow capture analysis took {ets} seconds.\n"
+        + f"streamflow capture analysis took {ets / 60.0} minutes.\n"
+        + f"streamflow capture analysis took {ets / 3600.0} hours.\n"
     )
     fs.write(line)
     sys.stdout.write(line)
@@ -364,7 +361,7 @@ def doit():
     for idx in range(10):
         fn = os.path.join(
             res_pth,
-            "USPB_capture_fraction_{:02d}_{:02d}.dat".format(nstep, idx + 1),
+            f"USPB_capture_fraction_{nstep:02d}_{idx + 1:02d}.dat",
         )
         sys.stdout.write(
             "saving capture fraction data to...{}\n".format(
@@ -375,5 +372,4 @@ def doit():
 
 
 if __name__ == "__main__":
-
     doit()

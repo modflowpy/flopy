@@ -60,7 +60,7 @@ Alternatively, with Anaconda or Miniconda:
     conda env create -f etc/environment.yml
     conda activate flopy
 
-The `flopy` package has a number of [optional dependencies](docs/flopy_method_dependencies.md), as well as extra dependencies required for linting, testing, and building documentation. Extra dependencies are listed in the `test`, `lint`, `optional`, and `doc` groups under the `options.extras_require` section in `setup.cfg`. Core, linting, testing and optional dependencies are included in the Conda environment in `etc/environment.yml`. Only core dependencies are included in the PyPI package &mdash; to install extra dependency groups with pip, use `pip install ".[<group>]"`. For instance, to install all extra dependency groups:
+The `flopy` package has a number of [optional dependencies](docs/flopy_method_dependencies.md), as well as extra dependencies required for linting, testing, and building documentation. Extra dependencies are listed in the `test`, `lint`, `optional`, and `doc` groups under the `[project.optional-dependencies]` section in `pyproject.toml`. Core, linting, testing and optional dependencies are included in the Conda environment in `etc/environment.yml`. Only core dependencies are included in the PyPI package &mdash; to install extra dependency groups with pip, use `pip install ".[<group>]"`. For instance, to install all extra dependency groups:
 
     pip install ".[test, lint, optional, doc]"
 
@@ -145,7 +145,7 @@ Some of the scripts use [optional dependencies](docs/flopy_method_dependencies.m
 
 [Example notebooks](docs/notebook_examples.md) are located in `examples/Notebooks`.
 
-To run the example notebooks you will need `jupyter` installed (`jupyter` is included with the `test` optional dependency group in `setup.cfg`). Some of the notebooks use [optional dependencies](docs/flopy_method_dependencies.md) as well.
+To run the example notebooks you will need `jupyter` installed (`jupyter` is included with the `test` optional dependency group in `pyproject.toml`). Some of the notebooks use [optional dependencies](docs/flopy_method_dependencies.md) as well.
 
 To install jupyter and optional dependencies at once:
 
@@ -159,9 +159,9 @@ Like the scripts and tutorials, each notebook is configured to create and (attem
 
 ## Tests
 
-To run the tests you will need `pytest` and a few plugins, including [`pytest-xdist`](https://pytest-xdist.readthedocs.io/en/latest/), [`pytest-dotenv`](https://github.com/quiqua/pytest-dotenv), and [`pytest-benchmark`](https://pytest-benchmark.readthedocs.io/en/latest/index.html). Test dependencies are specified in the `test` extras group in `setup.cfg` (with pip, use `pip install ".[test]"`). Test dependencies are included in the Conda environment `etc/environment`.
+To run the tests you will need `pytest` and a few plugins, including [`pytest-xdist`](https://pytest-xdist.readthedocs.io/en/latest/), [`pytest-dotenv`](https://github.com/quiqua/pytest-dotenv), and [`pytest-benchmark`](https://pytest-benchmark.readthedocs.io/en/latest/index.html). Test dependencies are specified in the `test` extras group in `pyproject.toml` (with pip, use `pip install ".[test]"`). Test dependencies are included in the Conda environment `etc/environment`.
 
-**Note:** to prepare your code for a pull request, you will need a few more packages specified in the `lint` extras group in `setup.cfg` (also included by default for Conda). See the docs on [submitting a pull request](CONTRIBUTING.md) for more info.
+**Note:** to prepare your code for a pull request, you will need a few more packages specified in the `lint` extras group in `pyproject.toml` (also included by default for Conda). See the docs on [submitting a pull request](CONTRIBUTING.md) for more info.
 
 ### Configuring tests
 

@@ -797,12 +797,8 @@ def test_sfr_plot(mf2005_model_path):
         check=False,
     )
     sfr = m.get_package("SFR")
-    tv = sfr.plot(
-        key="strtop",
-    )
-    assert issubclass(
-        type(tv[0]), matplotlib.axes.SubplotBase
-    ), "could not plot strtop"
+    tv = sfr.plot(key="strtop")
+    assert isinstance(tv[0], matplotlib.axes.SubplotBase)
 
 
 def get_test_matrix():

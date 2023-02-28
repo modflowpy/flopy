@@ -173,8 +173,8 @@ def get_gwf_model(sim, gwfname, gwfpath, modelshape, chdspd=None, welspd=None):
     # output control
     oc = ModflowGwfoc(
         gwf,
-        budget_filerecord="{}.cbc".format(gwfname),
-        head_filerecord="{}.hds".format(gwfname),
+        budget_filerecord=f"{gwfname}.cbc",
+        head_filerecord=f"{gwfname}.hds",
         headprintrecord=[("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "GENERAL")],
         saverecord=[("HEAD", "LAST"), ("BUDGET", "LAST")],
         printrecord=[("HEAD", "LAST"), ("BUDGET", "LAST")],
@@ -226,8 +226,8 @@ def get_gwt_model(sim, gwtname, gwtpath, modelshape, sourcerecarray=None):
     # output control
     oc = ModflowGwtoc(
         gwt,
-        budget_filerecord="{}.cbc".format(gwtname),
-        concentration_filerecord="{}.ucn".format(gwtname),
+        budget_filerecord=f"{gwtname}.cbc",
+        concentration_filerecord=f"{gwtname}.ucn",
         concentrationprintrecord=[
             ("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "GENERAL")
         ],
@@ -264,7 +264,7 @@ def test_string_to_file_path():
 
 
 def test_subdir(function_tmpdir):
-    sim = MFSimulation(sim_ws=str(function_tmpdir))
+    sim = MFSimulation(sim_ws=function_tmpdir)
     tdis = ModflowTdis(sim)
     gwf = ModflowGwf(sim, model_rel_path="level2")
     ims = ModflowIms(sim)
@@ -942,7 +942,7 @@ def test_get_set_data_record(function_tmpdir):
 @requires_exe("mf6")
 def test_output(function_tmpdir, example_data_path):
     ex_name = "test001e_UZF_3lay"
-    sim_ws = str(example_data_path / "mf6" / ex_name)
+    sim_ws = example_data_path / "mf6" / ex_name
     sim = MFSimulation.load(sim_ws=sim_ws, exe_name="mf6")
     sim.set_sim_path(str(function_tmpdir))
     sim.write_simulation()
@@ -1033,6 +1033,83 @@ def test_output_add_observation(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
+def test_sfr_connections(function_tmpdir, example_data_path):
+    """MODFLOW just warns if any reaches are unconnected
+    flopy fails to load model if reach 1 is unconnected, fine with other unconnected
+    """
+    data_path = example_data_path / "mf6" / "test666_sfrconnections"
+    sim_ws = function_tmpdir
+    for test in ["sfr0", "sfr1"]:
+        sim_name = "test_sfr"
+        model_name = "test_sfr"
+        tdis_name = f"{sim_name}.tdis"
+        sim = MFSimulation(
+            sim_name=sim_name, version="mf6", exe_name="mf6", sim_ws=sim_ws
+        )
+        tdis_rc = [(1.0, 1, 1.0)]
+        tdis = ModflowTdis(sim, time_units="DAYS", nper=1, perioddata=tdis_rc)
+        ims_package = ModflowIms(
+            sim,
+            pname="my_ims_file",
+            filename=f"{sim_name}.ims",
+            print_option="ALL",
+            complexity="SIMPLE",
+        )
+        model = ModflowGwf(
+            sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
+        )
+
+        dis = ModflowGwfdis(
+            model,
+            length_units="FEET",
+            nlay=1,
+            nrow=5,
+            ncol=5,
+            delr=5000.0,
+            delc=5000.0,
+            top=100.0,
+            botm=-100.0,
+            filename=f"{model_name}.dis",
+        )
+        ic_package = ModflowGwfic(model, filename=f"{model_name}.ic")
+        npf_package = ModflowGwfnpf(
+            model,
+            pname="npf",
+            save_flows=True,
+            alternative_cell_averaging="logarithmic",
+            icelltype=1,
+            k=50.0,
+        )
+
+        cnfile = f"mf6_{test}_connection.txt"
+        pkfile = f"mf6_{test}_package.txt"
+
+        with open(data_path / pkfile, "r") as f:
+            nreaches = len(f.readlines())
+        sfr = ModflowGwfsfr(
+            model,
+            packagedata={"filename": str(data_path / pkfile)},
+            connectiondata={"filename": str(data_path / cnfile)},
+            nreaches=nreaches,
+            pname="sfr",
+            unit_conversion=86400,
+        )
+        sim.set_all_data_external()
+        sim.write_simulation()
+        success, buff = sim.run_simulation()
+        assert success, f"simulation {sim.name} did not run"
+
+        # reload simulation
+        sim2 = MFSimulation.load(sim_ws=sim_ws)
+        sim.set_all_data_external()
+        sim.write_simulation()
+        success, buff = sim.run_simulation()
+        assert (
+            success
+        ), f"simulation {sim.name} did not run after being reloaded"
+
+
+@requires_exe("mf6")
 def test_array(function_tmpdir):
     # get_data
     # empty data in period block vs data repeating
@@ -1043,8 +1120,8 @@ def test_array(function_tmpdir):
 
     sim_name = "test_array"
     model_name = "test_array"
-    out_dir = str(function_tmpdir)
-    tdis_name = "{}.tdis".format(sim_name)
+    out_dir = function_tmpdir
+    tdis_name = f"{sim_name}.tdis"
     sim = MFSimulation(
         sim_name=sim_name, version="mf6", exe_name="mf6", sim_ws=out_dir
     )
@@ -1067,7 +1144,7 @@ def test_array(function_tmpdir):
         number_orthogonalizations=2,
     )
     model = ModflowGwf(
-        sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
     )
 
     dis = ModflowGwfdis(
@@ -1629,7 +1706,7 @@ def test_namefile_creation(tmpdir):
     model = ModflowGwf(
         sim,
         modelname=test_ex_name,
-        model_nam_file="{}.nam".format(test_ex_name),
+        model_nam_file=f"{test_ex_name}.nam",
     )
 
     # try to create simulation name file

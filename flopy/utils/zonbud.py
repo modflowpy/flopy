@@ -544,7 +544,6 @@ class ZoneBudget:
 
         """
         try:
-
             if kstpkper is not None:
                 for rn, cn, flux in zip(rownames, colnames, fluxes):
                     rowidx = np.where(
@@ -998,7 +997,6 @@ class ZoneBudget:
         return
 
     def _accumulate_flow_ssst(self, recname, kstpkper, totim):
-
         # NOT AN INTERNAL FLOW TERM, SO MUST BE A SOURCE TERM OR STORAGE
         # ACCUMULATE THE FLOW BY ZONE
 
@@ -1456,7 +1454,7 @@ class ZoneBudget:
         zones : np.array
 
         """
-        with open(fname, "r") as f:
+        with open(fname) as f:
             lines = f.readlines()
 
         # Initialize layer
@@ -1468,7 +1466,7 @@ class ZoneBudget:
 
         # First line contains array dimensions
         dimstring = lines.pop(0).strip().split()
-        nlay, nrow, ncol = [int(v) for v in dimstring]
+        nlay, nrow, ncol = (int(v) for v in dimstring)
         zones = np.zeros((nlay, nrow, ncol), dtype=np.int32)
 
         # The number of values to read before placing
@@ -1499,7 +1497,7 @@ class ZoneBudget:
                     iconst = int(rowitems[1])
                 else:
                     fmt = rowitems[1].strip("()")
-                    fmtin, iprn = [int(v) for v in fmt.split("I")]
+                    fmtin, iprn = (int(v) for v in fmt.split("I"))
 
             # ZONE DATA
             else:
@@ -1519,7 +1517,7 @@ class ZoneBudget:
                     if not os.path.isfile(fname):
                         errmsg = f'Could not find external file "{fname}"'
                         raise Exception(errmsg)
-                    with open(fname, "r") as ext_f:
+                    with open(fname) as ext_f:
                         ext_flines = ext_f.readlines()
                     for ext_frow in ext_flines:
                         ext_frowitems = ext_frow.strip().split()
@@ -2464,7 +2462,7 @@ def _get_budget(recarray, zonenamedict, names=None, zones=None, net=False):
     if "totim" in recarray.dtype.names:
         standard_fields.insert(0, "totim")
     select_fields = standard_fields + list(zonenamedict.values())
-    select_records = np.where((recarray["name"] == recarray["name"]))
+    select_records = np.where(recarray["name"] == recarray["name"])
     if zones is not None:
         for idx, z in enumerate(zones):
             if isinstance(z, int):
@@ -2613,7 +2611,6 @@ def _read_zb_zblst(fname):
         np.recarray
     """
     with open(fname) as foo:
-
         data = {}
         read_data = False
         flow_budget = False
@@ -2757,7 +2754,6 @@ def _read_zb_csv(fname):
                 read_data = True
 
             elif read_data:
-
                 t = line.split(",")
                 if "IN" in t[1]:
                     prefix = "FROM_"

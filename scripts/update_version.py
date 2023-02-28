@@ -78,7 +78,7 @@ class Version(NamedTuple):
     def from_file(cls, path: PathLike) -> "Version":
         lines = [
             line.rstrip("\n")
-            for line in open(Path(path).expanduser().absolute(), "r")
+            for line in open(Path(path).expanduser().absolute())
         ]
         vmajor = vminor = vpatch = None
         for line in lines:
@@ -151,20 +151,19 @@ def update_version_py(
 ):
     with open(_version_py_path, "w") as f:
         f.write(
-            f"# {_project_name} version file automatically created using {Path(__file__).name} on {timestamp.strftime('%B %d, %Y %H:%M:%S')}\n"
+            f"# {_project_name} version file automatically created using "
+            f"{Path(__file__).name} on {timestamp:%B %d, %Y %H:%M:%S}\n\n"
         )
-        f.write("\n")
         f.write(f"major = {version.major}\n")
         f.write(f"minor = {version.minor}\n")
         f.write(f"micro = {version.patch}\n")
-        f.write("__version__ = '{}.{}.{}'.format(major, minor, micro)\n")
+        f.write("__version__ = f'{major}.{minor}.{micro}'\n")
     print(f"Updated {_version_py_path} to version {version}")
 
 
 def get_software_citation(
     release_type: ReleaseType, timestamp: datetime, version: Version
 ):
-
     # get data Software/Code citation for FloPy
     citation = yaml.safe_load(file_paths["CITATION.cff"].read_text())
 
