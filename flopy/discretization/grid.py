@@ -821,6 +821,7 @@ class Grid:
         proj4=None,
         merge_coord_info=True,
     ):
+        new_crs = get_crs(prjfile=prjfile, epsg=epsg, proj4=proj4, crs=crs)
         if merge_coord_info:
             if xoff is None:
                 xoff = self._xoff
@@ -828,10 +829,8 @@ class Grid:
                 yoff = self._yoff
             if angrot is None:
                 angrot = self._angrot
-            if epsg is None:
-                epsg = self._epsg
-            if proj4 is None:
-                proj4 = self._proj4
+            if new_crs is None:
+                new_crs = self._crs
 
         if xoff is None:
             xoff = 0.0
@@ -843,9 +842,8 @@ class Grid:
         self._xoff = xoff
         self._yoff = yoff
         self._angrot = angrot
-        self._crs = get_crs(prjfile=prjfile, epsg=epsg, proj4=proj4, crs=crs)
-        self._epsg = epsg
-        self._proj4 = proj4
+        self._prjfile = prjfile
+        self.crs = new_crs
         self._require_cache_updates()
 
     def load_coord_info(self, namefile=None, reffile="usgs.model.reference"):
