@@ -41,6 +41,25 @@ def minimal_unstructured_grid_info():
     return d
 
 
+@pytest.fixture
+def minimal_vertex_grid_info(minimal_unstructured_grid_info):
+    usg_info = minimal_unstructured_grid_info
+    d = {}
+    d["vertices"] = minimal_unstructured_grid_info["vertices"]
+    cell2d = []
+    for n in range(len(usg_info["iverts"])):
+        cell2d_n = [
+            n,
+            usg_info["xcenters"][n],
+            usg_info["ycenters"][n],
+        ] + usg_info["iverts"][n]
+        cell2d.append(cell2d_n)
+    d["cell2d"] = cell2d
+    d["ncpl"] = len(cell2d)
+    d["nlay"] = 1
+    return d
+
+
 def test_rotation():
     m = Modflow(rotation=20.0)
     dis = ModflowDis(
@@ -657,6 +676,20 @@ def test_grid_set_crs(crs, expected_srs, function_tmpdir):
         assert isinstance(sg.crs, pyproj.CRS)
     assert getattr(sg.crs, "srs", None) == expected_srs
 
+    # test setting the crs via set_coord_info
+    sg.set_coord_info()
+    if crs is not None:
+        assert isinstance(sg.crs, pyproj.CRS)
+    assert getattr(sg.crs, "srs", None) == expected_srs
+    sg.set_coord_info(crs=crs)
+    if crs is not None:
+        assert isinstance(sg.crs, pyproj.CRS)
+    assert getattr(sg.crs, "srs", None) == expected_srs
+    sg.set_coord_info(crs=26915, merge_coord_info=False)
+    assert getattr(sg.crs, "srs", None) == "EPSG:26915"
+    # reset back to test case crs
+    sg = StructuredGrid(delr=delr, delc=delc, crs=crs)
+
     # test input of projection file
     if crs is not None:
         prjfile = function_tmpdir / "grid_crs.prj"
@@ -669,19 +702,29 @@ def test_grid_set_crs(crs, expected_srs, function_tmpdir):
             assert isinstance(sg.crs, pyproj.CRS)
         assert getattr(sg.crs, "srs", None) == expected_srs
         assert sg.prjfile == prjfile
+        sg.set_coord_info(prjfile=prjfile)
+        if crs is not None:
+            assert isinstance(sg.crs, pyproj.CRS)
+            assert getattr(sg.crs, "srs", None) == expected_srs
+        assert sg.prjfile == prjfile
 
     # test setting another crs
     sg.crs = 26915
     assert sg.crs == get_authority_crs(26915)
 
-    if version.parse(flopy.__version__) < version.parse("3.3.7"):
+    if (
+        version.parse(flopy.__version__) < version.parse("3.4")
+        and crs is not None
+    ):
         pyproj_crs = get_authority_crs(crs)
-        sg = StructuredGrid(delr=delr, delc=delc)
-        sg.epsg = pyproj_crs.to_epsg()
-        if crs is not None:
-            assert isinstance(sg.crs, pyproj.CRS)
-        assert getattr(sg.crs, "srs", None) == expected_srs
-        assert sg.epsg == pyproj_crs.to_epsg()
+        epsg = pyproj_crs.to_epsg()
+        if epsg is not None:
+            sg = StructuredGrid(delr=delr, delc=delc, crs=crs)
+            sg.epsg = epsg
+            if crs is not None:
+                assert isinstance(sg.crs, pyproj.CRS)
+            assert getattr(sg.crs, "srs", None) == expected_srs
+            assert sg.epsg == epsg
 
         sg = StructuredGrid(delr=delr, delc=delc)
         sg.proj4 = pyproj_crs.to_proj4()
