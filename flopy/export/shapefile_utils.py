@@ -638,7 +638,7 @@ def recarray2shp(
 
     w.close()
     write_prj(shpname, mg, crs=crs, epsg=epsg, prj=prj, prjfile=prjfile)
-    print(f"wrote {flopy_io.relpath_printstr(os.getcwd(), shpname)}")
+    print(f"wrote {flopy_io.relpath_safe(os.getcwd(), shpname)}")
     return
 
 
