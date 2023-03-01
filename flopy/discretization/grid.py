@@ -949,9 +949,9 @@ class Grid:
                                 elif info[0] == "rotation":
                                     self._angrot = float(data)
                                 elif info[0] == "epsg":
-                                    self._epsg = int(data)
+                                    self.crs = int(data)
                                 elif info[0] == "proj4":
-                                    self._proj4 = data
+                                    self.crs = data
                                 elif info[0] == "start_date":
                                     start_datetime = data
 

@@ -536,6 +536,8 @@ def test_read_usgs_model_reference(function_tmpdir, model_reference_path):
             for line in src:
                 if "epsg" in line:
                     line = "epsg 26916\n"
+                if "proj4" in line:
+                    line = "# proj4\n"
                 dst.write(line)
 
     m2 = Modflow.load("junk.nam", model_ws=ws)
