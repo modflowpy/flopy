@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Optional, Union
 
 import numpy as np
@@ -401,10 +402,8 @@ def output_helper(
         elif verbose:
             print(msg)
     times = [t for t in common_times[::stride]]
-
-    if isinstance(f, os.PathLike):
-        f = str(f)
-    if isinstance(f, str) and f.lower().endswith(".nc"):
+    if (isinstance(f, str) or isinstance(f, Path)) and 
+        Path(f).suffix.lower() == ".nc":
         f = NetCdf(
             f, ml, time_values=times, logger=logger, forgive=forgive, **kwargs
         )
@@ -513,7 +512,9 @@ def output_helper(
                 mask_array3d=mask_array3d,
             )
 
-    elif isinstance(f, str) and f.endswith(".shp"):
+    elif (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".shp":
         attrib_dict = {}
         for _, out_obj in oudic.items():
             if (
@@ -611,13 +612,13 @@ def model_export(
     if package_names is None:
         package_names = [pak.name[0] for pak in ml.packagelist]
 
-    if isinstance(f, os.PathLike):
-        f = str(f)
-
-    if isinstance(f, str) and f.lower().endswith(".nc"):
+    if (isinstance(f, str) or isinstance(f, Path)) and 
+        Path(f).suffix.lower() == ".nc":
         f = NetCdf(f, ml, **kwargs)
 
-    if isinstance(f, str) and f.lower().endswith(".shp"):
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".shp":
         shapefile_utils.model_attributes_to_shapefile(
             f, ml, package_names=package_names, **kwargs
         )
@@ -704,13 +705,13 @@ def package_export(
     """
     assert isinstance(pak, PackageInterface)
 
-    if isinstance(f, os.PathLike):
-        f = str(f)
-
-    if isinstance(f, str) and f.lower().endswith(".nc"):
+    if (isinstance(f, str) or isinstance(f, Path)) and 
+        Path(f).suffix.lower() == ".nc":
         f = NetCdf(f, pak.parent, **kwargs)
 
-    if isinstance(f, str) and f.lower().endswith(".shp"):
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".shp":
         shapefile_utils.model_attributes_to_shapefile(
             f, pak.parent, package_names=pak.name, verbose=verbose, **kwargs
         )
@@ -817,10 +818,8 @@ def generic_array_export(
             flopy model object
 
     """
-    if isinstance(f, os.PathLike):
-        f = str(f)
-
-    if isinstance(f, str) and f.lower().endswith(".nc"):
+    if (isinstance(f, str) or isinstance(f, Path)) and 
+        Path(f).suffix.lower() == ".nc":
         assert "model" in kwargs.keys(), (
             "creating a new netCDF using generic_array_helper requires a "
             "'model' kwarg"
@@ -907,13 +906,13 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
     if "modelgrid" in kwargs:
         modelgrid = kwargs.pop("modelgrid")
 
-    if isinstance(f, os.PathLike):
-        f = str(f)
-
-    if isinstance(f, str) and f.lower().endswith(".nc"):
+    if (isinstance(f, str) or isinstance(f, Path)) and 
+        Path(f).suffix.lower() == ".nc":
         f = NetCdf(f, mfl.model, **kwargs)
 
-    if isinstance(f, str) and f.lower().endswith(".shp"):
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".shp":
         sparse = kwargs.get("sparse", False)
         kper = kwargs.get("kper", 0)
         squeeze = kwargs.get("squeeze", True)
@@ -1063,13 +1062,13 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
     if "modelgrid" in kwargs:
         modelgrid = kwargs.pop("modelgrid")
 
-    if isinstance(f, os.PathLike):
-        f = str(f)
-
-    if isinstance(f, str) and f.lower().endswith(".nc"):
+    if (isinstance(f, str) or isinstance(f, Path)) and 
+        Path(f).suffix.lower() == ".nc":
         f = NetCdf(f, t2d.model, **kwargs)
 
-    if isinstance(f, str) and f.lower().endswith(".shp"):
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".shp":
         array_dict = {}
         for kper in range(t2d.model.modeltime.nper):
             u2d = t2d[kper]
@@ -1219,13 +1218,13 @@ def array3d_export(f: Union[str, os.PathLike], u3d, fmt=None, **kwargs):
     if "modelgrid" in kwargs:
         modelgrid = kwargs.pop("modelgrid")
 
-    if isinstance(f, os.PathLike):
-        f = str(f)
-
-    if isinstance(f, str) and f.lower().endswith(".nc"):
+    if (isinstance(f, str) or isinstance(f, Path)) and 
+        Path(f).suffix.lower() == ".nc":
         f = NetCdf(f, u3d.model, **kwargs)
 
-    if isinstance(f, str) and f.lower().endswith(".shp"):
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".shp":
         array_dict = {}
         for ilay in range(modelgrid.nlay):
             u2d = u3d[ilay]
@@ -1396,21 +1395,22 @@ def array2d_export(
     if "modelgrid" in kwargs:
         modelgrid = kwargs.pop("modelgrid")
 
-    if isinstance(f, os.PathLike):
-        f = str(f)
-
-    if isinstance(f, str) and f.lower().endswith(".nc"):
+    if (isinstance(f, str) or isinstance(f, Path)) and 
+        Path(f).suffix.lower() == ".nc":
         f = NetCdf(f, u2d.model, **kwargs)
 
-    if isinstance(f, str) and f.lower().endswith(".shp"):
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".shp":
         name = shapefile_utils.shape_attr_name(u2d.name, keep_layer=True)
         shapefile_utils.write_grid_shapefile(
             f, modelgrid, {name: u2d.array}, verbose=verbose
         )
         return
 
-    elif isinstance(f, str) and f.lower().endswith(".asc"):
-        export_array(modelgrid, f, u2d.array, verbose=verbose, **kwargs)
+    elif (isinstance(f, str) or isinstance(f, Path)) and 
+        Path(f).suffix.lower() == ".asc":
+        export_array(modelgrid, f, u2d.array, **kwargs)
         return
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):

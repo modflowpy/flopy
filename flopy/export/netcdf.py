@@ -160,11 +160,8 @@ class NetCdf:
         forgive=False,
         **kwargs,
     ):
-        if isinstance(output_filename, os.PathLike):
-            output_filename = str(
-                Path(output_filename).expanduser().absolute()
-            )
-        assert output_filename.lower().endswith(".nc")
+        output_filename = Path(output_filename)
+        assert output_filename.suffix == ".nc"
         if verbose is None:
             verbose = model.verbose
         if logger is not None:
@@ -174,7 +171,7 @@ class NetCdf:
         self.var_attr_dict = {}
         self.log = self.logger.log
         if os.path.exists(output_filename):
-            self.logger.warn("removing existing nc file: " + output_filename)
+            self.logger.warn(f"removing existing nc file: {output_filename}")
             os.remove(output_filename)
         self.output_filename = output_filename
 

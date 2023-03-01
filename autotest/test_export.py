@@ -58,14 +58,23 @@ def namfiles() -> List[Path]:
 
 
 @requires_pkg("shapefile")
-def test_output_helper_shapefile_export(function_tmpdir, example_data_path):
-    ws = example_data_path / "freyberg_multilayer_transient"
-    ml = Modflow.load("freyberg.nam", model_ws=ws)
-    head = HeadFile(ws / "freyberg.hds")
-    cbc = CellBudgetFile(ws / "freyberg.cbc")
+@pytest.mark.parametrize("pathlike", (True, False))
+def test_output_helper_shapefile_export(
+    pathlike, function_tmpdir, example_data_path
+):
+    ml = Modflow.load(
+        "freyberg.nam",
+        model_ws=str(example_data_path / "freyberg_multilayer_transient"),
+    )
+    head = HeadFile(os.path.join(ml.model_ws, "freyberg.hds"))
+    cbc = CellBudgetFile(os.path.join(ml.model_ws, "freyberg.cbc"))
 
+    if pathlike:
+        outpath = function_tmpdir / "test-pathlike.shp"
+    else:
+        outpath = os.path.join(function_tmpdir, "test.shp")
     flopy.export.utils.output_helper(
-        function_tmpdir / "test.shp",
+        outpath,
         ml,
         {"HDS": head, "cbc": cbc},
         mflay=1,
