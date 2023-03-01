@@ -168,7 +168,7 @@ def test_export_output(crs, function_tmpdir, example_data_path):
     hds = flopy.utils.HeadFile(hds_pth)
 
     function_tmpdir = Path(".")
-    out_pth = os.path.join(function_tmpdir, "freyberg.out.nc")
+    out_pth = function_tmpdir / f"freyberg_{crs}.out.nc"
     nc = flopy.export.utils.output_helper(
         out_pth, ml, {"freyberg.githds": hds}
     )
