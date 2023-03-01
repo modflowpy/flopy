@@ -671,57 +671,6 @@ class NetCdf:
         self.nc.close()
         self.log("writing nc file")
 
-    def _initialize_attributes(self):
-        """private method to initial the attributes
-        of the NetCdf instance
-        """
-        assert (
-            "nc" not in self.__dict__.keys()
-        ), "NetCdf._initialize_attributes() error: nc attribute already set"
-
-        self.nc_crs_str = "epsg:4326"
-        self.nc_crs_longname = "https://www.opengis.net/def/crs/EPSG/0/4326"
-        self.nc_semi_major = float(6378137.0)
-        self.nc_inverse_flat = float(298.257223563)
-
-        self.global_attributes = {}
-        self.global_attributes["namefile"] = self.model.namefile
-        self.global_attributes["model_ws"] = self.model.model_ws
-        self.global_attributes["exe_name"] = self.model.exe_name
-        self.global_attributes["modflow_version"] = self.model.version
-
-        self.global_attributes["create_hostname"] = socket.gethostname()
-        self.global_attributes["create_platform"] = platform.system()
-        self.global_attributes["create_directory"] = os.getcwd()
-
-        htol, rtol = -999, -999
-        try:
-            htol, rtol = self.model.solver_tols()
-        except Exception as e:
-            self.logger.warn(f"unable to get solver tolerances:{e!s}")
-        self.global_attributes["solver_head_tolerance"] = htol
-        self.global_attributes["solver_flux_tolerance"] = rtol
-        spatial_attribs = {
-            "xll": self.model_grid.xoffset,
-            "yll": self.model_grid.yoffset,
-            "rotation": self.model_grid.angrot,
-            "crs": self.model_grid.crs,
-        }
-        for n, v in spatial_attribs.items():
-            self.global_attributes["flopy_sr_" + n] = v
-        self.global_attributes[
-            "start_datetime"
-        ] = self.model_time.start_datetime
-
-        self.fillvalue = FILLVALUE
-
-        # initialize attributes
-        self.grid_crs = None
-        self.zs = None
-        self.ys = None
-        self.xs = None
-        self.nc = None
-
     def initialize_geometry(self):
         """initialize the geometric information
         needed for the netcdf file
@@ -757,6 +706,7 @@ class NetCdf:
 
         print(f"initialize_geometry::nc_crs = {self.nc_crs}")
 
+        xmin, xmax, ymin, ymax = self.model_grid.extent
         if self.transformer is not None:
             print(f"transforming coordinates using = {self.transformer}")
 
@@ -764,13 +714,14 @@ class NetCdf:
             self.xs, self.ys = self.transformer.transform(xs, ys)
 
             # get transformed bounds and record to check against ScienceBase later
-            xmin, xmax, ymin, ymax = self.model_grid.extent
             bbox = np.array(
                 [[xmin, ymin], [xmin, ymax], [xmax, ymax], [xmax, ymin]]
             )
             x, y = self.transformer.transform(*bbox.transpose())
             self.bounds = x.min(), y.min(), x.max(), y.max()
-            self.vbounds = vmin, vmax
+        else:
+            self.bounds = xmin, ymin, xmax, ymax
+        self.vbounds = vmin, vmax
 
     def initialize_file(self, time_values=None):
         """
@@ -790,10 +741,9 @@ class NetCdf:
         if self.nc is not None:
             raise Exception("nc file already initialized")
 
-        if self.model_crs is None:
-            self.log("initializing geometry")
-            self.initialize_geometry()
-            self.log("initializing geometry")
+        self.log("initializing geometry")
+        self.initialize_geometry()
+        self.log("initializing geometry")
 
         netCDF4 = import_optional_dependency("netCDF4")
 
