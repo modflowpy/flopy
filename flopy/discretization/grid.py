@@ -1025,10 +1025,14 @@ class Grid:
         """
         from ..export.shapefile_utils import write_grid_shapefile
 
-        if epsg is None and prj is None:
-            epsg = self.epsg
         write_grid_shapefile(
-            filename, self, array_dict={}, nan_val=-1.0e9, epsg=epsg, prj=prj
+            filename,
+            self,
+            array_dict={},
+            nan_val=-1.0e9,
+            crs=self.crs,
+            epsg=epsg,
+            prj=prj,
         )
         return
 
