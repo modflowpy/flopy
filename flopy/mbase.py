@@ -433,7 +433,7 @@ class BaseModel(ModelInterface):
 
     @property
     def model_ws(self):
-        return self._model_ws
+        return copy.deepcopy(self._model_ws)
 
     @model_ws.setter
     def model_ws(self, model_ws):
@@ -1283,10 +1283,6 @@ class BaseModel(ModelInterface):
             new_ext_fnames.append(new_ext_file)
         self.external_fnames = new_ext_fnames
 
-    @property
-    def model_ws(self):
-        return copy.deepcopy(self._model_ws)
-
     def _set_name(self, value):
         """
         Set model name
@@ -1638,6 +1634,45 @@ class BaseModel(ModelInterface):
         return
 
 
+def resolve_exe_name(model_ws, exe_name, silent):
+    exe_name = Path(exe_name)
+    if str(exe_name.parent) == ".":
+        exe = which(str(exe_name))
+        if exe is None:
+            if exe_name.suffix.lower() == ".exe":
+                # try removing .exe suffix
+                exe = which(str(exe_name)[:-4])
+                if exe is not None:
+                    exe_name = str(exe_name)[:-4]
+        if exe is None:
+            raise Exception(
+                f"The program "
+                f"{flopy_io.relpath_safe(exe_name, model_ws)} "
+                f"does not exist or is not executable."
+            )
+        else:
+            if not silent:
+                print(
+                    f"FloPy is using the following executable to run the "
+                    f"model: {flopy_io.relpath_safe(exe_name, model_ws)}"
+                )
+    else:
+        # make relative path into absolute path
+        exe_name = exe_name.absolute()
+        if not exe_name.exists() and not Path(f"{str(exe_name)}.exe").exists():
+            raise Exception(
+                f"The program {flopy_io.relpath_safe(exe_name, model_ws)} "
+                f"does not exist or is not executable."
+            )
+        else:
+            if not silent:
+                print(
+                    f"FloPy is using the following executable to run the "
+                    f"model: {flopy_io.relpath_safe(exe_name, model_ws)}"
+                )
+    return exe_name
+
+
 def run_model(
     exe_name,
     namefile,
@@ -1702,41 +1737,7 @@ def run_model(
         normal_msg[idx] = s.lower()
 
     # Check to make sure that program and namefile exist
-    exe_name = Path(exe_name)
-    if str(exe_name.parent) == ".":
-        exe = which(str(exe_name))
-        if exe is None:
-            if exe_name.suffix.lower() == ".exe":
-                # try removing .exe suffix
-                exe = which(str(exe_name)[:-4])
-                if exe is not None:
-                    exe_name = str(exe_name)[:-4]
-        if exe is None:
-            raise Exception(
-                f"The program "
-                f"{flopy_io.relpath_safe(exe_name, model_ws)} "
-                f"does not exist or is not executable."
-            )
-        else:
-            if not silent:
-                print(
-                    f"FloPy is using the following executable to run the "
-                    f"model: {flopy_io.relpath_safe(exe_name, model_ws)}"
-                )
-    else:
-        # make relative path into absolute path
-        exe_name = exe_name.absolute()
-        if not exe_name.exists() and not Path(f"{str(exe_name)}.exe").exists():
-            raise Exception(
-                f"The program {flopy_io.relpath_safe(exe_name, model_ws)} "
-                f"does not exist or is not executable."
-            )
-        else:
-            if not silent:
-                print(
-                    f"FloPy is using the following executable to run the "
-                    f"model: {flopy_io.relpath_safe(exe_name, model_ws)}"
-                )
+    exe_name = resolve_exe_name(model_ws, exe_name, silent)
 
     if namefile is not None:
         if not os.path.isfile(os.path.join(model_ws, namefile)):
