@@ -191,7 +191,7 @@ class MFFileMgmt:
     Parameters
     ----------
 
-    path : str
+    path : str or PathLike
         Path on disk to the simulation
 
     Attributes

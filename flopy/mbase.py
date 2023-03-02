@@ -689,7 +689,7 @@ class BaseModel(ModelInterface):
 
     def get_ext_dict_attr(
         self,
-        ext_unit_dict: Union[str, os.PathLike] = None,
+        ext_unit_dict=None,
         unit=None,
         filetype=None,
         pop_key=True,
@@ -725,7 +725,7 @@ class BaseModel(ModelInterface):
     def add_output_file(
         self,
         unit,
-        fname: Union[str, os.PathLike] = None,
+        fname: Optional[Union[str, os.PathLike]] = None,
         extension="cbc",
         binflag=True,
         package=None,
@@ -808,6 +808,7 @@ class BaseModel(ModelInterface):
             binary or not. (default is False)
 
         """
+        fname = str(fname)
         if fname in self.output_fnames:
             if self.verbose:
                 print(
@@ -834,7 +835,7 @@ class BaseModel(ModelInterface):
             self._output_msg(-1, add=True)
 
     def remove_output(
-        self, fname: Union[str, os.PathLike, None] = None, unit=None
+        self, fname: Optional[Union[str, os.PathLike]] = None, unit=None
     ):
         """
         Remove an output file from the model by specifying either the
@@ -848,6 +849,7 @@ class BaseModel(ModelInterface):
             Unit number of output array
         """
         if fname is not None:
+            fname = str(fname)
             for i, e in enumerate(self.output_fnames):
                 if fname in e:
                     if self.verbose:
@@ -884,6 +886,7 @@ class BaseModel(ModelInterface):
             Unit number of output array
         """
         if fname is not None:
+            fname = str(fname)
             for i, e in enumerate(self.output_fnames):
                 if fname in e:
                     return self.output_units[i]
@@ -917,6 +920,7 @@ class BaseModel(ModelInterface):
         """
         idx = None
         if fname is not None:
+            fname = str(fname)
             for i, e in enumerate(self.output_fnames):
                 if fname in e:
                     idx = i
@@ -1650,43 +1654,23 @@ class BaseModel(ModelInterface):
         self.export(filename, package_names=package_names)
 
 
-def resolve_exe_name(model_ws, exe_name, silent):
-    exe_name = Path(exe_name)
-    if str(exe_name.parent) == ".":
-        exe = which(str(exe_name))
-        if exe is None:
-            if exe_name.suffix.lower() == ".exe":
-                # try removing .exe suffix
-                exe = which(str(exe_name)[:-4])
-                if exe is not None:
-                    exe_name = str(exe_name)[:-4]
-        if exe is None:
-            raise Exception(
-                f"The program "
-                f"{flopy_io.relpath_safe(exe_name, model_ws)} "
-                f"does not exist or is not executable."
-            )
-        else:
-            if not silent:
-                print(
-                    f"FloPy is using the following executable to run the "
-                    f"model: {flopy_io.relpath_safe(exe_name, model_ws)}"
-                )
-    else:
-        # make relative path into absolute path
-        exe_name = exe_name.absolute()
-        if not exe_name.exists() and not Path(f"{str(exe_name)}.exe").exists():
-            raise Exception(
-                f"The program {flopy_io.relpath_safe(exe_name, model_ws)} "
-                f"does not exist or is not executable."
-            )
-        else:
-            if not silent:
-                print(
-                    f"FloPy is using the following executable to run the "
-                    f"model: {flopy_io.relpath_safe(exe_name, model_ws)}"
-                )
-    return exe_name
+def resolve_exe_name(exe_name):
+    exe_name = str(exe_name)
+    exe = which(exe_name)
+    if exe is None and exe_name.lower().endswith(".exe"):
+        # try removing .exe suffix
+        exe = which(exe_name[:-4])
+    if exe is None:
+        # try tilde-expanded abspath
+        exe = which(Path(exe_name).expanduser().absolute())
+    if exe is None and exe_name.lower().endswith(".exe"):
+        # try tilde-expanded abspath without .exe suffix
+        exe = which(Path(exe_name[:-4]).expanduser().absolute())
+    if exe is None:
+        raise FileNotFoundError(
+            f"The program {exe_name} does not exist or is not executable."
+        )
+    return exe
 
 
 def run_model(
@@ -1751,9 +1735,14 @@ def run_model(
     for idx, s in enumerate(normal_msg):
         normal_msg[idx] = s.lower()
 
-    # Check to make sure that program and namefile exist
-    exe_name = resolve_exe_name(model_ws, exe_name, silent)
+    # make sure executable exists
+    exe_name = resolve_exe_name(exe_name)
+    if not silent:
+        print(
+            f"FloPy is using the following executable to run the model: {flopy_io.relpath_safe(exe_name, model_ws)}"
+        )
 
+    # make sure namefile exists
     if namefile is not None:
         if not os.path.isfile(os.path.join(model_ws, namefile)):
             raise Exception(

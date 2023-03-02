@@ -951,7 +951,7 @@ class MFSimulation(PackageContainer):
 
         Parameters
         ----------
-        f : str or PathLike
+        f : str or PathLike, optional
             String defining file name or file handle for summary file
             of check method output. If str or pathlike, a file handle
             is created. If None, the method does not write results to
@@ -2455,7 +2455,7 @@ class MFSimulation(PackageContainer):
 
     def plot(
         self,
-        model_list: Union[str, List[str]] = None,
+        model_list: Optional[Union[str, List[str]]] = None,
         SelPackList=None,
         **kwargs,
     ):
@@ -2467,9 +2467,9 @@ class MFSimulation(PackageContainer):
 
         Parameters
         ----------
-            model_list: (list)
+            model_list: list, optional
                 List of model names to plot, if none all models will be plotted
-            SelPackList: (list)
+            SelPackList: list, optional
                 List of package names to plot, if none all packages will be
                 plotted
             kwargs:

@@ -81,9 +81,9 @@ def write_grid_shapefile(
         value to fill nans
     epsg : str, int
         epsg code
-    prj : str or PathLike
+    prj : str or PathLike, optional, default None
         projection file path
-    verbose : bool
+    verbose : bool, default False
         whether to print verbose output
 
     Returns
@@ -234,7 +234,7 @@ def model_attributes_to_shapefile(
     array_dict : dict of {name:2D array} pairs
        Additional 2D arrays to add as attributes to the shapefile.
        (default is None)
-    verbose : bool
+    verbose : bool, optional, default False
         whether to print verbose output
     **kwargs : keyword arguments
         modelgrid : fp.modflow.Grid object

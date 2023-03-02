@@ -18,6 +18,9 @@ class check:
     ----------
     package : object
         Instance of Package class.
+    f : str or PathLike, optional
+        Path to the summary file. If no path is provided, a summary
+        file is not created and results are only written to stdout.
     verbose : bool
         Boolean flag used to determine if check method results are
         written to the screen

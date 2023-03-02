@@ -1,4 +1,5 @@
 import os
+from typing import Optional, Union
 
 import numpy as np
 
@@ -39,22 +40,22 @@ class Modpath6(BaseModel):
     version : str, default "modpath"
         String that defines the MODPATH version. Valid versions are
         "modpath" (default).
-    exe_name : str, default "mp6"
+    exe_name : str or PathLike, default "mp6"
         The name of the executable to use.
     modflowmodel : flopy.modflow.Modflow
         MODFLOW model object with one of LPF, BCF6, or UPW packages.
-    dis_file : str
+    dis_file : str or PathLike
         Required dis file name.
     dis_unit : int, default 87
         Optional dis file unit number.
-    head_file : str
+    head_file : str or PathLike
         Required filename of the MODFLOW output head file.
-    budget_file : str
+    budget_file : str or PathLike
         Required filename of the MODFLOW output cell-by-cell budget file.
-    model_ws : str, optional
+    model_ws : str or PathLike, optional
         Model workspace.  Directory name to create model data sets.
         Default is the current working directory.
-    external_path : str, optional
+    external_path : str or PathLike, optional
         Location for external files.
     verbose : bool, default False
         Print additional information to the screen.
@@ -71,14 +72,14 @@ class Modpath6(BaseModel):
         simfile_ext="mpsim",
         namefile_ext="mpnam",
         version="modpath",
-        exe_name="mp6",
+        exe_name: Union[str, os.PathLike] = "mp6",
         modflowmodel=None,
-        dis_file=None,
+        dis_file: Optional[Union[str, os.PathLike]] = None,
         dis_unit=87,
-        head_file=None,
-        budget_file=None,
-        model_ws=None,
-        external_path=None,
+        head_file: Optional[Union[str, os.PathLike]] = None,
+        budget_file: Optional[Union[str, os.PathLike]] = None,
+        model_ws: Optional[Union[str, os.PathLike]] = None,
+        external_path: Optional[Union[str, os.PathLike]] = None,
         verbose=False,
         load=True,
         listunit=7,
@@ -138,6 +139,7 @@ class Modpath6(BaseModel):
         self.head_file = head_file
         self.budget_file = budget_file
         self.dis_file = dis_file
+
         self.dis_unit = dis_unit
         # make sure the valid files are available
         if self.head_file is None:
@@ -190,7 +192,6 @@ class Modpath6(BaseModel):
                 external_path
             ), "external_path does not exist"
             self.external = True
-        return
 
     def __repr__(self):
         return "Modpath model"

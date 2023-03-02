@@ -1,5 +1,5 @@
 import os
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 
@@ -1516,6 +1516,8 @@ def export_array(
     fieldname : str
         Attribute field name for array values (shapefile export only).
         (default 'values')
+    verbose : bool, optional, default False
+        whether to show verbose output
     kwargs:
         keyword arguments to np.savetxt (ascii)
         rasterio.open (GeoTIFF)
@@ -1662,7 +1664,8 @@ def export_contours(
     contours,
     fieldname="level",
     epsg=None,
-    prj=None,
+    prj: Optional[Union[str, os.PathLike]] = None,
+    verbose=False,
     **kwargs,
 ):
     """
@@ -1678,8 +1681,10 @@ def export_contours(
         gis attribute table field name
     epsg : int
         EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
-    prj : str
+    prj : str or PathLike, optional, default None
         Existing projection file to be used with new shapefile.
+    verbose : bool, optional, default False
+        whether to show verbose output
     **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
 
     Returns
@@ -1705,7 +1710,9 @@ def export_contours(
     # convert the dictionary to a recarray
     ra = np.array(level, dtype=[(fieldname, float)]).view(np.recarray)
 
-    recarray2shp(ra, geoms, filename, epsg=epsg, prj=prj, **kwargs)
+    recarray2shp(
+        ra, geoms, filename, epsg=epsg, prj=prj, verbose=verbose, **kwargs
+    )
 
 
 def export_contourf(
@@ -1713,7 +1720,7 @@ def export_contourf(
     contours,
     fieldname="level",
     epsg=None,
-    prj=None,
+    prj: Optional[Union[str, os.PathLike]] = None,
     verbose=False,
     **kwargs,
 ):
@@ -1732,8 +1739,10 @@ def export_contourf(
         the range represented by the polygon.  Default is 'level'.
     epsg : int
         EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
-    prj : str
+    prj : str or PathLike, optional, default None
         Existing projection file to be used with new shapefile.
+    verbose : bool, optional, default False
+        whether to show verbose output
 
     **kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
@@ -1800,7 +1809,9 @@ def export_contourf(
     # Create recarray
     ra = np.array(level, dtype=[(fieldname, float)]).view(np.recarray)
 
-    recarray2shp(ra, geoms, filename, epsg=epsg, prj=prj, **kwargs)
+    recarray2shp(
+        ra, geoms, filename, epsg=epsg, prj=prj, verbose=verbose, **kwargs
+    )
 
 
 def export_array_contours(
@@ -1812,7 +1823,8 @@ def export_array_contours(
     levels=None,
     maxlevels=1000,
     epsg=None,
-    prj=None,
+    prj: Optional[Union[str, os.PathLike]] = None,
+    verbose=False,
     **kwargs,
 ):
     """
@@ -1836,8 +1848,10 @@ def export_array_contours(
         maximum number of contour levels
     epsg : int
         EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
-    prj : str
+    prj : str or PathLike, optional, default None
         Existing projection file to be used with new shapefile.
+    verbose : bool, optional, default False
+        whether to show verbose output
     **kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
     """
@@ -1857,7 +1871,9 @@ def export_array_contours(
         levels = np.arange(imin, imax, interval)
     ax = plt.subplots()[-1]
     ctr = contour_array(modelgrid, ax, a, levels=levels)
-    export_contours(filename, ctr, fieldname, epsg, prj, **kwargs)
+    export_contours(
+        filename, ctr, fieldname, epsg, prj, verbose=verbose, **kwargs
+    )
     plt.close()
 
 
@@ -1871,7 +1887,6 @@ def contour_array(modelgrid, ax, a, **kwargs):
         modelgrid object
     ax : matplotlib.axes.Axes
         ax to add the contours
-
     a : np.ndarray
         array to contour
 

@@ -15,7 +15,7 @@ class MfUsg(Modflow):
 
     Parameters
     ----------
-    modelname : str, default "modflowusgtest".
+    modelname : str or PathLike, default "modflowusgtest".
         Name of model.  This string will be used to name the MODFLOW input
         that are created with write_model.
     namefile_ext : str, default "nam"
@@ -159,7 +159,7 @@ class MfUsg(Modflow):
 
         Parameters
         ----------
-        f : str
+        f : str or PathLike
             Path to MODFLOW name file to load.
         version : str, default "mfusg"
             MODFLOW version. Must be "mfusg".

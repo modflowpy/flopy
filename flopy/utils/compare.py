@@ -95,9 +95,9 @@ def compare_budget(
 
     Parameters
     ----------
-    namefile1 : str
+    namefile1 : str or PathLike, optional
         namefile path for base model
-    namefile2 : str
+    namefile2 : str or PathLike, optional
         namefile path for comparison model
     max_cumpd : float
         maximum percent discrepancy allowed for cumulative budget terms
@@ -108,11 +108,11 @@ def compare_budget(
     outfile : str
         budget comparison output file name. If outfile is None, no
         comparison output is saved. (default is None)
-    files1 : str
+    files1 : str, PathLike, or list, optional
         base model output file. If files1 is not None, results
         will be extracted from files1 and namefile1 will not be used.
         (default is None)
-    files2 : str
+    files2 : str, PathLike, or list, optional
         comparison model output file. If files2 is not None, results
         will be extracted from files2 and namefile2 will not be used.
         (default is None)
@@ -140,7 +140,7 @@ def compare_budget(
         lst_file = get_entries_from_namefile(namefile1, "list")
         lst_file1 = lst_file[0][0] if any(lst_file) else None
     else:
-        if isinstance(files1, str):
+        if isinstance(files1, (str, os.PathLike)):
             files1 = [files1]
         for file in files1:
             if (
@@ -154,7 +154,7 @@ def compare_budget(
         lst_file = get_entries_from_namefile(namefile2, "list")
         lst_file2 = lst_file[0][0] if any(lst_file) else None
     else:
-        if isinstance(files2, str):
+        if isinstance(files2, (str, os.PathLike)):
             files2 = [files2]
         for file in files2:
             if (
@@ -302,9 +302,9 @@ def compare_swrbudget(
 
     Parameters
     ----------
-    namefile1 : str
+    namefile1 : str or PathLike, optional
         namefile path for base model
-    namefile2 : str
+    namefile2 : str or PathLike, optional
         namefile path for comparison model
     max_cumpd : float
         maximum percent discrepancy allowed for cumulative budget terms
@@ -312,14 +312,14 @@ def compare_swrbudget(
     max_incpd : float
         maximum percent discrepancy allowed for incremental budget terms
         (default is 0.01)
-    outfile : str
+    outfile : str or PathLike, optional
         budget comparison output file name. If outfile is None, no
         comparison output is saved. (default is None)
-    files1 : str
+    files1 : str, PathLike, or list, optional
         base model output file. If files1 is not None, results
         will be extracted from files1 and namefile1 will not be used.
         (default is None)
-    files2 : str
+    files2 : str, PathLike, or list, optional
         comparison model output file. If files2 is not None, results
         will be extracted from files2 and namefile2 will not be used.
         (default is None)
@@ -534,7 +534,7 @@ def compare_heads(
     verbose : bool
         boolean indicating if verbose output should be written to the
         terminal (default is False)
-    exfile : str or PathLike
+    exfile : str or PathLike, optional
         path to a file with exclusion array data. Head differences will not
         be evaluated where exclusion array values are greater than zero.
         (default is None)
@@ -578,7 +578,7 @@ def compare_heads(
             status1 = entries[0][1] if any(entries) else None
 
     else:
-        if isinstance(files1, str):
+        if isinstance(files1, (str, os.PathLike)):
             files1 = [files1]
         for file in files1:
             if text.lower() == "head":
@@ -619,7 +619,7 @@ def compare_heads(
             hfpth2 = entries[0][0] if any(entries) else None
             status2 = entries[0][1] if any(entries) else None
     else:
-        if isinstance(files2, str):
+        if isinstance(files2, (str, os.PathLike)):
             files2 = [files2]
         for file in files2:
             if text2.lower() == "head":
@@ -683,7 +683,7 @@ def compare_heads(
     # get data from exclusion file
     if exfile is not None:
         e = None
-        if isinstance(exfile, str):
+        if isinstance(exfile, (str, os.PathLike)):
             try:
                 exd = np.genfromtxt(exfile).flatten()
             except:
@@ -899,23 +899,23 @@ def compare_concentrations(
 
     Parameters
     ----------
-    namefile1 : str
+    namefile1 : str or PathLike
         namefile path for base model
-    namefile2 : str
+    namefile2 : str or PathLike
         namefile path for comparison model
     precision : str
         precision for binary head file ("auto", "single", or "double")
         default is "auto"
     ctol : float
         maximum allowed concentration difference (default is 0.001)
-    outfile : str
+    outfile : str or PathLike, optional
         concentration comparison output file name. If outfile is None, no
         comparison output is saved. (default is None)
-    files1 : str
+    files1 : str, PathLike, or list, optional
         base model output file. If files1 is not None, results
         will be extracted from files1 and namefile1 will not be used.
         (default is None)
-    files2 : str
+    files2 : str, PathLike, or list, optional
         comparison model output file. If files2 is not None, results
         will be extracted from files2 and namefile2 will not be used.
         (default is None)
@@ -1131,23 +1131,23 @@ def compare_stages(
 
     Parameters
     ----------
-    namefile1 : str
+    namefile1 : str or PathLike
         namefile path for base model
-    namefile2 : str
+    namefile2 : str or PathLike
         namefile path for comparison model
     precision : str
         precision for binary head file ("auto", "single", or "double")
         default is "auto"
     htol : float
         maximum allowed stage difference (default is 0.001)
-    outfile : str
+    outfile : str or PathLike, optional
         head comparison output file name. If outfile is None, no
         comparison output is saved. (default is None)
-    files1 : str
+    files1 : str, PathLike, or list, optional
         base model output file. If files1 is not None, results
         will be extracted from files1 and namefile1 will not be used.
         (default is None)
-    files2 : str
+    files2 : str, PathLike, or list, optional
         comparison model output file. If files2 is not None, results
         will be extracted from files2 and namefile2 will not be used.
         (default is None)
@@ -1183,7 +1183,7 @@ def compare_stages(
                 sfpth1 = sfpth
                 break
     elif files1 is not None:
-        if isinstance(files1, str):
+        if isinstance(files1, (str, os.PathLike)):
             files1 = [files1]
         for file in files1:
             for ext in valid_ext:
@@ -1201,7 +1201,7 @@ def compare_stages(
                 sfpth2 = sfpth
                 break
     elif files2 is not None:
-        if isinstance(files2, str):
+        if isinstance(files2, (str, os.PathLike)):
             files2 = [files2]
         for file in files2:
             for ext in valid_ext:
@@ -1350,9 +1350,9 @@ def compare(
 
     Parameters
     ----------
-    namefile1 : str
+    namefile1 : str or PathLike, optional
         namefile path for base model
-    namefile2 : str
+    namefile2 : str or PathLike, optional
         namefile path for comparison model
     precision : str
         precision for binary head file ("auto", "single", or "double")
@@ -1365,17 +1365,17 @@ def compare(
         (default is 0.01)
     htol : float
         maximum allowed head difference (default is 0.001)
-    outfile1 : str
+    outfile1 : str or PathLike, optional
         budget comparison output file name. If outfile1 is None, no budget
         comparison output is saved. (default is None)
-    outfile2 : str
+    outfile2 : str or PathLike, optional
         head comparison output file name. If outfile2 is None, no head
         comparison output is saved. (default is None)
-    files1 : str
+    files1 : str, PathLike, or list, optional
         base model output file. If files1 is not None, results
         will be extracted from files1 and namefile1 will not be used.
         (default is None)
-    files2 : str
+    files2 : str, PathLike, or list, optional
         comparison model output file. If files2 is not None, results
         will be extracted from files2 and namefile2 will not be used.
         (default is None)
