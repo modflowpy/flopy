@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from shutil import which
 
 import numpy as np
 import pytest
@@ -600,7 +601,7 @@ def test_create_and_run_model(function_tmpdir, use_paths):
         sim = MFSimulation(
             sim_name=sim_name,
             version="mf6",
-            exe_name=exe_name,
+            exe_name=Path(which(exe_name)),
             sim_ws=function_tmpdir,
         )
     else:

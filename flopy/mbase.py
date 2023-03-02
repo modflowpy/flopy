@@ -16,7 +16,7 @@ from datetime import datetime
 from pathlib import Path
 from shutil import which
 from subprocess import PIPE, STDOUT, Popen
-from typing import Optional, Union
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -1675,7 +1675,7 @@ def resolve_exe_name(exe_name):
 
 def run_model(
     exe_name: Union[str, os.PathLike],
-    namefile: Union[str, os.PathLike],
+    namefile: Optional[str],
     model_ws: Union[str, os.PathLike] = os.curdir,
     silent=False,
     pause=False,
@@ -1683,47 +1683,46 @@ def run_model(
     normal_msg="normal termination",
     use_async=False,
     cargs=None,
-):
+) -> Tuple[bool, List[str]]:
     """
-    This function will run the model using subprocess.Popen.  It
-    communicates with the model's stdout asynchronously and reports
-    progress to the screen with timestamps
+    Run the model using subprocess.Popen, optionally collecting stdout and printing
+    timestamped progress. Model workspace, namefile, executable to use, and several
+    other options may be configured, and additional command line arguments may also
+    be provided.
 
     Parameters
     ----------
     exe_name : str or PathLike
-        Executable name (or path, if necessary) to run.
-    namefile : str or PathLike
-        Path to the namefile of model to run. The namefile must be the
-        filename of the namefile without the path. Namefile can be None
-        to allow programs that do not require a control file (name file)
-        to be passed as a command line argument.
-    model_ws : str or PathLike
+        Executable name or path. If the executable name is provided,
+        the executable must be on the system path. Alternatively, a
+        full path to the executable may be provided.
+    namefile : str, optional
+        Name of the name file of model to run. The name may be None
+        to run models that don't require a control file (name file)
+    model_ws : str or PathLike, optional, default '.'
         Path to the parent directory of the namefile. (default is the
         current working directory '.')
-    silent : boolean
-        Echo run information to screen (default is True).
-    pause : boolean, optional
-        Pause upon completion (default is False).
-    report : boolean, optional
-        Save stdout lines to a list (buff) which is returned
-        by the method . (default is False).
+    silent : boolean, default True
+        Whether to suppress model output. (Default is True)
+    pause : boolean, optional, default False
+        Pause and wait for keystroke upon completion. (Default is False)
+    report : boolean, optional, default False
+        Save stdout lines to a list (buff) returned by the method. (Default is False)
     normal_msg : str or list
-        Normal termination message used to determine if the
-        run terminated normally. More than one message can be provided using
-        a list. (Default is 'normal termination')
+        Termination message used to determine if the model terminated normally.
+        More than one message can be provided using a list.
+        (Default is 'normal termination')
     use_async : boolean
-        asynchronously read model stdout and report with timestamps.  good for
-        models that take long time to run.  not good for models that run
-        really fast
-    cargs : str or list of strings
-        additional command line arguments to pass to the executable.
-        Default is None
+        Asynchronously read model stdout and report with timestamps. Good for
+        models taking a long time to run, not good for models that run quickly.
+    cargs : str or list, optional, default None
+        Additional command line arguments to pass to the executable.
+        (Default is None)
     Returns
     -------
     (success, buff)
     success : boolean
-    buff : list of lines of stdout
+    buff : list of lines of stdout (empty if report is False)
 
     """
     success = False
@@ -1743,11 +1742,10 @@ def run_model(
         )
 
     # make sure namefile exists
-    if namefile is not None:
-        if not os.path.isfile(os.path.join(model_ws, namefile)):
-            raise Exception(
-                f"The namefile for this model does not exists: {namefile}"
-            )
+    if namefile is not None and not os.path.isfile(os.path.join(model_ws, namefile)):
+        raise FileNotFoundError(
+            f"The namefile for this model does not exist: {namefile}"
+        )
 
     # simple little function for the thread to target
     def q_output(output, q):
@@ -1759,7 +1757,7 @@ def run_model(
     # create a list of arguments to pass to Popen
     argv = [exe_name]
     if namefile is not None:
-        argv.append(str(namefile))
+        argv.append(Path(namefile).name)
 
     # add additional arguments to Popen arguments
     if cargs is not None:
