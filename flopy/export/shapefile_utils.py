@@ -534,7 +534,7 @@ def recarray2shp(
     shpname: Union[str, os.PathLike] = "recarray.shp",
     mg=None,
     epsg=None,
-    prj: Union[str, os.PathLike] = None,
+    prj: Optional[Union[str, os.PathLike]] = None,
     verbose=False,
     **kwargs,
 ):
@@ -558,7 +558,7 @@ def recarray2shp(
         Path for the output shapefile
     epsg : int
         EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
-    prj : str or PathLike, default None
+    prj : str or PathLike, optional, default None
         Existing projection file to be used with new shapefile.
     verbose : bool
         Whether to print verbose output
@@ -633,7 +633,7 @@ def write_prj(
     shpname: Union[str, os.PathLike],
     mg=None,
     epsg=None,
-    prj: Union[str, os.PathLike] = None,
+    prj: Optional[Union[str, os.PathLike]] = None,
     wkt_string=None,
     verbose=False,
 ):

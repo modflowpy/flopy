@@ -485,7 +485,6 @@ class BinaryLayerFile(LayerFile):
         self.recordarray = np.array(self.recordarray, dtype=self.header_dtype)
         self.iposarray = np.array(self.iposarray)
         self.nlay = np.max(self.recordarray["ilay"])
-        return
 
     def get_databytes(self, header):
         """

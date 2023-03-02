@@ -814,11 +814,31 @@ def test_bcs_check(function_tmpdir):
     assert np.array_equal(chk.summary_array["j"], np.array([0, 1, 1, 1, 1]))
 
 
+def test_path_params_and_props(function_tmpdir, module_tmpdir):
+    # properties should be set to string abspaths regardless of
+    # pathlib.Path or str arguments
+
+    mf = Modflow(
+        version="mf2005", model_ws=function_tmpdir, external_path=module_tmpdir
+    )
+    assert mf.model_ws == str(function_tmpdir)
+    assert mf.external_path == str(module_tmpdir)
+
+    mf = Modflow(
+        version="mf2005",
+        model_ws=str(function_tmpdir),
+        external_path=str(module_tmpdir),
+    )
+    assert mf.model_ws == str(function_tmpdir)
+    assert mf.external_path == str(module_tmpdir)
+
+
 def test_properties_check(function_tmpdir):
     mf = Modflow(
         version="mf2005",
         model_ws=function_tmpdir,
     )
+
     dis = ModflowDis(
         mf,
         nrow=2,

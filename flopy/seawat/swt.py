@@ -1,4 +1,5 @@
 import os
+from typing import Union
 
 from ..discretization.modeltime import ModelTime
 from ..discretization.structuredgrid import StructuredGrid
@@ -425,11 +426,11 @@ class Seawat(BaseModel):
     @classmethod
     def load(
         cls,
-        f,
+        f: str,
         version="seawat",
-        exe_name="swtv4",
+        exe_name: Union[str, os.PathLike] = "swtv4",
         verbose=False,
-        model_ws=".",
+        model_ws: Union[str, os.PathLike] = os.curdir,
         load_only=None,
     ):
         """
@@ -438,15 +439,15 @@ class Seawat(BaseModel):
         Parameters
         ----------
         f : str
-            Path to SEAWAT name file to load.
+            Name of SEAWAT name file to load.
         version : str, default "seawat"
             Version of SEAWAT to use. Valid versions are "seawat" (default).
         exe_name : str, default "swtv4"
             The name of the executable to use.
         verbose : bool, default False
             Print additional information to the screen.
-        model_ws : str, default "."
-            Model workspace.  Directory name to create model data sets.
+        model_ws : str or PathLike, default "."
+            Model workspace.  Directory to create model data sets.
             Default is the present working directory.
         load_only : list of str, optional
             Packages to load (e.g. ["lpf", "adv"]). Default None

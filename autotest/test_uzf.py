@@ -643,8 +643,7 @@ def test_uzf_negative_iuzfopt(function_tmpdir):
 
     ml.write_input()
     success, buff = ml.run_model()
-    if not success:
-        raise AssertionError("UZF model with -1 iuzfopt failed to run")
+    assert success, "UZF model with -1 iuzfopt failed to run"
 
     ml2 = Modflow.load(
         "uzf_neg.nam", version="mfnwt", model_ws=function_tmpdir
@@ -653,8 +652,9 @@ def test_uzf_negative_iuzfopt(function_tmpdir):
     pet = ml2.uzf.pet.array
     extpd = ml2.uzf.pet.array
 
-    if not np.max(pet) == np.min(pet) and np.max(pet) != 0.1:
-        raise AssertionError("Read error for iuzfopt less than 0")
-
-    if not np.max(extpd) == np.min(extpd) and np.max(extpd) != 0.2:
-        raise AssertionError("Read error for iuzfopt less than 0")
+    assert (
+        np.max(pet) == np.min(pet) and np.max(pet) != 0.1
+    ), "Read error for iuzfopt less than 0"
+    assert (
+        np.max(extpd) == np.min(extpd) and np.max(extpd) != 0.2
+    ), "Read error for iuzfopt less than 0"

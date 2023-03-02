@@ -5,6 +5,12 @@ import pytest
 from modflow_devtools.markers import requires_exe
 
 from flopy import run_model
+from flopy.mbase import resolve_exe
+
+
+@requires_exe("mf6")
+def test_resolve_exe():
+    assert resolve_exe(which("mf6")) == resolve_exe("mf6") == which("mf6")
 
 
 @pytest.fixture

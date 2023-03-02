@@ -1,6 +1,7 @@
 import inspect
 import os
 import sys
+from typing import Union
 
 import numpy as np
 
@@ -691,9 +692,9 @@ class MFModel(PackageContainer, ModelInterface):
         model_nam_file="modflowtest.nam",
         mtype="gwf",
         version="mf6",
-        exe_name="mf6",
+        exe_name: Union[str, os.PathLike] = "mf6",
         strict=True,
-        model_rel_path=".",
+        model_rel_path=os.curdir,
         load_only=None,
     ):
         """
@@ -713,10 +714,8 @@ class MFModel(PackageContainer, ModelInterface):
             relative path to the model name file from model working folder
         version : str
             version of modflow
-        exe_name : str
-            model executable name
-        model_ws : str
-            model working folder relative to simulation working folder
+        exe_name : str or PathLike
+            model executable name or path
         strict : bool
             strict mode when loading files
         model_rel_path : str

@@ -105,7 +105,7 @@ def compare_budget(
     max_incpd : float
         maximum percent discrepancy allowed for incremental budget terms
         (default is 0.01)
-    outfile : str
+    outfile : str or PathLike, optional
         budget comparison output file name. If outfile is None, no
         comparison output is saved. (default is None)
     files1 : str, PathLike, or list, optional

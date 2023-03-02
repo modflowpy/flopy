@@ -635,4 +635,3 @@ class LayerFile:
 
         """
         self.file.close()
-        return

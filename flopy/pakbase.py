@@ -7,6 +7,7 @@ pakbase module
 import abc
 import os
 import webbrowser as wb
+from typing import Union
 
 import numpy as np
 from numpy.lib.recfunctions import stack_arrays
@@ -881,7 +882,13 @@ class Package(PackageInterface):
         return
 
     @staticmethod
-    def load(f, model, pak_type, ext_unit_dict=None, **kwargs):
+    def load(
+        f: Union[str, bytes, os.PathLike],
+        model,
+        pak_type,
+        ext_unit_dict=None,
+        **kwargs,
+    ):
         """
         Default load method for standard boundary packages.
 

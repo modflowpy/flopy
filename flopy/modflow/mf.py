@@ -8,7 +8,7 @@ import os
 import warnings
 from inspect import getfullargspec
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import flopy
 
@@ -71,16 +71,16 @@ class Modflow(BaseModel):
     version : str, default "mf2005"
         MODFLOW version. Choose one of: "mf2k", "mf2005" (default),
         "mfnwt", or "mfusg".
-    exe_name : str, default "mf2005"
-        The name of the executable to use.
+    exe_name : str or PathLike, default "mf2005"
+        The name or path of the executable to use.
     structured : bool, default True
         Specify if model grid is structured (default) or unstructured.
     listunit : int, default 2
         Unit number for the list file.
-    model_ws : str, default "."
+    model_ws : str or PathLike, default "."
         Model workspace.  Directory name to create model data sets.
         (default is the present working directory).
-    external_path : str, optional
+    external_path : str or PathLike, optional
         Location for external files.
     verbose : bool, default False
         Print additional information to the screen.
@@ -109,11 +109,11 @@ class Modflow(BaseModel):
         modelname="modflowtest",
         namefile_ext="nam",
         version="mf2005",
-        exe_name="mf2005",
+        exe_name: Union[str, os.PathLike] = "mf2005",
         structured=True,
         listunit=2,
         model_ws: Union[str, os.PathLike] = os.curdir,
-        external_path: Union[str, os.PathLike] = None,
+        external_path: Optional[Union[str, os.PathLike]] = None,
         verbose=False,
         **kwargs,
     ):
@@ -162,7 +162,9 @@ class Modflow(BaseModel):
                 print(f"Note: external_path {external_path} already exists")
             else:
                 os.makedirs(os.path.join(model_ws, external_path))
-        self.external_path = external_path
+            self.external_path = str(external_path)
+        else:
+            self.external_path = None
         self.verbose = verbose
         self.mfpar = ModflowPar()
 
@@ -227,7 +229,6 @@ class Modflow(BaseModel):
             "vdf": flopy.seawat.SeawatVdf,
             "vsc": flopy.seawat.SeawatVsc,
         }
-        return
 
     def __repr__(self):
         nrow, ncol, nlay, nper = self.get_nrow_ncol_nlay_nper()
@@ -650,9 +651,9 @@ class Modflow(BaseModel):
     @classmethod
     def load(
         cls,
-        f: Union[str, os.PathLike],
+        f: str,
         version="mf2005",
-        exe_name="mf2005",
+        exe_name: Union[str, os.PathLike] = "mf2005",
         verbose=False,
         model_ws: Union[str, os.PathLike] = os.curdir,
         load_only=None,
@@ -664,14 +665,14 @@ class Modflow(BaseModel):
 
         Parameters
         ----------
-        f : str or PathLike
+        f : str
             Path to MODFLOW name file to load.
         version : str, default "mf2005"
             MODFLOW version. Choose one of: "mf2k", "mf2005" (default),
             or "mfnwt". Note that this can be modified on loading
             packages unique to different MODFLOW versions.
-        exe_name : str, default "mf2005"
-            MODFLOW executable name.
+        exe_name : str or PathLike, default "mf2005"
+            MODFLOW executable name or path.
         verbose : bool, default False
             Show messages that can be useful for debugging.
         model_ws : str or PathLike, default "."
