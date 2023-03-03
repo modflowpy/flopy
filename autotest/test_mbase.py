@@ -1,4 +1,5 @@
 from pathlib import Path
+from platform import system
 from shutil import copy, copytree, which
 
 import pytest
@@ -10,31 +11,57 @@ from flopy.mbase import resolve_exe
 
 
 @requires_exe("mf6")
-def test_resolve_exe(function_tmpdir):
+@pytest.mark.parametrize("use_ext", [True, False])
+def test_resolve_exe_named(function_tmpdir, use_ext):
+    if use_ext and system() != "Windows":
+        pytest.skip(".exe extensions are Windows-only")
+
+    ext = ".exe" if use_ext else ""
+    expected = which("mf6").lower()
+    actual = resolve_exe(f"mf6{ext}")
+    assert actual.lower() == expected
+    assert which(actual)
+
+
+@requires_exe("mf6")
+@pytest.mark.parametrize("use_ext", [True, False])
+def test_resolve_exe_full_path(function_tmpdir, use_ext):
+    if use_ext and system() != "Windows":
+        pytest.skip(".exe extensions are Windows-only")
+
+    ext = ".exe" if use_ext else ""
+    expected = which("mf6").lower()
+    actual = resolve_exe(which(f"mf6{ext}"))
+    assert actual.lower() == expected
+    assert which(actual)
+
+
+@requires_exe("mf6")
+@pytest.mark.parametrize("use_ext", [True, False])
+def test_resolve_exe_rel_path(function_tmpdir, use_ext):
+    if use_ext and system() != "Windows":
+        pytest.skip(".exe extensions are Windows-only")
+
+    ext = ".exe" if use_ext else ""
     expected = which("mf6").lower()
 
-    # named executable
-    actual = resolve_exe("mf6")
-    assert actual.lower() == expected
-    assert which(actual)
-
-    # full path to exe
-    actual = resolve_exe(which("mf6"))
-    assert actual.lower() == expected
-    assert which(actual)
-
-    # relative path to exe
     bin_dir = function_tmpdir / "bin"
     bin_dir.mkdir()
     inner_dir = function_tmpdir / "inner"
     inner_dir.mkdir()
-    copy(expected, bin_dir / "mf6")
-    assert (bin_dir / "mf6").is_file()
+
     with set_dir(inner_dir):
+        # move exe to relative dir
+        copy(expected, bin_dir / "mf6")
+        assert (bin_dir / "mf6").is_file()
+
         expected = which(str(Path(bin_dir / "mf6").absolute())).lower()
-        actual = resolve_exe("../bin/mf6")
+        actual = resolve_exe(f"../bin/mf6{ext}")
+
         assert actual.lower() == expected
         assert which(actual)
+
+        # should raise an error if exe DNE
         with pytest.raises(FileNotFoundError):
             resolve_exe("../bin/mf2005")
 
