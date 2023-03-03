@@ -1,6 +1,7 @@
 from pathlib import Path
 from platform import system
 from shutil import copy, copytree, which
+from tempfile import gettempdir
 
 import pytest
 from modflow_devtools.markers import requires_exe
@@ -8,6 +9,12 @@ from modflow_devtools.misc import set_dir
 
 from flopy import run_model
 from flopy.mbase import resolve_exe
+from flopy.utils.flopy_io import relpath_safe
+
+
+@pytest.fixture
+def mf6_model_path(example_data_path):
+    return example_data_path / "mf6" / "test006_gwf3"
 
 
 @requires_exe("mf6")
@@ -51,13 +58,12 @@ def test_resolve_exe_rel_path(function_tmpdir, use_ext):
     inner_dir.mkdir()
 
     with set_dir(inner_dir):
-        # move exe to relative dir
+        # copy exe to relative dir
         copy(expected, bin_dir / "mf6")
         assert (bin_dir / "mf6").is_file()
 
         expected = which(str(Path(bin_dir / "mf6").absolute())).lower()
         actual = resolve_exe(f"../bin/mf6{ext}")
-
         assert actual.lower() == expected
         assert which(actual)
 
@@ -66,12 +72,7 @@ def test_resolve_exe_rel_path(function_tmpdir, use_ext):
             resolve_exe("../bin/mf2005")
 
 
-@pytest.fixture
-def mf6_model_path(example_data_path):
-    return example_data_path / "mf6" / "test006_gwf3"
-
-
-def test_run_mf6_model_when_namefile_not_in_model_ws(
+def test_run_model_when_namefile_not_in_model_ws(
     mf6_model_path, example_data_path, function_tmpdir
 ):
     # copy input files to temp workspace
@@ -99,27 +100,25 @@ def test_run_mf6_model_when_namefile_not_in_model_ws(
 @pytest.mark.mf6
 @requires_exe("mf6")
 @pytest.mark.parametrize("use_paths", [True, False])
-def test_run_mf6_model(mf6_model_path, function_tmpdir, use_paths):
-    # copy input files to temp workspace
+@pytest.mark.parametrize(
+    "exe",
+    [
+        "mf6",
+        Path(which("mf6")),
+        relpath_safe(Path(which("mf6")), start=gettempdir()),
+    ],
+)
+def test_run_model(mf6_model_path, function_tmpdir, use_paths, exe):
     ws = function_tmpdir / "ws"
     copytree(mf6_model_path, ws)
 
-    if use_paths:
-        success, buff = run_model(
-            exe_name=Path(which("mf6")),
-            namefile="mfsim.nam",
-            model_ws=ws,
-            silent=False,
-            report=True,
-        )
-    else:
-        success, buff = run_model(
-            exe_name="mf6",
-            namefile="mfsim.nam",
-            model_ws=str(ws),
-            silent=False,
-            report=True,
-        )
+    success, buff = run_model(
+        exe_name=exe,
+        namefile="mfsim.nam",
+        model_ws=ws if use_paths else str(ws),
+        silent=False,
+        report=True,
+    )
 
     assert success
     assert any(buff)
