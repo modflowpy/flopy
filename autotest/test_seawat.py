@@ -52,7 +52,7 @@ ssm_data[0] = ssm_sp1
 def test_seawat_henry(function_tmpdir):
     # SEAWAT model from a modflow model and an mt3d model
     modelname = "henry"
-    mf = Modflow(modelname, exe_name="swtv4", model_ws=str(function_tmpdir))
+    mf = Modflow(modelname, exe_name="swtv4", model_ws=function_tmpdir)
     # shortened perlen to 0.1 to make this run faster -- should be about 0.5
     dis = ModflowDis(
         mf,
@@ -79,7 +79,7 @@ def test_seawat_henry(function_tmpdir):
     )
 
     # Create the basic MT3DMS model structure
-    mt = Mt3dms(modelname, "nam_mt3dms", mf, model_ws=str(function_tmpdir))
+    mt = Mt3dms(modelname, "nam_mt3dms", mf, model_ws=function_tmpdir)
     btn = Mt3dBtn(
         mt,
         nprs=-5,
@@ -102,7 +102,7 @@ def test_seawat_henry(function_tmpdir):
         "nam_swt",
         mf,
         mt,
-        model_ws=str(function_tmpdir),
+        model_ws=function_tmpdir,
         exe_name="swtv4",
     )
     vdf = SeawatVdf(
@@ -132,7 +132,7 @@ def test_seawat2_henry(function_tmpdir):
     m = Seawat(
         modelname,
         "nam",
-        model_ws=str(function_tmpdir),
+        model_ws=function_tmpdir,
         exe_name="swtv4",
     )
     dis = ModflowDis(
@@ -205,10 +205,8 @@ def swt4_namfiles():
 @pytest.mark.parametrize("binary", [True, False])
 def test_seawat_load_and_write(function_tmpdir, namfile, binary):
     model_name = Path(namfile).name
-    m = Seawat.load(
-        model_name, model_ws=str(Path(namfile).parent), verbose=True
-    )
-    m.change_model_ws(str(function_tmpdir), reset_external=True)
+    m = Seawat.load(model_name, model_ws=Path(namfile).parent, verbose=True)
+    m.change_model_ws(function_tmpdir, reset_external=True)
 
     if binary:
         skip_bcf6 = False
@@ -243,7 +241,7 @@ def test_vdf_vsc(function_tmpdir):
     nrow = 4
     ncol = 5
     nper = 3
-    m = Seawat(modelname="vdftest", model_ws=str(function_tmpdir))
+    m = Seawat(modelname="vdftest", model_ws=function_tmpdir)
     dis = ModflowDis(m, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper)
     vdf = SeawatVdf(m)
 

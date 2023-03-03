@@ -219,7 +219,7 @@ def list_is_copy(mflist1, mflist2):
 def test_mf2005_copy(example_data_path):
     m = Modflow.load(
         "freyberg.nam",
-        model_ws=str(example_data_path / "freyberg_multilayer_transient"),
+        model_ws=example_data_path / "freyberg_multilayer_transient",
     )
     m_c = copy.copy(m)
     m_dc = copy.deepcopy(m)
@@ -232,7 +232,7 @@ def test_mf6_copy(example_data_path):
     sim = MFSimulation.load(
         "mfsim.nam",
         "mf6",
-        sim_ws=str(example_data_path / "mf6" / "test045_lake2tr"),
+        sim_ws=example_data_path / "mf6" / "test045_lake2tr",
     )
     m = sim.get_model("lakeex2a")
     m_c = copy.copy(m)

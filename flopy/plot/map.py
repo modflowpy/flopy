@@ -542,8 +542,8 @@ class PlotMapView:
 
         Parameters
         ----------
-        shp : string or pyshp shapefile object
-            Name of the shapefile to plot
+        shp : str, os.PathLike or pyshp shapefile object
+            Path of the shapefile to plot
 
         kwargs : dictionary
             Keyword arguments passed to plotutil.plot_shapefile()
@@ -561,7 +561,8 @@ class PlotMapView:
         obj : collection object
             obj can accept the following types
 
-            str : shapefile name
+            str : shapefile path
+            PathLike : shapefile path
             shapefile.Reader object
             list of [shapefile.Shape, shapefile.Shape,]
             shapefile.Shapes object

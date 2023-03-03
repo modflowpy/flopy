@@ -111,7 +111,6 @@ class FormattedLayerFile(LayerFile):
 
     def __init__(self, filename, precision, verbose, kwargs):
         super().__init__(filename, precision, verbose, kwargs)
-        return
 
     def _build_index(self):
         """
@@ -309,7 +308,6 @@ class FormattedLayerFile(LayerFile):
 
         """
         self.file.close()
-        return
 
 
 class FormattedHeadFile(FormattedLayerFile):

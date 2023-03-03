@@ -3,6 +3,8 @@ import inspect
 import os.path
 import sys
 import warnings
+from pathlib import Path
+from typing import List, Optional, Union
 
 import numpy as np
 
@@ -235,7 +237,7 @@ class MFSimulationData:
 
     """
 
-    def __init__(self, path, mfsim):
+    def __init__(self, path: Union[str, os.PathLike], mfsim):
         # --- formatting variables ---
         self.indent_string = "  "
         self.constant_formatting = ["constant", ""]
@@ -445,8 +447,8 @@ class MFSimulation(PackageContainer):
         self,
         sim_name="sim",
         version="mf6",
-        exe_name="mf6",
-        sim_ws=".",
+        exe_name: Union[str, os.PathLike] = "mf6",
+        sim_ws: Union[str, os.PathLike] = os.curdir,
         verbosity_level=1,
         continue_=None,
         nocheck=None,
@@ -658,8 +660,8 @@ class MFSimulation(PackageContainer):
         cls,
         sim_name="modflowsim",
         version="mf6",
-        exe_name="mf6",
-        sim_ws=".",
+        exe_name: Union[str, os.PathLike] = "mf6",
+        sim_ws: Union[str, os.PathLike] = os.curdir,
         strict=True,
         verbosity_level=1,
         load_only=None,
@@ -676,11 +678,10 @@ class MFSimulation(PackageContainer):
             Name of the simulation.
         version : str
             MODFLOW version
-        exe_name : str
-            Relative path to MODFLOW executable from the simulation working
-            folder
-        sim_ws : str
-            Path to simulation working folder
+        exe_name : str or PathLike
+            Path to MODFLOW executable (relative to the simulation workspace or absolute)
+        sim_ws : str or PathLike
+            Path to simulation workspace
         strict : bool
             Strict enforcement of file formatting
         verbosity_level : int
@@ -939,17 +940,22 @@ class MFSimulation(PackageContainer):
             instance.check()
         return instance
 
-    def check(self, f=None, verbose=True, level=1):
+    def check(
+        self,
+        f: Optional[Union[str, os.PathLike]] = None,
+        verbose=True,
+        level=1,
+    ):
         """
         Check model data for common errors.
 
         Parameters
         ----------
-        f : str or file handle
+        f : str or PathLike, optional
             String defining file name or file handle for summary file
-            of check method output. If a string is passed a file handle
-            is created. If f is None, check method does not write
-            results to a summary file. (default is None)
+            of check method output. If str or pathlike, a file handle
+            is created. If None, the method does not write results to
+            a summary file. (default is None)
         verbose : bool
             Boolean flag used to determine if check method results are
             written to the screen
@@ -993,6 +999,10 @@ class MFSimulation(PackageContainer):
         return chk_list
 
     @property
+    def sim_path(self) -> Path:
+        return Path(self.simulation_data.mfpath.get_sim_path())
+
+    @property
     def sim_package_list(self):
         """List of all "simulation level" packages"""
         package_list = []
@@ -1009,10 +1019,10 @@ class MFSimulation(PackageContainer):
     def load_package(
         self,
         ftype,
-        fname,
+        fname: Union[str, os.PathLike],
         pname,
         strict,
-        ref_path,
+        ref_path: Union[str, os.PathLike],
         dict_package_name=None,
         parent_package=None,
     ):
@@ -1023,8 +1033,8 @@ class MFSimulation(PackageContainer):
         ----------
         ftype : str
             the file type
-        fname : str
-            the name of the file containing the package input
+        fname : str or PathLike
+            the path of the file containing the package input
         pname : str
             the user-defined name for the package
         strict : bool
@@ -1092,10 +1102,14 @@ class MFSimulation(PackageContainer):
             parent_package._add_package(package, package.path)
         return package
 
-    def register_ims_package(self, solution_file, model_list):
+    def register_ims_package(
+        self, solution_file: MFPackage, model_list: Union[str, List[str]]
+    ):
         self.register_solution_package(solution_file, model_list)
 
-    def register_solution_package(self, solution_file, model_list):
+    def register_solution_package(
+        self, solution_file: MFPackage, model_list: Union[str, List[str]]
+    ):
         """
         Register a solution package with the simulation.
 
@@ -1408,8 +1422,8 @@ class MFSimulation(PackageContainer):
             check_data: bool
                 Determines if data error checking is enabled during this
                 process.  Data error checking can be slow on large datasets.
-            external_data_folder
-                Folder, relative to the simulation path or model relative path
+            external_data_folder: str or PathLike
+                Path relative to the simulation path or model relative path
                 (see use_model_relative_path parameter), where external data
                 will be stored
         """
@@ -1529,7 +1543,7 @@ class MFSimulation(PackageContainer):
         if silent:
             self.simulation_data.verbosity_level = saved_verb_lvl
 
-    def set_sim_path(self, path):
+    def set_sim_path(self, path: Union[str, os.PathLike]):
         """Return a list of output data keys.
 
         Parameters
@@ -2439,7 +2453,12 @@ class MFSimulation(PackageContainer):
                             return True
         return False
 
-    def plot(self, model_list=None, SelPackList=None, **kwargs):
+    def plot(
+        self,
+        model_list: Optional[Union[str, List[str]]] = None,
+        SelPackList=None,
+        **kwargs,
+    ):
         """
         Plot simulation or models.
 
@@ -2448,9 +2467,9 @@ class MFSimulation(PackageContainer):
 
         Parameters
         ----------
-            model_list: (list)
+            model_list: list, optional
                 List of model names to plot, if none all models will be plotted
-            SelPackList: (list)
+            SelPackList: list, optional
                 List of package names to plot, if none all packages will be
                 plotted
             kwargs:

@@ -22,29 +22,69 @@ def test_line_parse():
 
 @requires_exe("mf6")
 @pytest.mark.parametrize("scrub", [True, False])
-def test_relpath_safe(function_tmpdir, scrub):
+@pytest.mark.parametrize("use_paths", [True, False])
+def test_relpath_safe(function_tmpdir, scrub, use_paths):
     if (
         platform.system() == "Windows"
         and splitdrive(function_tmpdir)[0] != splitdrive(getcwd())[0]
     ):
-        assert Path(relpath_safe(function_tmpdir)) == function_tmpdir.absolute()
-        assert relpath_safe(which("mf6")) == str(Path(which("mf6")).absolute())
+        if use_paths:
+            assert (
+                Path(relpath_safe(function_tmpdir))
+                == function_tmpdir.absolute()
+            )
+            assert relpath_safe(Path(which("mf6"))) == str(
+                Path(which("mf6")).absolute()
+            )
+        else:
+            assert (
+                Path(relpath_safe(str(function_tmpdir)))
+                == function_tmpdir.absolute()
+            )
+            assert relpath_safe(which("mf6")) == str(
+                Path(which("mf6")).absolute()
+            )
     else:
-        assert Path(
-            relpath_safe(function_tmpdir, function_tmpdir.parent)
-        ) == Path(function_tmpdir.name)
-        assert (
-            Path(relpath_safe(function_tmpdir, function_tmpdir.parent.parent))
-            == Path(function_tmpdir.parent.name) / function_tmpdir.name
-        )
-
-        assert relpath_safe(which("mf6")) == relpath(which("mf6"), getcwd())
+        if use_paths:
+            assert Path(
+                relpath_safe(function_tmpdir, function_tmpdir.parent)
+            ) == Path(function_tmpdir.name)
+            assert (
+                Path(
+                    relpath_safe(
+                        function_tmpdir, function_tmpdir.parent.parent
+                    )
+                )
+                == Path(function_tmpdir.parent.name) / function_tmpdir.name
+            )
+            assert relpath_safe(Path(which("mf6"))) == relpath(
+                Path(which("mf6")), Path(getcwd())
+            )
+        else:
+            assert Path(
+                relpath_safe(str(function_tmpdir), str(function_tmpdir.parent))
+            ) == Path(function_tmpdir.name)
+            assert (
+                Path(
+                    relpath_safe(
+                        str(function_tmpdir),
+                        str(function_tmpdir.parent.parent),
+                    )
+                )
+                == Path(function_tmpdir.parent.name) / function_tmpdir.name
+            )
+            assert relpath_safe(which("mf6")) == relpath(
+                which("mf6"), getcwd()
+            )
 
         # test user login obfuscation
         with set_dir("/"):
             try:
                 login = os.getlogin()
-                p = relpath_safe(Path.home(), scrub=scrub)
+                if use_paths:
+                    p = relpath_safe(Path.home(), scrub=scrub)
+                else:
+                    p = relpath_safe(str(Path.home()), scrub=scrub)
                 if login in str(Path.home()) and scrub:
                     assert "***" in p
                     assert login not in p

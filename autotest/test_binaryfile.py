@@ -39,9 +39,9 @@ def zonbud_model_path(example_data_path):
 
 def test_binaryfile_writeread(function_tmpdir, nwt_model_path):
     model = "Pr3_MFNWT_lower.nam"
-    ml = Modflow.load(model, version="mfnwt", model_ws=str(nwt_model_path))
+    ml = Modflow.load(model, version="mfnwt", model_ws=nwt_model_path)
     # change the model work space
-    ml.change_model_ws(str(function_tmpdir))
+    ml.change_model_ws(function_tmpdir)
     #
     ncol = ml.dis.ncol
     nrow = ml.dis.nrow
@@ -62,7 +62,7 @@ def test_binaryfile_writeread(function_tmpdir, nwt_model_path):
         kper=1,
     )
     b = ml.dis.botm.array[0, :, :].astype(np.float64)
-    pth = str(function_tmpdir / "bottom.hds")
+    pth = function_tmpdir / "bottom.hds"
     Util2d.write_bin(b.shape, pth, b, header_data=header)
 
     bo = HeadFile(pth, precision=precision)
@@ -92,7 +92,7 @@ def test_binaryfile_writeread(function_tmpdir, nwt_model_path):
         kper=1,
     )
     b = ml.dis.botm.array[0, :, :].astype(np.float32)
-    pth = str(function_tmpdir / "bottom_single.hds")
+    pth = function_tmpdir / "bottom_single.hds"
     Util2d.write_bin(b.shape, pth, b, header_data=header)
 
     bo = HeadFile(pth, precision=precision)
@@ -109,7 +109,7 @@ def test_binaryfile_writeread(function_tmpdir, nwt_model_path):
 
 def test_load_cell_budget_file_timeseries(example_data_path):
     cbf = CellBudgetFile(
-        str(example_data_path / "mf2005_test" / "swiex1.gitzta"),
+        example_data_path / "mf2005_test" / "swiex1.gitzta",
         precision="single",
     )
     ts = cbf.get_ts(text="ZETASRF  1", idx=(0, 0, 24))
@@ -121,12 +121,12 @@ def test_load_cell_budget_file_timeseries(example_data_path):
 
 def test_load_binary_head_file(example_data_path):
     mpath = example_data_path / "freyberg"
-    hf = HeadFile(str(mpath / "freyberg.githds"))
+    hf = HeadFile(mpath / "freyberg.githds")
     assert isinstance(hf, HeadFile)
 
 
 def test_plot_binary_head_file(example_data_path):
-    hf = HeadFile(str(example_data_path / "freyberg" / "freyberg.githds"))
+    hf = HeadFile(example_data_path / "freyberg" / "freyberg.githds")
     hf.mg.set_coord_info(xoff=1000.0, yoff=200.0, angrot=15.0)
 
     assert isinstance(hf.plot(), Axes)
@@ -134,7 +134,7 @@ def test_plot_binary_head_file(example_data_path):
 
 
 def test_headu_file_data(function_tmpdir, example_data_path):
-    fname = str(example_data_path / "unstructured" / "headu.githds")
+    fname = example_data_path / "unstructured" / "headu.githds"
     headobj = HeadUFile(fname)
     assert isinstance(headobj, HeadUFile)
     assert headobj.nlay == 3
@@ -199,19 +199,17 @@ def test_headufile_get_ts(example_data_path):
 
 def test_get_headfile_precision(example_data_path):
     precision = get_headfile_precision(
-        str(example_data_path / "freyberg" / "freyberg.githds")
+        example_data_path / "freyberg" / "freyberg.githds"
     )
     assert precision == "single"
 
     precision = get_headfile_precision(
-        str(
-            example_data_path
-            / "mf6"
-            / "create_tests"
-            / "test005_advgw_tidal"
-            / "expected_output"
-            / "AdvGW_tidal.hds"
-        )
+        example_data_path
+        / "mf6"
+        / "create_tests"
+        / "test005_advgw_tidal"
+        / "expected_output"
+        / "AdvGW_tidal.hds"
     )
     assert precision == "double"
 
@@ -222,16 +220,13 @@ _example_data_path = get_example_data_path()
 @pytest.mark.parametrize(
     "path",
     [
-        str(p)
-        for p in [
-            _example_data_path / "mf2005_test" / "swiex1.gitzta",
-            _example_data_path / "mp6" / "EXAMPLE.BUD",
-            _example_data_path
-            / "mfusg_test"
-            / "01A_nestedgrid_nognc"
-            / "output"
-            / "flow.cbc",
-        ]
+        _example_data_path / "mf2005_test" / "swiex1.gitzta",
+        _example_data_path / "mp6" / "EXAMPLE.BUD",
+        _example_data_path
+        / "mfusg_test"
+        / "01A_nestedgrid_nognc"
+        / "output"
+        / "flow.cbc",
     ],
 )
 def test_budgetfile_detect_precision_single(path):
@@ -242,14 +237,11 @@ def test_budgetfile_detect_precision_single(path):
 @pytest.mark.parametrize(
     "path",
     [
-        str(p)
-        for p in [
-            _example_data_path
-            / "mf6"
-            / "test006_gwf3"
-            / "expected_output"
-            / "flow_adj.cbc",
-        ]
+        _example_data_path
+        / "mf6"
+        / "test006_gwf3"
+        / "expected_output"
+        / "flow_adj.cbc",
     ],
 )
 def test_budgetfile_detect_precision_double(path):
@@ -295,7 +287,7 @@ def test_write_budget(function_tmpdir):
 
 
 def test_binaryfile_read(function_tmpdir, freyberg_model_path):
-    h = HeadFile(str(freyberg_model_path / "freyberg.githds"))
+    h = HeadFile(freyberg_model_path / "freyberg.githds")
     assert isinstance(h, HeadFile)
 
     times = h.get_times()
@@ -322,7 +314,7 @@ def test_binaryfile_read(function_tmpdir, freyberg_model_path):
     h.close()
 
     # Check error when reading empty file
-    fname = str(function_tmpdir / "empty.githds")
+    fname = function_tmpdir / "empty.githds"
     with open(fname, "w"):
         pass
     with pytest.raises(ValueError):
@@ -332,7 +324,7 @@ def test_binaryfile_read(function_tmpdir, freyberg_model_path):
 
 
 def test_binaryfile_read_context(freyberg_model_path):
-    hds_path = str(freyberg_model_path / "freyberg.githds")
+    hds_path = freyberg_model_path / "freyberg.githds"
     with HeadFile(hds_path) as h:
         data = h.get_data()
         assert data.max() > 0, data.max()
@@ -346,7 +338,7 @@ def test_binaryfile_read_context(freyberg_model_path):
 
 def test_cellbudgetfile_read_context(example_data_path):
     mf2005_model_path = example_data_path / "mf2005_test"
-    cbc_path = str(mf2005_model_path / "mnw1.gitcbc")
+    cbc_path = mf2005_model_path / "mnw1.gitcbc"
     with CellBudgetFile(cbc_path) as v:
         data = v.get_data(text="DRAINS")[0]
         assert data.min() < 0, data.min()
@@ -360,7 +352,7 @@ def test_cellbudgetfile_read_context(example_data_path):
 
 def test_cellbudgetfile_read(example_data_path):
     mf2005_model_path = example_data_path / "mf2005_test"
-    v = CellBudgetFile(str(mf2005_model_path / "mnw1.gitcbc"))
+    v = CellBudgetFile(mf2005_model_path / "mnw1.gitcbc")
     assert isinstance(v, CellBudgetFile)
 
     kstpkper = v.get_kstpkper()
@@ -381,7 +373,7 @@ def test_cellbudgetfile_read(example_data_path):
 
 
 def test_cellbudgetfile_position(function_tmpdir, zonbud_model_path):
-    fpth = str(zonbud_model_path / "freyberg.gitcbc")
+    fpth = zonbud_model_path / "freyberg.gitcbc"
     v = CellBudgetFile(fpth)
     assert isinstance(v, CellBudgetFile)
 
@@ -434,7 +426,7 @@ def test_cellbudgetfile_position(function_tmpdir, zonbud_model_path):
         assert np.array_equal(d1, d2), msg
 
     # Check error when reading empty file
-    fname = str(function_tmpdir / "empty.gitcbc")
+    fname = function_tmpdir / "empty.gitcbc"
     with open(fname, "w"):
         pass
     with pytest.raises(ValueError):
@@ -443,7 +435,7 @@ def test_cellbudgetfile_position(function_tmpdir, zonbud_model_path):
 
 def test_cellbudgetfile_readrecord(example_data_path):
     mf2005_model_path = example_data_path / "mf2005_test"
-    cbc_fname = str(mf2005_model_path / "test1tr.gitcbc")
+    cbc_fname = mf2005_model_path / "test1tr.gitcbc"
     v = CellBudgetFile(cbc_fname)
     assert isinstance(v, CellBudgetFile)
 
@@ -503,7 +495,7 @@ def test_cellbudgetfile_readrecord(example_data_path):
 
 def test_cellbudgetfile_readrecord_waux(example_data_path):
     mf2005_model_path = example_data_path / "mf2005_test"
-    cbc_fname = str(mf2005_model_path / "test1tr.gitcbc")
+    cbc_fname = mf2005_model_path / "test1tr.gitcbc"
     v = CellBudgetFile(cbc_fname)
     assert isinstance(v, CellBudgetFile)
 

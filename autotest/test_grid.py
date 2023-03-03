@@ -256,7 +256,7 @@ def test_intersection(dis_model, disv_model):
 def test_structured_xyz_intersect(example_data_path):
     ml = Modflow.load(
         "freyberg.nam",
-        model_ws=str(example_data_path / "freyberg_multilayer_transient"),
+        model_ws=example_data_path / "freyberg_multilayer_transient",
     )
     mg = ml.modelgrid
 
@@ -279,7 +279,7 @@ def test_structured_xyz_intersect(example_data_path):
 
 def test_vertex_xyz_intersect(example_data_path):
     sim = MFSimulation.load(
-        sim_ws=str(example_data_path / "mf6" / "test003_gwfs_disv")
+        sim_ws=example_data_path / "mf6" / "test003_gwfs_disv"
     )
     ml = sim.get_model(list(sim.model_names)[0])
     mg = ml.modelgrid
@@ -300,11 +300,11 @@ def test_vertex_xyz_intersect(example_data_path):
 
 
 def test_unstructured_xyz_intersect(example_data_path):
-    ws = str(example_data_path / "unstructured")
-    name = os.path.join(ws, "ugrid_verts.dat")
+    ws = example_data_path / "unstructured"
+    name = ws / "ugrid_verts.dat"
     verts = load_verts(name)
 
-    name = os.path.join(ws, "ugrid_iverts.dat")
+    name = ws / "ugrid_iverts.dat"
     iverts, xc, yc = load_iverts(name)
 
     # create a 3 layer model grid
@@ -356,7 +356,7 @@ def test_unstructured_xyz_intersect(example_data_path):
 
 
 def test_structured_neighbors(example_data_path):
-    ws = str(example_data_path / "freyberg")
+    ws = example_data_path / "freyberg"
     ml = Modflow.load("freyberg.nam", model_ws=ws)
     modelgrid = ml.modelgrid
     k, i, j = 0, 5, 5
@@ -374,7 +374,7 @@ def test_structured_neighbors(example_data_path):
 
 
 def test_vertex_neighbors(example_data_path):
-    ws = str(example_data_path / "mf6" / "test003_gwfs_disv")
+    ws = example_data_path / "mf6" / "test003_gwfs_disv"
     sim = MFSimulation.load(sim_ws=ws)
     gwf = sim.get_model("gwf_1")
     modelgrid = gwf.modelgrid
@@ -393,7 +393,7 @@ def test_vertex_neighbors(example_data_path):
 
 
 def test_unstructured_neighbors(example_data_path):
-    ws = str(example_data_path / "mf6" / "test006_gwf3")
+    ws = example_data_path / "mf6" / "test006_gwf3"
     sim = MFSimulation.load(sim_ws=ws)
     gwf = sim.get_model("gwf_1")
     modelgrid = gwf.modelgrid
@@ -405,7 +405,7 @@ def test_unstructured_neighbors(example_data_path):
 
 @pytest.mark.parametrize("spc_file", ["grd.spc", "grdrot.spc"])
 def test_structured_from_gridspec(example_data_path, spc_file):
-    fn = str(example_data_path / "specfile" / spc_file)
+    fn = example_data_path / "specfile" / spc_file
     modelgrid = StructuredGrid.from_gridspec(fn)
     assert isinstance(modelgrid, StructuredGrid)
 
@@ -417,7 +417,7 @@ def test_structured_from_gridspec(example_data_path, spc_file):
 
     extents = modelgrid.extent
     theta = modelgrid.angrot_radians
-    if "rot" in fn:
+    if fn.name == "grdrot.spc":
         assert theta != 0, "rotation missing"
     rotated_extents = (
         0,  # xmin
@@ -450,10 +450,10 @@ def test_structured_from_gridspec(example_data_path, spc_file):
 
 @requires_pkg("shapely")
 def test_unstructured_from_argus_mesh(example_data_path):
-    datapth = str(example_data_path / "unstructured")
+    datapth = example_data_path / "unstructured"
     fnames = [fname for fname in os.listdir(datapth) if fname.endswith(".exp")]
     for fname in fnames:
-        fname = os.path.join(datapth, fname)
+        fname = datapth / fname
         print(f"Loading Argus mesh ({fname}) into UnstructuredGrid")
         g = UnstructuredGrid.from_argus_export(fname)
         print(f"  Number of nodes: {g.nnodes}")
@@ -462,7 +462,7 @@ def test_unstructured_from_argus_mesh(example_data_path):
 def test_unstructured_from_verts_and_iverts(
     function_tmpdir, example_data_path
 ):
-    datapth = str(example_data_path / "unstructured")
+    datapth = example_data_path / "unstructured"
 
     # simple functions to load vertices and incidence lists
     def load_verts(fname):
@@ -487,11 +487,11 @@ def test_unstructured_from_verts_and_iverts(
         return iverts, np.array(xc), np.array(yc)
 
     # load vertices
-    fname = os.path.join(datapth, "ugrid_verts.dat")
+    fname = datapth / "ugrid_verts.dat"
     verts = load_verts(fname)
 
     # load the incidence list into iverts
-    fname = os.path.join(datapth, "ugrid_iverts.dat")
+    fname = datapth / "ugrid_iverts.dat"
     iverts, xc, yc = load_iverts(fname)
 
     ncpl = np.array(5 * [len(iverts)])
@@ -505,7 +505,7 @@ def test_unstructured_from_verts_and_iverts(
 
 def test_unstructured_from_gridspec(example_data_path):
     model_path = example_data_path / "freyberg_usg"
-    spec_path = str(model_path / "freyberg.usg.gsf")
+    spec_path = model_path / "freyberg.usg.gsf"
     grid = UnstructuredGrid.from_gridspec(spec_path)
 
     with open(spec_path) as file:
@@ -805,7 +805,7 @@ def test_triangle_unstructured_grid(function_tmpdir):
     tri = Triangle(
         maximum_area=maximum_area,
         angle=30,
-        model_ws=str(function_tmpdir),
+        model_ws=function_tmpdir,
     )
     tri.add_polygon(domainpoly)
     tri.build(verbose=False)
@@ -832,9 +832,7 @@ def test_voronoi_vertex_grid(function_tmpdir):
     ymin = 0.0
     ymax = 1.0
     area_max = 0.05
-    tri = Triangle(
-        maximum_area=area_max, angle=30, model_ws=str(function_tmpdir)
-    )
+    tri = Triangle(maximum_area=area_max, angle=30, model_ws=function_tmpdir)
     poly = np.array(((xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)))
     tri.add_polygon(poly)
     tri.build(verbose=False)
@@ -888,7 +886,7 @@ def test_voronoi_grid(request, function_tmpdir, grid_info):
         grid.ycellcenters[invalid_cells],
         "ro",
     )
-    plt.savefig(os.path.join(str(function_tmpdir), f"{name}.png"))
+    plt.savefig(function_tmpdir / f"{name}.png")
 
     assert ncpl == gridprops["ncpl"] or almost_right
     assert (

@@ -6,6 +6,7 @@ outputs to VTK.
 import os
 import warnings
 from pathlib import Path
+from typing import Union
 
 import numpy as np
 
@@ -1304,13 +1305,13 @@ class Vtk:
             vtk_array.SetName(name)
             self.vtk_pathlines.GetCellData().AddArray(vtk_array)
 
-    def write(self, f, kper=None):
+    def write(self, f: Union[str, os.PathLike], kper=None):
         """
         Method to write a vtk file from the VTK object
 
         Parameters
         ----------
-        f : os.PathLike or str
+        f : str or PathLike
             vtk file name
         kpers : int, list, tuple
             stress period or list of stress periods to write to vtk. This
@@ -1443,7 +1444,7 @@ class Vtk:
 
 def export_model(
     model,
-    otfolder,
+    otfolder: Union[str, os.PathLike],
     package_names=None,
     nanval=-1e20,
     smooth=False,
@@ -1463,7 +1464,7 @@ def export_model(
     ----------
     model : flopy model instance
         flopy model
-    otfolder : str
+    otfolder : str or PathLike
         output folder
     package_names : list
         list of package names to be exported
@@ -1523,7 +1524,7 @@ def export_model(
 def export_package(
     pak_model,
     pak_name,
-    otfolder,
+    otfolder: Union[str, os.PathLike],
     vtkobj=None,
     nanval=-1e20,
     smooth=False,
@@ -1545,7 +1546,7 @@ def export_package(
         the model of the package
     pak_name : str
         the name of the package
-    otfolder : str
+    otfolder : str or PathLike
         output folder to write the data
     vtkobj : VTK instance
         a vtk object (allows export_package to be called from
@@ -1609,7 +1610,7 @@ def export_package(
 def export_transient(
     model,
     array,
-    output_folder,
+    output_folder: Union[str, os.PathLike],
     name,
     nanval=-1e20,
     array2d=False,
@@ -1632,7 +1633,7 @@ def export_transient(
         the flopy model instance
     array : Transient instance
         flopy transient array
-    output_folder : str
+    output_folder : str or PathLike
         output folder to write the data
     name : str
         name of array
@@ -1709,7 +1710,7 @@ def export_transient(
 def export_array(
     model,
     array,
-    output_folder,
+    output_folder: Union[str, os.PathLike],
     name,
     nanval=-1e20,
     array2d=False,
@@ -1731,7 +1732,7 @@ def export_array(
         the flopy model instance
     array : flopy array
         flopy 2d or 3d array
-    output_folder : str
+    output_folder : str or PathLike
         output folder to write the data
     name : str
         name of array

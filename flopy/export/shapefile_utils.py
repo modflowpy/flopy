@@ -9,6 +9,7 @@ import shutil
 import sys
 import warnings
 from pathlib import Path
+from typing import Optional, Union
 from warnings import warn
 
 import numpy as np
@@ -20,15 +21,15 @@ from ..utils import Util3d, flopy_io, import_optional_dependency
 srefhttp = "https://spatialreference.org"
 
 
-def write_gridlines_shapefile(filename, mg):
+def write_gridlines_shapefile(filename: Union[str, os.PathLike], mg):
     """
     Write a polyline shapefile of the grid lines - a lightweight alternative
     to polygons.
 
     Parameters
     ----------
-    filename : Path or str
-        name of the shapefile to write
+    filename : str or PathLike
+        path of the shapefile to write
     mg : model grid
 
     Returns
@@ -54,23 +55,23 @@ def write_gridlines_shapefile(filename, mg):
 
     wr.close()
     write_prj(filename, mg=mg)
-    return
 
 
 def write_grid_shapefile(
-    path,
+    path: Union[str, os.PathLike],
     mg,
     array_dict,
     nan_val=np.nan,
     epsg=None,
-    prj=None,  # -1.0e9,
+    prj: Optional[Union[str, os.PathLike]] = None,
+    verbose=False,
 ):
     """
     Method to write a shapefile of gridded input data
 
     Parameters
     ----------
-    path : Path or str
+    path : str or PathLike
         shapefile file path
     mg : flopy.discretization.Grid object
         flopy model grid
@@ -80,8 +81,10 @@ def write_grid_shapefile(
         value to fill nans
     epsg : str, int
         epsg code
-    prj : Path or str
-        projection file name path
+    prj : str or PathLike, optional, default None
+        projection file path
+    verbose : bool, default False
+        whether to print verbose output
 
     Returns
     -------
@@ -200,14 +203,20 @@ def write_grid_shapefile(
 
     # close
     w.close()
-    print(f"wrote {flopy_io.relpath_safe(path)}")
+    if verbose:
+        print(f"wrote {flopy_io.relpath_safe(path)}")
+
     # write the projection file
-    write_prj(path, mg, epsg, prj)
-    return
+    write_prj(path, mg, epsg, prj, verbose=verbose)
 
 
 def model_attributes_to_shapefile(
-    path, ml, package_names=None, array_dict=None, **kwargs
+    path: Union[str, os.PathLike],
+    ml,
+    package_names=None,
+    array_dict=None,
+    verbose=False,
+    **kwargs,
 ):
     """
     Wrapper function for writing a shapefile of model data.  If package_names
@@ -216,7 +225,7 @@ def model_attributes_to_shapefile(
 
     Parameters
     ----------
-    path : Path or str
+    path : str or PathLike
         path to write the shapefile to
     ml : flopy.mbase
         model instance
@@ -225,15 +234,16 @@ def model_attributes_to_shapefile(
     array_dict : dict of {name:2D array} pairs
        Additional 2D arrays to add as attributes to the shapefile.
        (default is None)
-
+    verbose : bool, optional, default False
+        whether to print verbose output
     **kwargs : keyword arguments
         modelgrid : fp.modflow.Grid object
             if modelgrid is supplied, user supplied modelgrid is used in lieu
             of the modelgrid attached to the modflow model object
         epsg : int
             epsg projection information
-        prj : Path or str
-            user supplied prj file
+        prj : str or PathLike
+            prj file path
 
     Returns
     -------
@@ -291,7 +301,7 @@ def model_attributes_to_shapefile(
                     try:
                         assert a.array is not None
                     except:
-                        print(
+                        warn(
                             "Failed to get data for "
                             f"{a.name} array, {pak.name[0]} package"
                         )
@@ -334,7 +344,7 @@ def model_attributes_to_shapefile(
                     try:
                         assert a.array is not None
                     except:
-                        print(
+                        warn(
                             "Failed to get data for "
                             f"{a.name} array, {pak.name[0]} package"
                         )
@@ -377,10 +387,10 @@ def model_attributes_to_shapefile(
                                 array_dict[name] = arr
 
     # write data arrays to a shapefile
-    write_grid_shapefile(path, grid, array_dict)
+    write_grid_shapefile(path, grid, array_dict, verbose=verbose)
     epsg = kwargs.get("epsg", None)
     prj = kwargs.get("prj", None)
-    write_prj(path, grid, epsg, prj)
+    write_prj(path, grid, epsg, prj, verbose=verbose)
 
 
 def shape_attr_name(name, length=6, keep_layer=False):
@@ -486,13 +496,13 @@ def get_pyshp_field_dtypes(code):
     return dtypes.get(code, object)
 
 
-def shp2recarray(shpname):
+def shp2recarray(shpname: Union[str, os.PathLike]):
     """Read a shapefile into a numpy recarray.
 
     Parameters
     ----------
-    shpname : Path or str
-        ESRI Shapefile.
+    shpname : str or PathLike
+        ESRI Shapefile path
 
     Returns
     -------
@@ -521,10 +531,10 @@ def shp2recarray(shpname):
 def recarray2shp(
     recarray,
     geoms,
-    shpname="recarray.shp",
+    shpname: Union[str, os.PathLike] = "recarray.shp",
     mg=None,
     epsg=None,
-    prj=None,
+    prj: Optional[Union[str, os.PathLike]] = None,
     verbose=False,
     **kwargs,
 ):
@@ -544,11 +554,11 @@ def recarray2shp(
             list of shapefile.Shape objects, or geojson geometry collection
         The number of geometries in geoms must equal the number of records in
         recarray.
-    shpname : Path or str, default "recarray.shp"
+    shpname : str or PathLike, default "recarray.shp"
         Path for the output shapefile
     epsg : int
         EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
-    prj : Path or str
+    prj : str or PathLike, optional, default None
         Existing projection file to be used with new shapefile.
     verbose : bool
         Whether to print verbose output
@@ -620,7 +630,12 @@ def recarray2shp(
 
 
 def write_prj(
-    shpname, mg=None, epsg=None, prj=None, wkt_string=None, verbose=False
+    shpname: Union[str, os.PathLike],
+    mg=None,
+    epsg=None,
+    prj: Optional[Union[str, os.PathLike]] = None,
+    wkt_string=None,
+    verbose=False,
 ):
     # projection file name
     prjname = Path(shpname).with_suffix(".prj")

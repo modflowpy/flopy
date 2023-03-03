@@ -7,6 +7,8 @@ mf module.  Contains the ModflowGlobal, ModflowList, and Modflow classes.
 import os
 import warnings
 from inspect import getfullargspec
+from pathlib import Path
+from typing import Optional, Union
 
 import flopy
 
@@ -69,16 +71,16 @@ class Modflow(BaseModel):
     version : str, default "mf2005"
         MODFLOW version. Choose one of: "mf2k", "mf2005" (default),
         "mfnwt", or "mfusg".
-    exe_name : str, default "mf2005"
-        The name of the executable to use.
+    exe_name : str or PathLike, default "mf2005"
+        The name or path of the executable to use.
     structured : bool, default True
         Specify if model grid is structured (default) or unstructured.
     listunit : int, default 2
         Unit number for the list file.
-    model_ws : str, default "."
+    model_ws : str or PathLike, default "."
         Model workspace.  Directory name to create model data sets.
         (default is the present working directory).
-    external_path : str, optional
+    external_path : str or PathLike, optional
         Location for external files.
     verbose : bool, default False
         Print additional information to the screen.
@@ -107,11 +109,11 @@ class Modflow(BaseModel):
         modelname="modflowtest",
         namefile_ext="nam",
         version="mf2005",
-        exe_name="mf2005",
+        exe_name: Union[str, os.PathLike] = "mf2005",
         structured=True,
         listunit=2,
-        model_ws=".",
-        external_path=None,
+        model_ws: Union[str, os.PathLike] = os.curdir,
+        external_path: Optional[Union[str, os.PathLike]] = None,
         verbose=False,
         **kwargs,
     ):
@@ -160,7 +162,9 @@ class Modflow(BaseModel):
                 print(f"Note: external_path {external_path} already exists")
             else:
                 os.makedirs(os.path.join(model_ws, external_path))
-        self.external_path = external_path
+            self.external_path = str(external_path)
+        else:
+            self.external_path = None
         self.verbose = verbose
         self.mfpar = ModflowPar()
 
@@ -225,7 +229,6 @@ class Modflow(BaseModel):
             "vdf": flopy.seawat.SeawatVdf,
             "vsc": flopy.seawat.SeawatVsc,
         }
-        return
 
     def __repr__(self):
         nrow, ncol, nlay, nper = self.get_nrow_ncol_nlay_nper()
@@ -648,11 +651,11 @@ class Modflow(BaseModel):
     @classmethod
     def load(
         cls,
-        f,
+        f: str,
         version="mf2005",
-        exe_name="mf2005",
+        exe_name: Union[str, os.PathLike] = "mf2005",
         verbose=False,
-        model_ws=".",
+        model_ws: Union[str, os.PathLike] = os.curdir,
         load_only=None,
         forgive=False,
         check=True,
@@ -668,11 +671,11 @@ class Modflow(BaseModel):
             MODFLOW version. Choose one of: "mf2k", "mf2005" (default),
             or "mfnwt". Note that this can be modified on loading
             packages unique to different MODFLOW versions.
-        exe_name : str, default "mf2005"
-            MODFLOW executable name.
+        exe_name : str or PathLike, default "mf2005"
+            MODFLOW executable name or path.
         verbose : bool, default False
             Show messages that can be useful for debugging.
-        model_ws : str, default "."
+        model_ws : str or PathLike, default "."
             Model workspace path. Default is the current directory.
         load_only : list, str or None
             List of case insensitive packages to load, e.g. ["bas6", "lpf"].
@@ -697,26 +700,19 @@ class Modflow(BaseModel):
 
         """
         # similar to modflow command: if file does not exist , try file.nam
-        namefile_path = os.path.join(model_ws, f)
-        if not os.path.isfile(namefile_path) and os.path.isfile(
-            f"{namefile_path}.nam"
-        ):
-            namefile_path += ".nam"
-        if not os.path.isfile(namefile_path):
-            raise OSError(f"cannot find name file: {namefile_path}")
+        namefile_path = Path(model_ws).expanduser().absolute() / f
+        namefile_path_sfx = namefile_path.with_suffix(".nam")
+        if not namefile_path.is_file() and namefile_path_sfx.is_file():
+            namefile_path = namefile_path_sfx
+        if not namefile_path.is_file():
+            raise FileNotFoundError(f"cannot find name file: {namefile_path}")
 
         # Determine model name from 'f', without any extension or path
-        modelname = os.path.splitext(os.path.basename(f))[0]
-
-        # if model_ws is None:
-        #    model_ws = os.path.dirname(f)
+        modelname = namefile_path.stem
         if verbose:
             print(f"\nCreating new model with name: {modelname}\n{50 * '-'}\n")
 
-        attribs = mfreadnam.attribs_from_namfile_header(
-            os.path.join(model_ws, f)
-        )
-
+        attribs = mfreadnam.attribs_from_namfile_header(namefile_path)
         ml = cls(
             modelname,
             version=version,

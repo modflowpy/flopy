@@ -13,7 +13,7 @@ def test_tpl_constant(function_tmpdir):
     ncol = 20
 
     # Create the flopy model object and add the dis and lpf packages
-    m = Modflow(modelname="tpl1", model_ws=str(function_tmpdir))
+    m = Modflow(modelname="tpl1", model_ws=function_tmpdir)
     dis = ModflowDis(m, nlay, nrow, ncol)
     lpf = ModflowLpf(m, hk=10.0)
 
@@ -38,7 +38,7 @@ def test_tpl_constant(function_tmpdir):
     tw = TemplateWriter(m, [p])
     tw.write_template()
 
-    tplfile = str(function_tmpdir / "tpl1.lpf.tpl")
+    tplfile = function_tmpdir / "tpl1.lpf.tpl"
     assert os.path.isfile(tplfile)
 
 
@@ -48,7 +48,7 @@ def test_tpl_layered(function_tmpdir):
     ncol = 20
 
     # Create the flopy model object and add the dis and lpf packages
-    m = Modflow(modelname="tpl2", model_ws=str(function_tmpdir))
+    m = Modflow(modelname="tpl2", model_ws=function_tmpdir)
     dis = ModflowDis(m, nlay, nrow, ncol)
     lpf = ModflowLpf(m, hk=10.0)
 
@@ -69,7 +69,7 @@ def test_tpl_layered(function_tmpdir):
     tw = TemplateWriter(m, [p])
     tw.write_template()
 
-    tplfile = str(function_tmpdir / "tpl2.lpf.tpl")
+    tplfile = function_tmpdir / "tpl2.lpf.tpl"
     assert os.path.isfile(tplfile)
 
 
@@ -79,7 +79,7 @@ def test_tpl_zoned(function_tmpdir):
     ncol = 20
 
     # Create the flopy model object and add the dis and lpf packages
-    m = Modflow(modelname="tpl3", model_ws=str(function_tmpdir))
+    m = Modflow(modelname="tpl3", model_ws=function_tmpdir)
     dis = ModflowDis(m, nlay, nrow, ncol)
     lpf = ModflowLpf(m, hk=10.0)
 
@@ -130,5 +130,5 @@ def test_tpl_zoned(function_tmpdir):
     tw = TemplateWriter(m, plist)
     tw.write_template()
 
-    tplfile = str(function_tmpdir / "tpl3.lpf.tpl")
+    tplfile = function_tmpdir / "tpl3.lpf.tpl"
     assert os.path.isfile(tplfile)

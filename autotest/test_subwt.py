@@ -27,7 +27,7 @@ def ibound_path(example_data_path):
 @pytest.mark.slow
 @requires_exe("mf2005")
 def test_subwt(function_tmpdir, ibound_path):
-    ws = str(function_tmpdir)
+    ws = function_tmpdir
     ml = Modflow("subwt_mf2005", model_ws=ws, exe_name="mf2005")
     perlen = [1.0, 60.0 * 365.25, 60 * 365.25]
     nstp = [1, 60, 60]
@@ -114,21 +114,21 @@ def test_subwt(function_tmpdir, ibound_path):
     # contents = [f for f in function_tmpdir.glob("*.hds")]
 
     hds_geo = HeadFile(
-        str(function_tmpdir / f"{ml.name}.swt_geostatic_stress.hds"),
+        function_tmpdir / f"{ml.name}.swt_geostatic_stress.hds",
         text="stress",
     ).get_alldata()
     hds_eff = HeadFile(
-        str(function_tmpdir / f"{ml.name}.swt_eff_stress.hds"),
+        function_tmpdir / f"{ml.name}.swt_eff_stress.hds",
         text="effective stress",
     ).get_alldata()
 
     hds_sub = HeadFile(
-        str(function_tmpdir / f"{ml.name}.swt_subsidence.hds"),
+        function_tmpdir / f"{ml.name}.swt_subsidence.hds",
         text="subsidence",
     ).get_alldata()
 
     hds_comp = HeadFile(
-        str(function_tmpdir / f"{ml.name}.swt_total_comp.hds"),
+        function_tmpdir / f"{ml.name}.swt_total_comp.hds",
         text="layer compaction",
     ).get_alldata()
 

@@ -54,14 +54,14 @@ def test_nwt_pack_load(function_tmpdir, nwtfile):
     assert isinstance(nwt, ModflowNwt), msg
 
     # write the new file in the working directory
-    ml.change_model_ws(str(function_tmpdir))
+    ml.change_model_ws(function_tmpdir)
     nwt.write_file()
 
-    fn = os.path.join(str(function_tmpdir), ml.name + ".nwt")
+    fn = function_tmpdir / (ml.name + ".nwt")
     msg = f"{os.path.basename(nwtfile)} write unsuccessful"
     assert os.path.isfile(fn), msg
 
-    ml2 = Modflow(model_ws=str(function_tmpdir), version="mfnwt")
+    ml2 = Modflow(model_ws=function_tmpdir, version="mfnwt")
     nwt2 = ModflowNwt.load(fn, ml2)
     lst = [
         a
@@ -85,11 +85,11 @@ def test_nwt_model_load(function_tmpdir, namfile):
     assert isinstance(ml, Modflow), msg
 
     # change the model work space and rewrite the files
-    ml.change_model_ws(str(function_tmpdir))
+    ml.change_model_ws(function_tmpdir)
     ml.write_input()
 
     # reload the model that was just written
-    ml2 = Modflow.load(f, model_ws=str(function_tmpdir))
+    ml2 = Modflow.load(f, model_ws=function_tmpdir)
 
     # check that the data are the same
     for pn in ml.get_package_list():
@@ -103,7 +103,7 @@ def test_nwt_model_load(function_tmpdir, namfile):
         for l in lst:
             msg = (
                 "{}.{} data instantiated from {} load  is not the same as "
-                "written to {}".format(pn, l, model_ws, str(function_tmpdir))
+                "written to {}".format(pn, l, model_ws, function_tmpdir)
             )
             assert p[l] == p2[l], msg
 
@@ -176,7 +176,7 @@ def test_mfnwt_run(function_tmpdir):
     mf = Modflow(
         modelname=modelname,
         exe_name="mfnwt",
-        model_ws=str(function_tmpdir),
+        model_ws=function_tmpdir,
         version="mfnwt",
     )
     dis = ModflowDis(
@@ -211,7 +211,7 @@ def test_mfnwt_run(function_tmpdir):
 
     # Read the simulated MODFLOW-2005 model results
     # Create the headfile object
-    headfile = str(function_tmpdir / f"{modelname}.hds")
+    headfile = function_tmpdir / f"{modelname}.hds"
     headobj = HeadFile(headfile, precision="single")
     times = headobj.get_times()
     head = headobj.get_data(totim=times[-1])
@@ -240,4 +240,4 @@ def test_mfnwt_run(function_tmpdir):
         ax.set_xlabel("Horizontal distance, in m")
         ax.set_ylabel("Percent Error")
 
-        fig.savefig(str(function_tmpdir / f"{modelname}.png"))
+        fig.savefig(function_tmpdir / f"{modelname}.png")

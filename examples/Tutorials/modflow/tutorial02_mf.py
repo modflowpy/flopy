@@ -219,9 +219,9 @@ import matplotlib.pyplot as plt
 import flopy.utils.binaryfile as bf
 
 # Create the headfile and budget file objects
-headobj = bf.HeadFile(str(Path(workspace) / f"{name}.hds"))
+headobj = bf.HeadFile(Path(workspace) / f"{name}.hds")
 times = headobj.get_times()
-cbb = bf.CellBudgetFile(str(Path(workspace) / f"{name}.cbc"))
+cbb = bf.CellBudgetFile(Path(workspace) / f"{name}.cbc")
 
 # Setup contour parameters
 levels = np.linspace(0, 10, 11)

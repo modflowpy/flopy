@@ -35,18 +35,19 @@ def freyberg_usg_model_path(example_data_path):
 
 @requires_exe("mfusg")
 def test_usg_disu_load(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
-    fname = str(mfusg_01A_nestedgrid_nognc_model_path / "flow.disu")
+    fname = mfusg_01A_nestedgrid_nognc_model_path / "flow.disu"
     assert os.path.isfile(fname), f"disu file not found {fname}"
 
     # Create the model
     m = MfUsg(modelname="usgload", verbose=True)
 
-    # Load the disu file
+    # Load the disu file (as Path and str)
     disu = MfUsgDisU.load(fname, m)
+    disu = MfUsgDisU.load(str(fname), m)
     assert isinstance(disu, MfUsgDisU)
 
     # Change where model files are written
-    m.model_ws = str(function_tmpdir)
+    m.model_ws = function_tmpdir
 
     # Write the disu file
     disu.write_file()
@@ -69,7 +70,7 @@ def test_usg_disu_load(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
 
 @requires_exe("mfusg")
 def test_usg_sms_load(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
-    fname = str(mfusg_01A_nestedgrid_nognc_model_path / "flow.sms")
+    fname = mfusg_01A_nestedgrid_nognc_model_path / "flow.sms"
     assert os.path.isfile(fname), f"sms file not found {fname}"
 
     # Create the model
@@ -80,7 +81,7 @@ def test_usg_sms_load(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
     assert isinstance(sms, MfUsgSms)
 
     # Change where model files are written
-    m.model_ws = str(function_tmpdir)
+    m.model_ws = function_tmpdir
 
     # Write the sms file
     sms.write_file()
@@ -101,7 +102,7 @@ def test_usg_model(function_tmpdir):
     mf = MfUsg(
         version="mfusg",
         structured=True,
-        model_ws=str(function_tmpdir),
+        model_ws=function_tmpdir,
         modelname="simple",
         exe_name="mfusg",
     )
@@ -142,18 +143,18 @@ def test_usg_load_01B(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
         "loading: 01A_nestedgrid_nognc.nam"
     )
 
-    fname = str(mfusg_01A_nestedgrid_nognc_model_path / "flow.nam")
+    fname = mfusg_01A_nestedgrid_nognc_model_path / "flow.nam"
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
     m = MfUsg(
         modelname="usgload_1b",
         verbose=True,
-        model_ws=str(function_tmpdir),
+        model_ws=function_tmpdir,
     )
 
     # Load the model, with checking
-    m = m.load(fname, check=True, model_ws=str(function_tmpdir))
+    m = m.load(fname, check=True, model_ws=function_tmpdir)
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
@@ -172,15 +173,15 @@ def test_usg_load_01B(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
 def test_usg_load_45usg(function_tmpdir, example_data_path):
     print("testing 3-layer unstructured mfusg model loading: 45usg.nam")
 
-    pthusgtest = str(example_data_path / "mfusg_test" / "45usg")
+    pthusgtest = example_data_path / "mfusg_test" / "45usg"
     fname = os.path.abspath(os.path.join(pthusgtest, "45usg.nam"))
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
-    m = MfUsg(modelname="45usg", verbose=True, model_ws=str(function_tmpdir))
+    m = MfUsg(modelname="45usg", verbose=True, model_ws=function_tmpdir)
 
     # Load the model, with checking.
-    m = m.load(fname, check=True, model_ws=str(function_tmpdir))
+    m = m.load(fname, check=True, model_ws=function_tmpdir)
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
@@ -208,12 +209,10 @@ def test_usg_rch_evt_models01(function_tmpdir, mfusg_rch_evt_model_path):
     )
 
     nam = "usg_rch_evt.nam"
-    m = MfUsg.load(
-        nam, model_ws=str(mfusg_rch_evt_model_path), exe_name="mfusg"
-    )
+    m = MfUsg.load(nam, model_ws=mfusg_rch_evt_model_path, exe_name="mfusg")
     m.riv.check()
 
-    m.model_ws = str(function_tmpdir)
+    m.model_ws = function_tmpdir
     m.write_input()
     success, buff = m.run_model()
     assert success
@@ -228,11 +227,9 @@ def test_usg_rch_evt_models02(function_tmpdir, mfusg_rch_evt_model_path):
     )
 
     nam = "usg_rch_evt_nrchop2.nam"
-    m = MfUsg.load(
-        nam, model_ws=str(mfusg_rch_evt_model_path), exe_name="mfusg"
-    )
+    m = MfUsg.load(nam, model_ws=mfusg_rch_evt_model_path, exe_name="mfusg")
 
-    m.model_ws = str(function_tmpdir)
+    m.model_ws = function_tmpdir
     m.write_input()
     success, buff = m.run_model()
     assert success
@@ -248,11 +245,9 @@ def test_usg_rch_evt_models02a(function_tmpdir, mfusg_rch_evt_model_path):
     )
 
     nam = "usg_rch_evt_nrchop2a.nam"
-    m = MfUsg.load(
-        nam, model_ws=str(mfusg_rch_evt_model_path), exe_name="mfusg"
-    )
+    m = MfUsg.load(nam, model_ws=mfusg_rch_evt_model_path, exe_name="mfusg")
 
-    m.model_ws = str(function_tmpdir)
+    m.model_ws = function_tmpdir
     m.write_input()
     success, buff = m.run_model()
     assert success
@@ -266,17 +261,17 @@ def test_usg_ss_to_tr(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
     nam = "flow.nam"
     m = MfUsg.load(
         nam,
-        model_ws=str(mfusg_01A_nestedgrid_nognc_model_path),
+        model_ws=mfusg_01A_nestedgrid_nognc_model_path,
         exe_name="mfusg",
     )
 
-    m.model_ws = str(function_tmpdir)
+    m.model_ws = function_tmpdir
     m.disu.steady = [False]
     m.write_input()
     success, buff = m.run_model()
     assert success
 
-    m = MfUsg.load(nam, model_ws=str(function_tmpdir), exe_name="mfusg")
+    m = MfUsg.load(nam, model_ws=function_tmpdir, exe_name="mfusg")
     success, buff = m.run_model()
     assert success
 
@@ -287,11 +282,9 @@ def test_usg_str(function_tmpdir, mfusg_rch_evt_model_path):
     print("testing unstructured mfusg with STR: usg_rch_evt_str.nam")
 
     nam = "usg_rch_evt_str.nam"
-    m = MfUsg.load(
-        nam, model_ws=str(mfusg_rch_evt_model_path), exe_name="mfusg"
-    )
+    m = MfUsg.load(nam, model_ws=mfusg_rch_evt_model_path, exe_name="mfusg")
 
-    m.model_ws = str(function_tmpdir)
+    m.model_ws = function_tmpdir
     m.write_input()
     success, buff = m.run_model()
     assert success
@@ -303,11 +296,9 @@ def test_usg_lak(function_tmpdir, mfusg_rch_evt_model_path):
     print("testing unstructured mfusg with LAK: usg_rch_evt_lak.nam")
 
     nam = "usg_rch_evt_lak.nam"
-    m = MfUsg.load(
-        nam, model_ws=str(mfusg_rch_evt_model_path), exe_name="mfusg"
-    )
+    m = MfUsg.load(nam, model_ws=mfusg_rch_evt_model_path, exe_name="mfusg")
 
-    m.model_ws = str(function_tmpdir)
+    m.model_ws = function_tmpdir
     m.write_input()
     success, buff = m.run_model()
     assert success
@@ -319,11 +310,9 @@ def test_usg_hfb(function_tmpdir, mfusg_rch_evt_model_path):
     print("testing unstructured mfusg with HFB6: usg_rch_evt_hfb.nam")
 
     nam = "usg_rch_evt_hfb.nam"
-    m = MfUsg.load(
-        nam, model_ws=str(mfusg_rch_evt_model_path), exe_name="mfusg"
-    )
+    m = MfUsg.load(nam, model_ws=mfusg_rch_evt_model_path, exe_name="mfusg")
 
-    m.model_ws = str(function_tmpdir)
+    m.model_ws = function_tmpdir
     m.write_input()
     success, buff = m.run_model()
     assert success
@@ -338,11 +327,9 @@ def test_freyburg_usg(function_tmpdir, freyberg_usg_model_path):
     print("testing usg nrchop 3: freyburg.usg.nam")
 
     nam = "freyberg.usg.nam"
-    m = MfUsg.load(
-        nam, model_ws=str(freyberg_usg_model_path), exe_name="mfusg"
-    )
+    m = MfUsg.load(nam, model_ws=freyberg_usg_model_path, exe_name="mfusg")
 
-    m.model_ws = str(function_tmpdir)
+    m.model_ws = function_tmpdir
     m.write_input()
     success, buff = m.run_model()
     assert success
@@ -357,11 +344,9 @@ def test_freyburg_usg_external(function_tmpdir, freyberg_usg_model_path):
     print("testing usg external files: freyburg.usg.nam")
 
     nam = "freyberg.usg.nam"
-    m = MfUsg.load(
-        nam, model_ws=str(freyberg_usg_model_path), exe_name="mfusg"
-    )
+    m = MfUsg.load(nam, model_ws=freyberg_usg_model_path, exe_name="mfusg")
     # convert to all open/close
-    ext_model_ws = str(function_tmpdir)
+    ext_model_ws = function_tmpdir
     m.external_path = "."
     # reduce nper to speed this test up a bit
     m.disu.nper = 3
@@ -379,9 +364,7 @@ def test_flat_array_to_util3d_usg(function_tmpdir, freyberg_usg_model_path):
     print("testing usg flat arrays to layer property constructor")
 
     nam = "freyberg.usg.nam"
-    m = MfUsg.load(
-        nam, model_ws=str(freyberg_usg_model_path), exe_name="mfusg"
-    )
+    m = MfUsg.load(nam, model_ws=freyberg_usg_model_path, exe_name="mfusg")
 
     custom_array = m.lpf.hk.array
 
@@ -396,7 +379,7 @@ def test_flat_array_to_util3d_usg(function_tmpdir, freyberg_usg_model_path):
     assert (lpf_new.hk[1][:2] == 999.9).all(), msg
 
     # ensure we can still write the lpf file
-    m.model_ws = str(function_tmpdir)
+    m.model_ws = function_tmpdir
     m.write_input()
 
 
@@ -411,12 +394,12 @@ def test_load_usg(function_tmpdir, fpth):
 
     m = MfUsg.load(
         namfile,
-        model_ws=str(namfile.parent),
+        model_ws=namfile.parent,
         verbose=True,
         check=False,
     )
     assert m, f"Could not load namefile {namfile}"
     assert m.load_fail is False
 
-    m.change_model_ws(str(function_tmpdir))
+    m.change_model_ws(function_tmpdir)
     m.write_input()

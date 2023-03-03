@@ -25,7 +25,7 @@ def test_hob_simple(function_tmpdir):
     test041 create and run a simple MODFLOW-2005 OBS example
     """
     modelname = "hob_simple"
-    ws = str(function_tmpdir)
+    ws = function_tmpdir
     nlay, nrow, ncol = 1, 11, 11
     shape3d = (nlay, nrow, ncol)
     shape2d = (nrow, ncol)
@@ -112,14 +112,14 @@ def test_obs_load_and_write(function_tmpdir, example_data_path):
     test041 load and write of MODFLOW-2005 OBS example problem
     """
 
-    pth = str(example_data_path / "mf2005_obs")
-    ws = str(function_tmpdir)
+    pth = example_data_path / "mf2005_obs"
+    ws = function_tmpdir
 
     # copy the original files
     files = os.listdir(pth)
     for file in files:
-        src = os.path.join(pth, file)
-        dst = os.path.join(ws, file)
+        src = pth / file
+        dst = ws / file
         shutil.copyfile(src, dst)
 
     # load the modflow model
@@ -254,7 +254,7 @@ def test_obs_single_time(function_tmpdir):
     test reading a mf6 observation file with a single time
     """
 
-    pth = str(function_tmpdir / "single.csv")
+    pth = function_tmpdir / "single.csv"
     with open(pth, "w") as file:
         file.write("time,obs01,obs02\n1.0,10.0,20.0\n")
 
@@ -273,14 +273,14 @@ def test_obs_create_and_write(function_tmpdir, example_data_path):
     test041 create and write of MODFLOW-2005 OBS example problem
     """
 
-    pth = str(example_data_path / "mf2005_obs")
-    ws = str(function_tmpdir)
+    pth = example_data_path / "mf2005_obs"
+    ws = function_tmpdir
 
     # copy the original files
     files = os.listdir(pth)
     for file in files:
-        src = os.path.join(pth, file)
-        dst = os.path.join(ws, file)
+        src = pth / file
+        dst = ws / file
         shutil.copyfile(src, dst)
 
     # load the modflow model

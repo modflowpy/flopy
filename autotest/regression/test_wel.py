@@ -25,7 +25,7 @@ def test_binary_well(function_tmpdir):
     mfnam = "t1"
     ml = Modflow(
         modelname=mfnam,
-        model_ws=str(function_tmpdir),
+        model_ws=function_tmpdir,
         verbose=True,
         exe_name="mf2005",
     )
@@ -60,12 +60,12 @@ def test_binary_well(function_tmpdir):
     # run the modflow-2005 model
     success, buff = ml.run_model(silent=False)
     assert success, "could not run MODFLOW-2005 model"
-    fn0 = os.path.join(str(function_tmpdir), f"{mfnam}.nam")
+    fn0 = os.path.join(function_tmpdir, f"{mfnam}.nam")
 
     # load the model
     m = Modflow.load(
         f"{mfnam}.nam",
-        model_ws=str(function_tmpdir),
+        model_ws=function_tmpdir,
         verbose=True,
         exe_name="mf2005",
     )
@@ -77,7 +77,7 @@ def test_binary_well(function_tmpdir):
     )
 
     # change model work space
-    pth = os.path.join(str(function_tmpdir), "flopy")
+    pth = os.path.join(function_tmpdir, "flopy")
     m.change_model_ws(new_pth=pth)
 
     # remove the existing well package
@@ -98,12 +98,12 @@ def test_binary_well(function_tmpdir):
 
     # compare the files
     fsum = os.path.join(
-        str(function_tmpdir), f"{os.path.splitext(mfnam)[0]}.head.out"
+        function_tmpdir, f"{os.path.splitext(mfnam)[0]}.head.out"
     )
     assert compare_heads(fn0, fn1, outfile=fsum), "head comparison failure"
 
     fsum = os.path.join(
-        str(function_tmpdir), f"{os.path.splitext(mfnam)[0]}.budget.out"
+        function_tmpdir, f"{os.path.splitext(mfnam)[0]}.budget.out"
     )
     assert compare_budget(
         fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum

@@ -32,7 +32,7 @@ def mfusg_model(module_tmpdir):
     botm = [top - k * dz for k in range(1, nlay + 1)]
 
     # create dummy model and dis package for gridgen
-    m = Modflow(modelname=name, model_ws=str(module_tmpdir))
+    m = Modflow(modelname=name, model_ws=module_tmpdir)
     dis = ModflowDis(
         m,
         nlay=nlay,
@@ -45,7 +45,7 @@ def mfusg_model(module_tmpdir):
     )
 
     # Create and build the gridgen model with a refined area in the middle
-    g = Gridgen(m.modelgrid, model_ws=str(module_tmpdir))
+    g = Gridgen(m.modelgrid, model_ws=module_tmpdir)
 
     polys = [Polygon([(4, 4), (6, 4), (6, 6), (4, 6)])]
     g.add_refinement_features(polys, "polygon", 3, layers=[0])
@@ -64,7 +64,7 @@ def mfusg_model(module_tmpdir):
     name = "mymodel"
     m = MfUsg(
         modelname=name,
-        model_ws=str(module_tmpdir),
+        model_ws=module_tmpdir,
         exe_name="mfusg",
         structured=False,
     )
@@ -86,8 +86,7 @@ def mfusg_model(module_tmpdir):
     m.run_model()
 
     # head contains a list of head arrays for each layer
-    head_file_path = Path(module_tmpdir / f"{name}.hds")
-    return m, HeadUFile(str(head_file_path))
+    return m, HeadUFile(module_tmpdir / f"{name}.hds")
 
 
 @requires_exe("mfusg", "gridgen")

@@ -21,11 +21,11 @@ def test_str_fixed_free(function_tmpdir, example_data_path):
     m = Modflow.load(
         str_items[0]["mfnam"],
         exe_name="mf2005",
-        model_ws=str(mf2005_model_path),
+        model_ws=mf2005_model_path,
         verbose=False,
         check=False,
     )
-    m.change_model_ws(str(function_tmpdir))
+    m.change_model_ws(function_tmpdir)
 
     # get pointer to str package
     mstr = m.str
@@ -81,7 +81,7 @@ def test_str_fixed_free(function_tmpdir, example_data_path):
         m2 = Modflow.load(
             str_items[0]["mfnam"],
             exe_name="mf2005",
-            model_ws=str(mf2005_model_path),
+            model_ws=mf2005_model_path,
             verbose=False,
             check=False,
         )
@@ -95,7 +95,7 @@ def test_str_fixed_free(function_tmpdir, example_data_path):
     for p in function_tmpdir.glob("*"):
         p.unlink()
 
-    m.change_model_ws(str(function_tmpdir))
+    m.change_model_ws(function_tmpdir)
     m.set_ifrefm()
     m.write_input()
 
@@ -107,7 +107,7 @@ def test_str_fixed_free(function_tmpdir, example_data_path):
         m2 = Modflow.load(
             str_items[0]["mfnam"],
             exe_name="mf2005",
-            model_ws=str(function_tmpdir),
+            model_ws=function_tmpdir,
             verbose=False,
             check=False,
         )
@@ -119,8 +119,8 @@ def test_str_fixed_free(function_tmpdir, example_data_path):
     ), "could not load the free format model with aux variables"
 
     # compare the fixed and free format head files
-    fn1 = str(function_tmpdir / "str.nam")
-    fn2 = str(function_tmpdir / "str.nam")
+    fn1 = function_tmpdir / "str.nam"
+    fn2 = function_tmpdir / "str.nam"
     assert compare_heads(
         fn1, fn2, verbose=True
     ), "fixed and free format input output head files are different"
