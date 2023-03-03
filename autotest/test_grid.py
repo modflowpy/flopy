@@ -417,7 +417,7 @@ def test_structured_from_gridspec(example_data_path, spc_file):
 
     extents = modelgrid.extent
     theta = modelgrid.angrot_radians
-    if "rot" in str(fn):
+    if fn.name == "grdrot.spc":
         assert theta != 0, "rotation missing"
     rotated_extents = (
         0,  # xmin
