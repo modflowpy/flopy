@@ -1,7 +1,6 @@
 from pathlib import Path
 from platform import system
 from shutil import copy, copytree, which
-from tempfile import gettempdir
 
 import pytest
 from modflow_devtools.markers import requires_exe
@@ -123,3 +122,38 @@ def test_run_model(mf6_model_path, function_tmpdir, use_paths, exe):
     assert success
     assert any(buff)
     assert any(ws.glob("*.lst"))
+
+
+@requires_exe("mf6")
+@pytest.mark.parametrize("use_ext", [True, False])
+def test_run_model_exe_rel_path(mf6_model_path, function_tmpdir, use_ext):
+    if use_ext and system() != "Windows":
+        pytest.skip(".exe extensions are Windows-only")
+
+    ws = function_tmpdir / "ws"
+    copytree(mf6_model_path, ws)
+
+    ext = ".exe" if use_ext else ""
+    mf6 = which("mf6").lower()
+
+    bin_dir = function_tmpdir / "bin"
+    bin_dir.mkdir()
+    inner_dir = function_tmpdir / "inner"
+    inner_dir.mkdir()
+
+    with set_dir(inner_dir):
+        # copy exe to relative dir
+        copy(mf6, bin_dir / "mf6")
+        assert (bin_dir / "mf6").is_file()
+
+        success, buff = run_model(
+            exe_name=f"../bin/mf6{ext}",
+            namefile="mfsim.nam",
+            model_ws=ws,
+            silent=False,
+            report=True,
+        )
+
+        assert success
+        assert any(buff)
+        assert any(ws.glob("*.lst"))
