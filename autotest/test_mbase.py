@@ -1,16 +1,42 @@
 from pathlib import Path
-from shutil import copytree, which
+from shutil import copy, copytree, which
 
 import pytest
 from modflow_devtools.markers import requires_exe
+from modflow_devtools.misc import set_dir
 
 from flopy import run_model
 from flopy.mbase import resolve_exe
 
 
 @requires_exe("mf6")
-def test_resolve_exe():
-    assert resolve_exe(which("mf6")) == resolve_exe("mf6") == which("mf6")
+def test_resolve_exe(function_tmpdir):
+    expected = which("mf6").lower()
+
+    # named executable
+    actual = resolve_exe("mf6")
+    assert actual.lower() == expected
+    assert which(actual)
+
+    # full path to exe
+    actual = resolve_exe(which("mf6"))
+    assert actual.lower() == expected
+    assert which(actual)
+
+    # relative path to exe
+    bin_dir = function_tmpdir / "bin"
+    bin_dir.mkdir()
+    inner_dir = function_tmpdir / "inner"
+    inner_dir.mkdir()
+    copy(expected, bin_dir / "mf6")
+    assert (bin_dir / "mf6").is_file()
+    with set_dir(inner_dir):
+        expected = which(str(Path(bin_dir / "mf6").absolute())).lower()
+        actual = resolve_exe("../bin/mf6")
+        assert actual.lower() == expected
+        assert which(actual)
+        with pytest.raises(FileNotFoundError):
+            resolve_exe("../bin/mf2005")
 
 
 @pytest.fixture
