@@ -11,6 +11,8 @@ from .mfgwfdisv import ModflowGwfdisv
 from .mfgwfdrn import ModflowGwfdrn
 from .mfgwfevt import ModflowGwfevt
 from .mfgwfevta import ModflowGwfevta
+from .mfgwffp_rvc import ModflowGwffp_Rvc
+from .mfgwffp_rvp import ModflowGwffp_Rvp
 from .mfgwfghb import ModflowGwfghb
 from .mfgwfgnc import ModflowGwfgnc
 from .mfgwfgwf import ModflowGwfgwf

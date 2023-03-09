@@ -1642,6 +1642,8 @@ class MFModel(PackageContainer, ModelInterface):
             path = package.parent_file.path + (package.package_type,)
         else:
             path = (self.name, package.package_type)
+        if not self.structure.package_exists(package.package_type):
+            self.structure.add_package_struct(package)
         package_struct = self.structure.get_package_struct(
             package.package_type
         )

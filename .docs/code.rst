@@ -200,6 +200,23 @@ Contents:
    ./source/flopy.mf6.utils.reference.rst
    ./source/flopy.mf6.utils.lakpak_utils.rst
 
+FloPy for MODFLOW 6 Plugins
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+FloPy for MODFLOW 6 allows you to build FloPy Plugins, which can change the
+behavior of MODFLOW 6 through MODFLOW 6's BMI interface.  FloPy Plugins can
+change the behavior of an existing MODFLOW 6 package or behave like a new
+stand-alone MODFLOW 6 package.  Use plugin_template.py's
+generate_plugin_template method to help streamline the FloPy plugin
+development process.
+
+Contents:
+
+.. toctree::
+   :maxdepth: 4
+
+   ./source/flopy.mf6.utils.flopy_plugins.plugin_interface.rst
+   ./source/flopy.mf6.utils.flopy_plugins.plugin_template.rst
 
 MODFLOW 6 Data
 ^^^^^^^^^^^^^^

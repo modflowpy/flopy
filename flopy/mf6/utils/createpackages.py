@@ -141,6 +141,13 @@ def clean_class_string(name):
     return name
 
 
+def is_flopy_plugin(header):
+    for key, value in header.items():
+        if key == "flopy-plugin":
+            return True
+    return False
+
+
 def build_dfn_string(dfn_list, header, package_abbr, flopy_dict):
     dfn_string = "    dfn = ["
     line_length = len(dfn_string)
@@ -152,6 +159,9 @@ def build_dfn_string(dfn_list, header, package_abbr, flopy_dict):
     for key, value in header.items():
         if key == "multi-package":
             dfn_string = f'{dfn_string}\n{leading_spaces} "multi-package", '
+        elif key == "flopy-plugin":
+            pkg_str = f'"flopy-plugin {value}"'
+            dfn_string = f"{dfn_string}\n{leading_spaces} {pkg_str}, "
     # process solution packages
     if package_abbr in flopy_dict["solution_packages"]:
         model_types = '", "'.join(
@@ -533,7 +543,14 @@ def create_packages():
             doc_string = mfdatautil.MFDocString(package[0].description)
         else:
             if package[2]:
-                package_container_text = f" within a {package[2]} model"
+                if "flopy-plugin" in package[5]:
+                    package_container_text = (
+                        f" that is a flopy plugin "
+                        f"extension\n    of a "
+                        f"{package[2]} model"
+                    )
+                else:
+                    package_container_text = f" within a {package[2]} model"
             else:
                 package_container_text = ""
             ds = "Modflow{} defines a {} package{}.".format(
@@ -655,9 +672,23 @@ def create_packages():
                     if tg is not None and tg not in template_gens:
                         template_gens.append(tg)
 
-        import_string = "from .. import mfpackage"
+        # determine if this is a flopy plugin
+        flopy_plugin = is_flopy_plugin(package[5])
+
+        # build import strings
+        if flopy_plugin:
+            # full path import strings for flopy plugins since they may
+            # reside in a different python package
+            import_string = "from flopy.mf6 import mfpackage"
+        else:
+            import_string = "from .. import mfpackage"
         if template_gens:
-            import_string += "\nfrom ..data.mfdatautil import "
+            if flopy_plugin:
+                # full path import strings for flopy plugins since they may
+                # reside in a different python package
+                import_string += "\nfrom flopy.mf6.data.mfdatautil import "
+            else:
+                import_string += "\nfrom ..data.mfdatautil import "
             import_string += ", ".join(sorted(template_gens))
         # add extra docstrings for additional variables
         doc_string.add_parameter(

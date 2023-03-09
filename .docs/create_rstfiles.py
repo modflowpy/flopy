@@ -47,6 +47,11 @@ def create_tutorial_rst():
         create_section(f, "MODFLOW 6 Output", tutorial_dict[key])
         keys.remove(key)
 
+    key = "modflow6plugin"
+    if key in keys:
+        create_section(f, "MODFLOW 6 FloPy Plugin", tutorial_dict[key])
+        keys.remove(key)
+        
     key = "modflow"
     if key in keys:
         create_section(f, "MODFLOW", tutorial_dict[key])

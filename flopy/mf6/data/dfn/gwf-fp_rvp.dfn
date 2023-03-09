@@ -1,0 +1,143 @@
+# --------------------- gwf rvp options ---------------------
+# flopy flopy-plugin rvp
+
+block options
+name print_input
+type keyword
+reader urword
+optional true
+longname *** ADD LONGNAME HERE ***
+description *** ADD DESCRIPTION HERE ***
+
+block options
+name print_flows
+type keyword
+reader urword
+optional true
+longname *** ADD LONGNAME HERE ***
+description *** ADD DESCRIPTION HERE ***
+
+block options
+name save_flows
+type keyword
+reader urword
+optional true
+longname *** ADD LONGNAME HERE ***
+description *** ADD DESCRIPTION HERE ***
+
+block options
+name auxiliary
+type string
+shape (naux)
+reader urword
+optional true
+longname *** ADD LONGNAME HERE ***
+description *** ADD DESCRIPTION HERE ***
+
+block options
+name boundnames
+type keyword
+reader urword
+optional true
+longname *** ADD LONGNAME HERE ***
+description *** ADD DESCRIPTION HERE ***
+
+# --------------------- gwf rvp dimensions ---------------------
+
+block dimensions
+name maxbound
+type integer
+reader urword
+optional false
+longname maximum number... 
+description maximum number...
+
+# --------------------- gwf rvp period ---------------------
+
+block period
+name iper
+type integer
+block_variable True
+in_record true
+tagged false
+shape
+valid
+reader urword
+optional false
+longname stress period number
+description REPLACE iper {}
+
+block period
+name stress_period_data
+type recarray cellid stage cond_up cond_down rbot aux boundname
+shape (maxbound)
+reader urword
+longname
+description
+
+block period
+name cellid
+type string
+tagged false
+in_record true
+reader urword
+longname *** ADD LONGNAME HERE ***
+description *** ADD DESCRIPTION HERE ***
+
+block period
+name stage
+type double precision
+tagged false
+in_record true
+reader urword
+longname *** ADD LONGNAME HERE ***
+description *** ADD DESCRIPTION HERE ***
+
+block period
+name cond_up
+type double precision
+tagged false
+in_record true
+reader urword
+longname *** ADD LONGNAME HERE ***
+description *** ADD DESCRIPTION HERE ***
+
+block period
+name cond_down
+type double precision
+tagged false
+in_record true
+reader urword
+longname *** ADD LONGNAME HERE ***
+description *** ADD DESCRIPTION HERE ***
+
+block period
+name rbot
+type double precision
+tagged false
+in_record true
+reader urword
+longname *** ADD LONGNAME HERE ***
+description *** ADD DESCRIPTION HERE ***
+
+block period
+name aux
+type double precision
+shape (naux)
+tagged false
+in_record true
+reader urword
+optional True
+longname *** ADD LONGNAME HERE ***
+description *** ADD DESCRIPTION HERE ***
+
+block period
+name boundname
+type string
+tagged false
+in_record true
+reader urword
+optional True
+longname *** ADD LONGNAME HERE ***
+description *** ADD DESCRIPTION HERE ***
+

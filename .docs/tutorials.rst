@@ -42,6 +42,18 @@ Contents:
    _notebooks/tutorial01_mf6_output
 
 
+MODFLOW 6 FloPy Plugin Tutorials
+--------------------------------
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   _notebooks/tutorial01_mf6_plugin
+   _notebooks/tutorial02_mf6_plugin
+
+
 MODFLOW Tutorials
 -----------------
 

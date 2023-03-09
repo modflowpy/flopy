@@ -942,6 +942,12 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         else:
             data_dim = self._data_dimensions
             data_line = data_complete[mflist_line]
+            # check for flopy package in "packages" data
+            if self.structure.name == "packages" and data_line[0].startswith(
+                "FP_"
+            ):
+                # flopy package data, write as commented
+                text_line.append("# ")
             for data_item in data_set.data_item_structures:
                 if data_item.is_aux:
                     try:

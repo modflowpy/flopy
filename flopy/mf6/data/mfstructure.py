@@ -209,8 +209,12 @@ class DfnPackage(Dfn):
         # get header dict
         header_dict = {}
         for item in self.dfn_list[0]:
-            if item == "multi-package":
-                header_dict["multi-package"] = True
+            if isinstance(item, str):
+                if item == "multi-package":
+                    header_dict["multi-package"] = True
+                elif item.startswith("flopy-plugin "):
+                    fp_pkg_split = item.split()
+                    header_dict["flopy-plugin"] = fp_pkg_split[1]
         for dfn_entry in self.dfn_list[1:]:
             # load next data item
             new_data_item_struct = MFDataItemStructure()
@@ -503,7 +507,9 @@ class DfnFile(Dfn):
                 # load flopy data
                 if line_lst[2] == "multi-package":
                     header_dict["multi-package"] = True
-                if line_lst[2] == "parent_name_type" and len(line_lst) == 5:
+                elif line_lst[2] == "flopy-plugin":
+                    header_dict["flopy-plugin"] = line_lst[3]
+                elif line_lst[2] == "parent_name_type" and len(line_lst) == 5:
                     header_dict["parent_name_type"] = [
                         line_lst[3],
                         line_lst[4],
@@ -2109,6 +2115,10 @@ class MFInputFileStructure:
         self.has_packagedata = "packagedata" in self.blocks
         self.has_perioddata = "period" in self.blocks
         self.multi_package_support = "multi-package" in self.header
+        if "flopy-plugin" in self.header:
+            self.flopy_package_interface = self.header["flopy-plugin"]
+        else:
+            self.flopy_package_interface = None
         self.dfn_list = dfn_file.dfn_list
         self.sub_package = self._sub_package()
 
@@ -2184,8 +2194,9 @@ class MFModelStructure:
     --------
     """
 
-    def __init__(self, model_type, utl_struct_objs):
+    def __init__(self, simulation_structure, model_type, utl_struct_objs):
         # add name file structure
+        self.simulation_structure = simulation_structure
         self.model_type = model_type
         self.name_file_struct_obj = None
         self.package_struct_objs = {}
@@ -2200,6 +2211,17 @@ class MFModelStructure:
         self.package_struct_objs[dfn_file.package_type] = MFInputFileStructure(
             dfn_file, (self.model_type,), common, True
         )
+
+    def package_exists(self, package_type):
+        if (
+            package_type in self.package_struct_objs
+            or package_type in self.utl_struct_objs
+        ):
+            return True
+        return False
+
+    def add_package_struct(self, package):
+        self.simulation_structure.process_dfn(DfnPackage(package))
 
     def get_package_struct(self, package_type):
         if package_type in self.package_struct_objs:
@@ -2369,7 +2391,7 @@ class MFSimulationStructure:
 
     def add_model(self, model_type):
         self.model_struct_objs[model_type] = MFModelStructure(
-            model_type, self.utl_struct_objs
+            self, model_type, self.utl_struct_objs
         )
 
     def is_valid(self):

@@ -1374,10 +1374,18 @@ class MFFileAccessList(MFFileAccess):
                                 optional_line_info.append(data_item)
                         else:
                             optional_line_info.append(data_item)
+                is_flopy_package = (
+                    self.structure.name == "packages"
+                    and arr_line_len > 1
+                    and arr_line[1].startswith("FP_")
+                )
                 if MFComment.is_comment(arr_line, True):
                     arr_line.insert(0, "\n")
                     storage.add_data_line_comment(arr_line, line_num)
                 else:
+                    if is_flopy_package:
+                        # re-split line without comment
+                        arr_line = PyListUtil.split_data_line(arr_line[1])
                     # do higher performance quick load
                     self._data_line = ()
                     cellid_index = 0
@@ -1536,10 +1544,19 @@ class MFFileAccessList(MFFileAccess):
                 return 0, data_line
         data_index = data_index_start
         arr_line_len = len(arr_line)
+        is_flopy_package = (
+            self.structure.name == "packages"
+            and arr_line_len > 1
+            and arr_line[1].startswith("FP_")
+        )
         if MFComment.is_comment(arr_line, True) and data_index_start == 0:
             arr_line.insert(0, "\n")
             storage.add_data_line_comment(arr_line, line_num)
         else:
+            if is_flopy_package:
+                # re-split line without comment
+                arr_line = PyListUtil.split_data_line(arr_line[1])
+                arr_line_len = len(arr_line)
             # read variables
             var_index = 0
             repeat_count = 0

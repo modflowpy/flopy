@@ -1,0 +1,70 @@
+# flopy flopy-plugin rvc
+
+# --------------------- gwf rvc dimensions ---------------------
+
+block dimensions
+name maxbound
+type integer
+reader urword
+optional false
+longname maximum number of rivers with changing conductance
+description REPLACE maxbound {'{#1}': 'rivers'}
+
+# --------------------- gwf rvc period ---------------------
+
+block period
+name iper
+type integer
+block_variable True
+in_record true
+tagged false
+shape
+valid
+reader urword
+optional false
+longname stress period number
+description REPLACE iper {}
+
+block period
+name stress_period_data
+type recarray pkg_name rvc_bound cond_up cond_down
+shape (maxbound)
+reader urword
+longname
+description
+
+block period
+name pkg_name
+type string
+tagged false
+in_record true
+reader urword
+longname riv package name
+description name of riv package that rvc is modifying
+
+block period
+name rvc_bound
+type string
+tagged false
+in_record true
+reader urword
+longname river cell bound name
+description is the river cell bound name specified in the bound name of the riv package
+
+block period
+name cond_up
+type double precision
+tagged false
+in_record true
+reader urword
+longname river conductance for upward flow
+description is the riverbed hydraulic conductance for upward flow.
+
+block period
+name cond_down
+type double precision
+tagged false
+in_record true
+reader urword
+longname river conductance for downward flow
+description is the riverbed hydraulic conductance for downward flow.

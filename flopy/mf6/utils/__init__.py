@@ -1,3 +1,4 @@
+from . import flopy_plugins
 from . import createpackages
 from .binarygrid_util import MfGrdFile
 from .generate_classes import generate_classes
