@@ -23,7 +23,6 @@ pytestmark = pytest.mark.mf6
 
 
 @requires_exe("mf6")
-@pytest.mark.regression
 def test_rvc_plugin(tmpdir):
     # names
     sim_name = "rvc_plugin_test"
