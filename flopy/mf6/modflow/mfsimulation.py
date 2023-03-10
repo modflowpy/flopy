@@ -23,7 +23,7 @@ from ..mfbase import (
     VerbosityLevel,
 )
 from ..mfpackage import MFPackage
-from ..modflow import mfnam, mftdis, mfgwfapi
+from ..modflow import mfgwfapi, mfnam, mftdis
 from ..utils import binaryfile_utils, mfobservation
 from ..utils.flopy_plugins.plugin_interface import (
     FPPluginInterface,
