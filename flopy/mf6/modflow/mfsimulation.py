@@ -1,6 +1,7 @@
 import errno
 import inspect
 import os.path
+import shutil
 import sys
 import warnings
 from ctypes.util import find_library
@@ -1840,37 +1841,27 @@ class MFSimulation(PackageContainer):
         tried = f"{self.dll_name}"
         dll = find_library(self.dll_name)
         if dll is None:
+            dll = shutil.which(self.dll_name)
+        if dll is None:
             import platform
-
+            dll_name = ""
             if platform.system().lower() == "windows":
                 if not self.dll_name.lower().endswith(".dll"):
-                    tried = f"{tried} or {self.dll_name}.dll"
-                    dll = find_library(self.dll_name + ".dll")
+                    dll_name = f"{self.dll_name}.dll"
             elif platform.system().lower() == "linux":
                 if not self.dll_name.lower().endswith(".so"):
-                    tried = f"{tried} or {self.dll_name}.so"
-                    dll = find_library(self.dll_name + ".so")
+                    dll_name = f"{self.dll_name}.so"
             else:
                 if not self.dll_name.lower().endswith(".dylib"):
-                    tried = f"{tried} or {self.dll_name}.dylib"
-                    dll = find_library(self.dll_name + ".dylib")
+                    dll_name = f"{self.dll_name}.dylib"
+            if dll_name != "":
+                tried = f"{tried} or {dll_name}"
+                dll = find_library(dll_name)
+                if dll is None:
+                    dll = shutil.which(dll_name)
 
         if dll is None:
-            try:
-                exe_path = resolve_exe("mf6.exe")
-            except FileNotFoundError:
-                exe_path = ""
-            files = ""
-            if exe_path != "":
-                exe_dir = os.path.split(exe_path)[0]
-                for file in os.listdir(exe_dir):
-                    if files == "":
-                        files = file
-                    else:
-                        files = f"{files}, {file}"
-            raise Exception(f"The libraries {tried} do not exist.\n"
-                            f"Path to mf6: {exe_path}\n"
-                            f"Files in directory: {files}")
+            raise Exception(f"The libraries {tried} do not exist.\n")
         else:
             if (
                 self.simulation_data.verbosity_level.value
