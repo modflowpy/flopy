@@ -35,6 +35,7 @@ dependencies:
   - affine
   - scipy
   - pandas
+  - modflowapi
   - netcdf4
   - pyshp
   - rasterio
@@ -49,4 +50,3 @@ dependencies:
 
   # MODFLOW API dependencies
   - bmipy
-  - modflowapi
