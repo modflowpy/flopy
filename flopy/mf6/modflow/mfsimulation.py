@@ -457,7 +457,7 @@ class MFSimulation(PackageContainer):
         memory_print_option=None,
         write_headers=True,
         lazy_io=False,
-        dll_name: Union[str, os.PathLike] = "libmf6.dll",
+        dll_name: Union[str, os.PathLike] = "libmf6",
     ):
         super().__init__(MFSimulationData(sim_ws, self), sim_name)
         self.simulation_data.verbosity_level = self._resolve_verbosity_level(
