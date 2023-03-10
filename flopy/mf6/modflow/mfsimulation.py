@@ -1,7 +1,6 @@
 import errno
 import inspect
 import os.path
-import shutil
 import sys
 import warnings
 from ctypes.util import find_library
@@ -1841,8 +1840,6 @@ class MFSimulation(PackageContainer):
         tried = f"{self.dll_name}"
         dll = find_library(self.dll_name)
         if dll is None:
-            dll = shutil.which(self.dll_name)
-        if dll is None:
             import platform
             dll_name = ""
             if platform.system().lower() == "windows":
@@ -1857,11 +1854,24 @@ class MFSimulation(PackageContainer):
             if dll_name != "":
                 tried = f"{tried} or {dll_name}"
                 dll = find_library(dll_name)
-                if dll is None:
-                    dll = shutil.which(dll_name)
 
         if dll is None:
-            raise Exception(f"The libraries {tried} do not exist.\n")
+            try:
+                exe_path = resolve_exe("mf6.exe")
+            except FileNotFoundError:
+                exe_path = ""
+            files = ""
+            if exe_path != "":
+                exe_dir = os.path.split(exe_path)[0]
+                for file in os.listdir(exe_dir):
+                    if files == "":
+                        files = file
+                    else:
+                        files = f"{files}, {file}"
+            raise Exception(f"The libraries {tried} do not exist.\n"
+                            f"Path to mf6: {exe_path}\n"
+                            f"Files in directory: {files}\n"
+                            f"System paths: {sys.path}")
         else:
             if (
                 self.simulation_data.verbosity_level.value
