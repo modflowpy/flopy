@@ -1837,21 +1837,25 @@ class MFSimulation(PackageContainer):
 
     def _get_bmi_dll(self):
         # Check to make sure that program and namefile exist
+        tried = f"{self.dll_name}"
         dll = find_library(self.dll_name)
         if dll is None:
             import platform
 
             if platform.system().lower() == "windows":
                 if not self.dll_name.lower().endswith(".dll"):
+                    tried = f"{tried} or {self.dll_name}.dll"
                     dll = find_library(self.dll_name + ".dll")
             elif platform.system().lower() == "linux":
                 if not self.dll_name.lower().endswith(".so"):
+                    tried = f"{tried} or {self.dll_name}.so"
                     dll = find_library(self.dll_name + ".so")
             else:
                 if not self.dll_name.lower().endswith(".dylib"):
+                    tried = f"{tried} or {self.dll_name}.dylib"
                     dll = find_library(self.dll_name + ".dylib")
         if dll is None:
-            raise Exception(f"The library {self.dll_name} does not exist.")
+            raise Exception(f"The libraries {tried} do not exist.")
         else:
             if (
                 self.simulation_data.verbosity_level.value
