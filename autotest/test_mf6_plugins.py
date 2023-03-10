@@ -66,7 +66,7 @@ def test_rvc_plugin(tmpdir):
     )
     sim.register_ims_package(ims_package, [model.name])
     bot_data = [-100 for x in range(150)]
-    idom = np.ones((3, 15, 10), np.float)
+    idom = np.ones((3, 15, 10), float)
     idom[0, 0, 0] = 0
     idom[0, 0, 1] = 0
     dis_package = ModflowGwfdis(
@@ -83,7 +83,7 @@ def test_rvc_plugin(tmpdir):
     )
 
     ic_package = ModflowGwfic(model, strt=50.0, filename=f"{model_name}.ic")
-    k = np.ones((3, 15, 10), np.float)
+    k = np.ones((3, 15, 10), float)
     k_list = [
         0.01,
         1.0,
