@@ -25,10 +25,7 @@ from ..mfbase import (
 from ..mfpackage import MFPackage
 from ..modflow import mfgwfapi, mfnam, mftdis
 from ..utils import binaryfile_utils, mfobservation
-from ..utils.flopy_plugins.plugin_interface import (
-    FPPluginInterface,
-    FPBMIPluginInterface,
-)
+from ..utils.flopy_plugins.plugin_interface import FPBMIPluginInterface
 
 
 class SimulationDict(dict):

@@ -190,7 +190,7 @@ class TemplateUtils:
         package_name,
         package_path,
         options_dict,
-        dimensions_dict,
+        dimensions,
         package_data,
         stress_period_data,
         api_package_support=True,
@@ -207,15 +207,15 @@ class TemplateUtils:
             Path to flopy plug-in
         options_dict : dict
             Dictionary containing plug-in options
-        dimensions_dict: dict
-            Dictionary containing plug-in dimensions
+        dimensions: list
+            List containing plug-in dimensions
         package_data: dict
             Dictionary containing plug-in package data
         stress_period_data: dict
             Dictionary containing plug-in stress period data
         api_package_support : bool
             Whether or not this plug-in will have API package support
-        evaluation_code_at: enum
+        evaluation_code_at: str
             Location where user is instructed to add code
         """
         exclude_property_list = [
@@ -265,8 +265,8 @@ class TemplateUtils:
                             f"        self.{option} = "
                             f"self.package.{option}.get_data()\n"
                         )
-            if dimensions_dict is not None:
-                for dimension in dimensions_dict:
+            if dimensions is not None:
+                for dimension in dimensions:
                     fd_pkg.write("        # load dimensions data\n")
                     fd_pkg.write(
                         f"        self.{dimension} = "
@@ -280,7 +280,7 @@ class TemplateUtils:
                     f"self.package.packagedata.get_data()\n"
                 )
 
-            if "maxbound" not in dimensions_dict and not has_spd:
+            if "maxbound" not in dimensions and not has_spd:
                 if has_pkd:
                     fd_pkg.write(
                         "\n        # -----------------------------"
@@ -301,7 +301,7 @@ class TemplateUtils:
                     fd_pkg.write(
                         f"        self.maxbound = " f"len(self.packagedata)\n"
                     )
-                elif len(dimensions_dict) > 0:
+                elif len(dimensions) > 0:
                     fd_pkg.write(
                         "\n        # -----------------------------"
                         "------------------------------\n"
@@ -312,7 +312,7 @@ class TemplateUtils:
                     )
                     fd_pkg.write(
                         "        # API PACKAGE'S MAXBOUND"
-                        f" ASSIGNED TO {dimensions_dict[0]}"
+                        f" ASSIGNED TO {dimensions[0]}"
                         f"\n"
                     )
                     fd_pkg.write(
@@ -348,7 +348,7 @@ class TemplateUtils:
                 fd_pkg.write("        self.current_spd = []\n")
                 fd_pkg.write("\n")
 
-                if "maxbound" not in dimensions_dict:
+                if "maxbound" not in dimensions:
                     fd_pkg.write(
                         "\n        # -----------------------------"
                         "------------------------------\n"
@@ -505,18 +505,18 @@ class TemplateUtils:
                     # set hcof, rhs, nodelist, and bound
                     fd_pkg.write("        # update mf6 variables\n")
                     fd_pkg.write(
-                        f"{indent}self.mf6_default_package.set_advanced_var"
+                        f"{lspace}self.mf6_default_package.set_advanced_var"
                         f'("nodelist", cur_nodelist)\n'
                     )
                     fd_pkg.write(
-                        f"{indent}self.mf6_default_package.rhs = rhs_list\n"
+                        f"{lspace}self.mf6_default_package.rhs = rhs_list\n"
                     )
                     fd_pkg.write(
-                        f"{indent}self.mf6_default_package.hcof = "
+                        f"{lspace}self.mf6_default_package.hcof = "
                         f"hcof_list\n"
                     )
                     fd_pkg.write(
-                        f"{indent}self.mf6_default_package.set_advanced_var"
+                        f"{lspace}self.mf6_default_package.set_advanced_var"
                         f'("bound", bound)\n'
                     )
 
@@ -785,7 +785,7 @@ def generate_plugin_template(
         * A flopy package file so that flopy can load and save your package's
           input file.
         * A template to build your flopy package code from, which is created
-          in the mf6/utils/flopy_plugins folder.
+          in the mf6/utils/flopy_plugins/plugins folder.
 
     Parameters
     ----------
@@ -847,6 +847,7 @@ def generate_plugin_template(
     # generate flopy package code template
     package_path = join(
         TemplateUtils.get_packages_path(),
+        "plugins",
         f"flopy_{new_package_abbr}_plugin.py",
     )
     if stress_period_vars is None:
@@ -880,7 +881,8 @@ def create_python_package(
     ----------
     plugin_ext : str
         Three letter abbreviation indicating the extension of the plug-in
-        to be used.  This plug-in must exist in the "flopy_plugins" folder.
+        to be used.  This plug-in must exist in the "flopy_plugins/plugins"
+        folder.
     package_type : str
         The abbreviation of the flopy package file associated with the plug-in.
         This can be found by opening the flopy plug-in's package file in the
