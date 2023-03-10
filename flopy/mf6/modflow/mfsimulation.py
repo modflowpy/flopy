@@ -1844,8 +1844,14 @@ class MFSimulation(PackageContainer):
             if platform.system() in "Windows":
                 if not self.dll_name.lower().endswith(".dll"):
                     dll = find_library(self.dll_name + ".dll")
-            elif self.dll_name.lower().endswith(".dll"):
-                dll = find_library(self.dll_name[:-4])
+            elif platform.system().lower() == "linux":
+                if not self.dll_name.startswith("./"):
+                    if not self.dll_name.startswith("/"):
+                        dll = find_library("./" + self.dll_name + ".so")
+                    else:
+                        dll = find_library("." + self.dll_name + ".so")
+            else:
+                dll = find_library(self.dll_name + ".dylib")
         if dll is None:
             raise Exception(f"The library {self.dll_name} does not exist.")
         else:
