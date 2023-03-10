@@ -9,7 +9,7 @@ from typing import List, Optional, Union
 
 import numpy as np
 
-from ...mbase import run_model
+from ...mbase import resolve_exe, run_model
 from ..data import mfstructure
 from ..data.mfdatautil import MFComment
 from ..data.mfstructure import DatumType
@@ -1854,8 +1854,23 @@ class MFSimulation(PackageContainer):
                 if not self.dll_name.lower().endswith(".dylib"):
                     tried = f"{tried} or {self.dll_name}.dylib"
                     dll = find_library(self.dll_name + ".dylib")
+
         if dll is None:
-            raise Exception(f"The libraries {tried} do not exist.")
+            try:
+                exe_path = resolve_exe("mf6.exe")
+            except FileNotFoundError:
+                exe_path = ""
+            files = ""
+            if exe_path != "":
+                exe_dir = os.path.split(exe_path)[0]
+                for file in os.listdir(exe_dir):
+                    if files == "":
+                        files = file
+                    else:
+                        files = f"{files}, {file}"
+            raise Exception(f"The libraries {tried} do not exist.\n"
+                            f"Path to mf6: {exe_path}\n"
+                            f"Files in directory: {files}")
         else:
             if (
                 self.simulation_data.verbosity_level.value
