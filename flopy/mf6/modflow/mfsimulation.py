@@ -1835,27 +1835,32 @@ class MFSimulation(PackageContainer):
                         print(ex)
                         raise ex
 
+    def _add_platform_dll_ext(self):
+        import platform
+
+        if platform.system().lower() == "windows":
+            if not self.dll_name.lower().endswith(".dll"):
+                return f"{self.dll_name}.dll"
+        elif platform.system().lower() == "linux":
+            if not self.dll_name.lower().endswith(".so"):
+                return f"{self.dll_name}.so"
+        else:
+            if not self.dll_name.lower().endswith(".dylib"):
+                return f"{self.dll_name}.dylib"
+        return ""
+
     def _get_bmi_dll(self):
         # Check to make sure that program and namefile exist
         tried = f"{self.dll_name}"
         dll = find_library(self.dll_name)
         if dll is None:
             import platform
-            dll_name = ""
-            if platform.system().lower() == "windows":
-                if not self.dll_name.lower().endswith(".dll"):
-                    dll_name = f"{self.dll_name}.dll"
-            elif platform.system().lower() == "linux":
-                if not self.dll_name.lower().endswith(".so"):
-                    dll_name = f"{self.dll_name}.so"
-            else:
-                if not self.dll_name.lower().endswith(".dylib"):
-                    dll_name = f"{self.dll_name}.dylib"
+
+            dll_name = self._add_platform_dll_ext()
             if dll_name != "":
                 tried = f"{tried} or {dll_name}"
                 dll = find_library(dll_name)
 
-        if dll is None:
             try:
                 exe_path = resolve_exe("mf6.exe")
             except FileNotFoundError:
@@ -1863,15 +1868,22 @@ class MFSimulation(PackageContainer):
             files = ""
             if exe_path != "":
                 exe_dir = os.path.split(exe_path)[0]
-                for file in os.listdir(exe_dir):
-                    if files == "":
-                        files = file
-                    else:
-                        files = f"{files}, {file}"
-            raise Exception(f"The libraries {tried} do not exist.\n"
-                            f"Path to mf6: {exe_path}\n"
-                            f"Files in directory: {files}\n"
-                            f"System paths: {sys.path}")
+                dll_full_path = os.path.join(exe_dir, self.dll_name)
+                tried = f"{tried} or {dll_full_path}"
+                if os.path.isfile(dll_full_path):
+                    dll = dll_full_path
+                if dll is None and dll_name != "":
+                    dll_full_path = os.path.join(exe_dir, dll_name)
+                    tried = f"{tried} or {dll_full_path}"
+                    if os.path.isfile(dll_full_path):
+                        dll = dll_full_path
+
+        if dll is None:
+            raise Exception(
+                f"The library {self.dll_name} does not exist.\n"
+                f"Tried to find library using the following: "
+                f"{tried}"
+            )
         else:
             if (
                 self.simulation_data.verbosity_level.value
