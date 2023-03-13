@@ -1680,6 +1680,12 @@ class MFSimulation(PackageContainer):
                 flopy_plugin.receive_vars(
                     self, package.model_or_sim, package, package_kwargs
                 )
+                if debug_mode:
+                    fd_debug.write(
+                        f"  Initializing FloPy plugin "
+                        f"{flopy_plugin.abbr}.\n"
+                    )
+                    fd_debug.flush()
                 flopy_plugin.init_plugin(fd_debug)
                 if flopy_plugin.uses_api_package:
                     # set up api package
@@ -1706,28 +1712,12 @@ class MFSimulation(PackageContainer):
                     )
                     flopy_plugin.api_package = api_package
                     api_plugin_num += 1
-                    if debug_mode:
-                        fd_debug.write(
-                            f"  Initialized FloPy plugin "
-                            f"{flopy_plugin.abbr} with API package "
-                            f"support. Using API package "
-                            f"{api_package.package_name}.\n"
-                        )
-                        fd_debug.flush()
-                else:
-                    if debug_mode:
-                        fd_debug.write(
-                            f"  Initialized FloPy plugin "
-                            f"{flopy_plugin.abbr} without API "
-                            f"package support.\n"
-                        )
-                        fd_debug.flush()
             if api_plugin_num > 0:
                 # write any changes to simulation
-                self.write_simulation()
                 if debug_mode:
-                    fd_debug.write(f"  Wrote MODFLOW-6 simulation files.\n")
+                    fd_debug.write(f"  Writing MODFLOW-6 simulation files.\n")
                     fd_debug.flush()
+                self.write_simulation()
 
             import modflowapi
 
@@ -1757,12 +1747,12 @@ class MFSimulation(PackageContainer):
             if debug_mode:
                 fd_debug.write(f"Calling sim_complete for plugins...\n")
             for package, flopy_plugin in self._flopy_bmi_plugins.items():
-                flopy_plugin.sim_complete()
                 if debug_mode:
                     fd_debug.write(
-                        f"  Called sim_complete for " f"{flopy_plugin.abbr}.\n"
+                        f"  Calling sim_complete for {flopy_plugin.abbr}.\n"
                     )
                     fd_debug.flush()
+                flopy_plugin.sim_complete()
                 # build plugin dictionary for easy access
                 self.flopy_plugins[package.name[0]] = flopy_plugin
 
@@ -1779,13 +1769,14 @@ class MFSimulation(PackageContainer):
             # bmi model run with package calls at beginning and end
             for flopy_plugin in self._flopy_bmi_plugins.values():
                 try:
-                    flopy_plugin.receive_bmi(mf6_sim)
                     if flopy_plugin.fd_debug is not None:
                         flopy_plugin.fd_debug.write(
-                            "Called receive_bmi for "
+                            "Calling receive_bmi for "
                             "plugin "
                             f"{flopy_plugin.abbr}.\n"
                         )
+                        flopy_plugin.fd_debug.flush()
+                    flopy_plugin.receive_bmi(mf6_sim)
                 except Exception as ex:
                     # print out exception information so it is not lost
                     message = (
@@ -1804,12 +1795,13 @@ class MFSimulation(PackageContainer):
             for flopy_plugin in self._flopy_bmi_plugins.values():
                 if flopy_plugin.run_for_solution_group(mf6_sim):
                     try:
-                        flopy_plugin.stress_period_start(mf6_sim.kper, mf6_sim)
                         if flopy_plugin.fd_debug is not None:
                             flopy_plugin.fd_debug.write(
-                                "Called stress_period_start for plugin "
+                                "Calling stress_period_start for plugin "
                                 f"{flopy_plugin.abbr}.\n"
                             )
+                            flopy_plugin.fd_debug.flush()
+                        flopy_plugin.stress_period_start(mf6_sim.kper, mf6_sim)
                     except Exception as ex:
                         # print out exception information so it is not lost
                         message = (
@@ -1829,14 +1821,15 @@ class MFSimulation(PackageContainer):
             for flopy_plugin in self._flopy_bmi_plugins.values():
                 if flopy_plugin.run_for_solution_group(mf6_sim):
                     try:
+                        if flopy_plugin.fd_debug is not None:
+                            flopy_plugin.fd_debug.write(
+                                "Calling timestep_start for plugin "
+                                f"{flopy_plugin.abbr}.\n"
+                            )
+                            flopy_plugin.fd_debug.flush()
                         flopy_plugin.time_step_start(
                             mf6_sim.kper, mf6_sim.kstp, mf6_sim
                         )
-                        if flopy_plugin.fd_debug is not None:
-                            flopy_plugin.fd_debug.write(
-                                "Called timestep_start for plugin "
-                                f"{flopy_plugin.abbr}.\n"
-                            )
                     except Exception as ex:
                         # print out exception information so it is not lost
                         message = (
@@ -1855,17 +1848,18 @@ class MFSimulation(PackageContainer):
             for flopy_plugin in self._flopy_bmi_plugins.values():
                 if flopy_plugin.run_for_solution_group(mf6_sim):
                     try:
+                        if flopy_plugin.fd_debug is not None:
+                            flopy_plugin.fd_debug.write(
+                                "Calling iteration_start for plugin "
+                                f"{flopy_plugin.abbr}.\n"
+                            )
+                            flopy_plugin.fd_debug.flush()
                         flopy_plugin.iteration_start(
                             mf6_sim.kper,
                             mf6_sim.kstp,
                             mf6_sim.iteration,
                             mf6_sim,
                         )
-                        if flopy_plugin.fd_debug is not None:
-                            flopy_plugin.fd_debug.write(
-                                "Called iteration_start for plugin "
-                                f"{flopy_plugin.abbr}.\n"
-                            )
                     except Exception as ex:
                         # print out exception information so it is not lost
                         message = (
@@ -1884,18 +1878,18 @@ class MFSimulation(PackageContainer):
             for flopy_plugin in self._flopy_bmi_plugins.values():
                 if flopy_plugin.run_for_solution_group(mf6_sim):
                     try:
+                        if flopy_plugin.fd_debug is not None:
+                            flopy_plugin.fd_debug.write(
+                                f"Calling iteration_end for plugin "
+                                f"{flopy_plugin.abbr}.\n"
+                            )
+                            flopy_plugin.fd_debug.flush()
                         allow_cvg = flopy_plugin.iteration_end(
                             mf6_sim.kper,
                             mf6_sim.kstp,
                             mf6_sim.iteration,
                             mf6_sim,
                         )
-                        if flopy_plugin.fd_debug is not None:
-                            flopy_plugin.fd_debug.write(
-                                f"Called iteration_end for plugin "
-                                f"{flopy_plugin.abbr} which returned "
-                                f"allow_cvg of {str(allow_cvg)}.\n"
-                            )
                     except Exception as ex:
                         # print out exception information so it is not lost
                         message = (
@@ -1921,14 +1915,15 @@ class MFSimulation(PackageContainer):
             for flopy_plugin in self._flopy_bmi_plugins.values():
                 if flopy_plugin.run_for_solution_group(mf6_sim):
                     try:
+                        if flopy_plugin.fd_debug is not None:
+                            flopy_plugin.fd_debug.write(
+                                f"Calling timestep_end for plugin "
+                                f"{flopy_plugin.abbr}.\n"
+                            )
+                            flopy_plugin.fd_debug.flush()
                         flopy_plugin.time_step_end(
                             mf6_sim.kper, mf6_sim.kstp, converged, mf6_sim
                         )
-                        if flopy_plugin.fd_debug is not None:
-                            flopy_plugin.fd_debug.write(
-                                f"Called timestep_end for plugin "
-                                f"{flopy_plugin.abbr}.\n"
-                            )
                     except Exception as ex:
                         # print out exception information so it is not lost
                         message = (
@@ -1947,12 +1942,13 @@ class MFSimulation(PackageContainer):
             for flopy_plugin in self._flopy_bmi_plugins.values():
                 if flopy_plugin.run_for_solution_group(mf6_sim):
                     try:
-                        flopy_plugin.stress_period_end(mf6_sim.kper, mf6_sim)
                         if flopy_plugin.fd_debug is not None:
                             flopy_plugin.fd_debug.write(
-                                f"Called stress_period_end for plugin "
+                                f"Calling stress_period_end for plugin "
                                 f"{flopy_plugin.abbr}.\n"
                             )
+                            flopy_plugin.fd_debug.flush()
+                        flopy_plugin.stress_period_end(mf6_sim.kper, mf6_sim)
                     except Exception as ex:
                         # print out exception information so it is not lost
                         message = (
