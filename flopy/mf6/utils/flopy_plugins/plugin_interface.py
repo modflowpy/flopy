@@ -40,6 +40,7 @@ class FPPluginInterface:
         self.mg = None
         self._user_kwargs = None
         self._dis_type = None
+        self.fd_debug = None
 
     def __init_subclass__(cls):
         """Register plugin type"""
@@ -74,15 +75,22 @@ class FPPluginInterface:
         self.mg = model.modelgrid
         self._user_kwargs = user_kwargs
 
-    def init_plugin(self):
+    def init_plugin(self, fd_debug):
         """This method is called by MFSimulation.run_simulation prior to
         starting the simulation and immediately after receive_vars.  Override
         this method to execute any initialization code in your flopy plugin.
+
+        Parameters
+        ----------
+        fd_debug : file descriptor or None
+            Debug file descriptor
 
         Returns
         ----------
         bool : Success/Failure
         """
+        if fd_debug is not None:
+            self.fd_debug = fd_debug
         return True
 
     def sim_complete(self):
@@ -426,18 +434,23 @@ class FPBMIPluginInterface(FPPluginInterface):
         """
         super().receive_vars(simulation, model, package, user_kwargs)
 
-    def init_plugin(self):
+    def init_plugin(self, fd_debug=None):
         """This method is called by MFSimulation.run_simulation prior to
         starting the simulation and immediately after receive_vars.  Override
         this method to execute any initialization code in your flopy plugin.
         FPBMIPluginInterface initializes any enabled listing and/or debug
         files here.
 
+        Parameters
+        ----------
+        fd_debug : file descriptor or None
+            Debug file descriptor
+
         Returns
         ----------
         bool : Success/Failure
         """
-        super().init_plugin()
+        super().init_plugin(fd_debug)
 
     def receive_bmi(self, mf6_sim):
         """This method is called by MFSimulation.run_simulation prior to

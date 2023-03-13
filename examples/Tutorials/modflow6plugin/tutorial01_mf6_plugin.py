@@ -185,15 +185,18 @@ sim.write_simulation()
 # python package to run your simulation through the MODFLOW-6 BMI interface
 # (using the libmf6 dll instead of using the mf6 executable).
 
-sim.run_simulation()
-
+success = sim.run_simulation(debug_mode=True)
+if not success:
+    with open("debug_run_sim.txt", "r") as fd:
+        data = fd.read()
+        raise Exception(f"{data}")
+    
 # ## Post-processing model output
 #
 # ### Get and process specific discharge and head output
 
 flow_rvp = gwf.oc.output.budget().get_data(
     text="API",
-    # paknam="API_RVP_0",
     kstpkper=(0, 0),
 )[0]
 fjf = gwf.oc.output.budget().get_data(text="FLOW-JA-FACE", kstpkper=(0, 0))[0]
@@ -213,6 +216,6 @@ ax = fig.add_subplot(1, 2, 1, aspect="equal")
 ax.set_title("Volumetric discharge (" + r"$L^3/T$" + ")")
 mapview = flopy.plot.PlotMapView(model=gwf)
 quadmesh = mapview.plot_ibound()
-quadmesh = mapview.plot_array(head, alpha=0.5)
+quadmesh_2 = mapview.plot_array(head, alpha=0.5)
 quiver = mapview.plot_vector(qx, qy)
 linecollection = mapview.plot_grid()

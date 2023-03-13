@@ -254,8 +254,8 @@ class TemplateUtils:
                     "    def __init__(self, use_api_package=False):" "\n"
                 )
             fd_pkg.write("        super().__init__(use_api_package)\n\n")
-            fd_pkg.write("    def init_plugin(self):\n")
-            fd_pkg.write("        super().init_plugin()\n")
+            fd_pkg.write("    def init_plugin(self, fd_debug):\n")
+            fd_pkg.write("        super().init_plugin(fd_debug)\n")
 
             # read in options, dimensions, and stress period data
             if options_dict is not None:

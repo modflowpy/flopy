@@ -23,8 +23,8 @@ class FlopyRvc(FPBMIPluginInterface):
         super().__init__(use_api_package)
         self.rv_cond = {}
 
-    def init_plugin(self):
-        super().init_plugin()
+    def init_plugin(self, fd_debug):
+        super().init_plugin(fd_debug)
         # load dimensions data
         self.maxbound = self.package.maxbound.get_data()
         # load stress period data
