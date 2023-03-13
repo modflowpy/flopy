@@ -36,7 +36,7 @@ jobs:
           pip install --upgrade pip
           pip install build twine
           pip install .
-          pip install ".[lint, test, optional]"
+          pip install ".[lint, test, optional, api]"
 
       - name: Install MODFLOW
         run: |
@@ -223,7 +223,7 @@ jobs:
           pip install --upgrade pip
           pip install build twine
           pip install .
-          pip install ".[lint, test, optional]"     
+          pip install ".[lint, test, optional, api]"     
 
       - name: Build package
         run: python -m build
@@ -352,7 +352,7 @@ jobs:
           pip install --upgrade pip
           pip install build twine
           pip install .
-          pip install ".[lint, test, optional]"
+          pip install ".[lint, test, optional, api]"
 
       - name: Get release tag
         uses: oprypin/find-latest-tag@v1

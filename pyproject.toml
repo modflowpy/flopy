@@ -61,7 +61,6 @@ optional = [
     "descartes",
     "fiona",
     "geojson",
-    "modflowapi",
     "netcdf4",
     "pandas",
     "pyproj",
@@ -72,8 +71,13 @@ optional = [
     "scipy",
     "shapely >=1.8",
     "vtk",
-    "xmipy",
 ]
+
+api = [
+    "xmipy @ git+https://git@github.com/Deltares/xmipy@develop",
+    "modflowapi @ git+https://git@github.com/MODFLOW-USGS/modflowapi@develop"
+]
+
 doc = [
     "flopy[optional]",
     "ipython[kernel]",

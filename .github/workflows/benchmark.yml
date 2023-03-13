@@ -39,7 +39,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install .
-          pip install ".[test, optional]"
+          pip install ".[test, optional, api]"
 
       - name: Setup Micromamba
         if: runner.os == 'Windows'

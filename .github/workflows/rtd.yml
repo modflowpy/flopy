@@ -55,7 +55,7 @@ jobs:
 
       - name: Install modflowapi and dependencies
         run: |
-          pip install modflowapi
+          pip install ".[api]"
 
       - name: Install MODFLOW executables
         uses: modflowpy/install-modflow-action@v1
