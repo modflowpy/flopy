@@ -35,44 +35,100 @@ class ModflowGwffp_Rvc(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    stress_period_data = ListTemplateGenerator(('gwf6', 'fp_rvc',
-                                                'period',
-                                                'stress_period_data'))
+
+    stress_period_data = ListTemplateGenerator(
+        ("gwf6", "fp_rvc", "period", "stress_period_data")
+    )
     package_abbr = "gwffp_rvc"
     _package_type = "fp_rvc"
     dfn_file_name = "gwf-fp_rvc.dfn"
 
     dfn = [
-           ["header", 
-            "flopy-plugin rvc", ],
-           ["block dimensions", "name maxbound", "type integer",
-            "reader urword", "optional false"],
-           ["block period", "name iper", "type integer",
-            "block_variable True", "in_record true", "tagged false", "shape",
-            "valid", "reader urword", "optional false"],
-           ["block period", "name stress_period_data",
+        [
+            "header",
+            "flopy-plugin rvc",
+        ],
+        [
+            "block dimensions",
+            "name maxbound",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name iper",
+            "type integer",
+            "block_variable True",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name stress_period_data",
             "type recarray pkg_name rvc_bound cond_up cond_down",
-            "shape (maxbound)", "reader urword"],
-           ["block period", "name pkg_name", "type string", "tagged false",
-            "in_record true", "reader urword"],
-           ["block period", "name rvc_bound", "type string", "tagged false",
-            "in_record true", "reader urword"],
-           ["block period", "name cond_up", "type double precision",
-            "tagged false", "in_record true", "reader urword"],
-           ["block period", "name cond_down", "type double precision",
-            "tagged false", "in_record true", "reader urword"]]
+            "shape (maxbound)",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name pkg_name",
+            "type string",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name rvc_bound",
+            "type string",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name cond_up",
+            "type double precision",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name cond_down",
+            "type double precision",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+    ]
 
-    def __init__(self, model, loading_package=False, maxbound=None,
-                 stress_period_data=None, filename=None, pname=None, **kwargs):
-        super().__init__(model, "fp_rvc", filename, pname,
-                         loading_package, **kwargs)
+    def __init__(
+        self,
+        model,
+        loading_package=False,
+        maxbound=None,
+        stress_period_data=None,
+        filename=None,
+        pname=None,
+        **kwargs
+    ):
+        super().__init__(
+            model, "fp_rvc", filename, pname, loading_package, **kwargs
+        )
 
         # set up variables
         self.maxbound = self.build_mfdata("maxbound", maxbound)
-        self.stress_period_data = self.build_mfdata("stress_period_data",
-                                                    stress_period_data)
+        self.stress_period_data = self.build_mfdata(
+            "stress_period_data", stress_period_data
+        )
         self._init_complete = True

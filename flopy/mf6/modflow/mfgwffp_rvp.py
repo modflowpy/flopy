@@ -49,62 +49,167 @@ class ModflowGwffp_Rvp(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    auxiliary = ListTemplateGenerator(('gwf6', 'fp_rvp', 'options',
-                                       'auxiliary'))
-    stress_period_data = ListTemplateGenerator(('gwf6', 'fp_rvp',
-                                                'period',
-                                                'stress_period_data'))
+
+    auxiliary = ListTemplateGenerator(
+        ("gwf6", "fp_rvp", "options", "auxiliary")
+    )
+    stress_period_data = ListTemplateGenerator(
+        ("gwf6", "fp_rvp", "period", "stress_period_data")
+    )
     package_abbr = "gwffp_rvp"
     _package_type = "fp_rvp"
     dfn_file_name = "gwf-fp_rvp.dfn"
 
     dfn = [
-           ["header", 
-            "flopy-plugin rvp", ],
-           ["block options", "name print_input", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name print_flows", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name save_flows", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name auxiliary", "type string",
-            "shape (naux)", "reader urword", "optional true"],
-           ["block options", "name boundnames", "type keyword",
-            "reader urword", "optional true"],
-           ["block dimensions", "name maxbound", "type integer",
-            "reader urword", "optional false"],
-           ["block period", "name iper", "type integer",
-            "block_variable True", "in_record true", "tagged false", "shape",
-            "valid", "reader urword", "optional false"],
-           ["block period", "name stress_period_data",
+        [
+            "header",
+            "flopy-plugin rvp",
+        ],
+        [
+            "block options",
+            "name print_input",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name auxiliary",
+            "type string",
+            "shape (naux)",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name boundnames",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block dimensions",
+            "name maxbound",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name iper",
+            "type integer",
+            "block_variable True",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name stress_period_data",
             "type recarray cellid stage cond_up cond_down rbot aux boundname",
-            "shape (maxbound)", "reader urword"],
-           ["block period", "name cellid", "type string", "tagged false",
-            "in_record true", "reader urword"],
-           ["block period", "name stage", "type double precision",
-            "tagged false", "in_record true", "reader urword"],
-           ["block period", "name cond_up", "type double precision",
-            "tagged false", "in_record true", "reader urword"],
-           ["block period", "name cond_down", "type double precision",
-            "tagged false", "in_record true", "reader urword"],
-           ["block period", "name rbot", "type double precision",
-            "tagged false", "in_record true", "reader urword"],
-           ["block period", "name aux", "type double precision",
-            "shape (naux)", "tagged false", "in_record true", "reader urword",
-            "optional True"],
-           ["block period", "name boundname", "type string", "tagged false",
-            "in_record true", "reader urword", "optional True"]]
+            "shape (maxbound)",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name cellid",
+            "type string",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name stage",
+            "type double precision",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name cond_up",
+            "type double precision",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name cond_down",
+            "type double precision",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name rbot",
+            "type double precision",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name aux",
+            "type double precision",
+            "shape (naux)",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "optional True",
+        ],
+        [
+            "block period",
+            "name boundname",
+            "type string",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "optional True",
+        ],
+    ]
 
-    def __init__(self, model, loading_package=False, print_input=None,
-                 print_flows=None, save_flows=None, auxiliary=None,
-                 boundnames=None, maxbound=None, stress_period_data=None,
-                 filename=None, pname=None, **kwargs):
-        super().__init__(model, "fp_rvp", filename, pname,
-                         loading_package, **kwargs)
+    def __init__(
+        self,
+        model,
+        loading_package=False,
+        print_input=None,
+        print_flows=None,
+        save_flows=None,
+        auxiliary=None,
+        boundnames=None,
+        maxbound=None,
+        stress_period_data=None,
+        filename=None,
+        pname=None,
+        **kwargs
+    ):
+        super().__init__(
+            model, "fp_rvp", filename, pname, loading_package, **kwargs
+        )
 
         # set up variables
         self.print_input = self.build_mfdata("print_input", print_input)
@@ -113,6 +218,7 @@ class ModflowGwffp_Rvp(mfpackage.MFPackage):
         self.auxiliary = self.build_mfdata("auxiliary", auxiliary)
         self.boundnames = self.build_mfdata("boundnames", boundnames)
         self.maxbound = self.build_mfdata("maxbound", maxbound)
-        self.stress_period_data = self.build_mfdata("stress_period_data",
-                                                    stress_period_data)
+        self.stress_period_data = self.build_mfdata(
+            "stress_period_data", stress_period_data
+        )
         self._init_complete = True

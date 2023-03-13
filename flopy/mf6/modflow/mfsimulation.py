@@ -1701,8 +1701,10 @@ class MFSimulation(PackageContainer):
                 )
             except Exception as e:
                 print("Failed to complete model run ")
-                print(f"with message: {str(e)}\n"
-                      f"Version {modflowapi.__version__} of modflowapi used.")
+                print(
+                    f"with message: {str(e)}\n"
+                    f"Version {modflowapi.__version__} of modflowapi used."
+                )
                 return False
             self.flopy_plugins = {}
 
