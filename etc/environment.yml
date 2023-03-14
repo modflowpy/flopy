@@ -49,3 +49,4 @@ dependencies:
 
   # MODFLOW API dependencies
   - bmipy
+  - modflowapi

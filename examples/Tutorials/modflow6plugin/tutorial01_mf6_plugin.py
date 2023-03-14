@@ -160,6 +160,7 @@ for row in range(5, 10):
 
 rvp = flopy.mf6.ModflowGwffp_Rvp(
     gwf,
+    pname="rvp_0",
     print_input=True,
     save_flows=True,
     stress_period_data=spd,
@@ -190,7 +191,7 @@ if not success:
     with open("debug_run_sim.txt", "r") as fd:
         data = fd.read()
         raise Exception(f"{data}")
-    
+
 # ## Post-processing model output
 #
 # ### Get and process specific discharge and head output
