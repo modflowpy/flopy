@@ -49,3 +49,6 @@ dependencies:
 
   # MODFLOW API dependencies
   - bmipy
+  - pip:
+    - git+https://git@github.com/Deltares/xmipy@develop
+    - git+https://github.com/MODFLOW-USGS/modflowapi@develop

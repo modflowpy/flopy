@@ -55,7 +55,6 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash -l {0}
         run: |
-          pip install xmipy
           pip install .
           pip install .[api]
       - name: Install Modflow executables

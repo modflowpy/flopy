@@ -193,7 +193,6 @@ jobs:
         shell: bash -l {0}
         if: runner.os == 'Windows'
         run: |
-          pip install xmipy
           pip install ".[api]"
           pip install .
 
