@@ -231,7 +231,11 @@ def test_rvc_plugin(tmpdir):
     rvp_dir = os.path.join(tmpdir, "rvp")
     sim.set_sim_path(rvp_dir)
     sim.write_simulation()
-    sim.run_simulation()
+    success = sim.run_simulation(debug_mode=True)
+    if not success:
+        with open("debug_run_sim.txt", "r") as fd:
+            data = fd.read()
+            raise Exception(f"{data}")
 
     budget_fpriv_rvp = model.output.budget().get_data(text="API", full3D=False)
     array_util = PyListUtil()

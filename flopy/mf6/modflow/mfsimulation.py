@@ -1715,15 +1715,27 @@ class MFSimulation(PackageContainer):
             if api_plugin_num > 0:
                 # write any changes to simulation
                 if debug_mode:
-                    fd_debug.write(f"  Writing MODFLOW-6 simulation files.\n")
+                    fd_debug.write(f"Writing MODFLOW-6 simulation files.\n")
                     fd_debug.flush()
                 self.write_simulation()
 
-            import modflowapi
+            try:
+                import modflowapi
+            except Exception as ex:
+                message = (
+                    "Failed to initialize modflowapi library with message:"
+                    f"{str(ex)}"
+                )
+                print(message)
+                if debug_mode:
+                    fd_debug.write(f"{message}\n")
+                    fd_debug.close()
+                raise ex
 
             # there are BMI packages, run model through BMI interface
             # set up modflow API
             dll = self._get_bmi_dll()
+
             try:
                 modflowapi.run_simulation(
                     dll,
@@ -1740,7 +1752,7 @@ class MFSimulation(PackageContainer):
                 if debug_mode:
                     fd_debug.write(f"{message}\n")
                     fd_debug.close()
-                return False
+                raise ex
             self.flopy_plugins = {}
 
             # bmi model run with package calls at beginning and end
