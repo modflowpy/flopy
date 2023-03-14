@@ -82,7 +82,6 @@ doc = [
     "flopy[optional]",
     "ipython[kernel]",
     "jupytext",
-    "modflowapi",
     "nbsphinx",
     "nbsphinx-link",
     "pydata-sphinx-theme",
