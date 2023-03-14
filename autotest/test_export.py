@@ -1437,24 +1437,21 @@ def test_vtk_pathline(function_tmpdir, example_data_path):
 
     from vtkmodules.util import numpy_support
 
-    totim = numpy_support.vtk_to_numpy(data.GetCellData().GetArray("time"))
-    pid = numpy_support.vtk_to_numpy(data.GetCellData().GetArray("particleid"))
+    totim = numpy_support.vtk_to_numpy(data.GetPointData().GetArray("time"))
+    pid = numpy_support.vtk_to_numpy(
+        data.GetPointData().GetArray("particleid")
+    )
 
     maxtime = 0
     for p in plines:
         if np.max(p["time"]) > maxtime:
             maxtime = np.max(p["time"])
 
-    if not len(totim) == 12054:
-        raise AssertionError("Array size is incorrect for modpath VTK")
-
-    if not np.abs(np.max(totim) - maxtime) < 100:
-        raise AssertionError("time values are incorrect for modpath VTK")
-
-    if not len(np.unique(pid)) == len(plines):
-        raise AssertionError(
-            "number of particles are incorrect for modpath VTK"
-        )
+    assert len(totim) == 12054, "Array size is incorrect"
+    assert np.abs(np.max(totim) - maxtime) < 100, "time values are incorrect"
+    assert len(np.unique(pid)) == len(
+        plines
+    ), "number of particles are incorrect for modpath VTK"
 
 
 def grid2disvgrid(nrow, ncol):
