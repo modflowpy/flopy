@@ -23,7 +23,7 @@ class FlopyRvc(FPBMIPluginInterface):
         super().__init__(use_api_package)
         self.rv_cond = {}
 
-    def init_plugin(self, fd_debug):
+    def init_plugin(self, fd_debug=None):
         super().init_plugin(fd_debug)
         # load dimensions data
         self.maxbound = self.package.maxbound.get_data()
@@ -46,7 +46,7 @@ class FlopyRvc(FPBMIPluginInterface):
 
         # build dictionary of river conductance
         self.rv_cond = {}
-        for row_num, data_row in enumerate(self.current_spd):
+        for data_row in self.current_spd:
             aux_offset = 0
             # get stress period variables
             pkg_name = data_row[0 + aux_offset]

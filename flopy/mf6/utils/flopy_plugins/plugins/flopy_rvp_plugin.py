@@ -7,7 +7,7 @@ class FlopyRvp(FPBMIPluginInterface):
     def __init__(self, use_api_package=True):
         super().__init__(use_api_package)
 
-    def init_plugin(self, fd_debug):
+    def init_plugin(self, fd_debug=None):
         super().init_plugin(fd_debug)
         # load options data
         self.print_input = self.package.print_input.get_data()

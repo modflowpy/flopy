@@ -408,10 +408,6 @@ class FPBMIPluginInterface(FPPluginInterface):
         """Returns whether this plug-in uses the api package."""
         return self._use_api_package
 
-    """
-    Methods that are called during run_simulation
-    """
-
     def receive_vars(self, simulation, model, package, user_kwargs):
         """This method is called by MFSimulation.run_simulation prior to
         starting the simulation.  receive_vars is called prior to init_plugin.
@@ -494,7 +490,7 @@ class FPBMIPluginInterface(FPPluginInterface):
         if self.mf6_model is not None:
             # get dis/disv/disu package from modflowapi
             dis_type = self.dis_type
-            for pkg_name, package in self.mf6_model.package_dict.items():
+            for package in self.mf6_model.package_dict.values():
                 if dis_type == package.pkg_type:
                     self.mf6_dis = package
                     break
@@ -615,7 +611,7 @@ class FPBMIPluginInterface(FPPluginInterface):
         self._reset_cache_state()
         return True
 
-    def iteration_start(self, kper, kstp, iter, sln_group):
+    def iteration_start(self, kper, kstp, iter_num, sln_group):
         """This method is called by MFSimulation.run_simulation immediately
         before the start of each outer iteration.  Override this method to
         execute code immediately before the start of each outer iteration.
@@ -626,7 +622,7 @@ class FPBMIPluginInterface(FPPluginInterface):
             current stress period
         kstp : int
             current time step
-        iter : int
+        iter_num : int
             outer iteration number
         sln_group : modflowapi.simulation.Simulation
             solution group that is currently solving.  only relevant if
@@ -636,12 +632,12 @@ class FPBMIPluginInterface(FPPluginInterface):
         ----------
         bool : Success value
         """
-        if iter != self.iter:
-            self.iter = iter
+        if iter_num != self.iter:
+            self.iter = iter_num
         self._reset_cache_state()
         return True
 
-    def iteration_end(self, kper, kstp, iter, sln_group):
+    def iteration_end(self, kper, kstp, iter_num, sln_group):
         """This method is called by MFSimulation.run_simulation immediately
         after the end of each outer iteration.  Override this method to
         execute code immediately before the start of each time step.
@@ -654,7 +650,7 @@ class FPBMIPluginInterface(FPPluginInterface):
             current stress period
         kstp : int
             current time step
-        iter : int
+        iter_num : int
             outer iteration number
         sln_group : modflowapi.simulation.Simulation
             solution group that is currently solving.  only relevant if

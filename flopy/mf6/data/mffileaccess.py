@@ -1374,6 +1374,7 @@ class MFFileAccessList(MFFileAccess):
                                 optional_line_info.append(data_item)
                         else:
                             optional_line_info.append(data_item)
+                arr_line_len = len(arr_line)
                 is_flopy_package = (
                     self.structure.name == "packages"
                     and arr_line_len > 1
@@ -1419,7 +1420,6 @@ class MFFileAccessList(MFFileAccess):
                             else:
                                 self._data_line += (None,)
                             data_index = sub_entry[0]
-                    arr_line_len = len(arr_line)
                     if arr_line_len > data_index + 1:
                         # more data on the end of the line. see if it can
                         # be loaded as optional data

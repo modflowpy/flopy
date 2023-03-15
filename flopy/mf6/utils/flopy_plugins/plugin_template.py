@@ -95,7 +95,6 @@ class TemplateUtils:
         )
         fd_pkg.write(f"{indent}    aux_offset = 0\n")
         fd_pkg.write(f"{indent}    # get stress period variables\n")
-        has_aux = False
         for idx, item in enumerate(stress_period_data):
             index = f"{idx}" " + aux_offset"
             if item == "aux":
@@ -187,6 +186,159 @@ class TemplateUtils:
             )
 
     @staticmethod
+    def _write_max_bound(fd_pkg, dimensions):
+        if has_pkd:
+            fd_pkg.write(
+                "\n        # -----------------------------"
+                "------------------------------\n"
+            )
+            fd_pkg.write(
+                "        # PACKAGE DOES NOT HAVE MAXBOUND " "DIMENSION\n"
+            )
+            fd_pkg.write(
+                "        # API PACKAGE'S MAXBOUND "
+                "ASSIGNED TO LENGTH OF PACKAGEDATA\n"
+            )
+            fd_pkg.write(
+                "        # -----------------------------"
+                "------------------------------\n"
+            )
+            fd_pkg.write("        self.maxbound = " f"len(self.packagedata)\n")
+        elif len(dimensions) > 0:
+            fd_pkg.write(
+                "\n        # -----------------------------"
+                "------------------------------\n"
+            )
+            fd_pkg.write(
+                "        # PACKAGE DOES NOT HAVE MAXBOUND "
+                "DIMENSION OR PACKAGEDATA\n"
+            )
+            fd_pkg.write(
+                "        # API PACKAGE'S MAXBOUND"
+                f" ASSIGNED TO {dimensions[0]}"
+                "\n"
+            )
+            fd_pkg.write(
+                "        # -----------------------------"
+                "------------------------------\n"
+            )
+            fd_pkg.write("        self.maxbound = " f"dimensions_list[0]\n")
+        else:
+            fd_pkg.write(
+                "\n        # -----------------------------"
+                "------------------------------\n"
+            )
+            fd_pkg.write(
+                "        # PACKAGE DOES NOT HAVE MAXBOUND "
+                "DIMENSION, PACKAGEDATA, OR DIMENSIONS\n"
+            )
+            fd_pkg.write(
+                "        # API PACKAGE'S MAXBOUND " f"ASSIGNED TO 1\n"
+            )
+            fd_pkg.write(
+                "        # -----------------------------"
+                "------------------------------\n"
+            )
+            fd_pkg.write("        self.maxbound = 1\n")
+
+    @staticmethod
+    def _write_max_bound_spd(fd_pkg):
+        fd_pkg.write(
+            "\n        # -----------------------------"
+            "------------------------------\n"
+        )
+        fd_pkg.write("        # PACKAGE DOES NOT HAVE MAXBOUND " "DIMENSION\n")
+        fd_pkg.write(
+            "        # API PACKAGE'S MAXBOUND "
+            "ASSIGNED TO MAX STRESSPERIODDATA LENGTH\n"
+        )
+        fd_pkg.write(
+            "        # -----------------------------"
+            "------------------------------\n"
+        )
+        fd_pkg.write(
+            "        self.maxbound = 1\n"
+            "        spd_all = self.spd.get_data()\n"
+        )
+        fd_pkg.write(f"        for data in spd_all:\n")
+        fd_pkg.write(
+            "            if len(data) > self.maxbound:\n"
+            "                self.maxbound = len(data)"
+            "\n\n"
+        )
+
+    @staticmethod
+    def _write_template_end(fd_pkg):
+        fd_pkg.write(
+            "    def iteration_end(self, kper, kstp, "
+            "iter_num, sln_group):\n"
+        )
+        fd_pkg.write(
+            "        return super().iteration_end(kper, kstp, "
+            "iter_num, sln_group)\n\n"
+        )
+
+        # time_step_end
+        fd_pkg.write(
+            "    def time_step_end(self, kper, kstp, converged, "
+            "sln_group):\n"
+        )
+        fd_pkg.write(
+            "        super().time_step_end(kper, kstp, "
+            "converged, sln_group)\n\n"
+        )
+
+        # stress_period_end
+        fd_pkg.write("    def stress_period_end(self, kper, " "sln_group):\n")
+        fd_pkg.write(
+            "        super().stress_period_end(kper, " "sln_group)\n\n"
+        )
+
+    @staticmethod
+    def _write_api_package_support(fd_pkg, lspace):
+        # comments for user to set write code here
+        fd_pkg.write(
+            f"\n{lspace}# -----------------------------"
+            "------------------------------\n"
+        )
+        fd_pkg.write(
+            f"{lspace}# ADD YOUR CODE HERE TO UPDATE "
+            "RHS, HCOF, BOUND, AND NODELIST\n"
+        )
+        fd_pkg.write(
+            f"{lspace}# -----------------------------"
+            "------------------------------\n"
+        )
+        fd_pkg.write(f"{lspace}# example code...\n")
+        fd_pkg.write(f"{lspace}# rhs_list[row_num] = " "calculated_rhs_val\n")
+        fd_pkg.write(
+            f"{lspace}# hcof_list[row_num] = " "calculated_hcof_val\n"
+        )
+        fd_pkg.write(
+            f"{lspace}# cur_nodelist[row_num] = \\\n"
+            f"{lspace}#    self.mf6_model.usertonode"
+            f"[self.get_node(cellid)] + 1\n"
+        )
+        fd_pkg.write(
+            f"{lspace}# bound[row_num, 0] = " "calculated_bound_val\n\n"
+        )
+
+        # set hcof, rhs, nodelist, and bound
+        fd_pkg.write("        # update mf6 variables\n")
+        fd_pkg.write(
+            f"{lspace}self.mf6_default_package.set_advanced_var"
+            f'("nodelist", cur_nodelist)\n'
+        )
+        fd_pkg.write(f"{lspace}self.mf6_default_package.rhs = rhs_list\n")
+        fd_pkg.write(
+            f"{lspace}self.mf6_default_package.hcof = " f"hcof_list\n"
+        )
+        fd_pkg.write(
+            f"{lspace}self.mf6_default_package.set_advanced_var"
+            f'("bound", bound)\n'
+        )
+
+    @staticmethod
     def write_class_template(
         package_name,
         package_path,
@@ -208,7 +360,7 @@ class TemplateUtils:
             Path to flopy plug-in
         options_dict : dict
             Dictionary containing plug-in options
-        dimensions: list
+        dimensions: lst
             List containing plug-in dimensions
         package_data: dict
             Dictionary containing plug-in package data
@@ -254,7 +406,7 @@ class TemplateUtils:
                     "    def __init__(self, use_api_package=False):" "\n"
                 )
             fd_pkg.write("        super().__init__(use_api_package)\n\n")
-            fd_pkg.write("    def init_plugin(self, fd_debug):\n")
+            fd_pkg.write("    def init_plugin(self, fd_debug=None):\n")
             fd_pkg.write("        super().init_plugin(fd_debug)\n")
 
             # read in options, dimensions, and stress period data
@@ -277,69 +429,12 @@ class TemplateUtils:
             if has_pkd:
                 fd_pkg.write("        # load package data\n")
                 fd_pkg.write(
-                    f"        self.packagedata = "
+                    "        self.packagedata = "
                     f"self.package.packagedata.get_data()\n"
                 )
 
             if "maxbound" not in dimensions and not has_spd:
-                if has_pkd:
-                    fd_pkg.write(
-                        "\n        # -----------------------------"
-                        "------------------------------\n"
-                    )
-                    fd_pkg.write(
-                        "        # PACKAGE DOES NOT HAVE MAXBOUND "
-                        "DIMENSION\n"
-                    )
-                    fd_pkg.write(
-                        "        # API PACKAGE'S MAXBOUND "
-                        "ASSIGNED TO LENGTH OF PACKAGEDATA\n"
-                    )
-                    fd_pkg.write(
-                        "        # -----------------------------"
-                        "------------------------------\n"
-                    )
-                    fd_pkg.write(
-                        f"        self.maxbound = " f"len(self.packagedata)\n"
-                    )
-                elif len(dimensions) > 0:
-                    fd_pkg.write(
-                        "\n        # -----------------------------"
-                        "------------------------------\n"
-                    )
-                    fd_pkg.write(
-                        "        # PACKAGE DOES NOT HAVE MAXBOUND "
-                        "DIMENSION OR PACKAGEDATA\n"
-                    )
-                    fd_pkg.write(
-                        "        # API PACKAGE'S MAXBOUND"
-                        f" ASSIGNED TO {dimensions[0]}"
-                        f"\n"
-                    )
-                    fd_pkg.write(
-                        "        # -----------------------------"
-                        "------------------------------\n"
-                    )
-                    fd_pkg.write(
-                        "        self.maxbound = " f"dimensions_list[0]\n"
-                    )
-                else:
-                    fd_pkg.write(
-                        "\n        # -----------------------------"
-                        "------------------------------\n"
-                    )
-                    fd_pkg.write(
-                        "        # PACKAGE DOES NOT HAVE MAXBOUND "
-                        "DIMENSION, PACKAGEDATA, OR DIMENSIONS\n"
-                    )
-                    fd_pkg.write(
-                        "        # API PACKAGE'S MAXBOUND " f"ASSIGNED TO 1\n"
-                    )
-                    fd_pkg.write(
-                        "        # -----------------------------"
-                        "------------------------------\n"
-                    )
-                    fd_pkg.write("        self.maxbound = 1\n")
+                TemplateUtils._write_max_bound(fd_pkg, dimensions)
 
             if has_spd:
                 fd_pkg.write("        # load stress period data\n")
@@ -350,32 +445,7 @@ class TemplateUtils:
                 fd_pkg.write("\n")
 
                 if "maxbound" not in dimensions:
-                    fd_pkg.write(
-                        "\n        # -----------------------------"
-                        "------------------------------\n"
-                    )
-                    fd_pkg.write(
-                        "        # PACKAGE DOES NOT HAVE MAXBOUND "
-                        "DIMENSION\n"
-                    )
-                    fd_pkg.write(
-                        "        # API PACKAGE'S MAXBOUND "
-                        "ASSIGNED TO MAX STRESSPERIODDATA LENGTH\n"
-                    )
-                    fd_pkg.write(
-                        "        # -----------------------------"
-                        "------------------------------\n"
-                    )
-                    fd_pkg.write(
-                        f"        self.maxbound = 1\n"
-                        f"        spd_all = self.spd.get_data()\n"
-                    )
-                    fd_pkg.write(f"        for data in spd_all:\n")
-                    fd_pkg.write(
-                        f"            if len(data) > self.maxbound:\n"
-                        f"                self.maxbound = len(data)"
-                        f"\n\n"
-                    )
+                    TemplateUtils._write_max_bound_spd(fd_pkg)
 
                 # stress_period_start
                 fd_pkg.write(
@@ -421,11 +491,11 @@ class TemplateUtils:
                 # iteration_start
                 fd_pkg.write(
                     "    def iteration_start(self, kper, kstp, "
-                    "iter, sln_group):\n"
+                    "iter_num, sln_group):\n"
                 )
                 fd_pkg.write(
                     "        super().iteration_start(kper, kstp, "
-                    "iter, sln_group)\n\n"
+                    "iter_num, sln_group)\n\n"
                 )
                 if evaluation_code_at.lower() == "iteration_start":
                     fd_pkg.write("        # record start of iteration\n")
@@ -471,55 +541,7 @@ class TemplateUtils:
                     lspace = "        "
 
                 if api_package_support:
-                    # comments for user to set write code here
-                    fd_pkg.write(
-                        f"\n{lspace}# -----------------------------"
-                        "------------------------------\n"
-                    )
-                    fd_pkg.write(
-                        f"{lspace}# ADD YOUR CODE HERE TO UPDATE "
-                        "RHS, HCOF, BOUND, AND NODELIST\n"
-                    )
-                    fd_pkg.write(
-                        f"{lspace}# -----------------------------"
-                        "------------------------------\n"
-                    )
-                    fd_pkg.write(f"{lspace}# example code...\n")
-                    fd_pkg.write(
-                        f"{lspace}# rhs_list[row_num] = "
-                        "calculated_rhs_val\n"
-                    )
-                    fd_pkg.write(
-                        f"{lspace}# hcof_list[row_num] = "
-                        "calculated_hcof_val\n"
-                    )
-                    fd_pkg.write(
-                        f"{lspace}# cur_nodelist[row_num] = \\\n"
-                        f"{lspace}#    self.mf6_model.usertonode"
-                        f"[self.get_node(cellid)] + 1\n"
-                    )
-                    fd_pkg.write(
-                        f"{lspace}# bound[row_num, 0] = "
-                        "calculated_bound_val\n\n"
-                    )
-
-                    # set hcof, rhs, nodelist, and bound
-                    fd_pkg.write("        # update mf6 variables\n")
-                    fd_pkg.write(
-                        f"{lspace}self.mf6_default_package.set_advanced_var"
-                        f'("nodelist", cur_nodelist)\n'
-                    )
-                    fd_pkg.write(
-                        f"{lspace}self.mf6_default_package.rhs = rhs_list\n"
-                    )
-                    fd_pkg.write(
-                        f"{lspace}self.mf6_default_package.hcof = "
-                        f"hcof_list\n"
-                    )
-                    fd_pkg.write(
-                        f"{lspace}self.mf6_default_package.set_advanced_var"
-                        f'("bound", bound)\n'
-                    )
+                    TemplateUtils._write_api_package_support(fd_pkg, lspace)
 
                 # stress_period_start
                 fd_pkg.write(
@@ -543,40 +565,15 @@ class TemplateUtils:
                 # iteration_start
                 fd_pkg.write(
                     "    def iteration_start(self, kper, kstp, "
-                    "iter, sln_group):\n"
+                    "iter_num, sln_group):\n"
                 )
                 fd_pkg.write(
                     "        super().iteration_start(kper, kstp, "
-                    "iter, sln_group)\n\n"
+                    "iter_num, sln_group)\n\n"
                 )
 
-            # iteration_end
-            fd_pkg.write(
-                "    def iteration_end(self, kper, kstp, "
-                "iter, sln_group):\n"
-            )
-            fd_pkg.write(
-                "        return super().iteration_end(kper, kstp, "
-                "iter, sln_group)\n\n"
-            )
-
-            # time_step_end
-            fd_pkg.write(
-                "    def time_step_end(self, kper, kstp, converged, "
-                "sln_group):\n"
-            )
-            fd_pkg.write(
-                "        super().time_step_end(kper, kstp, "
-                "converged, sln_group)\n\n"
-            )
-
-            # stress_period_end
-            fd_pkg.write(
-                "    def stress_period_end(self, kper, " "sln_group):\n"
-            )
-            fd_pkg.write(
-                "        super().stress_period_end(kper, " "sln_group)\n\n"
-            )
+            # end methods
+            TemplateUtils._write_template_end(fd_pkg)
 
     @staticmethod
     def get_packages_path():
@@ -592,6 +589,56 @@ class TemplateUtils:
         """
         fp_packages_path = TemplateUtils.get_packages_path()
         return join(fp_packages_path, "..", "..", "data", "dfn")
+
+    @staticmethod
+    def _dfn_spvs(fd_dfn, stress_period_vars, model_type, package_name):
+        if stress_period_vars is not None:
+            # write period block with stress period data
+            fd_dfn.write(
+                f"# --------------------- {model_type} "
+                f"{package_name} period ---------------------\n"
+                f"\n"
+            )
+            fd_dfn.write("block period\n")
+            fd_dfn.write("name iper\n")
+            fd_dfn.write("type integer\n")
+            fd_dfn.write("block_variable True\n")
+            fd_dfn.write("in_record true\n")
+            fd_dfn.write("tagged false\n")
+            fd_dfn.write("shape\nvalid\n")
+            fd_dfn.write("reader urword\n")
+            fd_dfn.write("optional false\n")
+            fd_dfn.write("longname stress period number\n")
+            fd_dfn.write("description REPLACE iper {}\n\n")
+
+            # build stress period variables
+            spv_names = []
+            for spv in stress_period_vars.keys():
+                spv_names.append(spv)
+            spv_str = " ".join(spv_names)
+            fd_dfn.write("block period\n")
+            fd_dfn.write("name stress_period_data\n")
+            fd_dfn.write(f"type recarray {spv_str}\n")
+            fd_dfn.write("shape (maxbound)\n")
+            fd_dfn.write("reader urword\n")
+            fd_dfn.write("longname\n")
+            fd_dfn.write("description\n\n")
+
+            # write out stress period variables
+            for name, value in stress_period_vars.items():
+                fd_dfn.write("block period\n")
+                fd_dfn.write(f"name {name}\n")
+                fd_dfn.write(f'type {value["type"]}\n')
+                if "shape" in value:
+                    fd_dfn.write(f'shape ({value["shape"]})\n')
+
+                fd_dfn.write("tagged false\n")
+                fd_dfn.write("in_record true\n")
+                fd_dfn.write("reader urword\n")
+                if "optional" in value:
+                    fd_dfn.write(f'optional {value["optional"]}\n')
+                fd_dfn.write("longname *** ADD LONGNAME HERE ***\n")
+                fd_dfn.write("description *** ADD DESCRIPTION HERE ***\n" "\n")
 
     @staticmethod
     def create_dfn(
@@ -654,7 +701,7 @@ class TemplateUtils:
 
             fd_dfn.write(
                 f"# --------------------- {model_type} {package_name}"
-                f" dimensions ---------------------\n\n"
+                " dimensions ---------------------\n\n"
             )
             if dimensions_list is not None:
                 for dimension in dimensions_list:
@@ -663,7 +710,7 @@ class TemplateUtils:
                     fd_dfn.write("type integer\n")
                     fd_dfn.write("reader urword\n")
                     fd_dfn.write("optional false\n")
-                    fd_dfn.write(f"longname maximum number... \n")
+                    fd_dfn.write("longname maximum number... \n")
                     fd_dfn.write("description maximum number...\n\n")
             else:
                 # write generic dimensions block with maxbound
@@ -718,55 +765,12 @@ class TemplateUtils:
                         "description *** ADD DESCRIPTION HERE ***\n" "\n"
                     )
 
-            if stress_period_vars is not None:
-                # write period block with stress period data
-                fd_dfn.write(
-                    f"# --------------------- {model_type} "
-                    f"{package_name} period ---------------------\n"
-                    f"\n"
-                )
-                fd_dfn.write("block period\n")
-                fd_dfn.write("name iper\n")
-                fd_dfn.write("type integer\n")
-                fd_dfn.write("block_variable True\n")
-                fd_dfn.write("in_record true\n")
-                fd_dfn.write("tagged false\n")
-                fd_dfn.write("shape\nvalid\n")
-                fd_dfn.write("reader urword\n")
-                fd_dfn.write("optional false\n")
-                fd_dfn.write("longname stress period number\n")
-                fd_dfn.write("description REPLACE iper {}\n\n")
-
-                # build stress period variables
-                spv_names = []
-                for spv in stress_period_vars.keys():
-                    spv_names.append(spv)
-                spv_str = " ".join(spv_names)
-                fd_dfn.write("block period\n")
-                fd_dfn.write("name stress_period_data\n")
-                fd_dfn.write(f"type recarray {spv_str}\n")
-                fd_dfn.write("shape (maxbound)\n")
-                fd_dfn.write("reader urword\n")
-                fd_dfn.write("longname\n")
-                fd_dfn.write("description\n\n")
-
-                # write out stress period variables
-                for name, value in stress_period_vars.items():
-                    fd_dfn.write("block period\n")
-                    fd_dfn.write(f"name {name}\n")
-                    fd_dfn.write(f'type {value["type"]}\n')
-                    if "shape" in value:
-                        fd_dfn.write(f'shape ({value["shape"]})\n')
-
-                    fd_dfn.write("tagged false\n")
-                    fd_dfn.write("in_record true\n")
-                    fd_dfn.write("reader urword\n")
-                    if "optional" in value:
-                        fd_dfn.write(f'optional {value["optional"]}\n')
-                    fd_dfn.write("longname *** ADD LONGNAME HERE ***\n")
-                    fd_dfn.write(
-                        "description *** ADD DESCRIPTION HERE ***\n" "\n"
-                    )
+            TemplateUtils._dfn_spvs(
+                fd_dfn,
+                stress_period_vars,
+                model_type,
+                package_name,
+            )
         return new_dfn_file_path
 
 
@@ -838,7 +842,7 @@ def generate_plugin_template(
     print(f'Created new dfn file "{dfn_file}"')
 
     # run createpackages.py
-    print(f"Running createpackages...")
+    print("Running createpackages...")
     createpackages.create_packages()
     in_file_path = join(
         "..", "..", "modflow", f"mf{model_type}fp_{new_package_abbr}.py"
@@ -905,7 +909,7 @@ def create_python_package(
         )
     plugin_class = bmi_plugins[plugin_ext]
     plugin_file_path = abspath(getsourcefile(plugin_class))
-    plugin_file_folder, plugin_file_name = split(plugin_file_path)
+    plugin_file_name = split(plugin_file_path)[1]
 
     package_class = PackageContainer.package_factory(package_type, model_type)
     if package_class is None:
@@ -964,7 +968,7 @@ def create_python_package(
     # create __init__.py file
     with open(join(output_source_folder, "__init__.py"), "w") as fd_init:
         fd_init.write(f"from .{splitext(plugin_file_name)[0]} import ")
-        fd_init.write(f"{plugin_class.__name__}\n")
+        fd_init.write("{plugin_class.__name__}\n")
 
     # command line to create wheel file
     out_full = abspath(output_package_folder)

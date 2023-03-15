@@ -1627,7 +1627,7 @@ class MFSimulation(PackageContainer):
                 silent = True
         # build dictionaries of flopy packages in the simulation
         if debug_mode:
-            fd_debug.write(f"Discovering FloPy plugins...\n")
+            fd_debug.write("Discovering FloPy plugins...\n")
             fd_debug.flush()
         self._flopy_bmi_plugins = {}
         for model in self.model_dict.values():
@@ -1644,7 +1644,7 @@ class MFSimulation(PackageContainer):
                             pg_type = type(self._flopy_bmi_plugins[package])
                             abbr = self._flopy_bmi_plugins[package].abbr
                             fd_debug.write(
-                                f"  Discovered FloPy plugin type "
+                                "  Discovered FloPy plugin type "
                                 f"{pg_type} with abbreviation "
                                 f"{abbr} for package "
                                 f"{package.package_abbr}.\n"
@@ -1668,7 +1668,7 @@ class MFSimulation(PackageContainer):
         else:
             # bmi model run with plug-in callbacks
             if debug_mode:
-                fd_debug.write(f"Initializing FloPy plugins...\n")
+                fd_debug.write("Initializing FloPy plugins...\n")
                 fd_debug.flush()
             model = []
             api_plugin_num = 0
@@ -1682,7 +1682,7 @@ class MFSimulation(PackageContainer):
                 )
                 if debug_mode:
                     fd_debug.write(
-                        f"  Initializing FloPy plugin "
+                        "  Initializing FloPy plugin "
                         f"{flopy_plugin.abbr}.\n"
                     )
                     fd_debug.flush()
@@ -1715,7 +1715,7 @@ class MFSimulation(PackageContainer):
             if api_plugin_num > 0:
                 # write any changes to simulation
                 if debug_mode:
-                    fd_debug.write(f"Writing MODFLOW-6 simulation files.\n")
+                    fd_debug.write("Writing MODFLOW-6 simulation files.\n")
                     fd_debug.flush()
                 self.write_simulation()
 
@@ -1757,7 +1757,7 @@ class MFSimulation(PackageContainer):
 
             # bmi model run with package calls at beginning and end
             if debug_mode:
-                fd_debug.write(f"Calling sim_complete for plugins...\n")
+                fd_debug.write("Calling sim_complete for plugins...\n")
             for package, flopy_plugin in self._flopy_bmi_plugins.items():
                 if debug_mode:
                     fd_debug.write(
@@ -1769,10 +1769,23 @@ class MFSimulation(PackageContainer):
                 self.flopy_plugins[package.name[0]] = flopy_plugin
 
         if debug_mode:
-            fd_debug.write(f"run_simulation ending successfully\n")
+            fd_debug.write("run_simulation ending successfully\n")
             fd_debug.close()
 
         return True
+
+    @staticmethod
+    def _handle_bmi_callback_exception(loc, flopy_plugin, ex):
+        message = (
+            f"Exception occurred in {loc} " f" of plugin {flopy_plugin.abbr}"
+        )
+        print(message)
+        print(str(ex))
+        if flopy_plugin.fd_debug is not None:
+            flopy_plugin.fd_debug.write(f"{message}\n")
+            flopy_plugin.fd_debug.write(str(ex))
+            flopy_plugin.fd_debug.close()
+        raise ex
 
     def _bmi_callback(self, mf6_sim, callback_type):
         import modflowapi
@@ -1792,16 +1805,12 @@ class MFSimulation(PackageContainer):
                 except Exception as ex:
                     # print out exception information so it is not lost
                     message = (
-                        f"Exception occurred in receive_bmi of "
+                        "Exception occurred in receive_bmi of "
                         f"plugin {flopy_plugin.abbr}"
                     )
-                    print(message)
-                    print(str(ex))
-                    if flopy_plugin.fd_debug is not None:
-                        flopy_plugin.fd_debug.write(f"{message}\n")
-                        flopy_plugin.fd_debug.write(str(ex))
-                        flopy_plugin.fd_debug.close()
-                    raise ex
+                    MFSimulation._handle_bmi_callback_exception(
+                        "receive_bmi", flopy_plugin, ex
+                    )
         elif callback_type == modflowapi.Callbacks.stress_period_start:
             # call bmi packages stress_period_start
             for flopy_plugin in self._flopy_bmi_plugins.values():
@@ -1816,18 +1825,9 @@ class MFSimulation(PackageContainer):
                         flopy_plugin.stress_period_start(mf6_sim.kper, mf6_sim)
                     except Exception as ex:
                         # print out exception information so it is not lost
-                        message = (
-                            f"Exception occurred in "
-                            f"stress_period_start of plugin "
-                            f"{flopy_plugin.abbr}"
+                        MFSimulation._handle_bmi_callback_exception(
+                            "stress_period_start", flopy_plugin, ex
                         )
-                        print(message)
-                        print(ex)
-                        if flopy_plugin.fd_debug is not None:
-                            flopy_plugin.fd_debug.write(f"{message}\n")
-                            flopy_plugin.fd_debug.write(str(ex))
-                            flopy_plugin.fd_debug.close()
-                        raise ex
         elif callback_type == modflowapi.Callbacks.timestep_start:
             # call bmi packages time_step_start
             for flopy_plugin in self._flopy_bmi_plugins.values():
@@ -1844,17 +1844,9 @@ class MFSimulation(PackageContainer):
                         )
                     except Exception as ex:
                         # print out exception information so it is not lost
-                        message = (
-                            f"Exception occurred in timestep_start "
-                            f"of plugin {flopy_plugin.abbr}"
+                        MFSimulation._handle_bmi_callback_exception(
+                            "timestep_start", flopy_plugin, ex
                         )
-                        print(message)
-                        print(ex)
-                        if flopy_plugin.fd_debug is not None:
-                            flopy_plugin.fd_debug.write(f"{message}\n")
-                            flopy_plugin.fd_debug.write(str(ex))
-                            flopy_plugin.fd_debug.close()
-                        raise ex
         elif callback_type == modflowapi.Callbacks.iteration_start:
             # call bmi packages iteration_start
             for flopy_plugin in self._flopy_bmi_plugins.values():
@@ -1874,17 +1866,9 @@ class MFSimulation(PackageContainer):
                         )
                     except Exception as ex:
                         # print out exception information so it is not lost
-                        message = (
-                            f"Exception occurred in iteration_start "
-                            f" of plugin {flopy_plugin.abbr}"
+                        MFSimulation._handle_bmi_callback_exception(
+                            "iteration_start", flopy_plugin, ex
                         )
-                        print(message)
-                        print(ex)
-                        if flopy_plugin.fd_debug is not None:
-                            flopy_plugin.fd_debug.write(f"{message}\n")
-                            flopy_plugin.fd_debug.write(str(ex))
-                            flopy_plugin.fd_debug.close()
-                        raise ex
         elif callback_type == modflowapi.Callbacks.iteration_end:
             # call bmi packages iteration_end
             for flopy_plugin in self._flopy_bmi_plugins.values():
@@ -1892,7 +1876,7 @@ class MFSimulation(PackageContainer):
                     try:
                         if flopy_plugin.fd_debug is not None:
                             flopy_plugin.fd_debug.write(
-                                f"Calling iteration_end for plugin "
+                                "Calling iteration_end for plugin "
                                 f"{flopy_plugin.abbr}.\n"
                             )
                             flopy_plugin.fd_debug.flush()
@@ -1903,18 +1887,9 @@ class MFSimulation(PackageContainer):
                             mf6_sim,
                         )
                     except Exception as ex:
-                        # print out exception information so it is not lost
-                        message = (
-                            f"Exception occurred in iteration_end "
-                            f"of plugin {flopy_plugin.abbr}"
+                        MFSimulation._handle_bmi_callback_exception(
+                            "iteration_end", flopy_plugin, ex
                         )
-                        print(message)
-                        print(ex)
-                        if flopy_plugin.fd_debug is not None:
-                            flopy_plugin.fd_debug.write(f"{message}\n")
-                            flopy_plugin.fd_debug.write(str(ex))
-                            flopy_plugin.fd_debug.close()
-                        raise ex
                     mf6_sim.allow_convergence = (
                         mf6_sim.allow_convergence and allow_cvg
                     )
@@ -1929,7 +1904,7 @@ class MFSimulation(PackageContainer):
                     try:
                         if flopy_plugin.fd_debug is not None:
                             flopy_plugin.fd_debug.write(
-                                f"Calling timestep_end for plugin "
+                                "Calling timestep_end for plugin "
                                 f"{flopy_plugin.abbr}.\n"
                             )
                             flopy_plugin.fd_debug.flush()
@@ -1937,18 +1912,9 @@ class MFSimulation(PackageContainer):
                             mf6_sim.kper, mf6_sim.kstp, converged, mf6_sim
                         )
                     except Exception as ex:
-                        # print out exception information so it is not lost
-                        message = (
-                            f"Exception occurred in timestep_end of "
-                            f"plugin {flopy_plugin.abbr}"
+                        MFSimulation._handle_bmi_callback_exception(
+                            "timestep_end", flopy_plugin, ex
                         )
-                        print(message)
-                        print(ex)
-                        if flopy_plugin.fd_debug is not None:
-                            flopy_plugin.fd_debug.write(f"{message}\n")
-                            flopy_plugin.fd_debug.write(str(ex))
-                            flopy_plugin.fd_debug.close()
-                        raise ex
         elif callback_type == modflowapi.Callbacks.stress_period_end:
             # call bmi packages stress_period_start
             for flopy_plugin in self._flopy_bmi_plugins.values():
@@ -1956,24 +1922,15 @@ class MFSimulation(PackageContainer):
                     try:
                         if flopy_plugin.fd_debug is not None:
                             flopy_plugin.fd_debug.write(
-                                f"Calling stress_period_end for plugin "
+                                "Calling stress_period_end for plugin "
                                 f"{flopy_plugin.abbr}.\n"
                             )
                             flopy_plugin.fd_debug.flush()
                         flopy_plugin.stress_period_end(mf6_sim.kper, mf6_sim)
                     except Exception as ex:
-                        # print out exception information so it is not lost
-                        message = (
-                            f"Exception occurred in stress_period_end "
-                            f"plugin {flopy_plugin.abbr}"
+                        MFSimulation._handle_bmi_callback_exception(
+                            "stress_period_end", flopy_plugin, ex
                         )
-                        print(message)
-                        print(ex)
-                        if flopy_plugin.fd_debug is not None:
-                            flopy_plugin.fd_debug.write(f"{message}\n")
-                            flopy_plugin.fd_debug.write(str(ex))
-                            flopy_plugin.fd_debug.close()
-                        raise ex
 
     def _add_platform_dll_ext(self):
         import platform
@@ -1994,8 +1951,6 @@ class MFSimulation(PackageContainer):
         tried = f"{self.dll_name}"
         dll = find_library(self.dll_name)
         if dll is None:
-            import platform
-
             dll_name = self._add_platform_dll_ext()
             if dll_name != "":
                 tried = f"{tried} or {dll_name}"
@@ -2005,7 +1960,6 @@ class MFSimulation(PackageContainer):
                 exe_path = resolve_exe("mf6.exe")
             except FileNotFoundError:
                 exe_path = ""
-            files = ""
             if exe_path != "":
                 exe_dir = os.path.split(exe_path)[0]
                 dll_full_path = os.path.join(exe_dir, self.dll_name)
