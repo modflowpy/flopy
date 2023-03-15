@@ -195,7 +195,8 @@ def test_rvc_plugin(tmpdir):
     rvc_dir = os.path.join(tmpdir, "rvc")
     sim.set_sim_path(rvc_dir)
     sim.write_simulation()
-    sim.run_simulation()
+    success = sim.run_simulation()
+    assert success
 
     budget_fpriv_rvc = model.output.budget().get_data(text="RIV", full3D=False)
 

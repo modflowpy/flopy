@@ -186,11 +186,7 @@ sim.write_simulation()
 # python package to run your simulation through the MODFLOW-6 BMI interface
 # (using the libmf6 dll instead of using the mf6 executable).
 
-success = sim.run_simulation(debug_mode=True)
-if not success:
-    with open("debug_run_sim.txt", "r") as fd:
-        data = fd.read()
-        raise Exception(f"{data}")
+success = sim.run_simulation()
 
 # ## Post-processing model output
 #
