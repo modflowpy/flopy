@@ -454,7 +454,7 @@ def test_map_plot_particle_endpoints(modpath_model):
         c=np.random.rand(625) * -1000,
         cmap="viridis",
     )
-    plt.show()
+    # plt.show()
     assert isinstance(ep, PathCollection)
 
 
