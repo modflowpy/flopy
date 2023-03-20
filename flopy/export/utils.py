@@ -402,8 +402,9 @@ def output_helper(
         elif verbose:
             print(msg)
     times = [t for t in common_times[::stride]]
-    if (isinstance(f, str) or isinstance(f, Path)) and 
-        Path(f).suffix.lower() == ".nc":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".nc":
         f = NetCdf(
             f, ml, time_values=times, logger=logger, forgive=forgive, **kwargs
         )
@@ -612,8 +613,9 @@ def model_export(
     if package_names is None:
         package_names = [pak.name[0] for pak in ml.packagelist]
 
-    if (isinstance(f, str) or isinstance(f, Path)) and 
-        Path(f).suffix.lower() == ".nc":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".nc":
         f = NetCdf(f, ml, **kwargs)
 
     if (isinstance(f, str) or isinstance(f, Path)) and Path(
@@ -705,8 +707,9 @@ def package_export(
     """
     assert isinstance(pak, PackageInterface)
 
-    if (isinstance(f, str) or isinstance(f, Path)) and 
-        Path(f).suffix.lower() == ".nc":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".nc":
         f = NetCdf(f, pak.parent, **kwargs)
 
     if (isinstance(f, str) or isinstance(f, Path)) and Path(
@@ -818,8 +821,9 @@ def generic_array_export(
             flopy model object
 
     """
-    if (isinstance(f, str) or isinstance(f, Path)) and 
-        Path(f).suffix.lower() == ".nc":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".nc":
         assert "model" in kwargs.keys(), (
             "creating a new netCDF using generic_array_helper requires a "
             "'model' kwarg"
@@ -906,8 +910,9 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
     if "modelgrid" in kwargs:
         modelgrid = kwargs.pop("modelgrid")
 
-    if (isinstance(f, str) or isinstance(f, Path)) and 
-        Path(f).suffix.lower() == ".nc":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".nc":
         f = NetCdf(f, mfl.model, **kwargs)
 
     if (isinstance(f, str) or isinstance(f, Path)) and Path(
@@ -1062,8 +1067,9 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
     if "modelgrid" in kwargs:
         modelgrid = kwargs.pop("modelgrid")
 
-    if (isinstance(f, str) or isinstance(f, Path)) and 
-        Path(f).suffix.lower() == ".nc":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".nc":
         f = NetCdf(f, t2d.model, **kwargs)
 
     if (isinstance(f, str) or isinstance(f, Path)) and Path(
@@ -1218,8 +1224,9 @@ def array3d_export(f: Union[str, os.PathLike], u3d, fmt=None, **kwargs):
     if "modelgrid" in kwargs:
         modelgrid = kwargs.pop("modelgrid")
 
-    if (isinstance(f, str) or isinstance(f, Path)) and 
-        Path(f).suffix.lower() == ".nc":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".nc":
         f = NetCdf(f, u3d.model, **kwargs)
 
     if (isinstance(f, str) or isinstance(f, Path)) and Path(
@@ -1395,8 +1402,9 @@ def array2d_export(
     if "modelgrid" in kwargs:
         modelgrid = kwargs.pop("modelgrid")
 
-    if (isinstance(f, str) or isinstance(f, Path)) and 
-        Path(f).suffix.lower() == ".nc":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".nc":
         f = NetCdf(f, u2d.model, **kwargs)
 
     if (isinstance(f, str) or isinstance(f, Path)) and Path(
@@ -1408,8 +1416,9 @@ def array2d_export(
         )
         return
 
-    elif (isinstance(f, str) or isinstance(f, Path)) and 
-        Path(f).suffix.lower() == ".asc":
+    elif (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".asc":
         export_array(modelgrid, f, u2d.array, **kwargs)
         return
 
@@ -1726,7 +1735,9 @@ def export_contours(
     return
 
 
-def export_contourf(filename, contours, fieldname="level", **kwargs):
+def export_contourf(
+    filename, contours, fieldname="level", verbose=False, **kwargs
+):
     """
     Write matplotlib filled contours to shapefile.
 
@@ -1740,7 +1751,8 @@ def export_contourf(filename, contours, fieldname="level", **kwargs):
         Name of shapefile attribute field to contain the contour level.  The
         fieldname column in the attribute table will contain the lower end of
         the range represented by the polygon.  Default is 'level'.
-
+    verbose : bool, optional, default False
+        whether to show verbose output
     **kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
     Returns
