@@ -74,7 +74,6 @@ optional = [
 ]
 
 api = [
-    "xmipy @ git+https://git@github.com/Deltares/xmipy@develop",
     "modflowapi @ git+https://git@github.com/MODFLOW-USGS/modflowapi@develop"
 ]
 
