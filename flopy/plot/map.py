@@ -6,9 +6,11 @@ import numpy as np
 import pandas as pd
 from matplotlib.collections import LineCollection, PathCollection
 from matplotlib.path import Path
+from numpy.lib.recfunctions import stack_arrays
 
 from ..utils import geometry
 from . import plotutil
+from .plotutil import to_mp7_endpoints, to_mp7_pathlines
 
 warnings.simplefilter("always", PendingDeprecationWarning)
 
@@ -700,7 +702,8 @@ class PlotMapView:
 
     def plot_pathline(self, pl, travel_time=None, **kwargs):
         """
-        Plot MODPATH pathlines.
+        Plot particle pathlines. Compatible with MODFLOW 6 PRT particle track
+        data format, or MODPATH 6 or 7 pathline data format.
 
         Parameters
         ----------
@@ -708,11 +711,18 @@ class PlotMapView:
             Particle pathline data. If a list of recarrays or dataframes,
             each must contain the path of only a single particle. If just
             one recarray or dataframe, it should contain the paths of all
-            particles. Pathline data returned from PathlineFile.get_data()
-            or get_alldata() can be passed directly as this argument. Data
-            columns should be 'x', 'y', 'z', 'time', 'k', and 'particleid'
-            at minimum. Additional columns are ignored. The 'particleid'
-            column must be unique to each particle path.
+            particles. The flopy.utils.modpathfile.PathlineFile.get_data()
+            or get_alldata() return value may be passed directly as this
+            argument.
+
+            For MODPATH 6 or 7 pathlines, columns must include 'x', 'y', 'z',
+            'time', 'k', and 'particleid'. Additional columns are ignored.
+
+            For MODFLOW 6 PRT pathlines, columns must include 'x', 'y', 'z',
+            't', 'trelease', 'imdl', 'iprp', 'irpt', and 'ilay'. Additional
+            columns are ignored. Note that MODFLOW 6 PRT does not assign to
+            particles a unique ID, but infers particle identity from 'imdl',
+            'iprp', 'irpt', and 'trelease' combos (i.e. via composite key).
         travel_time : float or str
             Travel time selection. If a float, then pathlines with total
             time less than or equal to the given value are plotted. If a
@@ -733,19 +743,29 @@ class PlotMapView:
 
         from matplotlib.collections import LineCollection
 
-        # make sure pathlines is a list
+        # make sure pl is a list
         if not isinstance(pl, list):
-            pids = np.unique(pl["particleid"])
-            if len(pids) > 1:
-                pl = [pl[pl["particleid"] == pid] for pid in pids]
-            else:
-                pl = [pl]
+            if not isinstance(pl, (np.ndarray, pd.DataFrame)):
+                raise TypeError(
+                    "Pathline data must be a list of recarrays or dataframes, "
+                    f"or a single recarray or dataframe, got {type(pl)}"
+                )
+            pl = [pl]
 
+        # convert prt to mp7 format
         pl = [
-            p.to_records(index=False) if isinstance(p, pd.DataFrame) else p
+            to_mp7_pathlines(
+                p.to_records(index=False) if isinstance(p, pd.DataFrame) else p
+            )
             for p in pl
         ]
 
+        # merge pathlines then split on particleid
+        pls = stack_arrays(pl, asrecarray=True, usemask=False)
+        pids = np.unique(pls["particleid"])
+        pl = [pls[pls["particleid"] == pid] for pid in pids]
+
+        # configure layer
         if "layer" in kwargs:
             kon = kwargs.pop("layer")
             if isinstance(kon, bytes):
@@ -758,19 +778,21 @@ class PlotMapView:
         else:
             kon = self.layer
 
+        # configure plot settings
         marker = kwargs.pop("marker", None)
         markersize = kwargs.pop("markersize", None)
         markersize = kwargs.pop("ms", markersize)
         markercolor = kwargs.pop("markercolor", None)
         markerevery = kwargs.pop("markerevery", 1)
         ax = kwargs.pop("ax", self.ax)
-
         if "colors" not in kwargs:
             kwargs["colors"] = "0.5"
 
+        # compose pathlines
         linecol = []
         markers = []
         for p in pl:
+            # filter by travel time
             tp = plotutil.filter_modpath_by_travel_time(p, travel_time)
 
             # transform data!
@@ -781,8 +803,10 @@ class PlotMapView:
                 self.mg.yoffset,
                 self.mg.angrot_radians,
             )
+
             # build polyline array
             arr = np.vstack((x0r, y0r)).T
+
             # select based on layer
             if kon >= 0:
                 kk = p["k"].copy().reshape(p.shape[0], 1)
@@ -790,7 +814,8 @@ class PlotMapView:
                 arr = np.ma.masked_where((kk != kon), arr)
             else:
                 arr = np.ma.asarray(arr)
-            # append line to linecol if there is some unmasked segment
+
+            # append pathline if there are any unmasked segments
             if not arr.mask.all():
                 linecol.append(arr)
                 if not arr.mask.all():
@@ -799,6 +824,7 @@ class PlotMapView:
                         for xy in arr[::markerevery]:
                             if not np.all(xy.mask):
                                 markers.append(xy)
+
         # create line collection
         lc = None
         if len(linecol) > 0:
@@ -815,13 +841,15 @@ class PlotMapView:
                     ms=markersize,
                 )
 
+        # set axis limits
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
+
         return lc
 
     def plot_timeseries(self, ts, travel_time=None, **kwargs):
         """
-        Plot MODPATH timeseries.
+        Plot MODPATH 6 or 7 timeseries. Incompatible with MODFLOW 6 PRT.
 
         Parameters
         ----------
@@ -865,13 +893,20 @@ class PlotMapView:
         **kwargs,
     ):
         """
-        Plot MODPATH endpoints.
+        Plot particle endpoints. Compatible with MODFLOW 6 PRT particle
+        track data format, or MODPATH 6 or 7 endpoint data format.
 
         Parameters
         ----------
         ep : recarray or dataframe
             A numpy recarray with the endpoint particle data from the
-            MODPATH endpoint file
+            MODPATH endpoint file.
+
+            For MODFLOW 6 PRT pathlines, columns must include 'x', 'y', 'z',
+            't', 'trelease', 'imdl', 'iprp', 'irpt', and 'ilay'. Additional
+            columns are ignored. Note that MODFLOW 6 PRT does not assign to
+            particles a unique ID, but infers particle identity from 'imdl',
+            'iprp', 'irpt', and 'trelease' combos (i.e. via composite key).
         direction : str
             String defining if starting or ending particle locations should be
             considered. (default is 'ending')
@@ -902,6 +937,17 @@ class PlotMapView:
 
         """
 
+        # convert ep to recarray if needed
+        if isinstance(ep, pd.DataFrame):
+            ep = ep.to_records(index=False)
+
+        # convert ep from prt to mp7 format if needed
+        if "t" in ep.dtype.names:
+            from .plotutil import to_mp7_endpoints
+
+            ep = to_mp7_endpoints(ep)
+
+        # parse selection options
         ax = kwargs.pop("ax", self.ax)
         tep, _, xp, yp = plotutil.parse_modpath_selection_options(
             ep, direction, selection, selection_direction

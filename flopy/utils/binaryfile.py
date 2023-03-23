@@ -11,7 +11,7 @@ important classes that can be accessed by the user.
 import os
 import warnings
 from pathlib import Path
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 import numpy as np
 
@@ -1577,7 +1577,7 @@ class CellBudgetFile:
         text=None,
         paknam=None,
         full3D=False,
-    ):
+    ) -> Union[List, np.ndarray]:
         """
         Get data from the binary budget file.
 
