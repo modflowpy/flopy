@@ -1,6 +1,7 @@
 import copy
 import os
 from itertools import groupby
+from typing import Union
 
 import numpy as np
 
@@ -59,7 +60,9 @@ class ZoneBudget:
 
         if isinstance(cbc_file, CellBudgetFile):
             self.cbc = cbc_file
-        elif isinstance(cbc_file, str) and os.path.isfile(cbc_file):
+        elif isinstance(cbc_file, (str, os.PathLike)) and os.path.isfile(
+            cbc_file
+        ):
             self.cbc = CellBudgetFile(cbc_file)
         else:
             raise Exception(f"Cannot load cell budget file: {cbc_file}.")
@@ -2090,7 +2093,7 @@ class ZoneBudget6:
             foo.write("END ZONEBUDGET\n")
 
     @staticmethod
-    def load(nam_file, model_ws="."):
+    def load(nam_file, model_ws: Union[str, os.PathLike] = os.curdir):
         """
         Method to load a zonebudget model from namefile
 
@@ -2098,7 +2101,7 @@ class ZoneBudget6:
         ----------
         nam_file : str
             zonebudget name file
-        model_ws : str
+        model_ws : str or PathLike, default "."
             model workspace path
 
         Returns
@@ -2128,7 +2131,8 @@ class ZoneBudget6:
 
         Parameters
         ----------
-        f : str or flopy.export.netcdf.NetCdf object
+        f : str, PathLike, or flopy.export.netcdf.NetCdf object
+            The file to export to
         ml : flopy.modflow.Modflow or flopy.mf6.ModflowGwf object
         **kwargs :
             logger : flopy.export.netcdf.Logger instance
@@ -2142,7 +2146,8 @@ class ZoneBudget6:
         """
         from ..export.utils import output_helper
 
-        if isinstance(f, str):
+        if isinstance(f, (str, os.PathLike)):
+            f = str(f)
             if not f.endswith(".nc"):
                 raise AssertionError(
                     "File extension must end with .nc to "
@@ -2248,14 +2253,14 @@ class ZoneFile6:
             foo.write("\nEND GRIDDATA\n")
 
     @staticmethod
-    def load(f, model):
+    def load(f: Union[str, os.PathLike], model):
         """
         Method to load a Zone file for zonebudget 6.
 
         Parameter
         ---------
-        f : str
-            zone file name
+        f : str or PathLike
+            zone file path
         model : ZoneBudget6 object
             zonebudget 6 model object
 

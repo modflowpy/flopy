@@ -45,10 +45,10 @@ import flopy
 
 # ### Discretization
 #
-# We start by creating our flopy model object.
+# We start by creating a temporary workspace, then a flopy model object.
 
 temp_dir = TemporaryDirectory()
-workspace = temp_dir.name
+workspace = Path(temp_dir.name)
 name = "tutorial01_mf"
 mf = flopy.modflow.Modflow(name, exe_name="mf2005", model_ws=workspace)
 
@@ -154,7 +154,7 @@ import flopy.utils.binaryfile as bf
 
 # Extract the heads
 
-hds = bf.HeadFile(str(Path(workspace) / f"{name}.hds"))
+hds = bf.HeadFile(Path(workspace) / f"{name}.hds")
 head = hds.get_data(totim=1.0)
 
 # Contour the heads
@@ -170,13 +170,13 @@ ax.contour(head[0, :, :], levels=np.arange(1, 10, 1), extent=extent)
 # plot head contours, and plot vectors:
 
 # Extract the heads
-hds = bf.HeadFile(str(Path(workspace) / f"{name}.hds"))
+hds = bf.HeadFile(Path(workspace) / f"{name}.hds")
 times = hds.get_times()
 head = hds.get_data(totim=times[-1])
 
 # Extract the cell-by-cell flows
 
-cbb = bf.CellBudgetFile(str(Path(workspace) / f"{name}.cbc"))
+cbb = bf.CellBudgetFile(Path(workspace) / f"{name}.cbc")
 kstpkper_list = cbb.get_kstpkper()
 frf = cbb.get_data(text="FLOW RIGHT FACE", totim=times[-1])[0]
 fff = cbb.get_data(text="FLOW FRONT FACE", totim=times[-1])[0]
@@ -193,6 +193,8 @@ qm = modelmap.plot_ibound()
 lc = modelmap.plot_grid()
 cs = modelmap.contour_array(head, levels=np.linspace(0, 10, 11))
 quiver = modelmap.plot_vector(qx, qy)
+
+# Clean up the temporary workspace
 
 try:
     temp_dir.cleanup()

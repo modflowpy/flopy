@@ -1,5 +1,3 @@
-from os.path import join
-
 import numpy as np
 
 from flopy.mf6 import (
@@ -81,7 +79,7 @@ class Mp7Cases:
         MODPATH 7 example 1 for MODFLOW 6
         """
 
-        ws = join(str(function_tmpdir), "mf6")
+        ws = function_tmpdir / "mf6"
         nm = "ex01_mf6"
 
         # Create the Flopy simulation object
@@ -218,7 +216,7 @@ class Mp7Cases:
         MODPATH 7 example 1 for MODFLOW-2005
         """
 
-        ws = join(str(function_tmpdir), "mf2005")
+        ws = function_tmpdir / "mf2005"
         nm = "ex01_mf2005"
         iu_cbc = 130
         m = Modflow(nm, model_ws=ws, exe_name="mf2005")

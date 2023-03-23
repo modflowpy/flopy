@@ -31,19 +31,19 @@ def test_load(function_tmpdir, example_data_path, mnw2_examples_path):
         verbose=True,
         forgive=False,
     )
-    ws = str(function_tmpdir)
+    ws = function_tmpdir
     m.change_model_ws(ws)
     assert m.has_package("MNW2")
     assert m.has_package("MNWI")
 
     # load a real mnw2 package from a steady state model (multiple wells)
     m2 = Modflow("br", model_ws=ws)
-    path = str(mnw2_examples_path)
-    mnw2_2 = ModflowMnw2.load(f"{path}/BadRiver_cal.mnw2", m2)
-    mnw2_2.write_file(os.path.join(ws, "brtest.mnw2"))
+    path = mnw2_examples_path
+    mnw2_2 = ModflowMnw2.load(path / "BadRiver_cal.mnw2", m2)
+    mnw2_2.write_file(ws / "brtest.mnw2")
 
     m3 = Modflow("br", model_ws=ws)
-    mnw2_3 = ModflowMnw2.load(f"{ws}/brtest.mnw2", m3)
+    mnw2_3 = ModflowMnw2.load(ws / "brtest.mnw2", m3)
     mnw2_2.node_data.sort(order="wellid")
     mnw2_3.node_data.sort(order="wellid")
     assert np.array_equal(mnw2_2.node_data, mnw2_3.node_data)
@@ -67,7 +67,7 @@ def test_mnw1_load_write(function_tmpdir, mnw1_path):
         verbose=True,
         forgive=False,
     )
-    ws = str(function_tmpdir)
+    ws = function_tmpdir
     assert m.has_package("MNW1")
     assert m.mnw1.mxmnw == 120
     for i in range(3):
@@ -75,11 +75,11 @@ def test_mnw1_load_write(function_tmpdir, mnw1_path):
         assert len(np.unique(m.mnw1.stress_period_data[i]["mnw_no"])) == 15
         assert len(set(m.mnw1.stress_period_data[i]["label"])) == 4
 
-    shutil.copy(f"{mnw1_path}/mnw1.nam", ws)
-    shutil.copy(f"{mnw1_path}/mnw1.dis", ws)
-    shutil.copy(f"{mnw1_path}/mnw1.bas", ws)
+    shutil.copy(mnw1_path / "mnw1.nam", ws)
+    shutil.copy(mnw1_path / "mnw1.dis", ws)
+    shutil.copy(mnw1_path / "mnw1.bas", ws)
 
-    m.mnw1.fn_path = f"{ws}/mnw1.mnw"
+    m.mnw1.fn_path = ws / "mnw1.mnw"
     m.mnw1.write_file()
 
     m2 = Modflow.load(
@@ -95,7 +95,7 @@ def test_mnw1_load_write(function_tmpdir, mnw1_path):
 
 def test_make_package(function_tmpdir):
     """t027 test make MNW2 Package"""
-    ws = str(function_tmpdir)
+    ws = function_tmpdir
     m4 = Modflow("mnw2example", model_ws=ws)
     dis = ModflowDis(nrow=5, ncol=5, nlay=3, nper=3, top=10, botm=0, model=m4)
 
@@ -302,7 +302,7 @@ def test_mnw2_create_file(function_tmpdir):
     import pandas as pd
 
     mf = Modflow("test_mfmnw2", exe_name="mf2005")
-    ws = str(function_tmpdir)
+    ws = function_tmpdir
     wellids = [1, 2]
     nlayers = [2, 4]
     stress_period_data = pd.DataFrame([[0, 1]], columns=["per", "qdes"])
@@ -360,7 +360,7 @@ def test_mnw2_create_file(function_tmpdir):
     if len(mnw2.node_data) != 6:
         raise AssertionError("Node data not properly set")
 
-    mnw2.write_file(os.path.join(ws, "ndata.mnw2"))
+    mnw2.write_file(ws / "ndata.mnw2")
 
 
 @requires_pkg("netCDF4")
@@ -369,7 +369,7 @@ def test_export(function_tmpdir, mnw2_examples_path):
     """t027 test export of MNW2 Package to netcdf files"""
     import netCDF4
 
-    ws = str(function_tmpdir)
+    ws = function_tmpdir
     m = Modflow.load(
         "MNW2-Fig28.nam",
         model_ws=mnw2_examples_path,
@@ -379,13 +379,19 @@ def test_export(function_tmpdir, mnw2_examples_path):
     )
 
     # netDF4 tests
+    # first with path as string
     fcw = m.wel.export(os.path.join(ws, "MNW2-Fig28_well.nc"))
     fcw.write()
-    fpth = os.path.join(ws, "MNW2-Fig28.nc")
+
+    # with Path
+    fcw = m.wel.export(ws / "MNW2-Fig28_well.nc")
+    fcw.write()
+
+    fpth = ws / "MNW2-Fig28.nc"
     # test context statement
     with m.mnw2.export(fpth):
         pass
-    fpth = os.path.join(ws, "MNW2-Fig28.nc")
+    fpth = ws / "MNW2-Fig28.nc"
     nc = netCDF4.Dataset(fpth)
     assert np.array_equal(
         nc.variables["mnw2_qdes"][:, 0, 29, 40],
@@ -426,8 +432,8 @@ EB-35 -534.72
 eb-36 -534.72
 
 """
-    ws = str(function_tmpdir)
-    fpth = os.path.join(ws, "mymnw2.mnw2")
+    ws = function_tmpdir
+    fpth = ws / "mymnw2.mnw2"
     f = open(fpth, "w")
     f.write(mnw2str)
     f.close()
@@ -443,7 +449,7 @@ constant -3 bottom of layer 3
  1.  1 1. Tr    PERLEN NSTP TSMULT Ss/tr
 """
 
-    fpth = os.path.join(ws, "mymnw2.dis")
+    fpth = ws / "mymnw2.dis"
     f = open(fpth, "w")
     f.write(disstr)
     f.close()
@@ -452,7 +458,7 @@ constant -3 bottom of layer 3
 dis  102 mymnw2.dis
 mnw2 103 mymnw2.mnw2"""
 
-    fpth = os.path.join(ws, "mymnw2.nam")
+    fpth = ws / "mymnw2.nam"
     f = open(fpth, "w")
     f.write(namstr)
     f.close()

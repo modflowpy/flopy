@@ -10,7 +10,7 @@ MODFLOW Guide
 import os
 from os import PathLike
 from pathlib import Path, PurePosixPath, PureWindowsPath
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 
 class NamData:
@@ -272,14 +272,17 @@ def attribs_from_namfile_header(namefile):
 
 
 def get_entries_from_namefile(
-    path: PathLike, ftype: str = None, unit: int = None, extension: str = None
+    path: Union[str, PathLike],
+    ftype: str = None,
+    unit: int = None,
+    extension: str = None,
 ) -> List[Tuple]:
     """Get entries from an MF6 namefile. Can select using FTYPE, UNIT, or file extension.
     This function only supports MF6 namefiles.
 
     Parameters
     ----------
-    path : str
+    path : str or PathLike
         path to a MODFLOW-based model name file
     ftype : str
         package type

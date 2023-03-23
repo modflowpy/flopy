@@ -9,6 +9,7 @@ from collections.abc import Iterable
 from enum import Enum
 from pathlib import Path
 from shutil import copyfile
+from typing import Union
 
 
 # internal handled exceptions
@@ -190,7 +191,7 @@ class MFFileMgmt:
     Parameters
     ----------
 
-    path : str
+    path : str or PathLike
         Path on disk to the simulation
 
     Attributes
@@ -201,7 +202,7 @@ class MFFileMgmt:
 
     """
 
-    def __init__(self, path, mfsim=None):
+    def __init__(self, path: Union[str, os.PathLike], mfsim=None):
         self.simulation = mfsim
         self._sim_path = ""
         self.set_sim_path(path, True)
@@ -391,23 +392,23 @@ class MFFileMgmt:
             new_file_path = MFFilePath(file_path, model_name)
             self.existing_file_dict[file_path] = new_file_path
 
-    def set_sim_path(self, path, internal_use=False):
+    def set_sim_path(self, path: Union[str, os.PathLike], internal_use=False):
         """
         Set the file path to the simulation files.  Internal use only,
         call MFSimulation's set_sim_path method instead.
 
         Parameters
         ----------
-        path : str
-            Full path or relative path from working directory to
-            simulation folder
+        path : str or PathLike
+            Path to simulation folder
 
         Returns
         -------
+        None
 
         Examples
         --------
-        self.simulation_data.mfdata.set_sim_path('sim_folder')
+        self.simulation_data.mfdata.set_sim_path('path/to/workspace')
         """
         if not internal_use:
             print(
@@ -417,9 +418,8 @@ class MFFileMgmt:
             if self.simulation is not None:
                 self.simulation.set_sim_path(path)
                 return
-        # ensure that _sim_path is absolute
-        path = Path(path)
-        self._sim_path = path.absolute()
+        # expand tildes and ensure _sim_path is absolute
+        self._sim_path = Path(path).expanduser().absolute()
 
     def resolve_path(
         self, path, model_name, last_loaded_path=False, move_abs_paths=False
@@ -427,9 +427,9 @@ class MFFileMgmt:
         """Resolve a simulation or model path.  For internal FloPy use, not
         intended for end user."""
         if isinstance(path, MFFilePath):
-            file_path = path.file_path
+            file_path = str(path.file_path)
         else:
-            file_path = path
+            file_path = str(path)
 
         # remove quote characters from file path
         file_path = file_path.replace("'", "")

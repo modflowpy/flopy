@@ -50,6 +50,20 @@ def parameters_model_path(example_data_path):
 )
 def test_modflow_load(namfile, example_data_path):
     mpath = Path(example_data_path / namfile).parent
+
+    # Paths
+    model = Modflow.load(
+        mpath / namfile.name,
+        verbose=True,
+        model_ws=mpath,
+        check=False,
+    )
+
+    assert isinstance(model, Modflow)
+    assert not model.load_fail
+    assert model.model_ws == str(mpath)
+
+    # string paths
     model = Modflow.load(
         str(mpath / namfile.name),
         verbose=True,
@@ -59,6 +73,7 @@ def test_modflow_load(namfile, example_data_path):
 
     assert isinstance(model, Modflow)
     assert not model.load_fail
+    assert model.model_ws == str(mpath)
 
 
 def test_modflow_load_when_nam_dne():
@@ -230,7 +245,7 @@ def test_free_format_flag(function_tmpdir):
 
 
 def test_sr(function_tmpdir):
-    ws = str(function_tmpdir)
+    ws = function_tmpdir
     m = Modflow(
         "test",
         model_ws=ws,
@@ -257,7 +272,7 @@ def test_sr(function_tmpdir):
 
 def test_mf6_update_grid(example_data_path):
     ml_path = example_data_path / "mf6" / "test001a_Tharmonic"
-    sim = MFSimulation.load(sim_ws=str(ml_path))
+    sim = MFSimulation.load(sim_ws=ml_path)
     gwf = sim.get_model("flow15")
     mg = gwf.modelgrid
     gwf.dis.top = 12
@@ -268,7 +283,7 @@ def test_mf6_update_grid(example_data_path):
 
     # disv
     ml_path = example_data_path / "mf6" / "test003_gwfs_disv"
-    sim = MFSimulation.load(sim_ws=str(ml_path))
+    sim = MFSimulation.load(sim_ws=ml_path)
     gwf = sim.get_model("gwf_1")
     mg = gwf.modelgrid
     gwf.disv.top = 6.12
@@ -279,7 +294,7 @@ def test_mf6_update_grid(example_data_path):
 
     # disu
     ml_path = example_data_path / "mf6" / "test006_gwf3"
-    sim = MFSimulation.load(sim_ws=str(ml_path))
+    sim = MFSimulation.load(sim_ws=ml_path)
     gwf = sim.get_model("gwf_1")
     mg = gwf.modelgrid
     gwf.disu.top = 101
@@ -292,7 +307,7 @@ def test_mf6_update_grid(example_data_path):
 def test_load_twri_grid(example_data_path):
     mpath = example_data_path / "mf2005_test"
     name = "twri.nam"
-    ml = Modflow.load(name, model_ws=str(mpath), check=False)
+    ml = Modflow.load(name, model_ws=mpath, check=False)
     mg = ml.modelgrid
     assert isinstance(
         mg, StructuredGrid
@@ -420,7 +435,7 @@ def test_namfile_readwrite(function_tmpdir, example_data_path):
     nlay, nrow, ncol = 1, 30, 5
     delr, delc = 250, 500
     xll, yll = 272300, 5086000
-    ws = str(function_tmpdir)
+    ws = function_tmpdir
     m = Modflow(modelname="junk", model_ws=ws)
     dis = ModflowDis(m, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr, delc=delc)
     m.modelgrid = StructuredGrid(
@@ -452,7 +467,7 @@ def test_namfile_readwrite(function_tmpdir, example_data_path):
 
     ml = Modflow.load(
         "freyberg.nam",
-        model_ws=str(example_data_path / "freyberg_multilayer_transient"),
+        model_ws=example_data_path / "freyberg_multilayer_transient",
         verbose=False,
         check=False,
         exe_name="mfnwt",
@@ -481,7 +496,7 @@ def test_read_usgs_model_reference(function_tmpdir, model_reference_path):
             else:
                 continue
 
-    ws = str(function_tmpdir)
+    ws = function_tmpdir
     m = Modflow(modelname="junk", model_ws=ws)
     # feet and days
     dis = ModflowDis(
@@ -552,7 +567,7 @@ def parameters_model_namfiles():
 def test_mf2005_test_models_load(example_data_path, namfile):
     assert not Modflow.load(
         namfile,
-        model_ws=str(example_data_path / "mf2005_test"),
+        model_ws=example_data_path / "mf2005_test",
         version="mf2005",
         verbose=True,
     ).load_fail
@@ -563,7 +578,7 @@ def test_mf2005_test_models_load(example_data_path, namfile):
 def test_parameters_models_load(parameters_model_path, namfile):
     assert not Modflow.load(
         namfile,
-        model_ws=str(parameters_model_path),
+        model_ws=parameters_model_path,
         version="mf2005",
         verbose=True,
     ).load_fail
@@ -572,8 +587,8 @@ def test_parameters_models_load(parameters_model_path, namfile):
 @pytest.mark.parametrize("namfile", mf2005_model_namfiles())
 def test_mf2005_test_models_loadonly(example_data_path, namfile):
     assert not Modflow.load(
-        str(namfile),
-        model_ws=str(example_data_path / "mf2005_test"),
+        namfile,
+        model_ws=example_data_path / "mf2005_test",
         version="mf2005",
         verbose=True,
         load_only=["bas6"],
@@ -587,7 +602,7 @@ def test_write_irch(function_tmpdir, example_data_path):
     nam_file = "freyberg.nam"
     m = Modflow.load(
         nam_file,
-        model_ws=str(mpath),
+        model_ws=mpath,
         check=False,
         forgive=False,
         verbose=True,
@@ -606,12 +621,12 @@ def test_write_irch(function_tmpdir, example_data_path):
         d = arr - aarr
         assert np.abs(d).sum() == 0
 
-    m.change_model_ws(str(function_tmpdir))
+    m.change_model_ws(function_tmpdir)
     m.write_input()
 
     mm = Modflow.load(
         nam_file,
-        model_ws=str(function_tmpdir),
+        model_ws=function_tmpdir,
         forgive=False,
         verbose=True,
         check=False,
@@ -627,7 +642,7 @@ def test_mflist_external(function_tmpdir):
     ext = function_tmpdir / "ws"
     ml = Modflow(
         "mflist_test",
-        model_ws=str(function_tmpdir),
+        model_ws=function_tmpdir,
         external_path=ext.name,
     )
 
@@ -637,12 +652,12 @@ def test_mflist_external(function_tmpdir):
         1: [[0, 0, 0, -2], [1, 1, 1, -1]],
     }
     wel = ModflowWel(ml, stress_period_data=wel_data)
-    ml.change_model_ws(str(ext))
+    ml.change_model_ws(ext)
     ml.write_input()
 
     ml1 = Modflow.load(
         "mflist_test.nam",
-        model_ws=str(ext),
+        model_ws=ext,
         verbose=True,
         forgive=False,
         check=False,
@@ -684,7 +699,7 @@ def test_mflist_external(function_tmpdir):
 def test_single_mflist_entry_load(function_tmpdir, example_data_path):
     m = Modflow.load(
         "freyberg.nam",
-        model_ws=str(example_data_path / "freyberg"),
+        model_ws=example_data_path / "freyberg",
         load_only=["WEL"],
         check=False,
     )
@@ -692,12 +707,12 @@ def test_single_mflist_entry_load(function_tmpdir, example_data_path):
     spd = w.stress_period_data
     ModflowWel(m, stress_period_data={0: [0, 0, 0, 0.0]})
     m.external_path = "external"
-    m.change_model_ws(str(function_tmpdir), reset_external=True)
+    m.change_model_ws(function_tmpdir, reset_external=True)
     m.write_input()
 
     mm = Modflow.load(
         "freyberg.nam",
-        model_ws=str(function_tmpdir),
+        model_ws=function_tmpdir,
         forgive=False,
     )
     assert mm.wel.stress_period_data
@@ -729,27 +744,41 @@ def test_mflist_add_record():
 
 
 __mf2005_test_path = get_example_data_path() / "mf2005_test"
+__mf2005_namfiles = [
+    Path(__mf2005_test_path) / f
+    for f in __mf2005_test_path.rglob("*")
+    if f.suffix == ".nam"
+]
 
 
-@pytest.mark.parametrize(
-    "namfile",
-    [
-        os.path.join(__mf2005_test_path, f)
-        for f in os.listdir(__mf2005_test_path)
-        if f.endswith(".nam")
-    ],
-)
+@pytest.mark.parametrize("namfile", __mf2005_namfiles)
 def test_checker_on_load(namfile):
     # load all of the models in the mf2005_test folder
     # model level checks are performed by default on load()
+
+    # with pathlib.Path
+    model = Modflow.load(namfile, model_ws=namfile.parent)
+    assert isinstance(model, Modflow), "Not a Modflow instance"
+
+    # with str paths
     f = os.path.basename(namfile)
     d = os.path.dirname(namfile)
-    m = Modflow.load(f, model_ws=d)
-    assert isinstance(m, Modflow), "Not a Modflow instance"
+    model = Modflow.load(f, model_ws=d)
+    assert isinstance(model, Modflow), "Not a Modflow instance"
+
+
+@pytest.mark.parametrize("str_path", [True, False])
+def test_manual_check(function_tmpdir, str_path):
+    namfile_path = __mf2005_namfiles[0]
+    summary_path = function_tmpdir / "summary"
+    model = Modflow.load(namfile_path, model_ws=namfile_path.parent)
+    model.change_model_ws(function_tmpdir)
+    model.check(str(summary_path) if str_path else summary_path, verbose=True)
+    assert summary_path.is_file()
 
 
 def test_bcs_check(function_tmpdir):
-    mf = Modflow(version="mf2005", model_ws=str(function_tmpdir))
+    mf = Modflow(version="mf2005", model_ws=function_tmpdir)
 
     # test check for isolated cells
     dis = ModflowDis(mf, nlay=2, nrow=3, ncol=3, top=100, botm=95)
@@ -785,11 +814,31 @@ def test_bcs_check(function_tmpdir):
     assert np.array_equal(chk.summary_array["j"], np.array([0, 1, 1, 1, 1]))
 
 
-def test_properties_check(function_tmpdir):
+def test_path_params_and_props(function_tmpdir, module_tmpdir):
+    # properties should be set to string abspaths regardless of
+    # pathlib.Path or str arguments
+
+    mf = Modflow(
+        version="mf2005", model_ws=function_tmpdir, external_path=module_tmpdir
+    )
+    assert mf.model_ws == str(function_tmpdir)
+    assert mf.external_path == str(module_tmpdir)
+
     mf = Modflow(
         version="mf2005",
         model_ws=str(function_tmpdir),
+        external_path=str(module_tmpdir),
     )
+    assert mf.model_ws == str(function_tmpdir)
+    assert mf.external_path == str(module_tmpdir)
+
+
+def test_properties_check(function_tmpdir):
+    mf = Modflow(
+        version="mf2005",
+        model_ws=function_tmpdir,
+    )
+
     dis = ModflowDis(
         mf,
         nrow=2,
@@ -902,7 +951,7 @@ def test_rchload(function_tmpdir):
     nper = 2
 
     # create model 1
-    ws = str(function_tmpdir)
+    ws = function_tmpdir
     m1 = Modflow("rchload1", model_ws=ws)
     dis1 = ModflowDis(m1, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper)
     a = np.random.random((nrow, ncol))
@@ -939,7 +988,7 @@ def test_rchload(function_tmpdir):
 
 
 def test_default_oc_stress_period_data(function_tmpdir):
-    m = Modflow(model_ws=str(function_tmpdir), verbose=True)
+    m = Modflow(model_ws=function_tmpdir, verbose=True)
     dis = ModflowDis(m, nper=10, perlen=10.0, nstp=5)
     bas = ModflowBas(m)
     lpf = ModflowLpf(m, ipakcb=100)
@@ -958,7 +1007,7 @@ def test_default_oc_stress_period_data(function_tmpdir):
 
 
 def test_mfcbc(function_tmpdir):
-    m = Modflow(verbose=True, model_ws=str(function_tmpdir))
+    m = Modflow(verbose=True, model_ws=function_tmpdir)
     dis = ModflowDis(m)
     bas = ModflowBas(m)
     lpf = ModflowLpf(m, ipakcb=100)
@@ -972,7 +1021,7 @@ def test_mfcbc(function_tmpdir):
     nlay = 3
     nrow = 3
     ncol = 3
-    ml = Modflow(modelname="t1", model_ws=str(function_tmpdir), verbose=True)
+    ml = Modflow(modelname="t1", model_ws=function_tmpdir, verbose=True)
     dis = ModflowDis(
         ml, nlay=nlay, nrow=nrow, ncol=ncol, top=0, botm=[-1.0, -2.0, -3.0]
     )
@@ -1028,7 +1077,7 @@ def test_load_with_list_reader(function_tmpdir):
 
     m = Modflow(
         modelname="original",
-        model_ws=str(function_tmpdir),
+        model_ws=function_tmpdir,
         exe_name="mf2005",
     )
     dis = ModflowDis(m, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper)
@@ -1044,7 +1093,7 @@ def test_load_with_list_reader(function_tmpdir):
     m.write_input()
 
     # rewrite ghb
-    fname = os.path.join(str(function_tmpdir), "original.ghb")
+    fname = os.path.join(function_tmpdir, "original.ghb")
     with open(fname, "w") as f:
         f.write(f"{ghbra.shape[0]} 0\n")
         for kper in range(nper):
@@ -1053,14 +1102,14 @@ def test_load_with_list_reader(function_tmpdir):
 
     # write ghb list
     sfacghb = 5
-    fname = os.path.join(str(function_tmpdir), "original.ghb.dat")
+    fname = os.path.join(function_tmpdir, "original.ghb.dat")
     with open(fname, "w") as f:
         f.write(f"sfac {sfacghb}\n")
         for k, i, j, stage, cond in ghbra:
             f.write(f"{k + 1} {i + 1} {j + 1} {stage} {cond}\n")
 
     # rewrite drn
-    fname = os.path.join(str(function_tmpdir), "original.drn")
+    fname = os.path.join(function_tmpdir, "original.drn")
     with open(fname, "w") as f:
         f.write(f"{drnra.shape[0]} 0\n")
         for kper in range(nper):
@@ -1069,7 +1118,7 @@ def test_load_with_list_reader(function_tmpdir):
 
     # write drn list
     sfacdrn = 1.5
-    fname = os.path.join(str(function_tmpdir), "original.drn.dat")
+    fname = os.path.join(function_tmpdir, "original.drn.dat")
     with open(fname, "w") as f:
         for kper in range(nper):
             f.write(f"sfac {sfacdrn}\n")
@@ -1077,7 +1126,7 @@ def test_load_with_list_reader(function_tmpdir):
                 f.write(f"{k + 1} {i + 1} {j + 1} {stage} {cond}\n")
 
     # rewrite wel
-    fname = os.path.join(str(function_tmpdir), "original.wel")
+    fname = os.path.join(function_tmpdir, "original.wel")
     with open(fname, "w") as f:
         f.write(f"{drnra.shape[0]} 0\n")
         for kper in range(nper):
@@ -1097,7 +1146,7 @@ def test_load_with_list_reader(function_tmpdir):
     welra = np.recarray(2, dtype=weldt)
     welra[0] = (1, 2, 2, -5.0)
     welra[1] = (1, nrow - 2, ncol - 2, -10.0)
-    fname = os.path.join(str(function_tmpdir), "original.wel.bin")
+    fname = os.path.join(function_tmpdir, "original.wel.bin")
     with open(fname, "wb") as f:
         welra.tofile(f)
         welra.tofile(f)
@@ -1110,7 +1159,7 @@ def test_load_with_list_reader(function_tmpdir):
     # the m2 model will load all of these external files, possibly using sfac
     # and just create regular list input files for wel, drn, and ghb
     fname = "original.nam"
-    m2 = Modflow.load(fname, model_ws=str(function_tmpdir), verbose=False)
+    m2 = Modflow.load(fname, model_ws=function_tmpdir, verbose=False)
     m2.name = "new"
     m2.write_input()
 
@@ -1177,25 +1226,23 @@ def get_basic_modflow_model(ws, name):
 @pytest.mark.slow
 def test_model_init_time(function_tmpdir, benchmark):
     name = inspect.getframeinfo(inspect.currentframe()).function
-    benchmark(
-        lambda: get_basic_modflow_model(ws=str(function_tmpdir), name=name)
-    )
+    benchmark(lambda: get_basic_modflow_model(ws=function_tmpdir, name=name))
 
 
 @pytest.mark.slow
 def test_model_write_time(function_tmpdir, benchmark):
     name = inspect.getframeinfo(inspect.currentframe()).function
-    model = get_basic_modflow_model(ws=str(function_tmpdir), name=name)
+    model = get_basic_modflow_model(ws=function_tmpdir, name=name)
     benchmark(lambda: model.write_input())
 
 
 @pytest.mark.slow
 def test_model_load_time(function_tmpdir, benchmark):
     name = inspect.getframeinfo(inspect.currentframe()).function
-    model = get_basic_modflow_model(ws=str(function_tmpdir), name=name)
+    model = get_basic_modflow_model(ws=function_tmpdir, name=name)
     model.write_input()
     benchmark(
         lambda: Modflow.load(
-            f"{name}.nam", model_ws=str(function_tmpdir), check=False
+            f"{name}.nam", model_ws=function_tmpdir, check=False
         )
     )

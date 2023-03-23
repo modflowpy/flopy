@@ -5,12 +5,23 @@ from shutil import which
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from autotest.test_grid_cases import GridCases
 from matplotlib.collections import LineCollection, PathCollection, QuadMesh
 from modflow_devtools.markers import requires_exe, requires_pkg
 from modflow_devtools.misc import has_pkg
 
 import flopy
 from flopy.utils.gridgen import Gridgen
+
+
+def test_ctor_accepts_path_or_string(function_tmpdir):
+    grid = GridCases().structured_small()
+
+    g = Gridgen(grid, model_ws=function_tmpdir)
+    assert g.model_ws == function_tmpdir
+
+    g = Gridgen(grid, model_ws=str(function_tmpdir))
+    assert g.model_ws == function_tmpdir
 
 
 @pytest.mark.slow
@@ -31,7 +42,7 @@ def test_mf6disv(function_tmpdir):
 
     # Create a dummy model and regular grid to use as the base grid for gridgen
     sim = flopy.mf6.MFSimulation(
-        sim_name=name, sim_ws=str(function_tmpdir), exe_name="mf6"
+        sim_name=name, sim_ws=function_tmpdir, exe_name="mf6"
     )
     gwf = flopy.mf6.ModflowGwf(sim, modelname=name)
 
@@ -47,7 +58,7 @@ def test_mf6disv(function_tmpdir):
     )
 
     # Create and build the gridgen model with a refined area in the middle
-    g = Gridgen(gwf.modelgrid, model_ws=str(function_tmpdir))
+    g = Gridgen(gwf.modelgrid, model_ws=function_tmpdir)
     polys = [Polygon([(4, 4), (6, 4), (6, 6), (4, 6)])]
     g.add_refinement_features(polys, "polygon", 3, range(nlay))
     g.build()
@@ -64,7 +75,7 @@ def test_mf6disv(function_tmpdir):
     # build run and post-process the MODFLOW 6 model
     name = "mymodel"
     sim = flopy.mf6.MFSimulation(
-        sim_name=name, sim_ws=str(function_tmpdir), exe_name="mf6"
+        sim_name=name, sim_ws=function_tmpdir, exe_name="mf6"
     )
     tdis = flopy.mf6.ModflowTdis(sim)
     ims = flopy.mf6.ModflowIms(sim, linear_acceleration="bicgstab")
@@ -88,9 +99,9 @@ def test_mf6disv(function_tmpdir):
     gwf.modelgrid.set_coord_info(angrot=15)
 
     # write grid and model shapefiles
-    fname = os.path.join(str(function_tmpdir), "grid.shp")
+    fname = function_tmpdir / "grid.shp"
     gwf.modelgrid.write_shapefile(fname)
-    fname = os.path.join(str(function_tmpdir), "model.shp")
+    fname = function_tmpdir / "model.shp"
     gwf.export(fname)
 
     sim.run_simulation(silent=True)
@@ -116,7 +127,7 @@ def test_mf6disv(function_tmpdir):
         ax.set_title(f"Layer {ilay + 1}")
         pmv.plot_vector(spdis["qx"], spdis["qy"], color="white")
         fname = "results.png"
-        fname = os.path.join(str(function_tmpdir), fname)
+        fname = function_tmpdir / fname
         plt.savefig(fname)
         plt.close("all")
 
@@ -127,7 +138,7 @@ def test_mf6disv(function_tmpdir):
         sim_name=name,
         version="mf6",
         exe_name="mf6",
-        sim_ws=str(function_tmpdir),
+        sim_ws=function_tmpdir,
     )
     # get gwf model
     gwf = sim.get_model(name)
@@ -170,7 +181,7 @@ def test_mf6disu(function_tmpdir):
 
     # Create a dummy model and regular grid to use as the base grid for gridgen
     sim = flopy.mf6.MFSimulation(
-        sim_name=name, sim_ws=str(function_tmpdir), exe_name="mf6"
+        sim_name=name, sim_ws=function_tmpdir, exe_name="mf6"
     )
     gwf = flopy.mf6.ModflowGwf(sim, modelname=name)
 
@@ -186,7 +197,7 @@ def test_mf6disu(function_tmpdir):
     )
 
     # Create and build the gridgen model with a refined area in the middle
-    g = Gridgen(gwf.modelgrid, model_ws=str(function_tmpdir))
+    g = Gridgen(gwf.modelgrid, model_ws=function_tmpdir)
     polys = [Polygon([(4, 4), (6, 4), (6, 6), (4, 6)])]
     g.add_refinement_features(polys, "polygon", 3, layers=[0])
     g.build()
@@ -201,7 +212,7 @@ def test_mf6disu(function_tmpdir):
     # build run and post-process the MODFLOW 6 model
     name = "mymodel"
     sim = flopy.mf6.MFSimulation(
-        sim_name=name, sim_ws=str(function_tmpdir), exe_name="mf6"
+        sim_name=name, sim_ws=function_tmpdir, exe_name="mf6"
     )
     tdis = flopy.mf6.ModflowTdis(sim)
     ims = flopy.mf6.ModflowIms(sim, linear_acceleration="bicgstab")
@@ -231,9 +242,9 @@ def test_mf6disu(function_tmpdir):
     assert np.allclose(gwf.modelgrid.ncpl, np.array([436, 184, 112]))
 
     # write grid and model shapefiles
-    fname = os.path.join(str(function_tmpdir), "grid.shp")
+    fname = function_tmpdir / "grid.shp"
     gwf.modelgrid.write_shapefile(fname)
-    fname = os.path.join(str(function_tmpdir), "model.shp")
+    fname = function_tmpdir / "model.shp"
     gwf.export(fname)
 
     sim.run_simulation(silent=True)
@@ -260,7 +271,7 @@ def test_mf6disu(function_tmpdir):
         ax.set_title(f"Layer {ilay + 1}")
         pmv.plot_vector(spdis["qx"], spdis["qy"], color="white")
     fname = "results.png"
-    fname = os.path.join(str(function_tmpdir), fname)
+    fname = function_tmpdir / fname
     plt.savefig(fname)
     plt.close("all")
 
@@ -295,7 +306,7 @@ def test_mf6disu(function_tmpdir):
         sim_name=name,
         version="mf6",
         exe_name="mf6",
-        sim_ws=str(function_tmpdir),
+        sim_ws=function_tmpdir,
     )
     gwf = sim.get_model(name)
 
@@ -340,7 +351,7 @@ def test_mfusg(function_tmpdir):
     botm = [top - k * dz for k in range(1, nlay + 1)]
 
     # create dummy model and dis package for gridgen
-    m = flopy.modflow.Modflow(modelname=name, model_ws=str(function_tmpdir))
+    m = flopy.modflow.Modflow(modelname=name, model_ws=function_tmpdir)
     dis = flopy.modflow.ModflowDis(
         m,
         nlay=nlay,
@@ -353,7 +364,7 @@ def test_mfusg(function_tmpdir):
     )
 
     # Create and build the gridgen model with a refined area in the middle
-    g = Gridgen(m.modelgrid, model_ws=str(function_tmpdir))
+    g = Gridgen(m.modelgrid, model_ws=function_tmpdir)
     polys = [Polygon([(4, 4), (6, 4), (6, 6), (4, 6)])]
     g.add_refinement_features(polys, "polygon", 3, layers=[0])
     g.build()
@@ -371,7 +382,7 @@ def test_mfusg(function_tmpdir):
     name = "mymodel"
     m = flopy.mfusg.MfUsg(
         modelname=name,
-        model_ws=str(function_tmpdir),
+        model_ws=function_tmpdir,
         exe_name="mfusg",
         structured=False,
     )
@@ -393,7 +404,7 @@ def test_mfusg(function_tmpdir):
     m.run_model()
 
     # head is returned as a list of head arrays for each layer
-    head_file = os.path.join(str(function_tmpdir), f"{name}.hds")
+    head_file = function_tmpdir / f"{name}.hds"
     head = flopy.utils.HeadUFile(head_file).get_data()
 
     f = plt.figure(figsize=(10, 10))
@@ -411,7 +422,7 @@ def test_mfusg(function_tmpdir):
         ax.set_title(f"Layer {ilay + 1}")
         # pmv.plot_specific_discharge(spdis, color='white')
     fname = "results.png"
-    fname = os.path.join(str(function_tmpdir), fname)
+    fname = function_tmpdir / fname
     plt.savefig(fname)
     plt.close("all")
 
@@ -447,7 +458,7 @@ def test_mfusg(function_tmpdir):
 
     # also test load of unstructured LPF with keywords
     lpf2 = flopy.mfusg.MfUsgLpf.load(
-        os.path.join(str(function_tmpdir), f"{name}.lpf"), m, check=False
+        function_tmpdir / f"{name}.lpf", m, check=False
     )
     msg = "NOCVCORRECTION and NOVFC should be in lpf options but at least one is not."
     assert (
@@ -456,10 +467,10 @@ def test_mfusg(function_tmpdir):
     ), msg
 
     # test disu, bas6, lpf shapefile export for mfusg unstructured models
-    m.disu.export(os.path.join(str(function_tmpdir), f"{name}_disu.shp"))
-    m.bas6.export(os.path.join(str(function_tmpdir), f"{name}_bas6.shp"))
-    m.lpf.export(os.path.join(str(function_tmpdir), f"{name}_lpf.shp"))
-    m.export(os.path.join(str(function_tmpdir), f"{name}.shp"))
+    m.disu.export(function_tmpdir / f"{name}_disu.shp")
+    m.bas6.export(function_tmpdir / f"{name}_bas6.shp")
+    m.lpf.export(function_tmpdir / f"{name}_lpf.shp")
+    m.export(function_tmpdir / f"{name}.shp")
 
 
 @pytest.mark.slow
@@ -506,7 +517,7 @@ def test_gridgen(function_tmpdir):
 
     ms_u = flopy.mfusg.MfUsg(
         modelname="mymfusgmodel",
-        model_ws=str(function_tmpdir),
+        model_ws=function_tmpdir,
     )
     dis_usg = flopy.modflow.ModflowDis(
         ms_u,
@@ -520,7 +531,7 @@ def test_gridgen(function_tmpdir):
     )
 
     gridgen = Path(which("gridgen")).name
-    ws = str(function_tmpdir)
+    ws = function_tmpdir
     g = Gridgen(ms.modelgrid, model_ws=ws, exe_name=gridgen)
     g6 = Gridgen(gwf.modelgrid, model_ws=ws, exe_name=gridgen)
     gu = Gridgen(

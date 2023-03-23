@@ -4,6 +4,9 @@ Module for input/output utilities
 import os
 import platform
 import sys
+from pathlib import Path
+from shutil import which
+from typing import Union
 
 import numpy as np
 
@@ -544,7 +547,9 @@ def get_ts_sp(line):
 
 
 def relpath_safe(
-    path: os.PathLike, start=os.curdir, scrub: bool = False
+    path: Union[str, os.PathLike],
+    start: Union[str, os.PathLike] = os.curdir,
+    scrub: bool = False,
 ) -> str:
     """
     Return a relative version of the path starting at the given start path.
@@ -557,11 +562,11 @@ def relpath_safe(
 
     Parameters
     ----------
-    path : PathLike
+    path : str or PathLike
         the path to truncate relative to the start path
-    start : PathLike
-        the starting path
-    scrub : bool
+    start : str or PathLike, default "."
+        the starting path, defaults to the current working directory
+    scrub : bool, default False
         whether to remove the current login name from paths
     Returns
     -------

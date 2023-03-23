@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+from typing import Optional, Union
 
 import numpy as np
 from numpy.lib import recfunctions
@@ -16,6 +18,9 @@ class check:
     ----------
     package : object
         Instance of Package class.
+    f : str or PathLike, optional
+        Path to the summary file. If no path is provided, a summary
+        file is not created and results are only written to stdout.
     verbose : bool
         Boolean flag used to determine if check method results are
         written to the screen
@@ -90,7 +95,7 @@ class check:
     def __init__(
         self,
         package,
-        f=None,
+        f: Optional[Union[str, os.PathLike]] = None,
         verbose=True,
         level=1,
         property_threshold_values={},
@@ -117,11 +122,11 @@ class check:
 
         self.f = None
         if f is not None:
-            if isinstance(f, str):
+            if isinstance(f, (str, os.PathLike)):
                 if os.path.split(f)[0] == "":
                     self.summaryfile = os.path.join(self.model.model_ws, f)
                 else:  # if a path is supplied with summary file, save there
-                    self.summaryfile = f
+                    self.summaryfile = str(f)
                 self.f = open(self.summaryfile, "w")
             else:
                 self.f = f

@@ -37,7 +37,7 @@ class Mp6Cases1:
             namefile_ext="nam",
             version="mf2005",
             exe_name="mf2005",
-            model_ws=str(function_tmpdir),
+            model_ws=function_tmpdir,
         )
 
         # dis
@@ -117,7 +117,7 @@ class Mp6Cases1:
             namefile_ext="nam",
             version="mf2005",
             exe_name="mf2005",
-            model_ws=str(function_tmpdir),
+            model_ws=function_tmpdir,
         )
 
         # dis
@@ -225,7 +225,7 @@ class Mp6Cases2:
             namefile_ext="nam",
             version="mf2005",
             exe_name="mf2005",
-            model_ws=str(function_tmpdir),
+            model_ws=function_tmpdir,
         )
 
         # dis

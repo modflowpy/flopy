@@ -8,6 +8,9 @@ important classes that can be accessed by the user.
 """
 
 import itertools
+import os
+from pathlib import Path
+from typing import Union
 
 import numpy as np
 from numpy.lib.recfunctions import append_fields, stack_arrays
@@ -25,8 +28,8 @@ class _ModpathSeries:
 
     Parameters
     ----------
-    filename : str
-        name of pathline or modpath file
+    filename : str or PathLike
+        Path of pathline or modpath file
     verbose : bool
         Write information to the screen. Default is False
     output_type : str
@@ -35,7 +38,7 @@ class _ModpathSeries:
     """
 
     def __init__(self, filename, verbose=False, output_type="pathline"):
-        self.fname = filename
+        self.fname = Path(filename).expanduser().absolute()
         self.verbose = verbose
         self.output_type = output_type.upper()
 
@@ -72,9 +75,7 @@ class _ModpathSeries:
                 else:
                     self.version = None
                 if self.version is None:
-                    errmsg = "{} is not a valid {} file".format(
-                        self.fname, self.output_type.lower()
-                    )
+                    errmsg = f"{self.fname} is not a valid {self.output_type.lower()} file"
                     raise Exception(errmsg)
             self.skiprows += 1
             if self.version == 6 or self.version == 7:
@@ -414,8 +415,8 @@ class PathlineFile(_ModpathSeries):
 
     Parameters
     ----------
-    filename : string
-        Name of the pathline file
+    filename : str or PathLike
+        Path of the pathline file
     verbose : bool
         Write information to the screen.  Default is False.
 
@@ -440,7 +441,7 @@ class PathlineFile(_ModpathSeries):
         "sequencenumber",
     ]
 
-    def __init__(self, filename, verbose=False):
+    def __init__(self, filename: Union[str, os.PathLike], verbose=False):
         """
         Class constructor.
 

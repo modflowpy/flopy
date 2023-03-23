@@ -143,11 +143,11 @@ def test_base_run(function_tmpdir, example_data_path):
     mpath = example_data_path / "mf6-freyberg"
     sim = MFSimulation().load(
         sim_name="freyberg",
-        sim_ws=str(mpath),
+        sim_ws=mpath,
         exe_name="mf6",
         verbosity_level=0,
     )
-    sim.set_sim_path(str(function_tmpdir))
+    sim.set_sim_path(function_tmpdir)
 
     # remove the well package
     gwf = sim.get_model("freyberg")
@@ -162,20 +162,20 @@ def test_base_run(function_tmpdir, example_data_path):
     bot = gwf.dis.botm.array.squeeze()
     export_ascii_grid(
         gwf.modelgrid,
-        str(function_tmpdir / "bot.asc"),
+        function_tmpdir / "bot.asc",
         bot,
     )
     top = gwf.output.head().get_data().squeeze() + 2.0
     top = np.where(gwf.dis.idomain.array.squeeze() < 1.0, 0.0, top)
     export_ascii_grid(
         gwf.modelgrid,
-        str(function_tmpdir / "top.asc"),
+        function_tmpdir / "top.asc",
         top,
     )
     k11 = gwf.npf.k.array.squeeze()
     export_ascii_grid(
         gwf.modelgrid,
-        str(function_tmpdir / "k11.asc"),
+        function_tmpdir / "k11.asc",
         k11,
     )
 
@@ -184,19 +184,19 @@ def test_base_run(function_tmpdir, example_data_path):
 @requires_pkg("rasterio", "rasterstats")
 def test_lake(function_tmpdir, example_data_path):
     mpath = example_data_path / "mf6-freyberg"
-    top = Raster.load(str(mpath / "top.asc"))
-    bot = Raster.load(str(mpath / "bot.asc"))
-    k11 = Raster.load(str(mpath / "k11.asc"))
+    top = Raster.load(mpath / "top.asc")
+    bot = Raster.load(mpath / "bot.asc")
+    k11 = Raster.load(mpath / "k11.asc")
 
     sim = MFSimulation().load(
         sim_name="freyberg",
-        sim_ws=str(mpath),
+        sim_ws=mpath,
         exe_name="mf6",
         verbosity_level=0,
     )
 
     # change the workspace
-    sim.set_sim_path(str(function_tmpdir))
+    sim.set_sim_path(function_tmpdir)
 
     # get groundwater flow model
     gwf = sim.get_model("freyberg")
@@ -352,7 +352,7 @@ def test_embedded_lak_ex01(function_tmpdir, example_data_path):
     mpath = example_data_path / "mf2005_test"
     ml = Modflow.load(
         "l1a2k.nam",
-        model_ws=str(mpath),
+        model_ws=mpath,
         load_only=["EVT"],
         check=False,
     )
@@ -395,7 +395,7 @@ def test_embedded_lak_ex01(function_tmpdir, example_data_path):
     sim = MFSimulation(
         sim_name=name,
         exe_name="mf6",
-        sim_ws=str(function_tmpdir),
+        sim_ws=function_tmpdir,
     )
     tdis = ModflowTdis(
         sim,
@@ -515,8 +515,8 @@ def test_embedded_lak_prudic(example_data_path):
     shape3d = (nlay, nrow, ncol)
 
     # load data from text files
-    data_ws = str(example_data_path / "mf6_test")
-    fname = os.path.join(data_ws, "prudic2004t2_bot1.dat")
+    data_ws = example_data_path / "mf6_test"
+    fname = data_ws / "prudic2004t2_bot1.dat"
     bot0 = np.loadtxt(fname)
     botm = np.array(
         [bot0]
@@ -525,10 +525,10 @@ def test_embedded_lak_prudic(example_data_path):
             for k in range(1, nlay)
         ]
     )
-    fname = os.path.join(data_ws, "prudic2004t2_idomain1.dat")
+    fname = data_ws / "prudic2004t2_idomain1.dat"
     idomain0 = np.loadtxt(fname, dtype=np.int32)
     idomain = np.array(nlay * [idomain0], dtype=np.int32)
-    fname = os.path.join(data_ws, "prudic2004t2_lakibd.dat")
+    fname = data_ws / "prudic2004t2_lakibd.dat"
     lakibd = np.loadtxt(fname, dtype=int)
     lake_map = np.ones(shape3d, dtype=np.int32) * -1
     lake_map[0, :, :] = lakibd[:, :] - 1
@@ -618,8 +618,8 @@ def test_embedded_lak_prudic_mixed(example_data_path):
     shape3d = (nlay, nrow, ncol)
 
     # load data from text files
-    data_ws = str(example_data_path / "mf6_test")
-    fname = os.path.join(data_ws, "prudic2004t2_bot1.dat")
+    data_ws = example_data_path / "mf6_test"
+    fname = data_ws / "prudic2004t2_bot1.dat"
     bot0 = np.loadtxt(fname)
     botm = np.array(
         [bot0]
@@ -628,10 +628,10 @@ def test_embedded_lak_prudic_mixed(example_data_path):
             for k in range(1, nlay)
         ]
     )
-    fname = os.path.join(data_ws, "prudic2004t2_idomain1.dat")
+    fname = data_ws / "prudic2004t2_idomain1.dat"
     idomain0 = np.loadtxt(fname, dtype=np.int32)
     idomain = np.array(nlay * [idomain0], dtype=np.int32)
-    fname = os.path.join(data_ws, "prudic2004t2_lakibd.dat")
+    fname = data_ws / "prudic2004t2_lakibd.dat"
     lakibd = np.loadtxt(fname, dtype=int)
     lake_map = np.ones(shape3d, dtype=np.int32) * -1
     lake_map[0, :, :] = lakibd[:, :] - 1

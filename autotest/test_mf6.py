@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+from shutil import which
 
 import numpy as np
 import pytest
@@ -107,7 +109,6 @@ def write_head(
     h = np.array((kstp, kper, pertim, totim, text, ncol, nrow, ilay), dtype=dt)
     h.tofile(fbin)
     data.tofile(fbin)
-    return
 
 
 def get_gwf_model(sim, gwfname, gwfpath, modelshape, chdspd=None, welspd=None):
@@ -265,6 +266,8 @@ def test_string_to_file_path():
 
 def test_subdir(function_tmpdir):
     sim = MFSimulation(sim_ws=function_tmpdir)
+    assert sim.sim_path == function_tmpdir
+
     tdis = ModflowTdis(sim)
     gwf = ModflowGwf(sim, model_rel_path="level2")
     ims = ModflowIms(sim)
@@ -332,19 +335,24 @@ def test_binary_read(function_tmpdir):
     pd = PackageDimensions([md], None, "integration")
     dd = DataDimensions(pd, mfstruct)
 
-    binfile = str(function_tmpdir / "structured_layered.hds")
+    binfile = function_tmpdir / "structured_layered.hds"
     with open(binfile, "wb") as foo:
         for ix, a in enumerate(arr):
             write_head(foo, a, ilay=ix)
 
     fa = MFFileAccessArray(mfstruct, dd, sim_data, None, None)
-    arr2 = fa.read_binary_data_from_file(
-        binfile, data_shape, data_size, np.float64, modelgrid
-    )[0]
 
-    assert np.allclose(arr, arr2), "Binary read for layered Structured failed"
+    # test path as both Path and str
+    for bf in [binfile, str(binfile)]:
+        arr2 = fa.read_binary_data_from_file(
+            bf, data_shape, data_size, np.float64, modelgrid
+        )[0]
 
-    binfile = str(function_tmpdir / "structured_flat.hds")
+        assert np.allclose(
+            arr, arr2
+        ), f"Binary read for layered structured failed with {'Path' if isinstance(binfile, Path) else 'str'}"
+
+    binfile = function_tmpdir / "structured_flat.hds"
     with open(binfile, "wb") as foo:
         a = np.expand_dims(np.ravel(arr), axis=0)
         write_head(foo, a, ilay=1)
@@ -362,7 +370,7 @@ def test_binary_read(function_tmpdir):
 
     fa = MFFileAccessArray(mfstruct, dd, sim_data, None, None)
 
-    binfile = str(function_tmpdir / "vertex_layered.hds")
+    binfile = function_tmpdir / "vertex_layered.hds"
     with open(binfile, "wb") as foo:
         tarr = arr.reshape((nlay, 1, ncpl))
         for ix, a in enumerate(tarr):
@@ -374,7 +382,7 @@ def test_binary_read(function_tmpdir):
 
     assert np.allclose(arr, arr2), "Binary read for layered Vertex failed"
 
-    binfile = str(function_tmpdir / "vertex_flat.hds")
+    binfile = function_tmpdir / "vertex_flat.hds"
     with open(binfile, "wb") as foo:
         a = np.expand_dims(np.ravel(arr), axis=0)
         write_head(foo, a, ilay=1)
@@ -393,7 +401,7 @@ def test_binary_read(function_tmpdir):
 
     fa = MFFileAccessArray(mfstruct, dd, sim_data, None, None)
 
-    binfile = str(function_tmpdir / "unstructured.hds")
+    binfile = function_tmpdir / "unstructured.hds"
     with open(binfile, "wb") as foo:
         a = np.expand_dims(arr, axis=0)
         write_head(foo, a, ilay=1)
@@ -406,9 +414,24 @@ def test_binary_read(function_tmpdir):
 
 
 @requires_exe("mf6")
-def test_write_simulation(function_tmpdir):
+def test_props_and_write(function_tmpdir):
+    # workspace as str
     sim = MFSimulation(sim_ws=str(function_tmpdir))
     assert isinstance(sim, MFSimulation)
+    assert (
+        sim.simulation_data.mfpath.get_sim_path()
+        == function_tmpdir
+        == sim.sim_path
+    )
+
+    # workspace as Path
+    sim = MFSimulation(sim_ws=function_tmpdir)
+    assert isinstance(sim, MFSimulation)
+    assert (
+        sim.simulation_data.mfpath.get_sim_path()
+        == function_tmpdir
+        == sim.sim_path
+    )
 
     tdis = ModflowTdis(sim)
     assert isinstance(tdis, ModflowTdis)
@@ -529,9 +552,8 @@ def test_write_simulation(function_tmpdir):
         assert os.path.isfile(fname), f"{fname} not found"
 
 
-@requires_exe("mf6")
-def test_create_and_run_model(function_tmpdir):
-    # names
+@pytest.mark.parametrize("use_paths", [True, False])
+def test_set_sim_path(function_tmpdir, use_paths):
     sim_name = "testsim"
     model_name = "testmodel"
     exe_name = "mf6"
@@ -542,8 +564,53 @@ def test_create_and_run_model(function_tmpdir):
         sim_name=sim_name,
         version="mf6",
         exe_name=exe_name,
-        sim_ws=str(function_tmpdir),
+        sim_ws=function_tmpdir,
     )
+
+    new_ws = function_tmpdir / "new_ws"
+    new_ws.mkdir()
+    sim.set_sim_path(new_ws if use_paths else str(new_ws))
+
+    tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
+    tdis = mftdis.ModflowTdis(
+        sim, time_units="DAYS", nper=2, perioddata=tdis_rc
+    )
+
+    # create model instance
+    model = mfgwf.ModflowGwf(
+        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
+    )
+
+    sim.write_simulation()
+
+    assert len([p for p in function_tmpdir.glob("*") if p.is_file()]) == 0
+    assert len([p for p in new_ws.glob("*") if p.is_file()]) > 0
+
+
+@requires_exe("mf6")
+@pytest.mark.parametrize("use_paths", [True, False])
+def test_create_and_run_model(function_tmpdir, use_paths):
+    # names
+    sim_name = "testsim"
+    model_name = "testmodel"
+    exe_name = "mf6"
+
+    # set up simulation
+    tdis_name = f"{sim_name}.tdis"
+    if use_paths:
+        sim = MFSimulation(
+            sim_name=sim_name,
+            version="mf6",
+            exe_name=Path(which(exe_name)),
+            sim_ws=function_tmpdir,
+        )
+    else:
+        sim = MFSimulation(
+            sim_name=sim_name,
+            version="mf6",
+            exe_name=str(exe_name),
+            sim_ws=str(function_tmpdir),
+        )
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis = mftdis.ModflowTdis(
         sim, time_units="DAYS", nper=2, perioddata=tdis_rc
@@ -1037,6 +1104,7 @@ def test_sfr_connections(function_tmpdir, example_data_path):
     """MODFLOW just warns if any reaches are unconnected
     flopy fails to load model if reach 1 is unconnected, fine with other unconnected
     """
+
     data_path = example_data_path / "mf6" / "test666_sfrconnections"
     sim_ws = function_tmpdir
     for test in ["sfr0", "sfr1"]:

@@ -27,7 +27,7 @@ from flopy.modflow import (
 )
 from flopy.modpath import Modpath6, Modpath6Bas
 from flopy.plot import PlotCrossSection, PlotMapView
-from flopy.utils import CellBudgetFile, HeadFile, PathlineFile
+from flopy.utils import CellBudgetFile, EndpointFile, HeadFile, PathlineFile
 
 
 def test_map_view():
@@ -77,7 +77,7 @@ def test_map_view():
 @pytest.mark.xfail(reason="sometimes get wrong collection type")
 def test_map_view_bc_gwfs_disv(example_data_path):
     mpath = example_data_path / "mf6" / "test003_gwfs_disv"
-    sim = MFSimulation.load(sim_ws=str(mpath))
+    sim = MFSimulation.load(sim_ws=mpath)
     ml6 = sim.get_model("gwf_1")
     ml6.modelgrid.set_coord_info(angrot=-14)
     mapview = flopy.plot.PlotMapView(model=ml6)
@@ -97,7 +97,7 @@ def test_map_view_bc_gwfs_disv(example_data_path):
 @pytest.mark.xfail(reason="sometimes get wrong collection type")
 def test_map_view_bc_lake2tr(example_data_path):
     mpath = example_data_path / "mf6" / "test045_lake2tr"
-    sim = MFSimulation.load(sim_ws=str(mpath))
+    sim = MFSimulation.load(sim_ws=mpath)
     ml6 = sim.get_model("lakeex2a")
     mapview = flopy.plot.PlotMapView(model=ml6)
     mapview.plot_bc("LAK")
@@ -117,7 +117,7 @@ def test_map_view_bc_lake2tr(example_data_path):
 @pytest.mark.xfail(reason="sometimes get wrong collection type")
 def test_map_view_bc_2models_mvr(example_data_path):
     mpath = example_data_path / "mf6" / "test006_2models_mvr"
-    sim = MFSimulation.load(sim_ws=str(mpath))
+    sim = MFSimulation.load(sim_ws=mpath)
     ml6 = sim.get_model("parent")
     ml6c = sim.get_model("child")
     ml6c.modelgrid.set_coord_info(xoff=700, yoff=0, angrot=0)
@@ -144,7 +144,7 @@ def test_map_view_bc_2models_mvr(example_data_path):
 @pytest.mark.xfail(reason="sometimes get wrong collection type")
 def test_map_view_bc_UZF_3lay(example_data_path):
     mpath = example_data_path / "mf6" / "test001e_UZF_3lay"
-    sim = MFSimulation.load(sim_ws=str(mpath))
+    sim = MFSimulation.load(sim_ws=mpath)
     ml6 = sim.get_model("gwf_1")
 
     mapview = flopy.plot.PlotMapView(model=ml6)
@@ -166,7 +166,7 @@ def test_map_view_bc_UZF_3lay(example_data_path):
 )
 def test_cross_section_bc_gwfs_disv(example_data_path):
     mpath = example_data_path / "mf6" / "test003_gwfs_disv"
-    sim = MFSimulation.load(sim_ws=str(mpath))
+    sim = MFSimulation.load(sim_ws=mpath)
     ml6 = sim.get_model("gwf_1")
     xc = flopy.plot.PlotCrossSection(ml6, line={"line": ([0, 5.5], [10, 5.5])})
     xc.plot_bc("CHD")
@@ -186,7 +186,7 @@ def test_cross_section_bc_gwfs_disv(example_data_path):
 )
 def test_cross_section_bc_lake2tr(example_data_path):
     mpath = example_data_path / "mf6" / "test045_lake2tr"
-    sim = MFSimulation.load(sim_ws=str(mpath))
+    sim = MFSimulation.load(sim_ws=mpath)
     ml6 = sim.get_model("lakeex2a")
     xc = flopy.plot.PlotCrossSection(ml6, line={"row": 10})
     xc.plot_bc("LAK")
@@ -207,7 +207,7 @@ def test_cross_section_bc_lake2tr(example_data_path):
 )
 def test_cross_section_bc_2models_mvr(example_data_path):
     mpath = example_data_path / "mf6" / "test006_2models_mvr"
-    sim = MFSimulation.load(sim_ws=str(mpath))
+    sim = MFSimulation.load(sim_ws=mpath)
     ml6 = sim.get_model("parent")
     xc = flopy.plot.PlotCrossSection(ml6, line={"column": 1})
     xc.plot_bc("MAW")
@@ -227,7 +227,7 @@ def test_cross_section_bc_2models_mvr(example_data_path):
 )
 def test_cross_section_bc_UZF_3lay(example_data_path):
     mpath = example_data_path / "mf6" / "test001e_UZF_3lay"
-    sim = MFSimulation.load(sim_ws=str(mpath))
+    sim = MFSimulation.load(sim_ws=mpath)
     ml6 = sim.get_model("gwf_1")
 
     xc = flopy.plot.PlotCrossSection(ml6, line={"row": 0})
@@ -286,7 +286,7 @@ def test_vertex_model_dot_plot(example_data_path):
 
     # load up the vertex example problem
     sim = MFSimulation.load(
-        sim_ws=str(example_data_path / "mf6" / "test003_gwftri_disv")
+        sim_ws=example_data_path / "mf6" / "test003_gwftri_disv"
     )
     disv_ml = sim.get_model("gwf_1")
     ax = disv_ml.plot()
@@ -300,7 +300,7 @@ def test_vertex_model_dot_plot(example_data_path):
 def test_model_dot_plot(function_tmpdir, example_data_path):
     loadpth = example_data_path / "mf2005_test"
     ml = flopy.modflow.Modflow.load(
-        "ibs2k.nam", "mf2k", model_ws=str(loadpth), check=False
+        "ibs2k.nam", "mf2k", model_ws=loadpth, check=False
     )
     ax = ml.plot()
     assert isinstance(ax, list), "ml.plot() ax is is not a list"
@@ -310,7 +310,7 @@ def test_model_dot_plot(function_tmpdir, example_data_path):
 def test_dataset_dot_plot(function_tmpdir, example_data_path):
     loadpth = example_data_path / "mf2005_test"
     ml = flopy.modflow.Modflow.load(
-        "ibs2k.nam", "mf2k", model_ws=str(loadpth), check=False
+        "ibs2k.nam", "mf2k", model_ws=loadpth, check=False
     )
 
     # plot specific dataset
@@ -326,7 +326,7 @@ def test_dataset_dot_plot_nlay_ne_plottable(
 
     loadpth = example_data_path / "mf2005_test"
     ml = flopy.modflow.Modflow.load(
-        "ibs2k.nam", "mf2k", model_ws=str(loadpth), check=False
+        "ibs2k.nam", "mf2k", model_ws=loadpth, check=False
     )
     # special case where nlay != plottable
     ax = ml.bcf6.vcont.plot()
@@ -338,7 +338,7 @@ def test_dataset_dot_plot_nlay_ne_plottable(
 def test_model_dot_plot_export(function_tmpdir, example_data_path):
     loadpth = example_data_path / "mf2005_test"
     ml = flopy.modflow.Modflow.load(
-        "ibs2k.nam", "mf2k", model_ws=str(loadpth), check=False
+        "ibs2k.nam", "mf2k", model_ws=loadpth, check=False
     )
 
     fh = os.path.join(function_tmpdir, "ibs2k")
@@ -355,14 +355,13 @@ def test_model_dot_plot_export(function_tmpdir, example_data_path):
             raise AssertionError("Plot filenames not written correctly")
 
 
-@requires_pkg("pandas")
-@requires_exe("mf2005")
-def test_pathline_plot_xc(function_tmpdir, example_data_path):
+@pytest.fixture
+def modpath_model(function_tmpdir, example_data_path):
     # test with multi-layer example
     load_ws = example_data_path / "mp6"
 
-    ml = Modflow.load("EXAMPLE.nam", model_ws=str(load_ws), exe_name="mf2005")
-    ml.change_model_ws(str(function_tmpdir))
+    ml = Modflow.load("EXAMPLE.nam", model_ws=load_ws, exe_name="mf2005")
+    ml.change_model_ws(function_tmpdir)
     ml.write_input()
     ml.run_model()
 
@@ -370,7 +369,7 @@ def test_pathline_plot_xc(function_tmpdir, example_data_path):
         modelname="ex6",
         exe_name="mp6",
         modflowmodel=ml,
-        model_ws=str(function_tmpdir),
+        model_ws=function_tmpdir,
     )
 
     mpb = Modpath6Bas(
@@ -383,11 +382,18 @@ def test_pathline_plot_xc(function_tmpdir, example_data_path):
         packages="RCH",
         start_time=(2, 0, 1.0),
     )
-    mp.write_input()
+    return ml, mp, sim
 
+
+@requires_pkg("pandas")
+@requires_exe("mf2005", "mp6")
+def test_xc_plot_particle_pathlines(modpath_model):
+    ml, mp, sim = modpath_model
+
+    mp.write_input()
     mp.run_model(silent=False)
 
-    pthobj = PathlineFile(os.path.join(str(function_tmpdir), "ex6.mppth"))
+    pthobj = PathlineFile(os.path.join(mp.model_ws, "ex6.mppth"))
     well_pathlines = pthobj.get_destination_pathline_data(
         dest_cells=[(4, 12, 12)]
     )
@@ -396,16 +402,65 @@ def test_pathline_plot_xc(function_tmpdir, example_data_path):
     mx.plot_bc("WEL", kper=2, color="blue")
     pth = mx.plot_pathline(well_pathlines, method="cell", colors="red")
 
-    if not isinstance(pth, LineCollection):
-        raise AssertionError()
+    assert isinstance(pth, LineCollection)
+    assert len(pth._paths) == 6
 
-    if len(pth._paths) != 6:
-        raise AssertionError()
+
+@requires_pkg("pandas")
+@requires_exe("mf2005", "mp6")
+def test_map_plot_particle_endpoints(modpath_model):
+    ml, mp, sim = modpath_model
+    mp.write_input()
+    mp.run_model(silent=False)
+
+    pthobj = EndpointFile(os.path.join(mp.model_ws, "ex6.mpend"))
+    endpts = pthobj.get_alldata()
+
+    # color kwarg as scalar
+    mv = PlotMapView(model=ml)
+    mv.plot_bc("WEL", kper=2, color="blue")
+    ep = mv.plot_endpoint(endpts, direction="ending", color="red")
+    # plt.show()
+    assert isinstance(ep, PathCollection)
+
+    # c kwarg as array
+    mv = PlotMapView(model=ml)
+    mv.plot_bc("WEL", kper=2, color="blue")
+    ep = mv.plot_endpoint(
+        endpts,
+        direction="ending",
+        c=np.random.rand(625) * -1000,
+        cmap="viridis",
+    )
+    # plt.show()
+    assert isinstance(ep, PathCollection)
+
+    # colorbar: color by time to termination
+    mv = PlotMapView(model=ml)
+    mv.plot_bc("WEL", kper=2, color="blue")
+    ep = mv.plot_endpoint(
+        endpts, direction="ending", shrink=0.5, colorbar=True
+    )
+    # plt.show()
+    assert isinstance(ep, PathCollection)
+
+    # if both color and c are provided, c takes precedence
+    mv = PlotMapView(model=ml)
+    mv.plot_bc("WEL", kper=2, color="blue")
+    ep = mv.plot_endpoint(
+        endpts,
+        direction="ending",
+        color="red",
+        c=np.random.rand(625) * -1000,
+        cmap="viridis",
+    )
+    # plt.show()
+    assert isinstance(ep, PathCollection)
 
 
 @pytest.fixture
 def quasi3d_model(function_tmpdir):
-    mf = Modflow("model_mf", model_ws=str(function_tmpdir), exe_name="mf2005")
+    mf = Modflow("model_mf", model_ws=function_tmpdir, exe_name="mf2005")
 
     # Model domain and grid definition
     Lx = 1000.0
@@ -493,7 +548,7 @@ def test_map_plot_with_quasi3d_layers(quasi3d_model):
     mv.plot_ibound()
     mv.plot_bc("wel")
     mv.plot_vector(frf, fff)
-    plt.savefig(os.path.join(str(quasi3d_model.model_ws), "plt01.png"))
+    plt.savefig(os.path.join(quasi3d_model.model_ws, "plt01.png"))
 
 
 @requires_exe("mf2005")
@@ -522,7 +577,7 @@ def test_cross_section_with_quasi3d_layers(quasi3d_model):
     cs.plot_ibound()
     cs.plot_bc("wel")
     cs.plot_vector(frf, fff, flf, head=head)
-    plt.savefig(os.path.join(str(quasi3d_model.model_ws), "plt02.png"))
+    plt.savefig(os.path.join(quasi3d_model.model_ws, "plt02.png"))
     plt.close()
 
 

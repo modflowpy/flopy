@@ -1,8 +1,11 @@
 import os
 import textwrap
+from typing import List, Optional, Union
 
 import numpy as np
 
+from flopy.modflow import ModflowOc
+from flopy.utils import FormattedHeadFile, HeadFile, HeadUFile
 from flopy.utils.mfreadnam import get_entries_from_namefile
 
 
@@ -76,21 +79,25 @@ def _difftol(v1, v2, tol):
 
 
 def compare_budget(
-    namefile1,
-    namefile2,
+    namefile1: Optional[Union[str, os.PathLike]],
+    namefile2: Optional[Union[str, os.PathLike]],
     max_cumpd=0.01,
     max_incpd=0.01,
-    outfile=None,
-    files1=None,
-    files2=None,
+    outfile: Optional[Union[str, os.PathLike]] = None,
+    files1: Optional[
+        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+    ] = None,
+    files2: Optional[
+        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+    ] = None,
 ):
     """Compare the budget results from two simulations.
 
     Parameters
     ----------
-    namefile1 : str
+    namefile1 : str or PathLike, optional
         namefile path for base model
-    namefile2 : str
+    namefile2 : str or PathLike, optional
         namefile path for comparison model
     max_cumpd : float
         maximum percent discrepancy allowed for cumulative budget terms
@@ -98,14 +105,14 @@ def compare_budget(
     max_incpd : float
         maximum percent discrepancy allowed for incremental budget terms
         (default is 0.01)
-    outfile : str
+    outfile : str or PathLike, optional
         budget comparison output file name. If outfile is None, no
         comparison output is saved. (default is None)
-    files1 : str
+    files1 : str, PathLike, or list, optional
         base model output file. If files1 is not None, results
         will be extracted from files1 and namefile1 will not be used.
         (default is None)
-    files2 : str
+    files2 : str, PathLike, or list, optional
         comparison model output file. If files2 is not None, results
         will be extracted from files2 and namefile2 will not be used.
         (default is None)
@@ -133,7 +140,7 @@ def compare_budget(
         lst_file = get_entries_from_namefile(namefile1, "list")
         lst_file1 = lst_file[0][0] if any(lst_file) else None
     else:
-        if isinstance(files1, str):
+        if isinstance(files1, (str, os.PathLike)):
             files1 = [files1]
         for file in files1:
             if (
@@ -147,7 +154,7 @@ def compare_budget(
         lst_file = get_entries_from_namefile(namefile2, "list")
         lst_file2 = lst_file[0][0] if any(lst_file) else None
     else:
-        if isinstance(files2, str):
+        if isinstance(files2, (str, os.PathLike)):
             files2 = [files2]
         for file in files2:
             if (
@@ -279,21 +286,25 @@ def compare_budget(
 
 
 def compare_swrbudget(
-    namefile1,
-    namefile2,
+    namefile1: Optional[Union[str, os.PathLike]],
+    namefile2: Optional[Union[str, os.PathLike]],
     max_cumpd=0.01,
     max_incpd=0.01,
-    outfile=None,
-    files1=None,
-    files2=None,
+    outfile: Optional[Union[str, os.PathLike]] = None,
+    files1: Optional[
+        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+    ] = None,
+    files2: Optional[
+        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+    ] = None,
 ):
     """Compare the SWR budget results from two simulations.
 
     Parameters
     ----------
-    namefile1 : str
+    namefile1 : str or PathLike, optional
         namefile path for base model
-    namefile2 : str
+    namefile2 : str or PathLike, optional
         namefile path for comparison model
     max_cumpd : float
         maximum percent discrepancy allowed for cumulative budget terms
@@ -301,14 +312,14 @@ def compare_swrbudget(
     max_incpd : float
         maximum percent discrepancy allowed for incremental budget terms
         (default is 0.01)
-    outfile : str
+    outfile : str or PathLike, optional
         budget comparison output file name. If outfile is None, no
         comparison output is saved. (default is None)
-    files1 : str
+    files1 : str, PathLike, or list, optional
         base model output file. If files1 is not None, results
         will be extracted from files1 and namefile1 will not be used.
         (default is None)
-    files2 : str
+    files2 : str, PathLike, or list, optional
         comparison model output file. If files2 is not None, results
         will be extracted from files2 and namefile2 will not be used.
         (default is None)
@@ -474,18 +485,22 @@ def compare_swrbudget(
 
 
 def compare_heads(
-    namefile1,
-    namefile2,
+    namefile1: Optional[Union[str, os.PathLike]],
+    namefile2: Optional[Union[str, os.PathLike]],
     precision="auto",
     text="head",
     text2=None,
     htol=0.001,
-    outfile=None,
-    files1=None,
-    files2=None,
+    outfile: Optional[Union[str, os.PathLike]] = None,
+    files1: Optional[
+        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+    ] = None,
+    files2: Optional[
+        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+    ] = None,
     difftol=False,
     verbose=False,
-    exfile=None,
+    exfile: Optional[Union[str, os.PathLike]] = None,
     exarr=None,
     maxerr=None,
 ):
@@ -493,24 +508,24 @@ def compare_heads(
 
     Parameters
     ----------
-    namefile1 : str
+    namefile1 : str or PathLike
         namefile path for base model
-    namefile2 : str
+    namefile2 : str or PathLike
         namefile path for comparison model
     precision : str
         precision for binary head file ("auto", "single", or "double")
         default is "auto"
     htol : float
         maximum allowed head difference (default is 0.001)
-    outfile : str
+    outfile : str or PathLike
         head comparison output file name. If outfile is None, no
         comparison output is saved. (default is None)
-    files1 : str
-        base model output file. If files1 is not None, results
+    files1 : str or PathLike, or List of str or PathLike
+        base model output files. If files1 is not None, results
         will be extracted from files1 and namefile1 will not be used.
         (default is None)
-    files2 : str
-        comparison model output file. If files2 is not None, results
+    files2 : str or PathLike, or List of str or PathLike
+        comparison model output files. If files2 is not None, results
         will be extracted from files2 and namefile2 will not be used.
         (default is None)
     difftol : bool
@@ -519,7 +534,7 @@ def compare_heads(
     verbose : bool
         boolean indicating if verbose output should be written to the
         terminal (default is False)
-    exfile : str
+    exfile : str or PathLike, optional
         path to a file with exclusion array data. Head differences will not
         be evaluated where exclusion array values are greater than zero.
         (default is None)
@@ -537,11 +552,6 @@ def compare_heads(
         boolean indicating if the head differences are less than htol.
 
     """
-    try:
-        import flopy
-    except:
-        msg = "flopy not available - cannot use compare_heads"
-        raise ValueError(msg)
 
     if text2 is None:
         text2 = text
@@ -557,9 +567,7 @@ def compare_heads(
         if not any(ocf1) is None:
             return True
 
-        hu1, hfpth1, du1, _ = flopy.modflow.ModflowOc.get_ocoutput_units(
-            ocf1[0][0]
-        )
+        hu1, hfpth1, du1, _ = ModflowOc.get_ocoutput_units(ocf1[0][0])
         if text.lower() == "head":
             iut = hu1
         elif text.lower() == "drawdown":
@@ -570,7 +578,7 @@ def compare_heads(
             status1 = entries[0][1] if any(entries) else None
 
     else:
-        if isinstance(files1, str):
+        if isinstance(files1, (str, os.PathLike)):
             files1 = [files1]
         for file in files1:
             if text.lower() == "head":
@@ -601,9 +609,7 @@ def compare_heads(
         if not any(ocf2):
             return True
 
-        hu2, hfpth2, du2, dfpth2 = flopy.modflow.ModflowOc.get_ocoutput_units(
-            ocf2[0][0]
-        )
+        hu2, hfpth2, du2, dfpth2 = ModflowOc.get_ocoutput_units(ocf2[0][0])
         if text.lower() == "head":
             iut = hu2
         elif text.lower() == "drawdown":
@@ -613,7 +619,7 @@ def compare_heads(
             hfpth2 = entries[0][0] if any(entries) else None
             status2 = entries[0][1] if any(entries) else None
     else:
-        if isinstance(files2, str):
+        if isinstance(files2, (str, os.PathLike)):
             files2 = [files2]
         for file in files2:
             if text2.lower() == "head":
@@ -677,7 +683,7 @@ def compare_heads(
     # get data from exclusion file
     if exfile is not None:
         e = None
-        if isinstance(exfile, str):
+        if isinstance(exfile, (str, os.PathLike)):
             try:
                 exd = np.genfromtxt(exfile).flatten()
             except:
@@ -709,7 +715,7 @@ def compare_heads(
     status1 = status1.upper()
     unstructured1 = False
     if status1 == dbs:
-        headobj1 = flopy.utils.HeadFile(
+        headobj1 = HeadFile(
             hfpth1, precision=precision, verbose=verbose, text=text
         )
         txt = headobj1.recordarray["text"][0]
@@ -717,18 +723,14 @@ def compare_heads(
             txt = txt.decode("utf-8")
         if "HEADU" in txt:
             unstructured1 = True
-            headobj1 = flopy.utils.HeadUFile(
-                hfpth1, precision=precision, verbose=verbose
-            )
+            headobj1 = HeadUFile(hfpth1, precision=precision, verbose=verbose)
     else:
-        headobj1 = flopy.utils.FormattedHeadFile(
-            hfpth1, verbose=verbose, text=text
-        )
+        headobj1 = FormattedHeadFile(hfpth1, verbose=verbose, text=text)
 
     status2 = status2.upper()
     unstructured2 = False
     if status2 == dbs:
-        headobj2 = flopy.utils.HeadFile(
+        headobj2 = HeadFile(
             hfpth2, precision=precision, verbose=verbose, text=text2
         )
         txt = headobj2.recordarray["text"][0]
@@ -736,13 +738,9 @@ def compare_heads(
             txt = txt.decode("utf-8")
         if "HEADU" in txt:
             unstructured2 = True
-            headobj2 = flopy.utils.HeadUFile(
-                hfpth2, precision=precision, verbose=verbose
-            )
+            headobj2 = HeadUFile(hfpth2, precision=precision, verbose=verbose)
     else:
-        headobj2 = flopy.utils.FormattedHeadFile(
-            hfpth2, verbose=verbose, text=text2
-        )
+        headobj2 = FormattedHeadFile(hfpth2, verbose=verbose, text=text2)
 
     # get times
     times1 = headobj1.get_times()
@@ -882,13 +880,17 @@ def compare_heads(
 
 
 def compare_concentrations(
-    namefile1,
-    namefile2,
+    namefile1: Union[str, os.PathLike],
+    namefile2: Union[str, os.PathLike],
     precision="auto",
     ctol=0.001,
-    outfile=None,
-    files1=None,
-    files2=None,
+    outfile: Optional[Union[str, os.PathLike]] = None,
+    files1: Optional[
+        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+    ] = None,
+    files2: Optional[
+        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+    ] = None,
     difftol=False,
     verbose=False,
 ):
@@ -897,23 +899,23 @@ def compare_concentrations(
 
     Parameters
     ----------
-    namefile1 : str
+    namefile1 : str or PathLike
         namefile path for base model
-    namefile2 : str
+    namefile2 : str or PathLike
         namefile path for comparison model
     precision : str
         precision for binary head file ("auto", "single", or "double")
         default is "auto"
     ctol : float
         maximum allowed concentration difference (default is 0.001)
-    outfile : str
+    outfile : str or PathLike, optional
         concentration comparison output file name. If outfile is None, no
         comparison output is saved. (default is None)
-    files1 : str
+    files1 : str, PathLike, or list, optional
         base model output file. If files1 is not None, results
         will be extracted from files1 and namefile1 will not be used.
         (default is None)
-    files2 : str
+    files2 : str, PathLike, or list, optional
         comparison model output file. If files2 is not None, results
         will be extracted from files2 and namefile2 will not be used.
         (default is None)
@@ -955,7 +957,7 @@ def compare_concentrations(
         if ufpth1 is None:
             ufpth1 = os.path.join(os.path.dirname(namefile1), "MT3D001.UCN")
     else:
-        if isinstance(files1, str):
+        if isinstance(files1, (str, os.PathLike)):
             files1 = [files1]
         for file in files1:
             for ext in valid_ext:
@@ -975,7 +977,7 @@ def compare_concentrations(
         if ufpth2 is None:
             ufpth2 = os.path.join(os.path.dirname(namefile2), "MT3D001.UCN")
     else:
-        if isinstance(files2, str):
+        if isinstance(files2, (str, os.PathLike)):
             files2 = [files2]
         for file in files2:
             for ext in valid_ext:
@@ -1112,12 +1114,16 @@ def compare_concentrations(
 
 
 def compare_stages(
-    namefile1=None,
-    namefile2=None,
-    files1=None,
-    files2=None,
+    namefile1: Union[str, os.PathLike] = None,
+    namefile2: Union[str, os.PathLike] = None,
+    files1: Optional[
+        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+    ] = None,
+    files2: Optional[
+        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+    ] = None,
     htol=0.001,
-    outfile=None,
+    outfile: Optional[Union[str, os.PathLike]] = None,
     difftol=False,
     verbose=False,
 ):
@@ -1125,23 +1131,23 @@ def compare_stages(
 
     Parameters
     ----------
-    namefile1 : str
+    namefile1 : str or PathLike
         namefile path for base model
-    namefile2 : str
+    namefile2 : str or PathLike
         namefile path for comparison model
     precision : str
         precision for binary head file ("auto", "single", or "double")
         default is "auto"
     htol : float
         maximum allowed stage difference (default is 0.001)
-    outfile : str
+    outfile : str or PathLike, optional
         head comparison output file name. If outfile is None, no
         comparison output is saved. (default is None)
-    files1 : str
+    files1 : str, PathLike, or list, optional
         base model output file. If files1 is not None, results
         will be extracted from files1 and namefile1 will not be used.
         (default is None)
-    files2 : str
+    files2 : str, PathLike, or list, optional
         comparison model output file. If files2 is not None, results
         will be extracted from files2 and namefile2 will not be used.
         (default is None)
@@ -1177,7 +1183,7 @@ def compare_stages(
                 sfpth1 = sfpth
                 break
     elif files1 is not None:
-        if isinstance(files1, str):
+        if isinstance(files1, (str, os.PathLike)):
             files1 = [files1]
         for file in files1:
             for ext in valid_ext:
@@ -1195,7 +1201,7 @@ def compare_stages(
                 sfpth2 = sfpth
                 break
     elif files2 is not None:
-        if isinstance(files2, str):
+        if isinstance(files2, (str, os.PathLike)):
             files2 = [files2]
         for file in files2:
             for ext in valid_ext:
@@ -1324,25 +1330,29 @@ def compare_stages(
 
 
 def compare(
-    namefile1,
-    namefile2,
+    namefile1: Union[str, os.PathLike] = None,
+    namefile2: Union[str, os.PathLike] = None,
     precision="auto",
     max_cumpd=0.01,
     max_incpd=0.01,
     htol=0.001,
-    outfile1=None,
-    outfile2=None,
-    files1=None,
-    files2=None,
+    outfile1: Optional[Union[str, os.PathLike]] = None,
+    outfile2: Optional[Union[str, os.PathLike]] = None,
+    files1: Optional[
+        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+    ] = None,
+    files2: Optional[
+        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+    ] = None,
 ):
     """Compare the budget and head results for two MODFLOW-based model
     simulations.
 
     Parameters
     ----------
-    namefile1 : str
+    namefile1 : str or PathLike, optional
         namefile path for base model
-    namefile2 : str
+    namefile2 : str or PathLike, optional
         namefile path for comparison model
     precision : str
         precision for binary head file ("auto", "single", or "double")
@@ -1355,17 +1365,17 @@ def compare(
         (default is 0.01)
     htol : float
         maximum allowed head difference (default is 0.001)
-    outfile1 : str
+    outfile1 : str or PathLike, optional
         budget comparison output file name. If outfile1 is None, no budget
         comparison output is saved. (default is None)
-    outfile2 : str
+    outfile2 : str or PathLike, optional
         head comparison output file name. If outfile2 is None, no head
         comparison output is saved. (default is None)
-    files1 : str
+    files1 : str, PathLike, or list, optional
         base model output file. If files1 is not None, results
         will be extracted from files1 and namefile1 will not be used.
         (default is None)
-    files2 : str
+    files2 : str, PathLike, or list, optional
         comparison model output file. If files2 is not None, results
         will be extracted from files2 and namefile2 will not be used.
         (default is None)
@@ -1403,7 +1413,7 @@ def compare(
     return success
 
 
-def eval_bud_diff(fpth, b0, b1, ia=None, dtol=1e-6):
+def eval_bud_diff(fpth: Union[str, os.PathLike], b0, b1, ia=None, dtol=1e-6):
     # To use this eval_bud_diff function on a gwf or gwt budget file,
     # the function may need ia, in order to exclude comparison of the residual
     # term, which is stored in the diagonal position of the flowja array.

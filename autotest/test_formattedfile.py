@@ -12,9 +12,7 @@ def freyberg_model_path(example_data_path):
 
 
 def test_formattedfile_reference(example_data_path):
-    h = FormattedHeadFile(
-        str(example_data_path / "mf2005_test" / "test1tr.githds")
-    )
+    h = FormattedHeadFile(example_data_path / "mf2005_test" / "test1tr.githds")
     assert isinstance(h, FormattedHeadFile)
     h.mg.set_coord_info(xoff=1000.0, yoff=200.0, angrot=15.0)
 
@@ -24,7 +22,7 @@ def test_formattedfile_reference(example_data_path):
 
 def test_formattedfile_read(function_tmpdir, example_data_path):
     mf2005_model_path = example_data_path / "mf2005_test"
-    h = FormattedHeadFile(str(mf2005_model_path / "test1tr.githds"))
+    h = FormattedHeadFile(mf2005_model_path / "test1tr.githds")
     assert isinstance(h, FormattedHeadFile)
 
     times = h.get_times()
@@ -51,7 +49,7 @@ def test_formattedfile_read(function_tmpdir, example_data_path):
     h.close()
 
     # Check error when reading empty file
-    fname = str(function_tmpdir / "empty.githds")
+    fname = function_tmpdir / "empty.githds"
     with open(fname, "w"):
         pass
     with pytest.raises(ValueError):

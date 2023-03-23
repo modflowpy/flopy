@@ -6,6 +6,7 @@ shapefiles are also included.
 """
 import os
 import warnings
+from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -2066,13 +2067,15 @@ def shapefile_get_vertices(shp):
     return vertices
 
 
-def shapefile_to_patch_collection(shp, radius=500.0, idx=None):
+def shapefile_to_patch_collection(
+    shp: Union[str, os.PathLike], radius=500.0, idx=None
+):
     """
     Create a patch collection from the shapes in a shapefile
 
     Parameters
     ----------
-    shp : string
+    shp : str or PathLike
         Name of the shapefile to convert to a PatchCollection.
     radius : float
         Radius of circle for points in the shapefile.  (Default is 500.)
@@ -2192,8 +2195,8 @@ def plot_shapefile(
 
     Parameters
     ----------
-    shp : string
-        Name of the shapefile to plot.
+    shp : string or os.PathLike
+        Path of the shapefile to plot.
     ax : matplolib.pyplot.axes object
 
     radius : float

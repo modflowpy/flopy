@@ -5,6 +5,8 @@ import platform
 import socket
 import time
 from datetime import datetime
+from pathlib import Path
+from typing import Optional, Union
 
 import numpy as np
 
@@ -112,8 +114,8 @@ class NetCdf:
 
     Parameters
     ----------
-    output_filename : str
-        Name of the .nc file to write
+    output_filename : str or PathLike
+        Path of the .nc file to write
     model : flopy model instance
     time_values : the entries for the time dimension
         if not None, the constructor will initialize
@@ -124,6 +126,10 @@ class NetCdf:
         (default 'down')
     verbose : if True, stdout is verbose.  If str, then a log file
         is written to the verbose file
+    prj : str, optional, default None
+        PROJ4 string
+    logger : Logger, optional, default None
+        Logging object for custom logging configuration
     forgive : what to do if a duplicate variable name is being created.  If
         True, then the newly requested var is skipped.  If False, then
         an exception is raised.
@@ -142,7 +148,7 @@ class NetCdf:
 
     def __init__(
         self,
-        output_filename,
+        output_filename: Union[str, os.PathLike],
         model,
         time_values=None,
         z_positive="up",
@@ -152,6 +158,10 @@ class NetCdf:
         forgive=False,
         **kwargs,
     ):
+        if isinstance(output_filename, os.PathLike):
+            output_filename = str(
+                Path(output_filename).expanduser().absolute()
+            )
         assert output_filename.lower().endswith(".nc")
         if verbose is None:
             verbose = model.verbose
