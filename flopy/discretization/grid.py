@@ -35,13 +35,13 @@ class Grid:
     ----------
     grid_type : enumeration
         type of model grid ('structured', 'vertex', 'unstructured')
-    top : ndarray(float)
+    top : float or ndarray
         top elevations of cells in topmost layer
-    botm : ndarray(float)
+    botm : float or ndarray
         bottom elevations of all cells
-    idomain : ndarray(int)
+    idomain : int or ndarray
         ibound/idomain value for each cell
-    lenuni : ndarray(int)
+    lenuni : int or ndarray
         model length units
     crs : pyproj.CRS, optional if `prj` is specified
         Coordinate reference system (CRS) for the model grid
@@ -65,11 +65,11 @@ class Grid:
     ----------
     grid_type : enumeration
         type of model grid ('structured', 'vertex', 'unstructured')
-    top : ndarray(float)
+    top : float or ndarray
         top elevations of cells in topmost layer
-    botm : ndarray(float)
+    botm : float or ndarray
         bottom elevations of all cells
-    idomain : ndarray(int)
+    idomain : int or ndarray
         ibound/idomain value for each cell
     crs : pyproj.CRS
         Coordinate reference system (CRS) for the model grid

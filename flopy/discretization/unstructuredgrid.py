@@ -36,9 +36,9 @@ class UnstructuredGrid(Grid):
         top elevations for all cells in the grid.
     botm : list or ndarray
         bottom elevations for all cells in the grid.
-    idomain : ndarray(int)
+    idomain : int or ndarray
         ibound/idomain value for each cell
-    lenuni : ndarray(int)
+    lenuni : int or ndarray
         model length units
     ncpl : ndarray
         one dimensional array of size nlay with the number of cells in each

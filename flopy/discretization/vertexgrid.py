@@ -23,9 +23,9 @@ class VertexGrid(Grid):
         top elevations for all cells in the grid.
     botm : list or ndarray
         bottom elevations for all cells in the grid.
-    idomain : ndarray(int)
+    idomain : int or ndarray
         ibound/idomain value for each cell
-    lenuni : ndarray(int)
+    lenuni : int or ndarray
         model length units
     crs : pyproj.CRS, optional if `prj` is specified
         Coordinate reference system (CRS) for the model grid
