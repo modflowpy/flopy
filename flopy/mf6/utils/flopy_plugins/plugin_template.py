@@ -1,6 +1,7 @@
+import importlib.util
 import shutil
 from inspect import getsourcefile
-from os import makedirs
+from os import getcwd, makedirs
 from os.path import abspath, exists, join, split, splitext
 
 from flopy.mf6.mfbase import PackageContainer
@@ -15,41 +16,6 @@ class TemplateUtils:
     and create_python_package methods instead.
 
     """
-
-    @staticmethod
-    def update_init(package_name, package_path):
-        """
-        Updates the init file to include the new flopy plug-in.
-
-        Parameters
-        ----------
-        package_name : str
-            Name of flopy plug-in
-        package_path : str
-            Path to flopy plug-in
-        """
-        package_folder, package_file_name = split(package_path)
-        init_file = join(package_folder, "__init__.py")
-        init_lines = []
-        package_file = package_file_name.split(".")[0]
-        # read in existing file
-        with open(init_file, "r") as fd_init:
-            for line in fd_init:
-                sline = line.strip()
-                ssline = sline.split()
-                if len(sline) > 0 and (
-                    len(ssline) <= 1 or package_file != ssline[1][1:]
-                ):
-                    init_lines.append(line)
-        # append line to list
-        init_lines.append(
-            f"from .{package_file} "
-            f"import Flopy{package_name.capitalize()}\n"
-        )
-        # write list to file
-        with open(init_file, "w") as fd_init:
-            for line in init_lines:
-                fd_init.write(line)
 
     @staticmethod
     def _write_spd_eval(
@@ -667,7 +633,7 @@ class TemplateUtils:
         stress_period_vars: dict
             Dictionary containing plug-in stress period data
         """
-        dfn_path = TemplateUtils.get_dfn_base_path()
+        dfn_path = getcwd()
         new_dfn_file_path = join(
             dfn_path, f"{model_type}-fp_{package_name}" f".dfn"
         )
@@ -791,6 +757,7 @@ def generate_plugin_template(
           input file.
         * A template to build your flopy package code from, which is created
           in the mf6/utils/flopy_plugins/plugins folder.
+        * A configuration file (confffpl.py) that points FloPy to the plug-in.
 
     Parameters
     ----------
@@ -843,18 +810,13 @@ def generate_plugin_template(
 
     # run createpackages.py
     print("Running createpackages...")
-    createpackages.create_packages()
-    in_file_path = join(
-        "..", "..", "modflow", f"mf{model_type}fp_{new_package_abbr}.py"
-    )
-    print(f"Package interface file {in_file_path} created.")
+    createpackages.create_packages([dfn_file], getcwd(), False)
+
+    in_file_path = join(getcwd(), f"mf{model_type}fp_{new_package_abbr}.py")
+    print(f"Package data interface file {in_file_path} created.")
 
     # generate flopy package code template
-    package_path = join(
-        TemplateUtils.get_packages_path(),
-        "plugins",
-        f"flopy_{new_package_abbr}_plugin.py",
-    )
+    package_path = join(getcwd(), f"flopy_{new_package_abbr}_plugin.py")
     if stress_period_vars is None:
         stress_period_vars = []
     TemplateUtils.write_class_template(
@@ -868,16 +830,71 @@ def generate_plugin_template(
         evaluation_code_at,
     )
     print(
-        f'Flopy plugin template file "{package_path}" created.  Modify '
+        f'Flopy plugin templated code file "{package_path}" created.  Modify '
         f"this file to add functionality to your flopy plugin."
     )
-    # update init file
-    TemplateUtils.update_init(new_package_abbr, package_path)
+
+    # generate flopy package config file
+    model_type_upper = f"{model_type[0].upper()}{model_type[1:]}"
+    package_abbr_upper = (
+        f"{new_package_abbr[0].upper()}" f"{new_package_abbr[1:]}"
+    )
+    conf_path = join(getcwd(), "conffpl.py")
+    plugin_tpl = (
+        f"flopy_{new_package_abbr}_plugin.py",
+        f"Flopy{package_abbr_upper}",
+        f"mf{model_type}fp_{new_package_abbr}.py",
+        f"Modflow{model_type_upper}fp_{package_abbr_upper}",
+    )
+    full_var = (plugin_tpl,)
+    op = "created"
+    if exists(conf_path):
+        # load existing flopy_plugins variable
+        package_lib = importlib.util.spec_from_file_location(
+            "flopy_plugins", conf_path
+        )
+        pkg = importlib.util.module_from_spec(package_lib)
+        try:
+            package_lib.loader.exec_module(pkg)
+        except FileNotFoundError as ex:
+            print(
+                "ERROR: flopy_plugins variable in file "
+                f"{conf_path} could not be loaded."
+            )
+            raise ex
+        if hasattr(pkg, "flopy_plugins"):
+            # append the new plugin ot the existing plugin variable
+            package_var = getattr(pkg, "flopy_plugins")
+            full_var = []
+            found = False
+            for imp in package_var:
+                if imp[0] == plugin_tpl[0]:
+                    # plugin already exists at this location, overwrite
+                    full_var.append(plugin_tpl)
+                    found = True
+                else:
+                    full_var.append(imp)
+            if not found:
+                full_var.append(plugin_tpl)
+            full_var = tuple(full_var)
+            op = "modified"
+
+    with open(conf_path, "w") as fd_config:
+        fd_config.write("flopy_plugins = (")
+        for plugin in full_var:
+            fd_config.write("(")
+            for item in plugin:
+                fd_config.write(f'"{item}", ')
+            fd_config.write("), ")
+        fd_config.write(")\n")
+    print(
+        f'Flopy plugin config file "{conf_path}" '
+        f"{op}.  This file is used by FloPy to find your plugin's "
+        "python classes."
+    )
 
 
-def create_python_package(
-    plugin_ext, package_type, model_type, python_package_name=None
-):
+def create_python_package(plugin_ext, python_package_name=None):
     """
     This method generates the files necessary to install a python package
     containing a flopy plug-in.
@@ -886,43 +903,53 @@ def create_python_package(
     ----------
     plugin_ext : str
         Three letter abbreviation indicating the extension of the plug-in
-        to be used.  This plug-in must exist in the "flopy_plugins/plugins"
-        folder.
-    package_type : str
-        The abbreviation of the flopy package file associated with the plug-in.
-        This can be found by opening the flopy plug-in's package file in the
-        "mf6/modflow" folder and looking for the value of the "_package_type"
-        variable.
-    model_type : str
-        Three letter abbreviation indicating model type (eg. "GWF")
+        to be used.  There must be a conffpl.py file in your working path that
+        points to this plug-in.
     python_package_name : str
         The name of the python package this method will be generating
     """
     # use plugin_ext to find files, paths, class names, and abbreviations
-    bmi_plugins = FPBMIPluginInterface.flopy_bmi_plugins()
-    if plugin_ext not in bmi_plugins:
+    flopy_bmi_conf = FPBMIPluginInterface.flopy_bmi_conf_files()
+    if plugin_ext not in flopy_bmi_conf:
         raise Exception(
-            f"Flopy plug-in with extension {plugin_ext} not "
+            f"FloPy plug-in with extension {plugin_ext} not "
             f"found.  Only flopy plug-ins installed to run "
-            f"within flopy can be exported to an external "
+            f"within FloPy can be exported to an external "
             f"python package."
         )
-    plugin_class = bmi_plugins[plugin_ext]
-    plugin_file_path = abspath(getsourcefile(plugin_class))
+    if len(flopy_bmi_conf[plugin_ext]) < 3:
+        raise Exception(
+            f"FloPy plug-in data interface file for extension {plugin_ext} "
+            f"not found.  Make sure you are exporting a FloPy plug-in defined "
+            f"in a conffpl.py file in your working directory.  The "
+            f"conffpl.py file should have three entries for your plug-in, "
+            f"path to FloPy plug-in code file, name of FloPy plug-in code "
+            f"class, and path to FloPy plug-in data interface file."
+        )
+    (
+        plugin_file_path,
+        plugin_class,
+        package_file_path,
+        package_class_name,
+    ) = flopy_bmi_conf[plugin_ext]
     plugin_file_name = split(plugin_file_path)[1]
 
-    package_class = PackageContainer.package_factory(package_type, model_type)
-    if package_class is None:
-        raise Exception(
-            f"No package found with type {package_type} of "
-            f"model {model_type}."
-        )
-    package_file_path = abspath(getsourcefile(package_class))
-    dfn_file_name = package_class.dfn_file_name
-    package_file_folder, package_file_name = split(package_file_path)
-    dfn_file_path = join(
-        package_file_folder, "..", "data", "dfn", dfn_file_name
+    # load plugin's package class
+    package_lib = importlib.util.spec_from_file_location(
+        package_class_name, package_file_path
     )
+    pkg = importlib.util.module_from_spec(package_lib)
+    try:
+        package_lib.loader.exec_module(pkg)
+    except FileNotFoundError as ex:
+        print(
+            f"ERROR: Plugin interface file {package_class_name} at file "
+            f"location {package_file_path} could not be loaded."
+        )
+        raise ex
+    package_class = getattr(pkg, package_class_name)
+
+    package_file_name = split(package_file_path)[1]
     if python_package_name is None:
         python_package_name = f"fp_{plugin_ext}_plugin"
 
@@ -935,18 +962,17 @@ def create_python_package(
         makedirs(output_source_folder)
     shutil.copy(plugin_file_path, output_source_folder)
     shutil.copy(package_file_path, output_source_folder)
-    shutil.copy(dfn_file_path, output_source_folder)
 
     # create dist-info entry_points
     plugin = (
         f"{plugin_ext} = {python_package_name}."
         f"{splitext(plugin_file_name)[0]}:"
-        f"{plugin_class.__name__}"
+        f"{plugin_class}"
     )
     package = (
         f"{package_class.package_abbr} = {python_package_name}."
         f"{splitext(package_file_name)[0]}:"
-        f"{package_class.__name__}"
+        f"{package_class_name}"
     )
     entry_points = (
         "{"
@@ -968,7 +994,7 @@ def create_python_package(
     # create __init__.py file
     with open(join(output_source_folder, "__init__.py"), "w") as fd_init:
         fd_init.write(f"from .{splitext(plugin_file_name)[0]} import ")
-        fd_init.write("{plugin_class.__name__}\n")
+        fd_init.write(f"{plugin_class}\n")
 
     # command line to create wheel file
     out_full = abspath(output_package_folder)

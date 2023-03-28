@@ -468,7 +468,7 @@ class MFSimulation(PackageContainer):
             self.simulation_data.lazy_io = True
 
         # verify metadata
-        fpdata = mfstructure.MFStructure()
+        fpdata = mfstructure.MFStructure(reload=True)
         if not fpdata.valid:
             excpt_str = (
                 "Invalid package metadata.  Unable to load MODFLOW "
@@ -1650,7 +1650,14 @@ class MFSimulation(PackageContainer):
                                 f"{package.package_abbr}.\n"
                             )
                             fd_debug.flush()
-
+                    else:
+                        raise FlopyException(
+                            f"ERROR: Package "
+                            f"'{package.package_abbr}' "
+                            "uses FloPy plugin "
+                            f"'{interface}', which could "
+                            f"not be found."
+                        )
         if len(self._flopy_bmi_plugins) == 0:
             # run model
             val = run_model(
@@ -2413,7 +2420,7 @@ class MFSimulation(PackageContainer):
 
         package.container_type = [PackageContainerType.simulation]
         path = self._get_package_path(package)
-        if add_to_package_list and package.package_type.lower != "nam":
+        if add_to_package_list and package.package_type.lower() != "nam":
             if (
                 package.package_type.lower()
                 not in mfstructure.MFStructure().flopy_dict[

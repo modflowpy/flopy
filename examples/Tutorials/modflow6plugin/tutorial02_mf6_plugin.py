@@ -37,11 +37,6 @@
 # plugin template using the flopy template generator.  The plugin template
 # includes all files you will need to create your basic FloPy plugin.
 
-from pathlib import Path
-from tempfile import TemporaryDirectory
-
-import numpy as np
-
 import flopy
 
 # To create a plugin template, you first need to decide which type of model
@@ -120,20 +115,21 @@ flopy.mf6.utils.flopy_plugins.plugin_template.generate_plugin_template(
     evaluation_code_at="iteration_start",
 )
 
-# Running generate_plugin_template creates several files.  First, a dfn file is
-# created in the flopy/mf6/data/dfn that specifies your plugin's user defined
-# variables.  Then, createpackages.py creates a MODFLOW-6-like
-# package file in the flopy/mf6/modeflow folder, which users of your plugin
-# will instantiate.  Additionally, generate_plugin_template generates a FloPy
-# plugin code file in the flopy/mf6/utils/flopy_plugins/plugins folder, which
-# contains the code that will modify MODFLOW-6's behavior.  Edit this file to
-# change the behavior of your plugin.  Start by adding code in the various
-# callback methods that get called at various times during MODFLOW-6's
-# execution.  These callbacks include init_plugin, receive_bmi,
-# stress_period_start, stress_period_end, time_step_start, time_step_end,
-# iteration_start, iteration_end, and sim_complete.  For example, the code in
-# iteration_start will get called every time MODFLOW-6 starts an outer
-# iteration of the solution group the FloPy plugin is operating on.
+# Running generate_plugin_template creates several files in your working
+# directory.  First, a dfn file is created that specifies your plugin's user
+# defined variables.  Then, createpackages.py creates a MODFLOW-6-like
+# package file based on the dfn file, which users of your plugin will
+# instantiate.  A configfpl.py file is also created which tells FloPy how to
+# find your plug-in classes.  Additionally, generate_plugin_template generates
+# a FloPy plugin code file which contains the code that will modify MODFLOW-6's
+# behavior.  Edit this file to change the behavior of your plugin.  Start by
+# adding code in the various callback methods that get called at various times
+# during MODFLOW-6's execution.  These callbacks include init_plugin,
+# receive_bmi, stress_period_start, stress_period_end, time_step_start,
+# time_step_end, iteration_start, iteration_end, and sim_complete.  For
+# example, the code in iteration_start will get called every time MODFLOW-6
+# starts an outer iteration of the solution group the FloPy plugin is
+# operating on.
 #
 # When api_package_support is set to True, the plugin template is set up to
 # use MODFLOW-6's generic API package.  The generic API package can be

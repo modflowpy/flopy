@@ -435,26 +435,50 @@ def build_model_init_vars(param_list):
     return "\n".join(init_var_list)
 
 
-def create_packages():
-    indent = "    "
-    init_string_def = "    def __init__(self"
+def create_packages(package_file_list=None, out_path=None, build_init=True):
+    """Reads in the file definition metadata in the .dfn files and creates the
+    package classes in the modflow folder.
 
-    # load JSON file
-    file_structure = mfstructure.MFStructure(load_from_dfn_files=True)
-    sim_struct = file_structure.sim_struct
+    Parameters
+    ----------
+    package_file_list : list
+        List of package files to process.  If not specified package files in
+        mf6/data/dfn are processed.
+    out_path : Path/str
+        Path of output file.  If not specified output files are written to
+        mf6/modflow.
+    build_init : bool
+        Whether to build a __init__.py file that imports the package classes.
+    """
+    if package_file_list is None:
+        # load JSON file
+        file_structure = mfstructure.MFStructure(
+            load_from_dfn_files=True, reload=True
+        )
+        sim_struct = file_structure.sim_struct
+    else:
+        file_structure = mfstructure.MFStructure(
+            load_from_dfn_files=True,
+            package_list=package_file_list,
+            reload=True,
+        )
+        sim_struct = file_structure.sim_struct
+        for package_file in package_file_list:
+            sim_struct.process_dfn(mfstructure.DfnFile(package_file, False))
 
     # assemble package list of buildable packages
     package_list = []
-    package_list.append(
-        (
-            sim_struct.name_file_struct_obj,
-            PackageLevel.sim_level,
-            "",
-            sim_struct.name_file_struct_obj.dfn_list,
-            sim_struct.name_file_struct_obj.file_type,
-            sim_struct.name_file_struct_obj.header,
+    if package_file_list is None:
+        package_list.append(
+            (
+                sim_struct.name_file_struct_obj,
+                PackageLevel.sim_level,
+                "",
+                sim_struct.name_file_struct_obj.dfn_list,
+                sim_struct.name_file_struct_obj.file_type,
+                sim_struct.name_file_struct_obj.header,
+            )
         )
-    )
     for package in sim_struct.package_struct_objs.values():
         # add simulation level package to list
         package_list.append(
@@ -480,16 +504,17 @@ def create_packages():
             )
         )
     for model_key, model in sim_struct.model_struct_objs.items():
-        package_list.append(
-            (
-                model.name_file_struct_obj,
-                PackageLevel.model_level,
-                model_key,
-                model.name_file_struct_obj.dfn_list,
-                model.name_file_struct_obj.file_type,
-                model.name_file_struct_obj.header,
+        if package_file_list is None:
+            package_list.append(
+                (
+                    model.name_file_struct_obj,
+                    PackageLevel.model_level,
+                    model_key,
+                    model.name_file_struct_obj.dfn_list,
+                    model.name_file_struct_obj.file_type,
+                    model.name_file_struct_obj.header,
+                )
             )
-        )
         for package in model.package_struct_objs.values():
             package_list.append(
                 (
@@ -501,14 +526,29 @@ def create_packages():
                     package.header,
                 )
             )
-
-    util_path, tail = os.path.split(os.path.realpath(__file__))
-    init_file = open(
-        os.path.join(util_path, "..", "modflow", "__init__.py"),
-        "w",
-        newline="\n",
+    process_package_list(
+        package_list, file_structure, out_path=out_path, build_init=build_init
     )
-    init_file.write("from .mfsimulation import MFSimulation  # isort:skip\n")
+
+
+def process_package_list(
+    package_list, file_structure, out_path=None, build_init=True
+):
+    indent = "    "
+    init_string_def = "    def __init__(self"
+
+    if out_path is None:
+        out_path = os.path.split(os.path.realpath(__file__))[0]
+        out_path = os.path.join(out_path, "..", "modflow")
+    if build_init:
+        init_file = open(
+            os.path.join(out_path, "__init__.py"),
+            "w",
+            newline="\n",
+        )
+        init_file.write(
+            "from .mfsimulation import MFSimulation  # isort:skip" "\n"
+        )
 
     nam_import_string = (
         "from .. import mfmodel\nfrom ..data.mfdatautil "
@@ -792,7 +832,7 @@ def create_packages():
 
         # open new Packages file
         pb_file = open(
-            os.path.join(util_path, "..", "modflow", f"mf{package_name}.py"),
+            os.path.join(out_path, f"mf{package_name}.py"),
             "w",
             newline="\n",
         )
@@ -961,7 +1001,7 @@ def create_packages():
                 load_txt,
             )
             md_file = open(
-                os.path.join(util_path, "..", "modflow", f"mf{model_name}.py"),
+                os.path.join(out_path, f"mf{model_name}.py"),
                 "w",
                 newline="\n",
             )
@@ -970,10 +1010,11 @@ def create_packages():
             init_file_imports.append(
                 f"from .mf{model_name} import Modflow{model_name.capitalize()}\n"
             )
-    # Sort the imports
-    for line in sorted(init_file_imports, key=lambda x: x.split()[3]):
-        init_file.write(line)
-    init_file.close()
+    if build_init:
+        # Sort the imports
+        for line in sorted(init_file_imports, key=lambda x: x.split()[3]):
+            init_file.write(line)
+        init_file.close()
 
 
 if __name__ == "__main__":

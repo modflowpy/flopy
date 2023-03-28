@@ -1,3 +1,5 @@
+import importlib.util
+import os
 import sys
 
 if sys.version_info < (3, 10):
@@ -381,6 +383,69 @@ class FPBMIPluginInterface(FPPluginInterface):
                 FPBMIPluginInterface._flopy_bmi_plugins[cls.abbr] = cls
 
     @staticmethod
+    def get_conf_fpl_list():
+        """Imports the flopy configuration file, confflp.py, from the working
+        directory, and reads its contents.
+
+        Returns
+        ----------
+        flopy_plugins: list
+            List of FloPy plug-in entries found in conffpl.py.
+        """
+        conf_path = os.path.join(os.getcwd(), "conffpl.py")
+        try:
+            spec = importlib.util.spec_from_file_location(
+                "__main__", conf_path
+            )
+            conf_fpl = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(conf_fpl)
+        except Exception as ex:
+            print(
+                "INFORMATION: No valid conffpl.py file found in working "
+                "directory."
+            )
+            return []
+        try:
+            return conf_fpl.flopy_plugins
+        except Exception as ex:
+            print(
+                "WARNING: Invalid conffpl.py file found in working "
+                "directory."
+            )
+            return []
+
+    @staticmethod
+    def flopy_bmi_conf_files():
+        """Detects flopy plug-ins listed in configuration file, confflp.py.
+
+        Returns
+        ----------
+        flopy_bmi_conf_files: dict
+            Dictionary with flopy plug-in file paths and class names as values
+            and plug-in names as keys.
+        """
+        flopy_bmi_conf_files = {}
+        conf_fpl_list = FPBMIPluginInterface.get_conf_fpl_list()
+        for plugin_path in conf_fpl_list:
+            plugin_lib = importlib.util.spec_from_file_location(
+                plugin_path[1], plugin_path[0]
+            )
+            plugin = importlib.util.module_from_spec(plugin_lib)
+            try:
+                plugin_lib.loader.exec_module(plugin)
+            except FileNotFoundError as ex:
+                print(
+                    f"WARNING: Plugin {plugin_path[1]} {plugin_path[0]} "
+                    f"could not be found.  Please edit conffpl.py and "
+                    f"fix this plugin path."
+                )
+                continue
+            plugin_cls = getattr(plugin, plugin_path[1])
+
+            flopy_bmi_conf_files[plugin_cls.abbr] = plugin_path
+        return flopy_bmi_conf_files
+
+    @staticmethod
     def flopy_bmi_plugins():
         """Detects flopy plug-ins installed as python packages.
 
@@ -391,6 +456,7 @@ class FPBMIPluginInterface(FPPluginInterface):
             as keys
         """
         if not FPBMIPluginInterface._external_loaded:
+            # detect flopy plugins installed as python packages
             __eps = entry_points(group="mf6api.plugin")
             for _ep in __eps:
                 # internal plug-in takes precedent over external plug-in with
@@ -400,6 +466,32 @@ class FPBMIPluginInterface(FPPluginInterface):
                     FPBMIPluginInterface._flopy_bmi_plugins[
                         _ep.name
                     ] = _plugin_class
+
+            # detect flopy plugins defined in the conffpy.py file
+            conf_fpl_list = FPBMIPluginInterface.get_conf_fpl_list()
+            for plugin_path in conf_fpl_list:
+                plugin_lib = importlib.util.spec_from_file_location(
+                    plugin_path[1], plugin_path[0]
+                )
+                plugin = importlib.util.module_from_spec(plugin_lib)
+                try:
+                    plugin_lib.loader.exec_module(plugin)
+                except FileNotFoundError as ex:
+                    print(
+                        f"WARNING: Plugin {plugin_path[1]} {plugin_path[0]} "
+                        f"could not be found.  Please edit conffpl.py and "
+                        f"fix this plugin path."
+                    )
+                    continue
+                plugin_cls = getattr(plugin, plugin_path[1])
+                if (
+                    plugin_cls.abbr
+                    not in FPBMIPluginInterface._flopy_bmi_plugins
+                ):
+                    FPBMIPluginInterface._flopy_bmi_plugins[
+                        plugin_cls.abbr
+                    ] = plugin_cls
+
             FPBMIPluginInterface._external_loaded = True
         return FPBMIPluginInterface._flopy_bmi_plugins
 

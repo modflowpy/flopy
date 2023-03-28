@@ -22,6 +22,34 @@
 # direction of flow.  Using FloPy plugins is very similar to using MODFLOW-6
 # packages.
 
+# ## Brief technical introduction to FloPy plugins
+#
+# FloPy plugins have two parts to them, an interface and the plugin code.  The
+# interface is defined by the same FloPy files as a MODFLOW package, a dfn
+# file which, when built with createpackages.py, produces a package interface
+# python class.  The plugin code consists of a single python class that
+# alters MODFLOW-6's behavior through the BMI interface.
+#
+# The FloPy plugin interface files can exist anywhere you can instantiate them
+# from your FloPy script.  The FloPy plugin code file must exist in one of
+# three places.
+#
+# 1) In the flopy/mf6/utils/flopy_plugins/plugins folder.
+# 2) Installed as a Python package.  In this case you will need to install the
+# flopy plugin's python package and import the FloPy plugin from that package.
+# 3) Identified in a configuration file, conffpy.py, located in your script's
+# working path.  The conffpy.py file must contain a "flopy_plugins" variable
+# that defines the path to the plugin code file and the name of the plugin's
+# class.  For example, the following line in a conffpy.py file points to a
+# "wpf" plugin with class name "FlopyWpf".
+#
+# flopy_plugins = ((".\\flopy_wpf_test\\flopy_wpf_plugin.py", "FlopyWpf",
+# &emsp;".\\flopy_wpf_test\\mfgwffp_wpf.py", "ModflowGwffp_Wpf"),)
+#
+# When using FloPy plugins in places 2 and 3, note that these FloPy plugins
+# are not part of the FloPy distribution have not necessarily gone through
+# any approval process, so use at your own risk.
+
 # ## Creating a simple MODFLOW-6 simulation
 
 from tempfile import TemporaryDirectory
@@ -153,10 +181,13 @@ for row in range(5, 10):
 
 # ### Create a FloPy river plugin with duel conductances (`RVP`)
 #
-# FloPy plugins are accessible from the same location as MODFLOW-6 packages,
-# and are added to a model in the same way as a MODFLOW-6 package. FloPy also
-# stores FloPy plugin data in the same file format as MODFLOW-6 package data
-# is stored.
+# The FloPy RVP plugin code is in flopy/mf6/utils/flopy_plugins/plugins folder
+# where FloPy will autodetect it. The FloPY RVP interface code is accessible
+# from the same location as MODFLOW-6 packages.  Using the FloPy RVP interface
+# class, the FloPy RVP plugin can be added to a model in the same way as a
+# MODFLOW-6 package. FloPy also stores FloPy plugin data in the same file
+# format as MODFLOW-6 package data is stored, so adding the plugin is just
+# like adding a MODFLOW-6 package.
 
 rvp = flopy.mf6.ModflowGwffp_Rvp(
     gwf,
@@ -165,12 +196,6 @@ rvp = flopy.mf6.ModflowGwffp_Rvp(
     save_flows=True,
     stress_period_data=spd,
 )
-
-# Note that FloPy plugins can also be installed as separate python packages.
-# In this case you will need to install the flopy plugin's python package
-# and import the FloPy plugin from that package.  FloPy plugins that are not
-# part of the FloPy distribution have not necessarily gone through any
-# approval process, so use at your own risk.
 
 # ## Writing and running the simulation
 #

@@ -451,11 +451,14 @@ class DfnFile(Dfn):
     ----
     """
 
-    def __init__(self, file):
+    def __init__(self, file, standard_dfn_path=True):
         super().__init__()
 
-        dfn_path, tail = os.path.split(os.path.realpath(__file__))
-        dfn_path = os.path.join(dfn_path, "dfn")
+        if standard_dfn_path:
+            dfn_path = os.path.split(os.path.realpath(__file__))[0]
+            dfn_path = os.path.join(dfn_path, "dfn")
+        else:
+            dfn_path, file = os.path.split(os.path.realpath(file))
         self._file_path = os.path.join(dfn_path, file)
         self.dfn_file_name = file
         self.dfn_type, self.model_type = self._file_type(
@@ -2469,8 +2472,14 @@ class MFStructure:
 
     _instance = None
 
-    def __new__(cls, internal_request=False, load_from_dfn_files=False):
-        if cls._instance is None:
+    def __new__(
+        cls,
+        internal_request=False,
+        load_from_dfn_files=False,
+        package_list=None,
+        reload=False,
+    ):
+        if cls._instance is None or reload:
             cls._instance = super().__new__(cls)
 
             # Initialize variables
@@ -2479,6 +2488,7 @@ class MFStructure:
             cls._instance.sim_struct = None
             cls._instance.dimension_dict = {}
             cls._instance.load_from_dfn_files = load_from_dfn_files
+            cls._instance._package_list = package_list
             cls._instance.flopy_dict = {}
 
             # Read metadata from file
@@ -2500,18 +2510,24 @@ class MFStructure:
         MFStructure().flopy_dict["solution_packages"] = {}
 
         if self.load_from_dfn_files:
-            mf_dfn = Dfn()
-            dfn_files = mf_dfn.get_file_list()
-
+            if self._package_list is None:
+                mf_dfn = Dfn()
+                dfn_files = mf_dfn.get_file_list()
+                dfn_base_path = os.path.split(os.path.realpath(__file__))[0]
+                dfn_base_path = os.path.join(dfn_base_path, "dfn")
+            else:
+                dfn_files = self._package_list
+                dfn_base_path = None
             # get common
             common_dfn = DfnFile("common.dfn")
             self.sim_struct.process_dfn(common_dfn)
 
             # process each file's flopy header
             for file in dfn_files:
-                dfn_path, tail = os.path.split(os.path.realpath(__file__))
-                dfn_path = os.path.join(dfn_path, "dfn")
-                dfn_file = os.path.join(dfn_path, file)
+                if dfn_base_path is not None:
+                    dfn_file = os.path.join(dfn_base_path, file)
+                else:
+                    dfn_file = file
                 with open(dfn_file) as fd_dfn:
                     for line in fd_dfn:
                         if len(line) < 1 or line[0] != "#":
@@ -2533,7 +2549,10 @@ class MFStructure:
                                 MFStructure().flopy_dict["solution_packages"][
                                     line_lst[3]
                                 ] = line_lst[4:]
-            if len(MFStructure().flopy_dict["solution_packages"]) == 0:
+            if (
+                len(MFStructure().flopy_dict["solution_packages"]) == 0
+                and self._package_list is None
+            ):
                 MFStructure().flopy_dict["solution_packages"]["ims"] = ["*"]
                 warnings.warn(
                     "Package definition files (dfn) do not define a solution "
@@ -2545,7 +2564,9 @@ class MFStructure:
                 )
             # process each file
             for file in dfn_files:
-                self.sim_struct.process_dfn(DfnFile(file))
+                self.sim_struct.process_dfn(
+                    DfnFile(file, self._package_list is None)
+                )
             self.sim_struct.tag_read_as_arrays()
         else:
             package_list = PackageContainer.package_list()
