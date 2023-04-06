@@ -1672,9 +1672,7 @@ class MFPackage(PackageContainer, PackageInterface):
                 self._filename = f"{base_name}.{package_type}"
             else:
                 # filename uses model base name
-                self._filename = MFFileMgmt.string_to_file_path(
-                    f"{self.model_or_sim.name}.{package_type}"
-                )
+                self._filename = f"{self.model_or_sim.name}.{package_type}"
         else:
             if not isinstance(filename, str):
                 message = (
@@ -1696,9 +1694,7 @@ class MFPackage(PackageContainer, PackageInterface):
                     message,
                     self.model_or_sim.simulation_data.debug,
                 )
-            self._filename = MFFileMgmt.string_to_file_path(
-                datautil.clean_filename(filename)
-            )
+            self._filename = datautil.clean_filename(filename)
         self.path, self.structure = self.model_or_sim.register_package(
             self, not loading_package, pname is None, filename is None
         )
