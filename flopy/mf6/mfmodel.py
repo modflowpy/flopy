@@ -1280,7 +1280,7 @@ class MFModel(PackageContainer, ModelInterface):
         # update path in the file manager
         file_mgr = self.simulation_data.mfpath
         file_mgr.set_last_accessed_model_path()
-        path = file_mgr.string_to_file_path(model_ws)
+        path = model_ws
         file_mgr.model_relative_path[self.name] = path
 
         if (
@@ -1730,9 +1730,7 @@ class MFModel(PackageContainer, ModelInterface):
 
         if set_package_filename:
             # filename uses model base name
-            package._filename = MFFileMgmt.string_to_file_path(
-                f"{self.name}.{package.package_type}"
-            )
+            package._filename = f"{self.name}.{package.package_type}"
             if package._filename in self.package_filename_dict:
                 # auto generate a unique file name and register it
                 file_name = MFFileMgmt.unique_file_name(
