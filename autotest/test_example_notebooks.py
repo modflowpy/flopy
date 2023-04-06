@@ -2,6 +2,7 @@ import re
 
 import pytest
 from autotest.conftest import get_project_root_path
+from flaky import flaky
 from modflow_devtools.misc import run_cmd
 
 
@@ -22,6 +23,7 @@ def get_example_notebooks(exclude=None):
     )
 
 
+@flaky(max_runs=3)
 @pytest.mark.slow
 @pytest.mark.example
 @pytest.mark.parametrize(
