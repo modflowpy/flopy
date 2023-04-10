@@ -11,9 +11,9 @@ import numpy as np
 
 class FPPluginInterface:
     """
-    Base class of flopy plugins for MODFLOW-6.  Your flopy
+    Base class of flopy plugins for MODFLOW 6.  Your flopy
     plugins should not directly inherent from this class, inherent from
-    the FPBMIPluginInterface instead.
+    the FPAPIPluginInterface instead.
 
     Attributes
     ----------
@@ -24,7 +24,7 @@ class FPPluginInterface:
     model : MFModel
         Model object that this plugin is a part of.
     package : MFPackage
-        Package data that the flopy plugin for MODFLOW-6 uses to determine
+        Package data that the flopy plugin for MODFLOW 6 uses to determine
         the plugin's user settings.
     mg : Grid
         Model grid object for the model this plugin is a part of.
@@ -66,7 +66,7 @@ class FPPluginInterface:
         model : MFModel
             Model object that this plugin is a part of.
         package : MFPackage
-            Package data that the flopy plugin for MODFLOW-6 uses to determine
+            Package data that the flopy plugin for MODFLOW 6 uses to determine
             the plugin's user settings.
         user_kwargs : dict
             User defined variables passed as kwargs to run_simulation.
@@ -137,7 +137,7 @@ class FPPluginInterface:
     @property
     def dis_type(self):
         """Returns a string specifying the type of dis package the model uses,
-        which can be used in the BMI interface.
+        which can be used in the API interface.
 
         Returns
         ----------
@@ -170,110 +170,6 @@ class FPPluginInterface:
             assert len(cell_id) == 1
             return cell_id[0] + 1
 
-    @staticmethod
-    def sq_saturation(top, bot, x, c1=None, c2=None):
-        """Nonlinear smoothing function returns value between 0-1;
-            Cubic saturation function
-
-        Parameters
-        ----------
-        top : float
-            top elevation of the cell
-        bot : float
-            bottom elevation of the cell
-        x : float
-            head elevation
-        c1 : float
-            coefficient 1
-        c2 : float
-            coefficient 2
-        Returns
-        ----------
-        float : Value from smoothing function.
-        """
-        # process optional variables
-        if c1 is not None:
-            cof1 = c1
-        else:
-            cof1 = -2.0
-        if c1 is not None:
-            cof2 = c2
-        else:
-            cof2 = 3.0
-        #
-        # -- calculate head diference from bottom (w),
-        #    calculate range (b), and
-        #    calculate normalized head difference from bottom (s)
-        w = x - bot
-        b = top - bot
-        s = w / b
-        #
-        # -- divide cof1 and cof2 by range to the power 3 and 2, respectively
-        cof1 = cof1 / b**3.0
-        cof2 = cof2 / b**2.0
-        #
-        # -- calculate fraction
-        if s < 0.0:
-            y = 0.0
-        elif s < 1.0:
-            y = cof1 * w**3.0 + cof2 * w**2.0
-        else:
-            y = 1.0
-        return y
-
-    @staticmethod
-    def sq_saturation_derivative(top, bot, x, c1=None, c2=None):
-        """Nonlinear smoothing function returns value between 0-1;
-            Cubic saturation derivative function
-
-        Parameters
-        ----------
-        top : float
-            top elevation of the cell
-        bot : float
-            bottom elevation of the cell
-        x : float
-            head elevation
-        c1 : float
-            coefficient 1
-        c2 : float
-            coefficient 2
-
-        Returns
-        ----------
-        float : Value from smoothing function.
-        """
-        #!
-        #! -- process optional variables
-        if c1 is not None:
-            cof1 = c1
-        else:
-            cof1 = -2.0
-        if c2 is not None:
-            cof2 = c2
-        else:
-            cof2 = 3.0
-        #!
-        #! -- calculate head diference from bottom (w),
-        #!    calculate range (b), and
-        #!    calculate normalized head difference from bottom (s)
-        w = x - bot
-        b = top - bot
-        s = w / b
-        #!
-        #! -- multiply cof1 and cof2 by 3 and 2, respectively, and then
-        #!    divide by range to the power 3 and 2, respectively
-        cof1 = cof1 * 3.0 / b**3.0
-        cof2 = cof2 * 2.0 / b**2.0
-        #!
-        #! -- calculate derivative of fraction with respect to x
-        if s < 0.0:
-            return 0.0
-        elif s < 1.0:
-            return cof1 * w**2.0 + cof2 * w
-        else:
-            return 0.0
-
     def _build_grid_array(self, val):
         if self.mg.grid_type == "structured":
             return np.full((self.mg.nlay, self.mg.nrow, self.mg.ncol), val)
@@ -283,32 +179,32 @@ class FPPluginInterface:
             return np.full((self.mg.nnodes,), val)
 
 
-class FPBMIPluginInterface(FPPluginInterface):
+class FPAPIPluginInterface(FPPluginInterface):
     """
-    Base class of flopy plugins that use MODFLOW-6's BMI interface.  If you
+    Base class of flopy plugins that use MODFLOW 6's API interface.  If you
     are making a flopy plugin, use this class as your base class.
 
     Parameters
     ----------
     use_api_package : bool
-        Support use of the api package for this plug-in
+        Support use of the api package for this plugin
 
     Attributes
     ----------
     run_for_all_solution_groups : bool
-        Whether this plug-in gets a call-back when MODFLOW-6 is solving for
-        each solution group (True), or only gets a call-back when MODFLOW-6
-        is solving for the solution group this flopy plug-in is a part of
+        Whether this plugin gets a call-back when MODFLOW 6 is solving for
+        each solution group (True), or only gets a call-back when MODFLOW 6
+        is solving for the solution group this flopy plugin is a part of
         (False).
     api_package : MFPackage
-        Generic boundary MODFLOW-6 package that is used by the flopy package
+        Generic boundary MODFLOW 6 package that is used by the flopy package
         to modify the groundwater flow equations. A unique instance of this
         package is created for each flopy package with a package name
         reflecting the flopy package.  Package budgets for flopy packages
-        will appear in the MODFLOW-6 listing file under this generic API
+        will appear in the MODFLOW 6 listing file under this generic API
         package.
-    mf6 : mf6 bmi interface
-        MF6 BMI interface object for direct access to the MF6 API.  Use
+    mf6 : mf6 api interface
+        MF6 API interface object for direct access to the MF6 API.  Use
         mf6_sim, mf6_model, and mf6_dis for more user-friendly access to the
         MF6 API.
     mf6_sim : modflowapi.Simulation
@@ -321,25 +217,25 @@ class FPBMIPluginInterface(FPPluginInterface):
         Modflowapi package object containing access to the discretization
         package's MF6 variables.
     mf6_top : numpy ndarray
-        array of cell top elevations accessed through the MODFLOW-6 BMI
+        array of cell top elevations accessed through the MODFLOW 6 API
     mf6_bot : numpy ndarray
-        array of cell bottom elevations accessed through the MODFLOW-6 BMI
+        array of cell bottom elevations accessed through the MODFLOW 6 API
     mf6_area : numpy ndarray
-        array of cell top/bottom areas accessed through the MODFLOW-6 BMI
+        array of cell top/bottom areas accessed through the MODFLOW 6 API
     mf6_idomain : numpy ndarray
-        array of cell idomain values accessed through the MODFLOW-6 BMI
+        array of cell idomain values accessed through the MODFLOW 6 API
     kper : int
         current stress period
     """
 
-    _flopy_bmi_plugins = {}
+    _flopy_api_plugins = {}
     _external_loaded = False
-    interface_type = "bmi"
+    interface_type = "api"
 
     def __init__(self, use_api_package=True):
         super().__init__()
         self.run_for_all_solution_groups = False
-        # modflowapi BMI interface related objects
+        # modflowapi API interface related objects
         self.mf6 = None
         self.mf6_sim = None
         self.mf6_model = None
@@ -364,7 +260,7 @@ class FPBMIPluginInterface(FPPluginInterface):
         self._allow_convergence = True
         self._default_package = None
 
-        # BMI tags
+        # API tags
         self._pkg_rhs_tag = None
         self._pkg_hcof_tag = None
         if use_api_package:
@@ -379,8 +275,8 @@ class FPBMIPluginInterface(FPPluginInterface):
         """Register plugin type"""
         super().__init_subclass__()
         if cls.abbr is not None:
-            if cls.interface_type == "bmi":
-                FPBMIPluginInterface._flopy_bmi_plugins[cls.abbr] = cls
+            if cls.interface_type == "api":
+                FPAPIPluginInterface._flopy_api_plugins[cls.abbr] = cls
 
     @staticmethod
     def get_conf_fpl_list():
@@ -390,7 +286,7 @@ class FPBMIPluginInterface(FPPluginInterface):
         Returns
         ----------
         flopy_plugins: list
-            List of FloPy plug-in entries found in conffpl.py.
+            List of FloPy plugin entries found in conffpl.py.
         """
         conf_path = os.path.join(os.getcwd(), "conffpl.py")
         try:
@@ -415,17 +311,17 @@ class FPBMIPluginInterface(FPPluginInterface):
             return []
 
     @staticmethod
-    def flopy_bmi_conf_files():
-        """Detects flopy plug-ins listed in configuration file, confflp.py.
+    def flopy_api_conf_files():
+        """Detects flopy plugins listed in configuration file, confflp.py.
 
         Returns
         ----------
-        flopy_bmi_conf_files: dict
-            Dictionary with flopy plug-in file paths and class names as values
-            and plug-in names as keys.
+        flopy_api_conf_files: dict
+            Dictionary with flopy plugin file paths and class names as values
+            and plugin names as keys.
         """
-        flopy_bmi_conf_files = {}
-        conf_fpl_list = FPBMIPluginInterface.get_conf_fpl_list()
+        flopy_api_conf_files = {}
+        conf_fpl_list = FPAPIPluginInterface.get_conf_fpl_list()
         for plugin_path in conf_fpl_list:
             plugin_lib = importlib.util.spec_from_file_location(
                 plugin_path[1], plugin_path[0]
@@ -442,33 +338,40 @@ class FPBMIPluginInterface(FPPluginInterface):
                 continue
             plugin_cls = getattr(plugin, plugin_path[1])
 
-            flopy_bmi_conf_files[plugin_cls.abbr] = plugin_path
-        return flopy_bmi_conf_files
+            flopy_api_conf_files[plugin_cls.abbr] = plugin_path
+        return flopy_api_conf_files
 
     @staticmethod
-    def flopy_bmi_plugins():
-        """Detects flopy plug-ins installed as python packages.
+    def flopy_api_plugins():
+        """Detects flopy plugins installed as python packages.
 
         Returns
         ----------
         flopy_plugins: dict
-            Dictionary with flopy plug-in classes as values and plug-in names
+            Dictionary with flopy plugin classes as values and plugin names
             as keys
         """
-        if not FPBMIPluginInterface._external_loaded:
+        if not FPAPIPluginInterface._external_loaded:
             # detect flopy plugins installed as python packages
             __eps = entry_points(group="mf6api.plugin")
             for _ep in __eps:
-                # internal plug-in takes precedent over external plug-in with
+                # internal plugin takes precedent over external plugin with
                 # the same name
-                if _ep.name not in FPBMIPluginInterface._flopy_bmi_plugins:
-                    _plugin_class = _ep.load()
-                    FPBMIPluginInterface._flopy_bmi_plugins[
+                if _ep.name not in FPAPIPluginInterface._flopy_api_plugins:
+                    try:
+                        _plugin_class = _ep.load()
+                    except Exception as ex:
+                        print(
+                            f"ERROR: Plugin {_ep.name} failed to load.  Fix "
+                            f"or remove this plugin before running FloPy."
+                        )
+                        raise ex
+                    FPAPIPluginInterface._flopy_api_plugins[
                         _ep.name
                     ] = _plugin_class
 
             # detect flopy plugins defined in the conffpy.py file
-            conf_fpl_list = FPBMIPluginInterface.get_conf_fpl_list()
+            conf_fpl_list = FPAPIPluginInterface.get_conf_fpl_list()
             for plugin_path in conf_fpl_list:
                 plugin_lib = importlib.util.spec_from_file_location(
                     plugin_path[1], plugin_path[0]
@@ -486,18 +389,18 @@ class FPBMIPluginInterface(FPPluginInterface):
                 plugin_cls = getattr(plugin, plugin_path[1])
                 if (
                     plugin_cls.abbr
-                    not in FPBMIPluginInterface._flopy_bmi_plugins
+                    not in FPAPIPluginInterface._flopy_api_plugins
                 ):
-                    FPBMIPluginInterface._flopy_bmi_plugins[
+                    FPAPIPluginInterface._flopy_api_plugins[
                         plugin_cls.abbr
                     ] = plugin_cls
 
-            FPBMIPluginInterface._external_loaded = True
-        return FPBMIPluginInterface._flopy_bmi_plugins
+            FPAPIPluginInterface._external_loaded = True
+        return FPAPIPluginInterface._flopy_api_plugins
 
     @property
     def uses_api_package(self):
-        """Returns whether this plug-in uses the api package."""
+        """Returns whether this plugin uses the api package."""
         return self._use_api_package
 
     def receive_vars(self, simulation, model, package, user_kwargs):
@@ -515,7 +418,7 @@ class FPBMIPluginInterface(FPPluginInterface):
         model : MFModel
             Model object that this plugin is a part of.
         package : MFPackage
-            Package data that the flopy plugin for MODFLOW-6 uses to determine
+            Package data that the flopy plugin for MODFLOW 6 uses to determine
             the plugin's user settings.
         user_kwargs : dict
             User defined variables passed as kwargs to run_simulation.
@@ -526,7 +429,7 @@ class FPBMIPluginInterface(FPPluginInterface):
         """This method is called by MFSimulation.run_simulation prior to
         starting the simulation and immediately after receive_vars.  Override
         this method to execute any initialization code in your flopy plugin.
-        FPBMIPluginInterface initializes any enabled listing and/or debug
+        FPAPIPluginInterface initializes any enabled listing and/or debug
         files here.
 
         Parameters
@@ -540,9 +443,9 @@ class FPBMIPluginInterface(FPPluginInterface):
         """
         super().init_plugin(fd_debug)
 
-    def receive_bmi(self, mf6_sim):
+    def receive_api(self, mf6_sim):
         """This method is called by MFSimulation.run_simulation prior to
-        starting the simulation and immediately after the BMI interface is
+        starting the simulation and immediately after the API interface is
         initialized.
 
         Parameters
@@ -588,7 +491,7 @@ class FPBMIPluginInterface(FPPluginInterface):
                     break
 
     def run_for_solution_group(self, sln_group):
-        """Returns true of this plug-in should run for solution group
+        """Returns true of this plugin should run for solution group
         sln_group, returns false otherwise.
 
         Parameters
@@ -773,19 +676,19 @@ class FPBMIPluginInterface(FPPluginInterface):
     @mf6_default_package.setter
     def mf6_default_package(self, package_name):
         """
-        Set the default MODFLOW-6 package that this plug-in will be
-        interfacing with.  This plug-in is given easy access to the
+        Set the default MODFLOW 6 package that this plugin will be
+        interfacing with.  This plugin is given easy access to the
         default package's rhs, hcof, modelist, bound, and nbound properties
         though the "mf6_pkg_*" properties and the "mf6_pkg_set_*" methods.
         """
         if self.mf6 is None:
             print(
-                "Exception: Can not set MODFLOW-6 default package before "
-                "BMI is initialized."
+                "Exception: Can not set MODFLOW 6 default package before "
+                "API is initialized."
             )
             raise Exception(
-                "Can not set MODFLOW-6 default package before "
-                "BMI is initialized."
+                "Can not set MODFLOW 6 default package before "
+                "API is initialized."
             )
         if package_name in self.mf6_model.package_dict:
             self.package_name = package_name.upper()
@@ -989,7 +892,7 @@ class FPBMIPluginInterface(FPPluginInterface):
 
     @property
     def mf6_area(self):
-        """Get MODFLOW-6 AREA array containing model cell areas"""
+        """Get MODFLOW 6 AREA array containing model cell areas"""
         if self._area is None or (
             "area" in self._cache_state and not self._cache_state["area"]
         ):

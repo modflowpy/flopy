@@ -1,7 +1,15 @@
-from flopy.mf6.utils.flopy_plugins import FPBMIPluginInterface
+from flopy.mf6.utils.flopy_plugins import FPAPIPluginInterface
 
 
-class FlopyRvp(FPBMIPluginInterface):
+class FlopyRvp(FPAPIPluginInterface):
+    """
+    FlopyRvc is a simple example of a flopy plugin that behaves similarly to
+    the  MODFLOW 6 RIV package.  FlopyRvc allows for riverbed hydraulic
+    conductance to change with flow direction.
+
+    To use this plugin add a ModflowGwffp_Rvc package
+    (mf6/modflow/mfgwffp_rvt.py) to your flow model.
+    """
     abbr = "rvp"
 
     def __init__(self, use_api_package=True):

@@ -6,24 +6,24 @@ name print_input
 type keyword
 reader urword
 optional true
-longname *** ADD LONGNAME HERE ***
-description *** ADD DESCRIPTION HERE ***
+longname print input to listing file
+description REPLACE print_input {'{#1}': 'river'}
 
 block options
 name print_flows
 type keyword
 reader urword
 optional true
-longname *** ADD LONGNAME HERE ***
-description *** ADD DESCRIPTION HERE ***
+longname print calculated flows to listing file
+description REPLACE print_flows {'{#1}': 'river'}
 
 block options
 name save_flows
 type keyword
 reader urword
 optional true
-longname *** ADD LONGNAME HERE ***
-description *** ADD DESCRIPTION HERE ***
+longname save RVP flows to budget file
+description REPLACE save_flows {'{#1}': 'river'}
 
 block options
 name auxiliary
@@ -31,16 +31,16 @@ type string
 shape (naux)
 reader urword
 optional true
-longname *** ADD LONGNAME HERE ***
-description *** ADD DESCRIPTION HERE ***
+longname keyword to specify aux variables
+description REPLACE auxnames {'{#1}': 'Groundwater Flow'}
 
 block options
 name boundnames
 type keyword
 reader urword
 optional true
-longname *** ADD LONGNAME HERE ***
-description *** ADD DESCRIPTION HERE ***
+longname BOUNDNAME is an ASCII character variable
+description REPLACE boundnames {'{#1}': 'river'}
 
 # --------------------- gwf rvp dimensions ---------------------
 
@@ -49,8 +49,8 @@ name maxbound
 type integer
 reader urword
 optional false
-longname maximum number... 
-description maximum number...
+longname maximum number of rivers
+description REPLACE maxbound {'{#1}': 'rivers'}
 
 # --------------------- gwf rvp period ---------------------
 
@@ -81,8 +81,8 @@ type string
 tagged false
 in_record true
 reader urword
-longname *** ADD LONGNAME HERE ***
-description *** ADD DESCRIPTION HERE ***
+longname cell identifier
+description REPLACE cellid {}
 
 block period
 name stage
@@ -90,8 +90,8 @@ type double precision
 tagged false
 in_record true
 reader urword
-longname *** ADD LONGNAME HERE ***
-description *** ADD DESCRIPTION HERE ***
+longname river stage
+description is the head in the river.
 
 block period
 name cond_up
@@ -99,8 +99,8 @@ type double precision
 tagged false
 in_record true
 reader urword
-longname *** ADD LONGNAME HERE ***
-description *** ADD DESCRIPTION HERE ***
+longname river conductance for upward flow
+description is the riverbed hydraulic conductance for upward flow.
 
 block period
 name cond_down
@@ -108,8 +108,8 @@ type double precision
 tagged false
 in_record true
 reader urword
-longname *** ADD LONGNAME HERE ***
-description *** ADD DESCRIPTION HERE ***
+longname river conductance for downward flow
+description is the riverbed hydraulic conductance for downward flow.
 
 block period
 name rbot
@@ -117,8 +117,8 @@ type double precision
 tagged false
 in_record true
 reader urword
-longname *** ADD LONGNAME HERE ***
-description *** ADD DESCRIPTION HERE ***
+longname river bottom elevation
+description is the elevation of the bottom of the riverbed.
 
 block period
 name aux
@@ -128,8 +128,8 @@ tagged false
 in_record true
 reader urword
 optional True
-longname *** ADD LONGNAME HERE ***
-description *** ADD DESCRIPTION HERE ***
+longname auxiliary variables
+description auxiliary variables
 
 block period
 name boundname
@@ -138,6 +138,6 @@ tagged false
 in_record true
 reader urword
 optional True
-longname *** ADD LONGNAME HERE ***
-description *** ADD DESCRIPTION HERE ***
+longname river name
+description REPLACE boundname {'{#1}': 'river'}
 

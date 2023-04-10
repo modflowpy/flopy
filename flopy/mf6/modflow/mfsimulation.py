@@ -3,13 +3,12 @@ import inspect
 import os.path
 import sys
 import warnings
-from ctypes.util import find_library
 from pathlib import Path
 from typing import List, Optional, Union
 
 import numpy as np
 
-from ...mbase import resolve_exe, run_model
+from ...mbase import run_model
 from ..data import mfstructure
 from ..data.mfdatautil import MFComment
 from ..data.mfstructure import DatumType
@@ -23,9 +22,9 @@ from ..mfbase import (
     VerbosityLevel,
 )
 from ..mfpackage import MFPackage
-from ..modflow import mfgwfapi, mfnam, mftdis
+from ..modflow import mfnam, mftdis
 from ..utils import binaryfile_utils, mfobservation
-from ..utils.flopy_plugins.plugin_interface import FPBMIPluginInterface
+from ..utils.flopy_plugins import plugin_runner
 
 
 class SimulationDict(dict):
@@ -457,7 +456,7 @@ class MFSimulation(PackageContainer):
         memory_print_option=None,
         write_headers=True,
         lazy_io=False,
-        dll_name: Union[str, os.PathLike] = "libmf6",
+        lib_name: Union[str, os.PathLike] = "libmf6",
     ):
         super().__init__(MFSimulationData(sim_ws, self), sim_name)
         self.simulation_data.verbosity_level = self._resolve_verbosity_level(
@@ -482,7 +481,7 @@ class MFSimulation(PackageContainer):
 
         self.version = version
         self.exe_name = exe_name
-        self.dll_name = dll_name
+        self.lib_name = lib_name
         self._models = {}
         self._tdis_file = None
         self._exchange_files = {}
@@ -493,6 +492,7 @@ class MFSimulation(PackageContainer):
 
         self._exg_file_num = {}
         self.flopy_plugins = None
+        self._flopy_api_plugins = None
 
         self.simulation_data.mfpath.set_last_accessed_path()
 
@@ -1629,36 +1629,15 @@ class MFSimulation(PackageContainer):
         if debug_mode:
             fd_debug.write("Discovering FloPy plugins...\n")
             fd_debug.flush()
-        self._flopy_bmi_plugins = {}
-        for model in self.model_dict.values():
-            for package in model.get_package():
-                if package.structure.flopy_package_interface is not None:
-                    interface = package.structure.flopy_package_interface
-                    if interface in FPBMIPluginInterface.flopy_bmi_plugins():
-                        self._flopy_bmi_plugins[
-                            package
-                        ] = FPBMIPluginInterface.flopy_bmi_plugins()[
-                            interface
-                        ]()
-                        if debug_mode:
-                            pg_type = type(self._flopy_bmi_plugins[package])
-                            abbr = self._flopy_bmi_plugins[package].abbr
-                            fd_debug.write(
-                                "  Discovered FloPy plugin type "
-                                f"{pg_type} with abbreviation "
-                                f"{abbr} for package "
-                                f"{package.package_abbr}.\n"
-                            )
-                            fd_debug.flush()
-                    else:
-                        raise FlopyException(
-                            f"ERROR: Package "
-                            f"'{package.package_abbr}' "
-                            "uses FloPy plugin "
-                            f"'{interface}', which could "
-                            f"not be found."
-                        )
-        if len(self._flopy_bmi_plugins) == 0:
+        runner = plugin_runner.PluginRunner(
+            self,
+            kwargs,
+            fd_debug,
+            debug_mode,
+        )
+
+        self._flopy_api_plugins = runner.get_api_plugins()
+        if len(self._flopy_api_plugins) == 0:
             # run model
             val = run_model(
                 self.exe_name,
@@ -1673,52 +1652,7 @@ class MFSimulation(PackageContainer):
             )
             return val
         else:
-            # bmi model run with plug-in callbacks
-            if debug_mode:
-                fd_debug.write("Initializing FloPy plugins...\n")
-                fd_debug.flush()
-            model = []
-            api_plugin_num = 0
-            for package, flopy_plugin in self._flopy_bmi_plugins.items():
-                model.append(package.model_or_sim)
-                package_kwargs = None
-                if package.name[0] in kwargs:
-                    package_kwargs = kwargs[package.name[0]]
-                flopy_plugin.receive_vars(
-                    self, package.model_or_sim, package, package_kwargs
-                )
-                if debug_mode:
-                    fd_debug.write(
-                        "  Initializing FloPy plugin "
-                        f"{flopy_plugin.abbr}.\n"
-                    )
-                    fd_debug.flush()
-                flopy_plugin.init_plugin(fd_debug)
-                if flopy_plugin.uses_api_package:
-                    # set up api package
-                    if hasattr(package, "print_input"):
-                        print_input = package.print_input.get_data()
-                    else:
-                        print_input = True
-                    if hasattr(package, "print_flows"):
-                        print_flows = package.print_flows.get_data()
-                    else:
-                        print_flows = True
-                    if hasattr(package, "save_flows"):
-                        save_flows = package.save_flows.get_data()
-                    else:
-                        save_flows = True
-                    api_package = mfgwfapi.ModflowGwfapi(
-                        model[0],
-                        maxbound=flopy_plugin.max_bound,
-                        pname=f"API_{flopy_plugin.abbr}_{api_plugin_num}",
-                        filename=f"{model[0].name}_{flopy_plugin.abbr}.api",
-                        print_input=print_input,
-                        print_flows=print_flows,
-                        save_flows=save_flows,
-                    )
-                    flopy_plugin.api_package = api_package
-                    api_plugin_num += 1
+            api_plugin_num = runner.initialize()
             if api_plugin_num > 0:
                 # write any changes to simulation
                 if debug_mode:
@@ -1726,274 +1660,9 @@ class MFSimulation(PackageContainer):
                     fd_debug.flush()
                 self.write_simulation()
 
-            try:
-                import modflowapi
-            except Exception as ex:
-                message = (
-                    "Failed to initialize modflowapi library with message:"
-                    f"{str(ex)}"
-                )
-                print(message)
-                if debug_mode:
-                    fd_debug.write(f"{message}\n")
-                    fd_debug.close()
-                raise ex
-
-            # there are BMI packages, run model through BMI interface
-            # set up modflow API
-            dll = self._get_bmi_dll()
-
-            try:
-                modflowapi.run_simulation(
-                    dll,
-                    self.simulation_data.mfpath.get_sim_path(),
-                    self._bmi_callback,
-                )
-            except Exception as ex:
-                message = (
-                    "Failed to complete model run with message: "
-                    f"{str(ex)}\nVersion {modflowapi.__version__} "
-                    f"of modflowapi used."
-                )
-                print(message)
-                if debug_mode:
-                    fd_debug.write(f"{message}\n")
-                    fd_debug.close()
-                raise ex
-            self.flopy_plugins = {}
-
-            # bmi model run with package calls at beginning and end
-            if debug_mode:
-                fd_debug.write("Calling sim_complete for plugins...\n")
-            for package, flopy_plugin in self._flopy_bmi_plugins.items():
-                if debug_mode:
-                    fd_debug.write(
-                        f"  Calling sim_complete for {flopy_plugin.abbr}.\n"
-                    )
-                    fd_debug.flush()
-                flopy_plugin.sim_complete()
-                # build plugin dictionary for easy access
-                self.flopy_plugins[package.name[0]] = flopy_plugin
-
-        if debug_mode:
-            fd_debug.write("run_simulation ending successfully\n")
-            fd_debug.close()
+            self.flopy_plugins = runner.run_simulation()
 
         return True
-
-    @staticmethod
-    def _handle_bmi_callback_exception(loc, flopy_plugin, ex):
-        message = (
-            f"Exception occurred in {loc} " f" of plugin {flopy_plugin.abbr}"
-        )
-        print(message)
-        print(str(ex))
-        if flopy_plugin.fd_debug is not None:
-            flopy_plugin.fd_debug.write(f"{message}\n")
-            flopy_plugin.fd_debug.write(str(ex))
-            flopy_plugin.fd_debug.close()
-        raise ex
-
-    def _bmi_callback(self, mf6_sim, callback_type):
-        import modflowapi
-
-        if callback_type == modflowapi.Callbacks.initialize:
-            # bmi model run with package calls at beginning and end
-            for flopy_plugin in self._flopy_bmi_plugins.values():
-                try:
-                    if flopy_plugin.fd_debug is not None:
-                        flopy_plugin.fd_debug.write(
-                            "Calling receive_bmi for "
-                            "plugin "
-                            f"{flopy_plugin.abbr}.\n"
-                        )
-                        flopy_plugin.fd_debug.flush()
-                    flopy_plugin.receive_bmi(mf6_sim)
-                except Exception as ex:
-                    # print out exception information so it is not lost
-                    message = (
-                        "Exception occurred in receive_bmi of "
-                        f"plugin {flopy_plugin.abbr}"
-                    )
-                    MFSimulation._handle_bmi_callback_exception(
-                        "receive_bmi", flopy_plugin, ex
-                    )
-        elif callback_type == modflowapi.Callbacks.stress_period_start:
-            # call bmi packages stress_period_start
-            for flopy_plugin in self._flopy_bmi_plugins.values():
-                if flopy_plugin.run_for_solution_group(mf6_sim):
-                    try:
-                        if flopy_plugin.fd_debug is not None:
-                            flopy_plugin.fd_debug.write(
-                                "Calling stress_period_start for plugin "
-                                f"{flopy_plugin.abbr}.\n"
-                            )
-                            flopy_plugin.fd_debug.flush()
-                        flopy_plugin.stress_period_start(mf6_sim.kper, mf6_sim)
-                    except Exception as ex:
-                        # print out exception information so it is not lost
-                        MFSimulation._handle_bmi_callback_exception(
-                            "stress_period_start", flopy_plugin, ex
-                        )
-        elif callback_type == modflowapi.Callbacks.timestep_start:
-            # call bmi packages time_step_start
-            for flopy_plugin in self._flopy_bmi_plugins.values():
-                if flopy_plugin.run_for_solution_group(mf6_sim):
-                    try:
-                        if flopy_plugin.fd_debug is not None:
-                            flopy_plugin.fd_debug.write(
-                                "Calling timestep_start for plugin "
-                                f"{flopy_plugin.abbr}.\n"
-                            )
-                            flopy_plugin.fd_debug.flush()
-                        flopy_plugin.time_step_start(
-                            mf6_sim.kper, mf6_sim.kstp, mf6_sim
-                        )
-                    except Exception as ex:
-                        # print out exception information so it is not lost
-                        MFSimulation._handle_bmi_callback_exception(
-                            "timestep_start", flopy_plugin, ex
-                        )
-        elif callback_type == modflowapi.Callbacks.iteration_start:
-            # call bmi packages iteration_start
-            for flopy_plugin in self._flopy_bmi_plugins.values():
-                if flopy_plugin.run_for_solution_group(mf6_sim):
-                    try:
-                        if flopy_plugin.fd_debug is not None:
-                            flopy_plugin.fd_debug.write(
-                                "Calling iteration_start for plugin "
-                                f"{flopy_plugin.abbr}.\n"
-                            )
-                            flopy_plugin.fd_debug.flush()
-                        flopy_plugin.iteration_start(
-                            mf6_sim.kper,
-                            mf6_sim.kstp,
-                            mf6_sim.iteration,
-                            mf6_sim,
-                        )
-                    except Exception as ex:
-                        # print out exception information so it is not lost
-                        MFSimulation._handle_bmi_callback_exception(
-                            "iteration_start", flopy_plugin, ex
-                        )
-        elif callback_type == modflowapi.Callbacks.iteration_end:
-            # call bmi packages iteration_end
-            for flopy_plugin in self._flopy_bmi_plugins.values():
-                if flopy_plugin.run_for_solution_group(mf6_sim):
-                    try:
-                        if flopy_plugin.fd_debug is not None:
-                            flopy_plugin.fd_debug.write(
-                                "Calling iteration_end for plugin "
-                                f"{flopy_plugin.abbr}.\n"
-                            )
-                            flopy_plugin.fd_debug.flush()
-                        allow_cvg = flopy_plugin.iteration_end(
-                            mf6_sim.kper,
-                            mf6_sim.kstp,
-                            mf6_sim.iteration,
-                            mf6_sim,
-                        )
-                    except Exception as ex:
-                        MFSimulation._handle_bmi_callback_exception(
-                            "iteration_end", flopy_plugin, ex
-                        )
-                    mf6_sim.allow_convergence = (
-                        mf6_sim.allow_convergence and allow_cvg
-                    )
-        elif callback_type == modflowapi.Callbacks.timestep_end:
-            # call bmi packages time_step_end
-            slnobj = list(mf6_sim.solutions.values())[0]
-            converged = (
-                mf6_sim.allow_convergence and mf6_sim.iteration < slnobj.mxiter
-            )
-            for flopy_plugin in self._flopy_bmi_plugins.values():
-                if flopy_plugin.run_for_solution_group(mf6_sim):
-                    try:
-                        if flopy_plugin.fd_debug is not None:
-                            flopy_plugin.fd_debug.write(
-                                "Calling timestep_end for plugin "
-                                f"{flopy_plugin.abbr}.\n"
-                            )
-                            flopy_plugin.fd_debug.flush()
-                        flopy_plugin.time_step_end(
-                            mf6_sim.kper, mf6_sim.kstp, converged, mf6_sim
-                        )
-                    except Exception as ex:
-                        MFSimulation._handle_bmi_callback_exception(
-                            "timestep_end", flopy_plugin, ex
-                        )
-        elif callback_type == modflowapi.Callbacks.stress_period_end:
-            # call bmi packages stress_period_start
-            for flopy_plugin in self._flopy_bmi_plugins.values():
-                if flopy_plugin.run_for_solution_group(mf6_sim):
-                    try:
-                        if flopy_plugin.fd_debug is not None:
-                            flopy_plugin.fd_debug.write(
-                                "Calling stress_period_end for plugin "
-                                f"{flopy_plugin.abbr}.\n"
-                            )
-                            flopy_plugin.fd_debug.flush()
-                        flopy_plugin.stress_period_end(mf6_sim.kper, mf6_sim)
-                    except Exception as ex:
-                        MFSimulation._handle_bmi_callback_exception(
-                            "stress_period_end", flopy_plugin, ex
-                        )
-
-    def _add_platform_dll_ext(self):
-        import platform
-
-        if platform.system().lower() == "windows":
-            if not self.dll_name.lower().endswith(".dll"):
-                return f"{self.dll_name}.dll"
-        elif platform.system().lower() == "linux":
-            if not self.dll_name.lower().endswith(".so"):
-                return f"{self.dll_name}.so"
-        else:
-            if not self.dll_name.lower().endswith(".dylib"):
-                return f"{self.dll_name}.dylib"
-        return ""
-
-    def _get_bmi_dll(self):
-        # Check to make sure that program and namefile exist
-        tried = f"{self.dll_name}"
-        dll = find_library(self.dll_name)
-        if dll is None:
-            dll_name = self._add_platform_dll_ext()
-            if dll_name != "":
-                tried = f"{tried} or {dll_name}"
-                dll = find_library(dll_name)
-
-            try:
-                exe_path = resolve_exe("mf6.exe")
-            except FileNotFoundError:
-                exe_path = ""
-            if exe_path != "":
-                exe_dir = os.path.split(exe_path)[0]
-                dll_full_path = os.path.join(exe_dir, self.dll_name)
-                tried = f"{tried} or {dll_full_path}"
-                if os.path.isfile(dll_full_path):
-                    dll = dll_full_path
-                if dll is None and dll_name != "":
-                    dll_full_path = os.path.join(exe_dir, dll_name)
-                    tried = f"{tried} or {dll_full_path}"
-                    if os.path.isfile(dll_full_path):
-                        dll = dll_full_path
-
-        if dll is None:
-            raise Exception(
-                f"The library {self.dll_name} does not exist.\n"
-                f"Tried to find library using the following: "
-                f"{tried}"
-            )
-        else:
-            if (
-                self.simulation_data.verbosity_level.value
-                >= VerbosityLevel.normal.value
-            ):
-                print(
-                    f"FloPy is using the following dll to run the model: {dll}"
-                )
-        return dll
 
     def delete_output_files(self):
         """Deletes simulation output files."""

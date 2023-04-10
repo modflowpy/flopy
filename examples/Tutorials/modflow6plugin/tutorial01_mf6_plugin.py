@@ -19,7 +19,7 @@
 # In this tutorial the rvp FloPy plugin is used with a simple model.  The rvp
 # FloPy plugin behaves like the riv package with the added feature of allowing
 # the modeler to specify a different stream bed conductance depending on the
-# direction of flow.  Using FloPy plugins is very similar to using MODFLOW-6
+# direction of flow.  Using FloPy plugins is very similar to using MODFLOW 6
 # packages.
 
 # ## Brief technical introduction to FloPy plugins
@@ -28,7 +28,7 @@
 # interface is defined by the same FloPy files as a MODFLOW package, a dfn
 # file which, when built with createpackages.py, produces a package interface
 # python class.  The plugin code consists of a single python class that
-# alters MODFLOW-6's behavior through the BMI interface.
+# alters MODFLOW 6's behavior through the API interface.
 #
 # The FloPy plugin interface files can exist anywhere you can instantiate them
 # from your FloPy script.  The FloPy plugin code file must exist in one of
@@ -41,16 +41,16 @@
 # working path.  The conffpy.py file must contain a "flopy_plugins" variable
 # that defines the path to the plugin code file and the name of the plugin's
 # class.  For example, the following line in a conffpy.py file points to a
-# "wpf" plugin with class name "FlopyWpf".
+# "wpm" plugin with class name "FlopyWpm".
 #
-# flopy_plugins = ((".\\flopy_wpf_test\\flopy_wpf_plugin.py", "FlopyWpf",
-# &emsp;".\\flopy_wpf_test\\mfgwffp_wpf.py", "ModflowGwffp_Wpf"),)
+# flopy_plugins = ((".\\flopy_wpm_test\\flopy_wpm_plugin.py", "Flopywpm",
+# &emsp;".\\flopy_wpm_test\\mfgwffp_wpm.py", "ModflowGwffp_Wpm"),)
 #
 # When using FloPy plugins in places 2 and 3, note that these FloPy plugins
 # are not part of the FloPy distribution have not necessarily gone through
 # any approval process, so use at your own risk.
 
-# ## Creating a simple MODFLOW-6 simulation
+# ## Creating a simple MODFLOW 6 simulation
 
 from tempfile import TemporaryDirectory
 import flopy
@@ -63,15 +63,15 @@ name = "t01_mf6_plugin"
 
 # ### Create the FloPy simulation object
 
-# In order to run a simulation with a FloPy plug-in, the MODFLOW-6 BMI
-# interface must be installed.  To help FloPy find the MODFLOW-6 BMI dll on
-# your computer, specify the "dll_name" parameter when constructing your
+# In order to run a simulation with a FloPy plugin, the MODFLOW 6 API
+# interface must be installed.  To help FloPy find the MODFLOW 6 API library on
+# your computer, specify the "lib_name" parameter when constructing your
 # MFSimulation object.
 
 sim = flopy.mf6.MFSimulation(
     sim_name=name,
     exe_name="mf6",
-    dll_name="libmf6",
+    lib_name="libmf6",
     version="mf6",
     sim_ws=workspace,
 )
@@ -181,13 +181,14 @@ for row in range(5, 10):
 
 # ### Create a FloPy river plugin with duel conductances (`RVP`)
 #
-# The FloPy RVP plugin code is in flopy/mf6/utils/flopy_plugins/plugins folder
-# where FloPy will autodetect it. The FloPY RVP interface code is accessible
-# from the same location as MODFLOW-6 packages.  Using the FloPy RVP interface
-# class, the FloPy RVP plugin can be added to a model in the same way as a
-# MODFLOW-6 package. FloPy also stores FloPy plugin data in the same file
-# format as MODFLOW-6 package data is stored, so adding the plugin is just
-# like adding a MODFLOW-6 package.
+# The FloPy RVP "RiVer Plugin" plugin code is in
+# flopy/mf6/utils/flopy_plugins/plugins folder where FloPy will autodetect it.
+# The FloPY RVP interface code is accessible from the same location as
+# MODFLOW 6 packages.  Using the FloPy RVP interface class, the FloPy RVP
+# plugin can be added to a model in the same way as a MODFLOW 6 package.
+# FloPy also stores FloPy plugin data in the same file format as MODFLOW 6
+# package data is stored, so adding the plugin is just like adding a MODFLOW 6
+# package.
 
 rvp = flopy.mf6.ModflowGwffp_Rvp(
     gwf,
@@ -199,17 +200,17 @@ rvp = flopy.mf6.ModflowGwffp_Rvp(
 
 # ## Writing and running the simulation
 #
-# Writing the simulation writes out both the MODFLOW-6 files and the FloPy
-# plug-in files.  Both FloPy plugins and MODFLOW-6 packages have user-defined
+# Writing the simulation writes out both the MODFLOW 6 files and the FloPy
+# plugin files.  Both FloPy plugins and MODFLOW 6 packages have user-defined
 # data which is stored in formatted files.  FloPy also writes plugin
-# information to the model name file on (commented) lines that MODFLOW-6
+# information to the model name file on (commented) lines that MODFLOW 6
 # ignores.
 
 sim.write_simulation()
 
-# When FloPy detects a flopy plug-in in your simulation it uses the modflowapi
-# python package to run your simulation through the MODFLOW-6 BMI interface
-# (using the libmf6 dll instead of using the mf6 executable).
+# When FloPy detects a flopy plugin in your simulation it uses the modflowapi
+# python package to run your simulation through the MODFLOW 6 API interface
+# (using the libmf6 library instead of using the mf6 executable).
 
 success = sim.run_simulation()
 

@@ -6,7 +6,7 @@ from os.path import abspath, exists, join, split, splitext
 
 from flopy.mf6.mfbase import PackageContainer
 from flopy.mf6.utils import createpackages
-from flopy.mf6.utils.flopy_plugins.plugin_interface import FPBMIPluginInterface
+from flopy.mf6.utils.flopy_plugins.plugin_interface import FPAPIPluginInterface
 
 
 class TemplateUtils:
@@ -22,7 +22,7 @@ class TemplateUtils:
         fd_pkg, stress_period_data, api_package_support, indent
     ):
         """
-        Writes the part of the flopy plug-in file that loops through stress
+        Writes the part of the flopy plugin file that loops through stress
         period data.
 
         Parameters
@@ -32,7 +32,7 @@ class TemplateUtils:
         stress_period_data : list
             Stress period data list
         api_package_support : bool
-            Whether plug-in has support for an api package
+            Whether plugin has support for an api package
         indent : str
             The "base" size of the indent to use when writing this file
         """
@@ -125,7 +125,7 @@ class TemplateUtils:
                 "calculated_bound_val\n\n"
             )
 
-            # iteration_start - at end of loop use BMI to write
+            # iteration_start - at end of loop use API to write
             # nodelist, rhs, hcof arrays to API package
             fd_pkg.write(f"{indent}# update mf6 variables\n")
             fd_pkg.write(
@@ -316,24 +316,24 @@ class TemplateUtils:
         evaluation_code_at="iteration_start",
     ):
         """
-        Writes templated code for a new flopy plug-in.
+        Writes templated code for a new flopy plugin.
 
         Parameters
         ----------
         package_name : str
-            Name of flopy plug-in
+            Name of flopy plugin
         package_path : str
-            Path to flopy plug-in
+            Path to flopy plugin
         options_dict : dict
-            Dictionary containing plug-in options
+            Dictionary containing plugin options
         dimensions: lst
-            List containing plug-in dimensions
+            List containing plugin dimensions
         package_data: dict
-            Dictionary containing plug-in package data
+            Dictionary containing plugin package data
         stress_period_data: dict
-            Dictionary containing plug-in stress period data
+            Dictionary containing plugin stress period data
         api_package_support : bool
-            Whether or not this plug-in will have API package support
+            Whether or not this plugin will have API package support
         evaluation_code_at: str
             Location where user is instructed to add code
         """
@@ -358,11 +358,11 @@ class TemplateUtils:
             # class definition and init
             fd_pkg.write(
                 "from flopy.mf6.utils.flopy_plugins import "
-                "FPBMIPluginInterface\n\n\n"
+                "FPAPIPluginInterface\n\n\n"
             )
             fd_pkg.write(
                 f"class Flopy{package_name.capitalize()}"
-                f"(FPBMIPluginInterface):"
+                f"(FPAPIPluginInterface):"
             )
             fd_pkg.write(f'\n    abbr = "{package_name}"\n\n')
             if api_package_support:
@@ -471,9 +471,9 @@ class TemplateUtils:
                         fd_pkg, stress_period_data, api_package_support, indent
                     )
             else:
-                # override receive_bmi
-                fd_pkg.write("\n    def receive_bmi(self, mf6_sim):\n")
-                fd_pkg.write("        super().receive_bmi(mf6_sim)\n\n")
+                # override receive_api
+                fd_pkg.write("\n    def receive_api(self, mf6_sim):\n")
+                fd_pkg.write("        super().receive_api(mf6_sim)\n\n")
                 if api_package_support:
                     # get hcof, rhs, nodelist, and bound
                     fd_pkg.write("        # get mf6 variables\n")
@@ -616,22 +616,22 @@ class TemplateUtils:
         stress_period_vars=None,
     ):
         """
-        Creates dfn for a new flopy plug-in.
+        Creates dfn for a new flopy plugin.
 
         Parameters
         ----------
         model_type : str
-            Type of model that the flopy plug-in supports
+            Type of model that the flopy plugin supports
         package_name : str
-            Name of flopy plug-in
+            Name of flopy plugin
         options : dict
-            Dictionary containing plug-in options
+            Dictionary containing plugin options
         dimensions_list: list
-            List containing plug-in dimensions
+            List containing plugin dimensions
         package_vars: dict
-            Dictionary containing plug-in package data
+            Dictionary containing plugin package data
         stress_period_vars: dict
-            Dictionary containing plug-in stress period data
+            Dictionary containing plugin stress period data
         """
         dfn_path = getcwd()
         new_dfn_file_path = join(
@@ -757,7 +757,7 @@ def generate_plugin_template(
           input file.
         * A template to build your flopy package code from, which is created
           in the mf6/utils/flopy_plugins/plugins folder.
-        * A configuration file (confffpl.py) that points FloPy to the plug-in.
+        * A configuration file (confffpl.py) that points FloPy to the plugin.
 
     Parameters
     ----------
@@ -781,8 +781,8 @@ def generate_plugin_template(
         "optional").
     api_package_support : bool (optional)
         True if your plugin will be using the generic MF-6 API package.  Flopy
-        plug-ins will automatically add a unique instance of the API package
-        to any simulation that uses this plug-in and give the plug-in access
+        plugins will automatically add a unique instance of the API package
+        to any simulation that uses this plugin and give the plugin access
         to that API package.
     evaluation_code_at : str (optional)
         String that determines where your main code block that evaluates and
@@ -894,44 +894,43 @@ def generate_plugin_template(
     )
 
 
-def create_python_package(plugin_ext, python_package_name=None):
+def create_python_package(plugin_abbr, python_package_name=None):
     """
     This method generates the files necessary to install a python package
-    containing a flopy plug-in.
+    containing a flopy plugin.
 
     Parameters
     ----------
-    plugin_ext : str
-        Three letter abbreviation indicating the extension of the plug-in
-        to be used.  There must be a conffpl.py file in your working path that
-        points to this plug-in.
+    plugin_abbr : str
+        Three letter abbreviation of the plugin to be used.  There must be a
+        conffpl.py file in your working path that points to this plugin.
     python_package_name : str
         The name of the python package this method will be generating
     """
-    # use plugin_ext to find files, paths, class names, and abbreviations
-    flopy_bmi_conf = FPBMIPluginInterface.flopy_bmi_conf_files()
-    if plugin_ext not in flopy_bmi_conf:
+    # use plugin_abbr to find files, paths, class names, and abbreviations
+    flopy_api_conf = FPAPIPluginInterface.flopy_api_conf_files()
+    if plugin_abbr not in flopy_api_conf:
         raise Exception(
-            f"FloPy plug-in with extension {plugin_ext} not "
-            f"found.  Only flopy plug-ins installed to run "
+            f"FloPy plugin with abbreviation {plugin_abbr} not "
+            f"found.  Only flopy plugins installed to run "
             f"within FloPy can be exported to an external "
             f"python package."
         )
-    if len(flopy_bmi_conf[plugin_ext]) < 3:
+    if len(flopy_api_conf[plugin_abbr]) < 3:
         raise Exception(
-            f"FloPy plug-in data interface file for extension {plugin_ext} "
-            f"not found.  Make sure you are exporting a FloPy plug-in defined "
+            f"FloPy plugin data interface file for abbreviation {plugin_abbr} "
+            f"not found.  Make sure you are exporting a FloPy plugin defined "
             f"in a conffpl.py file in your working directory.  The "
-            f"conffpl.py file should have three entries for your plug-in, "
-            f"path to FloPy plug-in code file, name of FloPy plug-in code "
-            f"class, and path to FloPy plug-in data interface file."
+            f"conffpl.py file should have three entries for your plugin, "
+            f"path to FloPy plugin code file, name of FloPy plugin code "
+            f"class, and path to FloPy plugin data interface file."
         )
     (
         plugin_file_path,
         plugin_class,
         package_file_path,
         package_class_name,
-    ) = flopy_bmi_conf[plugin_ext]
+    ) = flopy_api_conf[plugin_abbr]
     plugin_file_name = split(plugin_file_path)[1]
 
     # load plugin's package class
@@ -951,7 +950,7 @@ def create_python_package(plugin_ext, python_package_name=None):
 
     package_file_name = split(package_file_path)[1]
     if python_package_name is None:
-        python_package_name = f"fp_{plugin_ext}_plugin"
+        python_package_name = f"fp_{plugin_abbr}_plugin"
 
     # create temp python package folder and move files there
     output_package_folder = f"{python_package_name}"
@@ -965,7 +964,7 @@ def create_python_package(plugin_ext, python_package_name=None):
 
     # create dist-info entry_points
     plugin = (
-        f"{plugin_ext} = {python_package_name}."
+        f"{plugin_abbr} = {python_package_name}."
         f"{splitext(plugin_file_name)[0]}:"
         f"{plugin_class}"
     )

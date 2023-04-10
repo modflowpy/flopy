@@ -20,17 +20,17 @@
 
 # ## Getting Started
 #
-# MODFLOW-6 supports a BMI interface which allows you to modify its behavior.
-# Support for accessing the BMI interface using python is provided through the
+# MODFLOW 6 supports a API interface which allows you to modify its behavior.
+# Support for accessing the API interface using python is provided through the
 # modflowapi library.  FloPy plugins are FloPy-integrated components that
-# modify MODFLOW-6 functionality using the modflowapi library.  The FloPy
-# plugins architecture streamlines the process of modifying MODFLOW-6
+# modify MODFLOW 6 functionality using the modflowapi library.  The FloPy
+# plugins architecture streamlines the process of modifying MODFLOW 6
 # functionality by:
 #
 # * Providing template generators to help rapidly set up your plugin's
 # interface
 # * Automatically loading, saving, and running FloPy plugins as part of a
-# MODFLOW-6 simulation
+# MODFLOW 6 simulation
 # * Providing an interface that allows multiple FloPy plugins to run together
 #
 # This tutorial describes the process of generating your own custom FloPy
@@ -47,7 +47,7 @@ import flopy
 mt = "gwf"
 
 # Next, pick a unique three letter abbreviation for your plugin.  This
-# abbreviation should be different from any MODFLOW-6 package or other flopy
+# abbreviation should be different from any MODFLOW 6 package or other flopy
 # plugin abbreviation.
 
 # define the stress plugin three letter abbreviation
@@ -105,6 +105,16 @@ spv = {
 # without support for the API package (api_package_support), and can also
 # define where you want the main loop of your plugin code to be
 # (evaluation_code_at).
+#
+# MODFLOW 6 has a special type of stress package, called the Application
+# Programming Interface (API) Package. This package does nothing by itself,
+# but it does provide empty arrays that can be filled from another program
+# that is accessing it through the MODFLOW API. In the context described here,
+# the plugin transfers stress package information, calculated with Python,
+# into the MODFLOW API Package while MODFLOW is running. MODFLOW then proceeds
+# with this information and includes it in solution of the matrix equations
+# for a model.
+
 
 flopy.mf6.utils.flopy_plugins.plugin_template.generate_plugin_template(
     mt,
@@ -117,25 +127,25 @@ flopy.mf6.utils.flopy_plugins.plugin_template.generate_plugin_template(
 
 # Running generate_plugin_template creates several files in your working
 # directory.  First, a dfn file is created that specifies your plugin's user
-# defined variables.  Then, createpackages.py creates a MODFLOW-6-like
+# defined variables.  Then, createpackages.py creates a MODFLOW 6-like
 # package file based on the dfn file, which users of your plugin will
 # instantiate.  A configfpl.py file is also created which tells FloPy how to
-# find your plug-in classes.  Additionally, generate_plugin_template generates
-# a FloPy plugin code file which contains the code that will modify MODFLOW-6's
+# find your plugin classes.  Additionally, generate_plugin_template generates
+# a FloPy plugin code file which contains the code that will modify MODFLOW 6's
 # behavior.  Edit this file to change the behavior of your plugin.  Start by
 # adding code in the various callback methods that get called at various times
-# during MODFLOW-6's execution.  These callbacks include init_plugin,
-# receive_bmi, stress_period_start, stress_period_end, time_step_start,
+# during MODFLOW 6's execution.  These callbacks include init_plugin,
+# receive_api, stress_period_start, stress_period_end, time_step_start,
 # time_step_end, iteration_start, iteration_end, and sim_complete.  For
-# example, the code in iteration_start will get called every time MODFLOW-6
+# example, the code in iteration_start will get called every time MODFLOW 6
 # starts an outer iteration of the solution group the FloPy plugin is
 # operating on.
 #
 # When api_package_support is set to True, the plugin template is set up to
-# use MODFLOW-6's generic API package.  The generic API package can be
-# used to modify the behavior of a MODFLOW-6 model.  For example, a FloPy
+# use MODFLOW 6's generic API package.  The generic API package can be
+# used to modify the behavior of a MODFLOW 6 model.  For example, a FloPy
 # plugin can modify the API package's rhs, hcof, nodelist, and nbound
-# variables (mf6_pkg_rhs, mf6_pkg_hcof, ...) to behave like a custom MODFLOW-6
+# variables (mf6_pkg_rhs, mf6_pkg_hcof, ...) to behave like a custom MODFLOW 6
 # package.
 #
 # More complete tutorials for creating FloPy plugins are available in two

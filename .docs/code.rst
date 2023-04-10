@@ -203,25 +203,46 @@ Contents:
 FloPy for MODFLOW 6 Plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-FloPy for MODFLOW 6 allows you to build FloPy Plugins, which can change the
-behavior of MODFLOW 6 through MODFLOW 6's BMI interface.  FloPy Plugins can
-change the behavior of an existing MODFLOW 6 package or behave like a new
+FloPy plugins are python code designed to change the behavior of MODFLOW 6.  
+Using FloPy plugins is similar to using a MODFLOW 6 package in FloPy.  Two 
+example plugins are included with FloPy which behave similar to the RIV 
+package, but allow for different conductances in the upward and downward 
+directions.  To use FloPy plugins instantiate a plugin input class 
+similar to the "package" input classes FloPy uses to add a package to an 
+existing model.   Documentation for the plugin input classes of the two 
+example plugins are included below.
+
+Contents:
+
+.. toctree::
+   :maxdepth: 4
+
+   ./source/flopy.mf6.modflow.mfgwffp_rvc.rst
+   ./source/flopy.mf6.modflow.mfgwffp_rvp.rst
+
+
+Creating FloPy for MODFLOW 6 Plugins
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+FloPy for MODFLOW 6 allows you to build FloPy Plugins, which can change 
+the behavior of MODFLOW 6 through MODFLOW 6's API interface.  FloPy Plugins can
+change the behavior of an existing MODFLOW 6 package or create a new
 stand-alone MODFLOW 6 package. There are three ways FloPy can detect plugins.
 
-1. Create a conffpl.py file in your working directly that identifies the plugins
-See example notebooks in examples/Notebooks/dev for more information.
+1. Create a conffpl.py file in your working directly that identifies the 
+plugins.  See example notebooks in examples/Notebooks/dev for more information.
 
-2. Install plugins as separate python packages. See example notebook in 
+2. Install plugins as separate python packages.  See example notebook in 
 examples/Notebooks/dev for more information.
 
-3. Include plugin as part of your FloPy distribution.  The plugin implementation
+3. Include plugins as part of your FloPy distribution.  The plugin implementation
 file goes in flopy/mf6/utils/flopy/plugins/plugins and the plugin interface file
-goes in flopy/mf6/modflow (with the appropriate \__init\__.py edited to point to
-these files).
+goes in flopy/mf6/modflow (with the appropriate \__init\__.py files edited to point 
+to these files).
 
 Use plugin_template.py's generate_plugin_template method to help streamline the
 FloPy plugin development process.  For more information on FloPy plugins see the
-tutorials and notebooks.
+FloPy plugin tutorials and notebooks.
 
 Contents:
 
