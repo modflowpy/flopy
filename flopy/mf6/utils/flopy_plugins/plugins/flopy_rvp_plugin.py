@@ -10,6 +10,7 @@ class FlopyRvp(FPAPIPluginInterface):
     To use this plugin add a ModflowGwffp_Rvc package
     (mf6/modflow/mfgwffp_rvt.py) to your flow model.
     """
+
     abbr = "rvp"
 
     def __init__(self, use_api_package=True):

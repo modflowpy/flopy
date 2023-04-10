@@ -66,9 +66,7 @@ class PluginRunner:
                 f"{tried}"
             )
         else:
-            if (
-                    self.verbosity_level >= VerbosityLevel.normal.value
-            ):
+            if self.verbosity_level >= VerbosityLevel.normal.value:
                 print(
                     f"FloPy is using the following lib to run the model: {lib}"
                 )
@@ -123,8 +121,7 @@ class PluginRunner:
             )
             if self.debug_mode:
                 self.fd_debug.write(
-                    "  Initializing FloPy plugin "
-                    f"{flopy_plugin.abbr}.\n"
+                    "  Initializing FloPy plugin " f"{flopy_plugin.abbr}.\n"
                 )
                 self.fd_debug.flush()
             flopy_plugin.init_plugin(self.fd_debug)
