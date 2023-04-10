@@ -1,5 +1,6 @@
-from ctypes.util import find_library
 import os
+from ctypes.util import find_library
+
 from ....mbase import resolve_exe
 from ...mfbase import FlopyException, VerbosityLevel
 from ...modflow import mfgwfapi
