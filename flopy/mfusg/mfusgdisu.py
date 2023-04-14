@@ -466,7 +466,7 @@ class MfUsgDisU(Package):
         Check layer thickness.
 
         """
-        return (self.parent.modelgrid.thick > 0).all()
+        return (self.parent.modelgrid.cell_thickness > 0).all()
 
     def get_cell_volumes(self):
         """

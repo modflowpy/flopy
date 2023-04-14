@@ -909,84 +909,84 @@ def unstructured_grid():
     return GridCases().unstructured_small()
 
 
-def test_structured_thick(structured_grid):
-    thick = structured_grid.thick
-    assert np.allclose(thick, 5.0), "thicknesses != 5."
+def test_structured_thickness(structured_grid):
+    thickness = structured_grid.cell_thickness
+    assert np.allclose(thickness, 5.0), "thicknesses != 5."
 
-    sat_thick = structured_grid.saturated_thick(structured_grid.botm + 10.0)
-    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
+    sat_thick = structured_grid.saturated_thickness(structured_grid.botm + 10.0)
+    assert np.allclose(sat_thick, thickness), "saturated thicknesses != 5."
 
-    sat_thick = structured_grid.saturated_thick(structured_grid.botm + 5.0)
-    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
+    sat_thick = structured_grid.saturated_thickness(structured_grid.botm + 5.0)
+    assert np.allclose(sat_thick, thickness), "saturated thicknesses != 5."
 
-    sat_thick = structured_grid.saturated_thick(structured_grid.botm + 2.5)
+    sat_thick = structured_grid.saturated_thickness(structured_grid.botm + 2.5)
     assert np.allclose(sat_thick, 2.5), "saturated thicknesses != 2.5"
 
-    sat_thick = structured_grid.saturated_thick(structured_grid.botm)
+    sat_thick = structured_grid.saturated_thickness(structured_grid.botm)
     assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
 
-    sat_thick = structured_grid.saturated_thick(structured_grid.botm - 100.0)
+    sat_thick = structured_grid.saturated_thickness(structured_grid.botm - 100.0)
     assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
 
 
-def test_vertices_thick(vertex_grid):
-    thick = vertex_grid.thick
-    assert np.allclose(thick, 5.0), "thicknesses != 5."
+def test_vertices_thickness(vertex_grid):
+    thickness = vertex_grid.cell_thickness
+    assert np.allclose(thickness, 5.0), "thicknesses != 5."
 
-    sat_thick = vertex_grid.saturated_thick(vertex_grid.botm + 10.0)
-    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
+    sat_thick = vertex_grid.saturated_thickness(vertex_grid.botm + 10.0)
+    assert np.allclose(sat_thick, thickness), "saturated thicknesses != 5."
 
-    sat_thick = vertex_grid.saturated_thick(vertex_grid.botm + 5.0)
-    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
+    sat_thick = vertex_grid.saturated_thickness(vertex_grid.botm + 5.0)
+    assert np.allclose(sat_thick, thickness), "saturated thicknesses != 5."
 
-    sat_thick = vertex_grid.saturated_thick(vertex_grid.botm + 2.5)
+    sat_thick = vertex_grid.saturated_thickness(vertex_grid.botm + 2.5)
     assert np.allclose(sat_thick, 2.5), "saturated thicknesses != 2.5"
 
-    sat_thick = vertex_grid.saturated_thick(vertex_grid.botm)
+    sat_thick = vertex_grid.saturated_thickness(vertex_grid.botm)
     assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
 
-    sat_thick = vertex_grid.saturated_thick(vertex_grid.botm - 100.0)
+    sat_thick = vertex_grid.saturated_thickness(vertex_grid.botm - 100.0)
     assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
 
 
-def test_unstructured_thick(unstructured_grid):
-    thick = unstructured_grid.thick
-    assert np.allclose(thick, 5.0), "thicknesses != 5."
+def test_unstructured_thickness(unstructured_grid):
+    thickness = unstructured_grid.cell_thickness
+    assert np.allclose(thickness, 5.0), "thicknesses != 5."
 
-    sat_thick = unstructured_grid.saturated_thick(
+    sat_thick = unstructured_grid.saturated_thickness(
         unstructured_grid.botm + 10.0
     )
-    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
+    assert np.allclose(sat_thick, thickness), "saturated thicknesses != 5."
 
-    sat_thick = unstructured_grid.saturated_thick(unstructured_grid.botm + 5.0)
-    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
+    sat_thick = unstructured_grid.saturated_thickness(unstructured_grid.botm + 5.0)
+    assert np.allclose(sat_thick, thickness), "saturated thicknesses != 5."
 
-    sat_thick = unstructured_grid.saturated_thick(unstructured_grid.botm + 2.5)
+    sat_thick = unstructured_grid.saturated_thickness(unstructured_grid.botm + 2.5)
     assert np.allclose(sat_thick, 2.5), "saturated thicknesses != 2.5"
 
-    sat_thick = unstructured_grid.saturated_thick(unstructured_grid.botm)
+    sat_thick = unstructured_grid.saturated_thickness(unstructured_grid.botm)
     assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
 
-    sat_thick = unstructured_grid.saturated_thick(
+    sat_thick = unstructured_grid.saturated_thickness(
         unstructured_grid.botm - 100.0
     )
     assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
 
 
 @parametrize_with_cases("grid", cases=GridCases, prefix="structured_cbd")
-def test_structured_ncb_thick(grid):
-    thick = grid.thick
+def test_structured_ncb_thickness(grid):
+    thickness = grid.cell_thickness
 
-    assert thick.shape[0] == grid.nlay + np.count_nonzero(
+    assert thickness.shape[0] == grid.nlay + np.count_nonzero(
         grid.laycbd
-    ), "grid thick attribute returns incorrect shape"
+    ), "grid cell_thickness attribute returns incorrect shape"
 
-    thick = grid.remove_confining_beds(grid.thick)
+    thickness = grid.remove_confining_beds(grid.cell_thickness)
     assert (
-        thick.shape == grid.shape
+        thickness.shape == grid.shape
     ), "quasi3d confining beds not properly removed"
 
-    sat_thick = grid.saturated_thick(grid.thick)
+    sat_thick = grid.saturated_thickness(grid.cell_thickness)
     assert (
         sat_thick.shape == grid.shape
     ), "saturated_thickness confining beds not removed"
