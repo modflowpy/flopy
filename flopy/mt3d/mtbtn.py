@@ -534,7 +534,7 @@ class Mt3dBtn(Package):
                 array_free_format=False,
             )
         else:
-            thickness = mf.modelgrid.thick
+            thickness = mf.modelgrid.cell_thickness
             self.dz = Util3d(
                 self.parent,
                 (nlay, nrow, ncol),

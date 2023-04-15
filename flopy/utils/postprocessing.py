@@ -637,13 +637,15 @@ def get_specific_discharge(
     if classical_budget:
         # get saturated thickness (head - bottom elev for unconfined layer)
         if head is None:
-            sat_thk = modelgrid.remove_confining_beds(modelgrid.thick)
+            saturated_thickness = modelgrid.remove_confining_beds(
+                modelgrid.cell_thickness
+            )
         else:
-            sat_thk = modelgrid.saturated_thick(
+            saturated_thickness = modelgrid.saturated_thickness(
                 head, mask=[model.hdry, model.hnoflo]
             )
 
-        sat_thk.shape = modelgrid.shape
+        saturated_thickness.shape = modelgrid.shape
 
         # inform modelgrid of no-flow and dry cells
         modelgrid = model.modelgrid
@@ -657,11 +659,11 @@ def get_specific_discharge(
 
         # get cross section areas along x
         delc = np.reshape(modelgrid.delc, (1, modelgrid.nrow, 1))
-        cross_area_x = delc * sat_thk
+        cross_area_x = delc * saturated_thickness
 
         # get cross section areas along y
         delr = np.reshape(modelgrid.delr, (1, 1, modelgrid.ncol))
-        cross_area_y = delr * sat_thk
+        cross_area_y = delr * saturated_thickness
 
         # get cross section areas along z
         cross_area_z = np.ones(modelgrid.shape) * delc * delr
@@ -671,10 +673,20 @@ def get_specific_discharge(
             qx = np.zeros(modelgrid.shape, dtype=np.float32)
             qy = np.zeros(modelgrid.shape, dtype=np.float32)
             cross_area_x = (
-                delc[:] * 0.5 * (sat_thk[:, :, :-1] + sat_thk[:, :, 1:])
+                delc[:]
+                * 0.5
+                * (
+                    saturated_thickness[:, :, :-1]
+                    + saturated_thickness[:, :, 1:]
+                )
             )
             cross_area_y = (
-                delr * 0.5 * (sat_thk[:, 1:, :] + sat_thk[:, :-1, :])
+                delr
+                * 0.5
+                * (
+                    saturated_thickness[:, 1:, :]
+                    + saturated_thickness[:, :-1, :]
+                )
             )
             qx[:, :, 1:] = (
                 0.5 * (tqx[:, :, 2:] + tqx[:, :, 1:-1]) / cross_area_x

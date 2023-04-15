@@ -316,11 +316,11 @@ def test_load_twri_grid(example_data_path):
     assert (
         mg.shape == shape
     ), f"modelgrid shape {mg.shape} not equal to {shape}"
-    thick = mg.thick
+    thickness = mg.cell_thickness
     shape = (5, 15, 15)
     assert (
-        thick.shape == shape
-    ), f"thickness shape {thick.shape} not equal to {shape}"
+        thickness.shape == shape
+    ), f"cell_thickness shape {thickness.shape} not equal to {shape}"
 
 
 def test_mg(function_tmpdir):
@@ -347,7 +347,7 @@ def test_mg(function_tmpdir):
         botm=botm,
     )
     bas = ModflowBas(ms, ifrefm=True)
-    t = ms.modelgrid.thick
+    t = ms.modelgrid.cell_thickness
 
     # test instantiation of an empty basic Structured Grid
     mg = StructuredGrid(dis.delc.array, dis.delr.array)

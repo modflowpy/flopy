@@ -269,7 +269,7 @@ class ModflowDis(Package):
         Check layer thickness.
 
         """
-        return (self.parent.modelgrid.thick > 0).all()
+        return (self.parent.modelgrid.cell_thickness > 0).all()
 
     def get_totim(self, use_cached=False):
         """
@@ -434,7 +434,7 @@ class ModflowDis(Package):
         """
         vol = np.empty((self.nlay, self.nrow, self.ncol))
         for l in range(self.nlay):
-            vol[l, :, :] = self.parent.modelgrid.thick[l]
+            vol[l, :, :] = self.parent.modelgrid.cell_thickness[l]
         for r in range(self.nrow):
             vol[:, r, :] *= self.delc[r]
         for c in range(self.ncol):
@@ -672,7 +672,7 @@ class ModflowDis(Package):
         active = chk.get_active(include_cbd=True)
 
         # Use either a numpy array or masked array
-        thickness = self.parent.modelgrid.thick
+        thickness = self.parent.modelgrid.cell_thickness
         non_finite = ~(np.isfinite(thickness))
         if non_finite.any():
             thickness[non_finite] = 0
