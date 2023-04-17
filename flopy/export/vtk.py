@@ -1090,8 +1090,8 @@ class Vtk:
         timeseries : bool
             method to plot data as a series of vtk timeseries files for
             animation or as a single static vtk file. Default is false
-
         """
+
         if isinstance(pathlines, (np.recarray, np.ndarray)):
             pathlines = [pathlines]
 
@@ -1111,7 +1111,7 @@ class Vtk:
                         arrays[key].append(rec[key])
                 lines.append(line)
 
-            self._set_particle_track_data(points, arrays, lines)
+            self._set_particle_track_data(points, lines, arrays)
 
         else:
             self.vtk_pathlines = self.__vtk.vtkUnstructuredGrid()
@@ -1265,28 +1265,26 @@ class Vtk:
             self.add_transient_array(d, name, masked_values)
             self.__transient_output_data = True
 
-    def _set_particle_track_data(self, points, d, lines=None):
+    def _set_particle_track_data(self, points, lines=None, arrays=None):
         """
-        Build VTK geometry for particle tracking results
-        and optionally arrange scalars at grid vertices.
+        Build VTK data structures for particle positions, pathlines, and metadata
 
         Parameters
         ----------
-        points : list or array-like
+        points : list or array_like
             list of (x, y, z) points
-        d : dict
-            dictionary of numpy arrays to add to vtk
-        lines : list or array-like
-            list of lists or 2D array of (x, y, z) coordinates
+        lines : list or array_like, optional
+            list of lists or 2D array of particle tracks, each with
+            n >= 1 (x, y, z) coordinates making n - 1 line segments
+        arrays : dict, optional
+            dictionary of array data to associate with points (e.g., particle ID, time)
         """
         from vtk.util import numpy_support
-
-        nverts = len(points)
 
         if self.vtk_pathlines is None:
             self.vtk_pathlines = self.__vtk.vtkUnstructuredGrid()
 
-        # add points
+        # create vtkPoints container
         vtk_points = self.__vtk.vtkPoints()
         lines = [] if lines is None else lines
         if any(lines):
@@ -1298,33 +1296,34 @@ class Vtk:
                 vtk_points.InsertNextPoint(point)
         self.vtk_pathlines.SetPoints(vtk_points)
 
-        # add polyLines for particle tracks
+        # create a vtkPolyLine for each particle track
         i = 0
         for line in lines:
-            n_pts = len(line)
-            polyLine = self.__vtk.vtkPolyLine()
-            polyLine.GetPointIds().SetNumberOfIds(n_pts)
-            for ii in range(0, n_pts):
-                polyLine.GetPointIds().SetId(ii, i)
+            npts = len(line)
+            poly = self.__vtk.vtkPolyLine()
+            poly.GetPointIds().SetNumberOfIds(npts)
+            for ii in range(0, npts):
+                poly.GetPointIds().SetId(ii, i)
                 i += 1
             self.vtk_pathlines.InsertNextCell(
-                polyLine.GetCellType(), polyLine.GetPointIds()
+                poly.GetCellType(), poly.GetPointIds()
             )
 
-        # create a Vertex instance for each point
-        # todo: are these necessary? since array data are associated with points now
-        i = 0
-        for line in lines:
-            for point in line:
-                vertex = self.__vtk.vtkPolyVertex()
-                vertex.GetPointIds().SetNumberOfIds(1)
-                vertex.GetPointIds().SetId(0, i)
-                self.vtk_pathlines.InsertNextCell(
-                    vertex.GetCellType(), vertex.GetPointIds()
-                )
-                i += 1
-        if not any(lines):
-            for i in range(nverts):
+        # create a vtkVertex for each point
+        # necessary if arrays (time & particle ID) live on points?
+        if any(lines):
+            i = 0
+            for line in lines:
+                for _ in line:
+                    vertex = self.__vtk.vtkPolyVertex()
+                    vertex.GetPointIds().SetNumberOfIds(1)
+                    vertex.GetPointIds().SetId(0, i)
+                    self.vtk_pathlines.InsertNextCell(
+                        vertex.GetCellType(), vertex.GetPointIds()
+                    )
+                    i += 1
+        else:
+            for i in range(len(points)):
                 vertex = self.__vtk.vtkPolyVertex()
                 vertex.GetPointIds().SetNumberOfIds(1)
                 vertex.GetPointIds().SetId(0, i)
@@ -1332,8 +1331,9 @@ class Vtk:
                     vertex.GetCellType(), vertex.GetPointIds()
                 )
 
-        # add arrays at points
-        for name, array in d.items():
+        # add arrays (time & particle ID) to points
+        arrays = {} if arrays is None else arrays
+        for name, array in arrays.items():
             array = np.array(array)
             vtk_array = numpy_support.numpy_to_vtk(
                 num_array=array, array_type=self.__vtk.VTK_FLOAT
@@ -1400,7 +1400,7 @@ class Vtk:
                 for time, d in self.__pathline_transient_data.items():
                     tf = self.__create_transient_vtk_path(foo, stp)
                     points = self._pathline_points[time]
-                    self._set_particle_track_data(points, d)
+                    self._set_particle_track_data(points, arrays=d)
 
                     w.SetInputData(self.vtk_pathlines)
                     w.SetFileName(str(tf))
