@@ -13,7 +13,7 @@ def get_authority_crs(crs):
 
     Parameters
     ----------
-    crs : pyproj.CRS, optional if `prj` is specified
+    crs : pyproj.CRS
         Coordinate reference system (CRS) for the model grid
         (must be projected; geographic CRS are not supported).
         The value can be anything accepted by
@@ -71,30 +71,58 @@ def get_shapefile_crs(shapefile):
             return get_authority_crs(crs)
 
 
-def get_crs(
-    prjfile=None, prj=None, epsg=None, proj4=None, crs=None, wkt_string=None
-):
+def get_crs(prjfile=None, crs=None, **kwargs):
     """Helper function to produce a pyproj.CRS object from
     various input. Longer-term, this would just handle the ``crs``
     and ``prjfile`` arguments, but in the near term, we need to
-    warn users about deprecating epsg and proj_str."""
+    warn users about deprecating the ``prj``, ``epsg``, ``proj4``
+    and ``wkt_string`` inputs.
+
+    Parameters
+    ----------
+    prjfile : str or pathlike, optional
+        _description_, by default None
+    prj : str or pathlike, optional
+        .. deprecated:: 3.4
+        use ``prjfile`` instead.
+    epsg : int, optional
+        .. deprecated:: 3.4
+        use ``crs`` instead.
+    proj4 : str, optional
+        .. deprecated:: 3.4
+        use ``crs`` instead.
+    crs : pyproj.CRS, optional if `prjfile` is specified
+        Coordinate reference system (CRS) for the model grid
+        (must be projected; geographic CRS are not supported).
+        The value can be anything accepted by
+        :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+        such as an authority string (eg "EPSG:26916") or a WKT string.
+    wkt_string : str, optional
+        .. deprecated:: 3.4
+        use ``crs`` instead.
+
+    Returns
+    -------
+    crs : pyproj.CRS instance
+
+    """
     if crs is not None:
         crs = get_authority_crs(crs)
-    if prj is not None:
+    if kwargs.get("prj") is not None:
         warnings.warn(
             "the prj argument will be deprecated and will be removed in version "
             "3.4. Use prjfile instead.",
             PendingDeprecationWarning,
         )
-        prjfile = prj
-    if epsg is not None:
+        prjfile = kwargs.get("prj")
+    if kwargs.get("epsg") is not None:
         warnings.warn(
             "the epsg argument will be deprecated and will be removed in version "
             "3.4. Use crs instead.",
             PendingDeprecationWarning,
         )
         if crs is None:
-            crs = get_authority_crs(epsg)
+            crs = get_authority_crs(kwargs.get("epsg"))
     elif prjfile is not None:
         prjfile_crs = get_shapefile_crs(prjfile)
         if (crs is not None) and (crs != prjfile_crs):
@@ -105,17 +133,17 @@ def get_crs(
             )
         else:
             crs = prjfile_crs
-    elif proj4 is not None:
+    elif kwargs.get("proj4") is not None:
         warnings.warn(
             "the proj4 argument will be deprecated and will be removed in version "
             "3.4. Use crs instead.",
             PendingDeprecationWarning,
         )
         if crs is None:
-            crs = get_authority_crs(proj4)
-    elif wkt_string is not None:
+            crs = get_authority_crs(kwargs.get("proj4"))
+    elif kwargs.get("wkt_string") is not None:
         if crs is None:
-            crs = get_authority_crs(wkt_string)
+            crs = get_authority_crs(kwargs.get("wkt_string"))
     if crs is not None and not crs.is_projected:
         raise ValueError(
             f"Only projected coordinate reference systems are supported.\n{crs}"
