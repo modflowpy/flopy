@@ -468,9 +468,7 @@ def test_export_netcdf(function_tmpdir, namfile):
 def test_export_array2(function_tmpdir):
     nrow = 7
     ncol = 11
-    # epsg = 4111  # this may not be a valid EPSG code
-    # (raises an error with pyproj)
-    crs = 3070
+    crs = 4431
 
     # no epsg code
     modelgrid = StructuredGrid(
@@ -504,9 +502,7 @@ def test_export_array2(function_tmpdir):
 def test_export_array_contours(function_tmpdir):
     nrow = 7
     ncol = 11
-    # epsg = 4111  # this may not be a valid EPSG code
-    # (raises an error with pyproj)
-    crs = 3070
+    crs = 4431
 
     # no epsg code
     modelgrid = StructuredGrid(
