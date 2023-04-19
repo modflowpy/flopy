@@ -51,7 +51,7 @@ class UnstructuredGrid(Grid):
         If the model grid defined in verts and iverts applies for all model
         layers, then the length of iverts can be equal to ncpl[0] and there
         is no need to repeat all of the vertex information for cells in layers
-    crs : pyproj.CRS, optional if `prj` is specified
+    crs : pyproj.CRS, optional if `prjfile` is specified
         Coordinate reference system (CRS) for the model grid
         (must be projected; geographic CRS are not supported).
         The value can be anything accepted by

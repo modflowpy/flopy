@@ -43,7 +43,7 @@ class Grid:
         ibound/idomain value for each cell
     lenuni : int or ndarray
         model length units
-    crs : pyproj.CRS, optional if `prj` is specified
+    crs : pyproj.CRS, optional if `prjfile` is specified
         Coordinate reference system (CRS) for the model grid
         (must be projected; geographic CRS are not supported).
         The value can be anything accepted by

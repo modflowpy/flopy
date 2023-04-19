@@ -83,7 +83,7 @@ def write_grid_shapefile(
         dictionary of model input arrays
     nan_val : float
         value to fill nans
-    crs : pyproj.CRS, optional if `prj` is specified
+    crs : pyproj.CRS, optional if `prjfile` is specified
         Coordinate reference system (CRS) for the model grid
         (must be projected; geographic CRS are not supported).
         The value can be anything accepted by
@@ -248,7 +248,7 @@ def model_attributes_to_shapefile(
         modelgrid : fp.modflow.Grid object
             if modelgrid is supplied, user supplied modelgrid is used in lieu
             of the modelgrid attached to the modflow model object
-        crs : pyproj.CRS, optional if `prj` is specified
+        crs : pyproj.CRS, optional if `prjfile` is specified
             Coordinate reference system (CRS) for the model grid
             (must be projected; geographic CRS are not supported).
             The value can be anything accepted by
@@ -571,7 +571,7 @@ def recarray2shp(
         recarray.
     shpname : str or PathLike, default "recarray.shp"
         Path for the output shapefile
-    crs : pyproj.CRS, optional if `prj` is specified
+    crs : pyproj.CRS, optional if `prjfile` is specified
         Coordinate reference system (CRS) for the model grid
         (must be projected; geographic CRS are not supported).
         The value can be anything accepted by

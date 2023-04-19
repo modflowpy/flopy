@@ -88,7 +88,7 @@ class ModflowDis(Package):
     rotation : float
         counter-clockwise rotation (in degrees) of the grid about the lower-
         left corner. default is 0.0
-    crs : pyproj.CRS, optional if `prj` is specified
+    crs : pyproj.CRS, optional if `prjfile` is specified
         Coordinate reference system (CRS) for the model grid
         (must be projected; geographic CRS are not supported).
         The value can be anything accepted by
