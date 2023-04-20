@@ -7,6 +7,7 @@ on:
       - develop
       - release*
       - ci-diagnose*
+      - notebooks
   pull_request:
     branches:
       - master
