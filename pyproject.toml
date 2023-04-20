@@ -74,7 +74,7 @@ optional = [
 ]
 
 api = [
-    "modflowapi @ git+https://git@github.com/MODFLOW-USGS/modflowapi@develop"
+    "modflowapi >= 0.1.0"
 ]
 
 doc = [

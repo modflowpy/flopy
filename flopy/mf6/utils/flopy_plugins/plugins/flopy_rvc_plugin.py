@@ -69,9 +69,10 @@ class FlopyRvc(FPAPIPluginInterface):
             if pkg_name in self.mf6_model.package_dict:
                 # load mf6 variables from riv package "pkg_name"
                 self.mf6_default_package = pkg_name
-                nodelist = self.mf6_default_package.get_advanced_var(
-                    "nodelist"
-                )
+                mf6_spd = self.mf6_default_package.stress_period_data.dataframe
+                nodelist = [
+                    self.get_node(cell_id) for cell_id in mf6_spd.nodelist
+                ]
                 bound_array = self.mf6_default_package.get_advanced_var(
                     "bound"
                 )
