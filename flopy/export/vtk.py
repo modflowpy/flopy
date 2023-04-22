@@ -1466,6 +1466,22 @@ class Vtk:
 
             self.pvd.write(pvdfile)
 
+    def to_pyvista(self):
+        """
+        Convert VTK object to PyVista meshes. If the VTK object contains 0
+        or multiple meshes a list of meshes is returned. Otherwise the one
+        mesh is returned alone. PyVista must be installed for this method.
+
+        Returns
+        -------
+        pyvista.DataSet or list of pyvista.DataSet
+            PyVista mesh or list of meshes
+        """
+        pv = import_optional_dependency("pyvista")
+        grids = [self.vtk_grid, self.vtk_polygons, self.vtk_pathlines]
+        meshes = [pv.wrap(grid) for grid in grids if grid is not None]
+        return meshes[0] if len(meshes) == 1 else meshes
+
     def __create_transient_vtk_path(self, path, kper):
         """
         Method to set naming convention for transient vtk file series
