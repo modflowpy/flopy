@@ -1265,6 +1265,36 @@ def test_vtk_unstructured(function_tmpdir, example_data_path):
     assert np.allclose(np.ravel(top), top2), "Field data not properly written"
 
 
+@requires_pkg("pyvista")
+def test_vtk_to_pyvista(function_tmpdir, example_data_path):
+    from autotest.test_mp7_cases import Mp7Cases
+
+    case_mf6 = Mp7Cases.mf6(function_tmpdir)
+    success, buff = case_mf6.run_model()
+    assert success, f"MP7 model ({case_mf6.name}) failed"
+
+    gwf = case_mf6.flowmodel
+    plf = PathlineFile(Path(case_mf6.model_ws) / f"{case_mf6.name}.mppth")
+    pls = plf.get_alldata()
+
+    vtk = Vtk(model=gwf, binary=True, smooth=False)
+    assert not any(vtk.to_pyvista())
+
+    vtk.add_model(gwf)
+    grid = vtk.to_pyvista()
+    assert grid.n_cells == gwf.modelgrid.nnodes
+
+    vtk.add_pathline_points(pls)
+    grid, pathlines = vtk.to_pyvista()
+    n_pts = sum([pl.shape[0] for pl in pls])
+    assert pathlines.n_points == n_pts
+    assert pathlines.n_cells == n_pts + len(pls) 
+
+    # uncomment to debug
+    # grid.plot()
+    # pathlines.plot()
+
+
 @pytest.mark.mf6
 @requires_pkg("vtk")
 def test_vtk_vertex(function_tmpdir, example_data_path):
