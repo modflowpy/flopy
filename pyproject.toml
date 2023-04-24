@@ -66,6 +66,7 @@ optional = [
     "pyproj",
     "pyshp",
     "python-dateutil >=2.4.0",
+    "pyvista",
     "rasterio",
     "rasterstats",
     "scipy",

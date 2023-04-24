@@ -238,32 +238,6 @@ def get_gwt_model(sim, gwtname, gwtpath, modelshape, sourcerecarray=None):
     return gwt
 
 
-def test_string_to_file_path():
-    import platform
-
-    if platform.system().lower() == "windows":
-        unc_path = r"\\server\path\path"
-        new_path = MFFileMgmt.string_to_file_path(unc_path)
-        assert unc_path == new_path, "UNC path error"
-
-        abs_path = r"C:\Users\some_user\path"
-        new_path = MFFileMgmt.string_to_file_path(abs_path)
-        assert abs_path == new_path, "Absolute path error"
-
-        rel_path = r"..\path\some_path"
-        new_path = MFFileMgmt.string_to_file_path(rel_path)
-        assert rel_path == new_path, "Relative path error"
-
-    else:
-        abs_path = "/mnt/c/some_user/path"
-        new_path = MFFileMgmt.string_to_file_path(abs_path)
-        assert abs_path == new_path, "Absolute path error"
-
-        rel_path = "../path/some_path"
-        new_path = MFFileMgmt.string_to_file_path(rel_path)
-        assert rel_path == new_path, "Relative path error"
-
-
 def test_subdir(function_tmpdir):
     sim = MFSimulation(sim_ws=function_tmpdir)
     assert sim.sim_path == function_tmpdir

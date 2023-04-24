@@ -311,29 +311,6 @@ class MFFileMgmt:
         else:
             return f"{file}_{num}"
 
-    @staticmethod
-    def string_to_file_path(fp_string):
-        """Interpret string as a file path.  For internal FloPy use, not
-        intended for end user."""
-        file_delimiters = ["/", "\\"]
-        new_string = fp_string
-        for delimiter in file_delimiters:
-            arr_string = new_string.split(delimiter)
-            if len(arr_string) > 1:
-                if os.path.isabs(fp_string):
-                    if not arr_string[0] and not arr_string[1]:
-                        new_string = f"{delimiter}{delimiter}"
-                    else:
-                        new_string = (
-                            f"{arr_string[0]}{delimiter}{arr_string[1]}"
-                        )
-                else:
-                    new_string = os.path.join(arr_string[0], arr_string[1])
-                if len(arr_string) > 2:
-                    for path_piece in arr_string[2:]:
-                        new_string = os.path.join(new_string, path_piece)
-        return new_string
-
     def set_last_accessed_path(self):
         """Set the last accessed simulation path to the current simulation
         path.  For internal FloPy use, not intended for end user."""

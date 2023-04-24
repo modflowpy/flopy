@@ -561,7 +561,7 @@ class StartingLocationsFile(Package):
 
         # write particle data
         print("writing loc particle data")
-        data.drop("groupname", 1, inplace=True)
+        data.drop(labels="groupname", axis=1, inplace=True)
         data.to_csv(
             loc_path,
             sep=" ",
