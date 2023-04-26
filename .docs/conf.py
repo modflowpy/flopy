@@ -100,7 +100,7 @@ cmd = ("python", "create_rstfiles.py")
 print(" ".join(cmd))
 os.system(" ".join(cmd))
 
-# -- convert the tutorial scripts -------------------------------------------
+# -- convert tutorial scripts to notebooks -------------------------------------------
 if not on_rtd:
     cmd = ("python", "create_tutorials.py")
     print(" ".join(cmd))

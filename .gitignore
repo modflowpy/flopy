@@ -65,9 +65,12 @@ flopy/.idea
 
 examples/Notebooks/data
 examples/Notebooks/temp
+examples/Notebooks/*.ipynb
 examples/FAQ/temp
+examples/FAQ/*.ipynb
 examples/scripts/data
 examples/groundwater_paper/Notebooks/temp
+examples/groundwater_paper/Notebooks/*.ipynb
 
 # ignore all .ipynb_checkpoints
 .ipynb_checkpoints

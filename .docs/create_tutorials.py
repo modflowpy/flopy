@@ -2,16 +2,16 @@ import os
 import shutil
 
 
-def create_notebooks():
+def create_notebooks(pth):
+    pth = str(pth)
+
+    # create a working directory
     wpth = ".working"
     if os.path.isdir(wpth):
         shutil.rmtree(wpth)
     os.makedirs(wpth)
 
-    # copy the python files
-    pth = os.path.join("..", "examples", "Tutorials")
-
-    # get a list of python files
+    # find python files paired with notebooks
     py_files = []
     for dirpath, _, filenames in os.walk(pth):
         py_files += [
@@ -19,6 +19,7 @@ def create_notebooks():
             for filename in sorted(filenames)
             if filename.endswith(".py")
         ]
+
     # sort the python files
     py_files = sorted(py_files)
 
@@ -27,6 +28,18 @@ def create_notebooks():
         dst = os.path.join(wpth, os.path.basename(src))
         print(f"{src} -> {dst}")
         shutil.copyfile(src, dst)
+    
+    # copy common utils
+    src = os.path.join("..", "examples", "common")
+    dst = os.path.join("common")
+    print(f"{src} -> {dst}")
+    shutil.copytree(src, dst, dirs_exist_ok=True)
+
+    # copy example data
+    src = os.path.join("..", "examples", "data")
+    dst = os.path.join("data")
+    print(f"{src} -> {dst}")
+    shutil.copytree(src, dst, dirs_exist_ok=True)
 
     # create and run notebooks
     py_pth = os.path.join(wpth, "*.py")
@@ -57,4 +70,7 @@ def create_notebooks():
 
 
 if __name__ == "__main__":
-    create_notebooks()
+    create_notebooks(os.path.join("..", "examples", "Tutorials"))
+    create_notebooks(os.path.join("..", "examples", "Notebooks"))
+    create_notebooks(os.path.join("..", "examples", "groundwater_paper"))
+    create_notebooks(os.path.join("..", "examples", "FAQ"))
