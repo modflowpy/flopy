@@ -135,6 +135,7 @@ extensions = [
     "IPython.sphinxext.ipython_console_highlighting",  # lowercase didn't work
     "sphinx.ext.autosectionlabel",
     "nbsphinx",
+    "sphinx_gallery.load_style",
     "nbsphinx_link",
     "recommonmark",
 ]
@@ -259,3 +260,19 @@ intersphinx_mapping = {
     "matplotlib": ("https://matplotlib.org", None),
     "pyproj": ("https://pyproj4.github.io/pyproj/stable/", None),
 }
+
+nbsphinx_prolog = r"""
+{% set docname = env.doc2path(env.docname, base=None) %}
+
+.. only:: html
+
+    .. role:: raw-html(raw)
+        :format: html
+
+    .. note::
+
+        | This page was generated from `{{ docname }}`__.
+        | Interactive online version: :raw-html:`<a href="https://mybinder.org/v2/gh/modflowpy/flopy.git/develop?urlpath=lab/tree/.docs/{{ docname }}"><img alt="Binder badge" src="https://mybinder.org/badge_logo.svg" style="vertical-align:text-bottom"></a>`
+
+        __ https://github.com/modflowpy/flopy/blob/develop/.docs/{{ docname }}
+"""
