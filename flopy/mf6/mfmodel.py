@@ -122,11 +122,9 @@ class MFModel(PackageContainer, ModelInterface):
         self._xul = kwargs.pop("xul", None)
         self._yul = kwargs.pop("yul", None)
         rotation = kwargs.pop("rotation", 0.0)
-        proj4 = kwargs.pop("proj4_str", None)
+        crs = kwargs.pop("crs", None)
         # build model grid object
-        self._modelgrid = Grid(
-            proj4=proj4, xoff=xll, yoff=yll, angrot=rotation
-        )
+        self._modelgrid = Grid(crs=crs, xoff=xll, yoff=yll, angrot=rotation)
 
         self.start_datetime = None
         # check for extraneous kwargs
@@ -348,8 +346,7 @@ class MFModel(PackageContainer, ModelInterface):
                         botm=None,
                         idomain=None,
                         lenuni=None,
-                        proj4=self._modelgrid.proj4,
-                        epsg=self._modelgrid.epsg,
+                        crs=self._modelgrid.crs,
                         xoff=self._modelgrid.xoffset,
                         yoff=self._modelgrid.yoffset,
                         angrot=self._modelgrid.angrot,
@@ -362,8 +359,7 @@ class MFModel(PackageContainer, ModelInterface):
                     botm=dis.botm.array,
                     idomain=dis.idomain.array,
                     lenuni=dis.length_units.array,
-                    proj4=self._modelgrid.proj4,
-                    epsg=self._modelgrid.epsg,
+                    crs=self._modelgrid.crs,
                     xoff=self._modelgrid.xoffset,
                     yoff=self._modelgrid.yoffset,
                     angrot=self._modelgrid.angrot,
@@ -383,8 +379,7 @@ class MFModel(PackageContainer, ModelInterface):
                         botm=None,
                         idomain=None,
                         lenuni=None,
-                        proj4=self._modelgrid.proj4,
-                        epsg=self._modelgrid.epsg,
+                        crs=self._modelgrid.crs,
                         xoff=self._modelgrid.xoffset,
                         yoff=self._modelgrid.yoffset,
                         angrot=self._modelgrid.angrot,
@@ -397,8 +392,7 @@ class MFModel(PackageContainer, ModelInterface):
                     botm=dis.botm.array,
                     idomain=dis.idomain.array,
                     lenuni=dis.length_units.array,
-                    proj4=self._modelgrid.proj4,
-                    epsg=self._modelgrid.epsg,
+                    crs=self._modelgrid.crs,
                     xoff=self._modelgrid.xoffset,
                     yoff=self._modelgrid.yoffset,
                     angrot=self._modelgrid.angrot,
@@ -458,8 +452,7 @@ class MFModel(PackageContainer, ModelInterface):
                 idomain=idomain,
                 lenuni=dis.length_units.array,
                 ncpl=ncpl,
-                proj4=self._modelgrid.proj4,
-                epsg=self._modelgrid.epsg,
+                crs=self._modelgrid.crs,
                 xoff=self._modelgrid.xoffset,
                 yoff=self._modelgrid.yoffset,
                 angrot=self._modelgrid.angrot,
@@ -481,8 +474,7 @@ class MFModel(PackageContainer, ModelInterface):
                         botm=None,
                         idomain=None,
                         lenuni=None,
-                        proj4=self._modelgrid.proj4,
-                        epsg=self._modelgrid.epsg,
+                        crs=self._modelgrid.crs,
                         xoff=self._modelgrid.xoffset,
                         yoff=self._modelgrid.yoffset,
                         angrot=self._modelgrid.angrot,
@@ -495,8 +487,7 @@ class MFModel(PackageContainer, ModelInterface):
                     botm=dis.botm.array,
                     idomain=dis.idomain.array,
                     lenuni=dis.length_units.array,
-                    proj4=self._modelgrid.proj4,
-                    epsg=self._modelgrid.epsg,
+                    crs=self._modelgrid.crs,
                     xoff=self._modelgrid.xoffset,
                     yoff=self._modelgrid.yoffset,
                     angrot=self._modelgrid.angrot,
@@ -532,7 +523,10 @@ class MFModel(PackageContainer, ModelInterface):
         if angrot is None:
             angrot = self._modelgrid.angrot
         self._modelgrid.set_coord_info(
-            xorig, yorig, angrot, self._modelgrid.epsg, self._modelgrid.proj4
+            xorig,
+            yorig,
+            angrot,
+            self._modelgrid.crs,
         )
         self._mg_resync = not self._modelgrid.is_complete
         return self._modelgrid

@@ -9,14 +9,55 @@ from autotest.test_grid_cases import GridCases
 from flaky import flaky
 from matplotlib import pyplot as plt
 from modflow_devtools.markers import requires_exe, requires_pkg
+from packaging import version
 from pytest_cases import parametrize_with_cases
 
+import flopy
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 from flopy.mf6 import MFSimulation
 from flopy.modflow import Modflow, ModflowDis
+from flopy.utils.crs import get_authority_crs
 from flopy.utils.cvfdutil import gridlist_to_disv_gridprops, to_cvfd
 from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
+
+
+@pytest.fixture
+def minimal_unstructured_grid_info():
+    d = {
+        # pass in simple 2 cell minimal grid to make grid valid
+        "vertices": [
+            [0, 0.0, 1.0],
+            [1, 1.0, 1.0],
+            [2, 2.0, 1.0],
+            [3, 0.0, 0.0],
+            [4, 1.0, 0.0],
+            [5, 2.0, 0.0],
+        ],
+        "iverts": [[0, 1, 4, 3], [1, 2, 5, 4]],
+        "xcenters": [0.5, 1.5],
+        "ycenters": [0.5, 0.5],
+    }
+    return d
+
+
+@pytest.fixture
+def minimal_vertex_grid_info(minimal_unstructured_grid_info):
+    usg_info = minimal_unstructured_grid_info
+    d = {}
+    d["vertices"] = minimal_unstructured_grid_info["vertices"]
+    cell2d = []
+    for n in range(len(usg_info["iverts"])):
+        cell2d_n = [
+            n,
+            usg_info["xcenters"][n],
+            usg_info["ycenters"][n],
+        ] + usg_info["iverts"][n]
+        cell2d.append(cell2d_n)
+    d["cell2d"] = cell2d
+    d["ncpl"] = len(cell2d)
+    d["nlay"] = 1
+    return d
 
 
 def test_rotation():
@@ -556,38 +597,149 @@ def test_unstructured_from_gridspec(example_data_path):
         assert min(grid.botm) == min([xyz[2] for xyz in expected_verts])
 
 
-def test_epsgs():
-    import flopy.export.shapefile_utils as shp
+@requires_pkg("pyproj")
+@pytest.mark.parametrize(
+    "crs,expected_srs",
+    (
+        (None, None),
+        (26916, "EPSG:26916"),
+        ("epsg:5070", "EPSG:5070"),
+        (
+            "+proj=tmerc +lat_0=0 +lon_0=-90 +k=0.9996 +x_0=520000 +y_0=-4480000 +datum=NAD83 +units=m +no_defs ",
+            "EPSG:3070",
+        ),
+        pytest.param(4269, None, marks=pytest.mark.xfail),
+    ),
+)
+def test_grid_crs(
+    minimal_unstructured_grid_info, crs, expected_srs, function_tmpdir
+):
+    import pyproj
 
-    # test setting a geographic (lat/lon) coordinate reference
-    # (also tests shapefile_utils.CRS parsing of geographic crs info)
+    d = minimal_unstructured_grid_info
     delr = np.ones(10)
     delc = np.ones(10)
-    mg = StructuredGrid(delr=delr, delc=delc)
+    sg = StructuredGrid(delr=delr, delc=delc, crs=crs)
+    if crs is not None:
+        assert isinstance(sg.crs, pyproj.CRS)
+        assert sg.crs.srs == expected_srs
 
-    mg.epsg = 102733
-    assert mg.epsg == 102733, f"mg.epsg is not 102733 ({mg.epsg})"
+    usg = UnstructuredGrid(**d, crs=crs)
+    assert getattr(sg.crs, "srs", None) == expected_srs
 
-    t_value = mg.__repr__()
-    if not "proj4_str:epsg:102733" in t_value:
-        raise AssertionError(
-            f"proj4_str:epsg:102733 not in mg.__repr__(): ({t_value})"
-        )
+    vg = VertexGrid(vertices=d["vertices"], crs=crs)
+    assert getattr(sg.crs, "srs", None) == expected_srs
 
-    mg.epsg = 4326  # WGS 84
-    crs = shp.CRS(epsg=4326)
-    if crs.grid_mapping_attribs is not None:
-        assert crs.crs["proj"] == "longlat"
-        t_value = crs.grid_mapping_attribs["grid_mapping_name"]
-        assert (
-            t_value == "latitude_longitude"
-        ), f"grid_mapping_name is not latitude_longitude: {t_value}"
+    # test input of pyproj.CRS object
+    if crs == 26916:
+        sg2 = StructuredGrid(delr=delr, delc=delc, crs=sg.crs)
 
-    t_value = mg.__repr__()
-    if not "proj4_str:epsg:4326" in t_value:
-        raise AssertionError(
-            f"proj4_str:epsg:4326 not in sr.__repr__(): ({t_value})"
-        )
+        if crs is not None:
+            assert isinstance(sg2.crs, pyproj.CRS)
+        assert getattr(sg2.crs, "srs", None) == expected_srs
+
+        # test input of projection file
+        prjfile = function_tmpdir / "grid_crs.prj"
+        with open(prjfile, "w", encoding="utf-8") as dest:
+            write_text = sg.crs.to_wkt()
+            dest.write(write_text)
+
+        sg3 = StructuredGrid(delr=delr, delc=delc, prjfile=prjfile)
+        if crs is not None:
+            assert isinstance(sg3.crs, pyproj.CRS)
+        assert getattr(sg3.crs, "srs", None) == expected_srs
+
+
+@requires_pkg("pyproj")
+@pytest.mark.parametrize(
+    "crs,expected_srs",
+    (
+        (None, None),
+        (26916, "EPSG:26916"),
+        ("epsg:5070", "EPSG:5070"),
+        (
+            "+proj=tmerc +lat_0=0 +lon_0=-90 +k=0.9996 +x_0=520000 +y_0=-4480000 +datum=NAD83 +units=m +no_defs ",
+            "EPSG:3070",
+        ),
+        ("ESRI:102733", "ESRI:102733"),
+        pytest.param(4269, None, marks=pytest.mark.xfail),
+    ),
+)
+def test_grid_set_crs(crs, expected_srs, function_tmpdir):
+    import pyproj
+
+    delr = np.ones(10)
+    delc = np.ones(10)
+    sg = StructuredGrid(delr=delr, delc=delc)
+    sg.crs = crs
+    if crs is not None:
+        assert isinstance(sg.crs, pyproj.CRS)
+    assert getattr(sg.crs, "srs", None) == expected_srs
+
+    # test setting the crs via set_coord_info
+    sg.set_coord_info()
+    if crs is not None:
+        assert isinstance(sg.crs, pyproj.CRS)
+    assert getattr(sg.crs, "srs", None) == expected_srs
+    sg.set_coord_info(crs=crs)
+    if crs is not None:
+        assert isinstance(sg.crs, pyproj.CRS)
+    assert getattr(sg.crs, "srs", None) == expected_srs
+    sg.set_coord_info(crs=26915, merge_coord_info=False)
+    assert getattr(sg.crs, "srs", None) == "EPSG:26915"
+    # reset back to test case crs
+    sg = StructuredGrid(delr=delr, delc=delc, crs=crs)
+
+    # test input of projection file
+    if crs is not None:
+        prjfile = function_tmpdir / "grid_crs.prj"
+        with open(prjfile, "w", encoding="utf-8") as dest:
+            write_text = sg.crs.to_wkt()
+            dest.write(write_text)
+        sg = StructuredGrid(delr=delr, delc=delc)
+        sg.prjfile = prjfile
+        if crs is not None:
+            assert isinstance(sg.crs, pyproj.CRS)
+        assert getattr(sg.crs, "srs", None) == expected_srs
+        assert sg.prjfile == prjfile
+        sg.set_coord_info(prjfile=prjfile)
+        if crs is not None:
+            assert isinstance(sg.crs, pyproj.CRS)
+            assert getattr(sg.crs, "srs", None) == expected_srs
+        assert sg.prjfile == prjfile
+
+    # test setting another crs
+    sg.crs = 26915
+    assert sg.crs == get_authority_crs(26915)
+
+    if (
+        version.parse(flopy.__version__) < version.parse("3.4")
+        and crs is not None
+    ):
+        pyproj_crs = get_authority_crs(crs)
+        epsg = pyproj_crs.to_epsg()
+        if epsg is not None:
+            sg = StructuredGrid(delr=delr, delc=delc, crs=crs)
+            sg.epsg = epsg
+            if crs is not None:
+                assert isinstance(sg.crs, pyproj.CRS)
+            assert getattr(sg.crs, "srs", None) == expected_srs
+            assert sg.epsg == epsg
+
+        sg = StructuredGrid(delr=delr, delc=delc)
+        sg.proj4 = pyproj_crs.to_proj4()
+        if crs is not None:
+            assert isinstance(sg.crs, pyproj.CRS)
+        assert getattr(sg.crs, "srs", None) == expected_srs
+        assert sg.proj4 == pyproj_crs.to_proj4()
+
+        if crs is not None:
+            sg = StructuredGrid(delr=delr, delc=delc)
+            sg.prj = prjfile
+            if crs is not None:
+                assert isinstance(sg.crs, pyproj.CRS)
+            assert getattr(sg.crs, "srs", None) == expected_srs
+            assert sg.prj == prjfile
 
 
 def test_tocvfd1():
@@ -682,32 +834,20 @@ def test_unstructured_grid_dimensions():
     assert not g.grid_varies_by_layer
 
 
-def test_unstructured_minimal_grid_ctor():
+def test_unstructured_minimal_grid_ctor(minimal_unstructured_grid_info):
     # pass in simple 2 cell minimal grid to make grid valid
-    vertices = [
-        [0, 0.0, 1.0],
-        [1, 1.0, 1.0],
-        [2, 2.0, 1.0],
-        [3, 0.0, 0.0],
-        [4, 1.0, 0.0],
-        [5, 2.0, 0.0],
-    ]
-    iverts = [[0, 1, 4, 3], [1, 2, 5, 4]]
-    xcenters = [0.5, 1.5]
-    ycenters = [0.5, 0.5]
-    g = UnstructuredGrid(
-        vertices=vertices, iverts=iverts, xcenters=xcenters, ycenters=ycenters
-    )
+    d = minimal_unstructured_grid_info
+    g = UnstructuredGrid(**d)
     assert np.allclose(g.ncpl, np.array([2], dtype=int))
     assert g.nlay == 1
     assert g.nnodes == 2
     assert g.is_valid
     assert not g.is_complete
     assert not g.grid_varies_by_layer
-    assert g._vertices == vertices
-    assert g._iverts == iverts
-    assert g._xc == xcenters
-    assert g._yc == ycenters
+    assert g._vertices == d["vertices"]
+    assert g._iverts == d["iverts"]
+    assert g._xc == d["xcenters"]
+    assert g._yc == d["ycenters"]
     grid_lines = [
         [(0.0, 0), (0.0, 1.0)],
         [(0.0, 1), (1.0, 1.0)],
@@ -728,33 +868,17 @@ def test_unstructured_minimal_grid_ctor():
     assert zv is None
 
 
-def test_unstructured_complete_grid_ctor():
+def test_unstructured_complete_grid_ctor(minimal_unstructured_grid_info):
     # pass in simple 2 cell complete grid to make grid valid, and put each
     # cell in a different layer
-    vertices = [
-        [0, 0.0, 1.0],
-        [1, 1.0, 1.0],
-        [2, 2.0, 1.0],
-        [3, 0.0, 0.0],
-        [4, 1.0, 0.0],
-        [5, 2.0, 0.0],
-    ]
-    iverts = [[0, 1, 4, 3], [1, 2, 5, 4]]
-    xcenters = [0.5, 1.5]
-    ycenters = [0.5, 0.5]
+    d = minimal_unstructured_grid_info
     ncpl = [1, 1]
     top = [1, 0]
     top = np.array(top)
     botm = [0, -1]
     botm = np.array(botm)
     g = UnstructuredGrid(
-        vertices=vertices,
-        iverts=iverts,
-        xcenters=xcenters,
-        ycenters=ycenters,
-        ncpl=ncpl,
-        top=top,
-        botm=botm,
+        ncpl=ncpl, top=top, botm=botm, **minimal_unstructured_grid_info
     )
     assert np.allclose(g.ncpl, np.array([1, 1], dtype=int))
     assert g.nlay == 2
@@ -762,10 +886,10 @@ def test_unstructured_complete_grid_ctor():
     assert g.is_valid
     assert not g.is_complete
     assert g.grid_varies_by_layer
-    assert g._vertices == vertices
-    assert g._iverts == iverts
-    assert g._xc == xcenters
-    assert g._yc == ycenters
+    assert g._vertices == d["vertices"]
+    assert g._iverts == d["iverts"]
+    assert g._xc == d["xcenters"]
+    assert g._yc == d["ycenters"]
     grid_lines = {
         0: [
             [(0.0, 0.0), (0.0, 1.0)],

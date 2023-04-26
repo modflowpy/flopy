@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Optional, Union
 
 import numpy as np
@@ -15,6 +16,7 @@ from ..utils import (
     flopy_io,
     import_optional_dependency,
 )
+from ..utils.crs import get_crs
 from . import NetCdf, netcdf, shapefile_utils, vtk
 from .longnames import NC_LONG_NAMES
 from .unitsformat import NC_UNITS_FORMAT
@@ -400,10 +402,9 @@ def output_helper(
         elif verbose:
             print(msg)
     times = [t for t in common_times[::stride]]
-
-    if isinstance(f, os.PathLike):
-        f = str(f)
-    if isinstance(f, str) and f.lower().endswith(".nc"):
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".nc":
         f = NetCdf(
             f, ml, time_values=times, logger=logger, forgive=forgive, **kwargs
         )
@@ -512,7 +513,9 @@ def output_helper(
                 mask_array3d=mask_array3d,
             )
 
-    elif isinstance(f, str) and f.endswith(".shp"):
+    elif (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".shp":
         attrib_dict = {}
         for _, out_obj in oudic.items():
             if (
@@ -593,11 +596,16 @@ def model_export(
         modelgrid: flopy.discretization.Grid
             user supplied modelgrid object which will supercede the built
             in modelgrid object
-        epsg : int
-            epsg projection code
-        prj : str
-            prj file name
-        if fmt is set to 'vtk', parameters of vtk.export_model
+        crs : pyproj.CRS, optional if `prjfile` is specified
+            Coordinate reference system (CRS) for the model grid
+            (must be projected; geographic CRS are not supported).
+            The value can be anything accepted by
+            :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+            such as an authority string (eg "EPSG:26916") or a WKT string.
+        prjfile : str or pathlike, optional if `crs` is specified
+            ESRI-style projection file with well-known text defining the CRS
+            for the model grid (must be projected; geographic CRS are not supported).
+            if fmt is set to 'vtk', parameters of vtk.export_model
 
     """
     assert isinstance(ml, ModelInterface)
@@ -605,13 +613,14 @@ def model_export(
     if package_names is None:
         package_names = [pak.name[0] for pak in ml.packagelist]
 
-    if isinstance(f, os.PathLike):
-        f = str(f)
-
-    if isinstance(f, str) and f.lower().endswith(".nc"):
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".nc":
         f = NetCdf(f, ml, **kwargs)
 
-    if isinstance(f, str) and f.lower().endswith(".shp"):
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".shp":
         shapefile_utils.model_attributes_to_shapefile(
             f, ml, package_names=package_names, **kwargs
         )
@@ -680,10 +689,15 @@ def package_export(
         modelgrid: flopy.discretization.Grid
             user supplied modelgrid object which will supercede the built
             in modelgrid object
-        epsg : int
-            epsg projection code
-        prj : str
-            prj file name
+        crs : pyproj.CRS, optional if `prjfile` is specified
+            Coordinate reference system (CRS) for the model grid
+            (must be projected; geographic CRS are not supported).
+            The value can be anything accepted by
+            :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+            such as an authority string (eg "EPSG:26916") or a WKT string.
+        prjfile : str or pathlike, optional if `crs` is specified
+            ESRI-style projection file with well-known text defining the CRS
+            for the model grid (must be projected; geographic CRS are not supported).
         if fmt is set to 'vtk', parameters of vtk.export_package
 
     Returns
@@ -693,13 +707,14 @@ def package_export(
     """
     assert isinstance(pak, PackageInterface)
 
-    if isinstance(f, os.PathLike):
-        f = str(f)
-
-    if isinstance(f, str) and f.lower().endswith(".nc"):
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".nc":
         f = NetCdf(f, pak.parent, **kwargs)
 
-    if isinstance(f, str) and f.lower().endswith(".shp"):
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".shp":
         shapefile_utils.model_attributes_to_shapefile(
             f, pak.parent, package_names=pak.name, verbose=verbose, **kwargs
         )
@@ -806,10 +821,9 @@ def generic_array_export(
             flopy model object
 
     """
-    if isinstance(f, os.PathLike):
-        f = str(f)
-
-    if isinstance(f, str) and f.lower().endswith(".nc"):
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".nc":
         assert "model" in kwargs.keys(), (
             "creating a new netCDF using generic_array_helper requires a "
             "'model' kwarg"
@@ -874,6 +888,15 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
     **kwargs : keyword arguments
         modelgrid : flopy.discretization.Grid
             model grid instance which will supercede the flopy.model.modelgrid
+        crs : pyproj.CRS, optional if `prjfile` is specified
+            Coordinate reference system (CRS) for the model grid
+            (must be projected; geographic CRS are not supported).
+            The value can be anything accepted by
+            :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+            such as an authority string (eg "EPSG:26916") or a WKT string.
+        prjfile : str or pathlike, optional if `crs` is specified
+            ESRI-style projection file with well-known text defining the CRS
+            for the model grid (must be projected; geographic CRS are not supported).
 
     """
     if not isinstance(mfl, (DataListInterface, DataInterface)):
@@ -887,13 +910,14 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
     if "modelgrid" in kwargs:
         modelgrid = kwargs.pop("modelgrid")
 
-    if isinstance(f, os.PathLike):
-        f = str(f)
-
-    if isinstance(f, str) and f.lower().endswith(".nc"):
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".nc":
         f = NetCdf(f, mfl.model, **kwargs)
 
-    if isinstance(f, str) and f.lower().endswith(".shp"):
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".shp":
         sparse = kwargs.get("sparse", False)
         kper = kwargs.get("kper", 0)
         squeeze = kwargs.get("squeeze", True)
@@ -938,11 +962,16 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
                     ]
                 )
                 ra = df.to_records(index=False)
-            epsg = kwargs.get("epsg", None)
-            prj = kwargs.get("prj", None)
+            crs = kwargs.get("crs", None)
+            prjfile = kwargs.get("prjfile", None)
             polys = np.array([Polygon(v) for v in verts])
             recarray2shp(
-                ra, geoms=polys, shpname=f, mg=modelgrid, epsg=epsg, prj=prj
+                ra,
+                geoms=polys,
+                shpname=f,
+                mg=modelgrid,
+                crs=crs,
+                prjfile=prjfile,
             )
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
@@ -1038,13 +1067,14 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
     if "modelgrid" in kwargs:
         modelgrid = kwargs.pop("modelgrid")
 
-    if isinstance(f, os.PathLike):
-        f = str(f)
-
-    if isinstance(f, str) and f.lower().endswith(".nc"):
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".nc":
         f = NetCdf(f, t2d.model, **kwargs)
 
-    if isinstance(f, str) and f.lower().endswith(".shp"):
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".shp":
         array_dict = {}
         for kper in range(t2d.model.modeltime.nper):
             u2d = t2d[kper]
@@ -1194,13 +1224,14 @@ def array3d_export(f: Union[str, os.PathLike], u3d, fmt=None, **kwargs):
     if "modelgrid" in kwargs:
         modelgrid = kwargs.pop("modelgrid")
 
-    if isinstance(f, os.PathLike):
-        f = str(f)
-
-    if isinstance(f, str) and f.lower().endswith(".nc"):
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".nc":
         f = NetCdf(f, u3d.model, **kwargs)
 
-    if isinstance(f, str) and f.lower().endswith(".shp"):
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".shp":
         array_dict = {}
         for ilay in range(modelgrid.nlay):
             u2d = u3d[ilay]
@@ -1371,21 +1402,24 @@ def array2d_export(
     if "modelgrid" in kwargs:
         modelgrid = kwargs.pop("modelgrid")
 
-    if isinstance(f, os.PathLike):
-        f = str(f)
-
-    if isinstance(f, str) and f.lower().endswith(".nc"):
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".nc":
         f = NetCdf(f, u2d.model, **kwargs)
 
-    if isinstance(f, str) and f.lower().endswith(".shp"):
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".shp":
         name = shapefile_utils.shape_attr_name(u2d.name, keep_layer=True)
         shapefile_utils.write_grid_shapefile(
             f, modelgrid, {name: u2d.array}, verbose=verbose
         )
         return
 
-    elif isinstance(f, str) and f.lower().endswith(".asc"):
-        export_array(modelgrid, f, u2d.array, verbose=verbose, **kwargs)
+    elif (isinstance(f, str) or isinstance(f, Path)) and Path(
+        f
+    ).suffix.lower() == ".asc":
+        export_array(modelgrid, f, u2d.array, **kwargs)
         return
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
@@ -1521,7 +1555,7 @@ def export_array(
     kwargs:
         keyword arguments to np.savetxt (ascii)
         rasterio.open (GeoTIFF)
-        or flopy.export.shapefile_utils.write_grid_shapefile2
+        or flopy.export.shapefile_utils.write_grid_shapefile
 
     Notes
     -----
@@ -1645,17 +1679,13 @@ def export_array(
     elif filename.lower().endswith(".shp"):
         from ..export.shapefile_utils import write_grid_shapefile
 
-        epsg = kwargs.get("epsg", None)
-        prj = kwargs.get("prj", None)
-        if epsg is None and prj is None:
-            epsg = modelgrid.epsg
+        crs = get_crs(**kwargs)
         write_grid_shapefile(
             filename,
             modelgrid,
             array_dict={fieldname: a},
             nan_val=nodata,
-            epsg=epsg,
-            prj=prj,
+            crs=crs,
         )
 
 
@@ -1663,9 +1693,6 @@ def export_contours(
     filename: Union[str, os.PathLike],
     contours,
     fieldname="level",
-    epsg=None,
-    prj: Optional[Union[str, os.PathLike]] = None,
-    verbose=False,
     **kwargs,
 ):
     """
@@ -1679,12 +1706,6 @@ def export_contours(
         (object returned by matplotlib.pyplot.contour)
     fieldname : str
         gis attribute table field name
-    epsg : int
-        EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
-    prj : str or PathLike, optional, default None
-        Existing projection file to be used with new shapefile.
-    verbose : bool, optional, default False
-        whether to show verbose output
     **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
 
     Returns
@@ -1710,19 +1731,12 @@ def export_contours(
     # convert the dictionary to a recarray
     ra = np.array(level, dtype=[(fieldname, float)]).view(np.recarray)
 
-    recarray2shp(
-        ra, geoms, filename, epsg=epsg, prj=prj, verbose=verbose, **kwargs
-    )
+    recarray2shp(ra, geoms, filename, **kwargs)
+    return
 
 
 def export_contourf(
-    filename: Union[str, os.PathLike],
-    contours,
-    fieldname="level",
-    epsg=None,
-    prj: Optional[Union[str, os.PathLike]] = None,
-    verbose=False,
-    **kwargs,
+    filename, contours, fieldname="level", verbose=False, **kwargs
 ):
     """
     Write matplotlib filled contours to shapefile.
@@ -1737,13 +1751,8 @@ def export_contourf(
         Name of shapefile attribute field to contain the contour level.  The
         fieldname column in the attribute table will contain the lower end of
         the range represented by the polygon.  Default is 'level'.
-    epsg : int
-        EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
-    prj : str or PathLike, optional, default None
-        Existing projection file to be used with new shapefile.
     verbose : bool, optional, default False
         whether to show verbose output
-
     **kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
     Returns
@@ -1809,9 +1818,8 @@ def export_contourf(
     # Create recarray
     ra = np.array(level, dtype=[(fieldname, float)]).view(np.recarray)
 
-    recarray2shp(
-        ra, geoms, filename, epsg=epsg, prj=prj, verbose=verbose, **kwargs
-    )
+    recarray2shp(ra, geoms, filename, **kwargs)
+    return
 
 
 def export_array_contours(
@@ -1822,9 +1830,6 @@ def export_array_contours(
     interval=None,
     levels=None,
     maxlevels=1000,
-    epsg=None,
-    prj: Optional[Union[str, os.PathLike]] = None,
-    verbose=False,
     **kwargs,
 ):
     """
@@ -1846,21 +1851,10 @@ def export_array_contours(
         list of contour levels
     maxlevels : int
         maximum number of contour levels
-    epsg : int
-        EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
-    prj : str or PathLike, optional, default None
-        Existing projection file to be used with new shapefile.
-    verbose : bool, optional, default False
-        whether to show verbose output
     **kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
     """
     import matplotlib.pyplot as plt
-
-    if epsg is None:
-        epsg = modelgrid.epsg
-    if prj is None:
-        prj = modelgrid.proj4
 
     if interval is not None:
         imin = np.nanmin(a)
@@ -1871,9 +1865,9 @@ def export_array_contours(
         levels = np.arange(imin, imax, interval)
     ax = plt.subplots()[-1]
     ctr = contour_array(modelgrid, ax, a, levels=levels)
-    export_contours(
-        filename, ctr, fieldname, epsg, prj, verbose=verbose, **kwargs
-    )
+
+    kwargs["modelgrid"] = modelgrid
+    export_contours(filename, ctr, fieldname, **kwargs)
     plt.close()
 
 

@@ -85,10 +85,35 @@ class StructuredGrid(Grid):
 
     Parameters
     ----------
-    delc
-        delc array
-    delr
-        delr array
+    delr : float or ndarray
+        column spacing along a row.
+    delc : float or ndarray
+        row spacing along a column.
+    top : float or ndarray
+        top elevations of cells in topmost layer
+    botm : float or ndarray
+        bottom elevations of all cells
+    idomain : int or ndarray
+        ibound/idomain value for each cell
+    lenuni : int or ndarray
+        model length units
+    crs : pyproj.CRS, optional if `prjfile` is specified
+        Coordinate reference system (CRS) for the model grid
+        (must be projected; geographic CRS are not supported).
+        The value can be anything accepted by
+        :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+        such as an authority string (eg "EPSG:26916") or a WKT string.
+    prjfile : str or pathlike, optional if `crs` is specified
+        ESRI-style projection file with well-known text defining the CRS
+        for the model grid (must be projected; geographic CRS are not supported).
+    xoff : float
+        x coordinate of the origin point (lower left corner of model grid)
+        in the spatial reference coordinate system
+    yoff : float
+        y coordinate of the origin point (lower left corner of model grid)
+        in the spatial reference coordinate system
+    angrot : float
+        rotation angle of model grid, as it is rotated around the origin point
 
     Properties
     ----------
@@ -120,9 +145,11 @@ class StructuredGrid(Grid):
         botm=None,
         idomain=None,
         lenuni=None,
+        crs=None,
         epsg=None,
         proj4=None,
         prj=None,
+        prjfile=None,
         xoff=0.0,
         yoff=0.0,
         angrot=0.0,
@@ -137,9 +164,11 @@ class StructuredGrid(Grid):
             botm,
             idomain,
             lenuni,
+            crs,
             epsg,
             proj4,
             prj,
+            prjfile,
             xoff,
             yoff,
             angrot,

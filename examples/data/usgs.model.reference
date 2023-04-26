@@ -6,5 +6,5 @@ time_units days        # model time units (days, years, etc.)
 start_date 1/1/1900    # state date of the model
 start_time 00:00:00    # start time of the model
 model modflow-2000     # MODFLOW model type (MODFLOW-NWT, etc.)
-epsg 102733            # epsg code 
-# proj4 'proj4 string' # or proj4 string 
+#            # epsg code
+proj4 '+proj=lcc +lat_0=31.8333333333333 +lon_0=-81 +lat_1=32.5 +lat_2=34.8333333333333 +x_0=609600 +y_0=0 +datum=NAD83 +units=us-ft +no_defs +type=crs' # or proj4 string
