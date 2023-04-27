@@ -16,3 +16,6 @@
 # Do not modify the model data in various directories
 examples/data/** binary
 examples/groundwater_paper/uspb/** binary
+
+# strip output from notebooks when committing
+*.ipynb filter=strip-notebook-output
