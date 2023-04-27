@@ -1,10 +1,13 @@
 import os
+import platform
+from os.path import join
 from pathlib import Path
-from shutil import which
+from shutil import copytree, which
 
 import numpy as np
 import pytest
 from modflow_devtools.markers import requires_exe
+from modflow_devtools.misc import set_dir
 
 import flopy
 from flopy.mf6 import (
@@ -236,6 +239,227 @@ def get_gwt_model(sim, gwtname, gwtpath, modelshape, sourcerecarray=None):
         printrecord=[("CONCENTRATION", "LAST"), ("BUDGET", "LAST")],
     )
     return gwt
+
+
+def to_win_sep(s):
+    return s.replace("/", "\\")
+
+
+def to_posix_sep(s):
+    return s.replace("\\", "/")
+
+
+def to_os_sep(s):
+    return s.replace("\\", os.sep).replace("/", os.sep)
+
+
+def test_load_and_run_sim_when_namefile_uses_filenames(
+    function_tmpdir, example_data_path
+):
+    ws = function_tmpdir / "ws"
+    ml_name = "freyberg"
+    nam_name = "mfsim.nam"
+    nam_path = ws / nam_name
+    copytree(example_data_path / f"mf6-{ml_name}", ws)
+
+    sim = MFSimulation.load(nam_name, sim_ws=ws)
+    sim.check()
+    success, buff = sim.run_simulation(report=True)
+    assert success
+
+
+def test_load_and_run_sim_when_namefile_uses_abs_paths(
+    function_tmpdir, example_data_path
+):
+    ws = function_tmpdir / "ws"
+    ml_name = "freyberg"
+    nam_name = "mfsim.nam"
+    nam_path = ws / nam_name
+    copytree(example_data_path / f"mf6-{ml_name}", ws)
+
+    with set_dir(ws):
+        lines = open(nam_path).readlines()
+        with open(nam_path, "w") as f:
+            for l in lines:
+                pattern = f"{ml_name}."
+                if pattern in l:
+                    l = l.replace(
+                        pattern, str(ws.absolute()) + os.sep + pattern
+                    )
+                f.write(l)
+
+    sim = MFSimulation.load(nam_name, sim_ws=ws)
+    sim.check()
+    success, buff = sim.run_simulation(report=True)
+    assert success
+
+
+@pytest.mark.parametrize("sep", ["win", "posix"])
+def test_load_sim_when_namefile_uses_rel_paths(
+    function_tmpdir, example_data_path, sep
+):
+    ws = function_tmpdir / "ws"
+    ml_name = "freyberg"
+    nam_name = "mfsim.nam"
+    nam_path = ws / nam_name
+    copytree(example_data_path / f"mf6-{ml_name}", ws)
+
+    with set_dir(ws):
+        lines = open(nam_path).readlines()
+        with open(nam_path, "w") as f:
+            for l in lines:
+                pattern = f"{ml_name}."
+                if pattern in l:
+                    if sep == "win":
+                        l = to_win_sep(
+                            l.replace(
+                                pattern, "../" + ws.name + "/" + ml_name + "."
+                            )
+                        )
+                    else:
+                        l = to_posix_sep(
+                            l.replace(
+                                pattern, "../" + ws.name + "/" + ml_name + "."
+                            )
+                        )
+                f.write(l)
+
+    sim = MFSimulation.load(nam_name, sim_ws=ws)
+    sim.check()
+
+    # don't run simulation with Windows sep on Linux or Mac
+    if sep == "win" and platform.system() != "Windows":
+        return
+
+    success, buff = sim.run_simulation(report=True)
+    assert success
+
+
+@pytest.mark.skip(reason="currently flopy uses OS-specific path separators")
+@pytest.mark.parametrize("sep", ["win", "posix"])
+def test_write_simulation_always_writes_posix_path_separators(
+    function_tmpdir, example_data_path, sep
+):
+    ws = function_tmpdir / "ws"
+    ml_name = "freyberg"
+    nam_name = "mfsim.nam"
+    nam_path = ws / nam_name
+    copytree(example_data_path / f"mf6-{ml_name}", ws)
+
+    with set_dir(ws):
+        lines = open(nam_path).readlines()
+        with open(nam_path, "w") as f:
+            for l in lines:
+                pattern = f"{ml_name}."
+                if pattern in l:
+                    if sep == "win":
+                        l = to_win_sep(
+                            l.replace(
+                                pattern, "../" + ws.name + "/" + ml_name + "."
+                            )
+                        )
+                    else:
+                        l = to_posix_sep(
+                            l.replace(
+                                pattern, "../" + ws.name + "/" + ml_name + "."
+                            )
+                        )
+                f.write(l)
+
+    sim = MFSimulation.load(nam_name, sim_ws=ws)
+    sim.write_simulation()
+
+    lines = open(ws / "mfsim.nam").readlines()
+    assert all("\\" not in l for l in lines)
+
+
+@requires_exe("mf6")
+@pytest.mark.parametrize("filename", ["name", "rel", "rel_win"])
+def test_basic_gwf(function_tmpdir, filename):
+    ws = function_tmpdir
+    name = "basic_gwf_prep"
+    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=ws, exe_name="mf6")
+    pd = [(1.0, 1, 1.0), (1.0, 1, 1.0)]
+
+    innerdir = Path(function_tmpdir / "inner")
+    innerdir.mkdir()
+
+    # mfpackage filename can be path or string..
+    # if string, it can either be a file name or
+    # path relative to the simulation workspace.
+    tdis_name = f"{name}.tdis"
+    tdis_path = innerdir / tdis_name
+    tdis_path.touch()
+    tdis_relpath = tdis_path.relative_to(ws).as_posix()
+    tdis_relpath_win = str(tdis_relpath).replace("/", "\\")
+
+    if filename == "name":
+        # file named with no path will be created in simulation workspace
+        tdis = flopy.mf6.ModflowTdis(
+            sim, nper=len(pd), perioddata=pd, filename=tdis_name
+        )
+        assert tdis.filename == tdis_name
+    elif filename == "rel":
+        # filename may be a relative pathlib.Path
+        tdis = flopy.mf6.ModflowTdis(
+            sim, nper=len(pd), perioddata=pd, filename=tdis_relpath
+        )
+        assert tdis.filename == str(tdis_relpath)
+
+        # relative paths may also be provided as strings
+        tdis = flopy.mf6.ModflowTdis(
+            sim, nper=len(pd), perioddata=pd, filename=str(tdis_relpath)
+        )
+        assert tdis.filename == str(tdis_relpath)
+    elif filename == "rel_win":
+        # windows path backslash separator should be converted to forward slash
+        tdis = flopy.mf6.ModflowTdis(
+            sim, nper=len(pd), perioddata=pd, filename=tdis_relpath_win
+        )
+        assert tdis.filename == str(tdis_relpath)
+
+    # create other packages
+    ims = flopy.mf6.ModflowIms(sim)
+    gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
+    dis = flopy.mf6.ModflowGwfdis(gwf, nrow=10, ncol=10)
+    ic = flopy.mf6.ModflowGwfic(gwf)
+    npf = flopy.mf6.ModflowGwfnpf(
+        gwf, save_specific_discharge=True, save_saturation=True
+    )
+    spd = {
+        0: [[(0, 0, 0), 1.0, 1.0], [(0, 9, 9), 0.0, 0.0]],
+        1: [[(0, 0, 0), 0.0, 0.0], [(0, 9, 9), 1.0, 2.0]],
+    }
+    chd = flopy.mf6.ModflowGwfchd(
+        gwf, pname="CHD-1", stress_period_data=spd, auxiliary=["concentration"]
+    )
+    budget_file = f"{name}.bud"
+    head_file = f"{name}.hds"
+    oc = flopy.mf6.ModflowGwfoc(
+        gwf,
+        budget_filerecord=budget_file,
+        head_filerecord=head_file,
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
+
+    # write the simulation
+    sim.write_simulation()
+
+    # check for input files
+    assert (ws / innerdir / tdis_name).is_file()
+    assert (ws / f"{name}.ims").is_file()
+    assert (ws / f"{name}.dis").is_file()
+    assert (ws / f"{name}.ic").is_file()
+    assert (ws / f"{name}.npf").is_file()
+    assert (ws / f"{name}.chd").is_file()
+    assert (ws / f"{name}.oc").is_file()
+
+    # run the simulation
+    sim.run_simulation()
+
+    # check for output files
+    assert (ws / budget_file).is_file()
+    assert (ws / head_file).is_file()
 
 
 def test_subdir(function_tmpdir):
