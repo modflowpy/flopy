@@ -20,6 +20,8 @@ This document describes how to set up a FloPy development environment, run the e
 - [Examples](#examples)
   - [Scripts](#scripts)
   - [Notebooks](#notebooks)
+  - [Editing or developing example Notebooks](#editing-or-developing-example-notebooks)
+    - [Adding a new Notebook to the documenation](#adding-a-new-notebook-to-the-documenation)
 - [Tests](#tests)
   - [Configuring tests](#configuring-tests)
   - [Running tests](#running-tests)
@@ -133,7 +135,7 @@ This can be fixed by running `Install Certificates.command` in your Python insta
 
 ## Examples
 
-A number of scripts and notebooks demonstrating various `flopy` functions and features are located in `examples/`. These are probably the easiest way to get acquainted with `flopy`.
+A number of scripts and notebooks demonstrating various `flopy` functions and features are located in `examples/` and `.docs/`. These are probably the easiest way to get acquainted with `flopy`.
 
 ### Scripts
 
@@ -156,6 +158,26 @@ To start a local Jupyter notebook server, run
     jupyter notebook
 
 Like the scripts and tutorials, each notebook is configured to create and (attempt to) dispose of its own isolated temporary workspace. (On Windows, Python's `TemporaryDirectory` can raise permissions errors, so cleanup is trapped with `try/except`.)
+
+### Editing or developing example Notebooks
+Submissions of high-quality Jupyter Notebook examples that demonstrate the use of Flopy are encouraged, as are edits to existing Notebook examples to improve the code quality and clarity of presentation. A few notes on contributing to Notebook examples:
+
+* Notebook examples are housed in their native Jupyter format in `.docs/Notebooks`, and then rendered into html by [nbsphinx](https://github.com/spatialaudio/nbsphinx) when the [online documentation](https://flopy.readthedocs.io/en/latest/) is built.
+* Only Notebook input should committed; `nbsphinx` executes the Notebooks as part of the documentation build, to get the output that will be rendered in the documentation.
+* Notebook output can be stripped automatically from Git commits by executing this shell command within the Flopy repository:
+
+    ```shell
+    git config filter.strip-notebook-output.clean 'jupyter nbconvert --ClearOutputPreprocessor. enabled=True --to=notebook --stdin --stdout --log-level=ERROR'
+    ```
+    which adds a `"strip-notebook-output"` filter to `.git/config`. A reference to this filter is already included in the `.gitattributes` file, which triggers its application on commits.
+* Notebook output can be stripped manually for a given notebook or a batch of notebooks (using wildcards), with:
+    ```shell
+    jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace .docs/Notebooks/*.ipynb
+    ```
+#### Adding a new Notebook to the documenation
+* Notebooks must be included in the documentation to be rendered. Most Notebooks are referenced in the `.docs/notebooks.rst` file that sets up the [Examples Gallery](https://flopy.readthedocs.io/en/latest/notebooks.html).
+* Thumbnails for the [Examples Gallery](https://flopy.readthedocs.io/en/latest/notebooks.html) are generated automatically from the Notebook header (typically the first line, begining with a single '#'), and by default, the last plot generated.
+* Thumbnails can be customized to use any plot in the Notebook or an external image, as described [here](https://nbsphinx.readthedocs.io/en/0.9.1/subdir/gallery.html).
 
 ## Tests
 
