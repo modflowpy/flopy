@@ -63,11 +63,11 @@ docs/_build/
 target/
 flopy/.idea
 
-examples/Notebooks/data
-examples/Notebooks/temp
-examples/FAQ/temp
-examples/scripts/data
-examples/groundwater_paper/Notebooks/temp
+.docs/Notebooks/data
+.docs/Notebooks/temp
+.docs/FAQ/temp
+.docs/scripts/data
+.docs/groundwater_paper/Notebooks/temp
 
 # ignore all .ipynb_checkpoints
 .ipynb_checkpoints
