@@ -27,6 +27,7 @@ Contents:
 
    tutorials
    notebooks
+   faq
 
 Code Description
 ================
