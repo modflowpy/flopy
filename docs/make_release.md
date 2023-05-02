@@ -21,13 +21,13 @@
 ## Initial steps
 
 The FloPy release procedure is mostly automated with GitHub Actions in [`release.yml`](../.github/workflows/release.yml), but there are a few manual steps to complete first:
-    
+
 1.  Update `usgsprograms.txt` in the [GitHub pymake repository](https://github.com/modflowpy/pymake) with the path to the new MODFLOW 6 release. Also update all other targets in `usgsprograms.txt` with the path to new releases.
 
 2.  Trigger a new release for the [executables repository](https://github.com/MODFLOW-USGS/executables), either via the GitHub Actions UI or GitHub CLI. See the executables repo's `DEVELOPER.md` for more information. Wait for the release to be published.
 
 3. Update the authors in `CITATION.cff` for the Software/Code citation for FloPy, if required.
- 
+
 
 ## Release procedure
 
@@ -84,14 +84,14 @@ As described above, making a release manually involves the following steps:
 - Run `python scripts/update_version.py -v <semver>` to update the version number stored in `version.txt` and `flopy/version.py`. For an approved release use the `--approve` flag.
 
 - Update MODFLOW 6 dfn files in the repository and MODFLOW 6 package classes by running `python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="master", backup=False)'`
-  
+
 - Run `isort` and `black` on the `flopy` module. This can be achieved by running `python scripts/pull_request_prepare.py` from the project root. The commands `isort .` and `black .` can also be run individually instead.
 
 - Use `run_notebooks.py` in the `scripts` directory to rerun all notebooks in:
 
-    - `examples\Notebooks` directory.
-    - `examples\Notebooks\groundwater_paper` directory.
-    - `examples\Notebooks\FAQ` directory.
+    - `.docs/Notebooks` directory.
+    - `.docs/Notebooks/groundwater_paper` directory.
+    - `.docs/Notebooks/FAQ` directory.
 
 - Generate a changelog starting from the last release with [git cliff](https://github.com/orhun/git-cliff), for instance: `git cliff --config cliff.toml --unreleased --tag=<release version number>`.
 
