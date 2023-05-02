@@ -143,7 +143,7 @@ Some of the scripts use [optional dependencies](docs/flopy_method_dependencies.m
 
 ### Notebooks
 
-[Example notebooks](docs/notebook_examples.md) are located in `examples/Notebooks`.
+[Example notebooks](docs/notebook_examples.md) are located in `.docs/Notebooks`.
 
 To run the example notebooks you will need `jupyter` installed (`jupyter` is included with the `test` optional dependency group in `pyproject.toml`). Some of the notebooks use [optional dependencies](docs/flopy_method_dependencies.md) as well.
 
@@ -252,7 +252,7 @@ def test_benchmark(benchmark):
         import time
         time.sleep(1)
         return True
-        
+
     assert benchmark(sleep_1s)
 ```
 
@@ -264,7 +264,7 @@ def test_benchmark(benchmark):
         import time
         time.sleep(s)
         return True
-        
+
     assert benchmark(sleep_s, 1)
 ```
 
@@ -276,7 +276,7 @@ def test_benchmark(benchmark):
         import time
         time.sleep(s)
         return True
-        
+
     assert benchmark(lambda: sleep_s(1))
 ```
 
