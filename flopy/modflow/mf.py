@@ -292,8 +292,7 @@ class Modflow(BaseModel):
                 botm=self.disu.bot.array,
                 idomain=ibound,
                 lenuni=self.disu.lenuni,
-                proj4=self._modelgrid.proj4,
-                epsg=self._modelgrid.epsg,
+                crs=self._modelgrid.crs,
                 xoff=self._modelgrid.xoffset,
                 yoff=self._modelgrid.yoffset,
                 angrot=self._modelgrid.angrot,
@@ -313,8 +312,7 @@ class Modflow(BaseModel):
                 self.dis.botm.array,
                 ibound,
                 self.dis.lenuni,
-                proj4=self._modelgrid.proj4,
-                epsg=self._modelgrid.epsg,
+                crs=self._modelgrid.crs,
                 xoff=self._modelgrid.xoffset,
                 yoff=self._modelgrid.yoffset,
                 angrot=self._modelgrid.angrot,
@@ -339,8 +337,7 @@ class Modflow(BaseModel):
             xoff,
             yoff,
             self._modelgrid.angrot,
-            self._modelgrid.epsg,
-            self._modelgrid.proj4,
+            self._modelgrid.crs,
         )
         self._mg_resync = not self._modelgrid.is_complete
         return self._modelgrid

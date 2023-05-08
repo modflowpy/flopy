@@ -32,4 +32,4 @@ Additional dependencies to use optional FloPy helper methods are listed below.
 | `get_sciencebase_xml_metadata()` in `flopy.export.metadata` `acdd` class             | **defusedxml**                                                           |
 | `flopy.utils.geospatial_utils` `GeoSpatialUtil` class                                | **geojson**                                                              |
 | `flopy.utils.geospatial_utils` `GeoSpatialCollection` class                          | **geojson**                                                              |
-| `flopy.export.vtk` `Vtk` class                                                       | **vtk**                                                                  |
+| `flopy.export.vtk` `Vtk` class                                                       | **vtk**, optionally **pyvista**                                          |

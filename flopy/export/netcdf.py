@@ -9,8 +9,10 @@ from pathlib import Path
 from typing import Optional, Union
 
 import numpy as np
+from packaging import version
 
 from ..utils import import_optional_dependency
+from ..utils.crs import get_authority_crs
 from .longnames import NC_LONG_NAMES
 from .metadata import acdd
 
@@ -158,11 +160,8 @@ class NetCdf:
         forgive=False,
         **kwargs,
     ):
-        if isinstance(output_filename, os.PathLike):
-            output_filename = str(
-                Path(output_filename).expanduser().absolute()
-            )
-        assert output_filename.lower().endswith(".nc")
+        output_filename = Path(output_filename)
+        assert output_filename.suffix == ".nc"
         if verbose is None:
             verbose = model.verbose
         if logger is not None:
@@ -172,7 +171,7 @@ class NetCdf:
         self.var_attr_dict = {}
         self.log = self.logger.log
         if os.path.exists(output_filename):
-            self.logger.warn("removing existing nc file: " + output_filename)
+            self.logger.warn(f"removing existing nc file: {output_filename}")
             os.remove(output_filename)
         self.output_filename = output_filename
 
@@ -202,14 +201,13 @@ class NetCdf:
         self.start_datetime = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
         self.logger.log(f"start datetime:{self.start_datetime}")
 
-        proj4_str = self.model_grid.proj4
-        if proj4_str is None:
-            proj4_str = "epsg:4326"
+        crs = get_authority_crs(self.model_grid.crs)
+        if crs is None:
             self.logger.warn(
                 "model has no coordinate reference system specified. "
-                f"Using default proj4 string: {proj4_str}"
             )
-        self.proj4_str = proj4_str
+        self.model_crs = crs
+        self.transformer = None
         self.grid_units = self.model_grid.units
         self.z_positive = z_positive
         if self.grid_units is None:
@@ -220,10 +218,49 @@ class NetCdf:
 
         self.time_units = self.model_time.time_units
 
-        # this gives us confidence that every NetCdf instance
-        # has the same attributes
         self.log("initializing attributes")
-        self._initialize_attributes()
+        self.nc_crs_str = "epsg:4326"
+        self.nc_crs_longname = "https://www.opengis.net/def/crs/EPSG/0/4326"
+        self.nc_semi_major = float(6378137.0)
+        self.nc_inverse_flat = float(298.257223563)
+
+        self.global_attributes = {}
+        self.global_attributes["namefile"] = self.model.namefile
+        self.global_attributes["model_ws"] = self.model.model_ws
+        self.global_attributes["exe_name"] = self.model.exe_name
+        self.global_attributes["modflow_version"] = self.model.version
+
+        self.global_attributes["create_hostname"] = socket.gethostname()
+        self.global_attributes["create_platform"] = platform.system()
+        self.global_attributes["create_directory"] = os.getcwd()
+
+        htol, rtol = -999, -999
+        try:
+            htol, rtol = self.model.solver_tols()
+        except Exception as e:
+            self.logger.warn(f"unable to get solver tolerances:{e!s}")
+        self.global_attributes["solver_head_tolerance"] = htol
+        self.global_attributes["solver_flux_tolerance"] = rtol
+        spatial_attribs = {
+            "xll": self.model_grid.xoffset,
+            "yll": self.model_grid.yoffset,
+            "rotation": self.model_grid.angrot,
+            "crs": self.model_grid.crs,
+        }
+        for n, v in spatial_attribs.items():
+            self.global_attributes["flopy_sr_" + n] = v
+        self.global_attributes[
+            "start_datetime"
+        ] = self.model_time.start_datetime
+
+        self.fillvalue = FILLVALUE
+
+        # initialize attributes
+        self.grid_crs = None
+        self.zs = self.model_grid.xyzcellcenters[2].copy()
+        self.ys = None
+        self.xs = None
+        self.nc = None
         self.log("initializing attributes")
 
         self.time_values_arg = time_values
@@ -383,6 +420,10 @@ class NetCdf:
             new_net.nc.variables[vname][:] = self.nc.variables[vname][:]
         new_net.nc.sync()
         return new_net
+
+    @property
+    def nc_crs(self):
+        return get_authority_crs(self.nc_crs_str)
 
     @classmethod
     def zeros_like(
@@ -627,57 +668,6 @@ class NetCdf:
         self.nc.close()
         self.log("writing nc file")
 
-    def _initialize_attributes(self):
-        """private method to initial the attributes
-        of the NetCdf instance
-        """
-        assert (
-            "nc" not in self.__dict__.keys()
-        ), "NetCdf._initialize_attributes() error: nc attribute already set"
-
-        self.nc_epsg_str = "epsg:4326"
-        self.nc_crs_longname = "https://www.opengis.net/def/crs/EPSG/0/4326"
-        self.nc_semi_major = float(6378137.0)
-        self.nc_inverse_flat = float(298.257223563)
-
-        self.global_attributes = {}
-        self.global_attributes["namefile"] = self.model.namefile
-        self.global_attributes["model_ws"] = self.model.model_ws
-        self.global_attributes["exe_name"] = self.model.exe_name
-        self.global_attributes["modflow_version"] = self.model.version
-
-        self.global_attributes["create_hostname"] = socket.gethostname()
-        self.global_attributes["create_platform"] = platform.system()
-        self.global_attributes["create_directory"] = os.getcwd()
-
-        htol, rtol = -999, -999
-        try:
-            htol, rtol = self.model.solver_tols()
-        except Exception as e:
-            self.logger.warn(f"unable to get solver tolerances:{e!s}")
-        self.global_attributes["solver_head_tolerance"] = htol
-        self.global_attributes["solver_flux_tolerance"] = rtol
-        spatial_attribs = {
-            "xll": self.model_grid.xoffset,
-            "yll": self.model_grid.yoffset,
-            "rotation": self.model_grid.angrot,
-            "proj4_str": self.model_grid.proj4,
-        }
-        for n, v in spatial_attribs.items():
-            self.global_attributes["flopy_sr_" + n] = v
-        self.global_attributes[
-            "start_datetime"
-        ] = self.model_time.start_datetime
-
-        self.fillvalue = FILLVALUE
-
-        # initialize attributes
-        self.grid_crs = None
-        self.zs = None
-        self.ys = None
-        self.xs = None
-        self.nc = None
-
     def initialize_geometry(self):
         """initialize the geometric information
         needed for the netcdf file
@@ -686,20 +676,15 @@ class NetCdf:
         from ..utils.parse_version import Version
 
         # Check if using newer pyproj version conventions
-        pyproj220 = Version(pyproj.__version__) >= Version("2.2.0")
+        if version.parse(pyproj.__version__) < version.parse("2.2"):
+            raise ValueError(
+                "The FloPy NetCDF module requires pyproj >= 2.2.0."
+            )
 
-        proj4_str = self.proj4_str
-        print(f"initialize_geometry::proj4_str = {proj4_str}")
+        print(f"initialize_geometry::")
 
-        self.log(f"building grid crs using proj4 string: {proj4_str}")
-        if pyproj220:
-            self.grid_crs = pyproj.CRS(proj4_str)
-        else:
-            if proj4_str.lower().startswith("epsg:"):
-                proj4_str = "+init=" + proj4_str
-            self.grid_crs = pyproj.Proj(proj4_str, preserve_units=True)
-
-        print(f"initialize_geometry::self.grid_crs = {self.grid_crs}")
+        self.log(f"model crs: {self.model_crs}")
+        print(f"model crs: {self.model_crs}")
 
         vmin, vmax = self.model_grid.botm.min(), self.model_grid.top.max()
         if self.z_positive == "down":
@@ -711,39 +696,28 @@ class NetCdf:
         xs = self.model_grid.xyzcellcenters[0].copy()
 
         # Transform to a known CRS
-        if pyproj220:
-            nc_crs = pyproj.CRS(self.nc_epsg_str)
+        if self.model_crs is not None and self.nc_crs is not None:
             self.transformer = pyproj.Transformer.from_crs(
-                self.grid_crs, nc_crs, always_xy=True
+                self.model_crs, self.nc_crs, always_xy=True
             )
-        else:
-            nc_epsg_str = self.nc_epsg_str
-            if nc_epsg_str.lower().startswith("epsg:"):
-                nc_epsg_str = "+init=" + nc_epsg_str
-            nc_crs = pyproj.Proj(nc_epsg_str)
-            self.transformer = None
 
-        print(f"initialize_geometry::nc_crs = {nc_crs}")
+        print(f"initialize_geometry::nc_crs = {self.nc_crs}")
 
-        if pyproj220:
+        xmin, xmax, ymin, ymax = self.model_grid.extent
+        if self.transformer is not None:
             print(f"transforming coordinates using = {self.transformer}")
 
-        self.log("projecting grid cell center arrays")
-        if pyproj220:
+            self.log("projecting grid cell center arrays")
             self.xs, self.ys = self.transformer.transform(xs, ys)
-        else:
-            self.xs, self.ys = pyproj.transform(self.grid_crs, nc_crs, xs, ys)
 
-        # get transformed bounds and record to check against ScienceBase later
-        xmin, xmax, ymin, ymax = self.model_grid.extent
-        bbox = np.array(
-            [[xmin, ymin], [xmin, ymax], [xmax, ymax], [xmax, ymin]]
-        )
-        if pyproj220:
+            # get transformed bounds and record to check against ScienceBase later
+            bbox = np.array(
+                [[xmin, ymin], [xmin, ymax], [xmax, ymax], [xmax, ymin]]
+            )
             x, y = self.transformer.transform(*bbox.transpose())
+            self.bounds = x.min(), y.min(), x.max(), y.max()
         else:
-            x, y = pyproj.transform(self.grid_crs, nc_crs, *bbox.transpose())
-        self.bounds = x.min(), y.min(), x.max(), y.max()
+            self.bounds = xmin, ymin, xmax, ymax
         self.vbounds = vmin, vmax
 
     def initialize_file(self, time_values=None):
@@ -759,16 +733,14 @@ class NetCdf:
                 self.model.dis.perlen and self.start_datetime
 
         """
-        from ..export.shapefile_utils import CRS
         from ..version import __version__ as version
 
         if self.nc is not None:
             raise Exception("nc file already initialized")
 
-        if self.grid_crs is None:
-            self.log("initializing geometry")
-            self.initialize_geometry()
-            self.log("initializing geometry")
+        self.log("initializing geometry")
+        self.initialize_geometry()
+        self.log("initializing geometry")
 
         netCDF4 = import_optional_dependency("netCDF4")
 
@@ -817,7 +789,7 @@ class NetCdf:
         # Metadata variables
         crs = self.nc.createVariable("crs", "i4")
         crs.long_name = self.nc_crs_longname
-        crs.epsg_code = self.nc_epsg_str
+        crs.crs_wkt = self.nc_crs.to_wkt()
         crs.semi_major_axis = self.nc_semi_major
         crs.inverse_flattening = self.nc_inverse_flat
         self.log("setting CRS info")
@@ -919,12 +891,9 @@ class NetCdf:
         )
         y[:] = self.model_grid.xyzcellcenters[1]
 
-        # grid mapping variable
-        crs = CRS(
-            prj=self.model_grid.prj,
-            epsg=self.model_grid.epsg,
-        )
-        attribs = crs.grid_mapping_attribs
+        # convert pyproj.CRS object to a
+        # Climate and Forecast (CF) Grid Mapping Version 1.8 dict.
+        attribs = self.nc_crs.to_cf()
         if attribs is not None:
             self.log("creating grid mapping variable")
             self.create_variable(

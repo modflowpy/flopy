@@ -1548,8 +1548,8 @@ class MFPackage(PackageContainer, PackageInterface):
         The parent model, simulation, or package containing this package
     package_type : str
         String defining the package type
-    filename : str
-        Filename of file where this package is stored
+    filename : str or PathLike
+        Name or path of file where this package is stored
     quoted_filename : str
         Filename with quotes around it when there is a space in the name
     pname : str
@@ -1674,7 +1674,7 @@ class MFPackage(PackageContainer, PackageInterface):
                 # filename uses model base name
                 self._filename = f"{self.model_or_sim.name}.{package_type}"
         else:
-            if not isinstance(filename, str):
+            if not isinstance(filename, (str, os.PathLike)):
                 message = (
                     "Invalid fname parameter. Expecting type str. "
                     'Instead type "{}" was '
@@ -1694,7 +1694,9 @@ class MFPackage(PackageContainer, PackageInterface):
                     message,
                     self.model_or_sim.simulation_data.debug,
                 )
-            self._filename = datautil.clean_filename(filename)
+            self._filename = datautil.clean_filename(
+                str(filename).replace("\\", "/")
+            )
         self.path, self.structure = self.model_or_sim.register_package(
             self, not loading_package, pname is None, filename is None
         )

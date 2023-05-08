@@ -13,18 +13,13 @@ from modflow_devtools.markers import (
     excludes_platform,
     requires_exe,
     requires_pkg,
-    requires_spatial_reference,
 )
 from modflow_devtools.misc import has_pkg
 
 import flopy
 from flopy.discretization import StructuredGrid, UnstructuredGrid
 from flopy.export import NetCdf
-from flopy.export.shapefile_utils import (
-    EpsgReference,
-    recarray2shp,
-    shp2recarray,
-)
+from flopy.export.shapefile_utils import recarray2shp, shp2recarray
 from flopy.export.utils import (
     export_array,
     export_array_contours,
@@ -53,6 +48,7 @@ from flopy.utils import (
     import_optional_dependency,
 )
 from flopy.utils import postprocessing as pp
+from flopy.utils.crs import get_authority_crs
 from flopy.utils.geometry import Polygon
 
 
@@ -62,14 +58,23 @@ def namfiles() -> List[Path]:
 
 
 @requires_pkg("shapefile")
-def test_output_helper_shapefile_export(function_tmpdir, example_data_path):
-    ws = example_data_path / "freyberg_multilayer_transient"
-    ml = Modflow.load("freyberg.nam", model_ws=ws)
-    head = HeadFile(ws / "freyberg.hds")
-    cbc = CellBudgetFile(ws / "freyberg.cbc")
+@pytest.mark.parametrize("pathlike", (True, False))
+def test_output_helper_shapefile_export(
+    pathlike, function_tmpdir, example_data_path
+):
+    ml = Modflow.load(
+        "freyberg.nam",
+        model_ws=str(example_data_path / "freyberg_multilayer_transient"),
+    )
+    head = HeadFile(os.path.join(ml.model_ws, "freyberg.hds"))
+    cbc = CellBudgetFile(os.path.join(ml.model_ws, "freyberg.cbc"))
 
+    if pathlike:
+        outpath = function_tmpdir / "test-pathlike.shp"
+    else:
+        outpath = os.path.join(function_tmpdir, "test.shp")
     flopy.export.utils.output_helper(
-        function_tmpdir / "test.shp",
+        outpath,
         ml,
         {"HDS": head, "cbc": cbc},
         mflay=1,
@@ -105,6 +110,7 @@ def test_freyberg_export(function_tmpdir, example_data_path):
         load_only=["DIS", "BAS6", "NWT", "OC", "RCH", "WEL", "DRN", "UPW"],
     )
     # test export without instantiating an sr
+    m.modelgrid.crs = None
     shape = function_tmpdir / f"{name}_drn_sparse.shp"
     m.drn.stress_period_data.export(shape, sparse=True)
     for suffix in [".dbf", ".shp", ".shx"]:
@@ -114,7 +120,7 @@ def test_freyberg_export(function_tmpdir, example_data_path):
     assert not shape.with_suffix(".prj").exists()
 
     m.modelgrid = StructuredGrid(
-        delc=m.dis.delc.array, delr=m.dis.delr.array, epsg=3070
+        delc=m.dis.delc.array, delr=m.dis.delr.array, crs=3070
     )
     # test export with an sr, regardless of whether or not wkt was found
     m.drn.stress_period_data.export(shape, sparse=True)
@@ -124,19 +130,16 @@ def test_freyberg_export(function_tmpdir, example_data_path):
         part.unlink()
 
     m.modelgrid = StructuredGrid(
-        delc=m.dis.delc.array, delr=m.dis.delr.array, epsg=3070
+        delc=m.dis.delc.array, delr=m.dis.delr.array, crs=3070
     )
     # verify that attributes have same sr as parent
-    assert m.drn.stress_period_data.mg.epsg == m.modelgrid.epsg
-    assert m.drn.stress_period_data.mg.proj4 == m.modelgrid.proj4
+    assert m.drn.stress_period_data.mg.crs == m.modelgrid.crs
     assert m.drn.stress_period_data.mg.xoffset == m.modelgrid.xoffset
     assert m.drn.stress_period_data.mg.yoffset == m.modelgrid.yoffset
     assert m.drn.stress_period_data.mg.angrot == m.modelgrid.angrot
 
     # get wkt text was fetched from spatialreference.org
-    wkt = flopy.export.shapefile_utils.CRS.get_spatialreference(
-        m.modelgrid.epsg
-    )
+    wkt = m.modelgrid.crs.to_wkt()
 
     # if wkt text was fetched from spatialreference.org
     if wkt is not None:
@@ -162,13 +165,19 @@ def test_freyberg_export(function_tmpdir, example_data_path):
                 assert part.read_text() == wkt
 
 
+# for now, test with and without a coordinate reference system
+@pytest.mark.parametrize("crs", (None, 26916))
 @requires_pkg("netCDF4", "pyproj")
-def test_export_output(function_tmpdir, example_data_path):
-    ml = Modflow.load("freyberg.nam", model_ws=example_data_path / "freyberg")
+def test_export_output(crs, function_tmpdir, example_data_path):
+    ml = Modflow.load(
+        "freyberg.nam", model_ws=str(example_data_path / "freyberg")
+    )
+    ml.modelgrid.crs = crs
     hds_pth = os.path.join(ml.model_ws, "freyberg.githds")
     hds = flopy.utils.HeadFile(hds_pth)
 
-    out_pth = os.path.join(function_tmpdir, "freyberg.out.nc")
+    function_tmpdir = Path(".")
+    out_pth = function_tmpdir / f"freyberg_{crs}.out.nc"
     nc = flopy.export.utils.output_helper(
         out_pth, ml, {"freyberg.githds": hds}
     )
@@ -180,6 +189,17 @@ def test_export_output(function_tmpdir, example_data_path):
 
     # close the netcdf file
     nc.nc.close()
+
+    # verify that the CRS was written correctly
+    import netCDF4
+    import pyproj
+
+    ds = netCDF4.Dataset(out_pth)
+    read_crs = pyproj.CRS.from_cf(ds["latitude_longitude"].__dict__)
+    # currently, NetCDF files are only written
+    # in the 4326 coordinate reference system
+    # (lat/lon WGS 84)
+    assert read_crs == get_authority_crs(4326)
 
 
 @requires_pkg("shapefile")
@@ -194,7 +214,7 @@ def test_write_gridlines_shapefile(function_tmpdir):
         # cell spacing along model rows
         delc=np.ones(10) * 1.1,
         # cell spacing along model columns
-        epsg=26715,
+        crs=26715,
     )
     outshp = function_tmpdir / "gridlines.shp"
     write_gridlines_shapefile(outshp, sg)
@@ -205,56 +225,6 @@ def test_write_gridlines_shapefile(function_tmpdir):
     with shapefile.Reader(str(outshp)) as sf:
         assert sf.shapeType == shapefile.POLYLINE
         assert len(sf) == 22
-
-
-@flaky
-@requires_pkg("shapefile", "shapely")
-def test_write_grid_shapefile(function_tmpdir):
-    from shapefile import Reader
-
-    from flopy.discretization import StructuredGrid
-    from flopy.export.shapefile_utils import write_grid_shapefile
-
-    sg = StructuredGrid(
-        delr=np.ones(10) * 1.1,
-        # cell spacing along model rows
-        delc=np.ones(10) * 1.1,
-        # cell spacing along model columns
-        epsg=26715,
-    )
-    outshp = function_tmpdir / "junk.shp"
-    write_grid_shapefile(outshp, sg, array_dict={})
-
-    for suffix in [".dbf", ".prj", ".shp", ".shx"]:
-        assert outshp.with_suffix(suffix).exists()
-
-    # test that vertices aren't getting altered by writing shapefile
-    # check that pyshp reads integers
-    # this only check that row/column were recorded as "N"
-    # not how they will be cast by python or numpy
-    sfobj = Reader(str(outshp))
-    for f in sfobj.fields:
-        if f[0] == "row" or f[0] == "column":
-            assert f[1] == "N"
-    recs = list(sfobj.records())
-    for r in recs[0]:
-        assert isinstance(r, int)
-    sfobj.close()
-
-    # check that row and column appear as integers in recarray
-    ra = shp2recarray(outshp)
-    assert np.issubdtype(ra.dtype["row"], np.integer)
-    assert np.issubdtype(ra.dtype["column"], np.integer)
-
-    try:  # check that fiona reads integers
-        import fiona
-
-        with fiona.open(outshp) as src:
-            meta = src.meta
-            assert "int" in meta["schema"]["properties"]["row"]
-            assert "int" in meta["schema"]["properties"]["column"]
-    except ImportError:
-        pass
 
 
 @requires_pkg("shapefile")
@@ -270,9 +240,7 @@ def test_export_shapefile_polygon_closed(function_tmpdir):
     nrow = int((yur - yll) / spacing)
     print(nrow, ncol)
 
-    m = flopy.modflow.Modflow(
-        "test.nam", proj4_str="EPSG:32614", xll=xll, yll=yll
-    )
+    m = flopy.modflow.Modflow("test.nam", crs="EPSG:32614", xll=xll, yll=yll)
 
     flopy.modflow.ModflowDis(
         m, delr=spacing, delc=spacing, nrow=nrow, ncol=ncol
@@ -381,41 +349,6 @@ def test_netcdf_classmethods(function_tmpdir, example_data_path):
     new_f.nc.close()
 
 
-def test_wkt_parse(example_shapefiles):
-    """Test parsing of Coordinate Reference System parameters
-    from well-known-text in .prj files."""
-
-    from flopy.export.shapefile_utils import CRS
-
-    geocs_params = [
-        "wktstr",
-        "geogcs",
-        "datum",
-        "spheroid_name",
-        "semi_major_axis",
-        "inverse_flattening",
-        "primem",
-        "gcs_unit",
-    ]
-
-    for prj in example_shapefiles:
-        with open(prj) as src:
-            wkttxt = src.read()
-            wkttxt = wkttxt.replace("'", '"')
-        if len(wkttxt) > 0 and "projcs" in wkttxt.lower():
-            crsobj = CRS(esri_wkt=wkttxt)
-            assert isinstance(crsobj.crs, dict)
-            for k in geocs_params:
-                assert crsobj.__dict__[k] is not None
-            projcs_params = [
-                k for k in crsobj.__dict__ if k not in geocs_params
-            ]
-            if crsobj.projcs is not None:
-                for k in projcs_params:
-                    if k in wkttxt.lower():
-                        assert crsobj.__dict__[k] is not None
-
-
 @requires_pkg("shapefile")
 def test_shapefile_ibound(function_tmpdir, example_data_path):
     from shapefile import Reader
@@ -481,8 +414,7 @@ def test_shapefile_export_modelgrid_override(function_tmpdir, namfile):
         grid.botm,
         grid.idomain,
         grid.lenuni,
-        grid.epsg,
-        grid.proj4,
+        grid.crs,
         xoff=grid.xoffset,
         yoff=grid.yoffset,
         angrot=grid.angrot,
@@ -536,7 +468,7 @@ def test_export_netcdf(function_tmpdir, namfile):
 def test_export_array2(function_tmpdir):
     nrow = 7
     ncol = 11
-    epsg = 4111
+    crs = 4431
 
     # no epsg code
     modelgrid = StructuredGrid(
@@ -549,7 +481,7 @@ def test_export_array2(function_tmpdir):
 
     # with modelgrid epsg code
     modelgrid = StructuredGrid(
-        delr=np.ones(ncol) * 1.1, delc=np.ones(nrow) * 1.1, epsg=epsg
+        delr=np.ones(ncol) * 1.1, delc=np.ones(nrow) * 1.1, crs=crs
     )
     filename = os.path.join(function_tmpdir, "myarray2.shp")
     a = np.arange(nrow * ncol).reshape((nrow, ncol))
@@ -562,7 +494,7 @@ def test_export_array2(function_tmpdir):
     )
     filename = os.path.join(function_tmpdir, "myarray3.shp")
     a = np.arange(nrow * ncol).reshape((nrow, ncol))
-    export_array(modelgrid, filename, a, epsg=epsg)
+    export_array(modelgrid, filename, a, crs=crs)
     assert os.path.isfile(filename), "did not create array shapefile"
 
 
@@ -570,7 +502,7 @@ def test_export_array2(function_tmpdir):
 def test_export_array_contours(function_tmpdir):
     nrow = 7
     ncol = 11
-    epsg = 4111
+    crs = 4431
 
     # no epsg code
     modelgrid = StructuredGrid(
@@ -581,22 +513,24 @@ def test_export_array_contours(function_tmpdir):
     export_array_contours(modelgrid, filename, a)
     assert os.path.isfile(filename), "did not create contour shapefile"
 
-    # with modelgrid epsg code
+    # with modelgrid coordinate reference
     modelgrid = StructuredGrid(
-        delr=np.ones(ncol) * 1.1, delc=np.ones(nrow) * 1.1, epsg=epsg
+        delr=np.ones(ncol) * 1.1,
+        delc=np.ones(nrow) * 1.1,
+        crs=crs,
     )
     filename = function_tmpdir / "myarraycontours2.shp"
     a = np.arange(nrow * ncol).reshape((nrow, ncol))
     export_array_contours(modelgrid, filename, a)
     assert os.path.isfile(filename), "did not create contour shapefile"
 
-    # with passing in epsg code
+    # with passing in coordinate reference
     modelgrid = StructuredGrid(
         delr=np.ones(ncol) * 1.1, delc=np.ones(nrow) * 1.1
     )
     filename = function_tmpdir / "myarraycontours3.shp"
     a = np.arange(nrow * ncol).reshape((nrow, ncol))
-    export_array_contours(modelgrid, filename, a, epsg=epsg)
+    export_array_contours(modelgrid, filename, a, crs=crs)
     assert os.path.isfile(filename), "did not create contour shapefile"
 
 
@@ -858,7 +792,7 @@ def test_polygon_from_ij(function_tmpdir):
         xoff=mg._xul_to_xll(600000.0, -45.0),
         yoff=mg._yul_to_yll(5170000, -45.0),
         angrot=-45.0,
-        proj4="EPSG:26715",
+        crs="EPSG:26715",
     )
 
     recarray = np.array(
@@ -889,7 +823,6 @@ def test_polygon_from_ij(function_tmpdir):
 
 @flaky
 @requires_pkg("netCDF4", "pyproj")
-@requires_spatial_reference
 def test_polygon_from_ij_with_epsg(function_tmpdir):
     ws = function_tmpdir
     m = Modflow("toy_model", model_ws=ws)
@@ -917,7 +850,7 @@ def test_polygon_from_ij_with_epsg(function_tmpdir):
         xoff=mg._xul_to_xll(600000.0, -45.0),
         yoff=mg._yul_to_yll(5170000, -45.0),
         angrot=-45.0,
-        proj4="EPSG:26715",
+        crs="EPSG:26715",
     )
 
     recarray = np.array(
@@ -943,16 +876,7 @@ def test_polygon_from_ij_with_epsg(function_tmpdir):
     ]
 
     fpth = os.path.join(ws, "test.shp")
-    recarray2shp(recarray, geoms, fpth, epsg=26715)
-
-    # tries to connect to https://spatialreference.org,
-    # might fail with CERTIFICATE_VERIFY_FAILED (on Mac,
-    # run Python Install Certificates) but intermittent
-    # 502s are also possible and possibly unavoidable)
-    ep = EpsgReference()
-    prj = ep.to_dict()
-
-    assert 26715 in prj
+    recarray2shp(recarray, geoms, fpth, crs=26715)
 
     fpth = os.path.join(ws, "test.prj")
     fpth2 = os.path.join(ws, "26715.prj")
@@ -1339,6 +1263,36 @@ def test_vtk_unstructured(function_tmpdir, example_data_path):
     top2 = vtk_to_numpy(data.GetCellData().GetArray("top"))
 
     assert np.allclose(np.ravel(top), top2), "Field data not properly written"
+
+
+@requires_pkg("pyvista")
+def test_vtk_to_pyvista(function_tmpdir, example_data_path):
+    from autotest.test_mp7_cases import Mp7Cases
+
+    case_mf6 = Mp7Cases.mf6(function_tmpdir)
+    success, buff = case_mf6.run_model()
+    assert success, f"MP7 model ({case_mf6.name}) failed"
+
+    gwf = case_mf6.flowmodel
+    plf = PathlineFile(Path(case_mf6.model_ws) / f"{case_mf6.name}.mppth")
+    pls = plf.get_alldata()
+
+    vtk = Vtk(model=gwf, binary=True, smooth=False)
+    assert not any(vtk.to_pyvista())
+
+    vtk.add_model(gwf)
+    grid = vtk.to_pyvista()
+    assert grid.n_cells == gwf.modelgrid.nnodes
+
+    vtk.add_pathline_points(pls)
+    grid, pathlines = vtk.to_pyvista()
+    n_pts = sum([pl.shape[0] for pl in pls])
+    assert pathlines.n_points == n_pts
+    assert pathlines.n_cells == n_pts + len(pls) 
+
+    # uncomment to debug
+    # grid.plot()
+    # pathlines.plot()
 
 
 @pytest.mark.mf6

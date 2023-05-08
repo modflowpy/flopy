@@ -129,7 +129,7 @@ class ModelInterface:
     def update_modelgrid(self):
         if self._modelgrid is not None:
             self._modelgrid = Grid(
-                proj4=self._modelgrid.proj4,
+                crs=self._modelgrid.crs,
                 xoff=self._modelgrid.xoffset,
                 yoff=self._modelgrid.yoffset,
                 angrot=self._modelgrid.angrot,
@@ -354,7 +354,7 @@ class BaseModel(ModelInterface):
         the lower-left corner of the grid, ``xul``/``yul`` for the
         x- and y-coordinates of the upper-left corner of the grid
         (deprecated), ``rotation`` for the grid rotation (default 0.0),
-        ``proj4_str`` for a PROJ string, and ``start_datetime`` for
+        ``crs`` for the coordinate reference system, and ``start_datetime`` for
         model start date (default "1-1-1970").
 
     """
@@ -407,12 +407,12 @@ class BaseModel(ModelInterface):
         self._yul = kwargs.pop("yul", None)
 
         self._rotation = kwargs.pop("rotation", 0.0)
-        self._proj4_str = kwargs.pop("proj4_str", None)
+        self._crs = kwargs.pop("crs", None)
         self._start_datetime = kwargs.pop("start_datetime", "1-1-1970")
 
         # build model discretization objects
         self._modelgrid = Grid(
-            proj4=self._proj4_str,
+            crs=self._crs,
             xoff=xll,
             yoff=yll,
             angrot=self._rotation,
