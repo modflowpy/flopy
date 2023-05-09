@@ -66,6 +66,24 @@ class Mt3dDsp(Package):
         utility (RARRAY) is used to input the 3-D diffusion coefficient
         array, one model layer at a time.
         (default is False)
+    nocross : boolean
+        To disable cross-dispersion terms, a keyword input record must be
+        input record must be inserted to the beginning of the Dispersion
+        (DSP) input file. The symbol $ in the first column of an input line
+        signifies a keyword input record containing one or more predefined
+        keywords. Above the keyword input record, comment lines marked by the
+        symbol # in the first column are allowed. Comment lines are processed
+        but have no effect on the simulation. Furthermore, blank lines are
+        also acceptable above the keyword input record. Below the keyword
+        input record, the format of the DSP input file must remain unchanged
+        from the previous versions except for the diffusion coefficient as
+        explained below. If no keyword input record is specified, the input
+        file remains backward compatible with all previous versions of MT3DMS.
+        The predefined keyword to turn off calculation of the cross-
+        dispersion terms is ''nocross''.  The keyword is case insensitive
+        so ''Nocross'' is equivalent to either ''NOCROSS'' or ''nocross''.
+        (default is False, which means cross-dispersion coefficients
+        are calculated).
     extension : string
         Filename extension (default is 'dsp')
     unitnumber : int
@@ -111,6 +129,7 @@ class Mt3dDsp(Package):
         dmcoef=1e-9,
         extension="dsp",
         multiDiff=False,
+        nocross=False,
         unitnumber=None,
         filenames=None,
         **kwargs,
@@ -135,6 +154,7 @@ class Mt3dDsp(Package):
         ncomp = model.ncomp
         mcomp = model.mcomp
         self.multiDiff = multiDiff
+        self.nocross = nocross
         self.al = Util3d(
             model,
             (nlay, nrow, ncol),
@@ -229,8 +249,15 @@ class Mt3dDsp(Package):
         f_dsp = open(self.fn_path, "w")
 
         # Write multidiffusion keyword
-        if self.multiDiff:
-            f_dsp.write("$ MultiDiffusion\n")
+        if self.multiDiff or self.nocross:
+            line = "$ "
+            if self.multiDiff:
+                line += "MultiDiffusion "
+            if self.nocross and not self.parent.version == "mt3dms":
+                line += "Nocross "
+
+            line += "\n"
+            f_dsp.write(line)
 
         # Write arrays
         f_dsp.write(self.al.get_file_entry())
@@ -320,11 +347,14 @@ class Mt3dDsp(Package):
 
         # Check for keywords (multidiffusion)
         multiDiff = False
+        nocross = False
         if imsd == 1:
             keywords = line[1:].strip().split()
             for k in keywords:
                 if k.lower() == "multidiffusion":
                     multiDiff = True
+                if k.lower() == "nocross":
+                    nocross = True
         else:
             # go back to beginning of file
             f.seek(0, 0)
@@ -431,6 +461,7 @@ class Mt3dDsp(Package):
             trpv=trpv,
             dmcoef=dmcoef,
             multiDiff=multiDiff,
+            nocross=nocross,
             unitnumber=unitnumber,
             filenames=filenames,
             **kwargs,
