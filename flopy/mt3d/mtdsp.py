@@ -253,7 +253,7 @@ class Mt3dDsp(Package):
             line = "$ "
             if self.multiDiff:
                 line += "MultiDiffusion "
-            if self.nocross:
+            if self.nocross and not self.parent.version == "mt3dms":
                 line += "Nocross "
 
             line += "\n"
