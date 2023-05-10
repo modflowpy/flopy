@@ -98,7 +98,8 @@ currently include:
  * Joshua D. Larsen |orcid_Joshua_D_Larsen|
  * Michael N. Fienen |orcid_Michael_N_Fienen|
  * Jon Jeffrey Starn |orcid_Jon_Jeffrey_Starn|
- * Davíd Brakenhoff
+ * Davíd A. Brakenhoff |orcid_Davíd_A_Brakenhoff|
+ * Wesley P. Bonelli |orcid_Wesley_P_Bonelli|
  * and others
 
 .. |orcid_Mark_Bakker| image:: _images/orcid_16x16.png
@@ -127,6 +128,10 @@ currently include:
    :target: https://orcid.org/0000-0002-7756-4651
 .. |orcid_Jon_Jeffrey_Starn| image:: _images/orcid_16x16.png
    :target: https://orcid.org/0000-0001-5909-0010
+.. |orcid_Davíd_A_Brakenhoff| image:: _images/orcid_16x16.png
+   :target: https://orcid.org/0000-0002-2993-2202
+.. |orcid_Wesley_P_Bonelli| image:: _images/orcid_16x16.png
+   :target: https://orcid.org/0000-0002-2665-5078
 
 How to Cite
 ===========

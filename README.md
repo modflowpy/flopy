@@ -26,6 +26,10 @@ FloPy includes support for [MODFLOW 6](docs/mf6.md), MODFLOW-2005, MODFLOW-NWT, 
 
 For general modeling issues, please consult a modeling forum, such as the [MODFLOW Users Group](https://groups.google.com/forum/#!forum/modflow).  Other MODFLOW resources are listed in the [MODFLOW Resources](https://github.com/modflowpy/flopy#modflow-resources) section.
 
+Documentation
+-----------------------------------------------
+* [Latest release](https://flopy.readthedocs.io)
+* [Current release candidate](https://flopy.readthedocs.io/en/latest/)
 
 Installation
 -----------------------------------------------
@@ -48,17 +52,6 @@ After FloPy is installed, MODFLOW and related programs can be installed using th
     get-modflow :flopy
 
 See documentation [get_modflow.md](https://github.com/modflowpy/flopy/blob/develop/docs/get_modflow.md) for more information.
-
-
-Documentation
------------------------------------------------
-
-Documentation is available on **Read the Docs** and includes information
-on FloPy; tutorials for using FloPy with MODFLOW 6 and previous versions
-of MODFLOW, MT3DMS, MT3D-USGS, MODPATH, and ZONEBUDGET; and code documentation.
-
- - Read the Docs for the [latest release](https://flopy.readthedocs.io).
- - Read the Docs for the [current release candidate](https://flopy.readthedocs.io/en/latest/).
 
 
 Getting Started
@@ -109,7 +102,7 @@ Additional FloPy Resources
 
 - [MODFLOW 6 Example Problems](https://modflow6-examples.readthedocs.io/en/latest/) demonstrating FloPy use to create, run, and post-process MODFLOW 6 models.
 
-- [Jupyter notebooks](docs/notebook_examples.md) demonstrating the use of FloPy pre- and post-processing capabilities with a variety of MODFLOW-based models.
+- [Jupyter notebooks](https://flopy.readthedocs.io/en/latest/notebooks.html) demonstrating the use of FloPy pre- and post-processing capabilities with a variety of MODFLOW-based models.
 
 - [Scripts](docs/script_examples.md) demonstrating the use of FloPy for running and post-processing MODFLOW-based models.
 
@@ -176,12 +169,11 @@ MODFLOW Resources
 Disclaimer
 ----------
 
-This software is preliminary or provisional and is subject to revision. It is 
-being provided to meet the need for timely best science. This software is 
-provided "as is" and "as-available", and makes no representations or warranties 
-of any kind concerning the software, whether express, implied, statutory, or 
-other. This includes, without limitation, warranties of title, 
-merchantability, fitness for a particular purpose, non-infringement, absence 
-of latent or other defects, accuracy, or the presence or absence of errors, 
+This software is preliminary or provisional and is subject to revision. It is
+being provided to meet the need for timely best science. This software is
+provided "as is" and "as-available", and makes no representations or warranties
+of any kind concerning the software, whether express, implied, statutory, or
+other. This includes, without limitation, warranties of title,
+merchantability, fitness for a particular purpose, non-infringement, absence
+of latent or other defects, accuracy, or the presence or absence of errors,
 whether or not known or discoverable.
-

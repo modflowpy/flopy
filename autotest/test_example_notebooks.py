@@ -8,15 +8,15 @@ from modflow_devtools.misc import run_cmd
 
 def get_example_notebooks(exclude=None):
     prjroot = get_project_root_path()
-    nbpaths = [str(p) for p in (prjroot / "examples" / "FAQ").glob("*.ipynb")]
+    nbpaths = [str(p) for p in (prjroot / ".docs" / "FAQ").glob("*.ipynb")]
     nbpaths += [
-        str(p) for p in (prjroot / "examples" / "Notebooks").glob("*.ipynb")
+        str(p) for p in (prjroot / ".docs" / "Notebooks").glob("*.ipynb")
     ]
     nbpaths += [
         str(p)
-        for p in (
-            prjroot / "examples" / "groundwater_paper" / "Notebooks"
-        ).glob("*.ipynb")
+        for p in (prjroot / ".docs" / "groundwater_paper" / "Notebooks").glob(
+            "*.ipynb"
+        )
     ]
     return sorted(
         [p for p in nbpaths if not exclude or not any(e in p for e in exclude)]

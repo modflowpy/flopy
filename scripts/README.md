@@ -39,13 +39,13 @@ python scripts/pull_request_prepare.py
 
 ## Running notebooks
 
-The `run_notebooks.py` script runs notebooks located in subdirectories of the `examples` directory, currently including:
+The `run_notebooks.py` script runs notebooks located in subdirectories of the `.docs/` directory, currently including:
 
-- `examples/Notebooks`
-- `examples/groundwater_paper/Notebooks`
-- `examples/FAQ`
+- `.docs/Notebooks`
+- `.docs/groundwater_paper/Notebooks`
+- `.docs/FAQ`
 
-Notebooks are run using `jupytext --from_ipynb --execute <notebook path>`. Note that notebooks are under version control, and running them with this script will produce large changesets in your working tree as execution metadata is updated. You will likely want to discard these changes before committing, e.g. with `git restore examples/Notebooks` (and likewise for other notebook folders). Care should be taken to make sure desired changes to notebook cells are not discarded however.
+Notebooks are run using `jupytext --from_ipynb --execute <notebook path>`. Note that notebooks are under version control, and running them with this script will produce large changesets in your working tree as execution metadata is updated. You will likely want to discard these changes before committing, e.g. with `git restore .docs/Notebooks` (and likewise for other notebook folders). Care should be taken to make sure desired changes to notebook cells are not discarded however.
 
 ## Updating version
 
