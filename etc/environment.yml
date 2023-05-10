@@ -47,6 +47,7 @@ dependencies:
   - vtk
   - rasterstats
   - pyvista
+  - imageio
 
   # MODFLOW API dependencies
   - bmipy
