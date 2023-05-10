@@ -67,6 +67,7 @@ optional = [
     "pyshp",
     "python-dateutil >=2.4.0",
     "pyvista",
+    "imageio",
     "rasterio",
     "rasterstats",
     "scipy",
