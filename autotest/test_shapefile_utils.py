@@ -10,7 +10,7 @@ from flopy.utils.crs import get_shapefile_crs
 from .test_grid import minimal_unstructured_grid_info, minimal_vertex_grid_info
 
 
-@requires_pkg("pyproj")
+@requires_pkg("pyproj", "pyshp", "shapely")
 def test_write_grid_shapefile(
     minimal_unstructured_grid_info, minimal_vertex_grid_info, function_tmpdir
 ):

@@ -12,12 +12,6 @@ import numpy as np
 from ..pakbase import Package
 from ..utils import Util3d, import_optional_dependency
 
-pd = import_optional_dependency(
-    "pandas",
-    error_message="writing particles is more effcient with pandas",
-    errors="ignore",
-)
-
 
 class Modpath6Sim(Package):
     """
@@ -502,7 +496,7 @@ class StartingLocationsFile(Package):
         data["k0"] += 1
         data["i0"] += 1
         data["j0"] += 1
-        if pd is not None and self.use_pandas and len(data) > 0:
+        if self.use_pandas and len(data) > 0:
             self._write_particle_data_with_pandas(data, float_format)
         else:
             self._write_wo_pandas(data, float_format)
@@ -516,6 +510,10 @@ class StartingLocationsFile(Package):
         :param save_group_mapper bool, if true, save a groupnumber to group name mapper as well.
         :return:
         """
+        pd = import_optional_dependency(
+            "pandas",
+            error_message="specify `use_pandas=False` to use slower methods without pandas",
+        )
         # convert float format string to pandas float format
         float_format = (
             float_format.replace("{", "").replace("}", "").replace(":", "%")

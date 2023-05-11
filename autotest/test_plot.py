@@ -30,6 +30,7 @@ from flopy.plot import PlotCrossSection, PlotMapView
 from flopy.utils import CellBudgetFile, EndpointFile, HeadFile, PathlineFile
 
 
+@requires_pkg("shapely")
 def test_map_view():
     m = flopy.modflow.Modflow(rotation=20.0)
     dis = flopy.modflow.ModflowDis(
@@ -602,6 +603,7 @@ def structured_square_grid(side: int = 10, thick: int = 10):
     return StructuredGrid(delr=delr, delc=delc, top=top, botm=botm)
 
 
+@requires_pkg("shapely")
 @pytest.mark.parametrize(
     "line",
     [(), [], (()), [[]], (0, 0), [0, 0], [[0, 0]]],

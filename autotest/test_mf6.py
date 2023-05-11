@@ -253,6 +253,7 @@ def to_os_sep(s):
     return s.replace("\\", os.sep).replace("/", os.sep)
 
 
+@requires_exe("mf6")
 def test_load_and_run_sim_when_namefile_uses_filenames(
     function_tmpdir, example_data_path
 ):
@@ -268,6 +269,7 @@ def test_load_and_run_sim_when_namefile_uses_filenames(
     assert success
 
 
+@requires_exe("mf6")
 def test_load_and_run_sim_when_namefile_uses_abs_paths(
     function_tmpdir, example_data_path
 ):
@@ -294,6 +296,7 @@ def test_load_and_run_sim_when_namefile_uses_abs_paths(
     assert success
 
 
+@requires_exe("mf6")
 @pytest.mark.parametrize("sep", ["win", "posix"])
 def test_load_sim_when_namefile_uses_rel_paths(
     function_tmpdir, example_data_path, sep

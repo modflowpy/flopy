@@ -754,6 +754,7 @@ def test_rect_grid_polygon_on_inner_boundary():
     # plt.show()
 
 
+@requires_pkg("shapely")
 def test_rect_grid_polygon_multiple_polygons():
     gr = get_rect_grid()
     p = Polygon(
