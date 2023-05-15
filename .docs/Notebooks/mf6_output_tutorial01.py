@@ -30,68 +30,10 @@ import flopy
 # ## Load a simple demonstration model
 
 exe_name = "mf6"
-
-
-def get_project_root_path(path=None):
-    """
-    Infers the path to the project root given the path to the current working directory.
-    The current working location must be somewhere in the project, i.e. below the root.
-
-    Parameters
-    ----------
-    path : the path to the current working directory
-
-    Returns
-    -------
-        The path to the project root
-    """
-
-    cwd = Path(path) if path is not None else Path.cwd()
-    if cwd.name == "autotest":
-        # we're in top-level autotest folder
-        return cwd.parent
-    elif "autotest" in cwd.parts and cwd.parts.index(
-        "autotest"
-    ) > cwd.parts.index("flopy"):
-        # we're somewhere inside autotests
-        parts = cwd.parts[0 : cwd.parts.index("autotest")]
-        return Path(*parts)
-    elif "examples" in cwd.parts and cwd.parts.index(
-        "examples"
-    ) > cwd.parts.index("flopy"):
-        # we're somewhere inside examples folder
-        parts = cwd.parts[0 : cwd.parts.index("examples")]
-        return Path(*parts)
-    elif cwd.parts.count("flopy") >= 1:
-        # we're somewhere inside the project or flopy module
-        tries = [1]
-        if "CI" in os.environ:
-            tries.append(2)
-        for t in tries:
-            parts = cwd.parts[0 : cwd.parts.index("flopy") + (t)]
-            pth = Path(*parts)
-            if (
-                next(iter([p for p in pth.glob("pyproject.toml")]), None)
-                is not None
-            ):
-                return pth
-        raise Exception(
-            f"Can't infer location of project root from {cwd}"
-            f"(run from project root, flopy module, examples, or autotest)"
-        )
-    elif cwd.parts.count("flopy") == 1 and cwd.name == "flopy":
-        # we're in project root
-        return cwd
-    else:
-        raise Exception(
-            f"Can't infer location of project root from {cwd}"
-            f"(run from project root, flopy module, examples, or autotest)"
-        )
-
-
+project_root_path = Path.cwd().parent.parent
 ws = os.path.abspath(os.path.dirname(""))
 sim_ws = str(
-    get_project_root_path() / "examples" / "data" / "mf6" / "test001e_UZF_3lay"
+    project_root_path / "examples" / "data" / "mf6" / "test001e_UZF_3lay"
 )
 
 # load the model

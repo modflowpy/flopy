@@ -11,6 +11,8 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+from pathlib import Path
+import subprocess
 import sys
 
 import yaml
@@ -100,9 +102,34 @@ cmd = ("python", "create_rstfiles.py")
 print(" ".join(cmd))
 os.system(" ".join(cmd))
 
-# -- convert the tutorial scripts -------------------------------------------
+# -- convert tutorial scripts and run example notebooks ----------------------
 if not on_rtd:
-    cmd = ("python", "create_tutorials.py")
+    # cmd = (
+    #     "jupyter",
+    #     "nbconvert",
+    #     "--to",
+    #     "ipynb",
+    #     "--execute",
+    #     "--inplace",
+    #     "Notebooks/*.ipynb",
+    # )
+    # print(" ".join(cmd))
+    # os.system(" ".join(cmd))
+
+    # pytest could be used to parallelize notebooks during local docs build?
+    # cmd = (
+    #     "pytest -v -n auto test_example_notebooks.py",
+    # )
+    # print(" ".join(cmd))
+    # subprocess.run(" ".join(cmd), cwd=Path.cwd().parent / "autotest", shell=True)
+
+    cmd = (
+        "jupytext",
+        "--to",
+        "ipynb",
+        "--execute",
+        "Notebooks/*tutorial*.py"
+    )
     print(" ".join(cmd))
     os.system(" ".join(cmd))
 
@@ -142,8 +169,12 @@ extensions = [
 # Settings for GitHub actions integration
 if on_rtd:
     extensions.append("rtds_action")
-    rtds_action_github_repo = "modflowpy/flopy"
-    rtds_action_path = "_notebooks"
+    rtds_action_github_repo = "w-bonelli/flopy"
+    # This will overwrite the .docs/Notebooks directory
+    # with the notebooks downloaded & extracted from CI
+    # artifacts, which is fine. We want to render those
+    # with output, not clean ones from version control.
+    rtds_action_path = "Notebooks"
     rtds_action_artifact_prefix = "notebooks-for-"
     rtds_action_github_token = os.environ.get("GITHUB_TOKEN", None)
 
@@ -260,6 +291,9 @@ intersphinx_mapping = {
     "pyproj": ("https://pyproj4.github.io/pyproj/stable/", None),
 }
 
+# disable automatic notebook execution (nbs are built in CI for now)
+nbsphinx_execute = "never"
+
 nbsphinx_prolog = r"""
 {% set docname = env.doc2path(env.docname, base=None) %}
 
@@ -275,8 +309,3 @@ nbsphinx_prolog = r"""
 
         __ https://github.com/modflowpy/flopy/blob/develop/.docs/{{ docname }}
 """
-
-# Example gallery thumbnails from static files
-nbsphinx_thumbnails = {
-    "Notebooks/flopy3_mt3d-usgs_example_with_sft_lkt_uzt.ipynb": "https://d9-wret.s3.us-west-2.amazonaws.com/assets/palladium/production/s3fs-public/thumbnails/image/mt3dms_1.png",
-}
