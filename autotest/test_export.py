@@ -57,6 +57,84 @@ def namfiles() -> List[Path]:
     return list(mf2005_path.rglob("*.nam"))
 
 
+def disu_sim(name, tmpdir, missing_arrays=False):
+    """
+    Get a simulation with a GWF model on a DISU grid,
+    optionally removing angldegx arrays. In this case
+    a warning is currently shown but export proceeds.
+    """
+
+    from flopy.utils.gridgen import Gridgen
+
+    Lx = 10000.0
+    Ly = 10500.0
+    nlay = 3
+    nrow = 21
+    ncol = 20
+    delr = Lx / ncol
+    delc = Ly / nrow
+    top = 400
+    botm = [220, 200, 0]
+
+    ml5 = Modflow()
+    dis5 = ModflowDis(
+        ml5,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=delr,
+        delc=delc,
+        top=top,
+        botm=botm,
+    )
+
+    g = Gridgen(ml5.modelgrid, model_ws=str(tmpdir))
+
+    xmin = 7 * delr
+    xmax = 12 * delr
+    ymin = 8 * delc
+    ymax = 13 * delc
+    rfpoly = [
+        [
+            [
+                (xmin, ymin),
+                (xmax, ymin),
+                (xmax, ymax),
+                (xmin, ymax),
+                (xmin, ymin),
+            ]
+        ]
+    ]
+    g.add_refinement_features(
+        rfpoly,
+        "polygon",
+        2,
+        [
+            0,
+        ],
+    )
+    g.build(verbose=False)
+
+    gridprops = g.get_gridprops_disu6()
+    if missing_arrays:
+        del gridprops["angldegx"]
+
+    sim = MFSimulation(sim_name=name, sim_ws=tmpdir, exe_name="mf6")
+    tdis = ModflowTdis(sim)
+    ims = ModflowIms(sim)
+    gwf = ModflowGwf(sim, modelname=name, save_flows=True)
+    dis = ModflowGwfdisu(gwf, **gridprops)
+
+    ic = ModflowGwfic(
+        gwf, strt=np.random.random_sample(gwf.modelgrid.nnodes) * 350
+    )
+    npf = ModflowGwfnpf(
+        gwf, k=np.random.random_sample(gwf.modelgrid.nnodes) * 10
+    )
+
+    return sim
+
+
 @requires_pkg("shapefile")
 @pytest.mark.parametrize("pathlike", (True, False))
 def test_output_helper_shapefile_export(
@@ -94,10 +172,21 @@ def test_freyberg_export(function_tmpdir, example_data_path):
     )
 
     # test export at model, package and object levels
-    m.export(f"{function_tmpdir}/model.shp")
-    m.wel.export(f"{function_tmpdir}/wel.shp")
-    m.lpf.hk.export(f"{function_tmpdir}/hk.shp")
-    m.riv.stress_period_data.export(f"{function_tmpdir}/riv_spd.shp")
+    shpfile_path = function_tmpdir / "model.shp"
+    m.export(shpfile_path)
+    assert shpfile_path.exists()
+
+    shpfile_path = function_tmpdir / "wel.shp"
+    m.wel.export(shpfile_path)
+    assert shpfile_path.exists()
+
+    shpfile_path = function_tmpdir / "hk.shp"
+    m.lpf.hk.export(shpfile_path)
+    assert shpfile_path.exists()
+
+    shpfile_path = function_tmpdir / "riv_spd.shp"
+    m.riv.stress_period_data.export(shpfile_path)
+    assert shpfile_path.exists()
 
     # transient
     # (doesn't work at model level because the total size of
@@ -165,6 +254,27 @@ def test_freyberg_export(function_tmpdir, example_data_path):
                 assert part.read_text() == wkt
 
 
+@requires_pkg("pandas", "shapefile")
+@pytest.mark.parametrize("missing_arrays", [True, False])
+@pytest.mark.slow
+def test_disu_export(function_tmpdir, missing_arrays):
+    name = "export_disu"
+    # check that missing angldegx array is tolerated
+    # https://github.com/modflowpy/flopy/issues/1775
+    sim = disu_sim(name, function_tmpdir, missing_arrays)
+    m = sim.get_model(name)
+
+    # test export at model level
+    shpfile_path = function_tmpdir / "model.shp"
+    m.export(shpfile_path)
+    assert shpfile_path.exists()
+
+    # test export at package level
+    shpfile_path = function_tmpdir / "disu.shp"
+    m.disu.export(shpfile_path)
+    assert shpfile_path.exists()
+
+
 # for now, test with and without a coordinate reference system
 @pytest.mark.parametrize("crs", (None, 26916))
 @requires_pkg("netCDF4", "pyproj")
@@ -176,7 +286,6 @@ def test_export_output(crs, function_tmpdir, example_data_path):
     hds_pth = os.path.join(ml.model_ws, "freyberg.githds")
     hds = flopy.utils.HeadFile(hds_pth)
 
-    function_tmpdir = Path(".")
     out_pth = function_tmpdir / f"freyberg_{crs}.out.nc"
     nc = flopy.export.utils.output_helper(
         out_pth, ml, {"freyberg.githds": hds}
@@ -1288,7 +1397,7 @@ def test_vtk_to_pyvista(function_tmpdir, example_data_path):
     grid, pathlines = vtk.to_pyvista()
     n_pts = sum([pl.shape[0] for pl in pls])
     assert pathlines.n_points == n_pts
-    assert pathlines.n_cells == n_pts + len(pls) 
+    assert pathlines.n_cells == n_pts + len(pls)
 
     # uncomment to debug
     # grid.plot()
@@ -1817,73 +1926,10 @@ def test_vtk_export_disu_model(function_tmpdir):
     from vtkmodules.util.numpy_support import vtk_to_numpy
 
     from flopy.export.vtk import Vtk
-    from flopy.utils.gridgen import Gridgen
 
-    name = "mymodel"
-
-    Lx = 10000.0
-    Ly = 10500.0
-    nlay = 3
-    nrow = 21
-    ncol = 20
-    delr = Lx / ncol
-    delc = Ly / nrow
-    top = 400
-    botm = [220, 200, 0]
-
-    ml5 = Modflow()
-    dis5 = ModflowDis(
-        ml5,
-        nlay=nlay,
-        nrow=nrow,
-        ncol=ncol,
-        delr=delr,
-        delc=delc,
-        top=top,
-        botm=botm,
-    )
-
-    g = Gridgen(ml5.modelgrid, model_ws=str(function_tmpdir))
-
-    xmin = 7 * delr
-    xmax = 12 * delr
-    ymin = 8 * delc
-    ymax = 13 * delc
-    rfpoly = [
-        [
-            [
-                (xmin, ymin),
-                (xmax, ymin),
-                (xmax, ymax),
-                (xmin, ymax),
-                (xmin, ymin),
-            ]
-        ]
-    ]
-    g.add_refinement_features(
-        rfpoly,
-        "polygon",
-        2,
-        [
-            0,
-        ],
-    )
-    g.build(verbose=False)
-
-    gridprops = g.get_gridprops_disu6()
-
-    sim = MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name="mf6")
-    tdis = ModflowTdis(sim)
-    ims = ModflowIms(sim)
-    gwf = ModflowGwf(sim, modelname=name, save_flows=True)
-    dis = ModflowGwfdisu(gwf, **gridprops)
-
-    ic = ModflowGwfic(
-        gwf, strt=np.random.random_sample(gwf.modelgrid.nnodes) * 350
-    )
-    npf = ModflowGwfnpf(
-        gwf, k=np.random.random_sample(gwf.modelgrid.nnodes) * 10
-    )
+    name = "vtk_export_disu"
+    sim = disu_sim(name, function_tmpdir)
+    gwf = sim.get_model(name)
 
     # export grid
     vtk = import_optional_dependency("vtk")

@@ -302,18 +302,19 @@ def model_attributes_to_shapefile(
                     or a.name == "thickness"
                 ):
                     continue
-                if (
-                    a.data_type == DataType.array2d
-                    and a.array.shape == horz_shape
-                ):
+                if a.data_type == DataType.array2d:
+                    if a.array is None or a.array.shape != horz_shape:
+                        warn(
+                            "Failed to get data for "
+                            f"{a.name} array, {pak.name[0]} package"
+                        )
+                        continue
                     name = shape_attr_name(a.name, keep_layer=True)
                     # name = a.name.lower()
                     array_dict[name] = a.array
                 elif a.data_type == DataType.array3d:
                     # Not sure how best to check if an object has array data
-                    try:
-                        assert a.array is not None
-                    except:
+                    if a.array is None:
                         warn(
                             "Failed to get data for "
                             f"{a.name} array, {pak.name[0]} package"
@@ -321,7 +322,6 @@ def model_attributes_to_shapefile(
                         continue
                     if isinstance(a.name, list) and a.name[0] == "thickness":
                         continue
-
                     if a.array.shape == horz_shape:
                         if hasattr(a, "shape"):
                             if a.shape[1] is None:  # usg unstructured Util3d
