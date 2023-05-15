@@ -325,7 +325,7 @@
 * Support for pyshp 1.2.1 dropped, pyshp 2.1.0 support maintained
 * Improved VTK export capabilities.  Added export for VTK at array level, package level, and model level.  Added binary head file export and cell by cell file export.  Added the ability to export point scalars in addition to cell scalars, and added smooth surface generation.  VTK export now supports writing transient data as well as exporting to binary .vtu files.
 * Support for copying model and package instances with `copy.deepcopy()`
-* Added link to Binder on [README](README.md) and [notebooks_examples](../examples/docs/notebook_examples.md) markdown documents. Binder provides an environment that runs and interactively serves the FloPy Jupyter notebooks.
+* Added link to Binder on [README](README.md) and notebooks_examples markdown documents. Binder provides an environment that runs and interactively serves the FloPy Jupyter notebooks.
 
 #### Bug fixes
 

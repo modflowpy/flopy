@@ -56,7 +56,7 @@ coverage.xml
 #*.sh
 
 # Sphinx documentation
-docs/_build/
+.docs/_build/
 
 # PyBuilder
 .idea/
@@ -65,9 +65,9 @@ flopy/.idea
 
 .docs/Notebooks/data
 .docs/Notebooks/temp
-.docs/FAQ/temp
+# tutorials are currently converted from .py to .ipynb by jupytext
+.docs/Notebooks/*tutorial*.ipynb  
 .docs/scripts/data
-.docs/groundwater_paper/Notebooks/temp
 
 # ignore all .ipynb_checkpoints
 .ipynb_checkpoints
@@ -88,7 +88,6 @@ autotest/.noseids
 .docs/source
 .docs/.bin
 .docs/_temp
-.docs/_notebooks
 
 *.bak
 

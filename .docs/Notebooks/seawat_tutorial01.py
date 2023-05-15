@@ -12,7 +12,7 @@
 #     name: python3
 # ---
 
-# # SEAWAT Tutorial 1: HenryuSaltwater Intrusion Problem
+# # SEAWAT Tutorial 1: Henry Saltwater Intrusion Problem
 #
 # In this tutorial, we will use Flopy to create, run, and post process the
 # Henry saltwater intrusion problem using SEAWAT Version 4.

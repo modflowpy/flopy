@@ -21,7 +21,6 @@ file_paths_list = [
     _project_root_path / "CITATION.cff",
     _project_root_path / "code.json",
     _project_root_path / "README.md",
-    _project_root_path / "docs" / "notebook_examples.md",
     _project_root_path / "docs" / "PyPI_release.md",
     _project_root_path / "flopy" / "version.py",
     _project_root_path / "flopy" / "DISCLAIMER.md",
@@ -313,30 +312,6 @@ def update_citation_cff(
     print(f"Updated {fpth} to version {version}")
 
 
-def update_notebook_examples_markdown(
-    release_type: ReleaseType, timestamp: datetime, version: Version
-):
-    # create disclaimer text
-    disclaimer = get_disclaimer(release_type)
-
-    # read notebook_examples.md into memory
-    fpth = file_paths["notebook_examples.md"]
-    lines = fpth.read_text().rstrip().split("\n")
-
-    # rewrite notebook_examples.md
-    f = open(fpth, "w")
-    for line in lines:
-        if "[Binder]" in line:
-            # [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/modflowpy/flopy.git/develop)
-            line = (
-                "[![Binder](https://mybinder.org/badge_logo.svg)]"
-                "(https://mybinder.org/v2/gh/modflowpy/flopy.git/develop)"
-            )
-        f.write(f"{line}\n")
-    f.close()
-    print(f"Updated {fpth} to version {version}")
-
-
 def update_PyPI_release(
     release_type: ReleaseType, timestamp: datetime, version: Version
 ):
@@ -384,7 +359,6 @@ def update_version(
             update_version_py(release_type, timestamp, version)
             update_readme_markdown(release_type, timestamp, version)
             update_citation_cff(release_type, timestamp, version)
-            update_notebook_examples_markdown(release_type, timestamp, version)
             update_codejson(release_type, timestamp, version)
             update_PyPI_release(release_type, timestamp, version)
     finally:

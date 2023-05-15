@@ -98,13 +98,11 @@ pmv.plot_vector(qx, qy, normalize=True, color="white")
 Additional FloPy Resources
 ------------------------------------------------
 
-- [Tutorials](https://flopy.readthedocs.io/en/latest/tutorials.html) demonstrating basic FloPy use.
+- [FloPy tutorials](https://flopy.readthedocs.io/en/stable/tutorials.html) and scripts demonstrating the use of FloPy to run and post-process MODFLOW-based models.
 
-- [MODFLOW 6 Example Problems](https://modflow6-examples.readthedocs.io/en/latest/) demonstrating FloPy use to create, run, and post-process MODFLOW 6 models.
+- [FloPy example notebooks](https://flopy.readthedocs.io/en/stable/notebooks.html) demonstrating the use of FloPy pre- and post-processing capabilities with a variety of MODFLOW-based models.
 
-- [Jupyter notebooks](https://flopy.readthedocs.io/en/latest/notebooks.html) demonstrating the use of FloPy pre- and post-processing capabilities with a variety of MODFLOW-based models.
-
-- [Scripts](docs/script_examples.md) demonstrating the use of FloPy for running and post-processing MODFLOW-based models.
+- [MODFLOW 6 example problems](https://modflow6-examples.readthedocs.io/en/latest/) demonstrating FloPy use to create, run, and post-process MODFLOW 6 models.
 
 - A list of supported packages in FloPy is available in [docs/supported_packages.md](docs/supported_packages.md) on the github repo.
 

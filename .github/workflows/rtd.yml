@@ -7,6 +7,7 @@ on:
       - develop
       - release*
       - ci-diagnose*
+      - notebooks*
   pull_request:
     branches:
       - master
@@ -15,13 +16,16 @@ on:
 jobs:
 
   rtd_build:
-    name: Read the Docs build
-    runs-on: ubuntu-latest
+    name: Prepare and test notebooks
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash
 
     steps:
       - name: Checkout flopy repo
@@ -42,33 +46,43 @@ jobs:
           cache-dependency-path: pyproject.toml
 
       - name: Upgrade pip
-        run: |
-          pip install --upgrade pip
-
-      - name: Install prerequisites
-        run: |
-          pip install jupyter jupytext
+        run: pip install --upgrade pip
 
       - name: Install flopy and dependencies
+        run: pip install ".[test, doc, optional]"
+      
+      - name: Workaround OpenGL issue on Linux
+        if: runner.os == 'Linux'
         run: |
-          pip install .[doc]
+          # referenced from https://github.com/pyvista/pyvista/blob/main/.github/workflows/vtk-pre-test.yml#L53
+          pip uninstall -y vtk
+          pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
+      
+      - name: Install OpenGL on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = "Stop"
+          $PSDefaultParameterValues['*:ErrorAction']='Stop'
+          powershell .github/install_opengl.ps1
 
       - name: Install MODFLOW executables
         uses: modflowpy/install-modflow-action@v1
 
-      - name: Run jupytext on tutorials
-        working-directory: ./.docs
-        run: |
-          python create_tutorials.py
+      - name: Test/create tutorial notebooks
+        run: jupytext --to ipynb --execute .docs/Notebooks/*tutorial*.py
+ 
+      - name: Test/create example notebooks
+        working-directory: autotest
+        run: pytest -v -n auto test_example_notebooks.py
 
-      - name: Upload completed jupyter notebooks as an artifact for ReadtheDocs
-        if:
-          github.repository_owner == 'modflowpy' && github.event_name == 'push'
-        uses: actions/upload-artifact@v2
+      - name: Upload example notebooks as an artifact for ReadtheDocs
+        if: github.repository_owner == 'modflowpy' && github.event_name == 'push' && runner.os == 'Linux'
+        uses: actions/upload-artifact@v3
         with:
           name: notebooks-for-${{ github.sha }}
-          path: |
-            .docs/_notebooks
+          path: .docs/Notebooks/*.ipynb
 
   # trigger rtd if previous job was successful
   rtd:
