@@ -390,25 +390,6 @@ class UnstructuredGrid(Grid):
             yv *= self.nlay
         return xv, yv
 
-    def neighbors(self, node, **kwargs):
-        """
-        Method to get a list of nearest neighbors
-
-        Parameters
-        ----------
-        node : int
-            node number
-
-        Returns
-        -------
-            list of nearest neighbors
-        """
-        nrec = self.iac[node]
-        idx0 = np.sum(self.iac[:node])
-        idx1 = idx0 + nrec
-        neighbors = self.ja[idx0:idx1][1:]
-        return list(neighbors)
-
     def cross_section_lay_ncpl_ncb(self, ncb):
         """
         Get PlotCrossSection compatible layers, ncpl, and ncb

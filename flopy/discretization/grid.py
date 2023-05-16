@@ -4,7 +4,8 @@ import warnings
 
 import numpy as np
 
-from ..plot.plotutil import UnstructuredPlotUtilities
+from collections import defaultdict
+
 from ..utils import geometry
 from ..utils.crs import get_crs
 from ..utils.gridutil import get_lni
@@ -195,6 +196,7 @@ class Grid:
         self._verts = None
         self._laycbd = None
         self._neighbors = None
+        self._edge_set = None
 
     ###################################
     # access to basic grid properties
@@ -536,7 +538,92 @@ class Grid:
     def cross_section_vertices(self):
         return self.xyzvertices[0], self.xyzvertices[1]
 
-    def neighbors(self, node, **kwargs):
+    def _set_rook_neighbors(self, reset=False):
+        """
+        Method to calculate rook neighbors and shared edges
+
+        Returns
+        -------
+            None
+        """
+        if self._neighbors is None or reset:
+            node_num = 0
+            neighbors = {i: list() for i in range(len(self.iverts))}
+            edge_set = {i: list() for i in range(len(self.iverts))}
+            geoms = []
+            node_nums = []
+            for poly in self.iverts:
+                for v in range(len(poly)):
+                    geoms.append(tuple(sorted([poly[v - 1], poly[v]])))
+                node_nums += [node_num] * len(poly)
+                node_num += 1
+
+            edge_nodes = defaultdict(set)
+            for i, item in enumerate(geoms):
+                edge_nodes[item].add(node_nums[i])
+
+            shared_vertices = []
+            for edge, nodes in edge_nodes.items():
+                if len(nodes) > 1:
+                    shared_vertices.append(nodes)
+                    for n in nodes:
+                        edge_set[n].append(edge)
+                        neighbors[n] += list(nodes)
+                        try:
+                            neighbors[n].remove(n)
+                        except:
+                            pass
+
+            # convert use dict to create a set that preserves insertion order
+            self._neighbors = {
+                i: list(dict.fromkeys(v)) for i, v in neighbors.items()
+            }
+            self._edge_set = edge_set
+
+    def _set_queen_neighbors(self, reset=False):
+        """
+        Method to set queen neighbors for flow unstructured flow
+        accumulation
+
+        Returns
+        -------
+            None
+        """
+        if self._neighbors is None or reset:
+            node_num = 0
+            neighbors = {i: list() for i in range(len(self.iverts))}
+            vert_set = {i: list() for i in range(len(self.iverts))}
+            geoms = []
+            node_nums = []
+            for poly in self.iverts:
+                for vert in poly:
+                    geoms.append(vert)
+                node_nums += [node_num] * len(poly)
+                node_num += 1
+
+            vert_nodes = defaultdict(set)
+            for i, item in enumerate(geoms):
+                vert_nodes[item].add(node_nums[i])
+
+            shared_vertices = []
+            for vert, nodes in vert_nodes.items():
+                if len(nodes) > 1:
+                    shared_vertices.append(nodes)
+                    for n in nodes:
+                        vert_set[n].append(vert)
+                        neighbors[n] += list(nodes)
+                        try:
+                            neighbors[n].remove(n)
+                        except:
+                            pass
+
+            # convert use dict to create a set that preserves insertion order
+            self._neighbors = {
+                i: list(dict.fromkeys(v)) for i, v in neighbors.items()
+            }
+            self._edge_set = vert_set
+
+    def neighbors(self, node=None, **kwargs):
         """
         Method to get nearest neighbors of a cell
 
@@ -545,50 +632,43 @@ class Grid:
         node : int
             model grid node number
 
+        ** kwargs:
+            method : str
+                "rook" for shared edge neighbors and "queen" for shared vertex
+                neighbors
+            reset : bool
+                flag to reset the neighbor calculation
+
         Returns
         -------
-            list : list of cell node numbers
+            list or dict : list of cell node numbers or dict of all cells and
+                neighbors
         """
-        ncpl = self.ncpl
-        if isinstance(ncpl, list):
-            ncpl = self.nnodes
+        method = kwargs.pop("method", None)
+        reset = kwargs.pop("reset", False)
+        if method is None:
+            self._set_rook_neighbors(reset=reset)
+        elif method.lower() is "rook":
+            self._set_rook_neighbors(reset=reset)
+        else:
+            self._set_queen_neighbors(reset=reset)
 
-        lay = 0
-        while node >= ncpl:
-            node -= ncpl
-            lay += 1
+        if node is not None:
+            lay = 0
+            if not isinstance(self.ncpl, (list, np.ndarray)):
+                while node >= self.ncpl:
+                    node -= self.ncpl
+                    lay += 1
 
-        if self._neighbors is None:
-            neigh = {}
-            xverts, yverts = self.cross_section_vertices
-            xverts, yverts = UnstructuredPlotUtilities.irregular_shape_patch(
-                xverts, yverts
-            )
-            for nn in range(ncpl):
-                conn = []
-                verts = self.get_cell_vertices(nn)
-                for ix in range(0, len(verts)):
-                    xv0, yv0 = verts[ix - 1]
-                    xv1, yv1 = verts[ix]
-                    idx0 = np.unique(
-                        np.where((xverts == xv0) & (yverts == yv0))[0]
-                    )
-                    idx1 = np.unique(
-                        np.where((xverts == xv1) & (yverts == yv1))[0]
-                    )
-                    mask = np.isin(idx0, idx1)
-                    conn += [i for i in idx0[mask]]
+                neighbors = self._neighbors[node]
+                if lay > 0:
+                    neighbors = [i + (self.ncpl * lay) for i in neighbors]
+            else:
+                neighbors = self._neighbors[node]
 
-                conn = list(set(conn))
-                conn.pop(conn.index(nn))
-                neigh[nn] = conn
-            self._neighbors = neigh
+            return neighbors
 
-        neighbors = self._neighbors[node]
-        if lay > 0:
-            neighbors = [i + (ncpl * lay) for i in neighbors]
-
-        return neighbors
+        return self._neighbors
 
     def remove_confining_beds(self, array):
         """
