@@ -1,10 +1,9 @@
 import copy
 import os
 import warnings
+from collections import defaultdict
 
 import numpy as np
-
-from collections import defaultdict
 
 from ..utils import geometry
 from ..utils.crs import get_crs
