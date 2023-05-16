@@ -411,8 +411,8 @@ class StartingLocationsFile(Package):
         Input style described in MODPATH6 manual (currently only input style 1 is supported)
     extension : string
         Filename extension (default is 'loc')
-
-    use_pandas: bool, if True and pandas is available use pandas to write the particle locations >2x speed
+    use_pandas: bool, default False
+        If True and pandas is available use pandas to write the particle locations >2x speed
     """
 
     def __init__(
@@ -421,7 +421,7 @@ class StartingLocationsFile(Package):
         inputstyle=1,
         extension="loc",
         verbose=False,
-        use_pandas=True,
+        use_pandas=False,
     ):
         super().__init__(model, extension, "LOC", 33)
 
