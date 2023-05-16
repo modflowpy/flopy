@@ -373,7 +373,7 @@ def test_const(sfr_data):
     assert True
 
 
-@requires_pkg("pandas", "shapefile")
+@requires_pkg("pandas", "shapefile", "shapely")
 def test_export(function_tmpdir, sfr_data):
     m = Modflow()
     dis = ModflowDis(m, 1, 10, 10, lenuni=2, itmuni=4)
