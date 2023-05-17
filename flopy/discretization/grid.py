@@ -539,14 +539,14 @@ class Grid:
 
     def _set_neighbors(self, reset=False, method="rook"):
         """
-        Method to calculate rook neighbors and shared edges
+        Method to calculate neighbors via shared edges or shared vertices
 
         Parameters
         ----------
         reset : bool
             flag to recalculate neighbors
         method: str
-            "rook" for shared edges and "queen" for shared lines
+            "rook" for shared edges and "queen" for shared vertex
 
         Returns
         -------
