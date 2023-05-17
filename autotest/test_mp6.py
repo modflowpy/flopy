@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from autotest.conftest import get_example_data_path
 from autotest.test_mp6_cases import Mp6Cases1, Mp6Cases2
-from modflow_devtools.markers import requires_exe, requires_pkg
+from modflow_devtools.markers import requires_exe, requires_pkg, has_pkg
 from pytest_cases import parametrize_with_cases
 
 import flopy
@@ -110,24 +110,30 @@ def test_mpsim(function_tmpdir, mp6_test_path):
     )
     mp.write_input()
 
-    sim = Modpath6Sim(model=mp)
-    # starting locations file
-    stl = StartingLocationsFile(model=mp)
-    stldata = StartingLocationsFile.get_empty_starting_locations_data(npt=2)
-    stldata["label"] = ["p1", "p2"]
-    stldata[1]["i0"] = 5
-    stldata[1]["j0"] = 6
-    stldata[1]["xloc0"] = 0.1
-    stldata[1]["yloc0"] = 0.2
-    stl.data = stldata
-    mp.write_input()
-    stllines = open(function_tmpdir / "ex6.loc").readlines()
-    assert stllines[3].strip() == "group1"
-    assert int(stllines[4].strip()) == 2
-    assert stllines[6].strip().split()[-1] == "p2"
+    use_pandas_combs = [False]  # test StartingLocationsFile._write_wo_pandas
+    if has_pkg("pandas"):
+        # test StartingLocationsFile._write_particle_data_with_pandas
+        use_pandas_combs.append(True)
+
+    for use_pandas in use_pandas_combs:
+        sim = Modpath6Sim(model=mp)
+        # starting locations file
+        stl = StartingLocationsFile(model=mp, use_pandas=use_pandas)
+        stldata = StartingLocationsFile.get_empty_starting_locations_data(npt=2)
+        stldata["label"] = ["p1", "p2"]
+        stldata[1]["i0"] = 5
+        stldata[1]["j0"] = 6
+        stldata[1]["xloc0"] = 0.1
+        stldata[1]["yloc0"] = 0.2
+        stl.data = stldata
+        mp.write_input()
+        stllines = open(function_tmpdir / "ex6.loc").readlines()
+        assert stllines[3].strip() == "group1"
+        assert int(stllines[4].strip()) == 2
+        assert stllines[6].strip().split()[-1] == "p2"
 
 
-@requires_pkg("pandas", "shapefile")
+@requires_pkg("pandas", "shapefile", "shapely")
 def test_get_destination_data(function_tmpdir, mp6_test_path):
     copy_modpath_files(mp6_test_path, function_tmpdir, "EXAMPLE.")
     copy_modpath_files(mp6_test_path, function_tmpdir, "EXAMPLE-3.")

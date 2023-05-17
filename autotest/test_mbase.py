@@ -103,8 +103,8 @@ def test_run_model_when_namefile_not_in_model_ws(
     "exe",
     [
         "mf6",
-        Path(which("mf6")),
-        relpath_safe(Path(which("mf6"))),
+        Path(which("mf6") or ""),
+        relpath_safe(Path(which("mf6") or "")),
     ],
 )
 def test_run_model(mf6_model_path, function_tmpdir, use_paths, exe):

@@ -17,6 +17,7 @@ from .test_export import disu_sim
 from .test_grid import minimal_unstructured_grid_info, minimal_vertex_grid_info
 
 
+@requires_pkg("pyshp", "shapely")
 def test_model_attributes_to_shapefile(example_data_path, function_tmpdir):
     # freyberg mf2005 model
     name = "freyberg"
@@ -52,7 +53,7 @@ def test_model_attributes_to_shapefile(example_data_path, function_tmpdir):
     assert shpfile_path.exists()
 
 
-@requires_pkg("pyproj")
+@requires_pkg("pyproj", "pyshp", "shapely")
 def test_write_grid_shapefile(
     minimal_unstructured_grid_info, minimal_vertex_grid_info, function_tmpdir
 ):

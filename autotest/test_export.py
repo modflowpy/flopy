@@ -931,7 +931,7 @@ def test_polygon_from_ij(function_tmpdir):
 
 
 @flaky
-@requires_pkg("netCDF4", "pyproj")
+@requires_pkg("netCDF4", "pyproj", "shapely")
 def test_polygon_from_ij_with_epsg(function_tmpdir):
     ws = function_tmpdir
     m = Modflow("toy_model", model_ws=ws)
@@ -1921,7 +1921,7 @@ def test_vtk_export_disu2_grid(function_tmpdir, example_data_path):
 
 @pytest.mark.mf6
 @requires_exe("mf6", "gridgen")
-@requires_pkg("vtk", "shapefile")
+@requires_pkg("vtk", "shapefile", "shapely")
 def test_vtk_export_disu_model(function_tmpdir):
     from vtkmodules.util.numpy_support import vtk_to_numpy
 
