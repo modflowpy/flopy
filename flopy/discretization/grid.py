@@ -537,9 +537,16 @@ class Grid:
     def cross_section_vertices(self):
         return self.xyzvertices[0], self.xyzvertices[1]
 
-    def _set_rook_neighbors(self, reset=False):
+    def _set_neighbors(self, reset=False, method="rook"):
         """
         Method to calculate rook neighbors and shared edges
+
+        Parameters
+        ----------
+        reset : bool
+            flag to recalculate neighbors
+        method: str
+            "rook" for shared edges and "queen" for shared lines
 
         Returns
         -------
@@ -551,11 +558,19 @@ class Grid:
             edge_set = {i: list() for i in range(len(self.iverts))}
             geoms = []
             node_nums = []
-            for poly in self.iverts:
-                for v in range(len(poly)):
-                    geoms.append(tuple(sorted([poly[v - 1], poly[v]])))
-                node_nums += [node_num] * len(poly)
-                node_num += 1
+            if method == "rook":
+                for poly in self.iverts:
+                    for v in range(len(poly)):
+                        geoms.append(tuple(sorted([poly[v - 1], poly[v]])))
+                    node_nums += [node_num] * len(poly)
+                    node_num += 1
+            else:
+                # queen neighbors
+                for poly in self.iverts:
+                    for vert in poly:
+                        geoms.append(vert)
+                    node_nums += [node_num] * len(poly)
+                    node_num += 1
 
             edge_nodes = defaultdict(set)
             for i, item in enumerate(geoms):
@@ -578,49 +593,6 @@ class Grid:
                 i: list(dict.fromkeys(v)) for i, v in neighbors.items()
             }
             self._edge_set = edge_set
-
-    def _set_queen_neighbors(self, reset=False):
-        """
-        Method to set queen neighbors for flow unstructured flow
-        accumulation
-
-        Returns
-        -------
-            None
-        """
-        if self._neighbors is None or reset:
-            node_num = 0
-            neighbors = {i: list() for i in range(len(self.iverts))}
-            vert_set = {i: list() for i in range(len(self.iverts))}
-            geoms = []
-            node_nums = []
-            for poly in self.iverts:
-                for vert in poly:
-                    geoms.append(vert)
-                node_nums += [node_num] * len(poly)
-                node_num += 1
-
-            vert_nodes = defaultdict(set)
-            for i, item in enumerate(geoms):
-                vert_nodes[item].add(node_nums[i])
-
-            shared_vertices = []
-            for vert, nodes in vert_nodes.items():
-                if len(nodes) > 1:
-                    shared_vertices.append(nodes)
-                    for n in nodes:
-                        vert_set[n].append(vert)
-                        neighbors[n] += list(nodes)
-                        try:
-                            neighbors[n].remove(n)
-                        except:
-                            pass
-
-            # convert use dict to create a set that preserves insertion order
-            self._neighbors = {
-                i: list(dict.fromkeys(v)) for i, v in neighbors.items()
-            }
-            self._edge_set = vert_set
 
     def neighbors(self, node=None, **kwargs):
         """
@@ -646,11 +618,9 @@ class Grid:
         method = kwargs.pop("method", None)
         reset = kwargs.pop("reset", False)
         if method is None:
-            self._set_rook_neighbors(reset=reset)
-        elif method.lower() is "rook":
-            self._set_rook_neighbors(reset=reset)
+            self._set_neighbors(reset=reset)
         else:
-            self._set_queen_neighbors(reset=reset)
+            self._set_neighbors(reset=reset, method=method)
 
         if node is not None:
             lay = 0
