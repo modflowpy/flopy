@@ -20,8 +20,10 @@ This document describes how to set up a FloPy development environment, run the e
 - [Examples](#examples)
   - [Scripts](#scripts)
   - [Notebooks](#notebooks)
-  - [Editing or developing example Notebooks](#editing-or-developing-example-notebooks)
-    - [Adding a new Notebook to the documenation](#adding-a-new-notebook-to-the-documenation)
+  - [Developing example Notebooks](#developing-example-notebooks)
+    - [Adding a new notebook to the documentation](#adding-a-new-notebook-to-the-documentation)
+      - [Adding a tutorial notebook](#adding-a-tutorial-notebook)
+      - [Adding an example notebook](#adding-an-example-notebook)
 - [Tests](#tests)
   - [Configuring tests](#configuring-tests)
   - [Running tests](#running-tests)
@@ -185,11 +187,30 @@ Notebook output can be stripped manually for a given notebook or a batch of note
 jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace .docs/Notebooks/*.ipynb
 ```
 
-#### Adding a new Notebook to the documentation
+#### Adding a new notebook to the documentation
 
-* Notebooks must be included in the documentation to be rendered. Most Notebooks are referenced in the `.docs/notebooks.rst` file that sets up the [Examples Gallery](https://flopy.readthedocs.io/en/latest/notebooks.html).
-* Thumbnails for the [Examples Gallery](https://flopy.readthedocs.io/en/latest/notebooks.html) are generated automatically from the Notebook header (typically the first line, begining with a single '#'), and by default, the last plot generated.
-* Thumbnails can be customized to use any plot in the Notebook or an external image, as described [here](https://nbsphinx.readthedocs.io/en/0.9.1/subdir/gallery.html).
+There are two kinds of notebooks: tutorials and examples.
+
+##### Adding a tutorial notebook
+
+If a notebook's name contains "tutorial", it will automatically be assigned to the [Tutorials](https://flopy.readthedocs.io/en/latest/tutorials.html) page in ReadTheDocs. Tutorials are grouped according to executable used, with binning based on whether the notebook name contains any of the following:
+
+- "mf6": MODFLOW 6
+- "mf" : MODFLOW 2005
+- "seawat": SEAWAT
+- none of the above: Miscellaneous
+
+Tutorial notebooks should aim to briefly demonstrate a basic FloPy feature. Most tutorial notebooks do not perform post-processing or generate visualizations, so tutorials are simply listed rather than rendered into a thumbnail gallery.
+
+##### Adding an example notebook
+
+If a notebook's name does not contain "tutorial", it is considered an example notebook. Example notebooks are more broadly scoped than tutorials, and typically include plots.
+
+To include the notebook in the [Examples gallery](https://flopy.readthedocs.io/en/latest/notebooks.html), the notebook developer must add the new notebook to a section of `.docs/notebooks.rst`.
+
+Thumbnails for the examples gallery are generated automatically from the notebook header (typically the first line, begining with a single '#'), and by default, the last plot generated. Thumbnails can be customized to use any plot in the notebook, or an external image, as described [here](https://nbsphinx.readthedocs.io/en/0.9.1/subdir/gallery.html).
+
+**Note**: at least one visualization is recommended in order to provide a thumbnail for each example notebook.
 
 ## Tests
 
