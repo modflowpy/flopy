@@ -87,11 +87,7 @@ As described above, making a release manually involves the following steps:
 
 - Run `isort` and `black` on the `flopy` module. This can be achieved by running `python scripts/pull_request_prepare.py` from the project root. The commands `isort .` and `black .` can also be run individually instead.
 
-- Use `run_notebooks.py` in the `scripts` directory to rerun all notebooks in:
-
-    - `.docs/Notebooks` directory.
-    - `.docs/Notebooks/groundwater_paper` directory.
-    - `.docs/Notebooks/FAQ` directory.
+- Use `run_notebooks.py` in the `scripts` directory to rerun all notebooks in `.docs/Notebooks`.
 
 - Generate a changelog starting from the last release with [git cliff](https://github.com/orhun/git-cliff), for instance: `git cliff --config cliff.toml --unreleased --tag=<release version number>`.
 

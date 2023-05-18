@@ -20,8 +20,10 @@ This document describes how to set up a FloPy development environment, run the e
 - [Examples](#examples)
   - [Scripts](#scripts)
   - [Notebooks](#notebooks)
-  - [Editing or developing example Notebooks](#editing-or-developing-example-notebooks)
-    - [Adding a new Notebook to the documenation](#adding-a-new-notebook-to-the-documenation)
+  - [Developing example Notebooks](#developing-example-notebooks)
+    - [Adding a new notebook to the documentation](#adding-a-new-notebook-to-the-documentation)
+      - [Adding a tutorial notebook](#adding-a-tutorial-notebook)
+      - [Adding an example notebook](#adding-an-example-notebook)
 - [Tests](#tests)
   - [Configuring tests](#configuring-tests)
   - [Running tests](#running-tests)
@@ -139,45 +141,76 @@ A number of scripts and notebooks demonstrating various `flopy` functions and fe
 
 ### Scripts
 
-[Example scripts](docs/script_examples.md) are in `examples/scripts` and `examples/Tutorials`. Each can be invoked by name with Python per usual. By default, all scripts create and (attempt to) clean up temporary working directories. (On Windows, Python's `TemporaryDirectory` can raise permissions errors, so cleanup is trapped with `try/except`.) Some scripts also accept a `--quiet` flag, curtailing verbose output, and a `--keep` option to specify a working directory of the user's choice.
+Tutorial scripts are located in `examples/scripts` and `examples/Tutorials`. The scripts are rendered as a notebook gallery [in the user documentation](https://flopy.readthedocs.io/en/stable/tutorials.html).
 
-Some of the scripts use [optional dependencies](docs/flopy_method_dependencies.md). If you're using `pip` make sure these have been installed with `pip install ".[optional]"`. The conda environment provided in `etc/environment.yml` already includes all dependencies.
+Each script be invoked by name with Python per usual. The scripts can also be converted to notebooks with `jupytext`. By default, all scripts create and attempt to clean up temporary working directories. (On Windows, Python's `TemporaryDirectory` can raise permissions errors, so cleanup is trapped with `try/except`.) Some scripts also accept a `--quiet` flag, curtailing verbose output, and a `--keep` option to specify a working directory of the user's choice.
+
+Some of the scripts use [optional dependencies](docs/flopy_method_dependencies.md). If you're using `pip`, make sure these have been installed with `pip install ".[optional]"`. The conda environment provided in `etc/environment.yml` already includes all optional dependencies.
 
 ### Notebooks
 
-[Example notebooks](docs/notebook_examples.md) are located in `.docs/Notebooks`.
+Example notebooks are located in `.docs/Notebooks`. A gallery is available [in the user documentation](https://flopy.readthedocs.io/en/stable/examples.html)
 
 To run the example notebooks you will need `jupyter` installed (`jupyter` is included with the `test` optional dependency group in `pyproject.toml`). Some of the notebooks use [optional dependencies](docs/flopy_method_dependencies.md) as well.
 
 To install jupyter and optional dependencies at once:
 
-    pip install jupyter ".[optional]"
+```shell
+pip install ".[test, optional]"
+```
 
-To start a local Jupyter notebook server, run
+To start a local Jupyter notebook server, run:
 
-    jupyter notebook
+```shell
+jupyter notebook
+```
 
 Like the scripts and tutorials, each notebook is configured to create and (attempt to) dispose of its own isolated temporary workspace. (On Windows, Python's `TemporaryDirectory` can raise permissions errors, so cleanup is trapped with `try/except`.)
 
-### Editing or developing example Notebooks
+### Developing example Notebooks
+
 Submissions of high-quality Jupyter Notebook examples that demonstrate the use of Flopy are encouraged, as are edits to existing Notebook examples to improve the code quality and clarity of presentation. A few notes on contributing to Notebook examples:
 
 * Notebook examples are housed in their native Jupyter format in `.docs/Notebooks`, and then rendered into html by [nbsphinx](https://github.com/spatialaudio/nbsphinx) when the [online documentation](https://flopy.readthedocs.io/en/latest/) is built.
-* Only Notebook input should committed; `nbsphinx` executes the Notebooks as part of the documentation build, to get the output that will be rendered in the documentation.
-* Notebook output can be stripped automatically from Git commits by executing this shell command within the Flopy repository:
+* Only Notebook input should committed; the Notebooks are executed in the CI [documentation build workflow](.github/workflows/rtd.yml), to get the output that will be rendered in the documentation.
+* Git can be configured to automatically strip Notebook output from commits:
 
-    ```shell
-    git config filter.strip-notebook-output.clean 'jupyter nbconvert --ClearOutputPreprocessor. enabled=True --to=notebook --stdin --stdout --log-level=ERROR'
-    ```
-    which adds a `"strip-notebook-output"` filter to `.git/config`. A reference to this filter is already included in the `.gitattributes` file, which triggers its application on commits.
-* Notebook output can be stripped manually for a given notebook or a batch of notebooks (using wildcards), with:
-    ```shell
-    jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace .docs/Notebooks/*.ipynb
-    ```
-#### Adding a new Notebook to the documenation
-* Notebooks must be included in the documentation to be rendered. Most Notebooks are referenced in the `.docs/notebooks.rst` file that sets up the [Examples Gallery](https://flopy.readthedocs.io/en/latest/notebooks.html).
-* Thumbnails for the [Examples Gallery](https://flopy.readthedocs.io/en/latest/notebooks.html) are generated automatically from the Notebook header (typically the first line, begining with a single '#'), and by default, the last plot generated.
-* Thumbnails can be customized to use any plot in the Notebook or an external image, as described [here](https://nbsphinx.readthedocs.io/en/0.9.1/subdir/gallery.html).
+```shell
+git config filter.strip-notebook-output.clean 'jupyter nbconvert --ClearOutputPreprocessor. enabled=True --to=notebook --stdin --stdout --log-level=ERROR'
+```
+
+This adds a `"strip-notebook-output"` filter to `.git/config`. A reference to this filter is already included in the `.gitattributes` file, which triggers its application on commits.
+
+Notebook output can be stripped manually for a given notebook or a batch of notebooks (using wildcards), with:
+
+```shell
+jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace .docs/Notebooks/*.ipynb
+```
+
+#### Adding a new notebook to the documentation
+
+There are two kinds of notebooks: tutorials and examples.
+
+##### Adding a tutorial notebook
+
+If a notebook's name contains "tutorial", it will automatically be assigned to the [Tutorials](https://flopy.readthedocs.io/en/latest/tutorials.html) page in ReadTheDocs. Tutorials are grouped according to executable used, with binning based on whether the notebook name contains any of the following:
+
+- "mf6": MODFLOW 6
+- "mf" : MODFLOW 2005
+- "seawat": SEAWAT
+- none of the above: Miscellaneous
+
+Tutorial notebooks should aim to briefly demonstrate a basic FloPy feature. Most tutorial notebooks do not perform post-processing or generate visualizations, so tutorials are simply listed rather than rendered into a thumbnail gallery.
+
+##### Adding an example notebook
+
+If a notebook's name does not contain "tutorial", it is considered an example notebook. Example notebooks are more broadly scoped than tutorials, and typically include plots.
+
+To include the notebook in the [Examples gallery](https://flopy.readthedocs.io/en/latest/notebooks.html), the notebook developer must add the new notebook to a section of `.docs/notebooks.rst`.
+
+Thumbnails for the examples gallery are generated automatically from the notebook header (typically the first line, begining with a single '#'), and by default, the last plot generated. Thumbnails can be customized to use any plot in the notebook, or an external image, as described [here](https://nbsphinx.readthedocs.io/en/0.9.1/subdir/gallery.html).
+
+**Note**: at least one visualization is recommended in order to provide a thumbnail for each example notebook.
 
 ## Tests
 

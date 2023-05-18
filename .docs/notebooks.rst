@@ -127,6 +127,16 @@ Other Flopy features
     Notebooks/flopy3_external_file_handling.ipynb
     Notebooks/flopy3_save_binary_data_file.ipynb
 
+Frequently asked questions
+------------------------------------
+
+.. nbgallery::
+    :name: faq-gallery
+
+    Notebooks/load_existing_mf2005.ipynb
+    Notebooks/load_existing_model_wAUX.ipynb
+    Notebooks/mf2005_does_not_exist.ipynb
+
 Examples from Bakker and others (2016)
 ---------------------------------------
 Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Starn, J. J. and Fienen, M. N., 2016, Scripting MODFLOW Model Development Using Python and FloPy: Groundwater, v. 54, p. 733–739, https://doi.org/10.1111/gwat.12413.
@@ -134,5 +144,5 @@ Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Starn
 .. nbgallery::
     :name: 2016gw-paper-gallery
 
-    groundwater_paper/Notebooks/example_1.ipynb
-    groundwater_paper/Notebooks/uspb.ipynb
+    Notebooks/groundwater_paper_example_1.ipynb
+    Notebooks/groundwater_paper_uspb.ipynb

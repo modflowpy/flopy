@@ -39,13 +39,9 @@ python scripts/pull_request_prepare.py
 
 ## Running notebooks
 
-The `run_notebooks.py` script runs notebooks located in subdirectories of the `.docs/` directory, currently including:
+The `run_notebooks.py` script runs notebooks located in the `.docs/Notebooks` directory.
 
-- `.docs/Notebooks`
-- `.docs/groundwater_paper/Notebooks`
-- `.docs/FAQ`
-
-Notebooks are run using `jupytext --from_ipynb --execute <notebook path>`. Note that notebooks are under version control, and running them with this script will produce large changesets in your working tree as execution metadata is updated. You will likely want to discard these changes before committing, e.g. with `git restore .docs/Notebooks` (and likewise for other notebook folders). Care should be taken to make sure desired changes to notebook cells are not discarded however.
+Notebooks are run using `jupytext --from_ipynb --execute <notebook path>`. Note that notebooks are under version control, and running them with this script will produce large changesets in your working tree as outputs and execution metadata are updated. See the [developer docs](../DEVELOPER.md) for instructions to configure `git` to automatically strip notebook outputs before commits.
 
 ## Updating version
 
@@ -55,7 +51,6 @@ The `update_version.py` script can be used to update FloPy version numbers. Runn
 - `flopy/DISCLAIMER.md`
 - `CITATION.cff`
 - `README.md`
-- `docs/notebook_examples.md`
 - `docs/PyPI_release.md`
 
 The script acquires a file lock before writing to files to make sure only one process edits the files at any given time and prevent desynchronization.

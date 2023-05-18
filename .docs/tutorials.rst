@@ -1,67 +1,49 @@
 Tutorials
 =========
 
-MODFLOW 6 Tutorials
--------------------
+The following tutorials demonstrate basic FloPy usage with MODFLOW 2005, MODFLOW 6, and SEAWAT.
+
+MODFLOW6
+--------
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
-   _notebooks/tutorial01_mf6
+   Notebooks/mf6_data_tutorial01
+   Notebooks/mf6_data_tutorial02
+   Notebooks/mf6_data_tutorial03
+   Notebooks/mf6_data_tutorial04
+   Notebooks/mf6_data_tutorial05
+   Notebooks/mf6_data_tutorial06
+   Notebooks/mf6_data_tutorial07
+   Notebooks/mf6_data_tutorial08
+   Notebooks/mf6_data_tutorial09
+   Notebooks/mf6_output_tutorial01
+   Notebooks/mf6_tutorial01
 
 
-MODFLOW 6 FloPy Use Tutorials
------------------------------
-
-Contents:
-
-.. toctree::
-   :maxdepth: 2
-
-   _notebooks/tutorial01_mf6_data
-   _notebooks/tutorial02_mf6_data
-   _notebooks/tutorial03_mf6_data
-   _notebooks/tutorial04_mf6_data
-   _notebooks/tutorial05_mf6_data
-   _notebooks/tutorial06_mf6_data
-   _notebooks/tutorial07_mf6_data
-   _notebooks/tutorial08_mf6_data
-   _notebooks/tutorial09_mf6_data
-
-
-MODFLOW 6 Output Tutorials
---------------------------
+MODFLOW
+-------
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
-   _notebooks/tutorial01_mf6_output
+   Notebooks/mf_tutorial01
+   Notebooks/mf_tutorial02
 
 
-MODFLOW Tutorials
------------------
-
-Contents:
-
-.. toctree::
-   :maxdepth: 2
-
-   _notebooks/tutorial01_mf
-   _notebooks/tutorial02_mf
-
-
-SEAWAT Tutorials
-----------------
+SEAWAT
+------
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
-   _notebooks/tutorial01_seawat
+   Notebooks/seawat_tutorial01
 
 

@@ -5,6 +5,7 @@ on:
       - master
       - develop
       - ci-diagnose*
+      - notebooks
   pull_request:
     branches:
       - master
