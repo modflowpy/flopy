@@ -296,8 +296,8 @@ class Modflow(BaseModel):
                 xoff=self._modelgrid.xoffset,
                 yoff=self._modelgrid.yoffset,
                 angrot=self._modelgrid.angrot,
-                iac=self.disu.iac,
-                ja=self.disu.ja,
+                iac=self.disu.iac.array,
+                ja=self.disu.ja.array,
             )
             print(
                 "WARNING: Model grid functionality limited for unstructured "

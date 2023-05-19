@@ -177,8 +177,6 @@ class UnstructuredGrid(Grid):
         self._iac = iac
         self._ja = ja
 
-        return
-
     def set_ncpl(self, ncpl):
         if isinstance(ncpl, int):
             ncpl = np.array([ncpl], dtype=int)
@@ -189,7 +187,6 @@ class UnstructuredGrid(Grid):
         assert ncpl.ndim == 1, "ncpl must be 1d"
         self._ncpl = ncpl
         self._require_cache_updates()
-        return
 
     @property
     def is_valid(self):

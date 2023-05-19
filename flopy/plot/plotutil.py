@@ -1807,17 +1807,18 @@ class UnstructuredPlotUtilities:
         return vdict
 
     @staticmethod
-    def irregular_shape_patch(xverts, yverts):
+    def irregular_shape_patch(xverts, yverts=None):
         """
-        Patch for vertex cross section plotting when
-        we have an irregular shape type throughout the
-        model grid or multiple shape types.
+        Patch for vertex cross-section plotting when we have an irregular
+        shape type throughout the model grid or multiple shape types. This
+        method is also used by the model splitter as a helper function
+        for remapping the cell2d array.
 
         Parameters
         ----------
         xverts : list
             xvertices
-        yverts : list
+        yverts : list or None
             yvertices
 
         Returns
@@ -1831,9 +1832,10 @@ class UnstructuredPlotUtilities:
             if len(xv) > max_verts:
                 max_verts = len(xv)
 
-        for yv in yverts:
-            if len(yv) > max_verts:
-                max_verts = len(yv)
+        if yverts is not None:
+            for yv in yverts:
+                if len(yv) > max_verts:
+                    max_verts = len(yv)
 
         adj_xverts = []
         for xv in xverts:
@@ -1844,19 +1846,26 @@ class UnstructuredPlotUtilities:
             else:
                 adj_xverts.append(xv)
 
-        adj_yverts = []
-        for yv in yverts:
-            if len(yv) < max_verts:
-                yv = list(yv)
-                n = max_verts - len(yv)
-                adj_yverts.append(yv + [yv[-1]] * n)
-            else:
-                adj_yverts.append(yv)
+        if yverts is not None:
+            adj_yverts = []
+            for yv in yverts:
+                if len(yv) < max_verts:
+                    yv = list(yv)
+                    n = max_verts - len(yv)
+                    adj_yverts.append(yv + [yv[-1]] * n)
+                else:
+                    adj_yverts.append(yv)
 
-        xverts = np.array(adj_xverts)
-        yverts = np.array(adj_yverts)
+            xverts = np.array(adj_xverts)
+            yverts = np.array(adj_yverts)
 
-        return xverts, yverts
+            return xverts, yverts
+
+        txverts = np.array(adj_xverts)
+        xverts = np.zeros((txverts.shape[0], txverts.shape[1] + 1), dtype=int)
+        xverts[:, 0:-1] = txverts
+        xverts[:, -1] = xverts[:, 0]
+        return xverts
 
     @staticmethod
     def arctan2(verts, reverse=False):
