@@ -396,54 +396,6 @@ def test_unstructured_xyz_intersect(example_data_path):
             raise AssertionError("Unstructured grid intersection failed")
 
 
-def test_structured_neighbors(example_data_path):
-    ws = example_data_path / "freyberg"
-    ml = Modflow.load("freyberg.nam", model_ws=ws)
-    modelgrid = ml.modelgrid
-    k, i, j = 0, 5, 5
-    neighbors = modelgrid.neighbors(k, i, j)
-    for neighbor in neighbors:
-        if (
-            neighbor != (k, i + 1, j)
-            and neighbor != (k, i - 1, j)
-            and neighbor != (k, i, j + 1)
-            and neighbor != (k, i, j - 1)
-        ):
-            raise AssertionError(
-                "modelgid.neighbors not returning proper values"
-            )
-
-
-def test_vertex_neighbors(example_data_path):
-    ws = example_data_path / "mf6" / "test003_gwfs_disv"
-    sim = MFSimulation.load(sim_ws=ws)
-    gwf = sim.get_model("gwf_1")
-    modelgrid = gwf.modelgrid
-    node = 63
-    neighbors = modelgrid.neighbors(node)
-    for neighbor in neighbors:
-        if (
-            neighbor != node + 1
-            and neighbor != node - 1
-            and neighbor != node + 10
-            and neighbor != node - 10
-        ):
-            raise AssertionError(
-                "modelgid.neighbors not returning proper values"
-            )
-
-
-def test_unstructured_neighbors(example_data_path):
-    ws = example_data_path / "mf6" / "test006_gwf3"
-    sim = MFSimulation.load(sim_ws=ws)
-    gwf = sim.get_model("gwf_1")
-    modelgrid = gwf.modelgrid
-    truth = [3, 5, 11]
-    neighbors = modelgrid.neighbors(4)
-    if not truth == neighbors:
-        raise AssertionError("modelgid.neighbors not returning proper values")
-
-
 @pytest.mark.parametrize("spc_file", ["grd.spc", "grdrot.spc"])
 def test_structured_from_gridspec(example_data_path, spc_file):
     fn = example_data_path / "specfile" / spc_file
@@ -1103,6 +1055,34 @@ def test_unstructured_thickness(unstructured_grid):
         unstructured_grid.botm - 100.0
     )
     assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
+
+
+def test_structured_neighbors(structured_grid):
+    rook_neighbors = structured_grid.neighbors(1)
+    assert np.allclose(rook_neighbors, [0, 2, 4])
+
+    queen_neighbors = structured_grid.neighbors(1, method="queen", reset=True)
+    assert np.allclose(queen_neighbors, [0, 3, 4, 2, 5])
+
+
+def test_vertex_neighbors(vertex_grid):
+    rook_neighbors = vertex_grid.neighbors(2)
+    assert np.allclose(rook_neighbors, [0, 3, 4])
+
+    queen_neighbors = vertex_grid.neighbors(2, method="queen", reset=True)
+    assert np.allclose(queen_neighbors, [0, 1, 3, 4])
+
+
+def test_unstructured_neighbors(unstructured_grid):
+    rook_neighbors = unstructured_grid.neighbors(5)
+    assert np.allclose(rook_neighbors, [0, 10, 1, 2, 3, 7, 12])
+
+    queen_neighbors = unstructured_grid.neighbors(
+        5, method="queen", reset=True
+    )
+    assert np.allclose(
+        queen_neighbors, [0, 10, 1, 6, 11, 2, 3, 4, 7, 8, 12, 13]
+    )
 
 
 @parametrize_with_cases("grid", cases=GridCases, prefix="structured_cbd")

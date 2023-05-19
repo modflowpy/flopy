@@ -793,37 +793,51 @@ class StructuredGrid(Grid):
                 column number
             as_node : bool
                 flag to return neighbors as node numbers
+            method : str
+                "rook" for shared edge neighbors (default) "queen" for shared
+                vertex neighbors (for flow accumulation calculations)
+            reset : bool
+                flag to re-calculate neighbors, default is False
 
         Returns
         -------
             list of neighboring cells
         """
         nn = None
+        as_nodes = kwargs.pop("as_nodes", False)
+
         if kwargs:
             if "node" in kwargs:
                 nn = kwargs.pop("node")
+                as_nodes = True
             else:
                 k = kwargs.pop("k", 0)
-                i = kwargs.pop("i")
-                j = kwargs.pop("j")
+                i = kwargs.pop("i", None)
+                j = kwargs.pop("j", None)
+                if i is None or j is None:
+                    pass
+                else:
+                    nn = self.get_node([(k, i, j)])[0]
 
         if len(args) > 0:
             if len(args) == 1:
                 nn = args[0]
+                as_nodes = True
             elif len(args) == 2:
                 k = 0
                 i, j = args[0:2]
             else:
                 k, i, j = args[0:3]
 
-        if nn is None:
-            nn = self.get_node([(k, i, j)])[0]
+            if nn is None:
+                nn = self.get_node([(k, i, j)])[0]
+        else:
+            as_nodes = True
 
-        as_nodes = kwargs.pop("as_nodes", False)
-
-        neighbors = super().neighbors(nn)
+        neighbors = super().neighbors(nn, **kwargs)
         if not as_nodes:
             neighbors = self.get_lrc(neighbors)
+
         return neighbors
 
     def intersect(self, x, y, z=None, local=False, forgive=False):
