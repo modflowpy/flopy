@@ -10,6 +10,8 @@
 #     display_name: Python 3
 #     language: python
 #     name: python3
+#   metadata:
+#     section: mf6
 # ---
 
 # # MODFLOW 6: Multiple Models - How to create multiple models in a simulation

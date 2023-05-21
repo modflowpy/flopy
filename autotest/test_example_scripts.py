@@ -22,7 +22,6 @@ def get_example_scripts(exclude=None):
                 ]
                 for d in [
                     prjroot / "examples" / "scripts",
-                    prjroot / "examples" / "Tutorials",
                 ]
             ],
             [],

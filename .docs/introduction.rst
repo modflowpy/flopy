@@ -1,5 +1,5 @@
-What is FloPy
-=============
+Introduction
+============
 
 The FloPy package consists of a set of Python scripts to run MODFLOW, MT3D,
 SEAWAT and other MODFLOW-related groundwater programs. FloPy enables you to
@@ -28,13 +28,12 @@ the development team if you want to contribute.
 
 Return to the Github `FloPy <https://github.com/modflowpy/flopy>`_ website.
 
-FloPy Installation
-==================
+Installation
+------------------
 
 FloPy can be installed using conda (from the conda-forge channel) or pip.
 
-conda Installation
-------------------
+To install with conda:
 
 .. code-block:: bash
 
@@ -42,10 +41,7 @@ conda Installation
 
 
 
-pip Installation
-----------------
-
-To install FloPy type:
+To install with pip:
 
 .. code-block:: bash
 
@@ -68,8 +64,8 @@ See documentation `get_modflow.md <https://github.com/modflowpy/flopy/blob/devel
 for more information.
 
 
-FloPy Resources
-===============
+Resources
+---------
 
 `Version history <https://github.com/modflowpy/flopy/blob/develop/docs/version_changes.md>`_
 
@@ -78,8 +74,8 @@ FloPy Resources
 `Model checking capabilities <https://github.com/modflowpy/flopy/blob/develop/docs/model_checks.md>`_
 
 
-FloPy Development Team
-======================
+Development Team
+----------------
 
 FloPy is developed by a team of MODFLOW users that have switched over to using
 Python for model development and post-processing.  Members of the team
@@ -134,7 +130,7 @@ currently include:
    :target: https://orcid.org/0000-0002-2665-5078
 
 How to Cite
-===========
+-----------
 
 * `Groundwater Paper <https://github.com/modflowpy/flopy#citation-for-flopy>`_
 * `Software Citation <https://github.com/modflowpy/flopy#softwarecode-citation-for-flopy>`_

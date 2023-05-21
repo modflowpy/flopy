@@ -149,9 +149,17 @@ Some of the scripts use [optional dependencies](docs/flopy_method_dependencies.m
 
 ### Notebooks
 
-Example notebooks are located in `.docs/Notebooks`. A gallery is available [in the user documentation](https://flopy.readthedocs.io/en/stable/examples.html)
+Notebooks are located in `.docs/Notebooks`.
 
-To run the example notebooks you will need `jupyter` installed (`jupyter` is included with the `test` optional dependency group in `pyproject.toml`). Some of the notebooks use [optional dependencies](docs/flopy_method_dependencies.md) as well.
+There are two kinds of notebooks: tutorials and examples. All notebooks are version-controlled as [`jupytext`-managed Python scripts](https://jupytext.readthedocs.io/en/latest/#paired-notebooks). Any `.ipynb` files in `.docs/Notebooks` are ignored by Git.
+
+To convert a paired Python script to an `.ipynb` notebook, run:
+
+```
+jupytext --from py --to ipynb path/to/notebook
+```
+
+Notebook scripts can be run like any other Python script. To run `.ipynb` notebooks, you will need `jupyter` installed (`jupyter` is included with the `test` optional dependency group in `pyproject.toml`). Some of the notebooks use [optional dependencies](docs/flopy_method_dependencies.md) as well.
 
 To install jupyter and optional dependencies at once:
 
@@ -167,50 +175,43 @@ jupyter notebook
 
 Like the scripts and tutorials, each notebook is configured to create and (attempt to) dispose of its own isolated temporary workspace. (On Windows, Python's `TemporaryDirectory` can raise permissions errors, so cleanup is trapped with `try/except`.)
 
-### Developing example Notebooks
+#### Developing new notebooks
 
-Submissions of high-quality Jupyter Notebook examples that demonstrate the use of Flopy are encouraged, as are edits to existing Notebook examples to improve the code quality and clarity of presentation. A few notes on contributing to Notebook examples:
-
-* Notebook examples are housed in their native Jupyter format in `.docs/Notebooks`, and then rendered into html by [nbsphinx](https://github.com/spatialaudio/nbsphinx) when the [online documentation](https://flopy.readthedocs.io/en/latest/) is built.
-* Only Notebook input should committed; the Notebooks are executed in the CI [documentation build workflow](.github/workflows/rtd.yml), to get the output that will be rendered in the documentation.
-* Git can be configured to automatically strip Notebook output from commits:
-
-```shell
-git config filter.strip-notebook-output.clean 'jupyter nbconvert --ClearOutputPreprocessor. enabled=True --to=notebook --stdin --stdout --log-level=ERROR'
-```
-
-This adds a `"strip-notebook-output"` filter to `.git/config`. A reference to this filter is already included in the `.gitattributes` file, which triggers its application on commits.
-
-Notebook output can be stripped manually for a given notebook or a batch of notebooks (using wildcards), with:
-
-```shell
-jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace .docs/Notebooks/*.ipynb
-```
-
-#### Adding a new notebook to the documentation
-
-There are two kinds of notebooks: tutorials and examples.
+Submissions of high-quality Jupyter Notebook examples that demonstrate the use of FloPy are encouraged, as are edits to existing notebooks to improve the code quality, performance, or clarity of presentation.
 
 ##### Adding a tutorial notebook
 
-If a notebook's name contains "tutorial", it will automatically be assigned to the [Tutorials](https://flopy.readthedocs.io/en/latest/tutorials.html) page in ReadTheDocs. Tutorials are grouped according to executable used, with binning based on whether the notebook name contains any of the following:
-
-- "mf6": MODFLOW 6
-- "mf" : MODFLOW 2005
-- "seawat": SEAWAT
-- none of the above: Miscellaneous
+If a notebook's name contains "tutorial", it will automatically be assigned to the [Tutorials](https://flopy.readthedocs.io/en/latest/tutorials.html) page in ReadTheDocs.
 
 Tutorial notebooks should aim to briefly demonstrate a basic FloPy feature. Most tutorial notebooks do not perform post-processing or generate visualizations, so tutorials are simply listed rather than rendered into a thumbnail gallery.
 
+Tutorials are assigned to sections by a notebook metadata `section` attribute. For instance, to assign a tutorial notebook to the MODFLOW 6 section:
+
+```
+# ---
+# jupyter
+#   jupytext:
+#     ...
+#   kernelspec:
+#     ..
+#   metadata:
+#     section: mf6
+#     authors:
+#       - name: ...
+# ---
+```
+
+See [the `create_rstfiles.py` script](./.docs/create_rstfiles.py) for a complete list of sections. If your notebook lacks a `section` attribute, it will be assigned to the "Miscellaneous" section.
+
 ##### Adding an example notebook
 
-If a notebook's name does not contain "tutorial", it is considered an example notebook. Example notebooks are more broadly scoped than tutorials, and typically include plots.
+If a notebook's name contains "example", it is considered an example notebook. Example notebooks are more broadly scoped than tutorials, and typically include plots. Example notebooks are rendered into an HTML gallery view by [nbsphinx](https://github.com/spatialaudio/nbsphinx) when the [online documentation](https://flopy.readthedocs.io/en/latest/) is built.
 
-To include the notebook in the [Examples gallery](https://flopy.readthedocs.io/en/latest/notebooks.html), the notebook developer must add the new notebook to a section of `.docs/notebooks.rst`.
+**Note**: at least one plot/visualization is recommended in order to provide a thumbnail for each example notebook in the [Examples gallery](https://flopy.readthedocs.io/en/latest/notebooks.html)gallery.
 
 Thumbnails for the examples gallery are generated automatically from the notebook header (typically the first line, begining with a single '#'), and by default, the last plot generated. Thumbnails can be customized to use any plot in the notebook, or an external image, as described [here](https://nbsphinx.readthedocs.io/en/0.9.1/subdir/gallery.html).
 
-**Note**: at least one visualization is recommended in order to provide a thumbnail for each example notebook.
+Example notebooks are assigned to sections in the same way as tutorials. See [the `create_rstfiles.py` script](./.docs/create_rstfiles.py) for a complete list of sections. If your notebook lacks a `section` attribute, it will be assigned to the "Miscellaneous" section.
 
 ## Tests
 
@@ -348,3 +349,21 @@ Benchmark results are only printed to `stdout` by default. To save results to a 
 Profiling is [distinct](https://stackoverflow.com/a/39381805/6514033) from benchmarking in evaluating a program's call stack in detail, while benchmarking just invokes a function repeatedly and computes summary statistics. Profiling is also accomplished with `pytest-benchmark`: use the `--benchmark-cprofile` option when running tests which use the `benchmark` fixture described above. The option's value is the column to sort results by. For instance, to sort by total time, use `--benchmark-cprofile="tottime"`. See the `pytest-benchmark` [docs](https://pytest-benchmark.readthedocs.io/en/stable/usage.html#commandline-options) for more information.
 
 By default, `pytest-benchmark` will only print profiling results to `stdout`. If the `--benchmark-autosave` flag is provided, performance profile data will be included in the JSON files written to the `.benchmarks` save directory as described in the benchmarking section above.
+
+## Branching model
+
+This project follows the [git flow](https://nvie.com/posts/a-successful-git-branching-model/): development occurs on the `develop` branch, while `main` is reserved for the state of the latest release. Development PRs are typically squashed to `develop`, to avoid merge commits. At release time, release branches are merged to `main`, and then `main` is merged back into `develop`.
+
+## Miscellaneous
+
+### Locating the root
+
+Python scripts and notebooks often need to reference files elsewhere in the project. 
+
+To allow scripts to be run from anywhere in the project hierarchy, scripts should locate the project root relative to themselves, then use paths relative to the root for file access, rather than using relative paths (e.g., `../some/path`).
+
+For a script in a subdirectory of the root, for instance, the conventional approach would be:
+
+```Python
+project_root_path = Path(__file__).parent.parent
+```

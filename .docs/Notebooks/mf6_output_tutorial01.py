@@ -10,6 +10,8 @@
 #     display_name: Python 3
 #     language: python
 #     name: python3
+#   metadata:
+#     section: mf6
 # ---
 
 # # Accessing MODFLOW 6 Output
