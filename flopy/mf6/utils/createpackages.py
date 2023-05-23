@@ -562,6 +562,10 @@ def create_packages():
             doc_string = mfdatautil.MFDocString(ds)
 
         if package[0].dfn_type == mfstructure.DfnType.exch_file:
+            exgtype = (
+                f'"{package_abbr[0:3].upper()}6-{package_abbr[3:].upper()}6"'
+            )
+
             add_var(
                 init_vars,
                 None,
@@ -569,7 +573,7 @@ def create_packages():
                 package_properties,
                 doc_string,
                 data_structure_dict,
-                None,
+                exgtype,
                 "exgtype",
                 "exgtype",
                 build_doc_string(
