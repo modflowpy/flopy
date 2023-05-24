@@ -156,7 +156,7 @@ extensions = [
 # Settings for GitHub actions integration
 if on_rtd:
     extensions.append("rtds_action")
-    rtds_action_github_repo = "w-bonelli/flopy"
+    rtds_action_github_repo = "modflowpy/flopy"
     # This will overwrite the .docs/Notebooks directory
     # with the notebooks downloaded & extracted from CI
     # artifacts, which is fine. We want to render those
