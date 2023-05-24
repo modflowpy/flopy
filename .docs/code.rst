@@ -1,5 +1,5 @@
-Flopy Code
-==========
+API Reference
+=============
 
 MODFLOW 6
 ---------

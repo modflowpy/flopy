@@ -104,34 +104,20 @@ os.system(" ".join(cmd))
 
 # -- convert tutorial scripts and run example notebooks ----------------------
 if not on_rtd:
-    cmd = (
-        "jupyter",
-        "nbconvert",
-        "--to",
-        "ipynb",
-        "--execute",
-        "--inplace",
-        "Notebooks/*.ipynb",
-    )
-    print(" ".join(cmd))
-    os.system(" ".join(cmd))
-
-    # pytest could be used to parallelize notebooks during local docs build?
-    # cmd = (
-    #     "pytest -v -n auto test_example_notebooks.py",
-    # )
-    # print(" ".join(cmd))
-    # subprocess.run(" ".join(cmd), cwd=Path.cwd().parent / "autotest", shell=True)
-
-    cmd = (
-        "jupytext",
-        "--to",
-        "ipynb",
-        "--execute",
-        "Notebooks/*tutorial*.py"
-    )
-    print(" ".join(cmd))
-    os.system(" ".join(cmd))
+    nbs = Path("Notebooks").glob("*.py")
+    for nb in nbs:
+        if nb.with_suffix(".ipynb").exists():
+            print(f"{nb} already exists, skipping")
+            continue
+        cmd = (
+            "jupytext",
+            "--to",
+            "ipynb",
+            "--execute",
+            str(nb)
+        )
+        print(" ".join(cmd))
+        os.system(" ".join(cmd))
 
 # -- Project information -----------------------------------------------------
 project = "FloPy Documentation"
@@ -170,7 +156,7 @@ extensions = [
 # Settings for GitHub actions integration
 if on_rtd:
     extensions.append("rtds_action")
-    rtds_action_github_repo = "modflowpy/flopy"
+    rtds_action_github_repo = "w-bonelli/flopy"
     # This will overwrite the .docs/Notebooks directory
     # with the notebooks downloaded & extracted from CI
     # artifacts, which is fine. We want to render those
@@ -250,7 +236,7 @@ html_css_files = [
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 html_short_title = "flopy"
-html_favicon = "_images/flopylogo.png"
+html_favicon = "_images/flopylogo_sm.png"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -297,16 +283,4 @@ nbsphinx_execute = "never"
 
 nbsphinx_prolog = r"""
 {% set docname = env.doc2path(env.docname, base=None) %}
-
-.. only:: html
-
-    .. role:: raw-html(raw)
-        :format: html
-
-    .. note::
-
-        | This page was generated from `{{ docname }}`__.
-        | Interactive online version: :raw-html:`<a href="https://mybinder.org/v2/gh/modflowpy/flopy.git/develop?urlpath=lab/tree/.docs/{{ docname }}"><img alt="Binder badge" src="https://mybinder.org/badge_logo.svg" style="vertical-align:text-bottom"></a>`
-
-        __ https://github.com/modflowpy/flopy/blob/develop/.docs/{{ docname }}
-"""
+""" + Path("prolog.rst").read_text()

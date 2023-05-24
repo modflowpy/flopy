@@ -10,12 +10,13 @@
 #     display_name: Python 3
 #     language: python
 #     name: python3
+#   metadata:
+#     section: mf6
 # ---
 
-# # MODFLOW 6 Tutorial 1: Unconfined Steady-State Flow Model
+# # Unconfined steady-state flow model
 #
-# This tutorial demonstrates use of FloPy to develop a simple MODFLOW 6
-# model.
+# This tutorial demonstrates a simple MODFLOW 6 model with FloPy.
 
 # ## Getting Started
 

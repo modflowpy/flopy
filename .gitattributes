@@ -16,8 +16,3 @@
 # Do not modify the model data in various directories
 examples/data/** binary
 .docs/groundwater_paper/uspb/** binary
-
-# strip output from Notebooks using
-# a custom filter in .git/config
-# (see DEVELOPER.md)
-*.ipynb filter=strip-notebook-output

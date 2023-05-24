@@ -10,6 +10,8 @@
 #     display_name: Python 3
 #     language: python
 #     name: python3
+#   metadata:
+#     section: mf2005
 # ---
 
 # # MODFLOW Tutorial 2: Unconfined Transient Flow Model
