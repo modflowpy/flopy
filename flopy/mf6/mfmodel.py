@@ -1837,12 +1837,12 @@ class MFModel(PackageContainer, ModelInterface):
                 if ftype in self._ftype_num_dict:
                     self._ftype_num_dict[ftype] += 1
                 else:
-                    self._ftype_num_dict[ftype] = 0
+                    self._ftype_num_dict[ftype] = 1
                 if pname is not None:
                     dict_package_name = pname
                 else:
                     dict_package_name = (
-                        f"{ftype}_{self._ftype_num_dict[ftype]}"
+                        f"{ftype}-{self._ftype_num_dict[ftype]}"
                     )
         else:
             dict_package_name = ftype
