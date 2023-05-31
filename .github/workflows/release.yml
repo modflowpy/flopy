@@ -89,7 +89,7 @@ jobs:
 
       - name: Generate changelog
         id: cliff
-        uses: orhun/git-cliff-action@v1
+        uses: orhun/git-cliff-action@v2
         with:
           config: cliff.toml
           args: --verbose --unreleased --tag ${{ steps.version.outputs.version }}
