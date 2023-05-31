@@ -60,6 +60,22 @@ jobs:
           pip install xmipy
           pip install .
 
+      - name: Workaround OpenGL issue on Linux
+        if: runner.os == 'Linux'
+        run: |
+          # referenced from https://github.com/pyvista/pyvista/blob/main/.github/workflows/vtk-pre-test.yml#L53
+          pip uninstall -y vtk
+          pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
+      
+      - name: Install OpenGL on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = "Stop"
+          $PSDefaultParameterValues['*:ErrorAction']='Stop'
+          powershell .github/install_opengl.ps1
+
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
 
