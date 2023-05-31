@@ -95,7 +95,8 @@ jobs:
         coverage report
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v2.1.0
+      if:
+        github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
+      uses: codecov/codecov-action@v3
       with:
-        directory: ./modflow6/autotest
-        file: coverage.xml
+        files: ./modflow6/autotest/coverage.xml
