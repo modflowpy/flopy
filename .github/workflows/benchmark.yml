@@ -84,7 +84,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload failed benchmark artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: failed-benchmark-${{ matrix.os }}-${{ matrix.python-version }}-${{ github.run_id }}
@@ -92,7 +92,7 @@ jobs:
             ./autotest/.failed/**
 
       - name: Upload benchmark result artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: benchmarks-${{ matrix.os }}-${{ matrix.python-version }}-${{ github.run_id }}
           path: |
@@ -155,7 +155,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: benchmarks-${{ github.run_id }}
           path: |
