@@ -256,13 +256,13 @@ class Mf6Splitter(object):
         pymetis = import_optional_dependency(
             "pymetis",
             "please install pymetis using: "
-            "conda install -c conda-forge pymetis"
+            "conda install -c conda-forge pymetis",
         )
         # create graph of nodes
         graph = []
         weights = []
         nlay = self._modelgrid.nlay
-        if self._modelgrid.grid_type in ('structured', 'vertex'):
+        if self._modelgrid.grid_type in ("structured", "vertex"):
             ncpl = self._modelgrid.ncpl
             shape = self._modelgrid.shape[1:]
         else:
@@ -275,7 +275,9 @@ class Mf6Splitter(object):
             weights.append(weight)
             graph.append(np.array(neighbors, dtype=int))
 
-        n_cuts, membership = pymetis.part_graph(nparts, adjacency=graph, vweights=weights)
+        n_cuts, membership = pymetis.part_graph(
+            nparts, adjacency=graph, vweights=weights
+        )
         mask = np.array(membership, dtype=int).reshape(shape)
         return mask
 
