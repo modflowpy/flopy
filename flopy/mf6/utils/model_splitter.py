@@ -4,10 +4,9 @@ import numpy as np
 
 from ...mf6 import modflow
 from ...plot import plotutil
+from ...utils import import_optional_dependency
 from ..data import mfdataarray, mfdatalist, mfdatascalar
 from ..mfbase import PackageContainer
-from ...utils import import_optional_dependency
-
 
 OBS_ID1_LUT = {
     "gwf": "cellid",
