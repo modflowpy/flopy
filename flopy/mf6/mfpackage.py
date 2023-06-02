@@ -1246,10 +1246,22 @@ class MFBlock:
             self._write_block(fd, self.block_headers[0], ext_file_action)
 
     def _add_missing_block_headers(self, repeating_dataset):
-        for key in repeating_dataset.get_active_key_list():
+        key_data_list = repeating_dataset.get_active_key_list()
+        # assemble a dictionary of data keys and empty keys
+        key_dict = {}
+        for key in key_data_list:
+            key_dict[key[0]] = True
+        for key, value in repeating_dataset.empty_keys.items():
+            if value:
+                key_dict[key] = True
+        for key in key_dict.keys():
             has_data = repeating_dataset.has_data(key)
-            if not self.header_exists(key[0]) and has_data:
-                self._build_repeating_header([key[0]])
+            empty_key = (
+                key in repeating_dataset.empty_keys
+                and repeating_dataset.empty_keys[key]
+            )
+            if not self.header_exists(key) and (has_data or empty_key):
+                self._build_repeating_header([key])
 
     def header_exists(self, key, data_path=None):
         if not isinstance(key, list):
@@ -1877,7 +1889,11 @@ class MFPackage(PackageContainer, PackageInterface):
     def _get_aux_data(self, aux_names):
         if hasattr(self, "stress_period_data"):
             spd = self.stress_period_data.get_data()
-            if 0 in spd and aux_names[0][1] in spd[0].dtype.names:
+            if (
+                0 in spd
+                and spd[0] is not None
+                and aux_names[0][1] in spd[0].dtype.names
+            ):
                 return spd
         if hasattr(self, "packagedata"):
             pd = self.packagedata.get_data()
@@ -1885,7 +1901,11 @@ class MFPackage(PackageContainer, PackageInterface):
                 return pd
         if hasattr(self, "perioddata"):
             spd = self.perioddata.get_data()
-            if 0 in spd and aux_names[0][1] in spd[0].dtype.names:
+            if (
+                0 in spd
+                and spd[0] is not None
+                and aux_names[0][1] in spd[0].dtype.names
+            ):
                 return spd
         if hasattr(self, "aux"):
             return self.aux.get_data()

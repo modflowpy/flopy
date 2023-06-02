@@ -78,6 +78,7 @@ class MFTransient:
     def __init__(self, *args, **kwargs):
         self._current_key = None
         self._data_storage = None
+        self.empty_keys = {}
 
     def add_transient_key(self, transient_key):
         if isinstance(transient_key, int):

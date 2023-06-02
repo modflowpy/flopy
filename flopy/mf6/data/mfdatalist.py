@@ -1475,7 +1475,9 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         package=None,
         block=None,
     ):
-        super().__init__(
+        mfdata.MFTransient.__init__(self)
+        MFList.__init__(
+            self,
             sim_data=sim_data,
             model_or_sim=model_or_sim,
             structure=structure,
@@ -1488,7 +1490,6 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         )
         self._transient_setup(self._data_storage)
         self.repeating = True
-        self.empty_keys = {}
 
     @property
     def data_type(self):

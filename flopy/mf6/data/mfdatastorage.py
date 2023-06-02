@@ -1632,6 +1632,10 @@ class DataStorage:
                         not isinstance(data_val, int)
                         or self._recarray_type_list[index][1] != float
                     )
+                    and (
+                        self._recarray_type_list[index][1] != float
+                        or not isinstance(data_val, np.floating)
+                    )
                 ):
                     # for inconsistent types use generic object type
                     self._recarray_type_list[index] = (

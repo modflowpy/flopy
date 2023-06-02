@@ -1607,7 +1607,9 @@ class MFTransientArray(MFArray, MFTransient):
         dimensions=None,
         block=None,
     ):
-        super().__init__(
+        MFTransient.__init__(self)
+        MFArray.__init__(
+            self,
             sim_data=sim_data,
             model_or_sim=model_or_sim,
             structure=structure,

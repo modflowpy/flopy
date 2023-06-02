@@ -723,7 +723,9 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
         path=None,
         dimensions=None,
     ):
-        super().__init__(
+        mfdata.MFTransient.__init__(self)
+        MFScalar.__init__(
+            self,
             sim_data=sim_data,
             model_or_sim=model_or_sim,
             structure=structure,
