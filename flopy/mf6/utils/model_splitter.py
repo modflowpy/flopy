@@ -6,6 +6,8 @@ from ...mf6 import modflow
 from ...plot import plotutil
 from ..data import mfdataarray, mfdatalist, mfdatascalar
 from ..mfbase import PackageContainer
+from ...utils import import_optional_dependency
+
 
 OBS_ID1_LUT = {
     "gwf": "cellid",
@@ -237,6 +239,46 @@ class Mf6Splitter(object):
         """
         return self._modelgrid
 
+    def optimize_splitting_mask(self, nparts):
+        """
+        Method to create a splitting array with a balanced number of active
+        cells per model. This method uses the program METIS and pymetis to
+        create the subsetting array
+
+        Parameters
+        ----------
+        nsplits: int
+
+        Returns
+        -------
+            np.ndarray
+        """
+        pymetis = import_optional_dependency(
+            "pymetis",
+            "please install pymetis using: "
+            "conda install -c conda-forge pymetis"
+        )
+        # create graph of nodes
+        graph = []
+        weights = []
+        nlay = self._modelgrid.nlay
+        if self._modelgrid.grid_type in ('structured', 'vertex'):
+            ncpl = self._modelgrid.ncpl
+            shape = self._modelgrid.shape[1:]
+        else:
+            ncpl = self._modelgrid.nnodes
+            shape = self._modelgrid.shape
+        idomain = self._modelgrid.idomain
+        idomain = idomain.reshape(nlay, ncpl)
+        for nn, neighbors in self._modelgrid.neighbors().items():
+            weight = np.count_nonzero(idomain[:, nn])
+            weights.append(weight)
+            graph.append(np.array(neighbors, dtype=int))
+
+        n_cuts, membership = pymetis.part_graph(nparts, adjacency=graph, vweights=weights)
+        mask = np.array(membership, dtype=int).reshape(shape)
+        return mask
+
     def reconstruct_array(self, arrays):
         """
         Method to reconstruct model output arrays into a single array
@@ -257,7 +299,10 @@ class Mf6Splitter(object):
 
         elif test_arr.size == self._model_dict[mkey].modelgrid.ncpl:
             nlay = 1
-            shape = (self._modelgrid.nrow, self._modelgrid.ncol)
+            if self._modelgrid.grid_type in ("structured", "vertex"):
+                shape = self._modelgrid.shape[1:]
+            else:
+                shape = self._modelgrid.shape
         else:
             raise AssertionError("Arrays are not the proper size")
 
