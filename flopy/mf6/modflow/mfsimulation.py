@@ -1567,6 +1567,7 @@ class MFSimulation(PackageContainer):
         silent=None,
         pause=False,
         report=False,
+        processors=None,
         normal_msg="normal termination",
         use_async=False,
         cargs=None,
@@ -1582,6 +1583,9 @@ class MFSimulation(PackageContainer):
                 Pause at end of run
             report: bool
                 Save stdout lines to a list (buff)
+            processors: int
+                Number of processors. Parallel simulations are only supported
+                for MODFLOW 6 simulations. (default is None)
             normal_msg: str or list
                 Normal termination message used to determine if the run
                 terminated normally. More than one message can be provided
@@ -1615,6 +1619,7 @@ class MFSimulation(PackageContainer):
             silent=silent,
             pause=pause,
             report=report,
+            processors=processors,
             normal_msg=normal_msg,
             use_async=use_async,
             cargs=cargs,

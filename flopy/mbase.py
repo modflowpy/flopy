@@ -1705,6 +1705,7 @@ def run_model(
     silent=False,
     pause=False,
     report=False,
+    processors=None,
     normal_msg="normal termination",
     use_async=False,
     cargs=None,
@@ -1733,6 +1734,9 @@ def run_model(
         Pause and wait for keystroke upon completion. (Default is False)
     report : boolean, optional, default False
         Save stdout lines to a list (buff) returned by the method. (Default is False)
+    processors: int
+        Number of processors. Parallel simulations are only supported for
+        MODFLOW 6 simulations. (default is None)
     normal_msg : str or list
         Termination message used to determine if the model terminated normally.
         More than one message can be provided using a list.
@@ -1783,7 +1787,16 @@ def run_model(
             # output.close()
 
     # create a list of arguments to pass to Popen
-    argv = [exe_path]
+    if processors is not None:
+        if "mf6" not in exe_path:
+            raise ValueError("processors kwarg only supported for MODFLOW 6")
+        mpiexec_path = resolve_exe("mpiexec")
+        if not silent:
+            print(f"FloPy is using {mpiexec_path} to run {exe_path}.")
+        argv = [mpiexec_path, "-np", f"{processors}", exe_path, "-p"]
+    else:
+        argv = [exe_path]
+
     if namefile is not None:
         argv.append(Path(namefile).name)
 
