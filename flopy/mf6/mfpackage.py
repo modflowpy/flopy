@@ -1256,8 +1256,10 @@ class MFBlock:
                 key_dict[key] = True
         for key in key_dict.keys():
             has_data = repeating_dataset.has_data(key)
-            empty_key = key in repeating_dataset.empty_keys and \
-                repeating_dataset.empty_keys[key]
+            empty_key = (
+                key in repeating_dataset.empty_keys
+                and repeating_dataset.empty_keys[key]
+            )
             if not self.header_exists(key) and (has_data or empty_key):
                 self._build_repeating_header([key])
 
@@ -1887,8 +1889,11 @@ class MFPackage(PackageContainer, PackageInterface):
     def _get_aux_data(self, aux_names):
         if hasattr(self, "stress_period_data"):
             spd = self.stress_period_data.get_data()
-            if 0 in spd and spd[0] is not None and \
-                    aux_names[0][1] in spd[0].dtype.names:
+            if (
+                0 in spd
+                and spd[0] is not None
+                and aux_names[0][1] in spd[0].dtype.names
+            ):
                 return spd
         if hasattr(self, "packagedata"):
             pd = self.packagedata.get_data()
@@ -1896,8 +1901,11 @@ class MFPackage(PackageContainer, PackageInterface):
                 return pd
         if hasattr(self, "perioddata"):
             spd = self.perioddata.get_data()
-            if 0 in spd and spd[0] is not None and \
-                    aux_names[0][1] in spd[0].dtype.names:
+            if (
+                0 in spd
+                and spd[0] is not None
+                and aux_names[0][1] in spd[0].dtype.names
+            ):
                 return spd
         if hasattr(self, "aux"):
             return self.aux.get_data()
