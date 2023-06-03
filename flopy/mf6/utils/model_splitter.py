@@ -724,8 +724,6 @@ class Mf6Splitter(object):
                 if key in ("simulation", "loading_package", "pname", "kwargs"):
                     continue
                 elif key == "ats_perioddata":
-                    # todo: figure out what needs to be done here. Child packages
-                    #   seem like they are going to be a bit of an issue
                     continue
                 else:
                     data = getattr(pak, key)
@@ -2885,5 +2883,5 @@ class Mf6Splitter(object):
 
 # todo: development notes:
 #   Then set up checks for model splitting
-#       (ex. doesnt parallel a fault, doesnt cut through a lake, active cells in modelgrid...)
-#   Finally deal with other subpackages...
+#       (ex. doesnt parallel a fault, doesnt cut through a lake,
+#       active cells in modelgrid...)
