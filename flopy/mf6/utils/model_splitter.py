@@ -246,7 +246,7 @@ class Mf6Splitter(object):
 
         Parameters
         ----------
-        nsplits: int
+        nparts: int
 
         Returns
         -------
