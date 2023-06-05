@@ -647,7 +647,7 @@ lgr_poly_array = np.array(lgr_poly).squeeze()
 
 # ## Plot the grids
 
-# +
+# + tags=["nbsphinx-thumbnail"]
 # Make a plot of the six grids
 figwidth = 17.15 / 2.54
 figheight = 3.66 * (Ly / Lx) * 8.25 / 2.54

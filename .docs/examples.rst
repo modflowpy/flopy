@@ -128,7 +128,7 @@ Examples from Hughes and others (2023)
 .. nbgallery::
     :name: 2023gw-paper
 
-   Notebooks/groundwater2023_synthetic_valley
+   Notebooks/groundwater2023_synthetic_valley_example
 
 
 Miscellaneous examples
