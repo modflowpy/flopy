@@ -479,7 +479,6 @@ for loc in cellids:
 fig = plt.figure(figsize=figsize)
 ax = fig.add_subplot()
 pmv = flopy.plot.PlotMapView(modelgrid=quadtree_grid)
-# pmv.plot_grid()
 pmv.plot_array(top_qg, ec="0.75")
 pmv.plot_array(
     intersection_qg,
@@ -496,7 +495,7 @@ ax.set_aspect("equal")
 ax.plot(bp[:, 0], bp[:, 1], "k-")
 for sg in sgs:
     sa = np.array(sg)
-    # ax.plot(sa[:, 0], sa[:, 1], "b-")
+    ax.plot(sa[:, 0], sa[:, 1], "b-")
 # -
 
 # ## Triangular grid
@@ -629,7 +628,6 @@ pmv.plot_array(
     alpha=0.2,
     cmap="Reds_r",
 )
-# pmv.plot_grid()
 pmv.plot_inactive()
 ax.plot(bp[:, 0], bp[:, 1], "k-")
 for sg in sgs:
@@ -662,7 +660,6 @@ grids = [
 ]
 topo_grids = [top_sg, top_sg_vrc, top_nested_grid, top_qg, top_tg, top_vg]
 extent = (0, 180000, 0, 100000)
-# cbar_axis = [0.75, 0.825, 0.2, 0.05]
 cbar_axis = [0.0, 0.1, 0.25, 0.9]
 
 with styles.USGSMap():
@@ -819,8 +816,6 @@ with styles.USGSMap():
     cbar.ax.set_title(
         "Elevation (m)", pad=2.5, loc="center", fontdict=font_dict
     )
-
-
 # -
 
 # ## Plot the river intersection for the six grids
@@ -965,6 +960,4 @@ with styles.USGSMap():
         columnspacing=0.6,
         handletextpad=0.3,
     )
-
-
 # -
