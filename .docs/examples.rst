@@ -59,6 +59,7 @@ MODFLOW 6 examples
    Notebooks/mf6_complex_model_example
    Notebooks/mf6_simple_model_example
    Notebooks/mf6_support_example
+   Notebooks/mf6_parallel_model_splitting
 
 
 MODFLOW USG examples

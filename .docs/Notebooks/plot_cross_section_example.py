@@ -456,7 +456,7 @@ ax = fig.add_subplot(2, 1, 1)
 
 # plot boundary conditions
 xsect = flopy.plot.PlotCrossSection(model=ml6, line={"Column": 5})
-patches = xsect.plot_bc("WEL_0", color="pink")
+patches = xsect.plot_bc("WEL", color="pink")
 patches = xsect.plot_ibound()
 linecollection = xsect.plot_grid()
 t = ax.set_title("Column 6 Cross-Section with Boundary Conditions")
