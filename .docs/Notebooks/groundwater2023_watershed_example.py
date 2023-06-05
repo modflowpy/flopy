@@ -16,9 +16,9 @@
 #       - name: Joseph Hughes
 # ---
 
-# # Synthetic Valley example
+# # Watershed geoprocessing example
 #
-# From Hughes, Joseph D., Langevin, Christian D., Paulinski, Scott R., Larsen, Joshua D., and Brakenhoff, David, 2023, FloPy Workflows for Creating and Constructing Structured and Unstructured MODFLOW 6 Models: Groundwater, https://doi.org/10.1111/gwat.13327
+# From Hughes, Joseph D., Langevin, Christian D., Paulinski, Scott R., Larsen, Joshua D., and Brakenhoff, David, 2023, FloPy Workflows for Creating Structured and Unstructured MODFLOW Models: Groundwater, https://doi.org/10.1111/gwat.13327
 #
 
 import os

@@ -156,6 +156,11 @@ def create_examples_rst():
                 "description": "Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Starn, J. J. and Fienen, M. N., 2016, Scripting MODFLOW Model Development Using Python and FloPy: Groundwater, v. 54, p. 733–739, https://doi.org/10.1111/gwat.12413.",
                 "files": []
             },
+            "2023gw-paper": {
+                "title": "Examples from Hughes and others (2023)",
+                "description": "Hughes, Joseph D., Langevin, Christian D., Paulinski, Scott R., Larsen, Joshua D., and Brakenhoff, David, 2023, FloPy Workflows for Creating Structured and Unstructured MODFLOW Models: Groundwater, https://doi.org/10.1111/gwat.13327.",
+                "files": []
+            },
             "misc": {
                 "title": "Miscellaneous examples",
                 "files": []
