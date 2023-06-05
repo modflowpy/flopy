@@ -58,6 +58,13 @@ jobs:
           pip uninstall -y vtk
           pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
       
+      - name: Install fonts on Linux
+        if: runner.os == 'Linux'
+        run: |
+          echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | sudo debconf-set-selections
+          sudo apt-get install ttf-mscorefonts-installer fonts-liberation
+          sudo rm -rf ~/.cache/matplotlib
+      
       - name: Install OpenGL on Windows
         if: runner.os == 'Windows'
         shell: pwsh

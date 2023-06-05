@@ -1033,6 +1033,9 @@ with styles.USGSMap():
     inactive = mapview.plot_inactive()
     plt.colorbar(quadmesh, shrink=0.75)
 
+    # change the font type to comic sans
+    styles.set_font_type(family="fantasy", fontname="Comic Sans MS"),
+
     # use styles to add a heading, xlabel, ylabel, and remove tick marks
     styles.heading(
         letter="A.",
