@@ -622,6 +622,11 @@ def set_plot_params():
     import matplotlib as mpl
     from matplotlib.font_manager import FontProperties
 
+    mpl.rcParams["font.sans-serif"] = "Arial"
+    mpl.rcParams["font.serif"] = "Times"
+    mpl.rcParams["font.cursive"] = "Zapf Chancery"
+    mpl.rcParams["font.fantasy"] = "Comic Sans MS"
+    mpl.rcParams["font.monospace"] = "Courier New"
     mpl.rcParams["pdf.compression"] = 0
     mpl.rcParams["pdf.fonttype"] = 42
 
