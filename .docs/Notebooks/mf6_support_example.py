@@ -469,7 +469,7 @@ rch_package.obs.initialize(
 )
 # -
 
-# # Saving and Running a MF6 Simulation
+# ## Saving and Running a MF6 Simulation
 
 # Saving and running a simulation are done with the MFSimulation class's write_simulation and run_simulation methods.
 
@@ -484,7 +484,7 @@ for line in buff:
     print(line)
 # -
 
-# # Exporting a MF6 Model
+# ## Exporting a MF6 Model
 
 # Exporting a MF6 model to a shapefile or netcdf is the same as exporting a MF2005 model.
 
@@ -500,14 +500,14 @@ model.dis.export(pth / "dis.nc")
 model.dis.botm.export(str(pth / "botm.shp"))  # supports os.PathLike or str
 # -
 
-# # Loading an Existing MF6 Simulation
+# ## Loading an Existing MF6 Simulation
 
 # Loading a simulation can be done with the flopy.mf6.MFSimulation.load static method.
 
 # load the simulation
 loaded_sim = flopy.mf6.MFSimulation.load(sim_name, "mf6", "mf6", sim_path)
 
-# # Retrieving Data and Modifying an Existing MF6 Simulation
+# ## Retrieving Data and Modifying an Existing MF6 Simulation
 
 # Data can be easily retrieved from a simulation.  Data can be retrieved using two methods.  One method is to retrieve the data object from a master simulation dictionary that keeps track of all the data.  The master simulation dictionary is accessed by accessing a simulation's "simulation_data" property and then the "mfdata" property:
 #

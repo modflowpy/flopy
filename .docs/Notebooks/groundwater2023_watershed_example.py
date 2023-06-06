@@ -133,9 +133,9 @@ for idx, sg in enumerate(sgs):
     ax.plot(sa[:, 0], sa[:, 1], color=riv_colors[idx], lw=0.75, marker="o")
 # -
 
-# # Structured Grids
+# ## Structured Grids
 #
-# ## Structured grid with constant row and column spacing
+# ### Structured grid with constant row and column spacing
 
 # +
 dx = dy = 1666.66666667
@@ -193,7 +193,7 @@ for sg in sgs:
     ax.plot(sa[:, 0], sa[:, 1], "b-")
 # -
 
-# ## Structured grid with variable row and column spacing
+# ### Structured grid with variable row and column spacing
 
 # +
 dx = dy = 5000
@@ -277,7 +277,7 @@ for sg in sgs:
     ax.plot(sa[:, 0], sa[:, 1], "b-", alpha=0.2)
 # -
 
-# ## Local grid refinement grid
+# ### Local grid refinement grid
 
 # +
 from flopy.utils.lgrutil import Lgr
@@ -414,7 +414,7 @@ for sg in sgs:
     ax.plot(sa[:, 0], sa[:, 1], "b-")
 # -
 
-# # Unstructured grids
+# ## Unstructured grids
 
 # create a polygon of the common refinement area for the quadtree grid
 lgr_poly = [
@@ -427,7 +427,7 @@ lgr_poly = [
     ]
 ]
 
-# ## Quadtree grid
+# ### Quadtree grid
 
 # +
 sim = flopy.mf6.MFSimulation()
@@ -498,7 +498,7 @@ for sg in sgs:
     ax.plot(sa[:, 0], sa[:, 1], "b-")
 # -
 
-# ## Triangular grid
+# ### Triangular grid
 
 nodes = []
 for sg in sgs:
@@ -585,7 +585,7 @@ if True:
         ax.plot(sa[:, 0], sa[:, 1], "b-")
 # -
 
-# ## Voronoi Grid from the Triangle object
+# ### Voronoi Grid from the Triangle object
 
 # create vor object and VertexGrid from the triangle object tri
 vor = VoronoiGrid(tri)
@@ -637,13 +637,13 @@ for sg in sgs:
 cg = pmv.contour_array(top_vg, levels=levels, linewidths=0.3, colors="0.75")
 # -
 
-# # Plot all six grids
+# ## Plot all six grids
 #
-# ## Create a polyline for Local Grid Refinement area
+# ### Create a polyline for Local Grid Refinement area
 
 lgr_poly_array = np.array(lgr_poly).squeeze()
 
-# ## Plot the grids
+# ### Plot the grids
 
 # + tags=["nbsphinx-thumbnail"]
 # Make a plot of the six grids
@@ -818,7 +818,7 @@ with styles.USGSMap():
     )
 # -
 
-# ## Plot the river intersection for the six grids
+# ### Plot the river intersection for the six grids
 
 # +
 figwidth = 17.15 / 2.54

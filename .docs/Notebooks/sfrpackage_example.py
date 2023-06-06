@@ -17,7 +17,7 @@
 #       - name: Andy Leaf
 # ---
 
-# ## SFR package Prudic and others (2004) example
+# # SFR package Prudic and others (2004) example
 # Demonstrates functionality of Flopy SFR module using the example documented by [Prudic and others (2004)](https://doi.org/10.3133/ofr20041042):  
 #
 # #### Problem description:
@@ -258,10 +258,11 @@ im = plt.imshow(sfrQ, interpolation="none")
 plt.colorbar(im, label="Streamflow, in cubic feet per second");
 
 # ## Reading transient SFR formatted output
-# the `SfrFile` class handles this the same way
 #
-# files for the transient version of the above example were already copied to the `data` folder in the third cell above
-# first run the transient model to get the output:
+# The `SfrFile` class handles this the same way
+#
+# Files for the transient version of the above example were already copied to the `data` folder in the third cell above.
+# First run the transient model to get the output:
 # ```
 # >mf2005 test1tr.nam
 # ```

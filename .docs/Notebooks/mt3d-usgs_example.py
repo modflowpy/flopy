@@ -549,7 +549,7 @@ mt.write_input()
 mt.run_model(silent=True, report=True)
 
 
-# # Compare mt3d-usgs results to an analytical solution
+# ## Compare mt3d-usgs results to an analytical solution
 
 # +
 # Define a function to read SFT output file

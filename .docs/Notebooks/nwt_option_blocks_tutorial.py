@@ -64,7 +64,7 @@ ml.change_model_ws(new_pth=model_ws)
 ml.write_input()
 # -
 
-# ## Let's look at the options attribute of the UZF object
+# ### Let's look at the options attribute of the UZF object
 #
 # The `uzf.options` attribute is an `OptionBlock` object. The representation of this object is the option block that will be written to output, which allows the user to easily check to make sure the block has the options they want.
 
@@ -135,7 +135,7 @@ print(uzf3.options)
 print(uzf3.options.block)
 # -
 
-# ## We can also look at the WEL object 
+# ### We can also look at the WEL object 
 
 wel = ml.get_package("WEL")
 wel.options
@@ -169,7 +169,7 @@ wel2.options
 wel2.options.block
 # -
 
-# # Building an OptionBlock from scratch
+# ## Building an OptionBlock from scratch
 #
 # The user can also build an `OptionBlock` object from scratch to add to a `ModflowSfr2`, `ModflowUzf1`, or `ModflowWel` file.
 #
