@@ -20,6 +20,7 @@
 # 
 # The `Mf6Splitter()` class supports Structured, Vertex, and Unstructured Grid models.
 
+import os
 import sys
 
 try:
@@ -40,14 +41,14 @@ from tempfile import TemporaryDirectory
 sys.path.append("../common")
 from notebook_utils import string2geom, geometries
 
-# ## Example 1: spilitting a simple structured grid model
+# # Example 1: splitting a simple structured grid model
 # 
-# This example shows the basics of using the `Mf6Splitter()` class and applies the method to the Freyberg model.
+# This example shows the basics of using the `Mf6Splitter()` class and applies the method to the Freyberg (1988) model.
 
 simulation_ws = Path("../../examples/data/mf6-freyberg")
 sim = flopy.mf6.MFSimulation.load(sim_ws=simulation_ws)
 
-# First, let's create a temporary directory for this example and run the freyberg model.
+# Create a temporary directory for this example and run the Freyberg (1988) model.
 
 temp_dir = TemporaryDirectory()
 workspace = Path(temp_dir.name)
@@ -59,7 +60,7 @@ sim.write_simulation()
 success, buff = sim.run_simulation(silent=True)
 assert success
 
-# And then visualize the head results and boundary conditions from this model.
+# Visualize the head results and boundary conditions from this model.
 
 gwf = sim.get_model()
 head = gwf.output.head().get_alldata()[-1]
@@ -78,9 +79,9 @@ pmv.plot_bc("RIV", color="c")
 pmv.plot_bc("CHD")
 pmv.plot_grid()
 pmv.plot_ibound()
-plt.colorbar(pc)
+plt.colorbar(pc);
 
-# ### Creating an array that defines the new models
+# ## Creating an array that defines the new models
 # 
 # In order to split models, the model domain must be discretized using unique model numbers. Any number of models can be created, however all of the cells within each model must be contiguous.
 # 
@@ -97,7 +98,7 @@ for row in range(modelgrid.nrow):
         ncol += 1
     array[row, ncol:] = 2
 
-# plot the two domains that the model will be split into
+# Plot the two domains that the model will be split into
 
 fig, ax = plt.subplots(figsize=(5, 7))
 pmv = flopy.plot.PlotMapView(gwf, ax=ax)
@@ -126,9 +127,9 @@ new_sim.write_simulation()
 success, buff = new_sim.run_simulation(silent=True)
 assert success
 
-# ### Visualizing and re-assembling model output
+# ## Visualize and reassemble model output
 # 
-# This example will start by visualizing both models side by side
+# Both models are visualized side by side
 
 # +
 # visualizing both models side by side
@@ -165,7 +166,7 @@ cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
 cbar = fig.colorbar(pc, cax=cbar_ax, label="Hydraulic heads");
 # -
 
-# #### Array based model output can be assembled into the original model's shape by using the `reconstruct_array()` method
+# ## Array based model output can be assembled into the original model's shape by using the `reconstruct_array()` method
 # 
 # `reconstruct_array` accepts a dictionary of array data. This data is assembled as {model_number: array_from_model}.
 
@@ -173,9 +174,9 @@ array_dict = {1: heads0, 2: heads1}
 
 new_head_array = mfsplit.reconstruct_array(array_dict)
 
-# #### Recarray based model inputs and outputs can also be assembled into the original model's shape by using the `reconstruct_recarray()` method
+# ## Recarray based model inputs and outputs can also be assembled into the original model's shape by using the `reconstruct_recarray()` method
 # 
-# The code outlined below shows how to join the input recarrays for the WEL, RIV, and CHD package and plot them as boundary condition arrays.
+# The code below demonstratess how to join the input recarrays for the WEL, RIV, and CHD package and plot them as boundary condition arrays.
 
 models = [ml0, ml1]
 
@@ -210,19 +211,20 @@ plt.colorbar(pc)
 plt.show()
 # -
 
-# ## A more comprehensive example with a basin model
+# # Example 2: a more comprehensive example with the watershed model from Hughes and others 2023
 # 
 # In this example, a basin model is created and is split into many models.
+# From Hughes, Joseph D., Langevin, Christian D., Paulinski, Scott R., Larsen, Joshua D., and Brakenhoff, David, 2023, FloPy Workflows for Creating Structured and Unstructured MODFLOW Models: Groundwater, https://doi.org/10.1111/gwat.13327
+#
 # 
+# ## Create the model
 # 
-# ### Creating the model
-# 
-# Start by loading an ASCII raster file
+# Load an ASCII raster file
 
 ascii_file = Path("../../examples/data/geospatial/fine_topo.asc")
 
 fine_topo = flopy.utils.Raster.load(ascii_file)
-fine_topo.plot()
+fine_topo.plot();
 
 # +
 Lx = 180000
@@ -255,9 +257,7 @@ segs = [
 fig = plt.figure(figsize=(8, 8))
 ax = fig.add_subplot()
 ax.set_aspect("equal")
-
 riv_colors = ("blue", "cyan", "green", "orange", "red")
-
 ax.plot(bp[:, 0], bp[:, 1], "ro-")
 for idx, seg in enumerate(segs):
     sa = np.array(seg)
@@ -274,13 +274,12 @@ delr = np.array(ncol * [dx])
 delc = np.array(nrow * [dy])
 top = np.ones((nrow, ncol)) * 1000.0
 botm = np.ones((nlay, nrow, ncol)) * -100.0
-
 modelgrid = flopy.discretization.StructuredGrid(
     nlay=nlay, delr=delr, delc=delc, xoff=0, yoff=0, top=top, botm=botm
 )
 
 
-# Now let's crop the raster, resample it for the top elevation, and then create an ibound array
+# Crop the raster, resample it for the top elevation, and create an ibound array
 
 new_top = fine_topo.resample_to_grid(
     modelgrid,
@@ -304,7 +303,7 @@ modelgrid._idomain = idomain
 modelgrid._top = new_top
 # -
 
-# #### now to intersect the stream segments with the modelgrid
+# Intersect the stream segments with the modelgrid
 
 ixs = flopy.utils.GridIntersect(modelgrid, method="structured")
 cellids = []
@@ -336,17 +335,10 @@ with styles.USGSMap():
         ax.plot(sa[:, 0], sa[:, 1], "b-")
 # -
 
-# #### calculate drain conductance, set simulation options, and begin building model arrays
+# Calculate drain conductance, set simulation options, and begin building model arrays
 
 # +
-newton_options = "NEWTON UNDER_RELAXATION"
-linear_accelerator = "bicgstab"
-outer_maximum = 1000
-rewet_record = None
-wetdry = None
-no_ptc = "ALL"
-
-# set number of model layers to 2
+# Set number of model layers to 2
 nlay = 2
 # -
 
@@ -406,14 +398,15 @@ strt = np.zeros((nlay, nrow, ncol))
 strt[:] = modelgrid.top
 # -
 
-# #### Assemble the example simulation in Flopy
+# Create the watershed model using Flopy
 
 temp_dir = TemporaryDirectory()
-workspace = Path(temp_dir.name)
+workspace = Path(temp_dir.name) / "basin"
 
+# +
 sim = flopy.mf6.MFSimulation(
     sim_name="basin",
-    sim_ws="basin",
+    sim_ws=workspace,
     exe_name="mf6",
 )
 
@@ -422,13 +415,16 @@ ims = flopy.mf6.ModflowIms(
     sim, 
     complexity="simple", 
     print_option="SUMMARY",
-    no_ptcrecord=no_ptc,
-    linear_acceleration=linear_accelerator, 
-    outer_maximum=outer_maximum, inner_maximum=100, 
-    outer_dvclose=1e-5, inner_dvclose=1e-6,
+    linear_acceleration="bicgstab",
+    outer_maximum=1000,
+    inner_maximum=100,
+    outer_dvclose=1e-5,
+    inner_dvclose=1e-6,
 )
 gwf = flopy.mf6.ModflowGwf(
-    sim, save_flows=True, newtonoptions=newton_options
+    sim,
+    save_flows=True,
+    newtonoptions="NEWTON UNDER_RELAXATION",
 )
 
 dis = flopy.mf6.ModflowGwfdis(
@@ -451,8 +447,6 @@ npf = flopy.mf6.ModflowGwfnpf(
     save_specific_discharge=True,
     icelltype=1,
     k=1.0,
-    rewet_record=rewet_record,
-    wetdry=wetdry,
 )
 sto = flopy.mf6.ModflowGwfsto(
     gwf,
@@ -484,6 +478,7 @@ oc = flopy.mf6.ModflowGwfoc(
     saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
     printrecord=[("BUDGET", "ALL")],
 )
+# -
 
 
 # +
@@ -491,6 +486,8 @@ sim.write_simulation()
 success, buff = sim.run_simulation(silent=True)
 assert success
 # -
+
+# Plot the model results
 
 # +
 water_table = flopy.utils.postprocessing.get_water_table(gwf.output.head().get_data())
@@ -520,9 +517,9 @@ with styles.USGSMap():
         ax.plot(sa[:, 0], sa[:, 1], "b-")
 # -
 
-# ## Now to split this model:
+# ## Split the watershed model
 # 
-# In this example we'll build a splitting array and split this model into many models for parallel modflow runs
+# Build a splitting array and split this model into many models for parallel modflow runs
 
 nrow_blocks, ncol_blocks = 2, 4
 row_inc, col_inc = int(nrow/nrow_blocks), int(ncol/ncol_blocks)
@@ -567,10 +564,10 @@ for idx in range(len(row_blocks)-1):
 # -
 
 # +
-plt.imshow(mask)
+plt.imshow(mask);
 # -
 
-# ### Now to split the model into many models using `Mf6Splitter()`
+# ## Now split the model into many models using `Mf6Splitter()`
 
 mfsplit = Mf6Splitter(sim)
 new_sim = mfsplit.split_model(mask)
@@ -584,9 +581,9 @@ success, buff = new_sim.run_simulation(silent=True)
 assert success
 # -
 
-# ### reassemble the heads to the original model shape for plotting
+# ## Reassemble the heads to the original model shape for plotting
 # 
-# create a dictionary of model number : heads and use the `reconstruct_array()` method to get a numpy array that is the original shape of the unsplit model.
+# Create a dictionary of model number : heads and use the `reconstruct_array()` method to get a numpy array that is the original shape of the unsplit model.
 
 model_names = list(new_sim.model_names)
 head_dict = {}
@@ -612,17 +609,21 @@ with styles.USGSMap():
             levels = contours
             vmin = hmin
             vmax = hmax
-            masked_values=None
         else:
             levels = None
             vmin = None
             vmax = None
-            masked_values=[0.0,]
-            
-        pmv = flopy.plot.PlotMapView(modelgrid=gwf.modelgrid, ax=ax, layer=0) #, extent=extent)
-        h = pmv.plot_array(hv[idx], vmin=vmin, vmax=vmax, masked_values=masked_values)
+
+        pmv = flopy.plot.PlotMapView(modelgrid=gwf.modelgrid, ax=ax, layer=0)
+        h = pmv.plot_array(hv[idx], vmin=vmin, vmax=vmax)
         if levels is not None:
-            c = pmv.contour_array(hv[idx], levels=levels, colors="white", linewidths=0.75, linestyles=":")
+            c = pmv.contour_array(
+                hv[idx],
+                levels=levels,
+                colors="white",
+                linewidths=0.75,
+                linestyles=":",
+            )
             plt.clabel(c, fontsize=8)
         pmv.plot_inactive()
         plt.colorbar(h, ax=ax, shrink=0.5)
@@ -633,14 +634,14 @@ with styles.USGSMap():
             ax.plot(sa[:, 0], sa[:, 1], "b-")
 # -
 
-# ## Create an optimized splitting mask for a model
+# # Example 3: create an optimized splitting mask for a model
 # 
-# In the previous examples the model splitting mask was defined by the user. `Mf6Splitter` also has a method called `optimize_splitting_mask` that creates a mask based on the number of models the user would like to generate.
+# In the previous examples, the watershed model splitting mask was defined by the user. `Mf6Splitter` also has a method called `optimize_splitting_mask` that creates a mask based on the number of models the user would like to generate.
 # 
 # The `optimize_splitting_mask()` method generates a vertex weighted adjacency graph, based on the number active and inactive nodes in all layers of the model. This adjacency graph is then provided to `pymetis` which does the work for us and returns a membership array for each node.
 
 # +
-# let's split the basin model into many models
+# Split the watershed model into many models
 split_array = mfsplit.optimize_splitting_mask(nparts=8)
 
 with styles.USGSMap():
@@ -659,7 +660,7 @@ success, buff = new_sim.run_simulation(silent=True)
 assert success
 # -
 
-# ### reassamble the heads and plot results
+# ## Reassemble the heads and plot results
 
 model_names = list(new_sim.model_names)
 head_dict = {}
@@ -685,17 +686,21 @@ with styles.USGSMap():
             levels = contours
             vmin = hmin
             vmax = hmax
-            masked_values=None
         else:
             levels = None
             vmin = None
             vmax = None
-            masked_values=[0.0,]
-            
-        pmv = flopy.plot.PlotMapView(modelgrid=gwf.modelgrid, ax=ax, layer=0) #, extent=extent)
-        h = pmv.plot_array(hv[idx], vmin=vmin, vmax=vmax, masked_values=masked_values)
+
+        pmv = flopy.plot.PlotMapView(modelgrid=gwf.modelgrid, ax=ax, layer=0)
+        h = pmv.plot_array(hv[idx], vmin=vmin, vmax=vmax)
         if levels is not None:
-            c = pmv.contour_array(hv[idx], levels=levels, colors="white", linewidths=0.75, linestyles=":")
+            c = pmv.contour_array(
+                hv[idx],
+                levels=levels,
+                colors="white",
+                linewidths=0.75,
+                linestyles=":",
+            )
             plt.clabel(c, fontsize=8)
         pmv.plot_inactive()
         plt.colorbar(h, ax=ax, shrink=0.5)

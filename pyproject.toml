@@ -64,6 +64,7 @@ optional = [
     "imageio",
     "netcdf4",
     "pandas",
+    "pymetis ; platform_system != 'Windows'",
     "pyproj",
     "pyshp",
     "python-dateutil >=2.4.0",
