@@ -335,7 +335,7 @@ plt.colorbar(ax, shrink=0.7);
 
 # __Note: bi-cubic sampling does not work well with triangular meshes and is not recommended for unstructured grids__
 
-# # Sampling points, Cropping, and performing intersections using raster data
+# ## Sampling points, Cropping, and performing intersections using raster data
 #
 # The `Raster` class contains useful methods for sampling single points, cross sections, cropping and performing intersections.
 #
@@ -378,7 +378,7 @@ ax.set_title("Elevation profile")
 df.head()
 # -
 
-# ### Sampling all points within a polygon in the raster
+# ## Sampling all points within a polygon in the raster
 #
 # The user can also sample all points within an arbitrary polygon within the raster using the `sample_polygon()` method.
 #
@@ -415,7 +415,7 @@ s = "Minimum elevation: {:.2f}\nMaximum elevation: {:.2f}\nMean elevation: {:.2f
 print(s.format(dmin, dmax, mean, stdv))
 # -
 
-# ### Cropping and resampling to a modelgrid
+# ## Cropping and resampling to a modelgrid
 #
 # The `crop()` method can accept a `list` or `np.array` of vertices, a shapely `Polygon` object, or a GeoJSON dictionary
 #
@@ -488,7 +488,7 @@ plt.title("Resample time, bi-linear: {:.3f} sec".format(resample_time))
 plt.colorbar(ax, shrink=0.7);
 # -
 
-# ### Here's an example of loading an arbitrary shape that will be used to define a model boundary
+# ## Arbitrary-shaped model boundaries
 #
 # In the example pyshp and shapely are used to get geometry information and then we create a top array and an ibound array using that geometry information
 #

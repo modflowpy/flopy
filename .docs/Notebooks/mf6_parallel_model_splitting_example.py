@@ -41,7 +41,7 @@ from tempfile import TemporaryDirectory
 sys.path.append("../common")
 from notebook_utils import string2geom, geometries
 
-# # Example 1: splitting a simple structured grid model
+# ## Example 1: splitting a simple structured grid model
 # 
 # This example shows the basics of using the `Mf6Splitter()` class and applies the method to the Freyberg (1988) model.
 
@@ -81,7 +81,7 @@ pmv.plot_grid()
 pmv.plot_ibound()
 plt.colorbar(pc);
 
-# ## Creating an array that defines the new models
+# ### Creating an array that defines the new models
 # 
 # In order to split models, the model domain must be discretized using unique model numbers. Any number of models can be created, however all of the cells within each model must be contiguous.
 # 
@@ -107,7 +107,7 @@ lc = pmv.plot_grid()
 plt.colorbar(pc)
 plt.show()
 
-# ## Splitting the model using `Mf6Splitter()`
+# ### Splitting the model using `Mf6Splitter()`
 # 
 # The `Mf6Splitter()` class accepts one required parameter and one optional parameter. These parameters are:
 #    - `sim`: A flopy.mf6.MFSimulation object
@@ -127,7 +127,7 @@ new_sim.write_simulation()
 success, buff = new_sim.run_simulation(silent=True)
 assert success
 
-# ## Visualize and reassemble model output
+# ### Visualize and reassemble model output
 # 
 # Both models are visualized side by side
 
@@ -166,7 +166,7 @@ cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
 cbar = fig.colorbar(pc, cax=cbar_ax, label="Hydraulic heads");
 # -
 
-# ## Array based model output can be assembled into the original model's shape by using the `reconstruct_array()` method
+# ### Array based model output can be assembled into the original model's shape by using the `reconstruct_array()` method
 # 
 # `reconstruct_array` accepts a dictionary of array data. This data is assembled as {model_number: array_from_model}.
 
@@ -174,7 +174,7 @@ array_dict = {1: heads0, 2: heads1}
 
 new_head_array = mfsplit.reconstruct_array(array_dict)
 
-# ## Recarray based model inputs and outputs can also be assembled into the original model's shape by using the `reconstruct_recarray()` method
+# ### Recarray based model inputs and outputs can also be assembled into the original model's shape by using the `reconstruct_recarray()` method
 # 
 # The code below demonstratess how to join the input recarrays for the WEL, RIV, and CHD package and plot them as boundary condition arrays.
 
@@ -211,13 +211,13 @@ plt.colorbar(pc)
 plt.show()
 # -
 
-# # Example 2: a more comprehensive example with the watershed model from Hughes and others 2023
+# ## Example 2: a more comprehensive example with the watershed model from Hughes and others 2023
 # 
 # In this example, a basin model is created and is split into many models.
 # From Hughes, Joseph D., Langevin, Christian D., Paulinski, Scott R., Larsen, Joshua D., and Brakenhoff, David, 2023, FloPy Workflows for Creating Structured and Unstructured MODFLOW Models: Groundwater, https://doi.org/10.1111/gwat.13327
 #
 # 
-# ## Create the model
+# ### Create the model
 # 
 # Load an ASCII raster file
 
@@ -517,7 +517,7 @@ with styles.USGSMap():
         ax.plot(sa[:, 0], sa[:, 1], "b-")
 # -
 
-# ## Split the watershed model
+# ### Split the watershed model
 # 
 # Build a splitting array and split this model into many models for parallel modflow runs
 
@@ -567,7 +567,7 @@ for idx in range(len(row_blocks)-1):
 plt.imshow(mask);
 # -
 
-# ## Now split the model into many models using `Mf6Splitter()`
+# ### Now split the model into many models using `Mf6Splitter()`
 
 mfsplit = Mf6Splitter(sim)
 new_sim = mfsplit.split_model(mask)
@@ -581,7 +581,7 @@ success, buff = new_sim.run_simulation(silent=True)
 assert success
 # -
 
-# ## Reassemble the heads to the original model shape for plotting
+# ### Reassemble the heads to the original model shape for plotting
 # 
 # Create a dictionary of model number : heads and use the `reconstruct_array()` method to get a numpy array that is the original shape of the unsplit model.
 
@@ -634,7 +634,7 @@ with styles.USGSMap():
             ax.plot(sa[:, 0], sa[:, 1], "b-")
 # -
 
-# # Example 3: create an optimized splitting mask for a model
+# ## Example 3: create an optimized splitting mask for a model
 # 
 # In the previous examples, the watershed model splitting mask was defined by the user. `Mf6Splitter` also has a method called `optimize_splitting_mask` that creates a mask based on the number of models the user would like to generate.
 # 
@@ -660,7 +660,7 @@ success, buff = new_sim.run_simulation(silent=True)
 assert success
 # -
 
-# ## Reassemble the heads and plot results
+# ### Reassemble the heads and plot results
 
 model_names = list(new_sim.model_names)
 head_dict = {}

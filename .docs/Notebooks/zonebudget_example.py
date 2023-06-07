@@ -230,7 +230,7 @@ df = zb.get_dataframes(
 df.head(6)
 
 
-# ## Plot Budget Components
+# ### Plot Budget Components
 # The following is a function that can be used to better visualize the budget components using matplotlib.
 
 # +
@@ -341,7 +341,7 @@ plt.tight_layout()
 plt.show()
 # -
 
-# # Zonebudget for Modflow 6 (`ZoneBudget6`)
+# ## Zonebudget for Modflow 6 (`ZoneBudget6`)
 #
 # This section shows how to build and run a Zonebudget when working with a MODFLOW 6 model. 
 #

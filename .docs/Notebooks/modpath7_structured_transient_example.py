@@ -283,7 +283,7 @@ add_legend(ax)
 plt.show()
 # -
 
-# # Running the simulation
+# ## Running the simulation
 #
 # Run the MODFLOW 6 flow simulation.
 
