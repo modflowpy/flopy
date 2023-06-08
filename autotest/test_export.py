@@ -1378,7 +1378,8 @@ def test_vtk_unstructured(function_tmpdir, example_data_path):
 def test_vtk_to_pyvista(function_tmpdir, example_data_path):
     from autotest.test_mp7_cases import Mp7Cases
 
-    case_mf6 = Mp7Cases.mf6(function_tmpdir)
+    case_mf6 = Mp7Cases.mp7_mf6(function_tmpdir)
+    case_mf6.write_input()
     success, buff = case_mf6.run_model()
     assert success, f"MP7 model ({case_mf6.name}) failed"
 
