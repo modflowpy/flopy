@@ -642,6 +642,7 @@ with styles.USGSMap():
 
 # +
 # Split the watershed model into many models
+mfsplit = Mf6Splitter(sim)
 split_array = mfsplit.optimize_splitting_mask(nparts=8)
 
 with styles.USGSMap():
@@ -653,6 +654,11 @@ with styles.USGSMap():
 # -
 
 # +
+new_sim = mfsplit.split_model(split_array)
+
+temp_dir = TemporaryDirectory()
+workspace = Path("temp")
+
 new_ws = workspace / "opt_split_models"
 new_sim.set_sim_path(new_ws)
 new_sim.write_simulation()

@@ -8,6 +8,11 @@ from ...utils import import_optional_dependency
 from ..data import mfdataarray, mfdatalist, mfdatascalar
 from ..mfbase import PackageContainer
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
 OBS_ID1_LUT = {
     "gwf": "cellid",
     "csub": {
@@ -238,6 +243,44 @@ class Mf6Splitter(object):
         """
         return self._modelgrid
 
+    def save_node_mapping(self, filename):
+        """
+        Method to save the Mf6Splitter's node mapping to file for
+        use in reconstructing arrays
+
+        Parameters
+        ----------
+        filename : str, Path
+            JSON file name
+
+        Returns
+        -------
+            None
+        """
+        node_map = {
+            int(k): (int(v[0]), int(v[1])) for k, v in self._node_map.items()
+        }
+        json_dict = {"node_map": node_map}
+        with open(filename, "w") as foo:
+            json.dump(json_dict, foo, indent=4)
+
+    def load_node_mapping(self, filename):
+        """
+        Method to load a saved json node mapping file
+
+        Parameters
+        ----------
+        filename : str, Path
+            JSON file name
+
+        """
+        with open(filename) as foo:
+            json_dict = json.load(foo)
+            node_map = {
+                int(k): tuple(v) for k, v in json_dict["node_map"].items()
+            }
+            self._node_map = node_map
+
     def optimize_splitting_mask(self, nparts):
         """
         Method to create a splitting array with a balanced number of active
@@ -269,16 +312,54 @@ class Mf6Splitter(object):
             shape = self._modelgrid.shape
         idomain = self._modelgrid.idomain
         idomain = idomain.reshape(nlay, ncpl)
+        adv_pkg_weights = np.zeros((ncpl,), dtype=int)
+        lak_array = np.zeros((ncpl,), dtype=int)
+        laks = []
+        for _, package in self._model.package_dict.items():
+            if isinstance(
+                package,
+                (
+                    modflow.ModflowGwfsfr,
+                    modflow.ModflowGwfuzf,
+                    modflow.ModflowGwflak,
+                ),
+            ):
+                if isinstance(package, modflow.ModflowGwflak):
+                    cellids = package.connectiondata.array.cellid
+                else:
+                    cellids = package.packagedata.array.cellid
+                if self._modelgrid.grid_type == "structured":
+                    cellids = [(0, i[1], i[2]) for i in cellids]
+                    nodes = self._modelgrid.get_node(cellids)
+                elif self._modelgrid.grid_type == "vertex":
+                    nodes = [i[1] for i in cellids]
+                else:
+                    nodes = [i[0] for i in cellids]
+
+                if isinstance(package, modflow.ModflowGwflak):
+                    lakenos = package.connectiondata.array.lakeno + 1
+                    lak_array[nodes] = lakenos
+                    laks += [i for i in np.unique(lakenos)]
+                else:
+                    adv_pkg_weights[nodes] += 1
+
         for nn, neighbors in self._modelgrid.neighbors().items():
             weight = np.count_nonzero(idomain[:, nn])
-            weights.append(weight)
+            adv_weight = adv_pkg_weights[nn]
+            weights.append(weight + adv_weight)
             graph.append(np.array(neighbors, dtype=int))
 
         n_cuts, membership = pymetis.part_graph(
             nparts, adjacency=graph, vweights=weights
         )
-        mask = np.array(membership, dtype=int).reshape(shape)
-        return mask
+        membership = np.array(membership, dtype=int)
+        if laks:
+            for lak in laks:
+                idx = np.where(lak_array == lak)[0]
+                mnum = np.unique(membership[idx])[0]
+                membership[idx] = mnum
+
+        return membership.reshape(shape)
 
     def reconstruct_array(self, arrays):
         """
@@ -292,22 +373,22 @@ class Mf6Splitter(object):
         -------
             np.ndarray of original model shape
         """
-        mkey = list(arrays.keys())[0]
-        test_arr = arrays[mkey].ravel()
-        if test_arr.size == self._model_dict[mkey].modelgrid.size:
-            nlay = self._modelgrid.nlay
-            shape = self._modelgrid.shape
-
-        elif test_arr.size == self._model_dict[mkey].modelgrid.ncpl:
-            nlay = 1
-            if self._modelgrid.grid_type in ("structured", "vertex"):
-                shape = self._modelgrid.shape[1:]
+        for ix, mkey in enumerate(arrays.keys()):
+            model = self._model_dict[mkey]
+            array = arrays[mkey]
+            if ix == 0:
+                nlay, shape = self._get_nlay_shape_models(model, array)
             else:
-                shape = self._modelgrid.shape
-        else:
-            raise AssertionError("Arrays are not the proper size")
+                nlay1, shape1 = self._get_nlay_shape_models(model, array)
 
-        new_array = np.zeros(shape, dtype=test_arr.dtype)
+                if shape != shape1:
+                    raise AssertionError(
+                        f"Supplied array for model {mkey} is not "
+                        f"consistent with output shape: {shape}"
+                    )
+
+        dtype = arrays[list(arrays.keys())[0]].dtype
+        new_array = np.zeros(shape, dtype=dtype)
         new_array = new_array.ravel()
         oncpl = self._modelgrid.ncpl
 
@@ -436,6 +517,36 @@ class Mf6Splitter(object):
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
 
         return bc_array, {"cmap": cmap, "norm": norm}
+
+    def _get_nlay_shape_models(self, model, array):
+        """
+        Method to assert user provided arrays are either ncpl or nnodes
+
+        Parameters
+        ----------
+        model : flopy.mf6.MFModel
+            Modflow model instance
+        array : np.ndarray
+            Array of model data
+
+        Returns
+        -------
+            tuple : (nlay, grid_shape)
+        """
+        if array.size == model.modelgrid.size:
+            nlay = self._modelgrid.nlay
+            shape = self._modelgrid.shape
+
+        elif array.size == model.modelgrid.ncpl:
+            nlay = 1
+            if self._modelgrid.grid_type in ("structured", "vertex"):
+                shape = self._modelgrid.shape[1:]
+            else:
+                shape = self._modelgrid.shape
+        else:
+            raise AssertionError("Array is not of size ncpl or nnodes")
+
+        return nlay, shape
 
     def _remap_nodes(self, array):
         """
@@ -802,9 +913,12 @@ class Mf6Splitter(object):
             else:
                 value = value[0][0]
                 for mdl in mapped_data.keys():
-                    new_val = value.split(".")
-                    new_val = f"{'.'.join(new_val[0:-1])}_{mdl}.{new_val[-1]}"
-                    mapped_data[mdl][item] = new_val
+                    if mapped_data[mdl]:
+                        new_val = value.split(".")
+                        new_val = (
+                            f"{'.'.join(new_val[0:-1])}_{mdl}.{new_val[-1]}"
+                        )
+                        mapped_data[mdl][item] = new_val
         return mapped_data
 
     def _remap_disu(self, mapped_data):
@@ -2572,19 +2686,21 @@ class Mf6Splitter(object):
                     continue
 
                 for mkey in mapped_data.keys():
-                    if isinstance(value, mfdatascalar.MFScalar):
-                        mapped_data[mkey][item] = value.data
-                    elif isinstance(value, mfdatalist.MFList):
-                        mapped_data[mkey][item] = value.array
+                    if mapped_data[mkey]:
+                        if isinstance(value, mfdatascalar.MFScalar):
+                            mapped_data[mkey][item] = value.data
+                        elif isinstance(value, mfdatalist.MFList):
+                            mapped_data[mkey][item] = value.array
 
         pak_cls = PackageContainer.package_factory(
             package.package_type, self._model_type
         )
         paks = {}
         for mdl, data in mapped_data.items():
-            paks[mdl] = pak_cls(
-                self._model_dict[mdl], pname=package.name[0], **data
-            )
+            if mapped_data[mdl]:
+                paks[mdl] = pak_cls(
+                    self._model_dict[mdl], pname=package.name[0], **data
+                )
 
         if observations is not None:
             for mdl, data in observations.items():
@@ -2824,6 +2940,7 @@ class Mf6Splitter(object):
                                 maxpackages=len(packages),
                                 packages=packages,
                                 perioddata=mvr_data,
+                                filename=f"{mname0}_{mname1}.mvr",
                             )
 
                         d[f"{mname0}_{mname1}_mvr"] = exchg
