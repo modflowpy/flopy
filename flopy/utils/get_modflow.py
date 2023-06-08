@@ -577,7 +577,7 @@ def run_main(
         for fpath in extract:
             fpath = Path(fpath)
             bindir_path = bindir / fpath
-            bindir_path.rename(bindir / fpath.name)
+            bindir_path.replace(bindir / fpath.name)
             rmdirs.add(fpath.parent)
         # clean up directories, starting with the longest
         for rmdir in reversed(sorted(rmdirs)):
