@@ -8,7 +8,7 @@ import numpy as np
 
 from ..discretization import StructuredGrid
 from ..export.shapefile_utils import shp2recarray
-from ..mbase import which
+from ..mbase import resolve_exe
 from ..mf6.modflow import ModflowGwfdis
 from ..mfusg.mfusgdisu import MfUsgDisU
 from ..modflow import ModflowDis
@@ -250,10 +250,7 @@ class Gridgen:
         self.nodelay = np.zeros((self.nlay,), dtype=int)
         self._vertdict = {}
         self.model_ws = Path(model_ws).expanduser().absolute()
-        exe_name = which(exe_name)
-        if exe_name is None:
-            raise Exception("Cannot find gridgen binary executable")
-        self.exe_name = os.path.abspath(exe_name)
+        self.exe_name = resolve_exe(exe_name)
 
         # Set default surface interpolation for all surfaces (nlay + 1)
         surface_interpolation = surface_interpolation.upper()
