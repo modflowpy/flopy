@@ -1464,6 +1464,7 @@ class Mf6Splitter(object):
                 idx = np.where(new_model == mkey)[0]
                 if len(idx) == 0:
                     new_recarray = None
+                    continue
                 else:
                     new_recarray = packagedata[idx]
 
@@ -1648,6 +1649,8 @@ class Mf6Splitter(object):
 
             if mvr_recs:
                 for mkey in self._model_dict.keys():
+                    if not mapped_data[mkey]:
+                        continue
                     mapped_data[mkey]["mover"] = True
                 for per in range(self._model.nper):
                     if per in self._sim_mover_data:
