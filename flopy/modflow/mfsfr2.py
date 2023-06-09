@@ -990,7 +990,7 @@ class ModflowSfr2(Package):
             if tabfiles and i == 0:
                 for j in range(numtab):
                     segnum, numval, iunit = map(
-                        int, f.readline().strip().split()
+                        int, f.readline().strip().split()[:3]
                     )
                     tabfiles_dict[segnum] = {"numval": numval, "inuit": iunit}
 
