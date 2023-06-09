@@ -1,4 +1,5 @@
 import inspect
+import json
 
 import numpy as np
 
@@ -7,11 +8,6 @@ from ...plot import plotutil
 from ...utils import import_optional_dependency
 from ..data import mfdataarray, mfdatalist, mfdatascalar
 from ..mfbase import PackageContainer
-
-try:
-    import simplejson as json
-except ImportError:
-    import json
 
 OBS_ID1_LUT = {
     "gwf": "cellid",
