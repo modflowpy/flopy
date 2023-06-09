@@ -63,7 +63,7 @@ jobs:
           python -c "import flopy; print(f'FloPy version: {flopy.__version__}')"
           echo "version=${ver#"v"}" >> $GITHUB_OUTPUT
 
-      - name: Update FloPy plugins
+      - name: Update FloPy packages
         run: python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="master", backup=False)'
 
       - name: Lint Python files
