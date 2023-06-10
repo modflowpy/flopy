@@ -153,3 +153,73 @@ def test_model_with_lak_sfr_mvr(function_tmpdir):
 
     err_msg = "Heads from original and split models do not match"
     np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
+
+
+@requires_exe("mf6")
+def test_metis_splitting_with_lak_sfr(function_tmpdir):
+    sim_path = get_example_data_path() / "mf6" / "test045_lake2tr"
+
+    sim = MFSimulation.load(sim_ws=sim_path)
+    sim.set_sim_path(function_tmpdir)
+    sim.write_simulation()
+    sim.run_simulation()
+
+    gwf = sim.get_model()
+
+    mfsplit = Mf6Splitter(sim)
+    array = mfsplit.optimize_splitting_mask(nparts=4)
+
+    cellids = sim.get_model().lak.connectiondata.array.cellid
+    cellids = [(i[1], i[2]) for i in cellids]
+    cellids = tuple(zip(*cellids))
+    lak_test = np.unique(array[cellids])
+    if len(lak_test) > 2:
+        raise AssertionError(
+            "optimize_splitting_mask is not correcting for lakes properly"
+        )
+
+    new_sim = mfsplit.split_model(array)
+    new_sim.set_sim_path(function_tmpdir / "split_model")
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+
+    original_heads = gwf.output.head().get_alldata()[-1]
+
+    array_dict = {}
+    for model in range(4):
+        ml = new_sim.get_model(f"lakeex2a_{model}")
+        heads0 = ml.output.head().get_alldata()[-1]
+        array_dict[model] = heads0
+
+    new_heads = mfsplit.reconstruct_array(array_dict)
+
+    err_msg = "Heads from original and split models do not match"
+    np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
+
+
+def test_save_load_node_mapping(function_tmpdir):
+    sim_path = get_example_data_path() / "mf6-freyberg"
+    json_file = sim_path / "node_map.json"
+
+    sim = MFSimulation.load(sim_ws=sim_path)
+    sim.set_sim_path(function_tmpdir)
+    sim.write_simulation()
+
+    mfsplit = Mf6Splitter(sim)
+    array = mfsplit.optimize_splitting_mask(nparts=5)
+    new_sim = mfsplit.split_model(array)
+    mfsplit.save_node_mapping(json_file)
+
+    original_node_map = mfsplit._node_map
+
+    mfsplit2 = Mf6Splitter(sim)
+    mfsplit2.load_node_mapping(json_file)
+
+    saved_node_map = mfsplit2._node_map
+
+    for k, v1 in original_node_map.items():
+        v2 = saved_node_map[k]
+        if not v1 == v2:
+            raise AssertionError(
+                "Node map read/write not returning proper values"
+            )
