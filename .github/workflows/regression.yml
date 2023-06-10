@@ -60,8 +60,22 @@ jobs:
           pip install xmipy
           pip install .
 
-      - name: Install Modflow executables
+      - name: Install Modflow-related executables
         uses: modflowpy/install-modflow-action@v1
+
+      - name: Install Modflow dev build executables
+        uses: modflowpy/install-modflow-action@v1
+        with:
+          repo: modflow6-nightly-build
+
+      - name: Update FloPy packages
+        if: runner.os != 'Windows'
+        run: python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="develop", backup=False)'
+
+      - name: Update FloPy packages
+        if: runner.os == 'Windows'
+        shell: bash -l {0}
+        run: python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="develop", backup=False)'
 
       - name: Run regression tests
         if: runner.os != 'Windows'
