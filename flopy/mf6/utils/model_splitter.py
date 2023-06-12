@@ -161,6 +161,7 @@ class Mf6Splitter(object):
         self._lak_remaps = {}
         self._sfr_remaps = {}
         self._maw_remaps = {}
+        self._allow_splitting = True
 
     @property
     def new_simulation(self):
@@ -260,22 +261,33 @@ class Mf6Splitter(object):
         with open(filename, "w") as foo:
             json.dump(json_dict, foo, indent=4)
 
-    def load_node_mapping(self, filename):
+    def load_node_mapping(self, sim, filename):
         """
-        Method to load a saved json node mapping file
+        Method to load a saved json node mapping file and populate mapping
+        dictionaries for reconstructing arrays and recarrays
 
         Parameters
         ----------
+        sim : flopy.mf6.MFSimulation
+            MFSimulation instance with split models
         filename : str, Path
             JSON file name
 
         """
+        modelnames = sim.model_names
+        self._model_dict = {}
+        for modelname in modelnames:
+            mkey = int(modelname.split("_")[-1])
+            self._model_dict[mkey] = modelname
+
         with open(filename) as foo:
             json_dict = json.load(foo)
             node_map = {
                 int(k): tuple(v) for k, v in json_dict["node_map"].items()
             }
             self._node_map = node_map
+
+        self._allow_splitting = False
 
     def optimize_splitting_mask(self, nparts):
         """
@@ -2963,6 +2975,12 @@ class Mf6Splitter(object):
         -------
             MFSimulation object
         """
+        if not self._allow_splitting:
+            raise AssertionError(
+                "Mf6Splitter cannot split a model that "
+                "is part of a split simulation"
+            )
+
         self._remap_nodes(array)
 
         if self._new_sim is None:
