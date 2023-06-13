@@ -136,6 +136,12 @@ class Mf6Splitter(object):
         if self._model_type.endswith("6"):
             self._model_type = self._model_type[:-1]
         self._modelgrid = self._model.modelgrid
+        if self._modelgrid.grid_type in ("structured", "vertex"):
+            self._ncpl = self._modelgrid.ncpl
+        else:
+            self._ncpl = self._modelgrid.nnodes
+        self._shape = self._modelgrid.shape
+        self._grid_type = self._modelgrid.grid_type
         self._node_map = {}
         self._node_map_r = {}
         self._new_connections = None
@@ -161,6 +167,7 @@ class Mf6Splitter(object):
         self._lak_remaps = {}
         self._sfr_remaps = {}
         self._maw_remaps = {}
+        self._allow_splitting = True
 
     @property
     def new_simulation(self):
@@ -256,26 +263,71 @@ class Mf6Splitter(object):
         node_map = {
             int(k): (int(v[0]), int(v[1])) for k, v in self._node_map.items()
         }
-        json_dict = {"node_map": node_map}
+        json_dict = {
+            "node_map": node_map,
+            "original_ncpl": self._ncpl,
+            "shape": self._shape,
+            "grid_type": self._grid_type,
+        }
         with open(filename, "w") as foo:
             json.dump(json_dict, foo, indent=4)
 
-    def load_node_mapping(self, filename):
+    def load_node_mapping(self, sim, filename):
         """
-        Method to load a saved json node mapping file
+        Method to load a saved json node mapping file and populate mapping
+        dictionaries for reconstructing arrays and recarrays
 
         Parameters
         ----------
+        sim : flopy.mf6.MFSimulation
+            MFSimulation instance with split models
         filename : str, Path
             JSON file name
 
         """
+        modelnames = sim.model_names
+        self._model_dict = {}
+        self._new_ncpl = {}
+        for modelname in modelnames:
+            mkey = int(modelname.split("_")[-1])
+            model = sim.get_model(modelname)
+            self._model_dict[mkey] = model
+            self._new_ncpl[mkey] = model.modelgrid.ncpl
+
         with open(filename) as foo:
             json_dict = json.load(foo)
+            oncpl = json_dict.pop("original_ncpl")
+            shape = json_dict.pop("shape")
+            grid_type = json_dict.pop("grid_type")
             node_map = {
                 int(k): tuple(v) for k, v in json_dict["node_map"].items()
             }
+
+            split_array = np.zeros((oncpl,), dtype=int)
+            model_array = np.zeros((oncpl,), dtype=int)
+            for k, v in json_dict["node_map"].items():
+                k = int(k)
+                model_array[k] = v[0]
+                split_array[k] = v[1]
+
+            grid_info = {}
+            models = sorted(np.unique(model_array))
+            for mkey in models:
+                ncpl = self._new_ncpl[mkey]
+                array = np.full((ncpl,), -1, dtype=int)
+                onode = np.where(model_array == mkey)[0]
+                nnode = split_array[onode]
+                array[nnode] = onode
+                grid_info[mkey] = (array,)
+
+            self._grid_info = grid_info
+            self._ncpl = oncpl
+            self._shape = shape
+            self._grid_type = grid_type
             self._node_map = node_map
+            self._modelgrid = None
+
+        self._allow_splitting = False
 
     def optimize_splitting_mask(self, nparts):
         """
@@ -377,7 +429,7 @@ class Mf6Splitter(object):
             else:
                 nlay1, shape1 = self._get_nlay_shape_models(model, array)
 
-                if shape != shape1:
+                if shape != shape1 and nlay != nlay1:
                     raise AssertionError(
                         f"Supplied array for model {mkey} is not "
                         f"consistent with output shape: {shape}"
@@ -386,7 +438,7 @@ class Mf6Splitter(object):
         dtype = arrays[list(arrays.keys())[0]].dtype
         new_array = np.zeros(shape, dtype=dtype)
         new_array = new_array.ravel()
-        oncpl = self._modelgrid.ncpl
+        oncpl = self._ncpl
 
         for mkey, array in arrays.items():
             array = array.ravel()
@@ -443,9 +495,9 @@ class Mf6Splitter(object):
             remapper = self.reversed_node_map[mkey]
             orec = recarray.copy()
             modelgrid = self._model_dict[mkey].modelgrid
-            if self._modelgrid.grid_type in ("structured", "vertex"):
+            if self._grid_type in ("structured", "vertex"):
                 layer = [i[0] for i in orec.cellid]
-                if self._modelgrid.grid_type == "structured":
+                if self._grid_type == "structured":
                     cellid = [(0, i[1], i[2]) for i in orec.cellid]
                     node = modelgrid.get_node(cellid)
                 else:
@@ -456,7 +508,12 @@ class Mf6Splitter(object):
             new_node = [remapper[i] for i in node if i in remapper]
 
             if modelgrid.grid_type == "structured":
-                new_cellid = self._modelgrid.get_lrc(new_node)
+                if self._modelgrid is None:
+                    new_cellid = list(
+                        zip(*np.unravel_index(new_node, self._shape))
+                    )
+                else:
+                    new_cellid = self._modelgrid.get_lrc(new_node)
                 new_cellid = [
                     (layer[ix], i[1], i[2]) for ix, i in enumerate(new_cellid)
                 ]
@@ -530,15 +587,15 @@ class Mf6Splitter(object):
             tuple : (nlay, grid_shape)
         """
         if array.size == model.modelgrid.size:
-            nlay = self._modelgrid.nlay
-            shape = self._modelgrid.shape
+            nlay = model.modelgrid.nlay
+            shape = self._shape
 
         elif array.size == model.modelgrid.ncpl:
             nlay = 1
             if self._modelgrid.grid_type in ("structured", "vertex"):
-                shape = self._modelgrid.shape[1:]
+                shape = self._shape[1:]
             else:
-                shape = self._modelgrid.shape
+                shape = self._shape
         else:
             raise AssertionError("Array is not of size ncpl or nnodes")
 
@@ -2963,6 +3020,12 @@ class Mf6Splitter(object):
         -------
             MFSimulation object
         """
+        if not self._allow_splitting:
+            raise AssertionError(
+                "Mf6Splitter cannot split a model that "
+                "is part of a split simulation"
+            )
+
         self._remap_nodes(array)
 
         if self._new_sim is None:

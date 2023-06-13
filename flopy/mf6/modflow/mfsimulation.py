@@ -641,7 +641,7 @@ class MFSimulation(PackageContainer):
             list: list of model names
 
         """
-        return self._models.keys()
+        return list(self._models.keys())
 
     @property
     def exchange_files(self):

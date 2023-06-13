@@ -197,24 +197,34 @@ def test_metis_splitting_with_lak_sfr(function_tmpdir):
     np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
 
 
+@requires_exe("mf6")
 def test_save_load_node_mapping(function_tmpdir):
     sim_path = get_example_data_path() / "mf6-freyberg"
-    json_file = sim_path / "node_map.json"
+    new_sim_path = sim_path / "split_model"
+    json_file = new_sim_path / "node_map.json"
+    nparts = 5
 
     sim = MFSimulation.load(sim_ws=sim_path)
     sim.set_sim_path(function_tmpdir)
     sim.write_simulation()
+    sim.run_simulation()
+
+    original_heads = sim.get_model().output.head().get_alldata()[-1]
 
     mfsplit = Mf6Splitter(sim)
-    array = mfsplit.optimize_splitting_mask(nparts=5)
+    array = mfsplit.optimize_splitting_mask(nparts=nparts)
     new_sim = mfsplit.split_model(array)
-    mfsplit.save_node_mapping(json_file)
-
+    new_sim.set_sim_path(new_sim_path)
+    new_sim.write_simulation()
+    new_sim.run_simulation()
     original_node_map = mfsplit._node_map
 
-    mfsplit2 = Mf6Splitter(sim)
-    mfsplit2.load_node_mapping(json_file)
+    mfsplit.save_node_mapping(json_file)
 
+    new_sim2 = MFSimulation.load(sim_ws=new_sim_path)
+
+    mfsplit2 = Mf6Splitter(new_sim2)
+    mfsplit2.load_node_mapping(new_sim2, json_file)
     saved_node_map = mfsplit2._node_map
 
     for k, v1 in original_node_map.items():
@@ -223,3 +233,13 @@ def test_save_load_node_mapping(function_tmpdir):
             raise AssertionError(
                 "Node map read/write not returning proper values"
             )
+
+    array_dict = {}
+    for model in range(nparts):
+        ml = new_sim2.get_model(f"freyberg_{model}")
+        heads0 = ml.output.head().get_alldata()[-1]
+        array_dict[model] = heads0
+
+    new_heads = mfsplit2.reconstruct_array(array_dict)
+    err_msg = "Heads from original and split models do not match"
+    np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
