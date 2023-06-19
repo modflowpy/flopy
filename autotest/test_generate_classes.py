@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 from pprint import pprint
 
@@ -16,10 +17,16 @@ def test_generate_classes_from_dfn(virtualenv, project_root_path):
         pprint(virtualenv.run(f"pip install {dependency}"))
 
     # get creation time of files
-    mod_files = list(
-        venv.parent.rglob("lib/python3.10/site-packages/flopy/mf6/modflow/*")
-    ) + list(
-        venv.parent.rglob("lib/python3.10/site-packages/flopy/mf6/data/dfn/*")
+    flopy_path = (
+        venv.parent
+        / "lib"
+        / f"python{sys.version_info.major}.{sys.version_info.minor}"
+        / "site-packages"
+        / "flopy"
+    )
+    assert flopy_path.is_dir()
+    mod_files = list((flopy_path / "mf6" / "modflow").rglob("*")) + list(
+        (flopy_path / "mf6" / "data" / "dfn").rglob("*")
     )
     mod_file_times = [Path(mod_file).stat().st_mtime for mod_file in mod_files]
     pprint(mod_files)
