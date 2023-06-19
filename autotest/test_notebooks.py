@@ -9,7 +9,8 @@ from modflow_devtools.misc import run_cmd
 def get_notebooks(pattern=None, exclude=None):
     prjroot = get_project_root_path()
     nbpaths = [
-        str(p) for p in (prjroot / ".docs" / "Notebooks").glob("*.py")
+        str(p)
+        for p in (prjroot / ".docs" / "Notebooks").glob("*.py")
         if pattern in p.name
     ]
     return sorted(
@@ -21,7 +22,9 @@ def get_notebooks(pattern=None, exclude=None):
 @pytest.mark.slow
 @pytest.mark.example
 @pytest.mark.parametrize(
-    "notebook", get_notebooks(pattern="tutorial", exclude=["mf6_lgr"]) + get_notebooks(pattern="example")
+    "notebook",
+    get_notebooks(pattern="tutorial", exclude=["mf6_lgr"])
+    + get_notebooks(pattern="example"),
 )
 def test_notebooks(notebook):
     args = ["jupytext", "--from", "py", "--to", "ipynb", "--execute", notebook]

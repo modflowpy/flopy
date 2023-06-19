@@ -1,11 +1,10 @@
 import numpy as np
-
 import pytest
 from autotest.conftest import get_example_data_path
 from modflow_devtools.markers import requires_exe
 
-from flopy.mf6.utils import Mf6Splitter
 from flopy.mf6 import MFSimulation
+from flopy.mf6.utils import Mf6Splitter
 
 
 @requires_exe("mf6")
