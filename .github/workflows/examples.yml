@@ -97,7 +97,7 @@ jobs:
         if: runner.os != 'Windows'
         working-directory: ./autotest
         run: |
-          pytest -v -m="example" -n=auto --durations=0 --keep-failed=.failed
+          pytest -v -m="example" -n=auto -s --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -106,7 +106,7 @@ jobs:
         shell: bash -l {0}
         working-directory: ./autotest
         run: |
-          pytest -v -m="example" -n=auto --durations=0 --keep-failed=.failed
+          pytest -v -m="example" -n=auto -s --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
