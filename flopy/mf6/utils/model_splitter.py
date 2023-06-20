@@ -188,8 +188,8 @@ class Mf6Splitter(object):
             model name to switch to
         remap_nodes : bool
             boolean flag to force the class to remap the node look up table.
-            This is used when models do not overlap (ex. two seperate
-            GWF models). Excahanges between original models are not preserved
+            This is used when models do not overlap (ex. two separate
+            GWF models). Exchanges between original models are not preserved
             currently.
 
         Returns
@@ -359,7 +359,10 @@ class Mf6Splitter(object):
             ncpl = self._modelgrid.nnodes
             shape = self._modelgrid.shape
         idomain = self._modelgrid.idomain
-        idomain = idomain.reshape(nlay, ncpl)
+        if idomain is None:
+            idomain = np.full((nlay, ncpl), 1.0, dtype=float)
+        else:
+            idomain = idomain.reshape(nlay, ncpl)
         adv_pkg_weights = np.zeros((ncpl,), dtype=int)
         lak_array = np.zeros((ncpl,), dtype=int)
         laks = []
