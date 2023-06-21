@@ -453,6 +453,7 @@ class MFSimulation(PackageContainer):
         continue_=None,
         nocheck=None,
         memory_print_option=None,
+        print_input=None,
         write_headers=True,
         lazy_io=False,
     ):
@@ -498,6 +499,7 @@ class MFSimulation(PackageContainer):
             continue_=continue_,
             nocheck=nocheck,
             memory_print_option=memory_print_option,
+            print_input=print_input,
             _internal_package=True,
         )
 
