@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from autotest.conftest import get_example_data_path
 from autotest.test_mp6_cases import Mp6Cases1, Mp6Cases2
-from modflow_devtools.markers import requires_exe, requires_pkg, has_pkg
+from modflow_devtools.markers import has_pkg, requires_exe, requires_pkg
 from pytest_cases import parametrize_with_cases
 
 import flopy
@@ -119,7 +119,9 @@ def test_mpsim(function_tmpdir, mp6_test_path):
         sim = Modpath6Sim(model=mp)
         # starting locations file
         stl = StartingLocationsFile(model=mp, use_pandas=use_pandas)
-        stldata = StartingLocationsFile.get_empty_starting_locations_data(npt=2)
+        stldata = StartingLocationsFile.get_empty_starting_locations_data(
+            npt=2
+        )
         stldata["label"] = ["p1", "p2"]
         stldata[1]["i0"] = 5
         stldata[1]["j0"] = 6
