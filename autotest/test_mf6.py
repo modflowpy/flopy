@@ -1,6 +1,5 @@
 import os
 import platform
-from os.path import join
 from pathlib import Path
 from shutil import copytree, which
 
@@ -58,7 +57,7 @@ from flopy.mf6.coordinates.modeldimensions import (
 )
 from flopy.mf6.data.mffileaccess import MFFileAccessArray
 from flopy.mf6.data.mfstructure import MFDataItemStructure, MFDataStructure
-from flopy.mf6.mfbase import MFFileMgmt
+from flopy.mf6.mfsimbase import MFSimulationData
 from flopy.mf6.modflow import (
     mfgwf,
     mfgwfdis,
@@ -72,7 +71,6 @@ from flopy.mf6.modflow import (
     mfims,
     mftdis,
 )
-from flopy.mf6.modflow.mfsimulation import MFSimulationData
 from flopy.utils import (
     CellBudgetFile,
     HeadFile,

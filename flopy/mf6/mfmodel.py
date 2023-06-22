@@ -14,7 +14,7 @@ from ..mbase import ModelInterface
 from ..utils import datautil
 from ..utils.check import mf6check
 from .coordinates import modeldimensions
-from .data import mfstructure, mfdata, mfdatalist
+from .data import mfdata, mfdatalist, mfstructure
 from .data.mfdatautil import DataSearchOutput, iterable
 from .mfbase import (
     ExtFileAction,

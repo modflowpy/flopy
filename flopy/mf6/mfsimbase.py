@@ -9,7 +9,7 @@ from typing import List, Optional, Union
 import numpy as np
 
 from flopy.mbase import run_model
-from flopy.mf6.data import mfstructure, mfdata, mfdatalist
+from flopy.mf6.data import mfdata, mfdatalist, mfstructure
 from flopy.mf6.data.mfdatautil import MFComment
 from flopy.mf6.data.mfstructure import DatumType
 from flopy.mf6.mfbase import (
