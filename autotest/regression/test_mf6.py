@@ -918,7 +918,10 @@ def test021_twri(function_tmpdir, example_data_path):
         version="mf6",
         exe_name="mf6",
         sim_ws=data_folder,
+        memory_print_option="SUMMARY",
     )
+    sim.nocheck = True
+
     sim.set_sim_path(function_tmpdir)
     tdis_rc = [(86400.0, 1, 1.0)]
     tdis_package = ModflowTdis(
@@ -927,6 +930,8 @@ def test021_twri(function_tmpdir, example_data_path):
     model = ModflowGwf(
         sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
     )
+    model.print_input = True
+
     ims_package = ModflowIms(
         sim,
         print_option="SUMMARY",
@@ -1098,6 +1103,9 @@ def test021_twri(function_tmpdir, example_data_path):
     strt2 = ic2.strt.get_data()
     drn2 = model2.get_package("drn")
     drn_spd = drn2.stress_period_data.get_data()
+    assert sim2.memory_print_option.get_data().lower() == "summary"
+    assert sim2.nocheck.get_data() is True
+    assert model2.print_input.get_data() is True
     assert strt2[0, 0, 0] == 0.0
     assert strt2[1, 0, 0] == 1.0
     assert strt2[2, 0, 0] == 2.0

@@ -1,9 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on January 27, 2023 18:36:16 UTC
-import os
-from typing import Union
-
+# FILE created on June 22, 2023 21:13:41 UTC
 from .. import mfmodel
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -93,7 +90,6 @@ class ModflowGwf(mfmodel.MFModel):
         print_flows=None,
         save_flows=None,
         newtonoptions=None,
-        packages=None,
         **kwargs,
     ):
         super().__init__(
@@ -112,7 +108,12 @@ class ModflowGwf(mfmodel.MFModel):
         self.name_file.print_flows.set_data(print_flows)
         self.name_file.save_flows.set_data(save_flows)
         self.name_file.newtonoptions.set_data(newtonoptions)
-        self.name_file.packages.set_data(packages)
+
+        self.list = self.name_file.list
+        self.print_input = self.name_file.print_input
+        self.print_flows = self.name_file.print_flows
+        self.save_flows = self.name_file.save_flows
+        self.newtonoptions = self.name_file.newtonoptions
 
     @classmethod
     def load(
@@ -122,12 +123,13 @@ class ModflowGwf(mfmodel.MFModel):
         modelname="NewModel",
         model_nam_file="modflowtest.nam",
         version="mf6",
-        exe_name: Union[str, os.PathLike] = "mf6",
+        exe_name="mf6",
         strict=True,
-        model_rel_path=os.curdir,
+        model_rel_path=".",
         load_only=None,
     ):
         return mfmodel.MFModel.load_base(
+            cls,
             simulation,
             structure,
             modelname,

@@ -1944,6 +1944,8 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                     self._simulation_data.debug,
                 )
             if key is None:
+                if data is None:
+                    return
                 # search for a key
                 new_key_index = self.structure.first_non_keyword_index()
                 if new_key_index is not None and len(data) > new_key_index:
