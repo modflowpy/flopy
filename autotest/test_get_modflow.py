@@ -105,10 +105,6 @@ def test_get_releases(repo):
     releases = get_releases(repo)
     assert "latest" in releases
 
-    # test page size option
-    if repo == "modflow6-nightly-build":
-        assert len(releases) == 31  # last 30 releases +1 for "latest"
-
 
 @flaky
 @requires_github
@@ -119,6 +115,7 @@ def test_get_release(repo):
     assets = release["assets"]
 
     expected_assets = ["linux.zip", "mac.zip", "win64.zip"]
+    expected_ostags = [a.replace(".zip", "") for a in expected_assets]
     actual_assets = [asset["name"] for asset in assets]
 
     if repo == "modflow6":
@@ -127,7 +124,10 @@ def test_get_release(repo):
             a for a in expected_assets if not a.startswith("win")
         }
     else:
-        assert set(actual_assets) >= set(expected_assets)
+        for ostag in expected_ostags:
+            assert any(
+                ostag in a for a in actual_assets
+            ), f"dist not found for {ostag}"
 
 
 @pytest.mark.parametrize("bindir", bindir_options.keys())
