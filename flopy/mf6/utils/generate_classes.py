@@ -45,10 +45,9 @@ def list_files(pth, exts=["py"]):
         if ext in exts:
             idx += 1
             print(f"    {idx:5d} - {fn}")
-    return
 
 
-def download_dfn(branch, new_dfn_pth):
+def download_dfn(owner, branch, new_dfn_pth):
     try:
         from modflow_devtools.download import download_and_unzip
     except:
@@ -58,10 +57,9 @@ def download_dfn(branch, new_dfn_pth):
             "pip install modflow-devtools.  Stopping."
         )
         print(msg)
-        return
 
-    mf6url = "https://github.com/MODFLOW-USGS/modflow6/archive/{}.zip"
-    mf6url = mf6url.format(branch)
+    mf6url = "https://github.com/{}/modflow6/archive/{}.zip"
+    mf6url = mf6url.format(owner, branch)
     print(f"  Downloading MODFLOW 6 repository from {mf6url}")
     with tempfile.TemporaryDirectory() as tmpdirname:
         download_and_unzip(mf6url, tmpdirname, verbose=True)
@@ -70,7 +68,6 @@ def download_dfn(branch, new_dfn_pth):
             downloaded_dfn_pth, "doc", "mf6io", "mf6ivar", "dfn"
         )
         shutil.copytree(downloaded_dfn_pth, new_dfn_pth)
-    return
 
 
 def backup_existing_dfns(flopy_dfn_path):
@@ -81,7 +78,6 @@ def backup_existing_dfns(flopy_dfn_path):
     assert os.path.isdir(
         backup_folder
     ), f"dfn backup files not found: {backup_folder}"
-    return
 
 
 def replace_dfn_files(new_dfn_pth, flopy_dfn_path):
@@ -105,10 +101,11 @@ def delete_mf6_classes():
         if os.path.isfile(os.path.join(pth, entry))
     ]
     delete_files(files, pth, exclude="mfsimulation.py")
-    return
 
 
-def generate_classes(branch="master", dfnpath=None, backup=True):
+def generate_classes(
+    owner="MODFLOW-USGS", branch="master", dfnpath=None, backup=True
+):
     """
     Generate the MODFLOW 6 flopy classes using definition files from the
     MODFLOW 6 GitHub repository or a set of definition files in a folder
@@ -116,6 +113,9 @@ def generate_classes(branch="master", dfnpath=None, backup=True):
 
     Parameters
     ----------
+    owner : str
+        Owner of the MODFLOW 6 repository to use to update the definition
+        files and generate the MODFLOW 6 classes. Default is MODFLOW-USGS.
     branch : str
         Branch name of the MODFLOW 6 repository to use to update the
         definition files and generate the MODFLOW 6 classes. Default is master.
@@ -139,10 +139,12 @@ def generate_classes(branch="master", dfnpath=None, backup=True):
     # download the dfn files and put them in flopy.mf6.data or update using
     # user provided dfnpath
     if dfnpath is None:
-        print(f"  Updating the MODFLOW 6 classes using the branch: {branch}")
+        print(
+            f"  Updating the MODFLOW 6 classes using {owner}/modflow6/{branch}"
+        )
         timestr = time.strftime("%Y%m%d-%H%M%S")
         new_dfn_pth = os.path.join(flopypth, "mf6", "data", f"dfn_{timestr}")
-        download_dfn(branch, new_dfn_pth)
+        download_dfn(owner, branch, new_dfn_pth)
     else:
         print(f"  Updating the MODFLOW 6 classes using {dfnpath}")
         assert os.path.isdir(dfnpath)
@@ -163,5 +165,3 @@ def generate_classes(branch="master", dfnpath=None, backup=True):
     print("  Create mf6 classes using the downloaded definition files.")
     create_packages()
     list_files(os.path.join(flopypth, "mf6", "modflow"))
-
-    return

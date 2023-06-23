@@ -1792,7 +1792,11 @@ def run_model(
             raise ValueError("processors kwarg only supported for MODFLOW 6")
         mpiexec_path = resolve_exe("mpiexec")
         if not silent:
-            print(f"FloPy is using {mpiexec_path} to run {exe_path}.")
+            print(
+                f"FloPy is using {mpiexec_path} "
+                + f"to run {exe_path} "
+                + f"on {processors} processors."
+            )
         argv = [mpiexec_path, "-np", f"{processors}", exe_path, "-p"]
     else:
         argv = [exe_path]

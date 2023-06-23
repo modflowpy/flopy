@@ -2999,16 +2999,16 @@ class Util2d(DataInterface):
                 if len(raw) >= 4:
                     iprn = int(raw[3])
             elif raw[0].lower() == "external":
+                nunit = abs(int(raw[1]))
                 if ext_unit_dict is not None:
                     try:
                         # td = ext_unit_dict[int(raw[1])]
-                        fname = ext_unit_dict[int(raw[1])].filename.strip()
+                        fname = ext_unit_dict[nunit].filename.strip()
                     except:
                         print(
                             f"   could not determine filename for unit {raw[1]}"
                         )
 
-                nunit = int(raw[1])
                 if isfloat:
                     cnstnt = float(raw[2].lower().replace("d", "e"))
                 else:
