@@ -1002,7 +1002,8 @@ class GridIntersect:
             idxs = np.nonzero(~mask_bnds_empty & mask_bnds_type)[0]
 
             # loop through results, starting with highest cellid
-            for i in idxs[::-1]:
+            jdxs = idxs[::-1]
+            for jx, i in enumerate(jdxs):
                 # calculate intersection with results w potential boundary
                 # intersections
                 isect = ixresult[i].intersection(ixresult[idxs])
@@ -1021,7 +1022,7 @@ class GridIntersect:
                 )
                 # update intersection result if necessary
                 if len(diff) > 0:
-                    ixresult[idxs[i]] = diff[0]
+                    ixresult[jdxs[jx]] = diff[0]
 
             # mask out empty results
             mask_keep = ~shapely.is_empty(ixresult)
