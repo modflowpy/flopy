@@ -9,6 +9,7 @@ See https://developer.github.com/v3/repos/releases/ for GitHub Releases API.
 """
 import json
 import os
+import shutil
 import sys
 import tempfile
 import urllib
@@ -252,7 +253,7 @@ def select_bindir(bindir, previous=None, quiet=False, is_cli=False) -> Path:
                 f"invalid option '{bindir}', choose from: {opt_avail}"
             )
         if not quiet:
-            print(f"auto-selecting option {sel[0]!r} for '{bindir}'")
+            print(f"auto-selecting option {sel[0]!r} for 'bindir'")
         return Path(options[sel[0]][0]).resolve()
     else:
         if not is_cli:
@@ -370,7 +371,7 @@ def run_main(
             bindir, previous=prev_bindir, quiet=quiet, is_cli=_is_cli
         )
     elif not isinstance(bindir, (str, Path)):
-        raise ValueError(f"Invalid bindir option (expected string or Path)")
+        raise ValueError("Invalid bindir option (expected string or Path)")
     bindir = Path(bindir).resolve()
 
     # make sure bindir exists
@@ -473,21 +474,19 @@ def run_main(
         if subset:
             meta["subset"] = sorted(subset)
     with zipfile.ZipFile(download_pth, "r") as zipf:
-        if repo == "modflow6":
-            # modflow6 release contains the whole repo with an internal bindir
-            for pth in zipf.namelist():
-                p = Path(pth)
-                if p.parent.name == "bin":
-                    full_path[p.name] = pth
-            files = set(full_path.keys())
-        else:
-            # assume all files to be extracted
+        # First gather files within internal directories named "bin"
+        for pth in zipf.namelist():
+            p = Path(pth)
+            if p.parent.name == "bin":
+                full_path[p.name] = pth
+        files = set(full_path.keys())
+
+        if not files:
+            # there was no internal "bin", so assume all files to be extracted
             files = set(zipf.namelist())
 
         code = False
         if "code.json" in files and repo == "executables":
-            # don't extract this file
-            files.remove("code.json")
             code_bytes = zipf.read("code.json")
             code = json.loads(code_bytes.decode())
             if meta_path:
@@ -495,6 +494,10 @@ def run_main(
 
                 code_md5 = hashlib.md5(code_bytes).hexdigest()
                 meta["code_json_md5"] = code_md5
+
+        if "code.json" in files:
+            # don't extract this file
+            files.remove("code.json")
 
         if subset:
             nosub = False
@@ -587,7 +590,7 @@ def run_main(
                 bindir_path = bindir / subdir
                 if bindir_path == bindir:
                     break
-                bindir_path.rmdir()
+                shutil.rmtree(str(bindir_path))
 
     if ostag in ["linux", "mac"]:
         # similar to "chmod +x fname" for each executable
