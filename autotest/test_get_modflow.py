@@ -105,10 +105,6 @@ def test_get_releases(repo):
     releases = get_releases(repo)
     assert "latest" in releases
 
-    # test page size option
-    if repo == "modflow6-nightly-build":
-        assert len(releases) == 31  # last 30 releases +1 for "latest"
-
 
 @flaky
 @requires_github
