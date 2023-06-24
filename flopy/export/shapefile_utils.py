@@ -55,7 +55,10 @@ def write_gridlines_shapefile(filename: Union[str, os.PathLike], mg):
         wr.record(i)
 
     wr.close()
-    write_prj(filename, modelgrid=mg)
+    try:
+        write_prj(filename, modelgrid=mg)
+    except ImportError:
+        pass
     return
 
 
@@ -65,10 +68,9 @@ def write_grid_shapefile(
     array_dict,
     nan_val=np.nan,
     crs=None,
-    prjfile=None,
-    epsg=None,
-    prj: Optional[Union[str, os.PathLike]] = None,
+    prjfile: Optional[Union[str, os.PathLike]] = None,
     verbose=False,
+    **kwargs,
 ):
     """
     Method to write a shapefile of gridded input data
@@ -83,7 +85,7 @@ def write_grid_shapefile(
         dictionary of model input arrays
     nan_val : float
         value to fill nans
-    crs : pyproj.CRS, optional if `prjfile` is specified
+    crs : pyproj.CRS, int, str, optional if `prjfile` is specified
         Coordinate reference system (CRS) for the model grid
         (must be projected; geographic CRS are not supported).
         The value can be anything accepted by
@@ -92,6 +94,14 @@ def write_grid_shapefile(
     prjfile : str or pathlike, optional if `crs` is specified
         ESRI-style projection file with well-known text defining the CRS
         for the model grid (must be projected; geographic CRS are not supported).
+    **kwargs : dict, optional
+        Support deprecated keyword options.
+
+        .. deprecated:: 3.3.7
+           The following keyword options will be removed for FloPy 3.4:
+
+             - ``epsg`` (int): use ``crs`` instead.
+             - ``prj`` (str or PathLike): use ``prjfile`` instead.
 
     Returns
     -------
@@ -213,8 +223,20 @@ def write_grid_shapefile(
     if verbose:
         print(f"wrote {flopy_io.relpath_safe(path)}")
 
+    # handle deprecated projection kwargs; warnings are raised in crs.py
+    write_prj_args = {}
+    if "epsg" in kwargs:
+        write_prj_args["epsg"] = kwargs.pop("epsg")
+    if "prj" in kwargs:
+        write_prj_args["prj"] = kwargs.pop("prj")
+    if kwargs:
+        raise TypeError(f"unhandled keywords: {kwargs}")
     # write the projection file
-    write_prj(path, mg, crs=crs, epsg=epsg, prj=prj, prjfile=prjfile)
+    try:
+        write_prj(path, mg, crs=crs, prjfile=prjfile, **write_prj_args)
+    except ImportError:
+        if verbose:
+            print("projection file not written")
     return
 
 
@@ -248,7 +270,7 @@ def model_attributes_to_shapefile(
         modelgrid : fp.modflow.Grid object
             if modelgrid is supplied, user supplied modelgrid is used in lieu
             of the modelgrid attached to the modflow model object
-        crs : pyproj.CRS, optional if `prjfile` is specified
+        crs : pyproj.CRS, int, str, optional if `prjfile` is specified
             Coordinate reference system (CRS) for the model grid
             (must be projected; geographic CRS are not supported).
             The value can be anything accepted by
@@ -403,7 +425,10 @@ def model_attributes_to_shapefile(
     write_grid_shapefile(path, grid, array_dict)
     crs = kwargs.get("crs", None)
     prjfile = kwargs.get("prjfile", None)
-    write_prj(path, grid, crs=crs, prjfile=prjfile)
+    try:
+        write_prj(path, grid, crs=crs, prjfile=prjfile)
+    except ImportError:
+        pass
 
 
 def shape_attr_name(name, length=6, keep_layer=False):
@@ -547,9 +572,7 @@ def recarray2shp(
     shpname: Union[str, os.PathLike] = "recarray.shp",
     mg=None,
     crs=None,
-    prjfile=None,
-    epsg=None,
-    prj: Optional[Union[str, os.PathLike]] = None,
+    prjfile: Optional[Union[str, os.PathLike]] = None,
     verbose=False,
     **kwargs,
 ):
@@ -571,7 +594,9 @@ def recarray2shp(
         recarray.
     shpname : str or PathLike, default "recarray.shp"
         Path for the output shapefile
-    crs : pyproj.CRS, optional if `prjfile` is specified
+    mg : flopy.discretization.Grid object
+        flopy model grid
+    crs : pyproj.CRS, int, str, optional if `prjfile` is specified
         Coordinate reference system (CRS) for the model grid
         (must be projected; geographic CRS are not supported).
         The value can be anything accepted by
@@ -580,10 +605,18 @@ def recarray2shp(
     prjfile : str or pathlike, optional if `crs` is specified
         ESRI-style projection file with well-known text defining the CRS
         for the model grid (must be projected; geographic CRS are not supported).
+    **kwargs : dict, optional
+        Support deprecated keyword options.
+
+        .. deprecated:: 3.3.7
+           The following keyword options will be removed for FloPy 3.4:
+
+             - ``epsg`` (int): use ``crs`` instead.
+             - ``prj`` (str or PathLike): use ``prjfile`` instead.
 
     Notes
     -----
-    Uses pyshp.
+    Uses pyshp and optionally pyproj.
     """
     from ..utils.geospatial_utils import GeoSpatialCollection
 
@@ -637,8 +670,23 @@ def recarray2shp(
             w.record(*r)
 
     w.close()
-    write_prj(shpname, mg, crs=crs, epsg=epsg, prj=prj, prjfile=prjfile)
-    print(f"wrote {flopy_io.relpath_safe(os.getcwd(), shpname)}")
+    if verbose:
+        print(f"wrote {flopy_io.relpath_safe(os.getcwd(), shpname)}")
+
+    # handle deprecated projection kwargs; warnings are raised in crs.py
+    write_prj_args = {}
+    if "epsg" in kwargs:
+        write_prj_args["epsg"] = kwargs.pop("epsg")
+    if "prj" in kwargs:
+        write_prj_args["prj"] = kwargs.pop("prj")
+    if kwargs:
+        raise TypeError(f"unhandled keywords: {kwargs}")
+    # write the projection file
+    try:
+        write_prj(shpname, mg, crs=crs, prjfile=prjfile, **write_prj_args)
+    except ImportError:
+        if verbose:
+            print("projection file not written")
     return
 
 
@@ -646,26 +694,30 @@ def write_prj(
     shpname,
     modelgrid=None,
     crs=None,
-    epsg=None,
-    prj=None,
     prjfile=None,
-    wkt_string=None,
+    **kwargs,
 ):
     # projection file name
     output_projection_file = Path(shpname).with_suffix(".prj")
 
-    crs = get_crs(
-        prjfile=prjfile, prj=prj, epsg=epsg, crs=crs, wkt_string=wkt_string
-    )
+    # handle deprecated projection kwargs; warnings are raised in crs.py
+    get_crs_args = {}
+    if "epsg" in kwargs:
+        get_crs_args["epsg"] = kwargs.pop("epsg")
+    if "prj" in kwargs:
+        get_crs_args["prj"] = kwargs.pop("prj")
+    if "wkt_string" in kwargs:
+        get_crs_args["wkt_string"] = kwargs.pop("wkt_string")
+    if kwargs:
+        raise TypeError(f"unhandled keywords: {kwargs}")
+    crs = get_crs(prjfile=prjfile, crs=crs, **get_crs_args)
     if crs is None and modelgrid is not None:
         crs = modelgrid.crs
     if crs is not None:
-        with open(output_projection_file, "w", encoding="utf-8") as dest:
-            write_text = crs.to_wkt()
-            dest.write(write_text)
+        output_projection_file.write_text(crs.to_wkt(), encoding="utf-8")
     else:
         print(
             "No CRS information for writing a .prj file.\n"
-            "Supply an valid coordinate system reference to the attached modelgrid object "
-            "or .export() method."
+            "Supply an valid coordinate system reference to the attached "
+            "modelgrid object or .export() method."
         )

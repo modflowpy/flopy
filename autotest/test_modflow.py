@@ -261,8 +261,7 @@ def test_sr(function_tmpdir):
         raise AssertionError()
     if extents[3] != 12355:
         raise AssertionError()
-    if mm.modelgrid.crs.srs != "EPSG:26916":
-        raise AssertionError()
+    assert mm.modelgrid.epsg == 26916
 
     mm.dis.top = 5000
 
@@ -543,7 +542,7 @@ def test_read_usgs_model_reference(function_tmpdir, model_reference_path):
     m2 = Modflow.load("junk.nam", model_ws=ws)
     m2.modelgrid.read_usgs_model_reference_file(mrf_path)
 
-    assert m2.modelgrid.crs.to_epsg() == 26916
+    assert m2.modelgrid.epsg == 26916
     # have to delete this, otherwise it will mess up other tests
     to_del = glob.glob(f"{mrf_path}*")
     for f in to_del:

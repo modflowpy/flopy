@@ -257,8 +257,7 @@ def test_get_destination_data(function_tmpdir, mp6_test_path):
         xoff=mg.xoffset,
         yoff=mg.yoffset,
         angrot=mg.angrot,
-        epsg=mg.epsg,
-        proj4=mg.proj4,
+        crs=mg.epsg,
     )
     ra = shp2recarray(function_tmpdir / "pathlines_1per2.shp")
     p3_2 = ra.geometry[ra.particleid == 4][0]
@@ -298,8 +297,7 @@ def test_get_destination_data(function_tmpdir, mp6_test_path):
         xoff=mg4._xul_to_xll(xul, 0.0),
         yoff=mg4._yul_to_yll(yul, 0.0),
         angrot=0.0,
-        epsg=mg4.epsg,
-        proj4=mg4.proj4,
+        crs=mg4.epsg,
     )
 
     fpth = function_tmpdir / "dis2.shp"

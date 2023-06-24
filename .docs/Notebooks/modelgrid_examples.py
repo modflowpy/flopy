@@ -159,7 +159,7 @@ print("Before: {}\n".format(modelgrid1))
 
 # set reference infromation
 modelgrid1.set_coord_info(
-    xoff=xoff, yoff=yoff, angrot=angrot, epsg=epsg, proj4=proj4
+    xoff=xoff, yoff=yoff, angrot=angrot, crs=epsg
 )
 
 print("After: {}".format(modelgrid1))
@@ -213,9 +213,8 @@ modelgrid1.plot();
 #    - `botm` : Array of layer Botm elevations
 #    - `idomain` : An ibound or idomain array that specifies active and inactive cells
 #    - `lenuni` : Model length unit integer
-#    - `epsg` : epsg code of model coordinate system
-#    - `proj4` : proj4 str describining model coordinate system
-#    - `prj` : path to ".prj" projection file that describes the model coordinate system
+#    - `crs` : either an epsg integer code of model coordinate system, a proj4 string or pyproj CRS instance
+#    - `prjfile` : path to ".prj" projection file that describes the model coordinate system
 #    - `xoff` : x-coordinate of the lower-left corner of the modelgrid
 #    - `yoff` : y-coordinate of the lower-left corner of the modelgrid
 #    - `angrot` : model grid rotation
@@ -358,9 +357,8 @@ gridprops.keys()
 #    - `botm` : Array of layer Botm elevations
 #    - `idomain` : An ibound or idomain array that specifies active and inactive cells
 #    - `lenuni` : Model length unit integer
-#    - `epsg` : epsg code of model coordinate system
-#    - `proj4` : proj4 str describining model coordinate system
-#    - `prj` : path to ".prj" projection file that describes the model coordinate system
+#    - `crs` : either an epsg integer code of model coordinate system, a proj4 string or pyproj CRS instance
+#    - `prjfile` : path to ".prj" projection file that describes the model coordinate system
 #    - `xoff` : x-coordinate of the lower-left corner of the modelgrid
 #    - `yoff` : y-coordinate of the lower-left corner of the modelgrid
 #    - `angrot` : model grid rotation
@@ -476,9 +474,8 @@ def load_iverts(fname):
 #    - `idomain` : An ibound or idomain array that specifies active and inactive cells
 #    - `lenuni` : Model length unit integer
 #    - `ncpl` : one dimensional array of number of cells per model layer
-#    - `epsg` : epsg code of model coordinate system
-#    - `proj4` : proj4 str describining model coordinate system
-#    - `prj` : path to ".prj" projection file that describes the model coordinate system
+#    - `crs` : either an epsg integer code of model coordinate system, a proj4 string or pyproj CRS instance
+#    - `prjfile` : path to ".prj" projection file that describes the model coordinate system
 #    - `xoff` : x-coordinate of the lower-left corner of the modelgrid
 #    - `yoff` : y-coordinate of the lower-left corner of the modelgrid
 #    - `angrot` : model grid rotation   
@@ -579,7 +576,7 @@ modelgrid.set_coord_info(
     xoff=622241.1904510253,
     yoff=3343617.741737109,
     angrot=15.0,
-    proj4="+proj=utm +zone=14 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
+    crs="+proj=utm +zone=14 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
 )
 # -
 
@@ -620,7 +617,7 @@ print(
 #    - `angrot_radians` : returns the angle of rotation of the modelgrid in radians
 #    - `epsg` : returns the modelgrid epsg code if it is set
 #    - `proj4` : returns the modelgrid proj4 string if it is set
-#    - `prj` : returns the path to the modelgrid projection file if it is set
+#    - `prjfile` : returns the path to the modelgrid projection file if it is set
 
 # Access and print some of these properties
 print(
@@ -723,8 +720,8 @@ plt.colorbar(pc);
 #    - `xoff` : lower-left corner of modelgrid x-coordinate location
 #    - `yoff` : lower-left corner of modelgrid y-coordinate location
 #    - `angrot` : rotation of model grid in degrees
-#    - `epsg` : epsg code for model grid projection
-#    - `proj4` : proj4 string describing the model grid projection
+#    - `crs` : either an epsg integer code of model coordinate system, a proj4 string or pyproj CRS instance
+#    - `prjfile` : path to ".prj" projection file that describes the model coordinate system
 #    - `merge_coord_info` : boolean flag to either merge changes with the existing coordinate info or clear existing coordinate info before applying changes.
 
 # +
@@ -900,15 +897,15 @@ plt.colorbar(pc);
 # Method to write a shapefile of the grid with just the cellid attributes. Input parameters include:
 #
 #    - `filename` : shapefile name
-#    - `epsg` : optional epsg code of the coordinate system projection
-#    - `prj` : optional, input projection file to be used to define the coordinate system projection
+#    - `crs` : either an epsg integer code of model coordinate system, a proj4 string or pyproj CRS instance
+#    - `prjfile` : path to ".prj" projection file that describes the model coordinate system
 
 # +
 # write a shapefile
 shp_name = os.path.join(gridgen_ws, "freyberg-6_grid.shp")
-epsg = "32614"
+epsg = 32614
 
-ml.modelgrid.write_shapefile(shp_name, epsg)
+ml.modelgrid.write_shapefile(shp_name, crs=epsg)
 # -
 
 try:

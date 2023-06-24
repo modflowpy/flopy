@@ -88,7 +88,7 @@ class ModflowDis(Package):
     rotation : float
         counter-clockwise rotation (in degrees) of the grid about the lower-
         left corner. default is 0.0
-    crs : pyproj.CRS, optional if `prjfile` is specified
+    crs : pyproj.CRS, int, str, optional if `prjfile` is specified
         Coordinate reference system (CRS) for the model grid
         (must be projected; geographic CRS are not supported).
         The value can be anything accepted by
@@ -99,6 +99,11 @@ class ModflowDis(Package):
         for the model grid (must be projected; geographic CRS are not supported).
     start_datetime : str
         starting datetime of the simulation. default is '1/1/1970'
+    **kwargs : dict, optional
+        Support deprecated keyword options.
+
+        .. deprecated:: 3.3.7
+           ``proj4_str`` will be removed for FloPy 3.4, use ``crs`` instead.
 
     Attributes
     ----------
@@ -147,10 +152,10 @@ class ModflowDis(Package):
         xul=None,
         yul=None,
         rotation=None,
-        proj4_str=None,
         crs=None,
         prjfile=None,
         start_datetime=None,
+        **kwargs,
     ):
         # set default unit number of one is not specified
         if unitnumber is None:
@@ -242,30 +247,37 @@ class ModflowDis(Package):
             5: "years",
         }
 
-        if xul is None:
-            xul = model._xul
-        if yul is None:
-            yul = model._yul
+        # set the model grid coordinate info
+        mg = model.modelgrid
         if rotation is None:
             rotation = model._rotation
-        crs = get_crs(prjfile=prjfile, proj4=proj4_str, crs=crs)
-        if crs is None:
-            crs = model._crs
+        if rotation is not None:
+            # set rotation before anything else
+            mg.set_coord_info(angrot=rotation)
+        set_coord_info_args = {"crs": crs, "prjfile": prjfile}
+        if "proj4_str" in kwargs:
+            warnings.warn(
+                "the proj4_str argument will be deprecated and will be "
+                "removed in version 3.4. Use crs instead.",
+                PendingDeprecationWarning,
+            )
+            proj4_str = kwargs.pop("proj4_str")
+            if crs is None:
+                set_coord_info_args["crs"] = proj4_str
+        if xul is None:
+            xul = model._xul
+        if xul is not None:
+            set_coord_info_args["xoff"] = mg._xul_to_xll(xul)
+        if yul is None:
+            yul = model._yul
+        if yul is not None:
+            set_coord_info_args["yoff"] = mg._yul_to_yll(yul)
+
+        # set all other relevant coordinate properties
+        model._modelgrid.set_coord_info(**set_coord_info_args)
+
         if start_datetime is None:
             start_datetime = model._start_datetime
-
-        # set the model grid coordinate info
-        xll = None
-        yll = None
-        mg = model.modelgrid
-        if rotation is not None:
-            mg.set_coord_info(xoff=None, yoff=None, angrot=rotation)
-        if xul is not None:
-            xll = mg._xul_to_xll(xul)
-        if yul is not None:
-            yll = mg._yul_to_yll(yul)
-        mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation, crs=crs)
-
         self.tr = TemporalReference(
             itmuni=self.itmuni, start_datetime=start_datetime
         )
