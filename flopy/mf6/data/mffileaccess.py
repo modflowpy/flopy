@@ -294,8 +294,8 @@ class MFFileAccessArray(MFFileAccess):
                     precision=precision,
                     text=text,
                     ncpl=modelgrid.ncpl,
+                    m2=1,
                     ilay=ilay,
-                    m3=1,
                     pertim=pertim,
                     totim=totim,
                     kstp=1,
@@ -1097,7 +1097,7 @@ class MFFileAccessList(MFFileAccess):
     def _get_cell_header(self, modelgrid):
         if modelgrid.grid_type == "structured":
             return [("layer", np.int32), ("row", np.int32), ("col", np.int32)]
-        elif modelgrid.grid_type == "vertex_layered":
+        elif modelgrid.grid_type == "vertex":
             return [("layer", np.int32), ("ncpl", np.int32)]
         else:
             return [("nodes", np.int32)]
