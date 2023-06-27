@@ -98,12 +98,6 @@ jobs:
 
       - name: Update changelog
         run: |
-          # move changelog
-          sudo cp ${{ steps.cliff.outputs.changelog }} CHANGELOG.md
-          
-          # show changelog
-          cat CHANGELOG.md
-          
           # substitute full group names
           sed -i 's/#### Ci/#### Continuous integration/' CHANGELOG.md
           sed -i 's/#### Feat/#### New features/' CHANGELOG.md
@@ -289,11 +283,9 @@ jobs:
           reset_branch="post-release-${{ steps.latest_tag.outputs.tag }}-reset"
           git switch -c $reset_branch
           
-          # increment patch version
-          major_version=$(echo "${{ steps.latest_tag.outputs.tag }}" | cut -d. -f1)
-          minor_version=$(echo "${{ steps.latest_tag.outputs.tag }}" | cut -d. -f2)
-          patch_version=$(echo "${{ steps.latest_tag.outputs.tag }}" | cut -d. -f3)
-          version="$major_version.$minor_version.$((patch_version + 1))"
+          # update version string (append '+' to indicate development status)
+          version=$(cat version.txt)
+          version="$version+"
           python scripts/update_version.py -v "$version"
           
           # lint Python files
@@ -304,13 +296,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "ci(release): update to development version $version"
+          git commit -m "ci(release): update to version $version"
           git push -u origin $reset_branch
           
           # create PR into develop
           body='
           # Reinitialize for development
           
-          Updates the `develop` branch from `master` following a successful release. Increments the patch version number.
+          Updates the `develop` branch from `master` following a successful release.
           '
           gh pr create -B "develop" -H "$reset_branch" --title "Reinitialize develop branch" --draft --body "$body"
