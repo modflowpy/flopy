@@ -98,12 +98,6 @@ jobs:
 
       - name: Update changelog
         run: |
-          # move changelog
-          sudo cp ${{ steps.cliff.outputs.changelog }} CHANGELOG.md
-          
-          # show changelog
-          cat CHANGELOG.md
-          
           # substitute full group names
           sed -i 's/#### Ci/#### Continuous integration/' CHANGELOG.md
           sed -i 's/#### Feat/#### New features/' CHANGELOG.md
