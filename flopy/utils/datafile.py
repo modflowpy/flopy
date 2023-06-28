@@ -95,8 +95,8 @@ class Header:
                         ("totim", floattype),
                         ("text", "a16"),
                         ("ncpl", "i4"),
-                        ("m2", "i4"),
                         ("ilay", "i4"),
+                        ("m3", "i4"),
                     ]
                 )
             elif self.header_type == "vardisu":

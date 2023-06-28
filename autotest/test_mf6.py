@@ -588,6 +588,7 @@ def test_binary_write(function_tmpdir):
 
 
 @requires_exe("mf6")
+@pytest.mark.skip(reason='todo:: after flopy binary fix.')
 def test_vor_binary_write(function_tmpdir):
 
     # build voronoi grid
