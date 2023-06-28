@@ -18,17 +18,17 @@
 #
 # A short demonstration of core `flopy` functionality
 
-# +
-from IPython.display import clear_output, display
-
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+
+# +
+from IPython.display import clear_output, display
 
 proj_root = Path.cwd().parent.parent
 
@@ -62,12 +62,12 @@ ml.modelgrid
 
 # Let's looks at some plots
 
-ml.upw.plot();
+ml.upw.plot()
 
-ml.dis.plot();
+ml.dis.plot()
 
 ml.drn.plot(key="cond")
-ml.drn.plot(key="elev");
+ml.drn.plot(key="elev")
 
 # First create a temporary workspace.
 
@@ -112,7 +112,7 @@ df_flux_out.columns = df_flux_out.columns.map(lambda x: x.split("_")[0])
 
 
 df_flux_delta = df_flux_in - df_flux_out
-df_flux_delta.iloc[-1, :].plot(kind="bar", figsize=(10, 10), grid=True);
+df_flux_delta.iloc[-1, :].plot(kind="bar", figsize=(10, 10), grid=True)
 # -
 
 # Now let's look at the simulated head.
@@ -121,7 +121,7 @@ df_flux_delta.iloc[-1, :].plot(kind="bar", figsize=(10, 10), grid=True);
 h = flopy.utils.HeadFile(model_ws / "freyberg.hds", model=ml)
 h.times
 
-h.plot(totim=900, contour=True, grid=True, colorbar=True, figsize=(10, 10));
+h.plot(totim=900, contour=True, grid=True, colorbar=True, figsize=(10, 10))
 
 # We can write the heads to a shapefile.
 
@@ -141,7 +141,7 @@ for t in h.times[0:-1:10]:
 
     display(f)
     clear_output(wait=True)
-    plt.pause(0.1);
+    plt.pause(0.1)
 
 try:
     # ignore PermissionError on Windows

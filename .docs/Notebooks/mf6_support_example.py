@@ -143,7 +143,7 @@ model.name_file.print_input = True
 
 # ## Specifying options
 #
-# Option that appear alone are assigned a boolean value, like the print_input option above.  Options that have additional optional parameters are assigned using a tuple, with the entries containing the names of the optional parameters to turn on.  Use a tuple with an empty string to indicate no optional parameters and use a tuple with None to turn the option off. 
+# Option that appear alone are assigned a boolean value, like the print_input option above.  Options that have additional optional parameters are assigned using a tuple, with the entries containing the names of the optional parameters to turn on.  Use a tuple with an empty string to indicate no optional parameters and use a tuple with None to turn the option off.
 
 # Turn Newton option on with under relaxation
 model.name_file.newtonoptions = "UNDER_RELAXATION"
@@ -154,7 +154,7 @@ model.name_file.newtonoptions = None
 
 # ## MFArray templates
 #
-# Lastly define all other packages needed.  
+# Lastly define all other packages needed.
 #
 # Note that flopy supports a number of ways to specify data for a package.  A template, which defines the data array shape for you, can be used to specify the data.  Templates are built by calling the empty of the data type you are building.  For example, to build a template for k in the npf package you would call:
 #
@@ -207,10 +207,10 @@ npf_package = flopy.mf6.ModflowGwfnpf(
 #
 #
 # ```python
-# strt=[100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 
+# strt=[100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0,
 #       90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0]
 # ```
-#       
+#
 # Or as a list defining a value or values for each model layer:
 #
 # ```python
@@ -226,10 +226,10 @@ npf_package = flopy.mf6.ModflowGwfnpf(
 # MFArray data can also be stored in an external file by using a dictionary using the keys 'filename' to specify the file name relative to the model folder and 'data' to specific the data.  The optional 'factor', 'iprn', and 'binary' keys may also be used.
 #
 # ```python
-# strt={'filename': 'strt.txt', 'factor':1.0, 'data':[100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 
+# strt={'filename': 'strt.txt', 'factor':1.0, 'data':[100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0,
 #       90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0], 'binary': 'True'}
 # ```
-#       
+#
 # If the 'data' key is omitted from the dictionary flopy will try to read the data from an existing file 'filename'.  Any relative paths for loading data from a file should specified relative to the MF6 simulation folder.
 
 strt = {
@@ -263,7 +263,9 @@ ic_package = flopy.mf6.ModflowGwfic(
     model, pname="ic", strt=strt, filename="{}.ic".format(model_name)
 )
 # move external file data into model folder
-icv_data_path = os.path.join("..", "..", "examples", "data", "mf6", "notebooks", "iconvert.txt")
+icv_data_path = os.path.join(
+    "..", "..", "examples", "data", "mf6", "notebooks", "iconvert.txt"
+)
 copyfile(icv_data_path, os.path.join(sim_path, "iconvert.txt"))
 # create storage package
 sto_package = flopy.mf6.ModflowGwfsto(
@@ -316,7 +318,7 @@ sto_package = flopy.mf6.ModflowGwfsto(
 #
 # MFList transient data templates are numpy recarrays stored in a dictionary with the dictionary key an integer zero based stress period value (stress period - 1).
 #
-# In the code below the well package is set up using a transient MFList template to help build the well's stress_periods.   
+# In the code below the well package is set up using a transient MFList template to help build the well's stress_periods.
 
 maxbound = 2
 # build a stress_period_data template with 2 wells over stress periods 1 and 2 with boundnames
@@ -388,7 +390,7 @@ oc_package.printrecord.add_transient_key(1)
 # set the data for stress period two in the print record
 oc_package.printrecord.set_data([("HEAD", "ALL"), ("BUDGET", "ALL")], 1)
 
-# ### Specifying MFList Data in an External File 
+# ### Specifying MFList Data in an External File
 #
 # MFList data can be specified in an external file using a dictionary with the 'filename' key.  If the 'data' key is also included in the dictionary and is not None, flopy will create the file with the data contained in the 'data' key.  The 'binary' key can be used to save data to a binary file (`'binary': True`).  The code below creates a chd package which creates and references an external file containing data for stress period 1 and stores the data internally in the chd package file for stress period 2.
 
@@ -424,7 +426,7 @@ rch_package = flopy.mf6.ModflowGwfrch(
 
 # ## Utility Files (TS, TAS, OBS, TAB)
 #
-# Utility files, MF6 formatted files that reference by packages, include time series, time array series, observation, and tab files.  The file names for utility files are specified using the package that references them. The utility files can be created in several ways. A simple case is demonstrated below. More detail is given in the flopy3_mf6_obs_ts_tas notebook. 
+# Utility files, MF6 formatted files that reference by packages, include time series, time array series, observation, and tab files.  The file names for utility files are specified using the package that references them. The utility files can be created in several ways. A simple case is demonstrated below. More detail is given in the flopy3_mf6_obs_ts_tas notebook.
 
 # +
 # build a time series array for the recharge package
@@ -519,7 +521,7 @@ loaded_sim = flopy.mf6.MFSimulation.load(sim_name, "mf6", "mf6", sim_path)
 #
 # The second method is to get the data from the package object.  If you do not already have the package object, you can work your way down the simulation structure, from the simulation to the correct model, to the correct package, and finally to the data object.
 #
-# These methods are demonstrated in the code below. 
+# These methods are demonstrated in the code below.
 
 # +
 # get hydraulic conductivity data object from the data dictionary
@@ -540,7 +542,7 @@ strt = ic.strt
 
 # Once you have the appropriate data object there are a number methods to retrieve data from that object.  Data  retrieved can either be the data as it appears in the model file or the data with any factor specified in the model file applied to it.  To get the raw data without applying a factor use the get_data method.  To get the data with the factor already applied use .array.
 #
-# Note that MFArray data is always a copy of the data stored by flopy.  Modifying the copy of the flopy data will have no affect on the data stored in flopy.  Non-constant internal MFList data is returned as a reference to a numpy recarray.  Modifying this recarray will modify the data stored in flopy. 
+# Note that MFArray data is always a copy of the data stored by flopy.  Modifying the copy of the flopy data will have no affect on the data stored in flopy.  Non-constant internal MFList data is returned as a reference to a numpy recarray.  Modifying this recarray will modify the data stored in flopy.
 
 # +
 # get the data without applying any factor
@@ -601,7 +603,7 @@ assert sim.sim_path == sim.simulation_data.mfpath.get_sim_path()
 
 # ## Adding a Model Relative Path
 #
-# A model relative path lets you put all of the files associated with a model in a folder relative to the simulation folder.  Warning, this will override all of your file paths to model package files and will also override any relative file paths to external model data files. 
+# A model relative path lets you put all of the files associated with a model in a folder relative to the simulation folder.  Warning, this will override all of your file paths to model package files and will also override any relative file paths to external model data files.
 
 # +
 # Change path of model files relative to the simulation folder

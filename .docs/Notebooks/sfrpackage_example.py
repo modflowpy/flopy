@@ -18,32 +18,32 @@
 # ---
 
 # # SFR package Prudic and others (2004) example
-# Demonstrates functionality of Flopy SFR module using the example documented by [Prudic and others (2004)](https://doi.org/10.3133/ofr20041042):  
+# Demonstrates functionality of Flopy SFR module using the example documented by [Prudic and others (2004)](https://doi.org/10.3133/ofr20041042):
 #
 # #### Problem description:
 #
-# * Grid dimensions: 1 Layer, 15 Rows, 10 Columns  
-# * Stress periods: 1 steady  
-# * Flow package: LPF  
-# * Stress packages: SFR, GHB, EVT, RCH  
-# * Solver: SIP  
+# * Grid dimensions: 1 Layer, 15 Rows, 10 Columns
+# * Stress periods: 1 steady
+# * Flow package: LPF
+# * Stress packages: SFR, GHB, EVT, RCH
+# * Solver: SIP
 #
 # <img src="./img/Prudic2004_fig6.png" width="400" height="500"/>
 
+import glob
+import os
+import shutil
+
 # +
 import sys
-import os
-import glob
-import shutil
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 import flopy
-
 import flopy.utils.binaryfile as bf
 from flopy.utils.sfroutputfile import SfrFile
 
@@ -89,31 +89,35 @@ oc = m.oc
 oc.stress_period_data
 
 # ### Read pre-prepared reach and segment data into numpy recarrays using numpy.genfromtxt()
-# Reach data (Item 2 in the SFR input instructions), are input and stored in a numpy record array  
-# https://numpy.org/doc/stable/reference/generated/numpy.recarray.html  
+# Reach data (Item 2 in the SFR input instructions), are input and stored in a numpy record array
+# https://numpy.org/doc/stable/reference/generated/numpy.recarray.html
 # This allows for reach data to be indexed by their variable names, as described in the SFR input instructions.
 #
-# For more information on Item 2, see the Online Guide to MODFLOW:  
+# For more information on Item 2, see the Online Guide to MODFLOW:
 # <https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/sfr.html>
 
-rpth = os.path.join("..", "..", "examples", "data", "sfr_examples", "test1ss_reach_data.csv")
+rpth = os.path.join(
+    "..", "..", "examples", "data", "sfr_examples", "test1ss_reach_data.csv"
+)
 reach_data = np.genfromtxt(rpth, delimiter=",", names=True)
 reach_data
 
 # ### Segment Data structure
-# Segment data are input and stored in a dictionary of record arrays, which 
+# Segment data are input and stored in a dictionary of record arrays, which
 
-spth = os.path.join("..", "..", "examples", "data", "sfr_examples", "test1ss_segment_data.csv")
+spth = os.path.join(
+    "..", "..", "examples", "data", "sfr_examples", "test1ss_segment_data.csv"
+)
 ss_segment_data = np.genfromtxt(spth, delimiter=",", names=True)
 segment_data = {0: ss_segment_data}
 segment_data[0][0:1]["width1"]
 
 # ### define dataset 6e (channel flow data) for segment 1
-# dataset 6e is stored in a nested dictionary keyed by stress period and segment,  
-# with a list of the following lists defined for each segment with icalc == 4  
-# FLOWTAB(1) FLOWTAB(2) ... FLOWTAB(NSTRPTS)  
-# DPTHTAB(1) DPTHTAB(2) ... DPTHTAB(NSTRPTS)  
-# WDTHTAB(1) WDTHTAB(2) ... WDTHTAB(NSTRPTS)  
+# dataset 6e is stored in a nested dictionary keyed by stress period and segment,
+# with a list of the following lists defined for each segment with icalc == 4
+# FLOWTAB(1) FLOWTAB(2) ... FLOWTAB(NSTRPTS)
+# DPTHTAB(1) DPTHTAB(2) ... DPTHTAB(NSTRPTS)
+# WDTHTAB(1) WDTHTAB(2) ... WDTHTAB(NSTRPTS)
 
 channel_flow_data = {
     0: {
@@ -126,11 +130,11 @@ channel_flow_data = {
 }
 
 # ### define dataset 6d (channel geometry data) for segments 7 and 8
-# dataset 6d is stored in a nested dictionary keyed by stress period and segment,  
-# with a list of the following lists defined for each segment with icalc == 4  
-# FLOWTAB(1) FLOWTAB(2) ... FLOWTAB(NSTRPTS)  
-# DPTHTAB(1) DPTHTAB(2) ... DPTHTAB(NSTRPTS)  
-# WDTHTAB(1) WDTHTAB(2) ... WDTHTAB(NSTRPTS)  
+# dataset 6d is stored in a nested dictionary keyed by stress period and segment,
+# with a list of the following lists defined for each segment with icalc == 4
+# FLOWTAB(1) FLOWTAB(2) ... FLOWTAB(NSTRPTS)
+# DPTHTAB(1) DPTHTAB(2) ... DPTHTAB(NSTRPTS)
+# WDTHTAB(1) WDTHTAB(2) ... WDTHTAB(NSTRPTS)
 
 channel_geometry_data = {
     0: {
@@ -145,7 +149,7 @@ channel_geometry_data = {
     }
 }
 
-# ### Define SFR package variables  
+# ### Define SFR package variables
 
 nstrm = len(reach_data)  # number of reaches
 nss = len(segment_data[0])  # number of segments
@@ -157,7 +161,7 @@ ipakcb = 53  # flag for writing SFR output to cell-by-cell budget (on unit 53)
 istcb2 = 81  # flag for writing SFR output to text file
 dataset_5 = {0: [nss, 0, 0]}  # dataset 5 (see online guide)
 
-# ### Instantiate SFR package  
+# ### Instantiate SFR package
 # Input arguments generally follow the variable names defined in the Online Guide to MODFLOW
 
 sfr = flopy.modflow.ModflowSfr2(
@@ -181,7 +185,7 @@ sfr.reach_data[0:1]
 # ### Plot the SFR segments
 # any column in the reach_data array can be plotted using the ```key``` argument
 
-sfr.plot(key="iseg");
+sfr.plot(key="iseg")
 
 # ### Check the SFR dataset for errors
 
@@ -199,10 +203,12 @@ if success:
 else:
     raise ValueError("Failed to run.")
 
-# ### Load SFR formated water balance output into pandas dataframe using the `SfrFile` class 
+# ### Load SFR formated water balance output into pandas dataframe using the `SfrFile` class
 # * requires the **pandas** library
 
-sfr_outfile = os.path.join("..", "..", "examples", "data", "sfr_examples", "test1ss.flw")
+sfr_outfile = os.path.join(
+    "..", "..", "examples", "data", "sfr_examples", "test1ss.flw"
+)
 sfrout = SfrFile(sfr_outfile)
 df = sfrout.get_dataframe()
 df.head()
@@ -214,7 +220,7 @@ print(df.reach[inds].astype(str))
 # ax = df.ix[inds, ['Qin', 'Qaquifer', 'Qout']].plot(x=df.reach[inds])
 ax = df.loc[inds, ["reach", "Qin", "Qaquifer", "Qout"]].plot(x="reach")
 ax.set_ylabel("Flow, in cubic feet per second")
-ax.set_xlabel("SFR reach");
+ax.set_xlabel("SFR reach")
 
 # ### Look at stage, model top, and streambed top
 
@@ -229,7 +235,7 @@ plt.plot([1, 6], list(streambed_top), label="streambed top")
 # ax = df.loc[inds, ['stage', 'model_top']].plot(ax=ax, x=df.reach[inds])
 ax = df.loc[inds, ["reach", "stage", "model_top"]].plot(ax=ax, x="reach")
 ax.set_ylabel("Elevation, in feet")
-plt.legend();
+plt.legend()
 
 # ### Get SFR leakage results from cell budget file
 
@@ -245,7 +251,7 @@ sfrleak[sfrleak == 0] = np.nan  # remove zero values
 im = plt.imshow(
     sfrleak[0], interpolation="none", cmap="coolwarm", vmin=-3, vmax=3
 )
-cb = plt.colorbar(im, label="SFR Leakage, in cubic feet per second");
+cb = plt.colorbar(im, label="SFR Leakage, in cubic feet per second")
 
 # ### Plot total streamflow
 
@@ -255,7 +261,7 @@ sfrQ[df.row.values - 1, df.column.values - 1] = (
     df[["Qin", "Qout"]].mean(axis=1).values
 )
 im = plt.imshow(sfrQ, interpolation="none")
-plt.colorbar(im, label="Streamflow, in cubic feet per second");
+plt.colorbar(im, label="Streamflow, in cubic feet per second")
 
 # ## Reading transient SFR formatted output
 #
@@ -281,7 +287,7 @@ dftr8 = dftr.loc[(dftr.segment == 8) & (dftr.reach == 5)]
 dftr8.Qout.plot(ax=axes[0])
 axes[0].set_ylabel("Simulated streamflow, cfs")
 dftr8.Qaquifer.plot(ax=axes[1])
-axes[1].set_ylabel("Leakage to aquifer, cfs");
+axes[1].set_ylabel("Leakage to aquifer, cfs")
 
 try:
     # ignore PermissionError on Windows

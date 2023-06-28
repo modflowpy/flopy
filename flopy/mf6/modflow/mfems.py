@@ -4,9 +4,9 @@
 from .. import mfpackage
 
 
-class ModflowGwfgwt(mfpackage.MFPackage):
+class ModflowEms(mfpackage.MFPackage):
     """
-    ModflowGwfgwt defines a gwfgwt package.
+    ModflowEms defines a ems package.
 
     Parameters
     ----------
@@ -16,12 +16,6 @@ class ModflowGwfgwt(mfpackage.MFPackage):
     loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
-    exgtype : <string>
-        * is the exchange type (GWF-GWF or GWF-GWT).
-    exgmnamea : <string>
-        * is the name of the first model that is part of this exchange.
-    exgmnameb : <string>
-        * is the name of the second model that is part of this exchange.
     filename : String
         File name for this package.
     pname : String
@@ -33,13 +27,14 @@ class ModflowGwfgwt(mfpackage.MFPackage):
 
     """
 
-    package_abbr = "gwfgwt"
-    _package_type = "gwfgwt"
-    dfn_file_name = "exg-gwfgwt.dfn"
+    package_abbr = "ems"
+    _package_type = "ems"
+    dfn_file_name = "sln-ems.dfn"
 
     dfn = [
         [
             "header",
+            ["solution_package", "*"],
         ],
     ]
 
@@ -47,24 +42,13 @@ class ModflowGwfgwt(mfpackage.MFPackage):
         self,
         simulation,
         loading_package=False,
-        exgtype="GWF6-GWT6",
-        exgmnamea=None,
-        exgmnameb=None,
         filename=None,
         pname=None,
         **kwargs,
     ):
         super().__init__(
-            simulation, "gwfgwt", filename, pname, loading_package, **kwargs
+            simulation, "ems", filename, pname, loading_package, **kwargs
         )
 
         # set up variables
-        self.exgtype = exgtype
-
-        self.exgmnamea = exgmnamea
-
-        self.exgmnameb = exgmnameb
-
-        simulation.register_exchange_file(self)
-
         self._init_complete = True

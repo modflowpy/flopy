@@ -22,13 +22,13 @@
 
 # +
 import os
-import sys
 import shutil
+import sys
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
 # run installed version of flopy or add local path
 try:
@@ -80,7 +80,7 @@ print(b.shape)
 pmv = flopy.plot.PlotMapView(model=mf)
 v = pmv.plot_array(b)
 pmv.plot_grid()
-plt.colorbar(v, shrink=0.5);
+plt.colorbar(v, shrink=0.5)
 
 # Write the linear data array to a binary file
 
@@ -115,14 +115,14 @@ br = bo.get_data(idx=0)
 pmv = flopy.plot.PlotMapView(model=mf)
 v = pmv.plot_array(br)
 pmv.plot_grid()
-plt.colorbar(v, shrink=0.5);
+plt.colorbar(v, shrink=0.5)
 
 # Plot the difference in the two values
 
 pmv = flopy.plot.PlotMapView(model=mf)
 v = pmv.plot_array(b - br)
 pmv.plot_grid()
-plt.colorbar(v, shrink=0.5);
+plt.colorbar(v, shrink=0.5)
 
 try:
     # ignore PermissionError on Windows

@@ -16,16 +16,17 @@
 
 # # Flopy Drain Return (DRT) capabilities
 
+import os
+
 # +
 import sys
-import os
 from tempfile import TemporaryDirectory
 
-import numpy as np
-import flopy
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
+import flopy
 
 print(sys.version)
 print("numpy version: {}".format(np.__version__))

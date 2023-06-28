@@ -23,9 +23,9 @@ import os
 import sys
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
 # run installed version of flopy or add local path
 try:
@@ -91,7 +91,7 @@ start = h1 * np.ones((N, N))
 start[Nhalf, Nhalf] = h2
 bas = flopy.modflow.ModflowBas(ml, ibound=ibound, strt=start)
 
-# The aquifer properties (really only the hydraulic conductivity) are defined with the LPF package. 
+# The aquifer properties (really only the hydraulic conductivity) are defined with the LPF package.
 
 lpf = flopy.modflow.ModflowLpf(ml, hk=k)
 
@@ -114,16 +114,16 @@ h = hds.get_data(kstpkper=(0, 0))
 x = y = np.linspace(0, L, N)
 c = plt.contour(x, y, h[0], np.arange(90, 100.1, 0.2))
 plt.clabel(c, fmt="%2.1f")
-plt.axis("scaled");
+plt.axis("scaled")
 
 x = y = np.linspace(0, L, N)
 c = plt.contour(x, y, h[-1], np.arange(90, 100.1, 0.2))
 plt.clabel(c, fmt="%1.1f")
-plt.axis("scaled");
+plt.axis("scaled")
 
 z = np.linspace(-H / Nlay / 2, -H + H / Nlay / 2, Nlay)
 c = plt.contour(x, z, h[:, 50, :], np.arange(90, 100.1, 0.2))
-plt.axis("scaled");
+plt.axis("scaled")
 
 try:
     # ignore PermissionError on Windows

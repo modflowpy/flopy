@@ -164,6 +164,7 @@ for idx in range(-3, 0):
 # +
 # Post-process the results
 import numpy as np
+
 import flopy.utils.binaryfile as bf
 
 # Load data
@@ -208,7 +209,7 @@ ax.quiver(
     width=0.0025,
 )
 plt.savefig(os.path.join(workspace, "henry.png"))
-plt.show();
+plt.show()
 # -
 
 # Extract the heads
@@ -221,7 +222,7 @@ head = headobj.get_data(totim=times[-1])
 fig = plt.figure(figsize=(10, 10))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 im = ax.imshow(head[:, 0, :], interpolation="nearest", extent=(0, Lx, 0, Lz))
-ax.set_title("Simulated Heads");
+ax.set_title("Simulated Heads")
 
 # #### Change the format of several arrays and rerun the model
 

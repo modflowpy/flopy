@@ -17,10 +17,11 @@
 
 # # Exporting to netCDF and shapefile
 
+import datetime
+
 # +
 import os
 import sys
-import datetime
 from tempfile import TemporaryDirectory
 
 import flopy
@@ -32,7 +33,9 @@ print("flopy version: {}".format(flopy.__version__))
 # Load our old friend...the Freyberg model
 
 nam_file = "freyberg.nam"
-model_ws = os.path.join("..", "..", "examples", "data", "freyberg_multilayer_transient")
+model_ws = os.path.join(
+    "..", "..", "examples", "data", "freyberg_multilayer_transient"
+)
 ml = flopy.modflow.Modflow.load(nam_file, model_ws=model_ws, check=False)
 
 # We can see the ``Modelgrid`` instance has generic entries, as does ``start_datetime``
@@ -71,10 +74,10 @@ flopy.export.utils.output_helper(
 ml.dis.top.export(os.path.join(pth, "top.nc"))
 ml.dis.top.export(os.path.join(pth, "top.shp"))
 
-# #### sparse export of stress period data for a boundary condition package  
-# * excludes cells that aren't in the package (aren't in `package.stress_period_data`)  
+# #### sparse export of stress period data for a boundary condition package
+# * excludes cells that aren't in the package (aren't in `package.stress_period_data`)
 # * by default, stress periods with duplicate parameter values (e.g., stage, conductance, etc.) are omitted
-# (`squeeze=True`); only stress periods with different values are exported  
+# (`squeeze=True`); only stress periods with different values are exported
 # * argue `squeeze=False` to export all stress periods
 
 ml.drn.stress_period_data.export(os.path.join(pth, "drn.shp"), sparse=True)

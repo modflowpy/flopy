@@ -25,13 +25,13 @@
 
 # +
 import os
-import sys
 import shutil
+import sys
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
 # run installed version of flopy or add local path
 try:
@@ -41,8 +41,8 @@ except:
     sys.path.append(fpth)
     import flopy
 
-from flopy.utils.gridgen import Gridgen
 from flopy.utils import flopy_io
+from flopy.utils.gridgen import Gridgen
 
 print(sys.version)
 print("numpy version: {}".format(np.__version__))
@@ -480,5 +480,3 @@ try:
     temp_dir.cleanup()
 except:
     pass
-
-

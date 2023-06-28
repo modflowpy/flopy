@@ -1,6 +1,6 @@
-# flopy version file automatically created using update_version.py on December 15, 2022 16:32:52
+# flopy version file automatically created using update_version.py on June 28, 2023 20:22:45
 
 major = 3
-minor = 3
-micro = 7
+minor = 4
+micro = 0
 __version__ = f"{major}.{minor}.{micro}"

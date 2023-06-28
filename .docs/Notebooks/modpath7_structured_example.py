@@ -21,14 +21,15 @@
 #
 # This notebook demonstrates how to create and run example 1a from the MODPATH 7 documentation for MODFLOW-2005 and MODFLOW 6. The notebooks also shows how to create subsets of endpoint output and plot MODPATH results on PlotMapView objects.
 
+import os
+
 # +
 import sys
-import os
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
 # run installed version of flopy or add local path
 try:
@@ -246,7 +247,7 @@ mm.plot_grid(lw=0.5)
 mm.plot_pathline(pw0, layer="all", colors="blue", label="captured by wells")
 mm.plot_pathline(pr0, layer="all", colors="green", label="captured by rivers")
 mm.plot_endpoint(epd0, direction="starting", colorbar=True)
-mm.ax.legend();
+mm.ax.legend()
 
 # ### MODPATH 7 using MODFLOW 6
 #
@@ -410,7 +411,7 @@ mm.plot_grid(lw=0.5)
 mm.plot_pathline(pw1, layer="all", colors="blue", label="captured by wells")
 mm.plot_pathline(pr1, layer="all", colors="green", label="captured by rivers")
 mm.plot_endpoint(epd1, direction="starting", colorbar=True)
-mm.ax.legend();
+mm.ax.legend()
 
 # ### Compare MODPATH results
 #
@@ -485,4 +486,4 @@ mm.plot_pathline(
     pr0, layer="all", colors="green", lw=1, linestyle=":", label="_none"
 )
 ax.legend()
-ax.set_title("MODFLOW 2005 and MODFLOW 6");
+ax.set_title("MODFLOW 2005 and MODFLOW 6")

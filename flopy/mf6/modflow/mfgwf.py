@@ -1,9 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on January 27, 2023 18:36:16 UTC
-import os
-from typing import Union
-
+# FILE created on June 28, 2023 20:22:50 UTC
 from .. import mfmodel
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -122,9 +119,9 @@ class ModflowGwf(mfmodel.MFModel):
         modelname="NewModel",
         model_nam_file="modflowtest.nam",
         version="mf6",
-        exe_name: Union[str, os.PathLike] = "mf6",
+        exe_name="mf6",
         strict=True,
-        model_rel_path=os.curdir,
+        model_rel_path=".",
         load_only=None,
     ):
         return mfmodel.MFModel.load_base(

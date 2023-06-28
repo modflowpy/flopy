@@ -23,15 +23,16 @@
 
 # ## Part I. Setup Notebook
 
+import os
+
 # +
 import sys
-import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
 proj_root = Path.cwd().parent.parent
 
@@ -167,7 +168,7 @@ mm = flopy.plot.PlotMapView(model=ms)
 mm.plot_grid()
 flopy.plot.plot_shapefile(rf0shp, ax=ax, facecolor="yellow", edgecolor="none")
 flopy.plot.plot_shapefile(rf1shp, ax=ax, facecolor="pink", edgecolor="none")
-flopy.plot.plot_shapefile(rf2shp, ax=ax, facecolor="red", edgecolor="none");
+flopy.plot.plot_shapefile(rf2shp, ax=ax, facecolor="red", edgecolor="none")
 
 # Build the refined grid.
 
@@ -177,7 +178,7 @@ g.build(verbose=False)
 
 fig = plt.figure(figsize=(5, 5), constrained_layout=True)
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
-g.plot(ax, linewidth=0.5);
+g.plot(ax, linewidth=0.5)
 
 # Extract the refined grid's properties.
 
@@ -318,7 +319,7 @@ cmap = mpl.colors.ListedColormap(
     ]
 )
 pc = pmv.plot_array(ibd, cmap=cmap, edgecolor="gray")
-t = ax.set_title("Boundary Conditions\n");
+t = ax.set_title("Boundary Conditions\n")
 
 fname = os.path.join(model_ws, model_name + ".hds")
 hdobj = flopy.utils.HeadFile(fname)
@@ -341,7 +342,7 @@ plt.clabel(cs, fmt="%.1f", colors="white", fontsize=11)
 cb = plt.colorbar(pc, shrink=0.5)
 t = ax.set_title(
     "Model Layer {}; hmin={:6.2f}, hmax={:6.2f}".format(ilay + 1, hmin, hmax)
-);
+)
 
 # Inspect model cells and vertices.
 
@@ -505,7 +506,7 @@ v = mm.plot_array(ibd, cmap=cmap, edgecolor="gray")
 mm.plot_pathline(p0, layer="all", colors="blue", lw=0.75)
 colors = ["green", "orange", "red"]
 for k in range(nlay):
-    mm.plot_timeseries(ts0, layer=k, marker="o", lw=0, color=colors[k]);
+    mm.plot_timeseries(ts0, layer=k, marker="o", lw=0, color=colors[k])
 
 # Create and run the endpoint analysis model.
 
@@ -556,7 +557,7 @@ cmap = mpl.colors.ListedColormap(
     ]
 )
 v = mm.plot_array(ibd, cmap=cmap, edgecolor="gray")
-mm.plot_endpoint(e0, direction="ending", colorbar=True, shrink=0.5);
+mm.plot_endpoint(e0, direction="ending", colorbar=True, shrink=0.5)
 
 # Clean up the temporary workspace.
 

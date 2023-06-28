@@ -32,11 +32,11 @@ import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-import flopy
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
+import flopy
 
 print(sys.version)
 print("numpy version: {}".format(np.__version__))
@@ -58,6 +58,7 @@ modelname = "watertable"
 
 
 # Define a function to calculate the analytical solution at specified points in an aquifer.
+
 
 def analytical_water_table_solution(h1, h2, z, R, K, L, x):
     h = np.zeros((x.shape[0]), float)
@@ -211,7 +212,7 @@ ax.set_ylabel("Error, in m")
 ax = fig.add_subplot(1, 3, 3)
 ax.plot(x, 100.0 * (head[0, 0, :] - hac) / hac, linewidth=1, color="blue")
 ax.set_xlabel("Horizontal distance, in m")
-ax.set_ylabel("Percent Error");
+ax.set_ylabel("Percent Error")
 # -
 
 try:
