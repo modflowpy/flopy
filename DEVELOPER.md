@@ -137,7 +137,7 @@ This can be fixed by running `Install Certificates.command` in your Python insta
 
 ### Updating FloPy packages
 
-FloPy must be up-to-date with the version of MODFLOW 6 and other executables it is being used with. The synchronization is achieved via DFN files, which define the format of MODFLOW6 inputs and outputs. FloPy contains Python source code automatically generated from DFN files. This is done with the `generate_classes` function in `flopy.mf6.utils`. See [this document](./docs/generate_classes.md) for usage examples.
+FloPy must be up-to-date with the version of MODFLOW 6 and other executables it is being used with. Synchronization is achieved via "definition" (DFN) files, which define the format of MODFLOW6 inputs and outputs. FloPy contains Python source code automatically generated from DFN files. This is done with the `generate_classes` function in `flopy.mf6.utils`. See [this document](./docs/generate_classes.md) for usage examples.
 
 ## Examples
 
