@@ -198,6 +198,10 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      id-token: write  # mandatory for trusted publishing
+    environment:  # requires a 'release' environment in repo settings
+      name: release
+      url: https://pypi.org/p/flopy
     steps:
 
       - name: Checkout master branch
@@ -232,9 +236,6 @@ jobs:
           path: dist
 
       - name: Publish to PyPI
-        env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: python -m twine upload dist/*
 
   reset:
