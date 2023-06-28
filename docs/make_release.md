@@ -68,6 +68,9 @@ If the branch name does not end with `rc`, the workflow will proceed to open a P
 
 Publishing the release triggers jobs to publish the `flopy` package to PyPI and open a PR updating `develop` from `master`. This PR also updates version numbers to the just-released version, and appends "+" to the end of the version string to indicate development status.
 
+##### Trusted publishing
+
+The automated release workflow assumes [trusted publishing](https://docs.pypi.org/trusted-publishers/) has been configured in the PyPI admin interface. A GitHub environment called `release` is also required (however it needs no secrets or environment variables).
 
 ### Manual releases
 
