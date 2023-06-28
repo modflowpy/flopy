@@ -511,6 +511,12 @@ def test_binary_write(function_tmpdir):
     shape3d = (nlay, nrow, ncol)
 
     # create binary data structured
+    idomain_data = {
+        "filename": "idomain.bin",
+        "binary": True,
+        "iprn": 0,
+        "data": 1,
+    }
     top_data = {
         "filename": "top.bin",
         "binary": True,
@@ -566,6 +572,7 @@ def test_binary_write(function_tmpdir):
         delc=1.0,
         top=top_data,
         botm=botm_data,
+        idomain=idomain_data,
     )
     ModflowGwfnpf(
         gwf,
@@ -573,7 +580,7 @@ def test_binary_write(function_tmpdir):
     )
     ModflowGwfic(
         gwf,
-        strt=10.0,
+        strt=strt_data,
     )
     ModflowGwfchd(
         gwf,
