@@ -135,6 +135,10 @@ URLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certifica
 
 This can be fixed by running `Install Certificates.command` in your Python installation directory (see the [StackOverflow discussion here](https://stackoverflow.com/a/58525755/6514033) for more information).
 
+### Updating FloPy packages
+
+FloPy must be up-to-date with the version of MODFLOW 6 and other executables it is being used with. Synchronization is achieved via "definition" (DFN) files, which define the format of MODFLOW6 inputs and outputs. FloPy contains Python source code automatically generated from DFN files. This is done with the `generate_classes` function in `flopy.mf6.utils`. See [this document](./docs/generate_classes.md) for usage examples.
+
 ## Examples
 
 A number of scripts and notebooks demonstrating various `flopy` functions and features are located in `examples/` and `.docs/`. These are probably the easiest way to get acquainted with `flopy`.
