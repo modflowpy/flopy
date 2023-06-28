@@ -194,6 +194,7 @@ class BinaryHeader(Header):
             "ilay",
             "ncpl",
             "nodes",
+            "m1",
             "m2",
             "m3",
         ]

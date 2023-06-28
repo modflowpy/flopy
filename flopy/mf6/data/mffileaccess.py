@@ -212,6 +212,8 @@ class MFFileAccessArray(MFFileAccess):
     ):
         data = self._resolve_cellid_numbers_to_file(data)
         fd = self._open_ext_file(fname, binary=True, write=True)
+        if data.size == modelgrid.nnodes:
+            write_multi_layer = False
         if write_multi_layer:
             for layer, value in enumerate(data):
                 self._write_layer(
@@ -307,7 +309,6 @@ class MFFileAccessArray(MFFileAccess):
                     shape3d = modelgrid.nlay * modelgrid.ncpl
                     if data.size == shape3d:
                         m1, m2, m3 = shape3d, 1, 1
-                print(f"{modelgrid.grid_type}: {text} (m1,m2,m3) ({m1},{m2},{m3})")
                 return BinaryHeader.create(
                     bintype="vardisv",
                     precision=precision,
