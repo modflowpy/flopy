@@ -24,9 +24,9 @@
 # ### Mapping is demonstrated for MODFLOW-2005, MODFLOW-USG, and MODFLOW-6 models in this notebook
 #
 
-import os
 
 # +
+import os
 import sys
 from tempfile import TemporaryDirectory
 
@@ -315,8 +315,6 @@ fig.colorbar(sm, shrink=0.75, ax=ax)
 # + [markdown] pycharm={"name": "#%% md\n"}
 # Array contours can be exported directly to a shapefile.
 
-from shapefile import Reader
-
 # + pycharm={"name": "#%%\n"}
 from flopy.export.utils import (  # use export_contourf for filled contours
     export_contours,
@@ -324,6 +322,8 @@ from flopy.export.utils import (  # use export_contourf for filled contours
 
 shp_path = os.path.join(modelpth, "contours.shp")
 export_contours(shp_path, contour_set)
+
+from shapefile import Reader
 
 with Reader(shp_path) as r:
     nshapes = len(r.shapes())

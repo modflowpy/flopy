@@ -1,15 +1,16 @@
 import os
 import re
-from packaging.version import Version
 from pathlib import Path
 
 import numpy as np
+from packaging.version import Version
 
 import flopy
 
 
 def test_import_and_version_string():
     import flopy
+
     # an error is raised if the version string can't be parsed
     Version(flopy.__version__)
 
