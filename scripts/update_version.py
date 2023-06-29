@@ -107,21 +107,23 @@ def update_version_txt(version: Version):
     print(f"Updated {_version_txt_path} to version {version}")
 
 
-def update_version_py(
-    timestamp: datetime, version: Version
-):
+def update_version_py(timestamp: datetime, version: Version):
     with open(_version_py_path, "w") as f:
         f.write(
             f"# {_project_name} version file automatically created using "
             f"{Path(__file__).name} on {timestamp:%B %d, %Y %H:%M:%S}\n\n"
         )
-        f.write("# created on..." + f"{timestamp.strftime('%B %d, %Y %H:%M:%S')}\n")
+        f.write(
+            "# created on..." + f"{timestamp.strftime('%B %d, %Y %H:%M:%S')}\n"
+        )
         f.write("\n")
         f.write(f"major = {version.major}\n")
         f.write(f"minor = {version.minor}\n")
         f.write(f"micro = {version.patch}\n")
         f.write(
-            "label = " + (("'" + version.label + "'") if version.label else "''") + "\n"
+            "label = "
+            + (("'" + version.label + "'") if version.label else "''")
+            + "\n"
         )
         f.write("__version__ = '{:d}.{:d}.{:d}'.format(major, minor, micro)\n")
         f.write("if label:\n")
@@ -197,7 +199,7 @@ def update_codejson(
 
 
 def update_readme_markdown(
-     timestamp: datetime, version: Version, approved: bool = False
+    timestamp: datetime, version: Version, approved: bool = False
 ):
     # create disclaimer text
     disclaimer = get_disclaimer(approved)
@@ -258,9 +260,7 @@ def update_readme_markdown(
     print(f"Updated {file_paths['DISCLAIMER.md']} to version {version}")
 
 
-def update_citation_cff(
-    timestamp: datetime, version: Version
-):
+def update_citation_cff(timestamp: datetime, version: Version):
     # read CITATION.cff to modify
     fpth = file_paths["CITATION.cff"]
     citation = yaml.safe_load(fpth.read_text())
@@ -312,7 +312,7 @@ def update_PyPI_release(
 def update_version(
     timestamp: datetime = datetime.now(),
     version: Version = None,
-    approved: bool = False
+    approved: bool = False,
 ):
     lock_path = Path(_version_txt_path.name + ".lock")
     try:
@@ -382,5 +382,5 @@ if __name__ == "__main__":
             version=Version.from_string(args.version)
             if args.version
             else _current_version,
-            approved=args.approve
+            approved=args.approve,
         )

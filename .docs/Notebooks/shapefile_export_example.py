@@ -24,14 +24,15 @@
 # * custom exporting of combined data from different packages
 # * general exporting and importing of geographic data from other sources
 
+import os
+
 # +
 import sys
-import os
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 import flopy
@@ -78,7 +79,7 @@ extents = grid.extent
 pc = flopy.plot.plot_shapefile(fname, ax=ax, edgecolor="k", facecolor="none")
 ax.set_xlim(extents[0], extents[1])
 ax.set_ylim(extents[2], extents[3])
-ax.set_title(fname);
+ax.set_title(fname)
 
 fname = "{}/wel.shp".format(outdir)
 m.wel.export(fname)
@@ -98,7 +99,7 @@ a = m.lpf.hk.array.ravel()
 pc = flopy.plot.plot_shapefile(fname, ax=ax, a=a)
 ax.set_xlim(extents[0], extents[1])
 ax.set_ylim(extents[2], extents[3])
-ax.set_title(fname);
+ax.set_title(fname)
 
 m.riv.stress_period_data
 
@@ -149,7 +150,7 @@ extents = grid.extent
 pc = flopy.plot.plot_shapefile(fname, ax=ax)
 ax.set_xlim(extents[0], extents[1])
 ax.set_ylim(extents[2], extents[3])
-ax.set_title(fname);
+ax.set_title(fname)
 
 # ### exporting other data
 # Suppose we have some well data with actual locations that we want to export to a shapefile
@@ -180,7 +181,7 @@ extents = grid.extent
 pc = flopy.plot.plot_shapefile(fname, ax=ax, radius=100)
 ax.set_xlim(extents[0], extents[1])
 ax.set_ylim(extents[2], extents[3])
-ax.set_title(fname);
+ax.set_title(fname)
 
 # ### Adding attribute data to an existing shapefile
 # Suppose we have a GIS coverage representing the river in the riv package
@@ -215,7 +216,7 @@ extents = grid.extent
 pc = flopy.plot.plot_shapefile(lines_shapefile, ax=ax, radius=25)
 ax.set_xlim(extents[0], extents[1])
 ax.set_ylim(extents[2], extents[3])
-ax.set_title(lines_shapefile);
+ax.set_title(lines_shapefile)
 
 # #### read in the GIS coverage using `shp2recarray`
 # `shp2recarray` reads a shapefile into a numpy record array, which can easily be converted to a DataFrame
@@ -249,7 +250,7 @@ extents = grid.extent
 pc = flopy.plot.plot_shapefile(lines_shapefile, ax=ax, radius=25)
 ax.set_xlim(extents[0], extents[1])
 ax.set_ylim(extents[2], extents[3])
-ax.set_title(lines_shapefile);
+ax.set_title(lines_shapefile)
 
 # ## Overriding the model's modelgrid with a user supplied modelgrid
 #
@@ -284,7 +285,7 @@ a = m.lpf.hk.array.ravel()
 pc = flopy.plot.plot_shapefile(fname, ax=ax, a=a)
 ax.set_xlim(extents[0], extents[1])
 ax.set_ylim(extents[2], extents[3])
-ax.set_title(fname);
+ax.set_title(fname)
 
 try:
     # ignore PermissionError on Windows

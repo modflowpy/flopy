@@ -2,7 +2,7 @@
 
 block options
 name viscref
-type double
+type double precision
 reader urword
 optional true
 longname reference viscosity
@@ -30,7 +30,7 @@ description may be used for specifying which viscosity formulation to use for th
 
 block options
 name thermal_a2
-type double 
+type double precision
 reader urword
 optional true
 longname coefficient used in nonlinear viscosity function
@@ -39,7 +39,7 @@ default_value 10.
 
 block options
 name thermal_a3
-type double 
+type double precision
 reader urword
 optional true
 longname coefficient used in nonlinear viscosity function

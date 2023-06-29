@@ -303,7 +303,7 @@ model.remove_package("ghb")
 # package.ts.filename : str
 #     Name of time series file to create. The default is packagename + '.ts',
 #     e.g. mymodel.ghb.ts.
-#     
+#
 # package.ts.timeseries : recarray
 #     Array containing the time series information.
 #     timeseries = [(t, np.sin(t)) for t in np.linspace(0, 100., 10)]
@@ -608,21 +608,21 @@ else:
 # package.tas.filename : str
 #     Name of time series file to create. The default is packagename + '.tas',
 #     e.g. mymodel.rcha.tas.
-#     
+#
 # package.tas.tas_array : {double:[double]}
 #     Array containing the time array series information for specific times.
 #     tas_array = {0.0: 0.0001, 200.0: [0.01, 0.02...]}
 #
 # package.tas.time_series_namerecord : str
-#     Name by which a package references a particular time-array series. 
+#     Name by which a package references a particular time-array series.
 #     The name must be unique among all time-array series used in a package
 #
 # package.tas.interpolation_methodrecord : list (of strings)
 #     List of interpolation methods to use for time array series. Method must be
 #     either 'stepwise' or 'linear'.
-#     
+#
 # package.tas.sfacrecord_single : float
-#     Scale factor to multiply the time array series data column. Can only be used if 
+#     Scale factor to multiply the time array series data column. Can only be used if
 #     there is one time series data column.
 #
 

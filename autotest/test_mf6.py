@@ -521,16 +521,18 @@ def test_binary_write(function_tmpdir):
         "filename": "botm.bin",
         "binary": True,
         "iprn": 0,
-        "data": np.array([
-            np.full(shape2d, 4.0, dtype=float),
-            np.full(shape2d, 0.0, dtype=float),
-        ]),
+        "data": np.array(
+            [
+                np.full(shape2d, 4.0, dtype=float),
+                np.full(shape2d, 0.0, dtype=float),
+            ]
+        ),
     }
     strt_data = {
         "filename": "strt.bin",
         "binary": True,
         "iprn": 0,
-        "data": np.full(shape3d, 10., dtype=float),
+        "data": np.full(shape3d, 10.0, dtype=float),
     }
     rch_data = {
         0: {
@@ -588,9 +590,8 @@ def test_binary_write(function_tmpdir):
 
 
 @requires_exe("mf6")
-@pytest.mark.skip(reason='todo:: after flopy binary fix.')
+@pytest.mark.skip(reason="todo:: after flopy binary fix.")
 def test_vor_binary_write(function_tmpdir):
-
     # build voronoi grid
     boundary = [(0.0, 0.0), (0.0, 1.0), (10.0, 1.0), (10.0, 0.0)]
     triangle_ws = function_tmpdir / "triangle"
@@ -620,23 +621,25 @@ def test_vor_binary_write(function_tmpdir):
         "filename": "botm.bin",
         "binary": True,
         "iprn": 0,
-        "data": np.array([
-            np.full(vor.ncpl, 4.0, dtype=float),
-            np.full(vor.ncpl, 0.0, dtype=float),
-        ]),
+        "data": np.array(
+            [
+                np.full(vor.ncpl, 4.0, dtype=float),
+                np.full(vor.ncpl, 0.0, dtype=float),
+            ]
+        ),
     }
     strt_data = {
         "filename": "strt.bin",
         "binary": True,
         "iprn": 0,
-        "data": np.full(shape3d, 10., dtype=float),
+        "data": np.full(shape3d, 10.0, dtype=float),
     }
     rch_data = {
         0: {
             "filename": "recharge.bin",
             "binary": True,
             "iprn": 0,
-            "data": np.full(vor.ncpl, 0.000001, dtype=float), #0.000001,
+            "data": np.full(vor.ncpl, 0.000001, dtype=float),  # 0.000001,
         },
     }
     chd_data = [
@@ -687,7 +690,6 @@ def test_vor_binary_write(function_tmpdir):
     sim.write_simulation()
     success, buff = sim.run_simulation()
     assert success
-
 
 
 def test_binary_read(function_tmpdir):

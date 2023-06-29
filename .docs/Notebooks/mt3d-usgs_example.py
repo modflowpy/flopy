@@ -19,7 +19,7 @@
 
 # # MT3D-USGS Example
 #
-# Demonstrates functionality of the flopy MT3D-USGS module using the 'Crank-Nicolson' example distributed with MT3D-USGS.  
+# Demonstrates functionality of the flopy MT3D-USGS module using the 'Crank-Nicolson' example distributed with MT3D-USGS.
 #
 # #### Problem description:
 #
@@ -30,17 +30,18 @@
 # * Stress packages: SFR, GHB
 # * Solvers: NWT, GCG
 
-# +
-import sys
+import math
 import os
 import string
-from tempfile import TemporaryDirectory
-from io import StringIO, BytesIO
-import math
 
-import numpy as np
+# +
+import sys
+from io import BytesIO, StringIO
+from tempfile import TemporaryDirectory
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
 # run installed version of flopy or add local path
 try:
@@ -207,6 +208,7 @@ upw = flopy.modflow.ModflowUpw(
 # -
 
 # Instantiate basic (BAS or BA6) package for MODFLOW-NWT
+
 
 # +
 # Create a flopy basic package object
@@ -428,7 +430,7 @@ else:
     raise ValueError("Failed to run.")
 # -
 
-# Now draft up MT3D-USGS input files.  
+# Now draft up MT3D-USGS input files.
 
 # Instantiate MT3D-USGS object in flopy
 mt = flopy.mt3d.Mt3dms(
@@ -551,6 +553,7 @@ mt.run_model(silent=True, report=True)
 
 # ## Compare mt3d-usgs results to an analytical solution
 
+
 # +
 # Define a function to read SFT output file
 def load_ts_from_SFT_output(fname, nd=1):
@@ -616,6 +619,7 @@ ts5_Otis = load_ts_from_otis(fname_OTIS, 5)
 # -
 
 # Set up some plotting functions
+
 
 # +
 def set_plot_params():

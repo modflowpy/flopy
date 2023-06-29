@@ -286,12 +286,28 @@ longname surface depression depth
 description real value that defines the surface depression depth for VERTICAL lake-GWF connections. If specified, SURFDEP must be greater than or equal to zero. If SURFDEP is not specified, a default value of zero is used for all vertical lake-GWF connections.
 
 block options
+name maximum_iterations
+type integer
+reader urword
+optional true
+longname LAK Newton-Raphson iterations
+description integer value that defines the maximum number of Newton-Raphson iterations allowed for a lake. By default, MAXIMUM\_ITERATIONS is equal to 100. MAXIMUM\_ITERATIONS would only need to be increased from the default value if one or more lakes in a simulation has a large water budget error.
+
+block options
+name maximum_stage_change
+type double precision
+reader urword
+optional true
+longname stage closure tolerance
+description real value that defines the lake stage closure tolerance. By default, MAXIMUM\_STAGE\_CHANGE is equal to $1 \times 10^{-5}$. The MAXIMUM\_STAGE\_CHANGE would only need to be increased or decreased from the default value if the water budget error for one or more lakes is too small or too large, respectively.
+
+block options
 name time_conversion
 type double precision
 reader urword
 optional true
 longname time conversion factor
-description value that is used in converting outlet flow terms that use Manning's equation or gravitational acceleration to consistent time units. TIME\_CONVERSION should be set to 1.0, 60.0, 3,600.0, 86,400.0, and 31,557,600.0 when using time units (TIME\_UNITS) of seconds, minutes, hours, days, or years in the simulation, respectively. CONVTIME does not need to be specified if no lake outlets are specified or TIME\_UNITS are seconds.
+description real value that is used to convert user-specified Manning's roughness coefficients or gravitational acceleration used to calculate outlet flows from seconds to model time units. TIME\_CONVERSION should be set to 1.0, 60.0, 3,600.0, 86,400.0, and 31,557,600.0 when using time units (TIME\_UNITS) of seconds, minutes, hours, days, or years in the simulation, respectively. CONVTIME does not need to be specified if no lake outlets are specified or TIME\_UNITS are seconds.
 
 block options
 name length_conversion
@@ -299,7 +315,7 @@ type double precision
 reader urword
 optional true
 longname length conversion factor
-description real value that is used in converting outlet flow terms that use Manning's equation or gravitational acceleration to consistent length units. LENGTH\_CONVERSION should be set to 3.28081, 1.0, and 100.0 when using length units (LENGTH\_UNITS) of feet, meters, or centimeters in the simulation, respectively. LENGTH\_CONVERSION does not need to be specified if no lake outlets are specified or LENGTH\_UNITS are meters.
+description real value that is used to convert outlet user-specified Manning's roughness coefficients or gravitational acceleration used to calculate outlet flows from meters to model length units. LENGTH\_CONVERSION should be set to 3.28081, 1.0, and 100.0 when using length units (LENGTH\_UNITS) of feet, meters, or centimeters in the simulation, respectively. LENGTH\_CONVERSION does not need to be specified if no lake outlets are specified or LENGTH\_UNITS are meters.
 
 
 # --------------------- gwf lak dimensions ---------------------

@@ -10,7 +10,7 @@ description use the variable-density hydraulic head formulation and add off-diag
 
 block options
 name denseref
-type double
+type double precision
 reader urword
 optional true
 longname reference density

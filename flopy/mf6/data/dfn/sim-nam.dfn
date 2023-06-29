@@ -23,6 +23,7 @@ reader urword
 optional true
 longname memory print option
 description is a flag that controls printing of detailed memory manager usage to the end of the simulation list file.  NONE means do not print detailed information. SUMMARY means print only the total memory for each simulation component. ALL means print information for each variable stored in the memory manager. NONE is default if MEMORY\_PRINT\_OPTION is not specified.
+mf6internal prmem
 
 block options
 name maxerrors
@@ -32,6 +33,13 @@ optional true
 longname maximum number of errors
 description maximum number of errors that will be stored and printed.
 
+block options
+name print_input
+type keyword
+reader urword
+optional true
+longname print input to listing file
+description keyword to activate printing of simulation input summaries to the simulation list file (mfsim.lst). With this keyword, input summaries will be written for those packages that support newer input data model routines.  Not all packages are supported yet by the newer input data model routines.
 
 # --------------------- sim nam timing ---------------------
 

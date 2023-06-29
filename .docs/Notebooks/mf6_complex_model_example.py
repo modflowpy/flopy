@@ -20,14 +20,15 @@
 
 # ### Setup the Notebook Environment
 
+import os
+
 # +
 import sys
-import os
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
 # run installed version of flopy or add local path
 try:
@@ -50,7 +51,13 @@ model_name = "advgw_tidal"
 workspace = os.path.join(temp_dir.name, model_name)
 
 data_pth = os.path.join(
-    "..", "..", "examples", "data", "mf6", "create_tests", "test005_advgw_tidal"
+    "..",
+    "..",
+    "examples",
+    "data",
+    "mf6",
+    "create_tests",
+    "test005_advgw_tidal",
 )
 assert os.path.isdir(data_pth)
 
@@ -644,7 +651,7 @@ csv = gwf.head_obs.output.obs(f="head-hydrographs.csv").get_data()
 
 for name in csv.dtype.names[1:]:
     plt.plot(csv["totim"], csv[name], label=name)
-plt.legend();
+plt.legend()
 # -
 
 try:

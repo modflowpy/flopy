@@ -23,26 +23,27 @@
 #
 # #### Problem description:
 #
-# * Grid dimensions: 1 Layer, 15 Rows, 10 Columns  
-# * Stress periods: 12  
+# * Grid dimensions: 1 Layer, 15 Rows, 10 Columns
+# * Stress periods: 12
 # * Units are in seconds and days
-# * Flow package: LPF  
-# * Stress packages: SFR, GHB, UZF 
-# * Solver: SIP  
+# * Flow package: LPF
+# * Stress packages: SFR, GHB, UZF
+# * Solver: SIP
 #
 # <img src="./img/Niswonger2006_fig13.png" width="400" height="500"/>
 
+import glob
+
 # +
 import os
-import sys
-import glob
 import shutil
+import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 proj_root = Path.cwd().parent.parent
@@ -154,7 +155,7 @@ plt.plot(
     marker="o",
 )
 plt.xlabel("Time, in days")
-plt.ylabel("Average infiltration rate, inches per year");
+plt.ylabel("Average infiltration rate, inches per year")
 
 # Define `extwc` (extinction water content) array.
 
@@ -173,7 +174,7 @@ linecollection = mapview.plot_grid()
 
 # ### Set up the gages (observation points)
 # * supplied as a dictionary keyed by `IFTUNIT`
-# * A positive value [of `IFTUNIT`] is for output of individual cells whereas a negative value is for output that is summed over all model cells. 
+# * A positive value [of `IFTUNIT`] is for output of individual cells whereas a negative value is for output that is summed over all model cells.
 # * values are a list of `[IUZROW, IUZCOL, IFTUNIT, IUZOPT]`
 # * `IUZROW` and `IUZCOL` are zero based
 

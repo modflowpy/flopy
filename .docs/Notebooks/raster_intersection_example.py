@@ -16,11 +16,11 @@
 
 # # Intersecting rasters with modelgrids using FloPy's Raster class
 #
-# A Raster class was developed as a wrapper that leverages RasterIO, RasterStats, and SciPy built in methods for easy raster intersections and cropping. 
+# A Raster class was developed as a wrapper that leverages RasterIO, RasterStats, and SciPy built in methods for easy raster intersections and cropping.
 #
 # This notebook will show some of the basic functionality of the `Raster` class with structured and unstructured model grid examples.
 #
-# The `Raster` class accepts Tiff and GeoTiff, ASCII Grid (ESRI ASCII), and Erdas Imagine .img files. 
+# The `Raster` class accepts Tiff and GeoTiff, ASCII Grid (ESRI ASCII), and Erdas Imagine .img files.
 #
 # Ideally this can be used to easily snap DEM rasters, PET, PPT, recharge and other rasters to a modflow grid for further processing and/or to apply as fluxes and boundary conditions to a MODFLOW model
 
@@ -30,12 +30,12 @@ import sys
 import time
 from tempfile import TemporaryDirectory
 
-import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-import shapely
+import pandas as pd
 import shapefile
+import shapely
 
 try:
     import flopy
@@ -86,7 +86,7 @@ fig = plt.figure(figsize=(12, 12))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
 ax = rio.plot(ax=ax, vmin=vmin, vmax=vmax)
-plt.colorbar(ax.images[0], shrink=0.7);
+plt.colorbar(ax.images[0], shrink=0.7)
 # -
 
 # ## Intersecting and resampling a data using the FloPy ModelGrid
@@ -112,29 +112,29 @@ ax = fig.add_subplot(1, 1, 1, aspect="equal")
 ax = rio.plot(ax=ax, vmin=vmin, vmax=vmax)
 plt.colorbar(ax.images[0], shrink=0.7)
 pmv = flopy.plot.PlotMapView(modelgrid=ml.modelgrid)
-pmv.plot_grid(ax=ax, lw=0.5, color="black");
+pmv.plot_grid(ax=ax, lw=0.5, color="black")
 # -
 
-# Once a modelgrid has been loaded, the `resample_to_grid()` method can be used to re-sample the data to an array consistent with the model grid.  
+# Once a modelgrid has been loaded, the `resample_to_grid()` method can be used to re-sample the data to an array consistent with the model grid.
 #
 # Inputs to `resample_to_grid()` include:
 #
-# + `modelgrid` : flopy `Grid` object 
-# + `band` : raster band to resample  
-# + `method` : resampling method, options include:  
-#     - `"nearest"` for nearest neighbor   
-#     - `"linear"` for bilinear sampling  
-#     - `"cubic"` for bicubic sampling  
+# + `modelgrid` : flopy `Grid` object
+# + `band` : raster band to resample
+# + `method` : resampling method, options include:
+#     - `"nearest"` for nearest neighbor
+#     - `"linear"` for bilinear sampling
+#     - `"cubic"` for bicubic sampling
 #     - `"mean"` for mean value sampling
 #     - `"median"` for median value sampling
 #     - `"min"` for minimum value sampling
 #     - `"max"` for maximum value sampling
 #     - `"mode"` for most often (dominant) sampling
 # + `extrapolate_edges` : boolean flag to extrapolate edges using the `"nearest"` resampling method. For all of the sampling methods except `"nearest"`, interpolation is only performed in areas bounded by data; nodata values are returned in areas without data. This option has no effect when the `"nearest"` interpolation method is used.
-#     
+#
 # **Note:** Bottlenecks in sampling time depend on the resampling method used:
-# + `"nearest"`, `"linear"`, and `"cubic"` bottlenecks are due to raster resolution. 
-# + `"mean"`, `"median"`, `"min"`, `"max"`, and `"mode"` are a function of the number of grid cells. 
+# + `"nearest"`, `"linear"`, and `"cubic"` bottlenecks are due to raster resolution.
+# + `"mean"`, `"median"`, `"min"`, `"max"`, and `"mode"` are a function of the number of grid cells.
 
 t0 = time.time()
 dem_data = rio.resample_to_grid(
@@ -152,7 +152,7 @@ ax = pmv.plot_array(
     dem_data, masked_values=rio.nodatavals, vmin=vmin, vmax=vmax
 )
 plt.title("Resample time, nearest neighbor: {:.3f} sec".format(resample_time))
-plt.colorbar(ax, shrink=0.7);
+plt.colorbar(ax, shrink=0.7)
 # -
 
 t0 = time.time()
@@ -171,7 +171,7 @@ ax = pmv.plot_array(
     dem_data, masked_values=rio.nodatavals, vmin=vmin, vmax=vmax
 )
 plt.title("Resample time, bi-linear: {:.3f} sec".format(resample_time))
-plt.colorbar(ax, shrink=0.7);
+plt.colorbar(ax, shrink=0.7)
 # -
 
 t0 = time.time()
@@ -190,7 +190,7 @@ ax = pmv.plot_array(
     dem_data, masked_values=rio.nodatavals, vmin=vmin, vmax=vmax
 )
 plt.title("Resample time, bi-cubic: {:.3f} sec".format(resample_time))
-plt.colorbar(ax, shrink=0.7);
+plt.colorbar(ax, shrink=0.7)
 # -
 
 t0 = time.time()
@@ -212,7 +212,7 @@ ax = pmv.plot_array(
     dem_data, masked_values=rio.nodatavals, vmin=vmin, vmax=vmax
 )
 plt.title("Resample time, median: {:.3f} sec".format(resample_time))
-plt.colorbar(ax, shrink=0.7);
+plt.colorbar(ax, shrink=0.7)
 # -
 
 # ## Vertex and Unstructured grid example
@@ -253,7 +253,7 @@ fig = plt.figure(figsize=(12, 12))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
 pmv = flopy.plot.PlotMapView(modelgrid=mg_unstruct, ax=ax)
-pmv.plot_grid();
+pmv.plot_grid()
 # -
 
 # Once a grid object is created, the raster can be resampled to the grid using the same `resample_to_grid()` method as the structured grid example
@@ -280,7 +280,7 @@ ax = pmv.plot_array(
     vmax=vmax,
 )
 plt.title("Resample time, nearest neighbor: {:.3f} sec".format(resample_time))
-plt.colorbar(ax, shrink=0.7);
+plt.colorbar(ax, shrink=0.7)
 
 # +
 t0 = time.time()
@@ -304,7 +304,7 @@ ax = pmv.plot_array(
     vmax=vmax,
 )
 plt.title("Resample time, bi-linear: {:.3f} sec".format(resample_time))
-plt.colorbar(ax, shrink=0.7);
+plt.colorbar(ax, shrink=0.7)
 
 # +
 t0 = time.time()
@@ -330,7 +330,7 @@ ax = pmv.plot_array(
     vmax=vmax,
 )
 plt.title("Resample time, median: {:.3f} sec".format(resample_time))
-plt.colorbar(ax, shrink=0.7);
+plt.colorbar(ax, shrink=0.7)
 # -
 
 # __Note: bi-cubic sampling does not work well with triangular meshes and is not recommended for unstructured grids__
@@ -401,7 +401,7 @@ ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
 ax = rio.plot(ax=ax, vmin=vmin, vmax=vmax)
 ax.plot(shape.T[0], shape.T[1], "r-")
-plt.colorbar(ax.images[0], shrink=0.7);
+plt.colorbar(ax.images[0], shrink=0.7)
 
 # +
 data = rio.sample_polygon(shape, band=rio.bands[0])
@@ -432,7 +432,7 @@ ax = fig.add_subplot(1, 1, 1, aspect="equal")
 ax = rio.plot(ax=ax, vmin=vmin, vmax=vmax)
 ax.plot(shape.T[0], shape.T[1], "r-")
 plt.title("Cropping time: {:.3f} sec".format(crop_time))
-plt.colorbar(ax.images[0], shrink=0.7);
+plt.colorbar(ax.images[0], shrink=0.7)
 # -
 
 # And then this can be re-sampled to a ModelGrid Object
@@ -460,7 +460,7 @@ ax = pmv.plot_array(
 )
 plt.plot(shape.T[0], shape.T[1], "r-")
 plt.title("Resample time, nearest neighbor: {:.3f} sec".format(resample_time))
-plt.colorbar(ax, shrink=0.7);
+plt.colorbar(ax, shrink=0.7)
 
 # +
 t0 = time.time()
@@ -485,7 +485,7 @@ ax = pmv.plot_array(
 )
 plt.plot(shape.T[0], shape.T[1], "r-")
 plt.title("Resample time, bi-linear: {:.3f} sec".format(resample_time))
-plt.colorbar(ax, shrink=0.7);
+plt.colorbar(ax, shrink=0.7)
 # -
 
 # ## Arbitrary-shaped model boundaries
@@ -513,7 +513,7 @@ ax = rio.plot(ax=ax, vmin=vmin, vmax=vmax)
 for shp in shapes:
     shp = np.array(shp.points).T
     plt.plot(shp[0], shp[1], "r-")
-plt.colorbar(ax.images[0], shrink=0.7);
+plt.colorbar(ax.images[0], shrink=0.7)
 # -
 
 # Now we can apply an intersection using the point data directly from the shapefile class
@@ -534,7 +534,7 @@ ax = rio.plot(ax=ax, vmin=vmin, vmax=vmax)
 shape = np.array(polygon).T
 plt.plot(shape[0], shape[1], "r-")
 plt.title("Cropped Arbitrary Polygon: {:.3f} sec".format(crop_time))
-plt.colorbar(ax.images[0], shrink=0.7);
+plt.colorbar(ax.images[0], shrink=0.7)
 # -
 
 # Now the data can be re-sampled to the modelgrid
@@ -571,15 +571,15 @@ plt.plot(shape[0], shape[1], "r-")
 plt.title(
     "Model top and ibound arrays created using bi-linear raster resampling"
 )
-plt.colorbar(ax, shrink=0.7);
+plt.colorbar(ax, shrink=0.7)
 # -
 
 # The `ibound` array and the `top` array can be used to build or edit the BAS and DIS file objects in FloPy
 
 # ## Future development
 #
-# Potential features that draw on this functionality could include:  
-# + intersection with multiple polygons  
+# Potential features that draw on this functionality could include:
+# + intersection with multiple polygons
 # + flow accumulation to develop SFR networks
 # + streambed topology from raster layers
 # + intersection with layers of derived parameters based on multiple raster bands

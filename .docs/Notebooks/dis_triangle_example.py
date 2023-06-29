@@ -27,9 +27,9 @@ import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
 import flopy
 
@@ -57,7 +57,7 @@ y = radius * np.sin(theta)
 circle_poly = [(x, y) for x, y in zip(x, y)]
 fig = plt.figure(figsize=(10, 10))
 ax = plt.subplot(1, 1, 1, aspect="equal")
-ax.plot(x, y, "bo-");
+ax.plot(x, y, "bo-")
 
 # +
 from flopy.utils.triangle import Triangle
@@ -107,7 +107,7 @@ tri.add_hole((25, 25))
 tri.build(verbose=False)
 fig = plt.figure(figsize=(10, 10))
 ax = plt.subplot(1, 1, 1, aspect="equal")
-tri.plot(ax=ax);
+tri.plot(ax=ax)
 # -
 
 # ## Specifying Regions with Different Triangle Sizes
@@ -127,7 +127,7 @@ tri.add_region((61, 61), 2, maximum_area=3)  # point inside area2
 tri.build(verbose=False)
 fig = plt.figure(figsize=(10, 10))
 ax = plt.subplot(1, 1, 1, aspect="equal")
-tri.plot(ax=ax);
+tri.plot(ax=ax)
 
 # ## Identifying Boundary Cells
 #
@@ -141,7 +141,7 @@ ibd = np.ma.masked_equal(ibd, 0)
 fig = plt.figure(figsize=(10, 10))
 ax = plt.subplot(1, 1, 1, aspect="equal")
 pc = tri.plot(a=ibd, cmap="jet")
-plt.colorbar(pc, shrink=0.5);
+plt.colorbar(pc, shrink=0.5)
 
 # we could plot just one group of boundary cells
 # this shows all the boundary cells
@@ -150,7 +150,7 @@ ibd = np.ma.masked_not_equal(ibd, 4)
 fig = plt.figure(figsize=(10, 10))
 ax = plt.subplot(1, 1, 1, aspect="equal")
 pc = tri.plot(a=ibd, cmap="jet", edgecolor="gray")
-cb = plt.colorbar(pc, shrink=0.5);
+cb = plt.colorbar(pc, shrink=0.5)
 
 # we can also plot the lines that comprise the boundaries
 fig = plt.figure(figsize=(10, 10))
@@ -158,18 +158,18 @@ ax = plt.subplot(1, 1, 1, aspect="equal")
 tri.plot(ax=ax, edgecolor="gray")
 for ibm in [1, 2, 3, 4]:
     colors = ["blue", "green", "red", "yellow"]
-    tri.plot_boundary(ibm, ax, marker="o", color=colors[ibm - 1]);
+    tri.plot_boundary(ibm, ax, marker="o", color=colors[ibm - 1])
 
 # ## Cell Attributes
 #
-# If regions (using the add_region() method) are used and an attribute value is provided, it is possible to determine the cells that are within each region.  
+# If regions (using the add_region() method) are used and an attribute value is provided, it is possible to determine the cells that are within each region.
 #
 
 attribute_array = tri.get_attribute_array()
 fig = plt.figure(figsize=(10, 10))
 ax = plt.subplot(1, 1, 1, aspect="equal")
 pc = tri.plot(a=attribute_array, cmap="jet", edgecolor="gray")
-cb = plt.colorbar(pc, shrink=0.5);
+cb = plt.colorbar(pc, shrink=0.5)
 
 # ## Building a Simple MODFLOW 6 Model
 #
@@ -184,7 +184,7 @@ ax = plt.subplot(1, 1, 1, aspect="equal")
 tri.plot(edgecolor="gray")
 for ibm in [1, 2, 3, 4]:
     colors = ["blue", "green", "red", "yellow"]
-    tri.plot_boundary(ibm, ax, marker="o", color=colors[ibm - 1]);
+    tri.plot_boundary(ibm, ax, marker="o", color=colors[ibm - 1])
 
 fig = plt.figure(figsize=(10, 10))
 ax = plt.subplot(1, 1, 1, aspect="equal")
@@ -192,7 +192,7 @@ tri.plot(ax=ax, edgecolor="gray")
 tri.plot_vertices(ax=ax, marker="o", color="blue")
 tri.label_vertices(ax=ax, fontsize=10, color="blue")
 tri.plot_centroids(ax=ax, marker="o", color="red")
-tri.label_cells(ax=ax, fontsize=10, color="red");
+tri.label_cells(ax=ax, fontsize=10, color="red")
 
 # +
 name = "mf"
@@ -265,7 +265,7 @@ bdobj = flopy.utils.CellBudgetFile(fname, precision="double", verbose=False)
 
 fig = plt.figure(figsize=(15, 15))
 ax = plt.subplot(1, 1, 1, aspect="equal")
-tri.plot(ax=ax, a=head[0, 0, :], cmap="jet");
+tri.plot(ax=ax, a=head[0, 0, :], cmap="jet")
 # -
 
 # Clean up the temporary workspace.

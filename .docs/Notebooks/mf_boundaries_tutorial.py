@@ -27,7 +27,7 @@
 #   * River
 #   * General-Head Boundary
 #   * Time-Variant Constant Head
-#   
+#
 # This notebook explains the different ways to enter these types of boundary conditions.
 #
 
@@ -104,7 +104,7 @@ m.write_input()
 
 # ## Recarray of Boundaries
 #
-# Numpy allows the use of recarrays, which are numpy arrays in which each column of the array may be given a different type.  Boundary conditions can be entered as recarrays.  Information on the structure of the recarray for a boundary condition package can be obtained from that particular package.  The structure of the recarray is contained in the dtype.  
+# Numpy allows the use of recarrays, which are numpy arrays in which each column of the array may be given a different type.  Boundary conditions can be entered as recarrays.  Information on the structure of the recarray for a boundary condition package can be obtained from that particular package.  The structure of the recarray is contained in the dtype.
 
 riv_dtype = flopy.modflow.ModflowRiv.get_default_dtype()
 print(riv_dtype)

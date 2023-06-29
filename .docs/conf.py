@@ -11,9 +11,9 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 import yaml
 
@@ -109,13 +109,7 @@ if not on_rtd:
         if nb.with_suffix(".ipynb").exists():
             print(f"{nb} already exists, skipping")
             continue
-        cmd = (
-            "jupytext",
-            "--to",
-            "ipynb",
-            "--execute",
-            str(nb)
-        )
+        cmd = ("jupytext", "--to", "ipynb", "--execute", str(nb))
         print(" ".join(cmd))
         os.system(" ".join(cmd))
 
@@ -150,7 +144,7 @@ extensions = [
     "nbsphinx",
     "nbsphinx_link",
     "recommonmark",
-    "sphinxcontrib.jquery"  # https://github.com/readthedocs/sphinx_rtd_theme/issues/1452
+    "sphinxcontrib.jquery",  # https://github.com/readthedocs/sphinx_rtd_theme/issues/1452
 ]
 
 # Settings for GitHub actions integration
@@ -281,6 +275,9 @@ intersphinx_mapping = {
 # disable automatic notebook execution (nbs are built in CI for now)
 nbsphinx_execute = "never"
 
-nbsphinx_prolog = r"""
+nbsphinx_prolog = (
+    r"""
 {% set docname = env.doc2path(env.docname, base=None) %}
-""" + Path("prolog.rst").read_text()
+"""
+    + Path("prolog.rst").read_text()
+)

@@ -50,7 +50,7 @@ name print_concentration
 type keyword
 reader urword
 optional true
-longname print calculated stages to listing file
+longname print calculated concentrations to listing file
 description REPLACE print_concentration {'{#1}': 'reach', '{#2}': 'concentration', '{#3}': 'CONCENTRATION'}
 
 block options
@@ -87,7 +87,7 @@ in_record true
 reader urword
 tagged true
 optional false
-longname stage keyword
+longname concentration keyword
 description keyword to specify that record corresponds to concentration.
 
 block options
@@ -255,7 +255,7 @@ longname obs6 input filename
 description REPLACE obs6_filename {'{#1}': 'SFT'}
 
 
-# --------------------- gwt lkt packagedata ---------------------
+# --------------------- gwt sft packagedata ---------------------
 
 block packagedata
 name packagedata

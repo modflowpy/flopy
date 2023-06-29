@@ -75,7 +75,7 @@ print("shapely version: {}".format(shapely.__version__))
 # - `method`: derived from model grid type or defined by the user: can be either `"vertex"` or
 # `"structured"`. If `"structured"` is passed, the intersections are performed
 # using structured methods. These methods use information about the regular grid
-# to limit the search space for intersection calculations. Note that `method="vertex"` 
+# to limit the search space for intersection calculations. Note that `method="vertex"`
 # also works for structured grids.
 # - `rtree`: either `True` (default) or `False`, only read when
 # `method="vertex"`. When True, an STR-tree is built, which allows for fast
@@ -117,7 +117,7 @@ sgr = fgrid.StructuredGrid(
     delc, delr, top=None, botm=None, xoff=xoff, yoff=yoff, angrot=angrot
 )
 
-sgr.plot();
+sgr.plot()
 
 # ### <a id="rectgrid.1"></a>[Polygon with regular grid](#top)
 # Polygon to intersect with:
@@ -155,7 +155,7 @@ result = ix.intersect(p)
 result[:5]
 # pd.DataFrame(result)  # recommended for prettier formatting and working with result
 
-# The cellids can be easily obtained 
+# The cellids can be easily obtained
 
 result.cellids
 
@@ -190,7 +190,7 @@ for irow, icol in result.cellids:
     )
 
 # add legend
-ax.legend([h2], [i.get_label() for i in [h2]], loc="best");
+ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 # -
 
 # The `intersect()` method contains several keyword arguments that specifically deal with polygons:
@@ -224,7 +224,7 @@ for irow, icol in result2.cellids:
     )
 
 # add legend
-ax.legend([h2], [i.get_label() for i in [h2]], loc="best");
+ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 # -
 
 # Example with `min_area_threshold` set to 0.35, the intersection result in a cell should cover 35% or more of the cell area.
@@ -251,7 +251,7 @@ for irow, icol in result3.cellids:
     )
 
 # add legend
-ax.legend([h2], [i.get_label() for i in [h2]], loc="best");
+ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 # -
 
 # Alternatively, the intersection can be calculated using special methods optimized for structured grids. Access these methods by instantiating the GridIntersect class with the `method="structured"` keyword argument.
@@ -279,7 +279,7 @@ for irow, icol in result4.cellids:
     )
 
 # add legend
-ax.legend([h2], [i.get_label() for i in [h2]], loc="best");
+ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 # -
 
 # ### <a id="rectgrid.2"></a>[Polyline with regular grid](#top)
@@ -307,7 +307,7 @@ for irow, icol in result.cellids:
         label="centroids of intersected gridcells",
     )
 
-ax.legend([h2], [i.get_label() for i in [h2]], loc="best");
+ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 # -
 
 # Same as before, the intersect for structured grids can also be performed with a different method optimized for structured grids
@@ -338,7 +338,7 @@ mp = MultiPoint(
     ]
 )
 
-# For points and linestrings there is a keyword argument `return_all_intersections` which will return multiple intersection results for points or (parts of) linestrings on cell boundaries. As an example, the difference is shown with the MultiPoint intersection. Note the number of red "+" symbols indicating the centroids of intersected cells, in the bottom left case, there are 4 results because the point lies exactly on the intersection between 4 grid cells. 
+# For points and linestrings there is a keyword argument `return_all_intersections` which will return multiple intersection results for points or (parts of) linestrings on cell boundaries. As an example, the difference is shown with the MultiPoint intersection. Note the number of red "+" symbols indicating the centroids of intersected cells, in the bottom left case, there are 4 results because the point lies exactly on the intersection between 4 grid cells.
 
 result = ix.intersect(mp)
 result_all = ix.intersect(mp, return_all_intersections=True)
@@ -367,7 +367,7 @@ for irow, icol in result_all.cellids:
         label="centroids with `return_all_intersections=True`",
     )
 
-ax.legend([h2, h3], [i.get_label() for i in [h2, h3]], loc="best");
+ax.legend([h2, h3], [i.get_label() for i in [h2, h3]], loc="best")
 # -
 
 # Same as before, the intersect for structured grids can also be performed with a different method written specifically for structured grids.
@@ -412,7 +412,7 @@ tgr = fgrid.VertexGrid(vertices, cell2d)
 
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 pmv = fplot.PlotMapView(modelgrid=tgr)
-pmv.plot_grid(ax=ax);
+pmv.plot_grid(ax=ax)
 
 # ### <a id="trigrid.1"></a>[Polygon with triangular grid](#top)
 
@@ -435,7 +435,7 @@ for cellid in result.cellids:
         label="centroids of intersected gridcells",
     )
 
-ax.legend([h2], [i.get_label() for i in [h2]], loc="best");
+ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 # -
 
 # ### <a id="trigrid.2"></a>[LineString with triangular grid](#top)
@@ -456,7 +456,7 @@ for cellid in result.cellids:
         label="centroids of intersected gridcells",
     )
 
-ax.legend([h2], [i.get_label() for i in [h2]], loc="best");
+ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 # -
 
 # ### <a id="trigrid.3"></a>[MultiPoint with triangular grid](#top)
@@ -487,4 +487,4 @@ for cellid in result_all.cellids:
         label="centroids with return_all_intersections=True",
     )
 
-ax.legend([h2, h3], [i.get_label() for i in [h2, h3]], loc="best");
+ax.legend([h2, h3], [i.get_label() for i in [h2, h3]], loc="best")

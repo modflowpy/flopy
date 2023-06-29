@@ -62,7 +62,7 @@ chk = m.check()
 
 chk.summary_array
 
-# This is a numpy record array that summarizes errors and warnings found by the checker. The package, layer-row-column location of the error, the offending value, and a description of the error are provided. In the checker, errors and warnings are loosely defined as follows:  
+# This is a numpy record array that summarizes errors and warnings found by the checker. The package, layer-row-column location of the error, the offending value, and a description of the error are provided. In the checker, errors and warnings are loosely defined as follows:
 # #### Errors:
 #
 # either input that would cause MODFLOW to crash, or inputs that almost certainly mis-represent the intended conceptual model.
