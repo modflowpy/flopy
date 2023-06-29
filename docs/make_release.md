@@ -66,7 +66,7 @@ If the branch name does not end with `rc`, the workflow will proceed to open a P
 
 **Note:** the PR should be merged, not squashed. Squashing removes the commit history from the `master` branch and causes `develop` and `master` to diverge, which can cause future PRs updating `master` to replay commits from previous releases.
 
-Publishing the release triggers jobs to publish the `flopy` package to PyPI and open a PR updating `develop` from `master`. This PR also updates version numbers to the just-released version, and appends "+" to the end of the version string to indicate development status.
+Publishing the release triggers a final job to publish the `flopy` package to PyPI.
 
 ##### Trusted publishing
 
@@ -109,7 +109,7 @@ As described above, making a release manually involves the following steps:
 
 1.  Merge the `master` branch into the `develop` branch.
 
-2.  Set the version as appropriate: `python scripts/update_version.py -v <semver>`.
+2.  Set the development version as appropriate: `python scripts/update_version.py -v <version>`. The version number must comply with [PEP 440](https://peps.python.org/pep-0440/).
 
 3.  Lint Python files: `python scripts/pull_request_prepare.py`
 
