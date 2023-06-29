@@ -1,3 +1,9 @@
+### Version 3.4.1
+
+#### Bug fixes
+
+* [fix(get-modflow)](https://github.com/modflowpy/flopy/commit/b8dffbc6bc7bee70d18d7ec24c96e33517e4f0e8): Accommodate mf6 release asset name change (#1855). Committed by w-bonelli on 2023-06-29.
+
 ### Version 3.4.0
 
 #### New features
