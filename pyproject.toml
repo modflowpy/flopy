@@ -56,6 +56,7 @@ test = [
     "pytest-dotenv",
     "pytest-virtualenv",
     "pytest-xdist",
+    "virtualenv"
 ]
 optional = [
     "affine",
