@@ -396,18 +396,14 @@ def run_main(
     release = get_release(repo, release_id, quiet)
     assets = release.get("assets", [])
 
-    # Windows 64-bit asset in modflow6 repo release has no OS tag
-    if repo == "modflow6" and ostag == "win64":
-        asset = list(sorted(assets, key=lambda a: len(a["name"])))[0]
+    for asset in assets:
+        if ostag in asset["name"]:
+            break
     else:
-        for asset in assets:
-            if ostag in asset["name"]:
-                break
-        else:
-            raise ValueError(
-                f"could not find ostag {ostag!r} from release {release['tag_name']!r}; "
-                f"see available assets here:\n{release['html_url']}"
-            )
+        raise ValueError(
+            f"could not find ostag {ostag!r} from release {release['tag_name']!r}; "
+            f"see available assets here:\n{release['html_url']}"
+        )
     asset_name = asset["name"]
     download_url = asset["browser_download_url"]
     if repo == "modflow6":
