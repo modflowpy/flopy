@@ -23,9 +23,9 @@
 #
 # ### Mapping is demonstrated for MODFLOW-2005 and MODFLOW-6 models in this notebook
 
-import os
 
 # + pycharm={"name": "#%%\n"}
+import os
 import sys
 from tempfile import TemporaryDirectory
 
