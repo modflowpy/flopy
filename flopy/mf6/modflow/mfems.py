@@ -4,22 +4,18 @@
 from .. import mfpackage
 
 
-class ModflowGwtadv(mfpackage.MFPackage):
+class ModflowEms(mfpackage.MFPackage):
     """
-    ModflowGwtadv defines a adv package within a gwt6 model.
+    ModflowEms defines a ems package.
 
     Parameters
     ----------
-    model : MFModel
-        Model that this package is a part of. Package is automatically
-        added to model when it is initialized.
+    simulation : MFSimulation
+        Simulation that this package is a part of. Package is automatically
+        added to simulation when it is initialized.
     loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
-    scheme : string
-        * scheme (string) scheme used to solve the advection term. Can be
-          upstream, central, or TVD. If not specified, upstream weighting is
-          the default weighting scheme.
     filename : String
         File name for this package.
     pname : String
@@ -31,37 +27,28 @@ class ModflowGwtadv(mfpackage.MFPackage):
 
     """
 
-    package_abbr = "gwtadv"
-    _package_type = "adv"
-    dfn_file_name = "gwt-adv.dfn"
+    package_abbr = "ems"
+    _package_type = "ems"
+    dfn_file_name = "sln-ems.dfn"
 
     dfn = [
         [
             "header",
-        ],
-        [
-            "block options",
-            "name scheme",
-            "type string",
-            "valid central upstream tvd",
-            "reader urword",
-            "optional true",
+            ["solution_package", "*"],
         ],
     ]
 
     def __init__(
         self,
-        model,
+        simulation,
         loading_package=False,
-        scheme=None,
         filename=None,
         pname=None,
         **kwargs,
     ):
         super().__init__(
-            model, "adv", filename, pname, loading_package, **kwargs
+            simulation, "ems", filename, pname, loading_package, **kwargs
         )
 
         # set up variables
-        self.scheme = self.build_mfdata("scheme", scheme)
         self._init_complete = True

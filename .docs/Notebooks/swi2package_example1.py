@@ -33,9 +33,9 @@ import os
 import sys
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
 import flopy
 
@@ -62,7 +62,7 @@ ml = flopy.modflow.Modflow(
 )
 # -
 
-# Define the number of layers, rows and columns, and the cell size along the rows (`delr`) and along the columns (`delc`). Then create a discretization file. Specify the top and bottom of the aquifer. The heads are computed quasi-steady state (hence a steady MODFLOW run) while the interface will move. There is one stress period with a length of 400 days and 200 steps (so one step is 2 days). 
+# Define the number of layers, rows and columns, and the cell size along the rows (`delr`) and along the columns (`delc`). Then create a discretization file. Specify the top and bottom of the aquifer. The heads are computed quasi-steady state (hence a steady MODFLOW run) while the interface will move. There is one stress period with a length of 400 days and 200 steps (so one step is 2 days).
 
 nlay = 1
 nrow = 1
@@ -202,7 +202,7 @@ for i in range(4):
 plt.axis("scaled")
 plt.xlim(0, 250)
 plt.ylim(-40, 0)
-plt.legend(loc="best");
+plt.legend(loc="best")
 
 # Use ModelCrossSection plotting class and plot_surface() method to plot zeta surfaces.
 
@@ -249,7 +249,7 @@ for i in range(4):
 ax.axis("scaled")
 ax.set_xlim(0, 250)
 ax.set_ylim(-40, 0)
-ax.legend(loc="best");
+ax.legend(loc="best")
 
 # Use ModelCrossSection plotting class and plot_fill_between() method to fill between zeta surfaces.
 
@@ -258,7 +258,7 @@ ax = fig.add_subplot(1, 1, 1)
 modelxsect = flopy.plot.PlotCrossSection(model=ml, line={"Row": 0})
 modelxsect.plot_fill_between(zeta[3, :, :, :])
 linecollection = modelxsect.plot_grid()
-ax.set_title("ModelCrossSection.plot_fill_between()");
+ax.set_title("ModelCrossSection.plot_fill_between()")
 
 # Convert zeta surfaces to relative seawater concentrations
 
@@ -270,7 +270,7 @@ v = np.vstack((conc[0, 0, :], conc[0, 0, :]))
 plt.imshow(v, extent=[0, 250, -40, 0], cmap="Reds")
 cb = plt.colorbar(orientation="horizontal")
 cb.set_label("percent seawater")
-plt.contour(X, Y, v, [0.25, 0.5, 0.75], linewidths=[2, 1.5, 1], colors="black");
+plt.contour(X, Y, v, [0.25, 0.5, 0.75], linewidths=[2, 1.5, 1], colors="black")
 
 try:
     # ignore PermissionError on Windows

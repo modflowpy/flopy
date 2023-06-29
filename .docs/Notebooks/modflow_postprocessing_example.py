@@ -24,18 +24,17 @@ import os
 import sys
 from tempfile import TemporaryDirectory
 
-import flopy
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
-
+import flopy
+import flopy.utils.binaryfile as bf
 from flopy.utils.postprocessing import (
+    get_gradients,
     get_transmissivities,
     get_water_table,
-    get_gradients,
 )
-import flopy.utils.binaryfile as bf
 
 print(sys.version)
 print("numpy version: {}".format(np.__version__))
@@ -86,7 +85,7 @@ for i, hdslayer in enumerate(hds):
 fig.delaxes(axes[-1])
 fig.subplots_adjust(right=0.8)
 cbar_ax = fig.add_axes([0.85, 0.15, 0.03, 0.7])
-fig.colorbar(im, cax=cbar_ax, label="Head");
+fig.colorbar(im, cax=cbar_ax, label="Head")
 # -
 
 # ### Compare rotated arc-ascii and GeoTiff output
@@ -106,7 +105,7 @@ results = np.loadtxt(
 )
 results[results == nodata] = np.nan
 plt.imshow(results)
-plt.colorbar();
+plt.colorbar()
 # -
 
 try:
@@ -144,7 +143,7 @@ fig.delaxes(axes[-2])
 fig.delaxes(axes[-1])
 fig.subplots_adjust(right=0.8)
 cbar_ax = fig.add_axes([0.85, 0.15, 0.03, 0.7])
-fig.colorbar(im, cax=cbar_ax, label="positive downward");
+fig.colorbar(im, cax=cbar_ax, label="positive downward")
 # -
 
 # ### Get the saturated thickness of a layer
@@ -155,25 +154,25 @@ st = m.modelgrid.saturated_thickness(hds, mask=-9999.0)
 
 plt.imshow(st[0])
 plt.colorbar(label="Saturated thickness")
-plt.title("Layer 1");
+plt.title("Layer 1")
 # -
 
 # ### Get the water table
-# `get_water_table()` returns an nrow, ncol array of the water table elevation.  
+# `get_water_table()` returns an nrow, ncol array of the water table elevation.
 # This method can be useful when HDRY is turned on and the water table is in multiple layers.
 
 # +
 wt = get_water_table(heads=hds, hdry=-9999)
 
 plt.imshow(wt)
-plt.colorbar(label="Elevation");
+plt.colorbar(label="Elevation")
 # -
 
 # ### Get layer transmissivities at arbitrary locations, accounting for the position of the water table
-# * for this method, the heads input is an nlay x nobs array of head results, which could be constructed using the Hydmod package with an observation in each layer at each observation location, for example . 
-# * x, y values in real-world coordinates can be used in lieu of row, column, provided a correct coordinate information is supplied to the flopy model object's grid. 
-# * open interval tops and bottoms can be supplied at each location for computing transmissivity-weighted average heads 
-# * this method can also be used for apportioning boundary fluxes for an inset from a 2-D regional model  
+# * for this method, the heads input is an nlay x nobs array of head results, which could be constructed using the Hydmod package with an observation in each layer at each observation location, for example .
+# * x, y values in real-world coordinates can be used in lieu of row, column, provided a correct coordinate information is supplied to the flopy model object's grid.
+# * open interval tops and bottoms can be supplied at each location for computing transmissivity-weighted average heads
+# * this method can also be used for apportioning boundary fluxes for an inset from a 2-D regional model
 # * see `**flopy3_get_transmissivities_example.ipynb**` for more details on how this method works
 
 r = [20, 5]

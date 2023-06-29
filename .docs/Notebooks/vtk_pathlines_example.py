@@ -25,6 +25,7 @@
 
 # +
 import sys
+
 import flopy
 
 print(sys.version)
@@ -35,16 +36,14 @@ print("flopy version: {}".format(flopy.__version__))
 
 # +
 from pathlib import Path
+
 from flopy.mf6 import MFSimulation
 
 mdl_name = "freyberg"
 sim_name = f"mf6-{mdl_name}-vtk-pathlines"
 sim_path = Path.cwd().parent / "../examples/data" / f"mf6-{mdl_name}"
 
-sim = MFSimulation.load(
-    sim_name=sim_name,
-    sim_ws=sim_path
-)
+sim = MFSimulation.load(sim_name=sim_name, sim_ws=sim_path)
 # -
 
 # Create a temporary directory and change the simulation's workspace.
@@ -78,19 +77,21 @@ for i in range(1, 5):
     nrow = gwf.modelgrid.nrow
     ncol = gwf.modelgrid.ncol
     m = i * 2 if i < 3 else (nrow - i * 4)
-    n = i *2 if i < 3 else (ncol - i * 4)
+    n = i * 2 if i < 3 else (ncol - i * 4)
     celldata = flopy.modpath.CellDataType(
         drape=0,
         columncelldivisions=1,
         rowcelldivisions=1,
-        layercelldivisions=1
+        layercelldivisions=1,
     )
     lrcpd = flopy.modpath.LRCParticleData(
         subdivisiondata=[celldata],
         lrcregions=[[[0, m, n, 0, m + 1, n + 1]]],
     )
     pg = flopy.modpath.ParticleGroupLRCTemplate(
-        particlegroupname=f"PG{i}", particledata=lrcpd, filename=f"{sim_name}.pg{i}.sloc"
+        particlegroupname=f"PG{i}",
+        particledata=lrcpd,
+        filename=f"{sim_name}.pg{i}.sloc",
     )
     pgs.append(pg)
 # -
@@ -100,7 +101,9 @@ for i in range(1, 5):
 # +
 import numpy as np
 
-wel_locs = [(rec[0][1], rec[0][2]) for rec in (gwf.wel.stress_period_data.data[0])]
+wel_locs = [
+    (rec[0][1], rec[0][2]) for rec in (gwf.wel.stress_period_data.data[0])
+]
 print(wel_locs)
 # -
 
@@ -109,14 +112,16 @@ print(wel_locs)
 # +
 zone_maps = []
 
+
 # zone 1 is the default (non-terminating regions)
 def fill_zone_1():
     return np.ones((nrow, ncol), dtype=np.int32)
 
+
 za = fill_zone_1()
 for wl in wel_locs:
     za[wl] = 2  # wells
-za[:,14] = 3  # river is in column 14
+za[:, 14] = 3  # river is in column 14
 zone_maps.append(za)
 # -
 
@@ -165,7 +170,7 @@ import matplotlib.pyplot as plt
 
 hf = flopy.utils.HeadFile(workspace / f"{mdl_name}.hds")
 hds = hf.get_data()
-        
+
 fig = plt.figure(figsize=(8, 8))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 mv = flopy.plot.PlotMapView(model=gwf)
@@ -228,7 +233,7 @@ for i, t in enumerate(pathlines["time"]):
         tracks[pid] = []
         particle_ids.add(pid)
         release_locs.append(loc)
-    
+
     # store the particle location in the corresponding track
     tracks[pid].append((loc, t))
 
@@ -242,7 +247,7 @@ print("The maximum number of locations per particle track is", max_track_len)
 
 # +
 pv.set_plot_theme("document")
-pv.set_jupyter_backend('static')
+pv.set_jupyter_backend("static")
 
 # create the plot and add the grid and pathline meshes
 p = pv.Plotter()
@@ -257,7 +262,13 @@ for pid, track in tracks.items():
         label_coords.append(track[0][0])
         start_labels.append(f"Particle {pid}")
 
-p.add_point_labels(label_coords, start_labels, font_size=10, point_size=15, point_color="black")
+p.add_point_labels(
+    label_coords,
+    start_labels,
+    font_size=10,
+    point_size=15,
+    point_color="black",
+)
 
 # zoom in and show the plot
 p.camera.zoom(2.4)
@@ -280,7 +291,7 @@ spls.point_data["time"] = np.zeros(len(spls.points))
 
 # add the underlying grid mesh and particle data, then zoom in
 p.add_mesh(grid, opacity=0.05)
-p.add_mesh(spls, clim=[0, 1.23e+09])
+p.add_mesh(spls, clim=[0, 1.23e09])
 p.camera.zoom(2.4)
 
 # cycle through time steps and update particle location
@@ -292,7 +303,7 @@ for i in range(1, max_track_len):
     for pid in particle_ids:
         track = tracks[pid]
         npts = len(track)
-        # use last locn if particle has already terminated 
+        # use last locn if particle has already terminated
         loc, t = track[i] if i < npts else track[npts - 1]
         pts.append(loc)
         times.append(t)
@@ -301,7 +312,7 @@ for i in range(1, max_track_len):
             segments.append(loc)
 
     p.update_coordinates(np.vstack(pts), render=False)
-    p.update_scalars(np.array(times),  mesh=spls, render=False)
+    p.update_scalars(np.array(times), mesh=spls, render=False)
     p.add_lines(np.array(segments), width=1, color="black")
     p.write_frame()  # write frame to file
 
@@ -314,7 +325,7 @@ p.close()
 # +
 from IPython.core.display import Image
 
-display(Image(data=open(gif_path,'rb').read(), format='gif'))
+display(Image(data=open(gif_path, "rb").read(), format="gif"))
 # -
 
 # Clean up the temporary workspace.

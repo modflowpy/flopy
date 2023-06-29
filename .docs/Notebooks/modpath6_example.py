@@ -21,17 +21,18 @@
 #
 # This notebook demonstrates forward and backward tracking with MODPATH. The notebook also shows how to create subsets of pathline and endpoint information, plot MODPATH results on ModelMap objects, and export endpoints and pathlines as shapefiles.
 
+import glob
+import os
+import shutil
+
 # +
 import sys
-import shutil
-import os
-import glob
 from tempfile import TemporaryDirectory
 
-import numpy as np
-import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
 # run installed version of flopy or add local path
 try:
@@ -71,7 +72,7 @@ hds = hdsfile.get_data(kstpkper=(0, 2))
 # Plot RIV bc and head results.
 
 plt.imshow(hds[4, :, :])
-plt.colorbar();
+plt.colorbar()
 
 fig = plt.figure(figsize=(8, 8))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
@@ -83,10 +84,10 @@ quadmesh = mapview.plot_bc("WEL", kper=1, plotAll=True)
 contour_set = mapview.contour_array(
     hds, levels=np.arange(np.min(hds), np.max(hds), 0.5), colors="b"
 )
-plt.clabel(contour_set, inline=1, fontsize=14);
+plt.clabel(contour_set, inline=1, fontsize=14)
 
 # Now create forward particle tracking simulation where particles are released at the top of each cell in layer 1:
-# * specifying the recharge package in ```create_mpsim``` releases a single particle on iface=6 of each top cell  
+# * specifying the recharge package in ```create_mpsim``` releases a single particle on iface=6 of each top cell
 # * start the particles at begining of per 3, step 1, as in example 3 in MODPATH6 manual
 #
 # **Note:** in FloPy version 3.3.5 and previous, the `Modpath6` constructor `dis_file`, `head_file` and `budget_file` arguments expected filenames relative to the model workspace. In 3.3.6 and later, full paths must be provided &mdash; if they are not, discretization, head and budget data are read directly from the model, as before.
@@ -149,7 +150,7 @@ contour_set = mapview.contour_array(
     hds, levels=np.arange(np.min(hds), np.max(hds), 0.5), colors="b"
 )
 plt.clabel(contour_set, inline=1, fontsize=14)
-mapview.plot_endpoint(well_epd, direction="starting", colorbar=True);
+mapview.plot_endpoint(well_epd, direction="starting", colorbar=True)
 
 # Write starting locations to a shapefile.
 
@@ -185,7 +186,7 @@ mapview.plot_endpoint(well_epd, direction="starting", colorbar=True)
 # (plot_pathline() will plot a single line for recarray with multiple particles)
 # for pid in np.unique(well_pathlines.particleid):
 #   modelmap.plot_pathline(pthobj.get_data(pid), layer='all', colors='red');
-mapview.plot_pathline(well_pathlines, layer="all", colors="red");
+mapview.plot_pathline(well_pathlines, layer="all", colors="red")
 # -
 
 # Write pathlines to a shapefile.
@@ -326,7 +327,7 @@ plt.clabel(contour_set, inline=1, fontsize=14)
 
 mapview.plot_pathline(
     well_pathlines, travel_time="<10000", layer="all", colors="red"
-);
+)
 # -
 
 try:

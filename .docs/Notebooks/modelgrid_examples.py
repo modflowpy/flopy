@@ -16,26 +16,28 @@
 
 # # ModelGrid classes demo
 #
-# ## The three modelgrid classes `StructuredGrid`, `VertexGrid`, and `UnstructuredGrid` will be demonstrated in this notebook. 
+# ## The three modelgrid classes `StructuredGrid`, `VertexGrid`, and `UnstructuredGrid` will be demonstrated in this notebook.
 #
 # All three classes behave similarly, as they inherit their base functionality from the same "parent" object. Even through they behave similarly, there are also some differences between the three classes based upon the specific grid type.
 #
 # ### This notebook will cover:
 #
-#    1) __How to access the modelgrid object from a model and common usages for the modelgrid__  
-#    
-#    2) __How to build modelgrid objects from scratch__ 
-#    
-#    3) __Useful methods and features__  
+#    1) __How to access the modelgrid object from a model and common usages for the modelgrid__
+#
+#    2) __How to build modelgrid objects from scratch__
+#
+#    3) __Useful methods and features__
+
+import os
+import shutil
 
 # +
 import sys
-import os
-import shutil
 from tempfile import TemporaryDirectory
-import numpy as np
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
 # run installed version of flopy or add local path
 try:
@@ -45,8 +47,8 @@ except:
     sys.path.append(fpth)
     import flopy
 
-from flopy.discretization import StructuredGrid, VertexGrid, UnstructuredGrid
 import flopy.utils.binaryfile as bf
+from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 
 print(sys.version)
 print("numpy version: {}".format(np.__version__))
@@ -61,7 +63,9 @@ gridgen_exe = "gridgen"
 
 # +
 # set paths to each of our model types for this example notebook
-spth = os.path.join("..", "..", "examples", "data", "freyberg_multilayer_transient")
+spth = os.path.join(
+    "..", "..", "examples", "data", "freyberg_multilayer_transient"
+)
 spth6 = os.path.join("..", "..", "examples", "data", "mf6-freyberg")
 vpth = os.path.join("..", "..", "examples", "data")
 upth = os.path.join("..", "..", "examples", "data")
@@ -76,7 +80,7 @@ gridgen_ws = temp_dir.name
 
 # ### How to access the modelgrid object from a model
 #
-# FloPy model objects have a built in method that dynamically assembles a modelgrid from model discretization information. Therefore, if the user updates their DIS file, when they call the `modelgrid` property the new discretization information will be included within it. 
+# FloPy model objects have a built in method that dynamically assembles a modelgrid from model discretization information. Therefore, if the user updates their DIS file, when they call the `modelgrid` property the new discretization information will be included within it.
 #
 # #### Modflow-2005 example
 
@@ -92,13 +96,13 @@ print(type(modelgrid))
 
 # Spaitial refernce information that is stored in the NAM file, such as:
 #
-# `xll` : geographic location of lower left model corner x-coordinate  
-# `yll` : geographic location of lower left model corner y-coordinate  
-# `rotation` : modelgrid rotation in degrees  
-# `epsg` : epsg code of modelgrid coordinate system  
-# `proj4_str` : proj4 projection information  
+# `xll` : geographic location of lower left model corner x-coordinate
+# `yll` : geographic location of lower left model corner y-coordinate
+# `rotation` : modelgrid rotation in degrees
+# `epsg` : epsg code of modelgrid coordinate system
+# `proj4_str` : proj4 projection information
 #
-# can be automatcally read in and applied to the modelgrid. FloPy will also write this information out when the user saves their model to file. 
+# can be automatcally read in and applied to the modelgrid. FloPy will also write this information out when the user saves their model to file.
 #
 # This information can be seen by printing the modelgrid
 
@@ -129,11 +133,11 @@ print(modelgrid1)
 # #### Accessing modelgrid reference information
 # There are properties attached to the modelgrid that allows the user to access reference information:
 #
-#    - `xoffset` : returns the x-coordinate for the modelgrid's lower left corner  
-#    - `yoffset` : returns the y-coordinate for the modelgrid's lower left corner  
-#    - `angrot` : returns the rotation of the modelgrid in degrees  
-#    - `epsg` : returns the modelgrid epsg code  
-#    - `proj4` : returns the modelgrid proj4_str information  
+#    - `xoffset` : returns the x-coordinate for the modelgrid's lower left corner
+#    - `yoffset` : returns the y-coordinate for the modelgrid's lower left corner
+#    - `angrot` : returns the rotation of the modelgrid in degrees
+#    - `epsg` : returns the modelgrid epsg code
+#    - `proj4` : returns the modelgrid proj4_str information
 
 # +
 xoff = modelgrid.xoffset
@@ -179,7 +183,7 @@ print(modelgrid1)
 
 # ### Using the modelgrid with plotting routines
 #
-# FloPy's plotting routines accept a model or modelgrid object to determine cell locations for plotting. Here is an example of plotting with the modelgrid object 
+# FloPy's plotting routines accept a model or modelgrid object to determine cell locations for plotting. Here is an example of plotting with the modelgrid object
 
 # +
 fig, axs = plt.subplots(
@@ -192,12 +196,12 @@ for ix, ax in enumerate(axs):
     modelgrid1.set_coord_info(angrot=rotation[ix])
     pmv = flopy.plot.PlotMapView(modelgrid=modelgrid1, ax=ax)
     pmv.plot_grid()
-    ax.set_title("Modelgrid: {} degrees rotation".format(rotation[ix]));
+    ax.set_title("Modelgrid: {} degrees rotation".format(rotation[ix]))
 # -
 
 # The grid lines can also be plotted directly from the modelgrid object
 
-modelgrid1.plot();
+modelgrid1.plot()
 
 # ## Building modelgrid objects from scratch
 
@@ -207,7 +211,7 @@ modelgrid1.plot();
 #
 #    - `delc` : Array of cell widths along columns
 #    - `delr` : Array of cell widths along rows
-#    
+#
 # Other optional, but useful parameters the user can supply include:
 #    - `top` : Array of model Top elevations
 #    - `botm` : Array of layer Botm elevations
@@ -223,7 +227,7 @@ modelgrid1.plot();
 #    - `nrow` : number of model rows
 #    - `ncol` : number of model columns
 #    - `laycbd` : array of length, nlay indicating if Quasi-3D confining layers exist
-#    
+#
 #
 # #### *In this example, some of the more common parameters are used to create a `StructuredGrid`*
 
@@ -280,7 +284,7 @@ pmv.plot_grid()
 pmv.plot_ibound()
 
 plt.colorbar(pc)
-ax.set_title("Top elevations and Ibound from StructuredGrid");
+ax.set_title("Top elevations and Ibound from StructuredGrid")
 # -
 
 # #### Plot a CrossSection of the structured grid
@@ -296,18 +300,19 @@ xc.plot_grid()
 xc.plot_ibound()
 
 plt.colorbar(pc)
-plt.title("Cross-Section of StructuredGrid");
+plt.title("Cross-Section of StructuredGrid")
 # -
 
 # ### `VertexGrid` example
 #
 # Before building the `VertexGrid` class we must first develop a grid. This example uses the `Gridgen` class and executable to produce the same grid as the MODFLOW 6 Quick Start example that is shown on the main page of the flopy repository (https://github.com/modflowpy/flopy).
 #
-# *NOTE*: The `Gridgen` class requires that etither a path to the executable is provided, that the executable exists in the same directory as the script, or that the executable is in the machine's PATH variables to run properly. 
+# *NOTE*: The `Gridgen` class requires that etither a path to the executable is provided, that the executable exists in the same directory as the script, or that the executable is in the machine's PATH variables to run properly.
+
+from flopy.utils.geometry import Polygon
 
 # +
 from flopy.utils.gridgen import Gridgen
-from flopy.utils.geometry import Polygon
 
 name = "dummy"
 nlay = 3
@@ -348,10 +353,10 @@ gridprops.keys()
 # #### Building the `VertexGrid`
 #
 # `VertexGrid` has many similar parameters as the previous `StructuredGrid` example. For a minimal working modelgrid, `VertexGrid` requires:
-#    
+#
 #    - `vertices` : list of vertex number, xvertex, yvertex that make up the grid
 #    - `cell2d` : list containing node number, xcenter, ycenter, and vertex numbers (from vertices)
-#    
+#
 # Other optional, but useful parameters include:
 #
 #    - `top` : Array of model Top elevations
@@ -366,7 +371,7 @@ gridprops.keys()
 #    - `angrot` : model grid rotation
 #    - `nlay` : number of model layers
 #    - `ncpl` : number of cells per model layer
-#    
+#
 # #### *In this example, some of the more common parameters are used to create a `VertexGrid`*
 
 # +
@@ -401,7 +406,7 @@ pmv.plot_grid()
 pmv.plot_ibound()
 
 plt.colorbar(pc)
-ax.set_title("Top elevations from VertexGrid");
+ax.set_title("Top elevations from VertexGrid")
 # -
 
 # #### Plot a CrossSection of the vertex grid
@@ -417,16 +422,17 @@ xc.plot_grid()
 xc.plot_ibound()
 
 plt.colorbar(pc)
-plt.title("Cross-Section of VertexGrid");
+plt.title("Cross-Section of VertexGrid")
 
 
 # -
 
 # ### `UnstructuredGrid` example
 #
-# Before building an `UnstructuredGrid` we must first develop a grid. This example loads saved grid information from data files to create an `UnstructuredGrid`. 
+# Before building an `UnstructuredGrid` we must first develop a grid. This example loads saved grid information from data files to create an `UnstructuredGrid`.
 #
-# *Note*: `Gridgen` can also be used to develop an unstructured grid and examples of how to do this can be found in the notebook [flopy3_gridgen.ipynb](https://github.com/modflowpy/flopy/blob/develop/examples/Notebooks/flopy3_gridgen.ipynb) 
+# *Note*: `Gridgen` can also be used to develop an unstructured grid and examples of how to do this can be found in the notebook [flopy3_gridgen.ipynb](https://github.com/modflowpy/flopy/blob/develop/examples/Notebooks/flopy3_gridgen.ipynb)
+
 
 # +
 # simple functions to load vertices and indice lists
@@ -456,7 +462,7 @@ def load_iverts(fname):
 # #### Building the `UnstructuredGrid`
 #
 # `UnstructuredGrid` has many similar parameters as the previous `VertexGrid` example. For a minimal working, but "incomplete" modelgrid, `UnstructuredGrid` requires:
-#    
+#
 #    - `vertices` : list of vertex number, xvertex, yvertex that make up the grid
 #    - `iverts` : list of vertex numbers that make up each cell
 #    - `xcenters` : list of x center coordinates for all cells in the grid if the grid
@@ -465,14 +471,14 @@ def load_iverts(fname):
 #    - `ycenters` : list of y center coordinates for all cells in the grid if the grid
 #         varies by layer or for all cells in a layer if the same grid is used
 #         for all layers
-#    
+#
 # For a "complete" `UnstructuredGrid` these parameters must be provided in addition to the ones listed above:
 #
 #    - `top` : Array of model Top elevations
 #    - `botm` : Array of layer Botm elevations
-#    
+#
 # Other optional, but useful parameters include:
-#    
+#
 #    - `idomain` : An ibound or idomain array that specifies active and inactive cells
 #    - `lenuni` : Model length unit integer
 #    - `ncpl` : one dimensional array of number of cells per model layer
@@ -481,8 +487,8 @@ def load_iverts(fname):
 #    - `prj` : path to ".prj" projection file that describes the model coordinate system
 #    - `xoff` : x-coordinate of the lower-left corner of the modelgrid
 #    - `yoff` : y-coordinate of the lower-left corner of the modelgrid
-#    - `angrot` : model grid rotation   
-#    
+#    - `angrot` : model grid rotation
+#
 # #### *In this example, some of the more common parameters are used to create a `UnstructuredGrid`*
 
 # +
@@ -537,7 +543,7 @@ pmv.plot_grid()
 # plot cell centers
 plt.plot(modelgrid.xcellcenters, modelgrid.ycellcenters, "bo")
 
-ax.set_title("Cell centers from UnstructuredGrid");
+ax.set_title("Cell centers from UnstructuredGrid")
 # -
 
 # #### Plot a CrossSection of the unstructured grid
@@ -555,7 +561,7 @@ pc = xc.plot_array(modelgrid.botm, alpha=0.5)
 xc.plot_grid()
 
 plt.colorbar(pc)
-plt.title("Cross-Section of UnstructuredGrid");
+plt.title("Cross-Section of UnstructuredGrid")
 # -
 
 # ## Useful methods and properties of the modelgrid classes
@@ -595,8 +601,8 @@ modelgrid.set_coord_info(
 #    - `grid_type` : returns a string representation of the grid type ("structured", "vertex", or "unstructured")
 #    - `units` : returns a string representation of model units
 #    - `lenuni` : returns an integer representation of model units
-#    - `extent` : returns the modelgrid extent as (xmin, xmax, ymin, ymax)  
-#    
+#    - `extent` : returns the modelgrid extent as (xmin, xmax, ymin, ymax)
+#
 
 # +
 # print grid info properties
@@ -634,7 +640,7 @@ print(
 print("proj4_str: {}".format(modelgrid.proj4))
 
 # #### Model discretization properties
-#    
+#
 #    - `shape` : returns the shape of the modelgrid (tuple)
 #    - `ncpl` : returns the number of cells per layer
 #    - `nnodes` : returns the number of cells in the model
@@ -678,7 +684,7 @@ ax.plot(
 plt.legend(
     loc=0,
 )
-plt.title("modelgrid cell vertices and centers");
+plt.title("modelgrid cell vertices and centers")
 
 # +
 # plot layer 1 top, botm, and thickness with ibound overlain
@@ -700,7 +706,7 @@ for ix, ax in enumerate(axs):
     pmv.plot_inactive()
     ax.set_title("Modelgrid: {}".format(labels[ix]))
 
-plt.colorbar(pc);
+plt.colorbar(pc)
 # -
 
 # ### Common methods
@@ -742,7 +748,7 @@ ax[0].set_title("merge_coord_info=True")
 modelgrid.set_coord_info(angrot=45, merge_coord_info=False)
 print(modelgrid)
 modelgrid.plot(ax=ax[1])
-ax[1].set_title("merge_coord_info=False");
+ax[1].set_title("merge_coord_info=False")
 # -
 
 # #### get_coords()
@@ -767,7 +773,7 @@ pmv = flopy.plot.PlotMapView(modelgrid=modelgrid, ax=ax)
 pmv.plot_grid()
 
 s = ax.scatter(rw_coords[0], rw_coords[1], c=q, cmap="viridis_r")
-plt.colorbar(s);
+plt.colorbar(s)
 # -
 
 # #### get_local_coords()
@@ -794,10 +800,10 @@ pmv = flopy.plot.PlotMapView(modelgrid=modelgrid, ax=ax)
 pmv.plot_grid()
 
 s = ax.scatter(l_coords[0], l_coords[1], c=q, cmap="viridis_r")
-plt.colorbar(s);
+plt.colorbar(s)
 # -
 
-# #### `intersect()` 
+# #### `intersect()`
 #
 # Method to get the cellid (`StructuredGrid`=(row, column) OR `VertexGrid` & `UnstrucuturedGrid`=node number) from either model coordinates or from real-world coordinates. Parameters include:
 #
@@ -842,7 +848,7 @@ fig, ax = plt.subplots(figsize=(10, 10), subplot_kw={"aspect": "equal"})
 pmv = flopy.plot.PlotMapView(modelgrid=modelgrid, ax=ax)
 pmv.plot_grid()
 pmv.plot_inactive()
-pmv.plot_bc(package=wel);
+pmv.plot_bc(package=wel)
 # -
 
 # #### saturated_thickness()
@@ -892,10 +898,10 @@ pmv.plot_grid()
 ax[1].set_title("Saturated thickness")
 
 plt.tight_layout()
-plt.colorbar(pc);
+plt.colorbar(pc)
 # -
 
-# #### `write_shapefile()` 
+# #### `write_shapefile()`
 #
 # Method to write a shapefile of the grid with just the cellid attributes. Input parameters include:
 #

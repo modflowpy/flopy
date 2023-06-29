@@ -21,7 +21,7 @@
 #
 # This example problem is the fourth example problem in the SWI2 documentation (https://pubs.usgs.gov/tm/6a46/) and simulates transient movement of the freshwater-seawater interface beneath an island in response to recharge and groundwater withdrawals. The island is 2,050$\times$2,050 m and consists of two 20-m thick aquifers that extend below sea level. The aquifers are confined, storage changes are not considered (all MODFLOW stress periods are steady-state), and the top and bottom of each aquifer is horizontal. The top of the upper aquifer and the bottom of the lower aquifer are impermeable.
 #
-# The domain is discretized into 61 columns, 61 rows, and 2 layers, with respective cell dimensions of 50 m (`DELR`), 50 m (`DELC`), and 20 m. A total of 230 years is simulated using three stress periods with lengths of 200, 12, and 18 years, with constant time steps of 0.2, 0.1, and 0.1 years, respectively. 
+# The domain is discretized into 61 columns, 61 rows, and 2 layers, with respective cell dimensions of 50 m (`DELR`), 50 m (`DELC`), and 20 m. A total of 230 years is simulated using three stress periods with lengths of 200, 12, and 18 years, with constant time steps of 0.2, 0.1, and 0.1 years, respectively.
 #
 # The horizontal and vertical hydraulic conductivity of both aquifers are 10 m/d and 0.2 m/d, respectively. The effective porosity is 0.2 for both aquifers. The model is extended 500 m offshore along all sides and the ocean boundary is represented as a general head boundary condition (GHB) in model layer 1. A freshwater head of 0 m is specified at the ocean bottom in all general head boundaries. The GHB conductance that controls outflow from the aquifer into the ocean is 62.5 m$^{2}$/d and corresponds to a leakance of 0.025 d$^{-1}$ (or a resistance of 40 days).
 #
@@ -38,9 +38,9 @@ import os
 import sys
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
 import flopy
 
@@ -61,7 +61,7 @@ temp_dir = TemporaryDirectory()
 workspace = temp_dir.name
 # -
 
-# Define the number of layers, rows and columns. The heads are computed quasi-steady state (hence a steady MODFLOW run) while the interface will move. There are three stress periods with a length of 200, 12, and 18 years and 1,000, 120, and 180 steps. 
+# Define the number of layers, rows and columns. The heads are computed quasi-steady state (hence a steady MODFLOW run) while the interface will move. There are three stress periods with a length of 200, 12, and 18 years and 1,000, 120, and 180 steps.
 
 # +
 ncol = 61
@@ -75,7 +75,7 @@ save_head = [200, 60, 60]
 steady = True
 # -
 
-# Specify the cell size along the rows (`delr`) and along the columns (`delc`) and the top and bottom of the aquifer for the `DIS` package. 
+# Specify the cell size along the rows (`delr`) and along the columns (`delc`) and the top and bottom of the aquifer for the `DIS` package.
 
 # dis data
 delr, delc = 50.0, 50.0
@@ -163,7 +163,7 @@ obslrc = [[0, 30, 35], [1, 30, 35]]
 nobs = len(obsnam)
 iswiobs = 1051
 
-# Create output control (OC) data using words 
+# Create output control (OC) data using words
 
 # oc data
 spd = {
@@ -592,7 +592,7 @@ ax.text(
     va="center",
     ha="left",
     size="7",
-);
+)
 # -
 
 # Use `ModelCrossSection` plotting class and `plot_fill_between()` method to fill between zeta surfaces.
@@ -620,7 +620,7 @@ ax.set_xlim(0, 3050)
 ax.set_ylim(-50, -10)
 modelxsect.plot_fill_between(zeta[-1, :, :, :], colors=colors, ax=ax)
 linecollection = modelxsect.plot_grid(ax=ax)
-ax.set_title("Scenario year {}".format(years[-1]));
+ax.set_title("Scenario year {}".format(years[-1]))
 # -
 
 try:

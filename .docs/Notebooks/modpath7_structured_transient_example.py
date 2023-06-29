@@ -31,16 +31,17 @@
 #
 # First import FloPy and set up a temporary workspace.
 
+import os
+
 # +
 import sys
-import os
 from os.path import join
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
 proj_root = Path.cwd().parent.parent
 
@@ -247,6 +248,7 @@ oc = flopy.mf6.modflow.mfgwfoc.ModflowGwfoc(
 # -
 
 # Take a look at the model grid before running the simulation.
+
 
 # +
 def add_release(ax):

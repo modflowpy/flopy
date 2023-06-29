@@ -21,15 +21,16 @@
 #
 # This notebook demonstrates the simple array and results plotting capabilities of flopy.  It demonstrates these capabilities by loading and running an existing model, and then showing how the `.plot()` method can be used to make simple plots of the model data and model results.
 
-# +
-from IPython.display import Image
-import sys
 import os
+import sys
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
+
+# +
+from IPython.display import Image
 
 # run installed version of flopy or add local path
 try:
@@ -93,12 +94,12 @@ for f in files:
 #
 # Two-dimensional data (for example the model top) can be plotted by calling the `.plot()` method for each data array.
 
-ml.modelgrid.plot();
+ml.modelgrid.plot()
 
 # As you can see, the `.plot()` methods returns a `matplotlib.pyplot` axis object, which can be used to add additional data to the figure. Below we will add black contours to the axis returned in the first line.
 
 ax = ml.dis.top.plot()
-ml.dis.top.plot(axes=ax, contour=True, pcolor=False);
+ml.dis.top.plot(axes=ax, contour=True, pcolor=False)
 
 # You will notice that we passed several keywords in the second line. There are a number of keywords that can be passed to the `.plot()` method to control plotting. Available keywords are:
 #
@@ -114,11 +115,11 @@ ml.dis.top.plot(axes=ax, contour=True, pcolor=False);
 # 10. `kper` - for transient two-dimensional data (for example recharge package data) `kper` can be used to plot data for a single stress period - note `kper` is zero-based
 # 11. `filename_base` - a base file name that will be used to automatically generate file names for two-dimensional, three-dimensional, and transient two-dimensional data, default is `filename_base=None`
 # 12. `file_extension` - valid `matplotlib` file extension, default is `png` and is only used if `filename_base` is specified
-# 13. `matplotlib.pyplot` keywords are also accepted 
+# 13. `matplotlib.pyplot` keywords are also accepted
 #
 # The previous code block is recreated in a single line using keywords in the code block below.
 
-ml.dis.top.plot(contour=True);
+ml.dis.top.plot(contour=True)
 
 # We can save the same image to a file.
 
@@ -136,7 +137,7 @@ Image(filename=fname)
 #
 # Here we plot the horizontal hydraulic conductivity for each layer. We are also masking areas where the horizontal hydraulic conductivity is zero and adding a color bar.
 
-ml.lpf.hk.plot(masked_values=[0.0], colorbar=True);
+ml.lpf.hk.plot(masked_values=[0.0], colorbar=True)
 
 # In addition to the plots of horizontal hydraulic conductivity you can see that the `.plot()` method returned a list containing 16 axis objects (one for each layer).
 #
@@ -146,7 +147,7 @@ ml.lpf.hk.plot(masked_values=[0.0], colorbar=True);
 #
 # Here we plot the horizontal hydraulic conductivity for layer 11 (`mflay=10`).
 
-ml.lpf.hk.plot(mflay=10, masked_values=[0.0], colorbar=True);
+ml.lpf.hk.plot(mflay=10, masked_values=[0.0], colorbar=True)
 
 # ### Plotting transient two-dimensional data
 #
@@ -154,7 +155,7 @@ ml.lpf.hk.plot(mflay=10, masked_values=[0.0], colorbar=True);
 #
 # Here we plot recharge rates for all six stress periods in the model. We are also masking areas where the recharge rate is zero and adding a color bar.
 
-ml.rch.rech.plot(kper="all", masked_values=[0.0], colorbar=True);
+ml.rch.rech.plot(kper="all", masked_values=[0.0], colorbar=True)
 
 # In addition to the plots of recharge rates you can see that the `.plot()` method returned a list containing 6 axis objects (one for each stress period).
 #
@@ -164,7 +165,7 @@ ml.rch.rech.plot(kper="all", masked_values=[0.0], colorbar=True);
 #
 # Here we plot the recharge rate for stress period 6 (`kper=5`).
 
-ml.rch.rech.plot(kper=5, masked_values=[0.0], colorbar=True);
+ml.rch.rech.plot(kper=5, masked_values=[0.0], colorbar=True)
 
 # We can also save the image to a file by provided the `filename_base` keyword with an appropriate base file name.
 
@@ -250,13 +251,13 @@ t = hdobj.plot(
 #
 # All input data for a package can be plotted using the `.plot()` method. Below all of the data for the lpf package is plotted.
 
-ml.dis.plot();
+ml.dis.plot()
 
 # ### Plot package input data for a specified layer
 #
 # Package input data for a specified layer can be plotted by passing the `mflay` keyword to the package `.plot()` method. Below lpf package input data for layer 12 (`mflay=11`) is plotted.
 
-ml.lpf.plot(mflay=11);
+ml.lpf.plot(mflay=11)
 
 # ### Plot all input data for a model
 #
@@ -269,7 +270,7 @@ ap = ml.plot()
 # Model input data for a specified layer can be plotted by passing the `mflay` keyword to the package `.plot()` method.
 # Below model input data for layer 12 (`mflay=11`) is plotted.
 
-ap = ml.plot(mflay=11);
+ap = ml.plot(mflay=11)
 
 # ## Summary
 #

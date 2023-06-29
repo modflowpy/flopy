@@ -22,10 +22,11 @@
 # +
 import os
 import sys
-import numpy as np
-import scipy.ndimage
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
+import scipy.ndimage
 
 try:
     import flopy
@@ -44,7 +45,13 @@ ws = os.path.join("temp")
 if not os.path.exists(ws):
     os.makedirs(ws)
 
-fn = os.path.join("..", "groundwater_paper", "uspb", "results", "USPB_capture_fraction_04_01.dat")
+fn = os.path.join(
+    "..",
+    "groundwater_paper",
+    "uspb",
+    "results",
+    "USPB_capture_fraction_04_01.dat",
+)
 cf = np.loadtxt(fn)
 print(cf.shape)
 
@@ -52,7 +59,7 @@ cf2 = scipy.ndimage.zoom(cf, 4, order=0)
 print(cf2.shape)
 
 c = plt.imshow(cf2, cmap="jet")
-plt.colorbar(c);
+plt.colorbar(c)
 
 wsl = os.path.join("..", "groundwater_paper", "uspb", "flopy")
 ml = flopy.modflow.Modflow.load("DG.nam", model_ws=wsl, verbose=False)
@@ -93,7 +100,7 @@ leg = plt.legend(loc="upper left", numpoints=1, prop={"size": 6})
 leg.draw_frame(False)
 plt.xticks([0, 20000, 40000, 60000, 80000])
 plt.tight_layout()
-plt.savefig(os.path.join(ws, "capture_fraction_010y.png"), dpi=300);
+plt.savefig(os.path.join(ws, "capture_fraction_010y.png"), dpi=300)
 
 # Rerun the model after changing workspace and writing input files
 
@@ -204,10 +211,16 @@ ax2.text(
     0.0, 1.01, "Model layer 5", ha="left", va="bottom", transform=ax2.transAxes
 )
 
-plt.savefig(os.path.join(ws, "uspb_heads.png"), dpi=300);
+plt.savefig(os.path.join(ws, "uspb_heads.png"), dpi=300)
 # -
 
-fn = os.path.join("..", "groundwater_paper", "uspb", "results", "USPB_capture_fraction_04_10.dat")
+fn = os.path.join(
+    "..",
+    "groundwater_paper",
+    "uspb",
+    "results",
+    "USPB_capture_fraction_04_10.dat",
+)
 cf = np.loadtxt(fn)
 cf2 = scipy.ndimage.zoom(cf, 4, order=0)
 
@@ -242,6 +255,4 @@ plt.plot(
 leg = plt.legend(loc="upper left", numpoints=1, prop={"size": 6})
 leg.draw_frame(False)
 plt.xticks([0, 20000, 40000, 60000, 80000])
-plt.savefig(os.path.join(ws, "capture_fraction_100y.png"), dpi=300);
-
-
+plt.savefig(os.path.join(ws, "capture_fraction_100y.png"), dpi=300)

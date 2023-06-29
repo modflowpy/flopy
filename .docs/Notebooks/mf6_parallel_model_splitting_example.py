@@ -15,9 +15,9 @@
 # ---
 
 # # Model splitting for parallel and serial MODFLOW 6
-# 
-# The model splitting functionality for MODFLOW 6 is shown in this notebook. Model splitting via the `Mf6Splitter()` class can be performed on groundwater flow models as well as combined groundwater flow and transport models. The `Mf6Splitter()` class maps a model's connectivity and then builds new models, with exchanges and movers between the new models, based on a user defined array of model numbers. 
-# 
+#
+# The model splitting functionality for MODFLOW 6 is shown in this notebook. Model splitting via the `Mf6Splitter()` class can be performed on groundwater flow models as well as combined groundwater flow and transport models. The `Mf6Splitter()` class maps a model's connectivity and then builds new models, with exchanges and movers between the new models, based on a user defined array of model numbers.
+#
 # The `Mf6Splitter()` class supports Structured, Vertex, and Unstructured Grid models.
 
 import os
@@ -30,19 +30,21 @@ except:
     sys.path.append(fpth)
     import flopy
 
-from flopy.mf6.utils import Mf6Splitter
-from flopy.plot import styles
-from flopy.utils.geometry import LineString, Polygon
-import numpy as np
-import matplotlib.pyplot as plt
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+from flopy.mf6.utils import Mf6Splitter
+from flopy.plot import styles
+from flopy.utils.geometry import LineString, Polygon
+
 sys.path.append("../common")
-from notebook_utils import string2geom, geometries
+from notebook_utils import geometries, string2geom
 
 # ## Example 1: splitting a simple structured grid model
-# 
+#
 # This example shows the basics of using the `Mf6Splitter()` class and applies the method to the Freyberg (1988) model.
 
 simulation_ws = Path("../../examples/data/mf6-freyberg")
@@ -68,9 +70,7 @@ head = gwf.output.head().get_alldata()[-1]
 fig, ax = plt.subplots(figsize=(5, 7))
 pmv = flopy.plot.PlotMapView(gwf, ax=ax)
 heads = gwf.output.head().get_alldata()[-1]
-heads = np.where(heads == 1e+30,
-                 np.nan,
-                 heads)
+heads = np.where(heads == 1e30, np.nan, heads)
 vmin = np.nanmin(heads)
 vmax = np.nanmax(heads)
 pc = pmv.plot_array(heads, vmin=vmin, vmax=vmax)
@@ -79,14 +79,14 @@ pmv.plot_bc("RIV", color="c")
 pmv.plot_bc("CHD")
 pmv.plot_grid()
 pmv.plot_ibound()
-plt.colorbar(pc);
+plt.colorbar(pc)
 
 # ### Creating an array that defines the new models
-# 
+#
 # In order to split models, the model domain must be discretized using unique model numbers. Any number of models can be created, however all of the cells within each model must be contiguous.
-# 
+#
 # The `Mf6Splitter()` class accept arrays that are equal in size to the number of cells per layer (`StructuredGrid` and `VertexGrid`) or the number of model nodes (`UnstructuredGrid`).
-# 
+#
 # In this example, the model is split diagonally into two model domains.
 
 modelgrid = gwf.modelgrid
@@ -108,7 +108,7 @@ plt.colorbar(pc)
 plt.show()
 
 # ### Splitting the model using `Mf6Splitter()`
-# 
+#
 # The `Mf6Splitter()` class accepts one required parameter and one optional parameter. These parameters are:
 #    - `sim`: A flopy.mf6.MFSimulation object
 #    - `modelname`: optional, the name of the model being split. If omitted Mf6Splitter grabs the first groundwater flow model listed in the simulation
@@ -116,7 +116,7 @@ plt.show()
 mfsplit = Mf6Splitter(sim)
 
 # The model splitting is then performed by calling the `split_model()` function. `split_model()` accepts an array that is either the same size as the number of cells per layer (`StructuredGrid` and `VertexGrid`) model or the number of nodes in the model (`UnstructuredGrid`).
-# 
+#
 # This function returns a new `MFSimulation` object that contains the split models and exchanges between them
 
 new_sim = mfsplit.split_model(array)
@@ -128,7 +128,7 @@ success, buff = new_sim.run_simulation(silent=True)
 assert success
 
 # ### Visualize and reassemble model output
-# 
+#
 # Both models are visualized side by side
 
 # +
@@ -163,11 +163,11 @@ ax1.set_title("Model 1")
 
 fig.subplots_adjust(right=0.8)
 cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
-cbar = fig.colorbar(pc, cax=cbar_ax, label="Hydraulic heads");
+cbar = fig.colorbar(pc, cax=cbar_ax, label="Hydraulic heads")
 # -
 
 # ### Array based model output can be assembled into the original model's shape by using the `reconstruct_array()` method
-# 
+#
 # `reconstruct_array` accepts a dictionary of array data. This data is assembled as {model_number: array_from_model}.
 
 array_dict = {1: heads0, 2: heads1}
@@ -175,7 +175,7 @@ array_dict = {1: heads0, 2: heads1}
 new_head_array = mfsplit.reconstruct_array(array_dict)
 
 # ### Recarray based model inputs and outputs can also be assembled into the original model's shape by using the `reconstruct_recarray()` method
-# 
+#
 # The code below demonstratess how to join the input recarrays for the WEL, RIV, and CHD package and plot them as boundary condition arrays.
 
 models = [ml0, ml1]
@@ -212,19 +212,19 @@ plt.show()
 # -
 
 # ## Example 2: a more comprehensive example with the watershed model from Hughes and others 2023
-# 
+#
 # In this example, a basin model is created and is split into many models.
 # From Hughes, Joseph D., Langevin, Christian D., Paulinski, Scott R., Larsen, Joshua D., and Brakenhoff, David, 2023, FloPy Workflows for Creating Structured and Unstructured MODFLOW Models: Groundwater, https://doi.org/10.1111/gwat.13327
 #
-# 
+#
 # ### Create the model
-# 
+#
 # Load an ASCII raster file
 
 ascii_file = Path("../../examples/data/geospatial/fine_topo.asc")
 
 fine_topo = flopy.utils.Raster.load(ascii_file)
-fine_topo.plot();
+fine_topo.plot()
 
 # +
 Lx = 180000
@@ -247,9 +247,7 @@ bp = np.array(boundary_polygon)
 
 # +
 # define stream segment locations
-segs = [
-    string2geom(geometries[f"streamseg{i}"]) for i in range(1, 5)
-]
+segs = [string2geom(geometries[f"streamseg{i}"]) for i in range(1, 5)]
 # -
 
 # Plot the model boundary and the individual stream segments for the RIV package
@@ -282,10 +280,7 @@ modelgrid = flopy.discretization.StructuredGrid(
 # Crop the raster, resample it for the top elevation, and create an ibound array
 
 new_top = fine_topo.resample_to_grid(
-    modelgrid,
-    band=fine_topo.bands[0],
-    method="min",
-    extrapolate_edges=True
+    modelgrid, band=fine_topo.bands[0], method="min", extrapolate_edges=True
 )
 
 # +
@@ -379,7 +374,7 @@ for r in range(nrow):
         gw_discharge_data.append(
             (0, r, c, modelgrid.top[r, c] - 0.5, conductance, 1.0)
         )
-gw_discharge_data[:10]   
+gw_discharge_data[:10]
 # -
 
 # +
@@ -412,8 +407,8 @@ sim = flopy.mf6.MFSimulation(
 
 tdis = flopy.mf6.ModflowTdis(sim)
 ims = flopy.mf6.ModflowIms(
-    sim, 
-    complexity="simple", 
+    sim,
+    complexity="simple",
     print_option="SUMMARY",
     linear_acceleration="bicgstab",
     outer_maximum=1000,
@@ -490,7 +485,9 @@ assert success
 # Plot the model results
 
 # +
-water_table = flopy.utils.postprocessing.get_water_table(gwf.output.head().get_data())
+water_table = flopy.utils.postprocessing.get_water_table(
+    gwf.output.head().get_data()
+)
 heads = gwf.output.head().get_data()
 hmin, hmax = water_table.min(), water_table.max()
 contours = np.arange(0, 100, 10)
@@ -506,7 +503,13 @@ with styles.USGSMap():
     ax.set_aspect("equal")
     pmv = flopy.plot.PlotMapView(modelgrid=gwf.modelgrid, ax=ax)
     h = pmv.plot_array(heads, vmin=hmin, vmax=hmax)
-    c = pmv.contour_array(water_table, levels=contours, colors="white", linewidths=0.75, linestyles=":")
+    c = pmv.contour_array(
+        water_table,
+        levels=contours,
+        colors="white",
+        linewidths=0.75,
+        linestyles=":",
+    )
     plt.clabel(c, fontsize=8)
     pmv.plot_inactive()
     plt.colorbar(h, ax=ax, shrink=0.5)
@@ -518,11 +521,11 @@ with styles.USGSMap():
 # -
 
 # ### Split the watershed model
-# 
+#
 # Build a splitting array and split this model into many models for parallel modflow runs
 
 nrow_blocks, ncol_blocks = 2, 4
-row_inc, col_inc = int(nrow/nrow_blocks), int(ncol/ncol_blocks)
+row_inc, col_inc = int(nrow / nrow_blocks), int(ncol / ncol_blocks)
 row_inc, col_inc
 
 # +
@@ -555,16 +558,19 @@ mask = np.zeros((nrow, ncol), dtype=int)
 # create masking array
 ival = 1
 model_row_col_offset = {}
-for idx in range(len(row_blocks)-1):
-    for jdx in range(len(col_blocks)-1):
-        mask[row_blocks[idx]:row_blocks[idx+1], col_blocks[jdx]:col_blocks[jdx+1]] = ival
-        model_row_col_offset[ival-1] = (row_blocks[idx], col_blocks[jdx])
+for idx in range(len(row_blocks) - 1):
+    for jdx in range(len(col_blocks) - 1):
+        mask[
+            row_blocks[idx] : row_blocks[idx + 1],
+            col_blocks[jdx] : col_blocks[jdx + 1],
+        ] = ival
+        model_row_col_offset[ival - 1] = (row_blocks[idx], col_blocks[jdx])
         # increment model number
         ival += 1
 # -
 
 # +
-plt.imshow(mask);
+plt.imshow(mask)
 # -
 
 # ### Now split the model into many models using `Mf6Splitter()`
@@ -582,7 +588,7 @@ assert success
 # -
 
 # ### Reassemble the heads to the original model shape for plotting
-# 
+#
 # Create a dictionary of model number : heads and use the `reconstruct_array()` method to get a numpy array that is the original shape of the unsplit model.
 
 model_names = list(new_sim.model_names)
@@ -598,7 +604,7 @@ ra_watertable = flopy.utils.postprocessing.get_water_table(ra_heads)
 # +
 with styles.USGSMap():
     fig, axs = plt.subplots(nrows=3, figsize=(8, 12))
-    diff = (ra_heads - heads)
+    diff = ra_heads - heads
     hv = [ra_heads, heads, diff]
     titles = ["Multiple models", "Single model", "Multiple - single"]
     for idx, ax in enumerate(axs):
@@ -635,9 +641,9 @@ with styles.USGSMap():
 # -
 
 # ## Example 3: create an optimized splitting mask for a model
-# 
+#
 # In the previous examples, the watershed model splitting mask was defined by the user. `Mf6Splitter` also has a method called `optimize_splitting_mask` that creates a mask based on the number of models the user would like to generate.
-# 
+#
 # The `optimize_splitting_mask()` method generates a vertex weighted adjacency graph, based on the number active and inactive nodes in all layers of the model. This adjacency graph is then provided to `pymetis` which does the work for us and returns a membership array for each node.
 
 # +
@@ -681,7 +687,7 @@ ra_watertable = flopy.utils.postprocessing.get_water_table(ra_heads)
 # +
 with styles.USGSMap():
     fig, axs = plt.subplots(nrows=3, figsize=(8, 12))
-    diff = (ra_heads - heads)
+    diff = ra_heads - heads
     hv = [ra_heads, heads, diff]
     titles = ["Multiple models", "Single model", "Multiple - single"]
     for idx, ax in enumerate(axs):

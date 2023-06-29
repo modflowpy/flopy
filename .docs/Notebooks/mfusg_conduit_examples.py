@@ -18,13 +18,15 @@
 # This example problem demonstrates use of the CLN process for simulating flow to a well pumping from two aquifers seperated by an impermeable confining unit. A structured finite-difference grid with 100 rows and 100 columns was used. Each square cells is 470m by 470 m in extent. Initial heads are 10m in aquifer 1 and 30m in aquifer 2.
 
 # +
-import os, shutil
+import os
+import shutil
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 import flopy
+
 # -
 
 # temporary directory
@@ -39,7 +41,9 @@ cln_ws = temp_dir.name
 # A vertical conduit well is located at the center of the domain and has a radius of 0.5 m. The well pumps 62,840 m3/d and is open fully to both aquifers from top to bottom. The CLN Process was used with a circular conduit geometry type to discretize the well bore with two conduit cells, one in each layer. The WEL Package was used to pump from the bottom CLN cell.
 #
 
-model_ws = os.path.join("../../examples/data/mfusg_test", "03_conduit_confined")
+model_ws = os.path.join(
+    "../../examples/data/mfusg_test", "03_conduit_confined"
+)
 mf = flopy.mfusg.MfUsg.load(
     "ex3.nam", model_ws=model_ws, exe_name="mfusg", check=False, verbose=True
 )

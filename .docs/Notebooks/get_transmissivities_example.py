@@ -21,7 +21,7 @@
 #
 # Demonstration of `flopy.utils.get_transmissivities` method
 # for computing open interval transmissivities (for weighted averages of heads or fluxes)
-# In practice this method might be used to:  
+# In practice this method might be used to:
 #
 # * compute vertically-averaged head target values representative of observation wells of varying open intervals (including variability in saturated thickness due to the position of the water table)
 # * apportion boundary fluxes (e.g. from an analytic element model) among model layers based on transmissivity.
@@ -32,11 +32,11 @@ import os
 import sys
 from tempfile import TemporaryDirectory
 
-import flopy
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
+import flopy
 
 print(sys.version)
 print("numpy version: {}".format(np.__version__))

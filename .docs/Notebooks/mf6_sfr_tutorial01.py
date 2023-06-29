@@ -16,9 +16,10 @@
 
 # # SFR2 package loading and querying
 
+import os
+
 # +
 import sys
-import os
 
 # run installed version of flopy or add local path
 try:
@@ -38,7 +39,9 @@ m = flopy.modflow.Modflow()
 
 # Read the SFR2 file
 
-f = os.path.join("..", "..", "examples", "data", "mf2005_test", "testsfr2_tab_ICALC2.sfr")
+f = os.path.join(
+    "..", "..", "examples", "data", "mf2005_test", "testsfr2_tab_ICALC2.sfr"
+)
 stuff = open(f).readlines()
 stuff
 

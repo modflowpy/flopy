@@ -24,8 +24,9 @@
 # +
 import os
 import sys
-import numpy as np
+
 import matplotlib as mpl
+import numpy as np
 
 # run installed version of flopy or add local path
 try:
@@ -37,7 +38,6 @@ except:
 
 import flopy.modflow as fpm
 import flopy.utils as fpu
-
 
 print(sys.version)
 print("numpy version: {}".format(np.__version__))
@@ -57,7 +57,7 @@ fpm.ModflowDis(
     model, nlay=1, nrow=1, ncol=201, delr=10, delc=1, top=50, botm=0
 )
 
-# Active cells and the like are defined with the Basic package (BAS), which is required for every MODFLOW model. It contains the {\tt ibound} array, which is used to specify which cells are active (value is positive), inactive (value is 0), or fixed head (value is negative). The {\tt numpy} package (aliased as {\tt np}) can be used to quickly initialize the {\tt ibound} array with values of 1, and then set the {\tt ibound} value for the first and last columns to -1. The {\tt numpy} package (and Python, in general) uses zero-based indexing and supports negative indexing so that row 1 and column 1, and row 1 and column 201, can be referenced as [0, 0], and [0, -1], respectively.  Although this simulation is for steady flow, starting heads still need to be specified. They are used as the head for fixed-head cells (where {\tt ibound} is negative), and as a starting point to compute the saturated thickness for cases of unconfined flow. 
+# Active cells and the like are defined with the Basic package (BAS), which is required for every MODFLOW model. It contains the {\tt ibound} array, which is used to specify which cells are active (value is positive), inactive (value is 0), or fixed head (value is negative). The {\tt numpy} package (aliased as {\tt np}) can be used to quickly initialize the {\tt ibound} array with values of 1, and then set the {\tt ibound} value for the first and last columns to -1. The {\tt numpy} package (and Python, in general) uses zero-based indexing and supports negative indexing so that row 1 and column 1, and row 1 and column 201, can be referenced as [0, 0], and [0, -1], respectively.  Although this simulation is for steady flow, starting heads still need to be specified. They are used as the head for fixed-head cells (where {\tt ibound} is negative), and as a starting point to compute the saturated thickness for cases of unconfined flow.
 
 ibound = np.ones((1, 201))
 ibound[0, 0] = ibound[0, -1] = -1
