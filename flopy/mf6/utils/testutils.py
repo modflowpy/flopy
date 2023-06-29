@@ -34,26 +34,27 @@ def read_cell2d(cell2d_file):
     return c2drecarray
 
 
-def read_exchangedata(gwf_file, cellid_size=3):
+def read_exchangedata(gwf_file, cellid_size=3, cellid_size_2=3):
     exgrecarray = []
     fd = open(gwf_file, "r")
     for line in fd:
         linesp = line.strip().split()
+        cellid_tot = cellid_size + cellid_size_2
         exgrecarray.append(
             (
                 make_int_tuple(linesp[0:cellid_size]),
-                make_int_tuple(linesp[cellid_size : cellid_size * 2]),
-                int(linesp[cellid_size * 2]),
-                float(linesp[cellid_size * 2 + 1]),
-                float(linesp[cellid_size * 2 + 2]),
-                float(linesp[cellid_size * 2 + 3]),
-                float(linesp[cellid_size * 2 + 4]),
+                make_int_tuple(linesp[cellid_size:cellid_tot]),
+                int(linesp[cellid_tot]),
+                float(linesp[cellid_tot + 1]),
+                float(linesp[cellid_tot + 2]),
+                float(linesp[cellid_tot + 3]),
+                float(linesp[cellid_tot + 4]),
             )
         )
     return exgrecarray
 
 
-def read_gncrecarray(gnc_file, cellid_size=3):
+def read_gncrecarray(gnc_file, cellid_size=3, cellid_size_2=3):
     gncrecarray = []
     fd = open(gnc_file, "r")
     for line in fd:
@@ -61,9 +62,17 @@ def read_gncrecarray(gnc_file, cellid_size=3):
         gncrecarray.append(
             (
                 make_int_tuple(linesp[0:cellid_size]),
-                make_int_tuple(linesp[cellid_size : cellid_size * 2]),
-                make_int_tuple(linesp[cellid_size * 2 : cellid_size * 3]),
-                float(linesp[cellid_size * 3]),
+                make_int_tuple(
+                    linesp[cellid_size : cellid_size + cellid_size_2]
+                ),
+                make_int_tuple(
+                    linesp[
+                        cellid_size
+                        + cellid_size_2 : cellid_size * 2
+                        + cellid_size_2
+                    ]
+                ),
+                float(linesp[cellid_size * 2 + cellid_size_2]),
             )
         )
     return gncrecarray

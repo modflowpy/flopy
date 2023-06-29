@@ -885,6 +885,7 @@ class MFSimulation(PackageContainer):
                         f"  loading exchange package {exchange_file._get_pname()}..."
                     )
                 exchange_file.load(strict)
+                instance._add_package(exchange_file, exchange_file.path)
                 instance._exchange_files[exgfile[1]] = exchange_file
 
         # load simulation packages
