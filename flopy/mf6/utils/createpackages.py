@@ -81,7 +81,6 @@ files, the package classes, and updated init.py that createpackages.py created.
 
 """
 import datetime
-import io
 import os
 import textwrap
 from enum import Enum
@@ -142,7 +141,7 @@ def clean_class_string(name):
     return name
 
 
-def build_dfn_string(dfn_list, header):
+def build_dfn_string(dfn_list, header, package_abbr, flopy_dict):
     dfn_string = "    dfn = ["
     line_length = len(dfn_string)
     leading_spaces = " " * line_length
@@ -153,6 +152,15 @@ def build_dfn_string(dfn_list, header):
     for key, value in header.items():
         if key == "multi-package":
             dfn_string = f'{dfn_string}\n{leading_spaces} "multi-package", '
+    # process solution packages
+    if package_abbr in flopy_dict["solution_packages"]:
+        model_types = '", "'.join(
+            flopy_dict["solution_packages"][package_abbr]
+        )
+        dfn_string = (
+            f"{dfn_string}\n{leading_spaces} "
+            f'["solution_package", "{model_types}"], '
+        )
     dfn_string = f"{dfn_string}],\n{leading_spaces}"
 
     # process all data items
@@ -398,7 +406,7 @@ def build_model_load(model_type):
         "             load_only=None):\n        "
         "return mfmodel.MFModel.load_base(simulation, structure, "
         "modelname,\n                                         "
-        "model_nam_file, '{}', version,\n"
+        "model_nam_file, '{}6', version,\n"
         "                                         exe_name, strict, "
         "model_rel_path,\n"
         "                                         load_only)"
@@ -485,7 +493,7 @@ def create_packages():
             )
 
     util_path, tail = os.path.split(os.path.realpath(__file__))
-    init_file = io.open(
+    init_file = open(
         os.path.join(util_path, "..", "modflow", "__init__.py"),
         "w",
         newline="\n",
@@ -499,6 +507,7 @@ def create_packages():
 
     # loop through packages list
     init_file_imports = []
+    flopy_dict = file_structure.flopy_dict
     for package in package_list:
         data_structure_dict = {}
         package_properties = []
@@ -507,10 +516,12 @@ def create_packages():
         set_param_list = []
         class_vars = []
         template_gens = []
-        dfn_string = build_dfn_string(package[3], package[5])
         package_abbr = clean_class_string(
             f"{clean_class_string(package[2])}{package[0].file_type}"
         ).lower()
+        dfn_string = build_dfn_string(
+            package[3], package[5], package_abbr, flopy_dict
+        )
         package_name = clean_class_string(
             "{}{}{}".format(
                 clean_class_string(package[2]),
@@ -551,6 +562,10 @@ def create_packages():
             doc_string = mfdatautil.MFDocString(ds)
 
         if package[0].dfn_type == mfstructure.DfnType.exch_file:
+            exgtype = (
+                f'"{package_abbr[0:3].upper()}6-{package_abbr[3:].upper()}6"'
+            )
+
             add_var(
                 init_vars,
                 None,
@@ -558,7 +573,7 @@ def create_packages():
                 package_properties,
                 doc_string,
                 data_structure_dict,
-                None,
+                exgtype,
                 "exgtype",
                 "exgtype",
                 build_doc_string(
@@ -749,7 +764,7 @@ def create_packages():
         )
 
         # open new Packages file
-        pb_file = io.open(
+        pb_file = open(
             os.path.join(util_path, "..", "modflow", f"mf{package_name}.py"),
             "w",
             newline="\n",
@@ -918,7 +933,7 @@ def create_packages():
                 init_vars,
                 load_txt,
             )
-            md_file = io.open(
+            md_file = open(
                 os.path.join(util_path, "..", "modflow", f"mf{model_name}.py"),
                 "w",
                 newline="\n",

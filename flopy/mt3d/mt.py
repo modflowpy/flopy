@@ -280,8 +280,7 @@ class Mt3dms(BaseModel):
             top=top,
             botm=botm,
             idomain=ibound,
-            proj4=self._modelgrid.proj4,
-            epsg=self._modelgrid.epsg,
+            crs=self._modelgrid.crs,
             xoff=self._modelgrid.xoffset,
             yoff=self._modelgrid.yoffset,
             angrot=self._modelgrid.angrot,
@@ -313,12 +312,9 @@ class Mt3dms(BaseModel):
                     yoff = self._modelgrid._yul_to_yll(self.mf._yul)
                 else:
                     yoff = 0.0
-        proj4 = self._modelgrid.proj4
-        if proj4 is None:
-            proj4 = self.mf._modelgrid.proj4
-        epsg = self._modelgrid.epsg
-        if epsg is None:
-            epsg = self.mf._modelgrid.epsg
+        crs = self._modelgrid.crs
+        if crs is None:
+            crs = self.mf._modelgrid.crs
         angrot = self._modelgrid.angrot
         if angrot is None or angrot == 0.0:  # angrot normally defaulted to 0.0
             if self.mf._modelgrid.angrot is not None:
@@ -326,7 +322,7 @@ class Mt3dms(BaseModel):
             else:
                 angrot = 0.0
 
-        self._modelgrid.set_coord_info(xoff, yoff, angrot, epsg, proj4)
+        self._modelgrid.set_coord_info(xoff, yoff, angrot, crs=crs)
         self._mg_resync = not self._modelgrid.is_complete
         return self._modelgrid
 
@@ -693,16 +689,15 @@ class Mt3dms(BaseModel):
         # write message indicating packages that were successfully loaded
         if mt.verbose:
             print(
-                "\n   The following {0} packages were "
+                "\n   The following {} packages were "
                 "successfully loaded.".format(len(files_successfully_loaded))
             )
             for fname in files_successfully_loaded:
                 print(f"      {os.path.basename(fname)}")
             if len(files_not_loaded) > 0:
                 print(
-                    "   The following {0} packages were not loaded.".format(
-                        len(files_not_loaded)
-                    )
+                    f"   The following {len(files_not_loaded)} packages "
+                    "were not loaded."
                 )
                 for fname in files_not_loaded:
                     print(f"      {os.path.basename(fname)}")
@@ -765,7 +760,7 @@ class Mt3dms(BaseModel):
 
         if not os.path.isfile(fname):
             raise Exception(f"Could not find file: {fname}")
-        with open(fname, "r") as f:
+        with open(fname) as f:
             line = f.readline()
             if line.strip() != firstline:
                 raise Exception(

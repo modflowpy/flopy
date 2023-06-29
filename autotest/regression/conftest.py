@@ -5,6 +5,7 @@ from tempfile import gettempdir
 
 import pytest
 from filelock import FileLock
+from modflow_devtools.download import download_and_unzip
 
 __mf6_examples = "mf6_examples"
 __mf6_examples_path = Path(gettempdir()) / __mf6_examples
@@ -12,19 +13,19 @@ __mf6_examples_lock = FileLock(Path(gettempdir()) / f"{__mf6_examples}.lock")
 
 
 def get_mf6_examples_path() -> Path:
-    pytest.importorskip("pymake")
-    import pymake
-
     # use file lock so mf6 distribution is downloaded once,
     # even when tests are run in parallel with pytest-xdist
     __mf6_examples_lock.acquire()
     try:
-        if not __mf6_examples_path.is_dir():
+        if __mf6_examples_path.is_dir() and any(__mf6_examples_path.glob("*")):
+            print(f"Example models already exist")
+        else:
             __mf6_examples_path.mkdir(exist_ok=True)
-            pymake.download_and_unzip(
+            print(f"Downloading example models")
+            download_and_unzip(
                 url="https://github.com/MODFLOW-USGS/modflow6-examples/releases/download/current/modflow6-examples.zip",
-                pth=str(__mf6_examples_path),
-                verify=True,
+                path=str(__mf6_examples_path),
+                verbose=True,
             )
         return __mf6_examples_path
     finally:

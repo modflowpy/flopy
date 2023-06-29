@@ -587,7 +587,7 @@ class MfGrdFile(FlopyBinaryData):
     @property
     def nja(self):
         """
-        Number of non-zero entries in the CRS column pointer vector.
+        Number of non-zero entries JA vector array.
 
         Returns
         -------
@@ -598,7 +598,11 @@ class MfGrdFile(FlopyBinaryData):
     @property
     def ia(self):
         """
-        CRS row pointers for the model grid.
+        index array that defines indexes for `.ja`. Each ia value is the
+        starting position of data for a cell. [ia[n]:ia[n+1]] would give you
+        all data for a cell. ia[n] is also the location of data for the
+        diagonal position. See `.ja` property documentation
+        for an example of getting a cell's number and connected cells
 
         Returns
         -------
@@ -609,22 +613,40 @@ class MfGrdFile(FlopyBinaryData):
     @property
     def ja(self):
         """
-        CRS column pointers for the model grid.
+        Flat jagged connection array for a model. `.ja` for a cell includes the
+        cell number and the cell number for all connected cells. Indexes for
+        cells are stored in the `.ia` variable.
 
         Returns
         -------
         ja : ndarray of ints
+
+        Examples
+        --------
+        >>> from flopy.mf6.utils import MfGrdFile
+        >>> grb = MfGrdFile("my_model.dis.grb")
+        >>> ia = grb.ia
+        >>> ja = grb.ja
+        >>> # get connections for node 0
+        >>> ja_node0 = ja[ia[0]:ia[1]]
+        >>> node = ja_node0[0]
+        >>> connections = ja_node0[1:]
         """
         return self._ja
 
     @property
     def iavert(self):
         """
-        CRS cell pointers for cell vertices.
+        index array that defines indexes for `.javart`. Each ia value is the
+        starting position of data for a cell. [iavert[n]:iavert[n+1]] would
+        give you all data for a cell. See `.javert` property documentation for
+        an example of getting cell number and it's vertex numbers.
+        Alternatively, the `.iverts` property can be used to get this
+        information
 
         Returns
         -------
-        iavert : ndarray of ints
+        iavert : ndarray of ints or None for structured grids
         """
         if "IAVERT" in self._datadict:
             iavert = self._datadict["IAVERT"] - 1
@@ -635,11 +657,20 @@ class MfGrdFile(FlopyBinaryData):
     @property
     def javert(self):
         """
-        CRS vertex numbers for the vertices comprising each cell.
+        Flat jagged array of vertex numbers that comprise all of the cells
 
         Returns
         -------
-        javerts : ndarray of ints
+        javerts : ndarray of ints or None for structured grids
+
+        Examples
+        --------
+        >>> from flopy.mf6.utils import MfGrdFile
+        >>> grb = MfGrdFile("my_model.dis.grb")
+        >>> iavert = self.iavert
+        >>> javert = self.javert
+        >>> # get vertex numbers for node 0
+        >>> vertnums = javert[iavert[0]:iavert[1]]
         """
         if "JAVERT" in self._datadict:
             javert = self._datadict["JAVERT"] - 1

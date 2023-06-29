@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 15, 2022 12:49:36 UTC
+# FILE created on June 29, 2023 01:58:48 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -424,7 +424,7 @@ class ModflowGwtgwt(mfpackage.MFPackage):
         self,
         simulation,
         loading_package=False,
-        exgtype=None,
+        exgtype="GWT6-GWT6",
         exgmnamea=None,
         exgmnameb=None,
         gwfmodelname1=None,

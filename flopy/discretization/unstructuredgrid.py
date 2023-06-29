@@ -1,6 +1,7 @@
 import copy
 import inspect
 import os
+from typing import Union
 
 import numpy as np
 from matplotlib.path import Path
@@ -31,6 +32,14 @@ class UnstructuredGrid(Grid):
         list of y center coordinates for all cells in the grid if the grid
         varies by layer or for all cells in a layer if the same grid is used
         for all layers
+    top : list or ndarray
+        top elevations for all cells in the grid.
+    botm : list or ndarray
+        bottom elevations for all cells in the grid.
+    idomain : int or ndarray
+        ibound/idomain value for each cell
+    lenuni : int or ndarray
+        model length units
     ncpl : ndarray
         one dimensional array of size nlay with the number of cells in each
         layer.  This can also be passed in as a tuple or list as long as it
@@ -42,11 +51,24 @@ class UnstructuredGrid(Grid):
         If the model grid defined in verts and iverts applies for all model
         layers, then the length of iverts can be equal to ncpl[0] and there
         is no need to repeat all of the vertex information for cells in layers
+    crs : pyproj.CRS, optional if `prjfile` is specified
+        Coordinate reference system (CRS) for the model grid
+        (must be projected; geographic CRS are not supported).
+        The value can be anything accepted by
+        :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+        such as an authority string (eg "EPSG:26916") or a WKT string.
+    prjfile : str or pathlike, optional if `crs` is specified
+        ESRI-style projection file with well-known text defining the CRS
+        for the model grid (must be projected; geographic CRS are not supported).
         beneath the top layer.
-    top : list or ndarray
-        top elevations for all cells in the grid.
-    botm : list or ndarray
-        bottom elevations for all cells in the grid.
+    xoff : float
+        x coordinate of the origin point (lower left corner of model grid)
+        in the spatial reference coordinate system
+    yoff : float
+        y coordinate of the origin point (lower left corner of model grid)
+        in the spatial reference coordinate system
+    angrot : float
+        rotation angle of model grid, as it is rotated around the origin point
     iac : list or ndarray
         optional number of connections per node array
     ja : list or ndarray
@@ -94,9 +116,11 @@ class UnstructuredGrid(Grid):
         idomain=None,
         lenuni=None,
         ncpl=None,
+        crs=None,
         epsg=None,
         proj4=None,
         prj=None,
+        prjfile=None,
         xoff=0.0,
         yoff=0.0,
         angrot=0.0,
@@ -109,9 +133,11 @@ class UnstructuredGrid(Grid):
             botm,
             idomain,
             lenuni,
+            crs,
             epsg,
             proj4,
             prj,
+            prjfile,
             xoff,
             yoff,
             angrot,
@@ -151,8 +177,6 @@ class UnstructuredGrid(Grid):
         self._iac = iac
         self._ja = ja
 
-        return
-
     def set_ncpl(self, ncpl):
         if isinstance(ncpl, int):
             ncpl = np.array([ncpl], dtype=int)
@@ -163,7 +187,6 @@ class UnstructuredGrid(Grid):
         assert ncpl.ndim == 1, "ncpl must be 1d"
         self._ncpl = ncpl
         self._require_cache_updates()
-        return
 
     @property
     def is_valid(self):
@@ -363,25 +386,6 @@ class UnstructuredGrid(Grid):
             xv *= self.nlay
             yv *= self.nlay
         return xv, yv
-
-    def neighbors(self, node, **kwargs):
-        """
-        Method to get a list of nearest neighbors
-
-        Parameters
-        ----------
-        node : int
-            node number
-
-        Returns
-        -------
-            list of nearest neighbors
-        """
-        nrec = self.iac[node]
-        idx0 = np.sum(self.iac[:node])
-        idx1 = idx0 + nrec
-        neighbors = self.ja[idx0:idx1][1:]
-        return list(neighbors)
 
     def cross_section_lay_ncpl_ncb(self, ncb):
         """
@@ -671,7 +675,6 @@ class UnstructuredGrid(Grid):
 
         # build xy vertex and cell center info
         for iverts in self.iverts:
-
             xcellvert = []
             ycellvert = []
             for ix in iverts:
@@ -858,7 +861,7 @@ class UnstructuredGrid(Grid):
 
         from ..utils.geometry import get_polygon_centroid
 
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             line = f.readline()
             ll = line.split()
             ncells, nverts = ll[0:2]
@@ -953,13 +956,13 @@ class UnstructuredGrid(Grid):
             )
 
     @classmethod
-    def from_gridspec(cls, file_path):
+    def from_gridspec(cls, file_path: Union[str, os.PathLike]):
         """
         Create an UnstructuredGrid from a grid specification file.
 
         Parameters
         ----------
-        file_path : Path-like
+        file_path : str or PathLike
             Path to the grid specification file
 
         Returns
@@ -967,7 +970,7 @@ class UnstructuredGrid(Grid):
             An UnstructuredGrid
         """
 
-        with open(file_path, "r") as file:
+        with open(file_path) as file:
 
             def split_line():
                 return file.readline().strip().split()

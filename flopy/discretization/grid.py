@@ -1,10 +1,12 @@
 import copy
 import os
+import warnings
+from collections import defaultdict
 
 import numpy as np
 
-from ..plot.plotutil import UnstructuredPlotUtilities
 from ..utils import geometry
+from ..utils.crs import get_crs
 from ..utils.gridutil import get_lni
 
 
@@ -34,20 +36,23 @@ class Grid:
     ----------
     grid_type : enumeration
         type of model grid ('structured', 'vertex', 'unstructured')
-    top : ndarray(float)
+    top : float or ndarray
         top elevations of cells in topmost layer
-    botm : ndarray(float)
+    botm : float or ndarray
         bottom elevations of all cells
-    idomain : ndarray(int)
+    idomain : int or ndarray
         ibound/idomain value for each cell
-    lenuni : ndarray(int)
+    lenuni : int or ndarray
         model length units
-    espg : str, int
-        optional espg projection code
-    proj4 : str
-        optional proj4 projection string code
-    prj : str
-        optional projection file name path
+    crs : pyproj.CRS, optional if `prjfile` is specified
+        Coordinate reference system (CRS) for the model grid
+        (must be projected; geographic CRS are not supported).
+        The value can be anything accepted by
+        :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+        such as an authority string (eg "EPSG:26916") or a WKT string.
+    prjfile : str or pathlike, optional if `crs` is specified
+        ESRI-style projection file with well-known text defining the CRS
+        for the model grid (must be projected; geographic CRS are not supported).
     xoff : float
         x coordinate of the origin point (lower left corner of model grid)
         in the spatial reference coordinate system
@@ -61,16 +66,14 @@ class Grid:
     ----------
     grid_type : enumeration
         type of model grid ('structured', 'vertex', 'unstructured')
-    top : ndarray(float)
+    top : float or ndarray
         top elevations of cells in topmost layer
-    botm : ndarray(float)
+    botm : float or ndarray
         bottom elevations of all cells
-    idomain : ndarray(int)
+    idomain : int or ndarray
         ibound/idomain value for each cell
-    proj4 : proj4 SpatialReference
-        spatial reference locates the grid in a coordinate system
-    epsg : epsg SpatialReference
-        spatial reference locates the grid in a coordinate system
+    crs : pyproj.CRS
+        Coordinate reference system (CRS) for the model grid
     lenuni : int
         modflow lenuni parameter
     xoffset : float
@@ -144,9 +147,11 @@ class Grid:
         botm=None,
         idomain=None,
         lenuni=None,
+        crs=None,
         epsg=None,
         proj4=None,
         prj=None,
+        prjfile=None,
         xoff=0.0,
         yoff=0.0,
         angrot=0.0,
@@ -170,9 +175,13 @@ class Grid:
         self._lenuni = lenuni
 
         self._units = lenunits[self._lenuni]
+        self._crs = get_crs(
+            prjfile=prjfile, prj=prj, epsg=epsg, proj4=proj4, crs=crs
+        )
         self._epsg = epsg
         self._proj4 = proj4
         self._prj = prj
+        self._prjfile = prjfile
         self._xoff = xoff
         self._yoff = yoff
         if angrot is None:
@@ -186,6 +195,7 @@ class Grid:
         self._verts = None
         self._laycbd = None
         self._neighbors = None
+        self._edge_set = None
 
     ###################################
     # access to basic grid properties
@@ -202,8 +212,8 @@ class Grid:
                 f"yll:{self.yoffset!s}",
                 f"rotation:{self.angrot!s}",
             ]
-        if self.proj4 is not None:
-            items.append(f"proj4_str:{self.proj4}")
+        if self.crs is not None:
+            items.append(f"crs:{self.crs.srs}")
         if self.units is not None:
             items.append(f"units:{self.units}")
         if self.lenuni is not None:
@@ -245,31 +255,32 @@ class Grid:
         return self._angrot * np.pi / 180.0
 
     @property
+    def crs(self):
+        return self._crs
+
+    @crs.setter
+    def crs(self, crs):
+        self._crs = get_crs(crs=crs)
+
+    @property
     def epsg(self):
-        return self._epsg
+        if self._crs is not None:
+            return self._crs.to_epsg()
 
     @epsg.setter
     def epsg(self, epsg):
-        self._epsg = epsg
+        self._crs = get_crs(epsg=epsg)
+        self._epsg = self._crs.to_epsg()
 
     @property
     def proj4(self):
-        proj4 = None
-        if self._proj4 is not None:
-            if "epsg" in self._proj4.lower():
-                proj4 = self._proj4
-                # set the epsg if proj4 specifies it
-                tmp = [i for i in self._proj4.split() if "epsg" in i.lower()]
-                self._epsg = int(tmp[0].split(":")[1])
-            else:
-                proj4 = self._proj4
-        elif self.epsg is not None:
-            proj4 = f"epsg:{self.epsg}"
-        return proj4
+        if self._crs is not None:
+            return self._crs.to_proj4()
 
     @proj4.setter
     def proj4(self, proj4):
-        self._proj4 = proj4
+        self._crs = get_crs(proj4=proj4)
+        self._proj4 = self._crs.to_proj4()
 
     @property
     def prj(self):
@@ -277,7 +288,17 @@ class Grid:
 
     @prj.setter
     def prj(self, prj):
-        self._proj4 = prj
+        self._crs = get_crs(prj=prj)
+        self._prj = prj
+
+    @property
+    def prjfile(self):
+        return self._prjfile
+
+    @prjfile.setter
+    def prjfile(self, prjfile):
+        self._crs = get_crs(prjfile=prjfile)
+        self._prjfile = prjfile
 
     @property
     def top(self):
@@ -299,7 +320,7 @@ class Grid:
             return self._laycbd
 
     @property
-    def thick(self):
+    def cell_thickness(self):
         """
         Get the cell thickness for a structured, vertex, or unstructured grid.
 
@@ -309,8 +330,64 @@ class Grid:
         """
         return -np.diff(self.top_botm, axis=0).reshape(self._botm.shape)
 
+    @property
+    def thick(self):
+        """
+        DEPRECATED method. thick will be removed in version 3.3.9
+
+        Get the cell thickness for a structured, vertex, or unstructured grid.
+
+        Returns
+        -------
+            thick : calculated thickness
+        """
+        warnings.warn(
+            "thick has been replaced with cell_thickness and will be removed in version 3.3.9,",
+            DeprecationWarning,
+        )
+        return self.cell_thickness
+
+    def saturated_thickness(self, array, mask=None):
+        """
+        Get the saturated thickness for a structured, vertex, or unstructured
+        grid. If the optional array is passed then thickness is returned
+        relative to array values (saturated thickness). Returned values
+        ranges from zero to cell thickness if optional array is passed.
+
+        Parameters
+        ----------
+        array : ndarray
+            array of elevations that will be used to adjust the cell thickness
+        mask: float, list, tuple, ndarray
+            array values to replace with a nan value.
+
+        Returns
+        -------
+            thickness : calculated saturated thickness
+        """
+        thickness = self.cell_thickness
+        top = self.top_botm[:-1].reshape(thickness.shape)
+        bot = self.top_botm[1:].reshape(thickness.shape)
+        thickness = self.remove_confining_beds(thickness)
+        top = self.remove_confining_beds(top)
+        bot = self.remove_confining_beds(bot)
+        array = self.remove_confining_beds(array)
+
+        idx = np.where((array < top) & (array > bot))
+        thickness[idx] = array[idx] - bot[idx]
+        idx = np.where(array <= bot)
+        thickness[idx] = 0.0
+        if mask is not None:
+            if isinstance(mask, (float, int)):
+                mask = [float(mask)]
+            for mask_value in mask:
+                thickness[np.where(array == mask_value)] = np.nan
+        return thickness
+
     def saturated_thick(self, array, mask=None):
         """
+        DEPRECATED method. saturated_thick will be removed in version 3.3.9
+
         Get the saturated thickness for a structured, vertex, or unstructured
         grid. If the optional array is passed then thickness is returned
         relative to array values (saturated thickness). Returned values
@@ -327,24 +404,11 @@ class Grid:
         -------
             thick : calculated saturated thickness
         """
-        thick = self.thick
-        top = self.top_botm[:-1].reshape(thick.shape)
-        bot = self.top_botm[1:].reshape(thick.shape)
-        thick = self.remove_confining_beds(thick)
-        top = self.remove_confining_beds(top)
-        bot = self.remove_confining_beds(bot)
-        array = self.remove_confining_beds(array)
-
-        idx = np.where((array < top) & (array > bot))
-        thick[idx] = array[idx] - bot[idx]
-        idx = np.where(array <= bot)
-        thick[idx] = 0.0
-        if mask is not None:
-            if isinstance(mask, (float, int)):
-                mask = [float(mask)]
-            for mask_value in mask:
-                thick[np.where(array == mask_value)] = np.nan
-        return thick
+        warnings.warn(
+            "saturated_thick has been replaced with saturated_thickness and will be removed in version 3.3.9,",
+            DeprecationWarning,
+        )
+        return self.saturated_thickness(array, mask)
 
     @property
     def units(self):
@@ -389,6 +453,10 @@ class Grid:
     @property
     def shape(self):
         raise NotImplementedError("must define shape in child class")
+
+    @property
+    def size(self):
+        return np.prod(self.shape)
 
     @property
     def extent(self):
@@ -469,7 +537,64 @@ class Grid:
     def cross_section_vertices(self):
         return self.xyzvertices[0], self.xyzvertices[1]
 
-    def neighbors(self, node, **kwargs):
+    def _set_neighbors(self, reset=False, method="rook"):
+        """
+        Method to calculate neighbors via shared edges or shared vertices
+
+        Parameters
+        ----------
+        reset : bool
+            flag to recalculate neighbors
+        method: str
+            "rook" for shared edges and "queen" for shared vertex
+
+        Returns
+        -------
+            None
+        """
+        if self._neighbors is None or reset:
+            node_num = 0
+            neighbors = {i: list() for i in range(len(self.iverts))}
+            edge_set = {i: list() for i in range(len(self.iverts))}
+            geoms = []
+            node_nums = []
+            if method == "rook":
+                for poly in self.iverts:
+                    for v in range(len(poly)):
+                        geoms.append(tuple(sorted([poly[v - 1], poly[v]])))
+                    node_nums += [node_num] * len(poly)
+                    node_num += 1
+            else:
+                # queen neighbors
+                for poly in self.iverts:
+                    for vert in poly:
+                        geoms.append(vert)
+                    node_nums += [node_num] * len(poly)
+                    node_num += 1
+
+            edge_nodes = defaultdict(set)
+            for i, item in enumerate(geoms):
+                edge_nodes[item].add(node_nums[i])
+
+            shared_vertices = []
+            for edge, nodes in edge_nodes.items():
+                if len(nodes) > 1:
+                    shared_vertices.append(nodes)
+                    for n in nodes:
+                        edge_set[n].append(edge)
+                        neighbors[n] += list(nodes)
+                        try:
+                            neighbors[n].remove(n)
+                        except:
+                            pass
+
+            # convert use dict to create a set that preserves insertion order
+            self._neighbors = {
+                i: list(dict.fromkeys(v)) for i, v in neighbors.items()
+            }
+            self._edge_set = edge_set
+
+    def neighbors(self, node=None, **kwargs):
         """
         Method to get nearest neighbors of a cell
 
@@ -478,50 +603,41 @@ class Grid:
         node : int
             model grid node number
 
+        ** kwargs:
+            method : str
+                "rook" for shared edge neighbors and "queen" for shared vertex
+                neighbors
+            reset : bool
+                flag to reset the neighbor calculation
+
         Returns
         -------
-            list : list of cell node numbers
+            list or dict : list of cell node numbers or dict of all cells and
+                neighbors
         """
-        ncpl = self.ncpl
-        if isinstance(ncpl, list):
-            ncpl = self.nnodes
+        method = kwargs.pop("method", None)
+        reset = kwargs.pop("reset", False)
+        if method is None:
+            self._set_neighbors(reset=reset)
+        else:
+            self._set_neighbors(reset=reset, method=method)
 
-        lay = 0
-        while node >= ncpl:
-            node -= ncpl
-            lay += 1
+        if node is not None:
+            lay = 0
+            if not isinstance(self.ncpl, (list, np.ndarray)):
+                while node >= self.ncpl:
+                    node -= self.ncpl
+                    lay += 1
 
-        if self._neighbors is None:
-            neigh = {}
-            xverts, yverts = self.cross_section_vertices
-            xverts, yverts = UnstructuredPlotUtilities.irregular_shape_patch(
-                xverts, yverts
-            )
-            for nn in range(ncpl):
-                conn = []
-                verts = self.get_cell_vertices(nn)
-                for ix in range(0, len(verts)):
-                    xv0, yv0 = verts[ix - 1]
-                    xv1, yv1 = verts[ix]
-                    idx0 = np.unique(
-                        np.where((xverts == xv0) & (yverts == yv0))[0]
-                    )
-                    idx1 = np.unique(
-                        np.where((xverts == xv1) & (yverts == yv1))[0]
-                    )
-                    mask = np.isin(idx0, idx1)
-                    conn += [i for i in idx0[mask]]
+                neighbors = self._neighbors[node]
+                if lay > 0:
+                    neighbors = [i + (self.ncpl * lay) for i in neighbors]
+            else:
+                neighbors = self._neighbors[node]
 
-                conn = list(set(conn))
-                conn.pop(conn.index(nn))
-                neigh[nn] = conn
-            self._neighbors = neigh
+            return neighbors
 
-        neighbors = self._neighbors[node]
-        if lay > 0:
-            neighbors = [i + (ncpl * lay) for i in neighbors]
-
-        return neighbors
+        return self._neighbors
 
     def remove_confining_beds(self, array):
         """
@@ -792,10 +908,13 @@ class Grid:
         xoff=None,
         yoff=None,
         angrot=None,
+        crs=None,
+        prjfile=None,
         epsg=None,
         proj4=None,
         merge_coord_info=True,
     ):
+        new_crs = get_crs(prjfile=prjfile, epsg=epsg, proj4=proj4, crs=crs)
         if merge_coord_info:
             if xoff is None:
                 xoff = self._xoff
@@ -803,10 +922,8 @@ class Grid:
                 yoff = self._yoff
             if angrot is None:
                 angrot = self._angrot
-            if epsg is None:
-                epsg = self._epsg
-            if proj4 is None:
-                proj4 = self._proj4
+            if new_crs is None:
+                new_crs = self._crs
 
         if xoff is None:
             xoff = 0.0
@@ -818,8 +935,8 @@ class Grid:
         self._xoff = xoff
         self._yoff = yoff
         self._angrot = angrot
-        self._epsg = epsg
-        self._proj4 = proj4
+        self._prjfile = prjfile
+        self.crs = new_crs
         self._require_cache_updates()
 
     def load_coord_info(self, namefile=None, reffile="usgs.model.reference"):
@@ -843,7 +960,7 @@ class Grid:
             return False
         xul, yul = None, None
         header = []
-        with open(namefile, "r") as f:
+        with open(namefile) as f:
             for line in f:
                 if not line.startswith("#"):
                     break
@@ -913,7 +1030,7 @@ class Grid:
                         if line.strip()[0] != "#":
                             info = line.strip().split("#")[0].split()
                             if len(info) > 1:
-                                data = " ".join(info[1:])
+                                data = " ".join(info[1:]).strip("'").strip('"')
                                 if info[0] == "xll":
                                     self._xoff = float(data)
                                 elif info[0] == "yll":
@@ -925,9 +1042,9 @@ class Grid:
                                 elif info[0] == "rotation":
                                     self._angrot = float(data)
                                 elif info[0] == "epsg":
-                                    self._epsg = int(data)
+                                    self.crs = int(data)
                                 elif info[0] == "proj4":
-                                    self._proj4 = data
+                                    self.crs = data
                                 elif info[0] == "start_date":
                                     start_datetime = data
 
@@ -1001,10 +1118,14 @@ class Grid:
         """
         from ..export.shapefile_utils import write_grid_shapefile
 
-        if epsg is None and prj is None:
-            epsg = self.epsg
         write_grid_shapefile(
-            filename, self, array_dict={}, nan_val=-1.0e9, epsg=epsg, prj=prj
+            filename,
+            self,
+            array_dict={},
+            nan_val=-1.0e9,
+            crs=self.crs,
+            epsg=epsg,
+            prj=prj,
         )
         return
 

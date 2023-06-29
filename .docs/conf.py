@@ -11,7 +11,9 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import subprocess
 import sys
+from pathlib import Path
 
 import yaml
 
@@ -23,7 +25,7 @@ from flopy import __author__, __version__
 on_rtd = os.environ.get("READTHEDOCS") == "True"
 
 # -- determine if this version is a release candidate
-with open("../README.md", "r") as f:
+with open("../README.md") as f:
     lines = f.readlines()
 rc_text = ""
 for line in lines:
@@ -38,7 +40,7 @@ with open("../CITATION.cff") as f:
 
 # -- update version number in main.rst
 rst_name = "main.rst"
-with open(rst_name, "r") as f:
+with open(rst_name) as f:
     lines = f.readlines()
 with open(rst_name, "w") as f:
     for line in lines:
@@ -51,7 +53,7 @@ with open(rst_name, "w") as f:
 
 # -- update authors in introduction.rst
 rst_name = "introduction.rst"
-with open(rst_name, "r") as f:
+with open(rst_name) as f:
     lines = f.readlines()
 tag_start = "FloPy Development Team"
 tag_end = "How to Cite"
@@ -100,11 +102,16 @@ cmd = ("python", "create_rstfiles.py")
 print(" ".join(cmd))
 os.system(" ".join(cmd))
 
-# -- convert the tutorial scripts -------------------------------------------
+# -- convert tutorial scripts and run example notebooks ----------------------
 if not on_rtd:
-    cmd = ("python", "create_tutorials.py")
-    print(" ".join(cmd))
-    os.system(" ".join(cmd))
+    nbs = Path("Notebooks").glob("*.py")
+    for nb in nbs:
+        if nb.with_suffix(".ipynb").exists():
+            print(f"{nb} already exists, skipping")
+            continue
+        cmd = ("jupytext", "--to", "ipynb", "--execute", str(nb))
+        print(" ".join(cmd))
+        os.system(" ".join(cmd))
 
 # -- Project information -----------------------------------------------------
 project = "FloPy Documentation"
@@ -137,13 +144,18 @@ extensions = [
     "nbsphinx",
     "nbsphinx_link",
     "recommonmark",
+    "sphinxcontrib.jquery",  # https://github.com/readthedocs/sphinx_rtd_theme/issues/1452
 ]
 
 # Settings for GitHub actions integration
 if on_rtd:
     extensions.append("rtds_action")
     rtds_action_github_repo = "modflowpy/flopy"
-    rtds_action_path = "_notebooks"
+    # This will overwrite the .docs/Notebooks directory
+    # with the notebooks downloaded & extracted from CI
+    # artifacts, which is fine. We want to render those
+    # with output, not clean ones from version control.
+    rtds_action_path = "Notebooks"
     rtds_action_artifact_prefix = "notebooks-for-"
     rtds_action_github_token = os.environ.get("GITHUB_TOKEN", None)
 
@@ -218,7 +230,7 @@ html_css_files = [
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 html_short_title = "flopy"
-html_favicon = "_images/flopylogo.png"
+html_favicon = "_images/flopylogo_sm.png"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -249,3 +261,23 @@ html_show_copyright = False
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = "flopydoc"
+
+# Example configuration for intersphinx: refer to the Python standard library.
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3/", None),
+    "numpy": ("https://docs.scipy.org/doc/numpy/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
+    "pandas": ("https://pandas.pydata.org/pandas-docs/stable", None),
+    "matplotlib": ("https://matplotlib.org", None),
+    "pyproj": ("https://pyproj4.github.io/pyproj/stable/", None),
+}
+
+# disable automatic notebook execution (nbs are built in CI for now)
+nbsphinx_execute = "never"
+
+nbsphinx_prolog = (
+    r"""
+{% set docname = env.doc2path(env.docname, base=None) %}
+"""
+    + Path("prolog.rst").read_text()
+)

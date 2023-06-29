@@ -34,7 +34,7 @@ jobs:
       with:
         python-version: 3.9
         cache: 'pip'
-        cache-dependency-path: setup.cfg
+        cache-dependency-path: pyproject.toml
 
     - name: Install Python dependencies
       run: |
@@ -79,6 +79,8 @@ jobs:
 
     - name: Get executables
       working-directory: modflow6/autotest
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
       run: |
         pytest -v --durations=0 get_exes.py
 
@@ -93,7 +95,8 @@ jobs:
         coverage report
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v2.1.0
+      if:
+        github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
+      uses: codecov/codecov-action@v3
       with:
-        directory: ./modflow6/autotest
-        file: coverage.xml
+        files: ./modflow6/autotest/coverage.xml

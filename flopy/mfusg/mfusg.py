@@ -1,6 +1,7 @@
 """Mfusg module."""
 import os
 from inspect import getfullargspec
+from typing import Union
 
 import flopy
 
@@ -14,7 +15,7 @@ class MfUsg(Modflow):
 
     Parameters
     ----------
-    modelname : str, default "modflowusgtest".
+    modelname : str or PathLike, default "modflowusgtest".
         Name of model.  This string will be used to name the MODFLOW input
         that are created with write_model.
     namefile_ext : str, default "nam"
@@ -56,7 +57,7 @@ class MfUsg(Modflow):
         self,
         modelname="modflowusgtest",
         structured=True,
-        model_ws=".",
+        model_ws: Union[str, os.PathLike] = os.curdir,
         **kwargs,
     ):
         """Constructs the MfUsg object. Overrides the parent Modflow object."""
@@ -145,11 +146,11 @@ class MfUsg(Modflow):
     @classmethod
     def load(
         cls,
-        f,
+        f: str,
         version="mfusg",
-        exe_name="mfusg",
+        exe_name: Union[str, os.PathLike] = "mfusg",
         verbose=False,
-        model_ws=".",
+        model_ws: Union[str, os.PathLike] = os.curdir,
         load_only=None,
         forgive=False,
         check=True,
@@ -159,14 +160,14 @@ class MfUsg(Modflow):
         Parameters
         ----------
         f : str
-            Path to MODFLOW name file to load.
+            Name of MODFLOW name file to load.
         version : str, default "mfusg"
             MODFLOW version. Must be "mfusg".
         exe_name : str, default "mfusg"
             MODFLOW executable name.
         verbose : bool, default False
             Show messages that can be useful for debugging.
-        model_ws : str, default "."
+        model_ws : str or PathLike, default "."
             Model workspace path. Default is the current directory.
         load_only : list, str or None
             List of case insensitive packages to load, e.g. ["bas6", "lpf"].
@@ -174,7 +175,7 @@ class MfUsg(Modflow):
             which attempts to load all files. An empty list [] will not load
             any additional packages than is necessary. At a minimum, "dis" or
             "disu" is always loaded.
-        forgive : bool, optional
+        forgive : bool, optional, default False
             Option to raise exceptions on package load failure, which can be
             useful for debugging. Default False.
         check : boolean, optional

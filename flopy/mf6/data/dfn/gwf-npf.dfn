@@ -34,7 +34,7 @@ type keyword
 reader urword
 optional true
 longname keyword to activate THICKSTRT option
-description indicates that cells having a negative ICELLTYPE are confined, and their cell thickness for conductance calculations will be computed as STRT-BOT rather than TOP-BOT.
+description indicates that cells having a negative ICELLTYPE are confined, and their cell thickness for conductance calculations will be computed as STRT-BOT rather than TOP-BOT.  This option should be used with caution as it only affects conductance calculations in the NPF Package.
 mf6internal ithickstrt
 
 block options
@@ -282,7 +282,7 @@ reader readarray
 layered true
 optional
 longname confined or convertible indicator
-description flag for each cell that specifies how saturated thickness is treated.  0 means saturated thickness is held constant;  $>$0 means saturated thickness varies with computed head when head is below the cell top; $<$0 means saturated thickness varies with computed head unless the THICKSTRT option is in effect.  When THICKSTRT is in effect, a negative value of icelltype indicates that saturated thickness will be computed as STRT-BOT and held constant.
+description flag for each cell that specifies how saturated thickness is treated.  0 means saturated thickness is held constant;  $>$0 means saturated thickness varies with computed head when head is below the cell top; $<$0 means saturated thickness varies with computed head unless the THICKSTRT option is in effect.  When THICKSTRT is in effect, a negative value for ICELLTYPE indicates that the saturated thickness value used in conductance calculations in the NPF Package will be computed as STRT-BOT and held constant.  If the THICKSTRT option is not in effect, then negative values provided by the user for ICELLTYPE are automatically reassigned by the program to a value of one.
 default_value 0
 
 block griddata

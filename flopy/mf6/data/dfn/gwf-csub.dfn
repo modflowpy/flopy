@@ -224,17 +224,6 @@ longname compaction keyword
 description keyword to specify that record corresponds to the compaction.
 
 block options
-name fileout
-type keyword
-shape
-in_record true
-reader urword
-tagged true
-optional false
-longname file keyword
-description keyword to specify that an output filename is expected next.
-
-block options
 name compaction_filename
 type string
 shape

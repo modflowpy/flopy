@@ -175,7 +175,6 @@ class Mt3dRct(Package):
         filenames=None,
         **kwargs,
     ):
-
         if unitnumber is None:
             unitnumber = Mt3dRct._defaultunit()
         elif unitnumber == 0:

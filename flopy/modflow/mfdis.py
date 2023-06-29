@@ -13,6 +13,7 @@ import numpy as np
 
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
+from ..utils.crs import get_crs
 from ..utils.flopy_io import line_parse
 from ..utils.reference import TemporalReference
 
@@ -87,10 +88,15 @@ class ModflowDis(Package):
     rotation : float
         counter-clockwise rotation (in degrees) of the grid about the lower-
         left corner. default is 0.0
-    proj4_str : str
-        PROJ4 string that defines the projected coordinate system
-        (e.g. '+proj=utm +zone=14 +datum=WGS84 +units=m +no_defs ').
-        Can be an EPSG code (e.g. 'EPSG:32614'). Default is None.
+    crs : pyproj.CRS, optional if `prjfile` is specified
+        Coordinate reference system (CRS) for the model grid
+        (must be projected; geographic CRS are not supported).
+        The value can be anything accepted by
+        :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+        such as an authority string (eg "EPSG:26916") or a WKT string.
+    prjfile : str or pathlike, optional if `crs` is specified
+        ESRI-style projection file with well-known text defining the CRS
+        for the model grid (must be projected; geographic CRS are not supported).
     start_datetime : str
         starting datetime of the simulation. default is '1/1/1970'
 
@@ -142,9 +148,10 @@ class ModflowDis(Package):
         yul=None,
         rotation=None,
         proj4_str=None,
+        crs=None,
+        prjfile=None,
         start_datetime=None,
     ):
-
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowDis._defaultunit()
@@ -241,8 +248,9 @@ class ModflowDis(Package):
             yul = model._yul
         if rotation is None:
             rotation = model._rotation
-        if proj4_str is None:
-            proj4_str = model._proj4_str
+        crs = get_crs(prjfile=prjfile, proj4=proj4_str, crs=crs)
+        if crs is None:
+            crs = model._crs
         if start_datetime is None:
             start_datetime = model._start_datetime
 
@@ -256,7 +264,7 @@ class ModflowDis(Package):
             xll = mg._xul_to_xll(xul)
         if yul is not None:
             yll = mg._yul_to_yll(yul)
-        mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation, proj4=proj4_str)
+        mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation, crs=crs)
 
         self.tr = TemporalReference(
             itmuni=self.itmuni, start_datetime=start_datetime
@@ -270,7 +278,7 @@ class ModflowDis(Package):
         Check layer thickness.
 
         """
-        return (self.parent.modelgrid.thick > 0).all()
+        return (self.parent.modelgrid.cell_thickness > 0).all()
 
     def get_totim(self, use_cached=False):
         """
@@ -435,7 +443,7 @@ class ModflowDis(Package):
         """
         vol = np.empty((self.nlay, self.nrow, self.ncol))
         for l in range(self.nlay):
-            vol[l, :, :] = self.parent.modelgrid.thick[l]
+            vol[l, :, :] = self.parent.modelgrid.cell_thickness[l]
         for r in range(self.nrow):
             vol[:, r, :] *= self.delc[r]
         for c in range(self.ncol):
@@ -605,7 +613,7 @@ class ModflowDis(Package):
         f_dis.write(f"{self.heading}\n")
         # Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI
         f_dis.write(
-            "{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}\n".format(
+            "{:10d}{:10d}{:10d}{:10d}{:10d}{:10d}\n".format(
                 self.nlay,
                 self.nrow,
                 self.ncol,
@@ -633,9 +641,9 @@ class ModflowDis(Package):
                 f"{self.perlen[t]:14f}{self.nstp[t]:14d}{self.tsmult[t]:10f} "
             )
             if self.steady[t]:
-                f_dis.write(" {0:3s}\n".format("SS"))
+                f_dis.write(" SS\n")
             else:
-                f_dis.write(" {0:3s}\n".format("TR"))
+                f_dis.write(" TR\n")
         f_dis.close()
 
     def check(self, f=None, verbose=True, level=1, checktype=None):
@@ -673,7 +681,7 @@ class ModflowDis(Package):
         active = chk.get_active(include_cbd=True)
 
         # Use either a numpy array or masked array
-        thickness = self.parent.modelgrid.thick
+        thickness = self.parent.modelgrid.cell_thickness
         non_finite = ~(np.isfinite(thickness))
         if non_finite.any():
             thickness[non_finite] = 0
@@ -928,7 +936,7 @@ class ModflowDis(Package):
             xul=xul,
             yul=yul,
             rotation=rotation,
-            proj4_str=proj4_str,
+            crs=proj4_str,
             start_datetime=start_datetime,
             unitnumber=unitnumber,
             filenames=filenames,

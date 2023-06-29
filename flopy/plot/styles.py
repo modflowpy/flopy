@@ -210,22 +210,23 @@ class styles:
         if ax is None:
             ax = plt.gca()
 
-        fontspec = styles.__set_fontspec(bold=True, italic=False, family=True)
+        fontsize = kwargs.pop("fontsize", 9)
+        fontspec = styles.__set_fontspec(
+            bold=True, italic=False, family=True, fontsize=fontsize
+        )
 
         if handles is None or labels is None:
             handles, labels = ax.get_legend_handles_labels()
         leg = ax.legend(handles, labels, prop=fontspec, **kwargs)
 
-        # add title to legend
-        if "title" in kwargs:
-            title = kwargs.pop("title")
-        else:
-            title = None
+        title = kwargs.pop("title", None)
+        fontsize = kwargs.pop("title_fontsize", None)
+
         leg = styles.graph_legend_title(leg, title=title)
         return leg
 
     @classmethod
-    def graph_legend_title(cls, leg, title=None):
+    def graph_legend_title(cls, leg, title=None, fontsize=9):
         """Set the legend title for a matplotlib legend object
 
         Parameters
@@ -234,6 +235,8 @@ class styles:
             matplotlib legend object
         title : str
             title for legend
+        fontsize : int
+            fontsize for legend
 
         Returns
         -------
@@ -246,7 +249,9 @@ class styles:
         elif title.lower() == "none":
             title = None
 
-        fontspec = styles.__set_fontspec(bold=True, italic=False, family=True)
+        fontspec = styles.__set_fontspec(
+            bold=True, italic=False, family=True, fontsize=fontsize
+        )
 
         leg.set_title(title, prop=fontspec)
         return leg

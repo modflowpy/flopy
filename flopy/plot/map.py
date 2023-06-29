@@ -42,7 +42,6 @@ class PlotMapView:
     def __init__(
         self, model=None, modelgrid=None, ax=None, layer=0, extent=None
     ):
-
         self.model = model
         self.layer = layer
         self.mg = None
@@ -212,6 +211,20 @@ class PlotMapView:
 
         # use standard contours for structured grid, otherwise tricontours
         if self.mg.grid_type == "structured":
+            ismasked = None
+            if masked_values is not None:
+                self._masked_values.extend(list(masked_values))
+
+            for mval in self._masked_values:
+                if ismasked is None:
+                    ismasked = np.isclose(plotarray, mval)
+                else:
+                    t = np.isclose(plotarray, mval)
+                    ismasked += t
+
+            if ismasked is not None:
+                plotarray[ismasked] = np.nan
+
             contour_set = (
                 ax.contourf(xcentergrid, ycentergrid, plotarray, **kwargs)
                 if filled
@@ -543,8 +556,8 @@ class PlotMapView:
 
         Parameters
         ----------
-        shp : string or pyshp shapefile object
-            Name of the shapefile to plot
+        shp : str, os.PathLike or pyshp shapefile object
+            Path of the shapefile to plot
 
         kwargs : dictionary
             Keyword arguments passed to plotutil.plot_shapefile()
@@ -562,7 +575,8 @@ class PlotMapView:
         obj : collection object
             obj can accept the following types
 
-            str : shapefile name
+            str : shapefile path
+            PathLike : shapefile path
             shapefile.Reader object
             list of [shapefile.Shape, shapefile.Shape,]
             shapefile.Shapes object
@@ -696,7 +710,7 @@ class PlotMapView:
             less than or equal to the passed time are plotted. If a
             string is passed a variety logical constraints can be added
             in front of a time value to select pathlines for a select
-            period of time. Valid logical constraints are <=, <, >=, and
+            period of time. Valid logical constraints are <=, <, ==, >=, and
             >. For example, to select all pathlines less than 10000 days
             travel_time='< 10000' would be passed to plot_pathline.
             (default is None)
@@ -810,7 +824,7 @@ class PlotMapView:
             less than or equal to the passed time are plotted. If a
             string is passed a variety logical constraints can be added
             in front of a time value to select pathlines for a select
-            period of time. Valid logical constraints are <=, <, >=, and
+            period of time. Valid logical constraints are <=, <, ==, >=, and
             >. For example, to select all pathlines less than 10000 days
             travel_time='< 10000' would be passed to plot_pathline.
             (default is None)
@@ -873,17 +887,11 @@ class PlotMapView:
         """
 
         ax = kwargs.pop("ax", self.ax)
-
         tep, _, xp, yp = plotutil.parse_modpath_selection_options(
             ep, direction, selection, selection_direction
         )
-        # scatter kwargs that users may redefine
-        if "c" not in kwargs:
-            c = tep["time"] - tep["time0"]
-        else:
-            c = np.empty((tep.shape[0]), dtype="S30")
-            c.fill(kwargs.pop("c"))
 
+        # marker size
         s = kwargs.pop("s", np.sqrt(50))
         s = float(kwargs.pop("size", s)) ** 2.0
 
@@ -904,7 +912,13 @@ class PlotMapView:
         arr = np.vstack((x0r, y0r)).T
 
         # plot the end point data
-        sp = ax.scatter(arr[:, 0], arr[:, 1], c=c, s=s, **kwargs)
+        if "c" in kwargs or "color" in kwargs:
+            if "c" in kwargs and "color" in kwargs:
+                kwargs.pop("color")
+            sp = ax.scatter(arr[:, 0], arr[:, 1], s=s, **kwargs)
+        else:
+            c = tep["time"] - tep["time0"]
+            sp = ax.scatter(arr[:, 0], arr[:, 1], c=c, s=s, **kwargs)
 
         # add a colorbar for travel times
         if createcb:

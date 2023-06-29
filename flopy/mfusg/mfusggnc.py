@@ -178,11 +178,9 @@ class MfUsgGnc(Package):
         f_gnc.write(f"{self.heading}\n")
 
         f_gnc.write(
-            (
-                f" {0:9d} {0:9d} {self.numgnc:9d} {self.numalphaj:9d}"
-                f" {self.i2kn:9d} {self.isymgncn:9d} {self.iflalphan:9d}"
-                f" {self.options}\n"
-            )
+            f" {0:9d} {0:9d} {self.numgnc:9d} {self.numalphaj:9d}"
+            f" {self.i2kn:9d} {self.isymgncn:9d} {self.iflalphan:9d}"
+            f" {self.options}\n"
         )
 
         gdata = self.gncdata.copy()

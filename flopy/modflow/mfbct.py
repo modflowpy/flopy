@@ -38,7 +38,6 @@ class ModflowBct(Package):
         extension="bct",
         unitnumber=None,
     ):
-
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowBct._defaultunit()

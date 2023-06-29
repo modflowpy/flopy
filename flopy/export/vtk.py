@@ -6,6 +6,7 @@ outputs to VTK.
 import os
 import warnings
 from pathlib import Path
+from typing import Union
 
 import numpy as np
 
@@ -136,7 +137,6 @@ class Vtk:
         smooth=False,
         point_scalars=False,
     ):
-
         vtk = import_optional_dependency("vtk")
 
         if model is None and modelgrid is None:
@@ -1090,8 +1090,8 @@ class Vtk:
         timeseries : bool
             method to plot data as a series of vtk timeseries files for
             animation or as a single static vtk file. Default is false
-
         """
+
         if isinstance(pathlines, (np.recarray, np.ndarray)):
             pathlines = [pathlines]
 
@@ -1099,14 +1099,19 @@ class Vtk:
         if not timeseries:
             arrays = {key: [] for key in keys}
             points = []
+            lines = []
             for recarray in pathlines:
                 recarray["z"] *= self.vertical_exageration
+                line = []
                 for rec in recarray:
-                    points.append(tuple(rec[["x", "y", "z"]]))
+                    t = tuple(rec[["x", "y", "z"]])
+                    line.append(t)
+                    points.append(t)
                     for key in keys:
                         arrays[key].append(rec[key])
+                lines.append(line)
 
-            self._set_modpath_point_data(points, arrays)
+            self._set_particle_track_data(points, lines, arrays)
 
         else:
             self.vtk_pathlines = self.__vtk.vtkUnstructuredGrid()
@@ -1260,66 +1265,105 @@ class Vtk:
             self.add_transient_array(d, name, masked_values)
             self.__transient_output_data = True
 
-    def _set_modpath_point_data(self, points, d):
+    def _set_particle_track_data(self, points, lines=None, arrays=None):
         """
-        Method to build the vtk point geometry and set arrays for
-        modpath pathlines
+        Build VTK data structures for particle positions, pathlines, and metadata
 
         Parameters
         ----------
-        points : list
+        points : list or array_like
             list of (x, y, z) points
-        d : dict
-            dictionary of numpy arrays to add to vtk
-
+        lines : list or array_like, optional
+            list of lists or 2D array of particle tracks, each with
+            n >= 1 (x, y, z) coordinates making n - 1 line segments
+        arrays : dict, optional
+            dictionary of array data to associate with points (e.g., particle ID, time)
         """
         from vtk.util import numpy_support
 
-        nverts = len(points)
+        if self.vtk_pathlines is None:
+            self.vtk_pathlines = self.__vtk.vtkUnstructuredGrid()
 
-        self.vtk_pathlines = self.__vtk.vtkUnstructuredGrid()
-
+        # create vtkPoints container
         vtk_points = self.__vtk.vtkPoints()
-        for point in points:
-            vtk_points.InsertNextPoint(point)
-
+        lines = [] if lines is None else lines
+        if any(lines):
+            for line in lines:
+                for point in line:
+                    vtk_points.InsertNextPoint(point)
+        else:
+            for point in points:
+                vtk_points.InsertNextPoint(point)
         self.vtk_pathlines.SetPoints(vtk_points)
 
-        # create a Vertex instance for each point data add to grid
-        for i in range(nverts):
-            vertex = self.__vtk.vtkPolyVertex()
-            vertex.GetPointIds().SetNumberOfIds(1)
-            vertex.GetPointIds().SetId(0, i)
-
-            # set data to the pathline grid
+        # create a vtkPolyLine for each particle track
+        i = 0
+        for line in lines:
+            npts = len(line)
+            poly = self.__vtk.vtkPolyLine()
+            poly.GetPointIds().SetNumberOfIds(npts)
+            for ii in range(0, npts):
+                poly.GetPointIds().SetId(ii, i)
+                i += 1
             self.vtk_pathlines.InsertNextCell(
-                vertex.GetCellType(), vertex.GetPointIds()
+                poly.GetCellType(), poly.GetPointIds()
             )
 
-        # process arrays and add arrays to grid.
-        for name, array in d.items():
+        # create a vtkVertex for each point
+        # necessary if arrays (time & particle ID) live on points?
+        if any(lines):
+            i = 0
+            for line in lines:
+                for _ in line:
+                    vertex = self.__vtk.vtkPolyVertex()
+                    vertex.GetPointIds().SetNumberOfIds(1)
+                    vertex.GetPointIds().SetId(0, i)
+                    self.vtk_pathlines.InsertNextCell(
+                        vertex.GetCellType(), vertex.GetPointIds()
+                    )
+                    i += 1
+        else:
+            for i in range(len(points)):
+                vertex = self.__vtk.vtkPolyVertex()
+                vertex.GetPointIds().SetNumberOfIds(1)
+                vertex.GetPointIds().SetId(0, i)
+                self.vtk_pathlines.InsertNextCell(
+                    vertex.GetCellType(), vertex.GetPointIds()
+                )
+
+        # add arrays (time & particle ID) to points
+        arrays = {} if arrays is None else arrays
+        for name, array in arrays.items():
             array = np.array(array)
             vtk_array = numpy_support.numpy_to_vtk(
                 num_array=array, array_type=self.__vtk.VTK_FLOAT
             )
             vtk_array.SetName(name)
-            self.vtk_pathlines.GetCellData().AddArray(vtk_array)
+            self.vtk_pathlines.GetPointData().AddArray(vtk_array)
 
-    def write(self, f, kper=None):
+    def write(self, f: Union[str, os.PathLike], kper=None):
         """
         Method to write a vtk file from the VTK object
 
         Parameters
         ----------
-        f : os.PathLike or str
+        f : str or PathLike
             vtk file name
         kpers : int, list, tuple
             stress period or list of stress periods to write to vtk. This
             parameter only applies to transient package data.
 
         """
-        grids = [self.vtk_grid, self.vtk_polygons, self.vtk_pathlines]
-        suffix = ["", "_hfb", "_pathline"]
+        grids = [
+            self.vtk_grid,
+            self.vtk_polygons,
+            self.vtk_pathlines,
+        ]
+        suffix = [
+            "",
+            "_hfb",
+            "_pathline",
+        ]
 
         extension = ".vtk"
         if self.pvd:
@@ -1356,7 +1400,7 @@ class Vtk:
                 for time, d in self.__pathline_transient_data.items():
                     tf = self.__create_transient_vtk_path(foo, stp)
                     points = self._pathline_points[time]
-                    self._set_modpath_point_data(points, d)
+                    self._set_particle_track_data(points, arrays=d)
 
                     w.SetInputData(self.vtk_pathlines)
                     w.SetFileName(str(tf))
@@ -1422,6 +1466,22 @@ class Vtk:
 
             self.pvd.write(pvdfile)
 
+    def to_pyvista(self):
+        """
+        Convert VTK object to PyVista meshes. If the VTK object contains 0
+        or multiple meshes a list of meshes is returned. Otherwise the one
+        mesh is returned alone. PyVista must be installed for this method.
+
+        Returns
+        -------
+        pyvista.DataSet or list of pyvista.DataSet
+            PyVista mesh or list of meshes
+        """
+        pv = import_optional_dependency("pyvista")
+        grids = [self.vtk_grid, self.vtk_polygons, self.vtk_pathlines]
+        meshes = [pv.wrap(grid) for grid in grids if grid is not None]
+        return meshes[0] if len(meshes) == 1 else meshes
+
     def __create_transient_vtk_path(self, path, kper):
         """
         Method to set naming convention for transient vtk file series
@@ -1444,7 +1504,7 @@ class Vtk:
 
 def export_model(
     model,
-    otfolder,
+    otfolder: Union[str, os.PathLike],
     package_names=None,
     nanval=-1e20,
     smooth=False,
@@ -1464,7 +1524,7 @@ def export_model(
     ----------
     model : flopy model instance
         flopy model
-    otfolder : str
+    otfolder : str or PathLike
         output folder
     package_names : list
         list of package names to be exported
@@ -1524,7 +1584,7 @@ def export_model(
 def export_package(
     pak_model,
     pak_name,
-    otfolder,
+    otfolder: Union[str, os.PathLike],
     vtkobj=None,
     nanval=-1e20,
     smooth=False,
@@ -1546,7 +1606,7 @@ def export_package(
         the model of the package
     pak_name : str
         the name of the package
-    otfolder : str
+    otfolder : str or PathLike
         output folder to write the data
     vtkobj : VTK instance
         a vtk object (allows export_package to be called from
@@ -1610,7 +1670,7 @@ def export_package(
 def export_transient(
     model,
     array,
-    output_folder,
+    output_folder: Union[str, os.PathLike],
     name,
     nanval=-1e20,
     array2d=False,
@@ -1633,7 +1693,7 @@ def export_transient(
         the flopy model instance
     array : Transient instance
         flopy transient array
-    output_folder : str
+    output_folder : str or PathLike
         output folder to write the data
     name : str
         name of array
@@ -1710,7 +1770,7 @@ def export_transient(
 def export_array(
     model,
     array,
-    output_folder,
+    output_folder: Union[str, os.PathLike],
     name,
     nanval=-1e20,
     array2d=False,
@@ -1732,7 +1792,7 @@ def export_array(
         the flopy model instance
     array : flopy array
         flopy 2d or 3d array
-    output_folder : str
+    output_folder : str or PathLike
         output folder to write the data
     name : str
         name of array

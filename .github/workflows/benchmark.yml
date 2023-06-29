@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python-version: [ 3.7, 3.8, 3.9, "3.10" ]
+        python-version: [ 3.8, 3.9, "3.10", "3.11" ]
         exclude:
           # avoid shutil.copytree infinite recursion bug
           # https://github.com/python/cpython/pull/17098
@@ -32,7 +32,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
-          cache-dependency-path: setup.cfg
+          cache-dependency-path: pyproject.toml
 
       - name: Install Python dependencies
         if: runner.os != 'Windows'
@@ -43,21 +43,21 @@ jobs:
 
       - name: Setup Micromamba
         if: runner.os == 'Windows'
-        uses: mamba-org/provision-with-micromamba@main
+        uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: etc/environment.yml
-          extra-specs: |
-            python=${{ matrix.python-version }}
-          channels: conda-forge
+          cache-environment: true
           cache-downloads: true
-          cache-env: true
+          create-args: >-
+            python=${{ matrix.python-version }}
+          init-shell: >-
+            bash
+            powershell
 
       - name: Install extra Python dependencies
         if: runner.os == 'Windows'
         shell: bash -l {0}
         run: |
-          pip install --upgrade pip
-          pip install https://github.com/modflowpy/pymake/zipball/master
           pip install xmipy
           pip install .
 
@@ -84,7 +84,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload failed benchmark artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: failed-benchmark-${{ matrix.os }}-${{ matrix.python-version }}-${{ github.run_id }}
@@ -92,7 +92,7 @@ jobs:
             ./autotest/.failed/**
 
       - name: Upload benchmark result artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: benchmarks-${{ matrix.os }}-${{ matrix.python-version }}-${{ github.run_id }}
           path: |
@@ -115,9 +115,9 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: 3.8
           cache: 'pip'
-          cache-dependency-path: setup.cfg
+          cache-dependency-path: pyproject.toml
 
       - name: Install Python dependencies
         run: |
@@ -155,7 +155,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: benchmarks-${{ github.run_id }}
           path: |

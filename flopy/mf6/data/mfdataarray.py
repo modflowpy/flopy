@@ -621,7 +621,7 @@ class MFArray(MFMultiDimVar):
             if isinstance(current_layer, int):
                 current_layer = (current_layer,)
             # get the layer's data
-            data = self._get_data(current_layer, True)
+            data = self._get_data(current_layer, False)
 
             if data is None:
                 # do not write empty data to an internal file
@@ -642,7 +642,7 @@ class MFArray(MFMultiDimVar):
                 factor = storage.layer_storage[current_layer].factor
                 internal_data = {
                     current_layer[0]: {
-                        "data": self._get_data(current_layer, True),
+                        "data": self._get_data(current_layer, False),
                         "factor": factor,
                     }
                 }
@@ -1092,25 +1092,27 @@ class MFArray(MFMultiDimVar):
                 self._set_storage_obj(
                     self._new_storage(shape_ml.get_total_size() != 1, True)
                 )
-        file_access = MFFileAccessArray(
-            self.structure,
-            self._data_dimensions,
-            self._simulation_data,
-            self._path,
-            self._current_key,
-        )
         storage = self._get_storage_obj()
-        self._layer_shape, return_val = file_access.load_from_package(
-            first_line,
-            file_handle,
-            self._layer_shape,
-            storage,
-            self._keyword,
-            pre_data_comments=None,
-        )
         if external_file_info is not None:
             storage.point_to_existing_external_file(
                 external_file_info, storage.layer_storage.get_total_size() - 1
+            )
+            return_val = [False, None]
+        else:
+            file_access = MFFileAccessArray(
+                self.structure,
+                self._data_dimensions,
+                self._simulation_data,
+                self._path,
+                self._current_key,
+            )
+            self._layer_shape, return_val = file_access.load_from_package(
+                first_line,
+                file_handle,
+                self._layer_shape,
+                storage,
+                self._keyword,
+                pre_data_comments=None,
             )
 
         return return_val
@@ -1605,7 +1607,9 @@ class MFTransientArray(MFArray, MFTransient):
         dimensions=None,
         block=None,
     ):
-        super().__init__(
+        MFTransient.__init__(self)
+        MFArray.__init__(
+            self,
             sim_data=sim_data,
             model_or_sim=model_or_sim,
             structure=structure,

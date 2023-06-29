@@ -359,10 +359,8 @@ class MfUsgLpf(ModflowLpf):
         # Item 1: IBCFCB, HDRY, NPLPF, <IKCFLAG>, OPTIONS
         if self.parent.version == "mfusg" and not self.parent.structured:
             f_obj.write(
-                (
-                    f" {self.ipakcb:9d} {self.hdry:9.5G} {self.nplpf:9d}"
-                    f" {self.ikcflag:9d} {self.options:s}\n"
-                )
+                f" {self.ipakcb:9d} {self.hdry:9.5G} {self.nplpf:9d}"
+                f" {self.ikcflag:9d} {self.options:s}\n"
             )
         else:
             f_obj.write(
@@ -793,7 +791,6 @@ class MfUsgLpf(ModflowLpf):
 
         # load by layer
         for layer in range(nlay):
-
             util2d_shape = get_util2d_shape_for_layer(model, layer=layer)
 
             if ikcflag == 0:

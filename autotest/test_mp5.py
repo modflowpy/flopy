@@ -1,9 +1,9 @@
 import os
 
 import numpy as np
-from autotest.conftest import requires_pkg
 from autotest.test_mp6 import eval_timeseries
 from matplotlib import pyplot as plt
+from modflow_devtools.markers import requires_pkg
 
 from flopy.modflow import Modflow
 from flopy.plot import PlotMapView
@@ -11,13 +11,13 @@ from flopy.utils import EndpointFile, PathlineFile
 
 
 @requires_pkg("pandas")
-def test_mp5_load(tmpdir, example_data_path):
+def test_mp5_load(function_tmpdir, example_data_path):
     # load the base freyberg model
     freyberg_ws = example_data_path / "freyberg"
     # load the modflow files for model map
     m = Modflow.load(
         "freyberg.nam",
-        model_ws=str(freyberg_ws),
+        model_ws=freyberg_ws,
         check=False,
         verbose=True,
         forgive=False,
@@ -63,7 +63,7 @@ def test_mp5_load(tmpdir, example_data_path):
     mm.plot_grid(lw=0.5)
     mm.plot_ibound()
 
-    fpth = os.path.join(str(tmpdir), "mp5.pathline.png")
+    fpth = function_tmpdir / "mp5.pathline.png"
     plt.savefig(fpth, dpi=300)
     plt.close()
 

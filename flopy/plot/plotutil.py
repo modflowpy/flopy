@@ -6,6 +6,7 @@ shapefiles are also included.
 """
 import os
 import warnings
+from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -1598,7 +1599,6 @@ class PlotUtilities:
         qz = None
 
         if Qx is not None:
-
             nlay, nrow, ncol = Qx.shape
             qx = np.zeros(Qx.shape, dtype=Qx.dtype)
 
@@ -1616,7 +1616,6 @@ class PlotUtilities:
             qx[:, :, 0] = 0.5 * qx[:, :, 0]
 
         if Qy is not None:
-
             nlay, nrow, ncol = Qy.shape
             qy = np.zeros(Qy.shape, dtype=Qy.dtype)
 
@@ -1808,17 +1807,18 @@ class UnstructuredPlotUtilities:
         return vdict
 
     @staticmethod
-    def irregular_shape_patch(xverts, yverts):
+    def irregular_shape_patch(xverts, yverts=None):
         """
-        Patch for vertex cross section plotting when
-        we have an irregular shape type throughout the
-        model grid or multiple shape types.
+        Patch for vertex cross-section plotting when we have an irregular
+        shape type throughout the model grid or multiple shape types. This
+        method is also used by the model splitter as a helper function
+        for remapping the cell2d array.
 
         Parameters
         ----------
         xverts : list
             xvertices
-        yverts : list
+        yverts : list or None
             yvertices
 
         Returns
@@ -1832,9 +1832,10 @@ class UnstructuredPlotUtilities:
             if len(xv) > max_verts:
                 max_verts = len(xv)
 
-        for yv in yverts:
-            if len(yv) > max_verts:
-                max_verts = len(yv)
+        if yverts is not None:
+            for yv in yverts:
+                if len(yv) > max_verts:
+                    max_verts = len(yv)
 
         adj_xverts = []
         for xv in xverts:
@@ -1845,19 +1846,26 @@ class UnstructuredPlotUtilities:
             else:
                 adj_xverts.append(xv)
 
-        adj_yverts = []
-        for yv in yverts:
-            if len(yv) < max_verts:
-                yv = list(yv)
-                n = max_verts - len(yv)
-                adj_yverts.append(yv + [yv[-1]] * n)
-            else:
-                adj_yverts.append(yv)
+        if yverts is not None:
+            adj_yverts = []
+            for yv in yverts:
+                if len(yv) < max_verts:
+                    yv = list(yv)
+                    n = max_verts - len(yv)
+                    adj_yverts.append(yv + [yv[-1]] * n)
+                else:
+                    adj_yverts.append(yv)
 
-        xverts = np.array(adj_xverts)
-        yverts = np.array(adj_yverts)
+            xverts = np.array(adj_xverts)
+            yverts = np.array(adj_yverts)
 
-        return xverts, yverts
+            return xverts, yverts
+
+        txverts = np.array(adj_xverts)
+        xverts = np.zeros((txverts.shape[0], txverts.shape[1] + 1), dtype=int)
+        xverts[:, 0:-1] = txverts
+        xverts[:, -1] = xverts[:, 0]
+        return xverts
 
     @staticmethod
     def arctan2(verts, reverse=False):
@@ -2068,13 +2076,15 @@ def shapefile_get_vertices(shp):
     return vertices
 
 
-def shapefile_to_patch_collection(shp, radius=500.0, idx=None):
+def shapefile_to_patch_collection(
+    shp: Union[str, os.PathLike], radius=500.0, idx=None
+):
     """
     Create a patch collection from the shapes in a shapefile
 
     Parameters
     ----------
-    shp : string
+    shp : str or PathLike
         Name of the shapefile to convert to a PatchCollection.
     radius : float
         Radius of circle for points in the shapefile.  (Default is 500.)
@@ -2194,8 +2204,8 @@ def plot_shapefile(
 
     Parameters
     ----------
-    shp : string
-        Name of the shapefile to plot.
+    shp : string or os.PathLike
+        Path of the shapefile to plot.
     ax : matplolib.pyplot.axes object
 
     radius : float
@@ -2573,10 +2583,19 @@ def advanced_package_bc_helper(pkg, modelgrid, kper):
 
 def filter_modpath_by_travel_time(recarray, travel_time):
     """
+    Helper method for filtering particles by travel time. Used in modpath
+    plotting routines
 
-    :param recarray:
-    :param travel_time:
-    :return:
+    Parameters
+    ----------
+    recarray : np.recarray
+        recarray of modpath particle information
+    travel_time : str, float
+        travel time logical argument to filter modpath output
+
+    Returns
+    -------
+        np.recarray
     """
     if travel_time is None:
         tp = recarray.copy()
@@ -2585,6 +2604,7 @@ def filter_modpath_by_travel_time(recarray, travel_time):
             funcs = {
                 "<=": lambda a, b: a["time"] <= b,
                 ">=": lambda a, b: a["time"] >= b,
+                "==": lambda a, b: a["time"] == b,
                 "<": lambda a, b: a["time"] < b,
                 ">": lambda a, b: a["time"] > b,
             }
@@ -2602,7 +2622,7 @@ def filter_modpath_by_travel_time(recarray, travel_time):
                     raise Exception(
                         "flopy.map.plot_pathline travel_time variable cannot "
                         "be parsed. Acceptable logical variables are , "
-                        "<=, <, >=, and >. "
+                        "<=, <, ==, >=, and >. "
                         "You passed {}".format(travel_time)
                     )
         else:

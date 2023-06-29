@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - master
-      - v*
+      - v[0-9]+.[0-9]+.[0-9]+*
   release:
     types:
       - published
@@ -27,9 +27,9 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: 3.8
           cache: 'pip'
-          cache-dependency-path: setup.cfg
+          cache-dependency-path: pyproject.toml
 
       - name: Install Python dependencies
         run: |
@@ -63,7 +63,7 @@ jobs:
           python -c "import flopy; print(f'FloPy version: {flopy.__version__}')"
           echo "version=${ver#"v"}" >> $GITHUB_OUTPUT
 
-      - name: Update FloPy plugins
+      - name: Update FloPy packages
         run: python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="master", backup=False)'
 
       - name: Lint Python files
@@ -76,7 +76,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload failed test outputs
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: failed-${{ matrix.os }}-${{ matrix.python-version }}
@@ -89,7 +89,7 @@ jobs:
 
       - name: Generate changelog
         id: cliff
-        uses: orhun/git-cliff-action@v1
+        uses: orhun/git-cliff-action@v2
         with:
           config: cliff.toml
           args: --verbose --unreleased --tag ${{ steps.version.outputs.version }}
@@ -98,12 +98,6 @@ jobs:
 
       - name: Update changelog
         run: |
-          # move changelog
-          sudo cp ${{ steps.cliff.outputs.changelog }} CHANGELOG.md
-          
-          # show changelog
-          cat CHANGELOG.md
-          
           # substitute full group names
           sed -i 's/#### Ci/#### Continuous integration/' CHANGELOG.md
           sed -i 's/#### Feat/#### New features/' CHANGELOG.md
@@ -204,6 +198,10 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      id-token: write  # mandatory for trusted publishing
+    environment:  # requires a 'release' environment in repo settings
+      name: release
+      url: https://pypi.org/p/flopy
     steps:
 
       - name: Checkout master branch
@@ -214,9 +212,9 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: 3.8
           cache: 'pip'
-          cache-dependency-path: setup.cfg
+          cache-dependency-path: pyproject.toml
 
       - name: Install Python dependencies
         run: |
@@ -238,90 +236,7 @@ jobs:
           path: dist
 
       - name: Publish to PyPI
-        env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: python -m twine upload dist/*
-
-      # TODO: only need if regro-cf-autotick-bot doesn't autodetect release and open PR on conda-forge/flopy-feedstock
-
-      # - name: Setup Micromamba
-      #   uses: mamba-org/provision-with-micromamba@main
-      #   with:
-      #     environment-file: flopy/etc/environment.yml
-      #     cache-downloads: true
-      #     cache-env: true
-
-      # - name: Install dependencies
-      #   run: |
-      #     conda install -c conda-forge conda-smithy
-      #     pip install --upgrade pip
-      #     pip install build twine
-
-      # - name: Download release assets
-      #   uses: robinraju/release-downloader@v1.6
-      #   with:
-      #     latest: true
-      #     tarBall: true
-      #     zipBall: false
-
-      # - name: Calculate checksum
-      #   id: checksum
-      #   run: |
-      #     sha256=$(openssl sha256 "Source code (tar.gz).tar.gz")
-      #     echo "SHA256: $sha256"
-      #     echo "sha256=$sha256" >> $GITHUB_OUTPUT
-
-      # - name: Checkout feedstock
-      #   uses: actions/checkout@v3
-      #   with:
-      #     repository: w-bonelli/flopy-feedstock
-      #     path: flopy-feedstock
-      #     ref: master
-
-      # - name: Get version
-      #   working-directory: flopy
-      #   id: version
-      #   run: |
-      #     version=$(python scripts/update_version.py --get)
-      #     echo "version: $version"
-      #     echo "version=$version" >> $GITHUB_OUTPUT
-
-      # - name: Update feedstock
-      #   working-directory: flopy-feedstock
-      #   run: |
-      #     git remote add upstream https://github.com/conda-forge/flopy-feedstock.git
-      #     git fetch upstream
-      #     git checkout master
-      #     git reset --hard upstream/master
-      #     # git push origin master --force
-      #     git switch -c "v${{ steps.version.outputs.version }}-update-conda"
-
-      # - name: Rerender feedstock
-      #   working-directory: flopy-feedstock
-      #   run: |
-      #     conda smithy rerender
-
-      # - name: Update feedstock recipe
-      #   working-directory: flopy-feedstock
-      #   run: |
-      #     sed -i '1s/.*/{% set version = "'${{ steps.version.outputs.version }}'" %}/' recipe/meta.yaml
-      #     sed -i 's/sha256:.*/sha256: ${{ steps.checksum.outputs.sha256 }}/g' recipe/meta.yaml
-      #     git add recipe/meta.yaml
-      #     git commit -m "ci(release): update recipe"
-      #     # git push -u origin "v${{ steps.version.outputs.version }}-update-conda"
-
-      # - name: Draft feedstock PR
-      #   working-directory: flopy-feedstock
-      #   env:
-      #     GITHUB_TOKEN: ${{ github.token }}
-      #   run: |
-      #     body='
-      #     # FloPy '$ver' release
-      #
-      #     This release can be approved by merging this pull request into `master`. This will trigger a final job to publish the release to PyPI and open a PR to update the [Conda feedstock](https://github.com/jdhughes-usgs/flopy-feedstock).
-      #     '
-      #     gh pr create -B "master" -H "$ref" --title "Release version $ver" --draft --latest --body "$body"
 
   reset:
     name: Draft reset PR
@@ -343,9 +258,9 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: 3.8
           cache: 'pip'
-          cache-dependency-path: setup.cfg
+          cache-dependency-path: pyproject.toml
 
       - name: Install Python dependencies
         run: |
@@ -369,25 +284,26 @@ jobs:
           reset_branch="post-release-${{ steps.latest_tag.outputs.tag }}-reset"
           git switch -c $reset_branch
           
-          # increment patch version
-          major_version=$(echo "${{ steps.latest_tag.outputs.tag }}" | cut -d. -f1)
-          minor_version=$(echo "${{ steps.latest_tag.outputs.tag }}" | cut -d. -f2)
-          patch_version=$(echo "${{ steps.latest_tag.outputs.tag }}" | cut -d. -f3)
-          version="$major_version.$minor_version.$((patch_version + 1))"
+          # update version string (append '+' to indicate development status)
+          version=$(cat version.txt)
+          version="$version+"
           python scripts/update_version.py -v "$version"
+          
+          # lint Python files
+          python scripts/pull_request_prepare.py
           
           # commit and push reset branch
           git config core.sharedRepository true
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "ci(release): update to development version $version"
+          git commit -m "ci(release): update to version $version"
           git push -u origin $reset_branch
           
           # create PR into develop
           body='
           # Reinitialize for development
           
-          Updates the `develop` branch from `master` following a successful release. Increments the patch version number.
+          Updates the `develop` branch from `master` following a successful release.
           '
           gh pr create -B "develop" -H "$reset_branch" --title "Reinitialize develop branch" --draft --body "$body"

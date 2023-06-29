@@ -15,4 +15,4 @@
 
 # Do not modify the model data in various directories
 examples/data/** binary
-examples/groundwater_paper/uspb/** binary
+.docs/groundwater_paper/uspb/** binary

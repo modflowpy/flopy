@@ -63,7 +63,6 @@ class MfList(DataInterface, DataListInterface):
         list_free_format=None,
         binary=False,
     ):
-
         if isinstance(data, MfList):
             for attr in data.__dict__.items():
                 setattr(self, attr[0], attr[1])
@@ -383,8 +382,8 @@ class MfList(DataInterface, DataListInterface):
         if d > 0:
             raise Exception(
                 "MfList error: dict integer value for "
-                "kper {0:10d} must be 0 or -1, "
-                "not {1:10d}".format(kper, d)
+                "kper {:10d} must be 0 or -1, "
+                "not {:10d}".format(kper, d)
             )
         if d == 0:
             self.__data[kper] = 0
@@ -395,8 +394,8 @@ class MfList(DataInterface, DataListInterface):
 
     def __cast_recarray(self, kper, d):
         assert d.dtype == self.__dtype, (
-            "MfList error: recarray dtype: {} doesn't match self dtype: "
-            "{}".format(d.dtype, self.dtype)
+            f"MfList error: recarray dtype: {d.dtype} doesn't match "
+            f"self dtype: {self.dtype}"
         )
         self.__data[kper] = d
         self.__vtype[kper] = np.recarray
@@ -405,8 +404,8 @@ class MfList(DataInterface, DataListInterface):
         d = np.atleast_2d(d)
         if d.dtype != self.__dtype:
             assert d.shape[1] == len(self.dtype), (
-                "MfList error: ndarray shape {} doesn't match dtype len: "
-                "{}".format(d.shape, len(self.dtype))
+                f"MfList error: ndarray shape {d.shape} doesn't match "
+                f"dtype len: {len(self.dtype)}"
             )
             # warnings.warn("MfList: ndarray dtype does not match self " +\
             #               "dtype, trying to cast")
@@ -800,7 +799,7 @@ class MfList(DataInterface, DataListInterface):
         if ("k" not in names) or ("i" not in names) or ("j" not in names):
             warnings.warn(
                 "MfList.check_kij(): index fieldnames 'k,i,j' "
-                "not found in self.dtype names: {}".format(names)
+                f"not found in self.dtype names: {names}"
             )
             return
         nr, nc, nl, nper = self._model.get_nrow_ncol_nlay_nper()
@@ -829,11 +828,11 @@ class MfList(DataInterface, DataListInterface):
                 if len(out_idx) > 0:
                     warn_str = (
                         "MfList.check_kij(): warning the following "
-                        "indices are out of bounds in kper {}:\n".format(kper)
+                        f"indices are out of bounds in kper {kper}:\n"
                     )
                     for idx in out_idx:
                         d = data[idx]
-                        warn_str += " {0:9d} {1:9d} {2:9d}\n".format(
+                        warn_str += " {:9d} {:9d} {:9d}\n".format(
                             d["k"] + 1, d["i"] + 1, d["j"] + 1
                         )
                     warnings.warn(warn_str)
@@ -883,7 +882,6 @@ class MfList(DataInterface, DataListInterface):
         kpers.sort()
         values = []
         for kper in range(0, max(self._model.nper, max(kpers))):
-
             if kper < min(kpers):
                 values.append(0)
             elif kper > max(kpers) or kper not in kpers:

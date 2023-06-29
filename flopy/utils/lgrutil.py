@@ -445,7 +445,6 @@ class Lgr:
                 for jc in range(ncolc):
                     plist = self.get_parent_connections(kc, ic, jc)
                     for (kp, ip, jp), idir in plist:
-
                         if cidomain[kc, ic, jc] == 0:
                             continue
 

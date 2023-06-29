@@ -3,12 +3,11 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-FloPy Documentation
-===================
+.. image:: _images/flopylogo.png
 
-**Documentation for version 3.3.5 --- release candidate**
+**Documentation for version 3.3.7 --- release candidate**
 
-Return to the Github `FloPy <https://github.com/modflowpy/flopy>`_ website where the code resides.
+Documentation is generated with Sphinx from the `FloPy repository <https://github.com/modflowpy/flopy>`_.
 
 Contents:
 
@@ -16,27 +15,10 @@ Contents:
    :maxdepth: 2
 
    introduction
-
-Tutorial
-========
-
-Contents:
-
-.. toctree::
-   :maxdepth: 2
-
    tutorials
-   notebooks
-
-Code Description
-================
-
-Contents:
-
-.. toctree::
-   :maxdepth: 2
-
-   code
+   examples
+   faq
+   code 
 
 Indices and tables
 ==================
@@ -44,4 +26,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

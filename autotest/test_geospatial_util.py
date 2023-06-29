@@ -1,5 +1,5 @@
 import pytest
-from autotest.conftest import requires_pkg
+from modflow_devtools.markers import requires_pkg
 
 from flopy.utils.geometry import (
     Collection,
@@ -151,6 +151,19 @@ def test_import_geospatial_utils():
         GeoSpatialCollection,
         GeoSpatialUtil,
     )
+
+
+@requires_pkg("shapefile", "shapely")
+def test_geospatial_collection_load_shpfile(example_data_path):
+    # with Path
+    shp = example_data_path / "freyberg" / "gis" / "bedrock_outcrop_hole.shp"
+    gsc = GeoSpatialCollection(shp)
+    assert any(gsc)
+
+    # with str
+    shp = example_data_path / "freyberg" / "gis" / "bedrock_outcrop_hole.shp"
+    gsc = GeoSpatialCollection(str(shp))
+    assert any(gsc)
 
 
 @requires_pkg("shapely", "geojson")
@@ -357,7 +370,6 @@ def test_polygon_collection(polygon, poly_w_hole, multipolygon):
 
     gi1 = [i.__geo_interface__ for i in col]
     col = Collection(col)
-
     gc1 = GeoSpatialCollection(col)
     shapetype = gc1.shapetype
     shp = gc1.shape

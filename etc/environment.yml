@@ -3,7 +3,7 @@ channels:
   - conda-forge
 dependencies:
   # required
-  - python>=3.7
+  - python>=3.8
   - numpy>=1.15.0
   - matplotlib>=1.4.0
 
@@ -19,11 +19,15 @@ dependencies:
   - filelock
   - jupyter
   - jupytext
+  - pip
+  - pip:
+      - modflow-devtools
   - pytest
   - pytest-benchmark
   - pytest-cases
   - pytest-cov
   - pytest-dotenv
+  - pytest-virtualenv
   - pytest-xdist
 
 
@@ -43,6 +47,9 @@ dependencies:
   - geojson
   - vtk
   - rasterstats
+  - pyvista
+  - imageio
+  - pymetis
 
   # MODFLOW API dependencies
   - bmipy

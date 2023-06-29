@@ -1,8 +1,11 @@
 import os
+from pathlib import Path
+from typing import Optional, Union
 
 import numpy as np
 from numpy.lib import recfunctions
 
+from ..utils.flopy_io import relpath_safe
 from ..utils.recarray_utils import recarray
 from ..utils.util_array import Util3d
 
@@ -15,6 +18,9 @@ class check:
     ----------
     package : object
         Instance of Package class.
+    f : str or PathLike, optional
+        Path to the summary file. If no path is provided, a summary
+        file is not created and results are only written to stdout.
     verbose : bool
         Boolean flag used to determine if check method results are
         written to the screen
@@ -89,12 +95,11 @@ class check:
     def __init__(
         self,
         package,
-        f=None,
+        f: Optional[Union[str, os.PathLike]] = None,
         verbose=True,
         level=1,
         property_threshold_values={},
     ):
-
         # allow for instantiation with model or package
         # if isinstance(package, BaseModel): didn't work
         if hasattr(package, "parent"):
@@ -117,11 +122,11 @@ class check:
 
         self.f = None
         if f is not None:
-            if isinstance(f, str):
+            if isinstance(f, (str, os.PathLike)):
                 if os.path.split(f)[0] == "":
                     self.summaryfile = os.path.join(self.model.model_ws, f)
                 else:  # if a path is supplied with summary file, save there
-                    self.summaryfile = f
+                    self.summaryfile = str(f)
                 self.f = open(self.summaryfile, "w")
             else:
                 self.f = f
@@ -543,8 +548,7 @@ class check:
         dtype2 = np.dtype({name: arr.dtype.fields[name] for name in fields})
         return np.ndarray(arr.shape, dtype2, arr, 0, arr.strides)
 
-    def summarize(self):
-
+    def summarize(self, scrub: bool = False):
         # write the summary array to text file (all levels)
         if self.f is not None:
             self.f.write(self.print_summary())
@@ -586,7 +590,7 @@ class check:
             and self.verbose
             and self.summary_array.shape[0] > 0
         ):
-            txt += f"  see {self.summaryfile} for details.\n"
+            txt += f"  see {relpath_safe(self.summaryfile, scrub=scrub)} for details.\n"
 
         # print checks that passed for higher levels
         if len(self.passed) > 0 and self.level > 0:
@@ -610,7 +614,9 @@ class check:
         elif self.summary_array.shape[0] > 0 and self.level > 0:
             print("Errors and/or Warnings encountered.")
             if self.f is not None:
-                print(f"  see {self.summaryfile} for details.\n")
+                print(
+                    f"  see {relpath_safe(self.summaryfile, scrub=scrub)} for details.\n"
+                )
 
     # start of older model specific code
     def _has_cell_indices(self, stress_period_data):

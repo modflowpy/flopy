@@ -3,6 +3,8 @@ import inspect
 import os.path
 import sys
 import warnings
+from pathlib import Path
+from typing import List, Optional, Union
 
 import numpy as np
 
@@ -20,7 +22,7 @@ from ..mfbase import (
     VerbosityLevel,
 )
 from ..mfpackage import MFPackage
-from ..modflow import mfgwfgnc, mfgwfmvr, mfgwtmvt, mfims, mfnam, mftdis
+from ..modflow import mfnam, mftdis
 from ..utils import binaryfile_utils, mfobservation
 
 
@@ -215,9 +217,9 @@ class MFSimulationData:
     wrap_multidim_arrays : bool
         Whether to wrap line for multi-dimensional arrays at the end of a
         row/column/layer
-    float_precision : int
+    _float_precision : int
         Number of decimal points to write for a floating point number
-    float_characters : int
+    _float_characters : int
         Number of characters a floating point number takes up
     write_headers: bool
         When true flopy writes a header to each package file indicating that
@@ -235,14 +237,14 @@ class MFSimulationData:
 
     """
 
-    def __init__(self, path, mfsim):
+    def __init__(self, path: Union[str, os.PathLike], mfsim):
         # --- formatting variables ---
         self.indent_string = "  "
         self.constant_formatting = ["constant", ""]
         self._max_columns_of_data = 20
         self.wrap_multidim_arrays = True
-        self.float_precision = 8
-        self.float_characters = 15
+        self._float_precision = 8
+        self._float_characters = 15
         self.write_headers = True
         self._sci_note_upper_thres = 100000
         self._sci_note_lower_thres = 0.001
@@ -273,6 +275,21 @@ class MFSimulationData:
         self.referenced_files = {}
 
     @property
+    def lazy_io(self):
+        if not self.auto_set_sizes and not self.verify_data:
+            return True
+        return False
+
+    @lazy_io.setter
+    def lazy_io(self, val):
+        if val:
+            self.auto_set_sizes = False
+            self.verify_data = False
+        else:
+            self.auto_set_sizes = True
+            self.verify_data = True
+
+    @property
     def max_columns_of_data(self):
         return self._max_columns_of_data
 
@@ -283,6 +300,48 @@ class MFSimulationData:
         ):
             self._max_columns_of_data = val
             self.max_columns_user_set = True
+
+    @property
+    def float_precision(self):
+        """
+        Gets precision of floating point numbers.
+        """
+        return self._float_precision
+
+    @float_precision.setter
+    def float_precision(self, value):
+        """
+        Sets precision of floating point numbers.
+
+        Parameters
+        ----------
+            value: float
+                floating point precision
+
+        """
+        self._float_precision = value
+        self._update_str_format()
+
+    @property
+    def float_characters(self):
+        """
+        Gets max characters used in floating point numbers.
+        """
+        return self._float_characters
+
+    @float_characters.setter
+    def float_characters(self, value):
+        """
+        Sets max characters used in floating point numbers.
+
+        Parameters
+        ----------
+            value: float
+                floating point max characters
+
+        """
+        self._float_characters = value
+        self._update_str_format()
 
     def set_sci_note_upper_thres(self, value):
         """
@@ -315,9 +374,9 @@ class MFSimulationData:
     def _update_str_format(self):
         """
         Update floating point formatting strings."""
-        self.reg_format_str = f"{{:.{self.float_precision}E}}"
+        self.reg_format_str = f"{{:.{self._float_precision}E}}"
         self.sci_format_str = (
-            f"{{:{self.float_characters}.{self.float_precision}f}}"
+            f"{{:{self._float_characters}.{self._float_precision}f}}"
         )
 
 
@@ -366,7 +425,11 @@ class MFSimulation(PackageContainer):
     write_headers: bool
         When true flopy writes a header to each package file indicating that
         it was created by flopy.
-
+    lazy_io: bool
+        When true flopy only reads external data when the data is requested
+        and only writes external data if the data has changed.  This option
+        automatically overrides the verify_data and auto_set_sizes, turning
+        both off.
     Examples
     --------
     >>> s = MFSimulation.load('my simulation', 'simulation.nam')
@@ -384,19 +447,23 @@ class MFSimulation(PackageContainer):
         self,
         sim_name="sim",
         version="mf6",
-        exe_name="mf6",
-        sim_ws=".",
+        exe_name: Union[str, os.PathLike] = "mf6",
+        sim_ws: Union[str, os.PathLike] = os.curdir,
         verbosity_level=1,
         continue_=None,
         nocheck=None,
         memory_print_option=None,
         write_headers=True,
+        lazy_io=False,
     ):
         super().__init__(MFSimulationData(sim_ws, self), sim_name)
         self.simulation_data.verbosity_level = self._resolve_verbosity_level(
             verbosity_level
         )
         self.simulation_data.write_headers = write_headers
+        if lazy_io:
+            self.simulation_data.lazy_io = True
+
         # verify metadata
         fpdata = mfstructure.MFStructure()
         if not fpdata.valid:
@@ -415,7 +482,7 @@ class MFSimulation(PackageContainer):
         self._models = {}
         self._tdis_file = None
         self._exchange_files = {}
-        self._ims_files = {}
+        self._solution_files = {}
         self._other_files = {}
         self.structure = fpdata.sim_struct
         self.model_type = None
@@ -481,7 +548,7 @@ class MFSimulation(PackageContainer):
         if item in self.structure.model_types:
             # get all models of this type
             for model in self._models.values():
-                if model.model_type == item:
+                if model.model_type == item or model.model_type[:-1] == item:
                     models.append(model)
 
         if len(models) > 0:
@@ -574,7 +641,7 @@ class MFSimulation(PackageContainer):
             list: list of model names
 
         """
-        return self._models.keys()
+        return list(self._models.keys())
 
     @property
     def exchange_files(self):
@@ -593,13 +660,14 @@ class MFSimulation(PackageContainer):
         cls,
         sim_name="modflowsim",
         version="mf6",
-        exe_name="mf6",
-        sim_ws=".",
+        exe_name: Union[str, os.PathLike] = "mf6",
+        sim_ws: Union[str, os.PathLike] = os.curdir,
         strict=True,
         verbosity_level=1,
         load_only=None,
         verify_data=False,
         write_headers=True,
+        lazy_io=False,
     ):
         """
         Load an existing model.
@@ -610,11 +678,10 @@ class MFSimulation(PackageContainer):
             Name of the simulation.
         version : str
             MODFLOW version
-        exe_name : str
-            Relative path to MODFLOW executable from the simulation working
-            folder
-        sim_ws : str
-            Path to simulation working folder
+        exe_name : str or PathLike
+            Path to MODFLOW executable (relative to the simulation workspace or absolute)
+        sim_ws : str or PathLike
+            Path to simulation workspace
         strict : bool
             Strict enforcement of file formatting
         verbosity_level : int
@@ -636,7 +703,11 @@ class MFSimulation(PackageContainer):
         write_headers: bool
             When true flopy writes a header to each package file indicating
             that it was created by flopy
-
+        lazy_io: bool
+            When true flopy only reads external data when the data is requested
+            and only writes external data if the data has changed.  This option
+            automatically overrides the verify_data and auto_set_sizes, turning
+            both off.
         Returns
         -------
         sim : MFSimulation object
@@ -656,7 +727,10 @@ class MFSimulation(PackageContainer):
             write_headers=write_headers,
         )
         verbosity_level = instance.simulation_data.verbosity_level
+
         instance.simulation_data.verify_data = verify_data
+        if lazy_io:
+            instance.simulation_data.lazy_io = True
 
         if verbosity_level.value >= VerbosityLevel.normal.value:
             print("loading simulation...")
@@ -844,29 +918,44 @@ class MFSimulation(PackageContainer):
                             f"    skipping package {solution_info[0].lower()}..."
                         )
                     continue
-                ims_file = mfims.ModflowIms(
-                    instance, filename=solution_info[1], pname=solution_info[2]
+                # create solution package
+                sln_package_obj = instance.package_factory(
+                    solution_info[0][:-1].lower(), ""
                 )
+                sln_package = sln_package_obj(
+                    instance,
+                    filename=solution_info[1],
+                    pname=solution_info[2],
+                )
+
                 if verbosity_level.value >= VerbosityLevel.normal.value:
-                    print(f"  loading ims package {ims_file._get_pname()}...")
-                ims_file.load(strict)
+                    print(
+                        f"  loading solution package "
+                        f"{sln_package._get_pname()}..."
+                    )
+                sln_package.load(strict)
 
         instance.simulation_data.mfpath.set_last_accessed_path()
         if verify_data:
             instance.check()
         return instance
 
-    def check(self, f=None, verbose=True, level=1):
+    def check(
+        self,
+        f: Optional[Union[str, os.PathLike]] = None,
+        verbose=True,
+        level=1,
+    ):
         """
         Check model data for common errors.
 
         Parameters
         ----------
-        f : str or file handle
+        f : str or PathLike, optional
             String defining file name or file handle for summary file
-            of check method output. If a string is passed a file handle
-            is created. If f is None, check method does not write
-            results to a summary file. (default is None)
+            of check method output. If str or pathlike, a file handle
+            is created. If None, the method does not write results to
+            a summary file. (default is None)
         verbose : bool
             Boolean flag used to determine if check method results are
             written to the screen
@@ -901,13 +990,17 @@ class MFSimulation(PackageContainer):
                     "Error", desc="\r    No tdis package", package="model"
                 )
             print("Error: no tdis package")
-        if len(self._ims_files) == 0:
+        if len(self._solution_files) == 0:
             if chk_list:
                 chk_list[0]._add_to_summary(
                     "Error", desc="\r    No solver package", package="model"
                 )
-            print("Error: no ims package")
+            print("Error: no solution package")
         return chk_list
+
+    @property
+    def sim_path(self) -> Path:
+        return Path(self.simulation_data.mfpath.get_sim_path())
 
     @property
     def sim_package_list(self):
@@ -915,7 +1008,7 @@ class MFSimulation(PackageContainer):
         package_list = []
         if self._tdis_file is not None:
             package_list.append(self._tdis_file)
-        for sim_package in self._ims_files.values():
+        for sim_package in self._solution_files.values():
             package_list.append(sim_package)
         for sim_package in self._exchange_files.values():
             package_list.append(sim_package)
@@ -926,10 +1019,10 @@ class MFSimulation(PackageContainer):
     def load_package(
         self,
         ftype,
-        fname,
+        fname: Union[str, os.PathLike],
         pname,
         strict,
-        ref_path,
+        ref_path: Union[str, os.PathLike],
         dict_package_name=None,
         parent_package=None,
     ):
@@ -940,8 +1033,8 @@ class MFSimulation(PackageContainer):
         ----------
         ftype : str
             the file type
-        fname : str
-            the name of the file containing the package input
+        fname : str or PathLike
+            the path of the file containing the package input
         pname : str
             the user-defined name for the package
         strict : bool
@@ -1009,32 +1102,42 @@ class MFSimulation(PackageContainer):
             parent_package._add_package(package, package.path)
         return package
 
-    def register_ims_package(self, ims_file, model_list):
+    def register_ims_package(
+        self, solution_file: MFPackage, model_list: Union[str, List[str]]
+    ):
+        self.register_solution_package(solution_file, model_list)
+
+    def register_solution_package(
+        self, solution_file: MFPackage, model_list: Union[str, List[str]]
+    ):
         """
-        Register an ims package with the simulation.
+        Register a solution package with the simulation.
 
         Parameters
-            ims_file : MFPackage
-                ims package to register
+            solution_file : MFPackage
+                solution package to register
             model_list : list of strings
-                list of models using the ims package to be registered
+                list of models using the solution package to be registered
 
         """
         if isinstance(model_list, str):
             model_list = [model_list]
 
-        if not isinstance(ims_file, mfims.ModflowIms):
+        if (
+            solution_file.package_type
+            not in mfstructure.MFStructure().flopy_dict["solution_packages"]
+        ):
             comment = (
-                'Parameter "ims_file" is not a valid ims file.  '
-                'Expected type ModflowIms, but type "{}" was given'
-                ".".format(type(ims_file))
+                'Parameter "solution_file" is not a valid solution file.  '
+                'Expected solution file, but type "{}" was given'
+                ".".format(type(solution_file))
             )
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(
                 None,
-                "ims",
+                "solution",
                 "",
-                "registering ims package",
+                "registering solution package",
                 "",
                 inspect.stack()[0][3],
                 type_,
@@ -1043,61 +1146,97 @@ class MFSimulation(PackageContainer):
                 comment,
                 self.simulation_data.debug,
             )
-
+        valid_model_types = mfstructure.MFStructure().flopy_dict[
+            "solution_packages"
+        ][solution_file.package_type]
         # remove models from existing solution groups
         if model_list is not None:
             for model in model_list:
-                self._remove_from_all_ims_solution_groups(model)
+                md = self.get_model(model)
+                if md is not None and (
+                    md.model_type not in valid_model_types
+                    and "*" not in valid_model_types
+                ):
+                    comment = (
+                        f"Model type {md.model_type} is not a valid type "
+                        f"for solution file {solution_file.filename} solution "
+                        f"file type {solution_file.package_type}. Valid model "
+                        f"types are {valid_model_types}"
+                    )
+                    type_, value_, traceback_ = sys.exc_info()
+                    raise MFDataException(
+                        None,
+                        "solution",
+                        "",
+                        "registering solution package",
+                        "",
+                        inspect.stack()[0][3],
+                        type_,
+                        value_,
+                        traceback_,
+                        comment,
+                        self.simulation_data.debug,
+                    )
+                self._remove_from_all_solution_groups(model)
 
-        # register ims package with model list
+        # register solution package with model list
         in_simulation = False
         pkg_with_same_name = None
-        for file in self._ims_files.values():
-            if file is ims_file:
+        for file in self._solution_files.values():
+            if file is solution_file:
                 in_simulation = True
-            if file.package_name == ims_file.package_name and file != ims_file:
+            if (
+                file.package_name == solution_file.package_name
+                and file != solution_file
+            ):
                 pkg_with_same_name = file
                 if (
                     self.simulation_data.verbosity_level.value
                     >= VerbosityLevel.normal.value
                 ):
                     print(
-                        "WARNING: ims package with name {} already exists. "
-                        "New ims package will replace old package"
+                        "WARNING: solution package with name {} already exists. "
+                        "New solution package will replace old package"
                         ".".format(file.package_name)
                     )
-                self._remove_package(self._ims_files[file.filename])
-                del self._ims_files[file.filename]
+                self._remove_package(self._solution_files[file.filename])
+                del self._solution_files[file.filename]
                 break
-        # register ims package
+        # register solution package
         if not in_simulation:
-            self._add_package(ims_file, self._get_package_path(ims_file))
-        # do not allow an ims package to be registered twice with the
+            self._add_package(
+                solution_file, self._get_package_path(solution_file)
+            )
+        # do not allow a solution package to be registered twice with the
         # same simulation
         if not in_simulation:
             # create unique file/package name
-            if ims_file.package_name is None:
-                file_num = len(self._ims_files) - 1
-                ims_file.package_name = f"ims_{file_num}"
-            if ims_file.filename in self._ims_files:
-                ims_file.filename = MFFileMgmt.unique_file_name(
-                    ims_file.filename, self._ims_files
+            if solution_file.package_name is None:
+                file_num = len(self._solution_files) - 1
+                solution_file.package_name = (
+                    f"{solution_file.package_type}_{file_num}"
                 )
-            # add ims package to simulation
-            self._ims_files[ims_file.filename] = ims_file
+            if solution_file.filename in self._solution_files:
+                solution_file.filename = MFFileMgmt.unique_file_name(
+                    solution_file.filename, self._solution_files
+                )
+            # add solution package to simulation
+            self._solution_files[solution_file.filename] = solution_file
 
-        # If ims file is being replaced, replace ims filename in
+        # If solution file is being replaced, replace solution filename in
         # solution group
         if pkg_with_same_name is not None and self._is_in_solution_group(
             pkg_with_same_name.filename, 1
         ):
-            # change existing solution group to reflect new ims file
-            self._replace_ims_in_solution_group(
-                pkg_with_same_name.filename, 1, ims_file.filename
+            # change existing solution group to reflect new solution file
+            self._replace_solution_in_solution_group(
+                pkg_with_same_name.filename, 1, solution_file.filename
             )
-        # only allow an ims package to be registered to one solution group
+        # only allow solution package to be registered to one solution group
         elif model_list is not None:
-            ims_in_group = self._is_in_solution_group(ims_file.filename, 1)
+            sln_file_in_group = self._is_in_solution_group(
+                solution_file.filename, 1
+            )
             # add solution group to the simulation name file
             solution_recarray = self.name_file.solutiongroup
             solution_group_list = solution_recarray.get_active_key_list()
@@ -1106,9 +1245,9 @@ class MFSimulation(PackageContainer):
             else:
                 solution_group_num = solution_group_list[-1][0]
 
-            if ims_in_group:
-                self._append_to_ims_solution_group(
-                    ims_file.filename, model_list
+            if sln_file_in_group:
+                self._append_to_solution_group(
+                    solution_file.filename, model_list
                 )
             else:
                 if self.name_file.mxiter.get_data(solution_group_num) is None:
@@ -1117,8 +1256,8 @@ class MFSimulation(PackageContainer):
                 # associate any models in the model list to this
                 # simulation file
                 version_string = mfstructure.MFStructure().get_version_string()
-                ims_pkg = f"ims{version_string}"
-                new_record = [ims_pkg, ims_file.filename]
+                solution_pkg = f"{solution_file.package_abbr}{version_string}"
+                new_record = [solution_pkg, solution_file.filename]
                 for model in model_list:
                     new_record.append(model)
                 try:
@@ -1128,8 +1267,8 @@ class MFSimulation(PackageContainer):
                 except MFDataException as mfde:
                     message = (
                         "Error occurred while updating the "
-                        "simulation name file with the ims package "
-                        'file "{}".'.format(ims_file.filename)
+                        "simulation name file with the solution package "
+                        'file "{}".'.format(solution_file.filename)
                     )
                     raise MFDataException(
                         mfdata_except=mfde, package="nam", message=message
@@ -1204,7 +1343,7 @@ class MFSimulation(PackageContainer):
 
     def _set_timing_block(self, file_name):
         struct_root = mfstructure.MFStructure()
-        tdis_pkg = "tdis{}".format(struct_root.get_version_string())
+        tdis_pkg = f"tdis{struct_root.get_version_string()}"
         tdis_attr = getattr(self.name_file, tdis_pkg)
         try:
             tdis_attr.set_data(file_name)
@@ -1244,9 +1383,11 @@ class MFSimulation(PackageContainer):
                 package.filename
             )
             self._rename_exchange_file(package, new_name)
-        elif package.filename in self._ims_files:
-            self._ims_files[new_name] = self._ims_files.pop(package.filename)
-            self._update_ims_solution_group(package.filename, new_name)
+        elif package.filename in self._solution_files:
+            self._solution_files[new_name] = self._solution_files.pop(
+                package.filename
+            )
+            self._update_solution_group(package.filename, new_name)
         else:
             self._other_files[new_name] = self._other_files.pop(
                 package.filename
@@ -1266,7 +1407,7 @@ class MFSimulation(PackageContainer):
             self._tdis_file.filename = f"{name}.{self._tdis_file.package_type}"
 
         self._rename_package_group(self._exchange_files, name)
-        self._rename_package_group(self._ims_files, name)
+        self._rename_package_group(self._solution_files, name)
         self._rename_package_group(self._other_files, name)
         for model in self._models.values():
             model.rename_all_packages(name)
@@ -1281,8 +1422,8 @@ class MFSimulation(PackageContainer):
             check_data: bool
                 Determines if data error checking is enabled during this
                 process.  Data error checking can be slow on large datasets.
-            external_data_folder
-                Folder, relative to the simulation path or model relative path
+            external_data_folder: str or PathLike
+                Path relative to the simulation path or model relative path
                 (see use_model_relative_path parameter), where external data
                 will be stored
         """
@@ -1291,8 +1432,8 @@ class MFSimulation(PackageContainer):
         # set data external for all packages in all models
         for model in self._models.values():
             model.set_all_data_external(check_data, external_data_folder)
-        # set data external for ims packages
-        for package in self._ims_files.values():
+        # set data external for solution packages
+        for package in self._solution_files.values():
             package.set_all_data_external(check_data, external_data_folder)
         # set data external for other packages
         for package in self._other_files.values():
@@ -1304,8 +1445,8 @@ class MFSimulation(PackageContainer):
         # set data external for all packages in all models
         for model in self._models.values():
             model.set_all_data_internal(check_data)
-        # set data external for ims packages
-        for package in self._ims_files.values():
+        # set data external for solution packages
+        for package in self._solution_files.values():
             package.set_all_data_internal(check_data)
         # set data external for other packages
         for package in self._other_files.values():
@@ -1361,14 +1502,17 @@ class MFSimulation(PackageContainer):
             print("  writing simulation tdis package...")
         self._tdis_file.write(ext_file_action=ext_file_action)
 
-        # write ims files
-        for ims_file in self._ims_files.values():
+        # write solution files
+        for solution_file in self._solution_files.values():
             if (
                 self.simulation_data.verbosity_level.value
                 >= VerbosityLevel.normal.value
             ):
-                print(f"  writing ims package {ims_file._get_pname()}...")
-            ims_file.write(ext_file_action=ext_file_action)
+                print(
+                    f"  writing solution package "
+                    f"{solution_file._get_pname()}..."
+                )
+            solution_file.write(ext_file_action=ext_file_action)
 
         # write exchange files
         for exchange_file in self._exchange_files.values():
@@ -1399,7 +1543,7 @@ class MFSimulation(PackageContainer):
         if silent:
             self.simulation_data.verbosity_level = saved_verb_lvl
 
-    def set_sim_path(self, path):
+    def set_sim_path(self, path: Union[str, os.PathLike]):
         """Return a list of output data keys.
 
         Parameters
@@ -1423,6 +1567,7 @@ class MFSimulation(PackageContainer):
         silent=None,
         pause=False,
         report=False,
+        processors=None,
         normal_msg="normal termination",
         use_async=False,
         cargs=None,
@@ -1438,6 +1583,9 @@ class MFSimulation(PackageContainer):
                 Pause at end of run
             report: bool
                 Save stdout lines to a list (buff)
+            processors: int
+                Number of processors. Parallel simulations are only supported
+                for MODFLOW 6 simulations. (default is None)
             normal_msg: str or list
                 Normal termination message used to determine if the run
                 terminated normally. More than one message can be provided
@@ -1471,6 +1619,7 @@ class MFSimulation(PackageContainer):
             silent=silent,
             pause=pause,
             report=report,
+            processors=processors,
             normal_msg=normal_msg,
             use_async=use_async,
             cargs=cargs,
@@ -1511,9 +1660,9 @@ class MFSimulation(PackageContainer):
                 self._tdis_file = None
             if package.filename in self._exchange_files:
                 del self._exchange_files[package.filename]
-            if package.filename in self._ims_files:
-                del self._ims_files[package.filename]
-                self._update_ims_solution_group(package.filename)
+            if package.filename in self._solution_files:
+                del self._solution_files[package.filename]
+                self._update_solution_group(package.filename)
             if package.filename in self._other_files:
                 del self._other_files[package.filename]
 
@@ -1834,7 +1983,8 @@ class MFSimulation(PackageContainer):
                 )
             self._remove_package(self._tdis_file)
         elif (
-            package.package_type.lower() != "ims"
+            package.package_type.lower()
+            in mfstructure.MFStructure().flopy_dict["solution_packages"]
             and pname in self.package_name_dict
         ):
             if (
@@ -1893,14 +2043,25 @@ class MFSimulation(PackageContainer):
             (path : tuple, package structure : MFPackageStructure)
 
         """
+        if set_package_filename:
+            # set initial package filename
+            base_name = os.path.basename(os.path.normpath(self.name))
+            package._filename = f"{base_name}.{package.package_type}"
+
         package.container_type = [PackageContainerType.simulation]
         path = self._get_package_path(package)
         if add_to_package_list and package.package_type.lower != "nam":
-            self._remove_package_by_type(package)
-            if package.package_type.lower() != "ims":
-                # all but ims packages get added here.  ims packages are
-                # added during ims package registration
+            if (
+                package.package_type.lower()
+                not in mfstructure.MFStructure().flopy_dict[
+                    "solution_packages"
+                ]
+            ):
+                # all but solution packages get added here.  solution packages
+                # are added during solution package registration
+                self._remove_package_by_type(package)
                 self._add_package(package, path)
+        sln_dict = mfstructure.MFStructure().flopy_dict["solution_packages"]
         if package.package_type.lower() == "nam":
             if not package.internal_package:
                 excpt_str = (
@@ -1920,18 +2081,24 @@ class MFSimulation(PackageContainer):
                     package.package_type.lower()
                 ],
             )
-        elif package.package_type.lower() == "ims":
-            # default behavior is to register the ims package with the first
-            # unregistered model
+        elif package.package_type.lower() in sln_dict:
+            supported_packages = sln_dict[package.package_type.lower()]
+            # default behavior is to register the solution package with the
+            # first unregistered model
             unregistered_models = []
-            for model in self._models:
-                model_registered = self._is_in_solution_group(model, 2, True)
-                if not model_registered:
-                    unregistered_models.append(model)
+            for model_name, model in self._models.items():
+                model_registered = self._is_in_solution_group(
+                    model_name, 2, True
+                )
+                if not model_registered and (
+                    model.model_type in supported_packages
+                    or "*" in supported_packages
+                ):
+                    unregistered_models.append(model_name)
             if unregistered_models:
-                self.register_ims_package(package, unregistered_models)
+                self.register_solution_package(package, unregistered_models)
             else:
-                self.register_ims_package(package, None)
+                self.register_solution_package(package, None)
             return (
                 path,
                 self.structure.package_struct_objs[
@@ -2032,31 +2199,40 @@ class MFSimulation(PackageContainer):
             [model_type, model_namefile, model_name]
         )
 
-        if len(self._ims_files) > 0:
-            # register model with first ims file found
-            first_ims_key = next(iter(self._ims_files))
-            self.register_ims_package(
-                self._ims_files[first_ims_key], model_name
+        if len(self._solution_files) > 0:
+            # register model with first solution file found
+            first_solution_key = next(iter(self._solution_files))
+            self.register_solution_package(
+                self._solution_files[first_solution_key], model_name
             )
 
         return self.structure.model_struct_objs[model_type]
 
     def get_ims_package(self, key):
+        warnings.warn(
+            "get_ims_package() has been deprecated and will be "
+            "removed in version 3.3.7. Use "
+            "get_solution_package() instead.",
+            DeprecationWarning,
+        )
+        return self.get_solution_package(key)
+
+    def get_solution_package(self, key):
         """
-        Get the ims package with the specified `key`.
+        Get the solution package with the specified `key`.
 
         Parameters
         ----------
             key : str
-                ims package file name
+                solution package file name
 
         Returns
         --------
-            ims_package : ModflowIms
+            solution_package : MFPackage
 
         """
-        if key in self._ims_files:
-            return self._ims_files[key]
+        if key in self._solution_files:
+            return self._solution_files[key]
         return None
 
     def remove_model(self, model_name):
@@ -2100,9 +2276,9 @@ class MFSimulation(PackageContainer):
             if not exchange.is_valid():
                 return False
 
-        # ims files valid
-        for imsfile in self._ims_files.values():
-            if not imsfile.is_valid():
+        # solution files valid
+        for solution_file in self._solution_files.values():
+            if not solution_file.is_valid():
                 return False
 
         # a model exists
@@ -2114,7 +2290,7 @@ class MFSimulation(PackageContainer):
             if not self._models[key].is_valid():
                 return False
 
-        # each model has an imsfile
+        # each model has a solution file
 
         return True
 
@@ -2136,7 +2312,7 @@ class MFSimulation(PackageContainer):
         else:
             return (package.package_type,)
 
-    def _update_ims_solution_group(self, ims_file, new_name=None):
+    def _update_solution_group(self, solution_file, new_name=None):
         solution_recarray = self.name_file.solutiongroup
         for solution_group_num in solution_recarray.get_active_key_list():
             try:
@@ -2153,7 +2329,7 @@ class MFSimulation(PackageContainer):
 
             new_array = []
             for record in rec_array:
-                if record.slnfname == ims_file:
+                if record.slnfname == solution_file:
                     if new_name is not None:
                         record.slnfname = new_name
                         new_array.append(tuple(record))
@@ -2167,7 +2343,7 @@ class MFSimulation(PackageContainer):
 
             solution_recarray.set_data(new_array, solution_group_num[0])
 
-    def _remove_from_all_ims_solution_groups(self, modelname):
+    def _remove_from_all_solution_groups(self, modelname):
         solution_recarray = self.name_file.solutiongroup
         for solution_group_num in solution_recarray.get_active_key_list():
             try:
@@ -2192,13 +2368,13 @@ class MFSimulation(PackageContainer):
                 new_array.append(tuple(new_record))
             solution_recarray.set_data(new_array, solution_group_num[0])
 
-    def _append_to_ims_solution_group(self, ims_file, new_models):
+    def _append_to_solution_group(self, solution_file, new_models):
         # clear models out of solution groups
         if new_models is not None:
             for model in new_models:
-                self._remove_from_all_ims_solution_groups(model)
+                self._remove_from_all_solution_groups(model)
 
-        # append models to ims_file
+        # append models to solution_file
         solution_recarray = self.name_file.solutiongroup
         for solution_group_num in solution_recarray.get_active_key_list():
             try:
@@ -2218,13 +2394,13 @@ class MFSimulation(PackageContainer):
                 rec_model_dict = {}
                 for index, item in enumerate(record):
                     if (
-                        record[1] == ims_file or item not in new_models
+                        record[1] == solution_file or item not in new_models
                     ) and item is not None:
                         new_record.append(item)
                         if index > 1 and item is not None:
                             rec_model_dict[item.lower()] = 1
 
-                if record[1] == ims_file:
+                if record[1] == solution_file:
                     for model in new_models:
                         if model.lower() not in rec_model_dict:
                             new_record.append(model)
@@ -2232,7 +2408,7 @@ class MFSimulation(PackageContainer):
                 new_array.append(tuple(new_record))
             solution_recarray.set_data(new_array, solution_group_num[0])
 
-    def _replace_ims_in_solution_group(self, item, index, new_item):
+    def _replace_solution_in_solution_group(self, item, index, new_item):
         solution_recarray = self.name_file.solutiongroup
         for solution_group_num in solution_recarray.get_active_key_list():
             try:
@@ -2241,7 +2417,7 @@ class MFSimulation(PackageContainer):
                 message = (
                     "An error occurred while getting solution group"
                     '"{}" from the simulation name file.  The error '
-                    'occurred while replacing IMS file "{}" with "{}"'
+                    'occurred while replacing solution file "{}" with "{}"'
                     'at index "{}"'.format(
                         solution_group_num[0], item, new_item, index
                     )
@@ -2282,7 +2458,12 @@ class MFSimulation(PackageContainer):
                             return True
         return False
 
-    def plot(self, model_list=None, SelPackList=None, **kwargs):
+    def plot(
+        self,
+        model_list: Optional[Union[str, List[str]]] = None,
+        SelPackList=None,
+        **kwargs,
+    ):
         """
         Plot simulation or models.
 
@@ -2291,9 +2472,9 @@ class MFSimulation(PackageContainer):
 
         Parameters
         ----------
-            model_list: (list)
+            model_list: list, optional
                 List of model names to plot, if none all models will be plotted
-            SelPackList: (list)
+            SelPackList: list, optional
                 List of package names to plot, if none all packages will be
                 plotted
             kwargs:

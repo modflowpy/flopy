@@ -124,9 +124,9 @@ boundary_ifaces = {
 
 
 @pytest.fixture
-def mf2005_model(tmpdir):
+def mf2005_model(function_tmpdir):
     # create modflow model
-    mf = Modflow("mf2005", model_ws=str(tmpdir), exe_name="mf2005")
+    mf = Modflow("mf2005", model_ws=function_tmpdir, exe_name="mf2005")
 
     # cell by cell flow file unit number
     cbc_unit_nb = 53
@@ -182,14 +182,17 @@ def mf2005_model(tmpdir):
     # write the MODFLOW model input files
     mf.write_input()
 
-    return mf, tmpdir
+    return mf, function_tmpdir
 
 
 @pytest.fixture
-def mf6_model(tmpdir):
+def mf6_model(function_tmpdir):
     # create simulation
     sim = MFSimulation(
-        sim_name="mf6", version="mf6", exe_name="mf6", sim_ws=str(tmpdir)
+        sim_name="mf6",
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=function_tmpdir,
     )
 
     # create tdis package
@@ -300,7 +303,7 @@ def mf6_model(tmpdir):
     # write input files
     sim.write_simulation()
 
-    return sim, tmpdir
+    return sim, function_tmpdir
 
 
 def basic_check(Qx_ext, Qy_ext, Qz_ext):
@@ -352,11 +355,13 @@ def local_balance_check(Qx_ext, Qy_ext, Qz_ext, hdsfile=None, model=None):
 @pytest.mark.xfail(reason="occasional Unexpected collection type")
 def test_extended_budget_default(mf2005_model):
     # build and run MODFLOW 2005 model
-    mf, tmpdir = mf2005_model
-    success, buff = mf.run_model()
+    mf, function_tmpdir = mf2005_model
+    mf.run_model()
 
     # load and postprocess
-    Qx_ext, Qy_ext, Qz_ext = get_extended_budget(str(tmpdir / "mf2005.cbc"))
+    Qx_ext, Qy_ext, Qz_ext = get_extended_budget(
+        function_tmpdir / "mf2005.cbc"
+    )
 
     # basic check
     basic_check(Qx_ext, Qy_ext, Qz_ext)
@@ -366,17 +371,17 @@ def test_extended_budget_default(mf2005_model):
     assert np.allclose(overall, -1122.4931640625)
 
     # call other evaluations
-    specific_discharge_default(tmpdir)
-    specific_discharge_comprehensive(tmpdir)
+    specific_discharge_default(function_tmpdir)
+    specific_discharge_comprehensive(function_tmpdir)
 
 
-def extended_budget_comprehensive(tmpdir):
+def extended_budget_comprehensive(function_tmpdir):
     # load and postprocess
-    mf = Modflow.load(str(tmpdir / "mf2005.nam"), check=False)
+    mf = Modflow.load(function_tmpdir / "mf2005.nam", check=False)
     Qx_ext, Qy_ext, Qz_ext = get_extended_budget(
-        str(tmpdir / "mf2005.cbc"),
+        function_tmpdir / "mf2005.cbc",
         boundary_ifaces=boundary_ifaces,
-        hdsfile=str(tmpdir / "mf2005.hds"),
+        hdsfile=function_tmpdir / "mf2005.hds",
         model=mf,
     )
 
@@ -384,17 +389,19 @@ def extended_budget_comprehensive(tmpdir):
     basic_check(Qx_ext, Qy_ext, Qz_ext)
 
     # local balance check
-    local_balance_check(Qx_ext, Qy_ext, Qz_ext, str(tmpdir / "mf2005.hds"), mf)
+    local_balance_check(
+        Qx_ext, Qy_ext, Qz_ext, function_tmpdir / "mf2005.hds", mf
+    )
 
     # overall check
     overall = np.sum(Qx_ext) + np.sum(Qy_ext) + np.sum(Qz_ext)
     assert np.allclose(overall, -1110.646240234375)
 
 
-def specific_discharge_default(tmpdir):
+def specific_discharge_default(function_tmpdir):
     # load and postprocess
-    mf = Modflow.load(str(tmpdir / "mf2005.nam"), check=False)
-    cbc = bf.CellBudgetFile(str(tmpdir / "mf2005.cbc"))
+    mf = Modflow.load(function_tmpdir / "mf2005.nam", check=False)
+    cbc = bf.CellBudgetFile(function_tmpdir / "mf2005.cbc")
     keys = ["FLOW RIGHT FACE", "FLOW FRONT FACE", "FLOW LOWER FACE"]
     vectors = [cbc.get_data(text=t)[0] for t in keys]
     qx, qy, qz = get_specific_discharge(vectors, mf)
@@ -404,16 +411,15 @@ def specific_discharge_default(tmpdir):
     assert np.allclose(overall, -1.7959892749786377)
 
 
-def specific_discharge_comprehensive(tmpdir):
-
-    hds = bf.HeadFile(str(tmpdir / "mf2005.hds"))
+def specific_discharge_comprehensive(function_tmpdir):
+    hds = bf.HeadFile(function_tmpdir / "mf2005.hds")
     head = hds.get_data()
     # load and postprocess
-    mf = Modflow.load(str(tmpdir / "mf2005.nam"), check=False)
+    mf = Modflow.load(function_tmpdir / "mf2005.nam", check=False)
     Qx_ext, Qy_ext, Qz_ext = get_extended_budget(
-        str(tmpdir / "mf2005.cbc"),
+        function_tmpdir / "mf2005.cbc",
         boundary_ifaces=boundary_ifaces,
-        hdsfile=str(tmpdir / "mf2005.hds"),
+        hdsfile=function_tmpdir / "mf2005.hds",
         model=mf,
     )
 
@@ -450,7 +456,7 @@ def specific_discharge_comprehensive(tmpdir):
     plt.close()
 
     # plot discharge in cross-section view
-    hds = bf.HeadFile(str(tmpdir / "mf2005.hds"), precision="single")
+    hds = bf.HeadFile(function_tmpdir / "mf2005.hds", precision="single")
     head = hds.get_data()
     row = 0
     xsect = PlotCrossSection(model=mf, line={"row": row})
@@ -491,17 +497,17 @@ def specific_discharge_comprehensive(tmpdir):
 )
 def test_specific_discharge_mf6(mf6_model):
     # build and run MODFLOW 6 model
-    sim, tmpdir = mf6_model
+    sim, function_tmpdir = mf6_model
     sim.run_simulation()
 
     # load and postprocess
     sim = MFSimulation.load(
-        sim_name="mf6", sim_ws=str(tmpdir), verbosity_level=0
+        sim_name="mf6", sim_ws=function_tmpdir, verbosity_level=0
     )
     gwf = sim.get_model("mf6")
-    hds = bf.HeadFile(str(tmpdir / "mf6.hds"))
+    hds = bf.HeadFile(function_tmpdir / "mf6.hds")
     head = hds.get_data()
-    cbc = bf.CellBudgetFile(str(tmpdir / "mf6.cbc"))
+    cbc = bf.CellBudgetFile(function_tmpdir / "mf6.cbc")
     spdis = cbc.get_data(text="SPDIS")[0]
     qx, qy, qz = get_specific_discharge(spdis, gwf, head)
 
@@ -535,7 +541,7 @@ def test_specific_discharge_mf6(mf6_model):
     plt.close()
 
     # plot discharge in cross-section view
-    hds = bf.HeadFile(str(tmpdir / "mf6.hds"), precision="double")
+    hds = bf.HeadFile(function_tmpdir / "mf6.hds", precision="double")
     head = hds.get_data()
     row = 0
     xsect = PlotCrossSection(model=gwf, line={"row": row})

@@ -56,18 +56,18 @@ coverage.xml
 #*.sh
 
 # Sphinx documentation
-docs/_build/
+.docs/_build/
 
 # PyBuilder
 .idea/
 target/
 flopy/.idea
 
-examples/Notebooks/data
-examples/Notebooks/temp
-examples/FAQ/temp
-examples/scripts/data
-examples/groundwater_paper/Notebooks/temp
+.docs/Notebooks/data
+.docs/Notebooks/temp
+# tutorials are currently converted from .py to .ipynb by jupytext
+.docs/Notebooks/*.ipynb  
+.docs/scripts/data
 
 # ignore all .ipynb_checkpoints
 .ipynb_checkpoints
@@ -88,10 +88,10 @@ autotest/.noseids
 .docs/source
 .docs/.bin
 .docs/_temp
-.docs/_notebooks
 
 *.bak
 
+# environment files
 **.env
 venv
 app

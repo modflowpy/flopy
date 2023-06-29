@@ -856,11 +856,6 @@ class MFBlock:
                             f'        opening external file "{file_name}"...'
                         )
                     external_file_info = arr_line
-                    file_name = datautil.clean_filename(arr_line[1])
-                    fd_block = open(os.path.join(root_path, file_name), "r")
-                    # read first line of external file
-                    line = fd_block.readline()
-                    arr_line = datautil.PyListUtil.split_data_line(line)
                 except:
                     type_, value_, traceback_ = sys.exc_info()
                     message = f'Error reading external file specified in line "{line}"'
@@ -1251,10 +1246,22 @@ class MFBlock:
             self._write_block(fd, self.block_headers[0], ext_file_action)
 
     def _add_missing_block_headers(self, repeating_dataset):
-        for key in repeating_dataset.get_active_key_list():
-            data = repeating_dataset.get_data(key)
-            if not self.header_exists(key[0]) and data is not None:
-                self._build_repeating_header([key[0]])
+        key_data_list = repeating_dataset.get_active_key_list()
+        # assemble a dictionary of data keys and empty keys
+        key_dict = {}
+        for key in key_data_list:
+            key_dict[key[0]] = True
+        for key, value in repeating_dataset.empty_keys.items():
+            if value:
+                key_dict[key] = True
+        for key in key_dict.keys():
+            has_data = repeating_dataset.has_data(key)
+            empty_key = (
+                key in repeating_dataset.empty_keys
+                and repeating_dataset.empty_keys[key]
+            )
+            if not self.header_exists(key) and (has_data or empty_key):
+                self._build_repeating_header([key])
 
     def header_exists(self, key, data_path=None):
         if not isinstance(key, list):
@@ -1553,8 +1560,8 @@ class MFPackage(PackageContainer, PackageInterface):
         The parent model, simulation, or package containing this package
     package_type : str
         String defining the package type
-    filename : str
-        Filename of file where this package is stored
+    filename : str or PathLike
+        Name or path of file where this package is stored
     quoted_filename : str
         Filename with quotes around it when there is a space in the name
     pname : str
@@ -1585,16 +1592,18 @@ class MFPackage(PackageContainer, PackageInterface):
         loading_package=False,
         **kwargs,
     ):
+        parent_file = kwargs.pop("parent_file", None)
         if isinstance(parent, MFPackage):
             self.model_or_sim = parent.model_or_sim
             self.parent_file = parent
-        elif "parent_file" in kwargs:
+        elif parent_file is not None:
             self.model_or_sim = parent
-            self.parent_file = kwargs["parent_file"]
+            self.parent_file = parent_file
         else:
             self.model_or_sim = parent
             self.parent_file = None
-        if "_internal_package" in kwargs and kwargs["_internal_package"]:
+        _internal_package = kwargs.pop("_internal_package", False)
+        if _internal_package:
             self.internal_package = True
         else:
             self.internal_package = False
@@ -1675,11 +1684,9 @@ class MFPackage(PackageContainer, PackageInterface):
                 self._filename = f"{base_name}.{package_type}"
             else:
                 # filename uses model base name
-                self._filename = MFFileMgmt.string_to_file_path(
-                    f"{self.model_or_sim.name}.{package_type}"
-                )
+                self._filename = f"{self.model_or_sim.name}.{package_type}"
         else:
-            if not isinstance(filename, str):
+            if not isinstance(filename, (str, os.PathLike)):
                 message = (
                     "Invalid fname parameter. Expecting type str. "
                     'Instead type "{}" was '
@@ -1699,8 +1706,8 @@ class MFPackage(PackageContainer, PackageInterface):
                     message,
                     self.model_or_sim.simulation_data.debug,
                 )
-            self._filename = MFFileMgmt.string_to_file_path(
-                datautil.clean_filename(filename)
+            self._filename = datautil.clean_filename(
+                str(filename).replace("\\", "/")
             )
         self.path, self.structure = self.model_or_sim.register_package(
             self, not loading_package, pname is None, filename is None
@@ -1724,14 +1731,28 @@ class MFPackage(PackageContainer, PackageInterface):
         self.bc_color = "black"
         self.__inattr = False
         self._child_package_groups = {}
+        child_builder_call = kwargs.pop("child_builder_call", None)
         if (
             self.parent_file is not None
-            and "child_builder_call" not in kwargs
+            and child_builder_call is None
             and package_type in self.parent_file._child_package_groups
         ):
             # initialize as part of the parent's child package group
             chld_pkg_grp = self.parent_file._child_package_groups[package_type]
             chld_pkg_grp.init_package(self, self._filename)
+
+        # remove any remaining valid kwargs
+        key_list = list(kwargs.keys())
+        for key in key_list:
+            if "filerecord" in key and hasattr(self, f"{key}"):
+                kwargs.pop(f"{key}")
+        # check for extraneous kwargs
+        if len(kwargs) > 0:
+            kwargs_str = ", ".join(kwargs.keys())
+            excpt_str = (
+                f'Extraneous kwargs "{kwargs_str}" provided to MFPackage.'
+            )
+            raise FlopyException(excpt_str)
 
     def __init_subclass__(cls):
         """Register package type"""
@@ -1868,7 +1889,11 @@ class MFPackage(PackageContainer, PackageInterface):
     def _get_aux_data(self, aux_names):
         if hasattr(self, "stress_period_data"):
             spd = self.stress_period_data.get_data()
-            if 0 in spd and aux_names[0][1] in spd[0].dtype.names:
+            if (
+                0 in spd
+                and spd[0] is not None
+                and aux_names[0][1] in spd[0].dtype.names
+            ):
                 return spd
         if hasattr(self, "packagedata"):
             pd = self.packagedata.get_data()
@@ -1876,7 +1901,11 @@ class MFPackage(PackageContainer, PackageInterface):
                 return pd
         if hasattr(self, "perioddata"):
             spd = self.perioddata.get_data()
-            if 0 in spd and aux_names[0][1] in spd[0].dtype.names:
+            if (
+                0 in spd
+                and spd[0] is not None
+                and aux_names[0][1] in spd[0].dtype.names
+            ):
                 return spd
         if hasattr(self, "aux"):
             return self.aux.get_data()

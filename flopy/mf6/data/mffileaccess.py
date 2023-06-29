@@ -1097,7 +1097,7 @@ class MFFileAccessList(MFFileAccess):
     def _get_cell_header(self, modelgrid):
         if modelgrid.grid_type == "structured":
             return [("layer", np.int32), ("row", np.int32), ("col", np.int32)]
-        elif modelgrid.grid_type == "vertex_layered":
+        elif modelgrid.grid_type == "vertex":
             return [("layer", np.int32), ("ncpl", np.int32)]
         else:
             return [("nodes", np.int32)]
@@ -1355,7 +1355,8 @@ class MFFileAccessList(MFFileAccess):
                             storage.data_dimensions.unlock()
                             return data_rec
             self.simple_line = (
-                self.simple_line and self.structure.package_type != "sfr"
+                self.simple_line
+                and not self.structure.parent_block.parent_package.advanced_package()
             )
             if self.simple_line:
                 line_len = len(self._last_line_info)
@@ -1685,23 +1686,51 @@ class MFFileAccessList(MFFileAccess):
                                                 name_data
                                                 not in data_item.keystring_dict
                                             ):
+                                                # look for data key in child records
+                                                found = False
+                                                for (
+                                                    key,
+                                                    record,
+                                                ) in (
+                                                    data_item.keystring_dict.items()
+                                                ):
+                                                    if (
+                                                        isinstance(
+                                                            record,
+                                                            MFDataStructure,
+                                                        )
+                                                        and len(
+                                                            record.data_item_structures
+                                                        )
+                                                        > 0
+                                                        and record.data_item_structures[
+                                                            0
+                                                        ].name
+                                                        == data.lower()
+                                                    ):
+                                                        name_data = key
+                                                        found = True
+                                                        break
                                                 # data does not match any
                                                 # expected keywords
-                                                if (
-                                                    self._simulation_data.verbosity_level.value
-                                                    >= VerbosityLevel.normal.value
-                                                ):
-                                                    print(
-                                                        "WARNING: Failed to "
-                                                        "process line {}.  "
-                                                        "Line does not match"
-                                                        " expected keystring"
-                                                        " {}".format(
-                                                            " ".join(arr_line),
-                                                            data_item.name,
+                                                if not found:
+                                                    if (
+                                                        self._simulation_data.verbosity_level.value
+                                                        >= VerbosityLevel.normal.value
+                                                    ):
+                                                        print(
+                                                            "WARNING: Failed to "
+                                                            "process line {}.  "
+                                                            "Line does not match"
+                                                            " expected keystring"
+                                                            " {}".format(
+                                                                " ".join(
+                                                                    arr_line
+                                                                ),
+                                                                data_item.name,
+                                                            )
                                                         )
-                                                    )
-                                                break
+                                                    break
                                         data_item_ks = (
                                             data_item.keystring_dict[name_data]
                                         )

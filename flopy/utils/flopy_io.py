@@ -2,7 +2,11 @@
 Module for input/output utilities
 """
 import os
+import platform
 import sys
+from pathlib import Path
+from shutil import which
+from typing import Union
 
 import numpy as np
 
@@ -290,7 +294,6 @@ def flux_to_wel(cbc_file, text, precision="single", model=None, verbose=False):
     # process the records in the cell budget file
     iper = -1
     for kstpkper in cbf.kstpkper:
-
         kstpkper = (kstpkper[0] - 1, kstpkper[1] - 1)
         kper = kstpkper[1]
         # if we haven't visited this kper yet
@@ -480,9 +483,7 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
 
     # else, read ascii
     else:
-
         for ii in range(nlist):
-
             # first line was already read
             if ii != 0:
                 line = file_handle.readline()
@@ -543,3 +544,70 @@ def get_ts_sp(line):
     sp = int(ll[0])
 
     return ts, sp
+
+
+def relpath_safe(
+    path: Union[str, os.PathLike],
+    start: Union[str, os.PathLike] = os.curdir,
+    scrub: bool = False,
+) -> str:
+    """
+    Return a relative version of the path starting at the given start path.
+    This is impossible on Windows if the paths are on different drives, in
+    which case the absolute path is returned. The builtin os.path.relpath
+    raises a ValueError, this method is a workaround to avoid interrupting
+    normal control flow (background at https://bugs.python.org/issue7195).
+
+    This method also truncates/obfuscates absolute paths with usernames.
+
+    Parameters
+    ----------
+    path : str or PathLike
+        the path to truncate relative to the start path
+    start : str or PathLike, default "."
+        the starting path, defaults to the current working directory
+    scrub : bool, default False
+        whether to remove the current login name from paths
+    Returns
+    -------
+        str : the relative path, unless the platform is Windows and the `path`
+        is not on the same drive as `start`, in which case the absolute path,
+        with elements before and including usernames removed and obfuscated
+    """
+
+    if start == os.curdir:
+        start = os.getcwd()
+
+    if platform.system() == "Windows":
+        pa = os.path.abspath(path)
+        sa = os.path.abspath(start)
+        pd = os.path.splitdrive(pa)[0].lower()
+        sd = os.path.splitdrive(sa)[0].lower()
+        p = os.path.abspath(path) if pd != sd else os.path.relpath(pa, sa)
+    else:
+        p = os.path.relpath(path, start)
+
+    return scrub_login(p) if scrub else p
+
+
+def scrub_login(s: str) -> str:
+    """
+    Remove the current login name from the given string,
+    replacing any occurences with "***".
+
+    Parameters
+    ----------
+    s : str
+        the input string
+
+    Returns
+    -------
+        the string with login name obfuscated
+    """
+
+    try:
+        login = os.getlogin()
+        return s.replace(login, "***")
+    except OSError:
+        # OSError is possible in CI, e.g. 'No such device or address'
+        return s

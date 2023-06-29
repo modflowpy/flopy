@@ -4,7 +4,7 @@ from io import StringIO
 
 import numpy as np
 import pytest
-from autotest.conftest import requires_exe
+from modflow_devtools.markers import requires_exe
 
 from flopy.modflow import (
     Modflow,
@@ -36,9 +36,9 @@ def options_path(example_data_path):
     return example_data_path / "options"
 
 
-def test_create_uzf(tmpdir, mf2005_test_path, uzf_test_path):
+def test_create_uzf(function_tmpdir, mf2005_test_path, uzf_test_path):
     # copy the test files
-    ws = str(tmpdir)
+    ws = function_tmpdir
     for f in mf2005_test_path.glob("UZFtest2.*"):
         shutil.copy(f, ws)
 
@@ -65,7 +65,7 @@ def test_create_uzf(tmpdir, mf2005_test_path, uzf_test_path):
         f for i, f in enumerate(m.external_output) if not rm[i]
     ]
 
-    datpth = str(uzf_test_path)
+    datpth = uzf_test_path
     irnbndpth = os.path.join(datpth, "irunbnd.dat")
     irunbnd = np.loadtxt(irnbndpth)
 
@@ -167,7 +167,7 @@ def test_create_uzf(tmpdir, mf2005_test_path, uzf_test_path):
         version="mf2005",
         exe_name="mf2005",
         verbose=True,
-        model_ws=str(mf2005_test_path),
+        model_ws=mf2005_test_path,
         forgive=False,
     )
     # verify that all of the arrays in the created UZF package are the same
@@ -191,8 +191,8 @@ def test_create_uzf(tmpdir, mf2005_test_path, uzf_test_path):
 
     # load in the test problem
     m = Modflow("UZFtest2", model_ws=ws, verbose=True)
-    dis = ModflowDis.load(str(mf2005_test_path / "UZFtest2.dis"), m)
-    uzf = ModflowUzf1.load(str(mf2005_test_path / "UZFtest2.uzf"), m)
+    dis = ModflowDis.load(mf2005_test_path / "UZFtest2.dis", m)
+    uzf = ModflowUzf1.load(mf2005_test_path / "UZFtest2.uzf", m)
     assert np.sum(uzf.iuzfbnd.array) == 116
     assert np.array_equal(np.unique(uzf.irunbnd.array), np.arange(9))
     assert np.abs(np.sum(uzf.vks.array) / uzf.vks.cnstnt - 116.0) < 1e-5
@@ -227,7 +227,7 @@ def test_create_uzf(tmpdir, mf2005_test_path, uzf_test_path):
                     assert a == l2[i]
 
     # load uzf test problem for nwt model with 'nwt_11_fmt'-style options and 'open/close' array types
-    tpth = str(uzf_test_path / "load_uzf_for_nwt")
+    tpth = uzf_test_path / "load_uzf_for_nwt"
     [
         shutil.copy(os.path.join(tpth, f), os.path.join(ws, f))
         for f in os.listdir(tpth)
@@ -243,8 +243,8 @@ def test_create_uzf(tmpdir, mf2005_test_path, uzf_test_path):
 
 
 @requires_exe("mfnwt")
-def test_uzf_surfk(tmpdir, uzf_test_path):
-    ws = str(uzf_test_path)
+def test_uzf_surfk(function_tmpdir, uzf_test_path):
+    ws = uzf_test_path
     uzf_name = "UZFtest4.uzf"
     dis_name = "UZFtest2.dis"
     ml = Modflow(modelname="UZFtest4", version="mfnwt")
@@ -254,23 +254,25 @@ def test_uzf_surfk(tmpdir, uzf_test_path):
     assert uzf.options.seepsurfk
     assert abs(np.unique(uzf.surfk.array)[0] - 0.099) < 1e-06
 
-    ml.change_model_ws(str(tmpdir))
+    ml.change_model_ws(function_tmpdir)
     dis.write_file()
     uzf.write_file()
 
     ml2 = Modflow(version="mfnwt")
     dis2 = ModflowDis.load(
-        os.path.join(str(tmpdir), "UZFtest4.dis"), ml2, ext_unit_dict={}
+        os.path.join(function_tmpdir, "UZFtest4.dis"),
+        ml2,
+        ext_unit_dict={},
     )
     uzf2 = ModflowUzf1.load(
-        os.path.join(str(tmpdir), uzf_name), ml2, ext_unit_dict={}
+        os.path.join(function_tmpdir, uzf_name), ml2, ext_unit_dict={}
     )
 
     assert uzf2.options.seepsurfk
     assert np.allclose(uzf.surfk.array, uzf2.surfk.array)
 
 
-def test_read_write_nwt_options(tmpdir):
+def test_read_write_nwt_options(function_tmpdir):
     welstr = "OPTIONS\nSPECIFY 0.5 10\nTABFILES 2 28\nEND\n"
     welstr2 = "OPTIONS\nSPECIFY 0.3\nTABFILES 2 28\nEND\n"
     uzfstr = (
@@ -293,7 +295,7 @@ def test_read_write_nwt_options(tmpdir):
     assert repr(uzfopt) == uzfstr
     assert repr(sfropt) == sfrstr
 
-    ws = str(tmpdir)
+    ws = function_tmpdir
     welopt.write_options(os.path.join(ws, "welopt.txt"))
     welopt2.write_options(os.path.join(ws, "welopt2.txt"))
     uzfopt.write_options(os.path.join(ws, "uzfopt.txt"))
@@ -318,14 +320,14 @@ def test_read_write_nwt_options(tmpdir):
     assert repr(sfropt) == sfrstr
 
 
-def test_load_write_sfr_option_block(tmpdir, options_path):
-    data_path = str(options_path)
+def test_load_write_sfr_option_block(function_tmpdir, options_path):
+    data_path = options_path
     sfr_name = "sagehen_ob.sfr"
 
     ml = Modflow(modelname="optionblock", version="mfnwt", verbose=False)
 
     dis = ModflowDis.load(
-        os.path.join(str(data_path), "sagehen.dis"),
+        os.path.join(data_path, "sagehen.dis"),
         model=ml,
         ext_unit_dict={},
         check=False,
@@ -336,11 +338,14 @@ def test_load_write_sfr_option_block(tmpdir, options_path):
     )
 
     sfr_name2 = "sagehen_ob2.sfr"
-    sfr.write_file(filename=os.path.join(str(tmpdir), sfr_name2))
+    sfr.write_file(filename=os.path.join(function_tmpdir, sfr_name2))
     ml.remove_package("SFR")
 
     sfr2 = ModflowSfr2.load(
-        os.path.join(str(tmpdir), sfr_name2), ml, nper=2, ext_unit_dict={}
+        os.path.join(function_tmpdir, sfr_name2),
+        ml,
+        nper=2,
+        ext_unit_dict={},
     )
 
     assert sfr.options.reachinput == sfr2.options.reachinput
@@ -354,19 +359,22 @@ def test_load_write_sfr_option_block(tmpdir, options_path):
 
     sfr2.options.strhc1kh = False
     sfr2.options.strhc1kv = False
-    sfr2.write_file(os.path.join(str(tmpdir), sfr_name2))
+    sfr2.write_file(os.path.join(function_tmpdir, sfr_name2))
     ml.remove_package("SFR")
 
     sfr3 = ModflowSfr2.load(
-        os.path.join(str(tmpdir), sfr_name2), ml, nper=2, ext_unit_dict={}
+        os.path.join(function_tmpdir, sfr_name2),
+        ml,
+        nper=2,
+        ext_unit_dict={},
     )
 
     assert sfr3.options.strhc1kh == False
     assert sfr3.options.strhc1kv == False
 
 
-def test_load_write_sfr_option_line(tmpdir, options_path):
-    data_path = str(options_path)
+def test_load_write_sfr_option_line(function_tmpdir, options_path):
+    data_path = options_path
     sfr_name = "sagehen.sfr"
 
     # test with modflow-nwt
@@ -384,11 +392,14 @@ def test_load_write_sfr_option_line(tmpdir, options_path):
     )
 
     sfr_name2 = "sagehen2.sfr"
-    sfr.write_file(os.path.join(str(tmpdir), sfr_name2))
+    sfr.write_file(os.path.join(function_tmpdir, sfr_name2))
     ml.remove_package("SFR")
 
     sfr2 = ModflowSfr2.load(
-        os.path.join(str(tmpdir), sfr_name2), ml, nper=2, ext_unit_dict={}
+        os.path.join(function_tmpdir, sfr_name2),
+        ml,
+        nper=2,
+        ext_unit_dict={},
     )
 
     assert sfr2.reachinput
@@ -411,18 +422,21 @@ def test_load_write_sfr_option_line(tmpdir, options_path):
     )
 
     sfr_name2 = "sagehen2.sfr"
-    sfr.write_file(os.path.join(str(tmpdir), sfr_name2))
+    sfr.write_file(os.path.join(function_tmpdir, sfr_name2))
     ml.remove_package("SFR")
 
     sfr2 = ModflowSfr2.load(
-        os.path.join(str(tmpdir), sfr_name2), ml, nper=2, ext_unit_dict={}
+        os.path.join(function_tmpdir, sfr_name2),
+        ml,
+        nper=2,
+        ext_unit_dict={},
     )
 
     assert sfr2.reachinput
 
 
-def test_load_write_uzf_option_block(tmpdir, options_path):
-    data_path = str(options_path)
+def test_load_write_uzf_option_block(function_tmpdir, options_path):
+    data_path = options_path
     uzf_name = "sagehen_ob.uzf"
 
     ml = Modflow(modelname="optionblock", version="mfnwt", verbose=False)
@@ -439,11 +453,11 @@ def test_load_write_uzf_option_block(tmpdir, options_path):
     )
 
     uzf_name2 = "sagehen_ob2.uzf"
-    uzf.write_file(os.path.join(str(tmpdir), uzf_name2))
+    uzf.write_file(os.path.join(function_tmpdir, uzf_name2))
     ml.remove_package("UZF")
 
     uzf2 = ModflowUzf1.load(
-        os.path.join(str(tmpdir), uzf_name2),
+        os.path.join(function_tmpdir, uzf_name2),
         ml,
         ext_unit_dict=None,
         check=False,
@@ -456,11 +470,11 @@ def test_load_write_uzf_option_block(tmpdir, options_path):
 
     uzf2.smoothfact = 0.4
 
-    uzf2.write_file(os.path.join(str(tmpdir), uzf_name2))
+    uzf2.write_file(os.path.join(function_tmpdir, uzf_name2))
     ml.remove_package("UZF")
 
     uzf3 = ModflowUzf1.load(
-        os.path.join(str(tmpdir), uzf_name2), ml, check=False
+        os.path.join(function_tmpdir, uzf_name2), ml, check=False
     )
 
     assert uzf3.options.smoothfact == 0.4
@@ -468,8 +482,8 @@ def test_load_write_uzf_option_block(tmpdir, options_path):
     ml.remove_package("UZF")
 
 
-def test_load_write_uzf_option_line(tmpdir, options_path):
-    data_path = str(options_path)
+def test_load_write_uzf_option_line(function_tmpdir, options_path):
+    data_path = options_path
     uzf_name = "sagehen.uzf"
 
     # test with modflow-nwt
@@ -490,11 +504,11 @@ def test_load_write_uzf_option_line(tmpdir, options_path):
     assert uzf.options.savefinf
 
     uzf_name2 = "sagehen2.uzf"
-    uzf.write_file(os.path.join(str(tmpdir), uzf_name2))
+    uzf.write_file(os.path.join(function_tmpdir, uzf_name2))
     ml.remove_package("UZF")
 
     uzf2 = ModflowUzf1.load(
-        os.path.join(str(tmpdir), uzf_name2), ml, check=False
+        os.path.join(function_tmpdir, uzf_name2), ml, check=False
     )
 
     assert uzf2.nosurfleak
@@ -504,8 +518,8 @@ def test_load_write_uzf_option_line(tmpdir, options_path):
     assert not uzf2.options.block
 
 
-def test_load_write_wel_option_block(tmpdir, options_path):
-    ws = str(options_path)
+def test_load_write_wel_option_block(function_tmpdir, options_path):
+    ws = options_path
     wel_name = "sagehen_ob.wel"
     ml = Modflow(modelname="optionblock", version="mfnwt", verbose=False)
 
@@ -514,11 +528,11 @@ def test_load_write_wel_option_block(tmpdir, options_path):
     )
 
     wel_name2 = "sagehen_ob2.wel"
-    wel.write_file(os.path.join(str(tmpdir), wel_name2))
+    wel.write_file(os.path.join(function_tmpdir, wel_name2))
     ml.remove_package("WEL")
 
     wel2 = ModflowWel.load(
-        os.path.join(str(tmpdir), wel_name2),
+        os.path.join(function_tmpdir, wel_name2),
         ml,
         nper=2,
         ext_unit_dict={},
@@ -532,11 +546,11 @@ def test_load_write_wel_option_block(tmpdir, options_path):
     wel2.options.tabfiles = False
     wel2.phiramp = 0.4
 
-    wel2.write_file(os.path.join(str(tmpdir), wel_name2))
+    wel2.write_file(os.path.join(function_tmpdir, wel_name2))
     ml.remove_package("WEL")
 
     wel3 = ModflowWel.load(
-        os.path.join(str(tmpdir), wel_name2),
+        os.path.join(function_tmpdir, wel_name2),
         ml,
         nper=2,
         ext_unit_dict={},
@@ -548,8 +562,8 @@ def test_load_write_wel_option_block(tmpdir, options_path):
     assert wel3.options.noprint
 
 
-def test_load_write_wel_option_line(tmpdir, options_path):
-    ws = str(options_path)
+def test_load_write_wel_option_line(function_tmpdir, options_path):
+    ws = options_path
     wel_name = "sagehen.wel"
 
     # test with modflow-nwt
@@ -566,11 +580,11 @@ def test_load_write_wel_option_line(tmpdir, options_path):
 
     wel.iunitramp = 20
     wel_name2 = "sagehen2.wel"
-    wel.write_file(os.path.join(str(tmpdir), wel_name2))
+    wel.write_file(os.path.join(function_tmpdir, wel_name2))
     ml.remove_package("WEL")
 
     wel2 = ModflowWel.load(
-        os.path.join(str(tmpdir), wel_name2),
+        os.path.join(function_tmpdir, wel_name2),
         ml,
         nper=2,
         ext_unit_dict={},
@@ -584,12 +598,12 @@ def test_load_write_wel_option_line(tmpdir, options_path):
 
 
 @requires_exe("mfnwt")
-def test_uzf_negative_iuzfopt(tmpdir):
+def test_uzf_negative_iuzfopt(function_tmpdir):
     ml = Modflow(
         modelname="uzf_neg",
         version="mfnwt",
         exe_name="mfnwt",
-        model_ws=str(tmpdir),
+        model_ws=function_tmpdir,
     )
     dis = ModflowDis(
         ml,
@@ -629,16 +643,18 @@ def test_uzf_negative_iuzfopt(tmpdir):
 
     ml.write_input()
     success, buff = ml.run_model()
-    if not success:
-        raise AssertionError("UZF model with -1 iuzfopt failed to run")
+    assert success, "UZF model with -1 iuzfopt failed to run"
 
-    ml2 = Modflow.load("uzf_neg.nam", version="mfnwt", model_ws=str(tmpdir))
+    ml2 = Modflow.load(
+        "uzf_neg.nam", version="mfnwt", model_ws=function_tmpdir
+    )
 
     pet = ml2.uzf.pet.array
     extpd = ml2.uzf.pet.array
 
-    if not np.max(pet) == np.min(pet) and np.max(pet) != 0.1:
-        raise AssertionError("Read error for iuzfopt less than 0")
-
-    if not np.max(extpd) == np.min(extpd) and np.max(extpd) != 0.2:
-        raise AssertionError("Read error for iuzfopt less than 0")
+    assert (
+        np.max(pet) == np.min(pet) and np.max(pet) != 0.1
+    ), "Read error for iuzfopt less than 0"
+    assert (
+        np.max(extpd) == np.min(extpd) and np.max(extpd) != 0.2
+    ), "Read error for iuzfopt less than 0"

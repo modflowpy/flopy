@@ -5,20 +5,31 @@
 # Required
 version: 2
 
+# Set the version of Python and other tools you might need
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3.11"
+  # todo: uncomment below if notebooks are to be executed in RTD build
+  # instead of in CI as currently, requires runtime reduction <15 mins
+  # jobs:
+  #   post_create_environment:
+  #     # install MODFLOW6 and related executables (notebooks need them)
+  #     - get-modflow :python
+  #     # swap default vtk for vtk-osmesa (avoid PyVista openGL errors)
+  #     # https://github.com/pyvista/pyvista/blob/main/.github/workflows/vtk-pre-test.yml#L53
+  #     - pip uninstall -y vtk
+  #     - pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
+
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
   configuration: .docs/conf.py
 
-# Build documentation with MkDocs
-#mkdocs:
-#  configuration: mkdocs.yml
-
-# Optionally build your docs in additional formats such as PDF and ePub
+# Build docs in additional formats such as PDF and ePub
 formats: all
 
-# Optionally set the version of Python and requirements required to build your docs
+# Set the Python version and requirements
 python:
-  version: 3.8
   install:
     - method: pip
       path: .

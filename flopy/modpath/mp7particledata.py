@@ -6,6 +6,7 @@ mp7particledata module. Contains the ParticleData, CellDataType,
 """
 
 import numpy as np
+from numpy.lib.recfunctions import unstructured_to_structured
 
 from ..utils.recarray_utils import create_empty_recarray
 
@@ -125,7 +126,7 @@ class ParticleData:
                     alllen3 = all(len(el) == 3 for el in partlocs)
                     if not alllen3:
                         raise ValueError(
-                            "{}: all partlocs entries  must have 3 items for "
+                            "{}: all partlocs entries must have 3 items for "
                             "structured particle data".format(self.name)
                         )
                 else:
@@ -164,14 +165,16 @@ class ParticleData:
 
             # convert partlocs composed of a lists/tuples of lists/tuples
             # to a numpy array
-            partlocs = np.array(partlocs, dtype=dtype)
+            partlocs = unstructured_to_structured(
+                np.array(partlocs), dtype=dtype
+            )
         elif isinstance(partlocs, np.ndarray):
             dtypein = partlocs.dtype
             if dtypein != dtype:
-                partlocs = np.array(partlocs, dtype=dtype)
+                partlocs = unstructured_to_structured(partlocs, dtype=dtype)
         else:
             raise ValueError(
-                f"{self.name}: partlocs must be a list or tuple with lists or tuples"
+                f"{self.name}: partlocs must be a list or tuple with lists or tuples, or an ndarray"
             )
 
         # localx
