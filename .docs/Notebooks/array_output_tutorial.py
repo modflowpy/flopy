@@ -25,9 +25,9 @@
 # + [markdown] pycharm={"name": "#%% md\n"}
 # load and run the Freyberg model
 
-import os
 
 # + pycharm={"name": "#%%\n"}
+import os
 import sys
 from tempfile import TemporaryDirectory
 
