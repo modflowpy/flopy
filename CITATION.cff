@@ -3,7 +3,7 @@ message: If you use this software, please cite both the article from preferred-c
   and the software itself.
 type: software
 title: FloPy
-version: 3.4.0+
+version: 3.dev4
 date-released: '2023-06-29'
 doi: 10.5066/F7BK19FH
 abstract: A Python package to create, run, and post-process MODFLOW-based models.

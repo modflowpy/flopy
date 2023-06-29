@@ -11,6 +11,7 @@ from typing import NamedTuple, Optional
 
 import yaml
 from filelock import FileLock
+from packaging.version import Version, parse
 
 _project_name = "flopy"
 _project_root_path = Path(__file__).parent.parent
@@ -59,42 +60,8 @@ def split_nonnumeric(s):
     return [s[: match.start()], s[match.start() :]] if match else s
 
 
-class Version(NamedTuple):
-    """Semantic version number, optionally with a short label.
-    The label may contain numbers but must not begin with a number."""
-
-    major: int = 0
-    minor: int = 0
-    patch: int = 0
-    label: Optional[str] = None
-
-    def __repr__(self):
-        s = f"{self.major}.{self.minor}.{self.patch}"
-        if self.label is not None and self.label != "":
-            s += self.label
-        return s
-
-    @classmethod
-    def from_string(cls, version: str) -> "Version":
-        t = version.split(".")
-        assert len(t) > 2
-        vmajor = int(t[0])
-        vminor = int(t[1])
-        tt = split_nonnumeric(t[2])
-        vpatch = int(tt[0])
-        vlabel = tt[1] if len(tt) > 1 else None
-        return cls(major=vmajor, minor=vminor, patch=vpatch, label=vlabel)
-
-    @classmethod
-    def from_file(cls, path: PathLike) -> "Version":
-        path = Path(path).expanduser().absolute()
-        lines = [line.rstrip("\n") for line in open(Path(path), "r")]
-        assert len(lines) == 1
-        return Version.from_string(lines[0])
-
-
-_initial_version = Version(0, 0, 1)
-_current_version = Version.from_file(_version_txt_path)
+_initial_version = Version("0.0.1")
+_current_version = Version(_version_txt_path.read_text().strip())
 
 
 def get_disclaimer(approved: bool = False):
@@ -113,21 +80,7 @@ def update_version_py(timestamp: datetime, version: Version):
             f"# {_project_name} version file automatically created using "
             f"{Path(__file__).name} on {timestamp:%B %d, %Y %H:%M:%S}\n\n"
         )
-        f.write(
-            "# created on..." + f"{timestamp.strftime('%B %d, %Y %H:%M:%S')}\n"
-        )
-        f.write("\n")
-        f.write(f"major = {version.major}\n")
-        f.write(f"minor = {version.minor}\n")
-        f.write(f"micro = {version.patch}\n")
-        f.write(
-            "label = "
-            + (("'" + version.label + "'") if version.label else "''")
-            + "\n"
-        )
-        f.write("__version__ = '{:d}.{:d}.{:d}'.format(major, minor, micro)\n")
-        f.write("if label:\n")
-        f.write("\t__version__ += '{}{}'.format(__version__, label)")
+        f.write(f"__version__ = '{version}'\n")
         f.close()
     print(f"Updated {_version_py_path} to version {version}")
 
@@ -317,11 +270,11 @@ def update_version(
     lock_path = Path(_version_txt_path.name + ".lock")
     try:
         lock = FileLock(lock_path)
-        previous = Version.from_file(_version_txt_path)
+        previous = Version(_version_txt_path.read_text().strip())
         version = (
             version
             if version
-            else Version(previous.major, previous.minor, previous.patch)
+            else Version(previous.major, previous.minor, previous.micro)
         )
 
         with lock:
@@ -375,11 +328,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.get:
-        print(Version.from_file(_project_root_path / "version.txt"))
+        print(
+            Version((_project_root_path / "version.txt").read_text().strip())
+        )
     else:
         update_version(
             timestamp=datetime.now(),
-            version=Version.from_string(args.version)
+            version=Version(args.version)
             if args.version
             else _current_version,
             approved=args.approve,

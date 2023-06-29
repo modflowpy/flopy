@@ -1,5 +1,6 @@
 import os
 import re
+from packaging.version import Version
 from pathlib import Path
 
 import numpy as np
@@ -9,11 +10,8 @@ import flopy
 
 def test_import_and_version_string():
     import flopy
-
-    # matches any 1-3 component, dot-separated version string
-    # https://stackoverflow.com/a/82205/6514033
-    pattern = r"^(\d+\.)?(\d+\.)?(\*|\d+)$"
-    assert re.match(pattern, flopy.__version__)
+    # an error is raised if the version string can't be parsed
+    Version(flopy.__version__)
 
 
 def test_modflow():
