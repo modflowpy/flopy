@@ -6,12 +6,12 @@ import textwrap
 from datetime import datetime
 from enum import Enum
 from os import PathLike, environ
-from packaging.version import Version, parse
 from pathlib import Path
 from typing import NamedTuple, Optional
 
 import yaml
 from filelock import FileLock
+from packaging.version import Version, parse
 
 _project_name = "flopy"
 _project_root_path = Path(__file__).parent.parent
@@ -328,7 +328,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.get:
-        print(Version((_project_root_path / "version.txt").read_text().strip()))
+        print(
+            Version((_project_root_path / "version.txt").read_text().strip())
+        )
     else:
         update_version(
             timestamp=datetime.now(),
