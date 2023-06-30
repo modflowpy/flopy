@@ -4,14 +4,12 @@ on:
     branches:
       - master
       - develop
-      - flopy_ex_fix
       - ci-diagnose*
       - notebooks
   pull_request:
     branches:
       - master
       - develop
-      - flopy_ex_fix
 jobs:
   build:
     name: Build

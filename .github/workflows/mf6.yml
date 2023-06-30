@@ -7,14 +7,12 @@ on:
     branches:
       - master
       - develop
-      - flopy_ex_fix
       - release*
       - ci-diagnose*
   pull_request:
     branches:
       - master
       - develop
-      - flopy_ex_fix
 
 jobs:
 
