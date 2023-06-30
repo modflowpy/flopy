@@ -1,6 +1,5 @@
 import re
 from functools import reduce
-from os import linesep
 from pprint import pprint
 
 import pytest
@@ -35,7 +34,6 @@ def get_example_scripts(exclude=None):
 @pytest.mark.parametrize("script", get_example_scripts())
 def test_scripts(script):
     stdout, stderr, returncode = run_py_script(script, verbose=True)
-
     if returncode != 0:
         if "Missing optional dependency" in stderr:
             pkg = re.findall("Missing optional dependency '(.*)'", stderr)[0]
@@ -44,13 +42,3 @@ def test_scripts(script):
     assert returncode == 0
     pprint(stdout)
     pprint(stderr)
-    # allowed_patterns = ["findfont", "warning", "loose", "match_original"]
-    # assert (
-    #     not stderr
-    #     or
-    #     # trap warnings & non-fatal errors
-    #     all(
-    #         (not line or any(p in line.lower() for p in allowed_patterns))
-    #         for line in stderr.split(linesep)
-    #     )
-    # )
