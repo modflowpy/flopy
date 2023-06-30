@@ -80,7 +80,7 @@ def update_version_py(timestamp: datetime, version: Version):
             f"# {_project_name} version file automatically created using "
             f"{Path(__file__).name} on {timestamp:%B %d, %Y %H:%M:%S}\n\n"
         )
-        f.write(f"__version__ = '{version}'\n")
+        f.write(f'__version__ = "{version}"\n')
         f.close()
     print(f"Updated {_version_py_path} to version {version}")
 
