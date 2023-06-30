@@ -3664,11 +3664,11 @@ def test006_2models_different_dis(function_tmpdir, example_data_path):
     c2drecarray = testutils.read_cell2d(os.path.join(pth, "cell2d.txt"))
     disv_package = ModflowGwfdisv(
         model_2,
-        ncpl=5240,
-        nlay=2,
-        nvert=2778,
+        ncpl=121,
+        nlay=1,
+        nvert=148,
         top=0.0,
-        botm=[-20.0, -40.0],
+        botm=-40.0,
         idomain=1,
         vertices=vertices,
         cell2d=c2drecarray,
@@ -3717,8 +3717,9 @@ def test006_2models_different_dis(function_tmpdir, example_data_path):
         maxbound=30,
         stress_period_data=stress_period_data,
     )
-    exgrecarray = testutils.read_exchangedata(os.path.join(pth, "exg.txt"),
-                                              3, 2)
+    exgrecarray = testutils.read_exchangedata(
+        os.path.join(pth, "exg.txt"), 3, 2
+    )
 
     # build obs dictionary
     gwf_obs = {
@@ -3743,13 +3744,14 @@ def test006_2models_different_dis(function_tmpdir, example_data_path):
     )
 
     gnc_path = os.path.join("gnc", "test006_2models_gnc.gnc")
-    gncrecarray = testutils.read_gncrecarray(os.path.join(pth, "gnc.txt"),
-                                             3, 2)
+    gncrecarray = testutils.read_gncrecarray(
+        os.path.join(pth, "gnc.txt"), 3, 2
+    )
     gnc_package = exg_package.gnc.initialize(
         filename=gnc_path,
         print_input=True,
         print_flows=True,
-        numgnc=36,
+        numgnc=9,
         numalphaj=1,
         gncdata=gncrecarray,
     )
@@ -3760,7 +3762,8 @@ def test006_2models_different_dis(function_tmpdir, example_data_path):
     # write simulation to new location
     sim.write_simulation()
     # run simulation
-    sim.run_simulation()
+    success, buff = sim.run_simulation()
+    assert success
 
     sim2 = MFSimulation.load(sim_ws=sim.sim_path)
     exh = sim2.get_package("gwfgwf")
