@@ -2071,7 +2071,7 @@ class MFFileAccessList(MFFileAccess):
             self._last_line_info.append([])
         if data_item.is_cellid or (
             data_item.possible_cellid
-            and storage._validate_cellid(arr_line, data_index)
+            and storage._validate_cellid(arr_line, data_index, data_item)
         ):
             if self._data_dimensions is None:
                 comment = (
@@ -2098,14 +2098,10 @@ class MFFileAccessList(MFFileAccess):
                 )
             # in case of multiple model grids, determine which one to use
             model_num = DatumUtil.cellid_model_num(
-                data_item, struct.model_data
+                data_item.name,
+                struct.model_data,
+                self._data_dimensions.package_dim.model_dim,
             )
-            if (
-                model_num is not None
-                and len(self._data_dimensions.package_dim.model_dim)
-                <= model_num
-            ):
-                model_num = None
             model_grid = self._data_dimensions.get_model_grid(
                 model_num=model_num
             )

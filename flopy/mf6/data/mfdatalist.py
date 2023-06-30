@@ -7,7 +7,7 @@ import numpy as np
 
 from ...datbase import DataListInterface, DataType
 from ...mbase import ModelInterface
-from ...utils import datautil
+from ...utils.datautil import DatumUtil
 from ..data import mfdata, mfstructure
 from ..mfbase import ExtFileAction, MFDataException, VerbosityLevel
 from ..utils.mfenums import DiscretizationType
@@ -1043,14 +1043,21 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                         data_val = data_line[index]
                         if data_item.is_cellid or (
                             data_item.possible_cellid
-                            and storage._validate_cellid([data_val], 0)
+                            and storage._validate_cellid(
+                                [data_val], 0, data_item
+                            )
                         ):
                             if (
                                 data_item.shape is not None
                                 and len(data_item.shape) > 0
                                 and data_item.shape[0] == "ncelldim"
                             ):
-                                model_grid = data_dim.get_model_grid()
+                                model_num = DatumUtil.cellid_model_num(
+                                    data_item,
+                                    self.structure.model_data,
+                                    self._data_dimensions.package_dim.model_dim,
+                                )
+                                model_grid = data_dim.get_model_grid(model_num)
                                 cellid_size = (
                                     model_grid.get_num_spatial_coordinates()
                                 )
@@ -1058,9 +1065,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                     resolved_shape, cellid_size
                                 )
                         data_size = 1
-                        if len(
-                            resolved_shape
-                        ) == 1 and datautil.DatumUtil.is_int(
+                        if len(resolved_shape) == 1 and DatumUtil.is_int(
                             resolved_shape[0]
                         ):
                             data_size = int(resolved_shape[0])
@@ -1722,7 +1727,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                 or replace_existing_external
             ):
                 fname, ext = os.path.splitext(external_file_path)
-                if datautil.DatumUtil.is_int(sp):
+                if DatumUtil.is_int(sp):
                     full_name = f"{fname}_{sp + 1}{ext}"
                 else:
                     full_name = f"{fname}_{sp}{ext}"

@@ -187,13 +187,10 @@ def to_string(
             and data_dim.get_model_dim(None).model_name is not None
         ):
             model_num = DatumUtil.cellid_model_num(
-                data_item, data_dim.structure.model_data
+                data_item.name,
+                data_dim.structure.model_data,
+                data_dim.package_dim.model_dim,
             )
-            if (
-                model_num is not None
-                and len(data_dim.package_dim.model_dim) <= model_num
-            ):
-                model_num = None
             model_grid = data_dim.get_model_grid(model_num=model_num)
             cellid_size = model_grid.get_num_spatial_coordinates()
             if len(val) != cellid_size:
