@@ -22,7 +22,7 @@
 # The `Vtk()` class in FloPy allows users to export Structured, Vertex, and Unstructured Grid based models to Visualization ToolKit files for display. This notebook demonstrates how to use FloPy to export to vtk (.vtu) files. This example will cover:
 #
 #    - basic exporting of information for a model, individual package, or array to `Vtk()`
-#    - example usage of the `Vtk()` class object to output data 
+#    - example usage of the `Vtk()` class object to output data
 #    - exporting heads and model output data
 #    - exporting modpath pathlines to `Vtk()`
 
@@ -33,12 +33,12 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import numpy as np
+
 import flopy
 from flopy.export import vtk
 
 sys.path.append(os.path.join("..", "common"))
 import notebook_utils
-
 
 print(sys.version)
 print("flopy version: {}".format(flopy.__version__))
@@ -69,7 +69,7 @@ workspace = Path(tempdir.name)
 #    - `xml`: True will write an xml base vtk file, default is False
 #    - `masked_values`: list or tuple of values to mask (set to nan) when writing a array
 #    - `vertical_exageration`: floating point value that can be used to scale the vertical exageration of the vtk points. Default is 1.
-#    
+#
 # Tranient type array exports ("stress_period_data"; ex. recharge data, well flux, etc ...) have additional optional keyword arguments:
 #    - `pvd`: True will write a paraview data file with simulation time for animations. Default is False
 #    - `kper`: a list, tuple, or integer value of specific stess periods to output
@@ -143,7 +143,7 @@ ml.upw.export(upw_output_dir, fmt="vtk", point_scalars=True, xml=True)
 # ### Model export to .vtu files
 #
 # Model export has the following optional keyword arguments:
-#    
+#
 #    - `package_names`: a list of package names to export, default is None and will export all packages in the model.
 #    - `smooth`: True creates a smooth surface, default is False
 #    - `point_scalars`: True outputs point scalar values as well as cell values, default is False.
@@ -165,11 +165,11 @@ ml.export(model_output_dir, fmt="vtk")
 # To export custom arrays, or choose a custom combination of model inputs to view, the user first needs to instantiate a new `Vtk()` object. The `Vtk()` object has a single required parameter and a number of optional parameters that the user can take advantage of. These parameters are as follows:
 #
 #    - `model`: any flopy model object can be supplied to create the vtk geometry. Either the model (recommended!) or modelgrid parameter must be supplied to the Vtk() object.
-#    - `modelgrid`: any flopy modelgrid object (StructuredGrid, VertexGrid, UnstructuredGrid) can be supplied, in leiu of a model object, to create the vtk geometery. 
+#    - `modelgrid`: any flopy modelgrid object (StructuredGrid, VertexGrid, UnstructuredGrid) can be supplied, in leiu of a model object, to create the vtk geometery.
 #    - `vertical_exageration`: floating point value that can be used to scale the vertical exageration of the vtk points. Default is 1.
 #    - `binary`: boolean flag to switch between binary and ASCII vtk files. Default is True.
 #    - `xml`: boolean flag to write xml based vtk files. Default is False
-#    - `pvd`: boolean flag to write a paraview data file for transient series of vtu files. This file relates model time to vtu file for animations. Default is False. If set to True Vtk() will automatically write xml based vtu files. 
+#    - `pvd`: boolean flag to write a paraview data file for transient series of vtu files. This file relates model time to vtu file for animations. Default is False. If set to True Vtk() will automatically write xml based vtu files.
 #    - `shared_points`: boolean flag to write shared vertices within the vtk file. Default is False.
 #    - `smooth`: boolean flag to interpolate vertex elevations using IDW based on shared cell elevations. Default is False.
 #    - `point_scalars`: boolean flag to write interpolated data at each point.
@@ -185,7 +185,7 @@ vtkobj
 # `add_array()` has a few parameters for the user:
 #    - `array` : numpy array that has a size equal to the number of cells in the model (modelgrid.nnodes).
 #    - `name` : array name (string)
-#    - `masked_values` : list of array values to mask/set to NaN 
+#    - `masked_values` : list of array values to mask/set to NaN
 
 # +
 # Create a vtk object
@@ -347,7 +347,7 @@ vtkobj.write(workspace / "cbc_output_test_parameters" / "freyberg_cbc.vtu")
 #
 # The `add_vector()` method accepts a numpy array of vector data. The array size must be 3 * the number of model cells (3 * modelgrid.nnodes). Parameters include:
 #    - `vector`: numpy array of size 3 * nnodes
-#    - `name`: name of the vector 
+#    - `name`: name of the vector
 #    - `masked_values`: list of values to set equal to NaN
 #
 

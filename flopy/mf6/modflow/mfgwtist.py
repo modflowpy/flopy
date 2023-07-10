@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 15, 2022 12:49:36 UTC
+# FILE created on June 29, 2023 14:20:38 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -51,24 +51,25 @@ class ModflowGwtist(mfpackage.MFPackage):
           concentrations will be written to this file at the same interval as
           mobile domain concentrations are saved, as specified in the GWT Model
           Output Control file.
-    fileout : boolean
-        * fileout (boolean) keyword to specify that an output filename is
-          expected next.
     cimprintrecord : [columns, width, digits, format]
         * columns (integer) number of columns for writing data.
         * width (integer) width for writing each number.
         * digits (integer) number of digits to use for writing a number.
         * format (string) write format can be EXPONENTIAL, FIXED, GENERAL, or
           SCIENTIFIC.
-    cim : [double]
-        * cim (double) initial concentration of the immobile domain in mass per
-          length cubed. If CIM is not specified, then it is assumed to be zero.
-    thetaim : [double]
-        * thetaim (double) porosity of the immobile domain specified as the
-          volume of immobile pore space per total volume (dimensionless).
+    porosity : [double]
+        * porosity (double) porosity of the immobile domain specified as the
+          immobile domain pore volume per immobile domain volume.
+    volfrac : [double]
+        * volfrac (double) fraction of the cell volume that consists of this
+          immobile domain. The sum of all immobile domain volume fractions must
+          be less than one.
     zetaim : [double]
         * zetaim (double) mass transfer rate coefficient between the mobile and
           immobile domains, in dimensions of per time.
+    cim : [double]
+        * cim (double) initial concentration of the immobile domain in mass per
+          length cubed. If CIM is not specified, then it is assumed to be zero.
     decay : [double]
         * decay (double) is the rate coefficient for first or zero-order decay
           for the aqueous phase of the immobile domain. A negative value
@@ -89,15 +90,19 @@ class ModflowGwtist(mfpackage.MFPackage):
           and either first- or zero-order decay are specified in the options
           block.
     bulk_density : [double]
-        * bulk_density (double) is the bulk density of the aquifer in mass per
-          length cubed. bulk_density will have no effect on simulation results
-          unless the SORPTION keyword is specified in the options block.
+        * bulk_density (double) is the bulk density of this immobile domain in
+          mass per length cubed. Bulk density is defined as the immobile domain
+          solid mass per volume of the immobile domain. bulk_density is not
+          required unless the SORPTION keyword is specified in the options
+          block. If the SORPTION keyword is not specified in the options block,
+          bulk_density will have no effect on simulation results.
     distcoef : [double]
         * distcoef (double) is the distribution coefficient for the
           equilibrium-controlled linear sorption isotherm in dimensions of
-          length cubed per mass. distcoef will have no effect on simulation
-          results unless the SORPTION keyword is specified in the options
-          block.
+          length cubed per mass. distcoef is not required unless the SORPTION
+          keyword is specified in the options block. If the SORPTION keyword is
+          not specified in the options block, distcoef will have no effect on
+          simulation results.
     filename : String
         File name for this package.
     pname : String
@@ -121,9 +126,10 @@ class ModflowGwtist(mfpackage.MFPackage):
     cimprintrecord = ListTemplateGenerator(
         ("gwt6", "ist", "options", "cimprintrecord")
     )
-    cim = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "cim"))
-    thetaim = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "thetaim"))
+    porosity = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "porosity"))
+    volfrac = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "volfrac"))
     zetaim = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "zetaim"))
+    cim = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "cim"))
     decay = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "decay"))
     decay_sorbed = ArrayTemplateGenerator(
         ("gwt6", "ist", "griddata", "decay_sorbed")
@@ -259,16 +265,6 @@ class ModflowGwtist(mfpackage.MFPackage):
         ],
         [
             "block options",
-            "name fileout",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
             "name cimfile",
             "type string",
             "preserve_case true",
@@ -348,16 +344,15 @@ class ModflowGwtist(mfpackage.MFPackage):
         ],
         [
             "block griddata",
-            "name cim",
+            "name porosity",
             "type double precision",
             "shape (nodes)",
             "reader readarray",
-            "optional true",
             "layered true",
         ],
         [
             "block griddata",
-            "name thetaim",
+            "name volfrac",
             "type double precision",
             "shape (nodes)",
             "reader readarray",
@@ -369,6 +364,15 @@ class ModflowGwtist(mfpackage.MFPackage):
             "type double precision",
             "shape (nodes)",
             "reader readarray",
+            "layered true",
+        ],
+        [
+            "block griddata",
+            "name cim",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "optional true",
             "layered true",
         ],
         [
@@ -395,6 +399,7 @@ class ModflowGwtist(mfpackage.MFPackage):
             "type double precision",
             "shape (nodes)",
             "reader readarray",
+            "optional true",
             "layered true",
         ],
         [
@@ -403,6 +408,7 @@ class ModflowGwtist(mfpackage.MFPackage):
             "type double precision",
             "shape (nodes)",
             "reader readarray",
+            "optional true",
             "layered true",
         ],
     ]
@@ -418,11 +424,11 @@ class ModflowGwtist(mfpackage.MFPackage):
         first_order_decay=None,
         zero_order_decay=None,
         cim_filerecord=None,
-        fileout=None,
         cimprintrecord=None,
-        cim=None,
-        thetaim=None,
+        porosity=None,
+        volfrac=None,
         zetaim=None,
+        cim=None,
         decay=None,
         decay_sorbed=None,
         bulk_density=None,
@@ -453,13 +459,13 @@ class ModflowGwtist(mfpackage.MFPackage):
         self.cim_filerecord = self.build_mfdata(
             "cim_filerecord", cim_filerecord
         )
-        self.fileout = self.build_mfdata("fileout", fileout)
         self.cimprintrecord = self.build_mfdata(
             "cimprintrecord", cimprintrecord
         )
-        self.cim = self.build_mfdata("cim", cim)
-        self.thetaim = self.build_mfdata("thetaim", thetaim)
+        self.porosity = self.build_mfdata("porosity", porosity)
+        self.volfrac = self.build_mfdata("volfrac", volfrac)
         self.zetaim = self.build_mfdata("zetaim", zetaim)
+        self.cim = self.build_mfdata("cim", cim)
         self.decay = self.build_mfdata("decay", decay)
         self.decay_sorbed = self.build_mfdata("decay_sorbed", decay_sorbed)
         self.bulk_density = self.build_mfdata("bulk_density", bulk_density)

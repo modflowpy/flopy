@@ -79,6 +79,8 @@ from flopy.utils import (
     ZoneBudget6,
 )
 from flopy.utils.observationfile import CsvFile
+from flopy.utils.triangle import Triangle
+from flopy.utils.voronoi import VoronoiGrid
 
 pytestmark = pytest.mark.mf6
 
@@ -498,6 +500,194 @@ def test_subdir(function_tmpdir):
     assert (
         gwf_r.dis.delc.get_file_entry() == gwf_r2.dis.delc.get_file_entry()
     ), "Something wrong with model external paths"
+
+
+@requires_exe("mf6")
+def test_binary_write(function_tmpdir):
+    nlay, nrow, ncol = 2, 1, 10
+    shape2d = (nrow, ncol)
+    shape3d = (nlay, nrow, ncol)
+
+    # create binary data structured
+    top_data = {
+        "filename": "top.bin",
+        "binary": True,
+        "iprn": 0,
+        "data": 10.0,
+    }
+    botm_data = {
+        "filename": "botm.bin",
+        "binary": True,
+        "iprn": 0,
+        "data": np.array(
+            [
+                np.full(shape2d, 4.0, dtype=float),
+                np.full(shape2d, 0.0, dtype=float),
+            ]
+        ),
+    }
+    strt_data = {
+        "filename": "strt.bin",
+        "binary": True,
+        "iprn": 0,
+        "data": np.full(shape3d, 10.0, dtype=float),
+    }
+    rch_data = {
+        0: {
+            "filename": "recharge.bin",
+            "binary": True,
+            "iprn": 0,
+            "data": 0.000001,
+        },
+    }
+    chd_data = [
+        (1, 0, 0, 10.0, 1.0, 100.0),
+        (1, 0, ncol - 1, 5.0, 0.0, 100.0),
+    ]
+    chd_data = {
+        0: {
+            "filename": "chd.bin",
+            "binary": True,
+            "iprn": 0,
+            "data": chd_data,
+        },
+    }
+
+    sim = MFSimulation(sim_ws=str(function_tmpdir))
+    ModflowTdis(sim)
+    ModflowIms(sim, complexity="simple")
+    gwf = ModflowGwf(sim, print_input=True)
+    ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=1.0,
+        delc=1.0,
+        top=top_data,
+        botm=botm_data,
+    )
+    ModflowGwfnpf(
+        gwf,
+        icelltype=1,
+    )
+    ModflowGwfic(
+        gwf,
+        strt=10.0,
+    )
+    ModflowGwfchd(
+        gwf,
+        auxiliary=["conc", "something"],
+        stress_period_data=chd_data,
+    )
+    ModflowGwfrcha(gwf, recharge=rch_data)
+
+    sim.write_simulation()
+    success, buff = sim.run_simulation()
+    assert success
+
+
+@requires_exe("mf6")
+@pytest.mark.skip(reason="todo:: after flopy binary fix.")
+def test_vor_binary_write(function_tmpdir):
+    # build voronoi grid
+    boundary = [(0.0, 0.0), (0.0, 1.0), (10.0, 1.0), (10.0, 0.0)]
+    triangle_ws = function_tmpdir / "triangle"
+    triangle_ws.mkdir(parents=True, exist_ok=True)
+
+    tri = Triangle(
+        angle=30,
+        maximum_area=1.0,
+        model_ws=triangle_ws,
+    )
+    tri.add_polygon(boundary)
+    tri.build(verbose=False)
+    vor = VoronoiGrid(tri)
+
+    # problem dimensions
+    nlay = 2
+    shape3d = (nlay, vor.ncpl)
+
+    # build binary data
+    top_data = {
+        "filename": "top.bin",
+        "binary": True,
+        "iprn": 0,
+        "data": 10.0,
+    }
+    botm_data = {
+        "filename": "botm.bin",
+        "binary": True,
+        "iprn": 0,
+        "data": np.array(
+            [
+                np.full(vor.ncpl, 4.0, dtype=float),
+                np.full(vor.ncpl, 0.0, dtype=float),
+            ]
+        ),
+    }
+    strt_data = {
+        "filename": "strt.bin",
+        "binary": True,
+        "iprn": 0,
+        "data": np.full(shape3d, 10.0, dtype=float),
+    }
+    rch_data = {
+        0: {
+            "filename": "recharge.bin",
+            "binary": True,
+            "iprn": 0,
+            "data": np.full(vor.ncpl, 0.000001, dtype=float),  # 0.000001,
+        },
+    }
+    chd_data = [
+        (1, 0, 10.0, 1.0, 100.0),
+        (1, 1, 10.0, 1.0, 100.0),
+        (1, 2, 5.0, 0.0, 100.0),
+        (1, 3, 5.0, 0.0, 100.0),
+    ]
+    chd_data = {
+        0: {
+            "filename": "chd.bin",
+            "binary": True,
+            "data": chd_data,
+        },
+    }
+
+    # build model
+    sim = MFSimulation(sim_ws=str(function_tmpdir))
+    ModflowTdis(sim)
+    ModflowIms(sim, complexity="simple")
+    gwf = ModflowGwf(sim, print_input=True)
+    flopy.mf6.ModflowGwfdisv(
+        gwf,
+        nlay=nlay,
+        ncpl=vor.ncpl,
+        nvert=vor.nverts,
+        vertices=vor.get_disv_gridprops()["vertices"],
+        cell2d=vor.get_disv_gridprops()["cell2d"],
+        top=top_data,
+        botm=botm_data,
+        xorigin=0.0,
+        yorigin=0.0,
+    )
+    ModflowGwfnpf(
+        gwf,
+        icelltype=1,
+    )
+    ModflowGwfic(
+        gwf,
+        strt=strt_data,
+    )
+    ModflowGwfrcha(gwf, recharge=rch_data)
+    ModflowGwfchd(
+        gwf,
+        auxiliary=["conc", "something"],
+        stress_period_data=chd_data,
+    )
+    sim.write_simulation()
+    success, buff = sim.run_simulation()
+    assert success
 
 
 def test_binary_read(function_tmpdir):

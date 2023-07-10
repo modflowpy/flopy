@@ -21,14 +21,15 @@
 #
 # This notebook demonstrates how to create a simple forward and backward MODPATH 7 simulation using the `.create_mp7()` method. The notebooks also shows how to create subsets of endpoint output and plot MODPATH results on ModelMap objects.
 
+import os
+
 # +
 import sys
-import os
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
 # run installed version of flopy or add local path
 try:
@@ -287,7 +288,7 @@ for k in range(nlay):
     mm.plot_pathline(pr, layer=k, colors=colors[k], lw=0.75)
     idax += 1
 
-plt.tight_layout();
+plt.tight_layout()
 # -
 
 # Forward tracking endpoints captured by the well and river
@@ -308,7 +309,7 @@ ax.set_aspect("equal")
 ax.set_title("River recharge area")
 mm = flopy.plot.PlotMapView(model=gwf, ax=ax)
 mm.plot_grid(lw=0.5)
-mm.plot_endpoint(riv_epd, direction="starting", colorbar=True, shrink=0.5);
+mm.plot_endpoint(riv_epd, direction="starting", colorbar=True, shrink=0.5)
 # -
 
 # ##### Backward tracking
@@ -361,4 +362,4 @@ mm.plot_pathline(
     label="captured by rivers",
 )
 
-plt.tight_layout();
+plt.tight_layout()

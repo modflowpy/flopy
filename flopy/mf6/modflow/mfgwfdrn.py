@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 15, 2022 12:49:36 UTC
+# FILE created on June 29, 2023 14:20:38 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -44,7 +44,8 @@ class ModflowGwfdrn(mfpackage.MFPackage):
           the elevation when the conductance (COND) scaling factor is 1. A
           linear- or cubic-scaling is used to scale the drain conductance
           (COND) when the Standard or Newton-Raphson Formulation is used,
-          respectively.
+          respectively. This discharge scaling option is described in more
+          detail in Chapter 3 of the Supplemental Technical Information.
     boundnames : boolean
         * boundnames (boolean) keyword to indicate that boundary names may be
           provided with the list of drain cells.

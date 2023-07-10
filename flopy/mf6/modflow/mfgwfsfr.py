@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 15, 2022 12:49:36 UTC
+# FILE created on June 29, 2023 14:20:38 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -82,28 +82,52 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           MOVER option is specified, additional memory is allocated within the
           package to store the available, provided, and received water.
     maximum_picard_iterations : integer
-        * maximum_picard_iterations (integer) value that defines the maximum
-          number of Streamflow Routing picard iterations allowed when solving
-          for reach stages and flows as part of the GWF formulate step. Picard
-          iterations are used to minimize differences in SFR package results
-          between subsequent GWF picard (non-linear) iterations as a result of
-          non-optimal reach numbering. If reaches are numbered in order, from
-          upstream to downstream, MAXIMUM_PICARD_ITERATIONS can be set to 1 to
-          reduce model run time. By default, MAXIMUM_PICARD_ITERATIONS is equal
-          to 100.
+        * maximum_picard_iterations (integer) integer value that defines the
+          maximum number of Streamflow Routing picard iterations allowed when
+          solving for reach stages and flows as part of the GWF formulate step.
+          Picard iterations are used to minimize differences in SFR package
+          results between subsequent GWF picard (non-linear) iterations as a
+          result of non-optimal reach numbering. If reaches are numbered in
+          order, from upstream to downstream, MAXIMUM_PICARD_ITERATIONS can be
+          set to 1 to reduce model run time. By default,
+          MAXIMUM_PICARD_ITERATIONS is equal to 100.
     maximum_iterations : integer
-        * maximum_iterations (integer) value that defines the maximum number of
-          Streamflow Routing Newton-Raphson iterations allowed for a reach. By
-          default, MAXIMUM_ITERATIONS is equal to 100.
+        * maximum_iterations (integer) integer value that defines the maximum
+          number of Streamflow Routing Newton-Raphson iterations allowed for a
+          reach. By default, MAXIMUM_ITERATIONS is equal to 100.
+          MAXIMUM_ITERATIONS would only need to be increased from the default
+          value if one or more reach in a simulation has a large water budget
+          error.
     maximum_depth_change : double
-        * maximum_depth_change (double) value that defines the depth closure
-          tolerance. By default, DMAXCHG is equal to :math:`1 \\times 10^{-5}`.
+        * maximum_depth_change (double) real value that defines the depth
+          closure tolerance. By default, MAXIMUM_DEPTH_CHANGE is equal to
+          :math:`1 \\times 10^{-5}`. The MAXIMUM_STAGE_CHANGE would only need
+          to be increased or decreased from the default value if the water
+          budget error for one or more reach is too small or too large,
+          respectively.
     unit_conversion : double
-        * unit_conversion (double) value (or conversion factor) that is used in
-          calculating stream depth for stream reach. A constant of 1.486 is
-          used for flow units of cubic feet per second, and a constant of 1.0
-          is used for units of cubic meters per second. The constant must be
-          multiplied by 86,400 when using time units of days in the simulation.
+        * unit_conversion (double) real value that is used to convert user-
+          specified Manning's roughness coefficients from seconds per
+          meters:math:`^{1/3}` to model length and time units. A constant of
+          1.486 is used for flow units of cubic feet per second, and a constant
+          of 1.0 is used for units of cubic meters per second. The constant
+          must be multiplied by 86,400 when using time units of days in the
+          simulation.
+    length_conversion : double
+        * length_conversion (double) real value that is used to convert user-
+          specified Manning's roughness coefficients from meters to model
+          length units. LENGTH_CONVERSION should be set to 3.28081, 1.0, and
+          100.0 when using length units (LENGTH_UNITS) of feet, meters, or
+          centimeters in the simulation, respectively. LENGTH_CONVERSION does
+          not need to be specified if LENGTH_UNITS are meters.
+    time_conversion : double
+        * time_conversion (double) real value that is used to convert user-
+          specified Manning's roughness coefficients from seconds to model time
+          units. TIME_CONVERSION should be set to 1.0, 60.0, 3,600.0, 86,400.0,
+          and 31,557,600.0 when using time units (TIME_UNITS) of seconds,
+          minutes, hours, days, or years in the simulation, respectively.
+          TIME_CONVERSION does not need to be specified if TIME_UNITS are
+          seconds.
     nreaches : integer
         * nreaches (integer) integer value specifying the number of stream
           reaches. There must be NREACHES entries in the PACKAGEDATA block.
@@ -729,6 +753,21 @@ class ModflowGwfsfr(mfpackage.MFPackage):
             "type double precision",
             "reader urword",
             "optional true",
+            "deprecated 6.4.2",
+        ],
+        [
+            "block options",
+            "name length_conversion",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name time_conversion",
+            "type double precision",
+            "reader urword",
+            "optional true",
         ],
         [
             "block dimensions",
@@ -1162,7 +1201,7 @@ class ModflowGwfsfr(mfpackage.MFPackage):
             "type record cross_section tab6 filein tab6_filename",
             "shape",
             "tagged",
-            "in_record false",
+            "in_record true",
             "reader urword",
         ],
         [
@@ -1264,6 +1303,8 @@ class ModflowGwfsfr(mfpackage.MFPackage):
         maximum_iterations=None,
         maximum_depth_change=None,
         unit_conversion=None,
+        length_conversion=None,
+        time_conversion=None,
         nreaches=None,
         packagedata=None,
         crosssections=None,
@@ -1317,6 +1358,12 @@ class ModflowGwfsfr(mfpackage.MFPackage):
         )
         self.unit_conversion = self.build_mfdata(
             "unit_conversion", unit_conversion
+        )
+        self.length_conversion = self.build_mfdata(
+            "length_conversion", length_conversion
+        )
+        self.time_conversion = self.build_mfdata(
+            "time_conversion", time_conversion
         )
         self.nreaches = self.build_mfdata("nreaches", nreaches)
         self.packagedata = self.build_mfdata("packagedata", packagedata)

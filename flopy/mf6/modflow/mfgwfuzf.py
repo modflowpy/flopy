@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 15, 2022 12:49:36 UTC
+# FILE created on June 29, 2023 14:20:38 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -96,7 +96,10 @@ class ModflowGwfuzf(mfpackage.MFPackage):
         * simulate_gwseep (boolean) keyword specifying that groundwater
           discharge (GWSEEP) to land surface will be simulated. Groundwater
           discharge is nonzero when groundwater head is greater than land
-          surface.
+          surface. This option is no longer recommended; a better approach is
+          to use the Drain Package with discharge scaling as a way to handle
+          seepage to land surface. The Drain Package with discharge scaling is
+          described in Chapter 3 of the Supplemental Technical Information.
     unsat_etwc : boolean
         * unsat_etwc (boolean) keyword specifying that ET in the unsaturated
           zone will be simulated as a function of the specified PET rate while

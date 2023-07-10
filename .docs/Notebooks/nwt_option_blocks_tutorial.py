@@ -19,7 +19,7 @@
 
 # # Working with MODFLOW-NWT v 1.1 option blocks
 #
-# In MODFLOW-NWT an option block is present for the WEL file, UZF file, and SFR file. This block takes keyword arguments that are supplied in an option line in other versions of MODFLOW. 
+# In MODFLOW-NWT an option block is present for the WEL file, UZF file, and SFR file. This block takes keyword arguments that are supplied in an option line in other versions of MODFLOW.
 #
 # The `OptionBlock` class was created to provide combatibility with the MODFLOW-NWT option block and allow the user to easily edit values within the option block
 
@@ -50,7 +50,7 @@ model_ws = os.path.join(temp_dir.name, "nwt_options", "output")
 
 # ## Loading a MODFLOW-NWT model that has option block options
 #
-# It is critical to set the `version` flag in `flopy.modflow.Modflow.load()` to `version='mfnwt'` 
+# It is critical to set the `version` flag in `flopy.modflow.Modflow.load()` to `version='mfnwt'`
 #
 # We are going to load a modified version of the Sagehen test problem from GSFLOW to illustrate compatibility
 
@@ -135,7 +135,7 @@ print(uzf3.options)
 print(uzf3.options.block)
 # -
 
-# ### We can also look at the WEL object 
+# ### We can also look at the WEL object
 
 wel = ml.get_package("WEL")
 wel.options

@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 15, 2022 12:49:36 UTC
+# FILE created on June 29, 2023 14:20:38 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator
 
@@ -39,7 +39,11 @@ class ModflowGwtmst(mfpackage.MFPackage):
           FREUNDLICH or LANGMUIR then SP2 is also required in the GRIDDATA
           block.
     porosity : [double]
-        * porosity (double) is the aquifer porosity.
+        * porosity (double) is the mobile domain porosity, defined as the
+          mobile domain pore volume per mobile domain volume. Additional
+          information on porosity within the context of mobile and immobile
+          domain transport simulations is included in the MODFLOW 6
+          Supplemental Technical Information document.
     decay : [double]
         * decay (double) is the rate coefficient for first or zero-order decay
           for the aqueous phase of the mobile domain. A negative value
@@ -62,7 +66,10 @@ class ModflowGwtmst(mfpackage.MFPackage):
     bulk_density : [double]
         * bulk_density (double) is the bulk density of the aquifer in mass per
           length cubed. bulk_density is not required unless the SORPTION
-          keyword is specified.
+          keyword is specified. Bulk density is defined as the mobile domain
+          solid mass per mobile domain volume. Additional information on bulk
+          density is included in the MODFLOW 6 Supplemental Technical
+          Information document.
     distcoef : [double]
         * distcoef (double) is the distribution coefficient for the
           equilibrium-controlled linear sorption isotherm in dimensions of

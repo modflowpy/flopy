@@ -22,13 +22,13 @@
 
 # +
 import os
-import sys
 import shutil
+import sys
 from tempfile import TemporaryDirectory
 
 import numpy as np
-import flopy
 
+import flopy
 from flopy.utils import flopy_io
 
 print(sys.version)

@@ -23,13 +23,15 @@
 #
 # ### Mapping is demonstrated for MODFLOW-2005 and MODFLOW-6 models in this notebook
 
+
 # + pycharm={"name": "#%%\n"}
-import sys
 import os
-import numpy as np
+import sys
+from tempfile import TemporaryDirectory
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from tempfile import TemporaryDirectory
+import numpy as np
 
 sys.path.append(os.path.join("..", "common"))
 import notebook_utils
@@ -167,7 +169,7 @@ t = ax.set_title("Column 6 Cross-Section with Boundary Conditions")
 # + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting an Array
 #
-# `PlotCrossSection` has a `plot_array()` method.  The `plot_array()` method will only accept 3D arrays for structured grids.  
+# `PlotCrossSection` has a `plot_array()` method.  The `plot_array()` method will only accept 3D arrays for structured grids.
 
 # + pycharm={"name": "#%%\n"}
 # Create a random array and plot it
@@ -220,9 +222,9 @@ cb = plt.colorbar(contour_set, shrink=0.75)
 # + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting Heads
 #
-# We can easily plot results from the simulation by extracting heads using `flopy.utils.HeadFile`. 
+# We can easily plot results from the simulation by extracting heads using `flopy.utils.HeadFile`.
 #
-# The head can be passed into the `plot_array()` and `contour_array()` using the `head=` keyword argument to fix the top of the colored patch and contour lines at the top of the water table in each cell, respectively. 
+# The head can be passed into the `plot_array()` and `contour_array()` using the `head=` keyword argument to fix the top of the colored patch and contour lines at the top of the water table in each cell, respectively.
 
 # + pycharm={"name": "#%%\n"}
 fname = os.path.join(str(modelpth), "freyberg.hds")
@@ -362,7 +364,7 @@ patch_collection = mapview.plot_shapefile(shp, radius=100, facecolor="red")
 
 # Plot the grid and boundary conditions over the top
 quadmesh = mapview.plot_ibound(alpha=0.1)
-linecollection = mapview.plot_grid(alpha=0.1);
+linecollection = mapview.plot_grid(alpha=0.1)
 
 # + [markdown] pycharm={"name": "#%% md\n"}
 # Now let's make a cross section based on this arbitrary cross-sectional line. We can load the cross sectional line vertices using `flopy.plot.plotutil.shapefile_get_vertices()`
@@ -391,7 +393,7 @@ cb = fig.colorbar(csa, ax=ax, shrink=0.5)
 #
 # The default cross section plotting method plots cells with regard to their intersection distance along the cross sectional line defined by the user. While this method is perfectly acceptable and in many cases may be preferred for plotting arbitrary cross sections, a flag has been added to plot based on geographic coordinates.
 #
-# The flag `geographic_coords` defaults to `False` which maintains FloPy's previous method of plotting cross sections. 
+# The flag `geographic_coords` defaults to `False` which maintains FloPy's previous method of plotting cross sections.
 
 # + pycharm={"name": "#%%\n"}
 # get the vertices for cross-section lines in a shapefile
@@ -520,7 +522,7 @@ quiver = xsect.plot_vector(
 cb = plt.colorbar(csa, shrink=0.75)
 
 # + [markdown] pycharm={"name": "#%% md\n"}
-# ## Vertex cross section plotting with MODFLOW-6 (DISV) 
+# ## Vertex cross section plotting with MODFLOW-6 (DISV)
 #
 # FloPy fully supports vertex discretization (DISV) plotting through the `PlotCrossSection` class. The method calls are identical to the ones presented previously for Structured discretization (DIS) and the same matplotlib keyword arguments are supported. Let's run through an example using a vertex model grid.
 
@@ -592,7 +594,7 @@ t = ax.set_title("Column 6 Cross-Section - Model Grid")
 # + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting Arrays and Contouring with Vertex Model grids
 #
-# `PlotCrossSection` allows the user to plot arrays and contour with DISV based discretization. The `plot_array()` method is called in the same way as using a structured grid. The only difference is that `PlotCrossSection` builds a matplotlib patch collection for Vertex based grids. 
+# `PlotCrossSection` allows the user to plot arrays and contour with DISV based discretization. The `plot_array()` method is called in the same way as using a structured grid. The only difference is that `PlotCrossSection` builds a matplotlib patch collection for Vertex based grids.
 
 # + pycharm={"name": "#%%\n"}
 # get the head output for stress period 1 from the modflow6 head file

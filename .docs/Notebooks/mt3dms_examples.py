@@ -33,14 +33,15 @@
 # 9. Two-Dimensional Application Example
 # 10. Three-Dimensional Field Case Study
 
+import os
+
 # +
 import sys
-import os
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
 # run installed version of flopy or add local path
 try:
@@ -77,6 +78,7 @@ print("flopy version: {}".format(flopy.__version__))
 # * Case 1b: Advection and dispersion
 # * Case 1c: Advection, dispersion, and sorption
 # * Case 1d: Advection, dispersion, sorption, and decay
+
 
 def p01(dirname, al, retardation, lambda1, mixelm):
     model_ws = os.path.join(workdir, dirname)
@@ -267,6 +269,7 @@ plt.legend()
 
 # ## Example 2. One-Dimensional Transport with Nonlinear or Nonequilibrium Sorption
 
+
 def p02(dirname, isothm, sp1, sp2, mixelm):
     model_ws = os.path.join(workdir, dirname)
     nlay = 1
@@ -418,6 +421,7 @@ plt.legend()
 
 # ## Example 3. Two-Dimensional Transport in a Uniform Flow Field
 
+
 def p03(dirname, mixelm):
     model_ws = os.path.join(workdir, dirname)
     nlay = 1
@@ -550,6 +554,7 @@ plt.title("ULTIMATE")
 
 
 # ## Example 4. Two-Dimensional Transport in a Diagonal Flow Field
+
 
 def p04(dirname, mixelm):
     model_ws = os.path.join(workdir, dirname)
@@ -713,6 +718,7 @@ plt.title("ULTIMATE")
 
 # ## Example 5. Two-Dimensional Transport in a Radial Flow Field
 
+
 def p05(dirname, mixelm, dt0, ttsmult):
     model_ws = os.path.join(workdir, dirname)
     nlay = 1
@@ -857,6 +863,7 @@ plt.title("ULTIMATE")
 
 # ## Example 6. Concentration at an Injection/Extraction Well
 
+
 def p06(dirname, mixelm, dt0):
     model_ws = os.path.join(workdir, dirname)
     nlay = 1
@@ -999,6 +1006,7 @@ plt.legend()
 # -
 
 # ## Example 7. Three-Dimensional Transport in a Uniform Flow Field
+
 
 def p07(dirname, mixelm):
     model_ws = os.path.join(workdir, dirname)
@@ -1154,6 +1162,7 @@ plt.tight_layout()
 # -
 
 # ## Example 8. Two-Dimensional, Vertical Transport in a Heterogeneous Aquifer
+
 
 def p08(dirname, mixelm):
     model_ws = os.path.join(workdir, dirname)
@@ -1324,6 +1333,7 @@ ax.set_title("TIME = 20 YEARS")
 # -
 
 # ## Example 9. Two-Dimensional Application Example
+
 
 def p09(dirname, mixelm, nadvfd):
     model_ws = os.path.join(workdir, dirname)
@@ -1517,6 +1527,7 @@ plt.legend()
 # -
 
 # ## Example 10. Three-Dimensional Field Case Study
+
 
 def p10(dirname, mixelm, perlen=1000, isothm=1, sp2=0.0, ttsmult=1.2):
     model_ws = os.path.join(workdir, dirname)

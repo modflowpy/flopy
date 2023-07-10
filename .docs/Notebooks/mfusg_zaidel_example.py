@@ -19,7 +19,7 @@
 
 # # MODFLOW-USG: Discontinuous water table configuration over a stairway impervious base
 #
-# One of the most challenging numerical cases for MODFLOW arises from drying-rewetting problems often associated with abrupt changes in the elevations of impervious base of a thin unconfined aquifer. This problem simulates a discontinuous water table configuration over a stairway impervious base and flow between constant-head boundaries in column 1 and 200. This problem is based on 
+# One of the most challenging numerical cases for MODFLOW arises from drying-rewetting problems often associated with abrupt changes in the elevations of impervious base of a thin unconfined aquifer. This problem simulates a discontinuous water table configuration over a stairway impervious base and flow between constant-head boundaries in column 1 and 200. This problem is based on
 #
 # [Zaidel, J. (2013), Discontinuous Steady-State Analytical Solutions of the Boussinesq Equation and Their Numerical Representation by Modflow. Groundwater, 51: 952–959. doi: 10.1111/gwat.12019](https://doi.org/10.1111/gwat.12019)
 #
@@ -32,11 +32,11 @@ import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-import flopy
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
+import flopy
 
 print(sys.version)
 print("numpy version: {}".format(np.__version__))
@@ -175,7 +175,7 @@ leg = ax.legend(loc="upper right")
 leg.draw_frame(False)
 ax.set_xlabel("Horizontal distance, in m")
 ax.set_ylabel("Head, in m")
-ax.set_ylim(-5, 25);
+ax.set_ylim(-5, 25)
 
 try:
     # ignore PermissionError on Windows

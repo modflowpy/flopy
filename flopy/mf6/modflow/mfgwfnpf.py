@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 15, 2022 12:49:36 UTC
+# FILE created on June 29, 2023 14:20:38 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -45,7 +45,9 @@ class ModflowGwfnpf(mfpackage.MFPackage):
     thickstrt : boolean
         * thickstrt (boolean) indicates that cells having a negative ICELLTYPE
           are confined, and their cell thickness for conductance calculations
-          will be computed as STRT-BOT rather than TOP-BOT.
+          will be computed as STRT-BOT rather than TOP-BOT. This option should
+          be used with caution as it only affects conductance calculations in
+          the NPF Package.
     cvoptions : [dewatered]
         * dewatered (string) If the DEWATERED keyword is specified, then the
           vertical conductance is calculated using only the saturated thickness
@@ -125,8 +127,12 @@ class ModflowGwfnpf(mfpackage.MFPackage):
           >0 means saturated thickness varies with computed head when head is
           below the cell top; <0 means saturated thickness varies with computed
           head unless the THICKSTRT option is in effect. When THICKSTRT is in
-          effect, a negative value of icelltype indicates that saturated
-          thickness will be computed as STRT-BOT and held constant.
+          effect, a negative value for ICELLTYPE indicates that the saturated
+          thickness value used in conductance calculations in the NPF Package
+          will be computed as STRT-BOT and held constant. If the THICKSTRT
+          option is not in effect, then negative values provided by the user
+          for ICELLTYPE are automatically reassigned by the program to a value
+          of one.
     k : [double]
         * k (double) is the hydraulic conductivity. For the common case in
           which the user would like to specify the horizontal hydraulic

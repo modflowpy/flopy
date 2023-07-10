@@ -1,4 +1,6 @@
 import re
+from pathlib import Path
+from pprint import pprint
 
 import pytest
 from autotest.conftest import get_project_root_path
@@ -11,8 +13,10 @@ def get_notebooks(pattern=None, exclude=None):
     nbpaths = [
         str(p)
         for p in (prjroot / ".docs" / "Notebooks").glob("*.py")
-        if pattern in p.name
+        if pattern is None or pattern in p.name
     ]
+
+    # sort for pytest-xdist: workers must collect tests in the same order
     return sorted(
         [p for p in nbpaths if not exclude or not any(e in p for e in exclude)]
     )
@@ -39,3 +43,5 @@ def test_notebooks(notebook):
             pytest.skip(f"notebook requires package {pkg!r}")
 
     assert returncode == 0, f"could not run {notebook}"
+    pprint(stdout)
+    pprint(stderr)

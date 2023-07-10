@@ -28,21 +28,20 @@
 
 # +
 import os
-import sys
 import shutil
+import sys
+import warnings
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import warnings
+import numpy as np
 
 import flopy
-
-from flopy.utils.geometry import Polygon, LineString, Point
 from flopy.export.shapefile_utils import recarray2shp, shp2recarray
-from flopy.utils.modpathfile import PathlineFile, EndpointFile
 from flopy.utils import geometry
+from flopy.utils.geometry import LineString, Point, Polygon
+from flopy.utils.modpathfile import EndpointFile, PathlineFile
 
 warnings.simplefilter("ignore", UserWarning)
 print(sys.version)
@@ -52,7 +51,7 @@ print("flopy version: {}".format(flopy.__version__))
 # -
 
 # ### write a numpy record array to a shapefile
-# in this case, we want to visualize output from the checker  
+# in this case, we want to visualize output from the checker
 # first make a toy model
 
 # +
@@ -77,7 +76,7 @@ grid.set_coord_info(xoff=600000, yoff=5170000, crs="EPSG:26715", angrot=45)
 chk = dis.check()
 chk.summary_array
 
-# ### make geometry objects for the cells with errors  
+# ### make geometry objects for the cells with errors
 # *  geometry objects allow the shapefile writer to be simpler and agnostic about the kind of geometry
 
 get_vertices = (
@@ -93,8 +92,8 @@ geoms[0].bounds
 
 geoms[0].plot()  # this feature requires descartes
 
-# ### write the shapefile  
-# * the projection (.prj) file can be written using an epsg code  
+# ### write the shapefile
+# * the projection (.prj) file can be written using an epsg code
 # * or copied from an existing .prj file
 
 # +
@@ -128,7 +127,7 @@ ra.geometry[0].plot()
 
 # ## Other geometry types
 #
-# ### Linestring  
+# ### Linestring
 # * create geometry objects for pathlines from a MODPATH simulation
 # * plot the paths using the built in plotting method
 

@@ -98,12 +98,6 @@ jobs:
 
       - name: Update changelog
         run: |
-          # move changelog
-          sudo cp ${{ steps.cliff.outputs.changelog }} CHANGELOG.md
-          
-          # show changelog
-          cat CHANGELOG.md
-          
           # substitute full group names
           sed -i 's/#### Ci/#### Continuous integration/' CHANGELOG.md
           sed -i 's/#### Feat/#### New features/' CHANGELOG.md
@@ -204,6 +198,10 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      id-token: write  # mandatory for trusted publishing
+    environment:  # requires a 'release' environment in repo settings
+      name: release
+      url: https://pypi.org/p/flopy
     steps:
 
       - name: Checkout master branch
@@ -238,79 +236,4 @@ jobs:
           path: dist
 
       - name: Publish to PyPI
-        env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        run: python -m twine upload dist/*
-
-  reset:
-    name: Draft reset PR
-    if: ${{ github.event_name == 'release' }}
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: write
-      pull-requests: write
-    defaults:
-      run:
-        shell: bash -l {0}
-    steps:
-
-      - name: Checkout master branch
-        uses: actions/checkout@v3
-        with:
-          ref: master
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.8
-          cache: 'pip'
-          cache-dependency-path: pyproject.toml
-
-      - name: Install Python dependencies
-        run: |
-          pip install --upgrade pip
-          pip install build twine
-          pip install .
-          pip install ".[lint, test, optional]"
-
-      - name: Get release tag
-        uses: oprypin/find-latest-tag@v1
-        id: latest_tag
-        with:
-          repository: ${{ github.repository }}
-          releases-only: true
-
-      - name: Draft pull request
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          # create reset branch from master
-          reset_branch="post-release-${{ steps.latest_tag.outputs.tag }}-reset"
-          git switch -c $reset_branch
-          
-          # increment patch version
-          major_version=$(echo "${{ steps.latest_tag.outputs.tag }}" | cut -d. -f1)
-          minor_version=$(echo "${{ steps.latest_tag.outputs.tag }}" | cut -d. -f2)
-          patch_version=$(echo "${{ steps.latest_tag.outputs.tag }}" | cut -d. -f3)
-          version="$major_version.$minor_version.$((patch_version + 1))"
-          python scripts/update_version.py -v "$version"
-          
-          # lint Python files
-          python scripts/pull_request_prepare.py
-          
-          # commit and push reset branch
-          git config core.sharedRepository true
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "ci(release): update to development version $version"
-          git push -u origin $reset_branch
-          
-          # create PR into develop
-          body='
-          # Reinitialize for development
-          
-          Updates the `develop` branch from `master` following a successful release. Increments the patch version number.
-          '
-          gh pr create -B "develop" -H "$reset_branch" --title "Reinitialize develop branch" --draft --body "$body"
+        uses: pypa/gh-action-pypi-publish@release/v1

@@ -16,9 +16,10 @@
 
 # # Working with the Multi-node Well (MNW2) Package
 
+import os
+
 # +
 import sys
-import os
 from tempfile import TemporaryDirectory
 
 import numpy as np
@@ -185,7 +186,7 @@ pd.DataFrame(mnw2fromobj.stress_period_data[0])
 pd.DataFrame(mnw2fromobj.stress_period_data[1])
 
 # ### By default, the ``node_data`` and ``stress_period_data`` tables attached to the ``ModflowMnw2`` package class are definitive
-# * on writing of the package output (``mnw2.write_file()``), the **Mnw** objects are regenerated from the tables. This setting is controlled by the default argument ``use_tables=True``. To write the package file using the **Mnw** objects (ignoring the tables), use ``mnw2.write_file(use_tables=False)``. 
+# * on writing of the package output (``mnw2.write_file()``), the **Mnw** objects are regenerated from the tables. This setting is controlled by the default argument ``use_tables=True``. To write the package file using the **Mnw** objects (ignoring the tables), use ``mnw2.write_file(use_tables=False)``.
 
 per1 = flopy.modflow.ModflowMnw2.get_empty_stress_period_data(itmp=2)
 per1

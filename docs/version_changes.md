@@ -1,3 +1,78 @@
+### Version 3.4.1
+
+#### Bug fixes
+
+* [fix(get-modflow)](https://github.com/modflowpy/flopy/commit/b8dffbc6bc7bee70d18d7ec24c96e33517e4f0e8): Accommodate mf6 release asset name change (#1855). Committed by w-bonelli on 2023-06-29.
+
+### Version 3.4.0
+
+#### New features
+
+* [feat(Simulation)](https://github.com/modflowpy/flopy/commit/e2cbb25ce6356fa44d9ed4ba4460674f3b9e6760): Support pathlike (#1712). Committed by aleaf on 2023-02-13.
+* [feat(solvers)](https://github.com/modflowpy/flopy/commit/ea04e83ed6199bd93fd6926e58a16a2d0d6686e1): Support for multiple solver types (#1706) (#1709). Committed by spaulins-usgs on 2023-02-15.
+* [feat(pathlike)](https://github.com/modflowpy/flopy/commit/656751a5d34c74e9a16ba39fce7cb85505888cc4): Support pathlike in user-facing APIs (#1730). Committed by w-bonelli on 2023-03-03.
+* [feat(export)](https://github.com/modflowpy/flopy/commit/17031e58a4ebf68e497771d2c1f1ffe6f71d1625): Include particle track polylines in VTK exports (#1750). Committed by w-bonelli on 2023-04-19.
+* [feat(crs)](https://github.com/modflowpy/flopy/commit/604183550e4a2a6b2d19cc38528e4de0686e58be): Pyproj crs (#1737). Committed by aleaf on 2023-04-26.
+* [feat(vtk)](https://github.com/modflowpy/flopy/commit/5352425694f2236e88fb2d77880b91f922d6f86e): Add to_pyvista() method (#1771). Committed by w-bonelli on 2023-04-30.
+* [feat(run_simulation)](https://github.com/modflowpy/flopy/commit/183117342d07e6a80fb5cc0aefad3453f61d1a51): Add support for running parallel simulations with flopy (#1807). Committed by jdhughes-usgs on 2023-06-05.
+* [feat(model_splitter.py)](https://github.com/modflowpy/flopy/commit/df091e4c73ffce3eefbc57d71e9372a44aeda830): Integrate model_splitter.py into FloPy (#1799). Committed by Joshua Larsen on 2023-06-05.
+* [feat(model_splitter)](https://github.com/modflowpy/flopy/commit/9e397631b0c371ab41807e8e6f04f1722968fba5): Add optional pymetis dependency (#1812). Committed by jdhughes-usgs on 2023-06-06.
+* [feat(model_splitter)](https://github.com/modflowpy/flopy/commit/cdd25125df0454404644d37af1064ec29ce5aa46): Add support for models that do not use IDOMAIN (#1834). Committed by jdhughes-usgs on 2023-06-21.
+* [feat(generate_classes)](https://github.com/modflowpy/flopy/commit/43a39c2383d7aa72b303e490d12177e93df35c7a): Add optional owner param (#1833). Committed by w-bonelli on 2023-06-21.
+
+#### Bug fixes
+
+* [fix(MFPackage kwargs check)](https://github.com/modflowpy/flopy/commit/19b3daa3a63abda992bfc75938f9cf79b92f333d): Now verifying that only valid kwargs are passed to MFPackage (#1667). Committed by spaulins-usgs on 2022-12-22.
+* [fix(factor)](https://github.com/modflowpy/flopy/commit/d99e0cc8be014c1ae796f917a83db2cb359e6a24): Fixed factor bug where converting data from internal to external can cause the factor to be applied to the data (#1673). Committed by scottrp on 2023-01-09.
+* [fix(package dictionary)](https://github.com/modflowpy/flopy/commit/ebaef18341fa8966fe3eed539821552d701635f4): Removed package_key_dict since it is redundant and can cause errors (#1690). Committed by spaulins-usgs on 2023-01-26.
+* [fix(intersect)](https://github.com/modflowpy/flopy/commit/ea1f5f06e935d7e3dc54d665e3ccb494cc0371e7): Multiple (#1696). Committed by w-bonelli on 2023-01-31.
+* [fix(datautil)](https://github.com/modflowpy/flopy/commit/3b2800e720a786250c00d822e01d4fd2669140a0): Fix SFR connection file parsing (#1694). Committed by Wes Kitlasten on 2023-02-03.
+* [fix(CellBudgetFile)](https://github.com/modflowpy/flopy/commit/c2c44fe2dc38653c84ee337eb3b2f91d4d8b6c42): Strip auxname for imeth 5 (#1716). Committed by Mike Taves on 2023-02-13.
+* [fix(mfdatastorage)](https://github.com/modflowpy/flopy/commit/940e69038d397379dbc7d9799420c10eb34f5904): Use appropriate fill_value for data type (#1689). Committed by Mike Taves on 2023-02-13.
+* [fix(test_sfr)](https://github.com/modflowpy/flopy/commit/915c268675c391e61fe0a3ef2d7f3fa26a9db2b8): Update test to be more robust with Matplotlib versions (#1717). Committed by Mike Taves on 2023-02-14.
+* [fix(flopy performance)](https://github.com/modflowpy/flopy/commit/82a1c0ccfc9727fc6c591565dd3ede91198b5a67): FloPy performance modifications + best practices documented (#1674). Committed by spaulins-usgs on 2023-02-15.
+* [fix(exe path)](https://github.com/modflowpy/flopy/commit/cf3a5177d16137455ce79fc9848c21b73fe7bb22): FloPy now correctly resolves relative paths to mf6 executable (#1633) (#1727). Committed by spaulins-usgs on 2023-03-02.
+* [fix(ParticleData)](https://github.com/modflowpy/flopy/commit/8d52ecef28bdf5624d78ce0b809620353014e42c): Support partlocs as ndarray or list of lists (#1752). Committed by w-bonelli on 2023-03-23.
+* [fix(mp6sim)](https://github.com/modflowpy/flopy/commit/ae14dd5caa4c2d580a6c5e7819b2d68e9effaa23): Use keyword args for pandas DataFrame.drop (#1757). Committed by w-bonelli on 2023-04-06.
+* [fix(MFFileMgmt)](https://github.com/modflowpy/flopy/commit/6a8161aba0a8d42d770208201e54ec1d8d027c06): Remove string_to_file_path (#1759). Committed by w-bonelli on 2023-04-06.
+* [fix(contours)](https://github.com/modflowpy/flopy/commit/baa322a8344b7baf5be196d44f1684f5fee99c41): Use nan for mpl contour masks on structured grids (#1766). Committed by w-bonelli on 2023-04-14.
+* [fix(MFFileMgmt)](https://github.com/modflowpy/flopy/commit/7db9263aa9fa200f0a60b4d47e33187b8de32130): Avoid IndexError in strip_model_relative_path (#1748). Committed by w-bonelli on 2023-04-27.
+* [fix(mtdsp)](https://github.com/modflowpy/flopy/commit/f9188eb1f963c442fef360fe459969209ce01ceb): Add support for keyword 'nocross' in MT3D dsp package (#1778). Committed by Eric Morway on 2023-05-09.
+* [fix(shapefile_utils)](https://github.com/modflowpy/flopy/commit/6569568709e2615bab4b06a19d4e0127b6fac371): Tolerate missing arrays in model_attributes_to_shapefile (#1785). Committed by w-bonelli on 2023-05-17.
+* [fix(Modpath6Sim)](https://github.com/modflowpy/flopy/commit/caadb03e0f54e45fe9a4c3f4366eee2131c35862): Move import_optional_dependency("pandas") to method (#1783). Committed by Mike Taves on 2023-05-17.
+* [fix(float32, empty stress period)](https://github.com/modflowpy/flopy/commit/6ad17acc25d3667c2da631423ba5281bf90123c6): #1779 and #1793 (#1806). Committed by spaulins-usgs on 2023-06-02.
+* [fix(load_node_mapping)](https://github.com/modflowpy/flopy/commit/22ef330bcfb9259fc23735d6b174d27804b624a0): Add sim parameter to populate Mf6Splitter._model_dict (#1828). Committed by Joshua Larsen on 2023-06-13.
+* [fix(keystring)](https://github.com/modflowpy/flopy/commit/7ca806d420a675c890a9966ef736210eed52ebcf): Flopy now does not rely on keystring name being a substring of the keystring record name (#1616) (#1830). Committed by spaulins-usgs on 2023-06-15.
+* [fix(get-modflow)](https://github.com/modflowpy/flopy/commit/a72a8c9fdaf6963fc5c9a89de00568665dfcfd9c): Manage internal "bin" dir structures (#1837). Committed by Mike Taves on 2023-06-23.
+* [fix(GridIntersect)](https://github.com/modflowpy/flopy/commit/736c5b89035b079bb2956a9e2241e5155c046a76): Fix indexing error for empty intersection comparison (#1838). Committed by Joshua Larsen on 2023-06-23.
+* [fix(mf6)](https://github.com/modflowpy/flopy/commit/8113a8856a61fdbb7a743d4687ddb3fb68d99e62): Fix external binary files for vertex grids (#1839). Committed by jdhughes-usgs on 2023-06-26.
+* [fix(binary)](https://github.com/modflowpy/flopy/commit/edb70b48695de9483a58d449e648f829818de197): Revert a few changes in PR #1839 (#1846). Committed by jdhughes-usgs on 2023-06-28.
+
+#### Perf
+
+* [perf(Gridintersect)](https://github.com/modflowpy/flopy/commit/1114c93d1c52de862e00a594d41f5d724d91f358): Optimize intersection methods for shapely 2.0 (#1666). Committed by Davíd Brakenhoff on 2022-12-23.
+
+#### Refactoring
+
+* [refactor(tests)](https://github.com/modflowpy/flopy/commit/96fc3ad8f78470811c04effa2ce2d4bf3318eb6d): Use modflow-devtools fixtures and utilities (#1665). Committed by w-bonelli on 2022-12-20.
+* [refactor(utils)](https://github.com/modflowpy/flopy/commit/94cd19d73a392738d29fbc742a41f1e1dc81d662): Move utils from modflow-devtools (#1621). Committed by w-bonelli on 2022-12-20.
+* [refactor](https://github.com/modflowpy/flopy/commit/1e6991d7c05f97b6b9464edecfd49101dd7969a2): Drop Python 3.7, add Python 3.11 (#1662). Committed by Mike Taves on 2022-12-21.
+* [refactor(dependencies)](https://github.com/modflowpy/flopy/commit/72890e175a9f91bc1021b89e7cc595b3dbce9778): Use devtools & relocated utils, drop pymake (#1670). Committed by w-bonelli on 2022-12-24.
+* [refactor](https://github.com/modflowpy/flopy/commit/2e6a7e1b7fb905157d7ff8b29b57485b4a3bec20): Move project metadata to pyproject.toml (#1678). Committed by Mike Taves on 2023-01-18.
+* [refactor(Modpath7)](https://github.com/modflowpy/flopy/commit/3c2a93e8e8f38fd3a168ea68daddf777a47cf35f): Update path construction for modpath nam file (#1679). Committed by Joshua Larsen on 2023-01-20.
+* [refactor(styles)](https://github.com/modflowpy/flopy/commit/2552de521a7adc550133bfd3427a66d406851087): Add graph_legend fontsize parameters (#1702). Committed by Joshua Larsen on 2023-02-07.
+* [refactor](https://github.com/modflowpy/flopy/commit/649596d0eeabc422a63e649111e3e12b411411ee): Run pyupgrade and adjust a few f-strings (#1710). Committed by Mike Taves on 2023-02-14.
+* [refactor(MfGrdFile)](https://github.com/modflowpy/flopy/commit/9b780aa84fcd95ba940eb5543e11637d1ed8f5d0): Update docstrings in MfGrdFile (#1685). Committed by Joshua Larsen on 2023-02-16.
+* [refactor(notebooks, mfhob.py)](https://github.com/modflowpy/flopy/commit/17dabb5494c91d931166f31809269a2704ba40e1): Clean paths in jupyter notebooks (#1711). Committed by Joshua Larsen on 2023-02-16.
+* [refactor(grid.py)](https://github.com/modflowpy/flopy/commit/7aa9ecf1cebcff6898163b26b721fd728092dc42): Add size property for model splitting support (#1720). Committed by Joshua Larsen on 2023-02-19.
+* [refactor(flopy_io, notebooks)](https://github.com/modflowpy/flopy/commit/fb3504bad39969dc75d88cf031b145cdcedfc810): Update path cleaning mechanism (#1728). Committed by w-bonelli on 2023-02-24.
+* [refactor(PlotMapView)](https://github.com/modflowpy/flopy/commit/c307420640d039f7b3f5811088c9d54321f3f9fd): Support color kwarg in plot_endpoint() (#1745). Committed by w-bonelli on 2023-03-21.
+* [refactor(Grid)](https://github.com/modflowpy/flopy/commit/945be7ce1cfc770b77651e6a9d0b21bf622d8af6): Refactor thick and saturated_thick: (#1768). Committed by Joshua Larsen on 2023-04-15.
+* [refactor(neighbors)](https://github.com/modflowpy/flopy/commit/0c6e2f797e374d64c60b25cdd73fdfd05d711094): Overhaul of neighbors calculation (#1787). Committed by Joshua Larsen on 2023-05-19.
+* [refactor(triangle-gridgen)](https://github.com/modflowpy/flopy/commit/9aa81e167741e062704edc789a12813fb0d00a44): Refactor resolving triangle and gridgen exe (#1819). Committed by jdhughes-usgs on 2023-06-08.
+* [refactor(get-modflow)](https://github.com/modflowpy/flopy/commit/0deb8f6e695ad278cfeb7590675df59183485827): Use Path.replace instead of Path.rename (#1822). Committed by w-bonelli on 2023-06-08.
+* [refactor(Mf6Splitter)](https://github.com/modflowpy/flopy/commit/2fa3d65af244ac5d31b523e1c8a310cd4be7b401): Feature updates and bugfixes (#1821). Committed by Joshua Larsen on 2023-06-10.
+
 ### Version 3.3.6
 
 #### New features

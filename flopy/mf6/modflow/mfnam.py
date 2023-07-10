@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 15, 2022 12:49:36 UTC
+# FILE created on June 29, 2023 14:20:38 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -34,6 +34,12 @@ class ModflowNam(mfpackage.MFPackage):
     maxerrors : integer
         * maxerrors (integer) maximum number of errors that will be stored and
           printed.
+    print_input : boolean
+        * print_input (boolean) keyword to activate printing of simulation
+          input summaries to the simulation list file (mfsim.lst). With this
+          keyword, input summaries will be written for those packages that
+          support newer input data model routines. Not all packages are
+          supported yet by the newer input data model routines.
     tdis6 : string
         * tdis6 (string) is the name of the Temporal Discretization (TDIS)
           Input File.
@@ -106,11 +112,19 @@ class ModflowNam(mfpackage.MFPackage):
             "type string",
             "reader urword",
             "optional true",
+            "mf6internal prmem",
         ],
         [
             "block options",
             "name maxerrors",
             "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_input",
+            "type keyword",
             "reader urword",
             "optional true",
         ],
@@ -254,6 +268,7 @@ class ModflowNam(mfpackage.MFPackage):
         nocheck=None,
         memory_print_option=None,
         maxerrors=None,
+        print_input=None,
         tdis6=None,
         models=None,
         exchanges=None,
@@ -274,6 +289,7 @@ class ModflowNam(mfpackage.MFPackage):
             "memory_print_option", memory_print_option
         )
         self.maxerrors = self.build_mfdata("maxerrors", maxerrors)
+        self.print_input = self.build_mfdata("print_input", print_input)
         self.tdis6 = self.build_mfdata("tdis6", tdis6)
         self.models = self.build_mfdata("models", models)
         self.exchanges = self.build_mfdata("exchanges", exchanges)

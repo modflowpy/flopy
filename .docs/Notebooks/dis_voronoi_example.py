@@ -27,16 +27,15 @@ import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 from shapely.geometry import LineString, Point
 
 import flopy
-
+from flopy.discretization import VertexGrid
 from flopy.utils.triangle import Triangle as Triangle
 from flopy.utils.voronoi import VoronoiGrid
-from flopy.discretization import VertexGrid
 
 temp_dir = TemporaryDirectory()
 workspace = Path(temp_dir.name)
@@ -77,7 +76,7 @@ tri.build(verbose=False)
 
 fig = plt.figure(figsize=(10, 10))
 ax = plt.subplot(1, 1, 1, aspect="equal")
-pc = tri.plot(ax=ax);
+pc = tri.plot(ax=ax)
 # -
 
 # ### Create and Plot FloPy Voronoi Grid
@@ -87,7 +86,7 @@ pc = tri.plot(ax=ax);
 voronoi_grid = VoronoiGrid(tri)
 fig = plt.figure(figsize=(10, 10))
 ax = plt.subplot(1, 1, 1, aspect="equal")
-voronoi_grid.plot(ax=ax, facecolor="none");
+voronoi_grid.plot(ax=ax, facecolor="none")
 
 # ### Use the VertexGrid Representation to Identify Boundary Cells
 
@@ -181,7 +180,7 @@ fig = plt.figure(figsize=(15, 15))
 ax = plt.subplot(1, 1, 1, aspect="equal")
 pmv = flopy.plot.PlotMapView(gwf)
 pmv.plot_array(head, cmap="jet", alpha=0.5)
-pmv.plot_vector(spdis["qx"], spdis["qy"], alpha=0.25);
+pmv.plot_vector(spdis["qx"], spdis["qy"], alpha=0.25)
 # -
 
 # ### Create Run and Post Process a MODFLOW 6 Transport Model
@@ -245,7 +244,7 @@ ax = plt.subplot(1, 1, 1, aspect="equal")
 pmv = flopy.plot.PlotMapView(gwf)
 c = pmv.plot_array(conc, cmap="jet")
 pmv.contour_array(conc, levels=(0.0001, 0.001, 0.01, 0.1), colors="y")
-plt.colorbar(c, shrink=0.5);
+plt.colorbar(c, shrink=0.5)
 # -
 
 # ## Building Voronoi Grid Examples

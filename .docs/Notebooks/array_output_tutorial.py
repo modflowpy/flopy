@@ -25,16 +25,17 @@
 # + [markdown] pycharm={"name": "#%% md\n"}
 # load and run the Freyberg model
 
+
 # + pycharm={"name": "#%%\n"}
-import sys
 import os
+import sys
 from tempfile import TemporaryDirectory
 
-import flopy
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
+import flopy
 
 # Set name of MODFLOW exe
 #  assumes executable is in users path statement
@@ -85,7 +86,7 @@ for f in files:
 print(ml.lpf.hk[0].format)
 
 # + [markdown] pycharm={"name": "#%% md\n"}
-# The ```ArrayFormat``` class exposes each of the attributes seen in the ```ArrayFormat.___str___()``` call. ```ArrayFormat``` also exposes ``.fortran``, ``.py`` and ``.numpy`` atrributes, which are the respective format descriptors: 
+# The ```ArrayFormat``` class exposes each of the attributes seen in the ```ArrayFormat.___str___()``` call. ```ArrayFormat``` also exposes ``.fortran``, ``.py`` and ``.numpy`` atrributes, which are the respective format descriptors:
 
 # + pycharm={"name": "#%%\n"}
 print(ml.dis.botm[0].format.fortran)

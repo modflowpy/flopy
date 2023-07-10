@@ -33,11 +33,10 @@ import os
 import sys
 from tempfile import TemporaryDirectory
 
-import numpy as np
-import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-
+import numpy as np
+import pandas as pd
 
 # run installed version of flopy or add local path
 try:
@@ -53,9 +52,9 @@ print("matplotlib version: {}".format(mpl.__version__))
 print("flopy version: {}".format(flopy.__version__))
 # -
 
-# Create a MODFLOW model and store it, in this case in the variable 'mf'. 
+# Create a MODFLOW model and store it, in this case in the variable 'mf'.
 # The modelname will be the name given to all MODFLOW files.
-# The exe_name should be the name of the MODFLOW executable. 
+# The exe_name should be the name of the MODFLOW executable.
 # In this case, we want to use version: 'mfnwt' for MODFLOW-NWT
 
 # +
@@ -133,7 +132,13 @@ nwt = flopy.modflow.ModflowNwt(
 
 # +
 elv_pth = os.path.join(
-    "..", "..", "examples", "data", "mt3d_example_sft_lkt_uzt", "dis_arrays", "grnd_elv.txt"
+    "..",
+    "..",
+    "examples",
+    "data",
+    "mt3d_example_sft_lkt_uzt",
+    "dis_arrays",
+    "grnd_elv.txt",
 )
 
 # Top of Layer 1 elevation determined using GW Vistas and stored locally
@@ -141,7 +146,13 @@ grndElv = np.loadtxt(elv_pth)
 
 # Bottom of layer 1 elevation also determined from use of GUI and stored locally
 bt1_pth = os.path.join(
-    "..", "..", "examples", "data", "mt3d_example_sft_lkt_uzt", "dis_arrays", "bot1.txt"
+    "..",
+    "..",
+    "examples",
+    "data",
+    "mt3d_example_sft_lkt_uzt",
+    "dis_arrays",
+    "bot1.txt",
 )
 bot1Elv = np.loadtxt(bt1_pth)
 
@@ -223,7 +234,13 @@ upw = flopy.modflow.ModflowUpw(
 
 # +
 ibnd1_pth = os.path.join(
-    "..", "..", "examples", "data", "mt3d_example_sft_lkt_uzt", "bas_arrays", "ibnd_lay1.txt"
+    "..",
+    "..",
+    "examples",
+    "data",
+    "mt3d_example_sft_lkt_uzt",
+    "bas_arrays",
+    "ibnd_lay1.txt",
 )
 ibnd1 = np.loadtxt(ibnd1_pth)
 ibnd2 = np.ones(ibnd1.shape)
@@ -233,17 +250,35 @@ ibnd = [ibnd1, ibnd2, ibnd3]
 ibnd = np.array(ibnd)
 
 StHd1_pth = os.path.join(
-    "..", "..", "examples", "data", "mt3d_example_sft_lkt_uzt", "bas_arrays", "strthd1.txt"
+    "..",
+    "..",
+    "examples",
+    "data",
+    "mt3d_example_sft_lkt_uzt",
+    "bas_arrays",
+    "strthd1.txt",
 )
 StHd1 = np.loadtxt(StHd1_pth)
 
 StHd2_pth = os.path.join(
-    "..", "..", "examples", "data", "mt3d_example_sft_lkt_uzt", "bas_arrays", "strthd2.txt"
+    "..",
+    "..",
+    "examples",
+    "data",
+    "mt3d_example_sft_lkt_uzt",
+    "bas_arrays",
+    "strthd2.txt",
 )
 StHd2 = np.loadtxt(StHd2_pth)
 
 StHd3_pth = os.path.join(
-    "..", "..", "examples", "data", "mt3d_example_sft_lkt_uzt", "bas_arrays", "strthd3.txt"
+    "..",
+    "..",
+    "examples",
+    "data",
+    "mt3d_example_sft_lkt_uzt",
+    "bas_arrays",
+    "strthd3.txt",
 )
 StHd3 = np.loadtxt(StHd3_pth)
 
@@ -315,7 +350,13 @@ ghb = flopy.modflow.ModflowGhb(mf, stress_period_data=sp)
 # Flopy will convert to 1-based when it writes the files
 
 rpth = os.path.join(
-    "..", "..", "examples", "data", "mt3d_example_sft_lkt_uzt", "sfr_data", "no3_reachinput.csv"
+    "..",
+    "..",
+    "examples",
+    "data",
+    "mt3d_example_sft_lkt_uzt",
+    "sfr_data",
+    "no3_reachinput.csv",
 )
 reach_data = np.genfromtxt(rpth, delimiter=",", names=True)
 reach_data
@@ -323,7 +364,13 @@ reach_data
 # Read pre-prepared segment data into numpy recarrays using numpy.genfromtxt()
 
 spth = os.path.join(
-    "..", "..", "examples", "data", "mt3d_example_sft_lkt_uzt", "sfr_data", "no3_segmentdata.csv"
+    "..",
+    "..",
+    "examples",
+    "data",
+    "mt3d_example_sft_lkt_uzt",
+    "sfr_data",
+    "no3_segmentdata.csv",
 )
 ss_segment_data = np.genfromtxt(spth, delimiter=",", names=True)
 segment_data = {0: ss_segment_data, 1: ss_segment_data}
@@ -365,7 +412,13 @@ sfr = flopy.modflow.ModflowSfr2(
 # +
 # Read pre-prepared lake arrays
 LakArr_pth = os.path.join(
-    "..", "..", "examples", "data", "mt3d_example_sft_lkt_uzt", "lak_arrays", "lakarr1.txt"
+    "..",
+    "..",
+    "examples",
+    "data",
+    "mt3d_example_sft_lkt_uzt",
+    "lak_arrays",
+    "lakarr1.txt",
 )
 LakArr_lyr1 = np.loadtxt(LakArr_pth)
 LakArr_lyr2 = np.zeros(LakArr_lyr1.shape)
@@ -493,10 +546,22 @@ thts = 0.30
 thti = 0.13079
 
 fname_uzbnd = os.path.join(
-    "..", "..", "examples", "data", "mt3d_example_sft_lkt_uzt", "uzf_arrays", "iuzbnd.txt"
+    "..",
+    "..",
+    "examples",
+    "data",
+    "mt3d_example_sft_lkt_uzt",
+    "uzf_arrays",
+    "iuzbnd.txt",
 )
 fname_runbnd = os.path.join(
-    "..", "..", "examples", "data", "mt3d_example_sft_lkt_uzt", "uzf_arrays", "irunbnd.txt"
+    "..",
+    "..",
+    "examples",
+    "data",
+    "mt3d_example_sft_lkt_uzt",
+    "uzf_arrays",
+    "irunbnd.txt",
 )
 
 iuzfbnd = np.loadtxt(fname_uzbnd)
@@ -532,10 +597,22 @@ uzf = flopy.modflow.ModflowUzf1(
 
 # +
 fname_drnElv = os.path.join(
-    "..", "..", "examples", "data", "mt3d_example_sft_lkt_uzt", "drn_arrays", "elv.txt"
+    "..",
+    "..",
+    "examples",
+    "data",
+    "mt3d_example_sft_lkt_uzt",
+    "drn_arrays",
+    "elv.txt",
 )
 fname_drnCond = os.path.join(
-    "..", "..", "examples", "data", "mt3d_example_sft_lkt_uzt", "drn_arrays", "cond.txt"
+    "..",
+    "..",
+    "examples",
+    "data",
+    "mt3d_example_sft_lkt_uzt",
+    "drn_arrays",
+    "cond.txt",
 )
 
 drnElv = np.loadtxt(fname_drnElv)

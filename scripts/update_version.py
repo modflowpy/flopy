@@ -1,15 +1,17 @@
 import argparse
 import json
+import re
 import subprocess
 import textwrap
 from datetime import datetime
 from enum import Enum
 from os import PathLike, environ
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 import yaml
 from filelock import FileLock
+from packaging.version import Version, parse
 
 _project_name = "flopy"
 _project_root_path = Path(__file__).parent.parent
@@ -53,90 +55,17 @@ whether or not known or discoverable.
 """
 
 
-class Version(NamedTuple):
-    """Semantic version number"""
-
-    major: int = 0
-    minor: int = 0
-    patch: int = 0
-
-    def __repr__(self):
-        return f"{self.major}.{self.minor}.{self.patch}"
-
-    @classmethod
-    def from_string(cls, version: str) -> "Version":
-        t = version.split(".")
-
-        vmajor = int(t[0])
-        vminor = int(t[1])
-        vpatch = int(t[2])
-
-        return cls(major=vmajor, minor=vminor, patch=vpatch)
-
-    @classmethod
-    def from_file(cls, path: PathLike) -> "Version":
-        lines = [
-            line.rstrip("\n")
-            for line in open(Path(path).expanduser().absolute())
-        ]
-        vmajor = vminor = vpatch = None
-        for line in lines:
-            line = line.strip()
-            if not any(line):
-                continue
-            t = line.split(".")
-            vmajor = int(t[0])
-            vminor = int(t[1])
-            vpatch = int(t[2])
-
-        assert (
-            vmajor is not None and vminor is not None and vpatch is not None
-        ), "version string must follow semantic version format: major.minor.patch"
-        return cls(major=vmajor, minor=vminor, patch=vpatch)
+def split_nonnumeric(s):
+    match = re.compile("[^0-9]").search(s)
+    return [s[: match.start()], s[match.start() :]] if match else s
 
 
-class ReleaseType(Enum):
-    CANDIDATE = "Release Candidate"
-    APPROVED = "Production"
+_initial_version = Version("0.0.1")
+_current_version = Version(_version_txt_path.read_text().strip())
 
 
-_initial_version = Version(0, 0, 1)
-_current_version = Version.from_file(_version_txt_path)
-
-
-def get_disclaimer(release_type: ReleaseType):
-    if release_type == ReleaseType.APPROVED:
-        return approved_disclaimer
-    else:
-        return preliminary_disclaimer
-
-
-def get_branch():
-    branch = None
-    error = ValueError("Coulnd't detect branch")
-    try:
-        # determine current branch
-        b = subprocess.Popen(
-            ("git", "status"), stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-        ).communicate()[0]
-        if isinstance(b, bytes):
-            b = b.decode("utf-8")
-
-        # determine current branch
-        for line in b.splitlines():
-            if "On branch" in line:
-                branch = line.replace("On branch ", "").rstrip()
-        if branch is None:
-            raise error
-    except:
-        branch = environ.get("GITHUB_REF_NAME", None)
-
-    if branch is None:
-        raise error
-    else:
-        print(f"Detected branch: {branch}")
-
-    return branch
+def get_disclaimer(approved: bool = False):
+    return approved_disclaimer if approved else preliminary_disclaimer
 
 
 def update_version_txt(version: Version):
@@ -145,30 +74,26 @@ def update_version_txt(version: Version):
     print(f"Updated {_version_txt_path} to version {version}")
 
 
-def update_version_py(
-    release_type: ReleaseType, timestamp: datetime, version: Version
-):
+def update_version_py(timestamp: datetime, version: Version):
     with open(_version_py_path, "w") as f:
         f.write(
             f"# {_project_name} version file automatically created using "
             f"{Path(__file__).name} on {timestamp:%B %d, %Y %H:%M:%S}\n\n"
         )
-        f.write(f"major = {version.major}\n")
-        f.write(f"minor = {version.minor}\n")
-        f.write(f"micro = {version.patch}\n")
-        f.write("__version__ = f'{major}.{minor}.{micro}'\n")
+        f.write(f'__version__ = "{version}"\n')
+        f.close()
     print(f"Updated {_version_py_path} to version {version}")
 
 
 def get_software_citation(
-    release_type: ReleaseType, timestamp: datetime, version: Version
+    timestamp: datetime, version: Version, approved: bool = False
 ):
     # get data Software/Code citation for FloPy
     citation = yaml.safe_load(file_paths["CITATION.cff"].read_text())
 
     sb = ""
-    if release_type != ReleaseType.APPROVED:
-        sb = f" &mdash; {release_type.value.lower()}"
+    if not approved:
+        sb = f" (preliminary)"
     # format author names
     authors = []
     for author in citation["authors"]:
@@ -205,7 +130,7 @@ def get_software_citation(
 
 
 def update_codejson(
-    release_type: ReleaseType, timestamp: datetime, version: Version
+    timestamp: datetime, version: Version, approved: bool = False
 ):
     # define json filename
     json_fname = file_paths["code.json"]
@@ -216,7 +141,7 @@ def update_codejson(
     # modify the json file data
     data[0]["date"]["metadataLastUpdated"] = timestamp.strftime("%Y-%m-%d")
     data[0]["version"] = str(version)
-    data[0]["status"] = release_type.value
+    data[0]["status"] = "Release" if approved else "Preliminary"
 
     # rewrite the json file
     with open(json_fname, "w") as f:
@@ -227,10 +152,10 @@ def update_codejson(
 
 
 def update_readme_markdown(
-    release_type: ReleaseType, timestamp: datetime, version: Version
+    timestamp: datetime, version: Version, approved: bool = False
 ):
     # create disclaimer text
-    disclaimer = get_disclaimer(release_type)
+    disclaimer = get_disclaimer(approved)
 
     # read README.md into memory
     fpth = file_paths["README.md"]
@@ -242,8 +167,8 @@ def update_readme_markdown(
     for line in lines:
         if "### Version " in line:
             line = f"### Version {version}"
-            if release_type != ReleaseType.APPROVED:
-                line += f" &mdash; {release_type.value.lower()}"
+            if not approved:
+                line += f" (preliminary)"
         elif "[flopy continuous integration]" in line:
             line = (
                 "[![flopy continuous integration](https://github.com/"
@@ -272,7 +197,7 @@ def update_readme_markdown(
                 "(https://mybinder.org/v2/gh/modflowpy/flopy.git/develop)"
             )
         elif "doi.org/10.5066/F7BK19FH" in line:
-            line = get_software_citation(release_type, timestamp, version)
+            line = get_software_citation(timestamp, version, approved)
         elif "Disclaimer" in line:
             line = disclaimer
             terminate = True
@@ -288,9 +213,7 @@ def update_readme_markdown(
     print(f"Updated {file_paths['DISCLAIMER.md']} to version {version}")
 
 
-def update_citation_cff(
-    release_type: ReleaseType, timestamp: datetime, version: Version
-):
+def update_citation_cff(timestamp: datetime, version: Version):
     # read CITATION.cff to modify
     fpth = file_paths["CITATION.cff"]
     citation = yaml.safe_load(fpth.read_text())
@@ -313,10 +236,10 @@ def update_citation_cff(
 
 
 def update_PyPI_release(
-    release_type: ReleaseType, timestamp: datetime, version: Version
+    timestamp: datetime, version: Version, approved: bool = False
 ):
     # create disclaimer text
-    disclaimer = get_disclaimer(release_type)
+    disclaimer = get_disclaimer(approved)
 
     # read PyPI_release.md into memory
     fpth = file_paths["PyPI_release.md"]
@@ -327,7 +250,7 @@ def update_PyPI_release(
     f = open(fpth, "w")
     for line in lines:
         if "doi.org/10.5066/F7BK19FH" in line:
-            line = get_software_citation(release_type, timestamp, version)
+            line = get_software_citation(timestamp, version, approved)
         elif "Disclaimer" in line:
             line = disclaimer
             terminate = True
@@ -340,27 +263,27 @@ def update_PyPI_release(
 
 
 def update_version(
-    release_type: ReleaseType,
     timestamp: datetime = datetime.now(),
     version: Version = None,
+    approved: bool = False,
 ):
     lock_path = Path(_version_txt_path.name + ".lock")
     try:
         lock = FileLock(lock_path)
-        previous = Version.from_file(_version_txt_path)
+        previous = Version(_version_txt_path.read_text().strip())
         version = (
             version
             if version
-            else Version(previous.major, previous.minor, previous.patch)
+            else Version(previous.major, previous.minor, previous.micro)
         )
 
         with lock:
             update_version_txt(version)
-            update_version_py(release_type, timestamp, version)
-            update_readme_markdown(release_type, timestamp, version)
-            update_citation_cff(release_type, timestamp, version)
-            update_codejson(release_type, timestamp, version)
-            update_PyPI_release(release_type, timestamp, version)
+            update_version_py(timestamp, version)
+            update_readme_markdown(timestamp, version, approved)
+            update_citation_cff(timestamp, version)
+            update_codejson(timestamp, version, approved)
+            update_PyPI_release(timestamp, version, approved)
     finally:
         try:
             lock_path.unlink()
@@ -393,7 +316,7 @@ if __name__ == "__main__":
         "--approve",
         required=False,
         action="store_true",
-        help="Indicate release is approved (defaults to false for preliminary/development distributions)",
+        help="Approve the release (defaults to false for preliminary/development distributions)",
     )
     parser.add_argument(
         "-g",
@@ -405,14 +328,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.get:
-        print(Version.from_file(_project_root_path / "version.txt"))
+        print(
+            Version((_project_root_path / "version.txt").read_text().strip())
+        )
     else:
         update_version(
-            release_type=ReleaseType.APPROVED
-            if args.approve
-            else ReleaseType.CANDIDATE,
             timestamp=datetime.now(),
-            version=Version.from_string(args.version)
+            version=Version(args.version)
             if args.version
             else _current_version,
+            approved=args.approve,
         )

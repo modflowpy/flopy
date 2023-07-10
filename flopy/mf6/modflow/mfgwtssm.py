@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 15, 2022 12:49:36 UTC
+# FILE created on June 29, 2023 14:20:38 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -40,7 +40,7 @@ class ModflowGwtssm(mfpackage.MFPackage):
           variable in the corresponding flow package. The auxiliary variable
           must have the same name as the AUXNAME value that follows. If the AUX
           keyword is specified, then the auxiliary variable specified by the
-          user will be assigned as the concenration value for groundwater
+          user will be assigned as the concentration value for groundwater
           sources (flows with a positive sign). For negative flow rates
           (sinks), groundwater will be withdrawn from the cell at the simulated
           concentration of the cell. The AUXMIXED option provides an

@@ -28,9 +28,9 @@ import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 proj_root = Path.cwd().parent.parent
@@ -233,6 +233,7 @@ df.head(6)
 # ### Plot Budget Components
 # The following is a function that can be used to better visualize the budget components using matplotlib.
 
+
 # +
 def tick_label_formatter_comma_sep(x, pos):
     return "{:,.0f}".format(x)
@@ -343,7 +344,7 @@ plt.show()
 
 # ## Zonebudget for Modflow 6 (`ZoneBudget6`)
 #
-# This section shows how to build and run a Zonebudget when working with a MODFLOW 6 model. 
+# This section shows how to build and run a Zonebudget when working with a MODFLOW 6 model.
 #
 # First let's load a model
 
@@ -375,7 +376,7 @@ zones = ml.modelgrid.idomain
 zones[0, 20:] = np.where(zones[0, 20:] != 0, 2, 0)
 
 plt.imshow(zones[0])
-plt.colorbar();
+plt.colorbar()
 # -
 
 # now let's build a zonebudget model and run it!

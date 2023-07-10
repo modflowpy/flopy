@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on June 22, 2023 21:13:41 UTC
+# FILE created on June 29, 2023 14:20:38 UTC
 from .. import mfmodel
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 

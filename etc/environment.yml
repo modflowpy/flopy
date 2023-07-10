@@ -29,7 +29,7 @@ dependencies:
   - pytest-dotenv
   - pytest-virtualenv
   - pytest-xdist
-
+  - virtualenv
 
   # optional
   - python-dateutil>=2.4.0

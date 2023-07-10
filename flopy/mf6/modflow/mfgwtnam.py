@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 15, 2022 12:49:36 UTC
+# FILE created on June 29, 2023 14:20:38 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -80,6 +80,7 @@ class ModflowGwtnam(mfpackage.MFPackage):
             "type string",
             "reader urword",
             "optional true",
+            "preserve_case true",
         ],
         [
             "block options",

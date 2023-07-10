@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 15, 2022 12:49:36 UTC
+# FILE created on June 29, 2023 14:20:38 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -119,9 +119,6 @@ class ModflowGwfcsub(mfpackage.MFPackage):
     compaction_filerecord : [compaction_filename]
         * compaction_filename (string) name of the binary output file to write
           compaction information.
-    fileout : boolean
-        * fileout (boolean) keyword to specify that an output filename is
-          expected next.
     compaction_elastic_filerecord : [elastic_compaction_filename]
         * elastic_compaction_filename (string) name of the binary output file
           to write elastic interbed compaction information.
@@ -513,16 +510,6 @@ class ModflowGwfcsub(mfpackage.MFPackage):
         [
             "block options",
             "name compaction",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name fileout",
             "type keyword",
             "shape",
             "in_record true",
@@ -1020,7 +1007,6 @@ class ModflowGwfcsub(mfpackage.MFPackage):
         strainib_filerecord=None,
         straincg_filerecord=None,
         compaction_filerecord=None,
-        fileout=None,
         compaction_elastic_filerecord=None,
         compaction_inelastic_filerecord=None,
         compaction_interbed_filerecord=None,
@@ -1086,7 +1072,6 @@ class ModflowGwfcsub(mfpackage.MFPackage):
         self.compaction_filerecord = self.build_mfdata(
             "compaction_filerecord", compaction_filerecord
         )
-        self.fileout = self.build_mfdata("fileout", fileout)
         self.compaction_elastic_filerecord = self.build_mfdata(
             "compaction_elastic_filerecord", compaction_elastic_filerecord
         )

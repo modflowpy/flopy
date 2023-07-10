@@ -120,6 +120,7 @@ def test_unstructured_model_splitter(function_tmpdir):
 
 
 @requires_exe("mf6")
+@pytest.mark.slow
 def test_model_with_lak_sfr_mvr(function_tmpdir):
     sim_path = get_example_data_path() / "mf6" / "test045_lake2tr"
 
@@ -155,6 +156,7 @@ def test_model_with_lak_sfr_mvr(function_tmpdir):
 
 
 @requires_exe("mf6")
+@pytest.mark.slow
 def test_metis_splitting_with_lak_sfr(function_tmpdir):
     sim_path = get_example_data_path() / "mf6" / "test045_lake2tr"
 
@@ -199,7 +201,7 @@ def test_metis_splitting_with_lak_sfr(function_tmpdir):
 @requires_exe("mf6")
 def test_save_load_node_mapping(function_tmpdir):
     sim_path = get_example_data_path() / "mf6-freyberg"
-    new_sim_path = sim_path / "split_model"
+    new_sim_path = function_tmpdir / "mf6-freyberg/split_model"
     json_file = new_sim_path / "node_map.json"
     nparts = 5
 

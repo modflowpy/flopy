@@ -24,14 +24,16 @@
 # ### Mapping is demonstrated for MODFLOW-2005, MODFLOW-USG, and MODFLOW-6 models in this notebook
 #
 
+
 # +
-import sys
 import os
-import numpy as np
+import sys
+from tempfile import TemporaryDirectory
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 import shapefile
-from tempfile import TemporaryDirectory
 
 sys.path.append(os.path.join("..", "common"))
 import notebook_utils
@@ -286,7 +288,7 @@ mapview = flopy.plot.PlotMapView(model=ml, layer=0)
 contour_set = mapview.contour_array(a)
 linecollection = mapview.plot_grid()
 
-plt.colorbar(contour_set, shrink=0.75);
+plt.colorbar(contour_set, shrink=0.75)
 
 # + pycharm={"name": "#%%\n"}
 # The contour_array() method will take any keywords
@@ -308,19 +310,20 @@ norm = mpl.colors.Normalize(
 )
 sm = plt.cm.ScalarMappable(norm=norm, cmap=contour_set.cmap)
 sm.set_array([])
-fig.colorbar(sm, shrink=0.75, ax=ax);
+fig.colorbar(sm, shrink=0.75, ax=ax)
 
 # + [markdown] pycharm={"name": "#%% md\n"}
 # Array contours can be exported directly to a shapefile.
 
 # + pycharm={"name": "#%%\n"}
-from flopy.export.utils import (
+from flopy.export.utils import (  # use export_contourf for filled contours
     export_contours,
-)  # use export_contourf for filled contours
-from shapefile import Reader
+)
 
 shp_path = os.path.join(modelpth, "contours.shp")
 export_contours(shp_path, contour_set)
+
+from shapefile import Reader
 
 with Reader(shp_path) as r:
     nshapes = len(r.shapes())
@@ -353,12 +356,12 @@ mapview = flopy.plot.PlotMapView(model=ml)
 quadmesh = mapview.plot_ibound()
 mapview.plot_bc("WEL")
 contour_set = mapview.contour_array(head, levels=levels)
-linecollection = mapview.plot_grid();
+linecollection = mapview.plot_grid()
 
 # + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting Discharge Vectors
 #
-# `PlotMapView` has a `plot_vector()` method, which takes vector components in the x- and y-directions at the cell centers. The x- and y-vector components are calculated from the `'FLOW RIGHT FACE'` and `'FLOW FRONT FACE'` arrays, which can be written by MODFLOW to the cell by cell budget file.  These array can be extracted from the cell by cell flow file using the `flopy.utils.CellBudgetFile` object as shown below.  Once they are extracted, they can be passed to the `postprocessing.get_specific_discharge()` method to get the discharge vectors and plotted using the `plot_vector()` method.  
+# `PlotMapView` has a `plot_vector()` method, which takes vector components in the x- and y-directions at the cell centers. The x- and y-vector components are calculated from the `'FLOW RIGHT FACE'` and `'FLOW FRONT FACE'` arrays, which can be written by MODFLOW to the cell by cell budget file.  These array can be extracted from the cell by cell flow file using the `flopy.utils.CellBudgetFile` object as shown below.  Once they are extracted, they can be passed to the `postprocessing.get_specific_discharge()` method to get the discharge vectors and plotted using the `plot_vector()` method.
 #
 # **Note**: `postprocessing.get_specific_discharge()` also takes the head array as an optional argument.  The head array is used to convert the volumetric discharge in dimensions of $L^3/T$ to specific discharge in dimensions of $L/T$.
 
@@ -437,7 +440,7 @@ travel_time_max = 200.0 * 365.25 * 24.0 * 60.0 * 60.0
 ctt = "<={}".format(travel_time_max)
 
 # plot the pathlines
-mapview.plot_pathline(plines, layer="all", colors="red", travel_time=ctt);
+mapview.plot_pathline(plines, layer="all", colors="red", travel_time=ctt)
 
 # + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting a Shapefile
@@ -510,7 +513,7 @@ patch_collection = mapview.plot_shapefile(shp, radius=100, facecolor="red")
 
 # Plot the grid and boundary conditions over the top
 quadmesh = mapview.plot_ibound(alpha=0.1)
-linecollection = mapview.plot_grid(alpha=0.1);
+linecollection = mapview.plot_grid(alpha=0.1)
 
 # + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting GIS Shapes
@@ -519,7 +522,7 @@ linecollection = mapview.plot_grid(alpha=0.1);
 #
 # The `plot_shapes()` function can plot points, lines, polygons, and multipolygons and will return a patch_collection. For a list or collection of polygons, the `plot_shapes()` function will try to plot and fill them all using a different color. For a list or collection of points, you may need to specify a radius, in model units, in order for the circles to show up properly.
 #
-# __Note:__ The supplied shapes must have intersecting geographic coordinates as the `PlotMapView` object in order for it to overlay correctly on the plot. 
+# __Note:__ The supplied shapes must have intersecting geographic coordinates as the `PlotMapView` object in order for it to overlay correctly on the plot.
 #
 # `plot_shapes()` supports many GIS based input types and they are listed below:
 #    + list of shapefile.Shape objects
@@ -580,7 +583,7 @@ patch_collection1 = mapview.plot_shapes(cross_section, lw=3, edgecolor="red")
 # plot_point(s)
 patch_collection3 = mapview.plot_shapes(
     wells, radius=100, facecolor="k", edgecolor="k"
-);
+)
 
 # + [markdown] pycharm={"name": "#%% md\n"}
 # ## Working with MODFLOW-6 models
@@ -667,7 +670,7 @@ norm = mpl.colors.Normalize(
 )
 sm = plt.cm.ScalarMappable(norm=norm, cmap=contour_set.cmap)
 sm.set_array([])
-fig.colorbar(sm, shrink=0.75, ax=ax);
+fig.colorbar(sm, shrink=0.75, ax=ax)
 
 # + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting specific discharge with a MODFLOW-6 model
@@ -697,7 +700,7 @@ quiver = mapview.plot_vector(qx, qy)
 inactive = mapview.plot_inactive()
 
 plt.title("Specific Discharge (" + r"$L/T$" + ")")
-plt.colorbar(quadmesh, shrink=0.75);
+plt.colorbar(quadmesh, shrink=0.75)
 
 # + [markdown] pycharm={"name": "#%% md\n"}
 # ## Vertex model plotting with MODFLOW-6
@@ -733,7 +736,7 @@ vertex_ml6 = vertex_sim.get_model("mp7p2")
 # + [markdown] pycharm={"name": "#%% md\n"}
 # ### Setting MODFLOW-6 Vertex Model Grid offsets, rotation and plotting
 #
-# Setting the `Grid` offsets and rotation is consistent in FloPy, no matter which type of discretization the user is using. The `set_coord_info()` method on the `modelgrid` is used.  
+# Setting the `Grid` offsets and rotation is consistent in FloPy, no matter which type of discretization the user is using. The `set_coord_info()` method on the `modelgrid` is used.
 #
 # Plotting works consistently too, the user just calls the `PlotMapView` class and it accounts for the discretization type
 
@@ -772,7 +775,7 @@ linecollection = mapview.plot_grid()
 # + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting Arrays and Contouring with Vertex Model grids
 #
-# `PlotMapView` allows the user to plot arrays and contour with DISV based discretization. The `plot_array()` method is called in the same way as using a structured grid. The only difference is that `PlotMapView` builds a matplotlib patch collection for Vertex based grids. 
+# `PlotMapView` allows the user to plot arrays and contour with DISV based discretization. The `plot_array()` method is called in the same way as using a structured grid. The only difference is that `PlotMapView` builds a matplotlib patch collection for Vertex based grids.
 
 # + pycharm={"name": "#%%\n"}
 # get the head output for stress period 1 from the modflow6 head file
@@ -945,7 +948,7 @@ print(umg)
 f = plt.figure(figsize=(10, 10))
 mapview = flopy.plot.PlotMapView(modelgrid=umg)
 mapview.plot_grid()
-plt.plot(umg.xcellcenters, umg.ycellcenters, "bo");
+plt.plot(umg.xcellcenters, umg.ycellcenters, "bo")
 
 # + pycharm={"name": "#%%\n"}
 # Create a random array for layer 0, and then plot it with a color flood and contours
@@ -1060,5 +1063,3 @@ try:
 except:
     pass
 # -
-
-

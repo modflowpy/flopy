@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 15, 2022 12:49:36 UTC
+# FILE created on June 29, 2023 14:20:38 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -127,7 +127,7 @@ class ModflowGwfvsc(mfpackage.MFPackage):
         [
             "block options",
             "name viscref",
-            "type double",
+            "type double precision",
             "reader urword",
             "optional true",
             "default_value 1.0",
@@ -152,7 +152,7 @@ class ModflowGwfvsc(mfpackage.MFPackage):
         [
             "block options",
             "name thermal_a2",
-            "type double",
+            "type double precision",
             "reader urword",
             "optional true",
             "default_value 10.",
@@ -160,7 +160,7 @@ class ModflowGwfvsc(mfpackage.MFPackage):
         [
             "block options",
             "name thermal_a3",
-            "type double",
+            "type double precision",
             "reader urword",
             "optional true",
             "default_value 248.37",

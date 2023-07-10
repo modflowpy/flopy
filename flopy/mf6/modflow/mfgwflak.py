@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 15, 2022 12:49:36 UTC
+# FILE created on June 29, 2023 14:20:38 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -86,22 +86,37 @@ class ModflowGwflak(mfpackage.MFPackage):
           for VERTICAL lake-GWF connections. If specified, SURFDEP must be
           greater than or equal to zero. If SURFDEP is not specified, a default
           value of zero is used for all vertical lake-GWF connections.
+    maximum_iterations : integer
+        * maximum_iterations (integer) integer value that defines the maximum
+          number of Newton-Raphson iterations allowed for a lake. By default,
+          MAXIMUM_ITERATIONS is equal to 100. MAXIMUM_ITERATIONS would only
+          need to be increased from the default value if one or more lakes in a
+          simulation has a large water budget error.
+    maximum_stage_change : double
+        * maximum_stage_change (double) real value that defines the lake stage
+          closure tolerance. By default, MAXIMUM_STAGE_CHANGE is equal to
+          :math:`1 \\times 10^{-5}`. The MAXIMUM_STAGE_CHANGE would only need
+          to be increased or decreased from the default value if the water
+          budget error for one or more lakes is too small or too large,
+          respectively.
     time_conversion : double
-        * time_conversion (double) value that is used in converting outlet flow
-          terms that use Manning's equation or gravitational acceleration to
-          consistent time units. TIME_CONVERSION should be set to 1.0, 60.0,
-          3,600.0, 86,400.0, and 31,557,600.0 when using time units
-          (TIME_UNITS) of seconds, minutes, hours, days, or years in the
-          simulation, respectively. CONVTIME does not need to be specified if
-          no lake outlets are specified or TIME_UNITS are seconds.
+        * time_conversion (double) real value that is used to convert user-
+          specified Manning's roughness coefficients or gravitational
+          acceleration used to calculate outlet flows from seconds to model
+          time units. TIME_CONVERSION should be set to 1.0, 60.0, 3,600.0,
+          86,400.0, and 31,557,600.0 when using time units (TIME_UNITS) of
+          seconds, minutes, hours, days, or years in the simulation,
+          respectively. CONVTIME does not need to be specified if no lake
+          outlets are specified or TIME_UNITS are seconds.
     length_conversion : double
-        * length_conversion (double) real value that is used in converting
-          outlet flow terms that use Manning's equation or gravitational
-          acceleration to consistent length units. LENGTH_CONVERSION should be
-          set to 3.28081, 1.0, and 100.0 when using length units (LENGTH_UNITS)
-          of feet, meters, or centimeters in the simulation, respectively.
-          LENGTH_CONVERSION does not need to be specified if no lake outlets
-          are specified or LENGTH_UNITS are meters.
+        * length_conversion (double) real value that is used to convert outlet
+          user-specified Manning's roughness coefficients or gravitational
+          acceleration used to calculate outlet flows from meters to model
+          length units. LENGTH_CONVERSION should be set to 3.28081, 1.0, and
+          100.0 when using length units (LENGTH_UNITS) of feet, meters, or
+          centimeters in the simulation, respectively. LENGTH_CONVERSION does
+          not need to be specified if no lake outlets are specified or
+          LENGTH_UNITS are meters.
     nlakes : integer
         * nlakes (integer) value specifying the number of lakes that will be
           simulated for all stress periods.
@@ -720,6 +735,20 @@ class ModflowGwflak(mfpackage.MFPackage):
         ],
         [
             "block options",
+            "name maximum_iterations",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name maximum_stage_change",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
             "name time_conversion",
             "type double precision",
             "reader urword",
@@ -1248,6 +1277,8 @@ class ModflowGwflak(mfpackage.MFPackage):
         observations=None,
         mover=None,
         surfdep=None,
+        maximum_iterations=None,
+        maximum_stage_change=None,
         time_conversion=None,
         length_conversion=None,
         nlakes=None,
@@ -1295,6 +1326,12 @@ class ModflowGwflak(mfpackage.MFPackage):
         )
         self.mover = self.build_mfdata("mover", mover)
         self.surfdep = self.build_mfdata("surfdep", surfdep)
+        self.maximum_iterations = self.build_mfdata(
+            "maximum_iterations", maximum_iterations
+        )
+        self.maximum_stage_change = self.build_mfdata(
+            "maximum_stage_change", maximum_stage_change
+        )
         self.time_conversion = self.build_mfdata(
             "time_conversion", time_conversion
         )
