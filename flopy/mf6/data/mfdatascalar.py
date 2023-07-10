@@ -822,6 +822,8 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
             if `data` is a dictionary.
 
         """
+        if data is None and key is None:
+            return
         if isinstance(data, dict):
             # each item in the dictionary is a list for one stress period
             # the dictionary key is the stress period the list is for

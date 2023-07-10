@@ -100,7 +100,7 @@ def delete_mf6_classes():
         for entry in os.listdir(pth)
         if os.path.isfile(os.path.join(pth, entry))
     ]
-    delete_files(files, pth, exclude="mfsimulation.py")
+    delete_files(files, pth)
 
 
 def generate_classes(

@@ -103,33 +103,34 @@ def convert_data(data, data_dimensions, data_type, data_item=None, sub_amt=1):
                         False,
                     )
     elif data_type == DatumType.integer:
-        if data_item is not None and data_item.numeric_index:
-            return int(PyListUtil.clean_numeric(data)) - sub_amt
-        try:
-            return int(data)
-        except (ValueError, TypeError):
+        if data is not None:
+            if data_item is not None and data_item.numeric_index:
+                return int(PyListUtil.clean_numeric(data)) - sub_amt
             try:
-                return int(PyListUtil.clean_numeric(data))
+                return int(data)
             except (ValueError, TypeError):
-                message = (
-                    'Data "{}" with value "{}" can not be '
-                    "converted to int"
-                    ".".format(data_dimensions.structure.name, data)
-                )
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(
-                    data_dimensions.structure.get_model(),
-                    data_dimensions.structure.get_package(),
-                    data_dimensions.structure.path,
-                    "converting data",
-                    data_dimensions.structure.name,
-                    inspect.stack()[0][3],
-                    type_,
-                    value_,
-                    traceback_,
-                    message,
-                    False,
-                )
+                try:
+                    return int(PyListUtil.clean_numeric(data))
+                except (ValueError, TypeError):
+                    message = (
+                        'Data "{}" with value "{}" can not be '
+                        "converted to int"
+                        ".".format(data_dimensions.structure.name, data)
+                    )
+                    type_, value_, traceback_ = sys.exc_info()
+                    raise MFDataException(
+                        data_dimensions.structure.get_model(),
+                        data_dimensions.structure.get_package(),
+                        data_dimensions.structure.path,
+                        "converting data",
+                        data_dimensions.structure.name,
+                        inspect.stack()[0][3],
+                        type_,
+                        value_,
+                        traceback_,
+                        message,
+                        False,
+                    )
     elif data_type == DatumType.string and data is not None:
         if data_item is None or not data_item.preserve_case:
             # keep strings lower case
@@ -892,7 +893,7 @@ class MFDocString:
             if model_parameter:
                 self.model_parameters.append(param_descr)
 
-    def get_doc_string(self, model_doc_string=False):
+    def get_doc_string(self, model_doc_string=False, sim_doc_string=False):
         doc_string = '{}"""\n{}{}\n\n{}\n'.format(
             self.indent, self.indent, self.description, self.parameter_header
         )
@@ -912,7 +913,17 @@ class MFDocString:
         else:
             param_list = self.parameters
         for parameter in param_list:
+            if sim_doc_string:
+                pclean = parameter.strip()
+                if (
+                    pclean.startswith("simulation")
+                    or pclean.startswith("loading_package")
+                    or pclean.startswith("filename")
+                    or pclean.startswith("pname")
+                    or pclean.startswith("parent_file")
+                ):
+                    continue
             doc_string += f"{parameter}\n"
-        if not model_doc_string:
+        if not (model_doc_string or sim_doc_string):
             doc_string += f'\n{self.indent}"""'
         return doc_string

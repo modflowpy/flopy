@@ -10,7 +10,8 @@ from flopy.datbase import DataInterface, DataType
 from flopy.mbase import ModelInterface
 from flopy.mf6.data.mfdatalist import MFList, MFTransientList
 from flopy.mf6.mfpackage import MFChildPackages, MFPackage
-from flopy.mf6.modflow.mfsimulation import MFSimulation, MFSimulationData
+from flopy.mf6.mfsimbase import MFSimulationData
+from flopy.mf6.modflow.mfsimulation import MFSimulation
 from flopy.modflow import Modflow
 from flopy.utils import TemporalReference
 

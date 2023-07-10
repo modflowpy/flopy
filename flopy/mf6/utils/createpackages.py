@@ -295,6 +295,7 @@ def create_package_init_var(
 def add_var(
     init_vars,
     class_vars,
+    options_param_list,
     init_param_list,
     package_properties,
     doc_string,
@@ -324,6 +325,8 @@ def add_var(
         if default_value is None:
             default_value = "None"
         init_param_list.append(f"{clean_ds_name}={default_value}")
+        if path is not None and "options" in path:
+            options_param_list.append(f"{clean_ds_name}={default_value}")
         # add to set parameter list
         set_param_list.append(f"{clean_ds_name}={clean_ds_name}")
     else:
@@ -404,7 +407,7 @@ def build_model_load(model_type):
         "             exe_name='mf6', strict=True, "
         "model_rel_path='.',\n"
         "             load_only=None):\n        "
-        "return mfmodel.MFModel.load_base(simulation, structure, "
+        "return mfmodel.MFModel.load_base(cls, simulation, structure, "
         "modelname,\n                                         "
         "model_nam_file, '{}6', version,\n"
         "                                         exe_name, strict, "
@@ -415,13 +418,54 @@ def build_model_load(model_type):
     return model_load, model_load_c
 
 
+def build_sim_load():
+    sim_load_c = (
+        "    Methods\n    -------\n"
+        "    load : (sim_name : str, version : "
+        "string,\n        exe_name : str or PathLike, "
+        "sim_ws : str or PathLike, strict : bool,\n        verbosity_level : "
+        "int, load_only : list, verify_data : bool,\n        "
+        "write_headers : bool, lazy_io : bool) : MFSimulation\n"
+        "        a class method that loads a simulation from files"
+        '\n    """'
+    )
+
+    sim_load = (
+        "    @classmethod\n    def load(cls, sim_name='modflowsim', "
+        "version='mf6',\n             "
+        "exe_name: Union[str, os.PathLike] = 'mf6',\n             "
+        "sim_ws: Union[str, os.PathLike] = os.curdir,\n             "
+        "strict=True, verbosity_level=1, load_only=None,\n             "
+        "verify_data=False, write_headers=True,\n             "
+        "lazy_io=False,):\n        "
+        "return mfsimbase.MFSimulationBase.load(cls, sim_name, version, "
+        "\n                                               "
+        "exe_name, sim_ws, strict,\n"
+        "                                                 verbosity_level, "
+        "load_only,\n                                               "
+        "verify_data, write_headers, "
+        "\n                                               lazy_io)"
+        "\n"
+    )
+    return sim_load, sim_load_c
+
+
 def build_model_init_vars(param_list):
     init_var_list = []
+    # build set data calls
     for param in param_list:
         param_parts = param.split("=")
         init_var_list.append(
             f"        self.name_file.{param_parts[0]}.set_data({param_parts[0]})"
         )
+    init_var_list.append("")
+    # build attributes
+    for param in param_list:
+        param_parts = param.split("=")
+        init_var_list.append(
+            f"        self.{param_parts[0]} = self.name_file.{param_parts[0]}"
+        )
+
     return "\n".join(init_var_list)
 
 
@@ -513,6 +557,7 @@ def create_packages():
         package_properties = []
         init_vars = []
         init_param_list = []
+        options_param_list = []
         set_param_list = []
         class_vars = []
         template_gens = []
@@ -569,6 +614,7 @@ def create_packages():
             add_var(
                 init_vars,
                 None,
+                options_param_list,
                 init_param_list,
                 package_properties,
                 doc_string,
@@ -589,6 +635,7 @@ def create_packages():
             add_var(
                 init_vars,
                 None,
+                options_param_list,
                 init_param_list,
                 package_properties,
                 doc_string,
@@ -610,6 +657,7 @@ def create_packages():
             add_var(
                 init_vars,
                 None,
+                options_param_list,
                 init_param_list,
                 package_properties,
                 doc_string,
@@ -640,6 +688,7 @@ def create_packages():
                     tg = add_var(
                         init_vars,
                         class_vars,
+                        options_param_list,
                         init_param_list,
                         package_properties,
                         doc_string,
@@ -698,7 +747,7 @@ def create_packages():
             )
         )
         init_string_full = init_string_def
-        init_string_model = f"{init_string_def}, simulation"
+        init_string_sim = f"{init_string_def}, simulation"
         # add variables to init string
         doc_string.add_parameter(
             "    loading_package : bool\n        "
@@ -871,21 +920,20 @@ def create_packages():
 
         if package[0].dfn_type == mfstructure.DfnType.model_name_file:
             # build model file
-            model_param_list = init_param_list[:-3]
-            init_vars = build_model_init_vars(model_param_list)
+            init_vars = build_model_init_vars(options_param_list)
 
-            model_param_list.insert(0, "model_rel_path='.'")
-            model_param_list.insert(0, "exe_name='mf6'")
-            model_param_list.insert(0, "version='mf6'")
-            model_param_list.insert(0, "model_nam_file=None")
-            model_param_list.insert(0, "modelname='model'")
-            model_param_list.append("**kwargs,")
-            init_string_model = build_init_string(
-                init_string_model, model_param_list
+            options_param_list.insert(0, "model_rel_path='.'")
+            options_param_list.insert(0, "exe_name='mf6'")
+            options_param_list.insert(0, "version='mf6'")
+            options_param_list.insert(0, "model_nam_file=None")
+            options_param_list.insert(0, "modelname='model'")
+            options_param_list.append("**kwargs,")
+            init_string_sim = build_init_string(
+                init_string_sim, options_param_list
             )
-            model_name = clean_class_string(package[2])
+            sim_name = clean_class_string(package[2])
             class_def_string = "class Modflow{}(mfmodel.MFModel):\n".format(
-                model_name.capitalize()
+                sim_name.capitalize()
             )
             class_def_string = class_def_string.replace("-", "_")
             doc_string.add_parameter(
@@ -898,9 +946,9 @@ def create_packages():
                 model_parameter=True,
             )
             doc_string.description = (
-                f"Modflow{model_name} defines a {model_name} model"
+                f"Modflow{sim_name} defines a {sim_name} model"
             )
-            class_var_string = f"    model_type = '{model_name}'\n"
+            class_var_string = f"    model_type = '{sim_name}'\n"
             mparent_init_string = "        super().__init__("
             spaces = " " * len(mparent_init_string)
             mparent_init_string = (
@@ -912,7 +960,7 @@ def create_packages():
                 "**kwargs,"
                 ")\n".format(
                     mparent_init_string,
-                    model_name,
+                    sim_name,
                     spaces,
                     spaces,
                     spaces,
@@ -920,7 +968,7 @@ def create_packages():
                     spaces,
                 )
             )
-            load_txt, doc_text = build_model_load(model_name)
+            load_txt, doc_text = build_model_load(sim_name)
             package_string = "{}\n{}\n\n\n{}{}\n{}\n{}\n{}{}\n{}\n\n{}".format(
                 comment_string,
                 nam_import_string,
@@ -928,21 +976,103 @@ def create_packages():
                 doc_string.get_doc_string(True),
                 doc_text,
                 class_var_string,
-                init_string_model,
+                init_string_sim,
                 mparent_init_string,
                 init_vars,
                 load_txt,
             )
             md_file = open(
-                os.path.join(util_path, "..", "modflow", f"mf{model_name}.py"),
+                os.path.join(util_path, "..", "modflow", f"mf{sim_name}.py"),
                 "w",
                 newline="\n",
             )
             md_file.write(package_string)
             md_file.close()
             init_file_imports.append(
-                f"from .mf{model_name} import Modflow{model_name.capitalize()}\n"
+                f"from .mf{sim_name} import Modflow{sim_name.capitalize()}\n"
             )
+        elif package[0].dfn_type == mfstructure.DfnType.sim_name_file:
+            # build simulation file
+            init_vars = build_model_init_vars(options_param_list)
+
+            options_param_list.insert(0, "lazy_io=False")
+            options_param_list.insert(0, "write_headers=True")
+            options_param_list.insert(0, "verbosity_level=1")
+            options_param_list.insert(
+                0, "sim_ws: Union[str, os.PathLike] = " "os.curdir"
+            )
+            options_param_list.insert(
+                0, "exe_name: Union[str, os.PathLike] " '= "mf6"'
+            )
+            options_param_list.insert(0, "version='mf6'")
+            options_param_list.insert(0, "sim_name='sim'")
+            init_string_sim = "    def __init__(self"
+            init_string_sim = build_init_string(
+                init_string_sim, options_param_list
+            )
+            class_def_string = (
+                "class MFSimulation(mfsimbase." "MFSimulationBase):\n"
+            )
+            doc_string.add_parameter(
+                "    sim_name : str\n" "       Name of the simulation",
+                beginning_of_list=True,
+                model_parameter=True,
+            )
+            doc_string.description = (
+                "MFSimulation is used to load, build, and/or save a MODFLOW "
+                "6 simulation. \n    A MFSimulation object must be created "
+                "before creating any of the MODFLOW 6 \n    model objects."
+            )
+            sparent_init_string = "        super().__init__("
+            spaces = " " * len(sparent_init_string)
+            sparent_init_string = (
+                "{}sim_name=sim_name,\n{}"
+                "version=version,\n{}"
+                "exe_name=exe_name,\n{}"
+                "sim_ws=sim_ws,\n{}"
+                "verbosity_level=verbosity_level,\n{}"
+                "write_headers=write_headers,\n{}"
+                "lazy_io=lazy_io,\n{}"
+                ")\n".format(
+                    sparent_init_string,
+                    spaces,
+                    spaces,
+                    spaces,
+                    spaces,
+                    spaces,
+                    spaces,
+                    spaces,
+                )
+            )
+            sim_import_string = (
+                "import os\n"
+                "from typing import Union\n"
+                "from .. import mfsimbase"
+            )
+
+            load_txt, doc_text = build_sim_load()
+            package_string = "{}\n{}\n\n\n{}{}\n{}\n{}{}\n{}\n\n{}".format(
+                comment_string,
+                sim_import_string,
+                class_def_string,
+                doc_string.get_doc_string(False, True),
+                doc_text,
+                init_string_sim,
+                sparent_init_string,
+                init_vars,
+                load_txt,
+            )
+            sim_file = open(
+                os.path.join(util_path, "..", "modflow", f"mfsimulation.py"),
+                "w",
+                newline="\n",
+            )
+            sim_file.write(package_string)
+            sim_file.close()
+            init_file_imports.append(
+                "from .mfsimulation import MFSimulation\n"
+            )
+
     # Sort the imports
     for line in sorted(init_file_imports, key=lambda x: x.split()[3]):
         init_file.write(line)
