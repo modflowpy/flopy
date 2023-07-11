@@ -185,30 +185,34 @@ class MFScalar(mfdata.MFData):
                     ) and len(data) > 1:
                         self._add_data_line_comment(data[1:], 0)
         storage = self._get_storage_obj()
-        data_struct = self.structure.data_item_structures[0]
-        try:
-            converted_data = convert_data(
-                data, self._data_dimensions, self._data_type, data_struct
-            )
-        except Exception as ex:
-            type_, value_, traceback_ = sys.exc_info()
-            comment = (
-                f'Could not convert data "{data}" to type "{self._data_type}".'
-            )
-            raise MFDataException(
-                self.structure.get_model(),
-                self.structure.get_package(),
-                self._path,
-                "converting data",
-                self.structure.name,
-                inspect.stack()[0][3],
-                type_,
-                value_,
-                traceback_,
-                comment,
-                self._simulation_data.debug,
-                ex,
-            )
+        if data is None:
+            converted_data = data
+        else:
+            data_struct = self.structure.data_item_structures[0]
+            try:
+                converted_data = convert_data(
+                    data, self._data_dimensions, self._data_type, data_struct
+                )
+            except Exception as ex:
+                type_, value_, traceback_ = sys.exc_info()
+                comment = (
+                    f'Could not convert data "{data}" to type '
+                    f'"{self._data_type}".'
+                )
+                raise MFDataException(
+                    self.structure.get_model(),
+                    self.structure.get_package(),
+                    self._path,
+                    "converting data",
+                    self.structure.name,
+                    inspect.stack()[0][3],
+                    type_,
+                    value_,
+                    traceback_,
+                    comment,
+                    self._simulation_data.debug,
+                    ex,
+                )
         try:
             storage.set_data(converted_data, key=self._current_key)
         except Exception as ex:

@@ -83,6 +83,26 @@ class DatumUtil:
             return True
         return False
 
+    @staticmethod
+    def cellid_model_num(data_item_name, model_data, model_dim):
+        # determine which model to use based on cellid name
+        # contains hard coded relationship between data item names and
+        # model number
+        # TODO: Incorporate this into the DFNs
+        if model_data:
+            return None
+        if data_item_name.startswith("cellidm") and len(data_item_name) > 7:
+            model_num = data_item_name[7:]
+            if DatumUtil.is_int(model_num):
+                return int(model_num) - 1
+        if (
+            data_item_name == "cellidn" or data_item_name == "cellidsj"
+        ) and len(model_dim) > 0:
+            return 0
+        elif data_item_name == "cellidm" and len(model_dim) > 1:
+            return 1
+        return None
+
 
 class PyListUtil:
     """

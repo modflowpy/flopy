@@ -918,10 +918,7 @@ def test021_twri(function_tmpdir, example_data_path):
         version="mf6",
         exe_name="mf6",
         sim_ws=data_folder,
-        memory_print_option="SUMMARY",
     )
-    sim.nocheck = True
-
     sim.set_sim_path(function_tmpdir)
     tdis_rc = [(86400.0, 1, 1.0)]
     tdis_package = ModflowTdis(
@@ -930,8 +927,6 @@ def test021_twri(function_tmpdir, example_data_path):
     model = ModflowGwf(
         sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
     )
-    model.print_input = True
-
     ims_package = ModflowIms(
         sim,
         print_option="SUMMARY",
@@ -1103,9 +1098,6 @@ def test021_twri(function_tmpdir, example_data_path):
     strt2 = ic2.strt.get_data()
     drn2 = model2.get_package("drn")
     drn_spd = drn2.stress_period_data.get_data()
-    assert sim2.memory_print_option.get_data().lower() == "summary"
-    assert sim2.nocheck.get_data() is True
-    assert model2.print_input.get_data() is True
     assert strt2[0, 0, 0] == 0.0
     assert strt2[1, 0, 0] == 1.0
     assert strt2[2, 0, 0] == 2.0
@@ -3606,6 +3598,187 @@ def test005_advgw_tidal(function_tmpdir, example_data_path):
         files2=[head_new],
         outfile=outfile,
     )
+
+
+@requires_exe("mf6")
+@pytest.mark.regression
+def test006_2models_different_dis(function_tmpdir, example_data_path):
+    # init paths
+    test_ex_name = "test006_2models_diff_dis"
+    model_name_1 = "model1"
+    model_name_2 = "model2"
+    pth = example_data_path / "mf6" / "create_tests" / test_ex_name
+
+    expected_output_folder = os.path.join(pth, "expected_output")
+    expected_head_file_1 = os.path.join(expected_output_folder, "model1.hds")
+    expected_head_file_2 = os.path.join(expected_output_folder, "model2.hds")
+
+    # create simulation
+    sim = MFSimulation(
+        sim_name=test_ex_name, version="mf6", exe_name="mf6", sim_ws=pth
+    )
+    tdis_rc = [(1.0, 1, 1.0)]
+    tdis_package = ModflowTdis(
+        sim, time_units="DAYS", nper=1, perioddata=tdis_rc
+    )
+    model_1 = ModflowGwf(
+        sim,
+        modelname=model_name_1,
+        model_nam_file=f"{model_name_1}.nam",
+    )
+    model_2 = ModflowGwf(
+        sim,
+        modelname=model_name_2,
+        model_nam_file=f"{model_name_2}.nam",
+    )
+    ims_package = ModflowIms(
+        sim,
+        print_option="SUMMARY",
+        outer_dvclose=0.00000001,
+        outer_maximum=1000,
+        under_relaxation="NONE",
+        inner_maximum=1000,
+        inner_dvclose=0.00000001,
+        rcloserecord=0.01,
+        linear_acceleration="BICGSTAB",
+        scaling_method="NONE",
+        reordering_method="NONE",
+        relaxation_factor=0.97,
+    )
+    sim.register_ims_package(ims_package, [model_1.name, model_2.name])
+    dis_package = ModflowGwfdis(
+        model_1,
+        length_units="METERS",
+        nlay=1,
+        nrow=7,
+        ncol=7,
+        idomain=1,
+        delr=100.0,
+        delc=100.0,
+        top=0.0,
+        botm=-100.0,
+        filename=f"{model_name_1}.dis",
+    )
+
+    vertices = testutils.read_vertices(os.path.join(pth, "vertices.txt"))
+    c2drecarray = testutils.read_cell2d(os.path.join(pth, "cell2d.txt"))
+    disv_package = ModflowGwfdisv(
+        model_2,
+        ncpl=121,
+        nlay=1,
+        nvert=148,
+        top=0.0,
+        botm=-40.0,
+        idomain=1,
+        vertices=vertices,
+        cell2d=c2drecarray,
+        filename=f"{model_name_2}.disv",
+    )
+    ic_package_1 = ModflowGwfic(
+        model_1, strt=1.0, filename=f"{model_name_1}.ic"
+    )
+    ic_package_2 = ModflowGwfic(
+        model_2, strt=1.0, filename=f"{model_name_2}.ic"
+    )
+    npf_package_1 = ModflowGwfnpf(
+        model_1, save_flows=True, perched=True, icelltype=0, k=1.0, k33=1.0
+    )
+    npf_package_2 = ModflowGwfnpf(
+        model_2, save_flows=True, perched=True, icelltype=0, k=1.0, k33=1.0
+    )
+    oc_package_1 = ModflowGwfoc(
+        model_1,
+        budget_filerecord="model1.cbc",
+        head_filerecord="model1.hds",
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+        printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
+    oc_package_2 = ModflowGwfoc(
+        model_2,
+        budget_filerecord="model2.cbc",
+        head_filerecord="model2.hds",
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+        printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
+
+    # build periodrecarray for chd package
+    set_1 = [0, 7, 14, 18, 22, 26, 33]
+    set_2 = [6, 13, 17, 21, 25, 32, 39]
+    stress_period_data = []
+    for value in range(0, 7):
+        stress_period_data.append(((0, value, 0), 1.0))
+    for value in range(0, 7):
+        stress_period_data.append(((0, value, 6), 0.0))
+    chd_package = ModflowGwfchd(
+        model_1,
+        print_input=True,
+        print_flows=True,
+        save_flows=True,
+        maxbound=30,
+        stress_period_data=stress_period_data,
+    )
+    exgrecarray = testutils.read_exchangedata(
+        os.path.join(pth, "exg.txt"), 3, 2
+    )
+
+    # build obs dictionary
+    gwf_obs = {
+        ("gwfgwf_obs.csv"): [
+            ("gwf-1-3-2_1-1-1", "flow-ja-face", (0, 2, 1), (0, 0, 0)),
+            ("gwf-1-3-2_1-2-1", "flow-ja-face", (0, 2, 1), (0, 1, 0)),
+        ]
+    }
+
+    exg_package = ModflowGwfgwf(
+        sim,
+        print_input=True,
+        print_flows=True,
+        save_flows=True,
+        auxiliary="testaux",
+        nexg=9,
+        exchangedata=exgrecarray,
+        exgtype="gwf6-gwf6",
+        exgmnamea=model_name_1,
+        exgmnameb=model_name_2,
+        observations=gwf_obs,
+    )
+
+    gnc_path = os.path.join("gnc", "test006_2models_gnc.gnc")
+    gncrecarray = testutils.read_gncrecarray(
+        os.path.join(pth, "gnc.txt"), 3, 2
+    )
+    gnc_package = exg_package.gnc.initialize(
+        filename=gnc_path,
+        print_input=True,
+        print_flows=True,
+        numgnc=9,
+        numalphaj=1,
+        gncdata=gncrecarray,
+    )
+
+    # change folder to save simulation
+    sim.set_sim_path(function_tmpdir)
+
+    # write simulation to new location
+    sim.write_simulation()
+    # run simulation
+    success, buff = sim.run_simulation()
+    assert success
+
+    sim2 = MFSimulation.load(sim_ws=sim.sim_path)
+    exh = sim2.get_package("gwfgwf")
+    exh_data = exh.exchangedata.get_data()
+    assert exh_data[0][0] == (0, 2, 1)
+    assert exh_data[0][1] == (0, 0)
+    assert exh_data[3][0] == (0, 3, 1)
+    assert exh_data[3][1] == (0, 3)
+    gnc = sim2.get_package("gnc")
+    gnc_data = gnc.gncdata.get_data()
+    assert gnc_data[0][0] == (0, 2, 1)
+    assert gnc_data[0][1] == (0, 0)
+    assert gnc_data[0][2] == (0, 1, 1)
+
+    sim.delete_output_files()
 
 
 @requires_exe("mf6")
