@@ -58,10 +58,34 @@ def get_lni(ncpl, nodes) -> List[Tuple[int, int]]:
     return tuples
 
 
-def get_disu_kwargs(nlay, nrow, ncol, delr, delc, tp, botm):
+def get_disu_kwargs(
+    nlay,
+    nrow,
+    ncol,
+    delr,
+    delc,
+    tp,
+    botm,
+):
     """
-    Simple utility for creating args needed to construct
-    a disu package
+    Create args needed to construct a DISU package.
+
+    Parameters
+    ----------
+    nlay : int
+        Number of layers
+    nrow : int
+        Number of rows
+    ncol : int
+        Number of columns
+    delr : numpy.ndarray
+        Column spacing along a row
+    delc : numpy.ndarray
+        Row spacing along a column
+    tp : int or numpy.ndarray
+        Top elevation(s) of cells in the model's top layer
+    botm : numpy.ndarray
+        Bottom elevation(s) of all cells in the model
     """
 
     def get_nn(k, i, j):
@@ -88,7 +112,7 @@ def get_disu_kwargs(nlay, nrow, ncol, delr, delc, tp, botm):
                 cl12.append(n + 1)
                 hwva.append(n + 1)
                 if k == 0:
-                    top[n] = tp
+                    top[n] = tp.item() if isinstance(tp, np.ndarray) else tp
                 else:
                     top[n] = botm[k - 1]
                 bot[n] = botm[k]
