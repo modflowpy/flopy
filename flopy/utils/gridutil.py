@@ -58,7 +58,15 @@ def get_lni(ncpl, nodes) -> List[Tuple[int, int]]:
     return tuples
 
 
-def get_disu_kwargs(nlay, nrow, ncol, delr, delc, tp, botm):
+def get_disu_kwargs(
+    nlay,
+    nrow,
+    ncol,
+    delr: np.ndarray,
+    delc: np.ndarray,
+    tp: np.ndarray,
+    botm: np.ndarray,
+):
     """
     Simple utility for creating args needed to construct
     a disu package
@@ -88,7 +96,7 @@ def get_disu_kwargs(nlay, nrow, ncol, delr, delc, tp, botm):
                 cl12.append(n + 1)
                 hwva.append(n + 1)
                 if k == 0:
-                    top[n] = tp
+                    top[n] = tp.item()
                 else:
                     top[n] = botm[k - 1]
                 bot[n] = botm[k]
