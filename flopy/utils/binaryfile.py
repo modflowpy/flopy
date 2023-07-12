@@ -562,7 +562,7 @@ class BinaryLayerFile(LayerFile):
                 )  # change ilay from header to zero-based
                 if ilay != k:
                     continue
-                ipos = int(self.iposarray[irec])
+                ipos = self.iposarray[irec].item()
 
                 # Calculate offset necessary to reach intended cell
                 self.file.seek(ipos + int(ioffset), 0)
@@ -1031,9 +1031,9 @@ class CellBudgetFile:
                     print(f"{itxt}: {s}")
                 print("file position: ", ipos)
                 if (
-                    int(header["imeth"]) != 5
-                    and int(header["imeth"]) != 6
-                    and int(header["imeth"]) != 7
+                    header["imeth"].item() != 5
+                    and header["imeth"].item() != 6
+                    and header["imeth"].item() != 7
                 ):
                     print("")
 
@@ -1141,7 +1141,7 @@ class CellBudgetFile:
             )
             for name in temp.dtype.names:
                 header2[name] = temp[name]
-            if int(header2["imeth"]) == 6:
+            if header2["imeth"].item() == 6:
                 header2["modelnam"] = binaryread(self.file, str, charlen=16)
                 header2["paknam"] = binaryread(self.file, str, charlen=16)
                 header2["modelnam2"] = binaryread(self.file, str, charlen=16)
@@ -1689,7 +1689,7 @@ class CellBudgetFile:
             idx = np.array([idx])
 
         header = self.recordarray[idx]
-        ipos = int(self.iposarray[idx])
+        ipos = self.iposarray[idx].item()
         self.file.seek(ipos, 0)
         imeth = header["imeth"][0]
 
