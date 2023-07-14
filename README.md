@@ -1,7 +1,7 @@
 
 <img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
-### Version 3.4.2.dev0 (preliminary)
+### Version 3.5.0.dev0 (preliminary)
 [![flopy continuous integration](https://github.com/modflowpy/flopy/actions/workflows/commit.yml/badge.svg?branch=develop)](https://github.com/modflowpy/flopy/actions/workflows/commit.yml)
 [![Read the Docs](https://github.com/modflowpy/flopy/actions/workflows/rtd.yml/badge.svg?branch=develop)](https://github.com/modflowpy/flopy/actions/workflows/rtd.yml)
 
@@ -142,7 +142,7 @@ How to Cite
 
 ##### ***Software/Code citation for FloPy:***
 
-[Bakker, Mark, Post, Vincent, Hughes, J. D., Langevin, C. D., White, J. T., Leaf, A. T., Paulinski, S. R., Bellino, J. C., Morway, E. D., Toews, M. W., Larsen, J. D., Fienen, M. N., Starn, J. J., Brakenhoff, D. A., and Bonelli, W. P., 2023, FloPy v3.4.2.dev0 (preliminary): U.S. Geological Survey Software Release, 30 June 2023, https://doi.org/10.5066/F7BK19FH](https://doi.org/10.5066/F7BK19FH)
+[Bakker, Mark, Post, Vincent, Hughes, J. D., Langevin, C. D., White, J. T., Leaf, A. T., Paulinski, S. R., Bellino, J. C., Morway, E. D., Toews, M. W., Larsen, J. D., Fienen, M. N., Starn, J. J., Brakenhoff, D. A., and Bonelli, W. P., 2023, FloPy v3.5.0.dev0 (preliminary): U.S. Geological Survey Software Release, 13 July 2023, https://doi.org/10.5066/F7BK19FH](https://doi.org/10.5066/F7BK19FH)
 
 
 Additional FloPy Related Publications
