@@ -503,40 +503,88 @@ def test_subdir(function_tmpdir):
 
 
 @requires_exe("mf6")
-def test_binary_write(function_tmpdir):
+@pytest.mark.parametrize("layered", [True, False])
+def test_binary_write(function_tmpdir, layered):
     nlay, nrow, ncol = 2, 1, 10
     shape2d = (nrow, ncol)
-    shape3d = (nlay, nrow, ncol)
+
+    # data for layers
+    botm = [4.0, 0.0]
+    strt = [5.0, 10.0]
 
     # create binary data structured
+    if layered:
+        idomain_data = []
+        botm_data = []
+        strt_data = []
+        for k in range(nlay):
+            idomain_data.append(
+                {
+                    "factor": 1.0,
+                    "filename": f"idomain_l{k+1}.bin",
+                    "data": 1,
+                    "binary": True,
+                    "iprn": 1,
+                }
+            )
+            botm_data.append(
+                {
+                    "filename": f"botm_l{k+1}.bin",
+                    "binary": True,
+                    "iprn": 1,
+                    "data": np.full(shape2d, botm[k], dtype=float),
+                }
+            )
+            strt_data.append(
+                {
+                    "filename": f"strt_l{k+1}.bin",
+                    "binary": True,
+                    "iprn": 1,
+                    "data": np.full(shape2d, strt[k], dtype=float),
+                }
+            )
+    else:
+        idomain_data = {
+            "filename": "idomain.bin",
+            "binary": True,
+            "iprn": 1,
+            "data": 1,
+        }
+        botm_data = {
+            "filename": "botm.bin",
+            "binary": True,
+            "iprn": 1,
+            "data": np.array(
+                [
+                    np.full(shape2d, botm[0], dtype=float),
+                    np.full(shape2d, botm[1], dtype=float),
+                ]
+            ),
+        }
+        strt_data = {
+            "filename": "strt.bin",
+            "binary": True,
+            "iprn": 1,
+            "data": np.array(
+                [
+                    np.full(shape2d, strt[0], dtype=float),
+                    np.full(shape2d, strt[1], dtype=float),
+                ]
+            ),
+        }
+
+    # binary data that does not vary by layers
     top_data = {
         "filename": "top.bin",
         "binary": True,
-        "iprn": 0,
+        "iprn": 1,
         "data": 10.0,
-    }
-    botm_data = {
-        "filename": "botm.bin",
-        "binary": True,
-        "iprn": 0,
-        "data": np.array(
-            [
-                np.full(shape2d, 4.0, dtype=float),
-                np.full(shape2d, 0.0, dtype=float),
-            ]
-        ),
-    }
-    strt_data = {
-        "filename": "strt.bin",
-        "binary": True,
-        "iprn": 0,
-        "data": np.full(shape3d, 10.0, dtype=float),
     }
     rch_data = {
         0: {
             "filename": "recharge.bin",
             "binary": True,
-            "iprn": 0,
+            "iprn": 1,
             "data": 0.000001,
         },
     }
@@ -548,7 +596,7 @@ def test_binary_write(function_tmpdir):
         0: {
             "filename": "chd.bin",
             "binary": True,
-            "iprn": 0,
+            "iprn": 1,
             "data": chd_data,
         },
     }
@@ -566,6 +614,7 @@ def test_binary_write(function_tmpdir):
         delc=1.0,
         top=top_data,
         botm=botm_data,
+        idomain=idomain_data,
     )
     ModflowGwfnpf(
         gwf,
@@ -573,7 +622,7 @@ def test_binary_write(function_tmpdir):
     )
     ModflowGwfic(
         gwf,
-        strt=10.0,
+        strt=strt_data,
     )
     ModflowGwfchd(
         gwf,
@@ -588,8 +637,8 @@ def test_binary_write(function_tmpdir):
 
 
 @requires_exe("mf6")
-@pytest.mark.skip(reason="todo:: after flopy binary fix.")
-def test_vor_binary_write(function_tmpdir):
+@pytest.mark.parametrize("layered", [True, False])
+def test_vor_binary_write(function_tmpdir, layered):
     # build voronoi grid
     boundary = [(0.0, 0.0), (0.0, 1.0), (10.0, 1.0), (10.0, 0.0)]
     triangle_ws = function_tmpdir / "triangle"
@@ -606,37 +655,84 @@ def test_vor_binary_write(function_tmpdir):
 
     # problem dimensions
     nlay = 2
-    shape3d = (nlay, vor.ncpl)
+
+    # data for layers
+    botm = [4.0, 0.0]
+    strt = [5.0, 10.0]
 
     # build binary data
+    if layered:
+        idomain_data = []
+        botm_data = []
+        strt_data = []
+        for k in range(nlay):
+            idomain_data.append(
+                {
+                    "factor": 1.0,
+                    "filename": f"idomain_l{k + 1}.bin",
+                    "data": 1,
+                    "binary": True,
+                    "iprn": 1,
+                }
+            )
+            botm_data.append(
+                {
+                    "filename": f"botm_l{k + 1}.bin",
+                    "binary": True,
+                    "iprn": 1,
+                    "data": np.full(vor.ncpl, botm[k], dtype=float),
+                }
+            )
+            strt_data.append(
+                {
+                    "filename": f"strt_l{k + 1}.bin",
+                    "binary": True,
+                    "iprn": 1,
+                    "data": np.full(vor.ncpl, strt[k], dtype=float),
+                }
+            )
+    else:
+        idomain_data = {
+            "filename": "idomain.bin",
+            "binary": True,
+            "iprn": 1,
+            "data": 1,
+        }
+        botm_data = {
+            "filename": "botm.bin",
+            "binary": True,
+            "iprn": 1,
+            "data": np.array(
+                [
+                    np.full(vor.ncpl, botm[0], dtype=float),
+                    np.full(vor.ncpl, botm[1], dtype=float),
+                ]
+            ),
+        }
+        strt_data = {
+            "filename": "strt.bin",
+            "binary": True,
+            "iprn": 1,
+            "data": np.array(
+                [
+                    np.full(vor.ncpl, strt[0], dtype=float),
+                    np.full(vor.ncpl, strt[1], dtype=float),
+                ]
+            ),
+        }
+
+    # binary data that does not vary by layers
     top_data = {
         "filename": "top.bin",
         "binary": True,
-        "iprn": 0,
+        "iprn": 1,
         "data": 10.0,
-    }
-    botm_data = {
-        "filename": "botm.bin",
-        "binary": True,
-        "iprn": 0,
-        "data": np.array(
-            [
-                np.full(vor.ncpl, 4.0, dtype=float),
-                np.full(vor.ncpl, 0.0, dtype=float),
-            ]
-        ),
-    }
-    strt_data = {
-        "filename": "strt.bin",
-        "binary": True,
-        "iprn": 0,
-        "data": np.full(shape3d, 10.0, dtype=float),
     }
     rch_data = {
         0: {
             "filename": "recharge.bin",
             "binary": True,
-            "iprn": 0,
+            "iprn": 1,
             "data": np.full(vor.ncpl, 0.000001, dtype=float),  # 0.000001,
         },
     }
@@ -668,6 +764,7 @@ def test_vor_binary_write(function_tmpdir):
         cell2d=vor.get_disv_gridprops()["cell2d"],
         top=top_data,
         botm=botm_data,
+        idomain=idomain_data,
         xorigin=0.0,
         yorigin=0.0,
     )
