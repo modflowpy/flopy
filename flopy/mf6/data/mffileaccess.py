@@ -212,6 +212,8 @@ class MFFileAccessArray(MFFileAccess):
     ):
         data = self._resolve_cellid_numbers_to_file(data)
         fd = self._open_ext_file(fname, binary=True, write=True)
+        if data.size == modelgrid.nnodes:
+            write_multi_layer = False
         if write_multi_layer:
             for layer, value in enumerate(data):
                 self._write_layer(
@@ -252,7 +254,14 @@ class MFFileAccessArray(MFFileAccess):
         ilay=None,
     ):
         header_data = self._get_header(
-            modelgrid, modeltime, stress_period, precision, text, fname, ilay
+            modelgrid,
+            modeltime,
+            stress_period,
+            precision,
+            text,
+            fname,
+            ilay=ilay,
+            data=data,
         )
         header_data.tofile(fd)
         data.tofile(fd)
@@ -266,6 +275,7 @@ class MFFileAccessArray(MFFileAccess):
         text,
         fname,
         ilay=None,
+        data=None,
     ):
         # handle dis (row, col, lay), disv (ncpl, lay), and disu (nodes) cases
         if modelgrid is not None and modeltime is not None:
@@ -274,13 +284,18 @@ class MFFileAccessArray(MFFileAccess):
             if ilay is None:
                 ilay = modelgrid.nlay
             if modelgrid.grid_type == "structured":
+                m1, m2, m3 = modelgrid.ncol, modelgrid.nrow, ilay
+                if data is not None:
+                    shape3d = modelgrid.nlay * modelgrid.nrow * modelgrid.ncol
+                    if data.size == shape3d:
+                        m1, m2, m3 = shape3d, 1, 1
                 return BinaryHeader.create(
                     bintype="vardis",
                     precision=precision,
                     text=text,
-                    nrow=modelgrid.nrow,
-                    ncol=modelgrid.ncol,
-                    ilay=ilay,
+                    m1=m1,
+                    m2=m2,
+                    m3=m3,
                     pertim=pertim,
                     totim=totim,
                     kstp=1,
@@ -289,24 +304,30 @@ class MFFileAccessArray(MFFileAccess):
             elif modelgrid.grid_type == "vertex":
                 if ilay is None:
                     ilay = modelgrid.nlay
+                m1, m2, m3 = modelgrid.ncpl, 1, ilay
+                if data is not None:
+                    shape3d = modelgrid.nlay * modelgrid.ncpl
+                    if data.size == shape3d:
+                        m1, m2, m3 = shape3d, 1, 1
                 return BinaryHeader.create(
                     bintype="vardisv",
                     precision=precision,
                     text=text,
-                    ncpl=modelgrid.ncpl,
-                    ilay=ilay,
-                    m3=1,
+                    m1=m1,
+                    m2=m2,
+                    m3=m3,
                     pertim=pertim,
                     totim=totim,
                     kstp=1,
                     kper=stress_period,
                 )
             elif modelgrid.grid_type == "unstructured":
+                m1, m2, m3 = modelgrid.nnodes, 1, 1
                 return BinaryHeader.create(
                     bintype="vardisu",
                     precision=precision,
                     text=text,
-                    nodes=modelgrid.nnodes,
+                    m1=m1,
                     m2=1,
                     m3=1,
                     pertim=pertim,
@@ -317,13 +338,14 @@ class MFFileAccessArray(MFFileAccess):
             else:
                 if ilay is None:
                     ilay = 1
+                m1, m2, m3 = 1, 1, ilay
                 header = BinaryHeader.create(
                     bintype="vardis",
                     precision=precision,
                     text=text,
-                    nrow=1,
-                    ncol=1,
-                    ilay=ilay,
+                    m1=m1,
+                    m2=m2,
+                    m3=m3,
                     pertim=pertim,
                     totim=totim,
                     kstp=1,
@@ -339,14 +361,15 @@ class MFFileAccessArray(MFFileAccess):
                         "binary file {}.".format(fname)
                     )
         else:
+            m1, m2, m3 = 1, 1, 1
             pertim = np.float64(1.0)
             header = BinaryHeader.create(
                 bintype="vardis",
                 precision=precision,
                 text=text,
-                nrow=1,
-                ncol=1,
-                ilay=1,
+                m1=m1,
+                m2=m2,
+                m3=m3,
                 pertim=pertim,
                 totim=pertim,
                 kstp=1,

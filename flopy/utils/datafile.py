@@ -81,9 +81,9 @@ class Header:
                         ("pertim", floattype),
                         ("totim", floattype),
                         ("text", "a16"),
-                        ("ncol", "i4"),
-                        ("nrow", "i4"),
-                        ("ilay", "i4"),
+                        ("m1", "i4"),
+                        ("m2", "i4"),
+                        ("m3", "i4"),
                     ]
                 )
             elif self.header_type == "vardisv":
@@ -94,8 +94,8 @@ class Header:
                         ("pertim", floattype),
                         ("totim", floattype),
                         ("text", "a16"),
-                        ("ncpl", "i4"),
-                        ("ilay", "i4"),
+                        ("m1", "i4"),
+                        ("m2", "i4"),
                         ("m3", "i4"),
                     ]
                 )
@@ -107,7 +107,7 @@ class Header:
                         ("pertim", floattype),
                         ("totim", floattype),
                         ("text", "a16"),
-                        ("nodes", "i4"),
+                        ("m1", "i4"),
                         ("m2", "i4"),
                         ("m3", "i4"),
                     ]

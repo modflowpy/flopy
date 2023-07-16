@@ -46,7 +46,7 @@ jobs:
           cache-dependency-path: pyproject.toml
 
       - name: Upgrade pip
-        run: pip install --upgrade pip
+        run: python -m pip install --upgrade pip
 
       - name: Install flopy and dependencies
         run: pip install ".[test, doc, optional]"
