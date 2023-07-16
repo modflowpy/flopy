@@ -254,7 +254,14 @@ class MFFileAccessArray(MFFileAccess):
         ilay=None,
     ):
         header_data = self._get_header(
-            modelgrid, modeltime, stress_period, precision, text, fname, ilay=ilay, data=data,
+            modelgrid,
+            modeltime,
+            stress_period,
+            precision,
+            text,
+            fname,
+            ilay=ilay,
+            data=data,
         )
         header_data.tofile(fd)
         data.tofile(fd)
@@ -288,7 +295,7 @@ class MFFileAccessArray(MFFileAccess):
                     text=text,
                     m1=m1,
                     m2=m2,
-                    m3-m3,
+                    m3=m3,
                     pertim=pertim,
                     totim=totim,
                     kstp=1,
