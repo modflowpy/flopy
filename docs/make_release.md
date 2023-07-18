@@ -28,7 +28,7 @@ The FloPy release procedure is mostly automated with GitHub Actions in [`release
 
 3. Update the authors in `CITATION.cff` for the Software/Code citation for FloPy, if required.
 
-4. Review deprecations. To search for deprecation warnings with git: `git grep "deprecated::"`
+4. Review deprecations. To search for deprecation warnings with git: `git grep -A2 "deprecated::"`
 
 
 ## Release procedure
