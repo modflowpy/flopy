@@ -97,8 +97,8 @@ def write_grid_shapefile(
     **kwargs : dict, optional
         Support deprecated keyword options.
 
-        .. deprecated:: 3.3.7
-           The following keyword options will be removed for FloPy 3.4:
+        .. deprecated:: 3.5
+           The following keyword options will be removed for FloPy 3.6:
 
              - ``epsg`` (int): use ``crs`` instead.
              - ``prj`` (str or PathLike): use ``prjfile`` instead.
@@ -608,8 +608,8 @@ def recarray2shp(
     **kwargs : dict, optional
         Support deprecated keyword options.
 
-        .. deprecated:: 3.3.7
-           The following keyword options will be removed for FloPy 3.4:
+        .. deprecated:: 3.5
+           The following keyword options will be removed for FloPy 3.6:
 
              - ``epsg`` (int): use ``crs`` instead.
              - ``prj`` (str or PathLike): use ``prjfile`` instead.

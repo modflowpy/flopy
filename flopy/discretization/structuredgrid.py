@@ -117,8 +117,8 @@ class StructuredGrid(Grid):
     **kwargs : dict, optional
         Support deprecated keyword options.
 
-        .. deprecated:: 3.3.7
-           The following keyword options will be removed for FloPy 3.4:
+        .. deprecated:: 3.5
+           The following keyword options will be removed for FloPy 3.6:
 
              - ``prj`` (str or pathlike): use ``prjfile`` instead.
              - ``epsg`` (int): use ``crs`` instead.

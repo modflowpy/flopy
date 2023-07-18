@@ -303,8 +303,8 @@ class _ModpathSeries:
             such as an authority string (eg "EPSG:26916") or a WKT string.
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
-          .. deprecated:: 3.3.7
-             The following keyword options will be removed for FloPy 3.4:
+          .. deprecated:: 3.5
+             The following keyword options will be removed for FloPy 3.6:
 
                - ``epsg`` (int): use ``crs`` instead.
 
@@ -781,8 +781,8 @@ class PathlineFile(_ModpathSeries):
             such as an authority string (eg "EPSG:26916") or a WKT string.
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
-          .. deprecated:: 3.3.7
-             The following keyword options will be removed for FloPy 3.4:
+          .. deprecated:: 3.5
+             The following keyword options will be removed for FloPy 3.6:
 
                - ``epsg`` (int): use ``crs`` instead.
 
@@ -1227,8 +1227,8 @@ class EndpointFile:
             such as an authority string (eg "EPSG:26916") or a WKT string.
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
-          .. deprecated:: 3.3.7
-             The following keyword options will be removed for FloPy 3.4:
+          .. deprecated:: 3.5
+             The following keyword options will be removed for FloPy 3.6:
 
                - ``epsg`` (int): use ``crs`` instead.
 
@@ -1632,8 +1632,8 @@ class TimeseriesFile(_ModpathSeries):
             such as an authority string (eg "EPSG:26916") or a WKT string.
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
-          .. deprecated:: 3.3.7
-             The following keyword options will be removed for FloPy 3.4:
+          .. deprecated:: 3.5
+             The following keyword options will be removed for FloPy 3.6:
 
                - ``epsg`` (int): use ``crs`` instead.
 

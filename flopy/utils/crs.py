@@ -95,8 +95,8 @@ def get_crs(prjfile=None, crs=None, **kwargs):
     **kwargs : dict, optional
         Support deprecated keyword options.
 
-        .. deprecated:: 3.3.7
-           The following keyword options will be removed for FloPy 3.4:
+        .. deprecated:: 3.4
+           The following keyword options will be removed for FloPy 3.6:
 
              - ``prj`` (str or pathlike): use ``prjfile`` instead.
              - ``epsg`` (int): use ``crs`` instead.
@@ -113,14 +113,14 @@ def get_crs(prjfile=None, crs=None, **kwargs):
     if "prj" in kwargs:
         warnings.warn(
             "the prj argument will be deprecated and will be removed in "
-            "version 3.4. Use prjfile instead.",
+            "version 3.6. Use prjfile instead.",
             PendingDeprecationWarning,
         )
         prjfile = kwargs.pop("prj")
     if "epsg" in kwargs:
         warnings.warn(
             "the epsg argument will be deprecated and will be removed in "
-            "version 3.4. Use crs instead.",
+            "version 3.6. Use crs instead.",
             PendingDeprecationWarning,
         )
         epsg = kwargs.pop("epsg")
@@ -139,7 +139,7 @@ def get_crs(prjfile=None, crs=None, **kwargs):
     if "proj4" in kwargs:
         warnings.warn(
             "the proj4 argument will be deprecated and will be removed in "
-            "version 3.4. Use crs instead.",
+            "version 3.6. Use crs instead.",
             PendingDeprecationWarning,
         )
         proj4 = kwargs.pop("proj4")

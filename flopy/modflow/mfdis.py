@@ -102,8 +102,8 @@ class ModflowDis(Package):
     **kwargs : dict, optional
         Support deprecated keyword options.
 
-        .. deprecated:: 3.3.7
-           ``proj4_str`` will be removed for FloPy 3.4, use ``crs`` instead.
+        .. deprecated:: 3.5
+           ``proj4_str`` will be removed for FloPy 3.6, use ``crs`` instead.
 
     Attributes
     ----------
@@ -258,7 +258,7 @@ class ModflowDis(Package):
         if "proj4_str" in kwargs:
             warnings.warn(
                 "the proj4_str argument will be deprecated and will be "
-                "removed in version 3.4. Use crs instead.",
+                "removed in version 3.6. Use crs instead.",
                 PendingDeprecationWarning,
             )
             proj4_str = kwargs.pop("proj4_str")
