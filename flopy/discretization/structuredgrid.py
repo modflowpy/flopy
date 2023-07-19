@@ -97,7 +97,7 @@ class StructuredGrid(Grid):
         ibound/idomain value for each cell
     lenuni : int or ndarray
         model length units
-    crs : pyproj.CRS, optional if `prjfile` is specified
+    crs : pyproj.CRS, int, str, optional if `prjfile` is specified
         Coordinate reference system (CRS) for the model grid
         (must be projected; geographic CRS are not supported).
         The value can be anything accepted by
@@ -114,6 +114,15 @@ class StructuredGrid(Grid):
         in the spatial reference coordinate system
     angrot : float
         rotation angle of model grid, as it is rotated around the origin point
+    **kwargs : dict, optional
+        Support deprecated keyword options.
+
+        .. deprecated:: 3.5
+           The following keyword options will be removed for FloPy 3.6:
+
+             - ``prj`` (str or pathlike): use ``prjfile`` instead.
+             - ``epsg`` (int): use ``crs`` instead.
+             - ``proj4`` (str): use ``crs`` instead.
 
     Properties
     ----------
@@ -146,9 +155,6 @@ class StructuredGrid(Grid):
         idomain=None,
         lenuni=None,
         crs=None,
-        epsg=None,
-        proj4=None,
-        prj=None,
         prjfile=None,
         xoff=0.0,
         yoff=0.0,
@@ -157,21 +163,20 @@ class StructuredGrid(Grid):
         nrow=None,
         ncol=None,
         laycbd=None,
+        **kwargs,
     ):
         super().__init__(
             "structured",
-            top,
-            botm,
-            idomain,
-            lenuni,
-            crs,
-            epsg,
-            proj4,
-            prj,
-            prjfile,
-            xoff,
-            yoff,
-            angrot,
+            top=top,
+            botm=botm,
+            idomain=idomain,
+            lenuni=lenuni,
+            crs=crs,
+            prjfile=prjfile,
+            xoff=xoff,
+            yoff=yoff,
+            angrot=angrot,
+            **kwargs,
         )
         if delc is not None:
             self.__nrow = len(delc)

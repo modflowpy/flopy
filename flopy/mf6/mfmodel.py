@@ -640,10 +640,6 @@ class MFModel(PackageContainer, ModelInterface):
             modelgrid: flopy.discretization.Grid
                 User supplied modelgrid object which will supercede the built
                 in modelgrid object
-            epsg : int
-                EPSG projection code
-            prj : str
-                The prj file name
             if fmt is set to 'vtk', parameters of vtk.export_model
 
         """

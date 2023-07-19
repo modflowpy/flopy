@@ -596,7 +596,7 @@ def model_export(
         modelgrid: flopy.discretization.Grid
             user supplied modelgrid object which will supercede the built
             in modelgrid object
-        crs : pyproj.CRS, optional if `prjfile` is specified
+        crs : pyproj.CRS, int, str, optional if `prjfile` is specified
             Coordinate reference system (CRS) for the model grid
             (must be projected; geographic CRS are not supported).
             The value can be anything accepted by
@@ -689,7 +689,7 @@ def package_export(
         modelgrid: flopy.discretization.Grid
             user supplied modelgrid object which will supercede the built
             in modelgrid object
-        crs : pyproj.CRS, optional if `prjfile` is specified
+        crs : pyproj.CRS, int, str, optional if `prjfile` is specified
             Coordinate reference system (CRS) for the model grid
             (must be projected; geographic CRS are not supported).
             The value can be anything accepted by
@@ -888,7 +888,7 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
     **kwargs : keyword arguments
         modelgrid : flopy.discretization.Grid
             model grid instance which will supercede the flopy.model.modelgrid
-        crs : pyproj.CRS, optional if `prjfile` is specified
+        crs : pyproj.CRS, int, str, optional if `prjfile` is specified
             Coordinate reference system (CRS) for the model grid
             (must be projected; geographic CRS are not supported).
             The value can be anything accepted by
@@ -1679,7 +1679,10 @@ def export_array(
     elif filename.lower().endswith(".shp"):
         from ..export.shapefile_utils import write_grid_shapefile
 
-        crs = get_crs(**kwargs)
+        try:
+            crs = get_crs(**kwargs)
+        except ImportError:
+            crs = None
         write_grid_shapefile(
             filename,
             modelgrid,
@@ -1866,7 +1869,7 @@ def export_array_contours(
     ax = plt.subplots()[-1]
     ctr = contour_array(modelgrid, ax, a, levels=levels)
 
-    kwargs["modelgrid"] = modelgrid
+    kwargs["mg"] = modelgrid
     export_contours(filename, ctr, fieldname, **kwargs)
     plt.close()
 

@@ -64,7 +64,7 @@ m.get_package_list()
 # the coordinate information where the grid is located in a projected coordinate system (e.g. UTM)
 
 grid = m.modelgrid
-grid.set_coord_info(xoff=273170, yoff=5088657, epsg=26916)
+grid.set_coord_info(xoff=273170, yoff=5088657, crs=26916)
 
 grid.extent
 
@@ -143,7 +143,7 @@ polygons
 # ##### write the shapefile
 
 fname = "{}/bcs.shp".format(outdir)
-recarray2shp(spd.to_records(), geoms=polygons, shpname=fname, epsg=grid.epsg)
+recarray2shp(spd.to_records(), geoms=polygons, shpname=fname, crs=grid.epsg)
 
 ax = plt.subplot(1, 1, 1, aspect="equal")
 extents = grid.extent
@@ -173,7 +173,7 @@ from flopy.utils.geometry import Point
 geoms = [Point(x, y) for x, y in zip(welldata.x_utm, welldata.y_utm)]
 
 fname = "{}/wel_data.shp".format(outdir)
-recarray2shp(welldata.to_records(), geoms=geoms, shpname=fname, epsg=grid.epsg)
+recarray2shp(welldata.to_records(), geoms=geoms, shpname=fname, crs=grid.epsg)
 # -
 
 ax = plt.subplot(1, 1, 1, aspect="equal")
@@ -207,7 +207,7 @@ recarray2shp(
     rivdata.to_records(index=False),
     geoms=lines,
     shpname=lines_shapefile,
-    epsg=grid.epsg,
+    crs=grid.epsg,
 )
 # -
 
@@ -242,7 +242,7 @@ recarray2shp(
     linesdata.drop("geometry", axis=1).to_records(),
     geoms=linesdata.geometry.values,
     shpname=lines_shapefile,
-    epsg=grid.epsg,
+    crs=grid.epsg,
 )
 
 ax = plt.subplot(1, 1, 1, aspect="equal")

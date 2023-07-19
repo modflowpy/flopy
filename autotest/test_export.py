@@ -328,8 +328,12 @@ def test_write_gridlines_shapefile(function_tmpdir):
     outshp = function_tmpdir / "gridlines.shp"
     write_gridlines_shapefile(outshp, sg)
 
-    for suffix in [".dbf", ".prj", ".shp", ".shx"]:
+    for suffix in [".dbf", ".shp", ".shx"]:
         assert outshp.with_suffix(suffix).exists()
+    if has_pkg("pyproj"):
+        assert outshp.with_suffix(".prj").exists()
+    else:
+        assert not outshp.with_suffix(".prj").exists()
 
     with shapefile.Reader(str(outshp)) as sf:
         assert sf.shapeType == shapefile.POLYLINE
@@ -991,7 +995,7 @@ def test_polygon_from_ij_with_epsg(function_tmpdir):
     fpth2 = os.path.join(ws, "26715.prj")
     shutil.copy(fpth, fpth2)
     fpth = os.path.join(ws, "test.shp")
-    recarray2shp(recarray, geoms, fpth, prj=fpth2)
+    recarray2shp(recarray, geoms, fpth, prjfile=fpth2)
 
     # test_dtypes
     fpth = os.path.join(ws, "test.shp")
