@@ -53,9 +53,9 @@ except:
     import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 
 temp_dir = TemporaryDirectory()
 sim_name = "mp7_ex03a_mf6"
@@ -165,7 +165,7 @@ tdis = flopy.mf6.modflow.mftdis.ModflowTdis(
 )
 
 # groundwater flow (gwf) model
-model_nam_file = "{}.nam".format(sim_name)
+model_nam_file = f"{sim_name}.nam"
 gwf = flopy.mf6.ModflowGwf(
     sim, modelname=sim_name, model_nam_file=model_nam_file, save_flows=True
 )
@@ -231,9 +231,9 @@ dd = [
 drn = flopy.mf6.modflow.mfgwfdrn.ModflowGwfdrn(gwf, stress_period_data={0: dd})
 
 # output control
-headfile = "{}.hds".format(sim_name)
+headfile = f"{sim_name}.hds"
 head_record = [headfile]
-budgetfile = "{}.cbb".format(sim_name)
+budgetfile = f"{sim_name}.cbb"
 budget_record = [budgetfile]
 saverecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
 oc = flopy.mf6.modflow.mfgwfoc.ModflowGwfoc(

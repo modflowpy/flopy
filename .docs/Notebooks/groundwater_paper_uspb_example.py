@@ -36,9 +36,9 @@ except:
     import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 # -
 
 ws = os.path.join("temp")

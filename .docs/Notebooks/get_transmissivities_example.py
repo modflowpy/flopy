@@ -39,9 +39,9 @@ import numpy as np
 import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # ### Make up some open interval tops and bottoms and some heads
@@ -104,7 +104,7 @@ m.dis.botm.array[:, r, c]
 fig, ax = plt.subplots()
 plt.plot(m.dis.top.array[r, c], label="model top")
 for i, l in enumerate(m.dis.botm.array[:, r, c]):
-    label = "layer {} bot".format(i + 1)
+    label = f"layer {i + 1} bot"
     if i == m.nlay - 1:
         label = "model bot"
     plt.plot(l, label=label)

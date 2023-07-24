@@ -40,9 +40,9 @@ except:
     import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 
 # temporary directory
 temp_dir = TemporaryDirectory()
@@ -98,7 +98,7 @@ tdis = flopy.mf6.modflow.mftdis.ModflowTdis(
 )
 
 # Create the Flopy groundwater flow (gwf) model object
-model_nam_file = "{}.nam".format(nm)
+model_nam_file = f"{nm}.nam"
 gwf = flopy.mf6.ModflowGwf(
     sim, modelname=nm, model_nam_file=model_nam_file, save_flows=True
 )
@@ -148,9 +148,9 @@ for i in range(nrow):
     rd.append([(0, i, ncol - 1), riv_h, riv_c, riv_z])
 flopy.mf6.modflow.mfgwfriv.ModflowGwfriv(gwf, stress_period_data={0: rd})
 # Create the output control package
-headfile = "{}.hds".format(nm)
+headfile = f"{nm}.hds"
 head_record = [headfile]
-budgetfile = "{}.cbb".format(nm)
+budgetfile = f"{nm}.cbb"
 budget_record = [budgetfile]
 saverecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
 oc = flopy.mf6.modflow.mfgwfoc.ModflowGwfoc(
@@ -182,7 +182,7 @@ nodesr = get_nodes(cellids)
 
 # +
 # create modpath files
-mpnamf = nm + "_mp_forward"
+mpnamf = f"{nm}_mp_forward"
 
 # create basic forward tracking modpath simulation
 mp = flopy.modpath.Modpath7.create_mp7(
@@ -210,7 +210,7 @@ for line in buff:
 
 # +
 # create modpath files
-mpnamb = nm + "_mp_backward"
+mpnamb = f"{nm}_mp_backward"
 
 # create basic forward tracking modpath simulation
 mp = flopy.modpath.Modpath7.create_mp7(
@@ -241,14 +241,14 @@ for line in buff:
 
 # Load forward tracking pathline data
 
-fpth = os.path.join(ws, mpnamf + ".mppth")
+fpth = os.path.join(ws, f"{mpnamf}.mppth")
 p = flopy.utils.PathlineFile(fpth)
 pw = p.get_destination_pathline_data(dest_cells=nodew)
 pr = p.get_destination_pathline_data(dest_cells=nodesr)
 
 # Load forward tracking endpoint data
 
-fpth = os.path.join(ws, mpnamf + ".mpend")
+fpth = os.path.join(ws, f"{mpnamf}.mpend")
 e = flopy.utils.EndpointFile(fpth)
 
 # Get forward particles that terminate in the well
@@ -273,7 +273,7 @@ idax = 0
 for k in range(nlay):
     ax = axes[idax]
     ax.set_aspect("equal")
-    ax.set_title("Well pathlines - Layer {}".format(k + 1))
+    ax.set_title(f"Well pathlines - Layer {k + 1}")
     mm = flopy.plot.PlotMapView(model=gwf, ax=ax)
     mm.plot_grid(lw=0.5)
     mm.plot_pathline(pw, layer=k, colors=colors[k], lw=0.75)
@@ -282,7 +282,7 @@ for k in range(nlay):
 for k in range(nlay):
     ax = axes[idax]
     ax.set_aspect("equal")
-    ax.set_title("River pathlines - Layer {}".format(k + 1))
+    ax.set_title(f"River pathlines - Layer {k + 1}")
     mm = flopy.plot.PlotMapView(model=gwf, ax=ax)
     mm.plot_grid(lw=0.5)
     mm.plot_pathline(pr, layer=k, colors=colors[k], lw=0.75)
@@ -316,14 +316,14 @@ mm.plot_endpoint(riv_epd, direction="starting", colorbar=True, shrink=0.5)
 #
 # Load backward tracking pathlines
 
-fpth = os.path.join(ws, mpnamb + ".mppth")
+fpth = os.path.join(ws, f"{mpnamb}.mppth")
 p = flopy.utils.PathlineFile(fpth)
 pwb = p.get_destination_pathline_data(dest_cells=nodew)
 prb = p.get_destination_pathline_data(dest_cells=nodesr)
 
 # Load backward tracking endpoints
 
-fpth = os.path.join(ws, mpnamb + ".mpend")
+fpth = os.path.join(ws, f"{mpnamb}.mpend")
 e = flopy.utils.EndpointFile(fpth)
 ewb = e.get_destination_endpoint_data(dest_cells=nodew, source=True)
 erb = e.get_destination_endpoint_data(dest_cells=nodesr, source=True)

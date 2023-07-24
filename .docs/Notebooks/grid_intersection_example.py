@@ -60,10 +60,10 @@ import flopy.plot as fplot
 from flopy.utils import GridIntersect
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
-print("shapely version: {}".format(shapely.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
+print(f"shapely version: {shapely.__version__}")
 # -
 
 # ## <a id="gridclass"></a>[GridIntersect Class](#top)

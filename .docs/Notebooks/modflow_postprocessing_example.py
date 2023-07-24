@@ -37,9 +37,9 @@ from flopy.utils.postprocessing import (
 )
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 
 # +
 mfnam = "EXAMPLE.nam"
@@ -68,18 +68,18 @@ axes = axes.flat
 grid = m.modelgrid
 for i, hdslayer in enumerate(hds):
     im = axes[i].imshow(hdslayer, vmin=hds.min(), vmax=hds.max())
-    axes[i].set_title("Layer {}".format(i + 1))
+    axes[i].set_title(f"Layer {i + 1}")
     ctr = axes[i].contour(hdslayer, colors="k", linewidths=0.5)
 
     # export head rasters
     # (GeoTiff export requires the rasterio package; for ascii grids, just change the extension to *.asc)
     flopy.export.utils.export_array(
-        grid, os.path.join(workspace, "heads{}.tif".format(i + 1)), hdslayer
+        grid, os.path.join(workspace, f"heads{i + 1}.tif"), hdslayer
     )
 
     # export head contours to a shapefile
     flopy.export.utils.export_array_contours(
-        grid, os.path.join(workspace, "heads{}.shp".format(i + 1)), hdslayer
+        grid, os.path.join(workspace, f"heads{i + 1}.shp"), hdslayer
     )
 
 fig.delaxes(axes[-1])
@@ -100,9 +100,7 @@ flopy.export.utils.export_array(
     grid, os.path.join(workspace, "heads5_rot.tif"), hdslayer, nodata=nodata
 )
 
-results = np.loadtxt(
-    os.path.join(workspace, "heads5_rot.asc".format(i + 1)), skiprows=6
-)
+results = np.loadtxt(os.path.join(workspace, f"heads5_rot.asc"), skiprows=6)
 results[results == nodata] = np.nan
 plt.imshow(results)
 plt.colorbar()
@@ -128,9 +126,7 @@ axes = axes.flat
 
 for i, vertical_gradient in enumerate(grad):
     im = axes[i].imshow(vertical_gradient, vmin=grad.min(), vmax=grad.max())
-    axes[i].set_title(
-        "Vertical gradient\nbetween Layers {} and {}".format(i + 1, i + 2)
-    )
+    axes[i].set_title(f"Vertical gradient\nbetween Layers {i + 1} and {i + 2}")
     ctr = axes[i].contour(
         vertical_gradient,
         levels=[-0.1, -0.05, 0.0, 0.05, 0.1],

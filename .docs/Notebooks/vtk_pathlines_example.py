@@ -29,7 +29,7 @@ import sys
 import flopy
 
 print(sys.version)
-print("flopy version: {}".format(flopy.__version__))
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # Load the Freyberg MF6 groundwater flow model.

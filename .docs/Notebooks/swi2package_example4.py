@@ -45,9 +45,9 @@ import numpy as np
 import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # Define model name of your model and the location of MODFLOW executable. All MODFLOW files and output will be stored in the subdirectory defined by the workspace. Create a model named `ml` and specify that this is a MODFLOW-2005 model.
@@ -307,7 +307,7 @@ ml2.run_model(silent=True)
 
 # read base model zeta
 zfile = flopy.utils.CellBudgetFile(
-    os.path.join(ml.model_ws, modelname + ".zta")
+    os.path.join(ml.model_ws, f"{modelname}.zta")
 )
 kstpkper = zfile.get_kstpkper()
 zeta = []
@@ -316,14 +316,14 @@ for kk in kstpkper:
 zeta = np.array(zeta)
 # read swi obs
 zobs = np.genfromtxt(
-    os.path.join(ml.model_ws, modelname + ".zobs.out"), names=True
+    os.path.join(ml.model_ws, f"{modelname}.zobs.out"), names=True
 )
 
 # Load the simulation 2 `ZETA` data and `ZETA` observations.
 
 # read saltwater well model zeta
 zfile2 = flopy.utils.CellBudgetFile(
-    os.path.join(ml2.model_ws, modelname2 + ".zta")
+    os.path.join(ml2.model_ws, f"{modelname2}.zta")
 )
 kstpkper = zfile2.get_kstpkper()
 zeta2 = []
@@ -332,7 +332,7 @@ for kk in kstpkper:
 zeta2 = np.array(zeta2)
 # read swi obs
 zobs2 = np.genfromtxt(
-    os.path.join(ml2.model_ws, modelname2 + ".zobs.out"), names=True
+    os.path.join(ml2.model_ws, f"{modelname2}.zobs.out"), names=True
 )
 
 # Create arrays for the x-coordinates and the output years
@@ -379,7 +379,7 @@ for idx in range(5):
         drawstyle="steps-mid",
         linewidth=0.5,
         color=cc[idx],
-        label="{:2d} years".format(years[idx]),
+        label=f"{years[idx]:2d} years",
     )
     # layer 2
     ax.plot(
@@ -437,7 +437,7 @@ for idx in range(5, len(years)):
         drawstyle="steps-mid",
         linewidth=0.5,
         color=cc[idx - 5],
-        label="{:2d} years".format(years[idx]),
+        label=f"{years[idx]:2d} years",
     )
     # layer 2
     ax.plot(
@@ -495,7 +495,7 @@ for idx in range(5, len(years)):
         drawstyle="steps-mid",
         linewidth=0.5,
         color=cc[idx - 5],
-        label="{:2d} years".format(years[idx]),
+        label=f"{years[idx]:2d} years",
     )
     # layer 2
     ax.plot(
@@ -613,14 +613,14 @@ modelxsect.plot_fill_between(
     zeta[4, :, :, :], colors=colors, ax=ax, edgecolors="none"
 )
 linecollection = modelxsect.plot_grid(ax=ax)
-ax.set_title("Recharge year {}".format(years[4]))
+ax.set_title(f"Recharge year {years[4]}")
 
 ax = fig.add_subplot(1, 2, 2)
 ax.set_xlim(0, 3050)
 ax.set_ylim(-50, -10)
 modelxsect.plot_fill_between(zeta[-1, :, :, :], colors=colors, ax=ax)
 linecollection = modelxsect.plot_grid(ax=ax)
-ax.set_title("Scenario year {}".format(years[-1]))
+ax.set_title(f"Scenario year {years[-1]}")
 # -
 
 try:

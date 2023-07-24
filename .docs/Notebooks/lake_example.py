@@ -40,9 +40,9 @@ temp_dir = TemporaryDirectory()
 workspace = temp_dir.name
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # We are creating a square model with a specified head equal to `h1` along all boundaries. The head at the cell in the center in the top layer is fixed to `h2`. First, set the name of the model and the parameters of the model: the number of layers `Nlay`, the number of rows and columns `N`, lengths of the sides of the model `L`, aquifer thickness `H`, hydraulic conductivity `k`
@@ -109,7 +109,7 @@ else:
 
 # Once the model has terminated normally, we can read the heads file. First, a link to the heads file is created with `HeadFile`. The link can then be accessed with the `get_data` function, by specifying, in this case, the step number and period number for which we want to retrieve data. A three-dimensional array is returned of size `nlay, nrow, ncol`. Matplotlib contouring functions are used to make contours of the layers or a cross-section.
 
-hds = flopy.utils.HeadFile(os.path.join(workspace, name + ".hds"))
+hds = flopy.utils.HeadFile(os.path.join(workspace, f"{name}.hds"))
 h = hds.get_data(kstpkper=(0, 0))
 x = y = np.linspace(0, L, N)
 c = plt.contour(x, y, h[0], np.arange(90, 100.1, 0.2))

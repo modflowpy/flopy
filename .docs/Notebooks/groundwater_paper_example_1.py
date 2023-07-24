@@ -40,9 +40,9 @@ import flopy.modflow as fpm
 import flopy.utils as fpu
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # Create a MODFLOW model object. Here, the MODFLOW model object is stored in a Python variable called {\tt model}, but this can be an arbitrary name. This object name is important as it will be used as a reference to the model in the remainder of the FloPy script. In addition, a {\tt modelname} is specified when the MODFLOW model object is created. This {\tt modelname} is used for all the files that are created by FloPy for this model.

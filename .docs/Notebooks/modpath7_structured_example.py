@@ -40,9 +40,9 @@ except:
     import flopy
 
     print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 
 # temporary directory
 temp_dir = TemporaryDirectory()
@@ -176,7 +176,7 @@ for line in buff:
 # create modpath files
 exe_name = "mp7"
 mp = flopy.modpath.Modpath7(
-    modelname=nm + "_mp", flowmodel=m, exe_name=exe_name, model_ws=ws
+    modelname=f"{nm}_mp", flowmodel=m, exe_name=exe_name, model_ws=ws
 )
 mpbas = flopy.modpath.Modpath7Bas(mp, porosity=0.1, defaultiface=defaultiface)
 mpsim = flopy.modpath.Modpath7Sim(
@@ -216,7 +216,7 @@ nodesr = m.dis.get_node(riv_locs.tolist())
 
 # Pathline data
 
-fpth = os.path.join(ws, nm + "_mp.mppth")
+fpth = os.path.join(ws, f"{nm}_mp.mppth")
 p = flopy.utils.PathlineFile(fpth)
 pw0 = p.get_destination_pathline_data(nodew, to_recarray=True)
 pr0 = p.get_destination_pathline_data(nodesr, to_recarray=True)
@@ -225,7 +225,7 @@ pr0 = p.get_destination_pathline_data(nodesr, to_recarray=True)
 #
 # Get particles that terminate in the well
 
-fpth = os.path.join(ws, nm + "_mp.mpend")
+fpth = os.path.join(ws, f"{nm}_mp.mpend")
 e = flopy.utils.EndpointFile(fpth)
 well_epd = e.get_destination_endpoint_data(dest_cells=nodew)
 well_epd.shape
@@ -270,7 +270,7 @@ tdis = flopy.mf6.modflow.mftdis.ModflowTdis(
 )
 
 # Create the Flopy groundwater flow (gwf) model object
-model_nam_file = "{}.nam".format(nm)
+model_nam_file = f"{nm}.nam"
 gwf = flopy.mf6.ModflowGwf(
     sim, modelname=nm, model_nam_file=model_nam_file, save_flows=True
 )
@@ -320,9 +320,9 @@ for i in range(nrow):
     rd.append([(0, i, ncol - 1), riv_h, riv_c, riv_z])
 flopy.mf6.modflow.mfgwfriv.ModflowGwfriv(gwf, stress_period_data={0: rd})
 # Create the output control package
-headfile = "{}.hds".format(nm)
+headfile = f"{nm}.hds"
 head_record = [headfile]
-budgetfile = "{}.cbb".format(nm)
+budgetfile = f"{nm}.cbb"
 budget_record = [budgetfile]
 saverecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
 oc = flopy.mf6.modflow.mfgwfoc.ModflowGwfoc(
@@ -348,7 +348,7 @@ for line in buff:
 # create modpath files
 exe_name = "mp7"
 mp = flopy.modpath.Modpath7(
-    modelname=nm + "_mp", flowmodel=gwf, exe_name=exe_name, model_ws=ws
+    modelname=f"{nm}_mp", flowmodel=gwf, exe_name=exe_name, model_ws=ws
 )
 mpbas = flopy.modpath.Modpath7Bas(mp, porosity=0.1, defaultiface=defaultiface6)
 mpsim = flopy.modpath.Modpath7Sim(
@@ -382,7 +382,7 @@ for line in buff:
 #
 # Pathline data
 
-fpth = os.path.join(ws, nm + "_mp.mppth")
+fpth = os.path.join(ws, f"{nm}_mp.mppth")
 p = flopy.utils.PathlineFile(fpth)
 pw1 = p.get_destination_pathline_data(nodew, to_recarray=True)
 pr1 = p.get_destination_pathline_data(nodesr, to_recarray=True)
@@ -391,7 +391,7 @@ pr1 = p.get_destination_pathline_data(nodesr, to_recarray=True)
 #
 # Get particles that terminate in the well
 
-fpth = os.path.join(ws, nm + "_mp.mpend")
+fpth = os.path.join(ws, f"{nm}_mp.mpend")
 e = flopy.utils.EndpointFile(fpth)
 well_epd = e.get_destination_endpoint_data(dest_cells=nodew)
 

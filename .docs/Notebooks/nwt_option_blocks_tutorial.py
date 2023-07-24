@@ -38,7 +38,7 @@ except:
 from flopy.utils import OptionBlock
 
 print(sys.version)
-print("flopy version: {}".format(flopy.__version__))
+print(f"flopy version: {flopy.__version__}")
 
 # +
 load_ws = os.path.join("..", "..", "examples", "data", "options", "sagehen")
