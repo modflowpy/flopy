@@ -274,7 +274,7 @@ else:
     raise ValueError("Failed to run.")
 
 # +
-head_file = os.path.join(mf.model_ws, modelname + ".clnhd")
+head_file = os.path.join(mf.model_ws, f"{modelname}.clnhd")
 headobj = flopy.utils.HeadFile(head_file)
 
 simtimes = headobj.get_times()
@@ -298,7 +298,7 @@ ax.set_title("MODFLOW USG Ex3a Conduit Unconfined")
 ax.legend()
 
 # +
-cbb_file = os.path.join(mf.model_ws, modelname + ".clncb")
+cbb_file = os.path.join(mf.model_ws, f"{modelname}.clncb")
 cbb = flopy.utils.CellBudgetFile(cbb_file)
 # cbb.list_records()
 
@@ -371,7 +371,7 @@ else:
     raise ValueError("Failed to run.")
 
 # +
-head_file = os.path.join(mf.model_ws, modelname + ".clnhd")
+head_file = os.path.join(mf.model_ws, f"{modelname}.clnhd")
 headobj = flopy.utils.HeadFile(head_file)
 
 simtimes = headobj.get_times()
@@ -393,7 +393,7 @@ ax.set_ylabel("Simulated Head in pumping well, in meters")
 ax.set_title("MODFLOW USG Ex3b Conduit Unconfined")
 
 # +
-cbb_file = os.path.join(mf.model_ws, modelname + ".clncb")
+cbb_file = os.path.join(mf.model_ws, f"{modelname}.clncb")
 cbb = flopy.utils.CellBudgetFile(cbb_file)
 # cbb.list_records()
 
@@ -467,7 +467,7 @@ else:
     raise ValueError("Failed to run.")
 
 # +
-head_file = os.path.join(mf.model_ws, modelname + ".clnhd")
+head_file = os.path.join(mf.model_ws, f"{modelname}.clnhd")
 headobj = flopy.utils.HeadFile(head_file)
 
 simtimes = headobj.get_times()
@@ -491,7 +491,7 @@ ax.set_title("MODFLOW USG Ex3c Conduit Unconfined")
 ax.legend()
 
 # +
-cbb_file = os.path.join(mf.model_ws, modelname + ".clncb")
+cbb_file = os.path.join(mf.model_ws, f"{modelname}.clncb")
 cbb = flopy.utils.CellBudgetFile(cbb_file)
 # cbb.list_records()
 
@@ -562,7 +562,7 @@ else:
     raise ValueError("Failed to run.")
 
 # +
-head_file = os.path.join(mf.model_ws, modelname + ".clnhd")
+head_file = os.path.join(mf.model_ws, f"{modelname}.clnhd")
 headobj = flopy.utils.HeadFile(head_file)
 
 simtimes = headobj.get_times()
@@ -576,7 +576,7 @@ for i in range(nper):
 head_case4 = np.squeeze(simhead)
 
 # +
-cbb_file = os.path.join(mf.model_ws, modelname + ".clncb")
+cbb_file = os.path.join(mf.model_ws, f"{modelname}.clncb")
 cbb = flopy.utils.CellBudgetFile(cbb_file)
 # cbb.list_records()
 

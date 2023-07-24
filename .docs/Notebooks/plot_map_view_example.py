@@ -47,9 +47,9 @@ except:
     import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 
 # + pycharm={"name": "#%%\n"}
 # Set name of MODFLOW exe
@@ -86,10 +86,10 @@ else:
 files = ["freyberg.hds", "freyberg.cbc"]
 for f in files:
     if os.path.isfile(os.path.join(modelpth, f)):
-        msg = "Output file located: {}".format(f)
+        msg = f"Output file located: {f}"
         print(msg)
     else:
-        errmsg = "Error. Output file cannot be found: {}".format(f)
+        errmsg = f"Error. Output file cannot be found: {f}"
         print(errmsg)
 
 # + [markdown] pycharm={"name": "#%% md\n"}
@@ -437,7 +437,7 @@ for d in ml.wel.stress_period_data[0]:
 
 # construct maximum travel time to plot (200 years - MODFLOW time unit is seconds)
 travel_time_max = 200.0 * 365.25 * 24.0 * 60.0 * 60.0
-ctt = "<={}".format(travel_time_max)
+ctt = f"<={travel_time_max}"
 
 # plot the pathlines
 mapview.plot_pathline(plines, layer="all", colors="red", travel_time=ctt)
@@ -607,10 +607,10 @@ if not success:
 files = ["freyberg.hds", "freyberg.cbc"]
 for f in files:
     if os.path.isfile(os.path.join(modelpth, f)):
-        msg = "Output file located: {}".format(f)
+        msg = f"Output file located: {f}"
         print(msg)
     else:
-        errmsg = "Error. Output file cannot be found: {}".format(f)
+        errmsg = f"Error. Output file cannot be found: {f}"
         print(errmsg)
 
 # + [markdown] pycharm={"name": "#%% md\n"}
@@ -716,10 +716,10 @@ modelpth = os.path.join(modelpth, "mp7_ex2", "mf6")
 files = ["mp7p2.hds", "mp7p2.cbb"]
 for f in files:
     if os.path.isfile(os.path.join(modelpth, f)):
-        msg = "Output file located: {}".format(f)
+        msg = f"Output file located: {f}"
         print(msg)
     else:
-        errmsg = "Error. Output file cannot be found: {}".format(f)
+        errmsg = f"Error. Output file cannot be found: {f}"
         print(errmsg)
 
 # + pycharm={"name": "#%%\n"}
@@ -820,11 +820,11 @@ cb = plt.colorbar(pc, shrink=0.75, ax=ax)
 # + pycharm={"name": "#%%\n"}
 # load the MODPATH-7 results
 mp_namea = "mp7p2a_mp"
-fpth = os.path.join(modelpth, mp_namea + ".mppth")
+fpth = os.path.join(modelpth, f"{mp_namea}.mppth")
 p = flopy.utils.PathlineFile(fpth)
 p0 = p.get_alldata()
 
-fpth = os.path.join(modelpth, mp_namea + ".timeseries")
+fpth = os.path.join(modelpth, f"{mp_namea}.timeseries")
 ts = flopy.utils.TimeseriesFile(fpth)
 ts0 = ts.get_alldata()
 
@@ -899,7 +899,7 @@ def load_verts(fname):
 
 
 def load_iverts(fname):
-    f = open(fname, "r")
+    f = open(fname)
     iverts = []
     xc = []
     yc = []
@@ -926,11 +926,11 @@ iverts, xc, yc = load_iverts(fname)
 # + pycharm={"name": "#%%\n"}
 # Print the first 5 entries in verts and iverts
 for ivert, v in enumerate(verts[:5]):
-    print("Vertex coordinate pair for vertex {}: {}".format(ivert, v))
+    print(f"Vertex coordinate pair for vertex {ivert}: {v}")
 print("...\n")
 
 for icell, vertlist in enumerate(iverts[:5]):
-    print("List of vertices for cell {}: {}".format(icell, vertlist))
+    print(f"List of vertices for cell {icell}: {vertlist}")
 
 # + [markdown] pycharm={"name": "#%% md\n"}
 # A flopy `UnstructuredGrid` object can now be created using the vertices and incidence list.  The `UnstructuredGrid` object is a key part of the plotting capabilities in flopy.  In addition to the vertex information, the `UnstructuredGrid` object also needs to know how many cells are in each layer.  This is specified in the ncpl variable, which is a list of cells per layer.
@@ -954,7 +954,7 @@ plt.plot(umg.xcellcenters, umg.ycellcenters, "bo")
 # Create a random array for layer 0, and then plot it with a color flood and contours
 f = plt.figure(figsize=(10, 10))
 
-a = np.random.random((ncpl[0])) * 100
+a = np.random.random(ncpl[0]) * 100
 levels = np.arange(0, 100, 30)
 
 mapview = flopy.plot.PlotMapView(modelgrid=umg)

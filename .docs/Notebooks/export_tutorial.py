@@ -27,7 +27,7 @@ from tempfile import TemporaryDirectory
 import flopy
 
 print(sys.version)
-print("flopy version: {}".format(flopy.__version__))
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # Load our old friend...the Freyberg model
@@ -60,12 +60,12 @@ temp_dir = TemporaryDirectory()
 pth = temp_dir.name
 
 # export the whole model (inputs and outputs)
-fnc = ml.export(os.path.join(pth, ml.name + ".in.nc"))
+fnc = ml.export(os.path.join(pth, f"{ml.name}.in.nc"))
 
 # export outputs using spatial reference info
 hds = flopy.utils.HeadFile(os.path.join(model_ws, "freyberg.hds"))
 flopy.export.utils.output_helper(
-    os.path.join(pth, ml.name + ".out.nc"), ml, {"hds": hds}
+    os.path.join(pth, f"{ml.name}.out.nc"), ml, {"hds": hds}
 )
 
 # ### Export an array to netCDF or shapefile

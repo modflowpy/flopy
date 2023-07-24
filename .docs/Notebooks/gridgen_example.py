@@ -45,9 +45,9 @@ from flopy.utils import flopy_io
 from flopy.utils.gridgen import Gridgen
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # The Flopy GRIDGEN module requires that the gridgen executable can be called using subprocess **(i.e., gridgen is in your path)**.
@@ -62,9 +62,7 @@ if gridgen_exe is None:
     print(msg)
 else:
     print(
-        "gridgen executable was found at: {}".format(
-            flopy_io.relpath_safe(gridgen_exe)
-        )
+        f"gridgen executable was found at: {flopy_io.relpath_safe(gridgen_exe)}"
     )
 
 # +
@@ -75,8 +73,8 @@ model_ws = temp_dir.name
 gridgen_ws = os.path.join(model_ws, "gridgen")
 if not os.path.exists(gridgen_ws):
     os.makedirs(gridgen_ws, exist_ok=True)
-print("Model workspace is : {}".format(flopy_io.scrub_login(model_ws)))
-print("Gridgen workspace is : {}".format(flopy_io.scrub_login(gridgen_ws)))
+print(f"Model workspace is : {flopy_io.scrub_login(model_ws)}")
+print(f"Gridgen workspace is : {flopy_io.scrub_login(gridgen_ws)}")
 # -
 
 # ## Basic Gridgen Operations
@@ -276,8 +274,8 @@ npf = flopy.mf6.ModflowGwfnpf(
     gwf, xt3doptions=True, save_specific_discharge=True
 )
 chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chdspd)
-budget_file = name + ".bud"
-head_file = name + ".hds"
+budget_file = f"{name}.bud"
+head_file = f"{name}.hds"
 oc = flopy.mf6.ModflowGwfoc(
     gwf,
     budget_filerecord=budget_file,
@@ -378,8 +376,8 @@ npf = flopy.mf6.ModflowGwfnpf(
     gwf, xt3doptions=True, save_specific_discharge=True
 )
 chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chdspd)
-budget_file = name + ".bud"
-head_file = name + ".hds"
+budget_file = f"{name}.bud"
+head_file = f"{name}.hds"
 oc = flopy.mf6.ModflowGwfoc(
     gwf,
     budget_filerecord=budget_file,
@@ -406,7 +404,7 @@ for ilay in range(gwf.modelgrid.nlay):
     pmv.contour_array(
         head, levels=[0.2, 0.4, 0.6, 0.8], linewidths=3.0, vmin=vmin, vmax=vmax
     )
-    ax.set_title("Layer {}".format(ilay + 1))
+    ax.set_title(f"Layer {ilay + 1}")
     pmv.plot_vector(spdis["qx"], spdis["qy"], color="white")
 # -
 
@@ -452,7 +450,7 @@ else:
     raise ValueError("Failed to run.")
 
 # head is returned as a list of head arrays for each layer
-head_file = os.path.join(ws, name + ".hds")
+head_file = os.path.join(ws, f"{name}.hds")
 head = flopy.utils.HeadUFile(head_file).get_data()
 
 # MODFLOW-USG does not have vertices, so we need to create
@@ -472,7 +470,7 @@ for ilay in range(disu.nlay):
     pmv.plot_array(head[ilay], cmap="jet", vmin=vmin, vmax=vmax)
     pmv.plot_grid(colors="k", alpha=0.1)
     pmv.contour_array(head[ilay], levels=[0.2, 0.4, 0.6, 0.8], linewidths=3.0)
-    ax.set_title("Layer {}".format(ilay + 1))
+    ax.set_title(f"Layer {ilay + 1}")
 # -
 
 try:

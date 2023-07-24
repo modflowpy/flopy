@@ -87,7 +87,7 @@ tdis = flopy.mf6.ModflowTdis(
 
 model_name = "example_model"
 model = flopy.mf6.ModflowGwf(
-    sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+    sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
 )
 
 # Next create one or more Iterative Model Solution (IMS) files.
@@ -129,7 +129,7 @@ dis_package = flopy.mf6.ModflowGwfdis(
     delc=500.0,
     top=100.0,
     botm=[50.0, 20.0],
-    filename="{}.dis".format(model_name),
+    filename=f"{model_name}.dis",
 )
 
 # ## Accessing namefiles
@@ -260,7 +260,7 @@ strt = {
     "binary": "True",
 }
 ic_package = flopy.mf6.ModflowGwfic(
-    model, pname="ic", strt=strt, filename="{}.ic".format(model_name)
+    model, pname="ic", strt=strt, filename=f"{model_name}.ic"
 )
 # move external file data into model folder
 icv_data_path = os.path.join(
@@ -380,8 +380,8 @@ saverec_dict = {
 oc_package = flopy.mf6.ModflowGwfoc(
     model,
     pname="oc",
-    budget_filerecord=[("{}.cbc".format(model_name),)],
-    head_filerecord=[("{}.hds".format(model_name),)],
+    budget_filerecord=[(f"{model_name}.cbc",)],
+    head_filerecord=[(f"{model_name}.hds",)],
     saverecord=saverec_dict,
     printrecord=printrec_tuple_list,
 )
@@ -547,17 +547,17 @@ strt = ic.strt
 # +
 # get the data without applying any factor
 hk_data_no_factor = hk.get_data()
-print("Data without factor:\n{}\n".format(hk_data_no_factor))
+print(f"Data without factor:\n{hk_data_no_factor}\n")
 
 # get data with factor applied
 hk_data_factor = hk.array
-print("Data with factor:\n{}\n".format(hk_data_factor))
+print(f"Data with factor:\n{hk_data_factor}\n")
 # -
 
 # Data can also be retrieved from the data object using []. For unlayered data the [] can be used to slice the data.
 
 # slice layer one row two
-print("SY slice of layer on row two\n{}\n".format(sy[0, :, 2]))
+print(f"SY slice of layer on row two\n{sy[0, :, 2]}\n")
 
 # For layered data specify the layer number within the brackets.  This will return a "LayerStorage" object which let's you change attributes of an individual layer.
 
@@ -566,8 +566,8 @@ hk_layer_one = hk[0]
 # change the print code and factor for layer one
 hk_layer_one.iprn = "2"
 hk_layer_one.factor = 1.1
-print("Layer one data without factor:\n{}\n".format(hk_layer_one.get_data()))
-print("Data with new factor:\n{}\n".format(hk.array))
+print(f"Layer one data without factor:\n{hk_layer_one.get_data()}\n")
+print(f"Data with new factor:\n{hk.array}\n")
 
 # ## Modifying Data
 #
@@ -577,13 +577,13 @@ print("Data with new factor:\n{}\n".format(hk.array))
 hk_layer_one.set_data(
     [120.0, 100.0, 80.0, 70.0, 60.0, 50.0, 40.0, 30.0, 25.0, 20.0]
 )
-print("New HK data no factor:\n{}\n".format(hk.get_data()))
+print(f"New HK data no factor:\n{hk.get_data()}\n")
 # set data attribute to new data
 ic_package.strt = 150.0
-print("New strt values:\n{}\n".format(ic_package.strt.array))
+print(f"New strt values:\n{ic_package.strt.array}\n")
 # call set_data
 sto_package.ss.set_data([0.000003, 0.000004])
-print("New ss values:\n{}\n".format(sto_package.ss.array))
+print(f"New ss values:\n{sto_package.ss.array}\n")
 
 # ## Modifying the Simulation Path
 #

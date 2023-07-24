@@ -52,10 +52,10 @@ import flopy
 from flopy.utils import flopy_io
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("pandas version: {}".format(pd.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"pandas version: {pd.__version__}")
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # Set name of MODFLOW exe
@@ -240,7 +240,7 @@ if avail:
     uzfbdobjct = flopy.utils.CellBudgetFile(fpth)
     uzfbdobjct.list_records()
 else:
-    print('"{}" is not available'.format(fpth))
+    print(f'"{fpth}" is not available')
 
 if success and avail:
     r = uzfbdobjct.get_data(text="UZF RECHARGE")

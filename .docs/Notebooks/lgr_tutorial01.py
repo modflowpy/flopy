@@ -42,9 +42,9 @@ if not os.path.isdir(workspace):
     os.makedirs(workspace, exist_ok=True)
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # ## LGR basics
@@ -256,8 +256,8 @@ chdspd = [[(0, 0, 0), 1.0], [(0, lgrp.nrow - 1, lgrp.ncol - 1), 0.0]]
 chd = flopy.mf6.ModflowGwfchd(gwfp, stress_period_data=chdspd)
 oc = flopy.mf6.ModflowGwfoc(
     gwfp,
-    budget_filerecord=pname + ".bud",
-    head_filerecord=pname + ".hds",
+    budget_filerecord=f"{pname}.bud",
+    head_filerecord=f"{pname}.hds",
     saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
 )
 
@@ -270,8 +270,8 @@ ic = flopy.mf6.ModflowGwfic(gwfc)
 npf = flopy.mf6.ModflowGwfnpf(gwfc, save_specific_discharge=True)
 oc = flopy.mf6.ModflowGwfoc(
     gwfc,
-    budget_filerecord=cname + ".bud",
-    head_filerecord=cname + ".hds",
+    budget_filerecord=f"{cname}.bud",
+    head_filerecord=f"{cname}.hds",
     saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
 )
 
@@ -436,8 +436,8 @@ chdspd = [[(0, 0, 0), 1.0], [(0, lgrp.nrow - 1, lgrp.ncol - 1), 0.0]]
 chd = flopy.mf6.ModflowGwfchd(gwfp, stress_period_data=chdspd)
 oc = flopy.mf6.ModflowGwfoc(
     gwfp,
-    budget_filerecord=pname + ".bud",
-    head_filerecord=pname + ".hds",
+    budget_filerecord=f"{pname}.bud",
+    head_filerecord=f"{pname}.hds",
     saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
 )
 
@@ -450,8 +450,8 @@ ic = flopy.mf6.ModflowGwfic(gwfc)
 npf = flopy.mf6.ModflowGwfnpf(gwfc, save_specific_discharge=True)
 oc = flopy.mf6.ModflowGwfoc(
     gwfc,
-    budget_filerecord=cname + ".bud",
-    head_filerecord=cname + ".hds",
+    budget_filerecord=f"{cname}.bud",
+    head_filerecord=f"{cname}.hds",
     saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
 )
 # -
@@ -495,8 +495,8 @@ if include_transport:
     ssm = flopy.mf6.ModflowGwtssm(gwtp)
     oc = flopy.mf6.ModflowGwtoc(
         gwtp,
-        budget_filerecord=pname + ".bud",
-        concentration_filerecord=pname + ".ucn",
+        budget_filerecord=f"{pname}.bud",
+        concentration_filerecord=f"{pname}.ucn",
         saverecord=[("CONCENTRATION", "ALL"), ("BUDGET", "ALL")],
     )
 
@@ -514,8 +514,8 @@ if include_transport:
     cnc = flopy.mf6.ModflowGwtcnc(gwtc, stress_period_data=cncspd)
     oc = flopy.mf6.ModflowGwtoc(
         gwtc,
-        budget_filerecord=cname + ".bud",
-        concentration_filerecord=cname + ".ucn",
+        budget_filerecord=f"{cname}.bud",
+        concentration_filerecord=f"{cname}.ucn",
         saverecord=[("CONCENTRATION", "ALL"), ("BUDGET", "ALL")],
         printrecord=[("CONCENTRATION", "LAST"), ("BUDGET", "ALL")],
     )

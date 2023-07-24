@@ -47,11 +47,11 @@ except:
     from flopy.utils import Raster
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("pandas version: {}".format(pd.__version__))
-print("shapely version: {}".format(shapely.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"pandas version: {pd.__version__}")
+print(f"shapely version: {shapely.__version__}")
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # temporary directory
@@ -151,7 +151,7 @@ pmv = flopy.plot.PlotMapView(modelgrid=ml.modelgrid, ax=ax)
 ax = pmv.plot_array(
     dem_data, masked_values=rio.nodatavals, vmin=vmin, vmax=vmax
 )
-plt.title("Resample time, nearest neighbor: {:.3f} sec".format(resample_time))
+plt.title(f"Resample time, nearest neighbor: {resample_time:.3f} sec")
 plt.colorbar(ax, shrink=0.7)
 # -
 
@@ -170,7 +170,7 @@ pmv = flopy.plot.PlotMapView(modelgrid=ml.modelgrid, ax=ax)
 ax = pmv.plot_array(
     dem_data, masked_values=rio.nodatavals, vmin=vmin, vmax=vmax
 )
-plt.title("Resample time, bi-linear: {:.3f} sec".format(resample_time))
+plt.title(f"Resample time, bi-linear: {resample_time:.3f} sec")
 plt.colorbar(ax, shrink=0.7)
 # -
 
@@ -189,7 +189,7 @@ pmv = flopy.plot.PlotMapView(modelgrid=ml.modelgrid, ax=ax)
 ax = pmv.plot_array(
     dem_data, masked_values=rio.nodatavals, vmin=vmin, vmax=vmax
 )
-plt.title("Resample time, bi-cubic: {:.3f} sec".format(resample_time))
+plt.title(f"Resample time, bi-cubic: {resample_time:.3f} sec")
 plt.colorbar(ax, shrink=0.7)
 # -
 
@@ -211,7 +211,7 @@ pmv = flopy.plot.PlotMapView(modelgrid=ml.modelgrid, ax=ax)
 ax = pmv.plot_array(
     dem_data, masked_values=rio.nodatavals, vmin=vmin, vmax=vmax
 )
-plt.title("Resample time, median: {:.3f} sec".format(resample_time))
+plt.title(f"Resample time, median: {resample_time:.3f} sec")
 plt.colorbar(ax, shrink=0.7)
 # -
 
@@ -279,7 +279,7 @@ ax = pmv.plot_array(
     vmin=vmin,
     vmax=vmax,
 )
-plt.title("Resample time, nearest neighbor: {:.3f} sec".format(resample_time))
+plt.title(f"Resample time, nearest neighbor: {resample_time:.3f} sec")
 plt.colorbar(ax, shrink=0.7)
 
 # +
@@ -303,7 +303,7 @@ ax = pmv.plot_array(
     vmin=vmin,
     vmax=vmax,
 )
-plt.title("Resample time, bi-linear: {:.3f} sec".format(resample_time))
+plt.title(f"Resample time, bi-linear: {resample_time:.3f} sec")
 plt.colorbar(ax, shrink=0.7)
 
 # +
@@ -329,7 +329,7 @@ ax = pmv.plot_array(
     vmin=vmin,
     vmax=vmax,
 )
-plt.title("Resample time, median: {:.3f} sec".format(resample_time))
+plt.title(f"Resample time, median: {resample_time:.3f} sec")
 plt.colorbar(ax, shrink=0.7)
 # -
 
@@ -431,7 +431,7 @@ ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
 ax = rio.plot(ax=ax, vmin=vmin, vmax=vmax)
 ax.plot(shape.T[0], shape.T[1], "r-")
-plt.title("Cropping time: {:.3f} sec".format(crop_time))
+plt.title(f"Cropping time: {crop_time:.3f} sec")
 plt.colorbar(ax.images[0], shrink=0.7)
 # -
 
@@ -459,7 +459,7 @@ ax = pmv.plot_array(
     vmax=vmax,
 )
 plt.plot(shape.T[0], shape.T[1], "r-")
-plt.title("Resample time, nearest neighbor: {:.3f} sec".format(resample_time))
+plt.title(f"Resample time, nearest neighbor: {resample_time:.3f} sec")
 plt.colorbar(ax, shrink=0.7)
 
 # +
@@ -484,7 +484,7 @@ ax = pmv.plot_array(
     vmax=vmax,
 )
 plt.plot(shape.T[0], shape.T[1], "r-")
-plt.title("Resample time, bi-linear: {:.3f} sec".format(resample_time))
+plt.title(f"Resample time, bi-linear: {resample_time:.3f} sec")
 plt.colorbar(ax, shrink=0.7)
 # -
 
@@ -533,7 +533,7 @@ ax = rio.plot(ax=ax, vmin=vmin, vmax=vmax)
 
 shape = np.array(polygon).T
 plt.plot(shape[0], shape[1], "r-")
-plt.title("Cropped Arbitrary Polygon: {:.3f} sec".format(crop_time))
+plt.title(f"Cropped Arbitrary Polygon: {crop_time:.3f} sec")
 plt.colorbar(ax.images[0], shrink=0.7)
 # -
 

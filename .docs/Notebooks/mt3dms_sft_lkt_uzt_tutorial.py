@@ -47,9 +47,9 @@ except:
     import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # Create a MODFLOW model and store it, in this case in the variable 'mf'.
@@ -441,7 +441,7 @@ stages = 268.00  # Initial stage of each lake at the beginning of the run
 
 bdlknc_lyr1 = LakArr_lyr1.copy()
 bdlknc_lyr2 = LakArr_lyr1.copy()
-bdlknc_lyr3 = np.zeros((LakArr_lyr1.shape))
+bdlknc_lyr3 = np.zeros(LakArr_lyr1.shape)
 
 # Need to expand bdlknc_lyr1 non-zero values by 1 in either direction
 # (left/right and up/down)

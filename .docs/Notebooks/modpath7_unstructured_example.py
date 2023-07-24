@@ -44,9 +44,9 @@ except:
     import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 
 # temporary directory
 temp_dir = TemporaryDirectory()
@@ -206,7 +206,7 @@ tdis = flopy.mf6.ModflowTdis(
 
 # create gwf model
 gwf = flopy.mf6.ModflowGwf(
-    sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+    sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
 )
 gwf.name_file.save_flows = True
 
@@ -277,8 +277,8 @@ riv = flopy.mf6.ModflowGwfriv(gwf, stress_period_data=rivspd)
 oc = flopy.mf6.ModflowGwfoc(
     gwf,
     pname="oc",
-    budget_filerecord="{}.cbb".format(model_name),
-    head_filerecord="{}.hds".format(model_name),
+    budget_filerecord=f"{model_name}.cbb",
+    head_filerecord=f"{model_name}.hds",
     headprintrecord=[("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "GENERAL")],
     saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
     printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
@@ -300,7 +300,7 @@ for line in buff:
 
 # Plot the boundary conditions on the grid.
 
-fname = os.path.join(model_ws, model_name + ".disv.grb")
+fname = os.path.join(model_ws, f"{model_name}.disv.grb")
 grd = flopy.mf6.utils.MfGrdFile(fname, verbose=False)
 mg = grd.modelgrid
 ibd = np.zeros((ncpl), dtype=int)
@@ -321,7 +321,7 @@ cmap = mpl.colors.ListedColormap(
 pc = pmv.plot_array(ibd, cmap=cmap, edgecolor="gray")
 t = ax.set_title("Boundary Conditions\n")
 
-fname = os.path.join(model_ws, model_name + ".hds")
+fname = os.path.join(model_ws, f"{model_name}.hds")
 hdobj = flopy.utils.HeadFile(fname)
 head = hdobj.get_data()
 head.shape
@@ -340,9 +340,7 @@ levels = np.arange(np.floor(hmin), np.ceil(hmax) + cint, cint)
 cs = mm.contour_array(head[:, 0, :], colors="white", levels=levels)
 plt.clabel(cs, fmt="%.1f", colors="white", fontsize=11)
 cb = plt.colorbar(pc, shrink=0.5)
-t = ax.set_title(
-    "Model Layer {}; hmin={:6.2f}, hmax={:6.2f}".format(ilay + 1, hmin, hmax)
-)
+t = ax.set_title(f"Model Layer {ilay + 1}; hmin={hmin:6.2f}, hmax={hmax:6.2f}")
 
 # Inspect model cells and vertices.
 
@@ -379,8 +377,8 @@ for i in range(ncpl):
 #
 # Define names for the MODPATH 7 simulations.
 
-mp_namea = model_name + "a_mp"
-mp_nameb = model_name + "b_mp"
+mp_namea = f"{model_name}a_mp"
+mp_nameb = f"{model_name}b_mp"
 
 # Create particles for the pathline and timeseries analysis.
 
@@ -419,7 +417,7 @@ pa = flopy.modpath.ParticleData(
 )
 
 # create backward particle group
-fpth = mp_namea + ".sloc"
+fpth = f"{mp_namea}.sloc"
 pga = flopy.modpath.ParticleGroup(
     particlegroupname="BACKWARD1", particledata=pa, filename=fpth
 )
@@ -444,7 +442,7 @@ facedata = flopy.modpath.FaceDataType(
 )
 pb = flopy.modpath.NodeParticleData(subdivisiondata=facedata, nodes=nodew)
 # create forward particle group
-fpth = mp_nameb + ".sloc"
+fpth = f"{mp_nameb}.sloc"
 pgb = flopy.modpath.ParticleGroupNodeTemplate(
     particlegroupname="BACKWARD2", particledata=pb, filename=fpth
 )

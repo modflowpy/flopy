@@ -40,9 +40,9 @@ import numpy as np
 import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # Define model name of your model and the location of MODFLOW executable. All MODFLOW files and output will be stored in the subdirectory defined by the workspace. Create a model named `ml` and specify that this is a MODFLOW-2005 model.
@@ -147,11 +147,11 @@ else:
 # Load the head and zeta data from the file
 
 # read model heads
-hfile = flopy.utils.HeadFile(os.path.join(ml.model_ws, modelname + ".hds"))
+hfile = flopy.utils.HeadFile(os.path.join(ml.model_ws, f"{modelname}.hds"))
 head = hfile.get_alldata()
 # read model zeta
 zfile = flopy.utils.CellBudgetFile(
-    os.path.join(ml.model_ws, modelname + ".zta")
+    os.path.join(ml.model_ws, f"{modelname}.zta")
 )
 kstpkper = zfile.get_kstpkper()
 zeta = []

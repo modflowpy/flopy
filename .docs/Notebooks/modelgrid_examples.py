@@ -51,9 +51,9 @@ import flopy.utils.binaryfile as bf
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # set the names of our modflow executables
@@ -147,9 +147,7 @@ epsg = modelgrid.epsg
 proj4 = modelgrid.proj4
 
 print(
-    "xoff: {}\nyoff: {}\nangrot: {}\nepsg: {}\nproj4: {}".format(
-        xoff, yoff, angrot, epsg, proj4
-    )
+    f"xoff: {xoff}\nyoff: {yoff}\nangrot: {angrot}\nepsg: {epsg}\nproj4: {proj4}"
 )
 # -
 
@@ -159,14 +157,12 @@ print(
 
 # +
 # show the coordinate info before setting it
-print("Before: {}\n".format(modelgrid1))
+print(f"Before: {modelgrid1}\n")
 
 # set reference infromation
-modelgrid1.set_coord_info(
-    xoff=xoff, yoff=yoff, angrot=angrot, crs=epsg
-)
+modelgrid1.set_coord_info(xoff=xoff, yoff=yoff, angrot=angrot, crs=epsg)
 
-print("After: {}".format(modelgrid1))
+print(f"After: {modelgrid1}")
 # -
 
 # *__The user can also set individual parts of the coordinate information if they do not want to supply all of the fields__*
@@ -196,7 +192,7 @@ for ix, ax in enumerate(axs):
     modelgrid1.set_coord_info(angrot=rotation[ix])
     pmv = flopy.plot.PlotMapView(modelgrid=modelgrid1, ax=ax)
     pmv.plot_grid()
-    ax.set_title("Modelgrid: {} degrees rotation".format(rotation[ix]))
+    ax.set_title(f"Modelgrid: {rotation[ix]} degrees rotation")
 # -
 
 # The grid lines can also be plotted directly from the modelgrid object
@@ -443,7 +439,7 @@ def load_verts(fname):
 
 
 def load_iverts(fname):
-    f = open(fname, "r")
+    f = open(fname)
     iverts = []
     xc = []
     yc = []
@@ -501,8 +497,8 @@ iverts, xc, yc = load_iverts(fname)
 ncpl = np.array(3 * [len(iverts)])
 nnodes = np.sum(ncpl)
 
-top = np.ones((nnodes))
-botm = np.ones((nnodes))
+top = np.ones(nnodes)
+botm = np.ones(nnodes)
 
 # set top and botm elevations
 i0 = 0
@@ -604,9 +600,9 @@ modelgrid.set_coord_info(
 # +
 # print grid info properties
 if modelgrid.is_valid and modelgrid.is_complete:
-    print("{} modelgrid is valid and complete\n".format(modelgrid.grid_type))
+    print(f"{modelgrid.grid_type} modelgrid is valid and complete\n")
 
-print("lenuni: {}, units: {}\n".format(modelgrid.lenuni, modelgrid.units))
+print(f"lenuni: {modelgrid.lenuni}, units: {modelgrid.units}\n")
 
 print(
     "lower left corner: ({0}, {2}), upper right corner: ({1}, {3})".format(
@@ -626,15 +622,11 @@ print(
 #    - `prjfile` : returns the path to the modelgrid projection file if it is set
 
 # Access and print some of these properties
+print(f"xoffset: {modelgrid.xoffset}, yoffset: {modelgrid.yoffset}\n")
 print(
-    "xoffset: {}, yoffset: {}\n".format(modelgrid.xoffset, modelgrid.yoffset)
+    f"rotation (deg): {modelgrid.angrot:.1f}, (rad): {modelgrid.angrot_radians:.4f}\n"
 )
-print(
-    "rotation (deg): {:.1f}, (rad): {:.4f}\n".format(
-        modelgrid.angrot, modelgrid.angrot_radians
-    )
-)
-print("proj4_str: {}".format(modelgrid.proj4))
+print(f"proj4_str: {modelgrid.proj4}")
 
 # #### Model discretization properties
 #
@@ -656,9 +648,9 @@ print("proj4_str: {}".format(modelgrid.proj4))
 # +
 # look at some model discretization information
 
-print("Grid shape: {}\n".format(modelgrid.shape))
-print("number of cells per layer: {}\n".format(modelgrid.ncpl))
-print("number of cells in model: {}".format(modelgrid.nnodes))
+print(f"Grid shape: {modelgrid.shape}\n")
+print(f"number of cells per layer: {modelgrid.ncpl}\n")
+print(f"number of cells in model: {modelgrid.nnodes}")
 
 # +
 # plot the model cell vertices and cell centers
@@ -701,7 +693,7 @@ for ix, ax in enumerate(axs):
     )
     pmv.plot_grid()
     pmv.plot_inactive()
-    ax.set_title("Modelgrid: {}".format(labels[ix]))
+    ax.set_title(f"Modelgrid: {labels[ix]}")
 
 plt.colorbar(pc)
 # -

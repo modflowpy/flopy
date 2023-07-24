@@ -37,9 +37,9 @@ temp_dir = TemporaryDirectory()
 workspace = Path(temp_dir.name)
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # ## Creating Meshes with the Triangle Class
@@ -247,8 +247,8 @@ for icpl in leftcells + rightcells:
 chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chdlist)
 oc = flopy.mf6.ModflowGwfoc(
     gwf,
-    budget_filerecord="{}.cbc".format(name),
-    head_filerecord="{}.hds".format(name),
+    budget_filerecord=f"{name}.cbc",
+    head_filerecord=f"{name}.hds",
     saverecord=[("HEAD", "LAST"), ("BUDGET", "LAST")],
     printrecord=[("HEAD", "LAST"), ("BUDGET", "LAST")],
 )
