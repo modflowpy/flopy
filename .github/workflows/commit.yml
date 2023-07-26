@@ -4,6 +4,7 @@ on:
     branches:
       - master
       - develop
+      - check_laytype
       - ci-diagnose*
       - notebooks
   pull_request:
