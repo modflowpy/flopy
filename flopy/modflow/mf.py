@@ -271,6 +271,9 @@ class Modflow(BaseModel):
 
     @property
     def modelgrid(self):
+        if not self._mg_resync:
+            return self._modelgrid
+
         if self.has_package("bas6"):
             ibound = self.bas6.ibound.array
         else:
@@ -336,6 +339,7 @@ class Modflow(BaseModel):
             self._modelgrid.angrot,
             self._modelgrid.crs or self._modelgrid.epsg,
         )
+        self._mg_resync = not self._modelgrid.is_complete
         return self._modelgrid
 
     @modelgrid.setter

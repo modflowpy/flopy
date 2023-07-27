@@ -186,6 +186,9 @@ class Seawat(BaseModel):
 
     @property
     def modelgrid(self):
+        if not self._mg_resync:
+            return self._modelgrid
+
         if self.has_package("bas6"):
             ibound = self.bas6.ibound.array
         else:
@@ -225,6 +228,7 @@ class Seawat(BaseModel):
             self._modelgrid.angrot,
             self._modelgrid.crs,
         )
+        self._mg_resync = not self._modelgrid.is_complete
         return self._modelgrid
 
     @property
