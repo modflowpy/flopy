@@ -442,20 +442,11 @@ class Grid:
 
     @property
     def thick(self):
-        """
-        DEPRECATED method. thick will be removed in version 3.3.9
-
-        Get the cell thickness for a structured, vertex, or unstructured grid.
-
-        Returns
-        -------
-            thick : calculated thickness
-        """
-        warnings.warn(
-            "thick has been replaced with cell_thickness and will be removed in version 3.3.9,",
-            DeprecationWarning,
+        """Raises AttributeError, use :meth:`cell_thickness`."""
+        # DEPRECATED since version 3.4.0
+        raise AttributeError(
+            "'thick' has been removed; use 'cell_thickness()'"
         )
-        return self.cell_thickness
 
     def saturated_thickness(self, array, mask=None):
         """
@@ -495,30 +486,11 @@ class Grid:
         return thickness
 
     def saturated_thick(self, array, mask=None):
-        """
-        DEPRECATED method. saturated_thick will be removed in version 3.3.9
-
-        Get the saturated thickness for a structured, vertex, or unstructured
-        grid. If the optional array is passed then thickness is returned
-        relative to array values (saturated thickness). Returned values
-        ranges from zero to cell thickness if optional array is passed.
-
-        Parameters
-        ----------
-        array : ndarray
-            array of elevations that will be used to adjust the cell thickness
-        mask: float, list, tuple, ndarray
-            array values to replace with a nan value.
-
-        Returns
-        -------
-            thick : calculated saturated thickness
-        """
-        warnings.warn(
-            "saturated_thick has been replaced with saturated_thickness and will be removed in version 3.3.9,",
-            DeprecationWarning,
+        """Raises AttributeError, use :meth:`saturated_thickness`."""
+        # DEPRECATED since version 3.4.0
+        raise AttributeError(
+            "'saturated_thick' has been removed; use 'saturated_thickness()'"
         )
-        return self.saturated_thickness(array, mask)
 
     @property
     def units(self):
