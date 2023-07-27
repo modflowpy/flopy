@@ -413,6 +413,15 @@ class PackageInterface:
                     skip_sy_check = True
             else:
                 iconvert = self.iconvert.array
+                inds = np.array(
+                    [
+                        True if l > 0 or l < 0 else False
+                        for l in iconvert.flatten()
+                    ]
+                )
+                if not inds.any():
+                    skip_sy_check = True
+
                 for ishape in np.ndindex(active.shape):
                     if active[ishape]:
                         active[ishape] = (
