@@ -253,9 +253,6 @@ class Mt3dms(BaseModel):
 
     @property
     def modelgrid(self):
-        if not self._mg_resync:
-            return self._modelgrid
-
         if self.btn is not None:
             ibound = self.btn.icbund.array
             delc = self.btn.delc.array
@@ -323,7 +320,6 @@ class Mt3dms(BaseModel):
                 angrot = 0.0
 
         self._modelgrid.set_coord_info(xoff, yoff, angrot, crs=crs)
-        self._mg_resync = not self._modelgrid.is_complete
         return self._modelgrid
 
     @property
