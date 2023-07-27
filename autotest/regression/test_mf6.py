@@ -948,9 +948,14 @@ def test_np002(function_tmpdir, example_data_path):
     oc_package.printrecord.set_data([("HEAD", "ALL"), ("BUDGET", "ALL")], 1)
 
     sto_package = ModflowGwfsto(
+        model, save_flows=True, iconvert=0, ss=0.000001, sy=None, pname="sto_t"
+    )
+    sto_package.check()
+
+    model.remove_package("sto_t")
+    sto_package = ModflowGwfsto(
         model, save_flows=True, iconvert=1, ss=0.000001, sy=0.15
     )
-
     hfb_package = ModflowGwfhfb(
         model,
         print_input=True,
