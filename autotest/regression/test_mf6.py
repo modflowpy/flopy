@@ -677,6 +677,7 @@ def test_np001(function_tmpdir, example_data_path):
     sim.delete_output_files()
 
     # test error checking
+    sim.simulation_data.verify_data = False
     drn_package = ModflowGwfdrn(
         model,
         print_input=True,
@@ -697,6 +698,7 @@ def test_np001(function_tmpdir, example_data_path):
         k=100001.0,
         k33=1e-12,
     )
+    sim.simulation_data.verify_data = True
     chk = sim.check()
     summary = ".".join(chk[0].summary_array.desc)
     assert "drn_1 package: invalid BC index" in summary
