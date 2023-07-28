@@ -183,8 +183,6 @@ class Grid:
         self._top = top
         if botm is not None:
             botm = botm.astype(float)
-            if idomain is None:
-                idomain = np.ones_like(botm)
         self._botm = botm
         self._idomain = idomain
 

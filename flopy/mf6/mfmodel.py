@@ -370,12 +370,14 @@ class MFModel(PackageContainer, ModelInterface):
                         angrot=self._modelgrid.angrot,
                     )
             else:
+                botm = dis.botm.array
+                idomain = self._resolve_idomain(dis.idomain.array, botm)
                 self._modelgrid = StructuredGrid(
                     delc=dis.delc.array,
                     delr=dis.delr.array,
                     top=dis.top.array,
-                    botm=dis.botm.array,
-                    idomain=dis.idomain.array,
+                    botm=botm,
+                    idomain=idomain,
                     lenuni=dis.length_units.array,
                     crs=self._modelgrid.crs,
                     xoff=self._modelgrid.xoffset,
@@ -403,12 +405,14 @@ class MFModel(PackageContainer, ModelInterface):
                         angrot=self._modelgrid.angrot,
                     )
             else:
+                botm = dis.botm.array
+                idomain = self._resolve_idomain(dis.idomain.array, botm)
                 self._modelgrid = VertexGrid(
                     vertices=dis.vertices.array,
                     cell2d=dis.cell2d.array,
                     top=dis.top.array,
-                    botm=dis.botm.array,
-                    idomain=dis.idomain.array,
+                    botm=botm,
+                    idomain=idomain,
                     lenuni=dis.length_units.array,
                     crs=self._modelgrid.crs,
                     xoff=self._modelgrid.xoffset,
@@ -498,12 +502,14 @@ class MFModel(PackageContainer, ModelInterface):
                         angrot=self._modelgrid.angrot,
                     )
             else:
+                botm = dis.botm.array
+                idomain = self._resolve_idomain(dis.idomain.array, botm)
                 self._modelgrid = VertexGrid(
                     vertices=dis.vertices.array,
                     cell1d=dis.cell1d.array,
                     top=dis.top.array,
-                    botm=dis.botm.array,
-                    idomain=dis.idomain.array,
+                    botm=botm,
+                    idomain=idomain,
                     lenuni=dis.length_units.array,
                     crs=self._modelgrid.crs,
                     xoff=self._modelgrid.xoffset,
@@ -1937,3 +1943,12 @@ class MFModel(PackageContainer, ModelInterface):
         )
 
         return axes
+
+    @staticmethod
+    def _resolve_idomain(idomain, botm):
+        if idomain is None:
+            if botm is None:
+                return idomain
+            else:
+                return np.ones_like(botm)
+        return idomain

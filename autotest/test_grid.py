@@ -983,7 +983,7 @@ def test_unstructured_complete_grid_ctor(minimal_unstructured_grid_info):
     assert g.nlay == 2
     assert g.nnodes == 2
     assert g.is_valid
-    assert g.is_complete
+    assert not g.is_complete
     assert g.grid_varies_by_layer
     assert g._vertices == d["vertices"]
     assert g._iverts == d["iverts"]
