@@ -3085,7 +3085,7 @@ def test028_create_tests_sfr(function_tmpdir, example_data_path):
         delc=5000.0,
         top=top,
         botm=botm,
-        idomain=idomain,
+        #idomain=idomain,
         filename=f"{model_name}.dis",
     )
     strt = testutils.read_std_array(os.path.join(pth, "strt.txt"), "float")
