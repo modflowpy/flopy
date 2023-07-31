@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import pandas as pd
 import pytest
 from modflow_devtools.markers import requires_pkg
 
@@ -439,7 +440,6 @@ def test_append_mflist(function_tmpdir):
     ml.write_input()
 
 
-@requires_pkg("pandas")
 def test_mflist(function_tmpdir, example_data_path):
     model = Modflow(model_ws=function_tmpdir)
     dis = ModflowDis(model, 10, 10, 10, 10)
@@ -609,13 +609,10 @@ def test_util3d_reset():
     ml.bas6.strt = arr
 
 
-@requires_pkg("pandas")
 def test_mflist_fromfile(function_tmpdir):
     """test that when a file is passed to stress period data,
     the .array attribute will load the file
     """
-    import pandas as pd
-
     wel_data = pd.DataFrame(
         [(0, 1, 2, -50.0), (0, 5, 5, -50.0)], columns=["k", "i", "j", "flux"]
     )

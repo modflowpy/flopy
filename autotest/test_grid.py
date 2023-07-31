@@ -1,5 +1,5 @@
-import re
 import os
+import re
 import warnings
 from warnings import warn
 
@@ -21,7 +21,6 @@ from flopy.utils.crs import get_authority_crs
 from flopy.utils.cvfdutil import gridlist_to_disv_gridprops, to_cvfd
 from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
-
 
 HAS_PYPROJ = has_pkg("pyproj")
 if HAS_PYPROJ:

@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 from ..utils import import_optional_dependency
 from ..utils.flopy_io import get_url_text
@@ -191,7 +192,6 @@ class acdd:
         -------
 
         """
-        pd = import_optional_dependency("pandas", errors="ignore")
 
         l = self.sb["dates"]
         tc = {}

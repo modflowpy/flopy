@@ -6,6 +6,7 @@ mt3d(usgs) run. Also includes support for SFT budget.
 import warnings
 
 import numpy as np
+import pandas as pd
 
 from ..utils import import_optional_dependency
 
@@ -76,11 +77,6 @@ class MtListBudget:
             (optionally) surface-water mass budget.
             If the SFT process is not used, df_sw is None.
         """
-        pd = import_optional_dependency(
-            "pandas",
-            error_message="MtListBudget.parse() requires pandas.",
-        )
-
         self.gw_data = {}
         self.sw_data = {}
         self.lcount = 0
@@ -182,11 +178,6 @@ class MtListBudget:
         return df_gw, df_sw
 
     def _diff(self, df):
-        pd = import_optional_dependency(
-            "pandas",
-            error_message="MtListBudget._diff() requires pandas.",
-        )
-
         out_cols = [
             c for c in df.columns if "_out" in c and not c.startswith("net_")
         ]

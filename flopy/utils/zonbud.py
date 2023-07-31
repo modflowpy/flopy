@@ -4,6 +4,7 @@ from itertools import groupby
 from typing import Union
 
 import numpy as np
+import pandas as pd
 
 from . import import_optional_dependency
 from .utils_def import totim_to_datetime
@@ -2378,10 +2379,6 @@ def _recarray_to_dataframe(
 
     pd.DataFrame
     """
-    pd = import_optional_dependency(
-        "pandas",
-        error_message="ZoneBudget.get_dataframes() requires pandas.",
-    )
 
     valid_index_keys = ["totim", "kstpkper"]
     s = f'index_key "{index_key}" is not valid.'
@@ -3000,10 +2997,6 @@ def _volumetric_flux(recarray, modeltime, extrapolate_kper=False):
         pd.DataFrame
 
     """
-    pd = import_optional_dependency(
-        "pandas",
-        error_message="ZoneBudget._volumetric_flux() requires pandas.",
-    )
 
     nper = len(modeltime.nstp)
     volumetric_data = {}

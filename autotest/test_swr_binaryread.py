@@ -1,4 +1,5 @@
 # Test SWR binary read functionality
+import pandas as pd
 import pytest
 from modflow_devtools.misc import has_pkg
 
@@ -446,21 +447,16 @@ def test_swr_binary_obs(swr_test_path, ipos):
         ), "SwrObs data does not have nobs + 1"
 
     # test get_dataframes()
-    if has_pkg("pandas"):
-        import pandas as pd
-
-        for idx in range(ntimes):
-            df = sobj.get_dataframe(idx=idx, timeunit="S")
-            assert isinstance(df, pd.DataFrame), "A DataFrame was not returned"
-            assert df.shape == (1, nobs + 1), "data shape is not (1, 10)"
-
-        for time in times:
-            df = sobj.get_dataframe(totim=time, timeunit="S")
-            assert isinstance(df, pd.DataFrame), "A DataFrame was not returned"
-            assert df.shape == (1, nobs + 1), "data shape is not (1, 10)"
-
-        df = sobj.get_dataframe(timeunit="S")
+    for idx in range(ntimes):
+        df = sobj.get_dataframe(idx=idx, timeunit="S")
         assert isinstance(df, pd.DataFrame), "A DataFrame was not returned"
-        assert df.shape == (336, nobs + 1), "data shape is not (336, 10)"
-    else:
-        print("pandas not available...")
+        assert df.shape == (1, nobs + 1), "data shape is not (1, 10)"
+
+    for time in times:
+        df = sobj.get_dataframe(totim=time, timeunit="S")
+        assert isinstance(df, pd.DataFrame), "A DataFrame was not returned"
+        assert df.shape == (1, nobs + 1), "data shape is not (1, 10)"
+
+    df = sobj.get_dataframe(timeunit="S")
+    assert isinstance(df, pd.DataFrame), "A DataFrame was not returned"
+    assert df.shape == (336, nobs + 1), "data shape is not (336, 10)"

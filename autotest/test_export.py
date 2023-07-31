@@ -160,7 +160,7 @@ def test_output_helper_shapefile_export(
     )
 
 
-@requires_pkg("pandas", "shapefile")
+@requires_pkg("shapefile")
 @pytest.mark.slow
 def test_freyberg_export(function_tmpdir, example_data_path):
     # steady state
@@ -254,7 +254,7 @@ def test_freyberg_export(function_tmpdir, example_data_path):
                 assert part.read_text() == wkt
 
 
-@requires_pkg("pandas", "shapefile")
+@requires_pkg("shapefile")
 @pytest.mark.parametrize("missing_arrays", [True, False])
 @pytest.mark.slow
 def test_disu_export(function_tmpdir, missing_arrays):
@@ -485,7 +485,7 @@ def test_shapefile_ibound(function_tmpdir, example_data_path):
     shape.close()
 
 
-@requires_pkg("pandas", "shapefile")
+@requires_pkg("shapefile")
 @pytest.mark.slow
 @pytest.mark.parametrize("namfile", namfiles())
 def test_shapefile(function_tmpdir, namfile):
@@ -510,7 +510,7 @@ def test_shapefile(function_tmpdir, namfile):
     ), f"wrong number of records in shapefile {fnc_name}"
 
 
-@requires_pkg("pandas", "shapefile")
+@requires_pkg("shapefile")
 @pytest.mark.slow
 @pytest.mark.parametrize("namfile", namfiles())
 def test_shapefile_export_modelgrid_override(function_tmpdir, namfile):
@@ -1446,7 +1446,7 @@ def test_vtk_vertex(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf2005")
-@requires_pkg("pandas", "vtk")
+@requires_pkg("vtk")
 def test_vtk_pathline(function_tmpdir, example_data_path):
     from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
 

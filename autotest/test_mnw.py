@@ -2,6 +2,7 @@ import os
 import shutil
 
 import numpy as np
+import pandas as pd
 import pytest
 from modflow_devtools.markers import requires_pkg
 
@@ -293,13 +294,11 @@ def test_make_package(function_tmpdir):
     )
 
 
-@requires_pkg("pandas")
 def test_mnw2_create_file(function_tmpdir):
     """
     Test for issue #556, Mnw2 crashed if wells have
     multiple node lengths
     """
-    import pandas as pd
 
     mf = Modflow("test_mfmnw2", exe_name="mf2005")
     ws = function_tmpdir

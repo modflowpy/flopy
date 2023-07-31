@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import pandas as pd
 import pytest
 from modflow_devtools.markers import requires_exe, requires_pkg
 
@@ -207,7 +208,6 @@ def test_zonbud_readwrite_zbarray(function_tmpdir):
     assert np.array_equal(x, z), "Input and output arrays do not match."
 
 
-@requires_pkg("pandas")
 def test_dataframes(cbc_f, zon_f):
     zon = ZoneBudget.read_zone_file(zon_f)
     cmd = ZoneBudget(cbc_f, zon, totim=1095.0)
@@ -233,11 +233,8 @@ def test_get_model_shape(cbc_f, zon_f):
     ).get_model_shape()
 
 
-@requires_pkg("pandas")
 @pytest.mark.parametrize("rtol", [1e-2])
 def test_zonbud_active_areas_zone_zero(loadpth, cbc_f, rtol):
-    import pandas as pd
-
     # Read ZoneBudget executable output and reformat
     zbud_f = loadpth / "zonef_mlt_active_zone_0.2.csv"
     zbud = pd.read_csv(zbud_f)
@@ -284,10 +281,7 @@ def test_read_zone_file(function_tmpdir):
 
 @pytest.mark.mf6
 @requires_exe("mf6")
-@requires_pkg("pandas")
 def test_zonebudget_6(function_tmpdir, example_data_path):
-    import pandas as pd
-
     exe_name = "mf6"
     zb_exe_name = "zbud6"
 
