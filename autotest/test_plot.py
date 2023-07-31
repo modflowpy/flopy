@@ -388,6 +388,8 @@ def modpath_model(function_tmpdir, example_data_path):
 
 @requires_exe("mf2005", "mp6")
 def test_xc_plot_particle_pathlines(modpath_model):
+    import pandas as pd
+
     ml, mp, sim = modpath_model
 
     mp.write_input()
@@ -398,16 +400,27 @@ def test_xc_plot_particle_pathlines(modpath_model):
         dest_cells=[(4, 12, 12)]
     )
 
+    # support pathline data as recarray
     mx = PlotCrossSection(model=ml, line={"row": 4})
     mx.plot_bc("WEL", kper=2, color="blue")
     pth = mx.plot_pathline(well_pathlines, method="cell", colors="red")
+    assert isinstance(pth, LineCollection)
+    assert len(pth._paths) == 6
 
+    # support pathline data as dataframe
+    mx = PlotCrossSection(model=ml, line={"row": 4})
+    mx.plot_bc("WEL", kper=2, color="blue")
+    pth = mx.plot_pathline(
+        pd.DataFrame(well_pathlines), method="cell", colors="red"
+    )
     assert isinstance(pth, LineCollection)
     assert len(pth._paths) == 6
 
 
 @requires_exe("mf2005", "mp6")
 def test_map_plot_particle_endpoints(modpath_model):
+    import pandas as pd
+
     ml, mp, sim = modpath_model
     mp.write_input()
     mp.run_model(silent=False)
@@ -415,7 +428,23 @@ def test_map_plot_particle_endpoints(modpath_model):
     pthobj = EndpointFile(os.path.join(mp.model_ws, "ex6.mpend"))
     endpts = pthobj.get_alldata()
 
-    # color kwarg as scalar
+    # support endpoint data as recarray
+    assert isinstance(endpts, np.recarray)
+    mv = PlotMapView(model=ml)
+    mv.plot_bc("WEL", kper=2, color="blue")
+    ep = mv.plot_endpoint(endpts, direction="ending")
+    # plt.show()
+    assert isinstance(ep, PathCollection)
+
+    # support endpoint data as dataframe
+    mv = PlotMapView(model=ml)
+    mv.plot_bc("WEL", kper=2, color="blue")
+    ep = mv.plot_endpoint(pd.DataFrame(endpts), direction="ending")
+    # plt.show()
+    assert isinstance(ep, PathCollection)
+
+    # test various possibilities for endpoint color configuration.
+    # first, color kwarg as scalar
     mv = PlotMapView(model=ml)
     mv.plot_bc("WEL", kper=2, color="blue")
     ep = mv.plot_endpoint(endpts, direction="ending", color="red")
