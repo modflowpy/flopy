@@ -28,11 +28,15 @@ The FloPy release procedure is mostly automated with GitHub Actions in [`release
 
 3. Update the authors in `CITATION.cff` for the Software/Code citation for FloPy, if required.
 
-4. Review deprecations. To search for deprecation warnings with git: `git grep [-[A/B/C]N] <pattern>` for N optional extra lines of context. Some terms to search for:
+4. If this is a minor or major release, review deprecation warnings (if this is a patch release, skip this step). Correct any deprecation version numbers if necessary &mdash; for instance, if the warning was added in the latest development cycle but incorrectly anticipated the forthcoming release number (e.g., if this release was expected to be minor but was promoted to major). If any deprecations are due this release, remove the corresponding features. FloPy loosely follows [NEP 23](https://numpy.org/neps/nep-0023-backwards-compatibility.html) deprecation guidelines: removal is recommended after at least 1 year or 2 non-patch releases.
 
-    - deprecated::
+    To search for deprecation warnings with git: `git grep [-[A/B/C]N] <pattern>`, where N is the optional number of extra lines of context and A/B/C selects post-context/pre-context/both, respectively. Some terms to search for:
+
+    - deprecated
+    - .. deprecated::
     - DEPRECATED
     - DeprecationWarning
+    - FutureWarning
 
 
 ## Release procedure
