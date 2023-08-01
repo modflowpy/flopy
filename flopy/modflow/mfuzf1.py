@@ -139,15 +139,6 @@ class ModflowUzf1(Package):
             followed by a series of depths and water contents in the
             unsaturated zone.
 
-    nwt_11_fmt : boolean
-        flag indicating whether or not to utilize a newer (MODFLOW-NWT
-        version 1.1 or later) format style, i.e., uzf1 optional variables
-        appear line-by-line rather than in a specific order on a single
-        line. True means that optional variables (e.g., SPECIFYTHTR,
-        SPECIFYTHTI, NOSURFLEAK) appear on new lines. True also supports
-        a number of newer optional variables (e.g., SPECIFYSURFK,
-        REJECTSURFK, SEEPSURFK). False means that optional variables
-        appear on one line.  (default is False)
     specifythtr : boolean
         key word for specifying optional input variable THTR (default is 0)
     specifythti : boolean
@@ -382,7 +373,6 @@ class ModflowUzf1(Package):
         air_entry=0.0,
         hroot=0.0,
         rootact=0.0,
-        nwt_11_fmt=False,
         specifysurfk=False,
         rejectsurfk=False,
         seepsurfk=False,
@@ -481,15 +471,6 @@ class ModflowUzf1(Package):
         self.url = "uzf_-_unsaturated_zone_flow_pa_3.html"
 
         # Data Set 1a
-        if nwt_11_fmt:
-            warnings.warn(
-                "nwt_11_fmt has been deprecated,"
-                " and will be removed in the next release"
-                " please provide a flopy.utils.OptionBlock object"
-                " to the options argument",
-                DeprecationWarning,
-            )
-        self.nwt_11_fmt = nwt_11_fmt
         self.specifythtr = bool(specifythtr)
         self.specifythti = bool(specifythti)
         self.nosurfleak = bool(nosurfleak)
@@ -695,37 +676,16 @@ class ModflowUzf1(Package):
         return nrow * ncol
 
     def _write_1a(self, f_uzf):
-        # the nwt_11_fmt code is slated for removal (deprecated!)
-        if not self.nwt_11_fmt:
-            specify_temp = ""
-            if self.specifythtr > 0:
-                specify_temp += "SPECIFYTHTR "
-            if self.specifythti > 0:
-                specify_temp += "SPECIFYTHTI "
-            if self.nosurfleak > 0:
-                specify_temp += "NOSURFLEAK"
-            if (self.specifythtr + self.specifythti + self.nosurfleak) > 0:
-                f_uzf.write(f"{specify_temp}\n")
-            del specify_temp
-        else:
-            txt = "options\n"
-            for var in [
-                "specifythtr",
-                "specifythti",
-                "nosurfleak",
-                "specifysurfk",
-                "rejectsurfk",
-                "seepsurfk",
-            ]:
-                value = self.__dict__[var]
-                if int(value) > 0:
-                    txt += f"{var}\n"
-            if self.etsquare:
-                txt += f"etsquare {self.smoothfact}\n"
-            if self.netflux:
-                txt += f"netflux {self.unitrech} {self.unitdis}\n"
-            txt += "end\n"
-            f_uzf.write(txt)
+        specify_temp = ""
+        if self.specifythtr > 0:
+            specify_temp += "SPECIFYTHTR "
+        if self.specifythti > 0:
+            specify_temp += "SPECIFYTHTI "
+        if self.nosurfleak > 0:
+            specify_temp += "NOSURFLEAK"
+        if (self.specifythtr + self.specifythti + self.nosurfleak) > 0:
+            f_uzf.write(f"{specify_temp}\n")
+        del specify_temp
 
     def write_file(self, f=None):
         """
