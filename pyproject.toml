@@ -30,6 +30,7 @@ requires-python = ">=3.8"
 dependencies = [
     "numpy >=1.15.0",
     "matplotlib >=1.4.0",
+    "pandas >=2.0.0"
 ]
 dynamic = ["version", "readme"]
 
@@ -65,7 +66,6 @@ optional = [
     "geojson",
     "imageio",
     "netcdf4",
-    "pandas",
     "pymetis ; platform_system != 'Windows'",
     "pyproj",
     "pyshp",

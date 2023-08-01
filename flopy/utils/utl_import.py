@@ -49,7 +49,6 @@ from .parse_version import Version
 VERSIONS = {
     "shapefile": "2.0.0",
     "dateutil": "2.4.0",
-    "pandas": "0.15.0",
 }
 
 # A mapping from import name to package name (on PyPI) for packages where

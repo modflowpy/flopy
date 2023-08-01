@@ -386,7 +386,6 @@ def modpath_model(function_tmpdir, example_data_path):
     return ml, mp, sim
 
 
-@requires_pkg("pandas")
 @requires_exe("mf2005", "mp6")
 def test_xc_plot_particle_pathlines(modpath_model):
     ml, mp, sim = modpath_model
@@ -407,7 +406,6 @@ def test_xc_plot_particle_pathlines(modpath_model):
     assert len(pth._paths) == 6
 
 
-@requires_pkg("pandas")
 @requires_exe("mf2005", "mp6")
 def test_map_plot_particle_endpoints(modpath_model):
     ml, mp, sim = modpath_model

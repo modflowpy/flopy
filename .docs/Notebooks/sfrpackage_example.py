@@ -204,7 +204,6 @@ else:
     raise ValueError("Failed to run.")
 
 # ### Load SFR formated water balance output into pandas dataframe using the `SfrFile` class
-# * requires the **pandas** library
 
 sfr_outfile = os.path.join(
     "..", "..", "examples", "data", "sfr_examples", "test1ss.flw"
