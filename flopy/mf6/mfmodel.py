@@ -1207,7 +1207,7 @@ class MFModel(PackageContainer, ModelInterface):
         for record in solution_group:
             for model_name in record[2:]:
                 if model_name == self.name:
-                    return self.simulation.get_ims_package(record[1])
+                    return self.simulation.get_solution_package(record[1])
         return None
 
     def get_steadystate_list(self):
