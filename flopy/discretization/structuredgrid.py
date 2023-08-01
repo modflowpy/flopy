@@ -1,5 +1,4 @@
 import copy
-import inspect
 import os.path
 from typing import Union
 
@@ -875,11 +874,6 @@ class StructuredGrid(Grid):
             The column number
 
         """
-        if isinstance(z, bool):
-            # trigger interface change warning
-            frame_info = inspect.getframeinfo(inspect.currentframe())
-            self._warn_intersect(frame_info.filename, frame_info.lineno)
-
         # transform x and y to local coordinates
         x, y = super().intersect(x, y, local, forgive)
 

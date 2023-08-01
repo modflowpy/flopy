@@ -147,8 +147,6 @@ class Grid:
         1D array of x and y coordinates of cell vertices for whole grid
         (single layer) in C-style (row-major) order
         (same as np.ravel())
-    intersect(x, y, local)
-        returns the row and column of the grid that the x, y point is in
 
     See Also
     --------
@@ -956,38 +954,6 @@ class Grid:
             return self.get_local_coords(x, y)
         else:
             return x, y
-
-    def _warn_intersect(self, module, lineno):
-        """
-        Warning for modelgrid intersect() interface change.
-
-        Should be be removed after a couple of releases. Added in 3.3.5
-
-        Updated in 3.3.6 to raise an error and exit if intersect interface
-        is called incorrectly.
-
-        Should be removed in flopy 3.3.7
-
-        Parameters
-        ----------
-        module : str
-            module name path
-        lineno : int
-            line number where warning is called from
-
-        Returns
-        -------
-            None
-        """
-        module = os.path.split(module)[-1]
-        warning = (
-            "The interface 'intersect(self, x, y, local=False, "
-            "forgive=False)' has been deprecated. Use the "
-            "intersect(self, x, y, z=None, local=False, "
-            "forgive=False) interface instead."
-        )
-
-        raise UserWarning(warning)
 
     def set_coord_info(
         self,

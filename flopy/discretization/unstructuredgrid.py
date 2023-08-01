@@ -1,5 +1,4 @@
 import copy
-import inspect
 import os
 from typing import Union
 
@@ -581,10 +580,6 @@ class UnstructuredGrid(Grid):
             The CELL2D number
 
         """
-        if isinstance(z, bool):
-            frame_info = inspect.getframeinfo(inspect.currentframe())
-            self._warn_intersect(frame_info.filename, frame_info.lineno)
-
         if local:
             # transform x and y to real-world coordinates
             x, y = super().get_coords(x, y)
