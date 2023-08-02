@@ -88,6 +88,7 @@ doc = [
     "PyYAML",
     "recommonmark",
     "rtds-action",
+    "sphinx >=4",
     "sphinx-rtd-theme",
 ]
 
