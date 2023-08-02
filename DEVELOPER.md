@@ -17,11 +17,11 @@ This document describes how to set up a FloPy development environment, run the e
     - [Manually installing executables](#manually-installing-executables)
       - [Linux](#linux)
       - [Mac](#mac)
+  - [Updating FloPy packages](#updating-flopy-packages)
 - [Examples](#examples)
   - [Scripts](#scripts)
   - [Notebooks](#notebooks)
-  - [Developing example Notebooks](#developing-example-notebooks)
-    - [Adding a new notebook to the documentation](#adding-a-new-notebook-to-the-documentation)
+    - [Developing new notebooks](#developing-new-notebooks)
       - [Adding a tutorial notebook](#adding-a-tutorial-notebook)
       - [Adding an example notebook](#adding-an-example-notebook)
 - [Tests](#tests)
@@ -33,6 +33,10 @@ This document describes how to set up a FloPy development environment, run the e
   - [Performance testing](#performance-testing)
     - [Benchmarking](#benchmarking)
     - [Profiling](#profiling)
+- [Branching model](#branching-model)
+- [Deprecation policy](#deprecation-policy)
+- [Miscellaneous](#miscellaneous)
+  - [Locating the root](#locating-the-root)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -357,6 +361,17 @@ By default, `pytest-benchmark` will only print profiling results to `stdout`. If
 ## Branching model
 
 This project follows the [git flow](https://nvie.com/posts/a-successful-git-branching-model/): development occurs on the `develop` branch, while `main` is reserved for the state of the latest release. Development PRs are typically squashed to `develop`, to avoid merge commits. At release time, release branches are merged to `main`, and then `main` is merged back into `develop`.
+
+## Deprecation policy
+
+This project loosely follows [NEP 23](https://numpy.org/neps/nep-0023-backwards-compatibility.html). Basic deprecation policy includes:
+
+- Deprecated features should be removed after at least 1 year or 2 non-patch releases.
+- `DeprecationWarning` should be used for features scheduled for removal.
+- `FutureWarning` should be used for features whose behavior will change in backwards-incompatible ways.
+- Deprecation warning messages should include the deprecation version number (the release in which the deprecation message first appears) to permit timely follow-through later.
+
+See the linked article for more detail.
 
 ## Miscellaneous
 

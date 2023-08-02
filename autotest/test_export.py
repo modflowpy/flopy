@@ -1112,7 +1112,7 @@ def test_vtk_transient_array_2d(function_tmpdir, example_data_path):
 
 @requires_pkg("vtk")
 @pytest.mark.slow
-def test_vtk_export_packages(function_tmpdir, example_data_path):
+def test_vtk_add_packages(function_tmpdir, example_data_path):
     # test mf 2005 freyberg
     ws = function_tmpdir
     mpath = example_data_path / "freyberg_multilayer_transient"
@@ -1572,7 +1572,7 @@ def load_iverts(fname, closed=False):
 
 @pytest.mark.mf6
 @requires_pkg("vtk")
-def test_vtk_export_model_without_packages_names(function_tmpdir):
+def test_vtk_add_model_without_packages_names(function_tmpdir):
     from vtkmodules.util.numpy_support import vtk_to_numpy
     from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
 
