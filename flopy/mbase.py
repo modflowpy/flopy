@@ -410,6 +410,12 @@ class BaseModel(ModelInterface):
         self._crs = kwargs.pop("crs", None)
         self._start_datetime = kwargs.pop("start_datetime", "1-1-1970")
 
+        if kwargs:
+            warnings.warn(
+                f"unhandled keywords: {kwargs}",
+                category=UserWarning,
+            )
+
         # build model discretization objects
         self._modelgrid = Grid(
             crs=self._crs,

@@ -278,9 +278,14 @@ class Modflow(BaseModel):
             ibound = self.bas6.ibound.array
         else:
             ibound = None
-
+        # take the first non-None entry
+        crs = (
+            self._modelgrid.crs
+            or self._modelgrid.proj4
+            or self._modelgrid.epsg
+        )
         common_kwargs = {
-            "crs": self._modelgrid.crs or self._modelgrid.epsg,
+            "crs": crs,
             "xoff": self._modelgrid.xoffset,
             "yoff": self._modelgrid.yoffset,
             "angrot": self._modelgrid.angrot,
