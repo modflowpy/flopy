@@ -144,7 +144,6 @@ extensions = [
     "nbsphinx",
     "nbsphinx_link",
     "recommonmark",
-    "sphinxcontrib.jquery",  # https://github.com/readthedocs/sphinx_rtd_theme/issues/1452
 ]
 
 # Settings for GitHub actions integration
