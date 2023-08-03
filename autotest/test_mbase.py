@@ -18,7 +18,7 @@ def mf6_model_path(example_data_path):
 
 @requires_exe("mf6")
 @pytest.mark.parametrize("use_ext", [True, False])
-def test_resolve_exe_named(function_tmpdir, use_ext):
+def test_resolve_exe_by_name(function_tmpdir, use_ext):
     if use_ext and system() != "Windows":
         pytest.skip(".exe extensions are Windows-only")
 
@@ -31,7 +31,7 @@ def test_resolve_exe_named(function_tmpdir, use_ext):
 
 @requires_exe("mf6")
 @pytest.mark.parametrize("use_ext", [True, False])
-def test_resolve_exe_full_path(function_tmpdir, use_ext):
+def test_resolve_exe_by_abs_path(function_tmpdir, use_ext):
     if use_ext and system() != "Windows":
         pytest.skip(".exe extensions are Windows-only")
 
@@ -44,7 +44,8 @@ def test_resolve_exe_full_path(function_tmpdir, use_ext):
 
 @requires_exe("mf6")
 @pytest.mark.parametrize("use_ext", [True, False])
-def test_resolve_exe_rel_path(function_tmpdir, use_ext):
+@pytest.mark.parametrize("forgive", [True, False])
+def test_resolve_exe_by_rel_path(function_tmpdir, use_ext, forgive):
     if use_ext and system() != "Windows":
         pytest.skip(".exe extensions are Windows-only")
 
@@ -66,9 +67,13 @@ def test_resolve_exe_rel_path(function_tmpdir, use_ext):
         assert actual.lower() == expected
         assert which(actual)
 
-        # should raise an error if exe DNE
-        with pytest.raises(FileNotFoundError):
-            resolve_exe("../bin/mf2005")
+        # check behavior if exe DNE
+        with (
+            pytest.warns(UserWarning)
+            if forgive
+            else pytest.raises(FileNotFoundError)
+        ):
+            assert not resolve_exe("../bin/mf2005", forgive)
 
 
 def test_run_model_when_namefile_not_in_model_ws(

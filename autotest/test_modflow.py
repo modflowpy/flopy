@@ -201,18 +201,53 @@ def test_mt_modelgrid(function_tmpdir):
 
 
 @requires_exe("mp7")
-def test_exe_selection():
+def test_exe_selection(example_data_path, function_tmpdir):
+    model_path = example_data_path / "freyberg"
+    namfile_path = model_path / "freyberg.nam"
+
     # no selection defaults to mf2005
-    assert Path(Modflow().exe_name).name == "mf2005"
-    assert Path(Modflow(exe_name=None).exe_name).name == "mf2005"
+    exe_name = "mf2005"
+    assert Path(Modflow().exe_name).name == exe_name
+    assert Path(Modflow(exe_name=None).exe_name).name == exe_name
+    assert (
+        Path(Modflow.load(namfile_path, model_ws=model_path).exe_name).name
+        == exe_name
+    )
+    assert (
+        Path(
+            Modflow.load(
+                namfile_path, exe_name=None, model_ws=model_path
+            ).exe_name
+        ).name
+        == exe_name
+    )
 
     # user-specified (just for testing - there is no legitimate reason
     # to use mp7 with Modflow but Modpath7 derives from BaseModel too)
-    assert Path(Modflow(exe_name="mp7").exe_name).name == "mp7"
+    exe_name = "mp7"
+    assert Path(Modflow(exe_name=exe_name).exe_name).name == exe_name
+    assert (
+        Path(
+            Modflow.load(
+                namfile_path, exe_name=exe_name, model_ws=model_path
+            ).exe_name
+        ).name
+        == exe_name
+    )
 
-    # BaseModel used to silently fall back to mf2005 if exe not found
-    with pytest.raises(FileNotFoundError):
-        ml = Modflow(exe_name="not_an_exe")
+    # init/load should warn if exe DNE
+    exe_name = "not_an_exe"
+    with pytest.warns(UserWarning):
+        ml = Modflow(exe_name=exe_name)
+    with pytest.warns(UserWarning):
+        ml = Modflow.load(namfile_path, exe_name=exe_name, model_ws=model_path)
+
+    # run should error if exe DNE
+    ml = Modflow.load(namfile_path, exe_name=exe_name, model_ws=model_path)
+    ml.change_model_ws(function_tmpdir)
+    ml.write_input()
+    with pytest.raises(ValueError):
+        ml.run_model()
 
 
 def test_free_format_flag(function_tmpdir):
