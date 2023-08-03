@@ -124,6 +124,10 @@ def test_mtlist(example_data_path):
     df_gw, df_sw = mt.parse(forgive=False, diff=False, start_datetime=None)
 
     mt_dir = example_data_path / "mt3d_test"
+    mt = MtListBudget(mt_dir / "mt3d_with_adv.list")
+    df_gw, df_sw = mt.parse(forgive=False, diff=False, start_datetime=None)
+
+    mt_dir = example_data_path / "mt3d_test"
     mt = MtListBudget(mt_dir / "CrnkNic.mt3d.list")
     df_gw, df_sw = mt.parse(forgive=False, diff=True, start_datetime=None)
 
