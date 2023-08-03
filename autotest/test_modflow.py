@@ -200,6 +200,21 @@ def test_mt_modelgrid(function_tmpdir):
     assert np.array_equal(swt.modelgrid.idomain, ml.modelgrid.idomain)
 
 
+@requires_exe("mp7")
+def test_exe_selection():
+    # no selection defaults to mf2005
+    assert Path(Modflow().exe_name).name == "mf2005"
+    assert Path(Modflow(exe_name=None).exe_name).name == "mf2005"
+
+    # user-specified (just for testing - there is no legitimate reason
+    # to use mp7 with Modflow but Modpath7 derives from BaseModel too)
+    assert Path(Modflow(exe_name="mp7").exe_name).name == "mp7"
+
+    # BaseModel used to silently fall back to mf2005 if exe not found
+    with pytest.raises(FileNotFoundError):
+        ml = Modflow(exe_name="not_an_exe")
+
+
 def test_free_format_flag(function_tmpdir):
     Lx = 100.0
     Ly = 100.0

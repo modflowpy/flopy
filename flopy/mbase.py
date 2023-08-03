@@ -376,10 +376,7 @@ class BaseModel(ModelInterface):
         self._namefile = self.__name + "." + self.namefile_ext
         self._packagelist = []
         self.heading = ""
-        try:
-            self.exe_name = resolve_exe(exe_name)
-        except:
-            self.exe_name = "mf2005"
+        self.exe_name = "mf2005" if exe_name is None else resolve_exe(exe_name)
         self._verbose = verbose
         self.external_path = None
         self.external_extension = "ref"
