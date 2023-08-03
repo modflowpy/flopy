@@ -640,7 +640,7 @@ class MFModel(PackageContainer, ModelInterface):
             modelgrid: flopy.discretization.Grid
                 User supplied modelgrid object which will supercede the built
                 in modelgrid object
-            if fmt is set to 'vtk', parameters of Vtk ctor
+            if fmt is set to 'vtk', parameters of Vtk initializer
 
         """
         from ..export import utils

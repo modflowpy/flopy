@@ -605,7 +605,7 @@ def model_export(
         prjfile : str or pathlike, optional if `crs` is specified
             ESRI-style projection file with well-known text defining the CRS
             for the model grid (must be projected; geographic CRS are not supported).
-        if fmt is set to 'vtk', parameters of Vtk ctor
+        if fmt is set to 'vtk', parameters of Vtk initializer
 
     """
     assert isinstance(ml, ModelInterface)
@@ -698,7 +698,7 @@ def package_export(
         prjfile : str or pathlike, optional if `crs` is specified
             ESRI-style projection file with well-known text defining the CRS
             for the model grid (must be projected; geographic CRS are not supported).
-        if fmt is set to 'vtk', parameters of Vtk ctor
+        if fmt is set to 'vtk', parameters of Vtk initializer
 
     Returns
     -------
@@ -1033,7 +1033,7 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
         max_valid : maximum valid value
         modelgrid : flopy.discretization.Grid
             model grid instance which will supercede the flopy.model.modelgrid
-        if fmt is set to 'vtk', parameters of Vtk ctor
+        if fmt is set to 'vtk', parameters of Vtk initializer
 
     """
 
@@ -1193,7 +1193,7 @@ def array3d_export(f: Union[str, os.PathLike], u3d, fmt=None, **kwargs):
         max_valid : maximum valid value
         modelgrid : flopy.discretization.Grid
             model grid instance which will supercede the flopy.model.modelgrid
-        if fmt is set to 'vtk', parameters of Vtk ctor
+        if fmt is set to 'vtk', parameters of Vtk initializer
 
     """
 
@@ -1371,7 +1371,7 @@ def array2d_export(
         max_valid : maximum valid value
         modelgrid : flopy.discretization.Grid
             model grid instance which will supercede the flopy.model.modelgrid
-        if fmt is set to 'vtk', parameters of Vtk ctor
+        if fmt is set to 'vtk', parameters of Vtk initializer
 
     """
     assert isinstance(
