@@ -34,7 +34,7 @@ def pytest_generate_tests(metafunc):
         ref = nonempty([o.strip() for o in ref_opt])
 
     # drop duplicates
-    ref = list(set(ref))
+    ref = list(dict.fromkeys(ref))
 
     # drop and warn refs with invalid format
     # i.e. not "owner/repo/branch"
