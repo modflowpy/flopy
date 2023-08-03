@@ -1815,7 +1815,6 @@ class MFTransientArray(MFArray, MFTransient):
 
     def get_data(self, key=None, apply_mult=True, **kwargs):
         """Returns the data associated with stress period key `key`.
-        If `layer` is None, returns all data for time `key`.
 
         Parameters
         ----------
@@ -1825,14 +1824,6 @@ class MFTransientArray(MFArray, MFTransient):
                 Whether to apply multiplier to data prior to returning it
 
         """
-        if "layer" in kwargs:
-            warnings.warn(
-                "The 'layer' parameter has been deprecated, use 'key' "
-                "instead.",
-                category=DeprecationWarning,
-            )
-            key = kwargs["layer"]
-
         if self._data_storage is not None and len(self._data_storage) > 0:
             if key is None:
                 sim_time = self._data_dimensions.package_dim.model_dim[

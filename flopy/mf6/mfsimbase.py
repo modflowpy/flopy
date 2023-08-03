@@ -1773,81 +1773,6 @@ class MFSimulationBase(PackageContainer):
             excpt_str = f'file "{filename}" can not be found.'
             raise FlopyException(excpt_str)
 
-    def get_mvr_file(self, filename):
-        """
-        Get a specified mover file.
-
-        Parameters
-        ----------
-            filename : str
-                Name of mover file to get
-
-        Returns
-        --------
-            mover package : MFPackage
-
-        """
-        warnings.warn(
-            "get_mvr_file will be deprecated and will be removed in version "
-            "3.3.6. Use get_file",
-            PendingDeprecationWarning,
-        )
-        if filename in self._other_files:
-            return self._other_files[filename]
-        else:
-            excpt_str = f'MVR file "{filename}" can not be found.'
-            raise FlopyException(excpt_str)
-
-    def get_mvt_file(self, filename):
-        """
-        Get a specified mvt file.
-
-        Parameters
-        ----------
-            filename : str
-                Name of mover transport file to get
-
-        Returns
-        --------
-            mover transport package : MFPackage
-
-        """
-        warnings.warn(
-            "get_mvt_file will be deprecated and will be removed in version "
-            "3.3.6. Use get_file",
-            PendingDeprecationWarning,
-        )
-        if filename in self._other_files:
-            return self._other_files[filename]
-        else:
-            excpt_str = f'MVT file "{filename}" can not be found.'
-            raise FlopyException(excpt_str)
-
-    def get_gnc_file(self, filename):
-        """
-        Get a specified gnc file.
-
-        Parameters
-        ----------
-            filename : str
-                Name of gnc file to get
-
-        Returns
-        --------
-            gnc package : MFPackage
-
-        """
-        warnings.warn(
-            "get_gnc_file will be deprecated and will be removed in version "
-            "3.3.6. Use get_file",
-            PendingDeprecationWarning,
-        )
-        if filename in self._other_files:
-            return self._other_files[filename]
-        else:
-            excpt_str = f'GNC file "{filename}" can not be found.'
-            raise FlopyException(excpt_str)
-
     def remove_exchange_file(self, package):
         """
         Removes the exchange file "package". This is for internal flopy
@@ -2229,15 +2154,6 @@ class MFSimulationBase(PackageContainer):
             )
 
         return self.structure.model_struct_objs[model_type]
-
-    def get_ims_package(self, key):
-        warnings.warn(
-            "get_ims_package() has been deprecated and will be "
-            "removed in version 3.3.7. Use "
-            "get_solution_package() instead.",
-            DeprecationWarning,
-        )
-        return self.get_solution_package(key)
 
     def get_solution_package(self, key):
         """
