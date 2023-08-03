@@ -18,9 +18,6 @@ from ..datbase import DataInterface, DataType
 from ..utils import Util3d, flopy_io, import_optional_dependency
 from ..utils.crs import get_crs
 
-# web address of spatial reference dot org
-srefhttp = "https://spatialreference.org"
-
 
 def write_gridlines_shapefile(filename: Union[str, os.PathLike], mg):
     """
@@ -41,15 +38,7 @@ def write_gridlines_shapefile(filename: Union[str, os.PathLike], mg):
     shapefile = import_optional_dependency("shapefile")
     wr = shapefile.Writer(str(filename), shapeType=shapefile.POLYLINE)
     wr.field("number", "N", 18, 0)
-    if mg.__class__.__name__ == "SpatialReference":
-        grid_lines = mg.get_grid_lines()
-        warnings.warn(
-            "SpatialReference has been deprecated. Use StructuredGrid"
-            " instead.",
-            category=DeprecationWarning,
-        )
-    else:
-        grid_lines = mg.grid_lines
+    grid_lines = mg.grid_lines
     for i, line in enumerate(grid_lines):
         wr.line([line])
         wr.record(i)
@@ -112,15 +101,7 @@ def write_grid_shapefile(
     w = shapefile.Writer(str(path), shapeType=shapefile.POLYGON)
     w.autoBalance = 1
 
-    if mg.__class__.__name__ == "SpatialReference":
-        verts = copy.deepcopy(mg.vertices)
-        warnings.warn(
-            "SpatialReference has been deprecated. Use StructuredGrid"
-            " instead.",
-            category=DeprecationWarning,
-        )
-        mg.grid_type = "structured"
-    elif mg.grid_type == "structured":
+    if mg.grid_type == "structured":
         verts = [
             mg.get_cell_vertices(i, j)
             for i in range(mg.nrow)
