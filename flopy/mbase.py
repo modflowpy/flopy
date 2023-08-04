@@ -696,19 +696,29 @@ class BaseModel(ModelInterface):
         Parameters
         ----------
         item : str
-            3 character package name (case insensitive) or "sr" to access
-            the SpatialReference instance of the ModflowDis object
+            This can be one of:
+
+                * A 3-character package name (case insensitive) returns package
+                * "tr" to access the time discretization object
+                * "modelgrid" to access the spatial discretization object
+                * "nper" to get the number of stress periods
+                * "start_datetime" to get str describing model start date/time
 
 
         Returns
         -------
-        sr : SpatialReference instance
-        pp : Package object
-            Package object of type :class:`flopy.pakbase.Package`
+        object, int or None
+            Package object of type :class:`flopy.pakbase.Package`,
+            :class:`flopy.utils.reference.TemporalReference`, int or None.
+
+        Raises
+        ------
+        AttributeError
+            When package or object name cannot be resolved.
 
         Note
         ----
-        if self.dis is not None, then the spatial reference instance is updated
+        if self.dis is not None, then the modelgrid instance is updated
         using self.dis.delr, self.dis.delc, and self.dis.lenuni before being
         returned
         """
@@ -1388,17 +1398,6 @@ class BaseModel(ModelInterface):
             self._set_name(value)
         elif key == "model_ws":
             self.change_model_ws(value)
-        elif key == "sr" and value.__class__.__name__ == "SpatialReference":
-            warnings.warn(
-                "SpatialReference has been deprecated.",
-                category=DeprecationWarning,
-            )
-            if self.dis is not None:
-                self.dis.sr = value
-            else:
-                raise Exception(
-                    "cannot set SpatialReference - ModflowDis not found"
-                )
         elif key == "tr":
             assert isinstance(
                 value, discretization.reference.TemporalReference

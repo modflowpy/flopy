@@ -198,7 +198,7 @@ def test_freyberg_export(function_tmpdir, example_data_path):
         verbose=False,
         load_only=["DIS", "BAS6", "NWT", "OC", "RCH", "WEL", "DRN", "UPW"],
     )
-    # test export without instantiating an sr
+    # test export without instantiating a modelgrid
     m.modelgrid.crs = None
     shape = function_tmpdir / f"{name}_drn_sparse.shp"
     m.drn.stress_period_data.export(shape, sparse=True)
@@ -211,7 +211,7 @@ def test_freyberg_export(function_tmpdir, example_data_path):
     m.modelgrid = StructuredGrid(
         delc=m.dis.delc.array, delr=m.dis.delr.array, crs=3070
     )
-    # test export with an sr, regardless of whether or not wkt was found
+    # test export with a modelgrid, regardless of whether or not wkt was found
     m.drn.stress_period_data.export(shape, sparse=True)
     for suffix in [".dbf", ".prj", ".shp", ".shx"]:
         part = shape.with_suffix(suffix)
@@ -221,16 +221,16 @@ def test_freyberg_export(function_tmpdir, example_data_path):
     m.modelgrid = StructuredGrid(
         delc=m.dis.delc.array, delr=m.dis.delr.array, crs=3070
     )
-    # verify that attributes have same sr as parent
+    # verify that attributes have same modelgrid as parent
     assert m.drn.stress_period_data.mg.crs == m.modelgrid.crs
     assert m.drn.stress_period_data.mg.xoffset == m.modelgrid.xoffset
     assert m.drn.stress_period_data.mg.yoffset == m.modelgrid.yoffset
     assert m.drn.stress_period_data.mg.angrot == m.modelgrid.angrot
 
-    # get wkt text was fetched from spatialreference.org
+    # get wkt text from pyproj
     wkt = m.modelgrid.crs.to_wkt()
 
-    # if wkt text was fetched from spatialreference.org
+    # if wkt text was fetched from pyproj
     if wkt is not None:
         # test default package export
         shape = function_tmpdir / f"{name}_dis.shp"

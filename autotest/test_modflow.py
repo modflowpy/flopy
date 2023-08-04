@@ -560,7 +560,7 @@ def test_namfile_readwrite(function_tmpdir, example_data_path):
         angrot=30,
     )
 
-    # test reading and writing of SR information to namfile
+    # test reading and writing of modelgrid information to namfile
     m.write_input()
     m2 = Modflow.load("junk.nam", model_ws=ws)
 
