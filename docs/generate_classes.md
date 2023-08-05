@@ -40,17 +40,26 @@ LIST OF FILES IN C:\Users\***\flopy\flopy\mf6\modflow
         ...
 ```
 
-The `generate_classes()` function has several optional arguments.
+The `generate_classes()` function has several optional parameters.
 
 ```python
 # use the develop branch instead
-generate_classes(branch="develop")
+generate_classes(ref="develop")
 
 # use a fork of modflow6
-generate_classes(owner="your-username", branch="your-branch")
+generate_classes(owner="your-username", ref="your-branch")
+
+# maybe your fork has a different name
+generate_classes(owner="your-username", repo="your-modflow6", ref="your-branch")
 
 # local copy of the repo
-generate_classes(dfnpath="../your/dfn/path"))
+generate_classes(dfnpath="../your/dfn/path")
 ```
 
+Branch names, commit hashes, or tags may be provided to `ref`.
+
 By default, a backup is made of FloPy's package classes before rewriting them. To disable backups, use `backup=False`.
+
+## Testing class generation
+
+Tests for the `generate_classes()` utility are located in `test_generate_classes.py`. The tests depend on [`pytest-virtualenv`](https://pypi.org/project/pytest-virtualenv/) and will be skipped if run in parallel without the `--dist loadfile` option for `pytest-xdist`.

@@ -64,14 +64,14 @@ jobs:
           echo "version=${ver#"v"}" >> $GITHUB_OUTPUT
 
       - name: Update FloPy packages
-        run: python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="master", backup=False)'
+        run: python -c 'import flopy; flopy.mf6.utils.generate_classes(ref="master", backup=False)'
 
       - name: Lint Python files
         run: python scripts/pull_request_prepare.py
 
       - name: Run tests
         working-directory: autotest
-        run: pytest -v -m="not example and not regression" -n=auto --durations=0 --keep-failed=.failed
+        run: pytest -v -m="not example and not regression" -n=auto --durations=0 --keep-failed=.failed --dist loadfile
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
