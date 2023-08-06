@@ -505,6 +505,36 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                             idomain_val = idomain
                             # cellid should be within the model grid
                             for idx, cellid_part in enumerate(record[index]):
+                                if cellid_part == -1:
+                                    # cellid not defined, all values should
+                                    # be -1
+                                    match = all(
+                                        elem == record[index][0]
+                                        for elem in record[index]
+                                    )
+                                    if not match:
+                                        message = (
+                                            f"Invalid cellid {record[index]}"
+                                        )
+                                        (
+                                            type_,
+                                            value_,
+                                            traceback_,
+                                        ) = sys.exc_info()
+                                        raise MFDataException(
+                                            self.structure.get_model(),
+                                            self.structure.get_package(),
+                                            self.structure.path,
+                                            "storing data",
+                                            self.structure.name,
+                                            inspect.stack()[0][3],
+                                            type_,
+                                            value_,
+                                            traceback_,
+                                            message,
+                                            self._simulation_data.debug,
+                                        )
+                                    continue
                                 if (
                                     model_shape[idx] <= cellid_part
                                     or cellid_part < 0
@@ -530,7 +560,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                     )
                                 idomain_val = idomain_val[cellid_part]
                             # cellid should be at an active cell
-                            if idomain_val < 1:
+                            if record[index][0] != -1 and idomain_val < 1:
                                 message = (
                                     "Cellid {} is outside of the "
                                     "active model grid"

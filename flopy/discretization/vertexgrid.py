@@ -97,9 +97,6 @@ class VertexGrid(Grid):
         self._vertices = vertices
         self._cell1d = cell1d
         self._cell2d = cell2d
-        self._top = top
-        self._botm = botm
-        self._idomain = idomain
         if botm is None:
             self._nlay = nlay
             self._ncpl = ncpl
