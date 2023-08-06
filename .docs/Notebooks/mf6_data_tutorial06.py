@@ -1,13 +1,14 @@
 # ---
 # jupyter:
 #   jupytext:
+#     notebook_metadata_filter: metadata
 #     text_representation:
 #       extension: .py
 #       format_name: light
-#       format_version: "1.5"
-#       jupytext_version: 1.5.1
+#       format_version: '1.5'
+#       jupytext_version: 1.14.4
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 #   metadata:
@@ -159,7 +160,7 @@ npf.rewet_record = [("WETFCT", 1.1, "IWETIT", 0, "IHDWET", 1)]
 # Note that the cellid information (layer, row, column) is encapsulated in
 # a tuple.
 
-stress_period_data = [((1, 10, 10), 100.0), ((1, 10, 11), 105.0)]
+stress_period_data = [((1, 8, 8), 100.0), ((1, 9, 9), 105.0)]
 # build chd package
 chd = flopy.mf6.modflow.mfgwfchd.ModflowGwfchd(
     gwf,
