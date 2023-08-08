@@ -39,9 +39,9 @@ except:
     import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # For this example, we will set up a temporary workspace.
@@ -83,7 +83,7 @@ tdis = flopy.mf6.modflow.mftdis.ModflowTdis(
 )
 
 # Create the Flopy groundwater flow (gwf) model object
-model_nam_file = "{}.nam".format(name)
+model_nam_file = f"{name}.nam"
 gwf = flopy.mf6.ModflowGwf(sim, modelname=name, model_nam_file=model_nam_file)
 
 # Create the Flopy iterative model solver (ims) Package object
@@ -159,13 +159,13 @@ for k, i, j in ra["cellid"]:
 
 ilay = 0
 plt.imshow(ibd[ilay, :, :], interpolation="none")
-plt.title("Layer {}: Constant Head Cells".format(ilay + 1))
+plt.title(f"Layer {ilay + 1}: Constant Head Cells")
 # -
 
 # Create the output control package
-headfile = "{}.hds".format(name)
+headfile = f"{name}.hds"
 head_filerecord = [headfile]
-budgetfile = "{}.cbb".format(name)
+budgetfile = f"{name}.cbb"
 budget_filerecord = [budgetfile]
 saverecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
 printrecord = [("HEAD", "LAST")]
@@ -271,7 +271,7 @@ cb = plt.colorbar(pa, shrink=0.5)
 
 # +
 # read the binary grid file
-fname = os.path.join(workspace, "{}.dis.grb".format(name))
+fname = os.path.join(workspace, f"{name}.dis.grb")
 bgf = flopy.mf6.utils.MfGrdFile(fname)
 
 # data read from the binary grid file is stored in a dictionary
@@ -279,7 +279,7 @@ bgf._datadict
 
 # +
 # read the cell budget file
-fname = os.path.join(workspace, "{}.cbb".format(name))
+fname = os.path.join(workspace, f"{name}.cbb")
 cbb = flopy.utils.CellBudgetFile(fname, precision="double")
 cbb.list_records()
 
@@ -294,10 +294,10 @@ i = 50
 j = 50
 celln = k * N * N + i * N + j
 ia, ja = bgf.ia, bgf.ja
-print("Printing flows for cell {}".format(celln))
+print(f"Printing flows for cell {celln}")
 for ipos in range(ia[celln] + 1, ia[celln + 1]):
     cellm = ja[ipos]
-    print("Cell {} flow with cell {} is {}".format(celln, cellm, flowja[ipos]))
+    print(f"Cell {celln} flow with cell {cellm} is {flowja[ipos]}")
 
 try:
     # ignore PermissionError on Windows

@@ -346,7 +346,7 @@ class MFModel(PackageContainer, ModelInterface):
             model.
 
         """
-
+        force_resync = False
         if not self._mg_resync:
             return self._modelgrid
         if self.get_grid_type() == DiscretizationType.DIS:
@@ -370,12 +370,17 @@ class MFModel(PackageContainer, ModelInterface):
                         angrot=self._modelgrid.angrot,
                     )
             else:
+                botm = dis.botm.array
+                idomain = dis.idomain.array
+                if idomain is None:
+                    force_resync = True
+                    idomain = self._resolve_idomain(idomain, botm)
                 self._modelgrid = StructuredGrid(
                     delc=dis.delc.array,
                     delr=dis.delr.array,
                     top=dis.top.array,
-                    botm=dis.botm.array,
-                    idomain=dis.idomain.array,
+                    botm=botm,
+                    idomain=idomain,
                     lenuni=dis.length_units.array,
                     crs=self._modelgrid.crs,
                     xoff=self._modelgrid.xoffset,
@@ -403,12 +408,17 @@ class MFModel(PackageContainer, ModelInterface):
                         angrot=self._modelgrid.angrot,
                     )
             else:
+                botm = dis.botm.array
+                idomain = dis.idomain.array
+                if idomain is None:
+                    force_resync = True
+                    idomain = self._resolve_idomain(idomain, botm)
                 self._modelgrid = VertexGrid(
                     vertices=dis.vertices.array,
                     cell2d=dis.cell2d.array,
                     top=dis.top.array,
-                    botm=dis.botm.array,
-                    idomain=dis.idomain.array,
+                    botm=botm,
+                    idomain=idomain,
                     lenuni=dis.length_units.array,
                     crs=self._modelgrid.crs,
                     xoff=self._modelgrid.xoffset,
@@ -498,12 +508,17 @@ class MFModel(PackageContainer, ModelInterface):
                         angrot=self._modelgrid.angrot,
                     )
             else:
+                botm = dis.botm.array
+                idomain = dis.idomain.array
+                if idomain is None:
+                    force_resync = True
+                    idomain = self._resolve_idomain(idomain, botm)
                 self._modelgrid = VertexGrid(
                     vertices=dis.vertices.array,
                     cell1d=dis.cell1d.array,
                     top=dis.top.array,
-                    botm=dis.botm.array,
-                    idomain=dis.idomain.array,
+                    botm=botm,
+                    idomain=idomain,
                     lenuni=dis.length_units.array,
                     crs=self._modelgrid.crs,
                     xoff=self._modelgrid.xoffset,
@@ -546,7 +561,7 @@ class MFModel(PackageContainer, ModelInterface):
             angrot,
             self._modelgrid.crs,
         )
-        self._mg_resync = not self._modelgrid.is_complete
+        self._mg_resync = not self._modelgrid.is_complete or force_resync
         return self._modelgrid
 
     @property
@@ -640,11 +655,7 @@ class MFModel(PackageContainer, ModelInterface):
             modelgrid: flopy.discretization.Grid
                 User supplied modelgrid object which will supercede the built
                 in modelgrid object
-            epsg : int
-                EPSG projection code
-            prj : str
-                The prj file name
-            if fmt is set to 'vtk', parameters of vtk.export_model
+            if fmt is set to 'vtk', parameters of Vtk initializer
 
         """
         from ..export import utils
@@ -1211,7 +1222,7 @@ class MFModel(PackageContainer, ModelInterface):
         for record in solution_group:
             for model_name in record[2:]:
                 if model_name == self.name:
-                    return self.simulation.get_ims_package(record[1])
+                    return self.simulation.get_solution_package(record[1])
         return None
 
     def get_steadystate_list(self):
@@ -1941,3 +1952,12 @@ class MFModel(PackageContainer, ModelInterface):
         )
 
         return axes
+
+    @staticmethod
+    def _resolve_idomain(idomain, botm):
+        if idomain is None:
+            if botm is None:
+                return idomain
+            else:
+                return np.ones_like(botm)
+        return idomain

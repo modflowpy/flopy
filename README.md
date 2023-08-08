@@ -136,7 +136,9 @@ To install the latest release candidate type:
 How to Cite
 -----------------------------------------------
 
-##### ***Citation for FloPy:***
+##### ***Citations for FloPy:***
+
+[Hughes, J.D., Langevin, C.D., Paulinski, S.R., Larsen, J.D. and Brakenhoff, D. (2023), FloPy Workflows for Creating Structured and Unstructured MODFLOW Models. Groundwater. https://doi.org/10.1111/gwat.13327](https://doi.org/10.1111/gwat.13327)
 
 [Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Starn, J. J. and Fienen, M. N., 2016, Scripting MODFLOW Model Development Using Python and FloPy: Groundwater, v. 54, p. 733–739, doi:10.1111/gwat.12413.](https://doi.org/10.1111/gwat.12413)
 

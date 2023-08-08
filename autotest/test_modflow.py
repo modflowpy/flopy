@@ -200,6 +200,56 @@ def test_mt_modelgrid(function_tmpdir):
     assert np.array_equal(swt.modelgrid.idomain, ml.modelgrid.idomain)
 
 
+@requires_exe("mp7")
+def test_exe_selection(example_data_path, function_tmpdir):
+    model_path = example_data_path / "freyberg"
+    namfile_path = model_path / "freyberg.nam"
+
+    # no selection defaults to mf2005
+    exe_name = "mf2005"
+    assert Path(Modflow().exe_name).name == exe_name
+    assert Path(Modflow(exe_name=None).exe_name).name == exe_name
+    assert (
+        Path(Modflow.load(namfile_path, model_ws=model_path).exe_name).name
+        == exe_name
+    )
+    assert (
+        Path(
+            Modflow.load(
+                namfile_path, exe_name=None, model_ws=model_path
+            ).exe_name
+        ).name
+        == exe_name
+    )
+
+    # user-specified (just for testing - there is no legitimate reason
+    # to use mp7 with Modflow but Modpath7 derives from BaseModel too)
+    exe_name = "mp7"
+    assert Path(Modflow(exe_name=exe_name).exe_name).name == exe_name
+    assert (
+        Path(
+            Modflow.load(
+                namfile_path, exe_name=exe_name, model_ws=model_path
+            ).exe_name
+        ).name
+        == exe_name
+    )
+
+    # init/load should warn if exe DNE
+    exe_name = "not_an_exe"
+    with pytest.warns(UserWarning):
+        ml = Modflow(exe_name=exe_name)
+    with pytest.warns(UserWarning):
+        ml = Modflow.load(namfile_path, exe_name=exe_name, model_ws=model_path)
+
+    # run should error if exe DNE
+    ml = Modflow.load(namfile_path, exe_name=exe_name, model_ws=model_path)
+    ml.change_model_ws(function_tmpdir)
+    ml.write_input()
+    with pytest.raises(ValueError):
+        ml.run_model()
+
+
 def test_free_format_flag(function_tmpdir):
     Lx = 100.0
     Ly = 100.0
@@ -261,8 +311,7 @@ def test_sr(function_tmpdir):
         raise AssertionError()
     if extents[3] != 12355:
         raise AssertionError()
-    if mm.modelgrid.crs.srs != "EPSG:26916":
-        raise AssertionError()
+    assert mm.modelgrid.epsg == 26916
 
     mm.dis.top = 5000
 
@@ -543,7 +592,7 @@ def test_read_usgs_model_reference(function_tmpdir, model_reference_path):
     m2 = Modflow.load("junk.nam", model_ws=ws)
     m2.modelgrid.read_usgs_model_reference_file(mrf_path)
 
-    assert m2.modelgrid.crs.to_epsg() == 26916
+    assert m2.modelgrid.epsg == 26916
     # have to delete this, otherwise it will mess up other tests
     to_del = glob.glob(f"{mrf_path}*")
     for f in to_del:

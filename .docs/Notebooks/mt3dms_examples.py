@@ -64,9 +64,9 @@ temp_dir = TemporaryDirectory()
 workdir = temp_dir.name
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 
 
 # -
@@ -99,7 +99,7 @@ def p01(dirname, al, retardation, lambda1, mixelm):
     rhob = 0.25
     kd = (retardation - 1.0) * prsity / rhob
 
-    modelname_mf = dirname + "_mf"
+    modelname_mf = f"{dirname}_mf"
     mf = flopy.modflow.Modflow(
         modelname=modelname_mf, model_ws=model_ws, exe_name=exe_name_mf
     )
@@ -132,7 +132,7 @@ def p01(dirname, al, retardation, lambda1, mixelm):
     else:
         raise ValueError("Failed to run.")
 
-    modelname_mt = dirname + "_mt"
+    modelname_mt = f"{dirname}_mt"
     mt = flopy.mt3d.Mt3dms(
         modelname=modelname_mt,
         model_ws=model_ws,
@@ -289,7 +289,7 @@ def p02(dirname, isothm, sp1, sp2, mixelm):
     laytyp = 0
     rhob = 1.587
 
-    modelname_mf = dirname + "_mf"
+    modelname_mf = f"{dirname}_mf"
     mf = flopy.modflow.Modflow(
         modelname=modelname_mf, model_ws=model_ws, exe_name=exe_name_mf
     )
@@ -317,7 +317,7 @@ def p02(dirname, isothm, sp1, sp2, mixelm):
     mf.write_input()
     mf.run_model(silent=True)
 
-    modelname_mt = dirname + "_mt"
+    modelname_mt = f"{dirname}_mt"
     mt = flopy.mt3d.Mt3dms(
         modelname=modelname_mt,
         model_ws=model_ws,
@@ -407,7 +407,7 @@ plt.ylabel("NORMALIZED CONCENTRATION, UNITLESS")
 plt.legend()
 
 for beta in [0, 2.0e-3, 1.0e-2, 20.0]:
-    lbl = "beta={}".format(beta)
+    lbl = f"beta={beta}"
     mf, mt, conc, cvt, mvt = p02("nonequilibrium", 4, 0.933, beta, -1)
     x = cvt["time"]
     y = cvt["(1, 1, 51)"] / 0.05
@@ -444,7 +444,7 @@ def p03(dirname, mixelm):
     hk = 1.0
     laytyp = 0
 
-    modelname_mf = dirname + "_mf"
+    modelname_mf = f"{dirname}_mf"
     mf = flopy.modflow.Modflow(
         modelname=modelname_mf, model_ws=model_ws, exe_name=exe_name_mf
     )
@@ -473,7 +473,7 @@ def p03(dirname, mixelm):
     mf.write_input()
     mf.run_model(silent=True)
 
-    modelname_mt = dirname + "_mt"
+    modelname_mt = f"{dirname}_mt"
     mt = flopy.mt3d.Mt3dms(
         modelname=modelname_mt,
         model_ws=model_ws,
@@ -580,7 +580,7 @@ def p04(dirname, mixelm):
     hk = 1.0
     laytyp = 0
 
-    modelname_mf = dirname + "_mf"
+    modelname_mf = f"{dirname}_mf"
     mf = flopy.modflow.Modflow(
         modelname=modelname_mf, model_ws=model_ws, exe_name=exe_name_mf
     )
@@ -616,7 +616,7 @@ def p04(dirname, mixelm):
     mf.write_input()
     mf.run_model(silent=True)
 
-    modelname_mt = dirname + "_mt"
+    modelname_mt = f"{dirname}_mt"
     mt = flopy.mt3d.Mt3dms(
         modelname=modelname_mt,
         model_ws=model_ws,
@@ -738,7 +738,7 @@ def p05(dirname, mixelm, dt0, ttsmult):
     hk = 1.0
     laytyp = 0
 
-    modelname_mf = dirname + "_mf"
+    modelname_mf = f"{dirname}_mf"
     mf = flopy.modflow.Modflow(
         modelname=modelname_mf, model_ws=model_ws, exe_name=exe_name_mf
     )
@@ -765,7 +765,7 @@ def p05(dirname, mixelm, dt0, ttsmult):
     mf.write_input()
     mf.run_model(silent=True)
 
-    modelname_mt = dirname + "_mt"
+    modelname_mt = f"{dirname}_mt"
     mt = flopy.mt3d.Mt3dms(
         modelname=modelname_mt,
         model_ws=model_ws,
@@ -883,7 +883,7 @@ def p06(dirname, mixelm, dt0):
     hk = 0.005 * 86400
     laytyp = 0
 
-    modelname_mf = dirname + "_mf"
+    modelname_mf = f"{dirname}_mf"
     mf = flopy.modflow.Modflow(
         modelname=modelname_mf, model_ws=model_ws, exe_name=exe_name_mf
     )
@@ -912,7 +912,7 @@ def p06(dirname, mixelm, dt0):
     mf.write_input()
     mf.run_model(silent=True)
 
-    modelname_mt = dirname + "_mt"
+    modelname_mt = f"{dirname}_mt"
     mt = flopy.mt3d.Mt3dms(
         modelname=modelname_mt,
         model_ws=model_ws,
@@ -1031,7 +1031,7 @@ def p07(dirname, mixelm):
     hk = 0.5
     laytyp = 0
 
-    modelname_mf = dirname + "_mf"
+    modelname_mf = f"{dirname}_mf"
     mf = flopy.modflow.Modflow(
         modelname=modelname_mf, model_ws=model_ws, exe_name=exe_name_mf
     )
@@ -1060,7 +1060,7 @@ def p07(dirname, mixelm):
     mf.write_input()
     mf.run_model(silent=True)
 
-    modelname_mt = dirname + "_mt"
+    modelname_mt = f"{dirname}_mt"
     mt = flopy.mt3d.Mt3dms(
         modelname=modelname_mt,
         model_ws=model_ws,
@@ -1131,7 +1131,7 @@ cs = pmv.contour_array(conc, levels=[0.01, 0.05, 0.15, 0.50], colors="k")
 plt.clabel(cs)
 plt.xlabel("DISTANCE ALONG X-AXIS, IN METERS")
 plt.ylabel("DISTANCE ALONG Y-AXIS, IN METERS")
-plt.title("LAYER {}".format(ilay + 1))
+plt.title(f"LAYER {ilay + 1}")
 
 ax = fig.add_subplot(3, 1, 2, aspect="equal")
 ilay = 5
@@ -1142,7 +1142,7 @@ cs = pmv.contour_array(conc, levels=[0.01, 0.05, 0.15, 0.50], colors="k")
 plt.clabel(cs)
 plt.xlabel("DISTANCE ALONG X-AXIS, IN METERS")
 plt.ylabel("DISTANCE ALONG Y-AXIS, IN METERS")
-plt.title("LAYER {}".format(ilay + 1))
+plt.title(f"LAYER {ilay + 1}")
 
 ax = fig.add_subplot(3, 1, 3, aspect="equal")
 ilay = 6
@@ -1153,7 +1153,7 @@ cs = pmv.contour_array(conc, levels=[0.01, 0.05, 0.15, 0.50], colors="k")
 plt.clabel(cs)
 plt.xlabel("DISTANCE ALONG X-AXIS, IN METERS")
 plt.ylabel("DISTANCE ALONG Y-AXIS, IN METERS")
-plt.title("LAYER {}".format(ilay + 1))
+plt.title(f"LAYER {ilay + 1}")
 plt.plot(grid.xcellcenters[7, 2], grid.ycellcenters[7, 2], "ko")
 
 plt.tight_layout()
@@ -1189,7 +1189,7 @@ def p08(dirname, mixelm):
     hk[11:19, :, 36:] = k2
     laytyp = 6 * [1] + 21 * [0]
 
-    modelname_mf = dirname + "_mf"
+    modelname_mf = f"{dirname}_mf"
     mf = flopy.modflow.Modflow(
         modelname=modelname_mf, model_ws=model_ws, exe_name=exe_name_mf
     )
@@ -1220,7 +1220,7 @@ def p08(dirname, mixelm):
     mf.write_input()
     mf.run_model(silent=True)
 
-    modelname_mt = dirname + "_mt"
+    modelname_mt = f"{dirname}_mt"
     mt = flopy.mt3d.Mt3dms(
         modelname=modelname_mt,
         model_ws=model_ws,
@@ -1355,7 +1355,7 @@ def p09(dirname, mixelm, nadvfd):
     hk = k1 * np.ones((nlay, nrow, ncol), dtype=float)
     hk[:, 5:8, 1:8] = k2
 
-    modelname_mf = dirname + "_mf"
+    modelname_mf = f"{dirname}_mf"
     mf = flopy.modflow.Modflow(
         modelname=modelname_mf, model_ws=model_ws, exe_name=exe_name_mf
     )
@@ -1387,7 +1387,7 @@ def p09(dirname, mixelm, nadvfd):
     mf.write_input()
     mf.run_model(silent=True)
 
-    modelname_mt = dirname + "_mt"
+    modelname_mt = f"{dirname}_mt"
     mt = flopy.mt3d.Mt3dms(
         modelname=modelname_mt,
         model_ws=model_ws,
@@ -1558,7 +1558,7 @@ def p10(dirname, mixelm, perlen=1000, isothm=1, sp2=0.0, ttsmult=1.2):
     vka = 0.1
     laytyp = 0
 
-    modelname_mf = dirname + "_mf"
+    modelname_mf = f"{dirname}_mf"
     mf = flopy.modflow.Modflow(
         modelname=modelname_mf, model_ws=model_ws, exe_name=exe_name_mf
     )
@@ -1613,7 +1613,7 @@ def p10(dirname, mixelm, perlen=1000, isothm=1, sp2=0.0, ttsmult=1.2):
         os.remove(fname)
     mf.run_model(silent=True)
 
-    modelname_mt = dirname + "_mt"
+    modelname_mt = f"{dirname}_mt"
     mt = flopy.mt3d.Mt3dms(
         modelname=modelname_mt,
         model_ws=model_ws,
@@ -1717,7 +1717,7 @@ plt.xlim(5100, 5100 + 28 * 50)
 plt.ylim(9100, 9100 + 45 * 50)
 plt.xlabel("DISTANCE ALONG X-AXIS, IN METERS")
 plt.ylabel("DISTANCE ALONG Y-AXIS, IN METERS")
-plt.title("LAYER {} INITIAL CONCENTRATION".format(3))
+plt.title(f"LAYER {3} INITIAL CONCENTRATION")
 for k, i, j, q in mf.wel.stress_period_data[0]:
     plt.plot(grid.xcellcenters[i, j], grid.ycellcenters[i, j], "ks")
 
@@ -1732,7 +1732,7 @@ plt.xlim(5100, 5100 + 28 * 50)
 plt.ylim(9100, 9100 + 45 * 50)
 plt.xlabel("DISTANCE ALONG X-AXIS, IN METERS")
 plt.ylabel("DISTANCE ALONG Y-AXIS, IN METERS")
-plt.title("LAYER {} TIME = 500 DAYS".format(3))
+plt.title(f"LAYER {3} TIME = 500 DAYS")
 for k, i, j, q in mf.wel.stress_period_data[0]:
     plt.plot(grid.xcellcenters[i, j], grid.ycellcenters[i, j], "ks")
 
@@ -1747,7 +1747,7 @@ plt.xlim(5100, 5100 + 28 * 50)
 plt.ylim(9100, 9100 + 45 * 50)
 plt.xlabel("DISTANCE ALONG X-AXIS, IN METERS")
 plt.ylabel("DISTANCE ALONG Y-AXIS, IN METERS")
-plt.title("LAYER {} TIME = 750 DAYS".format(3))
+plt.title(f"LAYER {3} TIME = 750 DAYS")
 for k, i, j, q in mf.wel.stress_period_data[0]:
     plt.plot(grid.xcellcenters[i, j], grid.ycellcenters[i, j], "ks")
 
@@ -1762,7 +1762,7 @@ plt.xlim(5100, 5100 + 28 * 50)
 plt.ylim(9100, 9100 + 45 * 50)
 plt.xlabel("DISTANCE ALONG X-AXIS, IN METERS")
 plt.ylabel("DISTANCE ALONG Y-AXIS, IN METERS")
-plt.title("LAYER {} TIME = 1000 DAYS".format(3))
+plt.title(f"LAYER {3} TIME = 1000 DAYS")
 for k, i, j, q in mf.wel.stress_period_data[0]:
     plt.plot(grid.xcellcenters[i, j], grid.ycellcenters[i, j], "ks")
 

@@ -11,6 +11,7 @@ import os
 import warnings
 
 import numpy as np
+import pandas as pd
 
 from ..datbase import DataInterface, DataListInterface, DataType
 from ..utils import import_optional_dependency
@@ -438,15 +439,7 @@ class MfList(DataInterface, DataListInterface):
             stress periods where at least one cells is different,
             otherwise it is equal to the number of keys in MfList.data.
 
-        Notes
-        -----
-        Requires pandas.
-
         """
-        pd = import_optional_dependency(
-            "pandas",
-            error_message="MfList.get_dataframe() requires pandas.",
-        )
 
         # make a dataframe of all data for all stress periods
         names = ["per", "k", "i", "j"]

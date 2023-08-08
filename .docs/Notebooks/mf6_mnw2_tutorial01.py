@@ -38,12 +38,12 @@ except:
     import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
+print(f"numpy version: {np.__version__}")
 try:
-    print("pandas version: {}".format(pd.__version__))
+    print(f"pandas version: {pd.__version__}")
 except:
     pass
-print("flopy version: {}".format(flopy.__version__))
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # ### Make an MNW2 package from scratch
@@ -221,7 +221,9 @@ pd.DataFrame(mnw2.mnw["well-a"].stress_period_data)
 
 path = os.path.join("..", "..", "examples", "data", "mnw2_examples")
 m = flopy.modflow.Modflow("br", model_ws=model_ws)
-mnw2 = flopy.modflow.ModflowMnw2.load(path + "/BadRiver_cal.mnw2", m)
+mnw2 = flopy.modflow.ModflowMnw2.load(
+    os.path.join(path, "BadRiver_cal.mnw2"), m
+)
 
 df = pd.DataFrame(mnw2.node_data)
 df.loc[:, df.sum(axis=0) != 0]

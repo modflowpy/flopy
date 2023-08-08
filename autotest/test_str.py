@@ -14,7 +14,6 @@ str_items = {
 
 
 @requires_exe("mf2005")
-@requires_pkg("pandas")
 def test_str_issue1164(function_tmpdir, example_data_path):
     mf2005_model_path = example_data_path / "mf2005_test"
     m = Modflow.load(

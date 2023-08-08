@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 from ..utils import import_optional_dependency
 
@@ -51,8 +52,6 @@ class SfrFile:
         """
         Class constructor.
         """
-
-        self.pd = import_optional_dependency("pandas")
 
         # get the number of rows to skip at top, and the number of data columns
         self.filename = filename
@@ -172,13 +171,10 @@ class SfrFile:
             "skiprows": self.sr,
             "low_memory": False,
         }
-        try:  # since pandas 1.3.0
-            df = self.pd.read_csv(**kwargs, on_bad_lines="skip")
-        except TypeError:  # before pandas 1.3.0
-            df = self.pd.read_csv(**kwargs, error_bad_lines=False)
+        df = pd.read_csv(**kwargs, on_bad_lines="skip")
 
         # drop text between stress periods; convert to numeric
-        df["layer"] = self.pd.to_numeric(df.layer, errors="coerce")
+        df["layer"] = pd.to_numeric(df.layer, errors="coerce")
         df.dropna(axis=0, inplace=True)
 
         # convert to proper dtypes
@@ -247,7 +243,7 @@ class SfrFile:
             results = self._get_result(segment, reach)
         except:
             locsr = list(zip(segment, reach))
-            results = self.pd.DataFrame()
+            results = pd.DataFrame()
             for s, r in locsr:
                 srresults = self._get_result(s, r)
                 if len(srresults) > 0:

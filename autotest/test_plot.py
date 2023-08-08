@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import pandas as pd
 import pytest
 from flaky import flaky
 from matplotlib import pyplot as plt
@@ -386,11 +387,9 @@ def modpath_model(function_tmpdir, example_data_path):
     return ml, mp, sim
 
 
-@requires_pkg("pandas")
 @requires_exe("mf2005", "mp6")
-def test_xc_plot_particle_pathlines(modpath_model):
+def test_plot_map_view_mp6_plot_pathline(modpath_model):
     ml, mp, sim = modpath_model
-
     mp.write_input()
     mp.run_model(silent=False)
 
@@ -399,17 +398,61 @@ def test_xc_plot_particle_pathlines(modpath_model):
         dest_cells=[(4, 12, 12)]
     )
 
-    mx = PlotCrossSection(model=ml, line={"row": 4})
-    mx.plot_bc("WEL", kper=2, color="blue")
-    pth = mx.plot_pathline(well_pathlines, method="cell", colors="red")
+    def test_plot(pl):
+        mx = PlotMapView(model=ml)
+        mx.plot_grid()
+        mx.plot_bc("WEL", kper=2, color="blue")
+        pth = mx.plot_pathline(pl, colors="red")
+        # plt.show()
+        assert isinstance(pth, LineCollection)
+        assert len(pth._paths) == 114
 
-    assert isinstance(pth, LineCollection)
-    assert len(pth._paths) == 6
+    # support pathlines as list of recarrays
+    test_plot(well_pathlines)
+
+    # support pathlines as list of dataframes
+    test_plot([pd.DataFrame(pl) for pl in well_pathlines])
+
+    # support pathlines as single recarray
+    test_plot(np.concatenate(well_pathlines))
+
+    # support pathlines as single dataframe
+    test_plot(pd.DataFrame(np.concatenate(well_pathlines)))
 
 
-@requires_pkg("pandas")
 @requires_exe("mf2005", "mp6")
-def test_map_plot_particle_endpoints(modpath_model):
+def test_plot_cross_section_mp6_plot_pathline(modpath_model):
+    ml, mp, sim = modpath_model
+    mp.write_input()
+    mp.run_model(silent=False)
+
+    pthobj = PathlineFile(os.path.join(mp.model_ws, "ex6.mppth"))
+    well_pathlines = pthobj.get_destination_pathline_data(
+        dest_cells=[(4, 12, 12)]
+    )
+
+    def test_plot(pl):
+        mx = PlotCrossSection(model=ml, line={"row": 4})
+        mx.plot_bc("WEL", kper=2, color="blue")
+        pth = mx.plot_pathline(pl, method="cell", colors="red")
+        assert isinstance(pth, LineCollection)
+        assert len(pth._paths) == 6
+
+    # support pathlines as list of recarrays
+    test_plot(well_pathlines)
+
+    # support pathlines as list of dataframes
+    test_plot([pd.DataFrame(pl) for pl in well_pathlines])
+
+    # support pathlines as single recarray
+    test_plot(np.concatenate(well_pathlines))
+
+    # support pathlines as single dataframe
+    test_plot(pd.DataFrame(np.concatenate(well_pathlines)))
+
+
+@requires_exe("mf2005", "mp6")
+def test_plot_map_view_mp6_endpoint(modpath_model):
     ml, mp, sim = modpath_model
     mp.write_input()
     mp.run_model(silent=False)
@@ -417,7 +460,23 @@ def test_map_plot_particle_endpoints(modpath_model):
     pthobj = EndpointFile(os.path.join(mp.model_ws, "ex6.mpend"))
     endpts = pthobj.get_alldata()
 
-    # color kwarg as scalar
+    # support endpoints as recarray
+    assert isinstance(endpts, np.recarray)
+    mv = PlotMapView(model=ml)
+    mv.plot_bc("WEL", kper=2, color="blue")
+    ep = mv.plot_endpoint(endpts, direction="ending")
+    # plt.show()
+    assert isinstance(ep, PathCollection)
+
+    # support endpoints as dataframe
+    mv = PlotMapView(model=ml)
+    mv.plot_bc("WEL", kper=2, color="blue")
+    ep = mv.plot_endpoint(pd.DataFrame(endpts), direction="ending")
+    # plt.show()
+    assert isinstance(ep, PathCollection)
+
+    # test various possibilities for endpoint color configuration.
+    # first, color kwarg as scalar
     mv = PlotMapView(model=ml)
     mv.plot_bc("WEL", kper=2, color="blue")
     ep = mv.plot_endpoint(endpts, direction="ending", color="red")

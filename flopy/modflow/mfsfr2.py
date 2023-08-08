@@ -5,6 +5,7 @@ import os
 import warnings
 
 import numpy as np
+import pandas as pd
 from numpy.lib import recfunctions
 
 from ..pakbase import Package
@@ -646,7 +647,6 @@ class ModflowSfr2(Package):
 
     @property
     def df(self):
-        pd = import_optional_dependency("pandas")
         return pd.DataFrame(self.reach_data)
 
     def _make_graph(self):
@@ -1572,8 +1572,6 @@ class ModflowSfr2(Package):
         ax : matplotlib.axes._subplots.AxesSubplot object
         """
         import matplotlib.pyplot as plt
-
-        pd = import_optional_dependency("pandas")
 
         df = self.df
         m = self.parent

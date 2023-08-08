@@ -11,7 +11,7 @@ important classes that can be accessed by the user.
 import os
 import warnings
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 
@@ -165,16 +165,14 @@ def write_budget(
 
 class BinaryHeader(Header):
     """
-    The binary_header class is a class to create headers for MODFLOW
-    binary files.
+    Represents data headers for binary output files.
 
     Parameters
     ----------
         bintype : str
-            is the type of file being opened (head and ucn file currently
-            supported)
+            Type of file being opened. Accepted values are 'head' and 'ucn'.
         precision : str
-            is the precision of the floating point data in the file
+            Precision of floating point data in the file.
 
     """
 
@@ -194,6 +192,7 @@ class BinaryHeader(Header):
             "ilay",
             "ncpl",
             "nodes",
+            "m1",
             "m2",
             "m3",
         ]
@@ -422,9 +421,16 @@ def get_headfile_precision(filename: Union[str, os.PathLike]):
 
 class BinaryLayerFile(LayerFile):
     """
-    The BinaryLayerFile class is the super class from which specific derived
-    classes are formed.  This class should not be instantiated directly
+    The BinaryLayerFile class is a parent class from which concrete
+    classes inherit. This class should not be instantiated directly.
 
+    Notes
+    -----
+
+    The BinaryLayerFile class is built on a record array consisting of
+    headers, which are record arrays of the modflow header information
+    (kstp, kper, pertim, totim, text, nrow, ncol, ilay), and long ints
+    pointing to the 1st byte of data for the corresponding data arrays.
     """
 
     def __init__(
@@ -577,39 +583,25 @@ class BinaryLayerFile(LayerFile):
 
 class HeadFile(BinaryLayerFile):
     """
-    HeadFile Class.
+    The HeadFile class provides simple ways to retrieve and manipulate
+    2D or 3D head arrays, or time series arrays for one or more cells,
+    from a binary head output file. A utility method is also provided
+    to reverse the order of head data, for use with particle tracking
+    simulations in which particles are tracked backwards in time from
+    terminating to release locations (e.g., to compute capture zones).
 
     Parameters
     ----------
     filename : str or PathLike
-        Path of the concentration file
+        Path of the head file.
     text : string
-        Name of the text string in the head file.  Default is 'head'
+        Name of the text string in the head file. Default is 'head'.
     precision : string
-        'auto', 'single' or 'double'.  Default is 'auto'.
+        Precision of floating point head data in the value. Accepted
+        values are 'auto', 'single' or 'double'. Default is 'auto',
+        which enables automatic detection of precision.
     verbose : bool
-        Write information to the screen.  Default is False.
-
-    Attributes
-    ----------
-
-    Methods
-    -------
-
-    See Also
-    --------
-
-    Notes
-    -----
-    The HeadFile class provides simple ways to retrieve 2d and 3d
-    head arrays from a MODFLOW binary head file and time series
-    arrays for one or more cells.
-
-    The BinaryLayerFile class is built on a record array consisting of
-    headers, which are record arrays of the modflow header information
-    (kstp, kper, pertim, totim, text, nrow, ncol, ilay)
-    and long integers, which are pointers to first bytes of data for
-    the corresponding data array.
+        Toggle logging output. Default is False.
 
     Examples
     --------
@@ -622,7 +614,6 @@ class HeadFile(BinaryLayerFile):
     >>> ddnobj = bf.HeadFile('model.ddn', text='drawdown', precision='single')
     >>> ddnobj.list_records()
     >>> rec = ddnobj.get_data(totim=100.)
-
 
     """
 
@@ -645,6 +636,88 @@ class HeadFile(BinaryLayerFile):
             bintype="Head", precision=precision
         )
         super().__init__(filename, precision, verbose, kwargs)
+
+    def reverse(self, filename: Optional[os.PathLike] = None):
+        """
+        Write a new binary head file with the records in reverse order.
+        If a new filename is not provided, or if the filename is the same
+        as the existing filename, the file will be overwritten and data
+        reloaded from the rewritten/reversed file.
+
+        Parameters
+        ----------
+
+        filename : str or PathLike
+            Path of the new reversed binary file to create.
+        """
+
+        filename = (
+            Path(filename).expanduser().absolute()
+            if filename
+            else self.filename
+        )
+
+        # header array formats
+        dt = np.dtype(
+            [
+                ("kstp", np.int32),
+                ("kper", np.int32),
+                ("pertim", np.float64),
+                ("totim", np.float64),
+                ("text", "S16"),
+                ("ncol", np.int32),
+                ("nrow", np.int32),
+                ("ilay", np.int32),
+            ]
+        )
+
+        # make sure we have tdis
+        if self.tdis is None or not any(self.tdis.perioddata.get_data()):
+            raise ValueError("tdis mu/st be known to reverse head file")
+
+        # extract period data
+        pd = self.tdis.perioddata.get_data()
+
+        # get maximum period number and total simulation time
+        kpermx = len(pd) - 1
+        tsimtotal = 0.0
+        for tpd in pd:
+            tsimtotal += tpd[0]
+
+        # get total number of records
+        nrecords = self.recordarray.shape[0]
+
+        # open backward file
+        with open(filename, "wb") as fbin:
+            # loop over head file records in reverse order
+            for idx in range(nrecords - 1, -1, -1):
+                # load header array
+                header = self.recordarray[idx].copy()
+
+                # reverse kstp and kper in the header array
+                (kstp, kper) = (header["kstp"] - 1, header["kper"] - 1)
+                kstpmx = pd[kper][1] - 1
+                kstpb = kstpmx - kstp
+                kperb = kpermx - kper
+                (header["kstp"], header["kper"]) = (kstpb + 1, kperb + 1)
+
+                # reverse totim and pertim in the header array
+                header["totim"] = tsimtotal - header["totim"]
+                perlen = pd[kper][0]
+                header["pertim"] = perlen - header["pertim"]
+
+                # write header information
+                h = np.array(header, dtype=dt)
+                h.tofile(fbin)
+
+                # load and write data
+                data = self.get_data(idx=idx)[0][0]
+                data = np.array(data, dtype=np.float64)
+                data.tofile(fbin)
+
+        # if we rewrote the original file, reinitialize
+        if filename == self.filename:
+            super().__init__(self.filename, self.precision, self.verbose, {})
 
 
 class UcnFile(BinaryLayerFile):
@@ -715,34 +788,190 @@ class UcnFile(BinaryLayerFile):
         return
 
 
+class HeadUFile(BinaryLayerFile):
+    """
+    The HeadUFile class provides simple ways to retrieve a list of
+    head arrays from a MODFLOW-USG binary head file and time series
+    arrays for one or more cells.
+
+    Parameters
+    ----------
+    filename : str or PathLike
+        Path of the head file
+    text : string
+        Name of the text string in the head file. Default is 'headu'.
+    precision : string
+        Precision of the floating point head data in the file. Accepted
+        values are 'auto', 'single' or 'double'. Default is 'auto', which
+        enables precision to be automatically detected.
+    verbose : bool
+        Toggle logging output. Default is False.
+
+    Notes
+    -----
+
+    The BinaryLayerFile class is built on a record array consisting of
+    headers, which are record arrays of the modflow header information
+    (kstp, kper, pertim, totim, text, nrow, ncol, ilay), and long ints
+    pointing to the 1st byte of data for the corresponding data arrays.
+    This class overrides methods in the parent class so that the proper
+    sized arrays are created: for unstructured grids, nrow and ncol are
+    the starting and ending node numbers for layer, ilay.
+
+    When the get_data method is called for this class, a list of
+    one-dimensional arrays will be returned, where each array is the head
+    array for a layer. If the heads for a layer were not saved, then
+    None will be returned for that layer.
+
+    Examples
+    --------
+
+    >>> import flopy.utils.binaryfile as bf
+    >>> hdobj = bf.HeadUFile('model.hds')
+    >>> hdobj.list_records()
+    >>> usgheads = hdobj.get_data(kstpkper=(1, 50))
+
+    """
+
+    def __init__(
+        self,
+        filename: Union[str, os.PathLike],
+        text="headu",
+        precision="auto",
+        verbose=False,
+        **kwargs,
+    ):
+        """
+        Class constructor
+        """
+        self.text = text.encode()
+        if precision == "auto":
+            precision = get_headfile_precision(filename)
+            if precision == "unknown":
+                s = f"Error. Precision could not be determined for {filename}"
+                print(s)
+                raise Exception()
+        self.header_dtype = BinaryHeader.set_dtype(
+            bintype="Head", precision=precision
+        )
+        super().__init__(filename, precision, verbose, kwargs)
+
+    def _get_data_array(self, totim=0.0):
+        """
+        Get a list of 1D arrays for the
+        specified kstp and kper value or totim value.
+
+        """
+
+        if totim >= 0.0:
+            keyindices = np.where(self.recordarray["totim"] == totim)[0]
+            if len(keyindices) == 0:
+                msg = f"totim value ({totim}) not found in file..."
+                raise Exception(msg)
+        else:
+            raise Exception("Data not found...")
+
+        # fill a list of 1d arrays with heads from binary file
+        data = self.nlay * [None]
+        for idx in keyindices:
+            ipos = self.iposarray[idx]
+            ilay = self.recordarray["ilay"][idx]
+            nstrt = self.recordarray["ncol"][idx]
+            nend = self.recordarray["nrow"][idx]
+            npl = nend - nstrt + 1
+            if self.verbose:
+                print(f"Byte position in file: {ipos} for layer {ilay}")
+            self.file.seek(ipos, 0)
+            data[ilay - 1] = binaryread(self.file, self.realtype, shape=(npl,))
+        return data
+
+    def get_databytes(self, header):
+        """
+
+        Parameters
+        ----------
+        header : datafile.Header
+            header object
+
+        Returns
+        -------
+         databytes : int
+            size of the data array, in bytes, following the header
+
+        """
+        # unstructured head files contain node starting and ending indices
+        # for each layer
+        nstrt = np.int64(header["ncol"])
+        nend = np.int64(header["nrow"])
+        npl = nend - nstrt + 1
+        return npl * np.int64(self.realtype(1).nbytes)
+
+    def get_ts(self, idx):
+        """
+        Get a time series from the binary HeadUFile
+
+        Parameters
+        ----------
+        idx : int or list of ints
+            idx can be nodenumber or it can be a list in the form
+            [nodenumber, nodenumber, ...].  The nodenumber,
+            values must be zero based.
+
+        Returns
+        ----------
+        out : numpy array
+            Array has size (ntimes, ncells + 1).  The first column in the
+            data array will contain time (totim).
+
+        """
+        times = self.get_times()
+        data = self.get_data(totim=times[0])
+        layers = len(data)
+        ncpl = [len(data[l]) for l in range(layers)]
+        result = []
+
+        if isinstance(idx, int):
+            layer, nn = get_lni(ncpl, [idx])[0]
+            for i, time in enumerate(times):
+                data = self.get_data(totim=time)
+                value = data[layer][nn]
+                result.append([time, value])
+        elif isinstance(idx, list) and all(isinstance(x, int) for x in idx):
+            for i, time in enumerate(times):
+                data = self.get_data(totim=time)
+                row = [time]
+                lni = get_lni(ncpl, idx)
+                for layer, nn in lni:
+                    value = data[layer][nn]
+                    row += [value]
+                result.append(row)
+        else:
+            raise ValueError("idx must be an integer or a list of integers")
+
+        return np.array(result)
+
+
 class BudgetIndexError(Exception):
     pass
 
 
 class CellBudgetFile:
     """
-    CellBudgetFile Class.
+    The CellBudgetFile class provides convenient ways to retrieve and
+    manipulate budget data from a binary cell budget file. A utility
+    method is also provided to reverse the budget records for particle
+    tracking simulations in which particles are tracked backwards from
+    terminating to release locations (e.g., to compute capture zones).
 
     Parameters
     ----------
     filename : str or PathLike
-        Path of the cell budget file
+        Path of the cell budget file.
     precision : string
-        'single' or 'double'.  Default is 'single'.
+        Precision of floating point budget data in the file. Accepted
+        values are 'single' or 'double'. Default is 'single'.
     verbose : bool
-        Write information to the screen.  Default is False.
-
-    Attributes
-    ----------
-
-    Methods
-    -------
-
-    See Also
-    --------
-
-    Notes
-    -----
+        Toggle logging output. Default is False.
 
     Examples
     --------
@@ -795,6 +1024,8 @@ class CellBudgetFile:
         if "dis" in kwargs.keys():
             self.dis = kwargs.pop("dis")
             self.modelgrid = self.dis.parent.modelgrid
+        if "tdis" in kwargs.keys():
+            self.tdis = kwargs.pop("tdis")
         if "sr" in kwargs.keys():
             from ..discretization import StructuredGrid, UnstructuredGrid
 
@@ -1968,177 +2199,158 @@ class CellBudgetFile:
         Close the file handle
         """
         self.file.close()
-        return
 
-
-class HeadUFile(BinaryLayerFile):
-    """
-    Unstructured MODFLOW-USG HeadUFile Class.
-
-    Parameters
-    ----------
-    filename : string
-        Name of the concentration file
-    text : string
-        Name of the text string in the head file.  Default is 'headu'
-    precision : string
-        'auto', 'single' or 'double'.  Default is 'auto'.
-    verbose : bool
-        Write information to the screen.  Default is False.
-
-    Attributes
-    ----------
-
-    Methods
-    -------
-
-    See Also
-    --------
-
-    Notes
-    -----
-    The HeadUFile class provides simple ways to retrieve a list of
-    head arrays from a MODFLOW-USG binary head file and time series
-    arrays for one or more cells.
-
-    The BinaryLayerFile class is built on a record array consisting of
-    headers, which are record arrays of the modflow header information
-    (kstp, kper, pertim, totim, text, nrow, ncol, ilay)
-    and long integers, which are pointers to first bytes of data for
-    the corresponding data array.  For unstructured grids, nrow and ncol
-    are the starting and ending node numbers for layer, ilay.  This class
-    overrides methods in the parent class so that the proper sized arrays
-    are created.
-
-    When the get_data method is called for this class, a list of
-    one-dimensional arrays will be returned, where each array is the head
-    array for a layer.  If the heads for a layer were not saved, then
-    None will be returned for that layer.
-
-    Examples
-    --------
-
-    >>> import flopy.utils.binaryfile as bf
-    >>> hdobj = bf.HeadUFile('model.hds')
-    >>> hdobj.list_records()
-    >>> usgheads = hdobj.get_data(kstpkper=(1, 50))
-
-
-    """
-
-    def __init__(
-        self,
-        filename: Union[str, os.PathLike],
-        text="headu",
-        precision="auto",
-        verbose=False,
-        **kwargs,
-    ):
+    def reverse(self, filename: Optional[os.PathLike] = None):
         """
-        Class constructor
+        Write a binary cell budget file with the records in reverse order.
+        If a new filename is not provided, or if the filename is the same
+        as the existing filename, the file will be overwritten and data
+        reloaded from the rewritten/reversed file.
+
+        Parameters
+        ----------
+
+        filename : str or PathLike, optional
+            Path of the new reversed binary cell budget file to create.
         """
-        self.text = text.encode()
-        if precision == "auto":
-            precision = get_headfile_precision(filename)
-            if precision == "unknown":
-                s = f"Error. Precision could not be determined for {filename}"
-                print(s)
-                raise Exception()
-        self.header_dtype = BinaryHeader.set_dtype(
-            bintype="Head", precision=precision
+
+        filename = (
+            Path(filename).expanduser().absolute()
+            if filename
+            else self.filename
         )
-        super().__init__(filename, precision, verbose, kwargs)
 
-    def _get_data_array(self, totim=0.0):
-        """
-        Get a list of 1D arrays for the
-        specified kstp and kper value or totim value.
+        # header array formats
+        dt1 = np.dtype(
+            [
+                ("kstp", np.int32),
+                ("kper", np.int32),
+                ("text", "S16"),
+                ("ndim1", np.int32),
+                ("ndim2", np.int32),
+                ("ndim3", np.int32),
+                ("imeth", np.int32),
+                ("delt", np.float64),
+                ("pertim", np.float64),
+                ("totim", np.float64),
+            ]
+        )
+        dt2 = np.dtype(
+            [
+                ("text1id1", "S16"),
+                ("text1id2", "S16"),
+                ("text2id1", "S16"),
+                ("text2id2", "S16"),
+            ]
+        )
 
-        """
+        # make sure we have tdis
+        if self.tdis is None or not any(self.tdis.perioddata.get_data()):
+            raise ValueError(
+                "tdis must be known to reverse a cell budget file"
+            )
 
-        if totim >= 0.0:
-            keyindices = np.where(self.recordarray["totim"] == totim)[0]
-            if len(keyindices) == 0:
-                msg = f"totim value ({totim}) not found in file..."
-                raise Exception(msg)
-        else:
-            raise Exception("Data not found...")
+        # extract perioddata
+        pd = self.tdis.perioddata.get_data()
 
-        # fill a list of 1d arrays with heads from binary file
-        data = self.nlay * [None]
-        for idx in keyindices:
-            ipos = self.iposarray[idx]
-            ilay = self.recordarray["ilay"][idx]
-            nstrt = self.recordarray["ncol"][idx]
-            nend = self.recordarray["nrow"][idx]
-            npl = nend - nstrt + 1
-            if self.verbose:
-                print(f"Byte position in file: {ipos} for layer {ilay}")
-            self.file.seek(ipos, 0)
-            data[ilay - 1] = binaryread(self.file, self.realtype, shape=(npl,))
-        return data
+        # get maximum period number and total simulation time
+        nper = len(pd)
+        kpermx = nper - 1
+        tsimtotal = 0.0
+        for tpd in pd:
+            tsimtotal += tpd[0]
 
-    def get_databytes(self, header):
-        """
+        # get number of records
+        nrecords = self.get_nrecords()
 
-        Parameters
-        ----------
-        header : datafile.Header
-            header object
+        # open backward budget file
+        with open(filename, "wb") as fbin:
+            # loop over budget file records in reverse order
+            for idx in range(nrecords - 1, -1, -1):
+                # load header array
+                header = self.recordarray[idx]
 
-        Returns
-        -------
-         databytes : int
-            size of the data array, in bytes, following the header
+                # reverse kstp and kper in the header array
+                (kstp, kper) = (header["kstp"] - 1, header["kper"] - 1)
+                kstpmx = pd[kper][1] - 1
+                kstpb = kstpmx - kstp
+                kperb = kpermx - kper
+                (header["kstp"], header["kper"]) = (kstpb + 1, kperb + 1)
 
-        """
-        # unstructured head files contain node starting and ending indices
-        # for each layer
-        nstrt = np.int64(header["ncol"])
-        nend = np.int64(header["nrow"])
-        npl = nend - nstrt + 1
-        return npl * np.int64(self.realtype(1).nbytes)
+                # reverse totim and pertim in the header array
+                header["totim"] = tsimtotal - header["totim"]
+                perlen = pd[kper][0]
+                header["pertim"] = perlen - header["pertim"]
 
-    def get_ts(self, idx):
-        """
-        Get a time series from the binary HeadUFile
+                # Write main header information to backward budget file
+                h = header[
+                    [
+                        "kstp",
+                        "kper",
+                        "text",
+                        "ncol",
+                        "nrow",
+                        "nlay",
+                        "imeth",
+                        "delt",
+                        "pertim",
+                        "totim",
+                    ]
+                ]
+                # Note: much of the code below is based on binary_file_writer.py
+                h = np.array(h, dtype=dt1)
+                h.tofile(fbin)
+                if header["imeth"] == 6:
+                    # Write additional header information to the backward budget file
+                    h = header[
+                        [
+                            "modelnam",
+                            "paknam",
+                            "modelnam2",
+                            "paknam2",
+                        ]
+                    ]
+                    h = np.array(h, dtype=dt2)
+                    h.tofile(fbin)
+                    # Load data
+                    data = self.get_data(idx)[0]
+                    data = np.array(data)
+                    # Negate flows
+                    data["q"] = -data["q"]
+                    # Write ndat (number of floating point columns)
+                    colnames = data.dtype.names
+                    ndat = len(colnames) - 2
+                    dt = np.dtype([("ndat", np.int32)])
+                    h = np.array([(ndat,)], dtype=dt)
+                    h.tofile(fbin)
+                    # Write auxiliary column names
+                    naux = ndat - 1
+                    if naux > 0:
+                        auxtxt = [
+                            "{:16}".format(colname) for colname in colnames[3:]
+                        ]
+                        auxtxt = tuple(auxtxt)
+                        dt = np.dtype(
+                            [(colname, "S16") for colname in colnames[3:]]
+                        )
+                        h = np.array(auxtxt, dtype=dt)
+                        h.tofile(fbin)
+                    # Write nlist
+                    nlist = data.shape[0]
+                    dt = np.dtype([("nlist", np.int32)])
+                    h = np.array([(nlist,)], dtype=dt)
+                    h.tofile(fbin)
+                elif header["imeth"] == 1:
+                    # Load data
+                    data = self.get_data(idx)[0][0][0]
+                    data = np.array(data, dtype=np.float64)
+                    # Negate flows
+                    data = -data
+                else:
+                    raise ValueError("not expecting imeth " + header["imeth"])
+                # Write data
+                data.tofile(fbin)
 
-        Parameters
-        ----------
-        idx : int or list of ints
-            idx can be nodenumber or it can be a list in the form
-            [nodenumber, nodenumber, ...].  The nodenumber,
-            values must be zero based.
-
-        Returns
-        ----------
-        out : numpy array
-            Array has size (ntimes, ncells + 1).  The first column in the
-            data array will contain time (totim).
-
-        """
-        times = self.get_times()
-        data = self.get_data(totim=times[0])
-        layers = len(data)
-        ncpl = [len(data[l]) for l in range(layers)]
-        result = []
-
-        if isinstance(idx, int):
-            layer, nn = get_lni(ncpl, [idx])[0]
-            for i, time in enumerate(times):
-                data = self.get_data(totim=time)
-                value = data[layer][nn]
-                result.append([time, value])
-        elif isinstance(idx, list) and all(isinstance(x, int) for x in idx):
-            for i, time in enumerate(times):
-                data = self.get_data(totim=time)
-                row = [time]
-                lni = get_lni(ncpl, idx)
-                for layer, nn in lni:
-                    value = data[layer][nn]
-                    row += [value]
-                result.append(row)
-        else:
-            raise ValueError("idx must be an integer or a list of integers")
-
-        return np.array(result)
+        # if we rewrote the original file, reinitialize
+        if filename == self.filename:
+            self.__init__(self.filename, self.precision, self.verbose)

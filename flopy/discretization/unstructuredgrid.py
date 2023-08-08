@@ -1,5 +1,4 @@
 import copy
-import inspect
 import os
 from typing import Union
 
@@ -51,7 +50,7 @@ class UnstructuredGrid(Grid):
         If the model grid defined in verts and iverts applies for all model
         layers, then the length of iverts can be equal to ncpl[0] and there
         is no need to repeat all of the vertex information for cells in layers
-    crs : pyproj.CRS, optional if `prjfile` is specified
+    crs : pyproj.CRS, int, str, optional if `prjfile` is specified
         Coordinate reference system (CRS) for the model grid
         (must be projected; geographic CRS are not supported).
         The value can be anything accepted by
@@ -73,6 +72,15 @@ class UnstructuredGrid(Grid):
         optional number of connections per node array
     ja : list or ndarray
         optional jagged connection array
+    **kwargs : dict, optional
+        Support deprecated keyword options.
+
+        .. deprecated:: 3.5
+           The following keyword options will be removed for FloPy 3.6:
+
+             - ``prj`` (str or pathlike): use ``prjfile`` instead.
+             - ``epsg`` (int): use ``crs`` instead.
+             - ``proj4`` (str): use ``crs`` instead.
 
     Properties
     ----------
@@ -117,30 +125,26 @@ class UnstructuredGrid(Grid):
         lenuni=None,
         ncpl=None,
         crs=None,
-        epsg=None,
-        proj4=None,
-        prj=None,
         prjfile=None,
         xoff=0.0,
         yoff=0.0,
         angrot=0.0,
         iac=None,
         ja=None,
+        **kwargs,
     ):
         super().__init__(
             "unstructured",
-            top,
-            botm,
-            idomain,
-            lenuni,
-            crs,
-            epsg,
-            proj4,
-            prj,
-            prjfile,
-            xoff,
-            yoff,
-            angrot,
+            top=top,
+            botm=botm,
+            idomain=idomain,
+            lenuni=lenuni,
+            crs=crs,
+            prjfile=prjfile,
+            xoff=xoff,
+            yoff=yoff,
+            angrot=angrot,
+            **kwargs,
         )
 
         # if any of these are None, then the grid is not valid
@@ -576,10 +580,6 @@ class UnstructuredGrid(Grid):
             The CELL2D number
 
         """
-        if isinstance(z, bool):
-            frame_info = inspect.getframeinfo(inspect.currentframe())
-            self._warn_intersect(frame_info.filename, frame_info.lineno)
-
         if local:
             # transform x and y to real-world coordinates
             x, y = super().get_coords(x, y)

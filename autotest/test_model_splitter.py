@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 from autotest.conftest import get_example_data_path
-from modflow_devtools.markers import requires_exe
+from modflow_devtools.markers import requires_exe, requires_pkg
 
 from flopy.mf6 import MFSimulation
 from flopy.mf6.utils import Mf6Splitter
@@ -155,6 +155,7 @@ def test_model_with_lak_sfr_mvr(function_tmpdir):
     np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
 
 
+@requires_pkg("pymetis")
 @requires_exe("mf6")
 @pytest.mark.slow
 def test_metis_splitting_with_lak_sfr(function_tmpdir):

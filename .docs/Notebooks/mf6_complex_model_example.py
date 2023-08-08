@@ -39,9 +39,9 @@ except:
     import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # For this example, we will set up a temporary workspace.
@@ -75,7 +75,7 @@ tdis = flopy.mf6.ModflowTdis(
 
 # create gwf model
 gwf = flopy.mf6.ModflowGwf(
-    sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+    sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
 )
 gwf.name_file.save_flows = True
 
@@ -114,12 +114,12 @@ dis = flopy.mf6.ModflowGwfdis(
     delc=500.0,
     top=50.0,
     botm=[5.0, -10.0, botlay2],
-    filename="{}.dis".format(model_name),
+    filename=f"{model_name}.dis",
 )
 
 # initial conditions
 ic = flopy.mf6.ModflowGwfic(
-    gwf, pname="ic", strt=50.0, filename="{}.ic".format(model_name)
+    gwf, pname="ic", strt=50.0, filename=f"{model_name}.ic"
 )
 
 # node property flow
@@ -136,8 +136,8 @@ npf = flopy.mf6.ModflowGwfnpf(
 oc = flopy.mf6.ModflowGwfoc(
     gwf,
     pname="oc",
-    budget_filerecord="{}.cbb".format(model_name),
-    head_filerecord="{}.hds".format(model_name),
+    budget_filerecord=f"{model_name}.cbb",
+    head_filerecord=f"{model_name}.hds",
     headprintrecord=[("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "GENERAL")],
     saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
     printrecord=[("HEAD", "FIRST"), ("HEAD", "LAST"), ("BUDGET", "LAST")],
@@ -274,7 +274,7 @@ ghb = flopy.mf6.ModflowGwfghb(
     stress_period_data=ghb_period,
 )
 ts_recarray = []
-fd = open(os.path.join(data_pth, "tides.txt"), "r")
+fd = open(os.path.join(data_pth, "tides.txt"))
 for line in fd:
     line_list = line.strip().split(",")
     ts_recarray.append((float(line_list[0]), float(line_list[1])))
@@ -295,7 +295,7 @@ obs_recarray = {
     ],
 }
 ghb.obs.initialize(
-    filename="{}.ghb.obs".format(model_name),
+    filename=f"{model_name}.ghb.obs",
     print_input=True,
     continuous=obs_recarray,
 )
@@ -316,7 +316,7 @@ obs_recarray = {
 obs_package = flopy.mf6.ModflowUtlobs(
     gwf,
     pname="head_obs",
-    filename="{}.obs".format(model_name),
+    filename=f"{model_name}.obs",
     print_input=True,
     continuous=obs_recarray,
 )
@@ -351,7 +351,7 @@ riv = flopy.mf6.ModflowGwfriv(
     pname="riv",
     print_input=True,
     print_flows=True,
-    save_flows="{}.cbc".format(model_name),
+    save_flows=f"{model_name}.cbc",
     boundnames=True,
     maxbound=20,
     stress_period_data=riv_period,
@@ -407,7 +407,7 @@ obs_recarray = {
     ],
 }
 riv.obs.initialize(
-    filename="{}.riv.obs".format(model_name),
+    filename=f"{model_name}.riv.obs",
     print_input=True,
     continuous=obs_recarray,
 )
@@ -443,7 +443,7 @@ for row in range(0, 15):
 rch1_period[0] = rch1_period_array
 rch1 = flopy.mf6.ModflowGwfrch(
     gwf,
-    filename="{}_1.rch".format(model_name),
+    filename=f"{model_name}_1.rch",
     pname="rch_1",
     fixed_cell=True,
     auxiliary="MULTIPLIER",
@@ -496,7 +496,7 @@ rch2_period_array = [
 rch2_period[0] = rch2_period_array
 rch2 = flopy.mf6.ModflowGwfrch(
     gwf,
-    filename="{}_2.rch".format(model_name),
+    filename=f"{model_name}_2.rch",
     pname="rch_2",
     fixed_cell=True,
     auxiliary="MULTIPLIER",
@@ -544,7 +544,7 @@ for row in range(0, 15):
 rch3_period[0] = rch3_period_array
 rch3 = flopy.mf6.ModflowGwfrch(
     gwf,
-    filename="{}_3.rch".format(model_name),
+    filename=f"{model_name}_3.rch",
     pname="rch_3",
     fixed_cell=True,
     auxiliary="MULTIPLIER",
@@ -616,7 +616,7 @@ contours = modelmap.contour_array(h[0])
 #
 # MODFLOW 6 writes a binary grid file, which contains information about the model grid.  MODFLOW 6 also writes a binary budget file, which contains flow information.  Both of these files can be read using FloPy methods.  The `MfGrdFile` class in FloPy can be used to read the binary grid file, which contains the cell connectivity (`ia` and `ja`).  The `output.budget()` method in FloPy can be used to read the binary budget file written by MODFLOW 6.
 
-fname = os.path.join(workspace, "{}.dis.grb".format(model_name))
+fname = os.path.join(workspace, f"{model_name}.dis.grb")
 bgf = flopy.mf6.utils.MfGrdFile(fname)
 ia, ja = bgf.ia, bgf.ja
 
@@ -632,14 +632,10 @@ j = 2
 cell_nodes = gwf.modelgrid.get_node([(k, i, j)])
 
 for celln in cell_nodes:
-    print("Printing flows for cell {}".format(celln))
+    print(f"Printing flows for cell {celln}")
     for ipos in range(ia[celln] + 1, ia[celln + 1]):
         cellm = ja[ipos]
-        print(
-            "Cell {} flow with cell {} is {}".format(
-                celln, cellm, flowja[ipos]
-            )
-        )
+        print(f"Cell {celln} flow with cell {cellm} is {flowja[ipos]}")
 # -
 
 # ### Post-Process Head Observations

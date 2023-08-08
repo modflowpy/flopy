@@ -525,7 +525,7 @@ pg = flopy.modpath.ParticleGroup(
 
 # +
 mp = flopy.modpath.Modpath7(
-    modelname=sim_name + "_mp",
+    modelname=f"{sim_name}_mp",
     flowmodel=gwf,
     exe_name="mp7",
     model_ws=workspace,

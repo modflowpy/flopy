@@ -41,7 +41,7 @@ sys.path.append(os.path.join("..", "common"))
 import notebook_utils
 
 print(sys.version)
-print("flopy version: {}".format(flopy.__version__))
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # load model for examples
@@ -384,10 +384,10 @@ modelpth = workspace / "mp7_ex2" / "mf6"
 files = ["mp7p2.hds", "mp7p2.cbb"]
 for f in files:
     if os.path.isfile(modelpth / f):
-        msg = "Output file located: {}".format(f)
+        msg = f"Output file located: {f}"
         print(msg)
     else:
-        errmsg = "Error. Output file cannot be found: {}".format(f)
+        errmsg = f"Error. Output file cannot be found: {f}"
         print(errmsg)
 
 # +

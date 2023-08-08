@@ -37,9 +37,9 @@ except:
     import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 
 # +
 # Set the paths
@@ -202,7 +202,7 @@ for idx, v in enumerate([19, 29, 34, 39, 44, 49, 54, 59]):
         edgecolor="none",
         step="pre",
     )
-    ax.set_title("{} hours".format(times[v]))
+    ax.set_title(f"{times[v]} hours")
     ax.set_ylim(-0.5, 4.5)
 
 # ## Summary

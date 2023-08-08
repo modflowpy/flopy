@@ -3,6 +3,7 @@ import warnings
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib.collections import LineCollection, PathCollection
 from matplotlib.path import Path
 
@@ -695,33 +696,35 @@ class PlotMapView:
 
     def plot_pathline(self, pl, travel_time=None, **kwargs):
         """
-        Plot the MODPATH pathlines.
+        Plot MODPATH pathlines.
 
         Parameters
         ----------
-        pl : list of rec arrays or a single rec array
-            rec array or list of rec arrays is data returned from
-            modpathfile PathlineFile get_data() or get_alldata()
-            methods. Data in rec array is 'x', 'y', 'z', 'time',
-            'k', and 'particleid'.
+        pl : list of recarrays or dataframes, or a single recarray or dataframe
+            Particle pathline data. If a list of recarrays or dataframes,
+            each must contain the path of only a single particle. If just
+            one recarray or dataframe, it should contain the paths of all
+            particles. Pathline data returned from PathlineFile.get_data()
+            or get_alldata() can be passed directly as this argument. Data
+            columns should be 'x', 'y', 'z', 'time', 'k', and 'particleid'
+            at minimum. Additional columns are ignored. The 'particleid'
+            column must be unique to each particle path.
         travel_time : float or str
-            travel_time is a travel time selection for the displayed
-            pathlines. If a float is passed then pathlines with times
-            less than or equal to the passed time are plotted. If a
-            string is passed a variety logical constraints can be added
-            in front of a time value to select pathlines for a select
-            period of time. Valid logical constraints are <=, <, ==, >=, and
-            >. For example, to select all pathlines less than 10000 days
-            travel_time='< 10000' would be passed to plot_pathline.
-            (default is None)
-        kwargs : layer, ax, colors.  The remaining kwargs are passed
-            into the LineCollection constructor. If layer='all',
-            pathlines are output for all layers
+            Travel time selection. If a float, then pathlines with total
+            time less than or equal to the given value are plotted. If a
+            string, the value must be a comparison operator, then a time
+            value. Valid operators are <=, <, ==, >=, and >. For example,
+            to filter pathlines with less than 10000 units of total time
+            traveled, use '< 10000'. (Default is None.)
+        kwargs : dict
+            Explicitly supported kwargs are layer, ax, colors.
+            Any remaining kwargs are passed into the LineCollection
+            constructor. If layer='all', pathlines are shown for all layers.
 
         Returns
         -------
         lc : matplotlib.collections.LineCollection
-
+            The pathlines added to the plot.
         """
 
         from matplotlib.collections import LineCollection
@@ -733,6 +736,11 @@ class PlotMapView:
                 pl = [pl[pl["particleid"] == pid] for pid in pids]
             else:
                 pl = [pl]
+
+        pl = [
+            p.to_records(index=False) if isinstance(p, pd.DataFrame) else p
+            for p in pl
+        ]
 
         if "layer" in kwargs:
             kon = kwargs.pop("layer")
@@ -809,32 +817,35 @@ class PlotMapView:
 
     def plot_timeseries(self, ts, travel_time=None, **kwargs):
         """
-        Plot the MODPATH timeseries.
+        Plot MODPATH timeseries.
 
         Parameters
         ----------
-        ts : list of rec arrays or a single rec array
-            rec array or list of rec arrays is data returned from
-            modpathfile TimeseriesFile get_data() or get_alldata()
-            methods. Data in rec array is 'x', 'y', 'z', 'time',
-            'k', and 'particleid'.
+        ts : list of recarrays or dataframes, or a single recarray or dataframe
+            Particle timeseries data. If a list of recarrays or dataframes,
+            each must contain the path of only a single particle. If just
+            one recarray or dataframe, it should contain the paths of all
+            particles. Timeseries data returned from TimeseriesFile.get_data()
+            or get_alldata() can be passed directly as this argument. Data
+            columns should be 'x', 'y', 'z', 'time', 'k', and 'particleid'
+            at minimum. Additional columns are ignored. The 'particleid'
+            column must be unique to each particle path.
         travel_time : float or str
-            travel_time is a travel time selection for the displayed
-            pathlines. If a float is passed then pathlines with times
-            less than or equal to the passed time are plotted. If a
-            string is passed a variety logical constraints can be added
-            in front of a time value to select pathlines for a select
-            period of time. Valid logical constraints are <=, <, ==, >=, and
-            >. For example, to select all pathlines less than 10000 days
-            travel_time='< 10000' would be passed to plot_pathline.
-            (default is None)
-        kwargs : layer, ax, colors.  The remaining kwargs are passed
-            into the LineCollection constructor. If layer='all',
-            pathlines are output for all layers
+            Travel time selection. If a float, then pathlines with total
+            time less than or equal to the given value are plotted. If a
+            string, the value must be a comparison operator, then a time
+            value. Valid operators are <=, <, ==, >=, and >. For example,
+            to filter pathlines with less than 10000 units of total time
+            traveled, use '< 10000'. (Default is None.)
+        kwargs : dict
+            Explicitly supported kwargs are layer, ax, colors.
+            Any remaining kwargs are passed into the LineCollection
+            constructor. If layer='all', pathlines are shown for all layers.
 
         Returns
         -------
-            lo : list of Line2D objects
+        lc : matplotlib.collections.LineCollection
+            The pathlines added to the plot.
         """
         if "color" in kwargs:
             kwargs["markercolor"] = kwargs["color"]
@@ -850,13 +861,13 @@ class PlotMapView:
         **kwargs,
     ):
         """
-        Plot the MODPATH endpoints.
+        Plot MODPATH endpoints.
 
         Parameters
         ----------
-        ep : rec array
+        ep : recarray or dataframe
             A numpy recarray with the endpoint particle data from the
-            MODPATH 6 endpoint file
+            MODPATH endpoint file
         direction : str
             String defining if starting or ending particle locations should be
             considered. (default is 'ending')
@@ -882,7 +893,8 @@ class PlotMapView:
 
         Returns
         -------
-        sp : matplotlib.pyplot.scatter
+        sp : matplotlib.collections.PathCollection
+            The PathCollection added to the plot.
 
         """
 

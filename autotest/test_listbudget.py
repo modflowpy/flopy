@@ -2,6 +2,7 @@ import os
 import warnings
 
 import numpy as np
+import pandas as pd
 import pytest
 from modflow_devtools.markers import requires_pkg
 from modflow_devtools.misc import has_pkg
@@ -54,14 +55,9 @@ def test_mflistfile(example_data_path):
     cum = mflist.get_cumulative(names="PERCENT_DISCREPANCY")
     assert isinstance(cum, np.ndarray)
 
-    if not has_pkg("pandas"):
-        return
-
-    import pandas
-
     df_flx, df_vol = mflist.get_dataframes(start_datetime=None)
-    assert isinstance(df_flx, pandas.DataFrame)
-    assert isinstance(df_vol, pandas.DataFrame)
+    assert isinstance(df_flx, pd.DataFrame)
+    assert isinstance(df_vol, pd.DataFrame)
 
     # test get runtime
     runtime = mflist.get_model_runtime(units="hours")
@@ -115,12 +111,13 @@ def test_mflist_reducedpumping_fail(example_data_path):
         mflist.get_reduced_pumping()
 
 
-@requires_pkg("pandas")
 def test_mtlist(example_data_path):
-    import pandas as pd
-
     mt_dir = example_data_path / "mt3d_test"
     mt = MtListBudget(mt_dir / "mcomp.list")
+    df_gw, df_sw = mt.parse(forgive=False, diff=False, start_datetime=None)
+
+    mt_dir = example_data_path / "mt3d_test"
+    mt = MtListBudget(mt_dir / "mt3d_with_adv.list")
     df_gw, df_sw = mt.parse(forgive=False, diff=False, start_datetime=None)
 
     mt_dir = example_data_path / "mt3d_test"

@@ -33,8 +33,8 @@ except:
     import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"flopy version: {flopy.__version__}")
 
 # + pycharm={"name": "#%%\n"}
 # temporary directory
@@ -152,8 +152,8 @@ swt.write_input()
 # Try to delete the output files, to prevent accidental use of older files
 try:
     os.remove(os.path.join(workspace, "MT3D001.UCN"))
-    os.remove(os.path.join(workspace, modelname + ".hds"))
-    os.remove(os.path.join(workspace, modelname + ".cbc"))
+    os.remove(os.path.join(workspace, f"{modelname}.hds"))
+    os.remove(os.path.join(workspace, f"{modelname}.cbc"))
 except:
     pass
 

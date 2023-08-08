@@ -81,9 +81,9 @@ class Header:
                         ("pertim", floattype),
                         ("totim", floattype),
                         ("text", "a16"),
-                        ("ncol", "i4"),
-                        ("nrow", "i4"),
-                        ("ilay", "i4"),
+                        ("m1", "i4"),
+                        ("m2", "i4"),
+                        ("m3", "i4"),
                     ]
                 )
             elif self.header_type == "vardisv":
@@ -94,8 +94,8 @@ class Header:
                         ("pertim", floattype),
                         ("totim", floattype),
                         ("text", "a16"),
-                        ("ncpl", "i4"),
-                        ("ilay", "i4"),
+                        ("m1", "i4"),
+                        ("m2", "i4"),
                         ("m3", "i4"),
                     ]
                 )
@@ -107,7 +107,7 @@ class Header:
                         ("pertim", floattype),
                         ("totim", floattype),
                         ("text", "a16"),
-                        ("nodes", "i4"),
+                        ("m1", "i4"),
                         ("m2", "i4"),
                         ("m3", "i4"),
                     ]
@@ -196,6 +196,8 @@ class LayerFile:
         if "dis" in kwargs.keys():
             self.dis = kwargs.pop("dis")
             self.mg = self.dis.parent.modelgrid
+        if "tdis" in kwargs.keys():
+            self.tdis = kwargs.pop("tdis")
         if "modelgrid" in kwargs.keys():
             self.mg = kwargs.pop("modelgrid")
         if len(kwargs.keys()) > 0:
@@ -421,6 +423,11 @@ class LayerFile:
         for header in self.recordarray:
             print(header)
         return
+
+    def get_nrecords(self):
+        if isinstance(self.recordarray, np.recarray):
+            return self.recordarray.shape[0]
+        return 0
 
     def _get_data_array(self, totim=0):
         """

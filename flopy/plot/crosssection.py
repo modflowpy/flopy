@@ -4,6 +4,7 @@ import warnings
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib.patches import Polygon
 
 from ..utils import geometry, import_optional_dependency
@@ -1097,6 +1098,12 @@ class PlotCrossSection:
                 pl = [pl[pl["particleid"] == pid] for pid in pids]
             else:
                 pl = [pl]
+
+        # make sure each element in pl is a recarray
+        pl = [
+            p.to_records(index=False) if isinstance(p, pd.DataFrame) else p
+            for p in pl
+        ]
 
         marker = kwargs.pop("marker", None)
         markersize = kwargs.pop("markersize", None)

@@ -1,5 +1,4 @@
 import copy
-import inspect
 import os
 
 import numpy as np
@@ -27,7 +26,7 @@ class VertexGrid(Grid):
         ibound/idomain value for each cell
     lenuni : int or ndarray
         model length units
-    crs : pyproj.CRS, optional if `prjfile` is specified
+    crs : pyproj.CRS, int, str, optional if `prjfile` is specified
         Coordinate reference system (CRS) for the model grid
         (must be projected; geographic CRS are not supported).
         The value can be anything accepted by
@@ -44,6 +43,15 @@ class VertexGrid(Grid):
         in the spatial reference coordinate system
     angrot : float
         rotation angle of model grid, as it is rotated around the origin point
+    **kwargs : dict, optional
+        Support deprecated keyword options.
+
+        .. deprecated:: 3.5
+           The following keyword options will be removed for FloPy 3.6:
+
+             - ``prj`` (str or pathlike): use ``prjfile`` instead.
+             - ``epsg`` (int): use ``crs`` instead.
+             - ``proj4`` (str): use ``crs`` instead.
 
     Properties
     ----------
@@ -68,9 +76,6 @@ class VertexGrid(Grid):
         idomain=None,
         lenuni=None,
         crs=None,
-        epsg=None,
-        proj4=None,
-        prj=None,
         prjfile=None,
         xoff=0.0,
         yoff=0.0,
@@ -78,28 +83,24 @@ class VertexGrid(Grid):
         nlay=None,
         ncpl=None,
         cell1d=None,
+        **kwargs,
     ):
         super().__init__(
             "vertex",
-            top,
-            botm,
-            idomain,
-            lenuni,
-            crs,
-            epsg,
-            proj4,
-            prj,
-            prjfile,
-            xoff,
-            yoff,
-            angrot,
+            top=top,
+            botm=botm,
+            idomain=idomain,
+            lenuni=lenuni,
+            crs=crs,
+            prjfile=prjfile,
+            xoff=xoff,
+            yoff=yoff,
+            angrot=angrot,
+            **kwargs,
         )
         self._vertices = vertices
         self._cell1d = cell1d
         self._cell2d = cell2d
-        self._top = top
-        self._botm = botm
-        self._idomain = idomain
         if botm is None:
             self._nlay = nlay
             self._ncpl = ncpl
@@ -316,10 +317,6 @@ class VertexGrid(Grid):
             The CELL2D number
 
         """
-        if isinstance(z, bool):
-            frame_info = inspect.getframeinfo(inspect.currentframe())
-            self._warn_intersect(frame_info.filename, frame_info.lineno)
-
         if local:
             # transform x and y to real-world coordinates
             x, y = super().get_coords(x, y)

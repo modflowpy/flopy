@@ -160,7 +160,7 @@ def test_output_helper_shapefile_export(
     )
 
 
-@requires_pkg("pandas", "shapefile")
+@requires_pkg("shapefile")
 @pytest.mark.slow
 def test_freyberg_export(function_tmpdir, example_data_path):
     # steady state
@@ -254,7 +254,7 @@ def test_freyberg_export(function_tmpdir, example_data_path):
                 assert part.read_text() == wkt
 
 
-@requires_pkg("pandas", "shapefile")
+@requires_pkg("shapefile")
 @pytest.mark.parametrize("missing_arrays", [True, False])
 @pytest.mark.slow
 def test_disu_export(function_tmpdir, missing_arrays):
@@ -328,8 +328,12 @@ def test_write_gridlines_shapefile(function_tmpdir):
     outshp = function_tmpdir / "gridlines.shp"
     write_gridlines_shapefile(outshp, sg)
 
-    for suffix in [".dbf", ".prj", ".shp", ".shx"]:
+    for suffix in [".dbf", ".shp", ".shx"]:
         assert outshp.with_suffix(suffix).exists()
+    if has_pkg("pyproj"):
+        assert outshp.with_suffix(".prj").exists()
+    else:
+        assert not outshp.with_suffix(".prj").exists()
 
     with shapefile.Reader(str(outshp)) as sf:
         assert sf.shapeType == shapefile.POLYLINE
@@ -481,7 +485,7 @@ def test_shapefile_ibound(function_tmpdir, example_data_path):
     shape.close()
 
 
-@requires_pkg("pandas", "shapefile")
+@requires_pkg("shapefile")
 @pytest.mark.slow
 @pytest.mark.parametrize("namfile", namfiles())
 def test_shapefile(function_tmpdir, namfile):
@@ -506,7 +510,7 @@ def test_shapefile(function_tmpdir, namfile):
     ), f"wrong number of records in shapefile {fnc_name}"
 
 
-@requires_pkg("pandas", "shapefile")
+@requires_pkg("shapefile")
 @pytest.mark.slow
 @pytest.mark.parametrize("namfile", namfiles())
 def test_shapefile_export_modelgrid_override(function_tmpdir, namfile):
@@ -991,7 +995,7 @@ def test_polygon_from_ij_with_epsg(function_tmpdir):
     fpth2 = os.path.join(ws, "26715.prj")
     shutil.copy(fpth, fpth2)
     fpth = os.path.join(ws, "test.shp")
-    recarray2shp(recarray, geoms, fpth, prj=fpth2)
+    recarray2shp(recarray, geoms, fpth, prjfile=fpth2)
 
     # test_dtypes
     fpth = os.path.join(ws, "test.shp")
@@ -1108,7 +1112,7 @@ def test_vtk_transient_array_2d(function_tmpdir, example_data_path):
 
 @requires_pkg("vtk")
 @pytest.mark.slow
-def test_vtk_export_packages(function_tmpdir, example_data_path):
+def test_vtk_add_packages(function_tmpdir, example_data_path):
     # test mf 2005 freyberg
     ws = function_tmpdir
     mpath = example_data_path / "freyberg_multilayer_transient"
@@ -1442,7 +1446,7 @@ def test_vtk_vertex(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf2005")
-@requires_pkg("pandas", "vtk")
+@requires_pkg("vtk")
 def test_vtk_pathline(function_tmpdir, example_data_path):
     from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
 
@@ -1568,7 +1572,7 @@ def load_iverts(fname, closed=False):
 
 @pytest.mark.mf6
 @requires_pkg("vtk")
-def test_vtk_export_model_without_packages_names(function_tmpdir):
+def test_vtk_add_model_without_packages_names(function_tmpdir):
     from vtkmodules.util.numpy_support import vtk_to_numpy
     from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
 

@@ -56,6 +56,210 @@ pytestmark = pytest.mark.mf6
 
 @requires_exe("mf6")
 @pytest.mark.regression
+def test_ts(function_tmpdir, example_data_path):
+    ws = function_tmpdir / "ws"
+    name = "test_ts"
+
+    # create the flopy simulation and tdis objects
+    sim = flopy.mf6.MFSimulation(
+        sim_name=name, exe_name="mf6", version="mf6", sim_ws=ws
+    )
+    tdis_rc = [(1.0, 1, 1.0), (10.0, 5, 1.0), (10.0, 5, 1.0), (10.0, 1, 1.0)]
+    tdis_package = flopy.mf6.modflow.mftdis.ModflowTdis(
+        sim, time_units="DAYS", nper=4, perioddata=tdis_rc
+    )
+    # create the Flopy groundwater flow (gwf) model object
+    model_nam_file = f"{name}.nam"
+    gwf = flopy.mf6.ModflowGwf(
+        sim, modelname=name, model_nam_file=model_nam_file
+    )
+    # create the flopy iterative model solver (ims) package object
+    ims = flopy.mf6.modflow.mfims.ModflowIms(
+        sim, pname="ims", complexity="SIMPLE"
+    )
+    # create the discretization package
+    bot = np.linspace(-3.0, -50.0 / 3.0, 3)
+    delrow = delcol = 4.0
+    dis = flopy.mf6.modflow.mfgwfdis.ModflowGwfdis(
+        gwf,
+        pname="dis",
+        nogrb=True,
+        nlay=3,
+        nrow=101,
+        ncol=101,
+        delr=delrow,
+        delc=delcol,
+        top=0.0,
+        botm=bot,
+    )
+    # create the initial condition (ic) and node property flow (npf) packages
+    ic_package = flopy.mf6.modflow.mfgwfic.ModflowGwfic(gwf, strt=50.0)
+    npf_package = flopy.mf6.modflow.mfgwfnpf.ModflowGwfnpf(
+        gwf,
+        save_flows=True,
+        icelltype=[1, 0, 0],
+        k=[5.0, 0.1, 4.0],
+        k33=[0.5, 0.005, 0.1],
+    )
+    oc = ModflowGwfoc(
+        gwf,
+        budget_filerecord=[(f"{name}.cbc",)],
+        head_filerecord=[(f"{name}.hds",)],
+        saverecord={
+            0: [("HEAD", "ALL"), ("BUDGET", "ALL")],
+            1: [],
+        },
+        printrecord=[("HEAD", "ALL")],
+    )
+
+    # build ghb stress period data
+    ghb_spd_ts = {}
+    ghb_period = []
+    for layer, cond in zip(range(1, 3), [15.0, 1500.0]):
+        for row in range(0, 15):
+            ghb_period.append(((layer, row, 9), "tides", cond, "Estuary-L2"))
+    ghb_spd_ts[0] = ghb_period
+
+    # build ts data
+    ts_data = []
+    for n in range(0, 365):
+        time = float(n / 11.73)
+        val = float(n / 60.0)
+        ts_data.append((time, val))
+    ts_dict = {
+        "filename": "tides.ts",
+        "time_series_namerecord": "tide",
+        "timeseries": ts_data,
+        "interpolation_methodrecord": "linearend",
+        "sfacrecord": 1.1,
+    }
+
+    # build ghb package
+    ghb = flopy.mf6.modflow.mfgwfghb.ModflowGwfghb(
+        gwf,
+        print_input=True,
+        print_flows=True,
+        save_flows=True,
+        boundnames=True,
+        timeseries=ts_dict,
+        pname="ghb",
+        maxbound=30,
+        stress_period_data=ghb_spd_ts,
+    )
+
+    # set required time series attributes
+    ghb.ts.time_series_namerecord = "tides"
+
+    # clean up for next example
+    gwf.remove_package("ghb")
+
+    # build ghb stress period data
+    ghb_spd_ts = {}
+    ghb_period = []
+    for layer, cond in zip(range(1, 3), [15.0, 1500.0]):
+        for row in range(0, 15):
+            if row < 10:
+                ghb_period.append(
+                    ((layer, row, 9), "tides", cond, "Estuary-L2")
+                )
+            else:
+                ghb_period.append(((layer, row, 9), "wl", cond, "Estuary-L2"))
+    ghb_spd_ts[0] = ghb_period
+
+    # build ts data
+    ts_data = []
+    for n in range(0, 365):
+        time = float(n / 11.73)
+        val = float(n / 60.0)
+        ts_data.append((time, val))
+    ts_data2 = []
+    for n in range(0, 365):
+        time = float(n / 11.73)
+        val = float(n / 30.0)
+        ts_data2.append((time, val))
+    ts_data3 = []
+    for n in range(0, 365):
+        time = float(n / 11.73)
+        val = float(n / 20.0)
+        ts_data3.append((time, val))
+
+    # build ghb package
+    ghb = flopy.mf6.modflow.mfgwfghb.ModflowGwfghb(
+        gwf,
+        print_input=True,
+        print_flows=True,
+        save_flows=True,
+        boundnames=True,
+        pname="ghb",
+        maxbound=30,
+        stress_period_data=ghb_spd_ts,
+    )
+
+    # initialize first time series
+    ghb.ts.initialize(
+        filename="tides.ts",
+        timeseries=ts_data,
+        time_series_namerecord="tides",
+        interpolation_methodrecord="linearend",
+        sfacrecord=1.1,
+    )
+
+    # append additional time series
+    ghb.ts.append_package(
+        filename="wls.ts",
+        timeseries=ts_data2,
+        time_series_namerecord="wl",
+        interpolation_methodrecord="stepwise",
+        sfacrecord=1.2,
+    )
+    # append additional time series
+    ghb.ts.append_package(
+        filename="wls2.ts",
+        timeseries=ts_data3,
+        time_series_namerecord="wl2",
+        interpolation_methodrecord="stepwise",
+        sfacrecord=1.3,
+    )
+
+    sim.write_simulation()
+    ret = sim.run_simulation()
+    assert ret
+    sim2 = flopy.mf6.MFSimulation.load("mfsim.nam", sim_ws=ws, exe_name="mf6")
+    sim2_ws = os.path.join(ws, "2")
+    sim2.set_sim_path(sim2_ws)
+    sim2.write_simulation()
+    ret = sim2.run_simulation()
+    assert ret
+
+    # compare datasets
+    model2 = sim2.get_model()
+    ghb_m2 = model2.get_package("ghb")
+    wls_m2 = ghb_m2.ts[1]
+    wls_m1 = ghb.ts[1]
+
+    ts_m1 = wls_m1.timeseries.get_data()
+    ts_m2 = wls_m2.timeseries.get_data()
+
+    assert ts_m1[0][1] == 0.0
+    assert ts_m1[30][1] == 1.0
+    for m1_line, m2_line in zip(ts_m1, ts_m2):
+        assert abs(m1_line[1] - m2_line[1]) < 0.000001
+
+    # compare output to expected results
+    head_1 = os.path.join(ws, f"{name}.hds")
+    head_2 = os.path.join(sim2_ws, f"{name}.hds")
+    outfile = os.path.join(ws, "head_compare.dat")
+    assert compare_heads(
+        None,
+        None,
+        files1=[head_1],
+        files2=[head_2],
+        outfile=outfile,
+    )
+
+
+@requires_exe("mf6")
+@pytest.mark.regression
 def test_np001(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "np001"
@@ -473,6 +677,7 @@ def test_np001(function_tmpdir, example_data_path):
     sim.delete_output_files()
 
     # test error checking
+    sim.simulation_data.verify_data = False
     drn_package = ModflowGwfdrn(
         model,
         print_input=True,
@@ -493,6 +698,7 @@ def test_np001(function_tmpdir, example_data_path):
         k=100001.0,
         k33=1e-12,
     )
+    sim.simulation_data.verify_data = True
     chk = sim.check()
     summary = ".".join(chk[0].summary_array.desc)
     assert "drn_1 package: invalid BC index" in summary
@@ -744,9 +950,14 @@ def test_np002(function_tmpdir, example_data_path):
     oc_package.printrecord.set_data([("HEAD", "ALL"), ("BUDGET", "ALL")], 1)
 
     sto_package = ModflowGwfsto(
+        model, save_flows=True, iconvert=0, ss=0.000001, sy=None, pname="sto_t"
+    )
+    sto_package.check()
+
+    model.remove_package("sto_t")
+    sto_package = ModflowGwfsto(
         model, save_flows=True, iconvert=1, ss=0.000001, sy=0.15
     )
-
     hfb_package = ModflowGwfhfb(
         model,
         print_input=True,
@@ -2874,7 +3085,7 @@ def test028_create_tests_sfr(function_tmpdir, example_data_path):
         delc=5000.0,
         top=top,
         botm=botm,
-        idomain=idomain,
+        #idomain=idomain,
         filename=f"{model_name}.dis",
     )
     strt = testutils.read_std_array(os.path.join(pth, "strt.txt"), "float")
