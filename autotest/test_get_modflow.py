@@ -27,6 +27,9 @@ bindir_options = {
     / ("Scripts" if system() == "Windows" else "bin"),
     "home": Path.home() / ".local" / "bin",
 }
+owner_options = [
+    "MODFLOW-USGS",
+]
 repo_options = {
     "executables": [
         "crt",
@@ -95,14 +98,14 @@ def append_ext(path: str):
 @pytest.mark.parametrize("per_page", [-1, 0, 101, 1000])
 def test_get_releases_bad_page_size(per_page):
     with pytest.raises(ValueError):
-        get_releases("executables", per_page=per_page)
+        get_releases(repo="executables", per_page=per_page)
 
 
 @flaky
 @requires_github
 @pytest.mark.parametrize("repo", repo_options.keys())
 def test_get_releases(repo):
-    releases = get_releases(repo)
+    releases = get_releases(repo=repo)
     assert "latest" in releases
 
 
@@ -111,7 +114,7 @@ def test_get_releases(repo):
 @pytest.mark.parametrize("repo", repo_options.keys())
 def test_get_release(repo):
     tag = "latest"
-    release = get_release(repo, tag)
+    release = get_release(repo=repo, tag=tag)
     assets = release["assets"]
 
     expected_assets = ["linux.zip", "mac.zip", "win64.zip"]
@@ -245,11 +248,14 @@ def test_script_valid_options(function_tmpdir, downloads_dir):
 @flaky
 @requires_github
 @pytest.mark.slow
+@pytest.mark.parametrize("owner", owner_options)
 @pytest.mark.parametrize("repo", repo_options.keys())
-def test_script(function_tmpdir, repo, downloads_dir):
+def test_script(function_tmpdir, owner, repo, downloads_dir):
     bindir = str(function_tmpdir)
     stdout, stderr, returncode = run_get_modflow_script(
         bindir,
+        "--owner",
+        owner,
         "--repo",
         repo,
         "--downloads-dir",
@@ -267,11 +273,14 @@ def test_script(function_tmpdir, repo, downloads_dir):
 @flaky
 @requires_github
 @pytest.mark.slow
+@pytest.mark.parametrize("owner", owner_options)
 @pytest.mark.parametrize("repo", repo_options.keys())
-def test_python_api(function_tmpdir, repo, downloads_dir):
+def test_python_api(function_tmpdir, owner, repo, downloads_dir):
     bindir = str(function_tmpdir)
     try:
-        get_modflow(bindir, repo=repo, downloads_dir=downloads_dir)
+        get_modflow(
+            bindir, owner=owner, repo=repo, downloads_dir=downloads_dir
+        )
     except HTTPError as err:
         if err.code == 403:
             pytest.skip(f"GitHub {rate_limit_msg}")
