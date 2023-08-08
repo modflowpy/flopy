@@ -24,7 +24,8 @@ __license__ = "CC0"
 
 from typing import Dict, List, Tuple
 
-owner = "MODFLOW-USGS"
+default_owner = "MODFLOW-USGS"
+default_repo = "executables"
 # key is the repo name, value is the renamed file prefix for the download
 renamed_prefix = {
     "modflow6": "modflow6",
@@ -93,8 +94,12 @@ def get_request(url, params={}):
     return urllib.request.Request(url, headers=headers)
 
 
-def get_releases(repo, quiet=False, per_page=None) -> List[str]:
+def get_releases(
+    owner=None, repo=None, quiet=False, per_page=None
+) -> List[str]:
     """Get list of available releases."""
+    owner = default_owner if owner is None else owner
+    repo = default_repo if repo is None else repo
     req_url = f"https://api.github.com/repos/{owner}/{repo}/releases"
 
     params = {}
@@ -133,8 +138,10 @@ def get_releases(repo, quiet=False, per_page=None) -> List[str]:
     return avail_releases
 
 
-def get_release(repo, tag="latest", quiet=False) -> dict:
+def get_release(owner=None, repo=None, tag="latest", quiet=False) -> dict:
     """Get info about a particular release."""
+    owner = default_owner if owner is None else owner
+    repo = default_repo if repo is None else repo
     api_url = f"https://api.github.com/repos/{owner}/{repo}"
     req_url = (
         f"{api_url}/releases/latest"
@@ -166,7 +173,7 @@ def get_release(repo, tag="latest", quiet=False) -> dict:
                 ) from err
             elif err.code == 404:
                 if releases is None:
-                    releases = get_releases(repo, quiet)
+                    releases = get_releases(owner, repo, quiet)
                 if tag not in releases:
                     raise ValueError(
                         f"Release {tag} not found (choose from {', '.join(releases)})"
@@ -287,7 +294,8 @@ def select_bindir(bindir, previous=None, quiet=False, is_cli=False) -> Path:
 
 def run_main(
     bindir,
-    repo="executables",
+    owner=default_owner,
+    repo=default_repo,
     release_id="latest",
     ostag=None,
     subset=None,
@@ -304,6 +312,8 @@ def run_main(
         Writable path to extract executables. Auto-select options start with a
         colon character. See error message or other documentation for further
         information on auto-select options.
+    owner : str, default "MODFLOW-USGS"
+        Name of GitHub repository owner (user or organization).
     repo : str, default "executables"
         Name of GitHub repository. Choose one of "executables" (default),
         "modflow6", or "modflow6-nightly-build".
@@ -393,7 +403,7 @@ def run_main(
         )
 
     # get the selected release
-    release = get_release(repo, release_id, quiet)
+    release = get_release(owner, repo, release_id, quiet)
     assets = release.get("assets", [])
 
     for asset in assets:
@@ -684,10 +694,16 @@ Examples:
         )
     parser.add_argument("bindir", help=bindir_help)
     parser.add_argument(
+        "--owner",
+        type=str,
+        default=default_owner,
+        help=f"GitHub repository owner; default is '{default_owner}'.",
+    )
+    parser.add_argument(
         "--repo",
         choices=available_repos,
-        default="executables",
-        help="Name of GitHub repository; default is 'executables'.",
+        default=default_repo,
+        help=f"Name of GitHub repository; default is '{default_repo}'.",
     )
     parser.add_argument(
         "--release-id",
