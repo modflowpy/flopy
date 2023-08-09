@@ -209,18 +209,18 @@ jobs:
 
       - name: Update FloPy packages
         if: runner.os != 'Windows'
-        run: python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="develop", backup=False)'
+        run: python -c 'import flopy; flopy.mf6.utils.generate_classes(ref="develop", backup=False)'
 
       - name: Update FloPy packages
         if: runner.os == 'Windows'
         shell: bash -l {0}
-        run: python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="develop", backup=False)'
+        run: python -c 'import flopy; flopy.mf6.utils.generate_classes(ref="develop", backup=False)'
 
       - name: Run tests
         if: runner.os != 'Windows'
         working-directory: ./autotest
         run: |
-          pytest -v -m="not example and not regression" -n=auto --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
+          pytest -v -m="not example and not regression" -n=auto --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed --dist loadfile
           coverage report
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -230,7 +230,7 @@ jobs:
         shell: bash -l {0}
         working-directory: ./autotest
         run: |
-          pytest -v -m="not example and not regression" -n=auto --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
+          pytest -v -m="not example and not regression" -n=auto --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed --dist loadfile
           coverage report
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -2,6 +2,7 @@ import os
 import shutil
 import tempfile
 import time
+from warnings import warn
 
 from .createpackages import create_packages
 
@@ -62,10 +63,15 @@ def download_dfn(owner, branch, new_dfn_pth):
     mf6url = mf6url.format(owner, branch)
     print(f"  Downloading MODFLOW 6 repository from {mf6url}")
     with tempfile.TemporaryDirectory() as tmpdirname:
-        download_and_unzip(mf6url, tmpdirname, verbose=True)
-        downloaded_dfn_pth = os.path.join(tmpdirname, f"modflow6-{branch}")
+        dl_path = download_and_unzip(mf6url, tmpdirname, verbose=True)
+        dl_contents = list(dl_path.glob("modflow6-*"))
+        proj_path = next(iter(dl_contents), None)
+        if not proj_path:
+            raise ValueError(
+                f"Could not find modflow6 project dir in {dl_path}: found {dl_contents}"
+            )
         downloaded_dfn_pth = os.path.join(
-            downloaded_dfn_pth, "doc", "mf6io", "mf6ivar", "dfn"
+            proj_path, "doc", "mf6io", "mf6ivar", "dfn"
         )
         shutil.copytree(downloaded_dfn_pth, new_dfn_pth)
 
@@ -104,7 +110,12 @@ def delete_mf6_classes():
 
 
 def generate_classes(
-    owner="MODFLOW-USGS", branch="master", dfnpath=None, backup=True
+    owner="MODFLOW-USGS",
+    repo="modflow6",
+    branch="master",
+    ref=None,
+    dfnpath=None,
+    backup=True,
 ):
     """
     Generate the MODFLOW 6 flopy classes using definition files from the
@@ -116,9 +127,16 @@ def generate_classes(
     owner : str
         Owner of the MODFLOW 6 repository to use to update the definition
         files and generate the MODFLOW 6 classes. Default is MODFLOW-USGS.
+    repo : str
+        Name of the MODFLOW 6 repository to use to update the definition.
     branch : str
         Branch name of the MODFLOW 6 repository to use to update the
         definition files and generate the MODFLOW 6 classes. Default is master.
+
+        .. deprecated:: 3.5.0
+            Use ref instead.
+    ref : str
+        Branch name, tag, or commit hash to use to update the definition.
     dfnpath : str
         Path to a definition file folder that will be used to generate the
         MODFLOW 6 classes.  Default is none, which means that the branch
@@ -140,11 +158,19 @@ def generate_classes(
     # user provided dfnpath
     if dfnpath is None:
         print(
-            f"  Updating the MODFLOW 6 classes using {owner}/modflow6/{branch}"
+            f"  Updating the MODFLOW 6 classes using {owner}/{repo}/{branch}"
         )
         timestr = time.strftime("%Y%m%d-%H%M%S")
         new_dfn_pth = os.path.join(flopypth, "mf6", "data", f"dfn_{timestr}")
-        download_dfn(owner, branch, new_dfn_pth)
+
+        # branch deprecated 3.5.0
+        if not ref:
+            if not branch:
+                raise ValueError("branch or ref must be provided")
+            warn("branch is deprecated, use ref instead", DeprecationWarning)
+            ref = branch
+
+        download_dfn(owner, ref, new_dfn_pth)
     else:
         print(f"  Updating the MODFLOW 6 classes using {dfnpath}")
         assert os.path.isdir(dfnpath)
