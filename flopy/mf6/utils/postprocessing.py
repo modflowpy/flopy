@@ -3,8 +3,51 @@ import numpy as np
 from .binarygrid_util import MfGrdFile
 
 
+def get_face(m, n, nlay, nrow, ncol):
+    """
+    Determine the connection direction at m, n
+    in the connection or intercell flow matrix
+
+    Notes
+    -----
+    For visual intuition see
+    https://stackoverflow.com/a/16330162/6514033
+
+    Parameters
+    ----------
+    m : int
+        row index
+    n : int
+        column index
+    nlay : int
+        number of layers in the grid
+    nrow : int
+        number of rows in the grid
+    ncol : int
+        number of columns in the grid
+
+    Returns
+    -------
+    face : int
+        0: right, 1: front, 2: lower
+    """
+    if m - 1 == n:
+        return 0
+    elif m - n == nrow * ncol:
+        return 2
+    else:
+        return 1
+
+
 def get_structured_faceflows(
-    flowja, grb_file=None, ia=None, ja=None, verbose=False
+    flowja,
+    grb_file=None,
+    ia=None,
+    ja=None,
+    nlay=None,
+    nrow=None,
+    ncol=None,
+    verbose=False
 ):
     """
     Get the face flows for the flow right face, flow front face, and
@@ -22,6 +65,12 @@ def get_structured_faceflows(
         CRS row pointers. Only required if grb_file is not provided.
     ja : list or ndarray
         CRS column pointers. Only required if grb_file is not provided.
+    nlay : int
+        number of layers in the grid. Only required if grb_file is not provided.
+    nrow : int
+        number of rows in the grid. Only required if grb_file is not provided.
+    ncol : int
+        number of columns in the grid. Only required if grb_file is not provided.
     verbose: bool
         Write information to standard output
 
@@ -43,10 +92,11 @@ def get_structured_faceflows(
                 "is only for structured DIS grids"
             )
         ia, ja = grb.ia, grb.ja
+        nlay, nrow, ncol = grb.nlay, grb.nrow, grb.ncol
     else:
-        if ia is None or ja is None:
+        if ia is None or ja is None or nlay is None or nrow is None or ncol is None:
             raise ValueError(
-                "ia and ja arrays must be specified if the MODFLOW 6"
+                "ia, ja, nlay, nrow, and ncol must be specified if the MODFLOW 6"
                 "binary grid file name is not specified."
             )
 
@@ -57,27 +107,24 @@ def get_structured_faceflows(
     # evaluate size of flowja relative to ja
     __check_flowja_size(flowja, ja)
 
-    # create face flow arrays
-    shape = (grb.nlay, grb.nrow, grb.ncol)
-    frf = np.zeros(shape, dtype=float).flatten()
-    fff = np.zeros(shape, dtype=float).flatten()
-    flf = np.zeros(shape, dtype=float).flatten()
+    # create empty flat face flow arrays
+    shape = (nlay, nrow, ncol)
+    frf = np.zeros(shape, dtype=float).flatten()  # right
+    fff = np.zeros(shape, dtype=float).flatten()  # front
+    flf = np.zeros(shape, dtype=float).flatten()  # lower
 
-    # fill flow terms
-    vmult = [-1.0, -1.0, -1.0]
+    # fill right, front and lower face flows
+    # (below main diagonal)
     flows = [frf, fff, flf]
     for n in range(grb.nodes):
-        i0, i1 = ia[n] + 1, ia[n + 1]
-        for j in range(i0, i1):
-            jcol = ja[j]
-            if jcol > n:
-                if jcol == n + 1:
-                    ipos = 0
-                elif jcol == n + grb.ncol:
-                    ipos = 1
-                else:
-                    ipos = 2
-                flows[ipos][n] = vmult[ipos] * flowja[j]
+        for i in range(ia[n] + 1, ia[n + 1]):
+            m = ja[i]
+            if m <= n:
+                continue
+            face = get_face(m, n, nlay, nrow, ncol)
+            flows[face][n] = -1 * flowja[i]
+
+    # reshape and return
     return frf.reshape(shape), fff.reshape(shape), flf.reshape(shape)
 
 
