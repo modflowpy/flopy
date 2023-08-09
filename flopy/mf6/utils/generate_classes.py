@@ -167,7 +167,7 @@ def generate_classes(
         if not ref:
             if not branch:
                 raise ValueError("branch or ref must be provided")
-            warn("branch is deprecated, use ref instead")
+            warn("branch is deprecated, use ref instead", DeprecationWarning)
             ref = branch
 
         download_dfn(owner, ref, new_dfn_pth)
