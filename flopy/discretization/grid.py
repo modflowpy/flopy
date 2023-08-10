@@ -6,6 +6,13 @@ from collections import defaultdict
 
 import numpy as np
 
+try:
+    import pyproj
+
+    HAS_PYPROJ = True
+except ImportError:
+    HAS_PYPROJ = False
+
 from ..utils import geometry
 from ..utils.crs import get_crs
 from ..utils.gridutil import get_lni
@@ -204,15 +211,15 @@ class Grid:
             raise TypeError(f"unhandled keywords: {kwargs}")
         if prjfile is not None:
             self.prjfile = prjfile
-        try:
+        if HAS_PYPROJ:
             self._crs = get_crs(**get_crs_args)
-        except ImportError:
-            # provide some support without pyproj by retaining 'epsg' integer
-            if getattr(self, "_epsg", None) is None:
-                epsg = _get_epsg_from_crs_or_proj4(crs, self.proj4)
-                if epsg is not None:
-                    self.epsg = epsg
-
+        elif crs is not None:
+            # provide some support without pyproj
+            if isinstance(crs, str) and self.proj4 is None:
+                self._proj4 = crs
+            if self.epsg is None:
+                if epsg := _get_epsg_from_crs_or_proj4(crs, self.proj4):
+                    self._epsg = epsg
         self._prjfile = prjfile
         self._xoff = xoff
         self._yoff = yoff
@@ -304,9 +311,9 @@ class Grid:
         if crs is None:
             self._crs = None
             return
-        try:
+        if HAS_PYPROJ:
             self._crs = get_crs(crs=crs)
-        except ImportError:
+        else:
             warnings.warn(
                 "cannot set 'crs' property without pyproj; "
                 "try setting 'epsg' or 'proj4' instead",
@@ -336,11 +343,8 @@ class Grid:
             raise ValueError("epsg property must be an int or None")
         self._epsg = epsg
         # If crs was previously unset, use EPSG code
-        if self._crs is None and epsg is not None:
-            try:
-                self._crs = get_crs(crs=epsg)
-            except ImportError:
-                pass
+        if HAS_PYPROJ and self._crs is None and epsg is not None:
+            self._crs = get_crs(crs=epsg)
 
     @property
     def proj4(self):
@@ -364,11 +368,8 @@ class Grid:
             raise ValueError("proj4 property must be a str or None")
         self._proj4 = proj4
         # If crs was previously unset, use lossy PROJ string
-        if self._crs is None and proj4 is not None:
-            try:
-                self._crs = get_crs(crs=proj4)
-            except ImportError:
-                pass
+        if HAS_PYPROJ and self._crs is None and proj4 is not None:
+            self._crs = get_crs(crs=proj4)
 
     @property
     def prj(self):
@@ -402,10 +403,10 @@ class Grid:
             raise ValueError("prjfile property must be str, PathLike or None")
         self._prjfile = prjfile
         # If crs was previously unset, use .prj file input
-        if self._crs is None:
+        if HAS_PYPROJ and self._crs is None:
             try:
                 self._crs = get_crs(prjfile=prjfile)
-            except (ImportError, FileNotFoundError):
+            except FileNotFoundError:
                 pass
 
     @property
@@ -1012,9 +1013,9 @@ class Grid:
             self.proj4 = get_crs_args["proj4"] = kwargs.pop("proj4")
         if kwargs:
             raise TypeError(f"unhandled keywords: {kwargs}")
-        try:
+        if HAS_PYPROJ:
             new_crs = get_crs(**get_crs_args)
-        except ImportError:
+        else:
             new_crs = None
             # provide some support without pyproj by retaining 'epsg' integer
             if getattr(self, "_epsg", None) is None:
