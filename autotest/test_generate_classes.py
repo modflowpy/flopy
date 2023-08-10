@@ -100,13 +100,8 @@ def test_generate_classes_from_github_refs(
     ref = spl[2]
     pprint(
         virtualenv.run(
-            "python -c 'from flopy.mf6.utils import generate_classes; generate_classes(owner=\""
-            + owner
-            + '", repo="'
-            + repo
-            + f'", ref="'
-            + ref
-            + "\", backup=False)'"
+            "python -m flopy.mf6.utils.generate_classes "
+            f"--owner {owner} --repo {repo} ref {ref} --no-backup"
         )
     )
 

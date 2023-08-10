@@ -11,6 +11,9 @@ flopypth = os.path.join(thisfilepath, "..", "..")
 flopypth = os.path.abspath(flopypth)
 protected_dfns = ["flopy.dfn"]
 
+default_owner = "MODFLOW-USGS"
+default_repo = "modflow6"
+
 
 def delete_files(files, pth, allow_failure=False, exclude=None):
     if exclude is None:
@@ -51,13 +54,12 @@ def list_files(pth, exts=["py"]):
 def download_dfn(owner, branch, new_dfn_pth):
     try:
         from modflow_devtools.download import download_and_unzip
-    except:
-        msg = (
-            "Error.  The modflow-devtools package must be installed in order to "
-            "generate the MODFLOW 6 classes. modflow-devtools can be installed using "
-            "pip install modflow-devtools.  Stopping."
+    except ImportError:
+        raise ImportError(
+            "The modflow-devtools package must be installed in order to "
+            "generate the MODFLOW 6 classes. This can be with:\n"
+            "     pip install modflow-devtools"
         )
-        print(msg)
 
     mf6url = "https://github.com/{}/modflow6/archive/{}.zip"
     mf6url = mf6url.format(owner, branch)
@@ -110,10 +112,10 @@ def delete_mf6_classes():
 
 
 def generate_classes(
-    owner="MODFLOW-USGS",
-    repo="modflow6",
-    branch="master",
-    ref=None,
+    owner=default_owner,
+    repo=default_repo,
+    branch=None,
+    ref="master",
     dfnpath=None,
     backup=True,
 ):
@@ -124,27 +126,27 @@ def generate_classes(
 
     Parameters
     ----------
-    owner : str
+    owner : str, default "MODFLOW-USGS"
         Owner of the MODFLOW 6 repository to use to update the definition
-        files and generate the MODFLOW 6 classes. Default is MODFLOW-USGS.
-    repo : str
+        files and generate the MODFLOW 6 classes.
+    repo : str, default "modflow6"
         Name of the MODFLOW 6 repository to use to update the definition.
-    branch : str
+    branch : str, optional
         Branch name of the MODFLOW 6 repository to use to update the
-        definition files and generate the MODFLOW 6 classes. Default is master.
+        definition files and generate the MODFLOW 6 classes.
 
         .. deprecated:: 3.5.0
             Use ref instead.
-    ref : str
+    ref : str, default "master"
         Branch name, tag, or commit hash to use to update the definition.
     dfnpath : str
         Path to a definition file folder that will be used to generate the
         MODFLOW 6 classes.  Default is none, which means that the branch
         will be used instead.  dfnpath will take precedence over branch
         if dfnpath is specified.
-    backup : bool
+    backup : bool, default True
         Keep a backup of the definition files in dfn_backup with a date and
-        time stamp from when the definition files were replaced.
+        timestamp from when the definition files were replaced.
 
     """
 
@@ -191,3 +193,57 @@ def generate_classes(
     print("  Create mf6 classes using the downloaded definition files.")
     create_packages()
     list_files(os.path.join(flopypth, "mf6", "modflow"))
+
+
+def cli_main():
+    """Command-line interface for generate_classes()."""
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(
+        description=generate_classes.__doc__.split("\n\n")[0],
+    )
+
+    parser.add_argument(
+        "--owner",
+        type=str,
+        default=default_owner,
+        help=f"GitHub repository owner; default is '{default_owner}'.",
+    )
+    parser.add_argument(
+        "--repo",
+        default=default_repo,
+        help=f"Name of GitHub repository; default is '{default_repo}'.",
+    )
+    parser.add_argument(
+        "--ref",
+        default="master",
+        help="Branch name, tag, or commit hash to use to update the "
+        "definition; default is 'master'.",
+    )
+    parser.add_argument(
+        "--dfnpath",
+        help="Path to a definition file folder that will be used to generate "
+        "the MODFLOW 6 classes.",
+    )
+    parser.add_argument(
+        "--no-backup",
+        action="store_true",
+        help="Set to disable backup. "
+        "Default behavior is to keep a backup of the definition files in "
+        "dfn_backup with a date and timestamp from when the definition "
+        "files were replaced.",
+    )
+
+    args = vars(parser.parse_args())
+    # Handle flipped logic
+    args["backup"] = not args.pop("no_backup")
+    try:
+        generate_classes(**args)
+    except (EOFError, KeyboardInterrupt):
+        sys.exit(f" cancelling '{sys.argv[0]}'")
+
+
+if __name__ == "__main__":
+    """Run command-line with: python -m flopy.mf6.utils.generate_classes"""
+    cli_main()
