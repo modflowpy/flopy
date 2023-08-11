@@ -5,7 +5,7 @@ from shutil import copytree, which
 
 import numpy as np
 import pytest
-from modflow_devtools.markers import requires_exe
+from modflow_devtools.markers import requires_exe, requires_pkg
 from modflow_devtools.misc import set_dir
 
 import flopy
@@ -637,6 +637,7 @@ def test_binary_write(function_tmpdir, layered):
 
 
 @requires_exe("mf6")
+@requires_pkg("shapely")
 @pytest.mark.parametrize("layered", [True, False])
 def test_vor_binary_write(function_tmpdir, layered):
     # build voronoi grid

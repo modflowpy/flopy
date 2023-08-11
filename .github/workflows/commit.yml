@@ -106,6 +106,8 @@ jobs:
       run:
         shell: bash
     timeout-minutes: 10
+    env:
+      PYTHON_VERSION: 3.8
 
     steps:
       - name: Checkout repo
@@ -114,23 +116,40 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
           cache-dependency-path: pyproject.toml
 
-      - name: Install Python dependencies
+      - name: Install core/test Python dependencies
         run: |
           pip install --upgrade pip
           pip install .
-          pip install ".[test, optional]"
+          pip install ".[test]"
 
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
+      
+      - name: Smoke test (no opt deps)
+        working-directory: autotest
+        run: pytest -v -n=auto --smoke --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Install optional dependencies
+        run: pip install ".[optional]"
 
-      - name: Run smoke tests
-        working-directory: ./autotest
-        run: |
-          pytest -v -n=auto --smoke --durations=0 --keep-failed=.failed
+      - name: Smoke test (all opt deps)
+        working-directory: autotest
+        run: pytest -v -n=auto --smoke --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Uninstall some opt deps
+        run: pip uninstall --yes pyproj shapely vtk
+    
+      - name: Smoke test (some opt deps)
+        working-directory: autotest
+        run: pytest -v -n=auto --smoke --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -138,9 +157,8 @@ jobs:
         uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: failed-smoke-${{ matrix.os }}-${{ matrix.python-version }}
-          path: |
-            ./autotest/.failed/**
+          name: failed-smoke-${{ runner.os }}-${{ env.PYTHON_VERSION }}
+          path: ./autotest/.failed/**
 
   test:
     name: Test
@@ -220,7 +238,7 @@ jobs:
         if: runner.os != 'Windows'
         working-directory: ./autotest
         run: |
-          pytest -v -m="not example and not regression" -n=auto --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed --dist loadfile
+          pytest -v -m="not example and not regression" -n=auto --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed --dist loadfile
           coverage report
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -230,7 +248,7 @@ jobs:
         shell: bash -l {0}
         working-directory: ./autotest
         run: |
-          pytest -v -m="not example and not regression" -n=auto --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed --dist loadfile
+          pytest -v -m="not example and not regression" -n=auto --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed --dist loadfile
           coverage report
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -244,8 +262,7 @@ jobs:
             ./autotest/.failed/**
 
       - name: Upload coverage
-        if:
-          github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
+        if: github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
         uses: codecov/codecov-action@v3
         with:
           files: ./autotest/coverage.xml
