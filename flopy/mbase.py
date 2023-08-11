@@ -698,18 +698,18 @@ class BaseModel(ModelInterface):
         item : str
             This can be one of:
 
-                * A 3-character package name (case insensitive) returns package
-                * "tr" to access the time discretization object
-                * "modelgrid" to access the spatial discretization object
-                * "nper" to get the number of stress periods
+                * A short package name (case insensitive), e.g., "dis" or "bas6"
+                  returns package object
+                * "tr" to access the time discretization object, if set
                 * "start_datetime" to get str describing model start date/time
+                * Some packages use "nper" or "modelgrid" for corner cases
 
 
         Returns
         -------
-        object, int or None
+        object, str, int or None
             Package object of type :class:`flopy.pakbase.Package`,
-            :class:`flopy.utils.reference.TemporalReference`, int or None.
+            :class:`flopy.utils.reference.TemporalReference`, str, int or None.
 
         Raises
         ------
@@ -732,6 +732,7 @@ class BaseModel(ModelInterface):
                 return None
 
         if item == "nper":
+            # most subclasses have a nper property, but ModflowAg needs this
             if self.dis is not None:
                 return self.dis.nper
             else:
@@ -755,6 +756,7 @@ class BaseModel(ModelInterface):
         if pckg is not None or item in self.mfnam_packages:
             return pckg
         if item == "modelgrid":
+            # most subclasses have a modelgrid property, but not MfUsg
             return
         raise AttributeError(item)
 
