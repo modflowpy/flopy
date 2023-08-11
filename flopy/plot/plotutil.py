@@ -1060,7 +1060,7 @@ class PlotUtilities:
         ----------
         plotarray : np.array object
         model: fp.modflow.Modflow object
-            optional if spatial reference is provided
+            optional if modelgrid is provided
         modelgrid: fp.discretization.Grid object
             object that defines the spatial orientation of a modflow
             grid within flopy. Optional if model object is provided

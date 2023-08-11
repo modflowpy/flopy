@@ -333,12 +333,6 @@ class Mt3dms(BaseModel):
         return None
 
     @property
-    def sr(self):
-        if self.mf is not None:
-            return self.mf.sr
-        return None
-
-    @property
     def nlay(self):
         if self.btn:
             return self.btn.nlay

@@ -1026,26 +1026,6 @@ class CellBudgetFile:
             self.modelgrid = self.dis.parent.modelgrid
         if "tdis" in kwargs.keys():
             self.tdis = kwargs.pop("tdis")
-        if "sr" in kwargs.keys():
-            from ..discretization import StructuredGrid, UnstructuredGrid
-
-            sr = kwargs.pop("sr")
-            if sr.__class__.__name__ == "SpatialReferenceUnstructured":
-                self.modelgrid = UnstructuredGrid(
-                    vertices=sr.verts,
-                    iverts=sr.iverts,
-                    xcenters=sr.xc,
-                    ycenters=sr.yc,
-                    ncpl=sr.ncpl,
-                )
-            elif sr.__class__.__name__ == "SpatialReference":
-                self.modelgrid = StructuredGrid(
-                    delc=sr.delc,
-                    delr=sr.delr,
-                    xoff=sr.xll,
-                    yoff=sr.yll,
-                    angrot=sr.rotation,
-                )
         if "modelgrid" in kwargs.keys():
             self.modelgrid = kwargs.pop("modelgrid")
         if len(kwargs.keys()) > 0:

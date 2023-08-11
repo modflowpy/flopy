@@ -696,19 +696,29 @@ class BaseModel(ModelInterface):
         Parameters
         ----------
         item : str
-            3 character package name (case insensitive) or "sr" to access
-            the SpatialReference instance of the ModflowDis object
+            This can be one of:
+
+                * A short package name (case insensitive), e.g., "dis" or "bas6"
+                  returns package object
+                * "tr" to access the time discretization object, if set
+                * "start_datetime" to get str describing model start date/time
+                * Some packages use "nper" or "modelgrid" for corner cases
 
 
         Returns
         -------
-        sr : SpatialReference instance
-        pp : Package object
-            Package object of type :class:`flopy.pakbase.Package`
+        object, str, int or None
+            Package object of type :class:`flopy.pakbase.Package`,
+            :class:`flopy.utils.reference.TemporalReference`, str, int or None.
+
+        Raises
+        ------
+        AttributeError
+            When package or object name cannot be resolved.
 
         Note
         ----
-        if self.dis is not None, then the spatial reference instance is updated
+        if self.dis is not None, then the modelgrid instance is updated
         using self.dis.delr, self.dis.delc, and self.dis.lenuni before being
         returned
         """
@@ -722,6 +732,7 @@ class BaseModel(ModelInterface):
                 return None
 
         if item == "nper":
+            # most subclasses have a nper property, but ModflowAg needs this
             if self.dis is not None:
                 return self.dis.nper
             else:
@@ -745,6 +756,7 @@ class BaseModel(ModelInterface):
         if pckg is not None or item in self.mfnam_packages:
             return pckg
         if item == "modelgrid":
+            # most subclasses have a modelgrid property, but not MfUsg
             return
         raise AttributeError(item)
 
@@ -1388,17 +1400,6 @@ class BaseModel(ModelInterface):
             self._set_name(value)
         elif key == "model_ws":
             self.change_model_ws(value)
-        elif key == "sr" and value.__class__.__name__ == "SpatialReference":
-            warnings.warn(
-                "SpatialReference has been deprecated.",
-                category=DeprecationWarning,
-            )
-            if self.dis is not None:
-                self.dis.sr = value
-            else:
-                raise Exception(
-                    "cannot set SpatialReference - ModflowDis not found"
-                )
         elif key == "tr":
             assert isinstance(
                 value, discretization.reference.TemporalReference

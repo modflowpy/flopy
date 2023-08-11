@@ -1193,14 +1193,6 @@ class Grid:
         else:
             return yul - (np.cos(self.angrot_radians) * yext)
 
-    def _set_sr_coord_info(self, sr):
-        self._xoff = sr.xll
-        self._yoff = sr.yll
-        self._angrot = sr.rotation
-        self._epsg = sr.epsg
-        self._proj4 = sr.proj4_str
-        self._require_cache_updates()
-
     def _require_cache_updates(self):
         for cache_data in self._cache_dict.values():
             cache_data.out_of_date = True

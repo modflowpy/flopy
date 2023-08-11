@@ -655,8 +655,6 @@ class Package(PackageInterface):
         # return [data_object, data_object, ...]
         dl = []
         attrs = dir(self)
-        if "sr" in attrs:
-            attrs.remove("sr")
         if "start_datetime" in attrs:
             attrs.remove("start_datetime")
         for attr in attrs:

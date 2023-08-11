@@ -2520,7 +2520,7 @@ class check:
             )
         else:
             txt += (
-                "No DIS package or SpatialReference object; cannot "
+                "No DIS package or modelgrid object; cannot "
                 "check reach proximities."
             )
             self._txt_footer(headertxt, txt, "")
