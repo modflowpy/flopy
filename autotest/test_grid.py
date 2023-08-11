@@ -1,6 +1,7 @@
 import os
 import re
 import warnings
+from contextlib import nullcontext
 from warnings import warn
 
 import matplotlib
@@ -594,9 +595,12 @@ def test_grid_crs(
     do_checks(UnstructuredGrid(**d, crs=crs))
     do_checks(VertexGrid(vertices=d["vertices"], crs=crs))
 
+    # only check deprecations if pyproj is available
+    context = pytest.deprecated_call() if HAS_PYPROJ else nullcontext()
+
     # test deprecated 'epsg' parameter
     if isinstance(crs, int):
-        with pytest.deprecated_call():
+        with context:
             do_checks(StructuredGrid(delr=delr, delc=delc, epsg=crs))
 
     if HAS_PYPROJ and crs == 26916:
@@ -612,14 +616,14 @@ def test_grid_crs(
         do_checks(StructuredGrid(delr=delr, delc=delc, prjfile=prjfile))
 
         # test deprecated 'prj' parameter
-        with pytest.deprecated_call():
+        with context:
             do_checks(StructuredGrid(delr=delr, delc=delc, prj=prjfile))
 
         # test deprecated 'proj4' parameter
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")  # pyproj warning about conversion
             proj4 = crs_obj.to_proj4()
-        with pytest.deprecated_call():
+        with context:
             do_checks(StructuredGrid(delr=delr, delc=delc, proj4=proj4))
 
 
@@ -675,9 +679,12 @@ def test_grid_set_crs(crs, expected_srs, function_tmpdir):
     sg.set_coord_info(crs=26915, merge_coord_info=False)
     do_checks(sg, exp_srs="EPSG:26915", exp_epsg=26915)
 
+    # only check deprecations if pyproj is available
+    context = pytest.deprecated_call() if HAS_PYPROJ else nullcontext()
+
     # test deprecated 'epsg' parameter
     if isinstance(crs, int):
-        with pytest.deprecated_call():
+        with context:
             sg.set_coord_info(epsg=crs)
         do_checks(sg)
 
@@ -827,8 +834,9 @@ def test_grid_crs_exceptions():
 
     # test non-existing file
     not_a_file = "not-a-file"
-    with pytest.raises(FileNotFoundError):
-        StructuredGrid(delr=delr, delc=delc, prjfile=not_a_file)
+    if has_pkg("pyproj"):
+        with pytest.raises(FileNotFoundError):
+            StructuredGrid(delr=delr, delc=delc, prjfile=not_a_file)
     # note "sg.prjfile = not_a_file" intentionally does not raise anything
 
     # test unhandled keyword
