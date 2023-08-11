@@ -1378,7 +1378,7 @@ def test_vtk_unstructured(function_tmpdir, example_data_path):
     assert np.allclose(np.ravel(top), top2), "Field data not properly written"
 
 
-@requires_pkg("pyvista")
+@requires_pkg("vtk", "pyvista")
 def test_vtk_to_pyvista(function_tmpdir, example_data_path):
     from autotest.test_mp7_cases import Mp7Cases
 

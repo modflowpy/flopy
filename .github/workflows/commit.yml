@@ -129,7 +129,7 @@ jobs:
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
       
-      - name: Smoke test (no opt deps)
+      - name: Smoke test (no optional dependencies)
         working-directory: autotest
         run: pytest -v -n=auto --smoke --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed
         env:
@@ -138,16 +138,16 @@ jobs:
       - name: Install optional dependencies
         run: pip install ".[optional]"
 
-      - name: Smoke test (all opt deps)
+      - name: Smoke test (all optional dependencies)
         working-directory: autotest
         run: pytest -v -n=auto --smoke --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Uninstall some opt deps
+      - name: Uninstall some dependencies
         run: pip uninstall --yes pyproj shapely vtk
     
-      - name: Smoke test (some opt deps)
+      - name: Smoke test (some optional dependencies)
         working-directory: autotest
         run: pytest -v -n=auto --smoke --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed
         env:

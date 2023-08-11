@@ -1221,7 +1221,7 @@ def test_polygon_offset_rot_structured_grid_shapely(rtree):
 # %% test rasters
 
 
-@requires_pkg("rasterstats", "scipy")
+@requires_pkg("rasterstats", "scipy", "shapely")
 def test_rasters(example_data_path):
     ws = example_data_path / "options"
     raster_name = "dem.img"
