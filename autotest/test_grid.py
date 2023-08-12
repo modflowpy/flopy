@@ -834,7 +834,7 @@ def test_grid_crs_exceptions():
 
     # test non-existing file
     not_a_file = "not-a-file"
-    if has_pkg("pyproj"):
+    if HAS_PYPROJ:
         with pytest.raises(FileNotFoundError):
             StructuredGrid(delr=delr, delc=delc, prjfile=not_a_file)
     # note "sg.prjfile = not_a_file" intentionally does not raise anything
