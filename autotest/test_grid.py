@@ -23,7 +23,7 @@ from flopy.utils.cvfdutil import gridlist_to_disv_gridprops, to_cvfd
 from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
 
-HAS_PYPROJ = has_pkg("pyproj")
+HAS_PYPROJ = has_pkg("pyproj", strict=True)
 if HAS_PYPROJ:
     import pyproj
 

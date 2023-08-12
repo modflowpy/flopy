@@ -14,7 +14,7 @@ from flopy.utils import Raster
 from flopy.utils.gridintersect import GridIntersect
 from flopy.utils.triangle import Triangle
 
-if has_pkg("shapely"):
+if has_pkg("shapely", strict=True):
     from shapely.geometry import (
         LineString,
         MultiLineString,
