@@ -1,4 +1,5 @@
 import numpy as np
+import flopy
 import pytest
 from autotest.conftest import get_example_data_path
 from modflow_devtools.markers import requires_exe, requires_pkg
@@ -245,3 +246,130 @@ def test_save_load_node_mapping(function_tmpdir):
     new_heads = mfsplit2.reconstruct_array(array_dict)
     err_msg = "Heads from original and split models do not match"
     np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
+
+
+def test_control_records(function_tmpdir):
+    nrow = 10
+    ncol = 10
+    nper = 3
+
+    sim = flopy.mf6.MFSimulation()
+    ims = flopy.mf6.ModflowIms(sim, complexity="SIMPLE")
+
+    tdis = flopy.mf6.ModflowTdis(
+        sim,
+        nper=nper,
+        perioddata=(
+            (1., 1, 1.),
+            (1., 1, 1.),
+            (1., 1, 1.)
+        )
+    )
+
+    gwf = flopy.mf6.ModflowGwf(sim, save_flows=True)
+
+    botm2 = np.ones((nrow, ncol)) * 20
+    dis = flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=2,
+        nrow=nrow,
+        ncol=ncol,
+        delr=1,
+        delc=1,
+        top=35,
+        botm=[30, botm2],
+        idomain=1
+    )
+
+    ic = flopy.mf6.ModflowGwfic(gwf, strt=32)
+    npf = flopy.mf6.ModflowGwfnpf(
+        gwf,
+        k=[
+            1.,
+            {
+                "data": np.ones((10, 10)) * 0.75,
+                "filename": "k.l2.txt",
+                "iprn": 1,
+                "factor": 1
+            }
+        ],
+        k33=[
+            np.ones((nrow, ncol)),
+            {
+                "data": np.ones((nrow, ncol)) * 0.5,
+                "filename": "k33.l2.bin",
+                "iprn": 1,
+                "factor": 1,
+                "binary": True
+            }
+        ]
+
+    )
+
+    wel_rec = [((0, 4, 5), -10), ]
+
+    spd = {
+        0: wel_rec,
+        1: {
+            "data": wel_rec,
+            "filename": "wel.1.txt"
+        },
+        2: {
+            "data": wel_rec,
+            "filename": "wel.2.bin",
+            "binary": True
+        }
+    }
+
+    wel = flopy.mf6.ModflowGwfwel(
+        gwf,
+        stress_period_data=spd
+    )
+
+    chd_rec = []
+    for cond, j in ((30, 0), (22, 9)):
+        for i in range(10):
+            chd_rec.append(((0, i, j), cond))
+
+    chd = flopy.mf6.ModflowGwfchd(
+        gwf,
+        stress_period_data={0: chd_rec}
+    )
+
+    arr = np.zeros((10, 10), dtype=int)
+    arr[0:5, :] = 1
+
+    mfsplit = flopy.mf6.utils.Mf6Splitter(sim)
+    new_sim = mfsplit.split_model(arr)
+
+    ml1 = new_sim.get_model("model_1")
+
+    kls = ml1.npf.k._data_storage.layer_storage.multi_dim_list
+    if kls[0].data_storage_type.value != 2:
+        raise AssertionError("Constants not being preserved for MFArray")
+
+    if kls[1].data_storage_type.value != 3 or kls[1].binary:
+        raise AssertionError(
+            "External ascii files not being preserved for MFArray"
+        )
+
+    k33ls =  ml1.npf.k33._data_storage.layer_storage.multi_dim_list
+    if k33ls[1].data_storage_type.value != 3 or not k33ls[1].binary:
+        raise AssertionError(
+            "Binary file input not being preserved for MFArray"
+        )
+
+    spd_ls1 = ml1.wel.stress_period_data._data_storage[1].layer_storage.multi_dim_list[0]
+    spd_ls2 = ml1.wel.stress_period_data._data_storage[2].layer_storage.multi_dim_list[0]
+
+    if spd_ls1.data_storage_type.value != 3 or spd_ls1.binary:
+        raise AssertionError(
+            "External ascii files not being preserved for MFList"
+        )
+
+    if spd_ls2.data_storage_type.value != 3 or not spd_ls2.binary:
+        raise AssertionError(
+            "External binary file input not being preseved for MFList"
+        )
+
+
