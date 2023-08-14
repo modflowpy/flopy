@@ -108,6 +108,10 @@ jobs:
     timeout-minutes: 10
     env:
       PYTHON_VERSION: 3.8
+    strategy:
+      fail-fast: true
+      matrix:
+        optdeps: [ "all", "no", "some" ]
 
     steps:
       - name: Checkout repo
@@ -120,36 +124,24 @@ jobs:
           cache: 'pip'
           cache-dependency-path: pyproject.toml
 
-      - name: Install core/test Python dependencies
+      - name: Install Python dependencies
         run: |
           pip install --upgrade pip
           pip install .
           pip install ".[test]"
+          if [[ "${{ matrix.optdeps }}" != "no" ]]; then
+            pip install ".[optional]"
+          fi
+          if [[ "${{ matrix.optdeps }}" == "some" ]]; then
+            pip uninstall --yes pyproj shapely vtk
+          fi
 
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
       
-      - name: Smoke test (no optional dependencies)
+      - name: Smoke test (${{ matrix.optdeps }} optional dependencies)
         working-directory: autotest
-        run: pytest -v -n=auto --smoke --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Install optional dependencies
-        run: pip install ".[optional]"
-
-      - name: Smoke test (all optional dependencies)
-        working-directory: autotest
-        run: pytest -v -n=auto --smoke --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Uninstall some dependencies
-        run: pip uninstall --yes pyproj shapely vtk
-    
-      - name: Smoke test (some optional dependencies)
-        working-directory: autotest
-        run: pytest -v -n=auto --smoke --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed
+        run: pytest -v -n=auto --smoke --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
