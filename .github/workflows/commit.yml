@@ -111,7 +111,10 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        optdeps: [ "all", "no", "some" ]
+        optdeps:
+          - "all optional dependencies"
+          - "no optional dependencies"
+          - "some optional dependencies"
 
     steps:
       - name: Checkout repo
@@ -129,17 +132,17 @@ jobs:
           pip install --upgrade pip
           pip install .
           pip install ".[test]"
-          if [[ "${{ matrix.optdeps }}" != "no" ]]; then
+          if [[ ! "${{ matrix.optdeps }}" == *"no"* ]]; then
             pip install ".[optional]"
           fi
-          if [[ "${{ matrix.optdeps }}" == "some" ]]; then
+          if [[ "${{ matrix.optdeps }}" == *"some"* ]]; then
             pip uninstall --yes pyproj shapely vtk
           fi
 
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
       
-      - name: Smoke test (${{ matrix.optdeps }} optional dependencies)
+      - name: Smoke test (${{ matrix.optdeps }})
         working-directory: autotest
         run: pytest -v -n=auto --smoke --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
         env:
