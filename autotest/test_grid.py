@@ -596,11 +596,13 @@ def test_grid_crs(
     do_checks(VertexGrid(vertices=d["vertices"], crs=crs))
 
     # only check deprecations if pyproj is available
-    context = pytest.deprecated_call() if HAS_PYPROJ else nullcontext()
+    pyproj_avail_context = (
+        pytest.deprecated_call() if HAS_PYPROJ else nullcontext()
+    )
 
     # test deprecated 'epsg' parameter
     if isinstance(crs, int):
-        with context:
+        with pyproj_avail_context:
             do_checks(StructuredGrid(delr=delr, delc=delc, epsg=crs))
 
     if HAS_PYPROJ and crs == 26916:
@@ -616,14 +618,14 @@ def test_grid_crs(
         do_checks(StructuredGrid(delr=delr, delc=delc, prjfile=prjfile))
 
         # test deprecated 'prj' parameter
-        with context:
+        with pyproj_avail_context:
             do_checks(StructuredGrid(delr=delr, delc=delc, prj=prjfile))
 
         # test deprecated 'proj4' parameter
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")  # pyproj warning about conversion
             proj4 = crs_obj.to_proj4()
-        with context:
+        with pyproj_avail_context:
             do_checks(StructuredGrid(delr=delr, delc=delc, proj4=proj4))
 
 
@@ -680,11 +682,13 @@ def test_grid_set_crs(crs, expected_srs, function_tmpdir):
     do_checks(sg, exp_srs="EPSG:26915", exp_epsg=26915)
 
     # only check deprecations if pyproj is available
-    context = pytest.deprecated_call() if HAS_PYPROJ else nullcontext()
+    pyproj_avail_context = (
+        pytest.deprecated_call() if HAS_PYPROJ else nullcontext()
+    )
 
     # test deprecated 'epsg' parameter
     if isinstance(crs, int):
-        with context:
+        with pyproj_avail_context:
             sg.set_coord_info(epsg=crs)
         do_checks(sg)
 
