@@ -645,7 +645,7 @@ class Mf6Splitter(object):
         bad_keys = []
         for mkey in mkeys:
             count = 0
-            mask = array[array == mkey]
+            mask = np.where(array == mkey)
             for arr in idomain:
                 check = arr[mask]
                 count += np.count_nonzero(check)
