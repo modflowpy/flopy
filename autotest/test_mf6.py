@@ -637,7 +637,7 @@ def test_binary_write(function_tmpdir, layered):
 
 
 @requires_exe("mf6")
-@requires_pkg("shapely")
+@requires_pkg("shapely", "scipy")
 @pytest.mark.parametrize("layered", [True, False])
 def test_vor_binary_write(function_tmpdir, layered):
     # build voronoi grid

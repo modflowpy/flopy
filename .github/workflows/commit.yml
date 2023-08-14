@@ -109,7 +109,7 @@ jobs:
     env:
       PYTHON_VERSION: 3.8
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         optdeps:
           - "all optional dependencies"
@@ -132,6 +132,10 @@ jobs:
           pip install --upgrade pip
           pip install .
           pip install ".[test]"
+
+          # Install optional dependencies according to matrix.optdeps.
+          # If matrix.optdeps is "some" remove 3 optional dependencies
+          # selected randomly using the current date as the seed.
           if [[ ! "${{ matrix.optdeps }}" == *"no"* ]]; then
             pip install ".[optional]"
           fi
