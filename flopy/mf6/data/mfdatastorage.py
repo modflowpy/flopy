@@ -2857,6 +2857,7 @@ class DataStorage:
                     if (
                         data_item.type != DatumType.keyword
                         or data_set.block_variable
+                        or data_item.optional
                     ):
                         initial_keyword = False
                         shape_rule = None
