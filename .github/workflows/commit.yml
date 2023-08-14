@@ -169,11 +169,11 @@ jobs:
           name: failed-smoke-${{ runner.os }}-${{ env.PYTHON_VERSION }}
           path: ./autotest/.failed/**
       
-      - name: Upload coverage
-        if: github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./autotest/coverage.xml
+      # - name: Upload coverage
+      #   if: github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
+      #   uses: codecov/codecov-action@v3
+      #   with:
+      #     files: ./autotest/coverage.xml
 
   test:
     name: Test
