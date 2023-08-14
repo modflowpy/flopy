@@ -136,8 +136,18 @@ jobs:
             pip install ".[optional]"
           fi
           if [[ "${{ matrix.optdeps }}" == *"some"* ]]; then
-            pip uninstall --yes pyproj shapely vtk
+            deps=$(sed '/optional =/,/]/!d' pyproject.toml | sed -e '1d;$d' -e 's/\"//g' -e 's/,//g' | tr -d ' ' | cut -f 1 -d ';')
+            rmvd=$(echo $deps | tr ' ' '\n' | shuf --random-source <(yes date +%d.%m.%y) | head -n 3)
+            echo "Removing optional dependencies: $rmvd" >> removed_dependencies.txt
+            cat removed_dependencies.txt
+            pip uninstall --yes $rmvd
           fi
+      
+      - name: Upload removed dependencies log
+        uses: actions/upload-artifact@v3
+        with:
+          name: smoke-test-removed-dependencies
+          path: ./removed_dependencies.txt
 
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
