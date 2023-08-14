@@ -375,7 +375,7 @@ class Mf6Splitter(object):
                     modflow.ModflowGwfsfr,
                     modflow.ModflowGwfuzf,
                     modflow.ModflowGwflak,
-                    modflow.ModflowGwfhfb
+                    modflow.ModflowGwfhfb,
                 ),
             ):
                 if isinstance(package, modflow.ModflowGwfhfb):
@@ -400,8 +400,6 @@ class Mf6Splitter(object):
                     laks += [i for i in np.unique(lakenos)]
                 else:
                     adv_pkg_weights[nodes] += 1
-
-
 
         for nn, neighbors in self._modelgrid.neighbors().items():
             weight = np.count_nonzero(idomain[:, nn])
@@ -1080,15 +1078,11 @@ class Mf6Splitter(object):
         for per, array in enumerate(mftransient.array):
             storage = mftransient._data_storage[per]
             how = [
-                i.data_storage_type.value for i in
-                storage.layer_storage.multi_dim_list
+                i.data_storage_type.value
+                for i in storage.layer_storage.multi_dim_list
             ]
-            binary = [
-                i.binary for i in storage.layer_storage.multi_dim_list
-            ]
-            fnames = [
-                i.fname for i in storage.layer_storage.multi_dim_list
-            ]
+            binary = [i.binary for i in storage.layer_storage.multi_dim_list]
+            fnames = [i.fname for i in storage.layer_storage.multi_dim_list]
 
             d = self._remap_array(
                 item, array, mapped_data, how=how, binary=binary, fnames=fnames
@@ -1127,16 +1121,16 @@ class Mf6Splitter(object):
                 return mapped_data
 
             how = [
-                i.data_storage_type.value for i in
-                mfarray._data_storage.layer_storage.multi_dim_list
+                i.data_storage_type.value
+                for i in mfarray._data_storage.layer_storage.multi_dim_list
             ]
             binary = [
-                i.binary for i in
-                mfarray._data_storage.layer_storage.multi_dim_list
+                i.binary
+                for i in mfarray._data_storage.layer_storage.multi_dim_list
             ]
             fnames = [
-                i.fname for i in
-                mfarray._data_storage.layer_storage.multi_dim_list
+                i.fname
+                for i in mfarray._data_storage.layer_storage.multi_dim_list
             ]
             mfarray = mfarray.array
 
@@ -1181,7 +1175,7 @@ class Mf6Splitter(object):
                 for h in how:
                     if h == 1:
                         # internal array
-                        new_input.append(new_array[i0: i1])
+                        new_input.append(new_array[i0:i1])
                     elif h == 2:
                         # constant, parse the original array data
                         new_input.append(original_arr[ncpl * lay])
@@ -1194,8 +1188,8 @@ class Mf6Splitter(object):
                             "filename": filename,
                             "factor": 1,
                             "iprn": 1,
-                            "data": new_array[i0: i1],
-                            "binary": binary[lay]
+                            "data": new_array[i0:i1],
+                            "binary": binary[lay],
                         }
 
                         new_input.append(cr)
@@ -1210,7 +1204,9 @@ class Mf6Splitter(object):
 
         return mapped_data
 
-    def _remap_mflist(self, item, mflist, mapped_data, transient=False, **kwargs):
+    def _remap_mflist(
+        self, item, mflist, mapped_data, transient=False, **kwargs
+    ):
         """
         Method to remap mflist data to each model
 
@@ -1239,7 +1235,9 @@ class Mf6Splitter(object):
                 return mapped_data
             recarray = mflist.array
             how = mflist._data_storage._data_storage_type.value
-            binary = mflist._data_storage.layer_storage.multi_dim_list[0].binary
+            binary = mflist._data_storage.layer_storage.multi_dim_list[
+                0
+            ].binary
         else:
             recarray = mflist
 
@@ -1274,7 +1272,7 @@ class Mf6Splitter(object):
                     new_recarray = {
                         "data": new_recarray,
                         "binary": binary,
-                        "filename": filename
+                        "filename": filename,
                     }
 
                 mapped_data[mkey][item] = new_recarray
@@ -2694,16 +2692,16 @@ class Mf6Splitter(object):
             return mapped_data
 
         how = {
-            p: i.layer_storage.multi_dim_list[0].data_storage_type.value for p, i in
-            mftransientlist._data_storage.items()
+            p: i.layer_storage.multi_dim_list[0].data_storage_type.value
+            for p, i in mftransientlist._data_storage.items()
         }
         binary = {
-            p: i.layer_storage.multi_dim_list[0].binary for p, i in
-            mftransientlist._data_storage.items()
+            p: i.layer_storage.multi_dim_list[0].binary
+            for p, i in mftransientlist._data_storage.items()
         }
         fnames = {
-            p: i.layer_storage.multi_dim_list[0].fname for p, i in
-            mftransientlist._data_storage.items()
+            p: i.layer_storage.multi_dim_list[0].fname
+            for p, i in mftransientlist._data_storage.items()
         }
 
         for per, recarray in mftransientlist.data.items():
@@ -2714,7 +2712,7 @@ class Mf6Splitter(object):
                 transient=True,
                 how=how[per],
                 binary=binary[per],
-                fname=fnames[per]
+                fname=fnames[per],
             )
             for mkey in self._model_dict.keys():
                 if mapped_data[mkey][item] is None:
