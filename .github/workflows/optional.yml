@@ -1,9 +1,5 @@
 name: FloPy optional dependency testing
 on:
-  pull_request:
-    branches:
-      - master
-      - develop
   schedule:
     - cron: '0 8 * * *' # run at 8 AM UTC (12 am PST)
 jobs:
