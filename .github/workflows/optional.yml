@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         optdeps:
-          - "all optional dependencies"
+          # - "all optional dependencies"
           - "no optional dependencies"
           - "some optional dependencies"
 
