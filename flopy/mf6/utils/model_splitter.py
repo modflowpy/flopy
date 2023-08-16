@@ -1167,13 +1167,13 @@ class Mf6Splitter(object):
 
             new_array[new_nodes] = original_arr[old_nodes]
 
-            if how:
+            if how and item != "idomain":
                 new_input = []
                 i0 = 0
                 i1 = new_ncpl
                 lay = 0
                 for h in how:
-                    if h == 1 or item == "idomain":
+                    if h == 1:
                         # internal array
                         new_input.append(new_array[i0:i1])
                     elif h == 2:
