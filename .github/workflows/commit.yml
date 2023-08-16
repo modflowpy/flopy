@@ -126,12 +126,6 @@ jobs:
           pip install .
           pip install ".[test,optional]"
       
-      - name: Upload removed dependencies log
-        uses: actions/upload-artifact@v3
-        with:
-          name: smoke-test-removed-dependencies
-          path: ./removed_dependencies.txt
-
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
       
