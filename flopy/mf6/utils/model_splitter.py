@@ -1173,7 +1173,7 @@ class Mf6Splitter(object):
                 i1 = new_ncpl
                 lay = 0
                 for h in how:
-                    if h == 1:
+                    if h == 1 or item == "idomain":
                         # internal array
                         new_input.append(new_array[i0:i1])
                     elif h == 2:
