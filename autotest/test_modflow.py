@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 from autotest.conftest import get_example_data_path
+from modflow_devtools.misc import has_pkg
 from modflow_devtools.markers import excludes_platform, requires_exe
 
 from flopy.discretization import StructuredGrid
@@ -28,6 +29,8 @@ from flopy.modflow import (
 from flopy.mt3d import Mt3dBtn, Mt3dms
 from flopy.seawat import Seawat
 from flopy.utils import Util2d
+
+_example_data_path = get_example_data_path()
 
 
 @pytest.fixture
@@ -74,6 +77,64 @@ def test_modflow_load(namfile, example_data_path):
     assert isinstance(model, Modflow)
     assert not model.load_fail
     assert model.model_ws == str(mpath)
+
+
+@pytest.mark.parametrize(
+    "path,expected",
+    [
+        pytest.param(
+            _example_data_path / "freyberg" / "freyberg.nam",
+            {
+                "crs": None,
+                "epsg": None,
+                "angrot": 0.0,
+                "xoffset": 0.0,
+                "yoffset": 0.0,
+            },
+            id="freyberg",
+        ),
+        pytest.param(
+            _example_data_path
+            / "freyberg_multilayer_transient"
+            / "freyberg.nam",
+            {
+                "proj4": "+proj=utm +zone=14 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
+                "angrot": 15.0,
+                "xoffset": 622241.1904510253,
+                "yoffset": 3343617.741737109,
+            },
+            id="freyberg_multilayer_transient",
+        ),
+        pytest.param(
+            _example_data_path
+            / "mt3d_test"
+            / "mfnwt_mt3dusgs"
+            / "sft_crnkNic"
+            / "CrnkNic.nam",
+            {
+                "epsg": 26916,
+                "angrot": 0.0,
+                "xoffset": 0.0,
+                "yoffset": 0.0,
+            },
+            id="CrnkNic",
+        ),
+    ],
+)
+def test_modflow_load_modelgrid(path, expected):
+    """Check modelgrid metadata from NAM file."""
+    model = Modflow.load(path.name, model_ws=path.parent, load_only=[])
+    modelgrid = model.modelgrid
+    for key, expected_value in expected.items():
+        if key == "proj4" and has_pkg("pyproj"):
+            # skip since pyproj will usually restructure proj4 attribute
+            # otherwise continue test without pyproj, as it should be preserved
+            continue
+        modelgrid_value = getattr(modelgrid, key)
+        if isinstance(modelgrid_value, float):
+            assert modelgrid_value == pytest.approx(expected_value), key
+        else:
+            assert modelgrid_value == expected_value, key
 
 
 def test_modflow_load_when_nam_dne():
@@ -499,7 +560,7 @@ def test_namfile_readwrite(function_tmpdir, example_data_path):
         angrot=30,
     )
 
-    # test reading and writing of SR information to namfile
+    # test reading and writing of modelgrid information to namfile
     m.write_input()
     m2 = Modflow.load("junk.nam", model_ws=ws)
 
@@ -601,12 +662,12 @@ def test_read_usgs_model_reference(function_tmpdir, model_reference_path):
 
 
 def mf2005_model_namfiles():
-    path = get_example_data_path() / "mf2005_test"
+    path = _example_data_path / "mf2005_test"
     return [str(p) for p in path.glob("*.nam")]
 
 
 def parameters_model_namfiles():
-    path = get_example_data_path() / "parameters"
+    path = _example_data_path / "parameters"
     skip = ["twrip.nam", "twrip_upw.nam"]  # TODO: why do these fail?
     return [str(p) for p in path.glob("*.nam") if p.name not in skip]
 
@@ -794,15 +855,15 @@ def test_mflist_add_record():
     np.testing.assert_array_equal(wel.stress_period_data[1], check1)
 
 
-__mf2005_test_path = get_example_data_path() / "mf2005_test"
-__mf2005_namfiles = [
-    Path(__mf2005_test_path) / f
-    for f in __mf2005_test_path.rglob("*")
+_mf2005_test_path = _example_data_path / "mf2005_test"
+_mf2005_namfiles = [
+    Path(_mf2005_test_path) / f
+    for f in _mf2005_test_path.rglob("*")
     if f.suffix == ".nam"
 ]
 
 
-@pytest.mark.parametrize("namfile", __mf2005_namfiles)
+@pytest.mark.parametrize("namfile", _mf2005_namfiles)
 def test_checker_on_load(namfile):
     # load all of the models in the mf2005_test folder
     # model level checks are performed by default on load()
@@ -820,7 +881,7 @@ def test_checker_on_load(namfile):
 
 @pytest.mark.parametrize("str_path", [True, False])
 def test_manual_check(function_tmpdir, str_path):
-    namfile_path = __mf2005_namfiles[0]
+    namfile_path = _mf2005_namfiles[0]
     summary_path = function_tmpdir / "summary"
     model = Modflow.load(namfile_path, model_ws=namfile_path.parent)
     model.change_model_ws(function_tmpdir)

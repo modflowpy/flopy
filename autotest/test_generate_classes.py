@@ -17,10 +17,14 @@ def nonempty(itr: Iterable):
 
 def pytest_generate_tests(metafunc):
     # defaults
+    owner = "MODFLOW-USGS"
+    repo = "modflow6"
     ref = [
-        "MODFLOW-USGS/modflow6/develop",
-        "MODFLOW-USGS/modflow6/master",
-        "MODFLOW-USGS/modflow6/6.4.1",
+        f"{owner}/{repo}/develop",
+        f"{owner}/{repo}/master",
+        f"{owner}/{repo}/6.4.1",
+        f"{owner}/{repo}/4458f9f",
+        f"{owner}/{repo}/4458f9f7a6244182e6acc2430a6996f9ca2df367",
     ]
 
     # refs provided as env vars override the defaults
@@ -51,7 +55,18 @@ def pytest_generate_tests(metafunc):
 
 @pytest.mark.mf6
 @pytest.mark.slow
-def test_generate_classes_from_dfn(virtualenv, project_root_path, ref):
+@pytest.mark.regression
+def test_generate_classes_from_github_refs(
+    request, virtualenv, project_root_path, ref, worker_id
+):
+    argv = (
+        request.config.workerinput["mainargv"]
+        if hasattr(request.config, "workerinput")
+        else []
+    )
+    if worker_id != "master" and "loadfile" not in argv:
+        pytest.skip("can't run in parallel")
+
     python = virtualenv.python
     venv = Path(python).parent
     print(
@@ -81,14 +96,12 @@ def test_generate_classes_from_dfn(virtualenv, project_root_path, ref):
     # generate classes
     spl = ref.split("/")
     owner = spl[0]
-    branch = spl[2]
+    repo = spl[1]
+    ref = spl[2]
     pprint(
         virtualenv.run(
-            "python -c 'from flopy.mf6.utils import generate_classes; generate_classes(owner=\""
-            + owner
-            + '", branch="'
-            + branch
-            + "\", backup=False)'"
+            "python -m flopy.mf6.utils.generate_classes "
+            f"--owner {owner} --repo {repo} ref {ref} --no-backup"
         )
     )
 

@@ -5,7 +5,7 @@ from shutil import copytree, which
 
 import numpy as np
 import pytest
-from modflow_devtools.markers import requires_exe
+from modflow_devtools.markers import requires_exe, requires_pkg
 from modflow_devtools.misc import set_dir
 
 import flopy
@@ -637,6 +637,7 @@ def test_binary_write(function_tmpdir, layered):
 
 
 @requires_exe("mf6")
+@requires_pkg("shapely", "scipy")
 @pytest.mark.parametrize("layered", [True, False])
 def test_vor_binary_write(function_tmpdir, layered):
     # build voronoi grid
@@ -2186,6 +2187,20 @@ def test_multi_model(function_tmpdir):
         assert rec_array[0][3] == model_names[1]
         assert rec_array[1][1] == "transport.ims"
         assert rec_array[1][2] == model_names[2]
+    # test ssm fileinput
+    gwt2 = sim2.get_model("gwt_model_1")
+    ssm2 = gwt2.get_package("ssm")
+    fileinput = [
+        ("RCH-1", f"gwt_model_1.rch1.spc"),
+        ("RCH-2", f"gwt_model_1.rch2.spc"),
+        ("RCH-3", f"gwt_model_1.rch3.spc", "MIXED"),
+        ("RCH-4", f"gwt_model_1.rch4.spc"),
+    ]
+    ssm2.fileinput = fileinput
+    fi_out = ssm2.fileinput.get_data()
+    assert fi_out[2][1] == "gwt_model_1.rch3.spc"
+    assert fi_out[1][2] is None
+    assert fi_out[2][2] == "MIXED"
 
     # create a new gwt model
     sourcerecarray = [("WEL-1", "AUX", "CONCENTRATION")]

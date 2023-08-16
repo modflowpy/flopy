@@ -86,12 +86,12 @@ jobs:
 
       - name: Update FloPy packages
         if: runner.os != 'Windows'
-        run: python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="develop", backup=False)'
+        run: python -m flopy.mf6.utils.generate_classes --ref develop --no-backup
 
       - name: Update FloPy packages
         if: runner.os == 'Windows'
         shell: bash -l {0}
-        run: python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="develop", backup=False)'
+        run: python -m flopy.mf6.utils.generate_classes --ref develop --no-backup
 
       - name: Run example tests
         if: runner.os != 'Windows'

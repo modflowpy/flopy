@@ -7,10 +7,10 @@ Additional dependencies to use optional FloPy helper methods are listed below.
 | `.export(*.shp)`                                                                     | **Pyshp** >= 2.0.0                                                       |
 | `.export(*.nc)`                                                                      | **netcdf4** >= 1.1, and **python-dateutil** >= 2.4.0                     |
 | `.export(*.tif)`                                                                     | **rasterio**                                                             |
-| `.export(*.asc)` in `flopy.utils.reference` `SpatialReference` class                 | **scipy.ndimage**                                                        |
-| `.interpolate()` in `flopy.utils.reference` `SpatialReference` class                 | **scipy.interpolate**                                                    |
+| `.export_array(*.asc)` in `flopy.export.utils`                                       | **scipy.ndimage**                                                        |
+| `.resample_to_grid()` in `flopy.utils.rasters`                                       | **scipy.interpolate**                                                    |
 | `.interpolate()` in `flopy.mf6.utils.reference` `StructuredSpatialReference` class   | **scipy.interpolate**                                                    |
-| `._parse_units_from_proj4()` in `flopy.utils.reference` `SpatialReference` class     | **pyproj**                                                               |
+| `.get_authority_crs()` in `flopy.utils.crs`                                          | **pyproj** >= 2.2.0                                                      |
 | `.generate_classes()` in `flopy.mf6.utils`                                           | [**modflow-devtools**](https://github.com/MODFLOW-USGS/modflow-devtools) |
 | `GridIntersect()` in `flopy.utils.gridintersect`                                     | **shapely**                                                              |
 | `GridIntersect().plot_polygon()` in `flopy.utils.gridintersect`                      | **shapely** and **descartes**                                            |

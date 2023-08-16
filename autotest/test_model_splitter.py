@@ -201,6 +201,7 @@ def test_metis_splitting_with_lak_sfr(function_tmpdir):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymetis")
 def test_save_load_node_mapping(function_tmpdir):
     sim_path = get_example_data_path() / "mf6-freyberg"
     new_sim_path = function_tmpdir / "mf6-freyberg/split_model"
