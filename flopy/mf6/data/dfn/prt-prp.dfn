@@ -1,0 +1,204 @@
+# --------------------- prt prp options ---------------------
+# flopy multi-package
+
+block options
+name boundnames
+type keyword
+shape
+reader urword
+optional true
+longname
+description REPLACE boundnames {'{#1}': 'release-point'}
+
+block options
+name stoptime
+type double precision
+reader urword
+optional true
+longname stop time
+description real value defining the maximum simulation time to which particles in the model can be tracked.  Particles that have not terminated earlier due to another termination condition will terminate when simulation time STOPTIME is reached.  If the last stress period in the simulation consists of more than one time step, particles will not be tracked past the ending time of the last stress period, regardless of STOPTIME.  If the last stress period in the simulation consists of a single time step, it is assumed to be a steady-state stress period, and its ending time will not limit the simulation time to which particles can be tracked.
+
+block options
+name stoptraveltime
+type double precision
+reader urword
+optional true
+longname stop travel time
+description real value defining the maximum travel time over which particles in the model can be tracked.  Particles that have not terminated earlier due to another termination condition will terminate when their travel time reaches STOPTRAVELTIME.  If the last stress period in the simulation consists of more than one time step, particles will not be tracked past the ending time of the last stress period, regardless of STOPTRAVELTIME.  If the last stress period in the simulation consists of a single time step, it is assumed to be a steady-state stress period, and its ending time will not limit the travel time over which particles can be tracked.
+
+block options
+name stop_at_weak_sink
+type keyword
+reader urword
+optional true
+longname stop at weak sink
+description is a text keyword to indicate that a particle is to terminate when it enters a cell that is a weak sink.  By default, particles are allowed to pass though cells that are weak sinks.
+
+block options
+name istopzone
+type integer
+reader urword
+optional true
+longname stop zone number
+description integer value defining the stop zone number.  If cells have been assigned IZONE values in the GRIDDATA block, a particle terminates if it enters a cell whose IZONE value matches ISTOPZONE.  An ISTOPZONE value of zero indicates that there is no stop zone.  The default value is zero.
+
+block options
+name drape
+type keyword
+reader urword
+optional true
+longname drape
+description is a text keyword to indicate that a particle is to be moved to the topmost active cell prior to release if its release point is in a cell that is dry at the scheduled time of release.  By default, a particle does not get released into the simulation if its release point is in a cell that is dry at the scheduled time of release.  ??? Move to what elevation within topmost active cell ???
+
+# --------------------- prt prp dimensions ---------------------
+
+block dimensions
+name nreleasepts
+type integer
+reader urword
+optional false
+longname number of particle release points
+description is the number of particle release points.
+
+# --------------------- prt prp packagedata ---------------------
+
+block packagedata
+name packagedata
+type recarray irptno cellid xrpt yrpt zrpt boundname
+shape (nreleasepts)
+reader urword
+longname
+description
+
+block packagedata
+name irptno
+type integer
+shape
+tagged false
+in_record true
+reader urword
+longname PRP id number for release point
+description integer value that defines the PRP release point number associated with the specified PACKAGEDATA data on the line. IRPTNO must be greater than zero and less than or equal to NRELEASEPTS.  The program will terminate with an error if information for a PRP release point number is specified more than once. ??? DO WE REALLY NEED THIS ???
+numeric_index true
+
+block packagedata
+name cellid
+type integer
+shape (ncelldim)
+tagged false
+in_record true
+reader urword
+longname cell identifier
+description REPLACE cellid {}
+
+block packagedata
+name xrpt
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+longname x coordinate of release point
+description real value that defines the x coordinate of the release point in model coordinates.  The (x, y, z) location specified for the release point must lie within the cell that corresponds to the specified cellid.
+
+block packagedata
+name yrpt
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+longname y coordinate of release point
+description real value that defines the y coordinate of the release point in model coordinates.  The (x, y, z) location specified for the release point must lie within the cell that corresponds to the specified cellid.
+
+block packagedata
+name zrpt
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+longname z coordinate of release point
+description real value that defines the z coordinate of the release point in model coordinates.  The (x, y, z) location specified for the release point must lie within the cell that corresponds to the specified cellid.
+
+block packagedata
+name boundname
+type string
+shape
+tagged false
+in_record true
+reader urword
+optional true
+longname release point name
+description REPLACE boundname {'{#1}': 'release-point'}
+
+# --------------------- prt prp period ---------------------
+
+block period
+name iper
+type integer
+block_variable True
+in_record true
+tagged false
+shape
+valid
+reader urword
+optional false
+longname stress period number
+description integer value specifying the stress period number for which the data specified in the PERIOD block apply. IPER must be less than or equal to NPER in the TDIS Package and greater than zero. The IPER value assigned to a stress period block must be greater than the IPER value assigned for the previous PERIOD block. The information specified in the PERIOD block applies only to that stress period.
+
+block period
+name perioddata
+type recarray releasesetting
+shape
+reader urword
+longname
+description
+
+block period
+name releasesetting
+type keystring all first frequency steps
+shape
+tagged false
+in_record true
+reader urword
+longname
+description specifies the steps at the start of which particles will be released.  The setting applies to all release points defined in PACKAGEDATA.
+
+block period
+name all
+type keyword
+shape
+in_record true
+reader urword
+longname
+description keyword to indicate release of particles at the start of all time steps in the period.
+
+block period
+name first
+type keyword
+shape
+in_record true
+reader urword
+longname
+description keyword to indicate release of particles at the start of the first time step in the period. This keyword may be used in conjunction with other keywords to release particles at the start of multiple time steps.
+
+block period
+name frequency
+type integer
+shape
+tagged true
+in_record true
+reader urword
+longname
+description release particles at the specified time step frequency. This keyword may be used in conjunction with other keywords to release particles at the start of multiple time steps.
+
+block period
+name steps
+type integer
+shape (<nstp)
+tagged true
+in_record true
+reader urword
+longname
+description release particles at the start of each step specified in STEPS. This keyword may be used in conjunction with other keywords to release particles at the start of multiple time steps.

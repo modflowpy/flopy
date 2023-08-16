@@ -1,0 +1,58 @@
+# --------------------- prt fmi options ---------------------
+
+block options
+name save_flows
+type keyword
+reader urword
+optional true
+longname save calculated flow imbalance correction to budget file
+description REPLACE save_flows {'{#1}': 'FMI'}
+
+block options
+name flow_imbalance_correction
+type keyword
+reader urword
+optional true
+longname correct for flow imbalance
+description correct for an imbalance in flows by assuming that any residual flow error comes in or leaves at the concentration of the cell.  When this option is activated, the PRT Model budget written to the listing file will contain two additional entries: FLOW-ERROR and FLOW-CORRECTION.  These two entries will be equal but opposite in sign.  The FLOW-CORRECTION term is a mass flow that is added to offset the error caused by an imprecise flow balance.  If these terms are not relatively small, the flow model should be rerun with stricter convergence tolerances.
+
+# --------------------- prt fmi packagedata ---------------------
+
+block packagedata
+name packagedata
+type recarray flowtype filein fname
+reader urword
+optional false
+longname flowtype list
+description
+
+block packagedata
+name flowtype
+in_record true
+type string
+tagged false
+reader urword
+longname flow type
+description is the word GWFBUDGET or GWFHEAD.  If GWFBUDGET is specified, then the corresponding file must be a budget file from a previous GWF Model run.
+
+block packagedata
+name filein
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block packagedata
+name fname
+in_record true
+type string
+preserve_case true
+tagged false
+reader urword
+longname file name
+description is the name of the file containing flows.  The path to the file should be included if the file is not located in the folder where the program was run.
+
