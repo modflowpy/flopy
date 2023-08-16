@@ -52,6 +52,11 @@ from flopy.utils.crs import get_authority_crs
 from flopy.utils.geometry import Polygon
 
 
+HAS_PYPROJ = has_pkg("pyproj", strict=True)
+if HAS_PYPROJ:
+    import pyproj
+
+
 def namfiles() -> List[Path]:
     mf2005_path = get_example_data_path() / "mf2005_test"
     return list(mf2005_path.rglob("*.nam"))
@@ -330,10 +335,7 @@ def test_write_gridlines_shapefile(function_tmpdir):
 
     for suffix in [".dbf", ".shp", ".shx"]:
         assert outshp.with_suffix(suffix).exists()
-    if has_pkg("pyproj"):
-        assert outshp.with_suffix(".prj").exists()
-    else:
-        assert not outshp.with_suffix(".prj").exists()
+    assert outshp.with_suffix(".prj").exists() == HAS_PYPROJ
 
     with shapefile.Reader(str(outshp)) as sf:
         assert sf.shapeType == shapefile.POLYLINE
@@ -1378,7 +1380,7 @@ def test_vtk_unstructured(function_tmpdir, example_data_path):
     assert np.allclose(np.ravel(top), top2), "Field data not properly written"
 
 
-@requires_pkg("pyvista")
+@requires_pkg("vtk", "pyvista")
 def test_vtk_to_pyvista(function_tmpdir, example_data_path):
     from autotest.test_mp7_cases import Mp7Cases
 

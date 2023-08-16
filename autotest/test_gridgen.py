@@ -14,6 +14,7 @@ import flopy
 from flopy.utils.gridgen import Gridgen
 
 
+@requires_exe("gridgen")
 def test_ctor_accepts_path_or_string(function_tmpdir):
     grid = GridCases().structured_small()
 
