@@ -64,7 +64,7 @@ jobs:
           echo "version=${ver#"v"}" >> $GITHUB_OUTPUT
 
       - name: Update FloPy packages
-        run: python -c 'import flopy; flopy.mf6.utils.generate_classes(ref="master", backup=False)'
+        run: python -m flopy.mf6.utils.generate_classes --ref master --no-backup
 
       - name: Lint Python files
         run: python scripts/pull_request_prepare.py
