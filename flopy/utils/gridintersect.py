@@ -18,6 +18,10 @@ if shapely is not None:
     if Version(shapely.__version__) < Version("1.8"):
         warnings.warn("GridIntersect requires shapely>=1.8.")
         shapely = None
+    if SHAPELY_GE_20:
+        from shapely import unary_union
+    else:
+        from shapely.ops import unary_union
 else:
     SHAPELY_GE_20 = False
 
@@ -1487,10 +1491,7 @@ class GridIntersect:
                     tempverts.append(vertices[i])
                     ishp = ixshapes[i]
                     if isinstance(ishp, list):
-                        if len(ishp) > 1:
-                            ishp = shapely_geo.MultiLineString(ishp)
-                        else:
-                            ishp = ishp[0]
+                        ishp = unary_union(ishp)
                     tempshapes.append(ishp)
             nodelist = tempnodes
             lengths = templengths
